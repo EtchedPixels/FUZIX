@@ -24,7 +24,7 @@ static const uint32_t dev_start[NUM_DEV_RD] = {
 };
 
 /* implements both rd_read and rd_write */
-int rd_transfer(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int rd_transfer(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     used(flag);
 
@@ -54,7 +54,7 @@ int rd_transfer(uint8_t minor, uint8_t rawflag, uint8_t flag)
     return rd_cpy_count;
 }
 
-int rd_open(uint8_t minor, uint16_t flags)
+int rd_open(uint_fast8_t minor, uint16_t flags)
 {
     flags; /* unused */
 

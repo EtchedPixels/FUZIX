@@ -1,3 +1,5 @@
+#ifndef _KERNEL_RTC_H
+#define _KERNEL_RTC_H
 
 struct cmos_rtc
 {
@@ -15,3 +17,4 @@ struct cmos_rtc
 #define CMOS_RTC_TIME	2
 /* Unix time format */
 
+#endif

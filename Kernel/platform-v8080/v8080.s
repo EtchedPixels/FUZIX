@@ -204,6 +204,7 @@ _tty_pollirq:
 	jnc poll2
 	in 1
 	mov e,a
+	mvi d,0
 	push d
 	mvi e,1
 	push d
@@ -216,6 +217,7 @@ poll2:
 	rnc
 	in 41
 	mov e,a
+	mvi d,0
 	push d
 	mvi e,2
 	push d
@@ -258,6 +260,7 @@ _fd_op:
 	out 21			! kernel mapping back
 	in 14			! return status
 	mov e,a
+	mvi d,0
 	ret
 
 .define _fd_drive

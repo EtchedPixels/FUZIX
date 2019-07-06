@@ -11,6 +11,7 @@ export CROSS_CC_SEG1=--code-name SEG1
 export CROSS_CC_SEG2=--code-name SEG2
 # 6502 we need a real SEG3 to make it fit
 export CROSS_CC_SEG3=--code-name SEG3
+export CROSS_CC_SEG4=--code-name SEG4
 export CROSS_CC_SYS1=--code-name SYS1
 export CROSS_CC_SYS2=--code-name SYS2
 export CROSS_CC_SYS3=--code-name SYS3

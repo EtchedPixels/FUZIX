@@ -24,6 +24,7 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/super.h>
+#include <time.h>
 
 
 struct dinode {
@@ -93,18 +94,22 @@ void mkfs(uint16_t fsize, uint16_t isize)
 {
     uint16_t j;
     char *zeros;
+    time_t t = time(NULL);
 
     /* Zero out the blocks */
-    printf("Zeroizing i-blocks...\n");
+    printf("Clearing blocks ");
     zeros = zerobuf();		/* Get a zero filled buffer */
 
-    if( !fast ){
-	    for (j = 0; j < fsize; ++j)
+    if (!fast) {
+	    for (j = 0; j < fsize; ++j) {
+	            putchar('.');
 		    dwrite(j, zeros);
-    }
-    else{
-	    for (j = 0; j < isize; ++j)
+            }
+    } else {
+	    for (j = 0; j < isize; ++j) {
+	            putchar('.');
 		    dwrite(j, zeros);
+            }
     }
 
     /* Initialize the super-block */
@@ -116,10 +121,12 @@ void mkfs(uint16_t fsize, uint16_t isize)
     fs_tab.s_tfree = 0;
     fs_tab.s_ninode = 0;
     fs_tab.s_tinode = (8 * (isize - 2)) - 2;
+    fs_tab.s_time = t;
+    fs_tab.s_timeh = (t >> 31) >> 1;	/* Mutter .. C standards .. mutter */
 
     /* Free each block, building the free list */
 
-    printf("Building free list...\n");
+    printf("\nBuilding free list...\n");
     for (j = fsize - 1; j > isize; --j) {
 	if (fs_tab.s_nfree == 50) {
 	    dwrite(j, (char *) &fs_tab.s_nfree);

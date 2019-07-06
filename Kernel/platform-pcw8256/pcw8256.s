@@ -19,8 +19,8 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
+	    .globl map_process_a
 	    .globl platform_interrupt_all
-	    .globl _copy_common
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -175,7 +175,7 @@ _program_vectors:
 ;	map_process		-	map the pages pointed to by hl, eats
 ;					a, hl
 ;
-kmap:	    .db 0x80, 0x81, 0x82, 0x83
+kmap:	    .db 0x80, 0x81, 0x82
 
 map_buffers:
 map_kernel:
@@ -189,10 +189,6 @@ map_kernel_di:
 	    ret
 
 map_for_swap:
-	    ld (map_current+1),a
-	    out (0xF1),a	; map at 0x4000
-	    ret
-
 map_process_always:
 map_process_always_di:
 	    push af
@@ -211,6 +207,7 @@ map_process_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
+map_process_a:	; really map_process_hl in our case.
 map_process_1:
 	    ld a, (_int_disabled)
 	    push af
@@ -261,24 +258,6 @@ map_restore:push hl
 	    pop af
             pop hl
             ret
-
-;
-;	Make a copy of common into a new page in order to use it for a
-;	process.
-;
-_copy_common:
-	    pop hl
-	    pop de
-	    push de
-	    push hl
-	    ld a,e
-	    out (0xf1),a	; 4000-7FFF
-	    ld hl,#0xF000
-	    ld de,#0x7000
-	    ld bc,#0x1000
-	    ldir
-	    jr map_kernel
-
 
 _bugout:    pop hl
 	    pop bc
@@ -493,12 +472,7 @@ roller:	    .db 0
 cursorpos:  .dw 0
 
 ;
-;	We need map_current to be at least 256 bytes into common as we
-;	swap the first 256 bytes.
-;
-;	FIXME: should we teach the tools about a 'commondata' ?
-;
-	    .area _COMMONMEM
+	    .area _COMMONDATA
 ;
 ;	These are in common, that means that on a system that switches
 ; common by task there are multiple copies of this information.

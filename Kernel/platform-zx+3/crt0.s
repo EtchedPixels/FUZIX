@@ -7,7 +7,7 @@
         .area _CODE
 	.area _CODE2
 	;
-	;	Tru and keep code in the top 32K
+	;	Try and keep code in the top 32K
 	;
 
 

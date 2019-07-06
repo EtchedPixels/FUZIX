@@ -70,7 +70,7 @@ static uint16_t siobaud[] = {
 	0x02	/* 115200 */
 };
 
-static void sio2_setup(uint8_t minor, uint8_t flags)
+static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
@@ -86,7 +86,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
 
 	r = 0xC4;
-	if (ctc_present && minor == 3) {
+	if (ctc_present && minor == 2) {
 		CTC_CH1 = 0x55;
 		CTC_CH1 = siobaud[baud];
 		if (baud > B600)	/* Use x16 clock and CTC divider */
@@ -94,7 +94,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 	} else
 		baud = B115200;
 
-	t->c_cflag &= CBAUD;
+	t->c_cflag &= ~CBAUD;
 	t->c_cflag |= baud;
 
 	if (t->c_cflag & CSTOPB)
@@ -107,7 +107,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
 }
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	if (sio_present || sio1_present) {
 		sio2_setup(minor, flags);
@@ -155,7 +155,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
 	}
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
         uint8_t c;
         uint8_t port;
@@ -302,17 +302,17 @@ void tty_pollirq_acia(void)
 	}
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	if (acia_present)
-		SIOA_D = c;
+		ACIA_D = c;
 	else {
 		uint8_t port = SIO0_BASE + 1 + 2 * (minor - 1);
 		out(port, c);
 	}
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	sleeping |= (1 << minor);
 }
@@ -325,7 +325,7 @@ void tty_sleeping(uint8_t minor)
 
    Need to review this we should be ok as the IRQ handler always leaves
    us pointing at RR0 */
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	irqflags_t irq;
 	uint8_t c;
@@ -349,13 +349,13 @@ ttyready_t tty_writeready(uint8_t minor)
 	return TTY_READY_SOON;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 	used(minor);
 }
 
 /* kernel writes to system console -- never sleep! */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
 	if (c == '\n')
@@ -364,7 +364,7 @@ void kputchar(char c)
 	tty_putc(TTYDEV - 512, c);
 }
 
-int rctty_open(uint8_t minor, uint16_t flag)
+int rctty_open(uint_fast8_t minor, uint16_t flag)
 {
 	if (acia_present && minor != 1) {
 		udata.u_error = ENODEV;

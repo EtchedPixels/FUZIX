@@ -10,7 +10,7 @@ extern uint8_t shiftkeyboard[8][7];
 #include <../include/vt.h>
 #include <../include/graphics.h>
 
-struct pty {
+struct tty_coco3 {
 	unsigned char *base;	/* base of buffer in cpu space */
 	unsigned char *cpos;	/* current location of cursor */
 	unsigned char csave;	/* charactor that is under the cursor */
@@ -25,11 +25,11 @@ struct pty {
 	struct display *fdisp;  /* ptr to struct for ioctl */
 };
 
-extern struct pty *curpty;
+extern struct tty_coco3 *curtty;
 extern uint8_t curattr;
 
 int my_tty_close( uint8_t minor ); /* wrapper call to close DW ports */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
-void set_defmode( uint8_t *s );
+void set_defmode(char *s);
 
 #endif

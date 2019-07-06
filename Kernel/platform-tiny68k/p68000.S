@@ -34,8 +34,8 @@ init_early:
 ;	FIXME: could be in discard if we wanted
 ;
 init_hardware:
-	    lea $30000,a0		; will be wrapped on the rc2014
-	    lea $10000,a1		; well above the kernel
+	    lea $300000,a0		; will be wrapped on the rc2014
+	    lea $100000,a1		; well above the kernel
 	    move.w #$AA55,(a0)
 	    cmp.w #$AA55,(a1)
 	    bne tiny68k

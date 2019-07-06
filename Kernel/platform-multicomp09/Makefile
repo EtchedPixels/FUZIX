@@ -7,7 +7,7 @@ CDSRCS =
 DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/mbr.c
 
 ASRCS = multicomp09.s crt0.s
-ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
+ASRCS += tricks.s commonmem.s usermem_gime.s ../dev/drivewire/drivewire.s sdc.s videoll.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -18,6 +18,8 @@ OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(CDOBJS)
 # to save intermediate files (eg, assembler) add -save-temps=cwd
 # and do the same thing in cpu-6809/rules.mk
 CROSS_CCOPTS += -I../dev/
+
+../dev/drivewire/drivewire.o: ASOPTS += --defsym MULTICOMP=1
 
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o) $(DSRCS:.c=.o)
 
@@ -32,7 +34,7 @@ $(CDOBJS): %$(BINEXT): %.c
 $(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %$(BINEXT): %.s dw.def kernel.def platform.def ../kernel09.def
+$(AOBJS): %$(BINEXT): %.s kernel.def platform.def ../kernel09.def
 	$(CROSS_AS) $(ASOPTS) $< -o $*.o
 
 
@@ -47,7 +49,7 @@ image:
 	crt0.o commonmem.o \
 	multicomp09.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	drivewire.o devdw.o ttydw.o blkdev.o mbr.o \
+	../dev/drivewire/drivewire.o devdw.o ttydw.o blkdev.o mbr.o \
 	devsdc.o sdc.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \

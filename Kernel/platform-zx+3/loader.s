@@ -42,6 +42,7 @@ motor_on:
 	ld de,#0x4001
 	ld bc,#0x6911
 	xor a
+	ld (hl),a
 	ldir
 
 
@@ -115,7 +116,7 @@ wait_ms_loop2:
 ;
 ;	Load sector E of track D into HL and adjust HL
 ;
-;	Load at just doing track loads in one command! FIXME
+;	Look at just doing track loads in one command! FIXME
 ;
 load_sector:
 	ld a,#0x46

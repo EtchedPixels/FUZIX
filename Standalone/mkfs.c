@@ -10,6 +10,7 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "fuzix_fs.h"
 
 /* This makes a filesystem 
@@ -71,6 +72,7 @@ int main(int argc, char **argv)
 	uint16_t j;
 	uint32_t s;
 	int opt;
+	time_t t = time(NULL);
 
 	while((opt = getopt(argc, argv, "Xb:")) != -1) {
 		switch(opt) {
@@ -128,6 +130,8 @@ int main(int argc, char **argv)
 	fs_super.fs.s_ninode = 0;
 	fs_super.fs.s_tinode = swizzle16(8 * (isize - 2) - 2);
 	fs_super.fs.s_shift = shift;
+	fs_super.fs.s_time = swizzle32(t);
+	fs_super.fs.s_timeh = t >> 32;
 
 	/* Free each block, building the free list. This is done in
 	   terms of the block shift, while isize is in 512 byte blocks.

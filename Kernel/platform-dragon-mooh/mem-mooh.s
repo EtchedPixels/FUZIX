@@ -105,36 +105,48 @@ map_save
 ; we simply copy the full 8KB bank here
 
 copybank
-	pshs x,y,u
-	ldy 0xFFA4	; save the two MMU regs
-	sta 0xFFA5	; map src at 0xA000 (task 0, kernel mapped)
-	stb 0xFFA4	; map dst at 0x8000
-	ldu #0xA000
-	ldx #0x8000
-
-copylp	ldd ,u++	; read from src bank
-	std ,x++	; write to dst bank
-	ldd ,u++
-	std ,x++
-	ldd ,u++
-	std ,x++
-	ldd ,u++
-	std ,x++
-	ldd ,u++
-	std ,x++
-	ldd ,u++
-	std ,x++
-	ldd ,u++
-	std ,x++
-	ldd ,u++
-	std ,x++
-	cmpx #0xA000
-	blo copylp
-
-	sty 0xFFA4	; restore MMU regs
-	puls x,y,u,pc
+	pshs	dp,x,y,u
+	ldx	0xFFA4		; save the two MMU regs on stack
+	pshs	x
+	std	0xFFA4		; map src at 0x8000 (MMU task 0, kernel mapped), map dst at 0xA000
+	sts	save_sp
+	lds	#0xC000		; top of DEST
+	ldu	#0xA000+7	; top of SRC
+smash@	leau	-14,u
+	pulu	dp,d,x,y	; transfer 7 bytes at a time
+	pshs	dp,d,x,y	; 6 times.. 42 bytes per loop
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	cmpu	#0x8002+42+7	; end of copy? (leave space for interrupt) - bottom of SRC
+	bne	smash@		; no repeat
+	ldx	save_sp		; put stack back
+	exg	x,s		; and data DEST ptr to X now
+	leau	-7,u
+safe@	ldd	,--u		; move last 44 bytes with a normal stack
+	std	,--x		; 4 bytes per loop
+	ldd	,--u
+	std	,--x
+	cmpx	#0xA000		; reached bottom of DEST?
+	bne	safe@
+	puls	x
+	stx	0xFFA4		; restore MMU regs
+	puls	dp,x,y,u,pc
 
 	.area .commondata
 
 map_store	.dw 0
 map_copy	.dw 0
+save_sp		.dw 0

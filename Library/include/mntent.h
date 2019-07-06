@@ -25,7 +25,10 @@ extern struct mntent *getmntent_r(FILE *fp, struct mntent *mnt, char *buf, int l
 /*extern int delmntent(FILE *fp, struct mntent *mnt); */
 
 /* FUZIX specific */
+#ifdef _FUZIX_SOURCE
+extern char *devname(dev_t dev);
 extern char *root_device_name(void);
 extern char *mnt_device_path(struct mntent *me);
+#endif
 
 #endif

@@ -53,7 +53,7 @@ static uint8_t kbd_timer;
 /* tty1 is the screen tty2 is the serial port */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
@@ -84,7 +84,7 @@ void tty_sleeping(uint8_t minor)
     used(minor);
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
 	if (minor == 2) {
 		/* FIXME: do proper mode setting */
@@ -255,7 +255,6 @@ void platform_interrupt(void)
 				kbd_timer = keyrepeat.continual;
 			}
 		}
-//                fd_timer_tick();
 		timer_interrupt();
 	}
 }

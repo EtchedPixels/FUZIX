@@ -19,6 +19,8 @@ f 0755 /bin/cat         cat
 f 0755 /bin/chmod       chmod
 f 0755 /bin/cmp         cmp
 f 0755 /bin/cp          cp
+l /bin/cp /bin/mv
+l /bin/cp /bin/ln
 f 0755 /bin/date        date
 f 0755 /bin/dd          dd
 f 0755 /bin/df          df
@@ -28,13 +30,11 @@ f 0755 /bin/echo        echo
 f 0755 /bin/fgrep       fgrep
 f 0755 /bin/kill        kill
 f 0755 /bin/killall     killall
-f 0755 /bin/ln          ln
 f 0755 /bin/ls          ls
 f 0755 /bin/mkdir       mkdir
 f 0755 /bin/mkfs        mkfs
 f 0755 /bin/mknod       mknod
 f 0755 /bin/mount       mount
-f 0755 /bin/mv          mv
 f 0755 /bin/prtroot     prtroot
 f 0755 /bin/ps          ps
 f 0755 /bin/pwd         pwd
@@ -98,6 +98,7 @@ f 0755 /bin/sort        sort
 f 0755 /bin/sum         sum
 f 0755 /bin/su          su
 f 0755 /bin/substroot   substroot
+f 0755 /bin/swapon	swapon
 f 0755 /bin/tail        tail
 f 0755 /bin/tar         tar
 f 0755 /usr/lib/tchelp  tchelp
@@ -112,6 +113,7 @@ f 0755 /bin/uptime      uptime
 f 0755 /bin/uud         uud
 f 0755 /bin/uue         uue
 f 0755 /bin/vile        vile
+l /bin/vile /bin/vi
 f 0755 /bin/wc          wc
 f 0755 /bin/which       which
 f 0755 /bin/who         who

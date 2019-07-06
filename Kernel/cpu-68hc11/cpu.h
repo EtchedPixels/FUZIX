@@ -6,6 +6,10 @@ typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef signed int size_t;
 
+typedef unsigned char uint_fast8_t;
+typedef signed char int_fast8_t;
+
+
 typedef uint8_t irqflags_t;
 
 typedef int16_t arg_t;
@@ -14,6 +18,8 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* A user address must fit this */
 typedef uint16_t uptr_t;		/* User pointer equivalent */
+
+#define MAXUSIZE	0xFFFF
 
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */

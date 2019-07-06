@@ -27,6 +27,8 @@
 	.globl unix_syscall_entry
 	.globl null_handler
 
+	.globl _vt_check_lower
+
         .include "kernel.def"
         .include "../kernel-z80.def"
 
@@ -65,10 +67,10 @@ init_hardware:
 	
 	ld hl,#96
 	ld (_ramsize),hl
-	ld hl,#48
+	ld hl,#36
 	ld (_procmem),hl
         im 1 ; set CPU interrupt mode
-        ret
+	jp _vt_check_lower
 ;
 ;	Mapping for us is fairly simple but it's not blank because we do
 ;	some mapping.

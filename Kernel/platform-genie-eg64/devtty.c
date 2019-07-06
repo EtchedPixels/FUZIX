@@ -11,7 +11,6 @@
 #include <stdarg.h>
 #include <trs80.h>
 
-/* FIXME: move to external tty buffers and bank them */
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 static char tbuf3[TTYSIZ];
@@ -22,7 +21,7 @@ static struct vt_switch ttysave[2];
 struct vt_repeat keyrepeat;
 extern uint8_t *vtbase[2];
 
-/* Default to having /dev/tty and the two consoles openable. Our probe
+/* Default to having /dev/tty1. Our probe
    routine will add tty2/tty3 as appropriate */
 
 static uint8_t ports = 3;

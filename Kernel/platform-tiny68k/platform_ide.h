@@ -16,3 +16,5 @@
 
 #define ide_select(x)
 #define ide_deselect()
+
+#define CONFIG_IDE_BSWAP

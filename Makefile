@@ -5,14 +5,17 @@
 # amstradnc/nc100:	Amstrad NC100 (or emulator)
 # amstradnc/nc200:	Amstrad NC200 (or emulator)
 # coco2cart:	Tandy COCO2 or Dragon with 64K and IDE or SDC + cartridge flash
-#		(or modified xroar)
+#		(or xroar emulator )
 # coco3:	Tandy COCO3 512K (or MAME)
-# dragon-nx32:	Dragon 32/64 with Spinx 512K card (or modified xroar)
+# dragon-mooh:	Dragon 32/64 with Mooh 512K card (or xroar emulator)
+# dragon-nx32:	Dragon 32/64 with Spinx 512K card (or xroar emulator)
+# easy-z80:	Easy-Z80 RC2014 compatible system
 # msx2:		MSX2 with 128K or more and MegaFlashROM+SD interface
 #		(or OpenMSX suitably configured)
 # mtx:		Memotech MTX512 with SDX (or MEMU emulator)
 # multicomp09:	Extended multicomp 6809
 # n8vem-mark4:	RBC/N8VEM Retrobrew Z180 board
+# pentagon-1024: Pentagon 1MB
 # p112:		DX Designs P112
 # rc2014:	RC2014 with 512K RAM/ROM and RTC
 # rc2014-sbc64: RC2014 Z80SBC64 128K system and RTC
@@ -20,6 +23,8 @@
 # sam:		Sam Coupe
 # sbcv2:	RBC/N8VEM SBC v2
 # sc108:	Small Computer Central SC108 and SC114 systems
+# sc111:	Small Computer Central SC111 system
+# scorpion:	Scorpion 256K (and some relatives) with NemoIDE
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # tc2068:	Timex TC2068/TS2068 with DivIDE/DivMMC disk interface
 # tiny68k:	Bill Shen's Tiny68K
@@ -55,8 +60,7 @@ FUZIX_ROOT = $(shell pwd)
 
 # TARGET is what we are building
 # CPU is the CPU type for the kernel
-# USERCPU is the CPU type for userspace and eventually may be different
-# (eg for 65c816 with 6502 user)
+# USERCPU is the CPU type for userspace and may be different
 export TARGET CPU USERCPU PATH FUZIX_ROOT
 
 # FUZIX_CCOPTS is the global CC optimization level

@@ -19,7 +19,7 @@ start:
 		sta $FFDF
 		jmp main
 
-		.area .text
+		.area .discard
 
 main:		
 		lds #kstack_top

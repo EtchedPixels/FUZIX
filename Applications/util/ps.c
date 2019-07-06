@@ -66,6 +66,8 @@ static uint16_t outflags;
 #define OF_TIME		8192		/* Cumulative execution time */
 #define OF_CMD		16384		/* Command line */
 
+static const char *month = "JanFebMarAprMayJunJulAugSepOctNovDec";
+
 static char mapstat(char s)
 {
 	switch (s) {
@@ -350,31 +352,45 @@ void display_process(struct p_tab *pp, int i)
 		fputs("    - ", stdout);
 	if (outflags & OF_WCHAN) {
 		if (pp->p_status > 2)
-			printf("%5d ", (unsigned int)pp->p_wait);
+			printf(" %4x ", (unsigned int)pp->p_wait);
 		else
 			fputs("    - ", stdout);
 	}
 	/* We need to sort out the whole kernel and user handling of
 	   times in ptab verus udata here */
 	if (outflags & OF_STIME) {
-		uint32_t t;
-		t = time(NULL) - pp->p_time;
-		if ((t - pp->p_time) > 86400)
-			printf("%02day ", t / 86400);
-		else {
-			struct tm *tm;
-			time_t x = pp->p_time;
-			tm = localtime(&x);
+		time_t t;
+		struct tm *tm, *tnow;
+		__ktime_t ticks;
+		/* ps is not portable code so don't bother with
+		   clock_gettimer() */
+		_time(&ticks, 1);	/* Get the tick timer */
+
+		/* Get the current time */
+		t = time(NULL);
+		tnow = localtime(&t);
+		/* Make t the unix time at process start according to the clock
+		   at this moment in time */
+		t -= ticks.time/10;
+		t += pp->p_time / 10;
+
+		tm = localtime(&t);
+
+		if (tm->tm_year != tnow->tm_year)
+			printf("%04d ", tm->tm_year);
+		else if (tm->tm_yday != tnow->tm_yday)
+			printf("%.3s%02d",
+				month + 3 * tm->tm_mon, tm->tm_mday);
+		else
 			printf("%02d:%02d ",
 				tm->tm_hour, tm->tm_min);
-		}
 	}
 				
 	if (outflags & OF_TTY) {
 		if (!pp->p_tty)
-			fputs("     ? ", stdout);
+			fputs("     ?  ", stdout);
 		else
-			printf("%6s ", ttyshortname(pp->p_tty));
+			printf("%7s ", ttyshortname(pp->p_tty));
 	}
 	if (outflags & OF_TIME) {
 		/* cstime/cutime or ctime/utime ? */ 

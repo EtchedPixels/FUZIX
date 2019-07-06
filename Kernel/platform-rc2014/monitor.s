@@ -7,7 +7,7 @@
 
 ; -----------------------------------------------------------------------------
 .ifne USE_FANCY_MONITOR ; -----------------------------------------------------
-                .area _CODE ; actual monitor lives in kernel bank
+                .area _CODE2 ; actual monitor lives in kernel bank
                 .include "../lib/monitor-z80.s"
 
                 .area _COMMONMEM ; just a stub goes in common memory

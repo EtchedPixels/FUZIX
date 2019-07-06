@@ -112,7 +112,7 @@ int showfile(const char *fname)
 	return 0;
 }
 
-void putstr(char *str)
+void putstr(const char *str)
 {
 	write(1, str, strlen(str));
 }
@@ -605,6 +605,11 @@ int main(int argc, char *argv[])
 
 	putstr("init version 0.9.0ac#1\n");
 
+	if (argv[1] && strcmp(argv[1], "s") == 0) {
+		execl("/bin/sh", "-sh", NULL);
+		execl("/bin/ssh", "-ssh", NULL);
+	}
+
 	membase = sbrk(0);
 
 	load_inittab();
@@ -705,19 +710,23 @@ const char *bauds[] = {
 	"115200"
 };
 
-static int baudmatch(const char *p)
+static int baudmatch(int fd, const char *p)
 {
 	int i;
 	const char **str = bauds;
+	static struct termios ttmp;
 
-	if (p == NULL)
-		return B9600;
-
-	for(i = 1; i < 15; i++) {
-		if (strcmp(p, *str++) == 0)
-			return i;
+	if (p) {
+		for(i = 1; i < 15; i++) {
+			if (strcmp(p, *str++) == 0)
+				return i;
+		}
+		write(1, "Unknown baud rate '", 18);
+		putstr(p);
+		write(1, "'.\n", 3);
 	}
-	return B9600;
+	tcgetattr(fd, &ttmp);
+	return ttmp.c_cflag & CBAUD;
 }
 
 static pid_t getty(const char **argv, const char *id)
@@ -810,7 +819,7 @@ static pid_t getty(const char **argv, const char *id)
 			}
 			/* Figure out the baud bits. It's cheaper to do this with strings
 			   than ulongs! */
-			tref.c_cflag |= baudmatch(argv[1]);
+			tref.c_cflag |= baudmatch(fdtty, argv[1]);
 
 			tcsetattr(fdtty, TCSANOW, &tref);
 

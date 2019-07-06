@@ -1,0 +1,8 @@
+; UZI mnemonics for memory addresses etc
+
+; (this is struct u_data from kernel.h)
+; 256+256 bytes.
+U_DATA__TOTALSIZE           .set $200
+
+PROGLOAD		    .set $2000
+ZPBASE			    .set $0

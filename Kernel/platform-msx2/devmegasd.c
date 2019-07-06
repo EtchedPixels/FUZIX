@@ -42,7 +42,7 @@
 /* slot and subslot containing the sd interface */
 uint8_t slotmfr;
 
-int megasd_probe()
+int megasd_probe(void)
 {
     uint8_t *sigp = (uint8_t *) MSD_MAGIC_ADDR;
     uint8_t slot;

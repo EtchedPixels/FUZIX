@@ -6,7 +6,7 @@ matrix:
         - env: TARGET=dragon-nx32
         - env: TARGET=multicomp09
         - env: TARGET=sbcv2
-        - env: TARGET=trs80
+        - env: TARGET=sc108
         - env: TARGET=v65c816
         - env: TARGET=v68
         - env: TARGET=tiny68k
@@ -22,7 +22,7 @@ before_install:
         sudo apt-get install -y lwtools gcc6809
       fi
     - |
-      if [ "$TARGET" = "sbcv2" -o "$TARGET" = "trs80" -o "$TARGET" = "n8vem-mark4" ]; then
+      if [ "$TARGET" = "sbcv2" -o "$TARGET" = "sc108" -o "$TARGET" = "n8vem-mark4" ]; then
         sudo apt-get install -y sdcc
       fi
     - |

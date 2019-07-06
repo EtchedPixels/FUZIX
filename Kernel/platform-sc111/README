@@ -1,0 +1,51 @@
+This is Fuzix for the SC111 Z180 RC2014 system with a suitable linear RAM/ROM
+module (RAM is expected to fill the upper 512K)
+
+Based upon the N8VEM Mark IV port by Will Sowerbutts <will@sowerbutts.com>
+
+Cards required:
+SC111 or similar Z180 CPU interface
+SC119 or similar (ROM in low 512K RAM in high 512K) unbanked memory
+RC2014 CF IDE
+
+Currently SCM is supported. Once there is a ROMWBW then support will be added
+to boot that way too.
+
+Supported hardware:
+ - RC2014 CF IDE interface
+
+Untested
+ - SD card on CSIO port
+
+Not yet supported but planned:
+ - RC2014 serial/ctc interfaces (only the onboard ports are handled)
+ - RC2014 RTC
+ - RC2014 TMS9918A
+ - Swap
+
+Experiments pending
+ - Using the clock doubler and some wait stating
+
+To set up
+
+Write the bootloader to blocks 0-23 of the CF adapter
+Write the kernel to blocks 24+
+Partition with a vaguely modern fdisk (2048 block offset base, not 63)
+Add partition for filesystem
+Copy filesystem onto partition
+
+In SCM type 'CPM' and instead of CP/M it will boot Fuzix. You can also in
+theory run the binary from CP/M but it may be too big to fit.
+
+The root filesystem device can be specified as either a decimal number, or as a
+a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
+
+When booting the system from CP/M you can specify the root filesystem device on
+the command line after the command name or unit number.
+
+For example, with root filesystem on /dev/hdb1 (minor #17) at the CP/M command
+prompt:
+
+    A> FUZIX hdb1
+or  A> FUZIX 17
+

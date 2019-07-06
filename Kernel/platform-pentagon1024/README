@@ -1,0 +1,83 @@
+Pentagon 1024 (except very early ones)
+
+Pentagon 1MB uses EFF7 bit 3 to turn on the RAM mapping
+
+EFF7
+2:	set for 128K compatibility (bit 5 is paging lock etc)
+3:	set to map RAM bank 0 over low 16K
+
+The usual 7FFD register is the banking except that the bits are not quite matching
+the 128K spectrum
+
+0:	bit 0 of bank
+1:	bit 1 of bank
+2:	bit 2 of bank
+3:	video RAM bank select
+4:	ROM select (editor or basic)
+5:	bit 5 of bank		(disable paging on 128K spectrum)
+6:	bit 3 of bank		(unused on 128K spectrum)
+7:	bit 4 of bank		(unused on 128K spectrum)
+
+As we never care about bank order we just treat 5/3/4 as if they were 3/4/5.
+Only 000 is special and it's the same in either order.
+
+
+
+These machines all have the same basic problem, there is a 16K window at
+C000-FFFF which is pageable but no bigger pageable range.
+
+We run with the following mapping
+
+0000-3FFF	IRQ vectors, common, const, commondata etc
+4000-5FFF	Spectrum screen memory and system variables
+6000-7FFF	Free for now
+8000-83FF	Needed to create the exec of init
+8400-BFFF	_DISCARD area - blown away when we exec init
+		(tons of room in this space)
+C000-FFFF
+	0:	0000-3FFF (Kernel data/common)
+	1:	Kernel CODE (fairly full)
+	2:	Mapped at 0x8000-0xBFFF (holds current process copy)
+	3:	User process
+	4:	User process
+	5:	Mapped at 0x4000-0x7FFF (Screen, spare)
+	6:	Kernel CODE2 (fairly full)
+	7:	CODE3, Video (lots of room)
+
+User processes live in 3/4 and 8+. We have copy stuff back and forth
+to page 2 due to the memory manager liits.
+
+To Do:
+-	Floppy driver
+-	Optimizations for switching (runticks expiry on non-preempt case
+	should we clear runticks - pro it gets us better perf, anti it reduces
+	responsiveness.
+-	Parent first support
+-	See if we can in fact keep 6000-7FFF clear. If so we can look at
+	ldir switching another 8K up and down to give 40K program sizes
+	which would be a big improvement. Would need us to allocate 2.5
+	banks per process however so need some allocator changes
+-	Need a nice way to support multiple IDE controllers in one system
+-	Loader variant to support Pentagon 512 with DivIDE/DivMMC - at least
+	altram systems.
+
+General ZX issues
+-	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
+	(Seems we lose the bottom line of the left most char - off by one bug
+	 in zxvid ?)
+-	6 or 5bit wide fonts (42, 51 column)
+-	Optimize zxvid - especially scrolling
+-	Move vtborder to common
+
+Floppy disk interfaces are problematic. The standard Betadisk interface locks
+the I/O ports to its ROM being active, which sucks. Fortunately it appears
+there is a mildy insane stunt we can pull. We can use the ROM to query itself
+to find the address of the out (c),a present in all Beta ROM images.
+
+We can then do a ROP attack on the ROM in order to make it do the "right"
+out (c),a  in it in order to do a bank switch with RAM at 0000-3FFF and catch
+the next instruction. Providing we remain in the RAM below 4000 it'll leave
+the card selected.
+
+Does mean we need to patch our kernel to grab the next instruction, and then
+put it back all under di but it does look doable.

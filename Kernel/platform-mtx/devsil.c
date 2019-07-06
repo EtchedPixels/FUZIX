@@ -1,9 +1,7 @@
 /* 
  * Memotech Silicon Disk Driver
  *
- * FIXME: would be sensible to add swap support to this driver for boxes with
- * < 512K RAM.
- *
+ * FIXME: add swap support to this driver for boxes with < 512K RAM.
  * FIXME: Check presence of device by probing ?
  */
 
@@ -14,7 +12,7 @@
 
 #define NUM_SIL		4
 
-static int sil_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int sil_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
 {
     int ct = 0;
     int map = 0;
@@ -37,7 +35,7 @@ static int sil_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     return ct << BLKSHIFT;
 }
 
-int sil_open(uint8_t minor, uint16_t flag)
+int sil_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= NUM_SIL) {
@@ -47,15 +45,14 @@ int sil_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int sil_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int sil_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return sil_transfer(minor, true, rawflag);
 }
 
-int sil_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int sil_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;minor;
     return sil_transfer(minor, false, rawflag);
 }
-

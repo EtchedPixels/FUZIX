@@ -27,6 +27,9 @@
 	.globl _tmpbuf
 	.globl _tmpfree
 
+	.globl map_save_kmap
+	.globl map_restore_kmap
+
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
@@ -49,6 +52,8 @@ _platform_switchout:
         push hl ; return code
         push ix
         push iy
+	call map_save_kmap
+	push af
         ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
         ; find another process to run (may select this one again)
@@ -152,9 +157,12 @@ not_swapped:
         ; _switchout or _dofork
         ld sp, (_udata + U_DATA__U_SP)
 
+	pop af
         pop iy
         pop ix
         pop hl ; return code
+
+	call map_restore_kmap
 
         ; enable interrupts, if the ISR isn't already running
         ld a, (_udata + U_DATA__U_ININTERRUPT)
@@ -172,7 +180,6 @@ switchinfail:
 	; something went wrong and we didn't switch in what we asked for
         jp _platform_monitor
 
-fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -198,6 +205,8 @@ _dofork:
         push hl		;	#0 child
         push ix
         push iy
+	call map_save_kmap
+	push af
 
         ; save kernel stack pointer -- when it comes back in the child we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
@@ -281,6 +290,7 @@ _dofork:
         pop bc
         pop bc
         pop bc
+	pop bc
 	; Return pid of child we forked into swap
         ret
 
@@ -291,6 +301,8 @@ ohpoo:
 
 nobufs:
 	.asciz 'nobufs'
+
+	.area _COMMONDATA
 ;
 ;	We can keep a stack in common because we will complete our
 ;	use of it before we switch common block. In this case we have
@@ -298,3 +310,5 @@ nobufs:
 ;
 	.ds 128
 _swapstack:
+
+fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry

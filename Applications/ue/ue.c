@@ -36,6 +36,7 @@ terminal is (1,1) based. display() takes care of the conversion.
 
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -113,6 +114,11 @@ void (*func[])(void) = {
 
 // generic console I/O
 
+void cleanup(void)
+{
+	tcsetattr(0, TCSANOW, &orig);
+}
+
 void
 GetSetTerm(int set)
 {
@@ -125,6 +131,7 @@ GetSetTerm(int set)
 		termios.c_cc[VMIN]  = 1;
 		termios.c_cc[VTIME] = 0;
 		termiop = &termios;
+		atexit(cleanup);
 	}
 	tcsetattr(0, TCSANOW, termiop);
 }
@@ -422,7 +429,7 @@ int main(int argc, char **argv)
 	int i;
 	char ch, *p;
 #ifdef VTSIZE
-	int16_t vtsize
+	int16_t vtsize;
 #endif
 #ifdef TIOCGWINSZ
 	struct winsize w;

@@ -49,6 +49,10 @@ static char code_for(const char *name)
 {
 	if (strcmp(name, "BOOT") == 0)
 		return '!';
+	if (strcmp(name, "BOOT0") == 0)
+		return '!';
+	if (strcmp(name, "HEADER") == 0)
+		return '!';
 	if (strcmp(name, "CODE") == 0)
 		return '0';
 	if (strcmp(name, "CODE1") == 0)
@@ -63,9 +67,13 @@ static char code_for(const char *name)
 		return '5';
 	if (strcmp(name, "CODE6") == 0)
 		return '6';
+	if (strcmp(name, "VECTORS") == 0)
+		return 'v';
 	if (strcmp(name, "VIDEO") == 0)
 		return 'V';
 	if (strcmp(name, "FONT") == 0)
+		return 'F';
+	if (strcmp(name, "FONTCOMMON") == 0)
 		return 'F';
 	if (strcmp(name, "INITIALIZED") == 0)
 		return 'I';
@@ -107,16 +115,24 @@ static char bank_for(const char *name)
 	/* Really this is very system dependant */
 	if (strcmp(name, "BOOT") == 0)
 		return 0;
+	if (strcmp(name, "BOOT0") == 0)
+		return 0;
+	if (strcmp(name, "HEADER") == 0)
+		return 0;
 	if (strcmp(name, "CODE") == 0)
 		return 0;
 	if (strcmp(name, "DATA") == 0)
 		return 0;
 	if (strncmp(name, "CODE", 4) == 0 || strncmp(name, "DATA", 4) == 0)
 		return name[4] - '0';
+	if (strcmp(name, "VECTORS") == 0)
+		return 0;
 	if (strcmp(name, "VIDEO") == 0)
 		return 3;
 	if (strcmp(name, "FONT") == 0)
 		return 3;
+	if (strcmp(name, "FONTCOMMON") == 0)
+		return 0;
 	if (strcmp(name, "INITIALIZED") == 0)
 		return 0;
 	if (strcmp(name, "HOME") == 0)

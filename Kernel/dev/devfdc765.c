@@ -17,7 +17,7 @@ static timer_t spindown_timer, recal_timer;
 static uint8_t lastdrive;
 static uint8_t trackpos[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
-int devfd_open(uint8_t minor, uint16_t flag)
+int devfd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= FDC765_MAX_FLOPPY) {
@@ -51,7 +51,7 @@ void devfd_spindown(void)
 }
 
 /* Seek to track 0. */
-static uint8_t fd_recalibrate(void)
+static uint_fast8_t fd_recalibrate(void)
 {
     /*
      *	Keep trying to recalibrate until the command succeed or a
@@ -77,19 +77,19 @@ static uint8_t fd_recalibrate(void)
 /* Set up the controller for a given block, seek, and wait for it.
    By the time we are called the motor is assumed to be at speed */
 
-static uint8_t fd_seek(uint16_t lba)
+static uint_fast8_t fd_seek(uint16_t lba)
 {
-    uint8_t i = 0;
+    uint_fast8_t i = 0;
     /* Hack for the moment until we introduce the proper floppy ioctls
        here and in the platform code */
 #ifdef CONFIG_FDC765_DS
-    uint8_t track2 = lba / 9;
-    uint8_t newtrack = track2 >> 1;
+    uint_fast8_t track2 = lba / 9;
+    uint_fast8_t newtrack = track2 >> 1;
 
     fd765_sector = (lba % 9) + 1;
     fd765_head = track2 & 1;
 #else
-    uint8_t newtrack = lba / 9;
+    uint_fast8_t newtrack = lba / 9;
     fd765_sector = (lba % 9) + 1;
     fd765_head = 0;
 #endif
@@ -123,7 +123,7 @@ static void fd_select(int minor)
     nudge_timer();
 }
 
-static int devfd_transfer(uint8_t minor, bool is_read, uint8_t is_raw)
+static int devfd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t is_raw)
 {
     int ct = 0;
     int tries;
@@ -194,13 +194,13 @@ static int devfd_transfer(uint8_t minor, bool is_read, uint8_t is_raw)
     return ct << BLKSHIFT;
 }
 
-int devfd_read(uint8_t minor, uint8_t is_raw, uint8_t flag)
+int devfd_read(uint_fast8_t minor, uint_fast8_t is_raw, uint_fast8_t flag)
 {
     flag;minor;
     return devfd_transfer(minor, true, is_raw);
 }
 
-int devfd_write(uint8_t minor, uint8_t is_raw, uint8_t flag)
+int devfd_write(uint_fast8_t minor, uint_fast8_t is_raw, uint_fast8_t flag)
 {
     flag;minor;
     return devfd_transfer(minor, false, is_raw);

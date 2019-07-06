@@ -16,7 +16,9 @@
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const uint8_t *base, usize_t size)
 {
-	if (!base || base < (const uint8_t *)PROGBASE || base + size < base ||
+	if (base + size < base)
+		size = MAXUSIZE - (usize_t)base + 1;
+	if (!base || base < (const uint8_t *)PROGBASE ||
 		base > (const uint8_t *)(size_t)udata.u_top)
 		size = 0;
 	else if (base + size > (const uint8_t *)(size_t)udata.u_top)

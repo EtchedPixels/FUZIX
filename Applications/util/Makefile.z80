@@ -19,12 +19,10 @@ SRCSNS = \
 	kill.c \
 	killall.c \
 	line.c \
-	ln.c \
 	logname.c \
 	mkdir.c \
 	mkfifo.c \
 	mknod.c \
-	mv.c \
 	pagesize.c \
 	printenv.c \
 	prtroot.c \
@@ -40,6 +38,7 @@ SRCSNS = \
 	touch.c \
 	tr.c \
 	true.c \
+	vile.c \
 	while1.c \
 	whoami.c \
 	yes.c
@@ -95,6 +94,7 @@ SRCS  = banner.c \
 	sort.c \
 	stty.c \
 	su.c \
+	swapon.c \
 	tail.c \
 	tar.c \
 	termcap.c \
@@ -106,7 +106,6 @@ SRCS  = banner.c \
 	uptime.c \
 	uud.c \
 	uue.c \
-	vile.c \
 	wc.c \
 	which.c \
 	who.c \

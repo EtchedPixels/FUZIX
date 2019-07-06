@@ -66,6 +66,7 @@ timer_irq:
 	    ;
 	    ; We might be in STOPPED state in which case do not go back
 	    ; to ready !
+	    move.l U_DATA__U_PTAB(a5),a0
 	    cmp.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
 	    bne no_ready
 	    move.b #P_READY,P_TAB__P_STATUS_OFFSET(a0)

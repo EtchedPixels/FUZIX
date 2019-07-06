@@ -16,9 +16,9 @@
 		.area _FONT
 	        .area _GSINIT
 	        .area _GSFINAL
+		.area _DISCARD
 	        .area _INITIALIZER
 	        .area _COMMONMEM
-		.area _DISCARD
 
         	; imported symbols
         	.globl _fuzix_main
@@ -36,7 +36,7 @@
 	        ; startup code
 	        .area _CODE
 ;
-;	We have 0x88 bytes before the standard UZI start point, everyone
+;	We have 0x88 bytes before the standard FUZIX start point, everyone
 ;	breathe in
 ;
 ;	Once the first loader block is called we are called via RST 0 each

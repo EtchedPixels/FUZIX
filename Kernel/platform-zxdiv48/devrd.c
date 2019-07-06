@@ -11,21 +11,25 @@
 static int rd_transfer(uint8_t is_read, uint8_t rawflag)
 {
     int ct = 0;
+    uint16_t nblock = udata.u_nblock;
+    blkno_t block = udata.u_block;
 
-    /* It's a disk but only for swapping (and rd_io isn't general purpose) */
-    if(rawflag != 2) {
-        udata.u_error = EIO;
-        return -1;
-    }
 
     rd_wr = is_read;
     rd_dptr = udata.u_dptr;
 
-    while (ct < udata.u_nblock) {
-        rd_page = (udata.u_block >> 5) + 4;	/* 0-3 are kernel */
-        rd_addr = (udata.u_block & 31) << 9;
+    /* It's a disk but only for swapping (and rd_io isn't general purpose) */
+    if(rd_dptr < (uint8_t *)0x4000 || rawflag == 1) {
+        udata.u_error = EIO;
+        return -1;
+    }
+
+    /* udata could change under us so keep variables privately */
+    while (ct < nblock) {
+        rd_page = (block >> 5);		/* 0-3 are kernel */
+        rd_addr = (block & 31) << 9;
         rd_io();        
-        udata.u_block++;
+        block++;
         rd_dptr += BLKSIZE;
         ct++;
     }

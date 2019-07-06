@@ -56,7 +56,7 @@ l1:     ini		; high bits of field in low bits of (hl)
 }
 
 
-uint8_t platform_rtc_secs(void) __naked
+uint8_fast_t platform_rtc_secs(void) __naked
 {
     __asm
         in a, (CLOCK_PORT)

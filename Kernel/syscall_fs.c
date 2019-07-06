@@ -157,20 +157,6 @@ int stcpy(inoptr ino, uint8_t *buf)
 	return err;
 }
 
-
-arg_t dup_op(int fd, int base)
-{
-	int8_t newd;
-
-	if ((newd = uf_alloc_n(base)) == -1)
-		return (-1);
-
-	udata.u_files[newd] = udata.u_files[fd];
-	++of_tab[udata.u_files[fd]].o_refs;
-
-	return (newd);
-}
-
 /*******************************************
   dup (oldd)                       Function 17
   int16_t oldd;
@@ -179,7 +165,7 @@ arg_t dup_op(int fd, int base)
 
 arg_t _dup(void)
 {
-	int8_t newd;
+	int_fast8_t newd;
 	if (getinode(oldd) == NULLINODE)
 		return (-1);
 	if ((newd = uf_alloc()) == -1)
@@ -238,7 +224,7 @@ arg_t _dup2(void)
 
 arg_t _umask(void)
 {
-	int omask;
+	unsigned int omask;
 
 	omask = udata.u_mask;
 	udata.u_mask = mask & 0777;
@@ -263,7 +249,7 @@ arg_t _ioctl(void)
 {
 	inoptr ino;
 	uint16_t dev;
-	uint8_t rclass = ((uint8_t)(request >> 8)) & 0xC0;
+	uint_fast8_t rclass = ((uint8_t)(request >> 8)) & 0xC0;
 	struct oft *oftp;
 
 	if ((ino = getinode(fd)) == NULLINODE)
@@ -316,7 +302,7 @@ int fildes[];
 
 arg_t _pipe(void)
 {
-	int8_t u1, u2, oft1, oft2;
+	int_fast8_t u1, u2, oft1, oft2;
 	regptr inoptr ino;
 
 /* bug fix SN */
@@ -415,10 +401,10 @@ uint16_t nbytes;
 #define buf (uint8_t *)udata.u_argn1
 #define nbytes (susize_t)udata.u_argn2
 
-arg_t readwrite(uint8_t reading)
+static arg_t readwrite(uint_fast8_t reading)
 {
 	inoptr ino;
-	uint8_t flag;
+	uint_fast8_t flag;
 
 	if (!nbytes)
 		return 0;

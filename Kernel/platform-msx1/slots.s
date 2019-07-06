@@ -11,57 +11,7 @@
         .globl _ramsize
         .globl _procmem
 	.globl ___hard_di
-
-;
-;	Memory banking for a 'simple' MSX 1 system. We have Fuzix in a
-;	cartridge from 0000-BFFF and RAM at C000-FFFF. For user space we
-;	map the RAM from 0000-BFFF as well.
-;
-;	Isolate the banking logic so that we can try and share code with
-;	other non MSX2 style mappers. (For an MSX2 mapper it would I think
-;	be better to teach the MSX2 code about different VDP options).
-;
-;	This is our little helper that needs to live low down. It expects
-;	interrupts to be *off*
-;
-;	Entry
-;	B = computed slot mask
-;	A = subslot mask to set
-;
-;	Return
-;	A = result of subslot set
-;
-
-	.area _LOW
-
-set_sub_slot:
-	push bc
-	push de
-	ld c,#0xA8
-	in e,(c)
-	out (c),b		; map the thing we need to set subslots for
-				; into the top 16K
-	ld (0xFFFF),a		; subslot info
-	ld a,(0xFFFF)		; report back the effect
-	cpl			; remembering it's complemented
-	out (c),e
-	pop de
-	pop bc
-	ret
-
-get_sub_slot:
-	push bc
-	push de
-	ld c,#0xA8
-	in e,(c)
-	out (c),b		; map the thing we need to set subslots for
-				; into the top 16K
-	ld a,(0xFFFF)		; report back the effect
-	cpl			; remembering it's complemented
-	out (c),e
-	pop de
-	pop bc
-	ret
+	.globl outcharhex
 
 ;
 ;	Our helpers put the top bank back before returning so the rest
@@ -83,12 +33,65 @@ get_sub_slot:
 	.globl _map_slot1_user
 	.globl find_ram
 	.globl _ramtab
+	.globl _devtab
 	.globl _kernel_map
 	.globl _user_map
 	.globl _current_map
 
 	.globl _subslots
 	.globl _int_disabled
+
+	.globl do_set_sub_slot
+	.globl do_get_sub_slot
+
+;
+;	Memory banking for a 'simple' MSX 1 system. We have Fuzix in a
+;	cartridge from 0000-BFFF and RAM at C000-FFFF. For user space we
+;	map the RAM from 0000-BFFF as well.
+;
+;	Isolate the banking logic so that we can try and share code with
+;	other non MSX2 style mappers. (For an MSX2 mapper it would I think
+;	be better to teach the MSX2 code about different VDP options).
+;
+;	Call our little helper who lives low down. It expects interrupts to be
+;	*off*. The stack will be in the top 16K so care is neeed.
+;
+;	Entry
+;	B = computed slot mask
+;	A = subslot mask to set
+;
+;	Return
+;	A = result of subslot set
+;
+;
+
+set_sub_slot:
+	push bc
+	push de
+	push hl
+	ld c,#0xA8
+	ld hl,#0xffff
+	call do_set_sub_slot
+	cpl
+	pop hl
+	pop de
+	pop bc
+	ret
+
+get_sub_slot:
+	push bc
+	push de
+	push hl
+	ld c,#0xA8
+	ld hl,#0xffff
+	call do_get_sub_slot
+	cpl
+	pop hl
+	pop de
+	pop bc
+	ret
+
+
 
 ;
 ;	Switch to the map pointed to by HL.
@@ -119,7 +122,7 @@ _switch_map:
 	push bc
 	push de
 	ld a,#'['
-	out (0x2F),a
+;	out (0x2F),a
 	in a,(0xA8)
 	and #0x3F			;	Keep the lower selections
 	ld b,a				;	the same
@@ -134,9 +137,9 @@ subslot_next:
 	cp (hl)
 	jr z, subslot_done		;	same subslots
 	ld a,b
-	call phex
+;	call outcharhex
 	ld a,(hl)
-	call phex
+;	call outcharhex
 	; Do set
 	call set_sub_slot
 	ld (de),a			;	update map
@@ -157,7 +160,7 @@ subslot_done:
 	ld (de),a
 	out (0xA8),a
 	ld a,#']'
-	out (0x2F),a
+;	out (0x2F),a
 	pop de
 	pop bc
 	pop af
@@ -287,12 +290,9 @@ map_save_kernel:
 	pop bc
 	pop de
 	pop hl
-	call map_kernel_di		; FIXME: fast path this later
+        call map_kernel_di		; FIXME: fast path this later
 	ret
 
-; This is messy because of the NMOS Z80 IRQ bug. It might be worth
-; revisiting all the logic that uses this and just keeping a software flag
-; instead.
 ;
 ; The expensive bank switching also means we need to write some custom
 ; usermem copiers.
@@ -303,6 +303,7 @@ map_save_kernel:
 map_kernel:
 	push af
 	push hl
+	di
 	ld a,(_int_disabled)
 	push af
 	xor a
@@ -327,16 +328,19 @@ was_di:
 
 map_kernel_di:
 	push af
+	push hl
 	xor a
 	ld (map_id),a
 	; We are possibly coming from a user bank. We need to jam the
 	; kernel low mapping back. FIXME: if the kernel cartridge and
 	; RAM are in the same subslot this will break. Need to put the flip
 	; code in the low 256 bytes of both.
+	; (DONE OK now I think)
 	ld a,(_kernel_map+5)
 	out (0xA8),a
 	ld hl,#_kernel_map
 	call _switch_map
+	pop hl
 	pop af
 	ret
 
@@ -349,6 +353,7 @@ map_process:
 map_process_always:
 	push af
 	push hl
+	di
 	ld a,(_int_disabled)
 	push af
 	ld a,#1
@@ -358,10 +363,12 @@ map_process_always:
 
 map_process_always_di:
 	push af
+	push hl
 	ld a,#1
 	ld (map_id),a
 	ld hl,#_user_map
 	call _switch_map
+	pop hl
 	pop af
 	ret
 
@@ -391,13 +398,13 @@ map_slot_1:
 	ld a,l
 	; First step: Update the slot register in the map
 	and #0x03			; slot
-	rlca
-	rlca
+	rla
+	rla
 	ld e,a
-	ld a, (_scratch_map + 4)	; slot register
+	ld a, (_scratch_map + 5)	; slot register
 	and #0xF3
 	or e
-	ld (_scratch_map + 4),a		; slot register with us in bank 1
+	ld (_scratch_map + 5),a		; slot register with us in bank 1
 	ld e,a				; Save it in E
 	ld a,l
 	bit 7,a
@@ -435,6 +442,7 @@ no_subslot_map:
 ;
 find_ram:
 	ld ix,#0xFCC1
+	ld iy,#_devtab		; device scan table
 	ld b,#4
 	ld e,#0
 next_slot:
@@ -482,6 +490,17 @@ next_slot:
 	;
 	;
 sub_scan:
+	;
+	;	FIXME: We can't map the low 48K to get our subslots the way
+	;	we do now because we are running at C000-FFFF. If we map a
+	;	different 0x0000-0x3FFF we can't get back because we no
+	;	longer have low stubs for our return.
+	;
+	;	We need to fix this to use high stubs to map the low 16K
+	;	scan that, and then use low stubs to map the middle 32K
+	;	(high stubs don't work as we have to swap the top 16K to
+	;	deal with the brain dead mapping scheme)
+	;
 	ld l,a			; Remember our A8 bits
 	push de			; Save slot number (E)
 
@@ -531,7 +550,7 @@ next_sub:
 	djnz next_sub
 
 	;
-	;	Restore the saved subslot
+	;	Restore the saved subslot.
 	;
 	pop af
 	ld b,c
@@ -540,8 +559,13 @@ next_sub:
 	; Recover our slot count
 	;
 	pop de
+	jr sub_done
 
 not_sub:
+	ld bc,#18		; move on correct table distance (3 x 6
+				; bytes) as no subslots
+	add iy,bc
+sub_done:
 	;
 	;	Recover the old slot map state
 	;
@@ -593,7 +617,33 @@ romcheck:
 ;	A device ROM. Potentially interesting. Need to add code to checksum
 ;	or otherwise identify them later
 ;
-	;FIXME
+	push de
+	push bc
+	xor a
+	ld l,a			; back to ROM start
+
+	ld d,a			; count
+	ld e,a
+	ld b,a			; 256 bytes
+	ld c,#8			; 2K
+
+nextrombyte:
+	ld a,(hl)
+	inc hl
+	add e
+	ld e,a
+	jr nc,noinc
+	inc d
+noinc:
+	djnz nextrombyte
+	dec c
+	jr nz,nextrombyte
+
+	set 7,d			; ROM present flag
+	ld (iy),e		; 15 bit sum
+	ld 1(iy),d
+	pop bc
+	pop de
 	jr notram
 
 writecheckd:
@@ -618,11 +668,13 @@ writecheck:
 	inc bc
 	ld a,d
 	ld (bc),a
-	inc bc
-	ret
+	jr incout
 notram:
 	inc bc
+incout:
 	inc bc
+	inc iy
+	inc iy
 	ret
 ;
 ;	Scan a slot/subslot for RAM
@@ -640,28 +692,142 @@ testram:
 _ramtab:
 	.ds 6
 
-dophex:		ld c,a
-		and #0xf0
-		rrca
-		rrca
-		rrca
-		rrca
-		call pdigit
-		ld a,c
-		and #0x0f
-pdigit:		cp #10
-		jr c,isl
-		add #7
-isl:		add #'0'
-		out (0x2F),a
-		ret
+;
+;	Because the slot changing is so slow and we do bouncing the need
+;	for custom copiers is essential. We carefully lay out things so that
+;	nothing we need to copy is below the common boundary line.
+;
 
-phex:
-		push af
-		push bc
-		call dophex
-		ld a,#' '
-		out (0x2f),a
-		pop bc
-		pop af
-		ret
+        ; exported symbols
+        .globl __uget
+        .globl __ugetc
+        .globl __ugetw
+
+	.globl outcharhex
+	.globl outhl
+
+        .globl __uput
+        .globl __uputc
+        .globl __uputw
+        .globl __uzero
+
+	.globl  map_process_always
+	.globl  map_kernel
+;
+;	We need these in common as they bank switch
+;
+        .area _COMMONMEM
+
+;
+;	The basic operations are copied from the standard one. Only the
+;	blk transfers are different. uputget is a bit different as we are
+;	not doing 8bit loop pairs.
+;
+uputget:
+        ; load DE with the byte count
+        ld c, 8(ix) ; byte count
+        ld b, 9(ix)
+	ld a, b
+	or c
+	ret z		; no work
+        ; load HL with the source address
+        ld l, 4(ix) ; src address
+        ld h, 5(ix)
+        ; load DE with destination address (in userspace)
+        ld e, 6(ix)
+        ld d, 7(ix)
+	ret	; 	Z is still false
+
+__uputc:
+	pop bc	;	return
+	pop de	;	char
+	pop hl	;	dest
+	push hl
+	push de
+	push bc
+	call map_process_always
+	ld (hl), e
+uputc_out:
+	jp map_kernel			; map the kernel back below common
+
+__uputw:
+	pop bc	;	return
+	pop de	;	word
+	pop hl	;	dest
+	push hl
+	push de
+	push bc
+	call map_process_always
+	ld (hl), e
+	inc hl
+	ld (hl), d
+	jp map_kernel
+
+__ugetc:
+	pop bc	; return
+	pop hl	; address
+	push hl
+	push bc
+	call map_process_always
+        ld l, (hl)
+	ld h, #0
+	jp map_kernel
+
+__ugetw:
+	pop bc	; return
+	pop hl	; address
+	push hl
+	push bc
+	call map_process_always
+        ld a, (hl)
+	inc hl
+	ld h, (hl)
+	ld l, a
+	jp map_kernel
+
+__uput:
+	push ix
+	ld ix, #0
+	add ix, sp
+	call uputget			; source in HL dest in DE, count in BC
+	jr z, uput_out			; but count is at this point magic
+	call map_process_always
+	ldir
+uput_out:
+	call map_kernel
+	pop ix
+	ld hl, #0
+	ret
+
+__uget:
+	push ix
+	ld ix, #0
+	add ix, sp
+	call uputget			; source in HL dest in DE, count in BC
+	jr z, uput_out			; but count is at this point magic
+	call map_process_always
+	ldir
+	jr uput_out
+
+;
+__uzero:
+	pop de	; return
+	pop hl	; address
+	pop bc	; size
+	push bc
+	push hl
+	push de
+	ld a, b	; check for 0 copy
+	or c
+	ret z
+	call map_process_always
+	ld (hl), #0
+	dec bc
+	ld a, b
+	or c
+	jp z, uputc_out
+	ld e, l
+	ld d, h
+	inc de
+	ldir
+	jp uputc_out

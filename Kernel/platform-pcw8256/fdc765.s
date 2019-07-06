@@ -4,7 +4,7 @@
 		.module fdc765
 
 		.include "kernel.def"
-		.include "../kernel.def"
+		.include "../kernel-z80.def"
 
 		.globl	_fd765_read_sector
 		.globl	_fd765_write_sector

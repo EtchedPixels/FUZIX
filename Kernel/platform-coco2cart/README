@@ -63,6 +63,8 @@ actually be doable if not doing drivewire.
 See if given an extra loader a 64K machine with Tormod's 32K RAM cart would
 work.
 
+Switch the 6809 single process in memory code to parent first for speed.
+
 To Test
 =======
 

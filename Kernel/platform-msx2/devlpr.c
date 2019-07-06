@@ -6,50 +6,54 @@
 __sfr __at 0x90 lpstat;
 __sfr __at 0x91 lpdata;
 
-int lpr_open(uint8_t minor, uint16_t flag)
+int lpr_open(uint_fast8_t minor, uint16_t flag)
 {
 	minor;
 	flag;			// shut up compiler
 	return 0;
 }
 
-int lpr_close(uint8_t minor)
+int lpr_close(uint_fast8_t minor)
 {
 	minor;			// shut up compiler
 	return 0;
 }
 
-int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+static uint8_t iopoll(void)
 {
-	int c = udata.u_count;
+	/* Ought to be a core helper for this lot ? */
+	if (need_reschedule())
+		_sched_yield();
+	if (chksigs()) {
+		if (!udata.u_done) {
+			udata.u_error = EINTR;
+			udata.u_done = (usize_t)-1;
+                }
+                return 1;
+	}
+	return 0;
+}
+
+int lpr_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
+{
 	char *p = udata.u_base;
-	uint16_t ct;
 
 	minor;
 	rawflag;
 	flag;			// shut up compiler
 
-	while (c-- > 0) {
-		ct = 0;
-
+	while (udata.u_done < udata.u_count) {
 		/* Try and balance polling and sleeping */
 		while (lpstat & 2) {
-			ct++;
-			if (ct == 10000) {
-				udata.u_ptab->p_timeout = 3;
-				if (psleep_flags(NULL, flag)) {
-					if (udata.u_count)
-						udata.u_error = 0;
-					return udata.u_count;
-				}
-				ct = 0;
-			}
+			if (iopoll())
+				return udata.u_done;
 		}
 		/* Data */
 		lpdata = ugetc(p++);
 		/* Strobe */
 		lpstat |= 1;
 		lpstat &= ~1;
+		udata.u_done++;
 	}
-	return udata.u_count;
+	return udata.u_done;
 }

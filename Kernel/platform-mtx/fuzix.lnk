@@ -8,6 +8,7 @@ platform-mtx/crt0.rel
 platform-mtx/commonmem.rel
 platform-mtx/mtx.rel
 platform-mtx/main.rel
+platform-mtx/discard.rel
 start.rel
 version.rel
 lowlevel-z80.rel
@@ -38,6 +39,18 @@ mm.rel
 bankfixed.rel
 swap.rel
 devsys.rel
+devinput.rel
 platform-mtx/devlpr.rel
 platform-mtx/devtty.rel
+platform-mtx/blkdev.rel
+platform-mtx/mbr.rel
+platform-mtx/devide.rel
+platform-mtx/devide_discard.rel
+platform-mtx/ppide_rbc.rel
+platform-mtx/ide.rel
+platform-mtx/devsd.rel
+platform-mtx/devsd_discard.rel
+platform-mtx/sdspi.rel
+platform-mtx/devinput.rel
+platform-mtx/devrtc.rel
 -e

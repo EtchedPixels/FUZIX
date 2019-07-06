@@ -71,7 +71,7 @@ This port supports the following configurations currently
 		Extra keys (F1 and F2)
 		LNW80 Graphics Modes (once emulator support is done)
 
-	Upsupported:
+	Unsupported:
 		LNW80 II
 		Low 16K in the base unit. This would be good to support
 		but becomes almost a different port as we could unbank

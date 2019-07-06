@@ -5,6 +5,10 @@
 #include <devtty.h>
 #include <vt.h>
 #include <tty.h>
+#include <graphics.h>
+#include <input.h>
+#include <devinput.h>
+#include <mtx.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -16,11 +20,18 @@ __sfr __at 0x0F serialBc;
 __sfr __at 0x09 ctc1;
 __sfr __at 0x0A ctc2;
 
+__sfr __at 0x60 prop_io;
+__sfr __at 0x61 prop_rb;
+
 signed char vt_twidth[2] = { 80, 40 };
 signed char vt_tright[2] = { 79, 39 };
-uint8_t curtty;		/* output side */
-uint8_t inputtty;	/* input side */
+
+uint8_t curtty = 1;		/* output side */
+uint8_t inputtty;		/* input side */
 static struct vt_switch ttysave[2];
+
+uint8_t prop80;			/* Propeller not a 6845 based 80 column interface */
+uint8_t has_6845;
 
 /* FIXME: this will eventually vary by tty so we'll need to either load
    it then call the vt ioctl or just intercept the vt ioctl */
@@ -29,10 +40,10 @@ uint8_t vtattr_cap;
 struct vt_repeat keyrepeat;
 static uint8_t kbd_timer;
 
-static char tbuf1[TTYSIZ];
-static char tbuf2[TTYSIZ];
-static char tbuf3[TTYSIZ];
-static char tbuf4[TTYSIZ];
+static uint8_t tbuf1[TTYSIZ];
+static uint8_t tbuf2[TTYSIZ];
+static uint8_t tbuf3[TTYSIZ];
+static uint8_t tbuf4[TTYSIZ];
 
 static uint8_t sleeping;
 
@@ -52,7 +63,7 @@ static tcflag_t dart_mask[4] = {
 	_ISYS,
 	_OSYS,
 	/* FIXME CTS/RTS, CSTOPB */
-	CSIZE|CBAUD|PARENB|PARODD|_CSYS,
+	CSIZE | CBAUD | PARENB | PARODD | _CSYS,
 	_LSYS,
 };
 
@@ -72,19 +83,21 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 };
 
 
-/* tty1 is the screen tty2 is vdp screen */
+/* tty1 is the 80 column screen tty2 is vdp screen */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	uint8_t reg = 0xFF;
+	if (minor == 1 && prop80)
+		return prop_io == 255 ? TTY_READY_SOON : TTY_READY_NOW;
 	if (minor == 3)
 		reg = serialAc;
 	if (minor == 4)
@@ -92,21 +105,33 @@ ttyready_t tty_writeready(uint8_t minor)
 	return (reg & 4) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	irqflags_t irq;
 
+	/* The first tty might be a real 6845 80 column card but it might be
+	   a propellor based one which has its own brains and video control */
+	if (minor == 1 && prop80) {
+		prop_io = c;
+		return;
+	}
+
 	if (minor < 3) {
-		/* FIXME: this makes our vt handling messy as we have the
-		   IRQ off for the character I/O */
-		irq = di();
-		if (curtty != minor - 1) {
-			vt_save(&ttysave[curtty]);
-			curtty = minor - 1;
-			vt_load(&ttysave[curtty]);
-		}
-		vtoutput(&c, 1);
-		irqrestore(irq);
+		/* If we have no 80 column card force everything to go via
+		   the VDP. We should later do multiple VDP consoles */
+		if (prop80 || has_6845) {
+			/* FIXME: this makes our vt handling messy as we have the
+			   IRQ off for the character I/O */
+			irq = di();
+			if (curtty != minor - 1) {
+				vt_save(&ttysave[curtty]);
+				curtty = minor - 1;
+				vt_load(&ttysave[curtty]);
+			}
+			vtoutput(&c, 1);
+			irqrestore(irq);
+		} else
+			vtoutput(&c, 1);
 		return;
 	}
 	if (minor == 3)
@@ -115,7 +140,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 		serialBd = c;
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	uint8_t reg = 0xFF;
 	if (minor == 3)
@@ -125,19 +150,20 @@ int tty_carrier(uint8_t minor)
 	return (reg & 8) ? 1 : 0;
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	sleeping |= (1 << minor);
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
+	used(minor);
 	/* FIXME:we can now implement flow control stuff */
 }
 
 static uint8_t dart_setup[] = {
 	1, 0x19,
-	2, 0x04,	/* Vector */
+	2, 0x04,		/* Vector */
 	3, 0x00,
 	4, 0x00,
 	5, 0x00,
@@ -154,7 +180,7 @@ static uint8_t dartbits[] = {
 };
 
 /* FIXME: Can we do CSTOPB - need to look into that */
-void tty_setup(uint8_t minor, uint8_t flagbits)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 {
 	irqflags_t flags;
 	int i;
@@ -163,8 +189,10 @@ void tty_setup(uint8_t minor, uint8_t flagbits)
 	uint16_t cf = t->termios.c_cflag;
 	uint8_t r;
 
+	used(flagbits);
+
 	/* Console */
-	if (minor < 2)
+	if (minor <= 2)
 		return;
 
 	if ((cf & CBAUD) < B150) {
@@ -182,7 +210,7 @@ void tty_setup(uint8_t minor, uint8_t flagbits)
 	if (cf & PARENB) {
 		r |= 1;
 		if (!(cf & PARODD))
-			r|=2;
+			r |= 2;
 	}
 	dart_setup[7] = r;
 	dart_setup[7] = r;
@@ -204,7 +232,8 @@ void tty_setup(uint8_t minor, uint8_t flagbits)
 	irqrestore(flags);
 }
 
-int mtxtty_close(uint8_t minor)
+/* Drop DTR/RTS on port close */
+int mtxtty_close(uint_fast8_t minor)
 {
 	irqflags_t flags;
 	int err = tty_close(minor);
@@ -225,14 +254,27 @@ int mtxtty_close(uint8_t minor)
 	return err;
 }
 
+/* Stop the user opening the second console if they have no 80 column card.
+   Eventually we will support multiple VDP consoles on a 16K VDP but not
+   yet */
+int mtxtty_open(uint_fast8_t minor, uint16_t flag)
+{
+	if (minor == 2 && !prop80 && !has_6845) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	return tty_open(minor, flag);
+}
+
 uint16_t keymap[8];
 static uint16_t keyin[8];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 static uint16_t shiftmask[8] = {
-	0, 0, 1, 0, 1, 0, 65 , 0
+	0, 0, 1, 0, 1, 0, 65, 0
 };
+
 __sfr __at 0x05 keyport;
 __sfr __at 0x06 keyporth;
 
@@ -245,15 +287,20 @@ static void keyproc(void)
 		/* Set the row */
 		keyport = 0xff - (1 << i);
 		/* Read the matrix lines - 10 bit wide */
-		keyin[i] = (keyport | ((uint16_t)keyporth << 8)) ^ 0x03ff;
+		keyin[i] = (keyport | ((uint16_t) keyporth << 8)) ^ 0x03ff;
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
 			int m = 1;
 			for (n = 0; n < 10; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
+						if (keyboard_grab == 3) {
+							queue_input(KEYPRESS_UP);
+							queue_input(keyboard[i][n]);
+						}
 						keysdown--;
+					}
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -271,26 +318,27 @@ static void keyproc(void)
 	}
 }
 
+/* TODO: non UK keyboards as identified by bits 12-11 of scan */
 uint8_t keyboard[8][10] = {
-	{'1', '3', '5', '7', '9' , '-', '\\', KEY_PAUSE, CTRL('C'), KEY_F1},
-	{ KEY_ESC, '2', '4', '6', '8', '0', '^', 0/*eol*/, KEY_BS, KEY_F5},
-	{ 0/*ctrl*/, 'w', 'r', 'y', 'i', 'p', '[', KEY_UP, KEY_TAB, KEY_F2 },
-	{'q', 'e', 't' , 'u', 'o', '@', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
-	{ 0/*capsl*/, 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, 0, KEY_F7 },
-	{ 'a', 'd', 'g', 'j', 'l', ':', CTRL('M'), KEY_HOME, 0, KEY_F3 },
-	{ 0/*shift*/, 'x', 'v', 'n', ',', '/', 0/*shift*/, KEY_DOWN, 0, KEY_F8},
-	{'z', 'c', 'b', 'm', '.', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4 }
+	{'1', '3', '5', '7', '9', '-', '\\', KEY_PAUSE, CTRL('C'), KEY_F1},
+	{KEY_ESC, '2', '4', '6', '8', '0', '^', 0 /*eol */ , KEY_BS, KEY_F5},
+	{0 /*ctrl */ , 'w', 'r', 'y', 'i', 'p', '[', KEY_UP, KEY_TAB, KEY_F2},
+	{'q', 'e', 't', 'u', 'o', '@', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6},
+	{0 /*capsl */ , 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, 0, KEY_F7},
+	{'a', 'd', 'g', 'j', 'l', ':', CTRL('M'), KEY_HOME, 0, KEY_F3},
+	{0 /*shift */ , 'x', 'v', 'n', ',', '/', 0 /*shift */ , KEY_DOWN, 0, KEY_F8},
+	{'z', 'c', 'b', 'm', '.', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4}
 };
 
 uint8_t shiftkeyboard[8][10] = {
-	{'!', '#', '%', '\'', ')' , '=', '|', KEY_PAUSE, CTRL('C'), KEY_F1},
-	{ KEY_ESC, '"', '$', '&', '(', 0, '~', 0/*eol*/, KEY_BS, KEY_F5},
-	{ 0/*ctrl*/, 'W', 'R', 'Y', 'I', 'P', '{', KEY_UP, KEY_TAB, KEY_F2 },
-	{'Q', 'E', 'T' , 'U', 'O', '`', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6 },
-	{ 0/*capsl*/, 'S', 'F', 'H', 'K', '+', '}', KEY_RIGHT, 0, KEY_F7 },
-	{ 'A', 'D', 'G', 'J', 'L', '*', CTRL('M'), KEY_HOME, 0, KEY_F3 },
-	{ 0/*shift*/, 'X', 'V', 'N', '<', '/', 0/*shift*/, KEY_DOWN ,0 , KEY_F8},
-	{'Z', 'C', 'B', 'M', '>', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4 }
+	{'!', '#', '%', '\'', ')', '=', '|', KEY_PAUSE, CTRL('C'), KEY_F1},
+	{KEY_ESC, '"', '$', '&', '(', 0, '~', 0 /*eol */ , KEY_BS, KEY_F5},
+	{0 /*ctrl */ , 'W', 'R', 'Y', 'I', 'P', '{', KEY_UP, KEY_TAB, KEY_F2},
+	{'Q', 'E', 'T', 'U', 'O', '`', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6},
+	{0 /*capsl */ , 'S', 'F', 'H', 'K', '+', '}', KEY_RIGHT, 0, KEY_F7},
+	{'A', 'D', 'G', 'J', 'L', '*', CTRL('M'), KEY_HOME, 0, KEY_F3},
+	{0 /*shift */ , 'X', 'V', 'N', '<', '/', 0 /*shift */ , KEY_DOWN, 0, KEY_F8},
+	{'Z', 'C', 'B', 'M', '>', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4}
 };
 
 static uint8_t capslock = 0;
@@ -298,6 +346,7 @@ static uint8_t capslock = 0;
 static void keydecode(void)
 {
 	uint8_t c;
+	uint8_t m = 0;
 
 	if (keybyte == 4 && keybit == 0) {
 		capslock = 1 - capslock;
@@ -306,6 +355,7 @@ static void keydecode(void)
 
 	if (keymap[6] & 65) {	/* shift */
 		c = shiftkeyboard[keybyte][keybit];
+		m = KEYPRESS_SHIFT;
 		if (c == KEY_F1 || c == KEY_F2) {
 			if (inputtty != c - KEY_F1) {
 				inputtty = c - KEY_F1;
@@ -318,13 +368,35 @@ static void keydecode(void)
 
 
 	if (keymap[2] & 1) {	/* control */
+		m |= KEYPRESS_CTRL;
 		if (c > 31 && c < 127)
 			c &= 31;
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-	if (c)
-		tty_inproc(inputtty + 1, c);
+	if (c) {
+		switch (keyboard_grab) {
+		case 0:
+			vt_inproc(inputtty + 1, c);
+			break;
+		case 1:
+			if (!input_match_meta(c)) {
+				vt_inproc(inputtty + 1, c);
+				break;
+			}
+			/* Fall through */
+		case 2:
+			queue_input(KEYPRESS_DOWN);
+			queue_input(c);
+			break;
+		case 3:
+			/* Queue an event giving the base key (unshifted)
+			   and the state of shift/ctrl/alt */
+			queue_input(KEYPRESS_DOWN | m);
+			queue_input(keyboard[keybyte][keybit]);
+			break;
+		}
+	}
 }
 
 void kbd_interrupt(void)
@@ -335,7 +407,7 @@ void kbd_interrupt(void)
 		if (newkey) {
 			keydecode();
 			kbd_timer = keyrepeat.first;
-		} else if (! --kbd_timer) {
+		} else if (!--kbd_timer) {
 			keydecode();
 			kbd_timer = keyrepeat.continual;
 		}
@@ -378,5 +450,157 @@ void tty_interrupt(void)
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
 
-/* FIXME: need to wrap vt_ioctl so we switch to the right tty before asking
+/* Need to wrap vt_ioctl so we switch to the right tty before asking
    the size! */
+
+static struct videomap vdpmap = {
+	0,
+	0x01,			/* I/O ports at 1 and 2 */
+	0, 0,
+	0, 0,
+	1,
+	MAP_PIO
+};
+
+static struct display mtxmodes[3] = {
+	{
+		0,
+		160, 96,
+		80, 24,
+		255, 255,
+		FMT_8PIXEL_MTX,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MULTIMODE,
+		1,
+		0
+	},
+	{
+		1,
+		160, 192,
+		80, 48,
+		255, 255,
+		FMT_8PIXEL_MTX,
+		HW_UNACCEL,
+		GFX_TEXT|GFX_MULTIMODE,
+		1,
+		0
+	},
+		/* VDP: we need to think harder about how we deal with VDP mode
+		   setting here and in MSX TODO */
+	{
+		1,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE | GFX_MAPPABLE | GFX_TEXT,
+		16,
+		0
+	},
+};
+
+static uint8_t vmode[3] = {
+	0, /* Unused */
+	0, /* 80x24 text */
+	2, /* VDP */
+};
+
+__sfr __at 0x38 crtc_reg;
+__sfr __at 0x39 crtc_data;
+
+/*
+ *	TODO: VDP font setting and UDG. Also the same is needed for the prop80
+ *	with it's 20x8 programmable characters in weird format.
+ */
+int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
+{
+	uint8_t dev = minor;
+	if (minor > 2)
+		return tty_ioctl(minor, request, data);
+
+	/* If we are 40 column only then our graphics properties change */
+	if (!prop80 && !has_6845)
+		dev = 2;
+
+	if (request == GFXIOC_GETINFO)
+		return uput(&mtxmodes[vmode[minor]], data, sizeof(struct display));
+	if (request == GFXIOC_MAP && dev == 2)
+		return uput(&vdpmap, data, sizeof(struct videomap));
+	if (request == GFXIOC_UNMAP)
+		return 0;
+	if (request == GFXIOC_GETMODE || request == GFXIOC_SETMODE)
+	{
+		uint8_t m = ugetc(data);
+		if (m > 1 || dev > 1 || (m == 1 && !has_rememo)) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (request == GFXIOC_GETMODE)
+			return uput(&mtxmodes[m], data, sizeof(struct display));
+		else {
+			irqflags_t irq;
+			irq = di();
+			/* Set CRT register 31 */
+			crtc_reg = 31;
+			crtc_data = m;
+			irqrestore(irq);
+		}
+		return 0;
+	}
+	if (request == VTSIZE) {
+		if (dev == 1) {
+			if (vmode[1] == 0)
+				return (24 << 8) | 80;
+			return (48 << 8) | 80;
+		}
+		if (dev == 2)
+			return (24 << 8) | 40;
+	}
+	return vt_ioctl(minor, request, data);
+}
+
+__sfr __at 0x30 bingbong;
+
+void do_beep(void)
+{
+	volatile uint8_t unused;
+	if (has_6845)
+		unused = bingbong;
+}
+
+/*
+ *	See if our 80 column card is a propellor board or a 6845 based board
+ *
+ *	Must be called very early so we drive the right screen!
+ */
+static int prop_wait(void)
+{
+	uint16_t i;
+	for (i = 0; i < 8192; i++) {
+		if (prop_io == 0)
+			return 0;
+	}
+	return 1;
+}
+
+int probe_prop(void)
+{
+	if (prop_wait())
+		return 0;
+#if 0
+	prop_io = 0x1B;
+	prop_io = 0x9C;
+	prop_rb = 0xB4;
+	if (prop_wait() || prop_rb)
+		return 0;
+	prop_io = 0x1B;
+	prop_io = 0x9E;
+	prop_rb = 0xB4;
+	if (prop_wait() || prop_rb != 2)
+		return 0;
+#endif
+	prop80 = 1;
+	curtty = 0;
+	return 1;
+}

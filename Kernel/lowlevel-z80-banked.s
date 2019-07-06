@@ -62,6 +62,7 @@
 	.globl istack_top
 	.globl _ssig
 	.globl _udata
+	.globl _doexit
 
         .include "platform/kernel.def"
         .include "kernel-z80.def"
@@ -398,16 +399,9 @@ interrupt_handler:
 	; Get onto the IRQ stack
 	ld (istack_switched_sp), sp
 	ld sp, #istack_top
-.ifeq PROGBASE
-	ld a, (0)
-.endif
 
 	call map_save_kernel
 
-.ifeq PROGBASE
-	cp #0xC3
-	call nz, null_pointer_trap
-.endif
 	; So the kernel can check rapidly for interrupt status
 	; FIXME: move to the C code
 	ld a, #1
@@ -453,6 +447,12 @@ intret:
 	or a
 	jr nz, interrupt_pop
 
+.ifeq PROGBASE
+	ld a, (0)
+	cp #0xC3
+	jp nz, null_pointer_trap
+.endif
+
 	; Loop through any pending signals. These could longjmp out
 	; of the handler so ensure everything is fixed before this !
 
@@ -480,22 +480,19 @@ interrupt_pop:
 	ret			; runs in the ei interrupt shadow
 
 ;
-;	Called with the kernel mapped, mid interrupt and on the IRQ stack
+;	At the point we fire we are back on the user stack and logically
+;	speaking have just finished the interrupt. If the low byte was
+;	corrupt we assume the worst and just blow the process away
 ;
 null_pointer_trap:
 	ld a, #0xC3
 	ld (0), a
-	ld hl, #11		; SIGSEGV
-trap_signal:
+	ld hl, #9		; SIGSEGV
 	push hl
-	ld hl, (_udata + U_DATA__U_PTAB);
-        push hl
 	push af
-        call _ssig
+	call _doexit
 	pop af
-        pop hl
-        pop hl
-	ret
+	jp _platform_monitor
 
 ;
 ;	Pre-emption. We need to get off the interrupt stack, switch task

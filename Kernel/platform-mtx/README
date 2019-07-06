@@ -1,13 +1,35 @@
+TODO
+DONE	- Fix the configuration for maximum memory banks
+DONE	- Autodetect the propeller MTX 80 column card on 0x60/61
+IP	- Driver for the propellor 80 column card
+DONE	- Probe what memory banks are present up to the full 640K that might be present
+DONE	- Support for the retro adapters (CF2+ etc)
+IP	   - need to auto handle CF1 v CF2
+- Autodetect silicon ramdisk
+DONE	- Figure out the DPB and how to get images onto the CF for ROM CP/M to run
+- Floppy features support
+DONE	- Get more stuff into discard
+DONE	- Dynamic buffer assignment
+DONE	- Support swap via CF adapter
+IP - Add hooks for uadmin to support swapon() so we can handle silicon disk nicely
+DONE	- Report graphics capabilities according to card (inc octel modes on
+	  80 col)
+- UDG support on both VDP and Prop
+- Use prop as a slave to vt layer because of awkward prop ctrl codes
+DONE	- keyboard etc devinput support
+- How to expose effectively having 512 chars (same problem as ubee)
+DONE	- How to detect a rememorizer ?
+
+
 The following MTX512 features are supported
-- 6845 based colour text display attributes yet) as /dev/tty1
-- VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) with
-  interrupts fed into CTC#0 as /dev/tty2. TTY usage is supported.
-- Keyboard including F1/F2 to switch tty
+- 6845 based colour text display (no attributes yet) as /dev/tty1
+  (or propellor based 80 column support).
+- VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) as
+  /dev/tty2. TTY usage is supported.
+- Keyboard including shift-F1/F2 to switch tty
 - SDX WD1791 style floppy controller at 0x10
 - Silicon discs. These are mapped as device 8 not as /dev/hd because their
-  contents (on real ones) vanish if you power off. The default build will
-  blindly use the first silicon disc as swap. Alter config.h to build
-  without swap.
+  contents (on real ones) vanish if you power off.
 - CTC timers
 - Z80 DART RS232
 - Printer
@@ -16,8 +38,15 @@ The following are not yet supported
 - Colour/attributes on the displays (graphics ioctls)
 - FDX SASI DMA controller
 - SN76489A sound
+IP - Rememorizer double height mode
+- MTXplus VDP9958
+- MTXplus DS12887
 
-The Rememorizer and Rememotech are not supported. Adding support for them
+Bugs:
+Autorepeat
+
+
+The Rememorizer and Rememotech are not fully supported. Adding support for them
 should not be difficult.
 
 
@@ -43,12 +72,12 @@ On the MEMU emulator you can do a fast load for testing as follows
 
 ./fullcpm.sh -iobyte 0x80 -addr 0x0100 -mem platform/fuzix.com -addr 0x0100
 -serial2-out /dev/tty -diag-console -sdx-mfloppy mfloppy/ref.fs -sdx-tracks
--80
+-80 --diag-bad-port
 
 (and add -diag-whatever as needed)
 
 This flips the box into pure RAM mode, loads the image at 0x100 and runs it
-fro there with the root floppy as mfloppy/ref.fs which needs to be a
+from there with the root floppy as mfloppy/ref.fs which needs to be a
 suitable image. I'm currently using an 80 track image, but 40 will work
 fine (40 in 80 won't yet). It's quicker than booting CP/M and loading
 the image.
@@ -62,3 +91,7 @@ Standalone/filesystem-src and do
 A 40 track image will need to be hand built with a few of the less useful
 utilities removed.
 
+
+A CF image can be built the normal way with the cfloader.bin on the first
+block and the kernel following. It will then honour normal partition table
+rules.

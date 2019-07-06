@@ -62,7 +62,7 @@ replace restart {
 	ld	(%2),a
 	inc	%2
 	; AC matching halves indirect store cleanup
-} if notVolatile(%1)
+} if notVolatile(%1), operandsNotRelated(%1 %2)
 
 //
 //	Should add rules for ix/iy switches with 0 or 1 base!!

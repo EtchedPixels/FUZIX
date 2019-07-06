@@ -18,3 +18,5 @@ TICKSPERSEC                 .equ 40           ; timer interrupt rate (Hz)
 
 PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
+
+CONFIG_SWAP		    .equ 0

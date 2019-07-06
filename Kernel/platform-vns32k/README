@@ -1,0 +1,37 @@
+Initial bootstrapping work for NS32K
+
+A simple NS32K development test platform
+
+RAM in the low 512K		00000-7FFFF
+UART				FFF00
+Timer				FFF40
+IDE disk controller		FFF80
+
+No MMU, no vectored interrupt controller
+
+Status
+- A basic image compiles
+- The C library compiles except for needing setjmp/longjmp adding
+
+Things To Do
+
+Kernel Side
+- Finish the emulator
+- Wire up the emulated timer
+- Write the board setup/emulator boot ROM
+- Write the setup code
+- Write the initial module code
+- Write the interrupt code
+- Write the trap handlers
+- Check how we should handle trace/trap bits and interrupts
+- Generate a raw kernel binary
+- Attempt to boot a kernel
+- Should we use the stack or register based calling convention ?
+- Understand what FPU would involve
+
+User Side
+- Setjmp/Longjmp
+- Make syscall match kernel version ?
+- What is needed for binary relocations ?
+- Try and build and bootstrap some userspace
+

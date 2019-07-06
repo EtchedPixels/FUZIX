@@ -14,3 +14,5 @@ VRAM_CH			    .equ 3	      ; font data 0x1800-1BFF ?
 Z80_MMU_HOOKS		    .equ 0
 
 CONFIG_SWAP		    .equ 1
+
+NBUFS			    .equ 5		; must match config.h

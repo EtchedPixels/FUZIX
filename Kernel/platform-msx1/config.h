@@ -16,7 +16,7 @@
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xC000  /* Top of program */
-#define KERNTOP	    0xF000  /* Grow buffers to 0xF000 */
+#define KERNTOP	    0xFFFF  /* Grow buffers to 0xF000 */
 
 #define PROC_SIZE   48	  /* Memory needed per process (inc udata) */
 
@@ -46,17 +46,17 @@ extern unsigned int swap_dev;
 /*
  *	When the kernel swaps something it needs to map the right page into
  *	memory using map_for_swap and then turn the user address into a
- *	physical address. For a simple banked setup there is no conversion
- *	needed so identity map it.
+ *	physical address. For our one process setup we can identity map. We'll
+ *	have to in fact as MSX1 has no flexible mapping.
  */
 #define swap_map(x)	((uint8_t *)(x))
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL  /* Location of root dev name */
-#define BOOTDEVICENAMES "hd#,fd,,rd"
+#define BOOTDEVICENAMES "hd#,fd"
 
 //#define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
-#define NBUFS    6        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
+#define NBUFS    5        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV 2	    /* IDE or SD ?? */

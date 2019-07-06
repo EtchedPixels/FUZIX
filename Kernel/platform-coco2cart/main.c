@@ -18,7 +18,7 @@ void platform_idle(void)
 
 uint8_t platform_param(char *p)
 {
-    return 0;
+	return 0;
 }
 
 void do_beep(void)

@@ -57,7 +57,7 @@ void hd_probe(void)
 		hd_cmd = HDCMD_READ;
 		if (hd_waitdrq() & 1)
 			continue;
-		if((hd_xfer(1) & 0x41) != 0x40)
+		if((hd_xfer(1, udata.u_dptr) & 0x41) != 0x40)
 			continue;
 		kprintf("hd%c: ", dev + 'a');
 		if (p->g.magic != MP_SIG_0) {

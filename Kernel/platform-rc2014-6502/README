@@ -1,0 +1,79 @@
+Initial sketches for a 6502 RC2014 banked memory platform
+
+Use a modern cc65 from https://github.com/cc65/cc65
+
+Our memory mapping looks like this
+
+	0x0000-0x00FF	ZP
+	0x0100-0x01FF	6502 Stack (per proc)
+	0x0200-0x03FF	Loader (need to reclaim this FIXME)
+	0x0400-0x1FFF	Common data and whatever code fills the rest
+
+	0x4000-0xBFFF	Kernel code
+	0xC000-0xC0FF	I/O Window
+	0xC100-0xFFF9	Kernel code/common/data/vectors
+	0xFFFA-0xFFFF	Vectors
+
+Everything we need to copy to/from userspace lives about C000
+
+In user space
+
+	0x0000-0x1FFF	Kernel common and work area
+	0x2000-0xBFFF	User space
+	0xC000-0xC0FF	I/O Window
+	0xC100-0xFFF9	Kernel code/common/data/vectors
+	0xFFFA-0xFFFF	Vectors
+
+We operate roughly like a 16K x 4 paged setup except that for now for simplicity
+we treat user space as a fixed 48K bank switch. The other difference is that
+being a 6502 we need it the other way up.
+
+We currently stuff the low space with kernel code limiting process size to
+0xC000 bytes. In theory we can trim that down and tidy up the maps a bit to
+make user bigger. That can wait however.
+
+Interrupts deal wth the shared ZP by swapping the ZP back and forth with the
+interrupt copies (about 20 bytes involved)
+
+Hardware Arrangement
+
+6502 CPU
+C000-C0FF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
+RC2014 bus
+RAM connected via the RC2014 bus but with A15 inverted
+512K RAM/ROM
+16550A UART
+
+Note: Because A15 is inverted the RAM/ROM 16K pages are mapped via
+
+$C07A
+$C07B
+$C078
+$C079
+
+not the expected order
+
+
+Challenges:
+
+C000-C0FF are the I/O window, rather than somewhere sane like FExx. Might be
+worth a board mod to move it and re-arrange the memory map.
+
+Next Steps
+
+DONE	Generate the binary with the correct hole at C000-C0FF
+DONE	Test and get initial boot working
+DONE	Rebuild user space for 0x2000 start
+	(need relocatable userspace yet)
+DONE	Figure out how to reclaim 0200-03FF with commondata start
+	(need to work out how loader knows where to jump...)
+DONE	Discard segment
+DONE	Write pre-emption code
+DONE	Timer interrupt (6522VIA)
+
+Debug signal handling
+Real hardware testing
+Do buffer growth into discard
+Swap support
+
+Look at other RC2014 device support

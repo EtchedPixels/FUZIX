@@ -44,11 +44,11 @@
  *  - implement RTS/CTS for ASCI (waiting on my making up a cable ...)
  */
 
-static char tbuf1[TTYSIZ];
-static char tbuf2[TTYSIZ];
-static char tbuf3[TTYSIZ];
-static char tbuf4[TTYSIZ];
-static char tbuf5[TTYSIZ];
+static uint8_t tbuf1[TTYSIZ];
+static uint8_t tbuf2[TTYSIZ];
+static uint8_t tbuf3[TTYSIZ];
+static uint8_t tbuf4[TTYSIZ];
+static uint8_t tbuf5[TTYSIZ];
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
@@ -78,12 +78,12 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 
 /* tty_hw_init() which sets up tty5 can be found in discard.c */
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
     minor;
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 #if 0   /* The code below works -- but if ESCC A has DCD low on boot
            the system crashes, which is no fun. So we just lie and 
@@ -216,7 +216,7 @@ void tty_pollirq_escc(void)
     ESCC_CTRL_A = 0x38; /* reset interrupt under service */
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     /* enable tx/status ints so we can awaken the process */
     switch(minor){
@@ -237,7 +237,7 @@ void tty_sleeping(uint8_t minor)
     }
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
     uint8_t c;
 
@@ -284,7 +284,7 @@ asci_readytest:
     }
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
     /* note that these all ignore CTS; tty_writeready checks it, but it does
      * mean kernel writes to console ignore flow control.  This could be easily
@@ -316,13 +316,13 @@ void tty_putc(uint8_t minor, unsigned char c)
 }
 
 /* kernel writes to system console -- never sleep! */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
     tty_putc(TTYDEV & 0xFF, c);
     if(c == '\n')
         tty_putc(TTYDEV & 0xFF, '\r');
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }

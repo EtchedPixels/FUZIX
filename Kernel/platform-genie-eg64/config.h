@@ -19,7 +19,7 @@
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS 1
 #define UDATA_SIZE 0x200
-#define MAXTICKS 20
+#define MAXTICKS 100
 /* Direct I/O support */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* Raw input layer */
@@ -28,11 +28,8 @@
 #define CONFIG_INPUT_GRABMAX	3
 /* And our buffer pool is dynamically sized */
 #define CONFIG_DYNAMIC_BUFPOOL
-/* And IDE */
-#define MAX_BLKDEV	2
-#define CONFIG_IDE
 
-#define MAP_SIZE	0x8000
+#define MAP_SIZE	0x9000
 
 #define CONFIG_BANKS	1	/* 32K */
 
@@ -52,13 +49,13 @@ extern unsigned char vt_map_char(unsigned char);
 #define KEY_COLS	8
 
 #define TICKSPERSEC 40	    /* Ticks per second */
-#define PROGBASE    0x8000  /* Base of user  */
-#define PROGLOAD    0x8000  /* Load and run here */
+#define PROGBASE    0x7000  /* Base of user  */
+#define PROGLOAD    0x7000  /* Load and run here */
 #define PROGTOP     0xFFFF  /* Top of program */
 #define PROC_SIZE   32 	    /* Memory needed per process */
 
-#define SWAP_SIZE   0x41 	/* 32.5K in blocks */
-#define SWAPBASE    0x8000	/* We swap the lot in one, include the */
+#define SWAP_SIZE   0x49 	/* 32.5K in blocks */
+#define SWAPBASE    0x7000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x10000UL	/* vectors so its a round number of sectors */
 
 #define MAX_SWAPS	16	/* Should be plenty (512K!) */

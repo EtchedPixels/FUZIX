@@ -615,9 +615,6 @@ z180_irqgo:
         ;    call outchar
         pop af
         jp interrupt_handler
-        ; this isn't perfect -- interrupt_handler always ends with RETI while only
-        ; INT0 should end with RETI, the others ending with a normal RET. unless
-        ; there are Z80 interrupt peripherals on the bus we'll be OK.
 
 ; z180_irq4:
 ;         push af
@@ -739,6 +736,27 @@ _switchin:
         ; memory and the stack under our feet so let's hope that common memory
         ; contains a copy of this code, eh?
         ld a, (hl)
+
+.ifne CONFIG_SWAP
+	.globl _swapper
+
+	or a
+	jr nz, is_resident
+	; Swap in the new process (and maybe out an old one)
+	ei
+	xor a
+	ld (_int_disabled),a
+	push hl
+	push de
+	call _swapper
+	pop de
+	pop hl
+	ld a,#1
+	ld (_int_disabled),a
+	di
+	ld a,(hl)
+.endif
+is_resident:
         ; out0 (MMU_BBR), a -- WRS: leave the kernel mapped in
         out0 (MMU_CBR), a
 

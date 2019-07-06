@@ -19,9 +19,9 @@
 
 #ifdef CONFIG_IDE
 
-bool devide_wait(uint8_t bits)
+bool devide_wait(uint_fast8_t bits)
 {
-    uint8_t status;
+    uint_fast8_t status;
     timer_t timeout;
 
     timeout = set_timer_sec(20);
@@ -37,6 +37,8 @@ bool devide_wait(uint8_t bits)
            (status == 0xFF) || /* zeta-v2 PPIDE: status=0xFF indicates neither master nor slave drive present */
            (status == 0x87)){  /* n8vem-mark4:   status=0x87 indicates neither master nor slave drive present */
             kprintf("ide error, status=%x\n", status);
+            if (status & IDE_STATUS_ERROR)
+                kprintf("ide error, code=%x\n", devide_readb(ide_reg_error));
             return false;
         }
 
@@ -49,7 +51,7 @@ bool devide_wait(uint8_t bits)
 
 uint8_t devide_transfer_sector(void)
 {
-    uint8_t drive;
+    uint_fast8_t drive;
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
     uint8_t *p;
 #endif
@@ -101,7 +103,7 @@ fail:
 
 int devide_flush_cache(void)
 {
-    uint8_t drive;
+    uint_fast8_t drive;
 
     drive = blk_op.blkdev->driver_data & IDE_DRIVE_NR_MASK;
 

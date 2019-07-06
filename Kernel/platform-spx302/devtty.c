@@ -71,7 +71,7 @@ static volatile uint8_t *uart_base = (volatile uint8_t *)0x300020;
 #define PUTB(x,y)	uart_base[(x)] = (y)
 
 /* Output for the system console (kprintf etc). Polled. */
-void kputchar(char c)
+void kputchar(uint8_t c)
 {
 	if (c == '\n') {
 		while(!(GETB(UART_SRA) &  4));

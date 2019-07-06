@@ -1,5 +1,5 @@
-Experimental porting work for Pentagon and similar systems that have the ability
-to somehow get the low 16K mapped into page 0 and have at least 256K of RAM.
+Experimental porting work for Pentagon and similar systems that have no ability
+to map RAM low.
 
 For now we hardcode 256K and Pentagon style rules (although it seems they
 vary even by pentagon type). As far as I can make out the basic rules for
@@ -11,23 +11,7 @@ Then it gets more complicated (and the partial decode ports make it worse)
 
 Pentagon uses bits 7/6 to allow for 512K RAM
 
-Some pentagon designs use 1FFD bit 0 to put RAM 0 into the low 16K, and
-use 1FFD bits 4 and 7 instead of 7FFD bits 7/6
-
-Pentagon 1MB uses EFF7 bit 3 to turn on the RAM mapping
-
-Scorpion 256/Kay 256 uses 1FFD bit 0 to put RAM 0 into the low 16K and then
-uses 1FFD bit 4 for the 256K select. Scoripon uses 4/6/7 if 1MB
-Kay 1MB uses 1FFD 4 and 7 for 256/512 and 7FFD bit 7 for 1MB bank (why!!!)
-
-ZX Profi uses DFFD bits 0-2 to select the upper page bits. Those that
-support it (Profi 1024 ?) bit 4 maps RAM0. There are other weird mappings
-too.
-
-ATM us FDFD bits 0-2 but early ones can't map over ROM. Late ATM goes up to
-4MB and can
-
-What a mess 8)
+ATM us FDFD bits 0-2
 
 ----
 These machines all have the same basic problem, there is a 16K window at
@@ -55,15 +39,17 @@ User processes live in 3/4 and 8+. We have copy stuff back and forth
 to page 2 due to the memory manager liits.
 
 To Do:
--	Debug the rest
--	Write SMUC and Nemo ATA driver code
--	Work out what we need to do for Pentagon v Scorpion etc
--	Floppy driver
+-	Update the loader
+-	Debug the code
+-	Optimizations for switching (runticks expiry on non-preempt case
+	should we clear runticks - pro it gets us better perf, anti it reduces
+	responsiveness.
+-	Parent first support
+
 
 -	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
 	(Seems we lose the bottom line of the left most char - off by one bug
 	 in zxvid ?)
--	Enable interrupts during swap
 -	6 or 5bit wide fonts (42, 51 column)
 -	Optimize zxvid - especially scrolling
 -	Move vtborder to common

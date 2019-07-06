@@ -27,6 +27,8 @@ static int verbose = 0;
 static int valgrind = 0;
 static int relocatable = 1;
 
+static int keep_temps = 0;
+
 static unsigned int progbase = 0x0100;	/* Program base */
 
 struct arglist {
@@ -203,6 +205,7 @@ static void set_map(const char *p)
 }
 
 static const char *cpu;
+static const char *libend;
 
 static void set_cpu(const char *p)
 {
@@ -212,10 +215,12 @@ static void set_cpu(const char *p)
     exit(1);
   }
   cpu = mstrdup(p);
-  if (strcmp(cpu, "z80") && strcmp(cpu, "z180") && strcmp(cpu, "r2k") && strcmp(cpu, "r3ka")) {
-    fprintf(stderr,"fcc: only Zilog z80, z180 and Rabbit r2k/r3ka targets currently handled.\n");
+  if (strcmp(cpu, "z80") && strcmp(cpu, "z180") && strcmp(cpu, "r2k") && strcmp(cpu, "r3ka") && strcmp(cpu, "ez80_z80")) {
+    fprintf(stderr,"fcc: only Zilog z80, z180, ez80_z80 and Rabbit r2k/r3ka targets currently handled.\n");
     exit(1);
   }
+  if (strcmp(cpu, "z80") && strcmp(cpu, "z180"))
+    libend = cpu;
 }
 
 static const char *platform = "";
@@ -370,6 +375,9 @@ static int ldelp = 0;
 static void delete_temporaries(void)
 {
   int i ;
+  if (keep_temps)
+    return;
+
   for (i = 0; i < delp; i++) {
     if (unlink(delvec[i]) == 0 && verbose)
       printf("unlink %s\n", delvec[i]);
@@ -443,6 +451,19 @@ static void add_option(const char *a, const char *b)
   add_argument(x);
 }
 
+static void add_option_postfixed(const char *a, const char *b, const char *c)
+{
+  char *x = malloc(strlen(a) + strlen(b) + strlen(c) + 1);
+  if (x == NULL) {
+    fprintf(stderr, "Out of memory.\n");
+    exit(1);
+  }
+  strcpy(x, a);
+  strcat(x, b);
+  strcat(x, c);
+  add_argument(x);
+}
+
 static void add_argument_list(struct arglist *l)
 {
   while(l) {
@@ -455,6 +476,19 @@ static void add_option_list(const char *a, struct arglist *l)
 {
   while(l) {
     add_option(a, l->p);
+    l = l->next;
+  }
+}  
+
+static void add_option_list_postfixed(const char *a, struct arglist *l,
+                                                          const char *post)
+{
+  if (!post) {
+    add_option_list(a, l);
+    return;
+  }
+  while(l) {
+    add_option_postfixed(a, l->p, post);
     l = l->next;
   }
 }  
@@ -574,6 +608,7 @@ static void build_command(int pass)
   add_argument("-D__FUZIX__");
   /* Suppress the warnings when sharing code across architectures */
   add_argument("-Ddouble=float");
+  add_argument("--fverbose-asm");
   /* User provided macros */
   add_argument_list(machead);
   /* -Wc, options */
@@ -598,10 +633,18 @@ static void build_command(int pass)
     }
   }
   if (mode == MODE_LINK) {
-    char *rp = "";
+    const char *rp = "";
+    const char *hp = "";
     char *tmp;
-    if (relocatable)
-      rp = "_z80_rel";
+    if (relocatable) {
+      if (cpu && strcmp(cpu, "ez80_z80") == 0)
+        rp = "_ez80_z80_rel";
+      else
+        rp = "_z80_rel";
+    } else {
+      if (cpu && strcmp(cpu, "ez80_z80") == 0)
+        hp = cpu;
+    }
     if (target == NULL)
       autotarget();
     if (target == NULL) {
@@ -610,9 +653,9 @@ static void build_command(int pass)
     }
     add_option("-o", add_delete_late(extendname("",relocmap(undotslash(rootname), pass), "ihx")));
     if (nostdio)
-      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%snostdio%s.rel", platform, rp);
+      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%snostdio%s.rel", hp, platform, rp);
     else
-      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%s.rel", platform, rp);
+      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%s%s.rel", hp, platform, rp);
 
     rp = mstrdup(buf);
     add_argument(rp);
@@ -644,7 +687,7 @@ static void build_command(int pass)
     exit(1);
   }
   if (mode == MODE_LINK)
-    add_option_list("-l", libhead);
+    add_option_list_postfixed("-l", libhead, libend);
 }
 
 int main(int argc, const char *argv[]) {
@@ -731,6 +774,9 @@ int main(int argc, const char *argv[]) {
           break;
         case 'g':
           debug = 1;
+          break;
+        case 'k':
+          keep_temps = 1;
           break;
         case 'W':	/* -Wc,-foo to pass on -foo directly */
           if (p[2] == 'c' && p[3] == ',') {

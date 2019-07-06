@@ -33,6 +33,8 @@ tools/maketap: tools/maketap.c
 
 tools/trdify: tools/trdify.c
 
+tools/makeeprom64: tools/makeeprom64.c
+
 tools/bankld/sdldz80:
 	+(cd tools/bankld; $(MAKE))
 

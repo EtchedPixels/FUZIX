@@ -16,11 +16,11 @@ __sfr __at 0x2F tty_debug;
 __sfr __at 0xAA kbd_row_set;
 __sfr __at 0xA9 kbd_row_read;
 
-static char tbuf1[TTYSIZ];
-static char tbuf2[TTYSIZ];
-static char tbuf3[TTYSIZ];
-static char tbuf4[TTYSIZ];
-static char tbuf5[TTYSIZ];
+static uint8_t tbuf1[TTYSIZ];
+static uint8_t tbuf2[TTYSIZ];
+static uint8_t tbuf3[TTYSIZ];
+static uint8_t tbuf4[TTYSIZ];
+static uint8_t tbuf5[TTYSIZ];
 
 uint8_t curtty;
 uint8_t inputtty;
@@ -59,14 +59,14 @@ uint8_t shiftkeyboard[11][8];
 
 /* Output for the system console (kprintf etc) */
 static void
-kputc(uint8_t minor, char c)
+kputc(uint_fast8_t minor, uint_fast8_t c)
 {
 	/* Debug port for bringup */
 	tty_debug = c;
 	tty_putc(minor, c);
 }
 
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		kputc(minor(TTYDEV), '\r');
@@ -74,7 +74,7 @@ void kputchar(char c)
 }
 
 /* All tty are always ready */
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	minor;
 	// tty are ready to write
@@ -90,7 +90,7 @@ void vtexchange()
 }
 
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	irqflags_t irq;
 
@@ -105,17 +105,17 @@ void tty_putc(uint8_t minor, unsigned char c)
 	irqrestore(irq);
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	minor;
 	return 1;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	minor;
 
@@ -201,7 +201,7 @@ static void keydecode(void)
 	vt_inproc(inputtty +1, c);
 }
 
-void update_keyboard()
+void update_keyboard(void)
 {
 	int n;
 	uint8_t r;
@@ -232,7 +232,7 @@ void kbd_interrupt(void)
 	}
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     minor;
 }

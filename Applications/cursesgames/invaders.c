@@ -154,6 +154,10 @@ struct termios save;
 
 static void cleanup(int sig)
 {
+	clrscr();
+	refresh();
+	curs_set(1);
+	endwin();
 	tcsetattr(0, TCSANOW, &save);
 	exit(0);
 }
@@ -170,15 +174,13 @@ int main(int argc, char **argv)
 	signal(SIGTSTP, SIG_IGN);
 
 	// set up curses library
-	initscr();
+	if (initscr() == NULL) {
+	    fprintf(stderr,"TERM variable not set.\n");
+	    exit(0);
+	}
 	cbreak();
 	noecho();
-#ifdef USE_COLORS
 	curs_set(0);		// hide cursor
-#endif
-	initscr();
-	cbreak();
-	noecho();
 #ifdef USE_KEYS
 	keypad(stdscr, TRUE);
 #endif
@@ -243,6 +245,8 @@ int main(int argc, char **argv)
 			}
 			break;
 		}
+		/* Drain any typing the user got ahead of us */
+		while(getch() != ERR);
 	}
 
 	return 0;		// not reached

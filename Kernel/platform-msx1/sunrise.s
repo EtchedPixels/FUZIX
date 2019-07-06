@@ -21,6 +21,8 @@
 	.globl _sunrise_u
 	.globl _sunrise_k
 
+	.module sunrise
+
 IDE_REG_ERROR		.equ	1
 IDE_REG_FEATURES 	.equ	1
 IDE_REG_SEC_COUNT	.equ	2
@@ -52,7 +54,12 @@ BLK_OP_ISUSER		.equ	2
 BLK_OP_LBA		.equ	6
 BLK_OP_ISREAD		.equ	12
 
+
+	.area _COMMONMEM
+
 devide_wait_ready:
+	xor a
+	ld (_ide_error),a
 	ld a,#IDE_STATUS_READY
 devide_wait:
 	push de
@@ -70,23 +77,27 @@ wait_nbusy:
 	jr nz, wait_nbusy
 	; Check for an error
 	bit IDE_ERROR,a
-	jr nz, error
+	jr z, noerror
+	; Keep NZ set
+	ld (_ide_error),a
+	ld a,IDE_REG_ERROR(ix)
+	ld (_ide_error + 1),a
+	jr waitout
+noerror:
 	; Now see if it's a good status
 	and c
 	cp c
 	jr nz, wait_nbusy
 	; We have !busy, !error and the value we wanted - done
+waitout:
 	pop hl
 	pop de
 	ret		; Z = good
 wait_timeout:
 	ld a,#255		; NZ is set already
-error:
 	ld (_ide_error),a	; save the value
 	; NZ set already
-	pop hl
-	pop de
-	ret
+	jr waitout
 
 ;
 ;	Flip I/O maps
@@ -94,13 +105,17 @@ error:
 map_sunrise_k:
 	push hl
 	ld hl,#_sunrise_k
+	di
 	call _switch_map
+	ei
 	pop hl
 	ret	
 map_sunrise_u:
 	push hl
 	ld hl,#_sunrise_u
+	di
 	call _switch_map
+	ei
 	pop hl
 	ret	
 ;
@@ -121,6 +136,7 @@ _do_ide_init_drive:
 	call devide_rx_buf
 	; returns the tmpbuf to the caller to free
 timeout:
+	ld a,#'R'
 	call map_kernel
 	pop ix
 	ret
@@ -175,25 +191,29 @@ xfer_user:
 init_io:
 	ld e,l
 	ld hl, (_blk_op + BLK_OP_LBA + 2)
-	ld IDE_REG_LBA_0(ix),l
-	ld IDE_REG_LBA_1(ix),h
-	ld hl, (_blk_op + BLK_OP_LBA + 3)
-	ld IDE_REG_LBA_2(ix),l
 	ld a,h
 	and #0x0F			; Merge drive and bits 24-27
 	or e
 	ld IDE_REG_LBA_3(ix),a
+	push hl
 	ld hl,#0
 	call devide_wait_ready
-	jr z, xfer_timeout
+	pop hl
+	jr nz, xfer_timeout
+	ld IDE_REG_LBA_2(ix),l
+	ld hl, (_blk_op + BLK_OP_LBA)
+	ld IDE_REG_LBA_1(ix),h
+	ld IDE_REG_LBA_0(ix),l
 	ld IDE_REG_SEC_COUNT(ix),#1
 	ld a,(_blk_op + BLK_OP_ISREAD)
 	or a
 	jr z, send_cmd
-	ld b,#IDE_CMD_READ_SECTOR
 	ld IDE_REG_COMMAND(ix),#IDE_CMD_READ_SECTOR
+	ld a,#IDE_STATUS_DATAREQUEST
+	call devide_wait
+	jr nz, xfer_timeout
 	call devide_xfer_r
-	ld hl,#1
+	ld hl,#0
 	call map_kernel
 	pop ix
 	ret
@@ -201,16 +221,16 @@ send_cmd:
 	ld IDE_REG_COMMAND(ix),#IDE_CMD_WRITE_SECTOR
 	ld a,#IDE_STATUS_DATAREQUEST
 	call devide_wait
-	jr z, xfer_timeout
+	jr nz, xfer_timeout
 	call devide_xfer_w
 	call devide_wait_ready
-	jr z, xfer_timeout
-	ld hl,#1
+	jr nz, xfer_timeout
+	ld hl,#0
 	call map_kernel
 	pop ix
 	ret
 xfer_timeout:
-	ld hl,#0
+	ld hl,#0xffff
 	call map_kernel
 	pop ix
 	ret
@@ -224,6 +244,7 @@ devide_xfer_r:
 	; We don't have to worry about swap being special for this port
 	; Our caller also is responsible for working out when to bounce
 xfer_do:
+	; FIXME: for non Sunrise we may need to change this and the xfer_w
 	ld hl,#0x7C00
 	ld bc,#0x0200
 	ldir

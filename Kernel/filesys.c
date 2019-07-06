@@ -21,8 +21,8 @@
 
 uint8_t lastname[31];
 
-static uint8_t n_open_fault;
-static uint8_t n_fault_type;
+static uint_fast8_t n_open_fault;
+static uint_fast8_t n_fault_type;
 static uint8_t *name, *nameend;
 
 static uint8_t getcf(void)
@@ -72,6 +72,8 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
 
     for(;;)
     {
+        /* ninode is the inode we are walking from at this point and wd
+           the parent. They may be the same. We hold one reference to each */
         if(ninode)
             magic(ninode);
 
@@ -79,69 +81,100 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
         if (udata.u_rename == ninode)
             udata.u_rename = NULLINODE;
 
-        /* See if we are at a mount point */
+        /* See if we are at a mount point.
+           If we are a mount point then we swap the parent inode for
+           the child inode and swap the reference to the child
+           Q: could we set an incore inode flag for mountpoint to speed
+              this up ? */
         if(ninode)
             ninode = srch_mt(ninode);
 
-        while((c = getcf()) == '/')    /* Skip(possibly repeated) slashes */
+        /* Skip any slashes between nodes. The standards say there can be
+           multiple slashes */
+        while((c = getcf()) == '/')
             ++name;
+        /* It is acceptable to end a file path with / */
         if(!c || n_open_fault)           /* No more components of path? */
             break;
+
+        /* If we failed to find our node we are done */
         if(!ninode){
             udata.u_error = ENOENT;
             goto nodir;
         }
+        /* Drop the reference to the old parent */
         i_deref(wd);
+        /* Make the parent our own node. We now hold a single reference to
+           wd/ninode */
         wd = ninode;
+        /* If we are still searching and the parent node is not a directory
+           we are done and we failed */
         if(getmode(wd) != MODE_R(F_DIR)){
             udata.u_error = ENOTDIR;
             goto nodir;
         }
+        /* If we are now allowed to access the directory then we are done */
         if(!(getperm(wd) & OTH_EX)){
             udata.u_error = EACCES;
             goto nodir;
         }
 
+        /* Walk the filename until / or end. Store the filename of up to
+           30 characters in lastname which is also used by our callers. It
+           is permissible to give longer name that matches the first 30 */
         fp = lastname;
-        while(c = getcf()) {
+        while((c = getcf()) != '\0') {
             if (c == '/')
                 break;
             if (fp != lastname + 30)
                 *fp++ = c;
             ++name;
         }
+        /* Terminate the lastname buffer with \0 */
         *fp = 0;
-        /* See if we are going up through a mount point */
-        /* FIXME: re-order for speed */
+        /* We are going up through a mount point if
+           either:
+           - We are accessing the root inode
+           - We are accessing the root inode number of a device
+           and:
+           - Our path is ..
+
+           FIXME: re-order tests for speed */
         if((wd == udata.u_root || (wd->c_num == ROOTINODE && wd->c_dev != root_dev)) &&
-                fp[0] == '.' && fp[1] == '.' &&
-                (fp[2] == '/' || fp[2] == '\0')){
+                lastname[0] == '.' && lastname[1] == '.' && lastname[2] == '\0') {
+            /* We are doing /../ */
             if (wd == udata.u_root) {
-                /* FIXME: is this assignment ever needed */
-                ninode = wd;
-                name += 2;
+                i_ref(wd);
                 continue;
             }
+            /* Find the mount point inode, which is hidden by the mount */
             temp = fs_tab[wd->c_super].m_mntpt;
-            ++temp->c_refs;
+            /* Take a reference to it */
+            i_ref(temp);
+            /* Drop the old directory */
             i_deref(wd);
+            /* Fall through so we walk the mount point directory .. entry */
             wd = temp;
         }
-
+        /* Find the entry in the directory. ninode will be NULL if we failed or
+           valid and referenced if it existed */
         ninode = srch_dir(wd, lastname);
     }
     /* If we faulted then treat it as invalid */
     if (n_open_fault)
         goto nodir;
 
+    /* Return the parent node if requested. This is needed by callers that
+       do directory manipulation */
     if(parent)
         *parent = wd;
     else
         i_deref(wd);
-
+    /* Check if we failed */
     if(!(parent || ninode))
         udata.u_error = ENOENT;
-
+    /* Return the target node if found. NULL with a valid parent is quite
+       possible and indicates the directory exists but the filename is new */
     return ninode;
 
 nodir:
@@ -199,7 +232,7 @@ inoptr srch_dir(inoptr wd, uint8_t *compname)
 
 inoptr srch_mt(inoptr ino)
 {
-    uint8_t j;
+    uint_fast8_t j;
     struct mount *m = &fs_tab[0];
 
     for(j=0; j < NMOUNTS; ++j){
@@ -417,7 +450,7 @@ bool ch_link(inoptr wd, uint8_t *oldname, uint8_t *newname, inoptr nindex)
  */
 bool namecomp(uint8_t *n1, uint8_t *n2) // return true if n1 == n2
 {
-    uint8_t n; // do we have enough variables called n?
+    uint_fast8_t n; // do we have enough variables called n?
 
     n = FILENAME_LEN;
     while(*n1 && *n1 != '/')
@@ -449,7 +482,7 @@ bool namecomp(uint8_t *n1, uint8_t *n2) // return true if n1 == n2
 inoptr newfile(inoptr pino, uint8_t *name)
 {
     regptr inoptr nindex;
-    uint8_t j;
+    uint_fast8_t j;
 
     /* No parent? */
     if (!pino) {
@@ -735,9 +768,9 @@ void blk_free(uint16_t devno, blkno_t blk)
  * entries in the open file table.
  */
 
-int8_t oft_alloc(void)
+int_fast8_t oft_alloc(void)
 {
-    uint8_t j;
+    uint_fast8_t j;
 
     for(j=0; j < OFTSIZE ; ++j) {
         if(of_tab[j].o_refs == 0) {
@@ -759,7 +792,7 @@ int8_t oft_alloc(void)
 void deflock(regptr struct oft *ofptr)
 {
     inoptr i = ofptr->o_inode;
-    uint8_t c = i->c_flags & CFLOCK;
+    uint_fast8_t c = i->c_flags & CFLOCK;
 
     if (ofptr->o_access & O_FLOCK) {
         if (c == CFLEX)
@@ -776,7 +809,7 @@ void deflock(regptr struct oft *ofptr)
  *	from a user file table then drop any file locks, dereference the inode
  *	and mark empty
  */
-void oft_deref(int8_t of)
+void oft_deref(uint_fast8_t of)
 {
     struct oft *ofptr;
 
@@ -791,9 +824,9 @@ void oft_deref(int8_t of)
 
 /* Uf_alloc finds an unused slot in the user file table.*/
 
-int8_t uf_alloc_n(int base)
+int_fast8_t uf_alloc_n(uint_fast8_t base)
 {
-    uint8_t j;
+    uint_fast8_t j;
 
     for(j=base; j < UFTSIZE ; ++j) {
         if(udata.u_files[j] == NO_FILE) {
@@ -805,7 +838,7 @@ int8_t uf_alloc_n(int base)
 }
 
 
-int8_t uf_alloc(void)
+int_fast8_t uf_alloc(void)
 {
     return uf_alloc_n(0);
 }
@@ -818,7 +851,7 @@ int8_t uf_alloc(void)
 
 void i_deref(regptr inoptr ino)
 {
-    uint8_t mode = getmode(ino);
+    uint_fast8_t mode = getmode(ino);
 
     magic(ino);
 
@@ -899,7 +932,7 @@ uint16_t devnum(inoptr ino)
 int f_trunc(regptr inoptr ino)
 {
     uint16_t dev;
-    int8_t j;
+    int_fast8_t j;
 
     if (ino->c_flags & CRDONLY) {
         udata.u_error = EROFS;
@@ -933,7 +966,7 @@ int f_trunc(regptr inoptr ino)
    This is annoying and it would be nice one day to find a clean solution */
 
 #ifdef CONFIG_BLKBUF_EXTERNAL
-void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
+void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
 {
     struct blkbuf *buf;
     regptr blkno_t *bn;
@@ -959,7 +992,7 @@ void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
 
 #else
 
-void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
+void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
 {
     struct blkbuf *buf;
     regptr blkno_t *bn;
@@ -989,7 +1022,7 @@ void freeblk(uint16_t dev, blkno_t blk, uint8_t level)
  * the physical block number on a device given the inode and the
  * logical block number in a file.  The block is zeroed if created.
  */
-blkno_t bmap(inoptr ip, blkno_t bn, int rwflg)
+blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg)
 {
     int i;
     bufptr bp;
@@ -1114,11 +1147,11 @@ static const uint16_t blkmask[] = {
     0x1F	/* 16384 */
 };
 
-blkno_t bmap(inoptr ip, blkno_t blk, int rwflg)
+blkno_t bmap(inoptr ip, blkno_t blk, unsigned int rwflg)
 {
     /* Linear bits */
-    uint8_t shift = fs_tab[ip->c_super].m_fs.s_shift;
-    uint8_t blklo = ((uint8_t)blk) & blkmask[shift];
+    uint_fast8_t shift = fs_tab[ip->c_super].m_fs.s_shift;
+    uint_fast8_t blklo = ((uint8_t)blk) & blkmask[shift];
     /* Non linear index bits */
     blk >>= shift;
     blk = do_bmap(ip, blk, rwflg);
@@ -1153,9 +1186,9 @@ void validblk(uint16_t dev, blkno_t num)
 /* This returns the inode pointer associated with a user's file
  * descriptor, checking for valid data structures.
  */
-inoptr getinode(uint8_t uindex)
+inoptr getinode(uint_fast8_t uindex)
 {
-    uint8_t oftindex;
+    uint_fast8_t oftindex;
     inoptr inoindex;
 
     if(uindex >= UFTSIZE || udata.u_files[uindex] == NO_FILE) {
@@ -1218,7 +1251,7 @@ uint8_t getperm(inoptr ino)
 
 
 /* This sets the times of the given inode, according to the flags. */
-void setftime(inoptr ino, uint8_t flag)
+void setftime(inoptr ino, uint_fast8_t flag)
 {
     if (ino->c_flags & CRDONLY)
         return;
@@ -1245,7 +1278,7 @@ uint8_t getmode(inoptr ino)
 static struct mount *newfstab(void)
 {
     struct mount *m = fs_tab;
-    int i;
+    uint_fast8_t i;
     for (i = 0; i < NMOUNTS; i++) {
         if (m->m_dev == NO_DEVICE)
             return m;
@@ -1267,19 +1300,19 @@ struct mount *fs_tab_get(uint16_t dev)
 }
 
 /* Fmount places the given device in the mount table with mount point info. */
-bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
+struct mount *fmount(uint16_t dev, inoptr ino, uint16_t flags)
 {
     struct mount *m;
     regptr struct filesys *fp;
     bufptr buf;
 
     if(d_open(dev, 0) != 0)
-        return true;    /* Bad device */
+        return NULL;    /* Bad device */
 
     m = newfstab();
     if (m == NULL) {
         udata.u_error = EMFILE;
-        return true;	/* Table is full */
+        return NULL;	/* Table is full */
     }
 
     fp = &m->m_fs;
@@ -1287,7 +1320,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     /* Get the buffer with the superblock (block 1) */
     buf = bread(dev, 1, 0);
     if (buf == NULL)
-        return true;
+        return NULL;
     blktok(fp, buf, 0, sizeof(struct filesys));
     brelse(buf);
 
@@ -1300,7 +1333,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     if(fp->s_mounted != SMOUNTED  ||  fp->s_isize >= fp->s_fsize ||
         fp->s_shift > FS_MAX_SHIFT) {
         udata.u_error = EINVAL;
-        return true; // failure
+        return NULL;
     }
 
     if (fp->s_fmod == FMOD_DIRTY) {
@@ -1322,7 +1355,7 @@ bool fmount(uint16_t dev, inoptr ino, uint16_t flags)
     /* Mark the filesystem dirty on disk */
     sync();
 
-    return false; // success
+    return m;
 }
 
 

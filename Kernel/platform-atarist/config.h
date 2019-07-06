@@ -22,9 +22,9 @@
 #define VT_HEIGHT	50
 #define VT_RIGHT	79
 #define VT_BOTTOM	49
-#define VT_INITIAL_LINE	15
+#define VT_INITIAL_LINE	0
 
-#define TICKSPERSEC 100   /* Ticks per second */
+#define TICKSPERSEC 200   /* Ticks per second */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -41,5 +41,9 @@
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+
+#define CONFIG_IDE
+
+#define MAX_BLKDEV	4
 
 /* TODO tty scan rows/cols etc */

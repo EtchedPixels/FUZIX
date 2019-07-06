@@ -14,10 +14,10 @@ FOBJS = $(patsubst %.c,fshbuild/%.rel, $(SRCS))
 all: fsh sh
 
 sh: $(OBJS)
-	$(FCC) $(Z80_PLATFORM) $(OBJS) -o $@
+	$(FCC) --nostdio $(Z80_PLATFORM) $(OBJS) -o $@
 
 fsh: $(FOBJS)
-	$(FCC) $(Z80_PLATFORM) $(FOBJS) -o $@ -lreadline
+	$(FCC) --nostdio $(Z80_PLATFORM) $(FOBJS) -o $@ -lreadline
 
 $(OBJS): $(INCS)
 
@@ -30,7 +30,7 @@ $(FOBJS): fshbuild/%.rel: %.c
 	$(FCC) $(Z80_PLATFORM) -c -DBUILD_FSH $< -o $@
 
 clean:
-	rm -f $(OBJS) fsh sh $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+	rm -f $(OBJS) $(FOBJS) fsh sh $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
 
 rmbak:
 	rm -f *~ core

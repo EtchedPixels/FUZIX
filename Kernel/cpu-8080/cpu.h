@@ -5,12 +5,20 @@ typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 
+/* ACK thinks in 16bit chunks and extends 8bit when working internally. All our
+   8bit indexes etc give it indigestion */
+
+typedef unsigned short uint_fast8_t;
+typedef signed short int_fast8_t;
+
 typedef int16_t  arg_t;			/* Holds arguments */
 typedef uint16_t uarg_t;		/* Holds arguments */
 typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* User address */
 typedef uint16_t uptr_t;		/* Userspace pointer equivalent */
+
+#define MAXUSIZE	0xFFFF
 
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
@@ -38,7 +46,9 @@ extern void *memmove(void *dest, const void *src, size_t n);
 
 extern int16_t strlen(const char *p);
 
-#define	staticfast	static/* User's structure for times() system call */
+#define	staticfast	static
+
+/* User's structure for times() system call */
 typedef unsigned long clock_t;
 
 /* Must match native ordering of long long */
@@ -55,7 +65,6 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
-/* SDCC is arsy about unused parameters */
 #define used(x)	x
 
 #define cpu_to_le16(x)	(x)
@@ -72,7 +81,6 @@ typedef union {            /* this structure is endian dependent */
 /* Deal with SDCC code gen issue */
 #define HIBYTE32(x)	(((uint8_t *)&(x))[3])
 
-/* FIXME: check this */
 /* ack8080 does not support attribute(packed) but then it also doesn't insert
    padding either */
 

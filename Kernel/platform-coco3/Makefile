@@ -9,7 +9,7 @@ DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c ../dev/devsd.c
 NSRCS = ../dev/net/net_native.c
 
 ASRCS = coco3.s crt0.s ide.s sd.s rtsd.s
-ASRCS += tricks.s commonmem.s usermem_gime.s drivewire.s sdc.s videoll.s
+ASRCS += tricks.s commonmem.s usermem_gime.s ../dev/drivewire/drivewire.s sdc.s videoll.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
@@ -105,7 +105,7 @@ image: boot.bin
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	drivewire.o devdw.o ttydw.o blkdev.o mbr.o devlpr.o \
+	../dev/drivewire/drivewire.o devdw.o ttydw.o blkdev.o mbr.o devlpr.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

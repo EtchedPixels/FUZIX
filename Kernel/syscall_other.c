@@ -347,10 +347,8 @@ arg_t _mount(void)
 
 	sync();
 
-	if (fmount(dev, dino, flags)) {
-		udata.u_error = EBUSY;
+	if (!fmount(dev, dino, flags))
 		goto nogood;
-	}
 
 	i_unlock_deref(dino);
 	i_deref(sino);
@@ -378,7 +376,7 @@ arg_t _mount(void)
 static int do_umount(uint16_t dev)
 {
 	regptr struct mount *mnt;
-	uint8_t rm = flags & MS_REMOUNT;
+	uint_fast8_t rm = flags & MS_REMOUNT;
 	regptr inoptr ptr;
 
 	mnt = fs_tab_get(dev);
@@ -549,7 +547,44 @@ arg_t _uadmin(void)
 		return 0;
 	}
 #endif
-	/* We don't do SWAPCTL yet */
+#ifdef CONFIG_PLATFORM_SWAPCTL
+	if (cmd == A_SWAPCTL) {
+		if (func == A_SC_ADD) {
+			inoptr ino = getinode(ugetw(ptr));
+			/* Size of device in blocks */
+			uint16_t size = ugetw(ptr + 2);
+			uint16_t dev;
+			uint16_t n;
+
+			if (ino == NULLINODE)
+				return -1;
+			if (swap_dev != 0xFFFF) {
+				udata.u_error = EEXIST;
+				return -1;
+			}
+			if (getmode(ino) != MODE_R(F_BDEV)) {
+				udata.u_error = EINVAL;
+				return -1;
+			}
+			dev = ino->c_node.i_addr[0];
+			if (!platform_canswapon(dev)) {
+				udata.u_error = ENXIO;
+				return -1;
+			}
+			/* If you use dynamic swap your swap must be 0 based,
+			   that is any offsetting needed has to be done in the
+			   driver */
+			n = 0;
+			while(size >= SWAP_SIZE && n < MAX_SWAPS) {
+				swapmap_init(n++);
+				size -= SWAP_SIZE;
+			}
+			swap_dev = dev;
+			return 0;
+		}
+		/* We don't do SWAPCTL, SC_REMOVE yet */
+	}
+#endif
 	udata.u_error = EINVAL;
 	return -1;
 }

@@ -35,15 +35,30 @@ static uint8_t ttypoll;
 
 static uint8_t ttybase[] = { 0, 0, 32, 80 };
 
+uint8_t tty_irqmode = 0;
+
 __sfr __at 0x00 tuart0_status;
 __sfr __at 0x01 tuart0_data;
 
 /* Write to system console */
 void kputchar(char c)
 {
-    /* Has to run polled */
-    while(!(tuart0_status & 0x80));
-    tuart0_data = c;
+    irqflags_t irq;
+    if (c == '\n')
+        kputchar('\r');
+    /* FIXME: spins in irq on */
+    while(1) {
+        /* Spin with interrupts on if possible */
+        while(!(tuart0_status & 0x80));
+        irq = di();
+        if (tuart0_status & 0x80) {
+            tuart0_data = c;
+            irqrestore(irq);
+            return;
+        }
+        /* Raced with the tty driver so try again */
+        irqrestore(irq);
+    }
 }
 
 char tty_writeready(uint8_t minor)
@@ -59,12 +74,17 @@ char tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
+    irqflags_t irq;
+    if (tty_writeready(minor) != TTY_READY_NOW)
+        return;
+    irq = di();
     if (minor == 1)
         tuart0_txqueue(c);
     else if (minor == 2)
         tuart1_txqueue(c);
     else
         tuart2_txqueue(c);
+    irqrestore(irq);
 }
 
 void tty_sleeping(uint8_t minor)
@@ -86,13 +106,13 @@ void tty_drain(void)
         tty_outproc(1);
     }
     while (tuart1_rxl)
-        tty_inproc(1, tuart1_rx_get());
+        tty_inproc(2, tuart1_rx_get());
     if (tuart1_txl < 32 && (ttypoll & (1 << 2))) {
         ttypoll &= ~(1 << 2);
         tty_outproc(2);
     }
     while (tuart2_rxl)
-        tty_inproc(1, tuart2_rx_get());
+        tty_inproc(3, tuart2_rx_get());
     if (tuart2_txl < 32 && (ttypoll & (1 << 3))) {
         ttypoll &= ~(1 << 3);
         tty_outproc(3);

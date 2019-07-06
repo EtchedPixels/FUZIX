@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -b _CODE=0x0000
 -b _COMMONMEM=0xF400
--b _DISCARD=0xEB00
+-b _DISCARD=0xEA00
 -l z80
 platform-pcw8256/crt0.rel
 platform-pcw8256/commonmem.rel
@@ -32,7 +32,7 @@ syscall_other.rel
 syscall_net.rel
 tty.rel
 mm.rel
-bank16k.rel
+bank16kfc.rel
 swap.rel
 devsys.rel
 devinput.rel
@@ -44,8 +44,6 @@ platform-pcw8256/blkdev.rel
 platform-pcw8256/mbr.rel
 platform-pcw8256/devide.rel
 platform-pcw8256/devide_discard.rel
-platform-pcw8256/devfhd.rel
-platform-pcw8256/fidhd.rel
 platform-pcw8256/devinput.rel
 platform-pcw8256/net_native.rel
 -e

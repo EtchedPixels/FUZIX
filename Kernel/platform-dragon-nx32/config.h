@@ -16,11 +16,12 @@
 #define MAP_SIZE 0x7F00U
 #define CONFIG_BANKS	1
 /* And swapping */
-#define SWAPDEV 2049		/* DriveWire drive 1 */
+#define SWAPDEV (swap_dev)	/* Dynamic swap */
 #define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot, including stashed uarea */
 #define SWAPTOP     0xFF00	/* so it's a round number of 256 byte sectors */
 #define MAX_SWAPS   32
+#define CONFIG_DYNAMIC_SWAP
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1

@@ -6,6 +6,10 @@ typedef unsigned char uint8_t;
 typedef signed char int8_t;
 typedef unsigned long size_t;
 
+/* TODO: Double check this */
+typedef unsigned char uint_fast8_t;
+typedef signed char int_fast8_t;
+
 typedef uint16_t irqflags_t;
 
 typedef int32_t arg_t;
@@ -16,6 +20,7 @@ typedef int32_t ssize_t;
 typedef uint32_t uaddr_t;
 typedef uint32_t uptr_t;		/* User pointer equivalent */
 
+#define MAXUSIZE	0xFFFFFFFF
 
 #define uputp  uputl			/* Copy user pointer type */
 #define ugetp  ugetl			/* between user and kernel */

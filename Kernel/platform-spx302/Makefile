@@ -33,10 +33,17 @@ $(LOBJS): %.o: ../lib/%.c
 
 tricks.S: ../lib/68000flat.S
 
+loader.o: loader.s
+	$(CROSS_CC) -c $<
+
+loader: loader.o loader.ld
+	$(CROSS_LD) -o loader.elf -T loader.ld loader.o
+	m68k-uclinux-objcopy loader.elf -O binary loader
+
 clean:
 	rm -f *.o fuzix.elf loader.elf loader.map loader.bin core *~ 
 
-image:
+image: loader fuzix.ld
 	$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld \
 	crt0.o \
 	p68000.o ../start.o ../version.o ../lowlevel-68000.o \
@@ -49,3 +56,5 @@ image:
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
+	cat loader ../fuzix.bin >fuzix.tmp
+	dd if=fuzix.tmp of=fuzix.68k bs=57600 count=1 conv=sync

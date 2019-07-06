@@ -19,7 +19,7 @@
  * event equal to the process's own ptab address is a wait().
  */
 
-static void do_psleep(void *event, uint8_t state)
+static void do_psleep(void *event, uint_fast8_t state)
 {
 	di();
 #ifdef DEBUG_SLEEP
@@ -124,7 +124,7 @@ void switchout(void)
 #ifdef DEBUG_NREADY
 	{
 		ptptr p;
-		uint8_t n = 0;
+		uint_fast8_t n = 0;
 		for (p = ptab; p < ptab_end; ++p) {
 			if (p->p_status == P_RUNNING ||
 				p->p_status == P_READY)
@@ -144,7 +144,7 @@ void switchout(void)
 		/* Drop through - we want to be running, but we might be
 		   pre-empted by someone else */
 	}
-	/* When we are idle we widdle our thumbs here until a polled event
+	/* When we are idle we twiddle our thumbs here until a polled event
 	   in platform_idle or an interrupt wakes someone up */
 	while (nready == 0) {
 		ei();
@@ -288,7 +288,10 @@ void makeproc(regptr ptptr p, u_data *u)
 	u->u_page = p->p_page;
 	u->u_page2 = p->p_page2;
 
-	program_vectors(&p->p_page);	/* set up vectors in new process and
+	/* Pass a pointer to the u_data copy because the ptab copy may not
+	   be in common space and map_process requires a pointer to a common
+	   space object */
+	program_vectors(&u->u_page);	/* set up vectors in new process and
 					   if needed copy any common code */
 #ifdef CONFIG_PARENT_FIRST
 	p->p_status = P_READY;
@@ -318,7 +321,7 @@ void makeproc(regptr ptptr p, u_data *u)
 
 	memset(&p->p_utime, 0, 4 * sizeof(clock_t));	/* Clear tick counters */
 
-	rdtime32(&p->p_time);
+	p->p_time = ticks.full;
 	if (u->u_cwd)
 		i_ref(u->u_cwd);
 	if (u->u_root)
@@ -389,11 +392,11 @@ ptptr ptab_alloc(void)
    is pre-Unix from Tenex). We don't report P_IOWAIT the same way as Unix
    does ... need to keep track of two nready values to do that */
 
-void load_average(void)
+static void load_average(void)
 {
 	regptr struct runload *r;
-	static uint8_t utick;
-	uint8_t i;
+	static uint_fast8_t utick;
+	uint_fast8_t i;
 	uint16_t nr;
 
 	utick++;
@@ -411,6 +414,20 @@ void load_average(void)
 		r->average = ((((r->average - (nr << 8)) * r->exponent) +
 				(((uint32_t)nr) << 16)) >> 8);
 		r++;
+	}
+}
+
+/*
+ * Timer queue processing
+ */
+
+void ptimer_insert(void)
+{
+	ptptr p = udata.u_ptab;
+	if (!(p->p_flags & PFL_ALARM)) {
+		p->p_timerq = alarms;
+		alarms = p;
+		p->p_flags |= PFL_ALARM;
 	}
 }
 
@@ -438,15 +455,14 @@ void timer_interrupt(void)
 	/* Do once-per-decisecond things - this doesn't work out well on
 	   boxes with 64 ticks/second.. need a better approach */
 	if (++ticks_this_dsecond == ticks_per_dsecond) {
-		static ptptr p;
-
-		/* Update global time counters */
+		ptptr p, *q;
 		ticks_this_dsecond = 0;
-		ticks.full++;
-
-		/* Update process alarm clocks and timeouts */
-		/* FIXME: for big builds hash this */
-		for (p = ptab; p < ptab_end; ++p) {
+		++ticks.full;
+		q = &alarms;
+		while(*q) {
+			p = *q;
+			if (p->p_status == P_EMPTY)
+				panic("dead timer");
 			if (p->p_alarm) {
 				p->p_alarm--;
 				if (!p->p_alarm)
@@ -457,6 +473,11 @@ void timer_interrupt(void)
 				if (p->p_timeout == 1)
 					pwake(p);
 			}
+			if (p->p_timeout < 2 && !p->p_alarm) {
+				p->p_flags &= ~PFL_ALARM;
+				*q = p->p_timerq;
+			} else
+				q = &(p->p_timerq);
 		}
 		updatetod();
                 load_average();
@@ -524,7 +545,21 @@ void unix_syscall(void)
 	sync_clock();
 
 	di();
-	if (runticks >= udata.u_ptab->p_priority && nready > 1) {
+	if (
+#ifdef CONFIG_PARENT_FIRST
+	/*
+	 *	This is not nice but in the pure swap parent first case
+	 *	we always give the parent a chance to get to waitpid().
+	 *	If they don't then the interrupt after will get them if
+	 *	they are already due for pre-emption.
+	 *
+	 *	Without this if we are the only running process and exceeded
+	 *	time then when we fork we end up thrashing in and out of
+	 *	swap before the waitpid.
+	 */
+		(udata.u_callno != 32 /* fork */ || !udata.u_retval) &&
+#endif
+		runticks >= udata.u_ptab->p_priority && nready > 1) {
 #ifdef DEBUG_PREEMPT	
 		kprintf("P: %d %x %d\n", runticks, udata.u_ptab, udata.u_ptab->p_priority);
 #endif		
@@ -542,7 +577,7 @@ void unix_syscall(void)
 	chksigs();
 }
 
-void sgrpsig(uint16_t pgrp, uint8_t sig)
+void sgrpsig(uint16_t pgrp, uint_fast8_t sig)
 {
 	regptr ptptr p;
 	if (pgrp) {
@@ -553,7 +588,7 @@ void sgrpsig(uint16_t pgrp, uint8_t sig)
 }
 
 #ifdef CONFIG_LEVEL_2
-uint8_t dump_core(uint8_t sig)
+uint8_t dump_core(uint_fast8_t sig)
 {
         if (!(udata.u_flags & U_FLAG_NOCORE) && ((sig == SIGQUIT || sig == SIGILL || sig == SIGTRAP ||
             sig == SIGABRT || sig == SIGBUS || sig == SIGFPE ||
@@ -602,9 +637,9 @@ void recalc_cursig(void)
 }
 
 /* Process a block of 16 signals so we can avoid using longs */
-static uint8_t chksigset(struct sigbits *sb, uint8_t b)
+static uint_fast8_t chksigset(struct sigbits *sb, uint_fast8_t b)
 {
-	uint8_t j = 1;
+	uint_fast8_t j = 1;
 	int (**svec)(int) = &udata.u_sigvec[0];
 	uint16_t m;
 	uint16_t pending = sb->s_pending & ~sb->s_held;
@@ -687,11 +722,11 @@ static uint8_t chksigset(struct sigbits *sb, uint8_t b)
 	return udata.u_cursig;
 }
 
-uint8_t chksigs(void)
+uint_fast8_t chksigs(void)
 {
 	struct sigbits *sb = udata.u_ptab->p_sig;
-	uint8_t r;
-	uint8_t b;
+	uint_fast8_t r;
+	uint_fast8_t b;
 
 	/* Sleeping without signals allowed. We rely upon the fact that
 	   P_IOWAIT is never pre-empted or returns to user space so
@@ -724,7 +759,7 @@ rescan:
  *	Send signal, avoid touching uarea
  */
 
-void ssig(ptptr proc, uint8_t sig)
+void ssig(ptptr proc, uint_fast8_t sig)
 {
 	struct sigbits *m = proc->p_sig;
 	uint16_t sigm;
@@ -843,7 +878,7 @@ static int signal_parent(ptptr c)
 
 void doexit(uint16_t val)
 {
-	int16_t j;
+	uint_fast8_t j;
 	ptptr p;
 	irqflags_t irq;
 
@@ -907,7 +942,13 @@ void doexit(uint16_t val)
 			ssig(p, SIGHUP);
 			ssig(p, SIGCONT);
 		}
+		/* Sneak the alarmq dequeue into the same loop */
+		if (p->p_timerq == udata.u_ptab)
+			p->p_timerq = udata.u_ptab->p_timerq;
 	}
+	/* If we head the timer list then we didn't kill it in the loop */
+	if (alarms == udata.u_ptab)
+		alarms = udata.u_ptab->p_timerq;
 	tty_exit();
 	irqrestore(irq);
 #ifdef DEBUG_SLEEP

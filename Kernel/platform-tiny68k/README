@@ -14,8 +14,6 @@ Unsupported right now:
 - Trapping back into monitor if high
 - Reboot
 
-UNTESTED - T68KRC (2MB version wth possible other serial etc on RC2014)
-
 Known problems
 --------------
 
@@ -53,15 +51,20 @@ To Do
 Propogate synchronous trap changes to Z80+MMU and Z180 illegal and maybe
 generically jp 0 and 0 corruptor ?
 
+Test Baud rate setting
 
 68K has space to add ptrace?
 
 Better binary format.
 
+LWIP ?
+
 Look into posix spawn functions or vfork and if /bin/sh can use them
 
 Longer term split into multiple segments (code R/O uncopied, data/stack etc
 copied)
+
+Sort out building the zork engines and l9x etc for 68K
 
 DONE Add a 'user touches kernel' catcher on the debug/sim
 DONE ps user/kernel include mismatch error
@@ -109,3 +112,5 @@ DONE Clean up switchout/switchin/dofork/forkreturn. We only ever return from a
 DONE pagesize is not meaningful
 DONE 68010 support. 68EC020 and 68020 also work although we don't know
 	how to decode the frames nicely in the crash handler
+DONE Byteswap mode for ucp ?
+DONE - T68KRC (2MB version wth possible other serial etc on RC2014)

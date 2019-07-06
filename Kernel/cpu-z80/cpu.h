@@ -5,6 +5,9 @@ typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 
+typedef unsigned char uint_fast8_t;
+typedef signed char int_fast8_t;
+
 typedef uint16_t size_t;
 typedef int16_t ssize_t;
 
@@ -14,6 +17,8 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;		/* User address */
 typedef uint16_t uptr_t;		/* Userspace pointer equivalent */
+
+#define MAXUSIZE	0xFFFF
 
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
@@ -38,7 +43,7 @@ extern uint8_t in16(uint16_t addr) __z88dk_fastcall;
 
 
 /* compiler provides optimised versions of these: */
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)
 #define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
 #define strcpy(dst, src) __builtin_strcpy(dst, src)
 #define strncpy(dst, src, n) __builtin_strncpy(dst, src, n)

@@ -25,3 +25,5 @@ FDC_CCR		.equ FDC_BASE+7	; Configuration Control Register (W/O)
 FDC_MSR		.equ FDC_BASE+4	; 8272 Main Status Register (R/O?)
 FDC_DATA	.equ FDC_BASE+5	; 8272 Data Port (R/W)
 FDC_DOR		.equ FDC_BASE+2	; Digital Output Register (W/O)
+
+CONFIG_SWAP		    .equ 0

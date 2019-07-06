@@ -1,3 +1,5 @@
+#define _FUZIX_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -141,7 +143,7 @@ int main(int argc, char *argv[])
         if (optind != argc)
             mnt.mnt_opts = argv[optind++];
         else
-            mnt.mnt_opts = "";
+            mnt.mnt_opts = "rw";
         if (optind != argc)
             usage();
         do_mount(&mnt);

@@ -163,7 +163,7 @@ uint8_t si_cmd(void)
 
 /* This needs plumbing into a /dev/sg device off devsys */
 
-int si_ioctl(uint8_t dev, uarg_t req, char *data)
+int si_ioctl(uint_fast8_t dev, uarg_t req, char *data)
 {
 	struct	Siioctl sip;
 

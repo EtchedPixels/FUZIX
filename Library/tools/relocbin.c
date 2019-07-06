@@ -89,10 +89,11 @@ static void sweep_relocations(void)
   *relptr++ = 0x00;
   relsize = relptr - (buf + s__DATA);
   /* In effect move the relocations from DATA into INITIALIZED */
+//  printf("%d relocations %d bytes BSS\n", relsize, l__DATA);
   s__DATA += relsize;
-  l__DATA -= relsize;
-  /* Corner case - more relocations than data - grow the object size slightly */
-  if (l__DATA < 0)
+  if (l__DATA >= relsize)
+    l__DATA -= relsize;
+  else
     l__DATA = 0;
 }
 

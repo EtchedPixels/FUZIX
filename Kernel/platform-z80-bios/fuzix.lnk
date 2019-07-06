@@ -1,0 +1,43 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0000
+-b _COMMONMEM=0xF000
+-l z80
+platform-z80-bios/crt0.rel
+platform-z80-bios/commonmem.rel
+platform-z80-bios/system.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+usermem.rel
+platform-z80-bios/tricks.rel
+platform-z80-bios/main.rel
+platform-z80-bios/discard.rel
+timer.rel
+kdata.rel
+platform-z80-bios/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+syscall_net.rel
+tty.rel
+mm.rel
+swap.rel
+bankfixed.rel
+devsys.rel
+usermem_std-z80.rel
+platform-z80-bios/devtty.rel
+platform-z80-bios/blkdev.rel
+platform-z80-bios/mbr.rel
+platform-z80-bios/devdisk.rel
+platform-z80-bios/devlpr.rel
+platform-z80-bios/devrtc.rel
+platform-z80-bios/bioshooks.rel
+-e

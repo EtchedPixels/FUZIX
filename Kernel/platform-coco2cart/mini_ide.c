@@ -25,7 +25,7 @@ extern void devide_write_data(uint8_t *p);
 extern uint8_t idepage;
 
 /* FIXME: switch to the correct mpi slot on entry */
-static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int ide_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
 {
     uint16_t nb = 0;
     uint8_t *dptr;
@@ -68,7 +68,7 @@ static int ide_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 }
 
-int ide_open(uint8_t minor, uint16_t flag)
+int ide_open(uint_fast8_t minor, uint16_t flag)
 {
     if (!(ide_present & (1 << (minor >> 7)))) {
         udata.u_error = ENODEV;
@@ -77,17 +77,17 @@ int ide_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int ide_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int ide_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     return ide_transfer(minor, true, rawflag);
 }
 
-int ide_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int ide_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     return ide_transfer(minor, false, rawflag);
 }
 
-int ide_ioctl(uint8_t minor, uarg_t request, char *unused)
+int ide_ioctl(uint_fast8_t minor, uarg_t request, char *unused)
 {
     if (request != BLKFLSBUF)
         return -1;

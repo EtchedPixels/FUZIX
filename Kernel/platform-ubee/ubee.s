@@ -35,7 +35,6 @@
             .globl istack_top
             .globl istack_switched_sp
             .globl unix_syscall_entry
-            .globl trap_illegal
             .globl outcharhex
 	    .globl fd_nmi_handler
 	    .globl null_handler

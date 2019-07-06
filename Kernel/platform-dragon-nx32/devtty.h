@@ -12,11 +12,11 @@ extern const signed char vt_tbottom[4];
 extern uint8_t curtty;
 extern void vc_clear(int8_t vc_num);
 
-extern int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
+extern int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr);
 
 extern void video_cmd(uint8_t *ptr);
 extern void video_read(uint8_t *ptr);
 extern void video_write(uint8_t *ptr);
 
-int my_tty_close( uint8_t minor ); /* wrapper call to close DW ports */
+int my_tty_close( uint_fast8_t minor ); /* wrapper call to close DW ports */
 #endif

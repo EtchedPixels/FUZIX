@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
+#include <msx.h>
 
 extern uint8_t ramtab[], kernel_map[], current_map[], user_map[];
 extern uint8_t subslots;
@@ -23,15 +24,20 @@ void map_init(void)
   uint8_t *rp;
   uint8_t i;
   uint8_t pp;
+  uint8_t cp;
   const char *vdpname = "??";
   
   if (vdptype < 3)
     vdpname = vdpnametab[vdptype];
 
+  cp = bp[5] & 3;
+
   kprintf("VDP %s@%x\n", vdpname, vdpport);  
   kprintf("Subslots %x\n", subslots);
-
-  kprintf("Kernel map %x %x %x %x %x %x\n",
+  kprintf("Cartridge in slot %d", cp);
+  if (subslots &  (1 << cp))
+    kprintf(".%d", bp[cp] & 3);
+  kprintf("\nKernel map %x %x %x %x %x %x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
     
   bp = current_map;
@@ -69,31 +75,17 @@ void map_init(void)
   bp = user_map;
   kprintf("User map %x %x %x %x %x %x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
-}
-
-
-void platform_discard(void)
-{
-    /* Until we tackle the buffers */
-}
-
-/*
- *	This function is called for partitioned devices if a partition is found
- *	and marked as swap type. The first one found will be used as swap. We
- *	only support one swap device.
- */
-void platform_swap_found(uint8_t letter, uint8_t m)
-{
-  blkdev_t *blk = blk_op.blkdev;
-  uint16_t n;
-  if (swap_dev != 0xFFFF)
-    return;
-  letter -= 'a';
-  kputs("(swap) ");
-  swap_dev = letter << 4 | m;
-  n = blk->lba_count[m - 1] / SWAP_SIZE;
-  if (n > MAX_SWAPS)
-    n = MAX_SWAPS;
-  while(n)
-    swapmap_init(n--);
+  copy_vectors();
+  for (i = 0; i < 4; i++){
+    for (pp = 0; pp < 4; pp++) {
+      if (devtab[i][pp][1] & 0x8000)
+        kprintf("@0x4000: %d.%d: %x\n", i, pp, devtab[i][pp][1] & 0x7FFF);
+    }
+  }
+  for (i = 0; i < 4; i++){
+    for (pp = 0; pp < 4; pp++) {
+      if (devtab[i][pp][2] & 0x8000)
+        kprintf("@0x8000: %d.%d: %x\n", i, pp, devtab[i][pp][2] & 0x7FFF);
+    }
+  }
 }

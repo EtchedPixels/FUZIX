@@ -29,7 +29,7 @@ __sfr __at (Z180_IO_BASE + 0x16) TIME_RLDR1L;   /* Timer reload register,  chann
 __sfr __at (Z180_IO_BASE + 0x17) TIME_RLDR1H;   /* Timer reload register,  channel 1H         */
 __sfr __at (Z180_IO_BASE + 0x18) TIME_FRC;      /* Timer Free running counter                 */
 
-__sfr __at (Z180_IO_BASE + 0x10) ASCI_CNTLA0;   /* ASCI control register A channel 0          */
+__sfr __at (Z180_IO_BASE + 0x00) ASCI_CNTLA0;   /* ASCI control register A channel 0          */
 __sfr __at (Z180_IO_BASE + 0x01) ASCI_CNTLA1;   /* ASCI control register A channel 1          */
 __sfr __at (Z180_IO_BASE + 0x02) ASCI_CNTLB0;   /* ASCI control register B channel 0          */
 __sfr __at (Z180_IO_BASE + 0x03) ASCI_CNTLB1;   /* ASCI control register B channel 0          */
@@ -48,6 +48,13 @@ __sfr __at (Z180_IO_BASE + 0x1D) ASCI_ASTC1H;   /* ASCI time constant register c
 
 __sfr __at (Z180_IO_BASE + 0x0A) CSIO_CNTR;     /* CSI/O control/status register              */
 __sfr __at (Z180_IO_BASE + 0x0B) CSIO_TRDR;     /* CSI/O transmit/receive data register       */
+
+__sfr __at (Z180_IO_BASE + 0x36) Z180_RCR;	/* Refresh control register */
+__sfr __at (Z180_IO_BASE + 0x3E) Z180_OMCR;	/* Output mode control register */
+__sfr __at (Z180_IO_BASE + 0x3F) Z180_ICR;	/* I/O control register */
+__sfr __at (Z180_IO_BASE + 0x1E) Z180_CMR;	/* Clock multiplier register */
+__sfr __at (Z180_IO_BASE + 0x1F) Z180_CCR;	/* Clock divide/standby register */
+__sfr __at (Z180_IO_BASE + 0x32) Z180_DCNTL;	/* DMA/WAIT control */
 
 /* On Z80182 the MIMIC, ESCC, PIA and MISC registers are at fixed addresses */
 __sfr __at (0xE0)                ESCC_CTRL_A;   /* ESCC Channel A control register            */

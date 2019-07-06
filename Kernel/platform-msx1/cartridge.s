@@ -21,8 +21,8 @@
 		.globl kstack_top
 
 ;
-;	We are running in an unknown subslot of an unknown bank and
-;	have 4000-BFFF mapped to us, BIOS (0:0) in the low 16K and
+;	We are running in an unknown subslot of an unknown slot and
+;	have 4000-7FFF mapped to us, BIOS (0:0) in the low 16K and
 ;	RAM ought to be in the top 16K because the BIOS needs it. We
 ;	can't btw even assume that all the RAM is in the same bank - what a
 ;	mess!
@@ -35,9 +35,6 @@
 CHPUT		.equ 0x00A2
 INITXT		.equ 0x006F
 EXPTBL		.equ 0xFCC1
-SLTTBL		.equ 0xFCC5
-SLTATR		.equ 0xFCC9
-
 
 pstring:
 		ld a,(hl)
@@ -102,7 +99,7 @@ ripple:
 
 expan:		.asciz 'expanded'
 		
-wtfami:		ld sp,#0xF000		; random free space in known RAM
+wtfami:		ld sp,#0xF380		; below system variables
 		;
 		;	Initialize the debug port
 		;
@@ -113,8 +110,91 @@ wtfami:		ld sp,#0xF000		; random free space in known RAM
 		call INITXT		; set 40 column text mode
 		ld hl,#hello
 		call pstring
+		ld a,#'#'
+		out (0x2F),a
+
+		; We'd like the use the ROM services but unfortunately they
+		; don't actually work for the top 16K in MSX
+
+		ld sp,#0xfcc0		; We can trash the sysvars below this
+
+		ld ix,#0xffff		; subslot control byte
 
 		di
+		ld a,(ix)
+		cpl			; remember the old subslot mapping
+					; for the RAM top 16K
+		ld e,a
+		in a,(0xA8)
+		ld d,a			; Remember the old slot mapping
+		and #0x0C		; This is the mapping for the cartridge
+		rla
+		rla
+		rla			; move it to the top 2 bits
+		rla
+		ld b,a
+		in a,(0xA8)
+		and #0x3F
+		or b
+		ld b,a
+		out (0xA8),a		; cartridge mapped in top 16K not stack
+		ld a,(ix)
+		cpl
+		and #0x0c		; cartridge subslot if any
+		rla
+		rla
+		rla
+		rla
+		ld c,a			; save the bits
+		ld a,(0xffff)
+		cpl
+		and #0x3f		; mask off top 16K map
+		or c
+		ld c,a
+
+		; At this point D/E get us the RAM mapping
+		; C/B the ROM mapping
+		; We could both be in the same slot so we have to do all the
+		; painful stupid stuff 8(
+
+	        ld a,d
+		out (0xA8),a
+		ld (ix),e
+
+		ld a,d
+		call phex
+		ld a,e
+		call phex
+		ld a,b
+		call phex
+		ld a,c
+		call phex
+		exx
+
+		ld hl,#0xC000
+		ld bc,#0x3C80
+
+copy_common_loop:
+		exx			; Paging values
+		ld a,b			; Map cartridge
+		out (0xA8),a
+		ld (ix),c
+		exx			; Work values
+		ld e,(hl)		; Fetch byte
+		exx			; Paging values
+		ld a,d			; Map RAM
+		out (0xA8),a
+		ld (ix),e
+		exx			; Work values
+		ld (hl),e		; Save to RAM
+		inc hl			; Move on
+		dec bc
+		ld a,b
+		or c
+		jr nz, copy_common_loop
+
+		; RAM is what is left mapped
+
 		;
 		;	Save a few things before we give the ROM the boot
 		;	We keep them in the alt registers
@@ -184,23 +264,23 @@ mapped:
 
 		; Begin by setting up our RAM as a normal ROM based SDCC
 		; process (for a change!)
-		ld hl,#s__INITIALIZER
-		ld de,#s__INITIALIZED
-		ld bc,#l__INITIALIZER
-		ldir
-		; Now unpack the common space
-		ld de,#s__COMMONMEM
-		ld bc,#l__COMMONMEM
-		ldir
-		; Wipe the BSS area
-		ld hl,#s__DATA
-		ld d,h
-		ld e,l
-		ld (hl),#0
-		ld bc,#l__DATA
-		inc de
-		dec bc
-		ldir
+;		ld hl,#s__INITIALIZER
+;		ld de,#s__INITIALIZED
+;		ld bc,#l__INITIALIZER
+;		ldir
+;		; Now unpack the common space
+;		ld de,#s__COMMONMEM
+;		ld bc,#l__COMMONMEM
+;		ldir
+;		; Wipe the BSS area
+;		ld hl,#s__DATA
+;		ld d,h
+;		ld e,l
+;		ld (hl),#0
+;		ld bc,#l__DATA
+;		inc de
+;		dec bc
+;		ldir
 		; Switch to the right stack
 		ld sp,#kstack_top
 		call init_early

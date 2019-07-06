@@ -175,7 +175,7 @@ static struct mode_s mode[5] = {
 };
 
  
-static struct pty ptytab[] VSECTD = {
+static struct tty_coco3 ttytab[] VSECTD = {
 	{
 		(unsigned char *) 0x2000,
 		NULL,
@@ -189,7 +189,6 @@ static struct pty ptytab[] VSECTD = {
 		79,
 		24,
 		&fmodes[0],
-		050
 	},
 	{
 		(unsigned char *) 0x3000,
@@ -204,13 +203,12 @@ static struct pty ptytab[] VSECTD = {
 		39,
 		24,
 		&fmodes[1],
-		050
 	}
 };
 
 
-/* ptr to current active pty table */
-struct pty *curpty VSECTD = &ptytab[0];
+/* ptr to current active tty table */
+struct tty_coco3 *curtty VSECTD = &ttytab[0];
 
 /* current minor for input */
 int curminor = 1;
@@ -218,7 +216,7 @@ int curminor = 1;
 
 /* Apply settings to GIME chip */
 void apply_gime( int minor ){
-	struct pty *p=&(ptytab[minor-1]);
+	struct tty_coco3 *p=&(ttytab[minor-1]);
 	uint16_t s;
 	if( p->vmod & 0x80 )
 		s=0x12000 / 8 ;
@@ -231,7 +229,7 @@ void apply_gime( int minor ){
 
 
 /* A wrapper for tty_close that closes the DW port properly */
-int my_tty_close(uint8_t minor)
+int my_tty_close(uint_fast8_t minor)
 {
 	if (minor > 2 && ttydata[minor].users == 1)
 		dw_vclose(minor);
@@ -240,19 +238,19 @@ int my_tty_close(uint8_t minor)
 
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	return TTY_READY_NOW;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	int irq;
 	if (minor > 2 ) {
@@ -260,24 +258,22 @@ void tty_putc(uint8_t minor, unsigned char c)
 		return;
 	}
 	irq=di();
-	struct pty *t = curpty;
-	vt_save(&curpty->vt);
-	curpty = &ptytab[minor - 1];
-	vt_load(&curpty->vt);
-	vtoutput(&c, 1);
-	vt_save(&curpty->vt);
-	curpty = t;
-	vt_load(&curpty->vt);
+	if (curtty != &ttytab[minor - 1]){
+		vt_save(&curtty->vt);
+		curtty = &ttytab[minor - 1];
+		vt_load(&curtty->vt);
+	}
+	vtoutput(&c,1);
 	irqrestore(irq);
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	used(minor);
 }
 
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	if (minor > 2) {
 		dw_vopen(minor);
@@ -286,7 +282,7 @@ void tty_setup(uint8_t minor, uint8_t flags)
 }
 
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	if( minor > 2 ) return dw_carrier( minor );
 	return 1;
@@ -297,7 +293,7 @@ void tty_interrupt(void)
 
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
@@ -457,18 +453,18 @@ static void keydecode(void)
 	if (keymap[4] & 64) {
 		/* control+1 */
 		if (c == '1') {
-			vt_save(&curpty->vt);
-			curpty = &ptytab[0];
-			vt_load(&curpty->vt);
+			vt_save(&curtty->vt);
+			curtty = &ttytab[0];
+			vt_load(&curtty->vt);
 			curminor = 1;
 			apply_gime( 1 );
 			return;
 		}
 		/* control + 2 */
 		if (c == '2') {
-			vt_save(&curpty->vt);
-			curpty = &ptytab[1];
-			vt_load(&curpty->vt);
+			vt_save(&curtty->vt);
+			curtty = &ttytab[1];
+			vt_load(&curtty->vt);
 			curminor = 2;
 			apply_gime( 2 );
 			return;
@@ -506,7 +502,7 @@ void vtattr_notify(void)
 	curattr = ((vtink&7)<<3) + (vtpaper&7);
 }
 
-int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
 	if ( minor > 2 )	/* remove once DW get its own ioctl() */
 		return tty_ioctl(minor, arg, ptr);
@@ -514,7 +510,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return vt_ioctl(minor, arg, ptr);
 	switch( arg ){
 	case GFXIOC_GETINFO:
-		return uput( ptytab[minor-1].fdisp, ptr, sizeof( struct display));
+		return uput( ttytab[minor-1].fdisp, ptr, sizeof( struct display));
 	case GFXIOC_GETMODE:
 		{
 			uint8_t m=ugetc(ptr);
@@ -525,7 +521,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		{
 			uint8_t m=ugetc(ptr);
 			if( m > 4 ) goto inval;
-			memcpy( &(ptytab[minor-1].vmod), &(mode[m]), sizeof( struct mode_s ) );
+			memcpy( &(ttytab[minor-1].vmod), &(mode[m]), sizeof( struct mode_s ) );
 			if( minor == curminor ) apply_gime( minor );
 			return 0;
 		}
@@ -565,13 +561,13 @@ static void apply_defmode( uint8_t defmode )
 {
 	int i;
 	for( i=0; i<2; i++){
-		memcpy( &(ptytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
+		memcpy( &(ttytab[i].vmod), &(mode[defmode]), sizeof( struct mode_s ) );
 	}
 	apply_gime(1);
 }
 
 __attribute__((section(".discard")))
-void set_defmode( uint8_t *s )
+void set_defmode(char *s)
 {
 	int defmode = s[7]-0x30;
 	if( defmode > 4 )
@@ -582,12 +578,12 @@ void set_defmode( uint8_t *s )
 __attribute__((section(".discard")))
 void devtty_init()
 {
-	int i;
 	/* set default keyboard delay/repeat rates */
 	keyrepeat.first = REPEAT_FIRST * (TICKSPERSEC/10);
 	keyrepeat.continual = REPEAT_CONTINUAL * (TICKSPERSEC/10);
 	apply_defmode(0);
 	/* make video palettes match vt.h's definitions. */
 	memcpy( (uint8_t *)0xffb0, rgb_def_pal, 16 );
+	vt_load(&curtty->vt);
 }
 

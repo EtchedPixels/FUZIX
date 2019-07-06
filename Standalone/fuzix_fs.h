@@ -71,7 +71,7 @@ typedef struct direct {
 typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 
 typedef struct blkbuf {
-    char        bf_data[512];    /* This MUST be first ! */
+    uint8_t     bf_data[512];    /* This MUST be first ! */
     char        bf_dev;
     blkno_t     bf_blk;
     char        bf_dirty;
@@ -238,7 +238,7 @@ static struct filesys fs_tab[1];
 static struct blkbuf bufpool[NBUFS];
 static struct u_data udata;
 static void bufsync (void);
-static char *zerobuf (void);
+static uint8_t *zerobuf (void);
 static void brelse(bufptr bp);
 static void bawrite(bufptr bp);
 static int bfree(bufptr bp, int dirty);
@@ -248,7 +248,7 @@ static void bufinit(void);
 static bufptr bfind(int dev, blkno_t blk);
 static bufptr freebuf(void);
 static void magic(inoptr ino);
-static char *bread(int dev, blkno_t blk, int rewrite);
+static uint8_t *bread(int dev, blkno_t blk, int rewrite);
 static int fmount(int dev, inoptr ino);
 static void i_ref(inoptr ino);
 static void xfs_end(void);

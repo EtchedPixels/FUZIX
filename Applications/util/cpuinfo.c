@@ -61,7 +61,7 @@ static void cpu_ident(void)
 }
 
 
-#elif defined(__SDCC_z80) || defined(__SDCC_z180)
+#elif defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80)
 
 #define CPU_Z80_Z80		0
 #define CPU_Z80_Z180		1
@@ -83,15 +83,15 @@ static void ident_asm(void)
         inc a			; part of long load on eZ80 only
         ld a, #CPU_Z80_EZ80
         jr z, set_id
-        ld a,#0x40
-        .byte 0xCB,0x37		; from the Z280 data book
-        jp p, z280_detected
         xor a
         dec a
         daa
         cp #0xF9
         ld a,#CPU_Z80_Z180
         jr z, set_id
+        ld a,#0x40
+        .byte 0xCB,0x37		; from the Z280 data book
+        jp p, z280_detected
         ld a,(_port_opt)
         or a
         jr z, no_port_idwork

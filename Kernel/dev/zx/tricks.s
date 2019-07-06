@@ -12,7 +12,6 @@
 	.globl _udata
         .globl _getproc
         .globl _platform_monitor
-        .globl trap_illegal
         .globl _platform_switchout
         .globl _switchin
 	.globl _low_bank
@@ -402,6 +401,7 @@ _dofork:
 
         ; Make a new process table entry, etc.
 	ld hl, #_udata
+	push hl
         ld hl, (fork_proc_ptr)
         push hl
 	push af

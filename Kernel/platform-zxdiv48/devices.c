@@ -5,9 +5,9 @@
 #include <devsys.h>
 #include <vt.h>
 #include <devide.h>
-#include <devsd.h>
 #include <blkdev.h>
 #include <devtty.h>
+#include <divrd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -28,8 +28,8 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
   /* 7: unused */
   {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
-  /* 8: DivIDE plus RAM swap: TODO */
-  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  /* 8: DivIDE plus RAM swap */
+  {  rd_open,      no_close,     rd_read,       rd_write,      no_ioctl  },
 };
 
 bool validdev(uint16_t dev)
@@ -42,8 +42,11 @@ bool validdev(uint16_t dev)
         return true;
 }
 
+extern void bufsetup(void);
+
 void device_init(void)
 {
+  bufsetup();
 #ifdef CONFIG_IDE
   devide_init();
 #endif

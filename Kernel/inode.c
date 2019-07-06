@@ -14,7 +14,7 @@
    need to integrate this into the I/O loop, but when we do it changes
    how we handle the psleep_flags bit. Pipes wrap before 64k so we can
    shorten the check */
-static uint8_t pipewait(inoptr ino, uint8_t flag)
+static uint8_t wait_pipe_read(inoptr ino, uint_fast8_t flag)
 {
         while((uint16_t)ino->c_node.i_size == 0) {
                 if (ino->c_writers == 0 || psleep_flags(ino, flag)) {
@@ -26,6 +26,23 @@ static uint8_t pipewait(inoptr ino, uint8_t flag)
         return 1;
 }
 
+/* Wait for our pipe to become writable. We must have enough space and
+   a reader */
+static uint8_t wait_pipe_write(inoptr ino, uint_fast8_t flag)
+{
+	while (LOWORD(ino->c_node.i_size) > 8 * BLKSIZE) {
+		if (ino->c_readers == 0) {	/* No readers */
+			udata.u_done = (usize_t)-1;
+			udata.u_error = EPIPE;
+			ssig(udata.u_ptab, SIGPIPE);
+			return 1;
+		}
+		/* Sleep if pipe full */
+		if (psleep_flags(ino, flag))
+		        return 1;
+	}
+	return 0;
+}
 /* We need this because SDCC otherwise makes a right hash of it */
 static uint16_t uoff(void)
 {
@@ -41,14 +58,14 @@ uint16_t umove(uint16_t n)
 	return udata.u_done;
 }
 
-static uint16_t mapcalc(inoptr ino, usize_t *size, uint8_t m)
+static uint16_t mapcalc(inoptr ino, usize_t *size, uint_fast8_t m)
 {
 	*size = min(udata.u_count, BLKSIZE - uoff());
 	return bmap(ino, udata.u_offset >> BLKSHIFT, m);
 }
 
 /* Writei (and readi) need more i/o error handling */
-void readi(regptr inoptr ino, uint8_t flag)
+void readi(regptr inoptr ino, uint_fast8_t flag)
 {
 	usize_t amount;
 	blkno_t pblk;
@@ -81,7 +98,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 	case MODE_R(F_PIPE):
 		ispipe = true;
 		/* This bit really needs to be inside the loop for pipe cases */
-		if (!pipewait(ino, flag))
+		if (!wait_pipe_read(ino, flag))
 		        break;
 		goto loop;
 
@@ -149,9 +166,7 @@ void readi(regptr inoptr ino, uint8_t flag)
 	}
 }
 
-
-
-void writei(regptr inoptr ino, uint8_t flag)
+void writei(regptr inoptr ino, uint_fast8_t flag)
 {
 	usize_t amount;
 	bufptr bp;
@@ -175,21 +190,6 @@ void writei(regptr inoptr ino, uint8_t flag)
 #endif
 	case MODE_R(F_PIPE):
 		ispipe = true;
-		/* FIXME: this will hang if you ever write > 16 * BLKSIZE
-		   in one go - needs merging into the loop */
-		while (udata.u_count > (16 * BLKSIZE) -
-					LOWORD(ino->c_node.i_size)) {
-			if (ino->c_readers == 0) {	/* No readers */
-				udata.u_done = (usize_t)-1;
-				udata.u_error = EPIPE;
-				ssig(udata.u_ptab, SIGPIPE);
-				return;
-			}
-			/* Sleep if empty pipe */
-			if (psleep_flags(ino, flag))
-			        return;
-		}
-		/* Sleep if empty pipe */
 
 	case MODE_R(F_DIR):
 	case MODE_R(F_REG):
@@ -197,6 +197,11 @@ void writei(regptr inoptr ino, uint8_t flag)
 	      	flag = flag & O_SYNC ? 2 : 1;
 
 		while (udata.u_count) {
+			if (ispipe) {
+				/* Sleep if empty pipe */
+				if (wait_pipe_write(ino, flag))
+					return;
+			}
 			pblk = mapcalc(ino, &amount, 0);
 
                         if (HIBYTE32(udata.u_offset) & BLKOVERSIZE32) {
@@ -251,7 +256,7 @@ void writei(regptr inoptr ino, uint8_t flag)
 	}
 }
 
-int16_t doclose(uint8_t uindex)
+int16_t doclose(uint_fast8_t uindex)
 {
 	int8_t oftindex;
 	struct oft *oftp;
@@ -291,7 +296,7 @@ int16_t doclose(uint8_t uindex)
 	return (0);
 }
 
-inoptr rwsetup(bool is_read, uint8_t * flag)
+inoptr rwsetup(bool is_read, uint_fast8_t * flag)
 {
 	inoptr ino;
 	regptr struct oft *oftp;

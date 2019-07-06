@@ -110,7 +110,7 @@ char *name;
 char *argv[];
 char *envp[];
 ********************************************/
-#define name (char *)udata.u_argn
+#define name (uint8_t *)udata.u_argn
 #define argv (char **)udata.u_argn1
 #define envp (char **)udata.u_argn2
 

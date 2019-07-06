@@ -9,7 +9,7 @@ __sfr __at 0xF7 ide_low;
 
 uint8_t atom_type;
 
-uint8_t devide_readb(uint8_t reg)
+uint_fast8_t devide_readb(uint_fast8_t reg)
 {
     volatile uint8_t dummy;
     ide_addr = reg;
@@ -17,7 +17,7 @@ uint8_t devide_readb(uint8_t reg)
     return ide_low;
 }
 
-void devide_writeb(uint8_t reg, uint8_t value)
+void devide_writeb(uint_fast8_t reg, uint_fast8_t value)
 {
     ide_addr = reg;
     ide_high = 0;

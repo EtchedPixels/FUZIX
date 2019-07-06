@@ -15,6 +15,9 @@
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
+/* Required for Z80 single process mode (and faster) */
+#define CONFIG_PARENT_FIRST
+
 /* Settings for swap only mode */
 #define CONFIG_SPLIT_UDATA		/* Not really but need to fix simple.c */
 #define UDATA_SIZE 0x200
@@ -69,14 +72,14 @@
 #define MAX_BLKDEV 2	    /* 2 IDE drives, 2 SD drive */
 
 #define SWAPBASE 0x8000
-#define SWAPTOP  0xFF00UL	/* FFxx is the interrupt stack */
+#define SWAPTOP  0xFC00UL	/* FC00+ is udata, stacks etc */
 #define SWAP_SIZE 0x40
 /* We need to set the swaps up dynamically. In theory the counts are
    14 for DivIDE plus (512K RAM, of which 64K is kernel banks), and
    13 for ZXCF+ 512K (512K RAM 64K kernel banks 32K ResiDOS) but there
    is a 1MB version that would need 29.. which is silly. Set it to 16
    which is our process count and worst case */
-#define MAX_SWAPS	14
+#define MAX_SWAPS	16
 #define SWAPDEV  0x800	  /* Device for swapping (ram special). */
 
 /* All our swap is to direct mapped space */

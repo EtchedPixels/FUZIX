@@ -902,7 +902,7 @@ int main(int argc, char **argv)
 	if (stat(argv[argc - 1], &dst) == 0) {
 		if ((dst.st_mode & S_IFMT) != S_IFLNK ||
 		    stat(argv[argc - 1], &ust) < 0)
-			ust = dst;
+			memcpy(&ust, &dst, sizeof(ust));
 		if ((ust.st_mode & S_IFMT) == S_IFDIR) {
 			char *copy, *cend;
 			size_t sz, slen, ss;

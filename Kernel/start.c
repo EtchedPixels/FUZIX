@@ -320,6 +320,7 @@ inline uint16_t get_root_dev(void)
 
 void fuzix_main(void)
 {
+	struct mount *m;
 	/* setup state */
 	inint = false;
 	udata.u_insys = true;
@@ -379,7 +380,7 @@ void fuzix_main(void)
 	/* initialise hardware devices */
 	device_init();
 
-        while(true){
+	do {
             old_progptr = progptr;
             old_argptr = argptr;
             /* Get a root device to try */
@@ -388,14 +389,21 @@ void fuzix_main(void)
                 panic(PANIC_NOROOT);
             /* Mount the root device */
             kprintf("Mounting root fs (root_dev=%d, r%c): ", root_dev, ro ? 'o' : 'w');
-            if(fmount(root_dev, NULLINODE, ro) == 0)
-                break;
-            kputs("failed\n");
-            /* reset potentially altered state before prompting the user for command line again */
-            progptr = old_progptr;
-            argptr = old_argptr;
-            ro = MS_RDONLY;
-        }
+            m = fmount(root_dev, NULLINODE, ro);
+            if (m == NULL) {
+	            kputs("failed\n");
+		    /* reset potentially altered state before prompting the user for command line again */
+	            progptr = old_progptr;
+		    argptr = old_argptr;
+	            ro = MS_RDONLY;
+	    }
+        } while(m == NULL);
+
+        /* Set the system time from the superblock. In turn user space will
+           set it from the user or rtc when prompted. Setting it here
+           however means the date is often right and that time goes forward */
+        tod.low = m->m_fs.s_time;
+        tod.high = m->m_fs.s_timeh;
 
 	root = i_open(root_dev, ROOTINODE);
 	if (!root)
@@ -408,7 +416,7 @@ void fuzix_main(void)
 
 	udata.u_cwd = i_ref(root);
 	udata.u_root = i_ref(root);
-	rdtime32(&udata.u_ptab->p_time);
+	udata.u_ptab->p_time = ticks.full;
 	exec_or_die();
 }
 

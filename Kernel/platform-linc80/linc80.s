@@ -325,6 +325,18 @@ _siob_txl:
 
 sio_ports a
 sio_ports b
+
+	.area _COMMONMEM
+
+;
+;	Our data is fixed in common so nothing is needed
+;
+.macro switch
+.endm
+
+.macro switchback
+.endm
+
 sio_handler_im2	a, SIOA_C, SIOA_D, reti
 sio_handler_im2 b, SIOB_C, SIOB_D, reti
 

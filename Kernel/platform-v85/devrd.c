@@ -7,11 +7,11 @@
 #include <printf.h>
 #include <devrd.h>
 
-static uint8_t rd_sizeh;
+static uint_fast8_t rd_sizeh;
 
-static int rd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int rd_transfer(uint8_t minor, bool is_read, uint_fast8_t rawflag)
 {
-    uint8_t page = 0;
+    uint_fast8_t page = 0;
     uint16_t ct = 0;
     if (rawflag == 2)
         page = swappage;
@@ -55,7 +55,7 @@ int devrd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 
 void devrd_init(void)
 {
-    uint8_t i;
+    uint_fast8_t i;
     for (i = 0; i < 8; i++) {
         if (rd_present(i) == 0)
             break;

@@ -38,9 +38,9 @@
 	.globl null_handler
 	.globl unix_syscall_entry
         .globl _doexec
-        .globl trap_illegal
 	.globl nmi_handler
 	.globl interrupt_handler
+	.globl synchronous_fault
 	.globl ___hard_ei
 	.globl ___hard_di
 	.globl ___hard_irqrestore
@@ -53,6 +53,7 @@
 	.globl _chksigs
 	.globl _int_disabled
         .globl _platform_monitor
+	.globl _doexit
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -318,11 +319,12 @@ _doexec:
         jp (hl)
 
 ;
-;  Called from process context (hopefully)
-;
-;  FIXME: hardcoded RST30 won't work on all boxes
+;	We took a NULL pointer - either a branch to NULL or on Z180
+;	an illegal. For now use a blunt instrument. We could in theory
+;	do a nicer signal throw etc.
 ;
 null_handler:
+	di
 	; kernel jump to NULL is bad
 	ld a, (_udata + U_DATA__U_INSYS)
 	or a
@@ -330,32 +332,21 @@ null_handler:
 	ld a, (_inint)
 	or a
 	jp nz, trap_illegal
-	; user is merely not good
-	ld hl, #7
+	; user is merely not good - handle it synchronously
+	ld hl,#9		; SIGKILL
+synchronous_fault:
+	ld sp,#kstack_top
+	call map_kernel_di
 	push hl
-	ld ix, (_udata + U_DATA__U_PTAB)
-	ld l,P_TAB__P_PID_OFFSET(ix)
-	ld h,P_TAB__P_PID_OFFSET+1(ix)
-	push hl
-	ld hl, #39		; signal (getpid(), SIGBUS)
-	push hl
-	call unix_syscall_entry		; syscall
-	ld hl, #0xFFFF
-	push hl
-	dec hl			; #0
-	push hl
-	call unix_syscall_entry
-
-
-
-illegalmsg: .ascii "[illegal]"
-            .db 13, 10, 0
-
+	call _doexit
 trap_illegal:
         ld hl, #illegalmsg
 traphl:
         call outstring
         call _platform_monitor
+
+illegalmsg: .ascii "[illegal]"
+            .db 13, 10, 0
 
 nmimsg: .ascii "[NMI]"
         .db 13,10,0
@@ -423,12 +414,7 @@ mmu_irq_ret:
 	ld (istack_switched_sp), sp
 	ld sp, #istack_top
 
-	ld a, (0)
-
 	call map_save_kernel
-
-	cp #0xC3
-	call nz, null_pointer_trap
 
 	; So the kernel can check rapidly for interrupt status
 	; FIXME: move to the C code
@@ -460,7 +446,14 @@ mmu_irq_ret:
 intout:
 	xor a
 	ld (_udata + U_DATA__U_ININTERRUPT), a
-
+	;
+	;	Z180 internal interrupts do not reti
+	;
+.ifeq CPU_Z180
+	ld a,(_irqvector)
+	or a
+	jr nz, intret
+.endif
 	ld hl, #intret
 	push hl
 	reti			; We have now 'left' the interrupt
@@ -473,6 +466,9 @@ intret:
 	or a
 	jr nz, interrupt_pop
 
+	ld a,(0)
+	cp #0xC3
+	jp nz, null_pointer_trap
 	; Loop through any pending signals. These could longjmp out
 	; of the handler so ensure everything is fixed before this !
 
@@ -503,22 +499,19 @@ interrupt_pop:
 	ret			; runs in the ei interrupt shadow
 
 ;
-;	Called with the kernel mapped, mid interrupt and on the IRQ stack
+;	At the point we fire we are back on the user stack and logically
+;	speaking have just finished the interrupt. If the low byte was
+;	corrupt we assume the worst and just blow the process away
 ;
 null_pointer_trap:
-	ld a, #0xC3
+	ld a, #0xC3		; Repair
 	ld (0), a
-	ld hl, #11		; SIGSEGV
+	ld hl, #9		; SIGKILL (take no prisoners here)
 trap_signal:
 	push hl
-	ld hl, (_udata + U_DATA__U_PTAB);
-	push hl
-        call _ssig
-        pop hl
-        pop hl
-	ret
-
-
+        call _doexit
+	; Does not return
+	jp _platform_monitor
 ;
 ;	Pre-emption. We need to get off the interrupt stack, switch task
 ;	and clean up the IRQ state carefully
@@ -538,6 +531,11 @@ preemption:
 
 	ld sp, #kstack_top	; We don't pre-empt in a syscall
 				; so this is fine
+.ifeq CPU_Z180
+	ld a,(_irqvector)
+	or a
+	jr nz, intret2
+.endif
 	ld hl, #intret2
 	push hl
 	reti			; We have now 'left' the interrupt

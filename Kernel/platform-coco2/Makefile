@@ -5,7 +5,7 @@ C3SRCS = libc.c
 
 CDSRCS = discard.c mini_ide_discard.c
 
-DSRCS = ../dev/devdw.c
+DSRCS =
 
 ASRCS = crt0.s coco2.s ide.s
 ASRCS += tricks.s commonmem.s

@@ -21,7 +21,8 @@ void pagemap_init(void)
 		0: 16K
 		
 	   The 1MB one uses bit 5 for 512K */
-	for (i = 8; i < 16; i++)
+	/* Add the rest of the first 256K */
+	for (i = 0; i < 8; i++)
 		pagemap_add(0x40|i);
 	/* If we deal with Scorpion and friends then we have to use
 	   1FFD bits 4-7 for the high bits instead */
@@ -74,27 +75,4 @@ void map_init(void)
 
 void platform_copyright(void)
 {
-}
-
-/*
- *	This function is called for partitioned devices if a partition is found
- *	and marked as swap type. The first one found will be used as swap. We
- *	only support one swap device.
- */
-void platform_swap_found(uint8_t letter, uint8_t m)
-{
-	blkdev_t *blk = blk_op.blkdev;
-	uint16_t n;
-	if (swap_dev != 0xFFFF)
-		return;
-	letter -= 'a';
-	kputs("(swap) ");
-	swap_dev = letter << 4 | m;
-	n = blk->lba_count[m - 1] / SWAP_SIZE;
-	if (n > MAX_SWAPS)
-		n = MAX_SWAPS;
-#ifdef SWAPDEV
-	while (n)
-		swapmap_init(n--);
-#endif
 }

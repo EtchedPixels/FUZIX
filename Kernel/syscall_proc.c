@@ -445,11 +445,16 @@ uint16_t t;
 
 arg_t _pause(void)
 {
+	/* Make sure we don't set a timeout, have it expire then sleep */
+	irqflags_t irq = di();
 	/* 0 is a traditional "pause", n is a timeout for doing
 	   sleep etc without ugly alarm hacks */
-	if (t)
+	if (t) {
 		udata.u_ptab->p_timeout = t + 1;
+		ptimer_insert();
+	}
 	psleep(0);
+	irqrestore(irq);
 	/* Were we interrupted ? */
 	if (!t || udata.u_ptab->p_timeout > 1) {
 		udata.u_error = EINTR;
@@ -602,7 +607,8 @@ arg_t _alarm(void)
 
 	retval = udata.u_ptab->p_alarm / 10;
 	udata.u_ptab->p_alarm = secs * 10;
-	return (retval);
+	ptimer_insert();
+	return retval;
 }
 
 #undef secs

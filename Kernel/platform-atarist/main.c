@@ -3,12 +3,14 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <machine.h>
+
+uint8_t need_resched;
+uint16_t features;
 
 void platform_idle(void)
 {
 }
-
-uint8_t need_resched;
 
 uint8_t platform_param(char *p)
 {
@@ -33,8 +35,43 @@ void do_beep(void)
 {
 }
 
+struct probe_bits {
+	const char *name;
+	uint16_t bits;
+	uint32_t addr;
+};
+
+struct probe_bits probes[] = {
+	{ "falcon ", FEATURE_FALCON, 0xFF8007 },
+	{ "tt ", FEATURE_TT, 0xFF8260 },
+	{ "ste", FEATURE_STE, 0xFF8093 },
+
+	{ "vme ", FEATURE_VME, 0xFF8E01 },
+	{ "rtc ", FEATURE_RTC, 0xFFFC21 },
+	{ "tt-rtc ", FEATURE_TTRTC, 0xFF8961 },
+	{ "blitter ", FEATURE_BLITTER, 0xFF8A00 },
+	{ "ide ", FEATURE_IDE, 0xF00009 },
+	{ NULL, 0, 0 }
+};
+
 void map_init(void)
 {
+	struct probe_bits *p = probes;
+	/* Useful spot for hardware set up and reporting */
+
+	kputs("Features: ");
+	while(p->name) {
+		if (probe_memory((uint8_t *)p->addr) == 0) {
+			features |= p->bits;
+			kputs(p->name);
+		}
+		p++;
+	}
+	if ((features & (FEATURE_VME|FEATURE_TT)) == FEATURE_VME) {
+		features |= FEATURE_MSTE;
+		kputs("mste");
+        }
+        kputchar('\n');
 }
 
 u_block uarea_block[PTABSIZE];
@@ -45,9 +82,10 @@ uint16_t fdseek;
 uint16_t cputype;
 uint32_t screenbase;
 
-
 void pagemap_init(void)
 {
+	extern uint8_t _end;
+	uint32_t e = (uint32_t)&_end;
 	hzticks = *(uint16_t *)0x448 ? 60 : 50;
 	memtop = *(uint32_t *)0x42E;
 	fdseek = *(uint16_t *)0x440;
@@ -58,11 +96,7 @@ void pagemap_init(void)
 		kputs("NTSC System\n");
 	if (cputype)
 		kputs("Not a 68000\n");
-	/* FIXME: 512K hackish setup to get going */
 	/* Linker provided end of kernel */
-	extern uint8_t _end;
-	uint32_t e = (uint32_t)&_end;
-	kprintf("Kernel end %p\n", e);
 	/* Allocate the rest of memory to the userspace */
 	kmemaddblk((void *)e, screenbase - e);
 }

@@ -33,5 +33,45 @@ extern uint8_t acia_present;
 extern uint8_t ctc_present;
 extern uint8_t sio_present;
 extern uint8_t sio1_present;
+extern uint8_t z180_present;
+extern uint8_t tms9918a_present;
+
+#define UART_ACIA	1
+#define UART_SIO	2
+#define UART_Z180	3
+#define UART_8250	4
+#define UART_16450	5
+#define UART_16550	6
+#define UART_16550A	7
+#define UART_16750	8
+
+/* From ROMWBW */
+extern uint16_t syscpu;
+extern uint16_t syskhz;
+extern uint8_t systype;
+
+extern const char *uart_name[];
+
+struct uart {
+    uint8_t (*intr)(uint_fast8_t , uint_fast8_t);
+    uint8_t (*writeready)(uint_fast8_t, uint_fast8_t);
+    void (*putc)(uint_fast8_t, uint_fast8_t, uint_fast8_t);
+    void (*setup)(uint_fast8_t, uint_fast8_t);
+    uint8_t (*carrier)(uint_fast8_t, uint_fast8_t);
+    uint16_t cmask;
+};
+
+extern struct uart *uart[NUM_DEV_TTY + 1];
+extern uint8_t ttyport[NUM_DEV_TTY + 1];
+extern uint8_t register_uart(uint8_t type, uint8_t port, struct uart *);
+
+extern struct uart acia_uart;
+extern struct uart sio_uart;
+extern struct uart sio_uartb;
+extern struct uart ns16x50_uart;
+extern struct uart z180_uart0;
+extern struct uart z180_uart1;
+
+extern uint8_t *init_alloc(uint16_t size);
 
 #endif

@@ -4,7 +4,6 @@
 #include <devfd.h>
 #include <blkdev.h>
 #include <devide.h>
-#include <devfhd.h>
 #include <devsys.h>
 #include <devlpr.h>
 #include <devtty.h>
@@ -42,7 +41,5 @@ void device_init(void)
 {
   tty_init_port();
   fd_probe();
-  /* See what we are attaching */
-  if (devfhd_init() == 0)
-    devide_init();
+  devide_init();
 }

@@ -143,9 +143,9 @@ void tty_sleeping(uint8_t minor)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	if (minor == 1 && sio_txl[1] == 255)
+	if (minor == 1 && sio_txl[1] >= 127)
 		return TTY_READY_SOON;
-	if (minor == 2 && sio_txl[0] == 255)
+	if (minor == 2 && sio_txl[0] >= 127)
 		return TTY_READY_SOON;
 	return TTY_READY_NOW;
 }
@@ -161,8 +161,8 @@ void kputchar(char c)
 	/* Can't use the normal paths as we must survive interrupts off */
 	/* FIXME: would be nicer to just disable tx int and re-enable it ? */
 	irqflags_t irq = di();
-	while(!(SIOA_C & 0x04));
-	SIOA_D = c;
+	while(!(SIOB_C & 0x04));
+	SIOB_D = c;
 	if (c == '\n')
 		kputchar('\r');
 	irqrestore(irq);

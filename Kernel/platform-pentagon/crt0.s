@@ -27,8 +27,10 @@
 	.area _CODE2
 	;	We start this bank with FONT so that we have it aligned
 	.area _FONT
-	.area _CODE3
         .area _VIDEO
+	.area _CODE3
+
+	.area _CODE4
 
 	; Discard is dumped in at 0x8000 and will be blown away later.
         .area _DISCARD

@@ -5,6 +5,7 @@
 #include <device.h>
 #include <devtty.h>
 #include <carts.h>
+#include <blkdev.h>
 
 /*
  * Map handling: We have flexible paging. Each map table consists of a set of pages

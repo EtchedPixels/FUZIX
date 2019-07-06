@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <device.h>
 #include <devtty.h>
+#include <blkdev.h>
 #include <carts.h>
 
 /*
@@ -53,6 +54,7 @@ struct cart_rom_id carts[] = {
 	{ 0xB61B, CART_HDBDOS, "HDBDOS" },
 	{ 0xCF55, CART_HDBDOS, "HDBDOS" },
 	{ 0xE1BA, CART_ORCH90, "Orchestra-90 CC" },
+	{ 0x933E, CART_SDBOOT, "SDBOOT" },
 	{ 0x0000, 0, "No ROM" }
 };
 

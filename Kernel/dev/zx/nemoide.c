@@ -4,7 +4,6 @@
 #include <devide.h>
 #include <blkdev.h>
 #include <platform_ide.h>
-#include <devtty.h>
 
 /* We have to provide slightly custom methods here because of the banked
    kernel */
@@ -37,8 +36,8 @@ readword:
             jr nz, readword
             pop af
             or a
-            jp nz, map_kernel_restore               ; else map kernel then return
-            ret
+            ret z
+            jp map_kernel_restore               ; else map kernel then return
     __endasm;
 }
 
@@ -71,7 +70,7 @@ writeword:
             jr nz, writeword
             pop af
             or a
-            jp nz, map_kernel_restore               ; else map kernel then return
-            ret
+            ret z
+            jp  map_kernel_restore               ; else map kernel then return
     __endasm;
 }

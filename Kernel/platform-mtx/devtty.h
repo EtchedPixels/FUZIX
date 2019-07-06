@@ -3,7 +3,11 @@
 
 extern void kbd_interrupt(void);
 extern void tty_interrupt(void);
-extern int mtxtty_close(uint8_t);
+extern int mtxtty_open(uint_fast8_t minor, uint16_t flag);
+extern int mtxtty_close(uint_fast8_t);
+extern int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data);
+
+extern int probe_prop(void);
 
 extern signed char vt_twidth[2];
 extern signed char vt_tright[2];
@@ -14,5 +18,7 @@ extern uint8_t curtty;
 extern uint16_t keymap[8];
 extern uint8_t keyboard[8][10];
 extern uint8_t shiftkeyboard[8][10];
+
+extern uint8_t has6845;
 
 #endif

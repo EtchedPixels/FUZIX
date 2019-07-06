@@ -61,6 +61,18 @@ MPGENA		.equ	0x7C	; memory paging enable register, bit 0 (W/O)
 ;
 bootit:
 	ld sp, #0xFE00		; SP as high as we can
+	ld bc, #0xF8F0		; Get the CPU info into H L and speed into
+				; DE
+	rst 8
+
+	push hl
+	push de
+
+	ld bc, #0xF100		; Get system type into L
+	rst 8
+
+	push hl
+
 	ld bc, #0xF8E0		; Get boot sysinfo into DE
 	rst 8
 	ld b, #0x13		; ROMWBW disk read request
@@ -69,9 +81,9 @@ bootit:
 	ld e, #32		; 32 sectors (16K)
 	push bc
 	rst 8			; Can error but if so wtf do we do ?
-	ld hl,#0x8100		; Don't copy first 256 bytes over
-	ld de,#0x4100
-	ld bc,#0x3F00		; We've loaded 0100-4000
+	ld hl,#0x8000		; Don't copy first 256 bytes over
+	ld de,#0x4000
+	ld bc,#0x4000		; We've loaded 0000-4000
 	ld a,#32
 	out (MPGSEL_1),a	; Low bank at 0x4000 please
 	ldir
@@ -111,15 +123,43 @@ bootit:
 	;	Final 16K
 	;
 	ld hl,#0x8000		; Now load 8000 up
-	ld e, #32		; takes us up to F000. If that's not enough
-				; before unpack we have a problem as we
-				; will need to move the loader
+	ld e, #32
+	push bc
 	rst 8
 
 	ld hl,#0x8000		; Move it into place
 	ld de,#0x4000
 	ld bc,#0x4000
 	ld a,#35
+	out (MPGSEL_1),a
+	ldir
+	pop bc
+
+	;
+	;	Bank 2 first 16K
+	;
+	ld hl,#0x8000		; Load 4000 up
+	ld e, #32
+	push bc
+	rst 8
+	ld hl,#0x8000		; Move it into place
+	ld de,#0x4000
+	ld bc,#0x4000
+	ld a,#36
+	out (MPGSEL_1),a
+	ldir
+	pop bc
+
+	;
+	;	Bank 2 second 16K
+	;
+	ld hl,#0x8000		; Now load 8000 up
+	ld e, #32
+	rst 8
+	ld hl,#0x8000		; Move it into place
+	ld de,#0x4000
+	ld bc,#0x4000
+	ld a,#37
 	out (MPGSEL_1),a
 	ldir
 

@@ -7,7 +7,7 @@
 uint8_t keyboard_grab;
 static uint8_t metamap[INPUT_MAX_META];	/* forces it 0 terminated */
 
-uint8_t input_match_meta(uint8_t c)
+uint_fast8_t input_match_meta(uint_fast8_t c)
 {
     uint8_t *cp = metamap;
     if (!c)
@@ -19,7 +19,7 @@ uint8_t input_match_meta(uint8_t c)
     return 0;
 }
 
-int inputdev_read(uint8_t flag)
+int inputdev_read(uint_fast8_t flag)
 {
     uint8_t m[8];
     int s;
@@ -47,14 +47,14 @@ int inputdev_read(uint8_t flag)
     }
 }
 
-int inputdev_write(uint8_t flag)
+int inputdev_write(uint_fast8_t flag)
 {
     return platform_input_write(flag);
 }
 
 int inputdev_ioctl(uarg_t request, char *data)
 {
-    uint8_t r;
+    uint_fast8_t r;
     if (request == INPUT_GRABKB) {
         r = ((uint8_t)data) & 0x03;
         if (r > CONFIG_INPUT_GRABMAX) {

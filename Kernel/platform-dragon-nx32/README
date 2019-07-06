@@ -31,6 +31,11 @@ Emulating in XRoar
 XRoar supports Spinx-512 and MOOH boards, including SD card emulation,
 since version 0.35.
 
+TODO
+====
+
+Use hard disk swap partitions as discovered and only fall back to drivewire
+
 Using DriveWire
 ===============
 

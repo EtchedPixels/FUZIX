@@ -29,12 +29,10 @@ SRCSNS = \
 	init.c \
 	kill.c \
 	killall.c \
-	ln.c \
 	logname.c \
 	mkdir.c \
 	mkfifo.c \
 	mknod.c \
-	mv.c \
 	pagesize.c \
 	printenv.c \
 	prtroot.c \
@@ -101,6 +99,7 @@ SRCS  = \
 	sort.c \
 	stty.c \
 	su.c \
+	swapon.c \
 	tar.c \
 	tail.c \
 	termcap.c \

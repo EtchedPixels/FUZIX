@@ -69,10 +69,6 @@ so 8000-AFFF could probably be made user space and copied in and out each task
 switch. As a single user machine doesn't switch much the cost isn't too high
 and more becomes possible.
 
-As this is meant to be a porting reference nothing clever is done. There is
-no fast bank to bank copier, and no clever user to kernel copier. These can be
-taken from other ports if wanted.
-
 Oddities
 
 The SBCv2 by default has no timer interrupt. This means that time based
@@ -112,7 +108,7 @@ dd if=fuzix.romwbw of=rbc.raw bs=512 seek=2 conv=notrunc
 dd if=rbc.raw of=rbc.ide bs=512 seek=2 conv=notrunc
 
 
-If you need to udate the filesystem then ucp supports offsets. You need a 2050
+If you need to update the filesystem then ucp supports offsets. You need a 2050
 sector offset so you can do
 
 ucp rbc.ide:1049600
@@ -120,3 +116,6 @@ ucp rbc.ide:1049600
 
 SD is similar but doesn't have the 1K header so you don't need to do the final
 step.
+
+Run the rbcv2 emulator with the option -t and at the boot prompt add the
+parameter "msr" in order to use 10Hz timer tick mode.

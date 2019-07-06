@@ -17,6 +17,7 @@
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
+	.globl copy_mmu
 
         include "kernel.def"
         include "../kernel09.def"
@@ -246,49 +247,58 @@ skip2@	incb
 	; --- we are now on the stack copy, parent stack is locked away ---
 	rts	; this stack is copied so safe to return on
 
-;;; Copy data from one bank to another
+;;; Copy data from one 16k bank to another
 ;;;   takes: B = dest bank, A = src bank
 copybank
-	pshs	d,x,u
-	;; save mmu state
-	ldd	0xffa8	
-	pshs	d
-	ldd	0xffaa
 	pshs	d
 	;; map in src and dest
-	ldd	4,s		; D = banks
-	stb	0xffa8
+	bsr	copy_mmu
 	incb
-	stb	0xffa9
-	sta	0xffaa
 	inca
-	sta	0xffab
-	;; loop setup
-	ldx	#0		; dest address
-	ldu	#0x4000		; src address
-	;; unrolled: 16 bytes at a time
-a@	ldd	,u++
-	std	,x++
-	ldd	,u++
-	std	,x++
-	ldd	,u++
-	std	,x++
-	ldd	,u++
-	std	,x++
-	ldd	,u++
-	std	,x++
-	ldd	,u++
-	std	,x++
-	ldd	,u++
-	std	,x++
-	ldd	,u++
-	std	,x++
-	cmpx	#0x4000		; end of copy?
-	bne	a@		; no repeat
-	;; restore mmu
-	puls	d
-	std	0xffaa
-	puls	d
-	std	0xffa8
+	bsr	copy_mmu
 	;; return
-	puls	d,x,u,pc		; return
+	puls	d,pc		; return
+
+;;; copy data from one 8k bank to another
+;;;   takes: b = dest, a = src bank
+copy_mmu
+	pshs	dp,d,x,y,u
+	sts	@temp
+	std	0xffa9		; map in src,dest into mmu
+	lds	#0x6000		; to and from ptrs
+	ldu	#0x4000+7
+a@	leau	-14,u
+	pulu	dp,d,x,y	; transfer 7 bytes at a time
+	pshs	dp,d,x,y	; 6 times.. 42 bytes per loop
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	leau	-14,u
+	pulu	dp,d,x,y
+	pshs	dp,d,x,y
+	cmpu	#0x2002+42+7	; end of copy? (leave space for interrupt)
+	bne	a@		; no repeat
+	ldx	@temp		; put stack back
+	exg	x,s		; and data to ptr to x now
+	leau	-7,u
+b@	ldd	,--u		; move last 44 bytes with a normal stack
+	std	,--x		; 4 bytes per loop
+	ldd	,--u
+	std	,--x
+	cmpx	#0x4000
+	bne	b@
+	;; restore mmu
+	ldd	#0x0102
+	std	0xffa9
+	;; return
+	puls	dp,d,x,y,u,pc		; return
+@temp	rmb	2

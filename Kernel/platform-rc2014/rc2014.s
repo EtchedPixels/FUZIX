@@ -7,10 +7,10 @@
         .globl init_hardware
 	.globl _program_vectors
 	.globl map_kernel
+	.globl map_kernel_restore
 	.globl map_process
+	.globl map_process_save
 	.globl map_buffers
-	.globl map_buffers_user
-	.globl map_buffers_user_h
 	.globl map_kernel_di
 	.globl map_process_di
 	.globl map_process_always
@@ -41,6 +41,7 @@
 	.globl _ctc_present
 	.globl _sio_present
 	.globl _sio1_present
+	.globl _z180_present
 	.globl _udata
 
 	; exported debugging tools
@@ -79,16 +80,19 @@ ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
 ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
 ;ACIA_RTS_LOW_A       .EQU     0xB6   ; rts low, xmit interrupt enabled
 
+MAP_BANK1	.equ	0x2221	; 20 is low, 23 is high
+BANK1		.equ	0x21
+MAP_BANK2	.equ	0x2524	; for now 24 is buffers - FIXME
+BANK2		.equ	0x24
+
 ;=========================================================================
 ; Initialization code
 ;=========================================================================
         .area _DISCARD
+
 init_hardware:
         ; program vectors for the kernel
-        ld hl, #0
-        push hl
-        call _program_vectors
-        pop hl
+        call do_program_vectors
 
         ; Stop floppy drive motors
         ld a, #0x0C
@@ -183,9 +187,39 @@ is_sio:	ld a,#1
 	jr z, serial_up
 
 	; Repeat the check on SIO B
+	; We have to be careful here because it could be that this is
+	; a mirror of the first SIO! Fortunately channel B WR2 can be read
+	; as RR2 so we can write the vector to one and check the other, then
+	; write a different vector and check again. If they both change
+	; it's aliased, if not it really is two interfaces.
+
+	ld a,#2
+	out (SIOB_C),a			; vector
+	ld a,#0xF0
+	out (SIOB_C),a			; vector is now 0xFX
+	ld a,#2
+	out (SIOD_C),a
+	in a,(SIOD_C)			; read it back on the second SIO
+	and #0xF0
+	cp #0xF0
+	jr nz, not_mirrored		; it's not a mirror, might not be an SIO
+
+	; Could be chance or a soft boot
+
+	ld a,#2
+	out (SIOB_C),a
+	xor a
+	out (SIOB_C),a
+	ld a,#2
+	out (SIOD_C),a
+	in a,(SIOD_C)
+	and #0xF0
+	jr z, serial_up			; It's a mirage
+
+not_mirrored:
+	ld c,#SIOD_C
 
 	xor a
-	ld c,#SIOD_C
 	out (c),a			; RR0
 	in b,(c)			; Save RR0 value
 	inc a
@@ -238,7 +272,7 @@ serial_up:
 	ld a,#0xAA			; Set a count
 	out (CTC_CH2),a
 	in a,(CTC_CH2)
-	cp #0xAA			; Should not have changed
+	cp #0xA9			; Should be one less
 	jr nz, no_ctc
 
 	ld a,#0x07
@@ -283,9 +317,22 @@ have_ctc:
 	out (CTC_CH3),a
 
 no_ctc:
-        ; Done CTC Stuff
-        ; ---------------------------------------------------------------------
+	;
+	; Check CPU type. We might be a Z180 CPU board with standard
+	; RC2014 components in which case activate the additional
+	; serial ports. If we have no CTC we should use the Z180 timers
+	;
 
+	xor a
+	dec a
+	daa
+	cp #0xF9
+	jr nz, is_z80
+
+	ld a,#1
+	ld (_z180_present),a
+
+is_z80:
 	im 1				; set Z80 CPU interrupt mode 1
         jp _init_hardware_c             ; pass control to C, which returns for us
 
@@ -304,7 +351,7 @@ sio_setup:
 ;=========================================================================
 ; Kernel code
 ;=========================================================================
-        .area _CODE
+        .area _COMMONMEM
 
 _platform_reboot:
         ; We need to map the ROM back in -- ideally into every page.
@@ -332,14 +379,22 @@ platform_interrupt_all:
 ; install interrupt vectors
 _program_vectors:
 	di
+	pop bc				; bank
 	pop de				; temporarily store return address
 	pop hl				; function argument -- base page number
 	push hl				; put stack back as it was
 	push de
+	push bc
 
 	; At this point the common block has already been copied
 	call map_process
 
+	call do_program_vectors
+
+	jp map_kernel_restore
+
+
+do_program_vectors:
 	; write zeroes across all vectors
 	ld hl,#0
 	ld de,#1
@@ -365,8 +420,7 @@ _program_vectors:
 	ld (0x0066),a			; Set vector for NMI
 	ld hl,#nmi_handler
 	ld (0x0067),hl
-
-	jr map_kernel
+	ret
 
 ;=========================================================================
 ; Memory management
@@ -381,29 +435,12 @@ _program_vectors:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_process_always:
+map_process_save:
 map_process_always_di:
 	push hl
+	; We don't need to save the kernel page numbers because we
+	; patched them on bank switches
 	ld hl,#_udata + U_DATA__U_PAGE
-        jr map_process_2_pophl_ret
-
-map_buffers_user:
-	push hl
-	ld hl,(_udata + U_DATA__U_PAGE)
-	ld h,#36
-	ld (_ubuffer_pages),hl
-	ld hl,(_udata + U_DATA__U_PAGE + 2)
-	ld (_ubuffer_pages + 2),hl
-	ld hl,#_ubuffer_pages
-        jr map_process_2_pophl_ret
-
-map_buffers_user_h:
-	push hl
-	ld hl,(_udata + U_DATA__U_PAGE)
-	ld (_ubuffer_pages),hl
-	ld hl,(_udata + U_DATA__U_PAGE + 2)
-	ld l,#36
-	ld (_ubuffer_pages + 2),hl
-	ld hl,#_ubuffer_pages
         jr map_process_2_pophl_ret
 
 ;=========================================================================
@@ -423,19 +460,11 @@ map_process_di:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_kernel:
+map_buffers:
+map_kernel_restore:
 map_kernel_di:
 	push hl
 	ld hl,#_kernel_pages
-        jr map_process_2_pophl_ret
-
-;=========================================================================
-; map_buffers - map kernel with disk buffers at 0x4000-0x7FFF
-; Inputs: none
-; Outputs: none; all registers preserved
-;=========================================================================
-map_buffers:
-	push hl
-	ld hl,#_kernelbuf_pages
         jr map_process_2_pophl_ret
 
 ;=========================================================================
@@ -480,7 +509,8 @@ map_process_2_pophl_ret:
 
 ;=========================================================================
 ; map_save_kernel - save the current page mapping to map_savearea and
-; switch to kernel maps
+; switch to kernel maps. We might switch to any kernel map but that is
+; ok as we will make a thunking call from common to the C irq handler
 ; Inputs: none
 ; Outputs: none
 ;=========================================================================
@@ -508,18 +538,148 @@ map_for_swap:
 	out (MPGSEL_1),a
 	ret
 
+;
+;	Bank switch functions
+;
+	.globl __bank_0_1
+	.globl __bank_0_2
+	.globl __bank_1_2
+	.globl __bank_2_1
+
+	.globl __stub_0_1
+	.globl __stub_0_2
+
+;
+;	We are calling into bank 1 from common. We don't know the current
+;	bank but we need to restore it as was.
+;
+__bank_0_1:
+	ld bc,#MAP_BANK1		; target pairs always a pair
+bank0:
+	pop hl				; in linear order
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push hl
+	ld a,(_kernel_pages + 1)	; save old page
+	ld (_kernel_pages + 1),bc
+	ld (mpgsel_cache + 1),bc	; and mark as current
+	ld b,a
+	ld a,c				; set new page
+	out (MPGSEL_1),a
+	inc a				; next page follows
+	out (MPGSEL_2),a
+	ex de,hl
+	ld a,b				; old bank
+	cp #BANK1			; 1 or 2
+	jr z, retbank1
+	call callhl
+	ld bc,#MAP_BANK2
+banksetbc:
+	ld (_kernel_pages + 1), bc
+	ld (mpgsel_cache + 1), bc
+	ld a,c
+	out (MPGSEL_1),a
+	ld a,b
+	out (MPGSEL_2),a
+	ret
+retbank1:
+	call callhl
+	ld bc,#MAP_BANK1
+	jr banksetbc
+__bank_0_2:
+	ld bc,#MAP_BANK2
+	jr bank0
+;
+;	These are easier because we have two banks so know the target and
+;	return bank in each case
+;
+__bank_1_2:
+	ld bc,#MAP_BANK2
+	pop hl				; in linear order
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push hl
+	call banksetbc
+	ex de,hl
+	call callhl
+	ld bc,#MAP_BANK1
+	jr banksetbc
+
+__bank_2_1:
+	ld bc,#MAP_BANK1
+	pop hl				; in linear order
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push hl
+	call banksetbc
+	ex de,hl
+	call callhl
+	ld bc,#MAP_BANK2
+	jr banksetbc
+
+__stub_0_1:
+	ld bc,#MAP_BANK1
+	jr stub_call
+__stub_0_2:
+	ld bc,#MAP_BANK2
+stub_call:
+	pop hl				; return address
+	ex (sp),hl			; bank space now target
+	ld a,(_kernel_pages+1)		; current bank
+	ld (_kernel_pages+1),bc		; target
+	ld (mpgsel_cache + 1), bc
+	ld b,a
+	ld a,c
+	out (MPGSEL_1),a
+	inc a
+	out (MPGSEL_2),a
+	ex de,hl
+	ld a,b
+	cp #BANK1
+	jr z, stub_ret_1
+	call callhl
+	ld bc,#MAP_BANK2
+stub_ret:
+	ld (_kernel_pages+1),bc
+	ld (mpgsel_cache + 1), bc
+	ld a,c
+	out (MPGSEL_1),a
+	inc a
+	out (MPGSEL_2),a
+	pop bc				; return
+	push bc				; correct stack padding
+	push bc
+	ret				; done
+stub_ret_1:
+	call callhl
+	ld bc,#MAP_BANK1
+	jr stub_ret
+
+callhl:	jp (hl)
+;
+;	Helpers for swap
+;
+
 _copy_common:
+	pop bc
 	pop hl
 	pop de
 	push de
 	push hl
+	push bc
 	ld a,e
 	call map_for_swap
-	ld hl,#0xD300
-	ld de,#0x4300
-	ld bc,#0x2D00
+	ld hl,#0xF200
+	ld de,#0x7200
+	ld bc,#0x0E00
 	ldir
-	jr map_kernel
+	jp map_kernel
 
 
 ; MPGSEL registers are read only, so their content is cached here
@@ -532,12 +692,6 @@ top_bank:	; the shared tricks code needs this name for cache+3
 _kernel_pages:
 	.db	32,33,34,35
 
-; kernel page mapping with buffer window
-_kernelbuf_pages:
-	.db	32,36,34,35
-
-_ubuffer_pages:
-	.db	0,0,0,0
 ; memory page mapping save area for map_save/map_restore
 map_savearea:
 	.db	0,0,0,0
@@ -618,3 +772,10 @@ inchar_acia:
 	jr z,inchar_acia		; no data, wait
 	in a,(ACIA_D)   		; read the character from the UART
 	ret
+
+
+;
+;	And the Z180 support code
+;
+
+	.include "../lib/z180-support.s"

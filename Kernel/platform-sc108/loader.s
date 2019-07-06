@@ -113,6 +113,6 @@ serstr:
 	jr serstr
 
 hello:
-	.asciz 'SC108 FUZIX LOADER 0.1\n\n'
+	.asciz 'SC108 FUZIX LOADER 0.1\r\n\r\n'
 gogogo:
-	.asciz '\nExecuting FUZIX...\n'
+	.asciz '\r\nExecuting FUZIX...\r\n'

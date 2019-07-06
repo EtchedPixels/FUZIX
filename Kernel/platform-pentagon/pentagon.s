@@ -1,5 +1,18 @@
 ;
-;    Pentagon hardware support
+;    Pentagon 256K+ hardware support
+;    A 128K machine needs something to put RAM low (eg DivIDE) and can thus
+;    use the zxdiv tree, although we might want to add printer support for
+;    it somehow (autodetect question)
+;
+;	Kernel is banked into
+;	0		CODE 1
+;	1		CODE 2 + BUFFERS
+;	3		CODE 4
+;	7		CODE 3 + VIDEO + FONTS
+;	2/5		4000-BFFF (common and user low buffer)
+;
+;	4		Free
+;	8+		Free
 ;
 
         .module pentagon
@@ -57,22 +70,36 @@
 	.globl __bank_0_1
 	.globl __bank_0_2
 	.globl __bank_0_3
+	.globl __bank_0_4
 	.globl __bank_1_2
 	.globl __bank_1_3
+	.globl __bank_1_4
 	.globl __bank_2_1
 	.globl __bank_2_3
+	.globl __bank_2_4
 	.globl __bank_3_1
 	.globl __bank_3_2
+	.globl __bank_3_4
+	.globl __bank_4_1
+	.globl __bank_4_2
+	.globl __bank_4_3
 
 	.globl __stub_0_1
 	.globl __stub_0_2
 	.globl __stub_0_3
+	.globl __stub_0_4
 	.globl __stub_1_2
 	.globl __stub_1_3
+	.globl __stub_1_4
 	.globl __stub_2_1
 	.globl __stub_2_3
+	.globl __stub_2_4
 	.globl __stub_3_1
 	.globl __stub_3_2
+	.globl __stub_3_4
+	.globl __stub_4_1
+	.globl __stub_4_2
+	.globl __stub_4_3
 
         .include "kernel.def"
         .include "../kernel-z80.def"
@@ -129,37 +156,37 @@ init_hardware:
         ld hl, #256
         ld (_ramsize), hl
 	; We lose the following to the system
-	; 0: low 16K of kernel
-	; 1: first kernel bank at C000
+	; 0: first kernel bank at C000
+	; 1: second kernel bank at C000
 	; 2: 4000-7FFF (screen and buffers)
+	; 3: fourth kernel bank at C000
 	; 5: 8000-BFFF (working 16K copy)
 	; 6: second kernel bank at C000
 	; 7: third kernel bank at C000
 	;
-	; We might be able to squash things up and get 6 or 7 back
-	; but as we work in pairs it's not actually that interesting. OTOH
-	; getting 6000-7FFF back might be for program sizes.
-	;
         ld hl, #(256 - 96)
         ld (_procmem), hl
 
+	;
+	;	No low RAM so need IM2 and custom syscall interface
+	;	(will need to tackle that nicely in libc too)
+	;
+
 	ld a,#0xC3
-	ld (0x00),a
-	ld (0x30),a
-	ld (0x38),a
-	ld (0x66),a
-	ld hl,#null_handler
-	ld (0x01),hl
+	ld (0xFFFD),a
+	ld (0xFFF4),a
 	ld hl,#unix_syscall_entry
-	ld (0x31),hl
+	ld (0xFFFE),hl
 	ld hl,#interrupt_handler
-	ld (0x39),hl
-	ld hl,#nmi_handler
-	ld (0x67),hl
+	ld (0xFFF5),hl
         ; screen initialization
 	push af
 	call _vtinit
 	pop af
+
+	ld a,#0x39
+	ld i,a
+	im 2			; Everything ends up at FFF4
 
         ret
 
@@ -189,7 +216,7 @@ switch_bank:
         ld (current_map), a
 	push bc
         ld bc, #0x7ffd
-	or #BANK_BITS	   ; Spectrum 48K ROM, Screen in Bank 7
+	or #BANK_BITS	   ; Spectrum 48K ROM
         out (c), a
 	pop bc
         ret
@@ -200,7 +227,11 @@ map_process:
         or l
         jr z, map_kernel_nosavea
 	push af
+	inc hl
+	inc hl
         ld a, (hl)
+	dec hl
+	dec hl
 	call switch_bank
 	pop af
 	ret
@@ -215,7 +246,7 @@ map_process_always_di:
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
-        ld a, (_udata + U_DATA__U_PAGE)
+        ld a, (_udata + U_DATA__U_PAGE2)
 	call switch_bank
 	pop af
 	ret
@@ -302,10 +333,11 @@ _need_resched:
 ;	1		0
 ;	2		1
 ;	3		7
+;	4		3
 ;
 ;
 __bank_0_1:
-	ld a,#1		   ; switch to physical bank 1 (logical 1)
+	xor a		   ; switch to physical bank 1 (logical 1)
 bankina0:
 	;
 	;	Get the target address first, otherwise we will change
@@ -321,23 +353,28 @@ bankina0:
 	call switch_bank   ; Move to new bank
 	; figure out which bank to map on the return path
 	ld a, c
-	dec a
+	or a
 	jr z, __retmap1
-	cp #5
+	dec a
 	jr z, __retmap2
+	cp #1			;  3  phys = logical 4
+	jr z, __retmap4
 	jr __retmap3
 
 callhl:	jp (hl)
 
 __bank_0_2:
-	ld a, #6	   ; logical 2 -> physical 6
+	ld a, #1	   ; logical 2 -> physical 1
 	jr bankina0
 __bank_0_3:
 	ld a, #7	   ; logical 3 -> physical 7
 	jr bankina0
+__bank_0_4:
+	ld a, #3	   ; logical 4 -> physical 3
+	jr bankina0
 
 __bank_1_2:
-	ld a, #6
+	ld a, #1
 bankina1:
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
@@ -349,14 +386,17 @@ bankina1:
 __retmap1:
 	ex de, hl
 	call callhl	   ; call the function
-	ld a,#1		   ; return to bank 1 (physical 1)
+	xor a		   ; return to bank 1 (physical 1)
 	jp switch_bank
 __bank_1_3:
 	ld a, #7
 	jr bankina1
+__bank_1_4:
+	ld a, #3
+	jr bankina1
 
 __bank_2_1:
-	ld a,#1
+	xor a
 bankina2:
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
@@ -368,14 +408,17 @@ bankina2:
 __retmap2:
 	ex de, hl
 	call callhl	   ; call the function
-	ld a, #6	   ; return to bank 2
+	ld a, #1	   ; return to bank 2
 	jp switch_bank
 __bank_2_3:
 	ld a, #7
 	jr bankina2
+__bank_2_4:
+	ld a, #3
+	jr bankina2
 
 __bank_3_1:
-	ld a, #1
+	xor a
 bankina3:
 	pop hl		   ; Return address (points to true function address)
 	ld e, (hl)	   ; DE = function to call
@@ -387,39 +430,69 @@ bankina3:
 __retmap3:
 	ex de, hl
 	call callhl	   ; call the function
-	ld a, #7	   ; return to bank 0
+	ld a, #7	   ; return to bank 3
 	jp switch_bank
-
 __bank_3_2:
-	ld a, #6
+	ld a, #1
 	jr bankina3
+__bank_3_4:
+	ld a, #3
+	jr bankina3
+
+__bank_4_1:
+	xor a
+bankina4:
+	pop hl		   ; Return address (points to true function address)
+	ld e, (hl)	   ; DE = function to call
+	inc hl
+	ld d, (hl)
+	inc hl
+	push hl		   ; Restore corrected return pointer
+	call switch_bank   ; Move to new bank
+__retmap4:
+	ex de, hl
+	call callhl	   ; call the function
+	ld a, #3	   ; return to bank 4
+	jp switch_bank
+__bank_4_2:
+	ld a, #1
+	jr bankina3
+__bank_4_3:
+	ld a, #7
+	jr bankina3
+
 
 ;
 ;	Stubs need some stack munging and use DE
 ;
 
 __stub_0_1:
-	ld a,#1
+	xor a
 __stub_0_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discard
 	ld bc, (current_map)
 	call switch_bank
 	ld a, c
-	dec a
+	or a		; bank 0 (logical 1)
 	jr z, __stub_1_ret
-	cp #5		; bank 6
+	dec a		; bank 1 (logical 2)
 	jr z, __stub_2_ret
-	jr __stub_3_ret	; bank 7
+	cp #1		; bank 3 (logical 4)
+	jr z, __stub_4_ret
+	jr __stub_3_ret	; bank 7 (logical 3)
 __stub_0_2:
-	ld a, #6
+	ld a, #1
 	jr __stub_0_a
 __stub_0_3:
 	ld a, #7
 	jr __stub_0_a
+__stub_0_4:
+	ld a, #3
+	jr __stub_0_a
 
 __stub_1_2:
-	ld a, #6
+	ld a, #1
 __stub_1_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discard
@@ -427,7 +500,7 @@ __stub_1_a:
 __stub_1_ret:
 	ex de, hl
 	call callhl
-	ld a,#1
+	xor a
 	call switch_bank
 	pop de
 	push de		; dummy the caller will discard
@@ -436,9 +509,12 @@ __stub_1_ret:
 __stub_1_3:
 	ld a, #7
 	jr __stub_1_a
+__stub_1_4:
+	ld a, #3
+	jr __stub_1_a
 
 __stub_2_1:
-	ld a,#1
+	xor a
 __stub_2_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discad
@@ -446,7 +522,7 @@ __stub_2_a:
 __stub_2_ret:
 	ex de, hl	; DE is our target
 	call callhl
-	ld a,#6
+	ld a,#1
 	call switch_bank
 	pop de
 	push de		; dummy the caller will discard
@@ -455,9 +531,12 @@ __stub_2_ret:
 __stub_2_3:
 	ld a, #7
 	jr __stub_2_a
+__stub_2_4:
+	ld a, #3
+	jr __stub_2_a
 
 __stub_3_1:
-	ld a,#1
+	xor a
 __stub_3_a:
 	pop hl		; the return
 	ex (sp), hl	; write it over the discad
@@ -472,5 +551,30 @@ __stub_3_ret:
 	push de
 	ret
 __stub_3_2:
-	ld a, #6
+	ld a, #1
 	jr __stub_3_a
+__stub_3_4:
+	ld a, #3
+	jr __stub_3_a
+
+__stub_4_1:
+	xor a
+__stub_4_a:
+	pop hl		; the return
+	ex (sp), hl	; write it over the discad
+	call switch_bank
+__stub_4_ret:
+	ex de, hl
+	call callhl
+	ld a,#2
+	call switch_bank
+	pop de
+	push de		; dummy the caller will discard
+	push de
+	ret
+__stub_4_2:
+	ld a, #1
+	jr __stub_4_a
+__stub_4_3:
+	ld a, #7
+	jr __stub_4_a

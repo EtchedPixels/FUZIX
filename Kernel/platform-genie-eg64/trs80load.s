@@ -9,7 +9,7 @@
 ;	of space to play in.
 ;
 .area	    BOOT	(ABS)
-.org	    0x0080		; loaded at 4200 and ldir's itself
+.org	    0x0000		; loaded at 4200 and ldir's itself
 
 ;
 ;	The 1791 is memory mapped
@@ -31,26 +31,34 @@ start:
 	    ;	Copy ourself down to 0x0000
 	    ;
 	    di
-	    ld a,#0xC0
-	    out (0xC0),a	; RAM low
+	    call 0x04C3			; 64 columns
 
 	    ; Relocate to the bottom of memory
+	    ; Set up memory mapping
+	    ld a,#0xC0			; RAM low I/O mapped
+	    out (0xC0),a		; need to skip I/O (3800-3FFF)
+
 	    ld hl,#0x4200
-	    ld de,#0x0000
+	    ld e,l
+	    ld d,l
 	    ld bc,#0x0100
+	    ldir
 	    ld sp,#0x0100
-	    jp go
+
+	    ld a,(0x01)
+	    cp #0xAF
+	    jp nz, go
+	    ld a,#'E'
+	    ld (0x3C40),a
+stop:	    jr stop
+
 
 go:
-	    call 0x04C3			; 64 columns
    	    ; Loader message
 	    ld de, #0x3C00
 	    call prints
 	    .ascii 'VGLOAD 0.3EG64\0'
 
-	    ; Set up memory mapping
-	    ld a,#0xE0			; Hide display and I/O
-	    out (0xC0),a		; so we can just load over them
 	    ld de, #FDCDATA		; data port
 	    ld hl, #FDCREG		; command port
 	    ; Loading base address
@@ -72,7 +80,7 @@ seekstat:
 	    and #0x18
 	    jr z, secmove
 	    call printse
-	    .ascii 'seek\0'
+	    .ascii 'SEEK\0'
 bad2:	    jr bad2
 secmove:    xor a
 	    dec a	
@@ -92,6 +100,11 @@ floppy_read:
 	    ld (FDCSEC), a		; sector please
 	    ld a, #0x01			; drive 0 select
 	    ld (LATCHD0), a		; keep motor on
+	    ld a, #0x37
+	    cp b			; I/O area
+	    jr nz, notio
+	    ld b,#0x40			; Skip to 0x4000
+notio:
 	    ld a, #0x8C			; READ
 	    ld (hl), a
 	    push bc

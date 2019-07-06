@@ -13,5 +13,6 @@
 #define CART_DRIVEWIRE	12		/* Drivewire card */
 #define CART_BECKER	13		/* Becker card */
 #define CART_JMCP	14		/* J&M */
+#define CART_SDBOOT	15		/* SDBoot */
 
 extern int cart_find(int id);

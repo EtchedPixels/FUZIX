@@ -1,0 +1,127 @@
+Development tree for Scorpion Spectrum style machines.
+
+Currently this supports the Scorpion 256 but using NemoIDE not SMUC. The other
+compatible systems ought to work but we don't yet detect the extra memory on
+them. The similar ZX Profi won't yet work.
+
+Supporting the bigger/slightly different boxes needs three things
+1. Loader changes for the ZX Profi
+2. Changes to bank numbering/allocation by platform type and size
+3. Detection of memory size
+4. Detection of (or loader reporting of) machine type
+
+TODO
+-	SMUC IDE
+-	Support both SMUC and NemoIDE in one build ?
+-	Add the other machines
+
+These systems use a pair of I/O ports 7FFD as with the Spectrum 128K and 1FFD
+which confusingly works nothing like the 1FFD on +2A/+3 systems
+
+On the Scorpion 7FFD works exactly like the Spectrum 128K and indeed a 128K
+spectrum port will work out of the box (although you'd want SMUC IDE adding).
+
+The 1FFD port supplies all the extras
+
+Scorpion 256 (and Kay 256)
+0:	disable ROM (RAM0 is mapped over 0000-3FFF)
+1:	selects service shadow ROM
+4:	banking bit 3 (0-2 are taken from 7FFD)
+
+Kay 1024
+
+7:	banking bit 4
+7FFD bit 7: banking bit 5
+
+Pentagon 1024 v 1.xx
+
+0:	disable ROM
+1:	protected mode (1FFD and 7FFD bit 7 locked to TR-DOS) *
+3:	Upper bit of ROM select (lower bit is 7FFD bit 4)
+4:	banking bit 3
+5:	lock 1FFD and bit 7 of 7FFD (128K compat enable) *
+7:	banking bit 4
+
+(*) latched until next boot
+
+and as with the Kay 7FFD bit7 is banking bit 5
+
+The 1024K expansion to the Scorpion differs from the Kay to be awkward
+
+1FFD
+6:	banking bit 4
+7:	banking bit 5
+
+And the ZX Profi uses DFFD instead of 1FFD and drives the upper bits
+differently. 
+
+DFFD
+0-2:	banking bits 3-5
+3:	paging at C000, or if set at 4000
+4:	0000-3FFF is RAM0
+5:	0: 1F/3F/5F/7F are i8255A
+	1: 1F/3F/5F/7F are FDC
+
+
+
+----
+These machines all have the same basic problem, there is a 16K window at
+C000-FFFF which is pageable but no bigger pageable range.
+
+We run with the following mapping
+
+0000-3FFF	IRQ vectors, common, const, commondata etc
+4000-5FFF	Spectrum screen memory and system variables
+6000-7FFF	Free for now
+8000-83FF	Needed to create the exec of init
+8400-BFFF	_DISCARD area - blown away when we exec init
+		(tons of room in this space)
+C000-FFFF
+	0:	0000-3FFF (Kernel data/common)
+	1:	Kernel CODE (fairly full)
+	2:	Mapped at 0x8000-0xBFFF (holds current process copy)
+	3:	User process
+	4:	User process
+	5:	Mapped at 0x4000-0x7FFF (Screen, spare)
+	6:	Kernel CODE2 (fairly full)
+	7:	CODE3, Video (lots of room)
+
+User processes live in 3/4 and 8+. We have copy stuff back and forth
+to page 2 due to the memory manager liits.
+
+To Do:
+-	Debug the rest
+-	Write SMUC driver code
+-	Work out what we need to do for Pentagon v Scorpion etc
+-	Floppy driver
+-	Optimizations for switching (runticks expiry on non-preempt case
+	should we clear runticks - pro it gets us better perf, anti it reduces
+	responsiveness.
+-	Parent first support
+
+
+-	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
+	(Seems we lose the bottom line of the left most char - off by one bug
+	 in zxvid ?)
+-	6 or 5bit wide fonts (42, 51 column)
+-	Optimize zxvid - especially scrolling
+-	Move vtborder to common
+-	See if we can in fact keep 6000-7FFF clear. If so we can look at
+	ldir switching another 8K up and down to give 40K program sizes
+	which would be a big improvement. Would need us to allocate 2.5
+	banks per process however so need some allocator changes
+
+Floppy disk interfaces are problematic. The standard Betadisk interface locks
+the I/O ports to its ROM being active, which sucks. Fortunately it appears
+there is a mildy insane stunt we can pull. We can use the ROM to query itself
+to find the address of the out (c),a present in all Beta ROM images.
+
+We can then do a ROP attack on the ROM in order to make it do the "right"
+out (c),a  in it in order to do a bank switch with RAM at 0000-3FFF and catch
+the next instruction. Providing we remain in the RAM below 4000 it'll leave
+the card selected.
+
+Does mean we need to patch our kernel to grab the next instruction, and then
+put it back all under di but it does look doable.
+
+

@@ -41,20 +41,3 @@ void pagemap_init(void)
 	if (bankmap & 8)
 		pagemap_add(0x88);
 }
-
-/* Swap partition on the hard disk */
-void platform_swap_found(uint8_t letter, uint8_t m)
-{
-	blkdev_t *blk = blk_op.blkdev;
-	uint16_t n;
-	if (swap_dev != 0xFFFF)
-		return;
-	letter -= 'a';
-	kputs("(swap) ");
-	swap_dev = letter << 4 | m;
-	n = blk->lba_count[m - 1] / SWAP_SIZE;
-	if (n > MAX_SWAPS)
-		n = MAX_SWAPS;
-	while (n)
-		swapmap_init(n--);
-}

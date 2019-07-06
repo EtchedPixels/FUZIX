@@ -40,15 +40,15 @@ uint8_t hd_waitdrq(void)
 	return st;
 }
 
-uint8_t hd_xfer(bool is_read)
+uint8_t hd_xfer(bool is_read, uint8_t *dptr)
 {
 	/* Error ? */
 	if (hd_status & 0x01)
 		return hd_status;
 	if (is_read)
-		hd_xfer_in(udata.u_dptr);
+		hd_xfer_in(dptr);
 	else
-		hd_xfer_out(udata.u_dptr);
+		hd_xfer_out(dptr);
 	/* Should be returning READY, and maybe SEEKDONE */
 	return hd_status;
 }
@@ -63,6 +63,9 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	uint8_t sector;
 	staticfast uint16_t cyl;
 	uint8_t dev = minor >> 4;
+	uint8_t *dptr;
+	uint16_t nblock;
+
 	staticfast struct minipart *p;
 
 	p = &parts[dev];
@@ -97,7 +100,15 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	if (minor)
 		cyl += p->cyl[(minor-1)&0x0F];
 
-	while (ct < udata.u_nblock) {
+	dptr = udata.u_dptr;
+	nblock = udata.u_nblock;
+
+	/* Here be dragons. In the swap case we will load over udata, but
+	   because our block size is 256 bytes we will run this loop so we
+	   must make cache everything we needed from udata before we load
+	   data */
+
+	while (ct < nblock) {
 		/* Head next bits, plus drive */
 		hd_sdh = 0x80 | head | (dev << 3);
 		hd_secnum = sector;
@@ -112,7 +123,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			   for us */
 			err = hd_waitdrq();
 			if (!(err & 1)) {
-				err = hd_xfer(is_read);
+				err = hd_xfer(is_read, dptr);
 				/* Ready, no error ? */
 				if ((err & 0x41) == 0x40)
 					break;
@@ -129,7 +140,7 @@ int hd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		if (tries == 3)
 			goto bad;
 		ct++;
-		udata.u_dptr += 256;
+		dptr += 256;
 		sector++;
 		/* Cheaper than division! */
 		if (sector == 32) {

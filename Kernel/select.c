@@ -52,12 +52,12 @@ void selwake(struct selmap *s)
 }
 
 /* Set our select bits on the inode */
-void selwait_inode(inoptr i, uint8_t smask, uint8_t setit)
+void selwait_inode(inoptr i, uint_fast8_t smask, uint_fast8_t setit)
 {
 	struct selmap *s = (struct selmap *) (&i->c_node.i_addr[17]);
-	uint8_t bit = udata.u_ptab - ptab;
-	uint8_t mask = 1 << (bit & 7);
-	uint8_t bset = bit & setit;
+	uint_fast8_t bit = udata.u_ptab - ptab;
+	uint_fast8_t mask = 1 << (bit & 7);
+	uint_fast8_t bset = bit & setit;
 	bit >>= 3;
 
 	if (smask & SELECT_IN) {
@@ -92,7 +92,7 @@ void selwake_inode(inoptr i, uint16_t mask)
 	irqrestore(irq);
 }
 
-void selwake_dev(uint8_t major, uint8_t minor, uint16_t mask)
+void selwake_dev(uint_fast8_t major, uint_fast8_t minor, uint16_t mask)
 {
 	irqflags_t irq = di();
 	uint16_t v = (major << 8) | minor;
@@ -106,7 +106,7 @@ void selwake_dev(uint8_t major, uint8_t minor, uint16_t mask)
 	irqrestore(irq);
 }
 
-static int pipesel_begin(inoptr i, uint8_t bits)
+static int pipesel_begin(inoptr i, uint_fast8_t bits)
 {
 	uint16_t mask = 0;
 	pipesel++;
@@ -148,7 +148,7 @@ arg_t _select(void)
 	uint16_t seltype = SELECT_BEGIN;
 	inoptr ino;
 	uint16_t sumo;
-	uint8_t i, m, n;
+	uint_fast8_t i, m, n;
 	uint16_t inr = 0, outr = 0, exr = 0;
 	/* Second 16bits of each spare for expansion */
 	uint16_t in = ugetw(base);
@@ -160,6 +160,8 @@ arg_t _select(void)
 	/* Timeout in 1/10th of a second (BSD api mangling done by libc) */
 	/* 0 means return immediately, need to sort out a 'forever' FIXME */
 	udata.u_ptab->p_timeout = ugetw(base + 6);
+	if (udata.u_ptab->p_timeout)
+		ptimer_insert();
 
 	do {
 		m = 1;

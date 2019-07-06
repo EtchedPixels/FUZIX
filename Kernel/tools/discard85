@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+#	ACK thinks we are the assembler. We will play with the incoming
+#	stream to move .text to .discard and feed it to the assembler
+#
+#	TODO: if it is worth it add another section for discard data
+#
+#	Called with - -o dest src
+#
+echo $3 $4 >/dev/tty
+ACK_ROOT=$(which ack | sed -e "s/\/bin\/ack//")
+X=$(mktemp)
+(echo ".sect .text"
+ echo ".sect .rom"
+ echo ".sect .data"
+ echo ".sect .bss"
+ echo ".sect .common"
+ echo ".sect .discard") >$X
+cat $4 | sed -e "s/\.text/\.discard/" >> $X
+$ACK_ROOT/lib/ack/cpm/as $1 -o $3 $X
+rm $X

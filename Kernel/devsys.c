@@ -16,6 +16,8 @@
  *	Minor	2	zero
  *	Minor	3	proc
  *	Minor   4       mem     (physical memory)
+ *	Minor	5	rtc
+ *	Minor	6	platform (Platform/CPU specific ioctls)
  *	Minor	64	audio
  *	Minor	65	net_native
  *	Minor	66	input
@@ -23,7 +25,7 @@
  *	Use Minor 128+ for platform specific devices
  */
 
-int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int sys_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	unsigned char *addr = (unsigned char *) ptab;
 
@@ -74,7 +76,7 @@ int sys_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	}
 }
 
-int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int sys_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	used(rawflag);
 	used(flag);
@@ -116,8 +118,12 @@ int sys_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 #define PIO_TABSIZE	1
 #define PIO_ENTRYSIZE	2
 
-int sys_ioctl(uint8_t minor, uarg_t request, char *data)
+int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
+#ifdef CONFIG_DEV_PLATFORM
+	if (minor == 6)
+		return platform_dev_ioctl(request, data);
+#endif
 #ifdef CONFIG_AUDIO
 	if (minor == 64)
 		return audio_ioctl(request, data);
@@ -130,10 +136,8 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 	if (minor == 66)
 		return inputdev_ioctl(request, data);
 #endif
-	if (minor != 3) {
-		udata.u_error = ENOTTY;
+	if (minor != 3)
 		return -1;
-	}
 
 	switch (request) {
 	case PIO_TABSIZE:
@@ -145,13 +149,12 @@ int sys_ioctl(uint8_t minor, uarg_t request, char *data)
 		break;
 
 	default:
-		udata.u_error = EINVAL;
-		return (-1);
+		return -1;
 	}
 	return 0;
 }
 
-int sys_close(uint8_t minor)
+int sys_close(uint_fast8_t minor)
 {
 	used(minor);
 #ifdef CONFIG_NET_NATIVE

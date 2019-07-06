@@ -53,9 +53,9 @@
 static blkdev_t blkdev_table[MAX_BLKDEV];
 struct blkparam blk_op;
 
-int blkdev_open(uint8_t minor, uint16_t flags)
+int blkdev_open(uint_fast8_t minor, uint16_t flags)
 {
-    uint8_t drive, partition;
+    uint_fast8_t drive, partition;
 
     used(flags);
 
@@ -72,9 +72,9 @@ int blkdev_open(uint8_t minor, uint16_t flags)
     return -1;
 }
 
-static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
+static int blkdev_transfer(uint_fast8_t minor, uint_fast8_t rawflag)
 {
-    uint8_t partition, n;
+    uint_fast8_t partition, n;
     uint16_t count = 0;
 
     /* we trust that blkdev_open() has already verified that this minor number is valid */
@@ -109,7 +109,7 @@ static int blkdev_transfer(uint8_t minor, uint8_t rawflag)
 	/* partition 0 is the whole disk and requires no translation */
 	if(blk_op.lba >= blk_op.blkdev->drive_lba_count)
 	    goto xferfail;
-    }else{
+    } else {
 	/* partitions 1+ require us to add in an offset */
 	if(blk_op.lba >= blk_op.blkdev->lba_count[partition-1])
 	    goto xferfail;
@@ -133,21 +133,21 @@ xferfail:
     return -1;
 }
 
-int blkdev_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int blkdev_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     used(flag); /* not used */
     blk_op.is_read = true;
     return blkdev_transfer(minor, rawflag);
 }
 
-int blkdev_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int blkdev_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     used(flag); /* not used */
     blk_op.is_read = false;
     return blkdev_transfer(minor, rawflag);
 }
 
-int blkdev_ioctl(uint8_t minor, uarg_t request, char *data)
+int blkdev_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
     used(data); /* unused */
 
@@ -181,9 +181,9 @@ blkdev_t *blkdev_alloc(void)
 }
 
 /* Flags is not used yet but will be needed (eg for swap scans) */
-void blkdev_scan(blkdev_t *blk, uint8_t flags)
+void blkdev_scan(blkdev_t *blk, uint_fast8_t flags)
 {
-    uint8_t letter = 'a' + (blk - blkdev_table);
+    uint_fast8_t letter = 'a' + (blk - blkdev_table);
 
     used(flags); /* not used */
 

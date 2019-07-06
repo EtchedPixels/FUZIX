@@ -29,12 +29,14 @@
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
 
+/* Tell the spectrum devtty layer where graphics is mapped */
+#define CONFIG_GFXBASE	0x4000
 /* Custom banking */
 
-/* A 1MB machine has 64 banks and the kernel plus system pages eat
+/* A 1MB machine has 64 blocks and the kernel plus system pages eat
    0,1,2,5,6,7 */
 #define MAX_MAPS	58
-#define MAP_SIZE	0x4000U
+#define MAP_SIZE	0x8000U
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	2

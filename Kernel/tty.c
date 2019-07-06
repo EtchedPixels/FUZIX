@@ -21,7 +21,7 @@ struct tty ttydata[NUM_DEV_TTY + 1];	/* ttydata[0] is not used */
 static uint16_t tty_select;		/* Fast path if no selects, could do with being per tty ? */
 
 /* Might be worth tracking tty minor <> inode for performance FIXME */
-static void tty_selwake(uint8_t minor, uint16_t event)
+static void tty_selwake(uint_fast8_t minor, uint16_t event)
 {
 	if (tty_select) {
 		/* 2 is the tty devices */
@@ -32,12 +32,13 @@ static void tty_selwake(uint8_t minor, uint16_t event)
 #define tty_selwake(a,b)	do {} while(0)
 #endif
 
-int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int tty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
-	unsigned char c;
+	uint_fast8_t c;
 	struct s_queue *q;
 	struct tty *t;
 
+	/* FIXME: fix race of timer versus the ptimer_insert to psleep_flags_io */
 	used(rawflag);
 	used(flag);			/* shut up compiler */
 
@@ -60,12 +61,14 @@ int tty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 				break;
 			}
 			if (!(t->termios.c_lflag & ICANON)) {
-			        uint8_t n = t->termios.c_cc[VTIME];
+			        uint_fast8_t n = t->termios.c_cc[VTIME];
 
 				if ((udata.u_done || !n) && udata.u_done >= t->termios.c_cc[VMIN])
 					goto out;
-				if (n)
+				if (n) {
 			                udata.u_ptab->p_timeout = n + 1;
+			                ptimer_insert();
+				}
                         }
 			if (psleep_flags_io(q, flag))
 			        goto out;
@@ -99,10 +102,10 @@ dead:
 	return -1;
 }
 
-int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int tty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	struct tty *t;
-	uint8_t c;
+	uint_fast8_t c;
 
 	used(rawflag);
 
@@ -158,7 +161,7 @@ int tty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 }
 
 
-int tty_open(uint8_t minor, uint16_t flag)
+int tty_open(uint_fast8_t minor, uint16_t flag)
 {
 	struct tty *t;
 	irqflags_t irq;
@@ -203,7 +206,7 @@ int tty_open(uint8_t minor, uint16_t flag)
 }
 
 /* Post processing for a successful tty open */
-void tty_post(inoptr ino, uint8_t minor, uint16_t flag)
+void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag)
 {
         struct tty *t = &ttydata[minor];
         irqflags_t irq = di();
@@ -223,7 +226,7 @@ void tty_post(inoptr ino, uint8_t minor, uint16_t flag)
 	irqrestore(irq);
 }
 
-int tty_close(uint8_t minor)
+int tty_close(uint_fast8_t minor)
 {
         struct tty *t = &ttydata[minor];
         if (--t->users)
@@ -248,16 +251,16 @@ int tty_close(uint8_t minor)
 /* If the group owner for the tty dies, the tty loses its group */
 void tty_exit(void)
 {
-        uint8_t t = udata.u_ptab->p_tty;
+        uint_fast8_t t = udata.u_ptab->p_tty;
         uint16_t *pgrp = &ttydata[t].pgrp;
         if (t && *pgrp == udata.u_ptab->p_pgrp && *pgrp == udata.u_ptab->p_pid)
                 *pgrp = 0;
 }
 
-int tty_ioctl(uint8_t minor, uarg_t request, char *data)
+int tty_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
         struct tty *t;
-        uint8_t waito = 0;
+        uint_fast8_t waito = 0;
         staticfast struct termios tm;
 
         t = &ttydata[minor];
@@ -381,11 +384,11 @@ int tty_ioctl(uint8_t minor, uarg_t request, char *data)
  * UZI180 - This routine is called from the raw Hardware read routine,
  * either interrupt or polled, to process the input character.  HFB
  */
-uint8_t tty_inproc(uint8_t minor, unsigned char c)
+uint_fast8_t tty_inproc(uint_fast8_t minor, uint_fast8_t c)
 {
-	unsigned char oc;
-	uint8_t canon;
-	uint8_t wr;
+	uint_fast8_t oc;
+	uint_fast8_t canon;
+	uint_fast8_t wr;
 	struct tty *t = &ttydata[minor];
 	struct s_queue *q = &ttyinq[minor];
 
@@ -489,19 +492,19 @@ eraseout:
 }
 
 /* called when a UART transmitter is ready for the next character */
-void tty_outproc(uint8_t minor)
+void tty_outproc(uint_fast8_t minor)
 {
 	wakeup(&ttydata[minor]);
 	tty_selwake(minor, SELECT_OUT);
 }
 
-void tty_echo(uint8_t minor, unsigned char c)
+void tty_echo(uint_fast8_t minor, uint_fast8_t c)
 {
 	if (ttydata[minor].termios.c_lflag & ECHO)
 		tty_putc_wait(minor, c);
 }
 
-void tty_erase(uint8_t minor)
+void tty_erase(uint_fast8_t minor)
 {
 	tty_putc_wait(minor, '\b');
 	tty_putc_wait(minor, ' ');
@@ -509,9 +512,9 @@ void tty_erase(uint8_t minor)
 }
 
 
-uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
+uint_fast8_t tty_putc_maywait(uint_fast8_t minor, uint_fast8_t c, uint_fast8_t flag)
 {
-        uint8_t t;
+        uint_fast8_t t;
 
         flag &= O_NDELAY;
 
@@ -562,12 +565,12 @@ uint8_t tty_putc_maywait(uint8_t minor, unsigned char c, uint8_t flag)
 	return 0;
 }
 
-void tty_putc_wait(uint8_t minor, unsigned char ch)
+void tty_putc_wait(uint_fast8_t minor, uint_fast8_t ch)
 {
 	tty_putc_maywait(minor, ch, 0);
 }
 
-void tty_hangup(uint8_t minor)
+void tty_hangup(uint_fast8_t minor)
 {
         struct tty *t = &ttydata[minor];
         /* Kill users */
@@ -584,13 +587,13 @@ void tty_hangup(uint8_t minor)
 	tty_selwake(minor, SELECT_IN|SELECT_OUT|SELECT_EX);
 }
 
-void tty_carrier_drop(uint8_t minor)
+void tty_carrier_drop(uint_fast8_t minor)
 {
         if (ttydata[minor].termios.c_cflag & HUPCL)
                 tty_hangup(minor);
 }
 
-void tty_carrier_raise(uint8_t minor)
+void tty_carrier_raise(uint_fast8_t minor)
 {
 	wakeup(&ttydata[minor].termios.c_cflag);
 	tty_selwake(minor, SELECT_IN|SELECT_OUT);
@@ -604,32 +607,32 @@ void tty_carrier_raise(uint8_t minor)
 
 static uint8_t ptyusers[PTY_PAIR];
 
-int ptty_open(uint8_t minor, uint16_t flag)
+int ptty_open(uint_fast8_t minor, uint16_t flag)
 {
 	return tty_open(minor + PTY_OFFSET, flag);
 }
 
-int ptty_close(uint8_t minor)
+int ptty_close(uint_fast8_t minor)
 {
 	return tty_close(minor + PTY_OFFSET);
 }
 
-int ptty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int ptty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	return tty_write(minor + PTY_OFFSET, rawflag, flag);
 }
 
-int ptty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int ptty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	return tty_read(minor + PTY_OFFSET, rawflag, flag);
 }
 
-int ptty_ioctl(uint8_t minor, uint16_t request, char *data)
+int ptty_ioctl(uint_fast8_t minor, uint16_t request, char *data)
 {
 	return tty_ioctl(minor + PTY_OFFSET, rawflag, flag);
 }
 
-int pty_open(uint8_t minor, uint16_t flag)
+int pty_open(uint_fast8_t minor, uint16_t flag)
 {
 	int r = tty_open(minor + PTY_OFFSET, flag | O_NOCTTY | O_NDELAY);
 	if (r == 0) {
@@ -640,7 +643,7 @@ int pty_open(uint8_t minor, uint16_t flag)
 	return r;
 }
 
-int pty_close(uint8_t minor)
+int pty_close(uint_fast8_t minor)
 {
 	ptyusers[minor]--;
 	if (ptyusers[minor] == 0)
@@ -648,7 +651,7 @@ int pty_close(uint8_t minor)
 	return tty_close(minor + PTY_OFFSET);
 }
 
-int pty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int pty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	uint16_t nwritten;
 	minor += PTY_OFFSET;
@@ -671,7 +674,7 @@ int pty_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	return nwritten;
 }
 
-int pty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int pty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	struct s_queue q = &ttyinq[minor + PTY_OFFSET + PTY_PAIR];
 	char c;
@@ -692,12 +695,12 @@ int pty_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	return nread;
 }
 
-int pty_ioctl(uint8_t minor, uint16_t request, char *data)
+int pty_ioctl(uint_fast8_t minor, uint16_t request, char *data)
 {
 	return tty_ioctl(minor + PTY_OFFSET, rawflag, flag);
 }
 
-void pty_putc_wait(uint8_t minor, char c)
+void pty_putc_wait(uint_fast8_t minor, char c)
 {
 	struct s_queue q = &ptyq[minor + PTY_OFFSET + PTY_PAIR];
 	/* tty output queue to pty */

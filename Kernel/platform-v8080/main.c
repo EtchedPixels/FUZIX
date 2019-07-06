@@ -8,7 +8,7 @@ uaddr_t ramtop = PROGTOP;
 
 void pagemap_init(void)
 {
- int i;
+ unsigned int i;
  for (i = 1; i < 8; i++)
   pagemap_add(i);
 }
@@ -36,7 +36,7 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint_fast8_t platform_param(char *p)
 {
  used(p);
  return 0;

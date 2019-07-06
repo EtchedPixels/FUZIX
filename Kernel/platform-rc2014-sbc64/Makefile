@@ -62,4 +62,4 @@ loader:	loader.s loader.inc
 	sdasz80 -o loader.s
 	sdldz80 -i loader.rel
 
-loader.inc: boot.s
+loader.inc: boot

@@ -16,19 +16,17 @@ int16_t mode;
 
 arg_t _open(void)
 {
-	int8_t uindex;
-	int8_t oftindex;
+	int_fast8_t uindex;
+	int_fast8_t oftindex;
 	staticfast inoptr ino;
 	int16_t perm;
 	staticfast inoptr parent;
-	int trunc;
 	int r;
 	int w;
 	int j;
 
 	parent = NULLINODE;
 
-	trunc = flag & O_TRUNC;
 	r = (flag + 1) & 1;
 	w = (flag + 1) & 2;
 
@@ -109,7 +107,7 @@ arg_t _open(void)
 		   usage or just because we blocked */
 		ino = *iptr;
 		i_lock(ino);
-	} else if (w && trunc && getmode(ino) == MODE_R(F_REG)) {
+	} else if (w && (flag & O_TRUNC) && getmode(ino) == MODE_R(F_REG)) {
 		if (f_trunc(ino))
 			goto idrop;
 		for (j = 0; j < OFTSIZE; ++j)

@@ -1,4 +1,4 @@
-An UZI target for z80pack.
+An FUZIX target for z80pack.
 
 Z80Pack has a simple 4K fixed common and 60K fixed sized banks. We run FUZIX
 with one application per bank and the memory map currently is
@@ -7,8 +7,8 @@ Bank 0:
 
 0000-0080	Vectors
 0081-0084	Saved CP/M command info
-0088		UZI kernel start
-????		UZI kernel end ~= A000
+0088		FUZIX kernel start
+????		FUZIX kernel end ~= A000
 (big kernels go up to E400 or so!)
 E800		Discard (blown away by user processes)
 End of kernel:	Common >= 0xF000

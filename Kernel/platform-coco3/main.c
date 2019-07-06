@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <ttydw.h>
+#include <libc.h>
 
 #define DISC __attribute__((section(".discard")))
 
@@ -76,10 +77,14 @@ void pagemap_init(void)
     int max = scanmem();
     
     /*  We have 64 8k pages for a CoCo3 so insert every other one
-     *  into the kernel allocator map.
+     *  into the kernel allocator map, skipping 3f. 3f holds our constant
+     *  page and tty buffers.  This code only works if page nos. are oddly
+     *  aligned after the kernel.
      */
-    for (i = 12; i < max ; i+=2)
+    for (i = 0xb; i < 0x3f; i+=2)
         pagemap_add(i);
+    for (i = 0x40; i < max; i+=2)
+	pagemap_add(i);
     /* add common page last so init gets it */
     pagemap_add(6);
     /* initialize swap pages */

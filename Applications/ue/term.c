@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <termios.h>
 #include <termcap.h>
 #include "ue.h"
@@ -29,7 +30,7 @@ void tputs_buf(char *p, int n)
 
 void gotoxy(int x, int y)
 {
-	tputs_buf(tgoto(t_go, x, y), 1);
+	tputs_buf(tgoto(t_go, x - 1, y - 1), 1);
 	outxy.Y=y;
 	outxy.X=x;
 }
@@ -72,6 +73,7 @@ void tty_init(void)
 {
 	int fd[2];
 	pid_t pid;
+	int l;
 
 	if (pipe(fd) < 0) {
 		perror("pipe");
@@ -84,9 +86,11 @@ void tty_init(void)
 		exit(1);
 	}
 
-	if (pid > 0) {
+	if (pid == 0) {
 		close(fd[0]);
+		dup2(fd[1], 1);
 		execl("/usr/lib/tchelp", "tchelp", "li#co#cm$ce$cd$cl$", NULL);
+		perror("tchelp");
 		_exit(1);
 	}
 	close(fd[1]);
@@ -94,13 +98,17 @@ void tty_init(void)
 		perror("read");
 		exit(1);
 	}
+	ival[0] -= 2 * sizeof(int);
 	t_go = sbrk((ival[0] + 3) & ~3);
 	if (t_go == (void *) -1) {
 		perror("sbrk");
 		exit(1);
 	}
-	if (read(fd[0], t_go, ival[0]) != ival[0]) {
-		perror("read");
+	if ((l = read(fd[0], t_go, ival[0])) != ival[0]) {
+		if (l < 0)
+			perror("read");
+		else
+			write(2, "ue: short read from tchelp.\n", 28);
 		exit(1);
 	}
 	close(fd[0]);

@@ -123,9 +123,12 @@ void swapin(ptptr p, uint16_t map)
 		return;
 	}
 
-	/* Note the page for the udata bit as it goes direct to udata and
-	   is always in common */
-	swapread(SWAPDEV, blk, UDATA_SIZE, (uaddr_t)&udata, 0);
+	/* The udata might not be in common space read it as kernel mapped */
+	udata.u_dptr = (uint8_t *)&udata;
+	udata.u_block = blk;
+	udata.u_nblock = UDATA_SIZE >> BLKSHIFT;
+	/* The driver will use the data in udata before it writes over it */
+	((*dev_tab[major(SWAPDEV)].dev_read) (minor(SWAPDEV), 0, 0));
 	swapread(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
 		 SWAPBASE, 1);
 

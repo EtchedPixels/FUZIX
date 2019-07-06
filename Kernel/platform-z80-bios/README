@@ -1,0 +1,57 @@
+TODO
+
+DONE -	Fix disk interface to have common stubs that do banking
+DONE -	Make termios copy back data, check matches test bios
+DONE -	Write the tty allocation/set up code as per rc2014
+DONE -	Rewrite the buffer allocation logic to work with the memory map
+	as we can't land the bios code before our code/after our data
+	(initial version - need to redo a bit for discards)
+DONE -	Add interface to say callbacks set
+DONE -	Add pieces to call BIOS (jump table)
+DONE -	Write fake external buffer wrappers
+DONE -	Who should own space allocation between bios and common - do we
+	have a bios "malloc" handler ?
+-	Attempt to make this boot with a simple hack fuzixbios on say
+	sbcv2
+DONE -	Set tty defaults from calls
+DONE -	lp error reporting
+DONE -	Use info to set common base, program size, buffers etc
+IP -	How do we do discard areas ? (just need to write extra buf allocator)
+-	header file for asm includes (errno codes, baud rates etc)
+-	Error code sort out
+
+BIOS Interface Improvements Then Needed
+-	Add bios interfaces for keyboard (up/down input notification and
+	key mask etc)
+-	Make vt hints set tty size info
+-	Media change notifier
+-	Blkdev changes to allow open hooking and media change
+-	soft di/ei
+-	interrupt driven parallel ?
+-	Floppy driver
+-	Disk ioctls and extend param interface
+-	Bank to bank copier hook ?
+
+Fixed assumptions to cure
+
+DONE -udata stash location is hardcoded needs to be (xxxx) form option in asm
+program top is hard coded but needs to adjust memory needed per program
+likewise
+
+
+Memory map
+
+0000-007F	Vectors
+0080-		Kernel (banked)		(can be higher if linked there)
+		BIOS (banked)
+		--
+		Kernel (common)
+		BIOS (common)
+		workspace if needed
+
+
+User space
+0000-00FF	Vectors etc
+0100-BDFF	Application (depends upon common base)
+BE00-BFFF	Udata copy
+C000+		common

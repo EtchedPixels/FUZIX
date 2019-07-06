@@ -1,0 +1,68 @@
+Fuzix for the ZX-Uno
+
+For the 128K spectrum we get 8 pages of 16K, all can be stuffed into the top
+16K but some are also wired to other things or hardwired elsewhere.
+
+The ZX-Uno DIVMMC allows us to do
+
+0xE3:	7: conmem 6: mapram 0-5: bank
+	(may only be 4 banks)
+
+	7 set ROM at 0000-1FFF and RAM at 2000-3FFF (banked)
+	and pins it (overrides 6)
+	6 is a one shot and write protects bank 3 and places it at
+	0000-1FFF, 
+	5-0: are the bank at 2000-3FFF
+
+To load we use the ESXDOS extension that is generally found with most
+DivMMC and DivIDE interfaces. Copy FUZIX.BIN into / on the ESXDOS drive and
+copy FUZIX into BIN. Then boot from ESXDOS with .fuzix
+
+We run with the following mapping
+
+0000-1FFF	IRQ vectors and boot loader
+2000-3FFF	RAM (switchable): Common, const, commondata etc
+		(we have 2 spare banks here but it's not clear what use they
+		actually are).
+
+4000-5FFF	A bit more kernel space right now (need to sort out external
+		buffers)
+
+6000-BFFF	User space (DOCK, EXT or main memory)
+
+C000-FFFF	Banked
+	0:	Kernel CODE (fairly full)
+	1:	Kernel CODE2 (fairly full)
+	2:	Mapped at 0x8000-0xBFFF
+	3:	Spare
+	4:	Top of user process in main memory
+	5:	Mapped at 0x4000-0x7FFF (some kernel, some user)
+	6:	CODE3, (lots of room) - buffers here ? when banked ?
+	7:	Screen memory, only accessed from common. Need to put
+		the font in the gaps here.
+
+We can move some stuff down into the low 16K (especially once we move the
+common space) We do need to do sort things out a bit and stuff commonmem etc
+in the low 8K to get more room.
+
+To Do:
+
+-	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
+	(Seems we lose the bottom line of the left most char - off by one bug
+	 in zxvid ?)
+-	Hand optimized bank exchange and bank to bank copy routines. These are
+	fairly performance critical due to the limitations of the memory model.
+	Right now we ldir in one case (could be faster abusing stack), and
+	the exchange case could be made much much faster using registers
+	and stack tricks not bounce buffers
+-	Enable interrupts during swap
+-	6 or 5bit wide fonts (42, 51 column)
+-	Optimize zxvid - especially scrolling
+-	Move vtborder to common
+-	Enable 64 column (512 pixel wide) mode on the Uno
+-	Use the Timex MMU DOCK/EXT memory for multiple banks of user code
+
+
+Working Notes
+- 	Need to update video code to use bank 7, right now it scribbles over
+	0x4000

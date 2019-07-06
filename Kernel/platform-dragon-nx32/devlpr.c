@@ -8,7 +8,7 @@ volatile uint8_t * const pia0b = (uint8_t *)0xFF02;
 volatile uint8_t * const pia1a = (uint8_t *)0xFF20;
 volatile uint8_t * const pia1b = (uint8_t *)0xFF22;
 
-int lpr_open(uint8_t minor, uint16_t flag)
+int lpr_open(uint_fast8_t minor, uint16_t flag)
 {
 	if (minor < 2)
 		return 0;
@@ -16,7 +16,7 @@ int lpr_open(uint8_t minor, uint16_t flag)
 	return -1;
 }
 
-int lpr_close(uint8_t minor)
+int lpr_close(uint_fast8_t minor)
 {
 	if (minor == 1)
 		dw_lpr_close();
@@ -37,7 +37,7 @@ static int iopoll(int sofar)
 	return 0;
 }
 
-int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int lpr_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	uint8_t *p = udata.u_base;
 	uint8_t *pe = p + udata.u_count;

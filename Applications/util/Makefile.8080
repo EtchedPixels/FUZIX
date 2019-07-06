@@ -15,12 +15,10 @@ SRCSNS = \
 	init.c \
 	kill.c \
 	killall.c \
-	ln.c \
 	logname.c \
 	mkdir.c \
 	mkfifo.c \
 	mknod.c \
-	mv.c \
 	pagesize.c \
 	printenv.c \
 	prtroot.c \
@@ -36,6 +34,7 @@ SRCSNS = \
 	touch.c \
 	tr.c \
 	true.c \
+	vile.c \
 	while1.c \
 	whoami.c \
 	yes.c
@@ -90,6 +89,7 @@ SRCS  = \
 	sort.c \
 	stty.c \
 	su.c \
+	swapon.c \
 	tar.c \
 	tail.c \
 	termcap.c \
@@ -108,8 +108,6 @@ SRCS  = \
 SRCTC = tget.c \
         tchelp.c \
 	marksman.c
-
-SRCCURSES = vile.c
 
 SRCOTHER = cpuinfo.c cpuinfo-8080.s
 

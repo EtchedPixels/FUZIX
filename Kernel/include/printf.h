@@ -5,4 +5,4 @@ extern void kuputunum(unsigned int v);
 extern void kputhex(unsigned int v);
 
 /* The platform must provide this method */
-extern void kputchar(char c);
+extern void kputchar(uint_fast8_t c);

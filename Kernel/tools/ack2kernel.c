@@ -353,6 +353,28 @@ static void overlaps(int sect)
 	}
 }
 
+static void range(int sect)
+{
+	int i;
+	int base = outsect[sect].os_base;
+	int end = base + outsect[sect].os_size;
+	if (end > 0xFFFF)
+		fprintf(stderr, "%s: Section %s exeeds space 0x%X.\n",
+			program, names[sect], end);
+
+	for (i = 0; i < NUM_SEGMENTS; i++) {
+		if (i == sect)
+			continue;
+		if (outsect[i].os_base >= end)
+			continue;
+		if (outsect[i].os_base + outsect[i].os_size <= base)
+			continue;
+		/* Overlap... */
+		fprintf(stderr, "%s: Section %s overlaps section %s.\n",
+			program, names[i], names[sect]);
+	}
+}
+
 static uint8_t maptable[256];
 
 static void initmap(void)
@@ -364,6 +386,8 @@ static void maps(int sect)
 {
 	int base = (outsect[sect].os_base + 127) >> 8;
 	int end = (outsect[sect].os_base + outsect[sect].os_size + 127) >> 8;
+	if (end > 0xFF)
+		end = 0xFF;
 	memset(maptable + base, "TRDBCX"[sect], end - base);
 }
 
@@ -473,8 +497,10 @@ int main(int argc, char* argv[])
 	if (!follows(&outsect[DATA], &outsect[ROM]))
 		fatal("the data segment must follow the rom segment.") ;
 
-	for (i = 0; i < NUM_SEGMENTS; i++)
+	for (i = 0; i < NUM_SEGMENTS; i++) {
 		overlaps(i);
+		range(i);
+	}
 
 	initmap();
 

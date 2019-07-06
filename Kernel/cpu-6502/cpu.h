@@ -7,6 +7,9 @@ typedef signed char int8_t;
 typedef unsigned int size_t;
 typedef signed int ssize_t;
 
+typedef unsigned char uint_fast8_t;
+typedef signed char int_fast8_t;
+
 typedef uint8_t irqflags_t;
 
 typedef int16_t arg_t;
@@ -15,6 +18,8 @@ typedef uint16_t usize_t;		/* Largest value passed by userspace */
 typedef int16_t susize_t;
 typedef uint16_t uaddr_t;
 typedef uint16_t uptr_t;		/* User pointer equivalent */
+
+#define MAXUSIZE	0xFFFF
 
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
@@ -53,8 +58,13 @@ typedef union {            /* this structure is endian dependent */
     } h;
 } ticks_t;
 
-/* Sane behaviour for unused parameters */
+/* No useful behaviour for unused parameters */
 #define used(x)
+
+#define cpu_to_le16(x)	(x)
+#define le16_to_cpu(x)	(x)
+#define cpu_to_le32(x)	(x)
+#define le32_to_cpu(x)	(x)
 
 /* No support for inline */
 #define inline

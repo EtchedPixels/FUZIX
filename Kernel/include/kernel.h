@@ -91,6 +91,9 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define CPUTYPE_Z280	10
 #define CPUTYPE_8080	11
 #define CPUTYPE_8085	12
+#define CPUTYPE_EZ80	13
+#define CPUTYPE_NS32K	14
+#define CPUTYPE_TMS9900 15
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
@@ -187,9 +190,9 @@ typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define BF_FREE		0
 #define BF_BUSY		1
 
-/* FIXME: if we could split the data and the header we could keep blocks
-   outside of our kernel data (as ELKS does) which would be a win, but need
-   some more care on copies, block indexes and directory ops */
+#if !defined(CONFIG_BLKBUF_EXTERNAL)
+#define CONFIG_BLKBUF_HELPERS
+#endif
 
 typedef struct blkbuf {
 #ifdef CONFIG_BLKBUF_EXTERNAL
@@ -204,7 +207,7 @@ typedef struct blkbuf {
     uint16_t    bf_time;        /* LRU time stamp */
 } blkbuf, *bufptr;
 
-#ifndef CONFIG_BLKBUF_EXTERNAL
+#if defined(CONFIG_BLKBUF_HELPERS)
 #define blktok(kaddr,buf,off,len) \
     memcpy((kaddr), (buf)->__bf_data + (off), (len))
 #define blkfromk(kaddr,buf, off,len) \
@@ -456,6 +459,9 @@ struct mount {
 #define A_SUSPEND               32	/* Suspend to RAM (optional) */
 
 #define AD_NOSYNC		1
+
+#define A_SC_ADD		1
+
                                           
 /* Process table entry */
 
@@ -497,6 +503,7 @@ typedef struct p_tab {
     usize_t	p_top;		/* Copy of u_top */
     uint8_t	p_flags;	/* Bitflags */
 #define PFL_CHKSIG	1	/* Signal check required */
+#define PFL_ALARM	2	/* On alarm queue */
 #ifdef CONFIG_LEVEL_2
     uint16_t	p_session;
 #endif
@@ -506,6 +513,8 @@ typedef struct p_tab {
     uaddr_t	p_profsize;
     uaddr_t	p_profoff;
 #endif    
+    /* Put new stuff we don't care about in asm or ps at the end */
+    struct p_tab *p_timerq;
 } p_tab, *ptptr;
 
 /*
@@ -778,6 +787,23 @@ struct s_argblk {
  *	Tape ioctls 0x06xx (see tape.h)
  */
 
+/*
+ *	CPU and platform ioctls (see platform code)
+ *	0700-07		8080-eZ80
+ *			0700	Get kernel CPM hook info
+ *	0708-0F		6502/65C816
+ *	0710-17		6309/809
+ *			0710	Hook SWI2 etc for emulators
+ *	0718-1F		680x0
+ *
+ *	07Ex		Platform specific (check 07F0 before using as will
+ *			be duplicated per platform)
+ *	07Fx		Generic
+ *			07F0	Get platform name string (unique)
+ *				required if have non CPU specific ioctls
+ *			07F1	Cache writeback/flush
+ */
+
 
 /*
  *	System info shared with user space
@@ -861,7 +887,7 @@ extern void validchk(uint16_t dev, const char *p);
 extern bufptr bread (uint16_t dev, blkno_t blk, bool rewrite);
 extern void brelse(bufptr);
 extern void bawrite(bufptr);
-extern int bfree(bufptr bp, uint8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
+extern int bfree(bufptr bp, uint_fast8_t dirty); /* dirty: 0=clean, 1=dirty (write back), 2=dirty+immediate write */
 extern void *tmpbuf(void);
 extern void tmpfree(void *p);
 extern bufptr zerobuf(void);
@@ -870,29 +896,28 @@ extern bufptr bfind(uint16_t dev, blkno_t blk);
 extern void bdrop(uint16_t dev);
 extern bufptr freebuf(void);
 extern void bufinit(void);
-extern void bufdiscard(bufptr bp);
 extern void bufdump (void);
 extern int bdread(bufptr bp);
 extern int bdwrite(bufptr bp);
-extern int cdread(uint16_t dev, uint8_t flag);
-extern int d_open(uint16_t dev, uint8_t flag);
+extern int cdread(uint16_t dev, uint_fast8_t flag);
+extern int d_open(uint16_t dev, uint_fast8_t flag);
 extern int d_close(uint16_t dev);
 extern int d_ioctl(uint16_t dev, uint16_t request, char *data);
 extern int d_flush(uint16_t dev);
-extern int d_blkoff(uint8_t bits);
-extern int cdwrite(uint16_t dev, uint8_t flag);
-extern bool insq(struct s_queue *q, unsigned char c);
-extern bool remq(struct s_queue *q, unsigned char *cp);
+extern int d_blkoff(uint_fast8_t bits);
+extern int cdwrite(uint16_t dev, uint_fast8_t flag);
+extern bool insq(struct s_queue *q, uint_fast8_t c);
+extern bool remq(struct s_queue *q, uint_fast8_t *cp);
 extern void clrq(struct s_queue *q);
-extern bool uninsq(struct s_queue *q, unsigned char *cp);
+extern bool uninsq(struct s_queue *q, uint_fast8_t *cp);
 extern bool fullq(struct s_queue *q);
-extern int psleep_flags_io(void *event, unsigned char flags);
-extern int psleep_flags(void *event, unsigned char flags);
-extern int nxio_open(uint8_t minor, uint16_t flag);
-extern int no_open(uint8_t minor, uint16_t flag);
-extern int no_close(uint8_t minor);
-extern int no_rdwr(uint8_t minir, uint8_t rawflag, uint8_t flag);
-extern int no_ioctl(uint8_t minor, uarg_t a, char *b);
+extern int psleep_flags_io(void *event, uint_fast8_t flags);
+extern int psleep_flags(void *event, uint_fast8_t flags);
+extern int nxio_open(uint_fast8_t minor, uint16_t flag);
+extern int no_open(uint_fast8_t minor, uint16_t flag);
+extern int no_close(uint_fast8_t minor);
+extern int no_rdwr(uint_fast8_t minir, uint_fast8_t rawflag, uint_fast8_t flag);
+extern int no_ioctl(uint_fast8_t minor, uarg_t a, char *b);
 
 /* filesys.c */
 /* open file, "name" in user address space */
@@ -912,40 +937,39 @@ extern uint16_t i_alloc(uint16_t devno);
 extern void i_free(uint16_t devno, uint16_t ino);
 extern blkno_t blk_alloc(uint16_t devno);
 extern void blk_free(uint16_t devno, blkno_t blk);
-extern int8_t oft_alloc(void);
+extern int_fast8_t oft_alloc(void);
 extern void deflock(struct oft *ofptr);
-extern void oft_deref(int8_t of);
+extern void oft_deref(uint_fast8_t of);
 /* returns index of slot, or -1 on failure */
-extern int8_t uf_alloc(void);
+extern int_fast8_t uf_alloc(void);
 /* returns index of slot, or -1 on failure */
-extern int8_t uf_alloc_n(int n);
+extern int_fast8_t uf_alloc_n(uint_fast8_t n);
 #define i_ref(ino) ((ino)->c_refs++, (ino))
 //extern void i_ref(inoptr ino);
 extern void i_deref(inoptr ino);
 extern void wr_inode(inoptr ino);
 extern bool isdevice(inoptr ino);
 extern int f_trunc(inoptr ino);
-extern void freeblk(uint16_t dev, blkno_t blk, uint8_t level);
-extern blkno_t bmap(inoptr ip, blkno_t bn, int rwflg);
+extern void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level);
+extern blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg);
 extern void validblk(uint16_t dev, blkno_t num);
-extern inoptr getinode(uint8_t uindex);
+extern inoptr getinode(uint_fast8_t uindex);
 extern bool super(void);
 extern bool esuper(void);
 extern uint8_t getperm(inoptr ino);
-extern void setftime(inoptr ino, uint8_t flag);
+extern void setftime(inoptr ino, uint_fast8_t flag);
 extern uint8_t getmode(inoptr ino);
 extern struct mount *fs_tab_get(uint16_t dev);
-/* returns true on failure, false on success */
-extern bool fmount(uint16_t dev, inoptr ino, uint16_t flags);
+extern struct mount *fmount(uint16_t dev, inoptr ino, uint16_t flags);
 extern void magic(inoptr ino);
 extern arg_t unlinki(inoptr ino, inoptr pino, uint8_t *fname);
 
 /* inode.c */
-extern void readi(inoptr ino, uint8_t flag);
+extern void readi(inoptr ino, uint_fast8_t flag);
 extern uint16_t umove(uint16_t n);	/* Probably wants to move ? */
-extern void writei(inoptr ino, uint8_t flag);
-extern int16_t doclose (uint8_t uindex);
-extern inoptr rwsetup (bool is_read, uint8_t *flag);
+extern void writei(inoptr ino, uint_fast8_t flag);
+extern int16_t doclose (uint_fast8_t uindex);
+extern inoptr rwsetup (bool is_read, uint_fast8_t *flag);
 extern int dev_openi(inoptr *ino, uint16_t flag);
 extern void sync(void);
 
@@ -961,12 +985,13 @@ extern void pwake(ptptr p);
 extern ptptr getproc(void);
 extern void makeproc(ptptr p, u_data *u);
 extern ptptr ptab_alloc(void);
-extern void ssig(ptptr proc, uint8_t sig);
+extern void ssig(ptptr proc, uint_fast8_t sig);
 extern void recalc_cursig(void);
-extern uint8_t chksigs(void);
+extern uint_fast8_t chksigs(void);
 extern void program_vectors(uint16_t *pageptr);
-extern void sgrpsig(uint16_t pgrp, uint8_t sig);
+extern void sgrpsig(uint16_t pgrp, uint_fast8_t sig);
 extern void unix_syscall(void);
+extern void ptimer_insert(void);
 extern void timer_interrupt(void);
 extern void doexit (uint16_t val);
 extern void panic(char *deathcry);
@@ -974,7 +999,7 @@ extern void exec_or_die(void);
 #define need_reschedule() (nready != 1 && runticks >= udata.u_ptab->p_priority)
 
 #ifdef CONFIG_LEVEL_2
-extern uint8_t dump_core(uint8_t sig);
+extern uint_fast8_t dump_core(uint8_t sig);
 #endif
 
 /* select.c */
@@ -982,10 +1007,10 @@ extern uint8_t dump_core(uint8_t sig);
 extern void seladdwait(struct selmap *s);
 extern void selrmwait(struct selmap *s);
 extern void selwake(struct selmap *s);
-extern void selwait_inode(inoptr i, uint8_t smask, uint8_t setit);
+extern void selwait_inode(inoptr i, uint_fast8_t smask, uint_fast8_t setit);
 extern void selwake_inode(inoptr i, uint16_t mask);
 extern void selwake_pipe(inoptr i, uint16_t mask);
-extern void selwake_dev(uint8_t major, uint8_t minor, uint16_t mask);
+extern void selwake_dev(uint_fast8_t major, uint_fast8_t minor, uint16_t mask);
 extern arg_t _select(void);
 #else
 #define selwait_inode(i,smask,setit) do {} while(0)
@@ -1002,14 +1027,14 @@ extern int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
 extern int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
 		     uaddr_t buf, uint16_t page);
 
-extern void swapmap_add(uint8_t swap);
-extern void swapmap_init(uint8_t swap);
+extern void swapmap_add(uint_fast8_t swap);
+extern void swapmap_init(uint_fast8_t swap);
 extern int swapmap_alloc(void);
 extern ptptr swapneeded(ptptr p, int selfok);
 extern void swapper(ptptr p);
 extern void swapper2(ptptr p, uint16_t map);
 extern uint8_t get_common(void);
-extern void swap_finish(uint8_t page, ptptr p);
+extern void swap_finish(uint_fast8_t page, ptptr p);
 /* These two are provided by the bank code selected for the port */
 extern int swapout(ptptr p);
 extern void swapin(ptptr p, uint16_t map);
@@ -1047,18 +1072,21 @@ extern void platform_discard(void);
 extern void platform_copyright(void);
 #endif
 extern void platform_idle(void);
-extern uint8_t platform_rtc_secs(void);
+extern uint_fast8_t platform_rtc_secs(void);
 extern int platform_rtc_read(void);
 extern int platform_rtc_write(void);
 extern void platform_reboot(void);
 extern void platform_monitor(void);
-extern uint8_t platform_param(char *p);
+extern uint_fast8_t platform_param(char *p);
 extern void platform_switchout(void);
 extern void platform_interrupt(void);
-extern uint8_t platform_suspend(void);
-extern uint8_t platform_udata_set(ptptr p);
+extern uint_fast8_t platform_suspend(void);
+extern uint_fast8_t platform_udata_set(ptptr p);
 
-extern void platform_swap_found(uint8_t part, uint8_t letter);
+extern void platform_swap_found(uint_fast8_t part, uint_fast8_t letter);
+extern uint_fast8_t platform_canswapon(uint16_t devno);
+
+extern int platform_dev_ioctl(uarg_t request, char *data);
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);

@@ -20,7 +20,7 @@ sio'X'_rx:
 sio'X'_tx:
 	.ds	128
 
-	.area _COMMONMEM
+	.area _SERIALDATA
 sio'X'_error:
 	.db	0
 sio'X'_rxover:
@@ -54,6 +54,7 @@ sio'X'_rxe:
 ;
 sio'X'_txd:
 	push af
+	switch
 	ld a,(_sio'X'_txl)
 	or a
 	jr z, tx_'X'_none
@@ -70,6 +71,7 @@ sio'X'_txd:
 tx_'X'_none:
 	ld a,#0x28
 	out (CP),a		; silence tx interrupt
+	switchback
 	pop af
 	ei
 	RET
@@ -79,6 +81,7 @@ tx_'X'_none:
 sio'X'_rx_ring:
 	push af
 	push hl
+	switch
 sio'X'_rx_next:
 	in a,(DP)		; read ASAP
 	ld l,a
@@ -106,6 +109,7 @@ sio'X'_rx_next:
 	in a,(CP)		; RR 0
 	rra
 	jr c, sio'X'_rx_next
+	switchback
 	pop hl
 	pop af
 	ei
@@ -114,6 +118,8 @@ sio'X'_rx_next:
 	ld a,(sio'X'_error)
 	or #0x20		; Fake an RX overflow bit
 	ld (sio'X'_rxover),a
+	switchback
+	pop hl
 	pop af
 	ei
 	RET
@@ -124,6 +130,7 @@ sio'X'_status:
 	; CTS or DCD change
 	push af
 	push hl
+	switch
 	; RR0
 	in a,(CP)
 	ld (_sio'X'_state),a
@@ -135,6 +142,7 @@ no_dcd_drop_'X':
 	; Clear the latched values
 	ld a,#0x10
 	out (CP),a
+	switchback
 	pop hl
 	pop af
 	ei
@@ -147,6 +155,7 @@ sio'X'_special:
 	; Parity, RX Overrun, Framing
 	; Probably want to record them, but we at least must clean up
 	push af
+	switch
 	ld a,#1
 	out (CP),a		; RR1 please
 	in a,(CP)		; clear events
@@ -154,6 +163,7 @@ sio'X'_special:
 	; Clear the latched values
 	ld a,#0x30
 	out (CP),a
+	switchback
 	pop af
 	ei
 	RET
@@ -190,7 +200,7 @@ tx'X'_overflow:
 sio'X'_direct_maybe:
 	; check RR
 	in a,(CP)
-	and #0x04		; RX space ?
+	and #0x04		; TX space ?
 	; if space
 	ld a,#1
 	jr z, sio'X'_queue
@@ -232,7 +242,6 @@ _sio'X'_rx_get:
 	inc l
 	res 7,l
 	ld (sio'X'_rxe),hl
-	scf
 	ld l,a
 	ret
 
@@ -243,6 +252,5 @@ _sio'X'_error_get:
 	ld (hl),#0
 	ld l,a
 	ret
-
 
 .endm

@@ -6,6 +6,7 @@
         ; when they are first seen.
         .area _CODE
         .area _CODE2
+	.area _HOME
         .area _CONST
 	.area _VIDEO
         .area _INITIALIZED
@@ -13,13 +14,15 @@
         .area _BSEG
         .area _BSS
         .area _HEAP
-        ; note that areas below here may be overwritten by the heap at runtime, so
-        ; put initialisation stuff in here
+	.area _BUFFERS
+	; Buffers will overwrite everything up to commonmem
         .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
 	.area _DISCARD
+	; We load the font into the VDP then it's discardable
 	.area _FONT
+	; and the common memory goes top
         .area _COMMONMEM
 
         ; imported symbols
@@ -31,6 +34,8 @@
         .globl l__DATA
         .globl s__FONT
         .globl l__FONT
+        .globl s__BUFFERS
+        .globl l__BUFFERS
         .globl s__DISCARD
         .globl l__DISCARD
         .globl s__COMMONMEM
@@ -64,6 +69,12 @@ init:
 	ld hl, #s__DATA
 	ld de, #s__DATA + 1
 	ld bc, #l__DATA - 1
+	ld (hl), #0
+	ldir
+	; Zero buffers area
+	ld hl, #s__BUFFERS
+	ld de, #s__BUFFERS + 1
+	ld bc, #l__BUFFERS - 1
 	ld (hl), #0
 	ldir
 

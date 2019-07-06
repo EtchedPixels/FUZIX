@@ -80,7 +80,7 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
 }
 
 /* define CONFIG_RTC in platform's config.h to hook this into timer.c */
-uint8_t platform_rtc_secs(void)
+uint_fast8_t platform_rtc_secs(void)
 {
     uint8_t buffer;
     if (ds1302_present) {

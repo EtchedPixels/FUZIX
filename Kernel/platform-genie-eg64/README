@@ -98,7 +98,7 @@ Memory Map:
 	8000-FFFF	User space
 
 	Note that the current build is an over featured one. Turning off
-	the  IDE support will shrink it loads/
+	the  IDE support will shrink it loads.
 
 	Unfortunately right now some core changes are needed to get to the
 	point we can have configurable options done properly.
