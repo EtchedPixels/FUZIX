@@ -76,5 +76,5 @@ Z182_RAMLBR                 .equ 0xE7                   ; RAM lower boundary reg
 Z182_ROMBR                  .equ 0xE8                   ; ROM boundary register
 
 ; Debugging
-DEBUGBANK   .equ 0
-DEBUGCOMMON .equ 0
+DEBUGBANK                   .equ 0
+DEBUGCOMMON                 .equ 0

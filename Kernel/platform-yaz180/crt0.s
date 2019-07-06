@@ -1,6 +1,7 @@
 ; 2013-12-18 William R Sowerbutts
 
         .module crt0
+        .z180
 
         ; Ordering of segments for the linker.
         ; WRS: Note we list all our segments here, even though
@@ -37,10 +38,20 @@
         .globl l__DATA
         .globl kstack_top
 
+        ; included symbols
+        .include "kernel.def"
+        .include "../cpu-z180/z180.def"
+        
         ; startup code
         .area _CODE
 init:
         di
+
+        ; ensure that RAM is clean 64kB pages -> CBR=BBR (needed for z180_init_early)
+        in0 a, (MMU_BBR)
+        out0 (MMU_CBR), a
+
+        ; set the stack
         ld sp, #kstack_top
 
         ; move the common memory where it belongs    
@@ -59,13 +70,13 @@ init:
         ld (hl), #0
         ldir
 
-        ; Configure memory map
+        ; configure memory map
         call init_early
 
-        ; Hardware setup
+        ; hardware setup
         call init_hardware
 
-        ; Call the C main routine
+        ; call the C main routine
         call _fuzix_main
     
         ; fuzix_main() shouldn't return, but if it does...
