@@ -32,7 +32,7 @@
 # trs80m1:	TRS80 Model I/III with suitable banker (also clones)
 # ubee:		Microbee
 # v8080:	8080 development using Z80Pack
-# yaz180:   Z180 modern SBC up to 1M RAM
+# yaz180:	Z180 modern SBC up to 1M RAM
 # z80pack:	Z80Pack virtual Z80 platform
 # zeta-v2:	Zeta v2 retrobrew SBC (for Zeta V1 see sbcv2)
 # zx+3:		ZX Spectrum +3

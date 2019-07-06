@@ -47,7 +47,7 @@
 init:
         di
 
-        ; ensure that RAM is clean 64kB pages -> CBR=BBR (needed for z180_init_early)
+        ; ensure that RAM is contiguous 64kB pages -> CBR=BBR (needed for z180_init_early)
         in0 a, (MMU_BBR)
         out0 (MMU_CBR), a
 

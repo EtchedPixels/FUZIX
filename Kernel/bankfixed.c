@@ -3,13 +3,13 @@
  *	area of memory is pinned and the other area can be set to multiple
  *	different banks.
  *
- *	FFFF		+-----------------------------------+
- *              	|          Common Memory            |
- *    MAPBASE+MAP_SIZE	+-----------------------------------+
- *	        	|          Banked Memory            |
- *      MAPBASE		+-----------------------------------+
- *			|          Common Memory	    |
- *	0000		+-----------------------------------+
+ *  FFFF                +-----------------------------------+
+ *                      |           Common Memory           |
+ *  MAPBASE+MAP_SIZE    +-----------------------------------+
+ *                      |           Banked Memory           |
+ *  MAPBASE             +-----------------------------------+
+ *                      |           Common Memory           |
+ *  0000                +-----------------------------------+
  *
  *
  *	Other requirements:

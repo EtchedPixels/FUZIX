@@ -7,8 +7,8 @@
 
 void init_hardware_c(void)
 {
-    ramsize = 912;
-    procmem = 848;
+    ramsize = 802;
+    procmem = 802 - 64;
     /* zero out the initial bufpool */
     memset(bufpool, 0, (char*)bufpool_end - (char*)bufpool);
 }
@@ -17,14 +17,14 @@ void pagemap_init(void)
 {
     int i;
 
-    /* YAZ180 has RAM from 0C000 to EFFFF
+    /* YAZ180 has RAM from 0C000 to CFFFF, with 256kB flash device.
      * First 64K is used by the kernel. 
      * Each process gets the full 64K for now.
      * Page size is 4KB.
-     * We don't do anything right now with C000-FFFF so that is
+     * We don't do anything right now with 0C000-0FFFF so that is
      * a good place to load any additional tools
      */
-    for(i = 0x20; i < 0xF0; i+=0x10)
+    for(i = 0x20; i < 0xD0; i+=0x10)
         pagemap_add(i);
 }
 
