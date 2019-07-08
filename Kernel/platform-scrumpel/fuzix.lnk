@@ -27,6 +27,7 @@ syscall_fs2.rel
 syscall_fs3.rel
 syscall_proc.rel
 syscall_other.rel
+syscall_net.rel
 tty.rel
 mm.rel
 bankfixed.rel
@@ -43,4 +44,5 @@ platform-scrumpel/devsd_discard.rel
 platform-scrumpel/mbr.rel
 platform-scrumpel/blkdev.rel
 platform-scrumpel/monitor.rel
+platform-scrumpel/net_native.rel
 -e

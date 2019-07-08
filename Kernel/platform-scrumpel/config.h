@@ -37,6 +37,10 @@
 #define NBUFS    5        /* Number of block buffers, keep in line with space reserved in scrumpel.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
+/* Enable networking and netd support */
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
+
 /* Hardware parameters : internal hardware at 0x00-0x3F */
 #define Z180_IO_BASE       0x00
 
