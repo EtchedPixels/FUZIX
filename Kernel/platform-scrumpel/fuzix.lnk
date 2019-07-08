@@ -1,6 +1,6 @@
 -mwxuy
 -i fuzix.ihx
--b _CODE=0x1000
+-b _CODE=0x0100
 -b _COMMONMEM=0xF600
 -b _DISCARD=0xE000
 -l z180

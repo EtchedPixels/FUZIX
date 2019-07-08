@@ -50,7 +50,7 @@
 #define NUM_DEV_TTY	2
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)
-#define TTY_INIT_BAUD B115200	/* Hardwired generally */
+#define TTY_INIT_BAUD B9600	/* Hardwired generally */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
