@@ -66,6 +66,8 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
     uint8_t i;
     irqflags_t irq = di();
 
+    platform_ds1302_setup();
+
     ds1302_set_pin_ce(true);
     ds1302_send_byte(0x81 | 0x3E); /* burst read all calendar data */
     for(i=0; i<length; i++){
@@ -76,6 +78,9 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
     }
     ds1302_set_pin_ce(false);
     ds1302_set_pin_clk(false);
+
+    platform_ds1302_restore();
+
     irqrestore(irq);
 }
 

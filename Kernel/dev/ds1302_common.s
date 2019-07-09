@@ -4,7 +4,7 @@
 ;
 ;
 
-        .module ds1302-n8vem
+        .module ds1302-common
 
         ; exported symbols
         .globl _ds1302_set_pin_ce
@@ -19,13 +19,6 @@
 ; -----------------------------------------------------------------------------
 ; DS1302 interface
 ; -----------------------------------------------------------------------------
-
-N8VEM_RTC       = 0x70
-PIN_CE          = 0x10
-PIN_DATA_HIZ    = 0x20
-PIN_CLK         = 0x40
-PIN_DATA_OUT    = 0x80
-PIN_DATA_IN     = 0x01
 
 _ds1302_get_pin_data:
         in a, (RTC)       	; read input register
@@ -72,5 +65,5 @@ writereg:
 
 .area _DATA
 
-rtc_shadow:     .db 0           ; we can't read back the latch contents, so we must keep a copy
+rtc_shadow:     .db PIN_OTHER   ; we can't read back the latch contents, so we must keep a copy
 

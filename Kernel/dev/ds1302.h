@@ -8,6 +8,14 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length);
 int platform_rtc_read(void);
 int platform_rtc_write(void);
 
+/* Optional helpers */
+#ifdef DS1302_SETUP
+extern void platform_ds1302_setup(void);
+extern void platform_ds1302_restore(void);
+#else
+#define platform_ds1302_setup()		do {} while(0)
+#define platform_ds1302_restore()	do {} while(0)
+#endif
 extern uint8_t ds1302_present;
 
 #ifdef _DS1302_PRIVATE

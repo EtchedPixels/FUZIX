@@ -1,6 +1,6 @@
-	STACKOFF	.equ	2
+	STACKOFF	.equ	4
 
-	.area _CODE
+	.area _CODE1
 
 RTC	        = 0xC0
 PIN_CE          = 0x10
