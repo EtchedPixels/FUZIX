@@ -8,6 +8,7 @@
 uint16_t ramtop = PROGTOP;
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
+uint8_t is_sc126;		/* TODO - how to detect */
 
 struct blkbuf *bufpool_end = bufpool + NBUFS; /* minimal for boot -- expanded after we're done with _DISCARD */
 
@@ -58,3 +59,23 @@ void platform_interrupt(void)
     }
 }
 
+__sfr __at 0x0C gpio;
+
+static uint8_t gpio_shadow;
+
+void gpio_set(uint8_t mask, uint8_t val)
+{
+    gpio_shadow &= ~mask;
+    gpio_shadow |= val;
+    gpio = gpio_shadow;
+}
+
+void platform_ds1302_setup(void)
+{
+}
+
+void platform_ds1302_restore(void)
+{
+    if (is_sc126)
+        gpio = gpio_shadow;
+}

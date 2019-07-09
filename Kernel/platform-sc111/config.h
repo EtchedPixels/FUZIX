@@ -37,7 +37,7 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 /* Hardware parameters : internal hardware at 0x40-0x7F */
-#define Z180_IO_BASE       0x40
+#define Z180_IO_BASE       0xC0
 
 #define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
 
@@ -60,7 +60,7 @@ extern unsigned int swap_dev;
 #define SWAPTOP	    0xFA00	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-#define CONFIG_DYNAMIC_SWAP
+//#define CONFIG_DYNAMIC_SWAP
 #define swap_map(x)	((uint8_t *)(x))
 
 #define platform_copyright()		// for now

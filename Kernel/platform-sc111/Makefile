@@ -3,7 +3,7 @@ CSRCS += devices.c main.c devtty.c spi.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/devsd_discard.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c  ../dev/devsd.c
-DASRCS = ../dev/ds1302_rc2014.s
+DASRCS = ../dev/ds1302_rc2014_z180.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
