@@ -14,7 +14,7 @@ devices are also provided entirely by the OS core.
 
 ## Device Methods
 
-Each Fuzix device has four methods. These do not all need to be implemented
+Each Fuzix device has five methods. These do not all need to be implemented
 and generic versions of them exist for default cases.
 
 ### open
@@ -42,7 +42,7 @@ something like this
         device_setup();
         return 0;
     }
-```
+````
 
 Open should set u_error correctly if an error occurs and return -1. If it
 succeeds then it should return 0
