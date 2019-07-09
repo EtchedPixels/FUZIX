@@ -20,6 +20,7 @@ Welcome to Fuzix's documentation!
    ExternalBuffers
    Process
    Tickless
+   DeviceDrivers
    TTY
    VT
    65C816
