@@ -132,7 +132,7 @@ like one but for user memory banks.
             if (d_blkoff(shift))
                     return -1;
     }
-```
+````
 
 #### Low Level Data Transfers
 
