@@ -64,7 +64,7 @@ int hd_open(uint8_t minor, uint16_t flag)
     used(flag);
     err = *diskstat;
     *disknum = minor;
-    if(*diskstat) {
+    if(err) {
         udata.u_error = ENODEV;
         return -1;
     }
