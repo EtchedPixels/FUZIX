@@ -93,7 +93,7 @@ static int sock_wait_enter(struct socket *s, uint8_t flag, uint8_t state)
 static struct socket *alloc_socket(void)
 {
 	irqflags_t irq = di();
-	struct socket *s = sockets;
+	regptr struct socket *s = sockets;
 	while (s < sockets + NSOCKET) {
 		if (s->s_state == SS_UNUSED) {
 			s->s_state = SS_INIT;
@@ -109,7 +109,7 @@ static struct socket *alloc_socket(void)
 
 struct socket *sock_alloc_accept(struct socket *s)
 {
-	struct socket *n = alloc_socket();
+	regptr struct socket *n = alloc_socket();
 	int sockno;
 	if (n == NULL)
 		return NULL;
@@ -156,8 +156,8 @@ void sock_closed(struct socket *s)
  */
 struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa)
 {
-	struct socket *sp;
-	struct sockaddrs *a;
+	regptr struct socket *sp;
+	regptr struct sockaddrs *a;
 
 	for (sp = sockets; sp < sockets + NSOCKET; sp++) {
 		a = &sp->s_addr[sv];
@@ -570,7 +570,7 @@ struct sockio *addr;	control buffer
 
 arg_t _sendto(void)
 {
-	struct socket *s = sock_get(fd, NULL);
+	regptr struct socket *s = sock_get(fd, NULL);
 	struct sockaddr_in sin;
 	uint16_t flags;
 	uint16_t alen;

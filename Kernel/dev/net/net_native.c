@@ -31,8 +31,8 @@ static struct netevent ne;
 
 int netdev_write(uint8_t flags)
 {
-	struct socket *s;
-	struct sockdata *sd;
+	regptr struct socket *s;
+	regptr struct sockdata *sd;
 
 	used(flags);
 	/* Grab a message from the service daemon */
@@ -200,7 +200,7 @@ int netdev_ioctl(uarg_t request, char *data)
  */
 int netdev_close(uint8_t minor)
 {
-	struct socket *s = sockets;
+	regptr struct socket *s = sockets;
 	used(minor);
 	if (net_ino) {
 		i_deref(net_ino);
@@ -452,7 +452,7 @@ static uint16_t netn_copyout(struct socket *s)
  */
 int net_init(struct socket *s)
 {
-	struct sockdata *sd = sockdata + s->s_num;
+	regptr struct sockdata *sd = sockdata + s->s_num;
 	if (!net_ino) {
 		udata.u_error = ENETDOWN;
 		return -1;
@@ -522,7 +522,7 @@ void net_close(struct socket *s)
  *	Read or recvfrom a socket. We don't yet handle message addresses
  *	sensibly and that needs fixing
  */
-arg_t net_read(struct socket *s, uint8_t flag)
+arg_t net_read(regptr struct socket *s, uint8_t flag)
 {
 	uint16_t n = 0;
 	struct sockdata *sd = s->s_priv;
@@ -571,7 +571,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
  *	Write or sendto a socket. We don't yet handle message addresses
  *	sensibly and that needs fixing
  */
-arg_t net_write(struct socket * s, uint8_t flag)
+arg_t net_write(regptr struct socket * s, uint8_t flag)
 {
 	uint16_t n = 0, t = 0;
 	uint16_t l = udata.u_count;
