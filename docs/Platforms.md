@@ -429,7 +429,7 @@ Unsupported
 - Bitbang serial port
 - Customising baud rate clocks and control
 
-Due to the limited memory the SC104/SC114 systems are not recommended for
+Due to the limited memory the SC108/SC114 systems are not recommended for
 multi-user usage. It is also not possible to use these boards with a banked
 ROM/RAM card.
 

@@ -50,7 +50,7 @@ flippable. They are all double density.
   9 sectors per track, 512 bytes/sector, skewed at format time.
   (Amstrad format).
 
-Flippable media can either me treated as one file system (only readable properly
+Flippable media can either be treated as one file system (only readable properly
 on a double sided drive), or two. Double step may be needed
 
 ## General Rules
