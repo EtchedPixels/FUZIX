@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -b _CODE=0x0088
 -b _COMMONMEM=0xF400
--b _DISCARD=0xE880
+-b _DISCARD=0xE900
 -l z80
 platform-z80pack/crt0.rel
 platform-z80pack/commonmem.rel
