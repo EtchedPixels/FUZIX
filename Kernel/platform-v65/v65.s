@@ -40,6 +40,7 @@
 	    .import _chksigs
 	    .import _platform_switchout
 	    .import _need_resched
+	    .import _udata
 
 	    .import outcharhex
 	    .import outxa
