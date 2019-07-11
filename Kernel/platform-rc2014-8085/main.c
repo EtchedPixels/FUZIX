@@ -36,11 +36,12 @@ static void timer_tick(uint8_t n)
 void platform_interrupt(void)
 {
 	tty_poll();
-	if (0 && ctc_present) {
+	if (ctc_present) {
 		uint_fast8_t n = 255 - ctc_check();
 		timer_tick(n);
 	}
-	if (tms_interrupt()) {
+	/* Need to write a TMS detector */
+	if (0 && tms_interrupt()) {
 		vblank++;
 		/* TODO vblank wakeup for gfx */
 		if (vblank == 6 && !ctc_present) {

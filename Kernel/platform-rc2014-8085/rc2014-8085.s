@@ -95,15 +95,28 @@ ctc_check:
 	mvi a,1
 	sta _ctc_present
 	!
-	!	Without major mods we can't use the CTC as a timer. There
-	!	are two reasons for this
-	!	1. We can't clear the interrupt as we have no M1
-	!	2. The speed is tied to CLK which with the 8085 board
-	!	   isn't well defined as the usual 7.3MHz but is twice
-	!	   the CPU clock
+	!	Set up the CTC
 	!
-	!	Instead... we use the TMS9918A. When we get a better clock
+	mvi a,0xB5
+	out CTC_CH2
+	mvi a,144
+	out CTC_CH2		! 200Hz at 7.3MHz
+	!
+	!	CTC3 is chained from CTC2 as we can't use Z80 IM2 to check
+	!	interrupt causes. It also means we can handle missed ticks
+	!	better.
+	!
+	mvi a,0x47
+	out CTC_CH3
+	mvi a,0xFF
+	out CTC_CH3
+	jmp tmsdone
+
+	!
+	!	See if we can use the TMS9918A. When we get a better clock
 	!	option we can use that
+	!
+	!	FIXME: add probe logic
 	!
 no_ctc:
 	lxi h,tmsinitdata
@@ -338,7 +351,8 @@ _uart_setup:
 
 !
 !	CTC small helper. Read the state of counter 3 (ticks elapsed) and
-!	reset it
+!	reset it, then bash CTC_CH2 over the head to unstick the interrupt
+!	as we lack Z80 IM2/RETI
 !
 .define _ctc_check
 
@@ -350,6 +364,24 @@ _ctc_check:
 	out CTC_CH3
 	mvi a,0xFF
 	out CTC_CH3
+	!
+	!	Undocumented CTC behaviour. If you clear the IRQ in the
+	!	control word then it clears in the CTC itself, at least
+	!	according to MAME, and we will test this in a bit!
+	!
+	!	Reconfigure the IRQ off and back on. The timer will carry
+	!	on ticking down the current count so the only risk is that
+	!	we might miss an IRQ but we'll pick that up next time due
+	!	to CH3.
+	!
+	mvi a,0x35
+	out CTC_CH2
+	mvi a,144
+	out CTC_CH2
+	mvi a,0xB5
+	out CTC_CH2
+	mvi a,144
+	out CTC_CH2
 	ret
 	
 !

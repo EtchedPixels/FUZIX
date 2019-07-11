@@ -11,7 +11,7 @@ PROGLOAD		    = 0x0100
 CONFIG_SWAP		    = 1
 
 #define INT_ENTER
-#define INT_EXIT	ei
+#define INT_EXIT
 #define DI		di
 
 #define EI		ei
@@ -20,5 +20,8 @@ CONFIG_SWAP		    = 1
 !	This sequence clears \M1, then causes the ED 4D pattern to be seen
 !	in memory reads. It saves the needed registers to avoid mess
 !
-#define FAKE_IRET	push h; mvi a,0x40; sim; lxi h,0x4DED; mvi a,0xC0; sim; pop h
+!	Not used on actual board now
+!
+!#define FAKE_IRET	push h; mvi a,0x40; sim; lxi h,0x4DED; mvi a,0xC0; sim; pop h
 
+#define FAKE_IRET
