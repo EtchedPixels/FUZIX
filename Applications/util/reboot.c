@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   }
   if (argc != 1) {
     write(2, argv[0], strlen(argv[0]));
-    write(2, ": unexpected argument.\n", 22);
+    write(2, ": unexpected argument.\n", 23);
     exit(1);
   }
   /* shutdown does a polite shutdown */
