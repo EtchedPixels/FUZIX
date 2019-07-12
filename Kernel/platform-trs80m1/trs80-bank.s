@@ -60,9 +60,9 @@ init_hardware:
 	    pop af
 	    ld a,(_trs80_mapper)
 	    or a
+	    ld hl,#0xFFFF		; FFFF is free in all our pages
 	    jr nz, memsize_selector
             ; set system RAM size
-	    ld hl,#0xFFFF		; FFFF is free in all our pages
 	    ld bc,#0xFF43		; kernel included
 	    xor a
 mark_pages:
@@ -87,9 +87,8 @@ mismatch:				; B holds the first page above
 	    jr scan_done
 
 memsize_selector:
-            ; set system RAM size
+            ; set system RAM size	- HL already points to FFFF
 	    ld bc,#0x381f
-	    ld hl,#0xFFFF		; free space
 	    ld e,#4			; only 4 pages to test
 mark_up:
 	    out (c),b
