@@ -3,7 +3,7 @@
 ;
         .module commonmem
 
-        .area _COMMONDATA
+        .area _UDATA
 
         .globl _ub
         .globl _udata
@@ -33,7 +33,7 @@ kstack_base:
 kstack_top:
 
 ;
-;	We link the pre bank switching setup code in 4400-44FF and a bit
+;	We link the pre bank switching setup code in 4300-43FF and a bit
 ;	then convert it into istack.
 ;
 istack_base:
