@@ -113,7 +113,6 @@ init_hardware:
 
 	xor a			; Kernel + ROM
 	out (0x3F),a		; ROM bank 0
-	inc a
 	out (0x38),a		; ROM in 
 
 	ld hl,#bankhelper
@@ -128,8 +127,9 @@ init_hardware:
 
 	xor a
 	out (0x3E),a		; Kernel bank
-	out (0x38), a		; ROM out
 	ld (banknum),a		; and correct page
+	inc a
+	out (0x38), a		; ROM out
 
 	; We now have our common in place. We can do the rest ourselves
 
