@@ -5,7 +5,7 @@
 -b _BOOT=0x4300
 -b _CODE1=0x8000
 -b _CODE2=0x8000
--b _COMMONDATA=0x4100
+-b _UDATA=0x4100
 -l z80
 platform-trs80m1/crt0.rel
 platform-trs80m1/commonmem.rel
