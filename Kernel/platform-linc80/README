@@ -5,9 +5,10 @@ This port supports the following configurations
 	LiNC80 with at least one extra 16K bank of RAM as bank 1
 	(additional banks will not be used at this point)
 
-	IDE CF card configured with CP/M to load Fuzix (pending a better
-	loader). Partition table 65536 blocks into the media with at
-	least a root and swap partition present.
+	IDE CF card with Fuzix loader, Fuzix and both a root fs and a
+	swap partition.
+
+	Optional SD card on Z80 PIO
 
 	Options:
 		No LiNC80 or RC2014 add in cards are currently supported
@@ -34,9 +35,6 @@ C000-FFFF	User
 
 TO DO
 
-Write a proper bootloader that can use partition tables but will trick the
-CPM loader into doing the right thing.
-
 Version that supports multiple 16K banks and multiple processes in memory
 ZX style. Also code to probe for and use the 32K hack which is far nicer.
 
@@ -59,4 +57,11 @@ Core code IM2 enabling
   first point we can, and for interrupt_handler do an inc and defer for the
   next tick if we can't re-enter (so we don't lose ticks and we don't miss
   latencies)
+
+
+Set Up
+
+Place the loader on the boot block onwards along with partition table
+Place the Kernel (fuzix.com) from block 24 onwards
+Enjoy
 
