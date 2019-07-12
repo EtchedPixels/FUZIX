@@ -34,7 +34,7 @@ static int kill_pids(int sig)
         return 255;
     }
     if (nodesize > sizeof(buf)) {
-        writes(2, "kilall: mismatch with kernel.\n");
+        writes(2, "killall: mismatch with kernel.\n");
         exit(1);
     }
     if (ioctl(fd, 1, (char *)&procs) != 0) {
