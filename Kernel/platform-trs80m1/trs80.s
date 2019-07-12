@@ -55,13 +55,15 @@
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x4000 upwards after the udata etc)
 ; -----------------------------------------------------------------------------
-            .area _COMMONMEM
+            .area _COMMONDATA
 ;
 ;	This is linked first after udata and boot, and we turn the boot area
 ;	into the istack. Don't screw around with the link order!
 ;
 istack_top:
 istack_switched_sp: .dw 0
+
+	    .area _COMMONMEM
 
 _platform_monitor:
 	    push af
@@ -87,6 +89,7 @@ _int_disabled:
 ; -----------------------------------------------------------------------------
 ; BOOT MEMORY BANK (below 0x8000)
 ; -----------------------------------------------------------------------------
+
             .area _BOOT
 
 
@@ -126,8 +129,7 @@ not_lnw:
 	    ld a,#3
 	    ld (_trs80_model),a	; Video Genie
 not_vg:
-	    call _rom_vectors
-            ret
+	    jp _rom_vectors
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
@@ -197,7 +199,7 @@ outchar:
 
 ;
 ;	Swap helpers.
-;	We have our buffers mapepd in Bank 2 but we don't need to do
+;	We have our buffers mapped in Bank 2 but we don't need to do
 ;	anything here as we are in common memory and we've carefully
 ;	arranged that the device driver callers are in BANK2 thus we'll
 ;	have BANK2 mapped by default, although we may map a user bank
