@@ -90,7 +90,10 @@ void diskprobe(void)
    The 256TC needed an extra bit so reused bit 5 (rom selector)
    The 3rd party 512K/1MB add ons used bits 7/6 for the high bank bits
 
-   Bank 0/0 holds the kernel and common Bank 0/1 holds the kernel low 32k */
+   The actual location of the high memory is physically 0/0, however bit
+   1 gets inverted when ROM is not mapped so we must avoid what we think
+   of as page 2 */
+
 static uint8_t map_mod(uint8_t banknum)
 {
 	uint8_t r = banknum & 0x03;
@@ -108,14 +111,18 @@ static uint8_t map_mod(uint8_t banknum)
 void pagemap_init(void)
 {
 	uint8_t i;
-	uint8_t nbank = procmem / 32;
+	uint8_t nbank = ramsize / 32;
 
 	/* Just a handy spot to run it early */
 	has_cmos_rtc();
 
-	for (i = 1; i < nbank; i++)
+	/* Our kernel lives in slot 0 as we see it. Our upper bank depends
+	   upon the machine type and is 2. We skip that as we assign pages */
+	for (i = 1; i < nbank; i++) {
+		if (i == 2)
+			continue;
 		pagemap_add(map_mod(i));
-
+	}
 }
 
 uint8_t platform_param(char *p)
