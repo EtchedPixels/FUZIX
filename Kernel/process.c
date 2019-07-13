@@ -377,6 +377,7 @@ ptptr ptab_alloc(void)
 			} else {
 				udata.u_error = ENOMEM;
 				newp = NULL;
+				break;
 	                }
 	                newp->p_pgrp = udata.u_ptab->p_pgrp;
 	                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
