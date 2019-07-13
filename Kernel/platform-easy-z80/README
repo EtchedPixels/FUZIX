@@ -78,5 +78,5 @@ the first file system with ucp foo.cf:1049600 if it starts at block 2048 of the
 CF card as normal.
 
 Then you can run
-./rc2014 -b -r ez512.rom -measy-z80 -i foo.cf   (-R for RTC)
+./rc2014 -b -r ez512.rom -m easyz80 -i foo.cf   (-R for RTC)
 
