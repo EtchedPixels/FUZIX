@@ -55,3 +55,5 @@
 #define ITABSIZE	176
 
 #define BOOTDEVICENAMES "hd#"
+
+#define TTY_INIT_BAUD	B38400

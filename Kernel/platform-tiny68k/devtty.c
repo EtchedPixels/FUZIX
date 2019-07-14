@@ -123,8 +123,9 @@ static const uint8_t baudset[3][16] = {
 	{
 		/* Normal BRG ACR:7 = 0 */
 		0xDD,		/* 0 is special */
-		0x11,		/* 50 */
-		0x11,		/* Can't do 75 on the standard BRG */
+		0x00,		/* 50 */
+		0x00,		/* Can't do 75 on the standard BRG */
+		0x11,		/* 110 */
 		0x22,		/* 134 */
 		0x22,		/* No 150 on the standard BRG */
 		0x44,		/* 300 */
@@ -140,8 +141,9 @@ static const uint8_t baudset[3][16] = {
 	},{
 		/* Normal BRG ACR:7 = 1 */
 		0xDD,		/* 0 is special */
-		0x11,		/* No 50 */
-		0x11,		/* 75 */
+		0x00,		/* No 50 */
+		0x00,		/* 75 */
+		0x11,		/* 110 */
 		0x22,		/* 134 */
 		0x33,		/* 150 */
 		0x44,		/* 300 */
@@ -159,7 +161,8 @@ static const uint8_t baudset[3][16] = {
 		0xDD,		/* 0 is special */
 		0x00,		/* No 50 */
 		0x00,		/* No 75 */
-		0x00,		/* No 1344 */
+		0x00,		/* No 110 */
+		0x00,		/* No 134 */
 		0x00,		/* No 150 */
 		0x00,		/* No 300 */
 		0x00,		/* No 600 */
@@ -202,12 +205,20 @@ void tty_setup(uint8_t minor, uint8_t flags)
 	if (table == 0) {
 		baud = oldbaud[minor];
 		table = baudsrc[baud];
+		goto out;
 	}
 
-	if (table & 2)
-		PUTB(UART_ACR, 0xF0);
-	else
-		PUTB(UART_ACR, 0x70);
+	/* Favour the standard BRG set up, don't mix and match */
+	if (table != 4) {
+		if (table & 2) {
+			PUTB(UART_ACR, 0xF0);
+			table = 2;
+		} else {
+			PUTB(UART_ACR, 0x70);
+			table = 1;
+		}
+	}
+
 
 	if ((table & 4) != oldbrg) {
 		GETB(UART_CRA);	/* Toggle BRG to use */
@@ -244,10 +255,11 @@ void tty_setup(uint8_t minor, uint8_t flags)
 	PUTB(base + UART_MRA, r);
 
 	/* Work out the CSR for the baud: ACR is already set to 0x70 */
-	t->c_cflag &= ~CBAUD;
-	t->c_cflag |= baud;
 	oldbaud[minor] = baud;
 	PUTB(base + UART_CSRA, baudset[table][baud]);
+out:
+	t->c_cflag &= ~CBAUD;
+	t->c_cflag |= baud;
 }
 
 /* Not wired on this board */
