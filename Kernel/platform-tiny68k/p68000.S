@@ -5,6 +5,7 @@
 		.globl init_early
 		.globl init_hardware
 		.globl program_vectors
+		.globl platform_idle
 		.globl outchar
 		.globl platform_monitor
 		.globl udata_block0
@@ -30,6 +31,9 @@ init_early:
 	    move.l a5,udata_shadow	; shadow copy for entry/exit
             rts
 
+platform_idle:
+	    stop #($2000+EI_MASK)
+	    rts
 ;
 ;	FIXME: could be in discard if we wanted
 ;

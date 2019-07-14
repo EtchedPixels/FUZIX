@@ -7,11 +7,6 @@
 
 uint16_t swap_dev = 0xFFFF;
 
-void platform_idle(void)
-{
-	/* Use STOP ? */
-}
-
 void do_beep(void)
 {
 }
