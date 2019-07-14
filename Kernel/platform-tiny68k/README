@@ -1,12 +1,10 @@
 Initial testing build for Tiny68K
 
 You need a disk image with the boot loader on LBA 1 and the kernel on LBA 2+
-Block 0 should hold a partition table and you must have a swap partition (type
-7F).
+Block 0 should hold a partition table.
 
-To get us going and also debug some userspace problems along the way (32 bit
-cleanliness, alignment) we are pretending to be a tiny system with only
-enough RAM for one process at a time. It'll do to get us up and going.
+Remember: the disk is byte swapped including on the emulator so you will
+want to use conv=notrunc,swab
 
 Unsupported right now:
 - RTC
@@ -16,10 +14,6 @@ Unsupported right now:
 
 Known problems
 --------------
-
-vi is not getting built linked as such
-
-vile exits without a message
 
 Core dumps are unfinished (need to include trap frame info and a lot
 more)
