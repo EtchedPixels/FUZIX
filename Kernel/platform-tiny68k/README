@@ -35,10 +35,6 @@ cpuinfo does not support 68K. Get subtype from sysinfo.cpu[0]
 We don't yet have a vfork or posix spawn. That causes a lot of extra copying
 of memory.
 
-We need to debug the fast memory copy/clear, write an exchange and wire them
-all up. That will help a bit on the memory copying cost.
-
-
 To Do
 -----
 
