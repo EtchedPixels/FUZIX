@@ -13,11 +13,11 @@
 	        .area _HEAP
 	        ; note that areas below here may be overwritten by the heap at runtime, so
 	        ; put initialisation stuff in here
-		.area _FONT
 	        .area _GSINIT
 	        .area _GSFINAL
 		.area _DISCARD
 	        .area _INITIALIZER
+		.area _FONT
 	        .area _COMMONMEM
 
         	; imported symbols
@@ -32,6 +32,8 @@
 		.globl l__COMMONMEM
 	        .globl kstack_top
 		.globl start
+
+		.globl _int_disabled
 
 	        ; startup code
 	        .area _CODE
@@ -138,6 +140,9 @@ start:
 		ld bc, #l__DATA - 1
 		ld (hl), #0
 		ldir
+
+		ld a,#1
+		ld (_int_disabled),a
 
 		call init_early
 		call init_hardware
