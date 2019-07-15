@@ -452,7 +452,7 @@ static uint16_t netn_copyout(struct socket *s)
  */
 int net_init(struct socket *s)
 {
-	regptr struct sockdata *sd = sockdata + s->s_num;
+	struct sockdata *sd = sockdata + s->s_num;
 	if (!net_ino) {
 		udata.u_error = ENETDOWN;
 		return -1;
