@@ -40,19 +40,8 @@ Hardware Arrangement
 6502 CPU
 C000-C0FF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
 RC2014 bus
-RAM connected via the RC2014 bus but with A15 inverted
 512K RAM/ROM
 16550A UART
-
-Note: Because A15 is inverted the RAM/ROM 16K pages are mapped via
-
-$C07A
-$C07B
-$C078
-$C079
-
-not the expected order
-
 
 Challenges:
 
