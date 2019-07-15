@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -b _CODE=0x0000
 -b _COMMONMEM=0xF400
--b _DISCARD=0xEA00
+-b _DISCARD=0xD000
 -l z80
 platform-pcw8256/crt0.rel
 platform-pcw8256/commonmem.rel
