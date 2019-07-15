@@ -549,14 +549,8 @@ noargs:
 	    beq syscout
 	    tay
 
-	    lda #255
+	    lda #160
 	    sta $C000
-
-	    tsx				; Move past existing return stack
-	    dex
-	    dex
-	    dex
-	    txs
 
 	    ;
 	    ;	The signal handler might make syscalls so we need to get
@@ -568,9 +562,9 @@ noargs:
 	    pha
 	    lda _udata+U_DATA__U_RETVAL+1
 	    pha
-	    lda #>sigret		; Return address
+	    lda #>(sigret-1)		; Return address
 	    pha
-	    lda #<sigret
+	    lda #<(sigret-1)
 	    pha
 
 	    tya
@@ -579,9 +573,9 @@ noargs:
 	    stx _udata+U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda _udata+U_DATA__U_SIGVEC,y	; Our vector
+	    lda _udata+U_DATA__U_SIGVEC+1,y	; Our vector
 	    pha
-	    lda _udata+U_DATA__U_SIGVEC+1,y
+	    lda _udata+U_DATA__U_SIGVEC,y
 	    pha
 	    txa
 	    sta _udata+U_DATA__U_SIGVEC,y	; Wipe the vector
@@ -589,12 +583,10 @@ noargs:
 
 	    ; Invoke the helper with signal and vector stacked
 	    ; it will then return to syscout and recover the original
-	    ; frame. If the handler made syscalls then
+	    ; frame. If the handler made syscalls then we set the registers
+	    ; up in sigret
 	    jmp (PROGLOAD + 20)
 
-	    ;
-	    ; FIXME: should loop for more signals if appropriate
-	    ;
 sigret:
 	    pla		; Unstack the syscall return pieces
 	    tax
