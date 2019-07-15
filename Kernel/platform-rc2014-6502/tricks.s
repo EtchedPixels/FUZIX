@@ -89,7 +89,7 @@ _switchin:
 ;	pha
 ;	jsr	outcharhex
 ;	pla
-	sta	$C07A		; switches zero page, stack memory area
+	sta	$C078		; switches zero page, stack memory area
 	; ------- New stack and ZP -------
 
 	; Set ptr1 back up (the old ptr1 was on the other ZP)
@@ -202,7 +202,7 @@ _dofork:
 	stx ptr1+1
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y
-	sta $C07A			; switch to child and child stack
+	sta $C078			; switch to child and child stack
 					; and zero page etc
 	; We are now in the kernel child context
 
@@ -247,10 +247,10 @@ _dofork:
 fork_copy:
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y		; child->p_pag[0]
-	sta $C078		; 8000
+	sta $C07A		; 8000
 	sta tmp1
 	lda _udata + U_DATA__U_PAGE
-	sta $C07B		; 4000
+	sta $C079		; 4000
 	sta tmp2
 
 	; Now use that window to copy 48K from 0000-BFFF
@@ -260,17 +260,17 @@ fork_copy:
 	inc tmp1
 	inc tmp2
 	lda tmp1
-	sta $C078
+	sta $C07A
 	lda tmp2
-	sta $C07B
+	sta $C079
 	jsr bank2bank		; second 16K
 
 	inc tmp1
 	inc tmp2
 	lda tmp1
-	sta $C078
+	sta $C07A
 	lda tmp2
-	sta $C07B
+	sta $C079
 	jsr bank2bank		; final block
 
 	jmp map_kernel		; put the kernel mapping back as it should be
@@ -300,9 +300,9 @@ copy1:
 
 _create_init_common:
 	lda #32
-	sta $C07B		;	set the map for 0x4000
+	sta $C079		;	set the map for 0x4000
 	lda #36
-	sta $C078		;	and 0x8000
+	sta $C07A		;	and 0x8000
 	jsr bank2bank
 	jmp map_kernel
 ;
