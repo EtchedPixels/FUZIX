@@ -401,16 +401,12 @@ no_preempt:
 	    tay
 
 	    lda #255
-	    sta $C000
-	    tsx
-	    txa
-	    sec
-	    sbc #6			; move down past the existing rti
-	    tax
-	    txs
-	    lda #>irqout
+;	    sta $C000
+	    ; Right now the stack holds Y X A P rti addr
+	    ; Push a helper to clean up and restore the register state
+	    lda #>(irqout-1)
 	    pha
-	    lda #<irqout
+	    lda #<(irqout-1)
 	    pha				; stack a return vector
 	    tya
 	    pha				; stack signal number
@@ -418,16 +414,17 @@ no_preempt:
 	    stx _udata+U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda _udata+U_DATA__U_SIGVEC,y	; Our vector (low)
+	    lda _udata+U_DATA__U_SIGVEC+1,y	; Our vector (low)
 	    pha				; stack half of vector
-	    lda _udata+U_DATA__U_SIGVEC+1,y	; High half
+	    lda _udata+U_DATA__U_SIGVEC,y	; High half
 	    pha				; stack rest of vector
 	    txa
 	    sta _udata+U_DATA__U_SIGVEC,y	; Wipe the vector
 	    sta _udata+U_DATA__U_SIGVEC+1,y
-	    lda #<PROGLOAD + 20
+	    lda #>(PROGLOAD + 20)
 	    pha
-	    lda #>PROGLOAD + 20
+	    lda #<(PROGLOAD + 20)
+	    pha
 	    lda #0
 	    pha				; dummy flags, with irq enable
 	    rti	    			; return on the fake frame
@@ -549,9 +546,6 @@ noargs:
 	    beq syscout
 	    tay
 
-	    lda #160
-	    sta $C000
-
 	    ;
 	    ;	The signal handler might make syscalls so we need to get
 	    ;	our return saved and return the right value!
@@ -585,6 +579,7 @@ noargs:
 	    ; it will then return to syscout and recover the original
 	    ; frame. If the handler made syscalls then we set the registers
 	    ; up in sigret
+	    cli
 	    jmp (PROGLOAD + 20)
 
 sigret:
