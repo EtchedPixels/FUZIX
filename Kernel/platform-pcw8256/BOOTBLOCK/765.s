@@ -182,7 +182,7 @@ greyscreen:
 		out (0xF7), a
 
 ;
-;	9 * 512 byte sectors/track on the boot image. We load 10 tracks
+;	9 * 512 byte sectors/track on the boot image. We load 12 tracks
 ;
 fd765_boot	
 		ld a, 0x84		; map display
@@ -220,7 +220,7 @@ fd765_nextcyl:
 		ld (fd765_seclast), a
 		ld a, (fd765_cyl)
 		inc a
-		cp 11
+		cp 13
 		jr nc, fd765_done
 		ld (fd765_cyl), a
 		ld (fd765_cyl2), a
@@ -299,4 +299,4 @@ fd765_seek	db 0x0F
 		db 0
 fd765_cyl2:	db 0
 		; Checksum
-checksum:	db 0x3f
+checksum:	db 0x3d
