@@ -41,3 +41,9 @@ clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~
 
 image:
+	# Make a blank disc
+	dd if=/dev/zero of=bootdisk.raw bs=512 count=360
+	# Add the boot block in sector 0
+	dd if=BOOTBLOCK/zout/765.cim of=bootdisk.raw conv=notrunc
+	# Add the kernel
+	dd if=../fuzix.bin of=bootdisk.raw bs=512 seek=1 conv=notrunc
