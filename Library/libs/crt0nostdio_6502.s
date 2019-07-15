@@ -55,9 +55,8 @@ head:
 __sighandler:
 	dec	sp+1		; ensure we are safe C stack wise
 	lda	jmpvec+1
-	pha
-	lda	jmpvec+2
-	pha
+	ldx	jmpvec+2
+	jsr	pushax
 	jsr	decsp8
 	jsr	decsp8
 	jsr	decsp2
@@ -74,11 +73,10 @@ __sighandler:
 	jsr	incsp2
 	jsr	incsp8
 	jsr	incsp8
-	inc	sp+1		; back to old stack
-	pla
-	sta	jmpvec+2
-	pla
+	jsr	popax
+	stx	jmpvec+2
 	sta	jmpvec+1
+	inc	sp+1		; back to old stack
 initmainargs:			; Hardcoded compiler dumbness
 	rts			; will return via the kernel stub
 ;
@@ -124,10 +122,10 @@ stash_loop:
 	pha
 	ldx	sp+2,y		; and ZP variable
 	txa
-	sta	(sp+2),y
+	sta	(sp),y
 	pla
 	tax
-	stx	sp,y
+	stx	sp+2,y
 	iny
 	cpy	#zpsavespace - 2	; 18 bytes
 	bne	stash_loop
