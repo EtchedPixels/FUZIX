@@ -92,9 +92,6 @@ platform_interrupt_all:
             .area _CODE
 
 init_early:
-	    ld b, #'U'
-	    call _bugoutv
-	    call _vtinit
             ret
 
 init_hardware:
@@ -105,6 +102,8 @@ init_hardware:
             ld (_ramsize), hl
             ld hl, #(256-64)		; 64K for kernel
             ld (_procmem), hl
+
+	    call _vtinit
 
 	    ; FIXME 100Hz timer on
 
@@ -265,15 +264,14 @@ _bugout:    pop hl
 	    push hl
 	    ld b, c
 _bugoutv:
-	    ld a, #0x20
+	    ld a, b
 	    .dw 0xfeed
 	    ret
 ; outchar: Wait for UART TX idle, then print the char in A
 ; destroys: AF
 ;
 outchar:    push bc
-	    ld b, a
-	    ld a, #0x20
+	    ld a, b
 	    .dw 0xfeed
 	    pop bc
 	    ret
@@ -290,7 +288,6 @@ outcharl:
 	    pop af
 	    out (0xE0), a
 	    ret
-
 
 	    .area _CODE
 
