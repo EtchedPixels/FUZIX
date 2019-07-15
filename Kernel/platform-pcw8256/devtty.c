@@ -113,10 +113,8 @@ extern void bugout(uint16_t c);
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-    if (minor == 1) {
-        bugout(c);
+    if (minor == 1)
         vtoutput(&c, 1);
-    }
     else if (minor == 2)
         dart0d = c;
     else
