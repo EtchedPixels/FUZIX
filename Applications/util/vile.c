@@ -1540,11 +1540,6 @@ static int doread(const char *name, int fd, char *ptr, int size)
 		perror(name);
 		exit(2);
 	}
-	if (n != size) {
-		write(2, name, strlen(name));
-		write(2, ": ", 2);
-		write(2, "short read.\n", 12);
-	}
 	return n;
 }
 
@@ -1586,8 +1581,7 @@ int main(int argc, char *argv[])
 				size -= n;
 				o += n;
 			}
-		}
-		else
+		} else
 			n = doread(*argv, fd, buf + o, size);
 		gap += n;
 		close(fd);
