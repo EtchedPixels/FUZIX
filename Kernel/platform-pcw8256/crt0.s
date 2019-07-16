@@ -109,6 +109,9 @@ font8:		.db 	0xf8, 0xf8, 0xf8, 0xf8, 0xf8, 0xf8, 0x00, 0x00
 ; bank 5 and the OS is loaded into banks 0-2
 ;
 start:
+		; Joyce tracing on
+	        ld a,#0x80
+		.dw 0xfeed
 		ld sp, #kstack_top
 		;
 		;	Move the common into place (our build tool

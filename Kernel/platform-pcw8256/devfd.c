@@ -1,5 +1,7 @@
 /* 
  *	Amstrad PCW8256 Floppy Driver
+ *
+ *	FIXME: unify with generic devfd765 code
  */
 
 #include <kernel.h>
@@ -13,7 +15,8 @@ __sfr __at 0x01 fdc_d;
 
 static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag);
 
-static uint8_t track[2];
+static uint8_t track[2] = { 255, 255 };
+static uint8_t sides[2];
 static uint8_t type[2];
 #define TYPE_NONE	0
 #define TYPE_THREE	1
@@ -50,7 +53,6 @@ static void motor_on(int minor)
     minor;
     asic_ctrl = 0x09;
 //FIXME    while(!(fd_send(0x04, minor) & 0x20));
-    kprintf("Motor on %d\n", minor);
 }
 
 static void motor_off(void)
@@ -65,30 +67,34 @@ static void motor_off(void)
  */
 static void fd_geom(int minor, blkno_t block)
 {
-    int ntrack = block >> 3;
-    int nsector = (block & 7) + 1;
-    fd765_cmdbuf[1] = 0;
+    uint8_t nsector = block % 9;
+    uint8_t ntrack = block / 9;
+    uint8_t side = 0;
+
+    nsector++;
+    /* These two will eventually need to be according to media type */
+    side = ntrack & 1;
+    ntrack >>= 1;
+
     fd765_cmdbuf[2] = ntrack;
+    fd765_rw_data[1] = (side << 2) | minor;
     fd765_rw_data[2] = ntrack;
-    fd765_rw_data[3] = 0;		/* single sided for now */
+    fd765_rw_data[3] = side;
     fd765_rw_data[4] = nsector;
     fd765_rw_data[6] = nsector;
     reset_motor_timer(minor);
 
-    kprintf("fd(%d,%d)\n", ntrack, nsector);
     if (ntrack == track[minor])
         return;
     fd765_cmdbuf[0] = 0x0F;
+    fd765_cmdbuf[1] = (side << 2) | minor;
     fd765_intwait();
     fd765_cmd3();
 
     if (fd765_intwait() & 0x20)
         track[minor] = ntrack;//FIXME??fd765_statbuf[1] & 0x7F;
-    else {
+    else
         track[minor] = 0xFF;
-        kputs("seekbad?\n");
-    }
-
 }
 
 /*
@@ -114,6 +120,11 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
     int st;
     int tries;
 
+    if (rawflag == 2) {
+        udata.u_error = EIO;
+        return -1;
+    }
+
     /* Direct to user space, or kernel buffered I/O ? */
     if(rawflag && d_blkoff(BLKSHIFT))
         return -1;
@@ -122,13 +133,14 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
     
     fd_select(minor);		/* Select, motor on */
     fd765_user = rawflag;	/* Tell the asm which map */
-//    kprintf("To %d:%x for %d\n", rawflag, dptr, block_xfer);
     while (ct < udata.u_nblock) {	/* For each block */
-        fd_geom(minor, udata.u_block);	/* Map it and set the geometry */
         fd765_buffer = dptr;
         for (tries = 0; tries < 3; tries ++) {	/* Try 3 times */
-            if (tries != 0)			/* After a fail recalibrate */
+            if (tries != 0) {			/* After a fail recalibrate */
                 fd_send(0x07, minor);
+                track[minor] = 0;
+            }
+            fd_geom(minor, udata.u_block);	/* Map it and set the geometry */
             if (is_read) {
                 fd765_rw_data[0] = 0x66;	/* MFM 512 byte read */
                 st = fd765_read_sector();
@@ -181,12 +193,13 @@ static void fd_probe_plus(int d)
     } else {
         asic_ctrl = 0x10;
         /* motor wait needed */
-        fd_send(0x04, du);
+        st = fd_send(0x04, du);
         if (st & 0x10)
             type[d] = TYPE_THREE;
         else
             type[d] = TYPE_THREE_FIVE;
     }
+    sides[d] = (st & 8) ? 1 : 2;
     /* Motors back off */
     motor_off();
 }
@@ -212,5 +225,5 @@ void fd_probe(void)
         type[0] = TYPE_THREE;
     motor_off();
     for (i = 0; i < 2; i++)
-        kprintf("fd%d: %s\n", i, fdnames[type[i]]);
+        kprintf("fd%d: %s (%d)\n", i, fdnames[type[i]], sides[i]);
 }

@@ -57,7 +57,7 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	uart_mask,
 	uart_mask,
 };
-
+#define static
 /* console driver for errors etc */
 void kputchar(char c)
 {
@@ -287,7 +287,6 @@ static void keydecode(void)
 	}
 	if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
-/*        kprintf("ttyinproc %d\n", (int) c); */
 	switch(keyboard_grab) {
 		case 1:
 			/* FIXME: proper rule needed */

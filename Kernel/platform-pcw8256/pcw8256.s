@@ -98,9 +98,10 @@ init_hardware:
             ; set system RAM size
 	    ld b, #'Z'
 	    call _bugoutv
-            ld hl, #256
+	    ; FIXME: should probe this
+            ld hl, #512
             ld (_ramsize), hl
-            ld hl, #(256-64)		; 64K for kernel
+            ld hl, #(512-96)		; 64K for kernel, 32K for video/fonts
             ld (_procmem), hl
 
 	    call _vtinit
@@ -242,6 +243,9 @@ map_save_kernel:
 	    ldi
 	    ldi
 	    push af
+	    ; FIXME: remove these two lines once this is fixed in 0.4
+	    ld a,#1
+	    ld (_int_disabled),a
 	    ld hl, #kmap
 	    call map_process_1
 	    pop af

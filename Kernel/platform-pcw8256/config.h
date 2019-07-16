@@ -14,7 +14,8 @@
 #define CONFIG_PAGE_SIZE	16
 /* We use flexible 16K banks with a fixed common */
 #define CONFIG_BANK16FC
-#define MAX_MAPS 16
+/* You can put 2MB in a PCW with 3rd party add in cards, 512K base */
+#define MAX_MAPS 128
 #define MAX_SWAPS 16
 
 #define CONFIG_BANKS	4	/* 4 banks 16K page size */
