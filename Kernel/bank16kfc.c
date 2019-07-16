@@ -65,7 +65,7 @@ void pagemap_free(ptptr p)
 static int maps_needed(uint16_t top)
 {
 	/* Allow 512 bytes for the udata stash at the top */
-	uint16_t needed = top + 0xFFFF - PROGTOP + sizeof(struct u_block);
+	uint16_t needed = top + sizeof(struct u_block) - PROGBASE - 1;
 	needed >>= 14;		/* in banks */
 	needed++;		/* rounded */
 	return needed;
