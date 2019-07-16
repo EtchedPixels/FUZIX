@@ -261,8 +261,8 @@ _dofork:
 	; load existing page ptr
 	ld a, (_udata + U_DATA__U_PAGE)
 
-	; FIXME: We will redefine this to expect udata as child and (hl)
-	; as parent so it's also clean for multibank. For now just make
+	; FIXME: We will redefine this to expect udata as parent and (hl)
+	; as child so it's also clean for multibank. For now just make
 	; sure HL happens to be right
 	call bankfork			;	do the bank to bank copy
 
