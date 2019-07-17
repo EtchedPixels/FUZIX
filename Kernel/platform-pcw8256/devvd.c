@@ -40,17 +40,13 @@ static uint8_t devvd_transfer_sector(void)
     vd_track = lba / (dpb[drive].spt >> 2);
     vd_sector = lba % (dpb[drive].spt >> 2);
 
-    kprintf("map %d lba %d track %d sector %d\n", blk_op.is_user, lba, vd_track, vd_sector);
-
     vd_mapping = blk_op.is_user;
     vd_page = blk_op.swap_page;
     vd_drive_op = (drive << 8) | (blk_op.is_read ? 0x04 : 0x05); 
     vd_dpb = dpb + drive;
     
-    if (vd_do_op(blk_op.addr)) {
-        kprintf("vd do op failed.\n");
+    if (vd_do_op(blk_op.addr))
         return 0;
-    }
     return 1;
 }
     
@@ -72,11 +68,7 @@ void devvd_probe(void)
 
     for (i = 2; i < MAXDRIVE; i++) {
         if (devvd_open(i) == 0) {
-            /* Should check the DPB is ok */
-            if (dpb[i].psm != 3) {
-                kprintf("vd%d: sector size unsuitable.\n");
-                continue;
-            }
+            /* Check the DPB is ok */
             if (dpb[i].spt & 3) {
                 kprintf("vd%d: sectors/track unsuitable.\n");
                 continue;
@@ -91,7 +83,6 @@ void devvd_probe(void)
             blk->driver_data = i & VD_DRIVE_NR_MASK;
             /* Assumes 512 byte sectors */
             blk->drive_lba_count = (dpb[i].dsm + 1) << (dpb[i].bsh - 2);
-            kprintf("Drive is %d sectors.\n", blk->drive_lba_count);
             blkdev_scan(blk, SWAPSCAN);
         }
     }
