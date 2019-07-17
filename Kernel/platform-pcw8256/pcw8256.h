@@ -15,12 +15,12 @@ __sfr __at 0xA2 amx2;
 __sfr __at 0xA8 gem_data;	/* PC/XT equivalent controller ? */
 __sfr __at 0xA9 gem_cs;
 __sfr __at 0xAA gem_csp;
-__Sfr __at 0xAB gem_dmaint;
+__sfr __at 0xAB gem_dmaint;
 __sfr __at 0xC8 fax;
 __sfr __at 0xD0 kempmouse0;
 __sfr __at 0xD1 kempmouse1;
 __sfr __at 0xD2 kempmouse2;
-__sfr __at 0xD3 kempmouse0;
+__sfr __at 0xD3 kempmouse3;
 __sfr __at 0xE0 dart_data_a;
 __sfr __at 0xE1 dart_ctrl_a;
 __sfr __at 0xE2 dart_data_b;
@@ -50,3 +50,5 @@ __sfr __at 0xFC iomatrix_d;
 __sfr __at 0xFD iomatrix_c;
 __sfr __at 0xFE locolink;
 
+
+extern uint8_t is_joyce;
