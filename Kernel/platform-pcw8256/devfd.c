@@ -21,6 +21,9 @@ static uint8_t type[2];
 #define TYPE_NONE	0
 #define TYPE_THREE	1
 #define TYPE_THREE_FIVE	2
+#define TYPE_UNKNOWN	3
+#define TYPE_DS		4
+
 static uint8_t motorct;
 static int8_t devsel = -1;
 
@@ -174,6 +177,7 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
+/* FIXME: Want an fdc discard */
 
 static void fd_probe_plus(int d)
 {
@@ -183,7 +187,10 @@ static void fd_probe_plus(int d)
     st = fd_send(0x07, du);
     st = fd765_intwait();
     st = fd_send(0x04, du);
+    /* Check track 0 */
+    /* Did it report trk0 */
     if (!(st & 0x10)) {
+        /* Not set: r/o means 3 r/w 3.5, for slave means no drive */
         if (st & 0x40)
             type[d] = TYPE_THREE;
         else if (d == 0)
@@ -193,18 +200,34 @@ static void fd_probe_plus(int d)
     } else {
         asic_ctrl = 0x10;
         /* motor wait needed */
+        motor_off();
+        /* Wait for not ready status */
+        do {
+            st = fd_send(0x04, 0);
+        } while (st & 0x20);
         st = fd_send(0x04, du);
         if (st & 0x10)
             type[d] = TYPE_THREE;
         else
             type[d] = TYPE_THREE_FIVE;
     }
-    sides[d] = (st & 8) ? 1 : 2;
+    if (st & 8)
+        type[d] |= TYPE_DS;
     /* Motors back off */
     motor_off();
 }
 
-static char *fdnames[] = {"none", "3\"", "3.5\"" };
+static const char *fdnames[] = {
+    NULL,
+    "180K",
+    "3.5\"",
+    "??",
+    NULL,
+    "720K",
+    "3.5\"",
+    "??",
+    NULL
+};
 
 void fd_probe(void)
 {
@@ -216,14 +239,39 @@ void fd_probe(void)
     do {
         st = fd_send(0x04, 0);
     } while (st & 0x20);
-    st = fd_send(0x04, 3);
+    /* Get status of 'drive 2' */
+    st = fd_send(0x04, 2);
     if (st & 0x20) {
+        /* Reports ready - new style drive */
         fd_probe_plus(0);
         fd_probe_plus(1);
     }
-    else
-        type[0] = TYPE_THREE;
+    else {
+        /* FIXME: can we detect 3.5" on older machines. Need to play about */
+        st = fd_send(0x04, 0);
+        type[0] = TYPE_THREE | ((st & 8) ? TYPE_DS : 0);
+        motor_on(0);
+        st = fd_send(0x07, 1);
+        st = fd765_intwait();
+        st = fd_send(0x04, 1);
+        if (st & 0x10) {
+            type[1] = TYPE_THREE | ((st & 8) ? TYPE_DS : 0);
+            sides[1] = (st & 8) ? 2 : 1;
+        }
+        /* FIXME: should do the 3 or 3.5 check generically - 3.5 won't
+           trk0 if not ready */
+    }
     motor_off();
-    for (i = 0; i < 2; i++)
-        kprintf("fd%d: %s (%d)\n", i, fdnames[type[i]], sides[i]);
+    for (i = 0; i < 2; i++) {
+        const char *p = fdnames[type[i]];
+        if (p == NULL) {
+            type[i] = TYPE_NONE;
+            continue;
+        }
+        if (type[i] & TYPE_DS)
+            sides[i] = 2;
+        else
+            sides[i] = 1;
+        kprintf("fd%d: %s\n", i, p);
+    }
 }

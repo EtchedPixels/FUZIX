@@ -44,11 +44,32 @@ $(NOBJS): %.rel: ../dev/net/%.c
 
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~
+	rm -f bootblock-dotmatrix bootblock-daisy *.tmp *.ihx
+	rm -f dotmatrix.raw daisy.raw
 
-image:
+image: ../tools/pcwsum bootblock-daisy bootblock-dotmatrix
 	# Make a blank disc
-	dd if=/dev/zero of=bootdisk.raw bs=512 count=360
+	dd if=/dev/zero of=dotmatrix.raw bs=512 count=360
 	# Add the boot block in sector 0
-	dd if=BOOTBLOCK/zout/765.cim of=bootdisk.raw conv=notrunc
+	dd if=bootblock-dotmatrix of=dotmatrix.raw conv=notrunc
 	# Add the kernel
-	dd if=../fuzix.bin of=bootdisk.raw bs=512 seek=1 conv=notrunc
+	dd if=../fuzix.bin of=dotmatrix.raw bs=512 seek=1 conv=notrunc
+	# Repeat for Daisywheel
+	dd if=/dev/zero of=daisy.raw bs=512 count=360
+	# Add the boot block in sector 0
+	dd if=bootblock-daisy of=daisy.raw conv=notrunc
+	# Add the kernel
+	dd if=../fuzix.bin of=daisy.raw bs=512 seek=1 conv=notrunc
+
+bootblock-daisy: ../tools/pcwsum
+	sdasz80 -o bootblock.s
+	sdldz80 -i bootblock.rel
+	makebin -s 61952 bootblock.ihx bootblock.tmp
+	dd if=bootblock.tmp of=bootblock-daisy bs=256 skip=240
+	../tools/pcwsum bootblock-daisy daisy
+
+bootblock-dotmatrix: bootblock-daisy
+	cp bootblock-daisy bootblock-dotmatrix
+	../tools/pcwsum bootblock-dotmatrix dotmatrix
+
+../tools/pcwsum: ../tools/pcwsum.c

@@ -21,6 +21,8 @@ and to free space in the kernel mappings. This still leaves about 5K in
 the video space that we could use for other things (candidates being either
 the tty buffers and/or the disk buffers).
 
+(Note that this puts the kernel not user space in the contended RAM)
+
 Banks 6 and up are allocated to user processes.
 
 
@@ -48,7 +50,7 @@ IP - support Joyce mode (EDFE A=0, if returns A=255 joyce)
 	- Joyce RTC
 - Real RTC addins
 - speed up keyproc (asm ?)
-- keyboard repeat
+DONE - keyboard repeat
 - test swap
 
 

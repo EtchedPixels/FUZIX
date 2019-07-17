@@ -57,7 +57,7 @@ tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	uart_mask,
 	uart_mask,
 };
-#define static
+
 /* console driver for errors etc */
 void kputchar(char c)
 {
@@ -136,7 +136,7 @@ void tty_irq(void)
     s = dartrr(3, 0);
     if (s & 1) {
         c = dart0d;
-        tty_inproc(2, c);
+        tty_inproc(3, c);
     }
     if ((s & 4) && (sleeping & 8)) {
 	tty_outproc(3);
@@ -305,23 +305,41 @@ static void keydecode(void)
 /* Vblank ticker */
 uint8_t vblank;
 
+__sfr __at 0xF4 timer;
+
 /* FIXME: keyboard repeat
-          floppy motor etc */
+          floppy motor, serial etc */
 void platform_interrupt(void) 
 {
+	/* The low 4 bits count timer events, 0 means this interrupt
+	   was from something else only */
+	uint8_t t = timer & 0x0F;
+
+	if (timer == 0) {
+		/* serial or similar event, so poll them */
+		tty_irq();
+	}
+
+	/* No timer work pending */
+	if (timer == 0)
+		return;
+
 	newkey = 0;
 	keyproc();
-	if (keysdown && keysdown < 3) {
-		if (newkey) {
-			keydecode();
-			kbd_timer = keyrepeat.first;
-		} else if (! --kbd_timer) {
-			keydecode();
-			kbd_timer = keyrepeat.continual;
+
+	while(t--) {
+		if (keysdown && keysdown < 3) {
+			if (newkey) {
+				keydecode();
+				kbd_timer = keyrepeat.first;
+			} else if (! --kbd_timer) {
+				keydecode();
+				kbd_timer = keyrepeat.continual;
+			}
 		}
+		vblank++;
+		wakeup(&vblank);
+		/* Should also run the mouse accumulator here FIXME */
+		timer_interrupt();
 	}
-	vblank++;
-	wakeup(&vblank);
-	/* Should also run the mouse accumulator here FIXME */
-	timer_interrupt();
 }
