@@ -51,7 +51,12 @@ extern unsigned int swap_dev;
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xC000	/* vector and stash */
 #define MAX_SWAPS   16
-#define swap_map(x)	(uint8_t *)(x)
+/*
+ *	When the kernel swaps something it needs to map the right page into
+ *	memory using map_for_swap and then turn the user address into a
+ *	physical address. We use the window at 0x4000 at all times.
+ */
+#define swap_map(x)	((uint8_t *)((((x) & 0x3FFF)) + 0x4000))
 
 #define BOOT_TTY	(512 + 1)
 

@@ -257,7 +257,14 @@ map_kernel_di:
 	    pop af
 	    ret
 
+;
+;	Map page A into the swap zone
+;
 map_for_swap:
+	   ld (map_current + 1),a	; update table for 0x4000
+	   out (0xF1),a			; and the mapping
+	   ret
+
 map_process_always:
 map_process_always_di:
 	    push af
