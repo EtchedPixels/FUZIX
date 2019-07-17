@@ -52,3 +52,12 @@ __sfr __at 0xFE locolink;
 
 
 extern uint8_t is_joyce;
+extern uint8_t model;
+
+#define MODEL_PCW8256		0
+#define MODEL_PCW8512		1
+#define MODEL_PCW9512		2
+#define MODEL_PCW9256		3
+#define MODEL_PCW9512PLUS	4
+
+extern void machine_ident(void);

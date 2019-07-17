@@ -6,6 +6,8 @@ int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
 int fd_open(uint8_t minor, uint16_t flag);
 
+extern uint8_t new_fdc;
+
 /* asm interface */
 extern uint16_t fd765_buffer;
 extern uint8_t fd765_user;

@@ -7,6 +7,7 @@
 uint16_t ramtop = 0xC000;
 uint16_t swap_dev = 0xFFFF;
 uint8_t is_joyce;
+uint8_t model;
 
 void platform_idle(void)
 {

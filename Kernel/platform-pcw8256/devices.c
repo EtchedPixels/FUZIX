@@ -3,14 +3,11 @@
 #include <kdata.h>
 #include <devfd.h>
 #include <blkdev.h>
-#include <devide.h>
-#include <devvd.h>
 #include <devsys.h>
 #include <devlpr.h>
 #include <devtty.h>
 #include <tty.h>
 #include <vt.h>
-#include <pcw8256.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -37,14 +34,4 @@ bool validdev(uint16_t dev)
 	return false;
     else
         return true;
-}
-
-void device_init(void)
-{
-  tty_init_port();
-  fd_probe();
-  if (is_joyce)
-    devvd_probe();
-  else
-    devide_init();
 }

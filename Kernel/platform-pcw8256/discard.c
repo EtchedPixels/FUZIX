@@ -2,7 +2,11 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
+#include <devide.h>
+#include <devvd.h>
+#include <devfd.h>
 #include <devtty.h>
+#include <pcw8256.h>
 
 /* Kernel is 0-3 screen for now is 4 and bits of 5
    Apps 6,7,8,9,10,11,12,13,14,15 etc
@@ -31,4 +35,44 @@ uint8_t platform_param(char *p)
 {
 	used(p);
 	return 0;
+}
+
+const char *mname[] = {
+	"PCW8256",
+	"PCW8512",
+	"PCW9512",
+	"PCW9256/PCW10",
+	"PCW9512PLUS"
+};
+
+__sfr __at 0xFD printstat;
+
+void device_init(void)
+{
+  tty_init_port();
+  fd_probe();
+
+  if (is_joyce)
+    devvd_probe();
+  else
+    devide_init();
+}
+
+void machine_ident(void)
+{
+  if (new_fdc == 0) {
+    if (printstat & 0x20)
+      model = MODEL_PCW9512;
+    else if (ramsize == 256)
+      model = MODEL_PCW8256;
+    else
+      model = MODEL_PCW8512;
+  } else {
+    if (ramsize > 256)
+      model = MODEL_PCW9512PLUS;
+    else
+      model = MODEL_PCW9256;	/* Or 10 - basically identical */
+  }
+  kprintf("Model: %s%s\n",
+    mname[model], is_joyce?"(joyce)":"");
 }

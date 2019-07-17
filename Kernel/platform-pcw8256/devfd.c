@@ -13,6 +13,8 @@ __sfr __at 0xf8 asic_ctrl;
 __sfr __at 0x00 fdc_c;
 __sfr __at 0x01 fdc_d;
 
+uint8_t new_fdc;
+
 static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag);
 
 static uint8_t track[2] = { 255, 255 };
@@ -242,6 +244,7 @@ void fd_probe(void)
     /* Get status of 'drive 2' */
     st = fd_send(0x04, 2);
     if (st & 0x20) {
+        new_fdc = 1;
         /* Reports ready - new style drive */
         fd_probe_plus(0);
         fd_probe_plus(1);
@@ -262,6 +265,9 @@ void fd_probe(void)
            trk0 if not ready */
     }
     motor_off();
+
+    machine_ident();
+
     for (i = 0; i < 2; i++) {
         const char *p = fdnames[type[i]];
         if (p == NULL) {
