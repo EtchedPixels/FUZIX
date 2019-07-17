@@ -88,6 +88,12 @@ _switchin:
         push de ; restore stack
         push bc ; restore stack
 
+	ld a,#1
+	ld (_int_disabled),a
+
+;
+;	FIXME: map_kernel_di ?
+;
 	call map_kernel
 
         ld hl, #P_TAB__P_PAGE_OFFSET
