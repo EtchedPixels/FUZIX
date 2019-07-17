@@ -51,7 +51,7 @@ IP - support Joyce mode (EDFE A=0, if returns A=255 joyce)
 - Real RTC addins
 - speed up keyproc (asm ?)
 DONE - keyboard repeat
-- test swap
+- debug swap
 
 
 Supported Hardware (all only in early test)
