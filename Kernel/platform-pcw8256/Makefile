@@ -1,5 +1,5 @@
 
-CSRCS = devlpr.c devtty.c devfd.c devinput.c
+CSRCS = devlpr.c devtty.c devfd.c devinput.c devvd.c
 CSRCS += devices.c main.c
 
 DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/mbr.c
@@ -9,7 +9,7 @@ NSRCS = ../dev/net/net_native.c
 
 CROSS_CCOPTS += -I ../dev/
 
-ASRCS =  crt0.s commonmem.s pcw8256.s
+ASRCS =  crt0.s commonmem.s pcw8256.s vd.s
 ASRCS += tricks.s fdc765.s
 
 COBJS = $(CSRCS:.c=.rel)

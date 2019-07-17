@@ -5,6 +5,7 @@
 #include <devtty.h>
 
 uint16_t ramtop = 0xC000;
+uint8_t is_joyce;
 
 /* Kernel is 0-3 screen for now is 4 and bits of 5
    Apps 6,7,8,9,10,11,12,13,14,15 etc

@@ -34,7 +34,7 @@
 
 #define CONFIG_INPUT
 #define CONFIG_INPUT_GRABMAX 2	/* We could in theory do full up/down but later */
-#define MAX_BLKDEV	1	/* UIDE or FIDHD never both */
+#define MAX_BLKDEV	2	/* UIDE or Joyce never both */
 #define CONFIG_IDE	/* Has an IDE controller - maybe anyway: UIDE */
 #undef CONFIG_NET
 #undef CONFIG_NET_NATIVE

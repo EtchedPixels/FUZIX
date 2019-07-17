@@ -44,6 +44,8 @@ platform-pcw8256/blkdev.rel
 platform-pcw8256/mbr.rel
 platform-pcw8256/devide.rel
 platform-pcw8256/devide_discard.rel
+platform-pcw8256/devvd.rel
+platform-pcw8256/vd.rel
 platform-pcw8256/devinput.rel
 platform-pcw8256/net_native.rel
 -e

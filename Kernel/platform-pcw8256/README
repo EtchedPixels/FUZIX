@@ -12,18 +12,30 @@ Need to try and keep kernel under 48K or so to make it easier to handle the
 screen memory, fonts etc. We need to put the screen (720x256 pixels + roller
 ram table of 512 bytes or so = ~ 24K) in the low 128K
 
-WIP - lots to do to add swap support and memory map needs a re-arrange so we
-can get fork() going
-
-FIXME:
+TODO
 - Move disk buffers into own bank and use external disk buffers to keep under
-  the 48K line or maybe just bank kernel (makes more sense ?)
+  the 48K line or maybe just bank kernel (makes more sense ?). See what
+  we do about NET first
 - Rework loader so that we can load a banked image
-- Alternative might be to go with 48K process size maximum and new a bank
+DONE - Alternative might be to go with 48K process size maximum and new a bank
 16/fixed common mode. Might be good for RC2014 and some others too ?
-
-If we went that way we'd take the task switch ldir hit but save memory for
-processes
+- fdc765 driver wants replacing with generic one
+- debug fdc765 crashes on disk error, write corruptions
+- fdc - rework and debug drive type detect
+- fdc - double/single side and 40/80 handling
+- fdc - step rates according to type
+- fdc - sort out device id properly
+- swap
+- discard handling
+- dynamic buffers (or do we place them in the rest of the screen bank ?)
+- UDG, FONT, graphics support/debug
+- input device debug
+- probe actual memory size
+- reboot - reload disk block 0 and run it ?
+- support Joyce mode (EDFE A=0, if returns A=255 joyce)
+	- Reboot/Off
+	- Joyce RTC
+- Real RTC addins
 
 0/1/2/3		Kernel
 4/5		Video & Fonts (+ 5K or so spare)
@@ -32,17 +44,8 @@ processes
 9/A/B		Process 1
 C/D/E		Process 2
 
-Alternative would be something like
-
-0/1		Kernel code 2
-4/5		Video + Fonts + Kernel code2 bits
-5/6		Kernel code 2 above fonts/video 
-2/3		Kernel high (and video routines)
-
-
-
 Supported Hardware (all only in early test)
-------------------
+-------------------------------------------
 
 	Amstrad PCW 8256
 	Amstrad PCW 8512
@@ -57,6 +60,7 @@ Supported Hardware (all only in early test)
 		CF2DD floppy
 		3.5" floppy	(need to sort seek rates better)
 		UIDE
+		Joyce virtual hard disk
 		CPS8256 and clones (parallel port not yet done)
 		AMX mouse
 		Kempston Mouse

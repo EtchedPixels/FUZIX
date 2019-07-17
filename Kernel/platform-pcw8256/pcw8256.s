@@ -48,6 +48,7 @@
             .globl interrupt_handler
             .globl unix_syscall_entry
 	    .globl _vtinit
+	    .globl _is_joyce
 
 	    ; debug symbols
             .globl outcharhex
@@ -114,6 +115,9 @@ init_hardware:
             call _program_vectors
             pop hl
 
+	    xor a
+	    .dw 0xfeed
+	    ld (_is_joyce),a
             im 1 ; set CPU interrupt mode
 	    ld b, #'I'
 	    call _bugoutv

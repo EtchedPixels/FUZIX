@@ -4,11 +4,13 @@
 #include <devfd.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <devvd.h>
 #include <devsys.h>
 #include <devlpr.h>
 #include <devtty.h>
 #include <tty.h>
 #include <vt.h>
+#include <pcw8256.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -41,5 +43,8 @@ void device_init(void)
 {
   tty_init_port();
   fd_probe();
-  devide_init();
+  if (is_joyce)
+    devvd_probe();
+  else
+    devide_init();
 }
