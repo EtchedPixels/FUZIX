@@ -504,6 +504,7 @@ interrupt_pop:
 ;	corrupt we assume the worst and just blow the process away
 ;
 null_pointer_trap:
+	call map_kernel_di
 	ld a, #0xC3		; Repair
 	ld (0), a
 	ld hl, #9		; SIGKILL (take no prisoners here)
