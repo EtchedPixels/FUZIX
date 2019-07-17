@@ -1,6 +1,7 @@
 
 CSRCS = devlpr.c devtty.c devfd.c devinput.c devvd.c
 CSRCS += devices.c main.c
+DISCARD_CSRCS = discard.c
 
 DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/mbr.c
 DISCARD_DSRCS = ../dev/devide_discard.c
@@ -13,17 +14,21 @@ ASRCS =  crt0.s commonmem.s pcw8256.s vd.s
 ASRCS += tricks.s fdc765.s
 
 COBJS = $(CSRCS:.c=.rel)
+DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
-OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(DISCARD_DOBJS) $(NOBJS)
+OBJS  = $(COBJS) $(DISCARD_COBJS) $(AOBJS) $(DOBJS) $(DISCARD_DOBJS) $(NOBJS)
 
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(DISCARD_COBJS): %.rel: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<

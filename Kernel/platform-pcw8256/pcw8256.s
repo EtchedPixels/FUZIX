@@ -95,14 +95,24 @@ platform_interrupt_all:
 init_early:
             ret
 
+; FIXME: can we move init_hardware into discard ?
 init_hardware:
             ; set system RAM size
 	    ld b, #'Z'
 	    call _bugoutv
-	    ; FIXME: should probe this
-            ld hl, #512
+	    ; Returns with A giving the number of 64K banks present
+	    call probe_ram
+	    ld hl,#0
+	    ld de,#64
+ramcount:
+	    add hl,de
+	    djnz ramcount
+
             ld (_ramsize), hl
-            ld hl, #(512-96)		; 64K for kernel, 32K for video/fonts
+
+	    or a
+	    ld de,#96		; 64K for kernel, 32K for video/fonts
+	    sbc hl,de
             ld (_procmem), hl
 
 	    call _vtinit
@@ -123,12 +133,67 @@ init_hardware:
 	    call _bugoutv
             ret
 
+	    .area _DISCARD
+;
+;	Discard is in common so we can keep stuff like bank probing here
+;
+;	We have 256K, 512K or maybe up to 2MB with third party add ins
+;
+probe_ram:
+	    ld hl,#0x4000		; address we will play with
+	    ld a,#0x80
+	    ld b,#0xAA
+;
+;	Label each bank with the page code
+;
+mark_banks:
+	    out (0xF1),a		; Mark all the banks
+	    ld (hl),b
+	    add #0x10
+	    jr nz, mark_banks
+
+	    ld a,#0x90
+;
+;	Now walk the labelled banks and check for the right code
+;
+	    ld bc,#0x80F1
+probe_next:
+	    ld a,#0xAA
+	    out (c),b			; switch bank
+	    cp (hl)			; still marked AA ?
+	    jr nz,notfound
+	    cpl
+	    ld (hl),a
+	    cp (hl)
+	    jr nz,notfound		; not valid RAM
+	    ld a,b
+	    add #0x10			; move on 256K
+	    jr z, full_load		; done
+	    ld b,a
+	    xor a
+	    ld (hl),a			; write sanity check
+	    cp (hl)
+	    jr z,probe_next
+notfound:
+	    ld a,b
+	    ; A is the top page set found
+	    rra
+	    rra
+	    and #0x1C			; Now the number of 64K blocks
+	    ld b,a
+banksok:
+	    ld a,#0x81
+	    out (0xF1),a		; back to kernel bank
+	    ret
+full_load:
+	    ld b,#0x20
+	    jr banksok
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
+;------------------------------------------------------------------------------
 
-            .area _COMMONMEM
-
+	    .area _COMMONMEM
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0

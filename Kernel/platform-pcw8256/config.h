@@ -16,7 +16,6 @@
 #define CONFIG_BANK16FC
 /* You can put 2MB in a PCW with 3rd party add in cards, 512K base */
 #define MAX_MAPS 128
-#define MAX_SWAPS 16
 
 #define CONFIG_BANKS	4	/* 4 banks 16K page size */
 
@@ -44,9 +43,15 @@
 #define PROGLOAD    0x0100	/* load base of program */
 #define PROGTOP     0xBE00  	/* Top of program, base of U_DATA stash */
 
+
+#define CONFIG_DYNAMIC_SWAP
+#define SWAPDEV	    (swap_dev)
+extern unsigned int swap_dev;
 #define SWAP_SIZE   0x60 	/* 48K in blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xC000	/* vector and stash */
+#define MAX_SWAPS   16
+#define swap_map(x)	(uint8_t *)(x)
 
 #define BOOT_TTY	(512 + 1)
 
@@ -55,13 +60,11 @@
 /* Device parameters */
 #define NUM_DEV_TTY 3
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define SWAPDEV  5	  /* Device for swapping. */
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-#define swap_map(x)	(uint8_t *)(x)
 
 #define platform_discard()
 #define platform_copyright()

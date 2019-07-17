@@ -1,16 +1,28 @@
 A FUZIX target for the Amstrad PCW series computers
 
-16K banked memory with flexible bank setting. Programs for now (until brk()
-is done right) get 64K in four consecutive page numbers. The UAREA is mapped
-high at 0xF900 with the process and irq stacks following and a copy of the
-common area beyond (so we have a sort of common code area as needed)
+This is an initial port for the Amstrad PCW series machines. It has the
+following major limitations that are still being worked on
 
-The very top of memory must be free as the top of bank 3 (top of OS kernel
-mapping) is "magically" the keyboard mappings.
+- The floppy driver eats disks on write
+- The floppy driver only supports 720K DS/DD disk
+- The floppy driver crashes the machine on disk errors
 
-Need to try and keep kernel under 48K or so to make it easier to handle the
-screen memory, fonts etc. We need to put the screen (720x256 pixels + roller
-ram table of 512 bytes or so = ~ 24K) in the low 128K
+Memory is currently arranged with a fixed common at 0xC000-0xFFFF and user
+processes get allocated 1-3 16K banks below that as needed. On a 256K machine
+chmem is very useful.
+
+The kernel itself lives in the low banks 0-3. Bank 3 is mapped as the common
+and also contains the system stacks. The top of it is also magically filled
+with the keyboard data by the system.
+
+Banks 4 and 5 hold the video and roller RAM. (720x256 pixels + 512 byte
+roller RAM). On boot the font is copied into the video bank for ease of use
+and to free space in the kernel mappings. This still leaves about 5K in
+the video space that we could use for other things (candidates being either
+the tty buffers and/or the disk buffers).
+
+Banks 6 and up are allocated to user processes.
+
 
 TODO
 - Move disk buffers into own bank and use external disk buffers to keep under
@@ -25,24 +37,20 @@ DONE - Alternative might be to go with 48K process size maximum and new a bank
 - fdc - double/single side and 40/80 handling
 - fdc - step rates according to type
 - fdc - sort out device id properly
-- swap
-- discard handling
+DONE - discard handling
 - dynamic buffers (or do we place them in the rest of the screen bank ?)
 - UDG, FONT, graphics support/debug
 - input device debug
 - probe actual memory size
 - reboot - reload disk block 0 and run it ?
-- support Joyce mode (EDFE A=0, if returns A=255 joyce)
+IP - support Joyce mode (EDFE A=0, if returns A=255 joyce)
 	- Reboot/Off
 	- Joyce RTC
 - Real RTC addins
+- speed up keyproc (asm ?)
+- keyboard repeat
+- test swap
 
-0/1/2/3		Kernel
-4/5		Video & Fonts (+ 5K or so spare)
-(assuming full 48K size)
-6/7/8		Process 0
-9/A/B		Process 1
-C/D/E		Process 2
 
 Supported Hardware (all only in early test)
 -------------------------------------------
@@ -77,6 +85,11 @@ Supported Hardware (all only in early test)
 		SCA Mark2 RTC
 		Locolink
 		Other hard disk controllers
+		(Cirtech GEM is PC/XT type at 0xA8-AB so shouldn't be hard)
+		(Cirtech GEM ATA is ATA at A8-AF)
+		(ASD PCWHD10/20 similar but A0-A7 : clashes with AMX mouse
+			unless AMX moved to 0x80, and Electric Studio pen)
+		NTSC
 
 
 
@@ -121,6 +134,8 @@ device 256 = fd0 257 = fd1
 
 (0-255 are the UIDE hard disks, or FID hard disks on Joyce)
 
+To build a UIDE disk boot and then exit. The created c.dsk in Joyce/Disks is 
+a MYZ80 image (256 E5 followed by 8MB raw disk image).
 
 Mixed boot/root images are not currently supported (this just needs a modified
 boot block that starts at a different offset)
