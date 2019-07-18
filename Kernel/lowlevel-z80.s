@@ -218,6 +218,9 @@ unix_syscall_entry:
         di	; Again we know we won't mess up calling di/ei directly
 
 
+	; FIXME: another spot we di but have the flag wrong and call stuff
+	; although we probably just need a rule that _di versions can't
+	; rely on it!
 	call map_process_always_di
 
 	xor a
