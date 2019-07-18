@@ -23,6 +23,8 @@
 #include <kdata.h>
 #include <printf.h>
 
+#define DEBUG
+
 #ifdef CONFIG_BANK16FC
 /*
  * Map handling: We have flexible paging. Each map table consists of a set of pages
@@ -115,11 +117,23 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	int8_t i;
 	uint8_t update = 0;
 	irqflags_t irq;
+	int8_t needed = want - have;
 
-	/* If we are shrinking then free pages and propogate the
-	   common page into the freed spaces */
+	/* No size change - no work required: usual path */
 	if (want == have)
 		return 0;
+
+#ifdef SWAPDEV
+	/* Throw our toys out of our pram until we have enough room */
+	if (needed > 0) {
+		while ((uint8_t)needed > pfptr)
+			if (swapneeded(udata.u_ptab, 1) == NULL)
+				return ENOMEM;
+	}
+#else
+	if (needed > pfptr)	/* We have no swap so poof... */
+		return ENOMEM;
+#endif
 
 	/* We don't want to take an interrupt here while our page mappings are
 	   incomplete. We may restore bogus mappings and then take a second IRQ
@@ -187,7 +201,7 @@ int swapout(ptptr p)
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
 #ifdef DEBUG
-	kprintf("Swapping out %x (%d)\n", p, p->p_page);
+	kprintf("Swapping out %x (%x%x)\n", p, p->p_page, p->p_page2);
 #endif
 
 	/* Are we out of swap ? */
@@ -197,6 +211,10 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app and udata stash to disk */
 	for (i = 0; i < 3; i++) {
+#ifdef DEBUG
+		kprintf("%d: swapwrite block %d, size %x, base %x\n",
+			p->p_pid, blk, size, base);
+#endif
 		swapwrite(SWAPDEV, blk, size << 9, base, *pt++);
 		base += 0x4000;
 		base &= 0xC000;	/* Snap to bank alignment */
@@ -230,7 +248,7 @@ void swapin(ptptr p, uint16_t map)
 	uint8_t *pt = (uint8_t *) & p->p_page;
 
 #ifdef DEBUG
-	kprintf("Swapin %x, %d\n", p, p->p_page);
+	kprintf("Swapin %x, %x%x\n", p, p->p_page, p->p_page2);
 #endif
 	if (!p->p_page) {
 		kprintf("%x: nopage!\n", p);
@@ -238,6 +256,10 @@ void swapin(ptptr p, uint16_t map)
 	}
 
 	for (i = 0; i < 3; i++) {
+#ifdef DEBUG
+		kprintf("%d: swapread block %d, size %x, base %x\n",
+			p->p_pid, blk, size, base);
+#endif
 		swapread(SWAPDEV, blk, size << 9, base, *pt++);
 		base += 0x4000;
 		base &= 0xC000;
