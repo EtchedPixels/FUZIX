@@ -3,7 +3,7 @@
         .include "kernel.def"
         .include "../kernel-z80.def"
 
-	.include "../lib/z80fixedbank-core.s"
+	.include "../lib/z80bank16kfc-core.s"
 
 ;
 ;	We are copying from udata (DE) to process tables (HL)
