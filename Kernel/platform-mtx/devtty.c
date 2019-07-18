@@ -179,7 +179,6 @@ static uint8_t dartbits[] = {
 	0x00, 0x40, 0x80, 0xC0
 };
 
-/* FIXME: Can we do CSTOPB - need to look into that */
 void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 {
 	irqflags_t flags;
@@ -212,6 +211,8 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 		if (!(cf & PARODD))
 			r |= 2;
 	}
+	if (cf & CSTOPB)
+		r |= 0x08;
 	dart_setup[7] = r;
 	dart_setup[7] = r;
 
