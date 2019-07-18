@@ -32,7 +32,7 @@
 #define VT_BOTTOM	31
 
 #define CONFIG_INPUT
-#define CONFIG_INPUT_GRABMAX 2	/* We could in theory do full up/down but later */
+#define CONFIG_INPUT_GRABMAX 3
 #define MAX_BLKDEV	2	/* UIDE or Joyce never both */
 #define CONFIG_IDE	/* Has an IDE controller - maybe anyway: UIDE */
 #undef CONFIG_NET

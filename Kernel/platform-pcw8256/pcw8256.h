@@ -61,3 +61,6 @@ extern uint8_t model;
 #define MODEL_PCW9512PLUS	4
 
 extern void machine_ident(void);
+
+extern uint8_t cps_centronics_busy(void);
+extern void cps_centronics_strobe(uint8_t r);

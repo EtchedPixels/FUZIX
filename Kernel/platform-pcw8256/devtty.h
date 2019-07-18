@@ -1,8 +1,8 @@
 #ifndef __DEVTTY_DOT_H__
 #define __DEVTTY_DOT_H__
 
-void tty_init_port(void);
 void tty_irq(void);
+int pcwtty_close(uint_fast8_t minor);
 
 #define KEY_ROWS	12
 #define KEY_COLS	8

@@ -49,7 +49,6 @@ __sfr __at 0xFD printstat;
 
 void device_init(void)
 {
-  tty_init_port();
   fd_probe();
 
   if (is_joyce)
