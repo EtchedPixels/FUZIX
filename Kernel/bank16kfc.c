@@ -23,7 +23,7 @@
 #include <kdata.h>
 #include <printf.h>
 
-#define DEBUG
+#undef DEBUG
 
 #ifdef CONFIG_BANK16FC
 /*
