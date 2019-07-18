@@ -804,6 +804,10 @@ struct s_argblk {
  *			07F1	Cache writeback/flush
  */
 
+/*
+ *	Printer ioctls 0x08xx (see printer.h)
+ */
+
 
 /*
  *	System info shared with user space
