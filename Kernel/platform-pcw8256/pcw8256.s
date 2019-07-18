@@ -285,9 +285,6 @@ map_process_di:
 	    jr z, map_kernel
 map_process_a:	; really map_process_hl in our case.
 map_process_1:
-	    ld a, (_int_disabled)
-	    push af
-	    di			; ensure we don't take an irq mid update
 	    push de
 	    push bc
 	    ld de, #map_current
@@ -303,10 +300,6 @@ map_loop:
 	    djnz map_loop
 	    pop bc
 	    pop de
-	    pop af
-	    or a
-	    ret nz
-	    ei
 	    ret
 
 map_save_kernel:
@@ -319,9 +312,6 @@ map_save_kernel:
 	    ldi
 	    ldi
 	    push af
-	    ; FIXME: remove these two lines once this is fixed in 0.4
-	    ld a,#1
-	    ld (_int_disabled),a
 	    ld hl, #kmap
 	    call map_process_1
 	    pop af
@@ -351,7 +341,8 @@ _bugoutv:
 ; destroys: AF
 ;
 outchar:    push bc
-	    ld a, b
+	    ld b,a
+	    ld a,#0xFA
 	    .dw 0xfeed
 	    pop bc
 	    ret
