@@ -56,6 +56,7 @@ not_swap:
 op_kernel:
 		call map_buffers
 do_op:
+		; Beware the trap updates IY as well as A
 		ld a,c
 		.dw 0xfeed
 		ld l,a
