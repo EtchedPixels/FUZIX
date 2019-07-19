@@ -95,7 +95,7 @@ init_loop:
 	txy
 	lda	#$00FE
 common_patch:
-	mvn	KERNEL_FAR,0		; copy the block
+	mvn	#KERNEL_FAR,0		; copy the block
 
 	sep	#$30
 	.a8
@@ -176,7 +176,7 @@ _hd_read_data:
 
 	lda #$200-1		; 1 sector
 hd_rpatch:
-	mvn $FF,$FF
+	mvn #$FF,#$FF
 	plb
 	sep #$30		; go anywhere
 	.a8
@@ -210,7 +210,7 @@ _hd_write_data:
 	lda #$200-1		; 1 sector
 
 hd_wpatch:
-	mvn $FF,$FF
+	mvn #$FF,#$FF
 	plb
 	sep #$30		; go anywhere
 	.a8
@@ -300,7 +300,7 @@ _scroll_up:
 	ldx #640
 	ldy #0
 	lda #15360-1		; 192 pixel rows
-	mvn $FE,$FE
+	mvn #$FE,#$FE
 	sep #$30
 	.a8
 	.i8
@@ -315,7 +315,7 @@ _scroll_down:
 	ldx #16000-1
 	ldy #15360-1
 	lda #15360-1
-	mvp $FE,$FE
+	mvp #$FE,#$FE
 	sep #$30
 	.a8
 	.i8
@@ -338,7 +338,7 @@ _do_clear_bytes:
 	.a16
 	lda _fb_count
 	phb
-	mvn $FE,$FE
+	mvn #$FE,#$FE
 	sep #$30
 	.a8
 	.i8

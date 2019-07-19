@@ -14,8 +14,8 @@
 #define CONFIG_CALL_R2L		/* Runtime stacks arguments backwards */
 
 /* Networking (not usable yet but for debug/development) */
-#define CONFIG_NET
-#define CONFIG_NET_NATIVE
+#undef CONFIG_NET
+#undef CONFIG_NET_NATIVE
 
 #define CONFIG_VT
 #define CONFIG_FONT8X8
