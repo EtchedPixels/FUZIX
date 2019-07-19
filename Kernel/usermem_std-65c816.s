@@ -43,7 +43,7 @@ __uget:	sta	ptr1
 	beq	ug_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 ugetpatch:
-	mvn	KERNEL_BANK,0
+	mvn	#0,#KERNEL_BANK
 ug_nomov:
 	.i8
 	.a8
@@ -100,7 +100,7 @@ __uput:
 	beq	up_nomov		; 0 means 64K!
 	dec				; need 1 less than size
 uputpatch:
-	mvn	0,KERNEL_BANK
+	mvn	#KERNEL_BANK,#0
 up_nomov:
 	.i8
 	.a8
@@ -179,7 +179,7 @@ __uzero:
 	; The set up is worth it as most uzero() calls are big
 	; ranges
 uzero_patch:
-	mvn	0,0
+	mvn	#0,#0
 nozero:
 	plb
 	sep	#$30
