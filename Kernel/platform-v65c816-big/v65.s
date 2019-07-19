@@ -93,7 +93,7 @@ init_loop:
 	txy
 	lda	#$00FE
 common_patch:
-	mvn	0,KERNEL_CODE_BANK	; copy the block
+	mvn	#0,#KERNEL_CODE_BANK	; copy the block
 
 	sep	#$30
 	.a8
@@ -173,7 +173,7 @@ _hd_read_data:
 
 	lda #$200-1		; 1 sector
 hd_rpatch:
-	mvn $FF,$FF
+	mvn #$FF,#$FF
 	plb
 	sep #$30		; go anywhere
 	.a8
@@ -206,7 +206,7 @@ _hd_write_data:
 	lda #$200-1		; 1 sector
 
 hd_wpatch:
-	mvn $FF,$FF
+	mvn #$FF,#$FF
 	plb
 	sep #$30		; go anywhere
 	.a8
