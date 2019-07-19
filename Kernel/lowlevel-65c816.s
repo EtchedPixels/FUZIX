@@ -765,7 +765,7 @@ signal_exit:
 	;	Y now points at bank, X points at PC high
 	;
 	lda	#8		; copy 9 bytes
-	mvp	0,0
+	mvp	#0,#0
 	;
 	;	At this point y points to the byte below the last
 	;	destination copied (aka s)
