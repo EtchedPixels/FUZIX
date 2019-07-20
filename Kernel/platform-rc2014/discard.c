@@ -99,9 +99,7 @@ void init_hardware_c(void)
 
 	/* FIXME: When ROMWBW handles 16550A or second SIO, or Z180 as
 	   console we will need to address this better */
-
 	if (z180_present) {
-		kputs("Z180 CPU card detected.\n");
 		z180_setup(!ctc_present);
 		register_uart(UART_Z180, Z180_IO_BASE, &z180_uart0);
 		register_uart(UART_Z180, Z180_IO_BASE + 1, &z180_uart1);
