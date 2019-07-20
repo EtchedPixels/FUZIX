@@ -198,9 +198,11 @@ serial_up:
 	ld a,#0xAA			; Set a count
 	out (CTC_CH2),a
 	in a,(CTC_CH2)
+	cp #0xAA
+	jr z, maybe_ctc
 	cp #0xA9			; Should be one less
 	jr nz, no_ctc
-
+maybe_ctc:
 	ld a,#0x07
 	out (CTC_CH2),a
 	ld a,#2
