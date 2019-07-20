@@ -173,20 +173,33 @@ int tty_open(uint_fast8_t minor, uint16_t flag)
 
 	t = &ttydata[minor];
 
-	/* Hung up but not yet cleared of users */
-	if (t->flag & TTYF_DEAD) {
-	        udata.u_error = ENXIO;
-	        return -1;
-        }
-
+	/*
+	 *	If the tty has users but is marked dead then we are still
+	 *	cleaning up from a carrier drop. If it didn't have users
+	 *	then this is fine.
+	 */
 	if (t->users) {
+		if (t->flag & TTYF_DEAD) {
+		        udata.u_error = ENXIO;
+		        return -1;
+	        }
 	        t->users++;
 	        return 0;
         }
+
+        t->flag &= ~TTYF_DEAD;
+
 	tty_setup(minor, 0);
+
+	/*
+	 *	Do not wait for carrier in these cases. If the port has
+	 *	no carrier tty_carrier always returns 1 so that hardware
+	 *	detail is abstracted
+	 */
 	if ((t->termios.c_cflag & CLOCAL) || (flag & O_NDELAY))
 		goto out;
 
+	/* Wait for carrier */
 	irq = di();
         if (!tty_carrier(minor)) {
 		if (psleep_flags(&t->termios.c_cflag, flag)) {
@@ -195,13 +208,15 @@ int tty_open(uint_fast8_t minor, uint16_t flag)
 		}
         }
         irqrestore(irq);
-        /* Carrier spiked ? */
+        /* Carrier rose and then fell again during the open ? */
         if (t->flag & TTYF_DEAD) {
                 udata.u_error = ENXIO;
                 t->flag &= ~TTYF_DEAD;
                 return -1;
         }
- out:   t->users++;
+out:
+	/* Track users */
+	t->users++;
         return 0;
 }
 
@@ -212,16 +227,12 @@ void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag)
         irqflags_t irq = di();
 
 	/* If there is no controlling tty for the process, establish it */
-	/* Disable interrupts so we don't endup setting up our control after
+	/* Disable interrupts so we don't end up setting up our control after
 	   the carrier drops and tries to undo it.. */
 	if (!(t->flag & TTYF_DEAD) && !udata.u_ptab->p_tty && !t->pgrp && !(flag & O_NOCTTY)) {
 		udata.u_ptab->p_tty = minor;
 		udata.u_ctty = ino;
 		t->pgrp = udata.u_ptab->p_pgrp;
-#ifdef DEBUG
-		kprintf("setting tty %d pgrp to %d for pid %d\n",
-		        minor, t->pgrp, udata.u_ptab->p_pid);
-#endif
 	}
 	irqrestore(irq);
 }
@@ -229,22 +240,18 @@ void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag)
 int tty_close(uint_fast8_t minor)
 {
         struct tty *t = &ttydata[minor];
+        /* We only care about the final close */
         if (--t->users)
                 return 0;
 	/* If we are closing the controlling tty, make note */
 	if (minor == udata.u_ptab->p_tty) {
 		udata.u_ptab->p_tty = 0;
 		udata.u_ctty = NULL;
-#ifdef DEBUG
-		kprintf("pid %d loses controller\n", udata.u_ptab->p_pid);
-#endif
         }
 	t->pgrp = 0;
-        /* If we were hung up then the last opener has gone away */
+        /* If we were hung up then the last opener has gone away. This may
+           race but we also check in the open path */
         t->flag &= ~TTYF_DEAD;
-#ifdef DEBUG
-        kprintf("tty %d last close\n", minor);
-#endif
 	return (0);
 }
 
@@ -570,21 +577,30 @@ void tty_putc_wait(uint_fast8_t minor, uint_fast8_t ch)
 	tty_putc_maywait(minor, ch, 0);
 }
 
+/*
+ *	This can occur in kernel or interrupt context. We therefore need
+ *	to be careful when we are racing open or close. If we race a close
+ *	the TTYF_DEAD gets set unnecessarily which is fine as open will
+ *	clean it up. If we race an open then open clears the flag early
+ *	and checks it before completion.
+ */
 void tty_hangup(uint_fast8_t minor)
 {
         struct tty *t = &ttydata[minor];
-        /* Kill users */
-        sgrpsig(t->pgrp, SIGHUP);
-        sgrpsig(t->pgrp, SIGCONT);
-        t->pgrp = 0;
-        /* Stop any new I/O with errors */
-        t->flag |= TTYF_DEAD;
-        /* Wake up read/write */
-        wakeup(&ttyinq[minor]);
-        /* Wake stopped stuff */
-        wakeup(&t->flag);
-        /* and deadflag will clear when the last user goes away */
-	tty_selwake(minor, SELECT_IN|SELECT_OUT|SELECT_EX);
+        if (t->users) {
+	        /* Kill users */
+	        sgrpsig(t->pgrp, SIGHUP);
+	        sgrpsig(t->pgrp, SIGCONT);
+	        t->pgrp = 0;
+	        /* Stop any new I/O with errors */
+	        t->flag |= TTYF_DEAD;
+	        /* Wake up read/write */
+	        wakeup(&ttyinq[minor]);
+	        /* Wake stopped stuff */
+	        wakeup(&t->flag);
+	        /* and deadflag will clear when the last user goes away */
+		tty_selwake(minor, SELECT_IN|SELECT_OUT|SELECT_EX);
+	}
 }
 
 void tty_carrier_drop(uint_fast8_t minor)
