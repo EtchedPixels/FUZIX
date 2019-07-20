@@ -47,12 +47,12 @@ $(NOBJS): %.rel: ../dev/net/%.c
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin bootrom.tmp
-	rm -f fuzix.romwbw boot-romwbw.tmp
+	rm -f fuzix.romwbw boot-romwbw.tmp test-romwbw.tmp
 
 #
 #	Compile up the boot block
 #
-image: bootblock
+image: bootblock testblock
 	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
 
 bootblock:
@@ -62,3 +62,11 @@ bootblock:
 	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
 	# Chop off the leading 61440 bytes we don't want
 	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
+
+testblock:
+	sdasz80 -o test-romwbw.s
+	sdldz80 -i test-romwbw.rel
+	# This makes us a binary from physical 0
+	makebin -s 62464 test-romwbw.ihx test-romwbw.tmp
+	# Chop off the leading 61440 bytes we don't want
+	dd if=test-romwbw.tmp of=test-romwbw.bin bs=512 count=2 skip=120

@@ -96,7 +96,7 @@ extern unsigned int swap_dev;
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
 
-#define NUM_DEV_TTY 4
+#define NUM_DEV_TTY 2
 
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)

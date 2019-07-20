@@ -37,12 +37,9 @@
 	.globl unix_syscall_entry
 	.globl nmi_handler
 	.globl null_handler
-	.globl _acia_present
-	.globl _ctc_present
-	.globl _sio_present
-	.globl _sio1_present
 	.globl _udata
 	.globl istack_top
+	.globl ___hard_di
 
 	; exported debugging tools
 	.globl outchar
@@ -68,11 +65,6 @@ SIOA_C		.EQU	SIOA_D+1
 SIOB_D		.EQU	SIOA_D+2
 SIOB_C		.EQU	SIOA_D+3
 
-SIOC_C		.EQU	0x84
-SIOC_D		.EQU	SIOC_C+1
-SIOD_C		.EQU	SIOC_C+2
-SIOD_D		.EQU	SIOC_C+3
-
 ;=========================================================================
 ; Initialization code
 ;=========================================================================
@@ -84,6 +76,8 @@ init_hardware:
         call _program_vectors
         pop hl
 
+	; Get the internal DI state right
+	call ___hard_di
 
         ; Stop floppy drive motors
         ld a, #0x0C
@@ -99,54 +93,12 @@ init_hardware:
 	; FIXME: see if we can cleanly ask ROMWBW for the device type
 	;
 
-	ld a,#1
-	ld (_sio_present),a
-
 	ld hl,#sio_setup
 	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
 	otir
 	ld hl,#sio_setup
 	ld bc,#0x0C00 + SIOB_C		; and to SIOB_C
 	otir
-
-	xor a
-	ld c,#SIOC_C
-	out (c),a			; RR0
-	in b,(c)			; Save RR0 value
-	inc a
-	out (c),a			; RR1
-	in a,(c)
-	cp b				; Same from both reads - not an SIO
-
-	jr z, serial_up
-
-	; Repeat the check on SIO B
-
-	xor a
-	ld c,#SIOD_C
-	out (c),a			; RR0
-	in b,(c)			; Save RR0 value
-	inc a
-	out (c),a			; RR1
-	in a,(c)
-	cp b				; Same from both reads - not an SIO
-
-	jr z, serial_up
-
-	ld a,#0x01
-	ld (_sio1_present),a
-
-	ld a,#0xA0			; Vectors for SIOC/D
-	ld (sio_irqv),a
-	ld hl,#sio_setup
-	ld bc,#0xA00 + SIOC_C		; 10 bytes to SIOC_C
-	otir
-	ld hl,#sio_setup
-	ld bc,#0x0C00 + SIOD_C		; and to SIOD_C
-	otir
-
-
-serial_up:
 
         ; ---------------------------------------------------------------------
 	; Initialize CTC
@@ -201,8 +153,6 @@ ctc_check:
 	;
 
 have_ctc:
-	ld a,#1
-	ld (_ctc_present),a
 
 	;
 	; Set up timer for 160Hz
@@ -231,18 +181,18 @@ no_ctc:
 
 	xor a
 	ld i,a
-	im 2				; set Z80 CPU interrupt mode 1
+	im 2				; set Z80 CPU interrupt mode 2
         jp _init_hardware_c             ; pass control to C, which returns for us
 
 sio_setup:
 	.byte 0x00
 	.byte 0x18		; Reset
 	.byte 0x04
-	.byte 0xC4
+	.byte 0x44		; x16 off the 1.8MHz crystal
 	.byte 0x01
 	.byte 0x1F
 	.byte 0x03
-	.byte 0xE1
+	.byte 0xC1
 	.byte 0x05
 	.byte RTS_LOW
 	.byte 0x02
@@ -299,6 +249,7 @@ _program_vectors:
 	ldir
 
 	; now install the interrupt vector at 0x0038
+
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
 	ld hl,#interrupt_handler
@@ -341,23 +292,6 @@ _program_vectors:
 	ld (0x9C),hl			; SIO A Received
 	ld hl,#sioa_special
 	ld (0x9E),hl			; SIO A Special
-
-	ld hl,#siod_txd
-	ld (0xA0),hl			; SIO2 B TX empty
-	ld hl,#siod_status
-	ld (0xA2),hl			; SIO2 B External status
-	ld hl,#siod_rx_ring
-	ld (0xA4),hl			; SIO2 B Receive
-	ld hl,#siod_special
-	ld (0xA6),hl			; SIO2 B Special
-	ld hl,#sioc_txd
-	ld (0xA8),hl			; SIO2 A TX empty
-	ld hl,#sioc_status
-	ld (0xAA),hl			; SIO2 A External status
-	ld hl,#sioc_rx_ring
-	ld (0xAC),hl			; SIO2 A Received
-	ld hl,#sioc_special
-	ld (0xAE),hl			; SIO2 A Special
 
 	jr map_kernel
 
@@ -439,6 +373,7 @@ map_buffers:
 map_process_2:
 	push de
 	push af
+
 	ld de,#mpgsel_cache		; paging registers are write only
 					; so cache their content in RAM
 	ld a,(hl)			; memory page number for bank #0
@@ -454,6 +389,7 @@ map_process_2:
 	ld a,(hl)			; memory page number for bank #2
 	ld (de),a
 	out (MPGSEL_2),a		; set bank #2
+
 	pop af
 	pop de
 	ret
@@ -605,62 +541,36 @@ _sioa_wr5:
 	.db 0xEA		; DTR, 8bit, tx enabled
 _siob_wr5:
 	.db 0xEA		; DTR, 8bit, tx enabled
-_sioc_wr5:
-	.db 0xEA		; DTR, 8bit, tx enabled
-_siod_wr5:
-	.db 0xEA		; DTR, 8bit, tx enabled
 _sio_flow:
 _sioa_flow:
 	.db 0			; Flow starts off
 _siob_flow:
-	.db 0			; Flow starts off
-_sioc_flow:
-	.db 0			; Flow starts off
-_siod_flow:
 	.db 0			; Flow starts off
 _sio_state:
 _sioa_state:
 	.db 0			; Last status report
 _siob_state:
 	.db 0			; Last status report
-_sioc_state:
-	.db 0			; Last status report
-_siod_state:
-	.db 0			; Last status report
 _sio_dropdcd:
 _sioa_dropdcd:
 	.db 0			; DCD dropped since last checked
 _siob_dropdcd:
-	.db 0			; DCD dropped since last checked
-_sioc_dropdcd:
-	.db 0			; DCD dropped since last checked
-_siod_dropdcd:
 	.db 0			; DCD dropped since last checked
 _sio_rxl:
 _sioa_rxl:
 	.db 0
 _siob_rxl:
 	.db 0
-_sioc_rxl:
-	.db 0
-_siod_rxl:
-	.db 0
 _sio_txl:
 _sioa_txl:
 	.db 0
 _siob_txl:
-	.db 0
-_sioc_txl:
-	.db 0
-_siod_txl:
 	.db 0
 
 	.include "../dev/z80sio.s"
 
 sio_ports a
 sio_ports b
-sio_ports c
-sio_ports d
 
 	.area _COMMONMEM
 
@@ -685,5 +595,3 @@ sio_sp:	.dw 0
 
 sio_handler_im2	a, SIOA_C, SIOA_D, reti
 sio_handler_im2 b, SIOB_C, SIOB_D, reti
-sio_handler_im2	c, SIOC_C, SIOC_D, reti
-sio_handler_im2 d, SIOD_C, SIOD_D, reti
