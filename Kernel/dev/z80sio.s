@@ -161,7 +161,7 @@ sio'X'_special:
 	in a,(CP)		; clear events
 	ld (sio'X'_error),a	; Save error bits
 	; Clear the latched values
-	ld a,#0x30
+	ld a,#0xC0
 	out (CP),a
 	switchback
 	pop af
