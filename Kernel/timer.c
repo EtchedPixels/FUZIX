@@ -58,11 +58,13 @@ void wrtime(time_t *tloc)
 	irqrestore(irq);
 }
 
-#if !defined(CONFIG_RTC) || defined(CONFIG_NO_CLOCK)
+/*
+ *	FIXME: rewrite this mess for 0.4
+ */
+
 static uint8_t tod_deci;
-/* Update software emulated clock. Called ten times
-   a second */
-void updatetod(void)
+
+static void tick_clock(void)
 {
 	if (++tod_deci != 10)
 		return;
@@ -70,12 +72,17 @@ void updatetod(void)
         if (!++tod.low)
 		++tod.high;
 }
+
+#if !defined(CONFIG_RTC) || defined(CONFIG_NO_CLOCK)
+/* Update software emulated clock. Called ten times
+   a second */
+void updatetod(void)
+{
+	tick_clock();
+}
 #else
 
 static uint8_t rtcsec;
-#ifdef CONFIG_RTC_INTERVAL
-static uint8_t tod_deci;
-#endif
 
 /*
  *	We use the seconds counter on the RTC as a time counter and lock our
@@ -107,7 +114,15 @@ void updatetod(void)
 
 	rtcnew = platform_rtc_secs();		/* platform function */
 
-	if (rtcnew == rtcsec || rtcnew == 255)
+	if (rtcnew == 255) {
+#ifdef CONFIG_RTC_INTERVAL
+		tod_deci++;
+#else
+		tick_clock();
+#endif
+		return;
+	}
+	if (rtcnew == rtcsec)
 		return;
 	slide = rtcnew - rtcsec;	/* Seconds elapsed */
 	rtcsec = rtcnew;
