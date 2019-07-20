@@ -122,60 +122,28 @@ init_hardware:
 	out (CTC_CH3),a			; set CH3 mode
 
 	;
-	; Probe for a CTC
-	;
-
-	ld a,#0x47			; CTC 2 as counter
-	out (CTC_CH2),a
-	ld a,#0xAA			; Set a count
-	out (CTC_CH2),a
-	in a,(CTC_CH2)
-	cp #0xA9			; Should be one less
-	jr nz, no_ctc
-
-	ld a,#0x07
-	out (CTC_CH2),a
-	ld a,#2
-	out (CTC_CH2),a
-
-	; We are now counting down from 2 very fast, so should only see
-	; those values on the bus
-
-	ld b,#0
-ctc_check:
-	in a,(CTC_CH2)
-	and #0xFC
-	jr nz, no_ctc
-	djnz ctc_check
-
-	;
-	; Looks like we have a CTC
-	;
-
-have_ctc:
-
-	;
-	; Set up timer for 160Hz
+	; Our input clock is 921.6Khz. It would be tempting to use the CPU
+	; clock and chain but the CPU clock depends on the users crystal
+	; choice so we have to live with this.
 	;
 
 	ld a,#0x80
 	out (CTC_CH0),a	; set the CTC vector
 
-	ld a,#0xB5
+	ld a,#0x57
 	out (CTC_CH2),a
-	ld a,#0xF4
-	out (CTC_CH2),a	; 200 Hz
+	xor a
+	out (CTC_CH2),a		; Divide by 256
 
 	;
 	; Set up counter CH3 as a missed event counter
 	;
 
-	ld a,#0x47
+	ld a,#0xD7
 	out (CTC_CH3),a
-	ld a,#255
+	ld a,#72		; Keep to 50Hz as used by the firmware
 	out (CTC_CH3),a
 
-no_ctc:
         ; Done CTC Stuff
         ; ---------------------------------------------------------------------
 
@@ -272,9 +240,9 @@ _program_vectors:
 	ld hl, #spurious
 	ld (0x80),hl			; CTC vectors
 	ld (0x82),hl
-	ld (0x86),hl
-	ld hl, #interrupt_handler	; Standard tick handler
 	ld (0x84),hl
+	ld hl, #interrupt_handler	; Standard tick handler
+	ld (0x86),hl
 
 	ld hl,#siob_txd
 	ld (0x90),hl			; SIO B TX empty
