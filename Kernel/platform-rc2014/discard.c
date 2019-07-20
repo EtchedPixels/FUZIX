@@ -13,28 +13,76 @@
 
 /* Everything in here is discarded after init starts */
 
+__sfr __at 0x98 tms9918a_data;
 __sfr __at 0x99 tms9918a_ctrl;
+
+static const uint8_t tmstext[] = {
+	0x00,
+	0xD0,
+	0x00,
+	0x00,
+	0x01,
+	0x00,
+	0x00,
+	0xF5
+};
+
+static const uint8_t tmsreset[] = {
+	0x00,
+	0x80,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00
+};
+
+static void nap(void)
+{
+}
+
+static void tmsconfig(uint8_t *r)
+{
+	uint8_t c = 0x80;
+	while(c < 0x88) {
+		tms9918a_ctrl = *r++;
+		tms9918a_ctrl = c++;
+		nap();
+	}
+}
+
+static void tmswipe(void)
+{
+	uint16_t ct;
+	tms9918a_ctrl = 0x00;
+	tms9918a_ctrl = 0x40;
+	for(ct = 0; ct < 16384; ct++) {
+		tms9918a_data = 0x00;
+		nap();
+	}
+}
 
 static uint8_t probe_tms9918a(void)
 {
 	uint16_t ct = 0;
-	/* Read the status port */
-	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x8F;
-	/* No fifth sprite collision */
-	if (tms9918a_ctrl & 0x7F)
-		return 0;
+	uint8_t v;
 	/* Try turning it on and looking for a vblank */
-	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x80;
-	tms9918a_ctrl = 0x09;
-	tms9918a_ctrl = 0x81;
+	tmsconfig(tmsreset);
+	tmswipe();
+	tmsconfig(tmstext);
 	/* Should see the top bit go high */
-	while(ct-- && !(tms9918a_ctrl & 0x80));
+	do {
+		v = tms9918a_ctrl & 0x80;
+	} while(ct-- && !(v & 0x80));
+
 	if (ct == 0)
 		return 0;
+	nap();
+
 	/* Reading the F bit should have cleared it */
-	if (tms9918a_ctrl & 0x80)
+	v = tms9918a_ctrl;
+	if (v & 0x80)
 		return 0;
 	return 1;
 }
