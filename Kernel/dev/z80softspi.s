@@ -140,20 +140,15 @@ spi0_tx0:
 spi0_bitbang_rx:
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
-	in d,(c)		; 12		get bit 0
+	in d,(c)		; 12		0
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
-	in a,(c)		; 12
+	in a,(c)		; 12		1
 	rra			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
-	in a,(c)		; 12		and bit 1
-	rra			; 4
-	rl d			; 8
-	out (c),l		; 12		low | 1
-	out (c),h		; 12		high | 1
-	in a,(c)		; 12		and bit 2
+	in a,(c)		; 12		2
 	rra			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
