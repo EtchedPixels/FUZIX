@@ -108,7 +108,7 @@ try_acia:
 	; TX should now have gone
 	in a,(ACIA_C)
 	bit 1,a
-	jr z, not_acia
+	jr nz, not_acia
 	;	Set up the ACIA
         ld a, #ACIA_RTS_LOW_A
         out (ACIA_C),a         		; Initialise ACIA
