@@ -66,20 +66,58 @@ Z80 Membership card
 ZX Spectrum 128K with DivIDE or DivMMC
 ZX Spectrum +3 with ZXMMC or similar
 
+Existing Supported Systems
+
+Amstrad NC100 with 1MB SRAM card
+Amstrad NC200 with 1MB SRAM card and floppy disk drive
+Dragon 32/64 with Spinx or MOOH cartridge
+DX Designs P112 with 1MB RAM and G-IDE
+EACA Video Genie (with suitable banked memory)
+LNW Research LNW80 with suitable banked memory (TRS80 Model 1 compatible bits)
+Memotech MTX512 with SDX disk (no Rememorizer or Rememotech support)
+Microbee 256TC or Premium with 128K+ RAM and ideally hard disk
+Multicomp09 with at least 128K RAM
+RBC(*) Mark IV with optional PropIO V2
+RBC(*) SBC v2 with optional PPIDE and/or PropIO V2
+RC2014 SBC with 512K ROM/RAM, CF, SIO and RTC
+RC2014 SBC with banked ROM, 64K RAM, CF, SIO and RTC
+SOCZ80 (128MHz FPGA Z80 platform)
+Tandy COCO2 with Cloud 9 IDE, or COCOSDC card and Fuzix partly in cartridge
+Tandy COCO3 with suitable disk interface
+TRS80 Model I/III with a hard disk and a supported banked RAM expansion
+TRS80 Model 4/4D/4P 128K RAM
+Zeta
+Zeta V2
+
+(*) Formerly N8VEM now RBC (RetroBrewComputers)
+
+
 Incomplete Ports
 
+Apple IIc	-	initial investigations
 Atari ST	-	in progress
 EZRetro		-	minimal development port for ez80
+Gemini		-	early design
+Lucas Nascom	-	early design
 MSX1		-	works in very limited configuration only
-ZX Uno		-	for now run the 128K version as this also knows
-			about Uno features
+Pentagon	-	needs the 0.4 ABI changes to be possible
+ZX Uno		-	for now run the 128K ZX Spectrum version as this also
+			knows about some Uno features
 Z80BIOS		-	experiment to see if things like S100 can be supported
 			by having a Z80 BIOS akin to the CP/M BIOS etc.
+Z280RC/ZZ80RC	-	early sketches
+
 
 New Virtual Platforms (Emulation Platforms For Fun or Development)
 
 v8080		-	8080 development environment
 v85		-	8085 development environment
+
+Existing Virtual Platforms
+
+V65C816		-	65C816 emulation work
+V68		-	68000 development work
+Z80Pack		-	Very flexible Z80 banked system emulator
 
 Obsolete
 
@@ -87,9 +125,25 @@ MSX2		-	needs a major rework and clean up
 
 Major Changes To Existing Platforms
 
+Dragon-MOOH	-	now it's own port with full MOOH paging support.
 MTX		-	support for CFX-I CFX-II, some rememorize support,
 			base MTXPlus support, extra keys on PC adapter. Lots
 			of bug fixes.
+
+The Library/Application support has been built for
+6502			no FP
+65C816			no FP, using 6502 modes
+6809			FP needs debug
+68000			FP needs debug
+68HC11			test only
+8086			test only
+MSP430X
+NS32k			test only
+PDP11			test only
+Rabbit2000		test only
+Z80
+Z180
+eZ80			needs a very recent SDCC
 
 
 Core Changes
@@ -206,17 +260,17 @@ ZX128 (Spectrum 128K etc) - too difficult to make work well
 
 Incomplete Ports
 
-Amstrad PCW8256/8512/9256/9512/10
-Apple IIc
-Cromemco
-Dragon 32/64 MOOH (full MOOH support, use the Spinx/Mooh port for now)
-Gemini
-Lucas Nascom
-Sam Coupe
-SC108 (port complete for proposed hardware)
-V65 (Virtual 6502 development platform)
-Video Genie with EG64
-Z280RC
+-Amstrad PCW8256/8512/9256/9512/10
+-Apple IIc
+-Cromemco
+-Dragon 32/64 MOOH (full MOOH support, use the Spinx/Mooh port for now)
+-Gemini
+-Lucas Nascom
+-Sam Coupe
+-SC108 (port complete for proposed hardware)
+-V65 (Virtual 6502 development platform)
+-Video Genie with EG64
+-Z280RC
 
 
 The Library/Application support has been built for
