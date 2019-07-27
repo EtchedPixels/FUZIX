@@ -123,26 +123,27 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 		/* There is no obvious logic to this */
 		switch(t->c_cflag & (CSIZE|PARENB|PARODD|CSTOPB)) {
 		case CS7|PARENB:
-			r = 0xEB;
+			r = 0x8A;
 			break;
 		case CS7|PARENB|PARODD:
-			r = 0xEF;
+			r = 0x8E;
 			break;
 		case CS7|PARENB|CSTOPB:
-			r = 0xE3;
+			r = 0x82;
 		case CS7|PARENB|PARODD|CSTOPB:
-			r = 0xE7;
+			r = 0x86;
 		case CS8|CSTOPB:
-			r = 0xF3;
+			r = 0x92;
 			break;
+		default:
 		case CS8:
-			r = 0xF7;
+			r = 0x96;
 			break;
 		case CS8|PARENB:
-			r = 0xFB;
+			r = 0x9A;
 			break;
 		case CS8|PARENB|PARODD:
-			r = 0xFF;
+			r = 0x9E;
 			break;
 		}
 		ACIA_C = r;

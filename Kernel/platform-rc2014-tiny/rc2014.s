@@ -92,18 +92,31 @@ init_hardware:
 	; Play guess the serial port
 
 	;
-	; We are booted under ROMWBW, therefore use the same algorithm as
-	; ROMWBW so if the probe fails we at least expect it to have failed
-	; before we run.
-	;
-	; FIXME: see if we can cleanly ask ROMWBW for the device type
-	;
-
-	;
 	; This could be the ACIA control port. If so we mash the settings
-	; up but that is ok as we will port them back in the ACIA probe
+	; up but that is ok as we will put them back in the SIO probe
 	;
 
+try_acia:
+	;
+	;	Look for an ACIA
+	;
+	in a,(ACIA_C)
+	bit 1,a
+	jr z, not_acia
+	ld a,#ACIA_RESET
+	out (ACIA_C),a
+	; TX should now have gone
+	in a,(ACIA_C)
+	bit 1,a
+	jr z, not_acia
+	;	Set up the ACIA
+        ld a, #ACIA_RTS_LOW_A
+        out (ACIA_C),a         		; Initialise ACIA
+	ld a,#1
+	ld (_acia_present),a
+	jp serial_up
+
+not_acia:
 	xor a
 	ld c,#SIOA_C
 	out (c),a			; RR0
@@ -113,7 +126,7 @@ init_hardware:
 	in a,(c)
 	cp b				; Same from both reads - not an SIO
 
-	jr z, try_acia
+	jr z, not_sio_either
 
 	; Repeat the check on SIO B
 
@@ -128,31 +141,14 @@ init_hardware:
 
 	jr nz, is_sio
 
-try_acia:
-	;
-	;	Look for an ACIA
-	;
-	ld a,#ACIA_RESET
-	out (ACIA_C),a
-	; TX should now have gone
-	in a,(ACIA_C)
-	bit 1,a
-	jr z, not_acia_either
-	;	Set up the ACIA
-
-        ld a, #ACIA_RTS_LOW_A
-        out (ACIA_C),a         		; Initialise ACIA
-	ld a,#1
-	ld (_acia_present),a
-	jp serial_up
 
 	;
 	; Doomed I say .... doomed, we're all doomed
 	;
 	; At least until RC2014 grows a nice keyboard/display card!
 	;
-not_acia_either:
-	jp serial_up
+not_sio_either:
+	; Fall through and hope
 ;
 ;	We have an SIO so do the required SIO hdance
 ;
