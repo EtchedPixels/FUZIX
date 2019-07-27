@@ -73,8 +73,8 @@ SIOC_D		.EQU	SIOC_C+1
 SIOD_C		.EQU	SIOC_C+2
 SIOD_D		.EQU	SIOC_C+3
 
-ACIA_C          .EQU     0x80
-ACIA_D          .EQU     0x81
+ACIA_C          .EQU     0xA0
+ACIA_D          .EQU     0xA1
 ACIA_RESET      .EQU     0x03
 ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
 ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
@@ -113,6 +113,29 @@ init_hardware:
 	; up but that is ok as we will port them back in the ACIA probe
 	;
 
+	;
+	;	Look for an ACIA
+	;
+	in a,(ACIA_C)			; TX ready should be set by now
+	bit 1,a
+	jr z, not_acia
+	ld a,#ACIA_RESET
+	out (ACIA_C),a
+	; TX should now have gone
+	in a,(ACIA_C)
+	bit 1,a
+	jr nz, not_acia
+	;
+	;	Set up the ACIA
+	;
+	ld a,#2
+	out (ACIA_C),a
+        ld a, #ACIA_RTS_LOW_A
+        out (ACIA_C),a         		; Initialise ACIA
+	ld a,#1
+	ld (_acia_present),a
+
+not_acia:
 	xor a
 	ld c,#SIOA_C
 	out (c),a			; RR0
@@ -122,7 +145,7 @@ init_hardware:
 	in a,(c)
 	cp b				; Same from both reads - not an SIO
 
-	jr z, try_acia
+	jp z, serial_up
 
 	; Repeat the check on SIO B
 
@@ -135,33 +158,33 @@ init_hardware:
 	in a,(c)
 	cp b				; Same from both reads - not an SIO
 
-	jr nz, is_sio
+	jp z, serial_up
 
-try_acia:
-	;
-	;	Look for an ACIA
-	;
-	ld a,#ACIA_RESET
-	out (ACIA_C),a
-	; TX should now have gone
-	in a,(ACIA_C)
-	bit 1,a
-	jr z, not_acia_either
-	;	Set up the ACIA
+	; Now sanity check the vector register
 
-        ld a, #ACIA_RTS_LOW_A
-        out (ACIA_C),a         		; Initialise ACIA
-	ld a,#1
-	ld (_acia_present),a
-	jp serial_up
+	ld a,#2
+	out (c),a
+	ld a,#0xA0
+	out (c),a
+	ld a,#2
+	out (c),a
+	in a,(c)
+	and #0xF0
+	cp #0xA0
+	jp nz, serial_up
 
-	;
-	; Doomed I say .... doomed, we're all doomed
-	;
-	; At least until RC2014 grows a nice keyboard/display card!
-	;
-not_acia_either:
-	jp serial_up
+	ld a,#2
+	out (c),a
+	ld a,#0x50
+	out (c),a
+	ld a,#2
+	out (c),a
+	in a,(c)
+	and #0xF0
+	cp #0x50
+	jr nz, serial_up
+
+
 ;
 ;	We have an SIO so do the required SIO hdance
 ;

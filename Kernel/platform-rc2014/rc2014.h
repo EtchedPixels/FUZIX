@@ -16,9 +16,12 @@ __sfr __at (SIO1_BASE + 1) SIOC_D;
 __sfr __at (SIO1_BASE + 2) SIOD_C;
 __sfr __at (SIO1_BASE + 3) SIOD_D;
 
-/* ACIA is at same address as SIO but we autodetect */
+/* The original RC2014 ACIA is partially decoded but notionally at 0x80.
+   ROMWBW however probes the 0xA0 alias and the later narrower decoding
+   boards are set to 0xA0 for ROMWBW use (eg 'The Missing Module'). That
+   also allows the two to co-exist */
 
-#define ACIA_BASE 0x80
+#define ACIA_BASE 0xA0
 __sfr __at (ACIA_BASE + 0) ACIA_C;
 __sfr __at (ACIA_BASE + 1) ACIA_D;
 

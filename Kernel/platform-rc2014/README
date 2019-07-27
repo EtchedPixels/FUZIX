@@ -16,7 +16,8 @@ Supported Hardware
 	management subsystem of the Zeta V2. It replaces the RC2014's
 	default ROM and RAM boards.
 
-	A serial IO board. Either an RC2014 SIO/2 board or a 68B50 ACIA board.
+	A serial IO board. Either an RC2014 SIO/2 board or a later narrow
+	decoding 68B50 adapter (eg 'The Missing Module') set to 0xA0.
 
 	DS1302 RTC at 0xC0	} You must have one or both
 	RC2014 CTC at 0x88	} CTC strongly recommended (eg SC102)

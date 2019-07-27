@@ -143,8 +143,6 @@ void init_hardware_c(void)
 	ramsize = 512;
 	procmem = 512 - 80;
 
-	/* Set the right console for kernel messages */
-
 	/* FIXME: When ROMWBW handles 16550A or second SIO, or Z180 as
 	   console we will need to address this better */
 	if (z180_present) {
@@ -153,12 +151,14 @@ void init_hardware_c(void)
 		register_uart(UART_Z180, Z180_IO_BASE + 1, &z180_uart1);
 	}
 
-	if (acia_present) {
-		register_uart(UART_ACIA, 0x80, &acia_uart);
-	} else {
+	/* Set the right console for kernel messages */
+	/* ROMWBW favours the SIO then the ACIA */
+	if (sio_present) {
 		register_uart(UART_SIO, 0x80, &sio_uart);
 		register_uart(UART_SIO, 0x82, &sio_uartb);
 	}
+	if (acia_present)
+		register_uart(UART_ACIA, 0xA0, &acia_uart);
 }
 
 void pagemap_init(void)
@@ -183,7 +183,7 @@ void pagemap_init(void)
 		ds1302_init();
 
 	if (acia_present)
-		kputs("6850 ACIA detected at 0x80.\n");
+		kputs("6850 ACIA detected at 0xA0.\n");
 	if (sio_present)
 		kputs("Z80 SIO detected at 0x80.\n");
 
