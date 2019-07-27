@@ -117,6 +117,170 @@ init_hardware:
 	ld hl,#60		; We lose 4K to common space
         ld (_procmem), hl
 
+	;
+	;	Look for an ACIA
+	;
+	in a,(ACIA_C)
+	bit 1,a
+	jr z, try_sio
+	ld a,#ACIA_RESET
+	out (ACIA_C),a
+	; TX should now have gone
+	in a,(ACIA_C)
+	bit 1,a
+	jr nz, try_sio
+	;	Set up the ACIA
+
+        ld a, #ACIA_RTS_LOW_A
+        out (ACIA_C),a         		; Initialise ACIA
+	ld a,#1
+	ld (_acia_present),a
+	jp serial_up
+
+
+try_sio:
+	; Play guess the serial port
+	;
+	; This could be the ACIA control port. If so we mash the settings
+	; up but that is ok as we will put them back in the SIO probe
+	;
+
+	xor a
+	ld c,#SIOA_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, not_sio_either
+
+	; Repeat the check on SIO B
+
+	xor a
+	ld c,#SIOB_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr nz, is_sio
+
+	; Now sanity check the vector register
+
+	ld a,#2
+	out (c),a
+	ld a,#0xA0
+	out (c),a
+	ld a,#2
+	out (c),a
+	in a,(c)
+	and #0xF0
+	cp #0xA0
+	jr z, is_sio
+
+	ld a,#2
+	out (c),a
+	ld a,#0x50
+	out (c),a
+	ld a,#2
+	out (c),a
+	in a,(c)
+	and #0xF0
+	cp #0x50
+	jr z, is_sio
+ 
+
+	;
+	; Doomed I say .... doomed, we're all doomed
+	;
+	; At least until RC2014 grows a nice keyboard/display card!
+	;
+	; Fall through and pray
+	;
+not_sio_either:
+;
+;	We have an SIO so do the required SIO hdance
+;
+is_sio:	ld a,#1
+	ld (_sio_present),a
+
+	ld hl,#sio_setup
+	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + SIOB_C		; and to SIOB_C
+	otir
+
+	xor a
+	ld c,#SIOC_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, serial_up
+
+	; Repeat the check on SIO B
+	; We have to be careful here because it could be that this is
+	; a mirror of the first SIO! Fortunately channel B WR2 can be read
+	; as RR2 so we can write the vector to one and check the other, then
+	; write a different vector and check again. If they both change
+	; it's aliased, if not it really is two interfaces.
+
+	ld a,#2
+	out (SIOB_C),a			; vector
+	ld a,#0xF0
+	out (SIOB_C),a			; vector is now 0xFX
+	ld a,#2
+	out (SIOD_C),a
+	in a,(SIOD_C)			; read it back on the second SIO
+	and #0xF0
+	cp #0xF0
+	jr nz, not_mirrored		; it's not a mirror, might not be an SIO
+
+	; Could be chance or a soft boot
+
+	ld a,#2
+	out (SIOB_C),a
+	xor a
+	out (SIOB_C),a
+	ld a,#2
+	out (SIOD_C),a
+	in a,(SIOD_C)
+	and #0xF0
+	jr z, serial_up			; It's a mirage
+
+not_mirrored:
+	xor a
+	ld c,#SIOD_C
+	out (c),a			; RR0
+	in b,(c)			; Save RR0 value
+	inc a
+	out (c),a			; RR1
+	in a,(c)
+	cp b				; Same from both reads - not an SIO
+
+	jr z, serial_up
+
+	ld a,#0x01
+	ld (_sio1_present),a
+
+	ld hl,#sio_setup
+	ld bc,#0xA00 + SIOC_C		; 10 bytes to SIOC_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + SIOD_C		; and to SIOD_C
+	otir
+
+
+serial_up:
+
 	xor a			; Kernel + ROM (works on SC108 and SC114)
 	out (0x38),a		;
 
@@ -235,140 +399,6 @@ old_sc108:
 	ld ix,#0
 	ld bc,#0x68
 	call ldir_to_user
-
-	; Play guess the serial port
-	;
-	; This could be the ACIA control port. If so we mash the settings
-	; up but that is ok as we will port them back in the ACIA probe
-	;
-
-	xor a
-	ld c,#SIOA_C
-	out (c),a			; RR0
-	in b,(c)			; Save RR0 value
-	inc a
-	out (c),a			; RR1
-	in a,(c)
-	cp b				; Same from both reads - not an SIO
-
-	jr z, try_acia
-
-	; Repeat the check on SIO B
-
-	xor a
-	ld c,#SIOB_C
-	out (c),a			; RR0
-	in b,(c)			; Save RR0 value
-	inc a
-	out (c),a			; RR1
-	in a,(c)
-	cp b				; Same from both reads - not an SIO
-
-	jr nz, is_sio
-
-try_acia:
-	;
-	;	Look for an ACIA
-	;
-	ld a,#ACIA_RESET
-	out (ACIA_C),a
-	; TX should now have gone
-	in a,(ACIA_C)
-	bit 1,a
-	jr z, not_acia_either
-	;	Set up the ACIA
-
-        ld a, #ACIA_RTS_LOW_A
-        out (ACIA_C),a         		; Initialise ACIA
-	ld a,#1
-	ld (_acia_present),a
-	jp serial_up
-
-	;
-	; Doomed I say .... doomed, we're all doomed
-	;
-	; At least until RC2014 grows a nice keyboard/display card!
-	;
-not_acia_either:
-	jp serial_up
-;
-;	We have an SIO so do the required SIO hdance
-;
-is_sio:	ld a,#1
-	ld (_sio_present),a
-
-	ld hl,#sio_setup
-	ld bc,#0xA00 + SIOA_C		; 10 bytes to SIOA_C
-	otir
-	ld hl,#sio_setup
-	ld bc,#0x0A00 + SIOB_C		; and to SIOB_C
-	otir
-
-	xor a
-	ld c,#SIOC_C
-	out (c),a			; RR0
-	in b,(c)			; Save RR0 value
-	inc a
-	out (c),a			; RR1
-	in a,(c)
-	cp b				; Same from both reads - not an SIO
-
-	jr z, serial_up
-
-	; Repeat the check on SIO B
-	; We have to be careful here because it could be that this is
-	; a mirror of the first SIO! Fortunately channel B WR2 can be read
-	; as RR2 so we can write the vector to one and check the other, then
-	; write a different vector and check again. If they both change
-	; it's aliased, if not it really is two interfaces.
-
-	ld a,#2
-	out (SIOB_C),a			; vector
-	ld a,#0xF0
-	out (SIOB_C),a			; vector is now 0xFX
-	ld a,#2
-	out (SIOD_C),a
-	in a,(SIOD_C)			; read it back on the second SIO
-	and #0xF0
-	cp #0xF0
-	jr nz, not_mirrored		; it's not a mirror, might not be an SIO
-
-	; Could be chance or a soft boot
-
-	ld a,#2
-	out (SIOB_C),a
-	xor a
-	out (SIOB_C),a
-	ld a,#2
-	out (SIOD_C),a
-	in a,(SIOD_C)
-	and #0xF0
-	jr z, serial_up			; It's a mirage
-
-not_mirrored:
-	xor a
-	ld c,#SIOD_C
-	out (c),a			; RR0
-	in b,(c)			; Save RR0 value
-	inc a
-	out (c),a			; RR1
-	in a,(c)
-	cp b				; Same from both reads - not an SIO
-
-	jr z, serial_up
-
-	ld a,#0x01
-	ld (_sio1_present),a
-
-	ld hl,#sio_setup
-	ld bc,#0xA00 + SIOC_C		; 10 bytes to SIOC_C
-	otir
-	ld hl,#sio_setup
-	ld bc,#0x0A00 + SIOD_C		; and to SIOD_C
-	otir
-
-
-serial_up:
 
         ; ---------------------------------------------------------------------
 	; Initialize CTC
@@ -503,6 +533,17 @@ _sio2_otir:
 ;
 outchar:
 	push af
+	ld a,(_acia_present)
+	or a
+	jr z, ocloop_sio
+
+ocloop_acia:
+	in a,(ACIA_C)
+	and #0x02
+	jr z, ocloop_acia
+	pop af
+	out (ACIA_D),a
+	ret
 	; wait for transmitter to be idle
 ocloop_sio:
         xor a                   ; read register 0

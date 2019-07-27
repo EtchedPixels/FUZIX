@@ -45,13 +45,20 @@ $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ loader.tmp loader.bin fuzix.com
+	rm -f $(OBJS) $(JUNK)  core *~
+	rm -f loader.tmp loader.bin loader-acia.bin fuzix.com
 
-image:	loader.bin
+image:	loader.bin loader-acia.bin
 
 loader.bin: loader.s
 	sdasz80 -o loader.s
 	sdldz80 -i loader.rel
 	makebin -s 65536 loader.ihx loader.tmp
 	dd if=loader.tmp bs=256 skip=208 of=loader.bin
+
+loader-acia.bin: loader-acia.s
+	sdasz80 -o loader-acia.s
+	sdldz80 -i loader-acia.rel
+	makebin -s 65536 loader-acia.ihx loader.tmp
+	dd if=loader.tmp bs=256 skip=208 of=loader-acia.bin
 
