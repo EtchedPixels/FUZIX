@@ -15,12 +15,11 @@
 ;	The end must actually be the byte after we need. ROMWBW explodes
 ;	if given F200 F3FF !
 ;
+;	ROMWBW 2.9.1 has an undocumented antisocial habit - it enables
+;	interrupts even if called with them disabled. Work around this
+;	by turnign them back off when we need too
+;
 		.module boot
-
-		.z180
-
-	.include "kernel.def"
-	.include "../cpu-z180/z180.def"
 
 .area	    BOOT	(ABS)
 	.org	    0xF000
@@ -41,7 +40,7 @@
 	.byte 0		; minor
 	.byte 0		; update
 	.byte 0		; patch
-	.ascii 'Fuzix 111 Loader'
+	.ascii 'Fuzix 126 Loader'
 	.byte '$'	; indicate valid label
 	.word 0		; no patch
 	.word 0xF200	; load target
@@ -57,7 +56,20 @@
 ;	it's has RST 8 interfaces for this rather than just passing
 ;	them in a register.
 ;
+;	For now we can do a simple load as we fit in 64K easily. If we
+;	add networking we might have to get clever.
+;
 bootit:
+	ld a,#0x01
+	out (0x0D),a
+
+	ld bc, #0x0100
+	ld e, #13
+	rst 8
+	ld bc, #0x0100
+	ld e, #10
+	rst 8
+
 	ld sp, #0xFE00		; SP as high as we can
 	ld bc, #0xF8F0		; Get the CPU info into H L and speed into
 				; DE
@@ -74,63 +86,96 @@ bootit:
 	ld bc, #0xF8E0		; Get boot sysinfo into DE
 	rst 8
 
+	ld a,#0x03
+	out (0x0D),a
+
 	ld b, #0x13		; ROMWBW disk read request
 	ld c, d			; Device (same as booted off)
-
-	call load_16k
-	call load_16k
-	call load_16k
-	call load_16k
-
-	;
-	;	Map the kernel low 16K block and jump into it
-	;
-	di
-	ld a,#0x80		; First RAM bank
-	out (MMU_BBR),a	; And go
-	jp 0x0100
-
-load_16k:
 	ld hl, #0x8000		; Loading at 0x8000 for the moment
 	ld e, #32		; 32 sectors (16K)
 	push bc
 	rst 8			; Can error but if so wtf do we do ?
+	or a
+	jr nz,failed
 
-	call dma_bank
+	ld a,#0x07
+	out (0x0D),a
 
+	ld hl,#0x8100		; Don't copy first 256 bytes over
+	ld de,#0x0100
+	ld bc,#0x3F00		; We've loaded 0100-4000
+	ldir
+
+	ld a,#0x0F
+	out (0x0D),a
+
+	;
+	;	Same process again for second 16K of kernel
+	;
 	pop bc
-	ret
-	
-dma_bank:
-	; Copy 16K into the next block
+	ld hl,#0x8000
+	ld e,#32		; Load the next 16K
+	push bc
+	rst 8
+	or a
+	jr nz,failed
+
+	ld a,#0x1F
+	out (0x0D),a
+
+	ld hl,#0x8000		; Move it into place
+	ld de,#0x4000
 	ld bc,#0x4000
-	ld d,#0x80
-	out0 (DMA_BCR0H),b		; 16K to copy
-	out0 (DMA_BCR0L),c
+	ldir
 
-	in0 a,(MMU_BBR)			; and from the current CPU bank
-	out0 (DMA_SAR0B),a		;
-	out0 (DMA_SAR0H),c		; From 0x8000
-	out0 (DMA_SAR0L),d		;
+	ld a,#0x3F
+	out (0x0D),a
+	;
+	;	And the third 16K
+	;
+	pop bc
+	ld hl,#0x8000		; Low the next 16K
+	ld e, #32
+	push bc
+	rst 8
+	or a
+	jr nz,failed
 
-	ld de,(dma_target)		; target in e, page in d
-	out0 (DMA_DAR0B),d		; 0x80 - first RAM bank
-	out0 (DMA_DAR0H),e		; 16K chunk
-	out0 (DMA_DAR0L),c		; Always 0 as aligned
-	out0 (DMA_DSTAT),b		; 0x40 (enable DMA)
-	; And CPU will continue once the DMA is done
+	; No need to put it in place
 
-	ld a,#0x40
-	add e				; Move on 0x4000 bytes
-	ld (dma_target),a
-	ret nz
-	inc d
-	ld a,d
-	ld (dma_page),a
-	ret
 
-dma_target:
-	.byte 0x00
-dma_page:
-	.byte 0x80
+	ld a,#0x7F
+	out (0x0D),a
+	;
+	;	Final 16K
+	;
+	pop bc
+	ld hl,#0xC000		; Now load 0xC000
+	ld e, #24		; takes us up to EFFF
+	rst 8
+	or a
+	jr nz,failed
 
+	; Into the kernel
+
+	ld a,#0xFF
+	out (0x0D),a
+	di
+	jp 0x0100
+
+failed:
+	ld bc,#0x0100
+	ld e,#'E'
+	rst 8
+	di
+	ld a,#0xF0
+flasher:
+	out (0x0D),a
+	ld bc,#0x0020
+wait:
+	djnz wait
+	dec c
+	jr nz, wait
+	ld c,#0x20
+	cpl
+	jr wait

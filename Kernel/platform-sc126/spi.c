@@ -61,7 +61,7 @@ void sd_spi_clock(bool go_fast)
     CSIO_CNTR = c;
 }
 
-void sd_spi_raise_cs(void)
+void sd_spi_lower_cs(void)
 {
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
@@ -69,7 +69,7 @@ void sd_spi_raise_cs(void)
     gpio_set(0x0C, 0x08 >> sd_drive);
 }
 
-void sd_spi_lower_cs(void)
+void sd_spi_raise_cs(void)
 {
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));

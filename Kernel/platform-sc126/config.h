@@ -39,16 +39,16 @@
 /* Hardware parameters : internal hardware at 0xC0-0xFF */
 #define Z180_IO_BASE       0xC0
 
-#define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
+#define MAX_BLKDEV 4	    /* 2 IDE drives, 2 SD drives */
 
 /* SD via CSIO : Needs an additional GPIO pin */
 #define CONFIG_SD
-#define SD_DRIVE_COUNT 1
+#define SD_DRIVE_COUNT 2
 
 #define NUM_DEV_TTY	2
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)
-#define TTY_INIT_BAUD B115200	/* Hardwired generally */
+#define TTY_INIT_BAUD B38400	/* Matches ROMWBW */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 

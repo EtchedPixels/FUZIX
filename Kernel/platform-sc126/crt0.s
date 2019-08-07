@@ -52,12 +52,9 @@
         .area _CODE
 init:
         di
+	ld a,#0xFE
+	out (0x0D),a
         ld sp, #kstack_top
-	ld a,#(OS_BANK + FIRST_RAM_BANK)
-	out (MMU_BBR),a
-	out (MMU_CBR),a
-	ld a,#0xF0
-	out (MMU_CBAR),a
 
         ; move the common memory where it belongs    
         ld hl, #s__DATA
@@ -75,11 +72,19 @@ init:
         ld (hl), #0
         ldir
 
+	ld a,#0xFC
+	out (0x0D),a
         ; Configure memory map
         call init_early
 
+	ld a,#0xF8
+	out (0x0D),a
+
         ; Hardware setup
         call init_hardware
+
+	ld a,#0xF0
+	out (0x0D),a
 
         ; Call the C main routine
         call _fuzix_main

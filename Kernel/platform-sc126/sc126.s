@@ -36,7 +36,7 @@ _bufpool:
         .area _DISCARD
 
 init_early:
-	ret
+	jp z180_init_early
 
 init_hardware:
         ; enable ASCI interrupts

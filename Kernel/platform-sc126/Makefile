@@ -49,6 +49,7 @@ z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
 #
 image: bootblock
 	cat boot-romwbw.bin >fuzix.romwbw
+	dd if=/dev/zero bs=256 count=1 >>fuzix.romwbw
 	cat ../fuzix.bin >>fuzix.romwbw
 
 bootblock:

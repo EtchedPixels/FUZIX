@@ -1,20 +1,22 @@
 Initial 'it compiles' test prototype.
 
-
 This is Fuzix for the SC126 Z180 RC2014 system with a suitable linear RAM/ROM
 module (RAM is expected to fill the upper 512K) booting from ROMWBW
 
 Based upon the N8VEM Mark IV port by Will Sowerbutts <will@sowerbutts.com>
 
-Cards required:
-SC126 SBC
+Required:
+- SC126 SBC set to boot from ROMWBW
+
+Options:
+ - RC2014 CF adapter at 0x10
 
 Not yet supported but planned:
+ - SPI chip select expansion
  - RC2014 serial/ctc interfaces (only the onboard ports are handled)
- - RC2014 RTC
  - RC2014 TMS9918A
- - RC2014 CF adapter
  - Swap
+ - Other generic Z180 RC2014 boards with ROMWBW (Black Adder, Tom's Z180 etc)
 
 To set up
 Write fuzix.romwbw to blocks 2+
@@ -27,24 +29,23 @@ a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
 
 TODO:
 - Identify SC111 v SC126 so we can merge the ports
-- Move RTC to 0x0C
-- On SC126
-	- drive 0x0D 8 LED port
-	- bitbang I2C port
-	- 0x0C is
-		7: RTC d out | I2C SDA
-		6: RTC sclk
-		5: /RTC_WE
-		4: /RTC_CE
-		3: /SD_CS2 	(really SPI CS2)
-		2: /SD_CS1	(and SPI CS1)
-		1: Flash selection (if not set by user)
-		0: I2C SCL
 
-	So 0x0C high 4 bits are the same as the classic DS1302 but we need
-	a register tracking bits at all time.
+Notes:
 
-- We should also support Black Adder and Tom's Z180 (and probably any other
-  generic Z180 / linear 512/512 / CF )
+On SC126
+- drive 0x0D 8 LED port (WO)
+- bitbang I2C port
+- 0x0C is
+	7: RTC d out | I2C SDA
+	6: RTC sclk
+	5: /RTC_WE
+	4: /RTC_CE
+	3: /SD_CS2 	(really SPI CS2)
+	2: /SD_CS1	(and SPI CS1)
+	1: Flash selection (if not set by user)
+	0: I2C SCL
+
+So 0x0C high 4 bits are the same as the classic DS1302 but we need
+a register tracking bits.
 
 

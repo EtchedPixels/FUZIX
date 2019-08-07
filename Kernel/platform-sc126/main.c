@@ -24,6 +24,12 @@ void platform_discard(void)
 	}
 }
 
+static uint8_t light = 0xF0;
+static uint8_t lightdir = 1;
+static uint8_t lightct = 0;
+
+__sfr __at 0x0D led;
+
 void z180_timer_interrupt(void)
 {
 	unsigned char a;
@@ -32,11 +38,23 @@ void z180_timer_interrupt(void)
 	a = TIME_TMDR0L;
 	a = TIME_TCR;
 	timer_interrupt();
+	if (++lightct & 7)
+		return;
+	if (lightdir)
+		light >>= 1;
+	else
+		light <<= 1;
+	if (light == 0x0F)
+		lightdir = 0;
+	else if (light == 0xF0)
+		lightdir = 1;
+	led = light;
 }
 
 void platform_idle(void)
 {
 	/* Let's go to sleep while we wait for something to interrupt us */
+	led = 0xFF;
 	__asm halt __endasm;
 }
 
@@ -59,7 +77,7 @@ void platform_interrupt(void)
 
 __sfr __at 0x0C gpio;
 
-static uint8_t gpio_shadow;
+static uint8_t gpio_shadow = 0x0C;
 
 void gpio_set(uint8_t mask, uint8_t val)
 {
