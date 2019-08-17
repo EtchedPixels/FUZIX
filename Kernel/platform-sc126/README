@@ -29,6 +29,12 @@ a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
 
 TODO:
 - Identify SC111 v SC126 so we can merge the ports
+- Add "turbo" option for clock doubling
+- Add wait state control option for mem/io/cf wait states
+- More CF testing
+- Can we do CF with DMA1 ? (ought to get us to 3MBytes/second which is about the
+PIO 0 limit with 0 mem 1 ide wait). 36MHz would get us closer to 6 but less
+due to wait stating so probably ok as PIO1.
 
 Notes:
 
