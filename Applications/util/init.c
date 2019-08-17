@@ -729,6 +729,11 @@ static int baudmatch(int fd, const char *p)
 	return ttmp.c_cflag & CBAUD;
 }
 
+static struct winsize winsz = {
+	25, 80
+};
+
+
 static pid_t getty(const char **argv, const char *id)
 {
 	int fdtty, pid;
@@ -810,13 +815,12 @@ static pid_t getty(const char **argv, const char *id)
 				if (argv[2])
 					envset("TERM", argv[2]);
 				if (argv[3] && argv[4]) {
-					static struct winsize winsz;
 					winsz.ws_col = atoi(argv[3]);
 					winsz.ws_row = atoi(argv[4]);
-					if (ioctl(fdtty, TIOCSWINSZ, &winsz))
-						perror("winsz");
 				}
 			}
+			if (ioctl(fdtty, TIOCSWINSZ, &winsz))
+				perror("winsz");
 			/* Figure out the baud bits. It's cheaper to do this with strings
 			   than ulongs! */
 			tref.c_cflag |= baudmatch(fdtty, argv[1]);
