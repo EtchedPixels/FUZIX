@@ -258,7 +258,7 @@ init_hardware:
 	    ld (_ramsize),hl
 
 	    ; We can now check for a Rememorizer. If we have one then we can
-	    ; do extra games with the memry banking
+	    ; do extra games with the memory banking
 	    call find_rememorizer
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
             ld hl, #0
@@ -270,7 +270,6 @@ init_hardware:
 
 	    ld bc,(_vdpport)
 	    ; Play with status register 2
-	    dec c
 	    ld a,#0x8F
 	    out (c),a
 	    nop
