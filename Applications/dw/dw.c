@@ -44,7 +44,8 @@ int main( int argc, char *argv[]){
 
 		tcgetattr( fddw, &prior );
 		tcgetattr( fddw, &new );
-		new.c_lflag = ~ECHO;
+		new.c_lflag &= ~ECHO;
+		new.c_cflag |= HUPCL;
 		tcsetattr( fddw, TCSANOW, &new );
 	
 		write( fddw, "dw ", 3);
