@@ -32,7 +32,7 @@ struct termios {
 #define BRKINT	0x0001
 #define ICRNL	0x0002	/* Supported */
 #define IGNBRK	0x0004
-#define IGNCR	0x0008
+#define IGNCR	0x0008  /* Supported */
 #define IGNPAR	0x0010
 #define INLCR	0x0020	/* Supported */
 #define INPCK	0x0040
@@ -43,7 +43,7 @@ struct termios {
 #define PARMRK	0x0800
 #define IXON	0x1000
 
-#define _ISYS	(ICRNL|INLCR|ISTRIP)	/* Flags supported by core */
+#define _ISYS	(IGNCR|ICRNL|INLCR|ISTRIP)	/* Flags supported by core */
 
 #define OPOST	0x0001	/* Supported */
 #define OLCUC	0x0002
