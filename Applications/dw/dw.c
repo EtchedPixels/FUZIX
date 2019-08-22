@@ -44,12 +44,13 @@ int main( int argc, char *argv[]){
 
 		tcgetattr( fddw, &prior );
 		tcgetattr( fddw, &new );
-		new.c_lflag = ~ECHO;
+		new.c_lflag &= ~ECHO;
+		new.c_cflag |= HUPCL;
+		new.c_iflag |= IGNCR;
 		tcsetattr( fddw, TCSANOW, &new );
 	
 		write( fddw, "dw ", 3);
 		write( fddw, ibuf, len );
-
 		while(1){
 			len=read( fddw, obuf, 128 );
 			if( len<=0 ){
