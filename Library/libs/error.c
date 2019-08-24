@@ -3,6 +3,8 @@
  * under the GNU Library General Public License.
  *
  * Rewritten by Alan Cox to use a binary file format and save a lot of space
+ *
+ * TODO: support loading a single error string for compactness
  */
 
 #include <unistd.h>
