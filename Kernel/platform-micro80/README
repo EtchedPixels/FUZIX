@@ -21,6 +21,9 @@ Stuff To Do
 o	Use PIO properly (and in emulator)
 	(joysticks and SD card etc)
 o	Soft ints ?
+o	Would kernel from 0x1000-EFFF only with a common at F000 and
+	0000-0FFF whilst common kept user only make more sense. We get
+	the same sized user space but gain the ability to run CP/M emulation.
 
 Emulation
 
