@@ -1,6 +1,6 @@
 TARGET_LIST = $(wildcard platform-*)
 
-export VERSION = "0.3rc2"
+export VERSION = "0.3"
 export SUBVERSION = ""
 export ROOT_DIR
 
