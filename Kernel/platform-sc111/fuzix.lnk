@@ -36,9 +36,6 @@ platform-sc111/discard.rel
 platform-sc111/devtty.rel
 platform-sc111/devide.rel
 platform-sc111/devide_discard.rel
-platform-sc111/spi.rel
-platform-sc111/devsd.rel
-platform-sc111/devsd_discard.rel
 platform-sc111/mbr.rel
 platform-sc111/blkdev.rel
 platform-sc111/monitor.rel

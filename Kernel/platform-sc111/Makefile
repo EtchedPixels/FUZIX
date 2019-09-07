@@ -1,8 +1,8 @@
 ASRCS = crt0.s z180.s commonmem.s sc111.s monitor.s
-CSRCS += devices.c main.c devtty.c spi.c
+CSRCS += devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/devsd_discard.c
-DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c  ../dev/devsd.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
+DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
 DASRCS = ../dev/ds1302_rc2014.s
 
 AOBJS = $(ASRCS:.s=.rel)
