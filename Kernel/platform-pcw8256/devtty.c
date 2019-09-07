@@ -36,27 +36,11 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS,
-	_LSYS
-};
-
-
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	_OSYS,
 	_CSYS,	/* For now - need to do DART code */
-	_LSYS
-};
-
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	uart_mask,
-	uart_mask,
+	_CSYS	/* For now - need to do DART code */
 };
 
 /* console driver for errors etc */

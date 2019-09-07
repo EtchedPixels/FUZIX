@@ -45,26 +45,11 @@ static uint8_t sleeping;
  *	TTY masks - define which bits can be changed for each port
  */
 
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	/* FIXME: break */
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	/* FIXME CTS/RTS */
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS,
-};
-
-static tcflag_t prop_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart_mask,
-	prop_mask
+	_CSYS
 };
 
 

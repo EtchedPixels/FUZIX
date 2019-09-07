@@ -23,20 +23,13 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
 #endif
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
 /* TODO: stty support for  the Z180 ports */
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	console_mask,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS,
+	_CSYS,
 #ifdef CONFIG_PROPIO2
-	console_mask
+	_CSYS
 #endif
 };
 

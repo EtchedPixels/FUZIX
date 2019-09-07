@@ -18,21 +18,13 @@ static uint8_t sleeping;
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1];
 
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	/* FIXME: break */
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	/* FIXME CTS/RTS */
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS,
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart_mask,
-	uart_mask,
-	uart_mask,
-	uart_mask
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
 };
 
 /* FIXME: CBAUD general handling - may need 0.4 changes to fix */

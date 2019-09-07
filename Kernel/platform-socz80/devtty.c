@@ -15,18 +15,11 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 }
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
 /* FIXME: will do for now though */
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	console_mask
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS,
+	_CSYS
 };
 
 /* console helper */
