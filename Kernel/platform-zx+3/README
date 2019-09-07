@@ -94,3 +94,5 @@ Would give direct mapped video
 Parent first fork mode
 
 Turn on interrupts during swapping
+
+Generic 8bit IDE support
