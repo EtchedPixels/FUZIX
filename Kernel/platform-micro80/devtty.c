@@ -17,17 +17,10 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-static tcflag_t uart0_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart0_mask,
-	uart0_mask,
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS
 };
 
 uint8_t sio_r[] = {
