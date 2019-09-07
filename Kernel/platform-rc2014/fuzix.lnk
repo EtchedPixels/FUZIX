@@ -54,4 +54,5 @@ platform-rc2014/ds1302.rel
 platform-rc2014/ds1302_discard.rel
 platform-rc2014/ds1302_rc2014-banked.rel
 platform-rc2014/net_native.rel
+platform-rc2014/z80dma.rel
 -e

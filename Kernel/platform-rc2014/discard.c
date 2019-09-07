@@ -202,6 +202,10 @@ void pagemap_init(void)
 	if (tms9918a_present)
 		kputs("TMS9918A at 0x98/99.\n");
 
+	dma_present = !probe_z80dma();
+	if (dma_present)
+		kputs("Z80DMA detected at 0x04.\n");
+
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;

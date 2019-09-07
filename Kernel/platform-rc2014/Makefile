@@ -6,6 +6,7 @@ DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014-banked.s
+DASRCS += ../dev/z80dma.s
 NSRCS = ../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)

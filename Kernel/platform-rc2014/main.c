@@ -18,6 +18,7 @@ uint8_t sio_present;
 uint8_t sio1_present;
 uint8_t z180_present;
 uint8_t tms9918a_present;
+uint8_t dma_present;
 
 /* From ROMWBW */
 uint16_t syscpu;
