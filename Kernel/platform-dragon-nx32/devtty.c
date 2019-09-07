@@ -45,35 +45,21 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf7, tbuf7, tbuf7, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	/* Console */
 	_CSYS,
-	_LSYS
-};
-
-static tcflag_t acia_mask[4] = {
-	_ISYS,
-	_OSYS,
+	/* 9128 */
+	_CSYS,
+	/* VC */
+	_CSYS,
+	_CSYS,
+	/* ACIA */
 	/* Review flow control and CSTOPB TODO */
 	_CSYS|CBAUD|CSIZE|PARENB|PARODD|PARMRK,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	/* Console */
-	console_mask,
-	/* 9128 */
-	console_mask,
-	/* VC */
-	console_mask,
-	console_mask,
-	/* ACIA */
-	acia_mask,
 	/* Drivewire */
-	console_mask,
-	console_mask
+	_CSYS,
+	_CSYS
 };
 
 uint8_t vtattr_cap = VTA_INVERSE|VTA_UNDERLINE|VTA_ITALIC|VTA_BOLD|
