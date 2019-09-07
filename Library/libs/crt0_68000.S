@@ -18,4 +18,4 @@ _start:
 	move.l 4(sp),__argv
 	jsr main
 	move.l d0,-(sp)
-	jsr _exit
+	jsr exit
