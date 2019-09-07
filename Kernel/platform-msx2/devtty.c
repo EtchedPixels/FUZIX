@@ -44,12 +44,12 @@ static tcflag_t console_mask[4] = {
 	_LSYS
 };
 
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	console_mask,
-	console_mask,
-	console_mask
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS
 };
 
 uint8_t keyboard[11][8];

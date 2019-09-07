@@ -59,27 +59,13 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
  *	TTY masks - define which bits can be changed for each port
  */
 
-static tcflag_t dart_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS,
+	_CSYS,
 	/* FIXME CTS/RTS, CSTOPB */
 	CSIZE | CBAUD | PARENB | PARODD | _CSYS,
-	_LSYS,
-};
-
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	console_mask,
-	dart_mask,
-	dart_mask
+	CSIZE | CBAUD | PARENB | PARODD | _CSYS,
 };
 
 
