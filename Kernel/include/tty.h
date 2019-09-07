@@ -220,7 +220,7 @@ struct tty {
 #define CTRL(x)		((x)&0x1F)
 
 extern struct tty ttydata[NUM_DEV_TTY + 1];
-extern tcflag_t *termios_mask[NUM_DEV_TTY + 1];
+extern tcflag_t termios_mask[NUM_DEV_TTY + 1];
 
 extern void tty_init(void);
 

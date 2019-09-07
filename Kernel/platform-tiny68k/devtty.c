@@ -43,18 +43,10 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 
 static uint8_t sleeping;
 
-/* For now */
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS|CBAUD|PARENB|PARODD|CSTOPB|CSIZE|CRTSCTS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	console_mask
+	_CSYS|CBAUD|PARENB|PARODD|CSTOPB|CSIZE|CRTSCTS,
 };
 
 static volatile uint8_t *uart_base = (volatile uint8_t *)0xFFF000;
