@@ -17,18 +17,11 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   tbuf3,   tbuf3,   tbuf3,   TTYSIZ,   0,   TTYSIZ/2 },
 };
 
-tcflag_t uart_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	CBAUD|CSTOPB|_CSYS,
-	_LSYS,
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart_mask,
-	uart_mask,
-	uart_mask
+	CBAUD|CSTOPB|_CSYS,
+	CBAUD|CSTOPB|_CSYS
 };
 
 static uint8_t ttypoll;
