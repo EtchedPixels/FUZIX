@@ -26,4 +26,7 @@ extern uint8_t fd765_sectors;
 extern uint8_t fd765_drive;
 extern uint8_t fd765_is_user;
 
+extern uint8_t fdc765_present;
+extern uint8_t fdc765_ds;		/* Double sided ? */
+
 #endif /* __DEVFDC765_DOT_H__ */

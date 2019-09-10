@@ -3,6 +3,11 @@
  *	Extracted from the Amstrad NC200 driver by David Given
  *
  *	The core work is in the platform specific asm file.
+ *
+ *
+ *	TODO:
+ *	Device types so we know about 40/80 and sides (and not present)	
+ *	Asm C command issue hook for probing
  */
 
 #include <kernel.h>
@@ -20,7 +25,7 @@ static uint8_t trackpos[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 int devfd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
-    if(minor >= FDC765_MAX_FLOPPY) {
+    if(minor >= FDC765_MAX_FLOPPY || !(fdc765_present & (1 << minor)) ) {
         udata.u_error = ENODEV;
         return -1;
     }
@@ -77,22 +82,22 @@ static uint_fast8_t fd_recalibrate(void)
 /* Set up the controller for a given block, seek, and wait for it.
    By the time we are called the motor is assumed to be at speed */
 
-static uint_fast8_t fd_seek(uint16_t lba)
+static uint_fast8_t fd_seek(uint_fast8_t minor, uint16_t lba)
 {
     uint_fast8_t i = 0;
-    /* Hack for the moment until we introduce the proper floppy ioctls
-       here and in the platform code */
-#ifdef CONFIG_FDC765_DS
-    uint_fast8_t track2 = lba / 9;
-    uint_fast8_t newtrack = track2 >> 1;
+    uint_fast8_t track2, newtrack;
 
-    fd765_sector = (lba % 9) + 1;
-    fd765_head = track2 & 1;
-#else
-    uint_fast8_t newtrack = lba / 9;
-    fd765_sector = (lba % 9) + 1;
-    fd765_head = 0;
-#endif
+    if (fdc765_ds & (1 << minor)) {
+        track2 = lba / 9;
+        newtrack = track2 >> 1;
+
+        fd765_sector = (lba % 9) + 1;
+        fd765_head = track2 & 1;
+    } else {
+        newtrack = lba / 9;
+        fd765_sector = (lba % 9) + 1;
+        fd765_head = 0;
+    }
 
     if (newtrack != fd765_track)
     {
@@ -157,7 +162,7 @@ static int devfd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t is_raw)
                     continue;
             }
             /* Seek failed - no point trying the I/O again */
-            if (fd_seek(lba))
+            if (fd_seek(minor, lba))
                 continue;
 
             /* Not all machines can make the timing for this, or have
