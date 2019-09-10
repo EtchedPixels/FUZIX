@@ -1,316 +1,354 @@
 ;
 ;		765 Floppy Controller Support
 ;
+;	This is based upon the Amstrad NC200 driver by David Given
+;
+;	TODO
+;	Initialize drive step rate etc (we rely on the firmware for now)
+;	Step rate
+;	Head load/unload times
+;	Write off time	af
+;
+;	Or do we rely on the boot loader to have gotten this right (can't
+;	for drive > 0) FIXME
+;
+;	Compare behaviour and timings with CP/M
+;
 		.module fdc765
 
 		.include "kernel.def"
 		.include "../kernel-z80.def"
 
-		.globl	_fd765_read_sector
-		.globl	_fd765_write_sector
-		.globl  _fd765_cmd2
-		.globl  _fd765_cmd3
-		.globl  _fd765_intwait
-		.globl  _fd765_buffer
-		.globl  _fd765_user
-		.globl  _fd765_rw_data
-		.globl  _fd765_cmdbuf
-		.globl  _fd765_statbuf
+	.globl  map_process_always
+	.globl	map_kernel
 
-		.globl  map_process_always
-		.globl	map_kernel
-		.globl _int_disabled
+	.globl _fd765_do_nudge_tc
+	.globl _fd765_do_recalibrate
+	.globl _fd765_do_seek
+	.globl _fd765_do_read
+	.globl _fd765_do_write
+	.globl _fd765_do_read_id
+	.globl _fd765_motor_on
+	.globl _fd765_motor_off
+	.globl _fd765_intwait
+	.globl _fd765_send_cmd
 
-		.area _COMMONMEM
+	.globl _fd765_track
+	.globl _fd765_head
+	.globl _fd765_sector
+	.globl _fd765_status
+	.globl _fd765_buffer
+	.globl _fd765_is_user
+	.globl _fd765_sectors
+	.globl _fd765_drive
 
-		FD_ST	.equ	0
-		FD_DT	.equ	1
+	.globl _diskmotor
 
-;
-;	Issue a command to the 765 floppy controller. On the Amstrad we
-;	apparently have to twiddle our thumbs between bytes to keep the
-;	controller happy
-;
-fd765_sendcmd:
-		in a, (FD_ST)
-		add a, a
-		jr nc, fd765_sendcmd		; busy
-		jp m, fd765_sendabort		; not expecting command ??
-		outi				; byte out
-		ex (sp), hl			; controller time
-		ex (sp), hl
-		ex (sp), hl
-		ex (sp), hl
-		jr nz, fd765_sendcmd		; next byte ?
-		ret
-;
-;	Mid command send the controller said it was not expecting more
-;	command bytes. This means we screwed up
-;
-fd765_sendabort:
-		or a				; NZ
-		; FIXME
-		ret
+	.area _COMMONMEM
+
+FD_ST	.equ	0
+FD_DT	.equ	1
 
 ;
-;	Get the controller status int fd765_statbuf. Each command returns
-;	a series of status bytes. As with commands we have to collect the
-;	status data with pauses between bytes
+; Twiddle the Terminal Count line to the FDC.
 ;
-fd765_status:
-		ld hl, #_fd765_statbuf
-fd765_status_1:
-		in a, (FD_ST)
-		add a, a
-		jr nc, fd765_status_1
-	        add a, a
-		ret nc				; bit 6 was clear, so done
-		ini
-		ex (sp), hl			; waste time for the 765
-		ex (sp), hl			; to recover
-		ex (sp), hl
-		ex (sp), hl
-		jr fd765_status_1
+_fd765_do_nudge_tc:
+	ld a,#0x05
+	out (0xF8),a
+	; Do we need a delay ?
+	inc a
+	out (0xF8),a
+	ret
+
+; Writes A to the FDC data register.
+
+fd765_tx:
+	ld c,a
+fd765_tx_loop:
+	in a, (FD_ST)
+	add a
+	jr nc, fd765_tx_loop
+	add a
+	ret c				; controller doesn't want it ?
+	ld a,c
+	out (FD_DT), a			; check if need delays
+	ret
+
+; Reads bytes from the FDC data register until the FDC tells us to stop (by
+; lowering DIO in the status register).
+
+fd765_read_status:
+	ld hl, #_fd765_status
+	ld c, #FD_DT
+read_status_loop:
+	in a, (FD_ST)
+	add a,a
+	jr nc, read_status_loop 	; ...low, keep waiting 
+	add a,a
+	ret nc				; ...low, no more data
+	ini
+	jr read_status_loop		; next byte
+_fd765_status:
+	.ds 8				; 8 bytes of status data
+
+; Sends the head/drive byte of a command.
+
+send_head:
+	ld hl, (_fd765_head)		; l = head h = drive)
+	ld a, l
+	add a
+	add a
+	add h
+	jr fd765_tx
+
+; Performs a RECALIBRATE command.
+
+_fd765_do_recalibrate:
+	ld a, #0x07				; RECALIBRATE
+	call fd765_tx
+	ld a, (_fd765_drive)			; drive #
+	call fd765_tx
+	jr wait_for_seek_ending
+
+; Performs a SEEK command.
+
+_fd765_do_seek:
+	ld a, #0x0f				; SEEK
+	call fd765_tx
+	call send_head				; specified head, drive #0
+	ld a, (_fd765_track)			; specified track
+	call fd765_tx
+	jr wait_for_seek_ending
+_fd765_track:
+	.db 0
+_fd765_sector:
+	.db 0
 ;
-;	The status bytes are all sent. Return with HL (and A) holding the
-;	first status byte
+;	These two must remain adjacent see send_head
 ;
-fd765_status_a:
-		call fd765_status
-		ld h, #0
-		ld a, (_fd765_statbuf)
-		ld l, a
-		ret
+_fd765_head:
+	.db 0
+_fd765_drive:
+	.db 0
+
+; Waits for a SEEK or RECALIBRATE command to finish by polling SENSE INTERRUPT STATUS.
+wait_for_seek_ending:
+	ld a, #0x08				; SENSE INTERRUPT STATUS
+	call fd765_tx
+	call fd765_read_status
+
+	ld a, (_fd765_status)
+	bit 5, a				; SE, seek end
+	jr z, wait_for_seek_ending
+
+	; Now settle the head (FIXME: what is the right value ?)
+	ld a, #30		; 30ms
+wait_ms:
+	push bc
+wait_ms_loop:
+	ld b,#0xDC
+wait_ms_loop2:
+	dec b
+	jr nz, wait_ms_loop2
+	dec a
+	jr nz, wait_ms_loop
+	pop bc
+	ret
+
+_fd765_motor_off:
+	xor a
+	ld (_diskmotor),a
+	ld a,#0x08
+	out (0xF8),a
+	ret
+
+_fd765_motor_on:
+	ld a,(_diskmotor)
+	or a
+	ret nz
+	ld a,#0x09
+	out (0xF8),a
+	ld (_diskmotor),a
+	; Now wait for spin up - should we ask the fdc instead ?
+	ld e,#10		; FIXME right value ??
+wait2:
+	; The classic Z80 KHz timing loop
+	ld bc,#0x3548	; 3.548MHz
+wait1:
+	dec bc
+	ld a,b
+	or c
+	jr nz, wait1
+	dec e
+	jr nz, wait2
+	ret
+;
+; Reads a 512-byte sector, after having previously saught to the right track.
+;
+; We need to be doubly careful here as the 765A has a 'feature' whereby it
+; won't report an overrun on the last byte so we must always make timing
+;
+_fd765_do_read:
+	ld a, #0x46			; READ SECTOR MFM
+	call setup_read_or_write
+	ld a, (_fd765_is_user)
+	or a
+	push af
+	call nz, map_process_always
+
+	di				; performance critical,
+					; run with interrupts off
+
+	xor a
+	call fd765_tx			; send the final unused byte
+					; to fire off the command
+	ld hl, (_fd765_buffer)
+	ld a,(_fd765_sectors)
+	ld e,a
+	ld bc,#FD_DT
+
+read_loop:
+	in a,(FD_ST)
+	add a
+	jr nc, read_loop
+	add a
+	jp p, read_finished
+	ini
+	jr nz, read_loop
+	dec e
+	jr nz, read_loop
+
+read_finished:
+	ld (_fd765_buffer), hl
+	call _fd765_do_nudge_tc		; Tell FDC we've finished
+	ei
+
+	call fd765_read_status
+
+	pop af
+	ret z
+	jp map_kernel
 
 ;
-;	We rely on this exiting with C = FD_DT
+;	Write is much like read just the other direction
 ;
-;	General trick, we load B with the command length and C with the
-;	FD_DT register in one go
-;
+_fd765_do_write:
+					; interrupts off
+	ld a, #0x45			; WRITE SECTOR MFM
+	call setup_read_or_write
+
+	ld a, (_fd765_is_user)
+	or a
+	push af
+	call nz, map_process_always
+
+	di
+
+	xor a
+	call fd765_tx			; send the final unused 0 byte
+					; to fire off the command
+	ld hl, (_fd765_buffer)
+	ld bc, #FD_DT
+	ld a,(_fd765_sectors)
+	ld e,a
+write_loop:
+	in a,(FD_ST)
+	add a
+	jr nc, write_loop
+	add a
+	jp p, write_finished
+	outi
+	jr nz, write_loop
+	dec e
+	jr nz, write_loop
+write_finished:
+	ld (_fd765_buffer), hl
+	call _fd765_do_nudge_tc		; Tell FDC we've finished
+	ei
+	call fd765_read_status
+
+	pop af
+	ret z
+	jp map_kernel
+
+; Given an FDC opcode in A, sets up a read or write.
+
+setup_read_or_write:
+	call fd765_tx			; 0: send opcode (in A)
+	call send_head			; 1: specified head, drive #0
+	ld a, (_fd765_track)		; 2: specified track
+	call fd765_tx
+	ld a, (_fd765_head)		; 3: specified head
+	call fd765_tx
+	ld a, (_fd765_sector)		; 4: specified sector
+	ld b, a
+	call fd765_tx
+	ld a, #2			; 5: bytes per sector: 512
+	call fd765_tx
+	ld a, (_fd765_sectors)
+	add b				; add first sector
+	dec a				; 6: last sector (*inclusive*)
+	call fd765_tx
+	ld a, #0x2A   			; 7: Gap 3 length (2A is standard for 3" drives)
+	call fd765_tx
+	; We return with the final unused 0 value not written. We need all
+	; the other stuff lined up before we write this.
+	ret
+
+_fd765_buffer:
+	.dw 0
+_fd765_is_user:
+	.db 0
+_fd765_sectors:
+	.db 0
+
+; Read the next sector ID off the disk.
+; (Only used for debugging.)
+
+_fd765_do_read_id:
+	ld a, #0x4a 				; READ MFM ID
+	call fd765_tx
+	call send_head				; specified head, drive 0
+	jp fd765_read_status
+
+_fd765_send_cmd:
+	ld a,(hl)
+	call fd765_tx
+	call send_head		; FIXME what should we be sending
+	call fd765_read_status
+	;
+	;	FIXME: should we check the int pending bit ?
+	;
+	ld a, #0x08		; SENSE INTERRUPT STATUS
+	call fd765_tx
+	call fd765_read_status
+	ld hl,#_fd765_status
+	ret
+
 _fd765_intwait:
-		ld bc, #1 * 256 + FD_DT		; send SENSE INTERRUPT STATUS
-		;
-		;	Check what is pending on the interrupt side
-		;
-		ld hl, #0xffff			; report -1 if not pending
-		in a, (0xF8)
-		bit 5, a
-		ret z				; wait for the 765 int to go off
-		;
-		;	Send the sense command, get the status back
-		;
-		ld hl, #fd765_sense		; sense command
-		call fd765_sendcmd
-		call fd765_status_a
-		bit 7, a			; error
-		jr nz, _fd765_intwait
-		bit 6, a			; abnormal
-		ret nz
-		ld b, #0x14			; give the controller time
-fd765_wait:	ld a, #0xB3
-fd765_wait_1:	ex (sp), hl
-		ex (sp), hl
-		ex (sp), hl
-		ex (sp), hl
-		dec a
-		jr nz, fd765_wait_1
-		djnz fd765_wait
-		ret
-
-;
-;	Block transfer bytes from the controller. We play some cute games
-;	with flags in order to keep this loop tight. We do *not* have a lot
-;	of time here because the bytes flow from the FDC to us at media head
-;	speed and if we miss one we lose.
-;
-;		C points at FD_DT
-fd765_xfer_in:
-		in a, (FD_ST)
-		add a
-		jr nc, fd765_xfer_in		; bit 7 clear
-fd765_xfer_in2:
-		add a
-		jp p, fd765_xfer_error		; bit 5 clear (short data ???)
-		ini				; transfer a byte
-		jr nz, fd765_xfer_in		; next byte
-		dec e
-		jr nz, fd765_xfer_in
-;
-;		Sector transferred
-;
-fd765_xfer_done:ld a, #5
-		out (0xF8), a			; terminate flag set
-		ret
-fd765_xfer_error:
-		or a				; NZ
-		; FIXME
-		ret
-;
-;	We enter the block transfer loop here. The first time around
-;	the loop we spin until a byte is ready and then disable interrupts
-;	before reading the bytes. We don't re-enable IRQs that is up to
-;	our caller.
-;
-fd765_xfer_indi:
-		in a, (FD_ST)
-		add a
-		jr nc, fd765_xfer_indi		; bit 7 clear
-		di
-		jr fd765_xfer_in2
-
-;
-;	Block transfer out. As with a block transfer from the controller we
-;	have to keep up so must do the transfer with interrupts off. Other
-;	that the direction this works the same as input. In fact if we were
-;	sure this wasn't ever going to end up in ROM we could self modify
-;
-;		C points at FD_DT
-fd765_xfer_out:
-		in a, (FD_ST)
-		add a
-		jr nc, fd765_xfer_out		; bit 7 clear
-fd765_xfer_out2:
-		add a
-		jp p, fd765_xfer_error		; bit 5 clear (short data ???)
-		outi				; transfer a byte
-		jr nz, fd765_xfer_in		; next byte
-		dec e
-		jr nz, fd765_xfer_in
-;
-;		Sector transferred
-;
-		ld a, #5
-		out (0xF8), a			; terminate flag set
-		ret
-
-fd765_xfer_outdi:
-		in a, (FD_ST)
-		add a
-		jr nc, fd765_xfer_outdi		; bit 7 clear
-		di
-		jr fd765_xfer_out2
-
-;
-;	Read a disc sector.
-;
-_fd765_read_sector:
-		ld a,(_int_disabled)
-		push af
-		ld a, (_fd765_user)
-		or a
-		jr z, read_kern
-;
-;	FIXME: this isn't sufficient for swap because of the fact we
-;	may be swapping over the 48K boundary mark
-;
-;	Plus this is wrong as we need to pass HL = p->page of the task!
-;
-		call map_process_always
-read_kern:
-		ld a, #6
-		out (0xf8), a
-		call _fd765_intwait		; wait for controller
-		;
-		;	Send the rw_data command. The command has been
-		;	modified by the caller to be the right read/write
-		;	for the right track/sector
-		;
-		ld b, #9
-		ld hl, #_fd765_rw_data
-		call fd765_sendcmd
-		jr nz, read_failed
-		ld hl, (_fd765_buffer);
-		ld e, #2
-		ld b, #0			; 512 bytes
-		call fd765_xfer_in
-		jr nz, read_failed
-read_status:					; clean up is shared
-		call fd765_status_a		; with write method
-		ld hl, #0
-		and #0xF8
-		jr nz, read_failed
-		; read ok
-read_out:
-		call map_kernel
-		pop af
-		or a
-		ret nz
-		ei
-		ret
-read_failed:
-		dec hl
-		jr read_out
-
-;
-;	Write a sector. Very similiar to reading a sector and could be
-;	be self modifying to save space.
-;
-_fd765_write_sector:
-		ld a,(_int_disabled)
-		push af
-		ld a, (_fd765_user)
-		or a
-		jr z, write_kern
-;
-;	FIXME: as per read.
-;
-		call map_process_always
-write_kern:
-		ld a, #6
-		out (0xf8), a
-		call _fd765_intwait		; wait for controller
-		ld b, #9
-		ld hl, #_fd765_rw_data
-		call fd765_sendcmd
-		jr nz, read_failed
-		ld hl, (_fd765_buffer);
-		ld e, #2
-		ld b, #0			; 512 bytes
-		call fd765_xfer_out
-		jr nz, read_failed
-		jr read_status
-
-_fd765_cmd2:	call _fd765_intwait
-		ld b, #2
-fd765_cmdop:
-		ld hl, #_fd765_cmdbuf
-		call fd765_sendcmd
-		jr nz, read_failed
-		call _fd765_intwait
-		call fd765_status_a
-		ret
-
-_fd765_cmd3:	call _fd765_intwait
-		ld b, #3
-		jr fd765_cmdop
-
-;
-;	Where to put this ? As we may flip between processes including high
-;	pages it is not clear where this data belongs. For now keep it in
-;	common. Swap + banked raises some architectural issues (where is the
-;	stack going ????) so it may be better to address this in the core
-;	swap code instead. For non swap cases common will do fine for now.
-;
-
-_fd765_buffer:	.dw 0		; Buffer pointer
-_fd765_user:	.db 0		; 0 - kernel 1 - user
-
-_fd765_rw_data: .db 0x66	; Normal MFM read
-		.db 0		; Drive 0, head 0
-		.db 0		; cylinder
-		.db 0		; head
-		.db 2		; sector
-		.db 2		; 512 bytes
-		.db 2		; last sector
-		.db 0x2A	; gap length
-		.db 0xFF	; unused
-
-fd765_sense:	.db 0x08	; Sense interrupt
-
-_fd765_cmdbuf:	.db 0x0F
-		.db 0
-		.db 0
-		.db 0
-_fd765_statbuf:
-		.ds 8
+	ld hl,#0xFFFF
+	in a,(0xF8)
+	bit 5,a
+	ret z
+	ld a,#0x08
+	call fd765_tx
+	call send_head
+	call fd765_read_status
+	ld a,(hl)
+	bit 7,a
+	jr nz, _fd765_intwait
+	bit 6,a
+	ret nz
+	; Do we need a delay here ?
+	ld b, #0x14			; give the controller time
+fd765_wait:
+	ld a, #0xB3
+fd765_wait_1:
+	ex (sp), hl
+	ex (sp), hl
+	ex (sp), hl
+	ex (sp), hl
+	dec a
+	jr nz, fd765_wait_1
+	djnz fd765_wait
+	ret

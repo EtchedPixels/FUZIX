@@ -18,6 +18,7 @@ platform-pcw8256/discard.rel
 timer.rel
 kdata.rel
 platform-pcw8256/devfd.rel
+platform-pcw8256/devfdc765.rel
 platform-pcw8256/fdc765.rel
 platform-pcw8256/devices.rel
 devio.rel

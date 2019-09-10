@@ -3,7 +3,7 @@ CSRCS = devlpr.c devtty.c devfd.c devinput.c devvd.c
 CSRCS += devices.c main.c
 DISCARD_CSRCS = discard.c
 
-DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/mbr.c
+DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/mbr.c ../dev/devfdc765.c
 DISCARD_DSRCS = ../dev/devide_discard.c
 
 NSRCS = ../dev/net/net_native.c

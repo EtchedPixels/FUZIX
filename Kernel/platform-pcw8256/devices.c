@@ -9,6 +9,7 @@
 #include <tty.h>
 #include <vt.h>
 #include <pcw8256.h>
+#include <devfdc765.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -17,7 +18,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 0: /dev/hd		Hard disc block devices (UIDE or FIDHD) */
   {  blkdev_open, no_close,	blkdev_read, blkdev_write, blkdev_ioctl },	/* 0: /dev/hd -- standard block device interface */
   /* 1: /dev/fd		Floppy disc block devices */
-  {  fd_open,     no_close,     fd_read,     fd_write,     no_ioctl     },
+  {  devfd_open,  no_close,     devfd_read,  devfd_write,  no_ioctl     },
   /* 2: /dev/tty	TTY devices */
   {  tty_open,    pcwtty_close, tty_read,    tty_write,    vt_ioctl     },
   /* 3: /dev/lpr	Printer devices */
