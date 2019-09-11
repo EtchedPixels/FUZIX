@@ -1,8 +1,5 @@
-	STACKOFF	.equ	2
-
 	.area _CODE
 
-RTC	        = 0xC0
 PIN_CE          = 0x10
 PIN_DATA_HIZ    = 0x20
 PIN_CLK         = 0x40

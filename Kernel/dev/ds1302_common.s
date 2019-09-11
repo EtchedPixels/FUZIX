@@ -13,6 +13,9 @@
         .globl _ds1302_set_pin_data_driven
         .globl _ds1302_get_pin_data
 
+	.globl _rtc_shadow
+	.globl _rtc_port
+
         .include "kernel.def"
         .include "../kernel-z80.def"
 
@@ -21,16 +24,15 @@
 ; -----------------------------------------------------------------------------
 
 _ds1302_get_pin_data:
-        in a, (RTC)       	; read input register
+	ld bc,(_rtc_port)
+        in a, (c)       	; read input register
         and #PIN_DATA_IN        ; mask off data pin
         ld l, a                 ; return result in L
         ret
 
 _ds1302_set_pin_data_driven:
-        ld hl, #STACKOFF        ; get address of function argument
-        add hl, sp
-        ld b, (hl)              ; load argument from stack
-        ld a, (rtc_shadow)
+        ld b, l                 ; load argument
+        ld a, (_rtc_shadow)
         and #~PIN_DATA_HIZ      ; 0 - output pin
         bit 0, b                ; test bit
         jr nz, writereg
@@ -50,20 +52,14 @@ _ds1302_set_pin_clk:
         jr setpin
 
 setpin:
-        ld a, (rtc_shadow)      ; load current register contents
+        ld a, (_rtc_shadow)     ; load current register contents
         and b                   ; unset the pin
-        ld hl, #STACKOFF        ; get address of function argument
-        add hl, sp
-        ld b, (hl)              ; load argument from stack
+        ld b, l                 ; load argument from caller (fastcall)
         bit 0, b                ; test bit
         jr z, writereg          ; arg is false
         or c                    ; arg is true
 writereg:
-        out (RTC), a	        ; write out new register contents
-        ld (rtc_shadow), a      ; update our shadow copy
+	ld bc, (_rtc_port)
+        out (c), a	        ; write out new register contents
+        ld (_rtc_shadow), a      ; update our shadow copy
         ret
-
-.area _DATA
-
-rtc_shadow:     .db PIN_OTHER   ; we can't read back the latch contents, so we must keep a copy
-
