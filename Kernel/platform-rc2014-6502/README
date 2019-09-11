@@ -59,9 +59,15 @@ DONE	Figure out how to reclaim 0200-03FF with commondata start
 DONE	Discard segment
 DONE	Write pre-emption code
 DONE	Timer interrupt (6522VIA)
+DONE	Debug signal handling
 
-Debug signal handling
-Real hardware testing
+	New PCB design with the IO hole at FExx
+	IDE card changes to qualify /R and /W with E to try and fix the IDE
+		hardware glitching
+
+IP	Real hardware testing
+
+
 Do buffer growth into discard
 Swap support
 
