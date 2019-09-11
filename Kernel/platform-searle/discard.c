@@ -2,7 +2,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <ds1302.h>
 #include <devide.h>
 #include <blkdev.h>
 #include <searle.h>
