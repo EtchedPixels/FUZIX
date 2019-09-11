@@ -17,6 +17,8 @@ uint8_t acia_present;
 uint8_t ctc_present;
 uint8_t sio_present;
 
+uint16_t rtc_port;
+uint8_t rtc_shadow;
 
 void platform_discard(void)
 {

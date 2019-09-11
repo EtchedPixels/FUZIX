@@ -41,9 +41,7 @@ _ds1302_get_pin_data:
         ret
 
 _ds1302_set_pin_data_driven:
-        ld hl, #2               ; get address of function argument
-        add hl, sp
-        ld b, (hl)              ; load argument from stack
+        ld b, l                 ; load argument from stack
         ld a, (rtc_shadow)
         and #~PIN_DATA_HIZ      ; 0 - output pin
         bit 0, b                ; test bit
@@ -66,9 +64,7 @@ _ds1302_set_pin_clk:
 setpin:
         ld a, (rtc_shadow)      ; load current register contents
         and b                   ; unset the pin
-        ld hl, #2               ; get address of function argument
-        add hl, sp
-        ld b, (hl)              ; load argument from stack
+        ld b, l                 ; load argument from stack
         bit 0, b                ; test bit
         jr z, writereg          ; arg is false
         or c                    ; arg is true

@@ -12,6 +12,9 @@
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
 
+uint8_t rtc_shadow;
+uint16_t rtc_port = 0xC0;
+
 void platform_discard(void)
 {
 }

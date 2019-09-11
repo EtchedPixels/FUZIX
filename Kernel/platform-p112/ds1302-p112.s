@@ -34,9 +34,7 @@ _ds1302_get_pin_data:
 _ds1302_set_pin_data_driven:
         in0 a, (PORT_A_DDR)     ; a 1 in each bit makes the corresponding pin tristate (input), 0 makes it an output
         and #~(PIN_DATA|PIN_CE|PIN_CLK) ; bits to 0 -> set all pins as outputs
-        ld hl, #2               ; get address of function argument
-        add hl, sp
-        ld b, (hl)              ; load argument from stack
+        ld b, l                 ; load argument
         bit 0, b                ; test bit
         jr nz, writeddr         ; nonzero -> we want an output
         or #PIN_DATA            ; zero -> we want an input; change bit to 1 -> set data pin as input
@@ -59,9 +57,7 @@ _ds1302_set_pin_clk:
 setpin:
         in0 a, (PORT_A_DATA)    ; load current register contents
         and b                   ; unset the pin
-        ld hl, #2               ; get address of function argument
-        add hl, sp
-        ld b, (hl)              ; load argument from stack
+        ld b, l                 ; load argument
         bit 0, b                ; test bit
         jr z, writereg          ; arg is false, bit is already 0
         or c                    ; arg is true, set bit to 1

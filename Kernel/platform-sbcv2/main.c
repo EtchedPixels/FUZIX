@@ -11,6 +11,10 @@ uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
 uint8_t timermsr = 0;
 
+/* Real time clock support for DS1302 driver - port and other pins */
+uint16_t rtc_port = 0x70;
+uint8_t rtc_shadow;
+
 /*
  *	This routine is called continually when the machine has nothing else
  *	it needs to execute. On a machine with entirely interrupt driven

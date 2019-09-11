@@ -21,6 +21,9 @@ uint8_t sio1_present;
 
 uint8_t is_sc108;
 
+uint16_t rtc_port = 0xC0;
+uint8_t rtc_shadow;
+
 void platform_discard(void)
 {
 	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
