@@ -149,6 +149,8 @@ void init_hardware_c(void)
 		z180_setup(!ctc_present);
 		register_uart(UART_Z180, Z180_IO_BASE, &z180_uart0);
 		register_uart(UART_Z180, Z180_IO_BASE + 1, &z180_uart1);
+		rtc_port = 0x0C;
+		rtc_shadow = 0x0C;
 	}
 
 	/* Set the right console for kernel messages */
@@ -178,9 +180,7 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
-	/* The DS1302 clashes with the Z180 ports */
-	if (!z180_present)
-		ds1302_init();
+	ds1302_init();
 
 	if (acia_present)
 		kputs("6850 ACIA detected at 0xA0.\n");

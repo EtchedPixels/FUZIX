@@ -25,6 +25,10 @@ uint16_t syscpu;
 uint16_t syskhz;
 uint8_t systype;
 
+/* For RTC */
+uint8_t rtc_shadow;
+uint16_t rtc_port = 0x00C0;
+
 /* Our pool ends at 0x4000 */
 uint8_t *initptr = (uint8_t *)0x4000;
 
