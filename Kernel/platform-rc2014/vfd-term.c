@@ -1,4 +1,4 @@
-#include "vfd-term.h"
+#include <kernel.h>
 
 void vfd_term_init(void) {
   __asm
