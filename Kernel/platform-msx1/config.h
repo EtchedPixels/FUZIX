@@ -21,7 +21,7 @@
 #define PROC_SIZE   48	  /* Memory needed per process (inc udata) */
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x61 	/* 48.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xC000	/* Swap out program */
