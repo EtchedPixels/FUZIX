@@ -1,6 +1,6 @@
 /* We may also be used by a build tool */
 #ifndef GENERATOR
-#include <config.h>
+#include <kernel.h>
 #endif
 
 #ifdef CONFIG_FONT8X8

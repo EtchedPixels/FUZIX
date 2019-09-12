@@ -26,7 +26,7 @@
  *
  */
 
-#include <config.h>
+#include <kernel.h>
 
 #ifdef CONFIG_FONT6X8
 
