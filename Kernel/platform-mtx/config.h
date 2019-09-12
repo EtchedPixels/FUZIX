@@ -39,7 +39,7 @@
 #define MAX_SWAPS   64		/* How many swaps per disc */
 #define SWAPDEV  (swap_dev)     /* Device for swapping. */
 
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 
 #define CONFIG_DYNAMIC_SWAP	/* Find swap partitions on disks */
 #define CONFIG_PLATFORM_SWAPCTL	/* Because we need to be able to swap on
