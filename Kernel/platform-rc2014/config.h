@@ -66,7 +66,7 @@
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
 
 //#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x69 	/* 60.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xF200	/* Swap out udata and program */
