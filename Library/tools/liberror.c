@@ -73,11 +73,17 @@ int main(int argc, char *argv[])
   int swizzle = 0;
   int i;
   
+  /* FIXME we can only swizzle to big-endian here */
   if (argc > 1 && strcmp(argv[1], "-X") == 0)
     swizzle = 1;
 
-  buf[0] = ERRORS;
-  buf[1] = 0;
+  if (swizzle) {
+    buf[1] = ERRORS;
+    buf[0] = 0;
+  } else {
+    buf[0] = ERRORS;
+    buf[1] = 0;
+  }
 
   for (i = 0; i < ERRORS; i++) {
     int len = strlen(err[i]) + 1;
