@@ -33,8 +33,7 @@ TODO
 - Rework loader so that we can load a banked image
 DONE - Alternative might be to go with 48K process size maximum and new a bank
 16/fixed common mode. Might be good for RC2014 and some others too ?
-- fdc765 driver wants replacing with generic one
-- debug fdc765 crashes on disk error, write corruptions
+IP - fdc765 driver wants replacing with generic one
 DONE - fdc - rework and debug drive type detect
 DONE - fdc - double/single side and 40/80 handling
 - fdc - step rates according to type
@@ -54,6 +53,8 @@ IP - support Joyce mode (EDFE A=0, if returns A=255 joyce)
 DONE - keyboard repeat
 DONE - debug swap
 - Keyboard mappings for delete etc need work
+- Shrink common size back down a bit
+- FDC probe to discard
 
 
 Supported Hardware (all only in early test)
