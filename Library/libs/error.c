@@ -15,6 +15,7 @@
 #define LONGEST_STRING 50
 
 static char retbuf[LONGEST_STRING + 1];
+static int last_err = -1;
 
 char *strerror(int err)
 {
@@ -23,6 +24,9 @@ char *strerror(int err)
 
 	if (err < 0)
 		goto sad;
+
+	if (err == last_err)
+		return retbuf;
 
 	int fd = open(_PATH_LIBERR, O_RDONLY|O_CLOEXEC);
 	if (fd < 0)
@@ -47,6 +51,7 @@ char *strerror(int err)
 		lseek(fd, index, SEEK_SET);
 		len = read(fd, retbuf, len);
 		retbuf[len] = '\0';
+		last_err = err;
 
 		close(fd);
 		return retbuf;
