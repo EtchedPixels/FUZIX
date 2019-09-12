@@ -46,7 +46,7 @@
 
 #define CONFIG_DYNAMIC_SWAP
 #define SWAPDEV	    (swap_dev)
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x60 	/* 48K in blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xC000	/* vector and stash */
