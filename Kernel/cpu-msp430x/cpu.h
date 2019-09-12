@@ -1,6 +1,3 @@
-#include <stddef.h>
-#include <stdint.h>
-
 /* The MSP430X has 20-bit registers. Yes, really. It defines size_t
  * to be one of those. Use that rather than uint32_t because it's
  * way more efficient, but 20-bit pointers are still stored in memory

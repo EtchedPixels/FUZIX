@@ -12,6 +12,8 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #include <stdbool.h>
 
+/* Import the CPU types before the config.h as config.h wants to use types */
+#include "types.h"
 #include "config.h"
 #include "cpu.h"
 
