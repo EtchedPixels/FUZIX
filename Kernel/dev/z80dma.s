@@ -18,21 +18,20 @@
 		.area _COMMONMEM
 
 script_memmem:
-		.db 0xC3
-		.db 0xC7
-		.db 0XCB
-		.db 0X7D
-dma_memsrc:	.dw 0
+		.db 0xC3	; Reset
+		.db 0x7D	; Set Port A address and length 16bit
+dma_memsrc:	.dw 0		; transfer mode from A->B
 dma_memlen:	.dw 0
-		.db 0x14
-		.db 0x10
-		.db 0xC0
-		.db 0xAD
-dma_memdst:	.dw 0
-		.db 0x92
-		.db 0xCF
-		.db 0xB3
-		.db 0x87
+		.db 0x14	; Set port A memory, incrementing
+		.db 0x10	; Set port B increments, is memory
+		.db 0x80	; C0enables DMA No matching
+		.db 0xCD	; Port B timing and interrupt config
+				; (burst, 16bit addr follows. no int)
+dma_memdst:	.dw 0		; Address
+		.db 0x92;82?	; Stop on end, /ce & /wait, ready active low
+		.db 0xCF	; Load
+		.db 0xB3	; Force ready (ignore /ce and /wait)
+		.db 0x87	; Enable DMA
 
 
 ldir_or_dma:
@@ -49,7 +48,7 @@ dma_memcpy:
 		ld (dma_memdst),de
 		ld (dma_memlen),bc
 		ld hl,#script_memmem
-		ld bc,#(18 + DMAPORT)
+		ld bc,#(16*256 + DMAPORT)
 		otir
 		; CPU stalls until DMA done
 		ret
