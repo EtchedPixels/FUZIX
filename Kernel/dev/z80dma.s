@@ -40,7 +40,7 @@ ldir_or_dma:
 		jr nz, dma_memcpy
 		ld a,l
 		cp #32
-		jr z, dma_memcpy
+		jr nc, dma_memcpy
 		ldir
 		ret
 dma_memcpy:
