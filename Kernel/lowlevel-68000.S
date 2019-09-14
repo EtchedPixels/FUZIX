@@ -412,6 +412,7 @@ set_usp:	move.l 4(sp),a0
 __hard_di:
 		move.w sr,d0
 		move.w d0,d1
+		and.w #$0700,d0
 		and.w #$F8FF,d1
 		or.w #DI_MASK,d1
 		move.w d1,sr
@@ -474,14 +475,18 @@ doexec:
 
 		bsr flush_icache
 
-		and.w #$F8FF,sr			; IRQ on
+		move.w sr,d0			; Set the IRQ mask
+		and.w #$F8FF,d0
+		or.w #EI_MASK,d0		; May be some masked even
+		; Don't put the status back yet - we will unmask in the rte
+		; as we clear the supervisor frame
 
 		tst.b cpu_has_trapvec
 		beq threeword
 		clr.w -(sp)			; push vector
 threeword:
 		move.l a1,-(sp)			; return address
-		clr.w -(sp)			; set up the status register
+		move.w d0,-(sp)			; set up the status register
 		move.l U_DATA__U_ISP(a5),a0
 		move.l a0,usp			; set the user stack
 		moveq #0,d0			; wipe the registers
