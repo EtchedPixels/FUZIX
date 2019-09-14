@@ -1565,26 +1565,28 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 		filename = "";
 	else {
-		size_t size;
-		size_t o = 0;
-		int n = 0;
 		fd = open(filename = *++argv, O_RDONLY);
-		if (fd == -1) {
+		if (fd == -1 && errno != ENOENT) {
 			perror(*argv);
 			return 2;
 		}
-		size = ebuf - buf;
-		/* We can have 32bit ptr, 16bit int even in theory */
-		if (size > INT_MAX) {
-			while (n = doread(*argv, fd, buf + o, INT_MAX)) {
-				gap += n;
-				size -= n;
-				o += n;
-			}
-		} else
-			n = doread(*argv, fd, buf + o, size);
-		gap += n;
-		close(fd);
+		if (fd != -1) {
+			size_t size;
+			size_t o = 0;
+			int n = 0;
+			size = ebuf - buf;
+			/* We can have 32bit ptr, 16bit int even in theory */
+			if (size > INT_MAX) {
+				while (n = doread(*argv, fd, buf + o, INT_MAX)) {
+					gap += n;
+					size -= n;
+					o += n;
+				}
+			} else
+				n = doread(*argv, fd, buf + o, size);
+			gap += n;
+			close(fd);
+		}
 	}
 
 	if (con_init())
