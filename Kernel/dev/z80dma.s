@@ -25,7 +25,7 @@ dma_memlen:	.dw 0
 		.db 0x14	; Set port A memory, incrementing
 		.db 0x10	; Set port B increments, is memory
 		.db 0x80	; C0enables DMA No matching
-		.db 0xCD	; Port B timing and interrupt config
+		.db 0xAD	; Port B timing and interrupt config
 				; (burst, 16bit addr follows. no int)
 dma_memdst:	.dw 0		; Address
 		.db 0x92;82?	; Stop on end, /ce & /wait, ready active low
@@ -46,13 +46,15 @@ ldir_or_dma:
 dma_memcpy:
 		ld (dma_memsrc),hl
 		ld (dma_memdst),de
+		; The DMA transfers one more than the specified count
+		; in sequential transfer mode (Table 11)
+		dec bc
 		ld (dma_memlen),bc
 		ld hl,#script_memmem
 		ld bc,#(16*256 + DMAPORT)
 		otir
 		; CPU stalls until DMA done
 		ret
-
 
 		.area _DISCARD
 ;
