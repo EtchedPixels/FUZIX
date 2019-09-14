@@ -21,6 +21,7 @@ char *strerror(int err)
 {
 	uint16_t nerr;
 	struct stat st;
+	int fd;
 
 	if (err < 0)
 		goto sad;
@@ -28,7 +29,7 @@ char *strerror(int err)
 	if (err == last_err)
 		return retbuf;
 
-	int fd = open(_PATH_LIBERR, O_RDONLY|O_CLOEXEC);
+	fd = open(_PATH_LIBERR, O_RDONLY|O_CLOEXEC);
 	if (fd < 0)
 		goto sad;
 
