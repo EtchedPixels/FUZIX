@@ -26,6 +26,8 @@ TOP_PORT	.equ	MPGSEL_3
 	.globl _kernel_pages
 	.globl map_kernel_restore
 
+	.globl ldir_or_dma
+
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
@@ -250,7 +252,7 @@ fork_next:
 	ld de, #0x4000
 	ld bc, #0x4000		; we copy the whole bank, we could optimise
 				; further
-	ldir
+	call ldir_or_dma	; use Z80DMA if we can
 	exx
 	call map_kernel		; put the maps back so we can look in p_tab
 	djnz fork_next
