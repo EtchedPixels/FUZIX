@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "kernel.h"
 
 void *memcpy(void *d, const void *s, size_t sz)
 {
