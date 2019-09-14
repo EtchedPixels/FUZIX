@@ -54,7 +54,7 @@
 
 /* Z180 does not yet support swap - need to fix that */
 //#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x7D 	/* 62.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xFA00	/* Swap out udata and program */

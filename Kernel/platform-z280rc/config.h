@@ -33,7 +33,7 @@
  *	Definitions for swapping.
  */
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x70 	/* 56K in 512 byte blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0xE000	/* vectors so its a round number of sectors */

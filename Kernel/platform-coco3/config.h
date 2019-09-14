@@ -20,7 +20,7 @@
 #define MAX_MAPS 128-3
 #define MAPBASE 0x0000
 /* And swapping */
-extern unsigned int swapdev;
+extern uint16_t swapdev;
 #define SWAPDEV  swapdev
 #define SWAP_SIZE   0x71
 /* FIXME */

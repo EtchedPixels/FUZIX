@@ -64,7 +64,7 @@
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 
 #define platform_copyright()
 
