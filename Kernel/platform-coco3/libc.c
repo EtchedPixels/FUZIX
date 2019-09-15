@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include "kernel.h"
 #include "libc.h"
 
 int strcmp( const char *a, const char *b ){
