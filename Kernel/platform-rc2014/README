@@ -24,6 +24,13 @@ Supported Hardware
 
 	Options:
 
+	Z80DMA at 0x04
+
+	16x50 at 0xC0-0xF8 (the range is scanned)
+
+	TMS9918A at 0x98/0x99. Only used for graphics at this point not as a
+	console device
+
 	VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD
 	Terminal will be supported. This will display all output to the serial
 	port on the VFD.
@@ -34,7 +41,7 @@ Supported Hardware
 
 	RC2014 Joystick
 
-	PPIDE
+	PPIDE (currently you need to change the config.h and rebuilld for this)
 
 Pending
 	TMS99918A VDP as timer
@@ -46,8 +53,6 @@ Unsupported Hardware
 	of the 512K ROM/RAM. Please see the relevant port instead.
 	SC111 or other Z180 CPU board with linear mapped RAM. See the SC111
 	port instead.
-
-	SC114 bit bang serial
 
 	Z80 PIO cards (really because I've no idea how to present them)
 
