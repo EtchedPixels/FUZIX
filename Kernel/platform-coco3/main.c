@@ -8,7 +8,7 @@
 
 #define DISC __attribute__((section(".discard")))
 
-unsigned int swapdev = 0;
+uint16_t swapdev = 0;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 DISC
