@@ -13,9 +13,6 @@
 
 /* Everything in here is discarded after init starts */
 
-__sfr __at 0x98 tms9918a_data;
-__sfr __at 0x99 tms9918a_ctrl;
-
 static const uint8_t tmstext[] = {
 	0x00,
 	0xD0,
@@ -180,7 +177,12 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
+	/* Could be at 0xC0 or 0x0C */
 	ds1302_init();
+	if (!ds1302_present) {
+		rtc_port = 0x0C;
+		ds1302_init();
+	}
 
 	if (acia_present)
 		kputs("6850 ACIA detected at 0xA0.\n");
@@ -206,18 +208,17 @@ void pagemap_init(void)
 	if (dma_present)
 		kputs("Z80DMA detected at 0x04.\n");
 
+	if (ds1302_present)
+		kprintf("DS1302 detected at 0x%2x.\n", rtc_port);
+
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;
-
-		if (ds1302_present) {
-			kputs("DS1302 detected at 0xC0.\n");
-			/* UART at 0xC0 means no DS1302 there */
-			i += 8;
-		}
 		while(i) {
-			if ((m = probe_16x50(i)))
-				register_uart(m, i, &ns16x50_uart);
+			if (!ds1302_present || rtc_port != i) {
+				if (m = probe_16x50(i))
+					register_uart(m, i, &ns16x50_uart);
+			}
 			i += 0x08;
 		}
 	}

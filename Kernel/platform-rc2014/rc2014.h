@@ -30,6 +30,9 @@ __sfr __at 0x89 CTC_CH1;
 __sfr __at 0x8A CTC_CH2;
 __sfr __at 0x8B CTC_CH3;
 
+__sfr __at 0x98 tms9918a_data;
+__sfr __at 0x99 tms9918a_ctrl;
+
 extern void sio2_otir(uint8_t port) __z88dk_fastcall;
 
 extern uint8_t acia_present;
