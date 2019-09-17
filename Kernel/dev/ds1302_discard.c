@@ -17,15 +17,6 @@
 /* each source file.                                                        */
 /****************************************************************************/
 
-void ds1302_write_register(uint8_t reg, uint8_t val)
-{
-    ds1302_set_pin_ce(true);
-    ds1302_send_byte(reg);
-    ds1302_send_byte(val);
-    ds1302_set_pin_ce(false);
-    ds1302_set_pin_clk(false);
-}
-
 void ds1302_write_seconds(uint8_t seconds)
 {
     irqflags_t irq = di();

@@ -120,6 +120,10 @@ int sys_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
+#ifdef CONFIG_RTC_EXTENDED
+	if (minor == 5)
+		return platform_rtc_ioctl(request, data);
+#endif
 #ifdef CONFIG_DEV_PLATFORM
 	if (minor == 6)
 		return platform_dev_ioctl(request, data);

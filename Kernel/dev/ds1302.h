@@ -7,6 +7,7 @@ uint8_t platform_rtc_secs(void);
 void ds1302_read_clock(uint8_t *buffer, uint8_t length);
 int platform_rtc_read(void);
 int platform_rtc_write(void);
+int platform_rtc_ioctl(uarg_t request , char *data);
 
 extern uint8_t rtc_shadow;		/* Shadow for other bits in port */
 extern uint16_t rtc_port;		/* I/O address to use */
@@ -22,6 +23,9 @@ extern void platform_ds1302_restore(void);
 extern uint8_t ds1302_present;
 
 #ifdef _DS1302_PRIVATE
+
+void ds1302_write_register(uint8_t reg, uint8_t val);
+
 /* consult the DS1302 datasheet for data format;
    http://datasheets.maximintegrated.com/en/ds/DS1302.pdf table 3 */
 void ds1302_send_byte(uint8_t byte);

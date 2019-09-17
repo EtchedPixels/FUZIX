@@ -786,6 +786,10 @@ struct s_argblk {
  */
 
 /*
+ *	RTC ioctls 0x053x (see rtc.h)
+ */
+
+/*
  *	Tape ioctls 0x06xx (see tape.h)
  */
 
@@ -1081,6 +1085,7 @@ extern void platform_idle(void);
 extern uint_fast8_t platform_rtc_secs(void);
 extern int platform_rtc_read(void);
 extern int platform_rtc_write(void);
+extern int platform_rtc_ioctl(uarg_t request, char *data);
 extern void platform_reboot(void);
 extern void platform_monitor(void);
 extern uint_fast8_t platform_param(char *p);

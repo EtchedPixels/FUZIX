@@ -14,6 +14,15 @@
 
 uint8_t ds1302_present;
 
+void ds1302_write_register(uint8_t reg, uint8_t val)
+{
+    ds1302_set_pin_ce(true);
+    ds1302_send_byte(reg);
+    ds1302_send_byte(val);
+    ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
+}
+
 void ds1302_send_byte(uint8_t byte)
 {
     uint8_t i;
@@ -83,6 +92,58 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
 
     irqrestore(irq);
 }
+
+#ifdef CONFIG_RTC_EXTENDED
+
+uint_fast8_t rtc_nvread(uint_fast8_t r)
+{
+    uint_fast8_t v;
+    irqflags_t irq;
+
+    irq = di();
+
+    platform_ds1302_setup();
+
+    ds1302_set_pin_ce(true);
+
+    ds1302_send_byte(0xC1 + 2 * r);
+    v = ds1302_receive_byte();
+
+    ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
+
+    platform_ds1302_restore();
+
+    irqrestore(irq);
+    return v;
+}
+
+int platform_rtc_ioctl(uarg_t request, char *data)
+{
+    struct cmos_nvram *rtc = (struct cmos_nvram *)data;
+    uint16_t r = ugetw(&rtc->offset);
+    int v;
+    if (r > 29) {
+        udata.u_error = ERANGE;
+        return -1;
+    }
+    switch(request) {
+    case RTCIO_NVGET:
+        return uputc(rtc_nvread(r), &rtc->val);
+    case RTCIO_NVSET:
+        v = ugetc(&rtc->val);
+        if (v < 0)
+            return -1;
+        ds1302_write_register(0xC0 + 2 * r, v);
+        return 0;
+    case RTCIO_NVSIZE:
+        return 30;
+    default:
+        return -1;
+    }
+}
+
+#endif
 
 /* define CONFIG_RTC in platform's config.h to hook this into timer.c */
 uint_fast8_t platform_rtc_secs(void)
