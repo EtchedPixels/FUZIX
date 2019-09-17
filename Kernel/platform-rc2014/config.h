@@ -95,6 +95,7 @@ extern uint16_t swap_dev;
 /* On-board DS1302, we can read the time of day from it */
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
+#define CONFIG_RTC_EXTENDED
 #define CONFIG_NO_CLOCK
 
 #define CONFIG_INPUT			/* Input device for joystick */
