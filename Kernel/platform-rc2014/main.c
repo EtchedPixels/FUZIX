@@ -12,7 +12,6 @@
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
 
-uint8_t acia_present;
 uint8_t ctc_present;
 uint8_t sio_present;
 uint8_t sio1_present;

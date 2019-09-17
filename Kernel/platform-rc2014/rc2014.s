@@ -740,6 +740,12 @@ _sio2_otir:
 ; Basic console I/O
 ;=========================================================================
 
+;	We need acia_present in common space because we might call these
+;	helpers from common code
+
+_acia_present:
+	.byte 0
+
 ;=========================================================================
 ; outchar - Wait for UART TX idle, then print the char in A
 ; Inputs: A - character to print
