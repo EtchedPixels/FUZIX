@@ -5,7 +5,11 @@
 ;	from the kernel's point of view are never eligible locations
 ;	to copy to or from. That in turn means that we can use them as a
 ;	32K window to safely do any copy up to 16K in size to or from
-;	user space with LDIR or DMA
+;	user space with LDIR or DMA.
+;
+;	For now don't use the DMA hooks with uput/uget. This needs more
+;	instrumentation to check but it appears most copies are small
+;	because aligned block sized I/O (most of it) goes direct.
 ;
 
 	.module rc2014usermem
@@ -19,9 +23,6 @@
         .globl __ugetc
         .globl __ugetw
 
-	.globl outcharhex
-	.globl outhl
-
         .globl __uput
         .globl __uputc
         .globl __uputw
@@ -32,12 +33,42 @@
 	.globl  map_process_save
 	.globl  map_kernel_restore
 
+	.globl ldir_or_dma
+
 	.globl mpgsel_cache
 ;
 ;	We need these in common as they bank switch
 ;
         .area _COMMONMEM
 
+;
+;	Zero a chunk of memory.
+;
+__uzero:
+	pop iy
+	pop de	; return
+	pop hl	; address
+	pop bc	; size
+	push bc
+	push hl
+	push de
+	push iy
+	ld a, b	; check for 0 copy
+	or c
+	ret z
+	call map_process_save
+	ld (hl), #0
+	dec bc
+	ld a, b
+	or c
+	jp z, uputc_out
+	ld e, l
+	ld d, h
+	inc de
+	; This won't adjust HL/DE/BC as LDIR does in all cases
+	; but that isn't a problem.
+	call ldir_or_dma
+	jr uputc_out
 
 ;
 ;	We can't really optimize these much
@@ -54,6 +85,7 @@ __uputc:
 	call map_process_save
 	ld (hl), e
 uputc_out:
+	ld hl,#0
 	jp map_kernel_restore			; map the kernel back below common
 
 __uputw:
@@ -69,7 +101,7 @@ __uputw:
 	ld (hl), e
 	inc hl
 	ld (hl), d
-	jp map_kernel_restore
+	jr uputc_out
 
 __ugetc:
 	pop de
@@ -238,32 +270,4 @@ uget_large:
 	ld b,a
 	or c				; Check for exactly 16K corner case
 	jr uget_next			; See if we are doing 16K or not
-
-;
-;	FIXME: the same byte along copy trick works with DMA so we should
-;	use it when we can.
-;
-__uzero:
-	pop iy
-	pop de	; return
-	pop hl	; address
-	pop bc	; size
-	push bc
-	push hl	
-	push de
-	push iy
-	ld a, b	; check for 0 copy
-	or c
-	ret z
-	call map_process_save
-	ld (hl), #0
-	dec bc
-	ld a, b
-	or c
-	jp z, uputc_out
-	ld e, l
-	ld d, h
-	inc de
-	ldir
-	jp uputc_out
 
