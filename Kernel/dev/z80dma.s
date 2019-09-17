@@ -84,10 +84,10 @@ iom_memdst:	.dw 0		; Address
 		.db 0x87	; Enable DMA
 
 ldir_or_dma:
-		ld a,h
+		ld a,b
 		or a
 		jr nz, dma_memcpy
-		ld a,l
+		ld a,c
 		cp #32
 		jr nc, dma_memcpy
 		ldir
