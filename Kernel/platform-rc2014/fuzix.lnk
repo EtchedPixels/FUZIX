@@ -40,7 +40,6 @@ tty.rel
 devsys.rel
 devinput.rel
 usermem.rel
-usermem_std-z80-banked.rel
 platform-rc2014/ppide_rbc.rel
 platform-rc2014/discard.rel
 platform-rc2014/devtty.rel
@@ -56,4 +55,5 @@ platform-rc2014/ds1302_rc2014.rel
 platform-rc2014/net_native.rel
 platform-rc2014/z80dma.rel
 platform-rc2014/ide.rel
+platform-rc2014/usermem.rel
 -e
