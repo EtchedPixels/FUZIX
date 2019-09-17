@@ -47,17 +47,19 @@ dma_memdst:	.dw 0		; Address
 ;
 script_memio:
 		.db 0xC3	; Reset
-		.db 0x7D	; Set Port A address and length 16bit
-mio_memsrc:	.dw 0		; transfer mode from A->B
+		.db 0x79	; Set Port A address and length 16bit
+mio_memsrc:	.dw 0		; transfer mode from B->A
 mio_memlen:	.dw 0
 		.db 0x14	; Set port A memory, incrementing
-		.db 0x38	; Set port B fixed, I/O
+		.db 0x38	; Set port B fixed, I/O (28?)
 		.db 0x80	; C0enables DMA No matching
 		.db 0xAD	; Port B timing and interrupt config
 				; (continuous, 16bit addr follows. no int)
 mio_memdst:	.dw 0		; Address
 		.db 0x92;82?	; Stop on end, /ce & /wait, ready active low
-		.db 0xCF	; Load
+		.db 0xCF	; Load register B, reset counter
+		.db 0x05	; Change direction A->B
+		.db 0xCF	; Load register A as port address, set counter
 		.db 0xB3	; Force ready (ignore /ce and /wait)
 		.db 0x87	; Enable DMA
 
@@ -122,11 +124,28 @@ sector_dma_in:
 		ret
 
 ;
+;	Write to CF or similar device flat out with no DMA handshaking.
+;
+sector_dma_out:
+;
 ;	Until we sort out the extra load rules
 ;		
-sector_dma_out:
+
 		otir				; EDB3
 		otir
+		ret
+		ld (mio_memsrc),hl		; source address
+		ld (mio_memdst),bc		; I/O (B = 0)
+		ld bc,#511
+		ld (mio_memlen),bc		; 512 bytes
+		ld hl,#script_memio
+		ld bc,#(18*256 + DMAPORT)
+		otir
+		; CPU stalls until DMA done
+		ld hl,(mio_memdst)
+		; Return with expected HL
+		inc h
+		inc h
 		ret
 
 		.area _DISCARD
