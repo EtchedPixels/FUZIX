@@ -95,6 +95,11 @@ void platform_interrupt(void)
 {
 	/* FIXME: For Z180 we know if the ASCI ports are the source so
 	   should fastpath them (vector 8 and 9) */
+	uint8_t ti_r = 0;
+
+	if (tms9918a_present)
+		ti_r = tms9918a_ctrl;
+
 	tty_pollirq();
 	if (z180_present) {
 		if (irqvector == 3)	/* Timer 0 */
@@ -104,6 +109,13 @@ void platform_interrupt(void)
 		CTC_CH3 = 0x47;
 		CTC_CH3 = 255;
 		timer_tick(n);
+	} else if (ti_r & 0x80) {
+		/* We areusing the TMS9918A as a timer */
+		timerct++;
+		if (timerct == 6) {	/* Always NTSC */
+			timer_interrupt();
+			timerct = 0;
+		}
 	}
 }
 
@@ -161,7 +173,7 @@ static void sync_clock_read(void)
  */
 void sync_clock(void)
 {
-	if (!ctc_present) {
+	if (!ctc_present && !tms9918a_present) {
 		irqflags_t irq = di();
 		int16_t tmp;
 		if (!re_enter++) {
