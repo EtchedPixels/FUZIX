@@ -176,7 +176,7 @@ void tty_pollirq_sio0(void)
 		SIOA_C = 0;		// read register 0
 		ca = SIOA_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[1])) {
+		if (ca & 1) {
 			progress = 1;
 			tty_inproc(1, SIOA_D);
 		}
@@ -198,7 +198,7 @@ void tty_pollirq_sio0(void)
 		}
 		SIOB_C = 0;		// read register 0
 		cb = SIOB_C;
-		if ((cb & 1) && !fullq(&ttyinq[2])) {
+		if (cb & 1) {
 			tty_inproc(2, SIOB_D);
 			progress = 1;
 		}
@@ -234,7 +234,7 @@ void tty_pollirq_sio1(void)
 		SIOC_C = 0;		// read register 0
 		ca = SIOC_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[3])) {
+		if (ca & 1) {
 			progress = 1;
 			tty_inproc(3, SIOC_D);
 		}
@@ -256,7 +256,7 @@ void tty_pollirq_sio1(void)
 		}
 		SIOD_C = 0;		// read register 0
 		cb = SIOD_C;
-		if ((cb & 1) && !fullq(&ttyinq[4])) {
+		if (cb & 1) {
 			tty_inproc(4, SIOD_D);
 			progress = 1;
 		}

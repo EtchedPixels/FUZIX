@@ -94,7 +94,7 @@ void tty_poll(void)
 		SIOA_C = 0;		// read register 0
 		ca = SIOA_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[1])) {
+		if (ca & 1) {
 			progress = 1;
 			tty_inproc(1, SIOA_D);
 		}
@@ -115,7 +115,7 @@ void tty_poll(void)
 
 		SIOB_C = 0;		// read register 0
 		cb = SIOB_C;
-		if ((cb & 1) && !fullq(&ttyinq[2])) {
+		if (cb & 1) {
 			tty_inproc(2, SIOB_D);
 			progress = 1;
 		}
