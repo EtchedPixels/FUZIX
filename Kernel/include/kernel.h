@@ -1029,6 +1029,9 @@ extern arg_t _select(void);
 #define selwake_dev(major,minor,smask) do {} while(0)
 #endif
 
+/* start.c */
+extern void set_boot_line(const char *p);
+
 /* swap.c */
 extern uint16_t swappage;
 

@@ -3,7 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <tty.h>
-#include <config.h>
 
 #define BAD_ROOT_DEV 0xFFFF
 
@@ -304,6 +303,20 @@ uint16_t get_root_dev(void)
 
 	return rd;
 }
+
+void set_boot_line(const char *p)
+{
+	/* This is a little bit ugly but we want it in discard. Override any
+	   command line if the user already hit a key */
+	/* Give the user bit of time by calling pause(10) */
+	udata.u_argn = 10;
+	_pause();
+	if (!tty_pending(TTYDEV)) {
+		memcpy(bootline, p, 63);
+		cmdline = bootline;
+	}
+}
+
 #else
 
 static uint8_t first = 1;
