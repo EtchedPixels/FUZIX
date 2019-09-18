@@ -14,7 +14,11 @@ typedef struct __packed {
 #define MBR_ENTRY_COUNT 4
 #define MBR_SIGNATURE 0xAA55
 typedef struct __packed {
-    uint8_t bootcode[446];
+    uint8_t bootcode[380];
+    /* Last 66 bytes go to the command line */
+    uint16_t cmdflag;
+#define MBR_BOOT_CMD 0x5EB5
+    uint8_t cmdline[64];
     partition_table_entry_t partition[MBR_ENTRY_COUNT];
     uint16_t signature;
 } boot_record_t;
