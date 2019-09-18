@@ -99,9 +99,32 @@ extern uint16_t swap_dev;
 #define CONFIG_NO_CLOCK
 
 #define CONFIG_INPUT			/* Input device for joystick */
-#define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
+#define CONFIG_INPUT_GRABMAX	3
 
-#define NUM_DEV_TTY 4
+/* Video terminal, not just a serial tty */
+#define CONFIG_VT
+/* Vt definitions */
+#define VT_WIDTH	40
+#define VT_HEIGHT	24
+#define VT_RIGHT	39
+#define VT_BOTTOM	23
+/* Keyboard contains non-ascii symbols */
+#define CONFIG_UNIKEY
+/* Font for the TMS9918A */
+#define CONFIG_FONT6X8
+/* Indirect queues so we can have lots of tty devices */
+#define CONFIG_INDIRECT_QUEUES
+/* And as they are banked we can make them full Unix size */
+#define TTYSIZE		256
+typedef uint8_t *queueptr_t;
+
+#define GETQ(x)		qread((x))
+#define PUTQ(x,y)	qwrite((x),(y))
+
+extern uint8_t qread(uint8_t *addr) __z88dk_fastcall;
+extern void qwrite(uint8_t *addr, uint8_t val);
+
+#define NUM_DEV_TTY 8
 
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)

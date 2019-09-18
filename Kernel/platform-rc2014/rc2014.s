@@ -27,6 +27,11 @@
 	.globl _bufpool
 	.globl _int_disabled
 
+	.globl _qread
+	.globl _qwrite
+
+	.globl _code1_end
+
         ; imported symbols
         .globl _ramsize
         .globl _procmem
@@ -47,6 +52,9 @@
 	; exported debugging tools
 	.globl outchar
 	.globl inchar
+
+	.globl s__CODE1
+	.globl l__CODE1
 
         .include "kernel.def"
         .include "../kernel-z80.def"
@@ -374,6 +382,38 @@ sio_setup:
 	.byte 0xE1
 	.byte 0x05
 	.byte RTS_LOW
+
+;
+;	TTY queues. We keep them in CODE1 so this is as simple as
+;	letting the bank logic do the natural thing. As these helpers and
+;	tty are in bank 1 it won't even cause us any grief. Common addresses
+;	and data addresses also continue to work so we don't need magic for
+;	the devinput queue.
+;
+
+	.area _CODE1
+_qread:
+	ld l,(hl)
+	ret
+_qwrite:
+	pop bc
+	pop hl
+	pop de
+	ld (de),a
+	push de
+	push hl
+	push bc
+	ret
+
+;
+;	Return where CODE1 ends. Tricky to do in C as the linker symbols
+;	have no leading underscore.
+;
+_code1_end:
+	ld hl,#s__CODE1
+	ld de,#l__CODE1
+	add hl,de
+	ret
 
 ;=========================================================================
 ; Kernel code

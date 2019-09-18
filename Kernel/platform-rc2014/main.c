@@ -8,6 +8,7 @@
 #include <rtc.h>
 #include <ds1302.h>
 #include <rc2014.h>
+#include <zxkey.h>
 
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
@@ -18,6 +19,7 @@ uint8_t sio1_present;
 uint8_t z180_present;
 uint8_t tms9918a_present;
 uint8_t dma_present;
+uint8_t zxkey_present;
 
 /* From ROMWBW */
 uint16_t syscpu;
@@ -28,8 +30,15 @@ uint8_t systype;
 uint8_t rtc_shadow;
 uint16_t rtc_port = 0x00C0;
 
+/* TMS9918A */
+uint8_t vtattr_cap;
+uint16_t vdpport = 0x99 + (40 << 8);	/* 256 * width + port */
+
+uint8_t shadowcon;
+
 /* Our pool ends at 0x4000 */
 uint8_t *initptr = (uint8_t *)0x4000;
+uint8_t *code1ptr = (uint8_t *)0xC000;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
@@ -39,6 +48,15 @@ uint8_t *init_alloc(uint16_t size)
 	if(p < (uint8_t *)bufpool_end)
 		panic("imem");
 	initptr = p;
+	return p;
+}
+
+uint8_t *code1_alloc(uint16_t size)
+{
+	uint8_t *p = code1ptr - size;
+	if(p < (uint8_t *)code1_end())
+		panic("1mem");
+	code1ptr = p;
 	return p;
 }
 
@@ -72,12 +90,6 @@ void platform_idle(void)
 	}
 }
 
-uint8_t platform_param(unsigned char *p)
-{
-	used(p);
-	return 0;
-}
-
 static int16_t timerct;
 
 /* Call timer_interrupt at 10Hz */
@@ -100,6 +112,9 @@ void platform_interrupt(void)
 		ti_r = tms9918a_ctrl;
 
 	tty_pollirq();
+	if ((ti_r & 0x80) && zxkey_present)
+		zxkey_poll();
+
 	if (z180_present) {
 		if (irqvector == 3)	/* Timer 0 */
 			timer_interrupt();
@@ -126,10 +141,15 @@ void platform_interrupt(void)
 
 int strlen(const char *p)
 {
-  int len = 0;
-  while(*p++)
-    len++;
-  return len;
+	int len = 0;
+	while(*p++)
+		len++;
+	return len;
+}
+
+void do_beep(void)
+{
+	/* For now */
 }
 
 /*

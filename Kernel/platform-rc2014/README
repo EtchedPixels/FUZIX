@@ -1,3 +1,8 @@
+
+- Why is the clock rate bonkers ?
+- Debug the ZX keyboard driver
+- Add multiple console support
+
 This is Fuzix for the RC2014
 
 The starting point was Scott Baker's git tree but this has been seen been
@@ -26,10 +31,9 @@ Supported Hardware
 
 	Z80DMA at 0x04
 
-	16x50 at 0xC0-0xF8 (the range is scanned)
+	16x50 at 0xC0-0xF8 (the range is scanned).
 
-	TMS9918A at 0x98/0x99. Only used for graphics at this point not as a
-	console device
+	TMS9918A at 0x98/0x99
 
 	VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD
 	Terminal will be supported. This will display all output to the serial

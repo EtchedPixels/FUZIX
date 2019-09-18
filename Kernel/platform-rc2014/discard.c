@@ -7,7 +7,7 @@
 #include <blkdev.h>
 #include <ppide.h>
 #include <rc2014.h>
-#include "config.h"
+#include <vt.h>
 #include "vfd-term.h"
 #include "z180_uart.h"
 
@@ -16,12 +16,12 @@
 static const uint8_t tmstext[] = {
 	0x00,
 	0xD0,
+	0x00,		/* Text at 0x0000 (space for 4 screens) */
+	0x00,
+	0x02,		/* Patterns at 0x1000 */
 	0x00,
 	0x00,
-	0x01,
-	0x00,
-	0x00,
-	0xF5
+	0xF1		/* white on black */
 };
 
 static const uint8_t tmsreset[] = {
@@ -49,24 +49,16 @@ static void tmsconfig(uint8_t *r)
 	}
 }
 
-static void tmswipe(void)
-{
-	uint16_t ct;
-	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x40;
-	for(ct = 0; ct < 16384; ct++) {
-		tms9918a_data = 0x00;
-		nap();
-	}
-}
+extern uint8_t fontdata_6x8[];
 
 static uint8_t probe_tms9918a(void)
 {
 	uint16_t ct = 0;
 	uint8_t v;
+	uint8_t *fp;
+
 	/* Try turning it on and looking for a vblank */
 	tmsconfig(tmsreset);
-	tmswipe();
 	tmsconfig(tmstext);
 	/* Should see the top bit go high */
 	do {
@@ -81,9 +73,22 @@ static uint8_t probe_tms9918a(void)
 	v = tms9918a_ctrl;
 	if (v & 0x80)
 		return 0;
+
+	/* We have a TMS9918A, load up the fonts */
+	ct = 0;
+
+	fp = fontdata_6x8;
+
+	tms9918a_ctrl = 0x00;
+	tms9918a_ctrl = 0x40 | 0x11;	/* Base of character 32 */
+	while(ct++ < 768) {
+		tms9918a_data = *fp++ << 2;
+		nap();
+	}
+	/* Initialize the VT layer */
+	vtinit();
 	return 1;
 }
-
 
 static uint8_t probe_16x50(uint8_t p)
 {
@@ -105,32 +110,20 @@ static uint8_t probe_16x50(uint8_t p)
 		/* Decode types with FIFO */
 		if (r & 0x80) {
 			if (r & 0x20)
-				return UART_16750;
-			return UART_16550A;
+				return 7;
+			return 5;	/* 16550A */
 		}
 		/* Should never find this real ones were discontinued
 		   very early due to a hardware bug */
-		return UART_16550;
+		return 0;
 	} else {
 		/* Decode types without FIFO */
 		out(p + 7, 0x2A);
 		if (in (p + 7) == 0x2A)
-			return UART_16450;
-		return UART_8250;
+			return 4;
+		return 8;
 	}
 }
-
-const char *uart_name[] = {
-	"?",
-	"6850 ACIA",
-	"Zilog SIO",
-	"Z180",
-	"8250",
-	"16450",
-	"16550",
-	"16550A",
-	"16750"
-};
 
 void init_hardware_c(void)
 {
@@ -140,12 +133,16 @@ void init_hardware_c(void)
 	ramsize = 512;
 	procmem = 512 - 80;
 
+	tms9918a_present = probe_tms9918a();
+	if (tms9918a_present)
+		shadowcon = 1;
+
 	/* FIXME: When ROMWBW handles 16550A or second SIO, or Z180 as
 	   console we will need to address this better */
 	if (z180_present) {
 		z180_setup(!ctc_present);
-		register_uart(UART_Z180, Z180_IO_BASE, &z180_uart0);
-		register_uart(UART_Z180, Z180_IO_BASE + 1, &z180_uart1);
+		register_uart(Z180_IO_BASE, &z180_uart0);
+		register_uart(Z180_IO_BASE + 1, &z180_uart1);
 		rtc_port = 0x0C;
 		rtc_shadow = 0x0C;
 	}
@@ -153,11 +150,11 @@ void init_hardware_c(void)
 	/* Set the right console for kernel messages */
 	/* ROMWBW favours the SIO then the ACIA */
 	if (sio_present) {
-		register_uart(UART_SIO, 0x80, &sio_uart);
-		register_uart(UART_SIO, 0x82, &sio_uartb);
+		register_uart(0x80, &sio_uart);
+		register_uart(0x82, &sio_uartb);
 	}
 	if (acia_present)
-		register_uart(UART_ACIA, 0xA0, &acia_uart);
+		register_uart(0xA0, &acia_uart);
 }
 
 void pagemap_init(void)
@@ -184,25 +181,16 @@ void pagemap_init(void)
 		ds1302_init();
 	}
 
-	if (acia_present)
-		kputs("6850 ACIA detected at 0xA0.\n");
-	if (sio_present)
-		kputs("Z80 SIO detected at 0x80.\n");
-
 	/* Further ports we register at this point */
 	if (sio1_present) {
-		kputs("Z80 SIO detected at 0x84.\n");
-		register_uart(UART_SIO, 0x84, &sio_uart);
-		register_uart(UART_SIO, 0x86, &sio_uartb);
+		register_uart(0x84, &sio_uart);
+		register_uart(0x86, &sio_uartb);
 	}
 	if (ctc_present)
 		kputs("Z80 CTC detected at 0x88.\n");
 
-	/* Not clear how we should attach this to a console, for now
-	   our tty driver logic attaches it to the first console port */
-	tms9918a_present = probe_tms9918a();
 	if (tms9918a_present)
-		kputs("TMS9918A at 0x98/99.\n");
+		kputs("TMS9918A VDP detected at 0x98.\n");
 
 	dma_present = !probe_z80dma();
 	if (dma_present)
@@ -217,16 +205,47 @@ void pagemap_init(void)
 		while(i) {
 			if (!ds1302_present || rtc_port != i) {
 				if (m = probe_16x50(i))
-					register_uart(m, i, &ns16x50_uart);
+					register_uart(i, &ns16x50_uart);
 			}
 			i += 0x08;
 		}
 	}
+	display_uarts();
 }
 
 void map_init(void)
 {
 }
+
+/* string.c
+ * Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
+ * This file is part of the Linux-8086 C library and is distributed
+ * under the GNU Library General Public License.
+ */
+
+static int strcmp(const char *d, const char *s)
+{
+	register char *s1 = (char *) d, *s2 = (char *) s, c1, c2;
+
+	while ((c1 = *s1++) == (c2 = *s2++) && c1);
+	return c1 - c2;
+}
+
+uint8_t platform_param(unsigned char *p)
+{
+	/* If we have a keyboard then the TMS9918A becomes a real tty
+	   and we make it the primary console */
+	if (strcmp(p, "zxkey") == 0) {
+		zxkey_present = 1;
+		if (tms9918a_present) {
+			shadowcon = 0;
+			insert_uart(0x98, &tms_uart);
+		}
+		return 1;
+	}
+	return 0;
+}
+
 
 void device_init(void)
 {

@@ -6,6 +6,7 @@
 #include <devtty.h>
 #include <graphics.h>
 #include <rc2014.h>
+#include <vt.h>
 #include "z180_uart.h"
 #include "vfd-term.h"
 #include "vfd-debug.h"
@@ -60,7 +61,11 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 	if (minor == 1)
 		vfd_term_write(c);
 #endif
-	uart[minor]->putc(minor, ttyport[minor], c);
+        /* If we have a video display then the first console output will
+	   go to it as well *unless it has a keyboard too* */
+        if (minor == 1 && shadowcon)
+		vtoutput(&c, 1);
+        uart[minor]->putc(minor, ttyport[minor], c);
 }
 
 void tty_sleeping(uint_fast8_t minor)
@@ -187,6 +192,7 @@ struct uart acia_uart = {
 	acia_setup,
 	carrier_unwired,
 	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
+	"ACIA"
 };
 
 static uint8_t old_c[NUM_DEV_TTY + 1];
@@ -333,6 +339,7 @@ struct uart sio_uart = {
 	sio_setup,
 	sio_carrier,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"Z80 SIO"
 };
 
 struct uart sio_uartb = {
@@ -342,6 +349,7 @@ struct uart sio_uartb = {
 	sio_setup,
 	sio_carrier,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"Z80 SIO"
 };
 
 static uint8_t ns16x50_intr(uint_fast8_t minor, uint_fast8_t port)
@@ -440,6 +448,7 @@ struct uart ns16x50_uart = {
 	ns16x50_setup,
 	ns16x50_carrier,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"16x50"
 };
 
 static uint8_t asci_intr0(uint_fast8_t minor, uint_fast8_t port)
@@ -581,6 +590,7 @@ struct uart z180_uart0 = {
 	asci_setup,
 	carrier_unwired,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|CRTSCTS|_CSYS,
+	"ASCI UART",
 };
 
 struct uart z180_uart1 = {
@@ -590,24 +600,100 @@ struct uart z180_uart1 = {
 	asci_setup,
 	carrier_unwired,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|CRTSCTS|_CSYS,
+	"ASCI UART"
 };
 
+static uint8_t tms_intr(uint8_t minor, uint8_t port)
+{
+	used(minor);
+	used(port);
+	return 1;
+}
+
+/*
+ *	Console driver for the TMS9918A
+ */
+static void tms_setup(uint8_t minor, uint8_t port)
+{
+	used(minor);
+	used(port);
+}
+
+static uint8_t tms_writeready(uint_fast8_t minor, uint_fast8_t p)
+{
+	used(minor);
+	used(p);
+	return TTY_READY_NOW;
+}
+
+static void tms_putc(uint_fast8_t minor, uint_fast8_t p, uint_fast8_t c)
+{
+	used(minor);
+	used(p);
+	vtoutput(&c, 1);
+}
+
+
+struct uart tms_uart = {
+	tms_intr,
+	tms_writeready,
+	tms_putc,
+	tms_setup,
+	carrier_unwired,
+	_CSYS,
+	"TMS9918A"
+};
 
 /* FIXME: could move this routine into discard */
 
-uint8_t register_uart(uint8_t type, uint8_t p, struct uart *ops)
+uint8_t register_uart(uint8_t port, struct uart *ops)
 {
 	queue_t *q = ttyinq + nuart;
-	if (nuart > NUM_DEV_TTY)
+	uint8_t *p = code1_alloc(TTYSIZ);
+	if (p == NULL || nuart > NUM_DEV_TTY)
 		return 0;
-	ttyport[nuart] = p;
+	ttyport[nuart] = port;
 	uart[nuart] = ops;
-	kprintf("tty%d: %s @ %2x.\n", nuart, uart_name[type], p);
-	q->q_base = q->q_head = q->q_tail = init_alloc(TTYSIZ);
+	q->q_base = q->q_head = q->q_tail = p;
 	q->q_size = TTYSIZ;
 	q->q_count = 0;
 	q->q_wakeup =  TTYSIZ/2;
 	return nuart++;
+}
+
+/* Ditto into discard */
+
+void insert_uart(uint8_t port, struct uart *ops)
+{
+	struct uart **p = &uart[NUM_DEV_TTY];
+	while(p != uart + 1) {
+		*p = p[-1];
+		p--;
+	}
+	uart[1] = ops;
+	ttyport[1] = port;
+	ttyinq[1].q_base = ttyinq[1].q_head = ttyinq[1].q_tail = init_alloc(TTYSIZ);
+	ttyinq[1].q_size = TTYSIZ;
+	ttyinq[1].q_count = 0;
+	ttyinq[1].q_wakeup =  TTYSIZ/2;
+	/* We may have booted one out */
+	if (nuart < NUM_DEV_TTY)
+		nuart++;
+}
+
+/* Ditto into discard */
+
+void display_uarts(void)
+{
+	struct uart **t = &uart[1];
+	uint8_t *p = ttyport + 1;
+	uint8_t n = 1;
+
+	while(n++ < nuart) {
+		kprintf("%s detected at 0x%2x.\n", (*t)->name, *p);
+		p++;
+		t++;
+	}
 }
 
 /*
@@ -616,7 +702,7 @@ uint8_t register_uart(uint8_t type, uint8_t p, struct uart *ops)
 
 static const struct videomap tms_map = {
 	0,
-	0x88,
+	0x98,
 	0, 0,
 	0, 0,
 	1,
@@ -632,14 +718,13 @@ static const struct display tms_mode = {
     255, 255,
     FMT_VDP,
     HW_VDP_9918A,
-    GFX_MULTIMODE|GFX_MAPPABLE,	/* We don't support it as a console yet */
+    GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
     16,
     0
 };
 
 int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-  uint8_t m;
   if (minor == 1 && tms9918a_present) {
   	switch(arg) {
   	case GFXIOC_GETINFO:
@@ -650,5 +735,5 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	}
   }
-  return tty_ioctl(minor, arg, ptr);
+  return vt_ioctl(minor, arg, ptr);
 }

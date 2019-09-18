@@ -1,8 +1,6 @@
 #ifndef __RC2014_SIO_DOT_H__
 #define __RC2014_SIO_DOT_H__
 
-#include "config.h"
-
 /* Standard RC2014 */
 #define SIO0_BASE 0x80
 __sfr __at (SIO0_BASE + 0) SIOA_C;
@@ -34,6 +32,7 @@ __sfr __at 0x98 tms9918a_data;
 __sfr __at 0x99 tms9918a_ctrl;
 
 extern void sio2_otir(uint8_t port) __z88dk_fastcall;
+extern uint16_t code1_end(void);
 
 extern uint8_t acia_present;
 extern uint8_t ctc_present;
@@ -42,18 +41,9 @@ extern uint8_t sio1_present;
 extern uint8_t z180_present;
 extern uint8_t tms9918a_present;
 extern uint8_t dma_present;
+extern uint8_t zxkey_present;
 
 extern uint16_t probe_z80dma(void);
-
-
-#define UART_ACIA	1
-#define UART_SIO	2
-#define UART_Z180	3
-#define UART_8250	4
-#define UART_16450	5
-#define UART_16550	6
-#define UART_16550A	7
-#define UART_16750	8
 
 /* From ROMWBW */
 extern uint16_t syscpu;
@@ -69,11 +59,14 @@ struct uart {
     void (*setup)(uint_fast8_t, uint_fast8_t);
     uint8_t (*carrier)(uint_fast8_t, uint_fast8_t);
     uint16_t cmask;
+    const char *name;
 };
 
 extern struct uart *uart[NUM_DEV_TTY + 1];
 extern uint8_t ttyport[NUM_DEV_TTY + 1];
-extern uint8_t register_uart(uint8_t type, uint8_t port, struct uart *);
+extern uint8_t register_uart( uint8_t port, struct uart *);
+extern void insert_uart(uint8_t port, struct uart *);
+extern void display_uarts(void);
 
 extern struct uart acia_uart;
 extern struct uart sio_uart;
@@ -81,7 +74,9 @@ extern struct uart sio_uartb;
 extern struct uart ns16x50_uart;
 extern struct uart z180_uart0;
 extern struct uart z180_uart1;
+extern struct uart tms_uart;
 
 extern uint8_t *init_alloc(uint16_t size);
+extern uint8_t *code1_alloc(uint16_t size);
 
 #endif

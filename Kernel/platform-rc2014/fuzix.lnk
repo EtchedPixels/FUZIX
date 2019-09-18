@@ -37,6 +37,8 @@ mm.rel
 swap.rel
 bank16k.rel
 tty.rel
+vt.rel
+font6x8.rel
 devsys.rel
 devinput.rel
 usermem.rel
@@ -56,4 +58,7 @@ platform-rc2014/net_native.rel
 platform-rc2014/z80dma.rel
 platform-rc2014/ide.rel
 platform-rc2014/usermem.rel
+platform-rc2014/zxkey.rel
+platform-rc2014/zxkeyboard.rel
+platform-rc2014/vdp1.rel
 -e

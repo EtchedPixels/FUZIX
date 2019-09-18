@@ -1,4 +1,4 @@
-ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vfdterm.s
+ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vfdterm.s vdp1.s
 CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c ide.c
 CSRCS += devinput.c
 DISCARD_CSRCS = discard.c
@@ -8,6 +8,8 @@ DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014.s
 DASRCS += ../dev/z80dma.s
 NSRCS = ../dev/net/net_native.c
+DRSRCS = ../dev/rc2014/zxkeyboard.c
+DRASRCS = ../dev/rc2014/zxkey.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
@@ -16,10 +18,13 @@ DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
 NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+DROBJS = $(patsubst ../dev/rc2014/%.c,%.rel, $(DRSRCS))
+DRAOBJS = $(patsubst ../dev/rc2014/%.s,%.rel, $(DRASRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS)
+OBJS += $(DISCARD_COBJS) $(NOBJS) $(DROBJS) $(DRAOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/net/
+CROSS_CCOPTS += -I../dev/ -I../dev/net/ -I../dev/rc2014/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -45,6 +50,13 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 
 $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+
+$(DROBJS): %.rel: ../dev/rc2014/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+
+$(DRAOBJS): %.rel: ../dev/rc2014/%.s
+	$(CROSS_AS) $(ASOPTS) $@ $<
+
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin fuzix.com fuzix.rom

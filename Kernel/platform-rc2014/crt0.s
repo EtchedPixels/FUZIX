@@ -20,6 +20,7 @@
         .area _GSFINAL     ; unused
 	.area _BUFFERS
         .area _DISCARD
+	.area _FONT	   ; only used at start up so discardable
         .area _INITIALIZER ; binman copies this to the right place for us
 	.area _CODE1
 	.area _DISCARD1
