@@ -88,6 +88,7 @@ SRCS  = banner.c \
 	ps.c \
 	remount.c \
 	seq.c \
+	setboot.c \
 	setdate.c \
 	size.c \
 	sleep.c \
