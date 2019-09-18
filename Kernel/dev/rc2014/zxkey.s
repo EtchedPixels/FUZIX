@@ -66,7 +66,6 @@ scannext:
 		ld (hl),a
 		inc d
 nomods:		inc hl		; keymap
-		inc hl		; next keybuf
 		rrc b
 		; If the 0 bit has hit C then we are done
 		jr c,scannext
@@ -83,6 +82,8 @@ nomods:		inc hl		; keymap
 		; and update the old map as we go so that next time
 		; we see only new changes
 		;
+		ld a,#0xFF
+		out (0xFD),a
 
 		push ix
 
@@ -104,7 +105,9 @@ keyscan:
 		djnz keyscan
 
 		pop ix
-		
+
+		xor a
+		out (0xFD),a
 		;
 		;	Final bits of work
 		;
@@ -159,13 +162,13 @@ zxkey_loop:
 		; All changes done ?
 		or a
 		ret z
-		rlca
+		add a
 		jr nc, zxkey_next
 		push af
 		; This bit changed
 		; E = row, D = bit num
 		bit 7,c		; key up or down ?
-		jr nz, zxkey_up
+		jr z, zxkey_down
 		call key_is_shift
 		jr z, nonotify
 		ld a,(_keyboard_grab)
@@ -186,7 +189,7 @@ nonotify:
 		ld (keysdown),a
 		pop af
 		jr zxkey_next
-zxkey_up:
+zxkey_down:
 		call key_is_shift
 		jr z, zxkey_next
 		ld a,#1
@@ -195,6 +198,7 @@ zxkey_up:
 		ld a,(keysdown)
 		inc a
 		ld (keysdown),a
+		pop af
 zxkey_next:
 		inc d
 		rlc c
@@ -330,6 +334,7 @@ notsymsh:
 		.area _DISCARD
 
 _zxkey_init:
+		; Set up both arrays
 		ld hl,#keybuf
 		ld a,#0xFF
 		ld b,#10
