@@ -201,7 +201,7 @@ static uint8_t sio_intrb(uint_fast8_t minor, uint_fast8_t p)
 {
 	uint8_t r;
 	r = in(p);
-	if ((r & 1) && !fullq(&ttyinq[minor]))
+	if (r & 1)
 		tty_inproc(minor, in(p + 1));
 	if (r & 2)
 		out(p, 2 << 5);
