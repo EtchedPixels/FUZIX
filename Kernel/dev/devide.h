@@ -1,7 +1,7 @@
 #ifndef __DEVIDE_DOT_H__
 #define __DEVIDE_DOT_H__
 
-#include "config.h"
+#include <kernel.h>
 #include "platform_ide.h"
 
 /* IDE Drive Configuration (in config.h)
