@@ -235,8 +235,9 @@ uint8_t platform_param(unsigned char *p)
 {
 	/* If we have a keyboard then the TMS9918A becomes a real tty
 	   and we make it the primary console */
-	if (strcmp(p, "zxkey") == 0) {
+	if (strcmp(p, "zxkey") == 0 && !zxkey_present) {
 		zxkey_present = 1;
+		zxkey_init();
 		if (tms9918a_present) {
 			shadowcon = 0;
 			insert_uart(0x98, &tms_uart);
