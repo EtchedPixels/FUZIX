@@ -230,6 +230,8 @@ extern int tty_open(uint_fast8_t minor, uint16_t flag);
 extern int tty_close(uint_fast8_t minor);
 extern int tty_ioctl(uint_fast8_t minor, uarg_t request, char *data);
 
+#define tty_pending(minor) ttyinq[(uint8_t)(minor)].q_count
+
 extern void tty_exit(void);
 extern void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag);
 
