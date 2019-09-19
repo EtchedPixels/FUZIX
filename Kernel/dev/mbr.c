@@ -68,11 +68,13 @@ void mbr_parse(uint_fast8_t letter)
 	    break;
         }
 
+#ifndef BOOTDEVICE
         /* Valid first MBR, look for boot command string */
         if (seen == 0) {
 		if (le16_to_cpu(br->cmdflag) == MBR_BOOT_CMD)
 			set_boot_line(br->cmdline);
 	}
+#endif
 
 	/* avoid an infinite loop where extended boot records form a loop */
 	if(seen >= 50)
