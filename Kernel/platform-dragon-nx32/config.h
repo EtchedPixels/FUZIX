@@ -45,6 +45,7 @@
 #define VT_RIGHT	(vt_tright[curtty])
 #define VT_BOTTOM	(vt_tbottom[curtty])
 #define VT_INITIAL_LINE	0
+#define MAX_VT 4
 
 #define VIDEO_BASE	0x0400
 #define VC_BASE		0x1C00
