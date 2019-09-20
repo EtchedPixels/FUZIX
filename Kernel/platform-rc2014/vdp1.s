@@ -33,11 +33,15 @@
 	    .globl _cursor_on
 	    .globl _cursor_off
 	    .globl _cursor_disable
+	    .globl _set_console
+
 	    .globl cursorpos
 
 	    .globl _int_disabled
 
 	    .globl _vdpport
+	    .globl _inputtty
+	    .globl _outputtty
 
 	    .globl _vtattr_notify
 	    .globl _vtattr_cap
@@ -61,6 +65,12 @@ vdpout:	    ld bc, (_vdpport)
 videopos:	; turn E=Y D=X into HL = addr
 	        ; pass B = 0x40 if writing
 	        ; preserves C
+	    ld a, (_inputtty)
+	    dec a
+	    add a			; 1K per screen
+	    add a
+	    add b
+	    ld b,a
 	    ld a, e			; 0-24 Y
 	    add a, a
 	    add a, a
@@ -118,7 +128,8 @@ popret:
 scrollbuf:   .ds		40
 
 ;
-;	We don't yet use attributes...
+;	We don't yet use attributes, we should support inverse video but
+;	there isn't anything else we can do in text mode
 ;
 _scroll_down:
 	    ld a,(_int_disabled)
@@ -253,7 +264,7 @@ l3:	    out (c),a
 	    jp popret
 
 ;
-;	FIXME: should use attribute blink flag not a char
+;	Turn on the cursor if this is the displayed console
 ;
 _cursor_on:
 	    pop bc
@@ -262,6 +273,11 @@ _cursor_on:
 	    push de
 	    push hl
 	    push bc
+	    ld a,(_outputtty)
+	    ld c,a
+	    ld a,(_inputtty)
+	    cp c
+	    ret nz
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -277,10 +293,15 @@ _cursor_on:
 	    in a, (c)			; character
 	    ld (cursorpeek), a		; save it away
 	    set 6, h			; make it a write command
-	    ld a, #'_'			; write the cursor
+	    xor #0x80			; invert the video
 	    jp plotit2
 
 _cursor_off:
+	    ld a,(_outputtty)
+	    ld c,a
+	    ld a,(_inputtty)
+	    cp c
+	    ret nz
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -293,6 +314,14 @@ _vtattr_notify:
 _cursor_disable:
 	    ret
 
+_set_console:
+	    ld a,(_inputtty)
+	    ld bc, (_vdpport)
+	    dec a
+	    out (c), a
+	    ld a,#0x82
+	    out (c),a
+	    ret
 ;
 ;	This must be in data or common not code
 ;

@@ -12,7 +12,8 @@
 #include "vfd-debug.h"
 
 struct uart *uart[NUM_DEV_TTY + 1];
-static uint8_t nuart = 1;
+uint8_t nuart = 1;
+static uint8_t first_poll = 1;
 uint8_t ttyport[NUM_DEV_TTY + 1];
 
 static uint8_t sleeping;
@@ -50,7 +51,7 @@ int tty_carrier(uint_fast8_t minor)
 
 void tty_pollirq(void)
 {
-	uint8_t minor = 1;
+	uint8_t minor = first_poll;
 	while(minor < nuart)
 		minor += uart[minor]->intr(minor, ttyport[minor]);
 }
@@ -613,6 +614,11 @@ static uint8_t tms_intr(uint8_t minor, uint8_t port)
 /*
  *	Console driver for the TMS9918A
  */
+
+uint8_t outputtty = 1, inputtty = 1;
+#define VT_CON	4
+static struct vt_switch ttysave[VT_CON];
+
 static void tms_setup(uint8_t minor, uint8_t port)
 {
 	used(minor);
@@ -628,8 +634,15 @@ static uint8_t tms_writeready(uint_fast8_t minor, uint_fast8_t p)
 
 static void tms_putc(uint_fast8_t minor, uint_fast8_t p, uint_fast8_t c)
 {
-	used(minor);
+	irqflags_t irq = di();
 	used(p);
+
+	if (outputtty != minor ) {
+		vt_save(&ttysave[outputtty - 1]);
+		outputtty = minor;
+		vt_load(&ttysave[outputtty - 1]);
+	}
+	irqrestore(irq);
 	vtoutput(&c, 1);
 }
 
@@ -649,12 +662,12 @@ struct uart tms_uart = {
 uint8_t register_uart(uint8_t port, struct uart *ops)
 {
 	queue_t *q = ttyinq + nuart;
-	uint8_t *p = code1_alloc(TTYSIZ);
-	if (p == NULL || nuart > NUM_DEV_TTY)
+	uint8_t *buf = code1_alloc(TTYSIZ);
+	if (buf == NULL || nuart > NUM_DEV_TTY)
 		return 0;
 	ttyport[nuart] = port;
 	uart[nuart] = ops;
-	q->q_base = q->q_head = q->q_tail = p;
+	q->q_base = q->q_head = q->q_tail = buf;
 	q->q_size = TTYSIZ;
 	q->q_count = 0;
 	q->q_wakeup =  TTYSIZ/2;
@@ -666,18 +679,20 @@ uint8_t register_uart(uint8_t port, struct uart *ops)
 void insert_uart(uint8_t port, struct uart *ops)
 {
 	struct uart **p = &uart[NUM_DEV_TTY];
+	uint8_t *buf = code1_alloc(TTYSIZ);
 	while(p != uart + 1) {
 		*p = p[-1];
 		p--;
 	}
 	uart[1] = ops;
 	ttyport[1] = port;
-	ttyinq[1].q_base = ttyinq[1].q_head = ttyinq[1].q_tail = init_alloc(TTYSIZ);
+	first_poll++;
+	ttyinq[1].q_base = ttyinq[1].q_head = ttyinq[1].q_tail = buf;
 	ttyinq[1].q_size = TTYSIZ;
 	ttyinq[1].q_count = 0;
 	ttyinq[1].q_wakeup =  TTYSIZ/2;
 	/* We may have booted one out */
-	if (nuart < NUM_DEV_TTY)
+	if (nuart <= NUM_DEV_TTY)
 		nuart++;
 }
 

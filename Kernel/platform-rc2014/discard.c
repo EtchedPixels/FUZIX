@@ -8,6 +8,8 @@
 #include <ppide.h>
 #include <rc2014.h>
 #include <vt.h>
+#include <netdev.h>
+#include <zxkey.h>
 #include "vfd-term.h"
 #include "z180_uart.h"
 
@@ -80,11 +82,29 @@ static uint8_t probe_tms9918a(void)
 	fp = fontdata_6x8;
 
 	tms9918a_ctrl = 0x00;
+	tms9918a_ctrl = 0x40 | 0x00;	/* Console 0 */
+	while(ct++ < 4096) {
+		tms9918a_data = ' ';
+		nap();
+	}
+
+	tms9918a_ctrl = 0x00;
 	tms9918a_ctrl = 0x40 | 0x11;	/* Base of character 32 */
+	ct = 0;
 	while(ct++ < 768) {
 		tms9918a_data = *fp++ << 2;
 		nap();
 	}
+
+	tms9918a_ctrl = 0x00;
+	tms9918a_ctrl = 0x40 | 0x15;	/* Base of character 160 */
+	ct = 0;
+	/* Load inverse video font data */
+	while(ct++ < 768) {
+		tms9918a_data = ~(*fp++ << 2);
+		nap();
+	}
+
 	/* Initialize the VT layer */
 	vtinit();
 	return 1;
@@ -231,6 +251,8 @@ static int strcmp(const char *d, const char *s)
 	return c1 - c2;
 }
 
+extern uint8_t nuart;
+
 uint8_t platform_param(unsigned char *p)
 {
 	/* If we have a keyboard then the TMS9918A becomes a real tty
@@ -239,8 +261,12 @@ uint8_t platform_param(unsigned char *p)
 		zxkey_present = 1;
 		zxkey_init();
 		if (tms9918a_present) {
+			/* Add the consoles */
+			uint8_t n = 0;
 			shadowcon = 0;
-			insert_uart(0x98, &tms_uart);
+			do {
+				insert_uart(0x98, &tms_uart);
+			} while(n < 4 && nuart <= NUM_DEV_TTY);
 		}
 		return 1;
 	}

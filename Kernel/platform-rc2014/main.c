@@ -81,7 +81,7 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	if (ctc_present || z180_present)
+	if (ctc_present || z180_present || tms9918a_present)
 		__asm halt __endasm;
 	else {
 		irqflags_t irq = di();
@@ -124,7 +124,7 @@ void platform_interrupt(void)
 		CTC_CH3 = 255;
 		timer_tick(n);
 	} else if (ti_r & 0x80) {
-		/* We areusing the TMS9918A as a timer */
+		/* We are using the TMS9918A as a timer */
 		timerct++;
 		if (timerct == 6) {	/* Always NTSC */
 			timer_interrupt();

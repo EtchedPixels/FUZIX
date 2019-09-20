@@ -16,15 +16,17 @@
 		.globl _keyboard_grab
 		.globl _keyboard
 		.globl _shiftkeyboard
+		.globl _keybits
 
 		.globl _zxkey_queue_key
 
-SYMCOL		.equ	0
+
+SYMCOL		.equ	7
 SYMROW		.equ	3
-CAPSCOL		.equ	2
-CAPSROW		.equ	2
-SYMBYTE		.equ	(SYMROW * 2)
-CAPSBYTE	.equ	(CAPSROW * 2)
+CAPSCOL		.equ	5
+CAPSROW		.equ	4
+SYMBYTE		.equ	SYMROW
+CAPSBYTE	.equ	CAPSROW
 
 ;
 ;	Must match vt.h
@@ -96,9 +98,9 @@ keyscan:
 		ld c,a
 		xor (ix)	; existing key state as the OS sees it
 		; A is now the changes
-		call nz, zxkey_eval
 		; Save the new state
 		ld (ix),c
+		call nz, zxkey_eval
 		inc hl
 		inc ix
 		inc e
@@ -108,6 +110,7 @@ keyscan:
 
 		xor a
 		out (0xFD),a
+
 		;
 		;	Final bits of work
 		;
@@ -124,7 +127,7 @@ keyscan:
 		;
 		ld a,(newkey)
 		or a
-		jr nz, checkrpt
+		jr z, checkrpt
 		ld a,(_keyrepeat + KRPT_FIRST)
 		ld (kbd_timer),a
 		push af
@@ -136,11 +139,12 @@ keyscan:
 		;	repeating yet
 		;
 checkrpt:
-		ld hl,#kbd_timer
-		dec (hl)
+		ld a,(kbd_timer)
+		dec a
+		ld (kbd_timer),a
 		ret nz
 		ld a,(_keyrepeat + KRPT_CONT)
-		ld (hl),a
+		ld (kbd_timer),a
 		push af
 		call _keydecode
 		pop af
@@ -167,10 +171,12 @@ zxkey_loop:
 		push af
 		; This bit changed
 		; E = row, D = bit num
+		call key_is_shift
+		; Shift doesn't affect our counts and tables
+		jr z, zxkey_pop_next
+
 		bit 7,c		; key up or down ?
 		jr z, zxkey_down
-		call key_is_shift
-		jr z, nonotify
 		ld a,(_keyboard_grab)
 		cp #3
 		jr nz, nonotify
@@ -187,17 +193,15 @@ nonotify:
 		ld a,(keysdown)
 		dec a
 		ld (keysdown),a
-		pop af
-		jr zxkey_next
+		jr zxkey_pop_next
 zxkey_down:
-		call key_is_shift
-		jr z, zxkey_next
 		ld a,#1
 		ld (newkey),a
-		ld (keybits),de	; row and col
+		ld (_keybits),de	; row and col
 		ld a,(keysdown)
 		inc a
 		ld (keysdown),a
+zxkey_pop_next:
 		pop af
 zxkey_next:
 		inc d
@@ -215,25 +219,27 @@ keylookup_shift:
 keylookup_main:
 		ld hl,#_keyboard
 keylookup:
-		ld a,d			; 0-4 so won't overflow
+		ld a,e			; 0-4 so won't overflow
 		add a
 		add a
 		add a
-		add e
+		add d
+		ld e,a
+		ld d,#0
 		add hl,de
 		ld a,(hl)
 		ret
 
 
 _keydecode:
-		ld de,(keybits)
-		ld a,(keybuf + SYMBYTE)	; keymap for shift
+		ld de,(_keybits)
+		ld a,(keybuf + SYMBYTE)		; keymap for shift
 		ld c,a
 		ld a,(keybuf + CAPSBYTE)	; keymap for caps
 		ld b,a
-		bit SYMCOL,b
+		bit SYMCOL,c
 		jr nz, not_sym			; symbol shift not pressed
-		bit CAPSCOL,c
+		bit CAPSCOL,b
 		jr z, not_sym			; caps is pressed
 		; Shift only - so look up the shifted symbol
 		call keylookup_shift
@@ -244,10 +250,10 @@ _keydecode:
 		;
 not_sym:
 		call keylookup_main
-		bit SYMCOL,b
-		jr z,checkctrl2			; sym is down - not caps only
-		bit CAPSCOL,c
+		ld e,#0
+		bit CAPSCOL,b
 		jr nz,keyqueue			; caps is up - no changes
+		ld e,#KEYPRESS_SHIFT
 		;
 		; Capitalization and other caps shift oddities for the ZX
 		; keyboard, notably caps-0 being backspace and to fit the
@@ -268,7 +274,16 @@ notkeybs:	cp #' '
 		ld a,#3			; control-C
 		jr keyqueue
 notkeystop:	; TODO cursor keys
+		cp #'1'
+		jr c,not_switch
+		cp #'5'
+		jr nc,not_switch
+		sub #'0'
+		ld h,#0x40		; special code for console change
+		ld l,a
+		ret
 
+not_switch:
 		;
 		; There is no control key, so we map caps/sym together as
 		; control. This is less than ideal as it has to be a sticky
@@ -286,7 +301,7 @@ checkctrl2:
 		ld a,(ctrl)
 		cpl
 		ld (ctrl),a
-		ld hl,#0xffff
+		ld hl,#0
 		ret
 
 		;
@@ -320,14 +335,14 @@ key_is_shift:
 		ld a,#SYMROW
 		cp e
 		jr nz, notsymsh
-		ld a,#SYMCOL
+		ld a,#7-SYMCOL
 		cp d
 		ret
 notsymsh:
 		ld a,#CAPSROW
 		cp e
 		ret nz
-		ld a,#CAPSCOL
+		ld a,#7-CAPSCOL
 		cp d
 		ret
 
@@ -347,28 +362,39 @@ l1:
 
 		.area _CONST
 
+;
+;	5 x 8 key matrix. The eights go up and down the keyboard not
+;	across it.
+;
 _keyboard:
-		.ascii '5tg6yvhb'
-		.ascii '4rf7ucjn'
-		.ascii '3ed8ixkm'
-		.ascii '2ws9ozl'
-		.byte 0		; sym
-		.ascii '1qa0p'
-		.byte 0		; caps
+		; Decode 0: 0xFEFF
+		.ascii 'bhvyg6t5'
+		; Decode 1: 0xFDFF
+		.ascii 'njcuf7r4'
+		; Decode 2: 0xFBFF
+		.ascii 'mkxid8e3'
+		; Decode 3: 0xF7FF
+		.byte 0		; symbol shift
+		.ascii 'lzos9w2'
+		; Decode 4: 0xEFFF
+		.ascii ' '
 		.byte 10
-		.byte ' '
+		.byte 0		; caps shift
+		.ascii 'pa0q1'
+
 _shiftkeyboard:
-		.ascii '%>}&[/]*'
-		.ascii '$<{'
-		.byte "'"
-		.ascii ']?-,'
-		.ascii '#E\\(Ix+.'	; fixme x = pound
-		.ascii '@W|);:='
-		.byte 0		; sym
-		.ascii '!Q~_"'
-		.byte 0		; caps
-		.byte 10
-		.byte ' '
+		; Decode 0: 0xFEFF
+		.ascii '*^/[}&>%'
+		; Decode 1: 0xFDFF
+		.ascii ",-?]{'<$"
+		; Decode 2: 0xFBFF
+		.ascii 'm+$i\(e#'	; FIXME pound not dollar
+		; Decode 3: 0xF7FF
+		.byte 0		; symbol shift
+		.ascii '=:;[)w@'
+		; Decode 4: 0xEFFF
+		.byte ' ',10, 0	; space, enter, caps
+		.ascii '"~_q!'
 
 		.area _DATA
 ;
@@ -378,6 +404,6 @@ keysdown:	.ds 1		; Keys currently pressed (rollover protection)
 keybuf:		.ds 5		; Current matrix state
 _keymap:	.ds 5		; Previous matrix state
 newkey:		.ds 1		; Have we seen a new key ?
-keybits:	.ds 2		; If so what was its position ?
+_keybits:	.ds 2		; If so what was its position ?
 ctrl:		.ds 1		; Sticky control toggle
 kbd_timer:	.ds 1		; Timer for repeat

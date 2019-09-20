@@ -33,6 +33,7 @@ __sfr __at 0x99 tms9918a_ctrl;
 
 extern void sio2_otir(uint8_t port) __z88dk_fastcall;
 extern uint16_t code1_end(void);
+extern void set_console(void);
 
 extern uint8_t acia_present;
 extern uint8_t ctc_present;

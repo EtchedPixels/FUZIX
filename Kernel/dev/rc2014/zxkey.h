@@ -13,4 +13,6 @@ extern uint8_t keymap[5];
 extern uint8_t keyboard[5][8];
 extern uint8_t shiftkeyboard[5][8];
 
+extern uint8_t inputtty, outputtty;
+
 #endif

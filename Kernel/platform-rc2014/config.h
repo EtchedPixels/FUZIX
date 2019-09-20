@@ -103,6 +103,8 @@ extern uint16_t swap_dev;
 
 /* Video terminal, not just a serial tty */
 #define CONFIG_VT
+/* Multiple consoles */
+#define CONFIG_VT_MULTI
 /* Vt definitions */
 #define VT_WIDTH	40
 #define VT_HEIGHT	24

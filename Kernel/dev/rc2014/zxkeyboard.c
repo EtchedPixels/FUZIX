@@ -12,9 +12,13 @@
 #include <tty.h>
 #include <input.h>
 #include <devinput.h>
+#include <rc2014.h>
 #include <zxkey.h>
 
+
 struct vt_repeat keyrepeat = { 50, 5 };
+
+extern uint16_t keybits;
 
 void zxkey_poll(void)
 {
@@ -24,14 +28,24 @@ void zxkey_poll(void)
     if (c == 0)
         return;
 
+#ifdef CONFIG_VT_MULTI
+    /* We pass a special flag back for a console change */
+    if ((r >> 8) == 0x40) {
+        if (inputtty != c) {
+            inputtty = c;
+            set_console();
+        }
+        return;
+    }
+#endif
 
     switch(keyboard_grab) {
     case 0:
-        vt_inproc(1, c);
+        vt_inproc(inputtty, c);
         break;
     case 1:
         if (!input_match_meta(c)) {
-            vt_inproc(1, c);
+            vt_inproc(inputtty, c);
             break;
         }
         /* Fall through */
@@ -43,7 +57,7 @@ void zxkey_poll(void)
 	/* Queue an event giving the base key (unshifted)
 	   and the state of shift/ctrl/alt */
 	queue_input(KEYPRESS_DOWN | (r >> 8));
-//	queue_input(FIXME ... need map and byte/bit);
+	queue_input(keyboard[keybits >> 8][keybits & 0xFF]);
     }
 }
 
