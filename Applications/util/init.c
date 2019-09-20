@@ -744,6 +744,7 @@ static pid_t getty(const char **argv, const char *id)
 	char *p, buf[50], salt[3];
 	char hn[64];
 	uint8_t console = 0;
+	uint16_t vtsize;
 
 	gethostname(hn, sizeof(hn));
 
@@ -810,6 +811,13 @@ static pid_t getty(const char **argv, const char *id)
 			/* here we are inside child's context of execution */
 			envset("PATH", "/bin:/usr/bin");
 			envset("CTTY", argv[0]);
+
+			/* retrieve default size from VT if available */
+			vtsize = ioctl(fdtty, VTSIZE, &winsz);
+			if (vtsize != -1) {
+				winsz.ws_col = vtsize & 0xFF;
+				winsz.ws_row = vtsize >> 8;
+			}
 
 			if (argv[1]) {
 				if (argv[2])
