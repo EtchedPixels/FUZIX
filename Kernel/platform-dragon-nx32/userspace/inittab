@@ -7,10 +7,10 @@ is:s:respawn:/bin/sh
 # Start up
 rc::bootwait:/etc/rc
 # Terminals
-01:3:respawn:getty /dev/tty1
-02:3:respawn:getty /dev/tty2
-03:3:respawn:getty /dev/tty3
-04:3:respawn:getty /dev/tty4
+01:3:respawn:getty /dev/tty1 9600 vt52
+02:3:respawn:getty /dev/tty2 9600 vt52
+03:3:respawn:getty /dev/tty3 9600 vt52
+04:3:respawn:getty /dev/tty4 9600 vt52
 # Shutdown
 ht:6:wait:/etc/rc.halt
 #06:3:respawn:dwgetty /dev/tty6 4242
