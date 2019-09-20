@@ -289,10 +289,9 @@ void vtoutput(unsigned char *p, unsigned int len)
 	vtbusy = 0;
 }
 
+/* Note: multiple vt switching handled by platform wrapper */
 int vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
-	/* FIXME: need to address the multiple vt switching case
-	   here.. probably need to switch vt */
 	if (minor <= MAX_VT) {
 		switch(request) {
 #ifdef KEY_ROWS
