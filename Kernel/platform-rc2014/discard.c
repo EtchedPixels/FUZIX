@@ -79,7 +79,6 @@ static uint8_t probe_tms9918a(void)
 	/* We have a TMS9918A, load up the fonts */
 	ct = 0;
 
-	fp = fontdata_6x8;
 
 	tms9918a_ctrl = 0x00;
 	tms9918a_ctrl = 0x40 | 0x00;	/* Console 0 */
@@ -88,6 +87,7 @@ static uint8_t probe_tms9918a(void)
 		nap();
 	}
 
+	fp = fontdata_6x8;
 	tms9918a_ctrl = 0x00;
 	tms9918a_ctrl = 0x40 | 0x11;	/* Base of character 32 */
 	ct = 0;
@@ -96,6 +96,7 @@ static uint8_t probe_tms9918a(void)
 		nap();
 	}
 
+	fp = fontdata_6x8;
 	tms9918a_ctrl = 0x00;
 	tms9918a_ctrl = 0x40 | 0x15;	/* Base of character 160 */
 	ct = 0;
