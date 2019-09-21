@@ -5,49 +5,32 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devfdc765.h>
+#include <rc2014.h>
 
 uaddr_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
-uint8_t ctc_present;
-
-/* On idle we spin checking for the terminals. Gives us more responsiveness
-   for the polled ports */
-void platform_idle(void)
-{
-  /* We don't want an idle poll and IRQ driven tty poll at the same moment */
-  irqflags_t irq = di();
-  tty_poll(); 
-  irqrestore(irq);
-}
 
 static int16_t timerct;
 static uint8_t vblank;
-
-/* Call timer_interrupt at 10Hz */
-static void timer_tick(uint8_t n)
-{
-	timerct += n;
-	while (timerct >= 20) {
-		timer_interrupt();
-		timerct -= 20;
-	}
-}
+uint8_t tms9918a_present;
 
 void platform_interrupt(void)
 {
 	tty_poll();
-	if (ctc_present) {
-		uint_fast8_t n = 255 - ctc_check();
-		timer_tick(n);
-	}
-	/* Need to write a TMS detector */
-	if (0 && tms_interrupt()) {
-		vblank++;
-		/* TODO vblank wakeup for gfx */
-		if (vblank == 6 && !ctc_present) {
-			timer_interrupt();
-			vblank = 0;
+
+	/* If the TMS9918A is present prefer it as a time source */
+	if (tms9918a_present) {
+		if (tms_interrupt()) {
+			vblank++;
+			/* TODO vblank wakeup for gfx */
+			if (vblank == 6) {
+				timer_interrupt();
+				vblank = 0;
+			}
 		}
+	} else {
+		/* If not then use the 82C54 */
+		if (timer_check())
+			timer_interrupt();
 	}
 }
-

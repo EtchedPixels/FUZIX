@@ -5,11 +5,6 @@
 
 	#include "../kernel-8080.def"
 
-#define CTC_CH0		0x88
-#define CTC_CH1		0x89
-#define CTC_CH2		0x8A
-#define CTC_CH3		0x8B
-
 .sect .common
 
 .define _platform_monitor
@@ -37,6 +32,15 @@ platform_interrupt_all:
 init_early:
 	ret
 
+.define _platform_idle
+
+!
+!	We are entirely interrupt driven
+!
+_platform_idle:
+	hlt
+	ret
+
 .define _tms_interrupt
 
 _tms_interrupt:
@@ -53,72 +57,12 @@ _tms_interrupt:
 
 init_hardware:
 	! 
+
 	lxi h,512		! 1 * 48K + 16K common
 	shld _ramsize
 	lxi h,432
 	shld _procmem
 
-	! Quieten the CTC
-	mvi a,0x43
-	out CTC_CH0
-	out CTC_CH1
-	out CTC_CH2
-	out CTC_CH3
-	! Probe the CTC
-	mvi a,0x47
-	out CTC_CH2
-	mvi a,0xAA
-	out CTC_CH2
-	in  CTC_CH2
-	cpi 0xA9
-	jnz no_ctc
-
-	mvi a,0x07
-	out CTC_CH2
-	mvi a,0x02
-	out CTC_CH2
-
-	!
-	!	We are now counting down from 2 very fast so we should
-	!	only see those values if we read
-	!
-	mvi b,0
-ctc_check:
-	in CTC_CH2
-	ani 0xFC
-	jnz no_ctc
-	dcr b
-	jnz ctc_check
-	!
-	!	We apparently have a CTC
-	!
-	mvi a,1
-	sta _ctc_present
-	!
-	!	Set up the CTC
-	!
-	mvi a,0xB5
-	out CTC_CH2
-	mvi a,144
-	out CTC_CH2		! 200Hz at 7.3MHz
-	!
-	!	CTC3 is chained from CTC2 as we can't use Z80 IM2 to check
-	!	interrupt causes. It also means we can handle missed ticks
-	!	better.
-	!
-	mvi a,0x47
-	out CTC_CH3
-	mvi a,0xFF
-	out CTC_CH3
-	jmp tmsdone
-
-	!
-	!	See if we can use the TMS9918A. When we get a better clock
-	!	option we can use that
-	!
-	!	FIXME: add probe logic
-	!
-no_ctc:
 	lxi h,tmsinitdata
 	mvi d,0x80
 tmsinit:
@@ -133,18 +77,53 @@ tmsinit:
 	inr d
 	jmp tmsinit
 
-	xra a
-	out 0x99		! M3 clear, external VDP input off
-	mvi a,0x80
-	out 0x99		! to register 0
-	mvi a,0x0D		! M1 on M2 clear (so text mode)
-	out 0x99		! 16K, blanked display, interrupt on
-	mvi a,0x81
-	out 0x99		! to register 1
-	xra a
-	out 0x99
-	mvi a,0x82
 tmsdone:
+	lxi h,0x8000
+tmswait:
+	dcx h
+	jk no_tms
+
+	! Now see if the device is actually present
+	in 0x99
+	rlc
+	jnc tmswait
+	!
+	! The read should have cleared the interrupt, and we will run well
+	! before the next one
+	!
+	in 0x99
+	rlc
+	jc tmswait
+	!
+	! TMS9918A is present
+	!
+	mvi a,1
+	sta _tms9918a_present
+	jmp uart_config
+	!
+	!	We still need a clock. Pray we have a 82C54 card at 0x3C
+	!
+	!	Channel 0 is clocked at the CPU clock and can output to a
+	!	user pin (eg for serial clocking)
+	!	Channel 1 is clocked at 1.8432MHz and drives
+	!	Channel 2 out drives the interrupt line
+	!
+	!	All gate lines are pulled high
+	!
+no_tms:
+	mvi a,0x76	! Counter 1, 16bit, mode 3 (square wave), not BCD
+	out 0x3F
+	mvi a,0x90	! Counter 2 , 8bit low, mode 0 (terminal count), not BCD
+	out 0x3F
+	mvi a,0xA6
+	out 0x3D	! Counter 1 LSB		}	Generate a 100Hz
+	mvi a,0x47	!			}	Square Wave into
+	out 0x3D	! Counter 1 MSB		}	Counter 2
+	mvi a,10
+	out 0x3E	! Counter 2 LSB		}	Generate an interrupt
+			!			}	at 10Hz
+
+uart_config:
 	!
 	! Set up the interrupt on the uart
 	mvi a,0x01
@@ -153,14 +132,14 @@ tmsdone:
 	jmp _program_vectors_k
 
 tmsinitdata:
-	.data1 0x00		! M3 clear, external VDP off, rest MBZ
-	.data1 0x0D		! M1 on M2 clear, 16K, blanked, int on
-	.data1 0x02		! Name table at 0x0800
-	.data1 0x00		! Colour table at 0x0000 (unused)
-	.data1 0x00		! Pattern table at 0x0000
-	.data1 0x00		! Sprite attribute at 0x0000 (unused)
-	.data1 0x00		! Sprite pattern at 0x0000 (unused)
-	.data1 0xF4		! White on dark blue
+	.data1 0x00
+	.data1 0xD0
+	.data1 0x00		! text at 0x0000 (room for 4 screens)
+	.data1 0x00
+	.data1 0x02		! patterns at 0x1000
+	.data1 0x00
+	.data1 0x00
+	.data1 0xF1		! white on black
 
 .define _int_disabled
 _int_disabled:
@@ -348,41 +327,6 @@ _uart_setup:
 !
 !	Add interrupt queued serial once we have the basics debugged
 !
-
-!
-!	CTC small helper. Read the state of counter 3 (ticks elapsed) and
-!	reset it, then bash CTC_CH2 over the head to unstick the interrupt
-!	as we lack Z80 IM2/RETI
-!
-.define _ctc_check
-
-_ctc_check:
-	in CTC_CH3
-	mov e,a
-	mvi d,0
-	mvi a,0x47
-	out CTC_CH3
-	mvi a,0xFF
-	out CTC_CH3
-	!
-	!	Undocumented CTC behaviour. If you clear the IRQ in the
-	!	control word then it clears in the CTC itself, at least
-	!	according to MAME, and we will test this in a bit!
-	!
-	!	Reconfigure the IRQ off and back on. The timer will carry
-	!	on ticking down the current count so the only risk is that
-	!	we might miss an IRQ but we'll pick that up next time due
-	!	to CH3.
-	!
-	mvi a,0x35
-	out CTC_CH2
-	mvi a,144
-	out CTC_CH2
-	mvi a,0xB5
-	out CTC_CH2
-	mvi a,144
-	out CTC_CH2
-	ret
 	
 !
 !	IDE controller
@@ -487,3 +431,20 @@ writeloop:
 	pop b
 	jmp map_kernel
 
+!
+!	82C54 helper
+!
+.define _timer_check
+
+_timer_check:
+	mvi d,0
+	mvi a,0xE8		!	count/status are active low !
+	out 0x3F		!	Latch status of counter 2
+	in 0x3E			!	Read status
+	rlc
+	mov e,d			!	Return 0
+	rnc			!	Output is low - so not us
+	mvi a,10
+	out 0x3E		!	Set the count back to 10
+	mov e,a			!	Return nonzero
+	ret			!	Was us
