@@ -24,6 +24,7 @@
 # sbcv2:	RBC/N8VEM SBC v2
 # sc108:	Small Computer Central SC108 and SC114 systems
 # sc111:	Small Computer Central SC111 system
+# sc126:	Small Computer Central SC126 system
 # scorpion:	Scorpion 256K (and some relatives) with NemoIDE
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # tc2068:	Timex TC2068/TS2068 with DivIDE/DivMMC disk interface
