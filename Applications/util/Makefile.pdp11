@@ -92,6 +92,7 @@ SRCS  = \
 	remount.c \
 	sed.c \
 	seq.c \
+	setboot.c \
 	setdate.c \
 	sleep.c \
 	ssh.c \
