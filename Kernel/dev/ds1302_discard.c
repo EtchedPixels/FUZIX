@@ -17,7 +17,7 @@
 /* each source file.                                                        */
 /****************************************************************************/
 
-void ds1302_write_seconds(uint8_t seconds)
+void ds1302_write_seconds(uint_fast8_t seconds)
 {
     irqflags_t irq = di();
     ds1302_write_register(0x8E, 0x00);    /* write to control register: disable write-protect */
@@ -26,7 +26,7 @@ void ds1302_write_seconds(uint8_t seconds)
     irqrestore(irq);
 }
 
-static uint8_t bad_bcd(uint8_t x, uint8_t min, uint8_t max)
+static uint_fast8_t bad_bcd(uint8_t x, uint8_t min, uint8_t max)
 {
     uint8_t c;
 
@@ -40,7 +40,7 @@ static uint8_t bad_bcd(uint8_t x, uint8_t min, uint8_t max)
     return 0;
 }
 
-uint8_t ds1302_check_rtc(void)
+uint_fast8_t ds1302_check_rtc(void)
 {
     uint8_t buffer[7];
 
@@ -64,7 +64,7 @@ uint8_t ds1302_check_rtc(void)
     return 1;
 }
 
-uint8_t ds1302_init(void)
+uint_fast8_t ds1302_init(void)
 {
     /* initialise the hardware into a sensible state */
     ds1302_set_pin_data_driven(true);

@@ -14,7 +14,7 @@
 
 uint8_t ds1302_present;
 
-void ds1302_write_register(uint8_t reg, uint8_t val)
+void ds1302_write_register(uint_fast8_t reg, uint_fast8_t val)
 {
     ds1302_set_pin_ce(true);
     ds1302_send_byte(reg);
@@ -23,7 +23,7 @@ void ds1302_write_register(uint8_t reg, uint8_t val)
     ds1302_set_pin_clk(false);
 }
 
-void ds1302_send_byte(uint8_t byte)
+void ds1302_send_byte(uint_fast8_t byte)
 {
     uint8_t i;
 
@@ -43,7 +43,7 @@ void ds1302_send_byte(uint8_t byte)
     }
 }
 
-uint8_t ds1302_receive_byte(void)
+uint_fast8_t ds1302_receive_byte(void)
 {
     uint8_t i, b;
 
@@ -65,12 +65,12 @@ uint8_t ds1302_receive_byte(void)
     return b;
 }
 
-uint8_t uint8_from_bcd(uint8_t value)
+uint_fast8_t uint8_from_bcd(uint_fast8_t value)
 {
     return (value & 0x0F) + (10 * (value >> 4));
 }
 
-void ds1302_read_clock(uint8_t *buffer, uint8_t length)
+void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
 {
     uint8_t i;
     irqflags_t irq = di();

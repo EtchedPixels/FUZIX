@@ -51,9 +51,13 @@ _ds1302_set_pin_data:
         lxi b, PIN_DATA_OUT + PIN_DATA_MASK
         jmp setpin
 
+	.define _ds1302_set_pin_ce
+
 _ds1302_set_pin_ce:
         lxi b, PIN_CE + PIN_CE_MASK
         jmp setpin
+
+	.define _ds1302_set_pin_clk
 
 _ds1302_set_pin_clk:
         lxi b, PIN_CLK + PIN_CLK_MASK
@@ -71,6 +75,6 @@ set:
         ana b                   ! unset the pin
         ora c			! set if arg is true
 writereg:
-	out RETREG		! write out new register contents
+	out RTCREG		! write out new register contents
         sta _rtc_shadow		! update our shadow copy
         ret
