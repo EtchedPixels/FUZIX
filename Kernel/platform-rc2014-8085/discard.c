@@ -25,3 +25,9 @@ uint_fast8_t platform_param(char *p)
 	return 0;
 }
 
+
+void device_init(void)
+{
+	ds1302_init();
+	devide_init();
+}

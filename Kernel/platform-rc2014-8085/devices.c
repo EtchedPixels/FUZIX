@@ -34,9 +34,3 @@ bool validdev(uint16_t dev)
     else
         return true;
 }
-
-void device_init(void)
-{
-    /* TODO: init the FDC and program step rate etc */
-    devide_init();
-}

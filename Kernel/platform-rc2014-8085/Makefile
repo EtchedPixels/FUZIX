@@ -4,20 +4,22 @@ LIBC=$(LIBPATH)/libc8080.a $(ACK_ROOT)/share/ack/cpm/libem.a
 CSRCS += devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
 
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c
-DSRCS = ../dev/devide.c ../dev/blkdev.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c ../dev/ds1302_discard.c
+DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/ds1302.c
 
 CROSS_CCOPTS += -I../dev/
 
 ASRCS = crt0.s commonmem.s rc2014-8085.s tricks.s end.s vdp1.s
+DASRCS = ../dev/ds1302_8085.s
 
 AOBJS = $(ASRCS:.s=.o)
 COBJS = $(CSRCS:.c=.o)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.o)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.o, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
+DAOBJS = $(patsubst ../dev/%.s,%.o, $(DASRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DISCARD_COBJS) $(DISCARD_DOBJS) $(DOBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DISCARD_COBJS) $(DISCARD_DOBJS) $(DAOBJS) $(DOBJS)
 
 JUNK = *.o *.lst *.asm *.sym *.rst
 
@@ -34,6 +36,9 @@ $(DISCARD_COBJS): %.o: %.c
 
 $(DOBJS): %.o: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $<
+
+$(DAOBJS): %.o: ../dev/%.s
+	$(CROSS_AS) $(ASOPTS) $<
 
 # Need to make discard work yet
 $(DISCARD_DOBJS): %.o: ../dev/%.c
@@ -54,6 +59,7 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec16.o  \
 	blkdev.o mbr.o devide.o devide_discard.o \
+	ds1302.o ds1302_discard.o ds1302_8085.o \
 	../usermem_std-8085.o $(LIBC) end.o
 	anm fuzix.bin | ../tools/8080map > ../fuzix.map
 	../tools/ack2kernel -v fuzix.bin ../fuzix.bin
