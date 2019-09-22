@@ -9,7 +9,7 @@ DSRCS = ../dev/devide.c ../dev/blkdev.c
 
 CROSS_CCOPTS += -I../dev/
 
-ASRCS = crt0.s commonmem.s rc2014-8085.s tricks.s end.s
+ASRCS = crt0.s commonmem.s rc2014-8085.s tricks.s end.s vdp1.s
 
 AOBJS = $(ASRCS:.s=.o)
 COBJS = $(CSRCS:.c=.o)
