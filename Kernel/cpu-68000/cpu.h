@@ -70,3 +70,5 @@ extern void *memcpy32(void *to, const void *from, size_t bytes);
 
 extern int probe_memory(void *p);
 extern int cpu_type(void);
+
+#define __fastcall

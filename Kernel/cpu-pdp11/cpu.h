@@ -62,3 +62,5 @@ typedef union {            /* this structure is endian dependent */
 #define CPUTYPE	CPUTYPE_PDP11
 
 #define barrier()		asm volatile("":::"memory")
+
+#define __fastcall

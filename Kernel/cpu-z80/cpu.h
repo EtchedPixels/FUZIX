@@ -83,3 +83,5 @@ typedef union {            /* this structure is endian dependent */
 
 #define __packed
 #define barrier()
+
+#define __fastcall	__z88dk_fastcall

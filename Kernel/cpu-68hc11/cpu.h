@@ -54,3 +54,5 @@ typedef union {            /* this structure is endian dependent */
 
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
+
+#define __fastcall

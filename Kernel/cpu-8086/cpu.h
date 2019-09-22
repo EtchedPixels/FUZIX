@@ -99,3 +99,5 @@ static inline uint8_t inb(uint16_t port)
 #define CPUTYPE	CPUTYPE_8086
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
+
+#define __fastcall
