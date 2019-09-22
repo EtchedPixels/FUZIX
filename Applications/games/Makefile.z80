@@ -36,7 +36,7 @@ $(OBJSNS): %.rel: %.c
 $(OBJSTC): %.rel: %.c
 
 .c.rel:
-	$(FCC) $(Z80_PLATFORM) -c $<
+	$(FCC) $(Z80_PLATFORM) -DCONFIG_IO_CUSS -c $<
 
 %: %.rel
 	$(FCC) $(Z80_PLATFORM) $(OPTS) $< -o $@

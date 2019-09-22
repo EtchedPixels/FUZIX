@@ -36,6 +36,8 @@ APPS = $(OBJS:.o=)
 APPSFP = $(OBJSFP:.o=)
 APPSNS = $(OBJSNS:.o=)
 
+CFLAGS += -DCONFIG_IO_CUSS
+
 all: $(APPS) $(APPSNS) $(APPSFP) size.report
 
 $(APPS): $(CRT0)
