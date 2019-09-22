@@ -139,7 +139,7 @@ _scroll_down:
 	    ld de, #0x3C0	; start of bottom line
 upline:
 	    push bc
-	    ld bc, (_vdpport)	; vdpport + 1 always holds #80
+	    ld bc, (_vdpport)	; vdpport + 1 always holds #40
 	    ld hl, #scrollbuf
 	    out (c), e		; our position
 	    out (c), d
@@ -196,7 +196,7 @@ up_0:
 	    out (c), h
 	    dec c
 	    ld hl, #scrollbuf
-	    ld b, #0x40
+	    ld b, #40
 up_1:
 	    outi
 	    jp nz,up_1
