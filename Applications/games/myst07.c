@@ -1398,6 +1398,7 @@ const uint8_t automap[] = {
 	57,
 	0,
 };
+#include <stdio.h>	/* Not really used but needed for perror */
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
