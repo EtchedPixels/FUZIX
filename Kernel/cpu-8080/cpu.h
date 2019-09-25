@@ -68,3 +68,6 @@ typedef union {            /* this structure is endian dependent */
 #define inline
 
 #define __fastcall
+
+extern void out(uint_fast8_t port, uint_fast8_t val);
+extern uint_fast8_t in(uint_fast8_t port);

@@ -605,3 +605,45 @@ unimp:	.asciz 'rt:unimp'
 ddz:	.asciz 'rt:ddz'
 case:	.asciz 'rt:case'
 divz:	.asciz 'rt:div0'
+
+!
+!	I/O helpers. ACK lacks inline assembly which is annoying. Doubly so
+!	because 8080/8085 can only access variable ports by self modifying
+!	code.. which is fun with interrupts. Bletch!
+!
+!	For speed critical cases you need asm stubs, for the others these
+!	will do.
+!
+.define _in
+.define _out
+
+_in:
+	lda	_int_disabled
+	push	psw
+	ldsi	4
+	ldax	d
+	di
+	sta	inpatch+1
+inpatch:
+	in 0
+	mov	e,a
+	mvi	d,0
+popout:
+	pop	psw
+	ora	a
+	rnc
+	ei
+	ret
+
+_out:
+	lda	_int_disabled
+	push	psw
+	ldsi	4
+	ldax	d
+	di
+	sta	outpatch+1
+	ldsi	6
+	ldax	d
+outpatch:
+	out	0
+	jmp	popout
