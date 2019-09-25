@@ -30,4 +30,5 @@ void device_init(void)
 {
 	ds1302_init();
 	devide_init();
+	rctty_init();
 }

@@ -12,7 +12,9 @@ uint16_t swap_dev = 0xFFFF;
 
 static int16_t timerct;
 static uint8_t vblank;
+uint8_t acia_present;
 uint8_t tms9918a_present;
+uint8_t uart_present;
 uint8_t rtc_shadow;
 
 void platform_interrupt(void)

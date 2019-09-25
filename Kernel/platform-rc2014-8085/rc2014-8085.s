@@ -5,6 +5,9 @@
 
 	#include "../kernel-8080.def"
 
+#define ACIA_RESET	0x03
+#define ACIA_RTS_LOW	0x96
+
 .sect .common
 
 .define _platform_monitor
@@ -123,12 +126,63 @@ no_tms:
 	out 0x3E	! Counter 2 LSB		}	Generate an interrupt
 			!			}	at 10Hz
 
+	!
+	! See what is present. Look for 16550A and 68B50. We know that
+	! it won't be a Z80 and we can't work the 16bit ports on the QUART
+	!
 uart_config:
+	in 0xA0
+	ani 2
+	jz not_acia	! TX ready ought to be high...
+	mvi a,ACIA_RESET
+	out 0xA0
+	in 0xA0
+	ani 2
+	jnz not_acia
+	mvi a,1
+	sta _acia_present
+	mvi a,2
+	out 0xA0
+	mvi a,ACIA_RTS_LOW
+	sta 0xA0
+
+	!
+	! Now check for a 16x50
+	!
+not_acia:
+	in 0xC3
+	mov b,a
+	ori 0x80
+	out 0xC3
+	in 0xC1
+	mov c,a
+	mvi a,0xAA
+	out 0xC1
+	in 0xC1
+	cpi 0xAA
+	jnz no_uart
+	mov a,b
+	out 0xC3	! Flip back and should not see it
+	in 0xC1
+	cpi 0xAA
+	jz  no_uart
+	mov a,b
+	ori 0x80
+	out 0xC3
+	mov a,c
+	out 0xC1	! Restore the current baud rate
+	mov a,b
+	out 0xC3
+	mvi a,1
+	sta _uart_present
 	!
 	! Set up the interrupt on the uart
 	mvi a,0x01
 	out 0xC1	
-
+	!
+	! Into the C set up code
+	!
+no_uart:
 	jmp _program_vectors_k
 
 tmsinitdata:
@@ -277,17 +331,15 @@ map_save:
 curmap:
 	.data1 1
 .define outchar
-.define _ttyout
+.define _ttyout_uart
+.define _ttyout_acia
 
 !
 !	16550A UART for now (should probe and pick)
 !
-_ttyout:
-	pop h
-	pop d
-	push d
-	push h
-	mov a,e
+_ttyout_uart:
+	ldsi 2
+	ldax d
 outchar:
 	push psw
 outcharw:
@@ -298,15 +350,31 @@ outcharw:
 	out 0xC0
 	ret
 
+_ttyout_acia:
+	ldsi 2
+	ldax d
+	out 0xC1
+	ret
+
 .define _uart_ready
+.define _acia_ready
 
 _uart_ready:
 	in 0xC5
 	ani 0x20
+	mvi d,0
+	mov e,a
+	ret
+
+_acia_ready:
+	in 0xA0
+	ani 2
+	mvi d,0
 	mov e,a
 	ret
 
 .define _uart_poll
+.define _acia_poll
 
 _uart_poll:
 	in 0xC5
@@ -318,10 +386,28 @@ _uart_poll:
 	mov e,a
 	ret
 
+_acia_poll:
+	in 0xA0
+	rar
+	lxi d,-1
+	rz
+	in 0xA1
+	mvi d,0
+	mov e,a
+	ret
 
 .define _uart_setup
 
 _uart_setup:
+	ret
+
+! We just pass this the control byte. It's easier than most devices
+.define _acia_setup
+
+_acia_setup:
+	ldsi 2
+	ldax d
+	out 0xA0
 	ret
 
 !
