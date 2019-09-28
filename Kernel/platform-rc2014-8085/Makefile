@@ -9,7 +9,7 @@ DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/ds1302.c
 
 CROSS_CCOPTS += -I../dev/
 
-ASRCS = crt0.s commonmem.s rc2014-8085.s tricks.s end.s vdp1.s
+ASRCS = crt0.s commonmem.s ppide.s rc2014-8085.s tricks.s end.s vdp1.s
 DASRCS = ../dev/ds1302_8085.s
 
 AOBJS = $(ASRCS:.s=.o)
@@ -58,6 +58,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec16.o  \
+	ppide.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	ds1302.o ds1302_discard.o ds1302_8085.o \
 	../usermem_std-8085.o $(LIBC) end.o

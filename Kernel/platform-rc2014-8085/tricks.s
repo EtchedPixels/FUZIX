@@ -7,84 +7,80 @@
 
 .define bankfork
 
-!
-!	A is the parent base bank C is the child base bank
-!
 bankfork:
-	di
-	mov b,a
-	! Do 48K of copying (C000-FFFF is the common bank)
-	call copy16
-	call copy16
-	call copy16
-	! Fix up the mess
-	jmp map_kernel
-
-copy16:
-	mov a,b
-	out 0x79		! 0x4000 is now the parent 16K
-	mov a,c
-	out 0x7A		! 0x8000 is the child 16K
-
-	push b
-	call fastcopy
-	pop b
-
-	inr b
-	inr c
-	ret
-
-!
-!	The basic idea is to work in words as best we can
-!
-!	lhlx loads HL from (DE), and the push then both
-!	stores the word in the right place and adjusts sp.
-!	We adjust d and run an unrolled loop
-!
-fastcopy:
+	di			! This nasty hack requires we really block
+	sta patch1+1		! interrupts. Might be good to go to a cleaner
+	mov a,c			! approach on a faster 8085 ?
+	sta patch2+1
 	lxi h,0
 	dad sp
-	shld tmpsp+1
-	lxi b,0x07FF		! we need to wrap for the jnk
-	lxi d,0x7FFE
-	lxi sp,0xC000
-copywords:
-	! 16 bytes a loop
-	lhlx
-	push h
-	dcx d
-	dcx d
-	lhlx
-	push h
-	dcx d
-	dcx d
-	lhlx
-	push h
-	dcx d
-	dcx d
-	lhlx
-	push h
-	dcx d
-	dcx d
-	dcx b
-	lhlx
-	push h
-	dcx d
-	dcx d
-	lhlx
-	push h
-	dcx d
-	dcx d
-	lhlx
-	push h
-	dcx d
-	dcx d
-	lhlx
-	push h
-	dcx d
-	dcx d
-	dcx b
-	jnk copywords
-tmpsp:
-	lxi sp,0	! patched
+	shld copy_done+1	! patch stack restore in
+
+	! Go from the break to 0-5
+	lhld U_DATA__U_BREAK
+	lxi d,-6		! move down 6 for the copier loop
+	dad d
+	sphl
+	mvi a,0xff		! end between 5 and 0 (which is fine)
+	sta patch3+1
+	lxi h,copy_stack
+	jmp copier
+	!
+	!	Go from BE00 to the stack pointer
+	!
+copy_stack:
+	lxi sp,0xBE00-6
+	! Trickier .. need to work out where to stop
+	lhld U_DATA__U_SYSCALL_SP
+	lxi d,-0x0106		! 6 for the underrun 0x100 for the round down
+	dad d
+	mov a,h
+	sta patch3+1
+	lxi h,copy_done
+	jmp copier
+copy_done:
+	lxi h,0
+	sphl
+	ei
 	ret
+
+copier:
+	shld patch4+1
+loop:
+				! sp points to top of block
+patch1:
+	mvi a,0			!					7
+	out 0xFF		! source bank				10
+	pop h			!					10
+	pop d			!					10
+	pop b			!					10
+patch2:
+	mvi a,0			!					7
+	out 0xFF		! dest bank				10
+	push b			!					11
+	push d			!					11
+	push h			! sp now back where it started		11
+	lxi h,-6		!					10
+	dad sp			!					10
+	sphl			! sp ready for next burst		5
+	mov a,h			!					5
+patch3:
+	cpi 0			! wrapped to FFFx			7
+	jnz loop		!					10
+
+!
+!	144 cycles per 6 bytes = 24 per byte which is actually not far off
+!	a naive Z80 implementation and about half a good one. Still means
+!	a second to do the fork() bank copy on a 1MHz 8080. Not quite so bad
+!	on a 6MHz 8085 though 8)
+!
+!	We halt at somewhere around xx05-xx00 so we have to tidy up by hand
+!	or accept an underrun. We go the overlap approach on the grounds
+!	it's cheap and our main overcopy is at most 5 bytes in common,
+!	whilst the bank to bank overcopy is harmless and small
+!
+!
+	mvi a,1
+	out 0xFF
+patch4:
+	jmp 0

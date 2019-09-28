@@ -379,11 +379,8 @@ map_process_di:
 	mov a,m
 map_for_swap:
 map_process_a:
-	push psw
-setmap:
 	sta curmap
 	out 0xFF
-	pop psw
 	ret
 
 .define map_process_always
@@ -393,7 +390,11 @@ map_process_always:
 map_process_always_di:
 	push psw
 	lda U_DATA__U_PAGE
-	jmp setmap
+setmap:
+	sta curmap
+	out 0xFF
+	pop psw
+	ret
 
 .define map_save_kernel
 
@@ -504,109 +505,6 @@ _acia_setup:
 !	Add interrupt queued serial once we have the basics debugged
 !
 	
-!
-!	IDE controller
-!
-.sect .common
-
-.define _devide_readb
-.define _devide_writeb
-
-_devide_readb:
-	ldsi 2
-	ldax d
-	sta .patch1+1
-.patch1:
-	in 0
-	mov e,a
-	mvi d,0
-	ret
-
-_devide_writeb:
-	ldsi 2
-	ldax d
-	sta .patch2+1
-	ldsi 4
-	ldax d
-.patch2:
-	out 0
-	ret
-
-.define _devide_read_data
-.define _devide_write_data
-
-_devide_read_data:
-	push b
-	lxi d,_blk_op
-	lhlx			! Address in HL
-	xchg			! Address in DE, struct back in HL
-	inx h
-	inx h
-	mov a,m			! Mapping type
-	cpi 2
-	jnz not_swapin
-	inx h			! Swap page
-	mov a,m
-	call map_for_swap
-	jmp doread
-not_swapin:
-	ora a
-	jz rd_kernel
-	call map_process_always
-	jmp doread
-rd_kernel:
-	call map_buffers
-doread:
-	mvi b,0
-	xchg
-readloop:
-	in 0x10
-	mov m,a
-	inx h
-	in 0x10
-	mov m,a
-	inx h
-	inr b
-	jnz readloop
-	pop b
-	jmp map_kernel
-
-_devide_write_data:
-	push b
-	lxi d,_blk_op
-	lhlx
-	xchg
-	inx h
-	inx h
-	mov a,m
-	cpi 2
-	jnz not_swapout
-	inx h
-	mov a,m
-	call map_for_swap
-	jmp dowrite
-not_swapout:
-	ora a
-	jz wr_kernel
-	call map_process_always
-	jmp dowrite
-wr_kernel:
-	call map_buffers
-dowrite:
-	mvi b,0
-	xchg
-writeloop:
-	mov a,m
-	out 0x10
-	inx h
-	mov a,m
-	out 0x10
-	inx h
-	inr b
-	jnz writeloop
-	pop b
-	jmp map_kernel
-
 !
 !	82C54 helper
 !
