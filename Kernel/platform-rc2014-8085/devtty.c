@@ -183,6 +183,7 @@ int rctty_open(uint_fast8_t minor, uint16_t flag)
 
 void rctty_init(void)
 {
+	kprintf("rctty_init %d %d\n", acia_present, uart_present);
   if (acia_present) {
     acia_minor = ++num_uart;
     termios_mask[1] = _CSYS|CSIZE|CSTOPB|PARENB|PARODD;
