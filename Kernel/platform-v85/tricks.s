@@ -77,7 +77,7 @@ patch3:
 !	We halt at somewhere around xx05-xx00 so we have to tidy up by hand
 !	or accept an underrun. We go the overlap approach on the grounds
 !	it's cheap and our main overcopy is at most 5 bytes in common,
-!	whlist the bank to bank overcopy is harmless and small
+!	whilst the bank to bank overcopy is harmless and small
 !
 !
 	mvi a,1
