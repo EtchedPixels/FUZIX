@@ -15,12 +15,12 @@ void pagemap_init(void)
 #else
 	/* 0x03 is the kernel mapping */
 	pagemap_add(0x83);
-	pagemap_add(0x43);
-	pagemap_add(0xC3);
+	pagemap_add(0x23);
+	pagemap_add(0xA3);
 	pagemap_add(0x0B);
 	pagemap_add(0x8B);
-	pagemap_add(0x4B);
-	pagemap_add(0xCB);
+	pagemap_add(0x2B);
+	pagemap_add(0xAB);
 	/* We don't use the other 8K blocks at this point. We should
 	   eventually copy common into each bank and use part of that
 	   top space for user and fast udata switching like Z180 */
