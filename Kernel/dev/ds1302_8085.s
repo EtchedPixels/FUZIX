@@ -15,7 +15,7 @@
 #define PIN_CE_MASK	0xF700
 #define PIN_CLK_MASK	0xBF00
 
-	.sect .code
+	.sect .text
 
 ! -----------------------------------------------------------------------------
 ! DS1302 interface
@@ -48,23 +48,25 @@ setreg:
 	.define _ds1302_set_pin_data
 
 _ds1302_set_pin_data:
+	push b
         lxi b, PIN_DATA_OUT + PIN_DATA_MASK
         jmp setpin
 
 	.define _ds1302_set_pin_ce
 
 _ds1302_set_pin_ce:
+	push b
         lxi b, PIN_CE + PIN_CE_MASK
         jmp setpin
 
 	.define _ds1302_set_pin_clk
 
 _ds1302_set_pin_clk:
+	push b
         lxi b, PIN_CLK + PIN_CLK_MASK
-        jmp setpin
-
+	! Fall through
 setpin:
-	ldsi 2
+	ldsi 4
 	lhlx			! Argument into HL
 	mov a, l		! Are we setting or clearing ?
 	ora a
@@ -74,6 +76,7 @@ set:
         lda _rtc_shadow		! load current register contents
         ana b                   ! unset the pin
         ora c			! set if arg is true
+	pop b
 writereg:
 	out RTCREG		! write out new register contents
         sta _rtc_shadow		! update our shadow copy
