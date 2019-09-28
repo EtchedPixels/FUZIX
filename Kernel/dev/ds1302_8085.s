@@ -12,7 +12,7 @@
 #define PIN_DATA_OUT	0x80
 
 #define PIN_DATA_MASK	0x7F00
-#define PIN_CE_MASK	0xF700
+#define PIN_CE_MASK	0xEF00
 #define PIN_CLK_MASK	0xBF00
 
 	.sect .text
