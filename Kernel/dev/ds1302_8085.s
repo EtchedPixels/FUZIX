@@ -36,9 +36,9 @@ _ds1302_set_pin_data_driven:
 	ldsi 2
 	lhlx
         mov a, l		! load argument
-	ora a
+	ani 1
         lda _rtc_shadow
-	jnz setreg
+	jz setreg
         ani ~PIN_DATA_HIZ	! 0 - output pin
         jmp writereg
 setreg:
