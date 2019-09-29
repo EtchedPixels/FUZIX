@@ -552,6 +552,8 @@ intret2:di
 	cp (hl)
 	jr nz, not_running
 	ld (hl), #P_READY
+	inc hl
+	set PFL_BATCH,(hl)
 not_running:
 	call _platform_switchout
 	;

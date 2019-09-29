@@ -309,6 +309,8 @@ intret2:
 	cp (hl)
 	jr nz, not_running
 	ld (hl), #P_READY
+	inc hl
+	set PFL_BATCH,(hl)
 not_running:
 	; Give up the CPU
 	; FIXME: can we get here on timers when only one thing is running

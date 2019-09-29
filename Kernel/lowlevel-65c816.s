@@ -639,6 +639,9 @@ ret_to_user:
 	bne	not_running
 	lda	#P_READY
 	sta	a:P_TAB__P_STATUS_OFFSET,x
+	lda	a:P_TAB__P_FLAGS_OFFSET,x
+	ora	#PFL_BATCH
+	sta	a:P_TAB__P_FLAGS_OFFSET,x
 not_running:
 	;
 	;	Drop back to a8i8 and schedule ourself out

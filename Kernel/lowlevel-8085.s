@@ -363,6 +363,13 @@ preemption:
 	cmp m
 	jnz not_running
 	mvi m,P_READY
+	!
+	!	Punish the process for using all of its time.
+	!
+	inx h
+	mvi a,PFL_BATCH
+	ora m
+	mov m,a
 not_running:
 	!
 	!	We will disappear into this and reappear somewhere else. In

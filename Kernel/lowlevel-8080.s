@@ -366,6 +366,12 @@ preemption:
 	cmp m
 	jnz not_running
 	mvi m,P_READY
+	!
+	!	Set the flag so we are punished for using all our time
+	!
+	mvi a,PFL_BATCH
+	ora m
+	mov m,a
 not_running:
 	!
 	!	We will disappear into this and reappear somewhere else. In
