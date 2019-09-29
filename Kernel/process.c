@@ -209,6 +209,11 @@ ptptr getproc(void)
 			kprintf("[getproc returning %p pid=%d]\n",
 				getproc_nextp, getproc_nextp->p_pid);
 #endif
+			/* Punish CPU hogs by selecting them less often */
+			if (getproc_nextp->p_flags & PFL_BATCH) {
+				getproc_nextp->p_flags &= ~PFL_BATCH;
+				continue;
+			}
 			return getproc_nextp;
 		}
 		/* Take a nap: not that it makes much difference to power on most
