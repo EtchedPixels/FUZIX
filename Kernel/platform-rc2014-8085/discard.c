@@ -9,10 +9,6 @@
 void pagemap_init(void)
 {
 	uint_fast8_t i;
-#ifdef OLD
-	for (i = 0; i < 9; i++)
- 		pagemap_add(36 + 3 * i);
-#else
 	/* 0x03 is the kernel mapping */
 	pagemap_add(0x83);
 	pagemap_add(0x23);
@@ -24,7 +20,6 @@ void pagemap_init(void)
 	/* We don't use the other 8K blocks at this point. We should
 	   eventually copy common into each bank and use part of that
 	   top space for user and fast udata switching like Z180 */
-#endif
 }
 
 /* Nothing to do for the map of init */

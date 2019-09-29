@@ -15,19 +15,10 @@
 
 _platform_monitor:
 _platform_reboot:
-#ifdef OLD
-	!
-	!	FIXME: needs work
-	!
-	xra a
-	out 0x78		! Map ROM back in
-	rst 0
-#else
 	di
 	mvi a,1			! Map ROM back in low
 	out 0xFF
 	rst 0
-#endif
 
 .define platform_interrupt_all
 
@@ -283,74 +274,6 @@ unexpect:
 	.ascii '[unexpected irq]'
 	.data1 10,0
 
-#ifdef OLD
-!
-!	Memory mapping
-!
-.define map_kernel
-.define map_kernel_di
-
-map_kernel:
-map_kernel_di:
-map_buffers:
-	push psw
-	mvi a,32
-	jmp setmap
-
-.define map_process
-.define map_process_di
-.define map_process_a
-
-map_process:
-map_process_di:
-	mov a,h
-	ora l
-	jz map_kernel
-	mov a,m
-map_for_swap:
-map_process_a:
-	push psw
-setmap:
-	sta curmap
-	out 0x78
-	inr a
-	out 0x79
-	inr a
-	out 0x7A
-	pop psw
-	ret
-
-.define map_process_always
-.define map_process_always_di
-
-map_process_always:
-map_process_always_di:
-	push psw
-	lda U_DATA__U_PAGE
-	jmp setmap
-
-.define map_save_kernel
-
-map_save_kernel:
-	push psw
-	lda curmap
-	sta map_save
-	mvi a,32
-	jmp setmap
-
-.define map_restore
-
-map_restore:
-	push psw
-	lda map_save
-	jmp setmap
-
-map_save:
-	.data1 0
-curmap:
-	.data1 1
-
-#else
 !
 !	Memory mapping
 !
@@ -416,9 +339,6 @@ map_save:
 	.data1 0
 curmap:
 	.data1 1
-
-
-#endif
 
 
 .define outchar
@@ -426,7 +346,7 @@ curmap:
 .define _ttyout_acia
 
 !
-!	16550A UART for now (should probe and pick)
+!	16550A UART for now with outchar debug (FIXME: pick from probe)
 !
 _ttyout_uart:
 	ldsi 2
@@ -444,7 +364,7 @@ outcharw:
 _ttyout_acia:
 	ldsi 2
 	ldax d
-	out 0xC1
+	out 0xA1
 	ret
 
 .define _uart_ready
