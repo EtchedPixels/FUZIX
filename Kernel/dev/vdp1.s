@@ -271,6 +271,8 @@ cursor_on:
 	    out (c), l			; address
 	    out (c), h			; address
 	    dec c
+	    inc hl			; kill clocks
+	    dec hl			; to be sure the char is readable
 	    in a, (c)			; character
 	    ld (cursorpeek), a		; save it away
 	    set 6, h			; make it a write command
