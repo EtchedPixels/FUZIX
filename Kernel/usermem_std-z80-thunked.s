@@ -192,10 +192,6 @@ zeroit:
 	jp map_kernel_low
 
 __ugetc:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	bit 7,h
 	ld a,(_udata + U_DATA__U_PAGE)
 	jr z, ugetcl
@@ -209,10 +205,6 @@ ugetcl:
 	
 
 __ugetw:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	bit 7,h
 	jr z, ugetwl
 	; High page - no wrap possible
