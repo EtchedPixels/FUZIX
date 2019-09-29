@@ -134,11 +134,13 @@ static void sync_clock_read(void)
  */
 void sync_clock(void)
 {
-	irqflags_t irq = di();
+	irqflags_t irq;
 	int16_t tmp;
 
 	if (clk_irq)
 		return;
+
+	irq = di();
 
 	if (!re_enter++) {
 		sync_clock_read();
