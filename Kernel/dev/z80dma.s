@@ -127,13 +127,6 @@ sector_dma_in:
 ;	Write to CF or similar device flat out with no DMA handshaking.
 ;
 sector_dma_out:
-;
-;	Until we sort out the extra load rules
-;		
-
-		otir				; EDB3
-		otir
-		ret
 		ld (mio_memsrc),hl		; source address
 		ld (mio_memdst),bc		; I/O (B = 0)
 		ld bc,#511
