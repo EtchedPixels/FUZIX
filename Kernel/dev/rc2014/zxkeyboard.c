@@ -31,10 +31,8 @@ void zxkey_poll(void)
 #ifdef CONFIG_VT_MULTI
     /* We pass a special flag back for a console change */
     if ((r >> 8) == 0x40) {
-        if (inputtty != c) {
-            inputtty = c;
-            set_console();
-        }
+        if (inputtty != c)
+            do_conswitch(c);
         return;
     }
 #endif

@@ -65,7 +65,7 @@ vdpout:	    ld bc, (_vdpport)
 videopos:	; turn E=Y D=X into HL = addr
 	        ; pass B = 0x40 if writing
 	        ; preserves C
-	    ld a, (_inputtty)
+	    ld a, (_outputtty)
 	    dec a
 	    add a			; 1K per screen
 	    add a
@@ -135,8 +135,16 @@ _scroll_down:
 	    ld a,(_int_disabled)
 	    push af
 	    di
+	    ld a, (_outputtty)
+	    dec a
+	    add a			; 1K per screen
+	    add a
+	    ld h,a
+	    ld l,#0
 	    ld b, #23
 	    ld de, #0x3C0	; start of bottom line
+	    add hl,de
+	    ex de,hl
 upline:
 	    push bc
 	    ld bc, (_vdpport)	; vdpport + 1 always holds #40
@@ -175,8 +183,16 @@ _scroll_up:
 	    ld a,(_int_disabled)
 	    push af
 	    di
+	    ld a, (_outputtty)
+	    dec a
+	    add a			; 1K per screen
+	    add a
+	    ld h,a
+	    ld l,#0
 	    ld b, #23
 	    ld de, #40		; start of second line
+	    add hl,de
+	    ex de,hl
 downline:   push bc
 	    ld bc, (_vdpport)
 	    ld hl, #scrollbuf

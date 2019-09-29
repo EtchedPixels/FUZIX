@@ -632,20 +632,34 @@ static uint8_t tms_writeready(uint_fast8_t minor, uint_fast8_t p)
 	return TTY_READY_NOW;
 }
 
+static void tms_setoutput(uint_fast8_t minor)
+{
+	vt_save(&ttysave[outputtty - 1]);
+	outputtty = minor;
+	vt_load(&ttysave[outputtty - 1]);
+}
+
 static void tms_putc(uint_fast8_t minor, uint_fast8_t p, uint_fast8_t c)
 {
 	irqflags_t irq = di();
 	used(p);
 
-	if (outputtty != minor ) {
-		vt_save(&ttysave[outputtty - 1]);
-		outputtty = minor;
-		vt_load(&ttysave[outputtty - 1]);
-	}
+	if (outputtty != minor)
+		tms_setoutput(minor);
 	irqrestore(irq);
 	vtoutput(&c, 1);
 }
 
+/* Callback from the keyboard driver for a console switch */
+void do_conswitch(uint8_t c)
+{
+	tms_setoutput(inputtty);
+	vt_cursor_off();
+	inputtty = c;
+	set_console();
+	tms_setoutput(c);
+	vt_cursor_on();
+}
 
 struct uart tms_uart = {
 	tms_intr,

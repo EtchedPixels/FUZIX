@@ -69,6 +69,8 @@ extern uint8_t register_uart( uint8_t port, struct uart *);
 extern void insert_uart(uint8_t port, struct uart *);
 extern void display_uarts(void);
 
+extern void do_conswitch(uint8_t con);
+
 extern struct uart acia_uart;
 extern struct uart sio_uart;
 extern struct uart sio_uartb;
@@ -79,5 +81,6 @@ extern struct uart tms_uart;
 
 extern uint8_t *init_alloc(uint16_t size);
 extern uint8_t *code1_alloc(uint16_t size);
+
 
 #endif
