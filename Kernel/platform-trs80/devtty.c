@@ -75,7 +75,7 @@ void vtexchange(void)
         vt_save(&ttysave[curtty]);
 
         /* Before we flip the memory */
-        cursor_off();
+        vt_cursor_off();
 
         /* Swap the buffers over */
         __asm
