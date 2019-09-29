@@ -81,20 +81,12 @@ __uputw:
 	jp map_kernel
 
 __ugetc:
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
 	call map_process_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel
 
 __ugetw:
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
 	call map_process_always
         ld a, (hl)
 	inc hl

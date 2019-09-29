@@ -104,24 +104,12 @@ __uputw:
 	jr uputc_out
 
 __ugetc:
-	pop de
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
-	push de
 	call map_process_save
         ld l, (hl)
 	ld h, #0
 	jp map_kernel_restore
 
 __ugetw:
-	pop de
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
-	push de
 	call map_process_save
         ld a, (hl)
 	inc hl

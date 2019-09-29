@@ -638,8 +638,8 @@ uputget:
         ld d, 9(ix)
 	ret	; 	Z is still false
 
-; FIXME: core code should allow ugetc/w to be fast call
-; and we should use add hl,sp logic here as I think it's faster
+;
+; We should use add hl,sp logic here as I think it's faster
 ;
 __uputc:
 	pop iy	;	bank
@@ -671,24 +671,12 @@ __uputw:
 	jp map_kernel
 
 __ugetc:
-	pop de
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
-	push de
 	call map_process_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel
 
 __ugetw:
-	pop de
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
-	push de
 	call map_process_always
         ld a, (hl)
 	inc hl

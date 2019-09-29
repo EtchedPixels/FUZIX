@@ -98,10 +98,6 @@ uout:
 	ret
 
 __ugetc:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	ld a,#0x81
 	out (0x38),a
 	rlca
@@ -111,10 +107,6 @@ __ugetc:
 	jr uout
 
 __ugetw:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	ld a,#0x81
 	out (0x38),a
 	rlca

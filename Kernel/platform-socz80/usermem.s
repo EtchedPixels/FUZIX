@@ -87,49 +87,36 @@ __uputw:
         jr ugetputret
 
 __ugetc:
-        push ix
-        ; stack has: ix, return address, source
-        ;                                ix+4 
-        ld ix, #0   ; load ix with stack pointer
-        add ix, sp
         ; store interrupt state, disable interrupts
         ld a, (_int_disabled)
         di
         push af
         ; load DE with source address (in userspace)
-        ld e, 4(ix)
-        ld d, 5(ix)
+	ex de,hl
         call ugetputsetup
         in a, (MMU_PAGE17)
         ld l, a
         ld h, #0
-        jr ugetputret
+ugetfret:
+        pop af
+	or a
+        ret nz
+        ei
+        ret
 
 __ugetw:
-        push ix
-        ; stack has: ix, return address, source
-        ;                                ix+4 
-        ld ix, #0   ; load ix with stack pointer
-        add ix, sp
         ; store interrupt state, disable interrupts
         ld a, (_int_disabled)
         di
         push af
         ; load DE with source address (in userspace)
-        ld e, 4(ix)
-        ld d, 5(ix)
+	ex de,hl
         call ugetputsetup
         in a, (MMU_PAGE17)
         ld l, a
         in a, (MMU_PAGE17)
         ld h, a
-ugetputret: ; this is shared with the other routines, above and below
-        pop af
-        pop ix
-	or a
-        ret nz
-        ei
-        ret
+	jr ugetfret
 
 __uget:
         push ix
@@ -152,7 +139,13 @@ __uget:
         ld e, 8(ix) ; byte count
         ld d, 9(ix)
         call page17in
-        jr ugetputret
+ugetputret: ; this is shared with the other routines, above and below
+        pop af
+        pop ix
+	or a
+        ret nz
+        ei
+        ret
 
 ugetputsetup:
         ; compute 32-bit dest address based on process MMU page and userspace address in DE
