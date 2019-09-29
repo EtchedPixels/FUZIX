@@ -25,8 +25,8 @@ struct __sigbits {
 /* Process table entry */
 
 struct p_tab {
-    /* WRS: UPDATE kernel.def IF YOU CHANGE THIS STRUCTURE */
     uint8_t     p_status;       /* Process status: MUST BE FIRST MEMBER OF STRUCT */
+    uint8_t	p_flags;
     uint8_t     p_tty;          /* Process' controlling tty minor # */
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
@@ -55,7 +55,6 @@ struct p_tab {
     uint8_t	p_event;	/* Events */
     /* FIXME: usize_t strictly */
     unsigned int p_top;		/* Copy of u_top : FIXME: usize_t */
-    uint8_t	p_flags;
 };
 
 /* Followed by this structure if profiling supported */

@@ -21,13 +21,16 @@
 #define U_DATA__U_SIGVEC	32
 
 #define P_TAB__P_STATUS_OFFSET	0
-#define P_TAB__P_TTY_OFFSET	1
-#define P_TAB__P_PID_OFFSET	2
-#define P_TAB__P_PAGE_OFFSET	14
+#define P_TAB__P_FLAGS_OFFSET	1
+#define P_TAB__P_TTY_OFFSET	2
+#define P_TAB__P_PID_OFFSET	4
+#define P_TAB__P_PAGE_OFFSET	16
 
 #define P_RUNNING		1
 #define P_READY			2
 #define P_DEFER			3
+
+#define PFL_BATCH		4
 
 #define OS_BANK			0
 

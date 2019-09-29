@@ -27,13 +27,16 @@ U_DATA__U_OFFSET            = U_DATA+100 ! uint32_t
 
 ! Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      = 0
-P_TAB__P_TTY_OFFSET         = 1
-P_TAB__P_PID_OFFSET         = 2
-P_TAB__P_PAGE_OFFSET        = 14
-P_TAB__P_PAGE2_OFFSET       = 16
+P_TAB__P_FLAGS_OFFSET	    = 1
+P_TAB__P_TTY_OFFSET         = 2
+P_TAB__P_PID_OFFSET         = 3
+P_TAB__P_PAGE_OFFSET        = 15
+P_TAB__P_PAGE2_OFFSET       = 17
 
 P_RUNNING                   = 1            ! value from include/kernel.h
 P_READY                     = 2            ! value from include/kernel.h
+
+PFL_BATCH		    = 4		   ! value from include/kernel.h
 
 OS_BANK                     = 0            ! value from include/kernel.h
 
