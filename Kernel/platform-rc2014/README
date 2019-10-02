@@ -1,4 +1,10 @@
 - Debug reboot
+- Test and adjust 16x50
+- Finish QUART init (set up interrupts etc, fix initial baud assumption)
+- Test QUART
+- QUART as system clock
+- 82C54 ?
+
 
 This is Fuzix for the RC2014
 
@@ -57,6 +63,7 @@ Supported Hardware
 
 Pending
 	Sound cards (until Fuzix gets proper audio support)
+	QUART
 
 Unsupported Hardware
 
