@@ -10,7 +10,7 @@ export CROSS_CC_VIDEO=--codeseg CODE2
 export CROSS_CC_FONT=--constseg DISCARD
 #
 export CROSS_CC_SYS1=--codeseg CODE1
-export CROSS_CC_SYS2=--codeseg CODE1
+export CROSS_CC_SYS2=--codeseg CODE2
 export CROSS_CC_SYS3=--codeseg CODE2
 export CROSS_CC_SYS4=--codeseg CODE2
 export CROSS_CC_SYS5=--codeseg CODE2
