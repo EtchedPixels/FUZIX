@@ -1,7 +1,5 @@
-Initial 'it compiles' test prototype.
-
-This is Fuzix for the SC126 Z180 RC2014 system with a suitable linear RAM/ROM
-module (RAM is expected to fill the upper 512K) booting from ROMWBW
+This is Fuzix for the SC126 Z180 RC2014 system booting from ROMWBW. It should
+also work on the SC130 although you won't get the status light display.
 
 Based upon the N8VEM Mark IV port by Will Sowerbutts <will@sowerbutts.com>
 
@@ -17,6 +15,7 @@ Not yet supported but planned:
  - RC2014 TMS9918A
  - Swap
  - Other generic Z180 RC2014 boards with ROMWBW (Black Adder, Tom's Z180 etc)
+   (although these should just work with a 512K/512K board)
 
 To set up
 Write fuzix.romwbw to blocks 2+
@@ -39,7 +38,7 @@ due to wait stating so probably ok as PIO1.
 Notes:
 
 On SC126
-- drive 0x0D 8 LED port (WO)
+- 0x0D drives an 8 LED port (WO)
 - bitbang I2C port
 - 0x0C is
 	7: RTC d out | I2C SDA
@@ -54,4 +53,15 @@ On SC126
 So 0x0C high 4 bits are the same as the classic DS1302 but we need
 a register tracking bits.
 
+On SC130
+- 0x0E
+	0: status LED
+- 0x0C
+	2: SPI CS for SD card (no second CS)
+
+SC130 TODO:
+	Because the classic RTC is not always fully decoded we need to ensure
+that when the LED control is added or SPI CS is played with are not mid RTC
+transaction or we shadow those bits. As we don't do SPI in an IRQ it's currently
+safe by chance.
 
