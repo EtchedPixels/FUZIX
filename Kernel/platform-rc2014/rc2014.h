@@ -39,6 +39,7 @@ extern uint8_t acia_present;
 extern uint8_t ctc_present;
 extern uint8_t sio_present;
 extern uint8_t sio1_present;
+extern uint8_t quart_present;
 extern uint8_t z180_present;
 extern uint8_t tms9918a_present;
 extern uint8_t dma_present;
@@ -54,19 +55,19 @@ extern uint8_t systype;
 extern const char *uart_name[];
 
 struct uart {
-    uint8_t (*intr)(uint_fast8_t , uint_fast8_t);
-    uint8_t (*writeready)(uint_fast8_t, uint_fast8_t);
-    void (*putc)(uint_fast8_t, uint_fast8_t, uint_fast8_t);
-    void (*setup)(uint_fast8_t, uint_fast8_t);
-    uint8_t (*carrier)(uint_fast8_t, uint_fast8_t);
+    uint8_t (*intr)(uint_fast8_t minor);
+    uint8_t (*writeready)(uint_fast8_t minor);
+    void (*putc)(uint_fast8_t minor, uint_fast8_t c);
+    void (*setup)(uint_fast8_t minor);
+    uint8_t (*carrier)(uint_fast8_t minor);
     uint16_t cmask;
     const char *name;
 };
 
 extern struct uart *uart[NUM_DEV_TTY + 1];
-extern uint8_t ttyport[NUM_DEV_TTY + 1];
-extern uint8_t register_uart( uint8_t port, struct uart *);
-extern void insert_uart(uint8_t port, struct uart *);
+extern uint16_t ttyport[NUM_DEV_TTY + 1];
+extern uint8_t register_uart( uint16_t port, struct uart *);
+extern void insert_uart(uint16_t port, struct uart *);
 extern void display_uarts(void);
 
 extern void do_conswitch(uint8_t con);
@@ -78,6 +79,7 @@ extern struct uart ns16x50_uart;
 extern struct uart z180_uart0;
 extern struct uart z180_uart1;
 extern struct uart tms_uart;
+extern struct uart quart_uart;
 
 extern uint8_t *init_alloc(uint16_t size);
 extern uint8_t *code1_alloc(uint16_t size);

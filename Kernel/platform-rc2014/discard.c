@@ -146,6 +146,33 @@ static uint8_t probe_16x50(uint8_t p)
 	}
 }
 
+/* Look for a QUART at 0xBB */
+
+#define QUARTREG(x)	(((x) << 11) | 0xBB)
+
+#define MRA	0x00
+#define IVR1	0x0C
+#define IVR2	0x1C
+
+static uint8_t probe_quart(void)
+{
+	uint8_t c = in16(QUARTREG(IVR1));
+
+	/* Make sure we they don't appear to affect one another */
+	out16(QUARTREG(IVR1), c + 1);
+	if(in16(QUARTREG(IVR1)) != c + 1)
+		return 0;
+	if(in16(QUARTREG(MRA)) == c + 1)
+		return 0;
+	/* Ok now check IVR2 also works */
+	out16(QUARTREG(IVR2), c + 2);
+	if(in16(QUARTREG(IVR1)) != c + 1)
+		return 0;
+	if(in16(QUARTREG(IVR2)) != c + 2)
+		return 0;
+	return 1;
+}
+
 void init_hardware_c(void)
 {
 #ifdef CONFIG_VFD_TERM
@@ -176,6 +203,12 @@ void init_hardware_c(void)
 	}
 	if (acia_present)
 		register_uart(0xA0, &acia_uart);
+	if (quart_present) {
+		register_uart(0x00BB, &quart_uart);
+		register_uart(0x40BB, &quart_uart);
+		register_uart(0x80BB, &quart_uart);
+		register_uart(0xC0BB, &quart_uart);
+	}
 }
 
 void pagemap_init(void)
@@ -213,12 +246,17 @@ void pagemap_init(void)
 	if (tms9918a_present)
 		kputs("TMS9918A VDP detected at 0x98.\n");
 
+	quart_present = probe_quart();
+	if (quart_present)
+		kputs("QUART at 0xBB.\n");
+
 	dma_present = !probe_z80dma();
 	if (dma_present)
 		kputs("Z80DMA detected at 0x04.\n");
 
 	if (ds1302_present)
 		kprintf("DS1302 detected at 0x%2x.\n", rtc_port);
+
 
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
@@ -232,6 +270,8 @@ void pagemap_init(void)
 		}
 	}
 	display_uarts();
+	/* FIXME: if we have no tms9918a and no CTC but a quart we should
+	   use the quart as our timer */
 }
 
 void map_init(void)
