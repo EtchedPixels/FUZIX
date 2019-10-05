@@ -28,12 +28,15 @@ void platform_interrupt(void)
 			/* TODO vblank wakeup for gfx */
 			if (vblank == 6) {
 				timer_interrupt();
+				poll_input();
 				vblank = 0;
 			}
 		}
 	} else {
 		/* If not then use the 82C54 */
-		if (timer_check())
+		if (timer_check()) {
 			timer_interrupt();
+			poll_input();
+		}
 	}
 }
