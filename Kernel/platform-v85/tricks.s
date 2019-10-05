@@ -7,8 +7,9 @@
 
 .define bankfork
 
+! Called with interrupts off
+
 bankfork:
-	di			! This nasty hack requires we really block
 	sta patch1+1		! interrupts. Might be good to go to a cleaner
 	mov a,c			! approach on a faster 8085 ?
 	sta patch2+1
@@ -41,7 +42,6 @@ copy_stack:
 copy_done:
 	lxi h,0
 	sphl
-	ei
 	ret
 
 copier:
