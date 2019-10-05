@@ -48,8 +48,10 @@
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
 
-/* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
+
+/* Input device support */
+#define CONFIG_INPUT			/* Input device for joystick */
 
 /* Device parameters */
 #define NUM_DEV_TTY 2	  /* For now we support a 16x50 and an ACIA */

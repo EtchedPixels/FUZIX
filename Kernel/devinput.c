@@ -55,6 +55,7 @@ int inputdev_write(uint_fast8_t flag)
 int inputdev_ioctl(uarg_t request, char *data)
 {
     uint_fast8_t r;
+#ifdef CONFIG_INPUT_GRABMAX
     if (request == INPUT_GRABKB) {
         r = ((uint8_t)data) & 0x03;
         if (r > CONFIG_INPUT_GRABMAX) {
@@ -64,6 +65,7 @@ int inputdev_ioctl(uarg_t request, char *data)
         keyboard_grab = r;
         return 0;
     }
+#endif
     if (request == INPUT_SETMETA)
         return uget(data, metamap, sizeof(metamap));
     return -1;

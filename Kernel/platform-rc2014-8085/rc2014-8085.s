@@ -442,3 +442,23 @@ _timer_check:
 	out 0x3E		!	Set the count back to 10
 	mov e,a			!	Return nonzero
 	ret			!	Was us
+
+!
+!	Joysticks
+!
+
+.define	_jsin1
+
+_jsin1:
+	mvi d,0
+	in 0x01
+	mov e,a
+	ret
+
+.define _jsin2
+
+_jsin2:
+	mvi d,0
+	in 0x02
+	mov e,a
+	ret

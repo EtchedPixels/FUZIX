@@ -1,7 +1,7 @@
 LIBPATH=../../Library/libs
 LIBC=$(LIBPATH)/libc8080.a $(ACK_ROOT)/share/ack/cpm/libem.a
 
-CSRCS += devices.c main.c devtty.c
+CSRCS += devices.c main.c devtty.c devinput.c
 DISCARD_CSRCS = discard.c
 
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c ../dev/ds1302_discard.c
@@ -58,7 +58,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec16.o  \
-	ppide.o \
+	ppide.o devinput.o ../devinput.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	ds1302.o ds1302_discard.o ds1302_8085.o \
 	../usermem_std-8085.o $(LIBC) end.o
