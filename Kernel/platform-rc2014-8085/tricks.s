@@ -27,10 +27,10 @@ bankfork:
 	lxi h,copy_stack
 	jmp copier
 	!
-	!	Go from BE00 to the stack pointer
+	!	Go from DE00 to the stack pointer
 	!
 copy_stack:
-	lxi sp,0xBE00-6
+	lxi sp,0xDE00-6
 	! Trickier .. need to work out where to stop
 	lhld U_DATA__U_SYSCALL_SP
 	lxi d,-0x0106		! 6 for the underrun 0x100 for the round down

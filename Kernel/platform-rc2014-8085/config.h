@@ -14,9 +14,9 @@
 #undef CONFIG_SINGLETASK
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
-/* 10 48K banks, 1 is kernel, 16K common 16K extra */
-#define MAX_MAPS	9
-#define MAP_SIZE	0xC000U
+/* 8 56K banks, 1 is kernel, 8K common */
+#define MAX_MAPS	7
+#define MAP_SIZE	0xE000U
 
 /* Read processes and big I/O direct into process space */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
@@ -27,14 +27,14 @@
 #define TICKSPERSEC 10   /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xBE00  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xDE00  /* Top of program, base of U_DATA copy */
 #define PROC_SIZE   60	  /* Memory needed per process */
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 
-#define SWAP_SIZE   0x60 	/* 48K in blocks (we actually don't need the low 256) */
+#define SWAP_SIZE   0x70 	/* 56K in blocks (we actually don't need the low 256) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xC000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0xE000	/* vectors so its a round number of sectors */
 #define MAX_SWAPS   16		/* The full drive would actually be 85! */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
