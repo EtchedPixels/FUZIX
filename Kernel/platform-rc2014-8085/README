@@ -51,6 +51,6 @@ At this point:
 0xC0-0xC7	16550A UART
 
 The bootloader from the ROM package goes on block 0 (with partition table),
-the kernel goes on blocks 2+ with the file system and PC partition tables
+the kernel goes on blocks 1+ with the file system and PC partition tables
 as normal.
 
