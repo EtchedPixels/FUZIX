@@ -20,7 +20,7 @@ MALFUNCTIONS MAY CAUSE A LOSS OF ANY KIND.
 - Atari is a trademark of Atari Interactive Inc
 - CP/M and MP/M are or were a trademark of Digital Research
 - Linux is a registered trademark of Linus Torvalds
-- Microbeee is a trademark of Microbeee Technology
+- Microbee is a trademark of Microbee Technology
 - Motorola is a trademark of Motorola Trademark Holdings LLC
 - MSX is a trademark of the MSX licensing corporation
 - POSIX is a trademark of the IEEE

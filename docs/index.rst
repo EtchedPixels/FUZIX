@@ -27,5 +27,6 @@ Welcome to Fuzix's documentation!
    M68000
    BankedZ80
    Z80Thunked
+   RC2014
 
 * :ref:`search`
