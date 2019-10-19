@@ -1,7 +1,7 @@
 #ifndef __RC2014_SIO_DOT_H__
 #define __RC2014_SIO_DOT_H__
 
-/* Needs generalizing and tidying up across the RC2014 systems */
+/* Simple80 has somewhat differing addressing */
 
 #include "config.h"
 
