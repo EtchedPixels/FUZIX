@@ -68,9 +68,9 @@ start2:
 		add hl,de		; hl is now the relocations
 					; de is the code base
 		ld b,#0			; on the code base bits
-		ex de,hl		; de is relocatios as loop swaps
+		ex de,hl		; de is relocations as loop swaps
 relnext:
-		; Read each relocatin byte and zero it (because it's really
+		; Read each relocation byte and zero it (because it's really
 		; stolen BSS so should start zero)
 		ex de,hl
 		ld a,(hl)
