@@ -2,20 +2,15 @@
 #	We can't build this for platforms other than 0 based so don't bother
 # with Z80_PLATFORM
 #
-BASE=49152
-#
 all: emulator runcpm
 
 emulator: emulator.s
-	echo "          .org "$(BASE) >cpm.def
 	sdasz80 -o -l emulator.rel emulator.s
-	sdldz80 -m -i emulator.ihx emulator.rel -e
-	makebin -s 65536 emulator.ihx emulator.tmp
-	dd if=emulator.tmp of=emulator.bin bs=1 count=4096 skip=$(BASE)
+	fcc --nocrt0 -o emulator.bin emulator.rel
 
 runcpm: runcpm.c
 	fcc -O2 -c --nostdio runcpm.c
-	fcc -o runcpm runcpm.rel
+	fcc --nostdio -o runcpm runcpm.rel
 	
 clean:
 	rm -f *~ *.rel *.ihx *.tmp *.bin *.lst *.lk *.noi *.map cpm.def *.sym runcpm emulator runcpm.asm

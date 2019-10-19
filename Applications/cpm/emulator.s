@@ -1,9 +1,5 @@
-    ; must begin on a page boundary (address % 256 == 0) to ensure
+    ; must be loaded on a page boundary (address % 256 == 0) to ensure
     ; the jump table is correctly aligned
-    ;
-    ; This varies by platform so we really want to make this relocatable
-    ; not linked per platform somehow
-    ;
     ;
     ; TODO
     ; - Fix up directory mapping a bit more
@@ -15,10 +11,6 @@
     ;
 	.module cpm
 	.area	ASEG(ABS)
-
-	.include "cpm.def"
-
-startaddr:
 
 fcb 	.EQU	0x005C		; Default CP/M FCB
 buff	.EQU	0x0080		; Default CP/M Buffer
@@ -47,13 +39,43 @@ TIOCINQ	.EQU	5		; Fuzix - characters pending
 STDIN	.EQU	0	; file descriptor value of keyboard
 STDOUT	.EQU	1	; file descriptor value of display
 
+	.area _CODE
 EStart:
 ;
-; Load the binary of argv[1] at 0x0100 (obliterating runcpm) (passed as fd
-; 2)
+;	Required image header, filled in by the tool chain and
+;	consumed by our loader code.
 ;
-	LD	HL, #startaddr		; just a cheap way to let runcpm
-					; check a valid load address
+start:		jr start2		; must be relative
+		nop
+		.db 'F'
+		.db 'Z'
+		.db 'L'
+		.db '1'
+
+;
+;	Borrowed idea from UMZIX - put the info in known places then
+;	we can write "size" tools
+;
+;	This is confusing. SDCC doesn't produce a BSS, instead it
+;	produces an INITIALIZED (which everyone else calls DATA) and a
+;	DATA which everyone else would think of as BSS.
+;
+;	FIXME: we need to automate the load page setting
+;
+		.db 0x01		; page to load at
+		.dw 0			; chmem ("0 - 'all'")
+		; These three are set by binman
+		.dw 0			; code
+		.dw 0			; data
+		.dw 0			; bss size
+		.dw 0			; spare
+
+start2:
+;
+;
+; Load the binary of argv[1] at 0x0100 (obliterating runcpm) (passed as fd
+; 3)
+;
 	LD	(SysSP), SP		; save stack pointer for cold starts
 	LD	DE,#EStart - 0x100	; largest possible binary space
 	PUSH	DE
@@ -70,7 +92,7 @@ EStart:
 	POP	DE
 	LD	DE,#3
 	PUSH	DE
-	DEC	DE		;  #2 close
+	DEC	DE		;  #3 close
 	PUSH	DE
 	RST	0x30
 	POP	DE
@@ -1497,5 +1519,8 @@ dir:	.ds	128		; Directory Buffer (can cut to 48 bytes?)
 BIOSIZ	.EQU	.-__bios
 CPMSIZ	.EQU	.-__bdos
 
+; To keep the linker happy
+	.area _DATA
+	.area _BSS
 ;       .end
 
