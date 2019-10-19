@@ -10,6 +10,7 @@ struct objhdr
 #define OA_8080		1
 #define OA_6502		2
 #define OA_DGNOVA	3	/* So I can test PC relative */
+#define OA_6800		4
     uint8_t o_flags;
 #define OF_BIGENDIAN	1
 #define OF_WORDMACHINE	2	/* 16bit word addressed */
@@ -32,6 +33,11 @@ struct objhdr
 #define OA_DGNOVA_FPU	2
 #define OA_DGNOVA_NOVA3	4
 #define	OA_DGNOVA_NOVA4	8
+
+#define OA_6800_6803	1
+#define OA_6800_6303	2
+#define OA_6800_68HC11	4
+
     uint16_t o_unused;		/* So it packs right */
     uint32_t o_segbase[OSEG];
     uint16_t o_size[OSEG];
