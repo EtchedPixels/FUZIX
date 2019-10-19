@@ -39,6 +39,10 @@ TODO
 
 Faster interbank copying
 Swap only needed blocks for speed up
+Finish support for the SIO modifications
+Maybe support the buggy boards (means no second serial port)
+Support the 150Hz clock board
+Fork a 512K RAM modified version
 
 Emulation
 
