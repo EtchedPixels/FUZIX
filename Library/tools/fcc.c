@@ -26,7 +26,6 @@ static char *workdir;		/* Working directory */
 static int verbose = 0;
 static int valgrind = 0;
 static int relocatable = 1;
-
 static int keep_temps = 0;
 
 static unsigned int progbase = 0x0100;	/* Program base */
@@ -259,7 +258,9 @@ static int debug;
 static int pedantic;
 static int werror;
 static int unschar;
-static int nostdio = 0;
+static int nostdio;
+static int dynlib;
+static int nocrt0;
 
 
 static char *extendname(const char *r, const char *i, char *ext)
@@ -652,13 +653,16 @@ static void build_command(int pass)
       exit(1);
     }
     add_option("-o", add_delete_late(extendname("",relocmap(undotslash(rootname), pass), "ihx")));
-    if (nostdio)
-      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%snostdio%s.rel", hp, platform, rp);
-    else
-      snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%s%s.rel", hp, platform, rp);
-
-    rp = mstrdup(buf);
-    add_argument(rp);
+    if (nocrt0 == 0) {
+      if (dynlib)
+        snprintf(buf, sizeof(buf), FCC_DIR, "/lib/lib0%s%s%s.rel", hp, platform, rp);
+      else if (nostdio)
+        snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%snostdio%s.rel", hp, platform, rp);
+      else
+        snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%s%s.rel", hp, platform, rp);
+      rp = mstrdup(buf);
+      add_argument(rp);
+    }
   }
   if (srchead) {
     if (mode == MODE_OBJ) {
@@ -795,6 +799,10 @@ int main(int argc, const char *argv[]) {
             pedantic = 1;
           else if (strcmp(p, "--nostdio") == 0)
             nostdio = 1;
+          else if (strcmp(p, "--dynlib") == 0)
+            dynlib = 1;
+          else if (strcmp(p, "--nocrt0") == 0)
+            nocrt0 = 1;
           else if (strcmp(p, "--valgrind") == 0)
             valgrind = 1;
           else {
