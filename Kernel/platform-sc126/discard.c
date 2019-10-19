@@ -3,9 +3,12 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
+#include <devide.h>
+#include <devsd.h>
 #include "config.h"
 #include <z180.h>
 #include <ds1302.h>
+#include <netdev.h>
 
 void init_hardware_c(void)
 {
@@ -44,4 +47,11 @@ uint8_t platform_param(char *p)
 {
 	used(p);
 	return 0;
+}
+
+void device_init(void)
+{
+	devide_init();
+	devsd_init();
+	netdev_init();
 }

@@ -4,6 +4,7 @@ DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/devsd_discard.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c  ../dev/devsd.c
 DASRCS = ../dev/ds1302_rc2014_z180.s
+NSRCS = ../dev/net/net_w5300.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
@@ -11,10 +12,11 @@ DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
+NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(DAOBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(DAOBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../dev/ -I../dev/net/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -31,6 +33,9 @@ $(DOBJS): %.rel: ../dev/%.c
 
 $(DAOBJS): %.rel: ../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
+
+$(NOBJS): %.rel: ../dev/net/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<

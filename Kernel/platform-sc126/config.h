@@ -64,3 +64,7 @@ extern uint16_t swap_dev;
 #define swap_map(x)	((uint8_t *)(x))
 
 #define platform_copyright()		// for now
+
+#define CONFIG_NET
+#define CONFIG_NET_WIZNET5300
+#define CONFIG_WIZNET_INDIRECT

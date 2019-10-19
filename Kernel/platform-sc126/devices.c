@@ -5,7 +5,6 @@
 #include <devsys.h>
 #include <devtty.h>
 #include <devide.h>
-#include <devrd.h>
 #include <devsd.h>
 #include <blkdev.h>
 #include <ds1302.h>
@@ -29,10 +28,4 @@ bool validdev(uint16_t dev)
 		return false;
 	else
 		return true;
-}
-
-void device_init(void)
-{
-	devide_init();
-	devsd_init();
 }
