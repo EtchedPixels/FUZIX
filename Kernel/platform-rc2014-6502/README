@@ -2,7 +2,8 @@ Initial sketches for a 6502 RC2014 banked memory platform
 
 Use a modern cc65 from https://github.com/cc65/cc65
 
-Our memory mapping looks like this
+Our memory mapping hasn't been reworked from the C000 top of space so
+still looks like this
 
 	0x0000-0x00FF	ZP
 	0x0100-0x01FF	6502 Stack (per proc)
@@ -11,17 +12,20 @@ Our memory mapping looks like this
 
 	0x4000-0xBFFF	Kernel code
 	0xC000-0xC0FF	I/O Window
-	0xC100-0xFFF9	Kernel code/common/data/vectors
+	0xC000-0xFDFF	Kernel code/common/data/vectors
+	0xFE00-0xFEFF	I/O Window
+	0xFF00-0xFFF9	Not yet used (FIXME)
 	0xFFFA-0xFFFF	Vectors
 
-Everything we need to copy to/from userspace lives about C000
+Everything we need to copy to/from userspace lives above C000
 
 In user space
 
 	0x0000-0x1FFF	Kernel common and work area
 	0x2000-0xBFFF	User space
-	0xC000-0xC0FF	I/O Window
-	0xC100-0xFFF9	Kernel code/common/data/vectors
+	0xC000-0xC0FF	Unused
+	0xC100-0xFDFF	Kernel code/common/data/vectors
+	0xFE00-0xFEFF	I/O Window
 	0xFFFA-0xFFFF	Vectors
 
 We operate roughly like a 16K x 4 paged setup except that for now for simplicity
@@ -38,15 +42,12 @@ interrupt copies (about 20 bytes involved)
 Hardware Arrangement
 
 6502 CPU
-C000-C0FF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
+FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
 RC2014 bus
 512K RAM/ROM
 16550A UART
 
 Challenges:
-
-C000-C0FF are the I/O window, rather than somewhere sane like FExx. Might be
-worth a board mod to move it and re-arrange the memory map.
 
 Next Steps
 
@@ -61,8 +62,8 @@ DONE	Write pre-emption code
 DONE	Timer interrupt (6522VIA)
 DONE	Debug signal handling
 
-	New PCB design with the IO hole at FExx
-	IDE card changes to qualify /R and /W with E to try and fix the IDE
+DONE	New PCB design with the IO hole at FExx
+DONE	IDE card changes to qualify /R and /W with E to try and fix the IDE
 		hardware glitching
 
 IP	Real hardware testing

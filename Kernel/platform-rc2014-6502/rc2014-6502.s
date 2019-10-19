@@ -64,7 +64,7 @@ syscall	     =  $FE
 _platform_monitor:
 _platform_reboot:
 	    lda #0
-	    sta $C07B		; top 16K to ROM 0
+	    sta $FE7B		; top 16K to ROM 0
 	    jmp ($FFFC)
 
 ___hard_di:
@@ -96,7 +96,7 @@ init_early:
 	    ; handling - or does it - we wrap the bit ?? FIXME
 	    jsr _create_init_common
 	    lda #36
-	    sta $C078		; set low page to copy
+	    sta $FE78		; set low page to copy
             rts			; stack was copied so this is ok
 
 init_hardware:
@@ -216,13 +216,13 @@ map_kernel:
 ;	need us to fix save/restore)
 ;
 map_bank:
-	    stx $C078
+	    stx $FE78
 map_bank_i:			; We are not mapping the first user page yet
 	    stx cur_map
 	    inx
-	    stx $C079
+	    stx $FE79
 	    inx
-	    stx $C07A
+	    stx $FE7A
 	    rts
 
 ; X,A holds the map table of this process
@@ -279,11 +279,11 @@ saved_map:  .byte 0
 outchar:
 	    pha
 outcharw:
-	    lda $C0C5
+	    lda $FEC5
 	    and #$20
 	    beq outcharw
 	    pla
-	    sta $C0C0
+	    sta $FEC0
 	    rts
 
 ;
@@ -401,7 +401,7 @@ no_preempt:
 	    tay
 
 	    lda #255
-;	    sta $C000
+;	    sta $FE00
 	    ; Right now the stack holds Y X A P rti addr
 	    ; Push a helper to clean up and restore the register state
 	    lda #>(irqout-1)
@@ -690,7 +690,7 @@ hd_kmap:
 	rts
 
 hd_read256:
-	lda $C010
+	lda $FE10
 	sta (ptr3),y
 	iny
 	bne hd_read256
@@ -717,7 +717,7 @@ hd_kmapw:
 
 hd_write256:
 	lda (ptr3),y
-	sta $C010
+	sta $FE10
 	iny
 	bne hd_write256
 	rts

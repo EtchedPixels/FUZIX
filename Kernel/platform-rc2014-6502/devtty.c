@@ -7,8 +7,8 @@
 #include <vt.h>
 #include <tty.h>
 
-/* 16550A at C0C0 */
-static volatile uint8_t *uart = (volatile uint8_t *)0xC0C0;
+/* 16550A at FEC0 */
+static volatile uint8_t *uart = (volatile uint8_t *)0xFEC0;
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;

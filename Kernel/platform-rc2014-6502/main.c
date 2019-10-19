@@ -42,7 +42,7 @@ uint8_t platform_param(char *p)
     return 0;
 }
 
-static volatile uint8_t *via = (volatile uint8_t *)0xC060;
+static volatile uint8_t *via = (volatile uint8_t *)0xFE60;
 
 void device_init(void)
 {
@@ -62,6 +62,7 @@ void device_init(void)
 void platform_interrupt(void)
 {
 	uint8_t dummy;
+
 	tty_poll();
 	if (via[13] & 0x40) {
 		dummy = via[4]; /* Reset interrupt */
