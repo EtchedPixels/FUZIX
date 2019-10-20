@@ -50,7 +50,7 @@ struct objhdr
 
 #define REL_SIZE	0x30	/* 1-4 bytes */
 /* If REL_SIMPLE then ... */
-#define REL_SIMPLE	0x80	/* relocationto base of segment */
+#define REL_SIMPLE	0x80	/* relocation to base of segment */
 #define REL_SEG		0x0F	/* segment 0-15 */	
 
 /*    followed by the bytes to relocate */
@@ -75,6 +75,8 @@ struct objhdr
    write where the two bytes of reloc are relocated and the high byte used. If
    used with overflow must follow it directly */
 #define REL_HIGH	(REL_SPECIAL| (3 << 4))	/* 30 */
+/* Indicate a change in address for ABS areas */
+#define REL_ORG		(REL_SPECIAL| (4 << 4))	/* 40 */
 
 /* symbols and debug are in the format 
     uint8_t flags

@@ -53,7 +53,14 @@ void outpass(void)
 
 void outabsolute(int addr)
 {
-	/* FIXME */
+	if (segment != ABSOLUTE)
+		qerr(MUST_BE_ABSOLUTE);
+	else {
+		outbyte(REL_ESC);
+		outbyte(REL_ORG);
+		outbyte(addr & 0xFF);
+		outbyte(addr >> 8);
+	}
 }
 
 /*

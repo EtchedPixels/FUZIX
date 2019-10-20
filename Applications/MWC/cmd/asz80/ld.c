@@ -603,7 +603,7 @@ static uint16_t target_get(struct object *o, uint16_t size, FILE *ip)
  * LD_RELOC: a relocation stream is output with no remaining symbol relocations
  *	     and all internal relocations resolved.
  */
-static void relocate_stream(struct object *o, FILE * op, FILE * ip)
+static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
 {
 	int c;
 	uint8_t size;
@@ -639,6 +639,20 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 			continue;
 		}
 
+		if (code == REL_ORG) {
+			if (ldmode != LD_ABSOLUTE) {
+				fprintf(stderr, "%s: absolute addressing requires '-b'.\n", o->path);
+				exit(1);
+			}
+			if (segment != ABSOLUTE) {
+				fprintf(stderr, "%s: cannot set address in non absolute segment.\n", o->path);
+				exit(1);
+			}
+			dot = fgetc(ip);
+			dot |= fgetc(ip) << 8;
+			xfseek(op, dot);
+			continue;
+		}
 		if (code == REL_OVERFLOW) {
 			overflow = 0;
 			code = fgetc(ip);
@@ -791,7 +805,7 @@ static void write_stream(FILE * op, int seg)
 		   assembler to generate the right symbol behaviours */
 		if (ldmode == LD_ABSOLUTE)
 			xfseek(op, dot);
-		relocate_stream(o, op, ip);
+		relocate_stream(o, seg, op, ip);
 		xfclose(ip);
 		o = o->next;
 	}
