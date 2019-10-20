@@ -43,6 +43,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <sys/stat.h>
 #include <ar.h>
 
 #include "obj.h"
@@ -53,7 +54,8 @@ static struct object *processing;	/* Object being processed */
 static struct object *objects, *otail;	/* List of objects */
 static struct symbol *symhash[NHASH];	/* Symbol has tables */
 static uint16_t base[4];		/* Base of each segment */
-static uint16_t size[4];		/* SIze of each segment */
+static uint16_t size[4];		/* Size of each segment */
+static uint16_t align;			/* Alignment */
 
 #define LD_RELOC	0		/* Output a relocatable binary */
 #define LD_RFLAG	1		/* Output an object module */
@@ -293,7 +295,10 @@ static struct symbol *find_alloc_symbol(struct object *o, uint8_t type, const ch
  */
 static void insert_internal_symbol(const char *name, int seg, uint16_t val)
 {
-	find_alloc_symbol(NULL, seg | S_PUBLIC, name, val);
+	if (seg == -1)
+		find_alloc_symbol(NULL, S_ANY | S_UNKNOWN, name, 0);
+	else
+		find_alloc_symbol(NULL, seg | S_PUBLIC, name, val);
 }
 
 /*
@@ -502,7 +507,9 @@ static void set_segment_bases(void)
 		if (split_id)
 			base[2] = size[1];
 		else {
-			base[2] = base[1] + size[1];
+			/* Single image. Check if we are aligning */
+			if (align)
+				base[2] = ((base[1] + size[1] + align - 1)/align) * align;
 			if (base[2] < base[1])
 				error("image too large");
 		}
@@ -686,10 +693,11 @@ static void relocate_stream(struct object *o, FILE * op, FILE * ip)
 				if (r >= o->nsym)
 					error("invalid reloc sym");
 				s = o->syment[r];
+				fprintf(stderr, "relocating sym %d (%s : %x)\n", r, s->name, s->type);
 				if (s->type & S_UNKNOWN) {
 					if (ldmode != LD_RFLAG) {
 						if (processing)
-						fprintf(stderr, "%s: Unknown symbol '%.16s'.\n", o->path, s->name);
+							fprintf(stderr, "%s: Unknown symbol '%.16s'.\n", o->path, s->name);
 						err |= 1;
 					}
 					if (ldmode != LD_ABSOLUTE) {
@@ -776,6 +784,13 @@ static void write_stream(FILE * op, int seg)
 			printf("Writing %s#%ld:%d\n", o->path, o->off, seg);
 		xfseek(ip, o->off + o->oh.o_segbase[seg]);
 		dot = o->base[seg];
+		/* In absolute mode we place segments wherever they should
+		   be in the binary space */
+		/* FIXME: to support ORG we will need to add a reloc type that
+		   indicates an arbitrary dot change. We also then need the
+		   assembler to generate the right symbol behaviours */
+		if (ldmode == LD_ABSOLUTE)
+			xfseek(op, dot);
 		relocate_stream(o, op, ip);
 		xfclose(ip);
 		o = o->next;
@@ -804,6 +819,7 @@ static void write_binary(FILE * op, FILE *mp)
 	hdr.o_size[0] = size[0];
 	hdr.o_size[1] = size[1];
 	hdr.o_size[2] = size[2];
+	hdr.o_size[3] = size[3];
 
 	rewind(op);
 	if (ldmode != LD_ABSOLUTE)
@@ -812,6 +828,11 @@ static void write_binary(FILE * op, FILE *mp)
 	   check for unknowmn symbols and error them out */
 	if (ldmode != LD_ABSOLUTE)
 		renumber_symbols();
+	if (ldmode == LD_RFLAG && size[0]) {
+		fprintf(stderr, "Cannot build a relocatable binary including absolute segments.\n");
+		exit(1);
+	}
+	write_stream(op, ABSOLUTE);
 	write_stream(op, CODE);
 	hdr.o_segbase[1] = ftell(op);
 	write_stream(op, DATA);
@@ -907,7 +928,7 @@ int main(int argc, char *argv[])
 
 	arg0 = argv[0];
 
-	while ((opt = getopt(argc, argv, "rbvtsio:m:c:")) != -1) {
+	while ((opt = getopt(argc, argv, "rbvtsiu:o:m:A:B:C:D:")) != -1) {
 		switch (opt) {
 		case 'r':
 			ldmode = LD_RFLAG;
@@ -917,7 +938,7 @@ int main(int argc, char *argv[])
 			strip = 1;
 			break;
 		case 'v':
-			printf("FuzixLD 0.1\n");
+			printf("FuzixLD 0.1.1\n");
 			break;
 		case 't':
 			verbose = 1;
@@ -928,14 +949,26 @@ int main(int argc, char *argv[])
 		case 'm':
 			mapname = optarg;
 			break;
+		case 'u':
+			insert_internal_symbol(optarg, -1, 0);
+			break;
 		case 's':
 			strip = 1;
 			break;
 		case 'i':
 			split_id = 1;
 			break;
-		case 'c':
-			base[1] = atoi(optarg);
+		case 'A':
+			align = strtoul(optarg, NULL, 0);
+			break;
+		case 'B':
+			base[1] = strtoul(optarg, NULL, 0);
+			break;
+		case 'C':
+			base[1] = strtoul(optarg, NULL, 0);
+			break;
+		case 'D':
+			base[2] = strtoul(optarg, NULL, 0);
 			break;
 		default:
 			fprintf(stderr, "%s: name ...\n", argv[0]);

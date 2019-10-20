@@ -15,7 +15,7 @@ char	*ep;
 char	*ip;
 char	*fname;
 VALUE	dot[NSEGMENT];
-int	segment = CODE;
+int	segment;
 SYM	*phash[NHASH];
 SYM	*uhash[NHASH];
 int	pass;
