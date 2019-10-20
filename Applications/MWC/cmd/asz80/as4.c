@@ -63,10 +63,8 @@ void outabsolute(int addr)
 void outsegment(int seg)
 {
 	/* Seek to the current writing address for this segment */
-	if (pass == 1) {
+	if (pass == 1)
 		fseek(ofp, segbase[seg], SEEK_SET);
-		printf("\nSegment %d, base %ld\n", seg, segbase[seg]);
-	}
 }
 
 /*
@@ -300,8 +298,8 @@ void outeof(void)
 	rewind(ofp);
 	obh.o_magic = MAGIC_OBJ;
 	fwrite(&obh, sizeof(obh), 1, ofp);
-	printf("Abs %d bytes: Code %d bytes: Data %d bytes: BSS %d bytes\n",
-		truesize[ABSOLUTE], truesize[CODE], truesize[DATA], truesize[BSS]);
+//	printf("Abs %d bytes: Code %d bytes: Data %d bytes: BSS %d bytes\n",
+//		truesize[ABSOLUTE], truesize[CODE], truesize[DATA], truesize[BSS]);
 }
 
 /*
@@ -310,10 +308,8 @@ void outeof(void)
  */
 void outbyte(uint8_t b)
 {
-	if (pass == 1 && segment != BSS && segment != ZP) {
-		printf("%02X,", b);
+	if (pass == 1 && segment != BSS && segment != ZP)
 		putc(b, ofp);
-	}
 	segbase[segment]++;
 	segsize[segment]++;
 }

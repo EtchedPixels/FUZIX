@@ -507,8 +507,9 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 #define T16DIXE	0x1500			/* All forms double immediate*/
 /* Stores in that range */
 #define T16DXE	0x1600			/* Double immediate no store */
-/* JMP */
-/* TODO: 6303 specific AIM/OIM etc */
+/* 6303 specials */
+#define TIMPL6303	0x1700		/* 6303 implicit */
+#define TIDX6303	0x1800		/* AIM etc */
 
 /*
  * Registers.

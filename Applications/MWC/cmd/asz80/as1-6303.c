@@ -66,6 +66,7 @@ void getaddr(ADDR *ap)
 			unget(c);
 		expr1(ap, LOPRI, 0);
 		istuser(ap);
+		constify(ap);
 		ap->a_type |= TIMMED;
 		return;
 	}
@@ -79,7 +80,10 @@ void getaddr(ADDR *ap)
 		c = getnb();
 		if (tolower(c) != 'x')
 			aerr(SYNTAX_ERROR);
-		constant_to_zp(ap);
+		if (ap->a_value < 0 || ap->a_value > 255)
+			aerr(INDX_RANGE);
+		istuser(ap);
+		constify(ap);
 		ap->a_type |= TINDEX;
 		return;
 	}
@@ -236,6 +240,8 @@ loop:
 			outab(0);
 		break;
 
+	case TIMPL6303:
+		/* Until we implement CPU type checks */
 	case TIMPL:
 		outab(opcode);
 		break;
@@ -266,8 +272,6 @@ loop:
 			break;
 		case TINDEX:
 			outab(opcode + 0x20);
-			if(a1.a_value < 0 || a1.a_value > 255)
-				aerr(INDX_RANGE);
 			outab(a1.a_value);
 			break;
 		default:
@@ -296,8 +300,6 @@ loop:
 			break;
 		case TINDEX:
 			outab(opcode + 0x20);
-			if(a1.a_value < 0 || a1.a_value > 255)
-				aerr(INDX_RANGE);
 			outab(a1.a_value);
 			break;
 		default:
@@ -320,6 +322,37 @@ loop:
 
 		outab(opcode);
 		outraw(&a1);
+		break;
+
+	case TIDX6303:	/* 6303 oddity, immediate followed by direct or indexed */
+		getaddr(&a1);
+		if ((a1.a_type & TMADDR) != TIMMED)
+			qerr(SYNTAX_ERROR);
+
+		if (a1.a_value < 0 || a1.a_value > 255)
+			aerr(CONSTANT_RANGE);
+
+		c = getnb();
+		if (c != ',')
+			qerr(SYNTAX_ERROR);
+
+		getaddr(&a2);
+		switch(a2.a_type & TMADDR) {
+			case TDIRECT:
+				opcode += 0x10;
+				break;
+			case TINDEX:
+				break;
+			default:
+				aerr(SYNTAX_ERROR);
+				break;
+		}
+		/* Now encode the instruction */
+		outab(opcode);
+		outrab(&a1);
+		constify(&a2);
+		istuser(&a2);
+		outrab(&a2);
 		break;
 
 	default:

@@ -29,10 +29,12 @@ SYM	sym[] = {
 	{	0,	".org",		TORG,		XXXX	},
 	{	0,	".equ",		TEQU,		XXXX	},
 	{	0,	".export",	TEXPORT,	XXXX	},
+	{	0,	"abs",		TSEGMENT,	ABSOLUTE},
 	{	0,	"code",		TSEGMENT,	CODE	},
 	{	0,	"data",		TSEGMENT,	DATA	},
 	{	0,	"bss",		TSEGMENT,	BSS	},
 	{	0,	"zp",		TSEGMENT,	ZP	},
+	{	0,	".abs",		TSEGMENT,	ABSOLUTE},
 	{	0,	".code",	TSEGMENT,	CODE	},
 	{	0,	".data",	TSEGMENT,	DATA	},
 	{	0,	".bss",		TSEGMENT,	BSS	},
@@ -62,13 +64,19 @@ SYM	sym[] = {
 	{	0,	"daa",		TIMPL,		0x19	},
 	{	0,	"aba",		TIMPL,		0x1B	},
 
+	/* 0x1X		:	Implicit 6303 */
+	{	0,	"xgdx",		TIMPL6303,	0x18	},
+	{	0,	"slp",		TIMPL6303,	0x1A	},
+
 	/* 0x2X		:	Branches */
 	{	0,	"bra",		TREL8,		0x20	},
 	{	0,	"brn",		TREL8,		0x21	},
 	{	0,	"bhi",		TREL8,		0x22	},
 	{	0,	"bls",		TREL8,		0x23	},
 	{	0,	"bcc",		TREL8,		0x24	},
+	{	0,	"bhs",		TREL8,		0x24	},
 	{	0,	"bcs",		TREL8,		0x25	},
+	{	0,	"blo",		TREL8,		0x25	},
 	{	0,	"bne",		TREL8,		0x26	},
 	{	0,	"beq",		TREL8,		0x27	},
 	{	0,	"bvc",		TREL8,		0x28	},
@@ -79,7 +87,6 @@ SYM	sym[] = {
 	{	0,	"blt",		TREL8,		0x2D	},
 	{	0,	"bgt",		TREL8,		0x2E	},
 	{	0,	"ble",		TREL8,		0x2F	},
-	/* And the alias names : TODO */
 	
 	/* 0x3X		:	Implicit */
 	{	0,	"tsx",		TIMPL,		0x30	},
@@ -114,7 +121,7 @@ SYM	sym[] = {
 	{	0,	"tsta",		TIMPL,		0x4D	},
 	/* 4E is HCF but has no official code */
 	{	0,	"clra",		TIMPL,		0x4F	},
-	
+
 	/* 0x5X		:	Implicit ops on B */
 
 	{	0,	"negb",		TIMPL,		0x50	},
@@ -130,7 +137,7 @@ SYM	sym[] = {
 	{	0,	"tstb",		TIMPL,		0x5D	},
 	/* 5E is HCF but has no official code */
 	{	0,	"clrb",		TIMPL,		0x5F	},
-	
+
 	/* 0x6X/0x7X	:	Indexed and extended */
 
 	{	0,	"neg",		TXE,		0x60	},
@@ -147,8 +154,15 @@ SYM	sym[] = {
 	{	0,	"jmp",		TXE,		0x6E	},
 	{	0,	"clr",		TXE,		0x6F	},
 	
-	/* 0x8x-0xBx	:	A and S form load/store/logic/oddities */
+	/* 0x6X/0x7X	:	6303 specific Imm/Direct and Imm/Index */
 	
+	{	0,	"aim",		TIDX6303,	0x61	},
+	{	0,	"oim",		TIDX6303,	0x62	},
+	{	0,	"eim",		TIDX6303,	0x65	},
+	{	0,	"tim",		TIDX6303,	0x6B	},
+
+	/* 0x8x-0xBx	:	A and S form load/store/logic/oddities */
+
 	{	0,	"suba",		TDIXE,		0x80	},
 	{	0,	"cmpa",		TDIXE,		0x81	},
 	{	0,	"sbca",		TDIXE,		0x82	},
@@ -212,22 +226,23 @@ void syminit(void)
 }
 
 char *etext[] = {
-	"unexpected character",
-	"phase error",
-	"multiple definitions",
-	"syntax error",
-	"must be absolute",
-	"missing delimiter",
-	"invalid constant",
-	"Bcc out of range",
-	"index out of range",
-	"address required",
-	"bad addressing mode",
-	"divide by 0",
-	"constant out of range",
-	"data in BSS",
-	"segment overflow",
-	"segment conflict"
+	"unexpected character",		/* 10 */
+	"phase error",			/* 11 */
+	"multiple definitions",		/* 12 */
+	"syntax error",			/* 13 */
+	"must be absolute",		/* 14 */
+	"missing delimiter",		/* 15 */
+	"invalid constant",		/* 16 */
+	"Bcc out of range",		/* 17 */
+	"index out of range",		/* 18 */
+	"address required",		/* 19 */
+	"invalid ID",			/* 20 */
+	"bad addressing mode",		/* 21 */
+	"divide by 0",			/* 22 */
+	"constant out of range",	/* 23 */
+	"data in BSS",			/* 24 */
+	"segment overflow",		/* 25 */
+	"segment conflict"		/* 26 */
 };
 
 /*
