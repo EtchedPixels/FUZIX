@@ -510,6 +510,7 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 /* 6303 specials */
 #define TIMPL6303	0x1700		/* 6303 implicit */
 #define TIDX6303	0x1800		/* AIM etc */
+#define TIDXB6303	0x1900		/* BIT form of the above */
 
 /*
  * Registers.

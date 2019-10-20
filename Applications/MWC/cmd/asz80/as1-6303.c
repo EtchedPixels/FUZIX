@@ -78,14 +78,15 @@ void getaddr(ADDR *ap)
 	/* foo,[x|y] */
 	if (c == ',') {
 		c = getnb();
-		if (tolower(c) != 'x')
-			aerr(SYNTAX_ERROR);
-		if (ap->a_value < 0 || ap->a_value > 255)
-			aerr(INDX_RANGE);
-		istuser(ap);
-		constify(ap);
-		ap->a_type |= TINDEX;
-		return;
+		if (tolower(c) == 'x') {
+			if (ap->a_value < 0 || ap->a_value > 255)
+				aerr(INDX_RANGE);
+			istuser(ap);
+			constify(ap);
+			ap->a_type |= TINDEX;
+			return;
+		}
+		unget(c);
 	}
 	unget(c);
 	constant_to_zp(ap);
@@ -344,16 +345,51 @@ loop:
 			case TINDEX:
 				break;
 			default:
-				aerr(SYNTAX_ERROR);
+				qerr(SYNTAX_ERROR);
 				break;
 		}
 		/* Now encode the instruction */
 		outab(opcode);
 		outrab(&a1);
-		constify(&a2);
-		istuser(&a2);
 		outrab(&a2);
 		break;
+
+	case TIDXB6303:	/* The above - rebranded as bit operations */
+		getaddr(&a1);
+		switch (a1.a_type & TMADDR) {
+			case TINDEX:
+			case TIMMED:
+				qerr(SYNTAX_ERROR);
+		}
+		constify(&a1);
+		/* Bit number */
+		if (a1.a_value < 0 || a1.a_value > 7)
+			aerr(CONSTANT_RANGE);
+		c = getnb();
+		if (c != ',')
+			qerr(SYNTAX_ERROR);
+
+		getaddr(&a2);
+		switch(a2.a_type & TMADDR) {
+			case TDIRECT:
+				opcode += 0x10;
+				break;
+			case TINDEX:
+				break;
+			default:
+				aerr(SYNTAX_ERROR);
+				break;
+		}
+		/* Mangle the bit value into the right format */
+		a1.a_value = 1 << a1.a_value;
+		/* For AIM aka BCLR we need to invert it */
+		a1.a_value ^= opcode >> 8;
+		/* Now encode the instruction */
+		outab(opcode & 0xFF);
+		outrab(&a1);
+		outrab(&a2);
+		break;
+			
 
 	default:
 		aerr(SYNTAX_ERROR);

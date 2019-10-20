@@ -160,6 +160,12 @@ SYM	sym[] = {
 	{	0,	"oim",		TIDX6303,	0x62	},
 	{	0,	"eim",		TIDX6303,	0x65	},
 	{	0,	"tim",		TIDX6303,	0x6B	},
+	
+	/* 0x6X/0x7X	:	Aliases to above with bit syntax */
+	{	0,	"bclr",		TIDXB6303,	0xFF61	},
+	{	0,	"bset",		TIDXB6303,	0x62	},
+	{	0,	"btgl",		TIDXB6303,	0x65	},
+	{	0,	"btst",		TIDXB6303,	0x6B	},
 
 	/* 0x8x-0xBx	:	A and S form load/store/logic/oddities */
 
