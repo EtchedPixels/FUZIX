@@ -69,7 +69,8 @@ void getaddr(ADDR *ap)
 		ap->a_type |= TIMMED;
 		return;
 	}
-	
+
+	unget(c);	
 	expr1(ap, LOPRI, 1);
 	c = getnb();
 	
