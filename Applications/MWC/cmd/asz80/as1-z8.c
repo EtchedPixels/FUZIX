@@ -313,6 +313,8 @@ loop:
 		/* OP r,r */
 		ta1 = a1.a_type & TMADDR;
 		ta2 = a2.a_type & TMADDR;
+
+		/* Short forms are  dest << 4 | soure  */
 		if (ta1 == TRS && ta2 == TRS) {
 			outab(opcode | 0x02);
 			outab((a1.a_value << 4) | a2.a_value);
@@ -324,7 +326,7 @@ loop:
 			outab((a1.a_value << 4) | a2.a_value);
 			break;
 		}
-		/* Long forms */
+		/* Long forms  are src, dst except when the are not (sigh)*/
 		/* OP R,R */
 		if (ta1 == TREG && ta2 == TREG)
 			outab(opcode | 0x04);
@@ -339,12 +341,16 @@ loop:
 			outab(opcode | 0x07);
 		else
 			qerr(INVALID_FORM);
-		outab(a1.a_value);
-		if (ta2 == TIMMED)
+		/* Immediate is backwards to the others */
+		if (ta2 == TIMMED) {
+			/* dst src */
+			outab(a1.a_value);
 			outrab(&a2);
-		else
+		} else {
+			/* src dst */
 			outab(a2.a_value);
-		outab(opcode);
+			outab(a1.a_value);
+		}
 		break;
 
 	case TRRIR:
@@ -397,7 +403,7 @@ loop:
 			getaddr(&a1);
 		} else
 			cc = 0x08; /* True */
-		outab(opcode + cc);
+		outab(opcode + (cc << 4));
 		a1.a_value -= dot[segment] + 1;
 		/* Relative branches are always in segment and within our
 		   generated space so don't relocate */
@@ -414,11 +420,13 @@ loop:
 		} else
 			cc = 0x08; /* True */
 		if ((a1.a_type & TMADDR) == TRRIND) {
+			if (cc != 0x08)
+				qerr(INVALID_FORM);
 			/* JP @RR */
 			outab(0x30);
 			outab(a2.a_value);
 		} else {
-			outab(opcode + cc);
+			outab(opcode + (cc << 4));
 			/* Relocatable label */
 			outraw(&a2);
 		}
@@ -497,27 +505,34 @@ loop:
 			outrab(&a2);
 			break;
 		}
+		/* As with the logic/maths ops the encoding order isn't
+		   entirely sane */
 		if (ta1 == TRS && ta2 == TREG) {
+			/* dst|mode , src */
 			outab(0x08 | (a1.a_value << 4));
 			outab(a2.a_value);
 			break;
 		}
 		if (ta1 == TREG && ta2 == TRS) {
+			/* src|mode , dst */
 			outab(0x09 | (a2.a_value << 4));
 			outab(a1.a_value);
 			break;
 		}
 		if (ta1 == TRS && ta2 == TSIND) {
+			/* mode | 3 , dst | src */
 			outab(0xE3);
 			outab((a1.a_value << 4) | (a2.a_value));
 			break;
 		}
 		if (ta1 == TSIND && ta2 == TRS) {
+			/* mode | 3 , dst | src */
 			outab(0xF3);
 			outab((a1.a_value << 4) | (a2.a_value));
 			break;
 		}
 		if (ta1 == TRS && ta2 == TINDEX) {
+			/* op , dst | x, offset */
 			outab(0xC7);
 			outab((a1.a_value << 4) | (a2.a_value >> 8));
 			a2.a_value &= 0xFF;
@@ -525,40 +540,46 @@ loop:
 			break;
 		}
 		if (ta1 == TINDEX && ta2 == TRS) {
-			outab(0xC7);
+			/* op , src | x, offset */
+			outab(0xD7);
 			outab((a1.a_value >>  8) | (a2.a_value << 4));
 			a1.a_value &= 0xFF;
 			outrab(&a1);
 			break;
 		}
 		if (ta1 == TREG && ta2 == TREG) {
+			/* op, src, dst */
 			outab(0xE4);
-			outab(a1.a_value);
 			outab(a2.a_value);
+			outab(a1.a_value);
 			break;
 		}
 		if (ta1 == TREG && ta2 == TIND) {
+			/* op, src, dst */
 			outab(0xE5);
-			outab(a1.a_value);
 			outab(a2.a_value);
+			outab(a1.a_value);
 			break;
 		}
 		if (ta1 == TREG && ta2 == TIMMED) {
+			/* op, dst, src */
 			outab(0xE6);
 			outab(a1.a_value);
 			outrab(&a2);
 			break;
 		}
 		if (ta1 == TIND && ta2 == TIMMED) {
+			/* op, dst, src */
 			outab(0xE7);
 			outab(a1.a_value);
 			outrab(&a2);
 			break;
 		}
 		if (ta1 == TIND && ta2 == TREG) {
+			/* op, src, dst */
 			outab(0xF5);
-			outab(a1.a_value);
 			outab(a2.a_value);
+			outab(a1.a_value);
 			break;
 		}
 		qerr(INVALID_FORM);
