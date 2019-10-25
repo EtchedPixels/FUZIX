@@ -11,6 +11,7 @@ struct objhdr
 #define OA_6502		2
 #define OA_DGNOVA	3	/* So I can test PC relative */
 #define OA_6800		4
+#define OA_Z8		5
     uint8_t o_flags;
 #define OF_BIGENDIAN	1
 #define OF_WORDMACHINE	2	/* 16bit word addressed */
