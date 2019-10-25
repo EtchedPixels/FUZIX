@@ -32,6 +32,27 @@ SYM	sym[] = {
 	{	0,	".data",	TSEGMENT,	DATA	},
 	{	0,	".bss",		TSEGMENT,	BSS	},
 	{	0,	".zp",		TSEGMENT,	ZP	},
+	
+	/* Condition codes */
+	
+	{	0,	"f",		TCC,		0x00	},
+	{	0,	"lt",		TCC,		0x01	},
+	{	0,	"le",		TCC,		0x02	},
+	{	0,	"ule",		TCC,		0x03	},
+	{	0,	"ov",		TCC,		0x04	},
+	{	0,	"mi",		TCC,		0x05	},
+	{	0,	"eq",		TCC,		0x06	},
+	{	0,	"z",		TCC,		0x06	},
+	{	0,	"c",		TCC,		0x07	},
+	/* 0x08 is 'true' */
+	{	0,	"ge",		TCC,		0x09	},
+	{	0,	"gt",		TCC,		0x0A	},
+	{	0,	"uge",		TCC,		0x0B	},
+	{	0,	"nov",		TCC,		0x0C	},
+	{	0,	"pl",		TCC,		0x0D	},
+	{	0,	"ne",		TCC,		0x0E	},
+	{	0,	"nz",		TCC,		0x0E	},
+	{	0,	"nc",		TCC,		0x0F	},
 
 	/* The Z8 has a gloriously clean instruction set */
 	
