@@ -106,11 +106,17 @@ void getaddr(ADDR *ap)
 		}
 		return;
 	}
-	
+	unget(c);
+
 	/* If it wasn't a short register or a constant it's a register. We
 	   have no 'address' formats except for constant load and indexed */
 
 	expr1(ap, LOPRI, 1);
+
+	/* Condition code */
+	if ((ap->a_type & TMMODE) == TCC)
+		return;
+
 	/* Must be an 8bit result */
 	if (ap->a_value < -128 || ap->a_value > 255)
 		qerr(CONSTANT_RANGE);
@@ -358,7 +364,9 @@ loop:
 		/* RR or IR format */
 		getaddr8(&a1);
 		switch(a1.a_type & TMADDR) {
-		case TRR:
+		case TREG:
+			if (a1.a_value & 1)
+				aerr(ODD_REGISTER);
 			outab(opcode);
 			break;
 		case TIND:
@@ -464,13 +472,13 @@ loop:
 			qerr(MISSING_DELIMITER);
 		getaddr8(&a2);
 		ta1 = a1.a_type & TMADDR;
-		ta2 = a1.a_type & TMADDR;
-		if (ta1 == TRS && ta2 == TSIND) {
+		ta2 = a2.a_type & TMADDR;
+		if (ta1 == TRS && ta2 == TRRIND) {
 			outab(opcode);
 			/* dst, src */
 			outab(a1.a_value);
 			outab(a2.a_value);
-		} else if (ta1 == TSIND && ta2 == TRS) {
+		} else if (ta1 == TRRIND && ta2 == TRS) {
 			/* src, dst */
 			outab(opcode + 0x01);
 			outab(a2.a_value);
@@ -485,9 +493,9 @@ loop:
 			qerr(MISSING_DELIMITER);
 		getaddr8(&a2);
 		ta1 = a1.a_type & TMADDR;
-		ta2 = a1.a_type & TMADDR;
+		ta2 = a2.a_type & TMADDR;
 		if (ta1 == TSIND && ta2 == TRRIND) {
-			/* dst. src */
+			/* dst, src */
 			outab(opcode);
 			outab(a1.a_value);
 			outab(a2.a_value);
@@ -507,7 +515,7 @@ loop:
 			qerr(MISSING_DELIMITER);
 		getaddr8(&a2);
 		ta1 = a1.a_type & TMADDR;
-		ta2 = a1.a_type & TMADDR;
+		ta2 = a2.a_type & TMADDR;
 		/* Now encode the load by type */
 		if (ta1 == TRS && ta2 == TIMMED) {
 			outab(0x0C | (a1.a_value << 4));
