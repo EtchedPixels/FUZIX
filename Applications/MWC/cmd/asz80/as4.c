@@ -36,7 +36,7 @@ void outpass(void)
 		}
 		obh.o_magic = 0;
 		obh.o_arch = ARCH;
-		obh.o_flags = 0;
+		obh.o_flags = ARCH_FLAGS;
 		obh.o_cpuflags = cpu_flags;
 		obh.o_symbase = base;
 		obh.o_dbgbase = 0;	/* for now */
