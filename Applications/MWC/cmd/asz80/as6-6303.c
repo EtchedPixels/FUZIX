@@ -248,7 +248,8 @@ char *etext[] = {
 	"constant out of range",	/* 23 */
 	"data in BSS",			/* 24 */
 	"segment overflow",		/* 25 */
-	"segment conflict"		/* 26 */
+	"data in direct page",		/* 26 */
+	"segment conflict"		/* 27 */
 };
 
 /*

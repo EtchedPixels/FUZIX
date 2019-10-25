@@ -7,8 +7,6 @@
 
 
 /*
- * Deal with the syntactic mess 6502 assembler has
- *
  * In some cases (JSR JMP and definitions - eg .word)
  * $ABCD means a constant everywhere else that is #ABCD
  */
