@@ -63,8 +63,8 @@ void getaddr(ADDR *ap)
 		else
 			unget(c);
 		expr1(ap, LOPRI, 0);
-		istuser(ap);
 		constify(ap);
+		istuser(ap);
 		ap->a_type |= TIMMED;
 		return;
 	}
