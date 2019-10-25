@@ -12,6 +12,7 @@
  * - ; is used for comments not '!' or '//'
  * - manufactured instructions (RES etc) are not yet supported (use the
  *   underlying and/or immediate)
+ * - no built in register alias names - .EQU in ABS should do fine ?
  */
 #include	"as.h"
 
@@ -464,14 +465,18 @@ loop:
 		getaddr8(&a2);
 		ta1 = a1.a_type & TMADDR;
 		ta2 = a1.a_type & TMADDR;
-		if (ta1 == TRS && ta2 == TSIND)
+		if (ta1 == TRS && ta2 == TSIND) {
 			outab(opcode);
-		else if (ta1 == TSIND && ta2 == TRS)
+			/* dst, src */
+			outab(a1.a_value);
+			outab(a2.a_value);
+		} else if (ta1 == TSIND && ta2 == TRS) {
+			/* src, dst */
 			outab(opcode + 0x01);
-		else
+			outab(a2.a_value);
+			outab(a1.a_value);
+		} else
 			qerr(INVALID_FORM);
-		outab(a1.a_value);
-		outab(a2.a_value);
 		break;
 	case TLDCI:
 		getaddr8(&a1);
@@ -481,14 +486,18 @@ loop:
 		getaddr8(&a2);
 		ta1 = a1.a_type & TMADDR;
 		ta2 = a1.a_type & TMADDR;
-		if (ta1 == TSIND && ta2 == TRRIND)
+		if (ta1 == TSIND && ta2 == TRRIND) {
+			/* dst. src */
 			outab(opcode);
-		else if (ta1 == TRRIND && ta2 == TSIND)
+			outab(a1.a_value);
+			outab(a2.a_value);
+		} else if (ta1 == TRRIND && ta2 == TSIND) {
 			outab(opcode + 0x01);
-		else
+			/* src, dst */
+			outab(a2.a_value);
+			outab(a1.a_value);
+		} else
 			qerr(INVALID_FORM);
-		outab(a1.a_value);
-		outab(a2.a_value);
 		break;
 	case TLOAD:
 		/* Load is its own special complicated case */
