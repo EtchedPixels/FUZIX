@@ -560,7 +560,7 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 
 #define ARCH OA_Z8
 #define ARCH_FLAGS 0
-#define ARCH_CPUFLAGS OA_Z8		/* For now until CPU type properly settable */
+#define ARCH_CPUFLAGS 0			/* For now until CPU type properly settable */
 
 
 /*
@@ -644,6 +644,89 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 #define DATA_IN_ZP	26
 #define	SEGMENT_CLASH	27
 #define ODD_REGISTER	28
+
+#elif TARGET_1802
+
+typedef	uint16_t	VALUE;		/* For symbol values */
+
+#define NSEGMENT 5			/* # of segments */
+
+#define ARCH OA_1802
+#define ARCH_FLAGS OF_BIGENDIAN
+#define ARCH_CPUFLAGS 0			/* For now until CPU type properly settable */
+
+
+/*
+ * Types. These are used
+ * in both symbols and in address
+ * descriptions. Observe the way the
+ * symbol flags hide in the register
+ * field of the address.
+ */
+#define	TMREG	0x000F			/* Register code */
+#define	TMMDF	0x0001			/* Multidef */
+#define	TMASG	0x0002			/* Defined by "=" */
+#define	TMMODE	0xFF00			/* Mode */
+#define	TMINDIR	0x8000			/* Indirect flag in mode */
+#define TPUBLIC	0x0080			/* Exported symbol */
+#define TMADDR	0x00F0			/* Addressing mode bits */
+
+#define TIMMED	0x0010			/* Immediate */
+
+#define	TNEW	0x0000			/* Virgin */
+#define	TUSER	0x0100			/* User name */
+#define	TBR	0x0200			/* Byte register */
+#define	TWR	0x0300			/* Word register */
+#define	TSR	0x0400			/* Special register (I, R) */
+#define	TDEFB	0x0500			/* defb */
+#define	TDEFW	0x0600			/* defw */
+#define	TDEFS	0x0700			/* defs */
+#define	TDEFM	0x0800			/* defm */
+#define	TORG	0x0900			/* org */
+#define	TEQU	0x0A00			/* equ */
+#define	TCOND	0x0B00			/* conditional */
+#define	TENDC	0x0C00			/* end conditional */
+#define TSEGMENT 0x0D00			/* segments by number */
+#define TEXPORT 0x0E00			/* symbol export */
+#define TCC	0x0F00
+/* CPU specific codes */
+#define TIMPL	0x1000			/* Implicit */
+#define TIMM8	0x1100			/* Immediate 8bit */
+#define TNOP	0x1200			/* NOP */
+#define TSKIP	0x1300			/* LSKIP */
+#define TREG	0x1400			/* 0-15 */
+#define TREGNZ	0x1500			/* 1-15 */
+#define TADDR16	0x1600			/* Long address */
+#define TIOPORT	0x1700			/* I/O port num (1-7) */
+#define TREL	0x1800			/* Relative address (sort of)*/
+
+/*
+ *	Error message numbers
+ */
+
+#define BRACKET_EXPECTED 1
+#define MISSING_COMMA	2
+#define SQUARE_EXPECTED 3
+#define PERCENT_EXPECTED 4
+#define UNEXPECTED_CHR	10
+#define PHASE_ERROR	11
+#define MULTIPLE_DEFS	12
+#define SYNTAX_ERROR	13
+#define MUST_BE_ABSOLUTE	14
+#define MISSING_DELIMITER 15
+#define INVALID_CONST	16
+#define BRA_RANGE	17
+#define INVALID_REG	18
+#define ADDR_REQUIRED	19
+#define INVALID_ID	20
+#define INVALID_IO	21
+#define DIVIDE_BY_ZERO	22
+#define CONSTANT_RANGE  23
+#define DATA_IN_BSS	24
+#define SEGMENT_OVERFLOW 25
+#define DATA_IN_ZP	26
+#define	SEGMENT_CLASH	27
+#define NOT_REG0	28
 
 #else
 #error "Unknown target"
