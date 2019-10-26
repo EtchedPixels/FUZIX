@@ -55,6 +55,8 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	uint8_t baud;
 	uint8_t ecr = 0;
 
+	used(flags);
+
 	/* Calculate the control bits */
 	if (cflag & PARENB) {
 		cntla |= 2;
@@ -143,6 +145,7 @@ void tty_sleeping(uint_fast8_t minor)
 
 void tty_data_consumed(uint_fast8_t minor)
 {
+	used(minor);
 }
 
 ttyready_t tty_writeready(uint_fast8_t minor)
