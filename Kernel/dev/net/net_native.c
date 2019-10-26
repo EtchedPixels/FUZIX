@@ -4,6 +4,11 @@
 #include <net_native.h>
 #include <printf.h>
 
+/*
+ *	TODO: support using a malloc pool of out of bank (or flat space)
+ *	memory buffers for networking not just file buffers. That way
+ *	it's much nicer on big boxes.
+ */
 #ifdef CONFIG_NET_NATIVE
 
 /* This holds the additional kernel context for the sockets */
