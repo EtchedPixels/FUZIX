@@ -14,6 +14,7 @@
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* One memory bank */
 #define CONFIG_BANKS	1
+/* FIXME: need to support non CTC uart ticking at 150Hz */
 #define TICKSPERSEC 10      /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
