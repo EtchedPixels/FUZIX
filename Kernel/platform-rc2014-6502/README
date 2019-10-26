@@ -71,5 +71,6 @@ IP	Real hardware testing
 
 Do buffer growth into discard
 Swap support
+Move entry point etc
 
 Look at other RC2014 device support
