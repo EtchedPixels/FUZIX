@@ -6,6 +6,7 @@
 #include <netdev.h>
 #include <devmem.h>
 #include <input.h>
+#include <i2c.h>
 #include <net_native.h>
 
 /*
@@ -62,6 +63,10 @@ int sys_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 	case 5:
 		return platform_rtc_read();
 #endif
+#ifdef CONFIG_DEV_I2C
+	case 6:
+		return devi2c_read();
+#endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:
 		return netdev_read(flag);
@@ -100,6 +105,10 @@ int sys_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 #ifdef CONFIG_RTC_FULL
 	case 5:
 		return platform_rtc_write();
+#endif
+#ifdef CONFIG_DEV_I2C
+	case 6:
+		return devi2c_write();
 #endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:
