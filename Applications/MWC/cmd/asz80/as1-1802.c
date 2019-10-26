@@ -258,8 +258,12 @@ loop:
 	case TIOPORT:
 		getio(&a1);
 		c = getnb();
-		if (c != ',')
-			qerr(SYNTAX_ERROR);
+		/* INP and OUT are technically 1 byte but in many cases it
+		   is handy to use them as a 2 byte form */
+		if (c != ',') {
+			unget(c);
+			break;
+		}
 		getaddr(&a2);
 		constify(&a2);
 		istuser(&a2);
