@@ -9,9 +9,9 @@ int platform_rtc_read(void);
 int platform_rtc_write(void);
 int platform_rtc_ioctl(uarg_t request , char *data);
 
+extern uint8_t rtc_defer;		/* Don't poll the RTC right now */
 extern uint8_t rtc_shadow;		/* Shadow for other bits in port */
 extern uint16_t rtc_port;		/* I/O address to use */
-
 /* Optional helpers */
 #ifdef DS1302_SETUP
 extern void platform_ds1302_setup(void);

@@ -13,6 +13,7 @@
 #include <ds1302.h>
 
 uint8_t ds1302_present;
+uint8_t rtc_defer;
 
 void ds1302_write_register(uint_fast8_t reg, uint_fast8_t val)
 {
@@ -149,7 +150,9 @@ int platform_rtc_ioctl(uarg_t request, char *data)
 uint_fast8_t platform_rtc_secs(void)
 {
     uint8_t buffer;
-    if (ds1302_present) {
+    /* On some platforms the RTC is accessed via a shared interface, so
+       we skip seconds polling off interrupts if directed to do so */
+    if (ds1302_present && !rtc_defer) {
         ds1302_read_clock(&buffer, 1);   /* read out only the seconds value */
         return uint8_from_bcd(buffer & 0x7F); /* mask off top bit (clock-halt) */
     }
