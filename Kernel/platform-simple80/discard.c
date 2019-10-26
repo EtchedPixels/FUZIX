@@ -10,6 +10,8 @@
 
 void map_init(void)
 {
+	if (*((uint8_t *)0xFFFF) & 1)
+		panic("R16 error fix/modified board required.\n");
 	ds1302_init();
 	if (ds1302_present)
 		kputs("DS1302 detected at 0xC0.\n");
