@@ -27,7 +27,7 @@
 #define UBLOCK_SIZE		1024
 
 #define P_TAB__P_STATUS_OFFSET	0
-#defien P_TAB__P_FLAGS_OFFSET	1
+#define P_TAB__P_FLAGS_OFFSET	1
 #define P_TAB__P_TTY_OFFSET	2
 #define P_TAB__P_PID_OFFSET	4
 #define P_TAB__P_PAGE_OFFSET	22
@@ -38,7 +38,7 @@
 #define P_READY			2
 #define P_DEFER			3
 
-#define PFL_BATCH		0x04	/* Flag mask */
+#define PFL_BATCH		$04	/* Flag mask */
 
 #define OS_BANK			0
 
