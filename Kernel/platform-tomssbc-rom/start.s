@@ -94,6 +94,9 @@ bigloop:
 		ex de,hl
 		jr unpack
 runit:
+		; On real Z80 silicon SP always comes up as FFFF but it's
+		; not officially written down that this is so
+		ld sp,#0xffff
 		push af
 		call _go
 		pop af
