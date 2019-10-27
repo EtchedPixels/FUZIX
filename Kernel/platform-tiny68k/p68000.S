@@ -95,7 +95,7 @@ timer_irq:
 	    cmp.b #P_RUNNING,P_TAB__P_STATUS_OFFSET(a0)
 	    bne no_ready
 	    move.b #P_READY,P_TAB__P_STATUS_OFFSET(a0)
-	    or.b #PF_BUSY, P_TAB__P_FLAGS_OFFSET(a0)
+	    or.b #PF_BUSY,P_TAB__P_FLAGS_OFFSET(a0)
 no_ready:
 	    bsr switchout
 no_preempt:
