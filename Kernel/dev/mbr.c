@@ -72,7 +72,7 @@ void mbr_parse(uint_fast8_t letter)
         /* Valid first MBR, look for boot command string */
         if (seen == 0) {
 		if (le16_to_cpu(br->cmdflag) == MBR_BOOT_CMD)
-			set_boot_line(br->cmdline);
+			set_boot_line((const char *)br->cmdline);
 	}
 #endif
 
