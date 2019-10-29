@@ -1,9 +1,9 @@
 /*
  *	Need to wipe BSS etc once we figure out our preferred boot method
  *
- *	On entry we are loaded at $0400 with the loader and the loaders
- *	supervisor stack a mystery. We are in supervisor mode and the rest
- *	is our problem.
+ *	On entry we are loaded at $0400 from a loader somewhere above us
+ *	The entry is made with interrupts off in supervisor mode. No valid
+ *	stack can be assumed. CP/M 68K is no longer alive.
  */
 		#include "../kernel-68000.def"
 
@@ -11,10 +11,7 @@
 		.globl __bss_start
 
 .mri 1
-		byte $15
-		byte $05
-		byte $C0
-		byte $DE
+		word $0302
 start:
 		or #$0700,sr
 		move.l #__bss_start,a0

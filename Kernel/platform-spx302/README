@@ -12,7 +12,7 @@ interface points for the second DUART port and minimal SPI.
 
 Memory Map
 
-When are loaded we have the 68302 internal I/O mapped at FFF000 and the
+When we are loaded we have the 68302 internal I/O mapped at FFF000 and the
 RAM mapped at 0.
 
 000000-0FFFFF		RAM (1MB)
@@ -33,25 +33,36 @@ TMR1 is set to 10ms
 The RTC is kicked into 24hr mode
 DUART and TMR1 are the interrupt sources
 
-As we boot CP/M 68K from ROM we need to run from CP/M 68K as follows
+The CP/M 68K environment runs from disk with the following diskdef, but is
+byteswapped.
 
-Binary header
-601AH
-Size of text.L
-Size of data.L
-Size of BSS.L
-0.L (Sizeof syms)
-0.L
-0.L (beginning of text segment and start)
-0.W (no reloc)
-[text][data]
+diskdef spx
+  seclen 128
+  tracks 64
+  sectrk 1024
+  blocksize 4096
+  maxdir 512
+  skew 0
+  boottrk 1
+  os 2.2
+end
 
-Supervisor mode:
+For Fuzix the provided booter.s file can be assembled and linked with as68
+and lo68 on the SPX machine. It loads 60K from physical block 1+ of the disk
+(block 0 is the partition table). This works fine because the CP/M filesystem
+reserves a track which it never uses and we can put a partition table there
+and a CP/M partition (which just protects the CP/M D: drive) of 8MB or so
+before the Fuzix ones.
 
-MOVE.W #$3E,D0
-TRAP #2
+	as68 booter.s
+	lo68 -r -o booter.68k booter.o
 
-returns in supervisor mode on the CP/M supervisor stack
+
+(FIXME copy over booter.s also booter.s needs to start with sector = 3
+so that we start on sector 4 block after boot disk)
+
+Need to decide what IDE endian to run Fuzix - easy enough to run with the
+endianness fixed if stick to byte/byte disk I/O
 
 
 The serial ports are mapped as follows
@@ -63,8 +74,6 @@ tty3-5	The SCC ports (these are wired as RS422/485)
 
 TODO
 
-Figure out the right rituals to get the CP/M 68K filesystem working in the
-CP/M utils
 Write a front end CP/M loader module that has the kernel as data and boots it
 Test the console and timer drivers
 Test IDE
