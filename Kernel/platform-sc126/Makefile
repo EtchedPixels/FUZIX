@@ -1,11 +1,12 @@
 ASRCS = crt0.s z180.s commonmem.s sc126.s monitor.s
-CSRCS += devices.c main.c devtty.c spi.c devi2c.c
+CSRCS += devices.c main.c devtty.c spi.c devi2c.c devenc28j60.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/devsd_discard.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
 DSRCS += ../dev/devsd.c ../dev/i2c.c ../dev/i2c_bitbang.c
-DASRCS = ../dev/ds1302_rc2014_z180.s
-NSRCS = ../dev/net/net_w5300.c
+DASRCS = ../dev/ds1302_rc2014_z180.s ../dev/z80softspi.s
+#NSRCS = ../dev/net/net_w5300.c
+NSRCS = ../dev/net/enc28j60.c ../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)

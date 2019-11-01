@@ -67,8 +67,10 @@ extern uint16_t swap_dev;
 
 /* WizNET based TCP/IP */
 #define CONFIG_NET
-#define CONFIG_NET_WIZNET5300
-#define CONFIG_WIZNET_INDIRECT
+#define CONFIG_NET_NATIVE
+
+//#define CONFIG_NET_WIZNET5300
+//#define CONFIG_WIZNET_INDIRECT
 
 /* I2C device */
 #define CONFIG_DEV_I2C
