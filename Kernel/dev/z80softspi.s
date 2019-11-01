@@ -1,16 +1,17 @@
 ;
 ;	Software SPI. Implements the minimal bits needed to support the
-;	SD card interface
+;	SD card layer (see z80sftsd.s) and other spi users
 ;
-;	Alan Cox 2019 with some further optimizations by herrw@plusporta
+;	Alan Cox 2019 with some further optimizations by herrw@pluspora
 ;
 
 	.module softspi
 
-	.globl _sd_spi_transmit_byte
-	.globl _sd_spi_receive_byte
-	.globl _sd_spi_tx_sector
-	.globl _sd_spi_rx_sector
+	.globl _spi_transmit_byte
+	.globl _spi_receive_byte
+	.globl spi0_set_regs
+	.globl spi0_bitbang_rx
+	.globl spi0_bitbang_tx
 
         .include "kernel.def"
         .include "../kernel-z80.def"
@@ -18,6 +19,8 @@
 
 	.globl _spi_port		; Port to use
 	.globl _spi_piostate		; PIO bits to preserve
+	.globl _spi_data		; Output data bit
+	.globl _spi_clock		; Clock bit
 
 	.area _COMMONMEM
 
@@ -28,80 +31,40 @@ _spi_port:
 _spi_piostate:
 	.db	0
 
-sd_spi_set_regs:
+_spi_data:
+	.db	0
+_spi_clock:
+	.db	0
+
+spi0_set_regs:
+	ld bc,(_spi_data)		; C = SPI_DATA, B = SPI_CLOCK
 	ld a,(_spi_piostate)
 	ld e,a
-	ld a,#SPI_DATA
+	ld a,c		; data
 	or e
 	ld l,a
-	or #SPI_CLOCK
+	or b		; clock
 	ld h,a
 	ld a,e
-	or #SPI_CLOCK
+	or b		; clock
 	ld d,a
 	ld bc, (_spi_port)
 	ret	
 
-_sd_spi_transmit_byte:
+_spi_transmit_byte:
 	ld a,l				; C argument
 	push af
-	call sd_spi_set_regs
+	call spi0_set_regs
 	pop af
 	call spi0_bitbang_tx
 	out (c),e			; drop final clock
 	ret
 
-_sd_spi_receive_byte:
-	call sd_spi_set_regs
+_spi_receive_byte:
+	call spi0_set_regs
 	call spi0_bitbang_rx
 	out (c),e
 	ld l,d
-	ret
-
-_sd_spi_rx_sector:
-	exx
-	call sd_spi_set_regs
-	exx
-	ld b,#0
-spi_rx_loop:
-	exx
-	call spi0_bitbang_rx
-	ld a,d
-	exx
-	ld (hl),a
-	inc hl
-	exx
-	call spi0_bitbang_rx
-	ld a,d
-	exx
-	ld (hl),a
-	inc hl
-	djnz spi_rx_loop
-	exx
-	out (c),e
-	exx
-	ret
-
-_sd_spi_tx_sector:
-	exx
-	call sd_spi_set_regs
-	exx
-	ld b,#0
-spi_tx_loop:
-	ld a,(hl)
-	inc hl
-	exx
-	call spi0_bitbang_tx
-	exx
-	ld a,(hl)
-	inc hl
-	exx
-	call spi0_bitbang_tx
-	exx
-	djnz spi_tx_loop
-	exx
-	out (c),e
-	exx
 	ret
 
 ;
