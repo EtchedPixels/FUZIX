@@ -158,17 +158,18 @@ static uint8_t probe_quart(void)
 {
 	uint8_t c = in16(QUARTREG(IVR1));
 
+	c++;
 	/* Make sure we they don't appear to affect one another */
-	out16(QUARTREG(IVR1), c + 1);
-	if(in16(QUARTREG(IVR1)) != c + 1)
+	out16(QUARTREG(IVR1), c);
+	if(in16(QUARTREG(IVR1)) != c)
 		return 0;
-	if(in16(QUARTREG(MRA)) == c + 1)
+	if(in16(QUARTREG(MRA)) == c)
 		return 0;
 	/* Ok now check IVR2 also works */
-	out16(QUARTREG(IVR2), c + 2);
-	if(in16(QUARTREG(IVR1)) != c + 1)
+	out16(QUARTREG(IVR2), c + 1);
+	if(in16(QUARTREG(IVR1)) != c)
 		return 0;
-	if(in16(QUARTREG(IVR2)) != c + 2)
+	if(in16(QUARTREG(IVR2)) != c + 1)
 		return 0;
 	return 1;
 }
@@ -211,6 +212,46 @@ void init_hardware_c(void)
 	}
 }
 
+__sfr __at 0xBC copro_ack;
+__sfr __banked __at 0xFFBC copro_boot;
+
+static uint8_t probe_copro(void)
+{
+	uint8_t i = 0;
+	uint8_t c;
+
+	copro_boot = 0x00;
+	while(i < 255 && copro_ack != 0xAA) {
+		i++;
+	}
+	if (i == 255)
+		return 0;
+	copro_boot = 0xFF;
+	while(i < 255 && copro_ack == 0xAA) {
+		i++;
+	}
+	if (i == 255)
+		return 0;
+	/* Now read the banner and print it */
+	while(1) {
+		c = copro_ack;
+		/* Ack the byte */
+		copro_boot = 0x00;
+		if (c == 0)
+			break;
+		/* While we print the char the coprocessor will get the next
+		   one ready - and it will beat us to the next step */
+		kputchar(c);
+		c = copro_ack;
+		copro_boot = 0x80;
+		if (c == 0)
+			break;
+		kputchar(c);
+	}
+	kputchar('\n');
+	return 1;
+}
+
 void pagemap_init(void)
 {
 	uint8_t i, m;
@@ -248,7 +289,7 @@ void pagemap_init(void)
 
 	quart_present = probe_quart();
 	if (quart_present)
-		kputs("QUART at 0xBB.\n");
+		kputs("QUART detected at 0xBB.\n");
 
 	dma_present = !probe_z80dma();
 	if (dma_present)
@@ -257,6 +298,10 @@ void pagemap_init(void)
 	if (ds1302_present)
 		kprintf("DS1302 detected at 0x%2x.\n", rtc_port);
 
+	/* Boot the coprocessor if present (just one for now) */
+	copro_present = probe_copro();
+	if (copro_present)
+		kputs("Z80 Co-processor at 0xBC\n");
 
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
@@ -307,6 +352,7 @@ uint8_t platform_param(unsigned char *p)
 			shadowcon = 0;
 			do {
 				insert_uart(0x98, &tms_uart);
+				n++;
 			} while(n < 4 && nuart <= NUM_DEV_TTY);
 		}
 		return 1;
