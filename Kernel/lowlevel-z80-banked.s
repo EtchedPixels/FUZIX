@@ -684,7 +684,6 @@ _out16:
 	pop de	; data
 	push de
 	push bc
-	push hl
 	push iy
 	out (c),e
 	jp (hl)
