@@ -1002,10 +1002,13 @@ uint8_t register_uart(uint16_t port, struct uart *ops)
 void insert_uart(uint16_t port, struct uart *ops)
 {
 	struct uart **p = &uart[NUM_DEV_TTY];
+	uint16_t *pt = &ttyport[NUM_DEV_TTY];
 	uint8_t *buf = code1_alloc(TTYSIZ);
 	while(p != uart + 1) {
 		*p = p[-1];
+		*pt = pt[-1];
 		p--;
+		pt--;
 	}
 	uart[1] = ops;
 	ttyport[1] = port;
@@ -1024,7 +1027,7 @@ void insert_uart(uint16_t port, struct uart *ops)
 void display_uarts(void)
 {
 	struct uart **t = &uart[1];
-	uint8_t *p = ttyport + 1;
+	uint16_t *p = ttyport + 1;
 	uint8_t n = 1;
 
 	while(n++ < nuart) {
