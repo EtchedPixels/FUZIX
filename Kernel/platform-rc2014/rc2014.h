@@ -44,6 +44,7 @@ extern uint8_t z180_present;
 extern uint8_t tms9918a_present;
 extern uint8_t dma_present;
 extern uint8_t zxkey_present;
+extern uint8_t copro_present;
 
 extern uint16_t probe_z80dma(void);
 

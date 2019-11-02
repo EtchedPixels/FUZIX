@@ -21,6 +21,7 @@ uint8_t quart_present;
 uint8_t tms9918a_present;
 uint8_t dma_present;
 uint8_t zxkey_present;
+uint8_t copro_present;
 
 /* From ROMWBW */
 uint16_t syscpu;
