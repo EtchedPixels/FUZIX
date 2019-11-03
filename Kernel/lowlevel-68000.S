@@ -470,13 +470,14 @@ noflush:
 ;	is memory protection.
 ;
 doexec:
+		bsr flush_icache
+
 		move.l 4(sp),a1			; go address
 		lea.l 1024(a5),a7		; reset the supervisor stack
 
-		bsr flush_icache
 
 		move.w sr,d0			; Set the IRQ mask
-		and.w #$F8FF,d0
+		and.w #$D8FF,d0			; Supervisor off
 		or.w #EI_MASK,d0		; May be some masked even
 		; Don't put the status back yet - we will unmask in the rte
 		; as we clear the supervisor frame
