@@ -22,8 +22,6 @@ Select doesn't work (need new hash algorithm for bigger setups)
 
 Scheduler
 	- linked list of runnables for big boxes
-	- linked list of alarm/timer uses (and need to wrap setting into
-	  a function or on small boxes trivial define)
 
 (CURSES lib) invaders always reports that the terminal is too small
 (stty reports rows cols correctly)
@@ -38,10 +36,7 @@ of memory.
 To Do
 -----
 
-Propogate synchronous trap changes to Z80+MMU and Z180 illegal and maybe
-generically jp 0 and 0 corruptor ?
 
-Test Baud rate setting
 
 68K has space to add ptrace?
 
@@ -103,4 +98,8 @@ DONE pagesize is not meaningful
 DONE 68010 support. 68EC020 and 68020 also work although we don't know
 	how to decode the frames nicely in the crash handler
 DONE Byteswap mode for ucp ?
-DONE - T68KRC (2MB version wth possible other serial etc on RC2014)
+DONE T68KRC (2MB version wth possible other serial etc on RC2014)
+DONE linked list of alarm/timer uses for scaling
+DONE propogate synchronous trap changes to Z80+MMU and Z180 illegal and maybe
+generically jp 0 and 0 corruptor ?
+DONE Test Baud rate setting
