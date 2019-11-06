@@ -102,6 +102,9 @@ extern uint16_t swap_dev;
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	3
 
+/* We have a GPIO interface */
+#define CONFIG_DEV_GPIO
+
 /* Video terminal, not just a serial tty */
 #define CONFIG_VT
 /* Multiple consoles */
