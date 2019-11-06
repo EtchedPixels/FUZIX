@@ -19,6 +19,8 @@
  *	Minor   4       mem     (physical memory)
  *	Minor	5	rtc
  *	Minor	6	platform (Platform/CPU specific ioctls)
+ *	Minor   7	i2c
+ *	Minor	8	gpio
  *	Minor	64	audio
  *	Minor	65	net_native
  *	Minor	66	input
@@ -64,7 +66,7 @@ int sys_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 		return platform_rtc_read();
 #endif
 #ifdef CONFIG_DEV_I2C
-	case 6:
+	case 7:
 		return devi2c_read();
 #endif
 #ifdef CONFIG_NET_NATIVE
@@ -107,7 +109,7 @@ int sys_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 		return platform_rtc_write();
 #endif
 #ifdef CONFIG_DEV_I2C
-	case 6:
+	case 7:
 		return devi2c_write();
 #endif
 #ifdef CONFIG_NET_NATIVE
@@ -136,6 +138,10 @@ int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 #ifdef CONFIG_DEV_PLATFORM
 	if (minor == 6)
 		return platform_dev_ioctl(request, data);
+#endif
+#ifdef CONFIG_DEV_GPIO
+	if (minor == 8)
+		return gpio_ioctl(request, data);
 #endif
 #ifdef CONFIG_AUDIO
 	if (minor == 64)
