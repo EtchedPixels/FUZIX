@@ -787,6 +787,10 @@ struct s_argblk {
  */
 
 /*
+ *	GPIO ioctls 0x053x (see gpio.h)
+ */
+
+/*
  *	RTC ioctls 0x053x (see rtc.h)
  */
 
