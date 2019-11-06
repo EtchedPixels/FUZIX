@@ -6,6 +6,7 @@
 #include <netdev.h>
 #include <devmem.h>
 #include <input.h>
+#include <gpio.h>
 #include <i2c.h>
 #include <net_native.h>
 
