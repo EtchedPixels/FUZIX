@@ -1,6 +1,6 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vfdterm.s vdp1.s
 CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c ide.c
-CSRCS += devinput.c
+CSRCS += devinput.c devgpio.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
