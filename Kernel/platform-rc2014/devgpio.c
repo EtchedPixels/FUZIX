@@ -47,7 +47,7 @@ static struct gpio pioinfo[NUM_GPIO] = {
 /* Track the actual data port as it's easier to mix types with that
    approach */
 static uint8_t portmap[] = {
-    0x6A, 0x6B, 0x6E, 0x6F, 0xFF, 0x00, 0x00
+    0x68, 0x69, 0x6C, 0x6D, 0xFF, 0x00, 0x00
 };
 
 int gpio_ioctl(uarg_t request, char *data)
