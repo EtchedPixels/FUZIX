@@ -32,3 +32,17 @@ NBUFS		.equ	4
 
 SPI_DATA	.equ	0x04
 SPI_CLOCK	.equ	0x02
+
+
+;
+;	SPI macros - SPI uses bottom bit for MISO
+;
+
+.macro	ROTATE
+	rra
+.endm
+
+.macro	LOADFIRST
+	in d,(c)
+	rlc d
+.endm
