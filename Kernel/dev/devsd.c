@@ -20,6 +20,8 @@
 #include <stdbool.h>
 #include <blkdev.h>
 
+#ifdef CONFIG_SD
+
 /* for platforms with multiple SD card slots, this variable contains
  * the current operation's drive number */
 uint_fast8_t sd_drive;
@@ -146,3 +148,5 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 
     return res;         /* Return with the response value */
 }
+
+#endif
