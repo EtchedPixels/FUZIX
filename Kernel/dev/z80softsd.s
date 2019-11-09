@@ -25,8 +25,13 @@
 
 	.area _COMMONMEM
 
-_sd_spi_transmit_byte .equ _spi_transmit_byte
-_sd_spi_receive_byte .equ _spi_receive_byte
+; SDCC linker is too crap to handle this
+;_sd_spi_transmit_byte .equ _spi_transmit_byte
+;_sd_spi_receive_byte .equ _spi_receive_byte
+_sd_spi_transmit_byte:
+	jp _spi_transmit_byte
+_sd_spi_receive_byte:
+	jp _spi_receive_byte
 
 
 _sd_spi_rx_sector:
