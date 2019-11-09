@@ -100,43 +100,44 @@ spi0_tx0:
 ;	Unrolled/tweaked by herrw@pluspora to get us down to 382 clocks a
 ;	byte, or about 19K/second !
 ;
+
 spi0_bitbang_rx:
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
-	in d,(c)		; 12		0
+	LOADFIRST
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12		1
-	rra			; 4
+	ROTATE			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12		2
-	rra			; 4
+	ROTATE			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12		3
-	rra			; 4
+	ROTATE			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12		4
-	rra			; 4
+	ROTATE			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12		5
-	rra			; 4
+	ROTATE			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12		6
-	rra			; 4
+	ROTATE			; 4
 	rl d			; 8
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1
 	in a,(c)		; 12		7
-	rra			; 4
+	ROTATE			; 4
 	rl d			; 8
 	ret
