@@ -48,6 +48,8 @@ extern uint8_t copro_present;
 
 extern uint16_t probe_z80dma(void);
 
+extern void pio_setup(void);
+
 /* From ROMWBW */
 extern uint16_t syscpu;
 extern uint16_t syskhz;

@@ -114,17 +114,16 @@ void platform_interrupt(void)
 		ti_r = tms9918a_ctrl;
 
 	tty_pollirq();
+	/* Running as a home computer not serial */
 	if ((ti_r & 0x80) && zxkey_present)
 		zxkey_poll();
 
+	/* On the Z180 we use the internal timer */
 	if (z180_present) {
 		if (irqvector == 3)	/* Timer 0 */
 			timer_interrupt();
-	} else if (ctc_present) {
-		uint8_t n = 255 - CTC_CH3;
-		CTC_CH3 = 0x47;
-		CTC_CH3 = 255;
-		timer_tick(n);
+	/* The TMS9918A is our second best choice as the CTC must be wired
+	   right and may not be wired as we need it */
 	} else if (ti_r & 0x80) {
 		/* We are using the TMS9918A as a timer */
 		timerct++;
@@ -132,6 +131,12 @@ void platform_interrupt(void)
 			timer_interrupt();
 			timerct = 0;
 		}
+	/* If not pray the CTC works */
+	} else if (ctc_present) {
+		uint8_t n = 255 - CTC_CH3;
+		CTC_CH3 = 0x47;
+		CTC_CH3 = 255;
+		timer_tick(n);
 	}
 }
 

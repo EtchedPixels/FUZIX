@@ -10,6 +10,8 @@
 #define CONFIG_RC2014_FLOPPY
 /* Set this if you have a VFD interface */
 #undef CONFIG_RC2014_VFD
+/* Set this for SD card support via PIO or SC129 at 0x68 */
+#define CONFIG_RC2014_SD
 
 
 #define OFTSIZE		64
@@ -38,6 +40,11 @@
 #endif
 #ifdef CONFIG_RC2014_VFD
 #define CONFIG_VFD_TERM
+#endif
+#ifdef CONFIG_RC2014_SD
+#define CONFIG_SD
+#define SD_DRIVE_COUNT 1
+#define SD_SPI_CALLTYPE __z88dk_fastcall
 #endif
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -90,7 +97,7 @@ extern uint16_t swap_dev;
 #define NBUFS    5        /* Number of block buffers - must match kernel.def */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE */
+#define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE or SD */
 
 /* On-board DS1302, we can read the time of day from it */
 #define CONFIG_RTC

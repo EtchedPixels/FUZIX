@@ -1,12 +1,13 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vfdterm.s vdp1.s
-CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c ide.c
+CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c ide.c sd.c
 CSRCS += devinput.c devgpio.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
+DISCARD_DSRCS += ../dev/devsd_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
-DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c
+DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c ../dev/devsd.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014.s
-DASRCS += ../dev/z80dma.s
+DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
 NSRCS = ../dev/net/net_native.c
 DRSRCS = ../dev/rc2014/zxkeyboard.c
 DRASRCS = ../dev/rc2014/zxkey.s

@@ -4,6 +4,7 @@
 #include <devtty.h>
 #include <ds1302.h>
 #include <devide.h>
+#include <devsd.h>
 #include <blkdev.h>
 #include <ppide.h>
 #include <rc2014.h>
@@ -183,8 +184,12 @@ void init_hardware_c(void)
 	procmem = 512 - 80;
 
 	tms9918a_present = probe_tms9918a();
-	if (tms9918a_present)
+	if (tms9918a_present) {
+		/* Turn off our CTC interrupts */
+		CTC_CH2 = 0x43;
+		CTC_CH3 = 0x43;
 		shadowcon = 1;
+	}
 
 	/* FIXME: When ROMWBW handles 16550A or second SIO, or Z180 as
 	   console we will need to address this better */
@@ -368,6 +373,10 @@ void device_init(void)
 #ifdef CONFIG_PPIDE
 	ppide_init();
 #endif
+#endif
+#ifdef CONFIG_SD
+	pio_setup();
+	devsd_init();
 #endif
 #ifdef CONFIG_NET
 	sock_init();
