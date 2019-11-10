@@ -396,13 +396,14 @@ _qread:
 	ld l,(hl)
 	ret
 _qwrite:
-	pop bc
-	pop hl
-	pop de
+	ld hl,#4
+	add hl,sp
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	ld a,(hl)
 	ld (de),a
-	push de
-	push hl
-	push bc
 	ret
 
 ;
