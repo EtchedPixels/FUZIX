@@ -45,7 +45,8 @@ int tty_carrier(uint_fast8_t minor)
    we can do
    0 : call me again
    1 : normal
-   2 : skip next port too (used with SIO)
+   2 : skip next port (used with SIO)
+   4 : skip 3 more ports (used with QUART)
 
    The rx side wants moving to proper interrupt driven queues */
 
@@ -656,28 +657,44 @@ struct uart z180_uart1 = {
 #define COPBC2	0x1F
 
 #define	QUARTREG(x)	(((uint16_t)(x)) << 11)
-#define QUARTPORT	0xBB
+#define QUARTPORT	0xBA
+
+static int log = 0;
 
 static uint8_t quart_intr(uint8_t minor)
 {
+	/* FIXME: we need to check for OE status and if so issue CMD 0x40 */
 	/* The QUART is really a pair of two port UARTs together */
+	/*
+	 *	ISR bits
+	 *	7: Line state change - read IPCR1
+	 *	6: Break delta (channel B)
+	 *	5: Receiver ready/fifo full (depends on MR1B[6])
+	 *	4: TX ready B (cleared by loading char)
+	 *	3: Counter 1 ready
+	 *	2: Break delta (channel A)
+	 *	1: Receiver ready/fifo full (depends on MR1A[6])
+	 *	0: TX ready A (cleared by loading char)
+	 *
+	 */
 	uint8_t r = in16(QUARTPORT + QUARTREG(ISR1));
-	if (r & 2) {
+	if (r & 0x02) {
 		r = in16(QUARTPORT + QUARTREG(RHRA));
 		tty_inproc(minor, r);
 	}
-	if (r & 4) {
+	if (r & 0x20) {
 		r = in16(QUARTPORT + QUARTREG(RHRB));
                 if (minor + 1 <= NUM_DEV_TTY)
 			tty_inproc(minor + 1 , r);
 	}
+	/* ISR2 is the same for the other half - port C/D and counter 2 */
 	r = in16(QUARTPORT + QUARTREG(ISR2));
-	if (r & 2) {
+	if (r & 0x02) {
 		r = in16(QUARTPORT + QUARTREG(RHRC));
                 if (minor + 2 <= NUM_DEV_TTY)
 			tty_inproc(minor + 2 , r);
 	}
-	if (r & 4) {
+	if (r & 0x20) {
 		r = in16(QUARTPORT + QUARTREG(RHRD));
                 if (minor + 3 <= NUM_DEV_TTY)
 			tty_inproc(minor + 3, r);
@@ -791,12 +808,13 @@ static const uint8_t pair[] = {
  *	TODO: RTS/CTS
  */
 
-static uint8_t oldbaud[3] = {0., B38400, B38400 };
+static uint8_t oldbaud[4] = {B38400, B38400, B38400, B38400 };
 
 static void quart_setup(uint8_t minor)
 {
 	static uint8_t oldbrg[2];
 	uint8_t other;
+	uint8_t unit;
 
 	struct termios *t = &ttydata[minor].termios;
 
@@ -808,10 +826,16 @@ static void quart_setup(uint8_t minor)
 	uint16_t port = ttyport[minor];
 	struct tty *to;
 
-	/* Are we the upper or lower of the pair ? */
-	if (port & 0x4000)
-		other = minor - 1;
+	if (port & 0x8000)
+		unit = 2;
 	else
+		unit = 0;
+
+	/* Are we the upper or lower of the pair ? */
+	if (port & 0x4000) {
+		other = minor - 1;
+		unit++;
+	} else
 		other = minor + 1;
 
 	to = &ttydata[other];
@@ -820,8 +844,6 @@ static void quart_setup(uint8_t minor)
 	if (port & 0x8000)
 		set = 1;
 
-	port &= ~0x4000;	/* We work on the pairs for set up */
-
 	/* If both ports are open we need to check the baud rate pair is
 	   achievable */
 	if (to->users)
@@ -829,22 +851,22 @@ static void quart_setup(uint8_t minor)
 
 	/* Clashing rates - use the old rate for this port */
 	if (table == 0) {
-		baud = oldbaud[minor];
+		baud = oldbaud[unit];
 		table = baudsrc[baud];
 		goto out;
 	}
 
 	/* Favour the standard BRG set up, don't mix and match */
 	if (table != 4) {
+		uint16_t pairpt = port & ~0x4000;
 		if (table & 2) {
-			out16(port + QUARTREG(ACR1), 0xF0);
+			out16(pairpt + QUARTREG(ACR1), 0xF0);
 			table = 2;
 		} else {
-			out16(port + QUARTREG(ACR1), 0x70);
+			out16(pairpt + QUARTREG(ACR1), 0x70);
 			table = 1;
 		}
 	}
-
 
 	if ((table & 4) != oldbrg[set]) {
 		in16(port + QUARTREG(CRA)); /* Toggle BRG to use */
@@ -879,20 +901,28 @@ static void quart_setup(uint8_t minor)
 	if (t->c_cflag & CSTOPB)
 		r |= 0x08;	/* Two stop bits */
 
+
+	log = 1;
 	out16(port + QUARTREG(MRA), r);
 
 	/* Work out the CSR for the baud: ACR is already set to 0x70 */
-	oldbaud[minor] = baud;
+	oldbaud[unit] = baud;
+
 	out16(port + QUARTREG(CSRA), baudset[table][baud]);
+
 out:
+	/* Ensure TX and RX are enabled */
+	out16(port + QUARTREG(CRA), 0x15);
 	t->c_cflag &= ~CBAUD;
 	t->c_cflag |= baud;
 }
 
-static uint8_t quart_writeready(uint_fast8_t minor)
+/*static */uint8_t quart_writeready(uint_fast8_t minor)
 {
 	uint16_t port = ttyport[minor];
-	if (in16(port + QUARTREG(SRA)) & 0x04)
+	uint8_t r;
+	r = in16(port + QUARTREG(SRA));
+	if (r & 0x04)
 		return TTY_READY_NOW;
 	return TTY_READY_SOON;
 }
@@ -1031,7 +1061,7 @@ void display_uarts(void)
 	uint8_t n = 1;
 
 	while(n++ < nuart) {
-		kprintf("%s detected at 0x%2x.\n", (*t)->name, *p);
+		kprintf("%s detected at 0x%x.\n", (*t)->name, *p);
 		p++;
 		t++;
 	}

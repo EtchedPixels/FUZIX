@@ -17,8 +17,8 @@
 /* Everything in here is discarded after init starts */
 
 static const uint8_t tmstext[] = {
-	0x00,
-	0xD0,
+	0x00,		/* m2:0 extvideo:0 */
+	0xF0,		/* 16K, not blanked, int on, m1:1 m3:0 */
 	0x00,		/* Text at 0x0000 (space for 4 screens) */
 	0x00,
 	0x02,		/* Patterns at 0x1000 */
@@ -147,13 +147,19 @@ static uint8_t probe_16x50(uint8_t p)
 	}
 }
 
-/* Look for a QUART at 0xBB */
+/* Look for a QUART at 0xBA */
 
-#define QUARTREG(x)	(((x) << 11) | 0xBB)
+#define QUARTREG(x)	(((x) << 11) | 0xBA)
 
 #define MRA	0x00
 #define IVR1	0x0C
 #define IVR2	0x1C
+#define IMR1	0x05
+#define IMR2	0x15
+#define CRA	0x02
+#define CRB	0x0A
+#define CRC	0x12
+#define CRD	0x1A
 
 static uint8_t probe_quart(void)
 {
@@ -162,16 +168,41 @@ static uint8_t probe_quart(void)
 	c++;
 	/* Make sure we they don't appear to affect one another */
 	out16(QUARTREG(IVR1), c);
+
 	if(in16(QUARTREG(IVR1)) != c)
 		return 0;
+
 	if(in16(QUARTREG(MRA)) == c)
 		return 0;
+
 	/* Ok now check IVR2 also works */
 	out16(QUARTREG(IVR2), c + 1);
 	if(in16(QUARTREG(IVR1)) != c)
 		return 0;
 	if(in16(QUARTREG(IVR2)) != c + 1)
 		return 0;
+	/* OK initialize things so we don't make a nasty mess when we
+	   get going. We don't want interrupts for anything but receive
+	   at this point. We can add line change later etc */
+	out16(QUARTREG(IMR1), 0x22);
+	out16(QUARTREG(IMR2), 0x22);
+	/* Ensure active mode */
+	out16(QUARTREG(CRA), 0xD0);
+	/* Clocking */
+	out16(QUARTREG(CRC), 0xD0);
+	/* Reset the channels */
+	out16(QUARTREG(CRA), 0x20);
+	out16(QUARTREG(CRA), 0x30);
+	out16(QUARTREG(CRA), 0x40);
+	out16(QUARTREG(CRB), 0x20);
+	out16(QUARTREG(CRB), 0x30);
+	out16(QUARTREG(CRB), 0x40);
+	out16(QUARTREG(CRC), 0x20);
+	out16(QUARTREG(CRC), 0x30);
+	out16(QUARTREG(CRC), 0x40);
+	out16(QUARTREG(CRD), 0x20);
+	out16(QUARTREG(CRD), 0x30);
+	out16(QUARTREG(CRD), 0x40);
 	return 1;
 }
 
@@ -209,12 +240,6 @@ void init_hardware_c(void)
 	}
 	if (acia_present)
 		register_uart(0xA0, &acia_uart);
-	if (quart_present) {
-		register_uart(0x00BB, &quart_uart);
-		register_uart(0x40BB, &quart_uart);
-		register_uart(0x80BB, &quart_uart);
-		register_uart(0xC0BB, &quart_uart);
-	}
 }
 
 __sfr __at 0xBC copro_ack;
@@ -281,20 +306,26 @@ void pagemap_init(void)
 		ds1302_init();
 	}
 
+	quart_present = probe_quart();
 	/* Further ports we register at this point */
+	if (quart_present) {
+		register_uart(0x00BA, &quart_uart);
+		register_uart(0x40BA, &quart_uart);
+		register_uart(0x80BA, &quart_uart);
+		register_uart(0xC0BA, &quart_uart);
+	}
+
 	if (sio1_present) {
 		register_uart(0x84, &sio_uart);
 		register_uart(0x86, &sio_uartb);
 	}
+
 	if (ctc_present)
 		kputs("Z80 CTC detected at 0x88.\n");
 
 	if (tms9918a_present)
 		kputs("TMS9918A VDP detected at 0x98.\n");
 
-	quart_present = probe_quart();
-	if (quart_present)
-		kputs("QUART detected at 0xBB.\n");
 
 	dma_present = !probe_z80dma();
 	if (dma_present)
