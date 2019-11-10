@@ -702,182 +702,61 @@ static uint8_t quart_intr(uint8_t minor)
 	return 4;
 }
 
-/* We have four BRG set ups but they affect both ports together so this
-   is tricky stuff to do right as we need to check if we can do the wanted
-   rates on both ports if both open.
+/*
 
-   The and of baudsrc of eac valid port tells us which table and BRG settings
-   to use. We must track the BRG as we can only toggle it not read it */
+	We use the extend bit on the 82C684 to avoid all the nastiness
+	with the older devices and baud rate combinations
 
-/* Which baud generators can generate each rate ?:
-	bit 0		Normal BRG ACR:7 0
-	bit 1		Normal BRG ACR:7 1
-	bit 2		BRG Test ACR:7 0
-			(No useful extra rates on ACR:7 1 with BRG test
+   X   CSR
+   0	0000		50
+   1	0000		75
+   0	0001		110
+   0	0010		134.5
+   1	0011		150
+   0	0100		300
+   0	0101		600
+   0	0110		1200
+   0	1000		2400
+   0	1001		4800
+   0	1011		9600
+   1	1100		19200
+   0	1100		38400
+   1	0111		57600
+   1	1000		115200
 
-   If we can't achieve a rate without breaking another open port we keep the
-   old rate */
+*/
 
-/* FIXME: correct for actual clock */
+#define XBIT		0x10
 
-static const uint8_t baudsrc[] = {
+static const uint8_t baudmap[] = {
 	0x07,		/* 0 is special */
-	0x01,		/* 50 baud is BRG1 ACR 0 */
-	0x03,		/* 70 baud is BRG1 ACR 1 */
-	0x03,		/* 110 is BRG1 ACR 0 or ACR 1 */
-	0x03,		/* 134 likewise */
-	0x02,		/* 150 BRG1 ACR 1 only */
-	0x03,		/* 300 BRG1 ACR 0 or ACR 1 */
-	0x03,		/* 600 ditto */
-	0x03,		/* 1200 ditto */
-	0x03,		/* 2400 ditto */
-	0x07,		/* 4800 is available on all */
-	0x07,		/* 9600 is available on all */
-	0x06,		/* 19200 is available on all but BRG1 ACR 0 */
-	0x05,		/* 38400 requires ACR 0 */
-	0x04,		/* 57600 requires BRG 2 */
-	0x04,		/* 11520 requires BRG 2 */
-};
-/* BRG values per speed for each table */
-static const uint8_t baudset[3][16] = {
-	{
-		/* Normal BRG ACR:7 = 0 */
-		0xDD,		/* 0 is special */
-		0x00,		/* 50 */
-		0x00,		/* Can't do 75 on the standard BRG */
-		0x11,		/* 110 */
-		0x22,		/* 134 */
-		0x22,		/* No 150 on the standard BRG */
-		0x44,		/* 300 */
-		0x55,		/* 600 */
-		0x66,		/* 1200 */
-		0x88,		/* 2400 */
-		0x99,		/* 4800 */
-		0xBB,		/* 9600 */
-		0xBB,		/* Can't do 19200 */
-		0xCC,		/* 38400 */
-		0xCC,		/* No 57600 */
-		0xCC,		/* No 115200 */
-	},{
-		/* Normal BRG ACR:7 = 1 */
-		0xDD,		/* 0 is special */
-		0x00,		/* No 50 */
-		0x00,		/* 75 */
-		0x11,		/* 110 */
-		0x22,		/* 134 */
-		0x33,		/* 150 */
-		0x44,		/* 300 */
-		0x55,		/* 600 */
-		0x66,		/* 1200 */
-		0x88,		/* 2400 */
-		0x99,		/* 4800 */
-		0xBB,		/* 9600 */
-		0xCC,		/* 19200  */
-		0xCC,		/* No 38400 */
-		0xCC,		/* No 57600 */
-		0xCC,		/* No 115200 */
-	},{
-		/* BRG Test ACR:7 = 0 */
-		0xDD,		/* 0 is special */
-		0x00,		/* No 50 */
-		0x00,		/* No 75 */
-		0x00,		/* No 110 */
-		0x00,		/* No 134 */
-		0x00,		/* No 150 */
-		0x00,		/* No 300 */
-		0x00,		/* No 600 */
-		0x00,		/* No 1200 */
-		0x00,		/* No 2400 */
-		0x00,		/* 4800 */
-		0xBB,		/* 9600 */
-		0x33,		/* 19200 */
-		0xCC,		/* 38400 */
-		0x55,		/* 57600 */
-		0x66,		/* 115200 */
-	}
-};
-
-static const uint8_t pair[] = {
-	0, 2, 1, 4, 3
+	0x00,		/* 50 baud */
+	XBIT|0x00,	/* 75 baud */
+	0x01,		/* 110 baud */
+	0x02,		/* 134 baud */
+	XBIT|03,	/* 150 baud */
+	0x04,		/* 300 baud */
+	0x05,		/* 600 baud */
+	0x06,		/* 1200 baud */
+	0x08,		/* 2400 baud */
+	0x09,		/* 4800 baud */
+	0x0B,		/* 9600 baud */
+	XBIT|0x0C,	/* 19200 baud */
+	0x0C,		/* 38400 baud */
+	XBIT|0x07,	/* 57600 baud */
+	XBIT|0x08,	/* 115200 baud */
 };
 
 /*
- *	The ports work in pairs (it's really 2 x 2 port) so the restrictions
- *	also work in pairs.
- *
- *	TODO: RTS/CTS
+ *	Program a QUART port the easy way
  */
-
-static uint8_t oldbaud[4] = {B38400, B38400, B38400, B38400 };
 
 static void quart_setup(uint8_t minor)
 {
-	static uint8_t oldbrg[2];
-	uint8_t other;
-	uint8_t unit;
-
 	struct termios *t = &ttydata[minor].termios;
-
-	uint8_t baud = t->c_cflag & CBAUD;
-	uint8_t r = 0;
-	uint8_t table = baudsrc[baud];
-	uint8_t set = 0;
-
 	uint16_t port = ttyport[minor];
-	struct tty *to;
-
-	if (port & 0x8000)
-		unit = 2;
-	else
-		unit = 0;
-
-	/* Are we the upper or lower of the pair ? */
-	if (port & 0x4000) {
-		other = minor - 1;
-		unit++;
-	} else
-		other = minor + 1;
-
-	to = &ttydata[other];
-
-	/* Which pair are we dealing with ? */
-	if (port & 0x8000)
-		set = 1;
-
-	/* If both ports are open we need to check the baud rate pair is
-	   achievable */
-	if (to->users)
-		table &= baudsrc[to->termios.c_cflag & CBAUD];
-
-	/* Clashing rates - use the old rate for this port */
-	if (table == 0) {
-		baud = oldbaud[unit];
-		table = baudsrc[baud];
-		goto out;
-	}
-
-	/* Favour the standard BRG set up, don't mix and match */
-	if (table != 4) {
-		uint16_t pairpt = port & ~0x4000;
-		if (table & 2) {
-			out16(pairpt + QUARTREG(ACR1), 0xF0);
-			table = 2;
-		} else {
-			out16(pairpt + QUARTREG(ACR1), 0x70);
-			table = 1;
-		}
-	}
-
-	if ((table & 4) != oldbrg[set]) {
-		in16(port + QUARTREG(CRA)); /* Toggle BRG to use */
-		oldbrg[set] = table & 4;
-	}
-
-	/* Turn the mask into an actual table */
-	if (table & 4)
-		table = 2;
-	else
-		table = (table & 2) ? 1 : 0;
+	uint8_t r;
+	uint8_t baud = t->c_cflag & CBAUD;
 
 	if (!(t->c_cflag & PARENB))
 		r = 0x08;	/* No parity */
@@ -905,10 +784,17 @@ static void quart_setup(uint8_t minor)
 	log = 1;
 	out16(port + QUARTREG(MRA), r);
 
-	/* Work out the CSR for the baud: ACR is already set to 0x70 */
-	oldbaud[unit] = baud;
+	r = baudmap[baud];
 
-	out16(port + QUARTREG(CSRA), baudset[table][baud]);
+	if (r & XBIT) {
+		out16(port + QUARTREG(CRA), 0x80);
+		out16(port + QUARTREG(CRA), 0xA0);
+	} else {
+		out16(port + QUARTREG(CRA), 0x90);
+		out16(port + QUARTREG(CRA), 0xB0);
+	}
+	r |= (r << 4);
+	out16(port + QUARTREG(CSRA), r);
 
 out:
 	/* Ensure TX and RX are enabled */
@@ -917,7 +803,7 @@ out:
 	t->c_cflag |= baud;
 }
 
-/*static */uint8_t quart_writeready(uint_fast8_t minor)
+static uint8_t quart_writeready(uint_fast8_t minor)
 {
 	uint16_t port = ttyport[minor];
 	uint8_t r;
