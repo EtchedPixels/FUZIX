@@ -45,6 +45,8 @@ extern uint8_t tms9918a_present;
 extern uint8_t dma_present;
 extern uint8_t zxkey_present;
 extern uint8_t copro_present;
+extern uint8_t ps2kbd_present;
+extern uint8_t ps2mouse_present;
 
 extern uint16_t probe_z80dma(void);
 

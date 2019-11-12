@@ -11,6 +11,8 @@
 #include <vt.h>
 #include <netdev.h>
 #include <zxkey.h>
+#include <ps2bitbang.h>
+#include <ps2kbd.h>
 #include "vfd-term.h"
 #include "z180_uart.h"
 
@@ -339,6 +341,25 @@ void pagemap_init(void)
 	if (copro_present)
 		kputs("Z80 Co-processor at 0xBC\n");
 
+	kbsave = 0x00;
+	kbdelay = 0xFF;	/* FIXME: tune for 125uS */
+	kbport = 0xBB;
+	kbwait = 0xFFFF;	/* FIXME: tune */
+	ps2kbd_present = ps2kbd_init();
+	if (ps2kbd_present) {
+		kputs("PS/2 Keyboard at 0xBB\n");
+		if (!zxkey_present && tms9918a_present) {
+			/* Add the consoles */
+			uint8_t n = 0;
+			shadowcon = 0;
+			do {
+				insert_uart(0x98, &tms_uart);
+				n++;
+			} while(n < 4 && nuart <= NUM_DEV_TTY);
+		}
+	}
+	/* TODO: mouse init and probe */
+
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;
@@ -373,13 +394,11 @@ static int strcmp(const char *d, const char *s)
 	return c1 - c2;
 }
 
-extern uint8_t nuart;
-
 uint8_t platform_param(unsigned char *p)
 {
 	/* If we have a keyboard then the TMS9918A becomes a real tty
 	   and we make it the primary console */
-	if (strcmp(p, "zxkey") == 0 && !zxkey_present) {
+	if (strcmp(p, "zxkey") == 0 && !zxkey_present && !ps2kbd_present) {
 		zxkey_present = 1;
 		zxkey_init();
 		if (tms9918a_present) {

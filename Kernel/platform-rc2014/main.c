@@ -22,6 +22,8 @@ uint8_t tms9918a_present;
 uint8_t dma_present;
 uint8_t zxkey_present;
 uint8_t copro_present;
+uint8_t ps2kbd_present;
+uint8_t ps2mouse_present;
 
 /* From ROMWBW */
 uint16_t syscpu;
@@ -115,8 +117,12 @@ void platform_interrupt(void)
 
 	tty_pollirq();
 	/* Running as a home computer not serial */
-	if ((ti_r & 0x80) && zxkey_present)
-		zxkey_poll();
+	if (ti_r & 0x80) {
+		if (zxkey_present)
+			zxkey_poll();
+		if (ps2kbd_present)
+			ps2kbd_poll();
+	}
 
 	/* On the Z180 we use the internal timer */
 	if (z180_present) {
