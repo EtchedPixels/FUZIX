@@ -114,6 +114,8 @@ n 20666 1027 /dev/proc
 n 20660 1028 /dev/mem
 n 20600 1029 /dev/rtc
 n 20644 1030 /dev/sys
+n 20600 1031 /dev/i2c
+n 20600 1032 /dev/gpio
 n 20600 1090 /dev/input
 
 f 0644 /etc/group     etc-files/group
