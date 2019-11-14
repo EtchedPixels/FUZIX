@@ -154,14 +154,17 @@ static uint8_t probe_16x50(uint8_t p)
 #define QUARTREG(x)	(((x) << 11) | 0xBA)
 
 #define MRA	0x00
-#define IVR1	0x0C
-#define IVR2	0x1C
-#define IMR1	0x05
-#define IMR2	0x15
 #define CRA	0x02
+#define IMR1	0x05
 #define CRB	0x0A
+#define IVR1	0x0C
 #define CRC	0x12
+#define ACR2	0x14
+#define IMR2	0x15
+#define CTU2	0x16
+#define CTL2	0x17
 #define CRD	0x1A
+#define IVR2	0x1C
 
 static uint8_t probe_quart(void)
 {
@@ -205,7 +208,23 @@ static uint8_t probe_quart(void)
 	out16(QUARTREG(CRD), 0x20);
 	out16(QUARTREG(CRD), 0x30);
 	out16(QUARTREG(CRD), 0x40);
+	/* We need to set ACR1/ACR2 once we do rts/cts and modem lines right */
 	return 1;
+}
+
+/* Our counter counts clock/16 so 460800 clocks/second */
+
+static void quart_clock(void)
+{
+	/* Timer, clock / 16 */
+	out16(QUARTREG(ACR2), 0x70);	/* Adjust for RTS/CTS too */
+	/* 10 ticks per second */
+	out16(QUARTREG(CTL2), 46080 & 0xFF);
+	out16(QUARTREG(CTU2), 46080 >> 8);
+	/* Timer interrupt also wanted */
+	out16(QUARTREG(IMR2), 0x32);
+	/* Tell the quart driver to do do timer ticks */
+	quart_timer = 1;
 }
 
 void init_hardware_c(void)
@@ -315,6 +334,14 @@ void pagemap_init(void)
 		register_uart(0x40BA, &quart_uart);
 		register_uart(0x80BA, &quart_uart);
 		register_uart(0xC0BA, &quart_uart);
+		/* Turn off our CTC interrupts */
+		CTC_CH2 = 0x43;
+		CTC_CH3 = 0x43;
+		/* If we don't have a TMS9918A then the QUART is the next
+		   best clock choice */
+		if (!tms9918a_present) {
+			quart_clock();
+		}
 	}
 
 	if (sio1_present) {

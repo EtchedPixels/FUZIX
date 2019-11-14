@@ -25,6 +25,8 @@ uint8_t copro_present;
 uint8_t ps2kbd_present;
 uint8_t ps2mouse_present;
 
+uint8_t quart_timer;
+
 /* From ROMWBW */
 uint16_t syscpu;
 uint16_t syskhz;
@@ -137,8 +139,8 @@ void platform_interrupt(void)
 			timer_interrupt();
 			timerct = 0;
 		}
-	/* If not pray the CTC works */
-	} else if (ctc_present) {
+	/* If not and we have no QUART then pray the CTC works */
+	} else if (ctc_present && !quart_timer ) {
 		uint8_t n = 255 - CTC_CH3;
 		CTC_CH3 = 0x47;
 		CTC_CH3 = 255;

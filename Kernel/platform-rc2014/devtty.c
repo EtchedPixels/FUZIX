@@ -699,6 +699,13 @@ static uint8_t quart_intr(uint8_t minor)
                 if (minor + 3 <= NUM_DEV_TTY)
 			tty_inproc(minor + 3, r);
 	}
+	if (quart_timer && (r & 0x10)) {
+		/* Clear the timer interrupt - in timer mode it keeps
+		   running so we don't need to reload the timer */
+		in16(QUARTPORT + QUARTREG(STC2));
+		/* Timer tick */
+		timer_interrupt();
+	}
 	return 4;
 }
 
