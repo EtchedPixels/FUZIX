@@ -27,6 +27,9 @@
 	.globl _kbdelay
 	.globl _kbport
 	.globl _kbwait
+
+	.globl outchar
+	.globl outcharhex
 ;
 ;	This isn't ideal. What we should do once it all works is turn on
 ;	the PS/2 and Keyboard, poll them both and run a state machine so
@@ -41,10 +44,11 @@
 ;
 timeout:
 	exx
-	ld hl,#0xffff
+	ld hl,#0xfffd
 	ld sp, (abort_sp)
 	ld a,(_kbsave)
 	ld bc, (_kbport)
+	or #0x03		; let it all float for debug FIXME
 	out (c),a
 	ret
 
@@ -64,7 +68,7 @@ _ps2kbd_get:
 kbget:
 	ld (abort_sp),sp
 	exx
-	ld hl,#10000		; timeout timer - FIXME value ?
+	ld hl,#0		; timeout timer - FIXME value ?
 	exx
 	; Stop pulling down CLK so that the keyboard can talk
 	ld a,(_kbsave)
@@ -83,8 +87,9 @@ kbdone:
 	; B is now zero - make it non zero so we can use high ports with
 	; Z180
 	inc b
+	or #0x02
 	out (c),a		; put the clock back down, don't pull data
-	xor a
+	ld hl,#0xffff
 	ret
 	;
 	; We got a rising edge. That means the keyboard wishes to talk to
@@ -97,11 +102,11 @@ kbdata:
 	; There should be a start, eight data and an odd parity
 	;
 	ld b,#8
-	call kbdbit
+	call kbdbit	; Start bit
 nextbit:
 	call kbdbit
 	djnz nextbit
-	; E now holds the data, C should be the start bit
+	; E now holds the data, carry should be the start bit
 	jr nc, kbdbad
 	ld a,e
 	or a		; Generate parity flag
@@ -117,7 +122,7 @@ kbdevenpar:
 	cp h
 	ld h,#0
 	jr z, kbdone	; parity was good
-	ld hl,#0xFFFF	; Parity was bad
+	ld hl,#0xFFFE	; Parity was bad
 	jr kbdone
 kbdbad:
 	inc b
@@ -131,34 +136,41 @@ kbdbad:
 ;	then wait for it to return high. The sampled bit is added to E
 ;
 kbdbit:
+	ld a,#0x08
+	out (0),a
 	exx
-kbdbit1:
 	dec hl
 	ld a,h
 	or l
 	jr z,timeout
+	exx
 	in a,(c)
 	bit 2,a
-	jr nz, kbdbit1
+	jr nz, kbdbit
 	; Falling clock edge, sample data is in bit 3
 	and #8
-	exx
 	add d		; will set carry if 1
 	rr e		; rotate into E
-	exx
 	; Wait for the rising edge
 	; Preserve carry for this loop, our caller needs the carry
 	; from the RL E
+	push af
+	ld a,#0x09
+	out (0),a
 kbdbit2:
+	exx
 	dec hl
 	ld a,h
 	or l
-	jr z,timeout
+	jp z,timeout
+	exx
 	in a,(c)
 	bit 2,a
 	jr z,kbdbit2
-	exx
 	; E now updated
+	ld a,#0x0A
+	out (0),a
+	pop af
 	ret
 
 ;
@@ -234,29 +246,28 @@ ps2bad:
 
 ps2bit:
 	exx
-ps2bit1:
 	dec hl
 	ld a,h
 	or l
 	jp z,timeout
+	exx
 	in a,(c)
 	rra
-	jr c, ps2bit1
+	jr c, ps2bit
 	; Falling clock edge, sample data is in bit 3
 	rra
-	exx
 	rr e		; rotate into E
-	exx
 	; Wait for the rising edge
 ps2bit2:
+	exx
 	dec hl
 	ld a,h
 	or l
 	jp z, timeout
+	exx
 	in a,(c)
 	rra 
 	jr nc, ps2bit2
-	exx
 	; E now updated
 	ret
 
@@ -275,15 +286,27 @@ ps2bit2:
 ;
 _ps2kbd_put:
 	ld bc,(_kbport)
+	xor a
+	out (0x00),a
 kbdput:
 	ld (abort_sp),sp
 	exx
 	ld hl,#10000		; timeout timer - FIXME value ?
 	exx
 	ld a,(_kbsave)
-	and #0xFD		; ... clock high, data low
-	or #0x01
+	and #0xFE		; Pull clock low
+	or #0x02		; Keep data floating
+	out (c),a		; Clock low, data floating
+	; 100uS delay		- actually right now the 125uS poll delay
+clkwait:
+	djnz clkwait
+	ld a,#0x01
+	out (0x00),a
+	ld a,(_kbsave)
 	ld b,#8			; Ensure B is always non zero
+	out (c),a		; Clock and data low
+	and #0xFC
+	or #0x01		; Release clock
 	out (c),a
 	; No specific start bit needed ?
 	ld d,l		; save character
@@ -299,12 +322,14 @@ kbdputl:
 kbdoutp1:
 	inc b
 	call kbdoutbit
-	ld e,#0xFF	; stop bits are 1s
+	ld l,#0xFF	; stop bits are 1s
 	call kbdoutbit
 	call kbdoutbit
 	;
 	; Wait 20uS
 	;
+	ld a,#0x02
+	out (0x00),a
 	ld de,(_kbdelay)
 	ld b,d
 del1:	djnz del1
@@ -327,11 +352,15 @@ del2:	djnz del2
 	out (c),a
 	; FIXME - need a general long timeout here
 	; Wait for the keyboard to pull the clock low
+	ld a,#0x03
+	out (0x00),a
 waitk:
 	in a,(c)
 	and #4
 	jr nz, waitk
 	; Return the status code (FE = failed try again)
+	ld a,#0x05
+	out (0x00),a
 	jp kbdata
 
 	;
@@ -341,31 +370,37 @@ waitk:
 	;
 kbdoutbit:
 	exx
-kbdoutw0:
 	dec hl
 	ld a,h
 	or l
 	jp z,timeout
+	exx
 	in a,(c)
 	and #4
-	jr nz, kbdoutw0		; wait for clock low
-	exx
+	jr nz, kbdoutbit	; wait for clock low
+	ld a,#0x02
+	out (0x00),a
+	ld a,(_kbsave)		;
+	or #1			; clock floating 
 	rr l
-	exx
-	ld a,(_kbsave)		; has the bit fixed at 0 and clock not pulled
 	jr nc, kbdouta
 	or #2			; set data
 kbdouta:
 	out (c),a
+	ld a,#0x03
+	out (0x00),a
 kbdoutw1:
+	exx
 	dec hl
 	ld a,h
 	or l
 	jp z,timeout
+	exx
+	ld a,#0x04
+	out (0x00),a
 	in a,(c)
 	and #4
 	jr z,kbdoutw1		; wait for clock to go back high
-	exx
 	ret
 
 ;
@@ -439,27 +474,27 @@ waitps2:
 
 ps2outbit:
 	exx
-ps2outw0:
 	dec hl
 	ld a,h
 	or l
 	jp z,timeout
+	exx
 	in a,(c)
 	rra
 	jr c, ps2outbit		; wait for clock low
-	exx
 	rr l			; FIXME send bit order ?
-	exx
 	ld a,(_kbsave)		; has the bit fixed at 0 and clock not pulled
 	jr nc, ps2outa
 	or #8			; set data
 ps2outa:
 	out (c),a
 ps2outw1:
+	exx
 	dec hl
 	ld a,h
 	or l
 	jp z,timeout
+	exx
 	in a,(c)
 	rra
 	jr nc,ps2outw1		; wait for clock to go back high
