@@ -17,10 +17,10 @@
  *	TODO
  *	- Pause
  *	- Alt keys
- *	- Numlock/num pad rules
+ *	- Numlock
  *	- Windows keys
  *	- LED setting
- *	- Lock keys
+ *	- Keyboard map setting
  */
 
 #include <kernel.h>
@@ -30,8 +30,13 @@
 #include <keycode.h>
 #include <devinput.h>
 #include <ps2kbd.h>
+#include <printf.h>
 
+#ifdef CONFIG_VT_MULTI
 extern uint8_t inputtty;		/* FIXME */
+#else
+#define inputtty 1
+#endif
 
 static uint8_t keymap[256]  = {
     /* 00 - 0F */
@@ -43,8 +48,8 @@ static uint8_t keymap[256]  = {
     0, 0, 'z', 's', 'a', 'w', '2', 0,
 
 #define LALT 0x11
-#define LSHIFT 0x13
-#define LCTRL 0x15
+#define LSHIFT 0x12
+#define LCTRL 0x14
 
     /* 20-2F */
     0, 'c', 'x', 'd', 'e', '4', '3', 0,
@@ -60,10 +65,10 @@ static uint8_t keymap[256]  = {
 
     /* 50-5F */
     0, 0, '\'', 0, '[', '=', 0, 0,
-    KEY_CAPSLOCK, 0/*RS*/, KEY_ENTER, ']', 0, '#', 0, 0,
+    0/*CL*/, 0/*RS*/, KEY_ENTER, ']', 0, '#', 0, 0,
 
-#define CAPSLOCK 0x58    
-#define RSHIFT 0x5A
+#define CAPSLOCK 0x58
+#define RSHIFT 0x59
 
     /* 60-6F */
     0, '\\', 0, 0, 0, 0, KEY_BS, 0,
@@ -83,15 +88,15 @@ static uint8_t keymap[256]  = {
     0, 0/*RALT*/, 0, 0, 0/*RCTRL*/, 'Q', '!', 0,
     0, 0, 'Z', 'S', 'A', 'W', '"', 0/*LWIN*/,
 
-#define RALT 0x81
-#define RCTRL 0x84
-#define LWIN 0x8F
+#define RALT 0x91
+#define RCTRL 0x94
+#define LWIN 0x9F
 
     /* E0 20 - E0 2F */
     0, 'C', 'X', 'D', 'E', '$', KEY_POUND, 0/*RWIN*/,
     0, 0, 'V', 'F', 'T', 'R', '%', 0/*WINMENU*/,
 
-#define RWIN 0x97
+#define RWIN 0xA7
 
     /* E0 30 - E0 3F */
     0, 'N', 'B', 'H', 'G', 'Y', '^', 0,
@@ -116,6 +121,7 @@ static uint8_t keymap[256]  = {
 
 static uint8_t shift_down;
 static uint8_t ctrl_down;
+static uint8_t alt_down;
 static uint8_t capslock;
 static uint8_t numlock;
 
@@ -171,6 +177,10 @@ static void keycode(uint_fast8_t code, uint_fast8_t up, uint_fast8_t shifted)
             ctrl_down &= ~1;
         else if (code == RCTRL)
             ctrl_down |= ~1;
+        else if (code == LALT)
+            alt_down &= ~1;
+        else if (code == RALT)
+            alt_down &= ~2;
         return;
     }
     if (code == LSHIFT)
@@ -181,35 +191,59 @@ static void keycode(uint_fast8_t code, uint_fast8_t up, uint_fast8_t shifted)
         ctrl_down |= 1;
     else if (code == RCTRL)
         ctrl_down |= 2;
+    else if (code == LALT)
+        alt_down |= 1;
+    else if (code == RALT)
+        alt_down |= 2;
+
+    /* caps lock, shift and friends all send autorepeat so care needed */
+    if (code == CAPSLOCK) {
+        capslock ^= up;		/* On the up toggle capslock */
+        /* Eventually we need to drive the LEDs */
+        return;
+    }
 
     key = keymap[code];
 
-    /* The keyboard deals with shifting but not the lock keys */
+#ifdef CONFIG_VT_MULTI
+    if (alt_down && key >= KEY_F1 && key <= KEY_F12) {
+        ps2kbd_conswitch(key - KEY_F1 + 1);
+        return;
+    }
+#endif
 
-    /* FIXME: need to handle keypad / which is elsewhere
+
+//    kprintf("Code %d Key %d KG %d IT %d\n",
+//        code, key, keyboard_grab, inputtty);
+
+    /* FIXME: need to handle keypad / (0xCA) which is elsewhere
        - review - not all bits shiftable ? */
     if (numlock && code >= 0x68 && code < 0x7E)
         code ^= 0x80;
-
-    if (shift_down)
+    if (shift_down) {
         m = KEYPRESS_SHIFT;
+        /* FIXME: duplicate any blank slots to remove second condition */
+        if (key < 0x80 && keymap[code + 0x80])
+            key = keymap[code + 0x80];
+    }
     if (ctrl_down) {
         m |= KEYPRESS_CTRL;
         key &= 31;
     }
+    if (alt_down)
+        m |= KEYPRESS_ALT;
 
     if (capslock && alpha(key))
         key ^= 32;
 
-
     if (key) {
         switch(keyboard_grab) {
         case 0:
-            vt_inproc(inputtty + 1, key);
+            vt_inproc(inputtty, key);
             break;
         case 1:
             if (!input_match_meta(key)) {
-                vt_inproc(inputtty + 1, key);
+                vt_inproc(inputtty, key);
                 break;
             }
             /* Fall through */
@@ -234,35 +268,72 @@ void ps2kbd_byte(uint_fast8_t byte)
     else if (byte == 0xF0)
         up = 1;
     else {
-        keycode(byte, up,shifted);
+        keycode(byte, up, shifted);
         up = 0;
         shifted = 0;
     }
 }
 
+static uint8_t ps2busy = 0;
+
 void ps2kbd_poll(void)
 {
-    int n = ps2kbd_get();
-    if (n != -1)
+    int n;
+    if (ps2busy)
+        return;
+
+    n = ps2kbd_get();
+    if (n >= 0)
         ps2kbd_byte(n);
 }
 
 static void kbd_set_leds(uint_fast8_t byte)
 {
+    ps2busy = 1;
     ps2kbd_put(0xED);
     ps2kbd_put(byte & 7);
+    ps2busy = 0;
 }
 
 int ps2kbd_init(void)
 {
+    int r;
+    uint8_t present = 0;
+    uint8_t i;
+
+    ps2busy = 1;
+
+    /* We may have FF or FF AA or FF AA 00 or other info queued before
+       our reset, if so empty it out */
+    for (i = 0; i < 16; i++) {
+        r = ps2kbd_get();
+        if (r != -1) {
+            /* It talked to us */
+            if (r >= 0)
+                present = 1;
+        }
+    }
+
     /* Try to reset, if it times out -> no keyboard */
-    if (ps2kbd_put(0xFF) != 0xFA)
-        return 0;
+    r = ps2kbd_put(0xFF);
+    if (r != 0xFA) {
+        kprintf("RX %x, %x", r, ps2kbd_get());
+        if (r < 0 && present == 0) {
+            ps2busy = 0;
+            return 0;
+        }
+    }
     ps2kbd_put(0xF6);	/* Restore default */
     ps2kbd_put(0xED);	/* LEDs off */
     ps2kbd_put(0x00);
     ps2kbd_put(0xF0);	/* Scan code 2 */
     ps2kbd_put(0x02);
     ps2kbd_put(0xF4);	/* Clear buffer and enable */
+
+    /* Flush out anything left over */
+    for (i = 0; i < 16; i++)
+        ps2kbd_get();
+
+    ps2busy = 0;
     return 1;
 }

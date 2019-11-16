@@ -12,6 +12,8 @@
 ;	to tx
 ;	20ms: longest a command reply should take
 ;
+;	Assumes <= 8MHz processor (so 125uS is 1000 clocks)
+;
 
 	.include "kernel.def"
 	.include "../kernel-z80.def"
@@ -67,9 +69,6 @@ _ps2kbd_get:
 	ld bc,(_kbport)
 kbget:
 	ld (abort_sp),sp
-	exx
-	ld hl,#0		; timeout timer - FIXME value ?
-	exx
 	; Stop pulling down CLK so that the keyboard can talk
 	ld a,(_kbsave)
 	or #0x03		; let clock rise, don't pull data		
@@ -83,13 +82,14 @@ kbwclock:
 	; It didn't reply so there was no interest
 	; Jam the clock again so that it can't send until we check
 kbdone:
+	ld hl,#0xffff
+kbout:
 	ld a,(_kbsave)
 	; B is now zero - make it non zero so we can use high ports with
 	; Z180
 	inc b
 	or #0x02
 	out (c),a		; put the clock back down, don't pull data
-	ld hl,#0xffff
 	ret
 	;
 	; We got a rising edge. That means the keyboard wishes to talk to
@@ -101,43 +101,44 @@ kbdata:
 	; We got a clock edge, that means there is incoming data:
 	; There should be a start, eight data and an odd parity
 	;
+	exx
+	ld hl,#0		; timeout timer - FIXME value ?
+	exx
 	ld b,#8
 	call kbdbit	; Start bit
 nextbit:
 	call kbdbit
 	djnz nextbit
 	; E now holds the data, carry should be the start bit
-	jr nc, kbdbad
+;	jr nc, kbdbad
 	ld a,e
 	or a		; Generate parity flag
-	ld h,#1		; For even parity of the 8bits send a 1 to get odd
+	ld h,#0x80	; For even parity of the 8bits send a 1 to get odd
 	jp pe, kbdevenpar
-	dec h		; If we are odd parity send a 0 so we stay odd
+	ld h,#0x00	; If we are odd parity send a 0 so we stay odd
 kbdevenpar:
 	ld l,a		; Save the keycode
 	inc b		; make sure b is non zero for Z180 ports
 	call kbdbit
 	ld a,e		; get parity bit into A
-	and #1		; mask other bits
+	and #0x80	; mask other bits
 	cp h
 	ld h,#0
-	jr z, kbdone	; parity was good
+	jr z, kbout	; parity was good
 	ld hl,#0xFFFE	; Parity was bad
-	jr kbdone
+	jr kbout
 kbdbad:
 	inc b
 	call kbdbit	; throw away parity
 	; Check stop bits ??
-	ld hl,#0xFFFF		; report -1 for no keycode
-	jr kbdone
+	ld hl,#0xFFFC		; report -err for wrong start
+	jr kbout
 
 ;
 ;	Receive a bit. Wait for the clock to go low, sample the data and
 ;	then wait for it to return high. The sampled bit is added to E
 ;
 kbdbit:
-	ld a,#0x08
-	out (0),a
 	exx
 	dec hl
 	ld a,h
@@ -155,8 +156,6 @@ kbdbit:
 	; Preserve carry for this loop, our caller needs the carry
 	; from the RL E
 	push af
-	ld a,#0x09
-	out (0),a
 kbdbit2:
 	exx
 	dec hl
@@ -168,8 +167,6 @@ kbdbit2:
 	bit 2,a
 	jr z,kbdbit2
 	; E now updated
-	ld a,#0x0A
-	out (0),a
 	pop af
 	ret
 
@@ -189,7 +186,7 @@ _ps2mouse_get:
 ps2get:
 	ld (abort_sp),sp
 	exx
-	ld hl,#10000		; timeout timer - FIXME value ?
+	ld hl,#0		; timeout timer - FIXME value ?
 	exx
 	; Stop pulling down CLK so that the keyboard can talk
 	ld a,(_kbsave)
@@ -286,12 +283,10 @@ ps2bit2:
 ;
 _ps2kbd_put:
 	ld bc,(_kbport)
-	xor a
-	out (0x00),a
 kbdput:
 	ld (abort_sp),sp
 	exx
-	ld hl,#10000		; timeout timer - FIXME value ?
+	ld hl,#0		; timeout timer - FIXME value ?
 	exx
 	ld a,(_kbsave)
 	and #0xFE		; Pull clock low
@@ -300,8 +295,6 @@ kbdput:
 	; 100uS delay		- actually right now the 125uS poll delay
 clkwait:
 	djnz clkwait
-	ld a,#0x01
-	out (0x00),a
 	ld a,(_kbsave)
 	ld b,#8			; Ensure B is always non zero
 	out (c),a		; Clock and data low
@@ -328,8 +321,6 @@ kbdoutp1:
 	;
 	; Wait 20uS
 	;
-	ld a,#0x02
-	out (0x00),a
 	ld de,(_kbdelay)
 	ld b,d
 del1:	djnz del1
@@ -352,15 +343,11 @@ del2:	djnz del2
 	out (c),a
 	; FIXME - need a general long timeout here
 	; Wait for the keyboard to pull the clock low
-	ld a,#0x03
-	out (0x00),a
 waitk:
 	in a,(c)
 	and #4
 	jr nz, waitk
 	; Return the status code (FE = failed try again)
-	ld a,#0x05
-	out (0x00),a
 	jp kbdata
 
 	;
@@ -378,8 +365,6 @@ kbdoutbit:
 	in a,(c)
 	and #4
 	jr nz, kbdoutbit	; wait for clock low
-	ld a,#0x02
-	out (0x00),a
 	ld a,(_kbsave)		;
 	or #1			; clock floating 
 	rr l
@@ -387,8 +372,6 @@ kbdoutbit:
 	or #2			; set data
 kbdouta:
 	out (c),a
-	ld a,#0x03
-	out (0x00),a
 kbdoutw1:
 	exx
 	dec hl
@@ -396,8 +379,6 @@ kbdoutw1:
 	or l
 	jp z,timeout
 	exx
-	ld a,#0x04
-	out (0x00),a
 	in a,(c)
 	and #4
 	jr z,kbdoutw1		; wait for clock to go back high
