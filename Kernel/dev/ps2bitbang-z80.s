@@ -185,9 +185,6 @@ _ps2mouse_get:
 	ld bc,(_kbport)
 ps2get:
 	ld (abort_sp),sp
-	exx
-	ld hl,#0		; timeout timer - FIXME value ?
-	exx
 	; Stop pulling down CLK so that the keyboard can talk
 	ld a,(_kbsave)
 	or #0x0C	;	let go of clock, don't pull data
@@ -201,6 +198,8 @@ ps2wclock:
 	; It didn't reply so there was no interest
 	; Jam the clock again so that it can't send until we check
 ps2done:
+	ld hl,#0xffff
+ps2out:
 	inc b
 	ld a,(_kbsave)
 	out (c),a
@@ -211,6 +210,9 @@ ps2data:
 	; We got a clock edge, that means there is incoming data:
 	; There should be a start, eight data and an odd parity
 	;
+	exx
+	ld hl,#0		; timeout timer - FIXME value ?
+	exx
 	ld b,#8
 	call ps2bit
 ps2nextbit:
@@ -220,26 +222,26 @@ ps2nextbit:
 	jr nc, ps2bad
 	ld a,e
 	or a
-	ld h,#1		; For even parity of the 8bits expect a 1
+	ld h,#0x80		; For even parity of the 8bits expect a 1
 	jp pe, ps2evenpar
-	dec h
+	ld h,#0x00
 ps2evenpar:
 	inc b
 	ld l,a		; Save the keycode
 	call ps2bit
 	ld a,e		; get parity bit into A
-	and #1		; mask other bits
+	and #0x80	; mask other bits
 	cp h
 	ld h,#0
-	jr z, ps2done	; parity was good
-	ld hl,#0xFFFF
-	jr ps2done
+	jr z, ps2out	; parity was good
+	ld hl,#0xFFFE
+	jr ps2out
 ps2bad:
 	inc b
 	call ps2bit	; throw away parity
 	; Check stop bits ??
-	ld hl,#0xFFFF		; report -1 for no keycode
-	jr ps2done
+	ld hl,#0xFFFC		; report -err for wrong start
+	jr ps2out
 
 ps2bit:
 	exx
@@ -394,7 +396,7 @@ _ps2mouse_put:
 ps2put:
 	ld (abort_sp),sp
 	exx
-	ld hl,#10000		; timeout timer - FIXME value ?
+	ld hl,#0		; timeout timer - FIXME value ?
 	exx
 	ld a,(_kbsave)
 	and #0xFC		; clock high data low
