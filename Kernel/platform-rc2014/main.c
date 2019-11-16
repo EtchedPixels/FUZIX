@@ -8,6 +8,7 @@
 #include <rtc.h>
 #include <ds1302.h>
 #include <rc2014.h>
+#include <ps2kbd.h>
 #include <zxkey.h>
 
 extern unsigned char irqvector;
@@ -118,13 +119,6 @@ void platform_interrupt(void)
 		ti_r = tms9918a_ctrl;
 
 	tty_pollirq();
-	/* Running as a home computer not serial */
-	if (ti_r & 0x80) {
-		if (zxkey_present)
-			zxkey_poll();
-		if (ps2kbd_present)
-			ps2kbd_poll();
-	}
 
 	/* On the Z180 we use the internal timer */
 	if (z180_present) {
@@ -133,6 +127,11 @@ void platform_interrupt(void)
 	/* The TMS9918A is our second best choice as the CTC must be wired
 	   right and may not be wired as we need it */
 	} else if (ti_r & 0x80) {
+		/* Running as a home computer not serial */
+		if (zxkey_present)
+			zxkey_poll();
+		if (ps2kbd_present)
+			ps2kbd_poll();
 		/* We are using the TMS9918A as a timer */
 		timerct++;
 		if (timerct == 6) {	/* Always NTSC */

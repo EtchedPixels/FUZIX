@@ -893,6 +893,14 @@ void do_conswitch(uint8_t c)
 	vt_cursor_on();
 }
 
+/* PS/2 call back for alt-Fx */
+void ps2kbd_conswitch(uint8_t console)
+{
+	if (console > 4 || console == inputtty)
+		return;
+	do_conswitch(console);
+}
+
 struct uart tms_uart = {
 	tms_intr,
 	tms_writeready,
@@ -953,10 +961,11 @@ void display_uarts(void)
 	uint16_t *p = ttyport + 1;
 	uint8_t n = 1;
 
-	while(n++ < nuart) {
-		kprintf("%s detected at 0x%x.\n", (*t)->name, *p);
+	while(n < nuart) {
+		kprintf("tty%d: %s at 0x%x.\n", n, (*t)->name, *p);
 		p++;
 		t++;
+		n++;
 	}
 }
 
@@ -998,6 +1007,13 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	case GFXIOC_UNMAP:
 		return 0;
 	}
+	/* Only the ZX keyboard has support for the bitmapped matrix ops
+	   and map setting.  We need to add different map setting for PS/2
+	   and different auto repeat if we support setting it */
+	if (!zxkey_present &&
+		( arg == KBMAPSIZE && arg == KBMAPGET || arg == KBSETTRANS ||
+			arg == KBRATE ))
+			return -1;
   }
   return vt_ioctl(minor, arg, ptr);
 }
