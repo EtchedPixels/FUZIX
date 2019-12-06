@@ -1,0 +1,26 @@
+Initial sketches for a 6303 RC2014 banked memory platform
+
+Proposed memory mapping
+
+	0x0000-0x00FF	Direct page
+	0x0100-0xEFFF	Kernel
+	0xF000-0xFFEF	Common data and whatever code fills the rest
+	0xFFF0-0xFFFF	Vectors
+
+Everything we need to copy to/from userspace lives above C000
+
+In user space
+
+	0x0000-0x00FF	Direct page
+	0x2000-0xEFFF	User space
+	0xF000-0xFFEF	Common data and whatever code fills the rest
+	0xFFF0-0xFFFF	Vectors
+
+Hardware Arrangement
+
+6303 CPU
+FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
+RC2014 bus
+512K RAM/ROM
+16550A UART	(switch to internal TODO)
+
