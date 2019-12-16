@@ -8,7 +8,7 @@
  *
  */
 
-#include "cpu.h"
+#include <kernel.h>
 
 /* mode 00 registers */
 #define REG_1_SEC_CTR	    0x0
