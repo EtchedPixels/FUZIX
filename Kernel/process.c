@@ -963,7 +963,7 @@ void doexit(uint16_t val)
 	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
 #endif
 #ifdef CONFIG_ACCT
-	acctexit(p);
+	acctexit(udata.u_ptab);
 #endif
         udata.u_page = 0xFFFFU;
         udata.u_page2 = 0xFFFFU;
