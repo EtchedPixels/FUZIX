@@ -1,5 +1,5 @@
 ;
-;	    v65 platform functions
+;	    rc2014 6502 platform functions
 ;
 
             .export init_early

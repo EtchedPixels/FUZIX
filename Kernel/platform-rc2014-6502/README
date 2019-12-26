@@ -1,4 +1,4 @@
-Initial sketches for a 6502 RC2014 banked memory platform
+Basic support for a 6502 RC2014 banked memory platform
 
 Use a modern cc65 from https://github.com/cc65/cc65
 
