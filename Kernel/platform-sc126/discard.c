@@ -53,5 +53,7 @@ void device_init(void)
 {
 	devide_init();
 	devsd_init();
+#ifdef CONFIG_NET
 	netdev_init();
+#endif
 }
