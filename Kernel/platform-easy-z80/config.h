@@ -40,8 +40,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Flexible 4x16K banking */
 #define CONFIG_BANK16
 /* Permit large I/O requests to bypass cache and go direct to userspace unless

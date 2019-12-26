@@ -10,8 +10,6 @@
 /* Multiple processes in memory at once */
 #undef CONFIG_MULTI
 #define CONFIG_SWAP_ONLY
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 

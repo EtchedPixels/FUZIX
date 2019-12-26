@@ -6,8 +6,6 @@
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 #undef CONFIG_USERMEM_C
 /* We use big banks so use the helper */
 #define CONFIG_BANK_FIXED

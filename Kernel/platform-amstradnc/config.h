@@ -12,8 +12,6 @@
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 /* We have a key that needs remapping into unicode space */

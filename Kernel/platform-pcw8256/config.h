@@ -6,8 +6,6 @@
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* CPM emulation capable */
 #define CONFIG_CPM_EMU
 /* 16K reported page size */

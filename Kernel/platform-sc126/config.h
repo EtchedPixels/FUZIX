@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Fixed banking: 8 x 64K banks, top 4KB is shared with kernel, 60KB-62KB is user memory  */
 #define CONFIG_BANK_FIXED
 /* Permit large I/O requests to bypass cache and go direct to userspace */
@@ -66,8 +64,8 @@ extern uint16_t swap_dev;
 #define platform_copyright()		// for now
 
 /* WizNET based TCP/IP */
-#define CONFIG_NET
-#define CONFIG_NET_NATIVE
+//#define CONFIG_NET
+//#define CONFIG_NET_NATIVE
 
 //#define CONFIG_NET_WIZNET5300
 //#define CONFIG_WIZNET_INDIRECT
