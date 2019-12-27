@@ -14,9 +14,9 @@
 #define CONFIG_RC2014_SD
 
 
-#define OFTSIZE		64
-#define ITABSIZE	48
-#define PTABSIZE	24
+#define OFTSIZE		56
+#define ITABSIZE	40
+#define PTABSIZE	20
 
 /*
  *	Turn selections into system level defines
@@ -70,14 +70,14 @@
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
 
-//#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
 #define SWAP_SIZE   0x69 	/* 60.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xF200	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-//#define CONFIG_DYNAMIC_SWAP
+#define CONFIG_DYNAMIC_SWAP
 /* Kept in bank 2 */
 #define CONFIG_DYNAMIC_BUFPOOL
 /*
