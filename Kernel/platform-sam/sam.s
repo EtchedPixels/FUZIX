@@ -546,10 +546,7 @@ syscall_high:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
-	    push de		; the syscall if must preserve de for now
-				; needs fixing when we change the syscall
-				; API for Z80 to something less sucky
-	    ld a,4(ix)
+	    push bc
 	    ld c,6(ix)
 	    ld b,7(ix)
 	    ld e,8(ix)
@@ -585,19 +582,16 @@ syscall_high:
 	    xor a
 	    cp h
 	    call nz, syscall_sigret
-	    ; FIXME for now do the grungy C flag HL DE stuff from
-	    ; lowlevel-z80 until we fix the ABI
-	    ld bc,#0
+	    ; Decide what to return
+	    pop bc
 	    ld a,h
 	    or l
 	    jr nz, error
 	    ex de,hl
-	    pop de
 	    pop ix
 	    ei
 	    ret
 error:	    scf
-	    pop de
 	    pop ix
 	    ei
 	    ret

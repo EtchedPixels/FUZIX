@@ -774,15 +774,24 @@ irqsigret:
 	    inc sp		; drop signal number
 	    inc sp
 	    ret
-
+;
+;	Our stack looks like this when we start accessing arguments
+;
+;	12	arg3
+;	10	arg2
+;	8	arg1
+;	6	arg0
+;	4	user address
+;	2	syscall return to user address
+;	0	ix
+;
+;	and A holds the syscall number
+;
 syscall_high:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
-	    push de		; the syscall if must preserve de for now
-				; needs fixing when we change the syscall
-				; API for Z80 to something less sucky
-	    ld a,4(ix)
+	    push bc
 	    ld c,6(ix)
 	    ld b,7(ix)
 	    ld e,8(ix)
@@ -794,8 +803,7 @@ syscall_high:
 	    ld h,13(ix)
 	    pop ix
 	    di
-	    ; BUG: syscall corrupts AF' - should we just define some
-	    ; alt register corruptors for new API - would be sanest fix
+	    ; AF' can be changed in the ABI
 	    ex af, af'		; Ick - find a better way to do this bit !
 	    ld a,#1
 	    out (0x38),a
@@ -819,17 +827,16 @@ syscall_high:
 	    call nz, syscall_sigret
 	    ; FIXME for now do the grungy C flag HL DE stuff from
 	    ; lowlevel-z80 until we fix the ABI
-	    ld bc,#0
 	    ld a,h
 	    or l
 	    jr nz, error
 	    ex de,hl
-	    pop de
+	    pop bc
 	    pop ix
 	    ei
 	    ret
 error:	    scf
-	    pop de
+	    pop bc
 	    pop ix
 	    ei
 	    ret
