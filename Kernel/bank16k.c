@@ -25,6 +25,8 @@
 #include <kdata.h>
 #include <printf.h>
 
+#undef DEBUG
+
 #ifdef CONFIG_BANK16
 /*
  * Map handling: We have flexible paging. Each map table consists of a set of pages
@@ -184,6 +186,10 @@ usize_t pagemap_mem_used(void)
    used by swapping 16k platforms to procure a common page.
    platforms will have to provide a void copy_common(uint8_t page)
    that copies the current common page to the specified page.
+
+   FIXME: don't assume common always freed last. Probably means always
+   calling copy_common, but this is swap in so it's already slow so this
+   shouldn't be a big deal.
 */
 
 uint8_t get_common(void)
