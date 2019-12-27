@@ -63,6 +63,10 @@ int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
 		panic("swprd");
 	udata.u_nblock = nbytes >> BLKSHIFT;
 	swappage = page;
+#ifdef DEBUG
+	kprintf("SR | L %p M %p Bytes %d Page %d Block %d\n",
+		buf, udata.u_dptr, nbytes, page, udata.u_block);
+#endif
 	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 2, 0));
 }
 
@@ -77,6 +81,10 @@ int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
 		panic("swpwr");
 	udata.u_nblock = nbytes >> BLKSHIFT;
 	swappage = page;
+#ifdef DEBUG
+	kprintf("SW | L %p M %p Bytes %d Page %d Block %d\n",
+		buf, udata.u_dptr, nbytes, page, udata.u_block);
+#endif
 	return ((*dev_tab[major(dev)].dev_write) (minor(dev), 2, 0));
 }
 
@@ -165,6 +173,8 @@ void swapper2(ptptr p, uint16_t map)
 	kprintf("Swapped in %p (page %d), udata.ptab %p\n",
 		p, p->p_page, udata.u_ptab);
 #endif
+	udata.u_page = p->p_page;
+	udata.u_page2 = p->p_page2;
 }
 
 /*
