@@ -25,6 +25,8 @@ TOP_PORT	.equ	MPGSEL_3
 	.globl _udata
 	.globl _kernel_pages
 	.globl map_kernel_restore
+	.globl _get_common
+	.globl _swap_finish
 
 	.globl ldir_or_dma
 
@@ -85,11 +87,68 @@ _switchin:
         push bc ; restore stack
 	push hl ; bank
 
-        ld hl, #P_TAB__P_PAGE_OFFSET+3	; Common
+        ld hl, #P_TAB__P_PAGE_OFFSET	; Base page number or swap info
 	add hl, de		; process ptr
 	ld a, (hl)
+	or a
+	jr nz, notswapped
+
+	;
+	;	Swap us in (may swap someone else out)
+	;	Hands us a new common in L
+	;
+	;	FIXME: look at interrupt disable/enable logic here
+	;
+	push de
+	push hl			; We need these in a bit
+
+	push af
+	call _get_common
+	pop af
+
+	ld a,l
+	;
+	;	Recover saved registers before we stack switch
+	;
+	pop hl
+	pop de
+	;
+	;	Switch to our new common
+	;
+	out (TOP_PORT),a	; Map in our common and udata
 	ld (top_bank),a
+	;
+	;	Use a temporary stack
+	;
+	ld sp, #swapstack
+	;
+	;	Save back onto that instead
+	;
+	push hl
+	push de
+
+	;
+	;	swap_finish(page, process)
+	;
+	push de			; process
+	push af			; page for common
+	inc sp
+	push af
+	call _swap_finish
+	pop af
+	pop af
+	inc sp
+
+	;	Recover registers we need
+	pop de
+	pop hl
+notswapped:
+	inc hl
+	inc hl
+	inc hl			; common page
+	ld a,(hl)
 	out (TOP_PORT), a	; *CAUTION* our stack just left the building
+	ld (top_bank),a
 
 	; ------- No stack -------
         ; check u_data->u_ptab matches what we wanted
@@ -263,3 +322,5 @@ fork_next:
 	ret			; this stack is copied so safe to return on
 
 	
+	.ds 256
+swapstack:
