@@ -65,11 +65,6 @@
         .include "platform/kernel.def"
         .include "kernel-z80.def"
 
-; these make the code below more readable. sdas allows us only to 
-; test if an expression is zero or non-zero.
-CPU_CMOS_Z80	    .equ    Z80_TYPE-0
-CPU_NMOS_Z80	    .equ    Z80_TYPE-1
-
 	HIGH
 ;
 ;	Execve also needs a platform helper for 32/32K
