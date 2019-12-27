@@ -16,7 +16,7 @@ SRC =	as.c assemble.c errors.c express.c \
 	scan.c table.c typeconv.c alloc.c
 OBJ = $(SRC:.c=.o)
 
-all: as09
+all:
 
 as09: $(OBJ)
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
