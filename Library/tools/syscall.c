@@ -22,7 +22,7 @@ static void write_call(int n)
   fprintf(fp, "\t.area _CODE\n\n");
   fprintf(fp, "\t.globl __syscall\n");
   fprintf(fp, "\t.globl _%s\n\n", syscall_name[n]);
-  fprintf(fp, "_%s:\n\tld hl, #%d\n", syscall_name[n], n);
+  fprintf(fp, "_%s:\n\tld a, #%d\n", syscall_name[n], n);
   fprintf(fp, "\tjp __syscall\n");
   fclose(fp);
 }

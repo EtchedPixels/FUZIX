@@ -69,8 +69,6 @@
 
 ; these make the code below more readable. sdas allows us only to 
 ; test if an expression is zero or non-zero.
-CPU_CMOS_Z80	    .equ    Z80_TYPE-0
-CPU_NMOS_Z80	    .equ    Z80_TYPE-1
 CPU_Z180	    .equ    Z80_TYPE-2
 
         .area _COMMONMEM
@@ -155,42 +153,45 @@ signal_return:
 ;
 ;	Syscall processing path
 ;
+;	This is the first part of the big API change. This is in effect
+;	a temporary ABI so don't build stuff to it!
+;
 unix_syscall_entry:
 	; We know the previous state was EI and that we won't do anything
 	; clever until we EI again, so we can avoid the helpers on the fast
 	; path.
         di
-        ; store processor state
-        ex af, af'
-        push af
-        ex af, af'
-        exx
-        push bc		; FIXME we don't I think need to save bc/de/hl
-        push de		; as they are compiler caller save once we fix the API
-        push hl
+        ; store processor state. We destroy AF, AF', DE, HL
         exx
         push bc
         push de
+        push hl
+        exx
+	push bc
         push ix
         push iy
-	; We don't save AF or HL
+
         ; locate function call arguments on the userspace stack
-        ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
+        ld hl, #16     ; 12 bytes machine state, plus 2 bytes return address x 2
         add hl, sp
 
 	.ifne Z80_MMU_HOOKS
-	call mmu_kernel			; must preserve HL
+	call mmu_kernel			; must preserve A,HL
 	.endif
         ; save system call number
-        ld a, (hl)
         ld (_udata + U_DATA__U_CALLNO), a
         ; advance to syscall arguments
-        inc hl
-        inc hl
         ; copy arguments to common memory
-        ld bc, #8      ; four 16-bit values
         ld de, #_udata + U_DATA__U_ARGN
-        ldir           ; copy  FIXME use LDI x 8
+
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
 
 	ld a, #1
 	ld (_udata + U_DATA__U_INSYS), a
@@ -263,16 +264,12 @@ unix_pop:
         ; restore machine state
         pop iy
         pop ix
-        pop de
-        pop bc
+	pop bc
         exx
         pop hl
         pop de
         pop bc
         exx
-        ex af, af'
-        pop af
-        ex af, af'
         ei
         ret ; must immediately follow EI
 
