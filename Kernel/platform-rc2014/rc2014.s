@@ -593,7 +593,7 @@ map_save_kernel:
 
 ;=========================================================================
 ; map_for_swap - map a page into a bank for swap I/O
-; Inputs: none
+; Inputs: A = page
 ; Outputs: none
 ;
 ; The caller will later map_kernel to restore normality
