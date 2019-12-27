@@ -1,7 +1,8 @@
 /*
  *	Generate the syscall functions
  *
- *	8080 - TODO
+ *	8080 - Nice and simple as we use the compiler calling convention
+ *	with an offset for the syscall stub
  */
 
 #include <stdio.h>
