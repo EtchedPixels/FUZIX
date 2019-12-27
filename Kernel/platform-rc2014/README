@@ -1,12 +1,9 @@
 - Debug reboot
 - Test and adjust 16x50
-DONE - Finish QUART init (set up interrupts etc, fix initial baud assumption)
-DONE - Test QUART
 - QUART CTS/RTS
-IP - QUART as system clock
 - 82C54 ?
 - TMS9918A - stop console flipping when in gfx mode
-- PS2 driver
+IP - PS2 driver
 - Sound
 
 
