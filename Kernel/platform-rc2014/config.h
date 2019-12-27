@@ -72,7 +72,7 @@
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
-#define SWAP_SIZE   0x69 	/* 60.5K in blocks (prog + udata) */
+#define SWAP_SIZE   0x79 	/* 60.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xF200	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
