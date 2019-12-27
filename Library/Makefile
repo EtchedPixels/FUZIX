@@ -2,10 +2,11 @@
 
 CFLAGS += -I../Kernel/include
 
-all: tools/syscall tools/binman tools/fcc tools/syscall_6502 \
-     tools/syscall_68000 tools/syscall_8080 tools/ack2fuzix \
-     tools/syscall_6809 tools/syscall-scc6809 tools/binman \
-     tools/fcc tools/liberror tools/relocbin tools/fuzixlib
+all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
+     tools/syscall_6502 tools/syscall_68000 tools/syscall_8080 \
+     tools/syscall_6809 tools/syscall-scc6809 \
+     tools/ack2fuzix tools/binman \
+     tools/liberror tools/relocbin tools/fuzixlib
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
@@ -14,7 +15,7 @@ clean:
 tools/syscall: tools/syscall.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
-tools/syscall-z88dk: tools/syscall-z88dk.c ../Kernel/include/syscall_name.h
+tools/syscall_6303: tools/syscall_8080.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_6502: tools/syscall_6502.c ../Kernel/include/syscall_name.h
@@ -33,9 +34,6 @@ tools/syscall-scc6809: tools/syscall-scc6809.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_pdp11: tools/syscall_pdp11.c ../Kernel/include/syscall_name.h
-	$(CC) $(CFLAGS) -o $@ $<
-
-tools/syscall_tms9900: tools/syscall_tms9900.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/binman: tools/binman.c
