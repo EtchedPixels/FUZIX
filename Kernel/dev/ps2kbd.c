@@ -317,7 +317,7 @@ int ps2kbd_init(void)
     /* Try to reset, if it times out -> no keyboard */
     r = ps2kbd_put(0xFF);
     if (r != 0xFA) {
-        kprintf("RX %x, %x", r, ps2kbd_get());
+        ps2kbd_get();
         if (r < 0 && present == 0) {
             ps2busy = 0;
             return 0;
