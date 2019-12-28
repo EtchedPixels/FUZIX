@@ -49,6 +49,30 @@ static uint8_t fd_send(uint8_t cmd, uint8_t minor)
     return *stat;
 }
 
+/*
+ *	The Amstrad 3" drives are 30ms head settle,  12ms step
+ *	480ms head unload, 4ms head load, 1.75ms write current off
+ *
+ *	Amstrad seems to use 1 second motor stabilizing time and 5 second
+ *	motor off.
+ *
+ *	Amstrad actually appears to use 28ms settle.
+ *
+ *	The NEC765 is clocked at 4MHz so the step timer is in 2ms increments
+ *	the head load in 4ms intervals, and the HUT is in 32ms intervals.
+ */
+static uint8_t setup_cmd[] = {
+    0x03,		/* SPECIFY */
+    0x6f,		/* SRT and HUT - check if 6 or cpl of 6 */
+    0x03,		/* ND, head load time */
+};
+
+static void fd_setup(uint8_t minor)
+{
+    fd765_drive = minor;
+    fd765_send_cmd3(setup_cmd);
+}
+
 /* FIXME: Want an fdc discard */
 
 static void fd_probe_plus(int d)

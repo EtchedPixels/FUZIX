@@ -3,16 +3,8 @@
 ;
 ;	This is based upon the Amstrad NC200 driver by David Given
 ;
-;	TODO
-;	Initialize drive step rate etc (we rely on the firmware for now)
-;	Step rate
-;	Head load/unload times
-;	Write off time	af
-;
-;	Or do we rely on the boot loader to have gotten this right (can't
-;	for drive > 0) FIXME
-;
-;	Compare behaviour and timings with CP/M
+;	TODO:
+;	Check behaviour and timings with CP/M
 ;
 		.module fdc765
 
@@ -32,6 +24,7 @@
 	.globl _fd765_motor_off
 	.globl _fd765_intwait
 	.globl _fd765_send_cmd
+	.globl _fd765_send_cmd3
 
 	.globl _fd765_track
 	.globl _fd765_head
@@ -60,6 +53,10 @@ _fd765_do_nudge_tc:
 	out (0xF8),a
 	ret
 
+; Writes HL to the FDC register and moves on
+fd765_tx_hl:
+	ld a,(hl)
+	inc hl
 ; Writes A to the FDC data register.
 
 fd765_tx:
@@ -141,7 +138,7 @@ wait_for_seek_ending:
 	bit 5, a				; SE, seek end
 	jr z, wait_for_seek_ending
 
-	; Now settle the head (FIXME: what is the right value ?)
+	; Now settle the head
 	ld a, #30		; 30ms
 wait_ms:
 	push bc
@@ -170,10 +167,10 @@ _fd765_motor_on:
 	out (0xF8),a
 	ld (_diskmotor),a
 	; Now wait for spin up - should we ask the fdc instead ?
-	ld e,#10		; FIXME right value ??
+	ld e,#10		; 1 second (ouch)
 wait2:
 	; The classic Z80 KHz timing loop
-	ld bc,#0x3548	; 3.548MHz
+	ld bc,#4000	; 4MHz
 wait1:
 	dec bc
 	ld a,b
@@ -315,6 +312,7 @@ _fd765_send_cmd:
 	ld a,(hl)
 	call fd765_tx
 	call send_head		; FIXME what should we be sending
+cmdandout:
 	call fd765_read_status
 	;
 	;	FIXME: should we check the int pending bit ?
@@ -324,6 +322,13 @@ _fd765_send_cmd:
 	call fd765_read_status
 	ld hl,#_fd765_status
 	ret
+
+; Used for setup
+_fd765_send_cmd3:
+	call fd765_tx_hl
+	call fd765_tx_hl
+	call fd765_tx_hl
+	jr cmdandout
 
 _fd765_intwait:
 	ld hl,#0xFFFF
@@ -344,8 +349,6 @@ _fd765_intwait:
 fd765_wait:
 	ld a, #0xB3
 fd765_wait_1:
-	ex (sp), hl
-	ex (sp), hl
 	ex (sp), hl
 	ex (sp), hl
 	dec a
