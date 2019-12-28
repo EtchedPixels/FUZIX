@@ -25,6 +25,10 @@ void init_hardware_c(void)
 	swap_size = biosinfo->common_base >> 9;
 	ramtop = biosinfo->common_base;
 	udata_stash = ramtop - sizeof(u_data);
+	if (biosinfo->features & FEATURE_TIMER)
+		platform_tick_present = 1;
+	if (biosinfo->features & FEATURE_RTC_SLOW)
+		rtc_delay = 100;
 	/* Get the tty up */
 	biostty_init();
 	/* Allocate the initial buffers */

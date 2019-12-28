@@ -32,7 +32,9 @@ struct fuzixbios_info {
     uint8_t num_disk;
 
     uint16_t features;
-#define FEATURE_RTC	1
+#define FEATURE_RTC		1
+#define FEATURE_TIMER		2
+#define FEATURE_RTC_SLOW	4
 };
 
 struct fuzixbios_callbacks {

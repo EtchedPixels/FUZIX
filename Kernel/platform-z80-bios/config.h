@@ -70,7 +70,11 @@ extern uint16_t swap_dev;
 /* Specify that there is a full real time clock that can supply the date and
    time to the system. */
 #define CONFIG_RTC_FULL
-
+/* Allow for the case where the system has no timer tick - not recommended */
+#define CONFIG_NO_CLOCK
+/* We set this at runtime */
+extern uint8_t rtc_delay;
+#define CONFIG_RTC_INTERVAL	(rtc_delay)
 /*
  * How fast does the clock tick (if present), or how many times a second do
  * we simulate if not. For a machine without video 10 is a good number. If

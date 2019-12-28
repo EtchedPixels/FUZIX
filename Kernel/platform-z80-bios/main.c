@@ -12,6 +12,9 @@ uint16_t udata_stash;
 uint8_t swap_size;
 uint16_t swap_dev = 0xFFFF;
 
+uint8_t platform_tick_present;
+uint8_t rtc_delay = 1;
+
 struct fuzixbios_info *biosinfo;
 uint8_t *alloc_base;
 
