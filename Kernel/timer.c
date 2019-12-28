@@ -54,15 +54,12 @@ void wrtime(time_t *tloc)
         irqflags_t irq = di();
 	sync_clock();
         memcpy(&tod, tloc, sizeof(tod));
-        update_sync_clock();
 	irqrestore(irq);
 }
 
-/*
- *	FIXME: rewrite this mess for 0.4
- */
-
-static uint8_t tod_deci;
+static uint8_t tod_deci;	/* 10ths of a second count */
+static uint8_t rtcsec;		/* Second number we expect from the RTC */
+static uint8_t rtcsync;		/* Counter in 1/10ths until we sync with the RTC */
 
 static void tick_clock(void)
 {
@@ -71,18 +68,10 @@ static void tick_clock(void)
         tod_deci = 0;
         if (!++tod.low)
 		++tod.high;
+	/* Track the seconds value we expect to see from an RTC */
+	rtcsec++;
 }
 
-#if !defined(CONFIG_RTC) || defined(CONFIG_NO_CLOCK)
-/* Update software emulated clock. Called ten times
-   a second */
-void updatetod(void)
-{
-	tick_clock();
-}
-#else
-
-static uint8_t rtcsec;
 
 /*
  *	We use the seconds counter on the RTC as a time counter and lock our
@@ -92,53 +81,52 @@ static uint8_t rtcsec;
  *	We allow for multi-second leaps. On boxes with many of the directly
  *	interfaced floppy controllers we can reasonably expect to lose IRQ
  *	service for annoyingly long times.
+ *
+ *	The awkward case here is the no-clock case. In that situation
+ *	we are running the clock from the RTC and we therefore don't need
+ *	or want to do magic adjustments. A system using NO_CLOCK should
+ *	make platform_rtc_secs return 255 if there is no timer interrupt
+ *	available.
  */
+
 void updatetod(void)
 {
 	uint8_t rtcnew;
 	int8_t slide;
 
-#ifdef CONFIG_RTC_INTERVAL
+	tick_clock();
+
+#ifdef CONFIG_RTC
 	/* on some platforms reading the RTC is expensive so we don't do it
 	   every decisecond. */
-	if(++tod_deci != CONFIG_RTC_INTERVAL){
-            if(!(tod_deci % 10)){ /* we still need to count each second */
-                rtcsec++;
-                slide=1;
-                goto addtod;
-            }
-	    return;
-        }
-	tod_deci = 0;
-#endif
-
+	if(++rtcsync != CONFIG_RTC_INTERVAL)
+		return;
+	rtcsync = 0;
 	rtcnew = platform_rtc_secs();		/* platform function */
 
-	if (rtcnew == 255) {
-#ifdef CONFIG_RTC_INTERVAL
-		tod_deci++;
-#else
-		tick_clock();
-#endif
+	if (rtcnew == 255 || rtcnew == rtcsec)
 		return;
-	}
-	if (rtcnew == rtcsec)
-		return;
+
 	slide = rtcnew - rtcsec;	/* Seconds elapsed */
 	rtcsec = rtcnew;
 	/*
 	 *	We assume a small negative warp in seconds is telling us
 	 *	that the clock is running too fast and we should stall.
 	 */
-	if (slide == -1)
+	if (slide == -1) {
+		tod_deci--;		/* Wrapping here is fine */
 		return;
+	}
 addtod:
 	if (slide < 0)
 		slide += 60;		/* Seconds wrapped */
 	tod.low += slide;
 	if (tod.low < slide)		/* 32bit wrap ? */
 		tod.high++;
+#endif
 }
+
+#ifdef CONFIG_RTC
 
 void inittod(void)
 {
@@ -146,3 +134,60 @@ void inittod(void)
 }
 
 #endif				/* NO_RTC */
+
+/*
+ *	Tickless support logic.
+ */
+
+#ifdef CONFIG_NO_CLOCK
+
+/*
+ *	Logic for tickless system. If you have an RTC you can ignore this.
+ */
+
+static uint8_t newticks = 0xFF;
+static uint8_t oldticks;
+
+static uint8_t re_enter;
+
+/*
+ *	The OS core will invoke this routine when idle (via platform_idle) but
+ *	also after a system call and in certain other spots to ensure the clock
+ *	is roughly valid. It may be called from interrupts, without interrupts
+ *	or even recursively so it must protect itself using the framework
+ *	below.
+ *
+ *	Having worked out how much time has passed in 1/10ths of a second it
+ *	performs that may timer_interrupt events in order to advance the clock.
+ *	The core kernel logic ensures that we won't do anything silly from a
+ *	jump forward of many seconds.
+ *
+ *	We also choose to poll the ttys here so the user has some chance of
+ *	getting control back on a messed up process.
+ */
+void sync_clock(void)
+{
+	if (!platform_tick_present) {
+		irqflags_t irq = di();
+		int16_t tmp;
+		if (!re_enter++) {
+			/* Get a rolling tick count so we can work out
+			   how much time elapsed */
+			oldticks = newticks;
+			newticks = platform_rtc_secs();
+			if (oldticks != 0xFF) {
+				tmp = newticks - oldticks;
+				if (tmp < 0)
+					tmp += 60;
+				tmp *= 10;
+				while(tmp--) {
+					timer_interrupt();
+				}
+			}
+		}
+		re_enter--;
+		irqrestore(irq);
+	}
+}
+
+#endif

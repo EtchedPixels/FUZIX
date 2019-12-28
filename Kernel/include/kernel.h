@@ -1069,6 +1069,7 @@ extern void rdtime32(uint32_t *tloc);
 extern void wrtime(time_t *tloc);
 extern void updatetod(void);
 extern void inittod(void);
+extern void sync_clock(void);
 
 /* provided by architecture or helpers */
 extern void device_init(void);	/* provided by platform */
@@ -1106,6 +1107,8 @@ extern void platform_swap_found(uint_fast8_t part, uint_fast8_t letter);
 extern uint_fast8_t platform_canswapon(uint16_t devno);
 
 extern int platform_dev_ioctl(uarg_t request, char *data);
+
+extern uint8_t platform_tick_present;
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
