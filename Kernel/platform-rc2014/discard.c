@@ -330,6 +330,7 @@ void pagemap_init(void)
 	quart_present = probe_quart();
 	/* Further ports we register at this point */
 	if (quart_present) {
+		platform_tick_present = 1;
 		register_uart(0x00BA, &quart_uart);
 		register_uart(0x40BA, &quart_uart);
 		register_uart(0x80BA, &quart_uart);
@@ -349,11 +350,15 @@ void pagemap_init(void)
 		register_uart(0x86, &sio_uartb);
 	}
 
-	if (ctc_present)
+	if (ctc_present) {
+		platform_tick_present = 1;
 		kputs("Z80 CTC detected at 0x88.\n");
+	}
 
-	if (tms9918a_present)
+	if (tms9918a_present) {
+		platform_tick_present = 1;
 		kputs("TMS9918A VDP detected at 0x98.\n");
+	}
 
 
 	dma_present = !probe_z80dma();
@@ -399,8 +404,6 @@ void pagemap_init(void)
 		}
 	}
 	display_uarts();
-	/* FIXME: if we have no tms9918a and no CTC but a quart we should
-	   use the quart as our timer */
 }
 
 void map_init(void)

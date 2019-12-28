@@ -16,8 +16,10 @@ void map_init(void)
 	if (ds1302_present)
 		kputs("DS1302 detected at 0xC0.\n");
 	/* Default clashes with the CF adapter for Simple 80 */
-	if (ctc_present)
+	if (ctc_present) {
+		platform_tick_present = 1;
 		kputs("Z80 CTC detected at 0xD0.\n");
+	}
 }
 
 void device_init(void)
