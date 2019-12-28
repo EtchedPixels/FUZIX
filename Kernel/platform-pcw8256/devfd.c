@@ -61,15 +61,14 @@ static uint8_t fd_send(uint8_t cmd, uint8_t minor)
  *	The NEC765 is clocked at 4MHz so the step timer is in 2ms increments
  *	the head load in 4ms intervals, and the HUT is in 32ms intervals.
  */
-static uint8_t setup_cmd[] = {
+static const uint8_t setup_cmd[] = {
     0x03,		/* SPECIFY */
     0x6f,		/* SRT and HUT - check if 6 or cpl of 6 */
     0x03,		/* ND, head load time */
 };
 
-static void fd_setup(uint8_t minor)
+static void fd_setup(void)
 {
-    fd765_drive = minor;
     fd765_send_cmd3(setup_cmd);
 }
 
@@ -176,4 +175,5 @@ void fd_probe(void)
         }
         m <<= 1;
     }
+    fd_setup();
 }
