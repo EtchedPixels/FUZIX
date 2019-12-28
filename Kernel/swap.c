@@ -95,7 +95,6 @@ int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
  */
 static ptptr swapvictim(ptptr p, int notself)
 {
-#ifdef CONFIG_MULTI
 	ptptr c;
 	ptptr r = NULL;
 	ptptr f = NULL;
@@ -141,12 +140,6 @@ static ptptr swapvictim(ptptr p, int notself)
 	if (notself == 0)
 		return udata.u_ptab;
 	return r;
-#else
-	used(p);
-	if (notself)
-		panic(PANIC_NOTSELF);
-	return udata.u_ptab;
-#endif
 }
 
 ptptr swapneeded(ptptr p, int notself)
