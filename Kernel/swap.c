@@ -106,6 +106,7 @@ static ptptr swapvictim(ptptr p, int notself)
 
 	c = getproc_nextp;
 
+	/* FIXME: with the punishment flag we ought to also consider that */
 	do {
 		if (c->p_page && c != udata.u_ptab) {	/* No point swapping someone in swap! */
 			/* Find the last entry before us */
@@ -175,6 +176,8 @@ void swapper2(ptptr p, uint16_t map)
 #endif
 	udata.u_page = p->p_page;
 	udata.u_page2 = p->p_page2;
+	/* We booted it out onto disk, don't then not run it */
+	p->p_flags &= ~PFL_BATCH;
 }
 
 /*
