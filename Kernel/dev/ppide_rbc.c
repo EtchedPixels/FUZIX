@@ -75,10 +75,22 @@ void ppide_read_data(void) __naked
             ld e, #ide_reg_data | PPIDE_RD_LINE     ; register address with /RD asserted
             ld b, #0                                ; setup count
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+#ifdef SWAPDEV            
+            cp #2				    ; swap ?
+            jr nz, not_swapin			    ; nope
+            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; get the page to use
+            call map_for_swap			    ; map it if needed
+            jr doread
+not_swapin:
+#endif
             or a                                    ; test is_user
-            push af                                 ; save flags
+            jr z, rd_kernel			    ; kernel buffer read ?
+            call map_process_always		    ; map the process memory
+            jr doread
+rd_kernel:
+            call map_buffers			    ; ensure the buffers are mapped
+doread:
             ld a, #PPIDE_BASE+0                     ; I will be needing this later
-            call nz, map_process_always             ; map user memory first if required
 goread:     ; now we do the transfer
             out (c), e                              ; assert /RD
             ld c, a                                 ; PPIDE_BASE
@@ -90,9 +102,7 @@ goread:     ; now we do the transfer
             inc b                                   ; (delay) counteract second ini instruction
             jr nz, goread                           ; (delay) next word
             ; read completed
-            pop af                                  ; recover is_user test result
-            ret z                                   ; done if kernel memory transfer
-            jp map_kernel                           ; else map kernel then return
+            jp map_kernel                           ; map kernel then return
     __endasm;
 }
 
@@ -111,10 +121,23 @@ void ppide_write_data(void) __naked
             ld e, #ide_reg_data | PPIDE_WR_LINE     ; register address with /WR asserted
             ld b, #0                                ; setup count
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+
+#ifdef SWAPDEV
+	    cp #2				    ; swap out ?
+	    jr nz, not_swapout			    ; skip if not
+	    ld a,(_blk_op+BLKPARAM_SWAP_PAGE)	    ; get page to swap
+	    call map_for_swap			    ; map it so we can write it out
+	    jr dowrite
+not_swapout:
+#endif
             or a                                    ; test is_user
-            push af                                 ; save flags
+	    jr z, wr_kernel			    ; writing from kernel ?
+	    call map_process_always	 	    ; map user space
+	    jr dowrite
+wr_kernel:
+	    call map_buffers			    ; map the disk buffers
+dowrite:
             ld a, #PPIDE_BASE+0                     ; I will be needing this later
-            call nz, map_process_always             ; map user memory first if required
 gowrite:    ; now we do the transfer
             out (c), d                              ; de-assert /WR
             ld c, a                                 ; PPIDE_BASE
@@ -130,9 +153,7 @@ gowrite:    ; now we do the transfer
             ld a, #PPIDE_PPI_BUS_READ
             inc c                                   ; up to 8255A command register
             out (c), a                              ; 8255A ports A, B to read mode
-            pop af                                  ; recover is_user test result
-            ret z                                   ; done if kernel memory transfer
-            jp map_kernel                           ; else map kernel then return
+            jp map_kernel                           ; map kernel then return
     __endasm;
 }
 
