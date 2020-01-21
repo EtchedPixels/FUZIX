@@ -250,7 +250,7 @@ interrupt_sig:
 	ld e,a
 	xor a
 	ld (_int_disabled),a
-	ld e,a
+	ld d,a
 	ld c,a
 	ld (_udata + U_DATA__U_CURSIG),a
 	ld hl,#_udata + U_DATA__U_SIGVEC
