@@ -115,8 +115,8 @@ deliver_signals_2:
 	ld bc, #signal_return
 	push bc		; bc is passed in as the return vector
 
-	ex de, hl
 	ei
+	ld hl,(PROGLOAD+16)
 	jp (hl)		; return to user space. This will then return via
 			; the return path handler passed in BC
 

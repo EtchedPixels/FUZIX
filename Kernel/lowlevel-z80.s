@@ -114,14 +114,13 @@ deliver_signals_2:
 	ld bc, #signal_return
 	push bc		; bc is passed in as the return vector
 
-	ex de, hl
 	ei
 	.ifne Z80_MMU_HOOKS
 	call mmu_user		; must preserve HL
 	.endif
-	jp (hl)		; return to user space. This will then return via
-			; the return path handler passed in BC
-
+	ld hl,(PROGLOAD+16); return to user space. This will then return via
+			; the return path handler stacked above via BC
+	jp (hl)
 ;
 ;	Syscall signal return path
 ;
