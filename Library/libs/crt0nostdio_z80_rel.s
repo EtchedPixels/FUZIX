@@ -50,7 +50,7 @@ start:		jr start2		; must be relative
 		.dw 0			; code
 		.dw 0			; data
 		.dw 0			; bss size
-		.dw 0			; spare
+		.dw __sighandler	; signal handler
 
 start2:
 ;
@@ -116,6 +116,14 @@ relocdone:
 		call _main		; go
 		push hl
 		call _exit
+
+;
+;	Simple for Z80 case (the 8080 binaries have a lot more to do)
+;
+__sighandler:
+		ex de,hl
+		jp (hl)
+
 
 		.area _GSINIT
 ;
