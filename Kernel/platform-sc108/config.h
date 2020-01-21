@@ -56,6 +56,11 @@ extern uint16_t swap_dev;
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_NO_CLOCK
+/* Set how often we actually poll this RTC in ticks - 1 means always. On the
+   SC108 it's slow so don't sync often. If we have no timer tick then we will
+   read the RTC regularly as needed - and it'll suck accordingly regardless
+   of this setting */
+#define CONFIG_RTC_INTERVAL	100
 
 /* IDE/CF support */
 #define CONFIG_IDE
