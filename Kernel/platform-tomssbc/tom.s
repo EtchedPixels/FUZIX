@@ -412,6 +412,8 @@ sigpath:
 	    push de		; signal number
 	    ld de,#irqsigret
 	    push de		; clean up
+	    ex de,hl
+	    ld hl,(PROGLOAD+16)	; helper vector
 	    jp (hl)
 irqsigret:
 	    inc sp		; drop signal number
