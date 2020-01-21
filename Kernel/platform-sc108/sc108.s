@@ -769,7 +769,9 @@ sigpath:
 	    push de		; signal number
 	    ld de,#irqsigret
 	    push de		; clean up
-	    jp (hl)
+	    ex de,hl		; move the vector into DE
+	    ld hl,(PROGLOAD+16)	; helper pointer
+	    jp (hl)		; into helper
 irqsigret:
 	    inc sp		; drop signal number
 	    inc sp
