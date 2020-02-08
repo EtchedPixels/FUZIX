@@ -52,31 +52,17 @@ static void size_binflat(char *name, uint8_t * buf)
 }
 #endif
 
-static void size_fzx1(char *name, uint8_t * buf)
+static void size_fzx2(char *name, uint8_t *buf, int endian)
 {
-	unsigned int basepage = 0;
-	int endian;
-	unsigned int txtsz, datsz, bsssz;
+	uint16_t txtsz, datsz, bsssz;
+	uint16_t basepage;
 
-	if (buf[0] == 0xC3 || buf[0] == 0x18 || buf[0] == 0x4C || buf[0] == 0x38) {
-		/* Z-80 or 6502 */
-		endian = 0;
-		basepage = buf[7] << 8;
-	} else if (buf[0] == 0x7E || buf[0] == 0x20) {
-		/* 6809 */
-		endian = 1;
-	} else {
-		endian = -1;
-	}
-	if (endian == -1) {
-		fprintf(stderr, "%s: not a known FZX1 platform.\n", name);
-		err = 1;
-		return;
-	}
 	/* Text, data, BSS */
-	txtsz = bufpair(endian, buf, 10);
-	datsz = bufpair(endian, buf, 12);
-	bsssz = bufpair(endian, buf, 14);
+	txtsz = bufpair(endian, buf, 6);
+	datsz = bufpair(endian, buf, 8);
+	bsssz = bufpair(endian, buf, 10);
+
+	basepage = buf[4] << 8;
 
 	if (head != 1) {
 		if (head == 2)
@@ -111,9 +97,12 @@ int main(int argc, char *argv[])
 		}
 		fclose(fp);
 
-		if (memcmp(buf + 3, "FZX1", 4) == 0 ||
-				memcmp(buf + 3, "FZL1", 4) == 0)
-			size_fzx1(argv[n], buf);
+		/* Big endian */
+		if (*buf == 0x80 && buf[1] == 0xA8)
+			size_fzx2(argv[n], buf, 1);
+		/* Little endian */
+		else if (*buf == 0xA8 && buf[1] == 0x80)
+			size_fzx2(argv[n], buf, 0);
 #if defined(__m68k__)
 		else if (memcmp(buf, "bFLT", 4) == 0)
 			size_binflat(argv[n], buf);
