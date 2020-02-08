@@ -24,6 +24,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 #undef DEBUG
 
@@ -123,7 +124,7 @@ int pagemap_alloc( ptptr p ){
  *
  *	FIXME: review swap case and ENOMEM
  */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size + MAPBASE);
