@@ -38,6 +38,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 #undef DEBUG
 
@@ -72,7 +73,7 @@ int pagemap_alloc(ptptr p)
 }
 
 /* Realloc is trivial - we can't do anything useful */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	if (size > MAP_SIZE)
 		return ENOMEM;

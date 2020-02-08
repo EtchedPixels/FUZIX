@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 #ifdef CONFIG_BANK32
 
@@ -118,7 +119,7 @@ int pagemap_alloc(ptptr p)
  *
  *	FIXME: needs fixing as we update memory management
  */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack) {
+int pagemap_realloc(struct exec *hdr, usize_t size) {
 	int have = maps_needed(udata.u_top);
 	int want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;

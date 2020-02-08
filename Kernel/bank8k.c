@@ -39,6 +39,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <bank8k.h>
+#include <exec.h>
 
 #ifdef CONFIG_BANK8
 
@@ -208,12 +209,8 @@ int pagemap_alloc(ptptr p)
  *	specific case of bank8k.
  *
  *	FIXME: needs updating once we have all the new sizes/stack etc right
- *
- *	We don't deal with low vectors as we don't have any systems needing
- *	8K pages with low vectors to fix up. If we ever do need it then it's
- *	a fairly simple transplant from bank16k.c
  */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struc exec *hdr, usize_t size)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size + MAPBASE);

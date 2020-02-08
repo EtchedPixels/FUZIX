@@ -1,5 +1,5 @@
 /*
- *	Banking logic for ZX style machines with moe than the 128K base
+ *	Banking logic for ZX style machines with more than the 128K base
  *	memory.
  *
  *	We manage this as a pair of 16K banks allocated per process. To avoid
@@ -18,6 +18,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 extern uint8_t switchedbank, switchedwb;
 
@@ -64,7 +65,7 @@ int pagemap_alloc(ptptr p)
 
 /* Realloc is trivial - we can't do anything useful */
 /* FIXME: update when new model is ready */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	if (size > MAP_SIZE)
 		return ENOMEM;

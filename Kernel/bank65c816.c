@@ -10,7 +10,7 @@
  *	don't support split I/D (different code/data page) at this point.
  *
  *	Beyond that it's a normal banked platform. The oddities are that we
- *	have no common, and that we must also swap the Stack separately
+ *	have no common, and that we must also swap the stack separately
  *	from bank 0, as well as the program bank.
  *
  *	Note: The code assumes we have the normal user map of 0x0000-0xFBFF
@@ -23,6 +23,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 #ifdef CONFIG_BANK_65C816
 
@@ -61,7 +62,7 @@ int pagemap_alloc(ptptr p)
 
    FIXME: when we redo the loader this will need to handle split I/D
    and new stack model */
-int pagemap_realloc(usize_t csize, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	if (size > MAP_SIZE)
 		return ENOMEM;
