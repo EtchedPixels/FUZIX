@@ -617,3 +617,58 @@ unimp:	.asciz 'rt:unimp'
 ddz:	.asciz 'rt:ddz'
 case:	.asciz 'rt:case'
 divz:	.asciz 'rt:div0'
+
+.define _set_cpu_type
+
+!
+!	We use 08 to check what happens. On an 8080 it's a nop on an 8085
+!	it does 16bit subtract, and on a Z80 its ex af,af' so uninteresting and
+!	safe.
+!
+_set_cpu_type:
+	push b
+	lxi d,0
+	lxi b,1
+	dsub
+	mov a,l
+	ora a
+	jz is8080		! 8080 or Z80
+	mvi a,1
+	sta _sys_cpu_feat	! 8085
+is8080:
+	pop b
+	ret
+
+!
+!	CPU setup and properties. We are expecting an 8080, we might be
+!	an 8085 or Z80 but we can't support the Z80 feature set as we don't
+!	save IX, IY and alt registers. Maybe one day we will make the kernel
+!	self patch to do both but given the performance gains it seems not
+!	worth supporting Z80 booting with 8080 kernel.
+!
+.define _sys_cpu
+.define _sys_cpu_feat
+.define _sys_stubs
+
+.sect .data
+
+_sys_cpu:
+	.data1 1		! 8080 family
+_sys_cpu_feat:
+	.data1 0		! No features
+
+_sys_stubs:
+	jmp	unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
