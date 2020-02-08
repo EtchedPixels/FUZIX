@@ -2,6 +2,7 @@
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 static void close_on_exec(void)
 {
@@ -37,9 +38,9 @@ char *envp[];
    followed by a base page for the executable
 
 */
-static int header_ok(uint8_t *pp)
+static int header_ok(struct exec *pp)
 {
-	register uint8_t *p = pp;
+	register uint8_t *p = (uint8_t *)pp;
 	if (*p != EMAGIC && *p != EMAGIC_2)
 		return 0;
 	p += 3;
@@ -51,7 +52,7 @@ static int header_ok(uint8_t *pp)
 arg_t _execve(void)
 {
 	/* We aren't re-entrant where this matters */
-	uint8_t hdr[16];
+	struct exec hdr;
 	staticfast inoptr ino;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
@@ -78,42 +79,44 @@ arg_t _execve(void)
 	setftime(ino, A_TIME);
 
 	udata.u_offset = 0;
-	udata.u_count = 16;
-	udata.u_base = hdr;
+	udata.u_count = sizeof(struct exec);
+	udata.u_base = (uint8_t *)&hdr;
 	udata.u_sysio = true;
 
 	readi(ino, 0);
-	if (udata.u_done != 16) {
+	if (udata.u_done != sizeof(struct exec)) {
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
 
-	if (!header_ok(hdr)) {
+	if (!header_ok(&hdr)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
 
-	progload = hdr[7] << 8;
+	progload = hdr.a_base << 8;
 	if (progload == 0)
 		progload = PROGLOAD;
 
-	top = *(uint16_t *)(hdr + 8);
+	top = hdr.a_size;
 	if (top == 0)	/* Legacy 'all space' binary */
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
 		top += progload;
 
-	bss = *(uint16_t *)(hdr + 14);
+	/* FIXME: top can overflow */
+
+	bss = hdr.a_bss;
 
 	/* Binary doesn't fit */
-	/* FIXME: review overflows */
+	/* FIXME: do the read and if it is short then fail instead */
 	bin_size = ino->c_node.i_size;
 	if (bin_size + bss < bin_size) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
 	progptr = bin_size + 1024 + bss;
-	if (progload < PROGLOAD || top - progload < progptr || progptr < bin_size) {
+	if (bin_size < 64 || progload < PROGLOAD || top - progload < progptr || progptr < bin_size) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
@@ -168,8 +171,9 @@ arg_t _execve(void)
 
 	/* We are definitely going to succeed with the exec,
 	 * so we can start writing over the old program
+	 * FIXME: this will get changed to the vector
 	 */
-	uput(hdr, (uint8_t *)progload, 16);
+	uput(&hdr, (uint8_t *)progload, sizeof(struct exec));
 	/* At this point, we are committed to reading in and
 	 * executing the program. This call must not block. */
 
@@ -181,17 +185,16 @@ arg_t _execve(void)
 	 *  space and move it directly.
 	 */
 
-	 progptr = progload + 16;
-	 if (bin_size > 16) {
-		bin_size -= 16;
-		udata.u_base = (uint8_t *)progptr;		/* We copied the first block already */
-		udata.u_count = bin_size;
-		udata.u_sysio = false;
-		readi(ino, 0);
-		if (udata.u_done != bin_size)
-			goto nogood4;
-		progptr += bin_size;
-	}
+	progptr = progload + sizeof(struct exec);
+	bin_size -= sizeof(struct exec);
+	udata.u_base = (uint8_t *)progptr;		/* We copied the first block already */
+	udata.u_count = bin_size;
+	udata.u_sysio = false;
+	readi(ino, 0);
+	if (udata.u_done != bin_size)
+		goto nogood4;
+	progptr += bin_size;
+
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk() */
 	uzero((uint8_t *)progptr, bss);
