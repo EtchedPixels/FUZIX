@@ -732,7 +732,6 @@ ___hard_irqrestore:
 	.area _COMMONMEM
 
 	.globl ___sdcc_enter_ix
-	.globl ___sdcc_enter_ix_n
 
 ___sdcc_enter_ix:
 	pop hl		; return address
