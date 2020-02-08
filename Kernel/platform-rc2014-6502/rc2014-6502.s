@@ -421,9 +421,9 @@ no_preempt:
 	    txa
 	    sta _udata+U_DATA__U_SIGVEC,y	; Wipe the vector
 	    sta _udata+U_DATA__U_SIGVEC+1,y
-	    lda #>(PROGLOAD + 20)
+	    lda #>(PROGLOAD + 16)
 	    pha
-	    lda #<(PROGLOAD + 20)
+	    lda #<(PROGLOAD + 16)
 	    pha
 	    lda #0
 	    pha				; dummy flags, with irq enable
