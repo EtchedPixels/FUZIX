@@ -210,7 +210,7 @@ int pagemap_alloc(ptptr p)
  *
  *	FIXME: needs updating once we have all the new sizes/stack etc right
  */
-int pagemap_realloc(struc exec *hdr, usize_t size)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size + MAPBASE);
