@@ -68,7 +68,7 @@ int pagemap_alloc(ptptr p)
 
 /* Realloc is trivial - we can't do anything useful */
 /* FIXME: update when new model is ready */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, uint16_t size)
 {
 	if (size > MAP_SIZE)
 		return ENOMEM;
