@@ -254,10 +254,9 @@ int follows(struct outsect* pa, struct outsect* pb)
 
 void fuzix_fixup(char *buffer, int len)
 {
-	uint16_t *bp = (uint16_t *)(buffer + 8);
+	uint16_t *bp = (uint16_t *)(buffer + 6);
 	if (len < 32)
 		fatal("text too short");
-	bp++;	/* chmem */
 	*bp++ = outsect[TEXT].os_size + outsect[ROM].os_size;
 	*bp++ = outsect[DATA].os_size;
 	*bp = outsect[BSS].os_size;
