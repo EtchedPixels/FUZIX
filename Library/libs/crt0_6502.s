@@ -10,6 +10,7 @@
 	.import		_exit
 	.export		_environ
 	.export		initmainargs
+	.export		__syscall
 	.import		_main
 	.import		popax, pushax
 	.import		___stdio_init_vars
@@ -22,20 +23,21 @@
 
 .segment "STARTUP"
 
+__syscall:				; Stubs overlay this
 head:
-	jmp	start
-
-	.byte	'F'
-	.byte	'Z'
-	.byte	'X'
-	.byte	'1'
-	.byte	>head
-	.word	0
+	.word 	$80A8
+	.byte	3			; 6502 family
+	.byte	1			; 65C02 required (TODO)
+	.byte	>head			; Load address page
+	.byte	0			; No hint bits
 	.word	__CODE_SIZE__ + __RODATA_SIZE__
 	.word	__DATA_SIZE__
 	.word	__BSS_SIZE__
-	.word	0
-	.word   0	; padding
+	.byte 	<start			; Offset from load page as entry
+	.byte	0			; No size hint
+	.byte	0			; No stack hint
+	.byte	0			; TODO - ZP size
+
 	.word	__sighandler		; IRQ path signal handling helper
 
 ;
