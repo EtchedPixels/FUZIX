@@ -23,6 +23,7 @@
 	    .export ___hard_ei
 	    .export ___hard_irqrestore
 	    .export vector
+	    .export _sys_stubs
 
 	    .import interrupt_handler
 	    .import _udata
@@ -52,10 +53,6 @@
             .include "../kernel02.def"
 	    .include "zeropage.inc"
 
-;
-;	syscall is jsr [$00fe]
-;
-syscall	     =  $FE
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x0200 upwards after the common data blocks)
 ; -----------------------------------------------------------------------------
@@ -111,6 +108,17 @@ init_hardware:
 	    sta _procmem+1
             jmp program_vectors_k
 
+	    ; copied into the stubs of each binary
+_sys_stubs:
+	    jmp syscall_entry
+	    .byte 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
@@ -133,13 +141,6 @@ program_vectors_k:
 	    sta $FFFA
 	    lda #>nmi_handler
 	    sta $FFFB
-	    ; However tempting it may be to use BRK for system calls we
-	    ; can't do this on an NMOS 6502 because the chip has brain
-	    ; dead IRQ handling bits that could simply "lose" the syscall!
-	    lda #<syscall_entry
-	    sta syscall
-	    lda #>syscall_entry
-	    sta syscall+1
 	    jmp map_kernel
 
 ;

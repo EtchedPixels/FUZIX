@@ -12,6 +12,10 @@
 	.export outxa
 	.export stash_zp
 
+	.export _sys_cpu
+	.export _sys_cpu_feat
+	.export _set_cpu_type
+
 	.export _need_resched
 
 	.import outchar
@@ -201,3 +205,12 @@ outxa:	pha
 
 _need_resched:
 	.byte 0
+
+_sys_cpu:
+	.byte 3			; 6502 series processors
+_sys_cpu_feat:
+	.byte 1			; FIXME: for now hardcode 65C02
+
+_set_cpu_type:
+	; FIXME: TODO
+	rts
