@@ -13,12 +13,8 @@ extern uint8_t in(uint8_t addr) __z88dk_fastcall;
 extern void out16(uint16_t addr, uint16_t val);
 extern uint8_t in16(uint16_t addr) __z88dk_fastcall;
 
-/* Z80 binaries start with a JP */
-#define EMAGIC    0xc3    /* Header of executable */
-#define EMAGIC_2  0x18	  /* JR */
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
-
 
 /* compiler provides optimised versions of these: */
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)

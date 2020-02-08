@@ -8,9 +8,6 @@ typedef uint16_t irqflags_t;
 extern void out(uint8_t addr, uint8_t val);
 extern uint8_t in(uint8_t addr) __z88dk_fastcall;
 
-/* Rabbit binaries start with a JP FIXME: sort this in new binfmt */
-#define EMAGIC    0xc3    /* Header of executable */
-#define EMAGIC_2  0x18	  /* JR */
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
 

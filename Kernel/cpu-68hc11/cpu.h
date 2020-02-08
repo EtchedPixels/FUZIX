@@ -3,8 +3,6 @@
 #define uputi  uputw			/* Copy user int type */
 #define ugeti  ugetw			/* between user and kernel */
 
-#define EMAGIC    0x7E    /* Header of executable  (JMP) */
-#define EMAGIC_2  0x20    /* BRA */
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
 

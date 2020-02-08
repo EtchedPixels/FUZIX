@@ -3,11 +3,6 @@
 #define uputi  uputw			/* Copy user int type */
 #define ugeti  ugetw			/* between user and kernel */
 
-/* FIXME: we actually want to use an a.out loader */
-
-#define EMAGIC    0x01    /* Header of executable  (BR) */
-#define EMAGIC_2  0x01	  /* Only BR is recognized */
-
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
 
