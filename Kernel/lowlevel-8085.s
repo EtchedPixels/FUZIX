@@ -654,3 +654,39 @@ _out:
 outpatch:
 	out	0
 	jmp	popout
+
+.define _set_cpu_type
+
+_set_cpu_type:
+	ret
+
+!
+!	CPU setup and properties. As we are hardcoded for 8085 this isn't
+!	too hard
+!
+.define _sys_cpu
+.define _sys_cpu_feat
+.define _sys_stubs
+
+.sect .data
+
+_sys_cpu:
+	.data1 1		! 8080 family
+_sys_cpu_feat:
+	.data1 1		! 8085 feature set
+
+_sys_stubs:
+	jmp	unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
