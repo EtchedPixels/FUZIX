@@ -29,24 +29,20 @@ char *envp[];
 #define argv (char **)udata.u_argn1
 #define envp (char **)udata.u_argn2
 
-/* Magic numbers
-
-	0xC3 xx xx	- Z80 with 0x100 entry
-	0x4C xx xx	- 6502
-	0x7E xx xx	- 6809
-
-   followed by a base page for the executable
-
-*/
+/*
+ *	See exec.h
+ */
 static int header_ok(struct exec *pp)
 {
-	register uint8_t *p = (uint8_t *)pp;
-	if (*p != EMAGIC && *p != EMAGIC_2)
+	/* Executable ? */
+	if (pp->a_magic != EXEC_MAGIC)
 		return 0;
-	p += 3;
-	if (*p++ != 'F' || *p++ != 'Z' || *p++ != 'X' || *p++ != '1')
+	/* Right CPU type ? */
+	if (pp->a_cpu != sys_cpu)
 		return 0;
-	return 1;
+	/* Compatible with this system ? */
+	if ((pp->a_cpufeat & sys_cpu_feat) != pp->a_cpufeat)
+		return 0;
 }
 
 arg_t _execve(void)
@@ -94,24 +90,25 @@ arg_t _execve(void)
 		goto nogood2;
 	}
 
+	/* For now assume no split I/D. We will need to revisit this and
+	   pagemap_realloc when we add that so that the work is done in
+	   pagemap_realloc and passed back somehow */
 	progload = hdr.a_base << 8;
 	if (progload == 0)
 		progload = PROGLOAD;
 
-	top = hdr.a_size;
+	top = hdr.a_size << 8;
 	if (top == 0)	/* Legacy 'all space' binary */
 		top = ramtop;
 	else	/* Requested an amount, so adjust for the base */
 		top += progload;
 
-	/* FIXME: top can overflow */
-
+	/* top can overflow. We check below */
 	bss = hdr.a_bss;
 
-	/* Binary doesn't fit */
-	/* FIXME: do the read and if it is short then fail instead */
-	bin_size = ino->c_node.i_size;
-	if (bin_size + bss < bin_size) {
+	bin_size = hdr.a_text + hdr.a_data;
+	/* Does it fit ? */
+	if (bin_size < hdr.a_text || top < progload || bin_size + bss < bin_size) {
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
@@ -138,11 +135,9 @@ arg_t _execve(void)
 		goto nogood3;	/* SN */
 
 	/* This must be the last test as it makes changes if it works */
-	/* FIXME: once we sort out chmem we can make stack and data
-	   two elements. We never allocate 'code' as there is no split I/D */
 	/* This is only safe from deadlocks providing pagemap_realloc doesn't
 	   sleep */
-	if (pagemap_realloc(0, top - MAPBASE, 0))
+	if (pagemap_realloc(&hdr, top - MAPBASE))
 		goto nogood3;
 
 	/* From this point on we are commmited to the exec() completing */
@@ -169,11 +164,12 @@ arg_t _execve(void)
 	/* FIXME: In the execve case we may on some platforms have space
 	   below PROGLOAD to clear... */
 
-	/* We are definitely going to succeed with the exec,
-	 * so we can start writing over the old program
-	 * FIXME: this will get changed to the vector
+	/*
+	 * We place the stubs below the program in the hole left by the
+	 * header. It's like the Linux VDSO except that it's not virtual
+	 * not dynamic and not shared 8).
 	 */
-	uput(&hdr, (uint8_t *)progload, sizeof(struct exec));
+	uput(sys_stubs, (uint8_t *)progload, sizeof(struct exec));
 	/* At this point, we are committed to reading in and
 	 * executing the program. This call must not block. */
 
@@ -235,7 +231,7 @@ arg_t _execve(void)
 
 	/* Start execution (never returns) */
 	udata.u_ptab->p_status = P_RUNNING;
-	doexec(progload);
+	doexec(progload + hdr.a_entry);
 
 	/* tidy up in various failure modes */
 nogood4:
