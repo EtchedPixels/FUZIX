@@ -355,6 +355,9 @@ void fuzix_main(void)
 			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
 			"Copyright (c) 2014-2019 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
 			sysinfo.uname);
+
+	set_cpu_type();
+
 	platform_copyright();
 #ifndef SWAPDEV
 #ifdef PROC_SIZE
