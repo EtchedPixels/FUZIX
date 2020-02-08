@@ -100,10 +100,9 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  bp = buf + progload + 7;
-  *bp++ = progload >> 8;
-  *bp++ = 0;
-  *bp++ = 0;
+  bp = buf + progload + 4;
+  *bp++ = progload >> 8;		/* Base page to load */
+  bp++;					/* Skip hints */
   *bp++ = s__INITIALIZED - progload;
   *bp++ = (s__INITIALIZED - progload) >> 8;
   *bp++ = s__DATA - s__INITIALIZED;
