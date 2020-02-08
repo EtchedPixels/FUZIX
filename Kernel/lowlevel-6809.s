@@ -48,6 +48,10 @@
         .globl trap_illegal
 	.globl nmi_handler
 	.globl interrupt_handler
+	.globl _sys_cpu
+	.globl _sys_cpu_feat
+	.globl _sys_stubs
+	.globl _set_cpu_type
 
         ; imported symbols
         .globl _platform_monitor
@@ -335,8 +339,26 @@ nmi_handler:
 	jsr outstring
         jsr _platform_monitor
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	CPU type management
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+_sys_cpu:
+	.byte 4
+_sys_cpu_feat:
+	.byte 0
+
+_set_cpu_type:
+;
+;	We should check for a 6309 here and if set set sys_cpu_feat to 1
+;	TODO
+;
+	rts
+
+; We don't use the stubs as we have a proper architected syscalling
+; interface via swi. Set it here so the binary gets 16bytes of free
+; but uninteresting noise
+_sys_stubs:
 
 ; outstring: Print the string at X until 0 byte is found
 ; destroys: A, X
