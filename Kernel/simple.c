@@ -29,6 +29,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 #undef DEBUG
 
@@ -46,7 +47,7 @@ int pagemap_alloc(ptptr p)
 }
 
 /* FIXME: update once we have the new mm logic in place */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
   if (size > ramtop - PROGBASE)
     return ENOMEM;
