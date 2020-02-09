@@ -46,7 +46,6 @@ void pagemap_init(void)
 	/* Allocate the rest of memory to the userspace */
 	kmemaddblk((void *)e, 0xFF8000 - e);
 
-	sysinfo.cpu[0] = cpu_type();
 	kprintf("Motorola 680%s%d processor detected.\n",
 		sysinfo.cpu[0]?"":"0",sysinfo.cpu[0]);
 	enable_icache();
