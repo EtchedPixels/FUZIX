@@ -260,9 +260,9 @@ int exception(struct trapdata *framedata)
 
 void set_cpu_type(void)
 {
-	sysinfo.cpu[0] = cpu_type();
+	sysinfo.cpu[1] = cpu_type();
 	/* We don't have a 68010 flag as there really isn't anything user
 	   that matters to a well behaved 68000 app */
-	if (sysinfo.cpu[0] >= 20)
+	if (sysinfo.cpu[1] >= 20)
 		sys_cpu_feat |= AF_68000_020;
 }
