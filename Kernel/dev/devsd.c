@@ -49,10 +49,20 @@ uint_fast8_t devsd_transfer_sector(void)
                     sd_spi_transmit_sector();
                     sd_spi_transmit_byte(0xFF); /* dummy CRC */
                     sd_spi_transmit_byte(0xFF);
+                    /* Was the data accepted ? */
                     success = ((sd_spi_wait(false) & 0x1F) == 0x05);
+                    /* Wait for the write to finish.
+                       TODO: it would be smarter if we set a flag and
+                       did this in sync and also before issuing other
+                       commands. However we may then also have to watch
+                       and defer CS handling.
+                       
+                       Could also do a 250ms timeout here */
+                    if (success)
+                        while(sd_spi_wait(false) == 0x00);
                 }
             }
-	}else
+	} else
 	    success = false;
 
 	sd_spi_release();
