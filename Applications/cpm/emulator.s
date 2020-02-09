@@ -45,30 +45,21 @@ EStart:
 ;	Required image header, filled in by the tool chain and
 ;	consumed by our loader code.
 ;
-start:		jr start2		; must be relative
-		nop
-		.db 'F'
-		.db 'Z'
-		.db 'L'
-		.db '1'
+		.dw 0x80A9		; Magic number
+		.db 0x01		; 8080 family
+		.db 0x02		; Z80 featureset required
+		.db 0x00		; Relocating
 
-;
-;	Borrowed idea from UMZIX - put the info in known places then
-;	we can write "size" tools
-;
-;	This is confusing. SDCC doesn't produce a BSS, instead it
-;	produces an INITIALIZED (which everyone else calls DATA) and a
-;	DATA which everyone else would think of as BSS.
-;
-;	FIXME: we need to automate the load page setting
-;
-		.db 0x01		; page to load at
-		.dw 0			; chmem ("0 - 'all'")
-		; These three are set by binman
-		.dw 0			; code
-		.dw 0			; data
-		.dw 0			; bss size
-		.dw 0			; spare
+		.db 0x00		; No hints
+		.dw 0x0000		; Text size (updated by tools)
+		.dw 0x0000		; Data size (updated by tools)
+		.dw 0x0000		; BSS size (updated by tools)
+		.db 16			; Start address
+		.db 0			; Default hint for grab all space
+		.db 0			; Default no stack hint
+		.db 0			; No zero page on Z80
+
+		; 16 bytes in ...
 
 start2:
 ;

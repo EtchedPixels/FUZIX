@@ -38,7 +38,7 @@ int nfcb;
 void to_emulator(void) __naked
 {
 __asm
-		ld hl,(_image + 10)	; code size (and copy size)
+		ld hl,(_image + 6)	; code size (and copy size)
 		ld b,h
 		ld c,l			; Save copy size
 		; Don't bother adding in BSS/DATA we don't have any and
@@ -61,7 +61,7 @@ __asm
 		;	DE = relocation address
 		;
 		ld hl,#_image
-		ld bc,(_image + 10)
+		ld bc,(_image + 6)
 		add hl,bc		; Find the base of the relocations
 		ld b,#0
 
@@ -102,7 +102,10 @@ relocdone:
 		;
 		;	Relocation done
 		;
-		ret	; to the stacked entry point
+                pop de	; base of relocated image
+                ld hl,#16
+                add hl,de
+                jp (hl)	; entry point
 __endasm;
 }
 
