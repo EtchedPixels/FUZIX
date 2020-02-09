@@ -25,7 +25,7 @@ const char *syscall_name[NR_SYSCALL] = {
 	"getppid",
 	"getuid",
 	"umask",
-	"_getfsys",
+	"_statfs",
 	"execve",
 	"_getdirent",
 	"setuid",

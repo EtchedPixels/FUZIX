@@ -408,26 +408,26 @@ arg_t _acct(void)
 
 #undef fd
 
-/* Special system call returns super-block of given filesystem
- * for users to determine free space, etc.  Should be replaced
- * with a sync() followed by a read of block 1 of the device.
- */
 /*******************************************
-  getfsys (dev, buf)               Function 22
-  int16_t  dev;
-  struct filesys *buf;
- ********************************************/
-#define dev (uint16_t)udata.u_argn
-#define buf (struct filesys *)udata.u_argn1
+  statfs(path, buf)               Function 22
+  char *path;
 
-arg_t _getfsys(void)
+  Wrapped by the various C library translators to standard
+  APIs
+ ********************************************/
+#define path (char *)udata.u_argn
+#define buf (uint8_t *)udata.u_argn1
+
+arg_t _statfs(void)
 {
-        struct mount *m = fs_tab_get(dev);
-	if (m == NULL || m->m_dev == NO_DEVICE) {
-		udata.u_error = ENXIO;
-		return (-1);
-	}
-	return uput((uint8_t *) &m->m_fs, (uint8_t *) buf, sizeof(struct filesys));
+	inoptr ino;
+	struct mount *m;
+
+	if (!(ino  = n_open(path, NULLINOPTR)))
+		return -1;
+        m = fs_tab_get(ino->c_dev);
+        uputw(m->m_flags, buf + sizeof(struct filesys));
+	return uput((uint8_t *) &m->m_fs, buf, sizeof(struct filesys));
 }
 
 #undef dev

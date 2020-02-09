@@ -375,6 +375,7 @@ struct mount {
 };
 #define MS_RDONLY	1
 #define MS_NOSUID	2	/* Not yet implemented */
+#define MS_NOEXEC	4	/* Not yet implemented */
 #define MS_REMOUNT	128
 
 /* Process table p_status values */
@@ -1141,7 +1142,7 @@ extern arg_t _getpid(void);       /* FUZIX system call 18 */
 extern arg_t _getppid(void);      /* FUZIX system call 19 */
 extern arg_t _getuid(void);       /* FUZIX system call 20 */
 extern arg_t _umask(void);        /* FUZIX system call 21 */
-extern arg_t _getfsys(void);      /* FUZIX system call 22 */
+extern arg_t _statfs(void);       /* FUZIX system call 22 */
 extern arg_t _execve(void);       /* FUZIX system call 23 */
 extern arg_t _getdirent(void);    /* FUZIX system call 24 */
 extern arg_t _setuid(void);       /* FUZIX system call 25 */
