@@ -82,24 +82,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define in_group(x)	0
 #endif
 
-/* CPU families */
-#define CPUTYPE_Z80	0
-#define CPUTYPE_6809	1
-#define CPUTYPE_6502	2
-#define CPUTYPE_68000	3
-#define CPUTYPE_PDP11	4
-#define CPUTYPE_MSP430	5
-#define CPUTYPE_68HC11	6
-#define CPUTYPE_8086	7
-#define CPUTYPE_65C816	8
-#define CPUTYPE_R2K	9
-#define CPUTYPE_Z280	10
-#define CPUTYPE_8080	11
-#define CPUTYPE_8085	12
-#define CPUTYPE_EZ80	13
-#define CPUTYPE_NS32K	14
-#define CPUTYPE_TMS9900 15
-
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
 #ifndef UFTSIZE
