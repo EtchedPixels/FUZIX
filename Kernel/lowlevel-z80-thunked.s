@@ -483,7 +483,7 @@ ___hard_irqrestore:
 
 	.area _CONST
 
-_sys_stubs;:
+_sys_stubs:
 	jp unix_syscall_entry
 	nop
 	nop
