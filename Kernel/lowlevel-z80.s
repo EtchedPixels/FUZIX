@@ -759,6 +759,8 @@ ___hard_irqrestore:
 	ei
 	ret
 
+	.area _CONST
+
 _sys_stubs:
 	jp unix_syscall_entry
 	nop

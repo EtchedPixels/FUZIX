@@ -1328,6 +1328,7 @@ memmove_up:
 	pop	hl
 	ret
 
+	.area _CONST
 
 _sys_stubs:
 	jp unix_syscall_entry
