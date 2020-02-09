@@ -53,8 +53,6 @@ register struct u_data *udata_ptr asm ("r6");
 
 #define CONFIG_STACKSIZE	1024
 
-#define CPUTYPE	CPUTYPE_NS32K
-
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
 

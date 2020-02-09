@@ -48,8 +48,6 @@ typedef union {            /* this structure is endian dependent */
 
 #define BIG_ENDIAN
 
-#define CPUTYPE	CPUTYPE_68HC11
-
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
 

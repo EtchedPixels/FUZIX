@@ -90,7 +90,6 @@ static inline uint8_t inb(uint16_t port)
 	return value;
 }
 
-#define CPUTYPE	CPUTYPE_8086
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
 

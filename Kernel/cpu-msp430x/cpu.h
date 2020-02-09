@@ -113,7 +113,6 @@ typedef union {            /* this structure is endian dependent */
 
 #define no_cache_udata()
 
-#define CPUTYPE	CPUTYPE_MSP340X
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
 

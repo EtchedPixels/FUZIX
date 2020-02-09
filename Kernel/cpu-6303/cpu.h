@@ -48,8 +48,6 @@ typedef union {            /* this structure is endian dependent */
 
 #define BIG_ENDIAN
 
-#define CPUTYPE	CPUTYPE_6303
-
 #define __packed
 #define barrier()
 

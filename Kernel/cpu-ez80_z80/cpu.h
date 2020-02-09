@@ -62,8 +62,6 @@ typedef union {            /* this structure is endian dependent */
 #define ntohl(x)	((((x) & 0xFF) << 24) | (((x) & 0xFF00) << 8) | \
                          (((x) & 0xFF0000) >> 8) | (((x >> 24) & 0xFF)))
 
-#define CPUTYPE	CPUTYPE_Z80
-
 /* Deal with SDCC code gen issue */
 #define HIBYTE32(x)	(((uint8_t *)&(x))[3])
 
