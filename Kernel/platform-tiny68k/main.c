@@ -47,7 +47,7 @@ void pagemap_init(void)
 	kmemaddblk((void *)e, 0xFF8000 - e);
 
 	kprintf("Motorola 680%s%d processor detected.\n",
-		sysinfo.cpu[0]?"":"0",sysinfo.cpu[0]);
+		sysinfo.cpu[1]?"":"0",sysinfo.cpu[1]);
 	enable_icache();
 }
 
