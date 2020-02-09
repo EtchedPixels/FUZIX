@@ -33,6 +33,11 @@ struct exec {
 #define A_6502		3		/* 6502 */
 #define A_6809		4		/* 6809 */
 #define A_RABBIT	5		/* Rabbit is unZ80 enough to be its own */
+#define A_MSP340	6		/* MSP340 series */
+#define A_PDP11		7		/* PDP-11 */
+#define A_8086		8		/* x86 16bit */
+#define A_68000		9		/* 68000 32bit */
+#define A_NS32K		10		/* NS32K 32bit */
 	uint8_t a_cpufeat;
 #define AF_8080_8085	1		/* Uses 8085 instructions */
 #define AF_8080_Z80	2		/* Uses legal Z80 instructions */
@@ -72,5 +77,8 @@ struct exec {
 	/* uint16_t a_sigvec; */
 };
 
+/* Feature bits for 32bit to go with the 32bit exec header once done */
+
+#define AF_68000_020	1		/* Has 68020 features */
 
 #endif
