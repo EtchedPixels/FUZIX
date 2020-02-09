@@ -62,6 +62,9 @@ typedef uint16_t nlink_t;
 typedef int16_t pid_t;
 typedef uint16_t ino_t;
 
+typedef uint16_t fsblkcnt_t;
+typedef uint16_t fsfilcnt_t;
+
 #if defined(NO_64BIT)
 typedef uint32_t time_t;
 /* For kernel struct alignment */
