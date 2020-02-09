@@ -396,6 +396,8 @@ SYM (__umodsi3):
 		.globl swap_blocks
 		.globl install_vectors
 		.globl vdso
+		.globl sys_cpu
+		.globl sys_cpu_feat
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -1096,3 +1098,5 @@ cpu_has_trapvec:
 		byte 0
 cpu_has_icache:
 		byte 0
+sys_cpu:	byte 9		; 68000
+sys_cpu_feat:	byte 0		; 68000 base features (updated as we boot)
