@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
@@ -10,7 +11,6 @@
 const char *devname(dev_t);
 const char *mntpoint(const char *);
 void df_path(const char *path, const char *dpath, const char *mntpath);
-void df_dev(dev_t dev, const char *dpath, const char *mntpath);
 void df_all(void);
 
 int iflag=0, kflag=0, fflag=0;
@@ -57,61 +57,55 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void df_path(const char *path, const char *dpath, const char *mntpath)
+void df_path(const char *path, const char *dpath, const char *mpath)
 {
-    struct stat sbuf;
+    static struct statvfs vfs;
+    static struct stat st;
+    /* We do not currently need the extra bits here but will in future with
+       any kind of block extent scaling */
+    unsigned long total, used, unused;
+    unsigned int percent;
 
-    if(stat(path, &sbuf) < 0){
+    if (statvfs(path, &vfs) < 0 || stat(path, &st) < 0) {
         fprintf(stderr, "df: \"%s\": %s\n", path, strerror(errno));
-    }else{
-        df_dev(sbuf.st_dev, dpath, mntpath);
-    }
-}
-
-void df_dev(dev_t dev, const char *dpath, const char *mntpath)
-{
-    unsigned int Total, Used, Free, Percent;
-    struct _uzifilesys fsys;
-    const char *dn;
-
-    dn = dpath ? dpath: devname(dev);
-
-    if(_getfsys(dev, &fsys)){
-        fprintf(stderr, "df: _getfsys(%d): %s\n", dev, strerror(errno));
         return;
     }
 
-    if(iflag){
+    if (dpath == NULL)
+        dpath = devname(st.st_dev);
+    if (mpath == NULL)
+        mpath = mntpoint(dpath);
+
+    if (iflag) {
 	/* inodes */
-	Total = 8 * (fsys.s_isize - 2);
-	Used  = Total - fsys.s_tinode;
-	Free  = fsys.s_tinode;
-    }else{
-	/* blocks */
-	Total = fsys.s_fsize;
-	Used  = Total - fsys.s_isize - fsys.s_tfree;
-	Free  = fsys.s_tfree;
+	total = vfs.f_files;
+	unused  = vfs.f_favail;
+    } else {
+	/* blocks in 512 byte counts */
+	total = vfs.f_blocks * (vfs.f_bsize / 512);
+	unused  = vfs.f_bavail * (vfs.f_bsize / 512);
     }
+    used  = total - unused;
 
+    /* Are we working in Kbytes or blocks ? */
     if (!iflag && kflag) {
-        Total /= 2;
-        Used /= 2;
-        Free /= 2;
+        total /= 2;
+        used /= 2;
+        unused /= 2;
     }
 
-    Percent = Total / 100;
+    percent = total / 100;
 
     if (fflag) {
-	if(Percent)
-	    Percent = Free / Percent;
+	if(percent)
+	    percent = unused / percent;
     } else {
-	if(Percent)
-	    Percent = Used / Percent;
+	if(percent)
+	    percent = used / percent;
     }
 
-    printf("%-16s %6u %6u %6u %5u%% %s\n",
-            dn, Total, Used, Free, Percent,
-            mntpath ? mntpath : mntpoint(dn));
+    printf("%-16s %6lu %6lu %6lu %5u%% %s\n",
+            dpath, total, used, unused, percent, mpath);
 }
 
 void df_all(void)
