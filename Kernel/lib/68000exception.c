@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 extern void *get_usp(void);
 extern void set_usp(void *p);
@@ -255,4 +256,13 @@ int exception(struct trapdata *framedata)
 	udata.u_sigvec[sig] = SIG_DFL;
 	/* Return, RTE and end up on the signal frame */
 	return 1;
+}
+
+void set_cpu_type(void)
+{
+	sysinfo.cpu[0] = cpu_type();
+	/* We don't have a 68010 flag as there really isn't anything user
+	   that matters to a well behaved 68000 app */
+	if (sysinfo.cpu[0] >= 20)
+		sys_cpu_feat |= AF_68000_020;
 }
