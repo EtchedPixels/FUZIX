@@ -328,7 +328,7 @@ void pagemap_free(ptptr p)
 
    Supporting re-entrant binaries will need the binaries to have the data
    aligned so maybe force it in the link ? */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	unsigned int proc = udata.u_page;
 	struct memblk *mb;

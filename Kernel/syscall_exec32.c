@@ -183,7 +183,9 @@ arg_t _execve(void)
 	/* FIXME: need to update this to support split code/data and to fix
 	   stack handling nicely */
 	/* FIXME: ENOMEM fix needs to go to 16bit ? */
-	if ((udata.u_error = pagemap_realloc(0, bin_size, 0)) != 0)
+	/* NULL for exec is a hack - we need the binfmt_flat to be
+	   our exec structure in this case I think */
+	if ((udata.u_error = pagemap_realloc(NULL, bin_size)) != 0)
 		goto nogood3;
 
 	/* Core dump and ptrace permission logic */
