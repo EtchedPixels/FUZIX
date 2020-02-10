@@ -25,14 +25,12 @@ images should follow in time.
 	with Minix style chmem and efficient use of bank allocations.
 * Support for multiple processes via hard disk or non mappable RAM
     drive switching (as per UZI, UZIX).
-* The ability to run single tasking on small devices, for bring up
-    and for standalone tool execution
 * Support for "real" swapping combined with banked memory.
 * Proper sane off_t and lseek
 * Normal dev_t
 * 30 character filenames
 * Proper sane time_t
-* System 5 signals (half baked)
+* System 5 signals
 * Posix termios (does all the original UZI tty did but much can be added)
 * Blocking on carrier for terminals
 * Optimisations to avoid bogus uarea copying compared to UZI180
@@ -42,7 +40,7 @@ images should follow in time.
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on both 6502 (bitrotted), 65C816, 68000, 6809, 8080, 8085, MSP430 (bitrotted) and Z80/Z180
+* Kernel boots to userspace on both 6502, 65C816, 68000, 6809, 8080, 8085, MSP430 (bitrotted) and Z80/Z180
 * Core code can be built for 6502, 65C816, 6809, 68HC11, 68000, 8080, 8085, 8086, MSP430, pdp11 and Z80/Z180 so should
   be far more portable
 * Core architecture designed to support building and maintaining
@@ -60,8 +58,6 @@ images should follow in time.
 
 ## What do the UZI branches have that FUZIX has not yet integrated
 
-* Minimal TCP/IP (UZIX 2.0). Unfortunately the original TCP was never
-released openly.
 * Symbolic links (UZIX)
 * Various clever fusions of syscalls that may save a few bytes
 	(UZIX)
@@ -75,7 +71,7 @@ friends, while UMZIX has a neat unified "make anything" function.
 
 ## What Key Features Are Missing Still
 
-* ptrace, ulimit
+* ptrace, most of ulimit
 * root reserved disk blocks
 * banked executables
 * TCP/IP (in progress)
