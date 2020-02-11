@@ -4,8 +4,6 @@ The memory mapping on this machine is a bit friendlier but it's still single
 (large) process in memory at a time to get the best result. Banked kernel
 2 x 32K is also doable but probably not such a good use of the machine
 
-This port really shows we need to support parent-first single in memory
-
 Note:
 
 We keep the discard high up below the common because otherwise the packed
@@ -80,7 +78,7 @@ May also be able to later do
 
 0-2		Kernel		3 high kernel common
 				7 upper 8K buffers and high stubs
-				7 lower scree
+				7 lower screen
 4/5/6		User 64K	3 high kernel common , 3 low user
 
 4/5/6		User 48K	7 screen, upper 8K buffers
