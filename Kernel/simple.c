@@ -37,26 +37,38 @@
 
 void pagemap_free(ptptr p)
 {
-  p->p_page = 0;
+	p->p_page = 0;
 }
 
 int pagemap_alloc(ptptr p)
 {
-  p->p_page = 1;
-  return 0;
+	p->p_page = 1;
+	return 0;
 }
 
 /* FIXME: update once we have the new mm logic in place */
 int pagemap_realloc(struct exec *hdr, usize_t size)
 {
-  if (size > ramtop - PROGBASE)
-    return ENOMEM;
-  return 0;
+	if (size > ramtop - PROGBASE)
+		return ENOMEM;
+	return 0;
+}
+
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr->a_base == 0)
+		hdr->a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr->a_size == 0)
+		hdr->a_size = (ramtop >> 8) - hdr->a_base;
+	return 0;
 }
 
 usize_t pagemap_mem_used(void)
 {
-  return (PROGTOP - PROGBASE) >> 10;
+	return (PROGTOP - PROGBASE) >> 10;
 }
 
 void pagemap_init(void)

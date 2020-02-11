@@ -1064,6 +1064,7 @@ extern void copy_common(uint8_t page);
 extern void pagemap_add(uint8_t page);	/* FIXME: may need a page type for big boxes */
 extern void pagemap_free(ptptr p);
 extern int pagemap_alloc(ptptr p);
+extern int pagemap_prepare(struct exec *hdr);
 extern int pagemap_realloc(struct exec *hdr, usize_t m);
 extern usize_t pagemap_mem_used(void);
 extern void map_init(void);

@@ -91,18 +91,15 @@ arg_t _execve(void)
 		goto nogood2;
 	}
 
+	if (pagemap_prepare(&hdr) < 0)
+		goto nogood2;
+
+	progload = hdr.a_base << 8;
+	top = (hdr.a_base + hdr.a_size) << 8;
+
 	/* For now assume no split I/D. We will need to revisit this and
 	   pagemap_realloc when we add that so that the work is done in
 	   pagemap_realloc and passed back somehow */
-	progload = hdr.a_base << 8;
-	if (progload == 0)
-		progload = PROGLOAD;
-
-	top = hdr.a_size << 8;
-	if (top == 0)	/* Legacy 'all space' binary */
-		top = ramtop;
-	else	/* Requested an amount, so adjust for the base */
-		top += progload;
 
 	/* top can overflow. We check below */
 	bss = hdr.a_bss;

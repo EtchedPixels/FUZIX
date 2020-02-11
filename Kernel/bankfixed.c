@@ -66,12 +66,24 @@ int pagemap_alloc(ptptr p)
 	return 0;
 }
 
-/* Realloc is trivial - we can't do anything useful */
-/* FIXME: update when new model is ready */
+/* Realloc is a no-op */
 int pagemap_realloc(struct exec *hdr, uint16_t size)
 {
-	if (size > MAP_SIZE)
-		return ENOMEM;
+	return 0;
+}
+
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr->a_base == 0)
+		hdr->a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr->a_size == 0)
+		hdr->a_size = (ramtop >> 8) - hdr->a_base;
+	/* Check it fits - we can do this early for fixed banks */
+	if (hdr->a_size > (MAP_SIZE >> 8))
+		return -1;
 	return 0;
 }
 

@@ -154,6 +154,18 @@ int pagemap_realloc(struct exec *hdr, uint16_t size)
 	return 0;
 }
 
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr->a_base == 0)
+		hdr->a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr->a_size == 0)
+		hdr->a_size = (ramtop >> 8) - hdr->a_base;
+	return 0;
+}
+
 uint16_t pagemap_mem_used(void)
 {
 	return procmem - (pfptr << 4);
