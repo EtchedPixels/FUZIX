@@ -43,6 +43,7 @@ static int header_ok(struct exec *pp)
 	/* Compatible with this system ? */
 	if ((pp->a_cpufeat & sys_cpu_feat) != pp->a_cpufeat)
 		return 0;
+	return 1;
 }
 
 arg_t _execve(void)
