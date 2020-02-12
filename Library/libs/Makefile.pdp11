@@ -13,7 +13,7 @@ KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
-SRC_ASM = setjmp_pdp11.S udivhi3_pdp11.S divsi3_pdp11.S
+SRC_ASM = setjmp_pdp11.S udivhi3_pdp11.S divsi3_pdp11.S htons-pdp11.S htonl-pdp11.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
 SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
