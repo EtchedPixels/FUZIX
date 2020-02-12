@@ -20,9 +20,12 @@
 		.globl _exit
 		.globl _environ
 		.globl ___argv
+		.globl __call_sys
 
 		.area _CODE
 
+__call_sys:				; Because the stubs overlay this
+					; executable header
 start:
 		.dw 0x80A8		; Magic number
 		.db 0x01		; 8080 family
