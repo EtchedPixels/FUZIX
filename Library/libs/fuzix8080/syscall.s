@@ -1,12 +1,13 @@
 !
-!	This uses the revised API that Z80 will move to (or at least
-!	similarly). It's basically the same API with a 2 byte stack offset
+!	This uses the revised API that Z80 now uses. We have to switch DE
+!	and HL around a bit for 8080 because our C return is via DE not HL
 !
 .sect .text
 .define __syscall
 
 __syscall:
-		rst 	6
+		call __text			! syscall stub is at text
+						! start, set by kernel
 		! returns in HL
 		xchg				! into DE for the 8080 C ABI
 		rnc				! ok return in DE

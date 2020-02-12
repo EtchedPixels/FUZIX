@@ -1,8 +1,9 @@
 		.globl	__syscall
+		.globl __call_sys
 		.globl	_errno
 
 __syscall:
-		rst	#0x30
+		call	__call_sys
 		ret	nc
 		ld	(_errno), hl		; error path
 		ld	hl, #0xffff
