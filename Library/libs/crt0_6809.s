@@ -22,6 +22,8 @@ start:
 		.db 0				; no stack hint
 		.db 0				; ZP not used on 6809
 
+		jmp start2
+
 		.area .text
 
 start2:
