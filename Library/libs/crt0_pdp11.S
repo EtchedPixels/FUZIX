@@ -28,7 +28,7 @@ _start2:
 		inc	r0
 		mov	r0,_environ
 		jsr	pc,_main
-		move	r0,-(sp)
+		mov	r0,-(sp)
 		jsr	pc,_exit
 
 		.data
