@@ -68,16 +68,20 @@ SRC_CT += termcap.c tgetent.c
 
 SRC_CURS = $(shell find curses -name '*.c')
 
+SRC_RL = readline.c readline_fn.c
+
 SRC_LM = vfscanf.c vfprintf.c
 OBJ_LM = vfscanf-libm.o vfprintf-libm.o
 
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_CURS = $(SRC_CURS:.c=.o)
 OBJ_CT = $(SRC_CT:.c=.o)
+OBJ_RL = $(SRC_RL:.c=.o)
 OBJ_HARD = $(SRC_HARD:.c=.o)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_RL)
 
-all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
+all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
+     termcap$(PLATFORM).lib m$(PLATFORM).lib readline$(PLATFORM).lib
 
 $(OBJ_ALL): $(KRN_HEADERS_COPY)
 
@@ -122,6 +126,10 @@ m$(PLATFORM).lib: $(OBJ_LM)
 	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
 
+readline$(PLATFORM).lib: $(OBJ_RL)
+	$(AR) rc readline$(PLATFORM).lib $(OBJ_RL)
+	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
+
 $(OBJ_ASM):%.o: %.S
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.S)
 
@@ -132,6 +140,9 @@ $(OBJ_C):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
 
 $(OBJ_CT):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c)
+
+$(OBJ_RL):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
 
 $(OBJ_CURS):%.o: %.c
