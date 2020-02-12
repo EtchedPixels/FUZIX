@@ -10,6 +10,11 @@
 	.globl outr0hex
 	.globl outstring
 
+	.globl _sys_cpu
+	.globl _sys_cpu_feat
+	.globl _sys_stubs
+	.globl _set_cpu_type
+
 /*	Probably should go to ipl6 not ipl7 to allow profiling ?
 
 	This is slightly odd compared with most machines. Rather than
@@ -28,6 +33,21 @@ ___hard_ei:
 	rts pc
 ___hard_irqrestore:
 	mov 2(sp),0177776
+	rts pc
+
+/* Mostly TODO */
+
+_sys_cpu:
+	.byte	7
+_sys_cpu_feat:
+	.byte	0
+
+	.even
+
+_sys_stubs:
+	trap	$17
+	rts pc
+_set_cpu_type:
 	rts pc
 
 
@@ -114,7 +134,7 @@ outstring:
 	rts pc
 
 /*
- *	The PDP 11 have a signed divide (except early machines) but not an
+ *	The PDP11s have a signed divide (except early machines) but not an
  *	unsigned one. For some reason the PDP-11 gcc support lib forgets to
  *	include this helper so we use our own
  *
