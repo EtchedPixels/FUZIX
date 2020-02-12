@@ -343,22 +343,29 @@ nmi_handler:
 ;	CPU type management
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-_sys_cpu:
-	.byte 4
-_sys_cpu_feat:
-	.byte 0
-
-_set_cpu_type:
-;
-;	We should check for a 6309 here and if set set sys_cpu_feat to 1
-;	TODO
-;
-	rts
-
 ; We don't use the stubs as we have a proper architected syscalling
 ; interface via swi. Set it here so the binary gets 16bytes of free
 ; but uninteresting noise
 _sys_stubs:
+
+_sys_cpu:
+	.byte 4
+_sys_cpu_feat:
+	.byte 0
+;
+;	Check for a 6309 (as per The 6309 Book)
+;
+_set_cpu_type:
+	pshs d
+	.dw 0x1043
+	cmpb 1,s
+	puls d
+	beq is8
+	lda #1
+	staa _sys_cpu_feat
+is8:
+	rts
+
 
 ; outstring: Print the string at X until 0 byte is found
 ; destroys: A, X
