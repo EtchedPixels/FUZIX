@@ -4,7 +4,7 @@ ASM = pdp11-aout-as
 AR = pdp11-aout-ar
 LINKER = pdp11-aout-ld
 CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
-LINKER_OPT = --no-relax -L../../Library/libs -lcpdp11 -T../../Library/pdp11.ld
+LINKER_OPT = -L../../Library/libs -lcpdp11 -T../../Library/pdp11.ld
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
 #-T ../../Library/elf2flt.ld
