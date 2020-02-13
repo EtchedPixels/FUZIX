@@ -12,6 +12,7 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <sys/stat.h>
 #include <time.h>
 #include "fuzix_fs.h"
+#include "util.h"
 
 /* This makes a filesystem 
  *
@@ -29,7 +30,6 @@ direct dirbuf[64] = {
 };
 
 struct dinode inode[8];
-int swizzling = 0;
 
 void mkfs(uint16_t fsize, uint16_t isize, uint8_t shift);
 void dwrite(uint16_t blk, char *addr);

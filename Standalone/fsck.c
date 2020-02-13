@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "util.h"
 
 typedef uint16_t	blkno_t;
 
@@ -64,18 +65,14 @@ struct direct {
 
 static int dev = 0;
 static struct filesys superblock;
-static int swizzling = 0;		/* Wrongendian ? */
-static long offset;
-static int dev_fd;
-static int dev_offset;
 static int error;
 static int aflag;
 static int yflag;
 
 static unsigned char *bitmap;
 static int16_t *linkmap;
-static char *daread(uint16_t blk);
-static void dwrite(uint16_t blk, char *addr);
+static uint8_t *daread(uint16_t blk);
+static void dwrite(uint16_t blk, uint8_t *addr);
 static void iread(uint16_t ino, struct dinode *buf);
 static void iwrite(uint16_t ino, struct dinode *buf);
 static void setblkno(struct dinode *ino, blkno_t num, blkno_t dnum);
@@ -136,64 +133,9 @@ static void panic(char *s)
 	exit(error | 8);
 }
 
-static int fd_open(char *name)
-{
-	char *namecopy, *sd;
-	int bias = 0;
-	struct stat rootst;
-	struct stat work;
-
-	namecopy = strdup(name);
-	sd = index(namecopy, ':');
-	if (sd) {
-		*sd = 0;
-		sd++;
-		bias = atoi(sd);
-	}
-
-	printf("Opening %s (offset %d)\n", namecopy, bias);
-	dev_offset = bias;
-	dev_fd = open(namecopy, O_RDWR | O_CREAT, 0666);
-	free(namecopy);
-
-	if (dev_fd < 0)
-		return -1;
-	/* printf("fd=%d, dev_offset = %d\n", dev_fd, dev_offset); */
-
-	if (stat("/", &rootst) == -1)
-	    panic("stat /");
-        if (fstat(dev_fd, &work) == -1)
-            panic("statfd");
-
-	return 0;
-}
-
-static uint16_t swizzle16(uint32_t v)
-{
-        int top = v & 0xFFFF0000UL;
-	if (top && top != 0xFFFF0000) {
-		fprintf(stderr, "swizzle16 given a 32bit input\n");
-		exit(error | 8);
-	}
-	if (swizzling)
-		return (v & 0xFF) << 8 | ((v & 0xFF00) >> 8);
-	else
-		return v;
-}
-
-static uint32_t swizzle32(uint32_t v)
-{
-	if (!swizzling)
-		return v;
-
-	return (v & 0xFF) << 24 | (v & 0xFF00) << 8 | (v & 0xFF0000) >> 8 |
-	    (v & 0xFF000000) >> 24;
-}
-
 int main(int argc, char **argv)
 {
-    char *buf;
-    char *op;
+    uint8_t *buf;
 
     while (argc > 1 && *argv[1] == '-') {
         if (strcmp(argv[1], "-a") == 0) {
@@ -213,13 +155,7 @@ int main(int argc, char **argv)
         return 16;
     }
     
-    op = strchr(argv[1], ':');
-    if (op) {
-        *op++ = 0;
-        offset = atol(op);
-    }
-
-    if(fd_open(argv[1])){
+    if(fd_open(argv[1]) < 0) {
         printf("Cannot open file\n");
         return 16;
     }
@@ -246,7 +182,7 @@ int main(int argc, char **argv)
         if (!yes())
             exit(error|32);
         superblock.s_mounted = swizzle16(SMOUNTED);
-        dwrite((blkno_t) 1, (char *) &superblock);
+        dwrite((blkno_t) 1, (uint8_t *) &superblock);
     }
 
     printf("Device %u has fsize = %u and isize = %u. Continue? ",
@@ -283,8 +219,10 @@ int main(int argc, char **argv)
     /* If we fixed things, and no errors were left unconnected */
     if ((error & 5) == 1) {
         superblock.s_fmod = FMOD_CLEAN;
-        dwrite((blkno_t) 1, (char *) &superblock);
+        dwrite((blkno_t) 1, (uint8_t *) &superblock);
     }
+
+    bdclose();
 
     printf("Done.\n");
 
@@ -379,7 +317,7 @@ static void pass1(void)
                         /* 1.4.98 - line split.  HFB */
                         if (yes()) {
                             buf[b] = 0;
-                            dwrite(b, (char *) buf);
+                            dwrite(b, (uint8_t *) buf);
                         }
                     }
                     if (buf[b] != 0)
@@ -413,7 +351,7 @@ static void pass1(void)
 
         if (yes()) {
             superblock.s_tinode = swizzle16(8 * (swizzle16(superblock.s_isize) - 2) - ROOTINODE - icount);
-            dwrite((blkno_t) 1, (char *) &superblock);
+            dwrite((blkno_t) 1, (uint8_t *) &superblock);
         }
     }
 }
@@ -445,7 +383,7 @@ static void pass2(void)
     for (j = swizzle16(superblock.s_fsize) - 1; j >= swizzle16(superblock.s_isize); --j) {
         if (bittest(j) == 0) {
             if (swizzle16(superblock.s_nfree) == 50) {
-                dwrite(j, (char *) &superblock.s_nfree);
+                dwrite(j, (uint8_t *) &superblock.s_nfree);
                 superblock.s_nfree = 0;
             }
             superblock.s_tfree = swizzle16(swizzle16(superblock.s_tfree)+1);
@@ -455,7 +393,7 @@ static void pass2(void)
         }
     }
 
-    dwrite((blkno_t) 1, (char *) &superblock);
+    dwrite((blkno_t) 1, (uint8_t *) &superblock);
 
     if (oldtfree != swizzle16(superblock.s_tfree))
         printf("During free list regeneration s_tfree was changed to %u from %u.\n",
@@ -695,7 +633,7 @@ static void pass5(void)
                     iwrite(n, &ino);
                     superblock.s_tinode =
                                 swizzle16(swizzle16(superblock.s_tinode) + 1);
-                    dwrite((blkno_t) 1, (char *) &superblock);
+                    dwrite((blkno_t) 1, (uint8_t *) &superblock);
                 }
             } else {
 #if 0
@@ -720,7 +658,7 @@ static void pass5(void)
                         iwrite(n, &ino);
                         superblock.s_tinode =
                                 swizzle16(swizzle16(superblock.s_tinode) + 1);
-                        dwrite((blkno_t) 1, (char *) &superblock);
+                        dwrite((blkno_t) 1, (uint8_t *) &superblock);
                     } else {
                         ino.i_nlink = swizzle16(1);
                         iwrite(n, &ino);
@@ -818,7 +756,7 @@ static void setblkno(struct dinode *ino, blkno_t num, blkno_t dnum)
 
         buf = (blkno_t *) daread(indb);
         buf[num - 18] = swizzle16(dnum);
-        dwrite(indb, (char *) buf);
+        dwrite(indb, (uint8_t *) buf);
     } else {				/* Double indirect */
         indb = swizzle16(ino->i_addr[19]);
         if (indb == 0)
@@ -831,7 +769,7 @@ static void setblkno(struct dinode *ino, blkno_t num, blkno_t dnum)
 
         buf = (blkno_t *) daread(dindb);
         buf[(num - (18 + 256)) & 0x00ff] = swizzle16(num);
-        dwrite(indb, (char *) buf);
+        dwrite(indb, (uint8_t *) buf);
     }
 }
 
@@ -871,39 +809,28 @@ static blkno_t blk_alloc0(struct filesys *filesys)
         printf("Free list is corrupt.  Did you rebuild it?\n");
         return (0);
     }
-    dwrite((blkno_t) 1, (char *) filesys);
+    dwrite((blkno_t) 1, (uint8_t *) filesys);
     return (newno);
 }
 
 static uint16_t lblk;
 
-static char *daread(uint16_t blk)
+static uint8_t *daread(uint16_t blk)
 {
-    static char da_buf[512];
+    static uint8_t da_buf[512];
 
     if (blk == lblk)
         return da_buf;
 
-    if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
-        perror("lseek");
+    if (bdread(blk, da_buf) < 0)
         exit(1);
-    }
-    if(read(dev_fd, da_buf, 512) != 512) {
-        perror("read");
-        exit(1);
-    }
     lblk = blk;
     return da_buf;
 }
 
-static void dwrite(uint16_t blk, char *addr)
+static void dwrite(uint16_t blk, uint8_t *addr)
 {
-    if (lseek(dev_fd, offset + blk * 512L, 0) == -1) {
-        perror("lseek");
-        exit(1);
-    }
-    if(write(dev_fd, addr, 512) != 512) {
-        perror("write");
+    if (bdwrite(blk, addr)) {
         exit(1);
     }
     lblk = 0;
@@ -923,13 +850,13 @@ static void iwrite(uint16_t ino, struct dinode *buf)
 
     addr = (struct dinode *) daread((ino >> 3) + 2);
     bcopy((char *) buf, (char *) &addr[ino & 7], sizeof(struct dinode));
-    dwrite((ino >> 3) + 2, (char *) addr);
+    dwrite((ino >> 3) + 2, (uint8_t *) addr);
 }
 
 static void dirread(struct dinode *ino, uint16_t j, struct direct *dentry)
 {
     blkno_t blkno;
-    char *buf;
+    uint8_t *buf;
 
     blkno = getblkno(ino, (blkno_t) j / 16);
     if (blkno == 0)
@@ -941,7 +868,7 @@ static void dirread(struct dinode *ino, uint16_t j, struct direct *dentry)
 static void dirwrite(struct dinode *ino, uint16_t j, struct direct *dentry)
 {
     blkno_t blkno;
-    char *buf;
+    uint8_t *buf;
 
     blkno = getblkno(ino, (blkno_t) j / 16);
     if (blkno == 0)

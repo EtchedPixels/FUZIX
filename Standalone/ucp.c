@@ -19,8 +19,9 @@ HP
 #include <libgen.h>
 #define UCP
 #include "fuzix_fs.h"
+#include "util.h"
 
-#define UCP_VERSION  "1.3ac"
+#define UCP_VERSION  "1.4ac"
 
 static int16_t *syserror = (int16_t *) & udata.u_error;
 static char cwd[100];
@@ -31,16 +32,11 @@ static char *month[] = { "Jan", "Feb", "Mar", "Apr",
 	"Sep", "Oct", "Nov", "Dec"
 };
 
-#define DEVIO
-
 static uint16_t bufclock = 0;	/* Time-stamp counter for LRU */
 static struct blkbuf bufpool[NBUFS];
 
 static struct cinode i_tab[ITABSIZE];
 static struct filesys fs_tab[1];
-
-int swizzling = 0;
-static int swapped = 0;
 
 static inoptr root;
 static struct oft of_tab[OFTSIZE];
@@ -2324,7 +2320,7 @@ static uint8_t *bread(int dev, blkno_t blk, int rewrite)
 	   so we don't need the previous contents */
 
 	ifnot(rewrite)
-	    if (bdread(bp) == -1) {
+	    if (bdread(bp->bf_blk, bp->bf_data) == -1) {
 		udata.u_error = EIO;
 		return 0;
 	}
@@ -2355,7 +2351,7 @@ static int bfree(bufptr bp, int dirty)
 	bp->bf_busy = 0;
 
 	if (dirty == 2) {	/* Extra dirty */
-		if (bdwrite(bp) == -1)
+		if (bdwrite(bp->bf_blk, bp->bf_data) == -1)
 			udata.u_error = EIO;
 		bp->bf_dirty = 0;
 		return (-1);
@@ -2396,7 +2392,7 @@ static void bufsync(void)
 
 	for (bp = bufpool; bp < bufpool + NBUFS; ++bp) {
 		if (bp->bf_dev != -1 && bp->bf_dirty) {
-			bdwrite(bp);
+			bdwrite(bp->bf_blk, bp->bf_data);
 			if (!bp->bf_busy)
 				bp->bf_dirty = 0;
 		}
@@ -2434,7 +2430,7 @@ static bufptr freebuf(void)
 	    panic("no free buffers");
 
 	if (oldest->bf_dirty) {
-		if (bdwrite(oldest) == -1)
+		if (bdwrite(oldest->bf_blk, oldest->bf_data) == -1)
 			udata.u_error = EIO;
 		oldest->bf_dirty = 0;
 	}
@@ -2451,50 +2447,3 @@ static void bufinit(void)
 }
 
 
-/*********************************************************************
-Bdread() and bdwrite() are the block device interface routines.  they
-are given a buffer pointer, which contains the device, block number,
-and data location.  They basically validate the device and vector the
-call.
-
-Cdread() and cdwrite are the same for character (or "raw") devices,
-and are handed a device number.  Udata.u_base, count, and offset have
-the rest of the data.
-**********************************************************************/
-
-static uint8_t *bdswap(uint8_t * p)
-{
-	static uint8_t buf[512];
-	if (!swapped)
-		return p;
-	swab(p, buf, 512);
-	return buf;
-}
-
-static void bdswapkeep(uint8_t * p)
-{
-	/* Irritatingly POSIX says swab(x,x,512) is undefined even though
-	   it's actually pretty safe */
-	memcpy(p, bdswap(p), 512);
-}
-
-static int bdread(bufptr bp)
-{
-	if (lseek(dev_fd, dev_offset + (((int) bp->bf_blk) * 512),
-		  SEEK_SET) == -1)
-		perror("lseek");
-	if (read(dev_fd, bp->bf_data, 512) != 512)
-		panic("read() failed");
-	if (swapped)
-		bdswapkeep(bp->bf_data);
-	return 0;
-}
-
-
-static int bdwrite(bufptr bp)
-{
-	lseek(dev_fd, dev_offset + (((int) bp->bf_blk) * 512), SEEK_SET);
-	if (write(dev_fd, bdswap(bp->bf_data), 512) != 512)
-		panic("write() failed");
-	return 0;
-}
