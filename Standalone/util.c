@@ -265,9 +265,10 @@ void bdclose(void)
 int bdopen(const char *name, int addflags)
 {
 #ifdef LIBDSK
-	if (strncmp(name, "libdsk:", 7) == 0)
+	if (strncmp(name, "libdsk:", 7) == 0) {
+		printf("MOO");
 		return bdopen_libdsk(name + 7, addflags);
-	else
+	} else
 #endif
 	return bdopen_raw(name, addflags);
 }
