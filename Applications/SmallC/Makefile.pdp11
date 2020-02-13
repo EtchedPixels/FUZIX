@@ -1,0 +1,65 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+.SUFFIXES: .c .o
+
+LIBDIR	=/usr/bin
+LDFLAGS	=
+
+DEFS	=
+
+OBJS = initials.o data.o error.o expr.o function.o gen.o io.o \
+       lex.o main.o outstack.o preproc.o primary.o stmt.o struct.o sym.o while.o
+
+OBJ_Z80 = codez80.o
+OBJ_8080 = code8080.o
+OBJ_6801 = code6801.o
+OBJ_6809 = code6809.o
+
+OBJ_COPT = copt.o
+
+INC = data.h defs.h prototype.h
+
+OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
+all:    scc6801 scc6809 scc8080 sccz80 copt
+
+sccz80: $(OBJS) $(OBJ_Z80)
+	$(LINKER) -o sccz80.bin $(OBJS) $(OBJ_Z80) $(LINKER_OPT)
+	$(AOUT2FUZIX) sccz80.bin sccz80
+
+# Linker breaker
+#scc8080: $(OBJS) $(OBJ_8080)
+#	$(LINKER) -o scc8080.bin $(OBJS) $(OBJ_8080) $(LINKER_OPT)
+#	$(AOUT2FUZIX) scc8080.bin scc8080
+
+scc6801: $(OBJS) $(OBJ_6801)
+	$(LINKER) -o scc6801.bin $(OBJS) $(OBJ_6801) $(LINKER_OPT) 
+	$(AOUT2FUZIX) scc6801.bin scc6801
+
+scc6809: $(OBJS) $(OBJ_6809)
+	$(LINKER) -o scc6809.bin $(OBJS) $(OBJ_6809) $(LINKER_OPT)
+	$(AOUT2FUZIX) scc6809.bin scc6809
+
+copt:	$(OBJ_COPT)
+	$(LINKER) -o copt.bin $(OBJ_COPT) $(LINKER_OPT) 
+	$(AOUT2FUZIX) copt.bin copt
+
+
+.c.o:
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+$(OBJS_ALL) : $(INC)
+
+clean:
+	rm -f $(OBJ) scc8080 sccz80 scc6801 scc6809
+	rm -f *~ *.o *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk

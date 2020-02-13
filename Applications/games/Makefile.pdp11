@@ -11,7 +11,7 @@ LINKER_OPT += -L$(LIBGCCDIR) -lgcc
 CRT0 = ../../Library/libs/crt0_pdp11.o
 CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
 AOUT2FUZIX = cp  #for now
-
+HOSTCC = gcc
 .SUFFIXES: .c .o
 
 SRCSNS = qrun.c fortune.c z1.c z2.c z3.c z4.c z5.c z8.c

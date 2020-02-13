@@ -3,7 +3,7 @@ CC = pdp11-aout-gcc
 ASM = pdp11-aout-as
 AR = pdp11-aout-ar
 LINKER = pdp11-aout-ld
-CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../../Library/include -I../../../Library/include/pdp11
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -I../../../Library/include -I../../../Library/include/pdp11
 LINKER_OPT = -L../../../Library/libs -lcpdp11 -T../../../Library/pdp11.ld
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
@@ -12,14 +12,16 @@ CRT0 = ../../../Library/libs/crt0_pdp11.o
 CRT0NS = ../../../Library/libs/crt0nostdio_pdp11.o
 AOUT2FUZIX = cp  #for now
 
-.SUFFIXES: .c .o
+#
+# FIXME : optimisation turned off
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=93719
+#
+
+.SUFFIXES: .c .o .y
 
 
-SRCS  = ac.c col.c dc.c diff.c makekey.c ptx.c sum.c wall.c
-SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
-SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
-SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
-SRCS += pg.c ed.c sort.c tty.c
+SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c du.c ed.c \
+	expr.c find.c m4.c make.c moo.c pr.c sort.c tar.c test.c ttt.c units.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -27,9 +29,15 @@ APPS = $(OBJS:.o=)
 
 all: $(APPS) size.report
 
+$(APPS): $(CRT0)
+
 $(APPS): %: %.o
-	$(LINKER) $(CRT0) $< -o $@.bin $(LINKER_OPT)
+	$(LINKER) -o $@.bin $^ $(LINKER_OPT)
 	$(AOUT2FUZIX) $@.bin $@
+
+expr.c: expr.y
+
+find.c: find.y
 
 size.report: $(APPS)
 	ls -l $^ > $@

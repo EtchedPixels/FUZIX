@@ -1,0 +1,58 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+HOSTCC = gcc
+.SUFFIXES: .c .o
+
+CFLAGS += -DNETD_LITTLE_ENDIAN
+
+
+SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c slip.c
+SRCS += echoping.c dig.c gethostbyname.c httpd.c ping.c ntpdate.c
+SRCS += htget.c tinyirc.c linein.c
+
+OBJS = $(SRCS:.c=.o)
+
+APPS = netd-slip
+
+all: $(APPS)
+
+
+netd-slip: $(OBJS)
+	$(LINKER) -o netd-slip.bin $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o slip.o $(LINKER_OPT)
+	$(AOUT2FUZIX) netd-slip.bin netd-slip
+	$(LINKER) -o telnet.bin $(CRT0) telnet.o gethostbyname.o $(LINKER_OPT)
+	$(AOUT2FUZIX) telnet.bin telnet
+	$(LINKER) -o echoping.bin $(CRT0) echoping.o $(LINKER_OPT)
+	$(AOUT2FUZIX) echoping.bin echoping
+	$(LINKER) -o dig.bin $(CRT0) dig.o $(LINKER_OPT)
+	$(AOUT2FUZIX) dig.bin dig
+	$(LINKER) -o httpd.bin $(CRT0) httpd.o $(LINKER_OPT)
+	$(AOUT2FUZIX) httpd.bin httpd
+	$(LINKER) -o ping.bin $(CRT0) ping.o gethostbyname.o $(LINKER_OPT)
+	$(AOUT2FUZIX) ping.bin ping
+	$(LINKER) -o ntpdate.bin $(CRT0) ntpdate.o gethostbyname.o $(LINKER_OPT) 
+	$(AOUT2FUZIX) ntpdate.bin ntpdate
+	$(LINKER) -o htget.bin $(CRT0) htget.o gethostbyname.o $(LINKER_OPT)
+	$(AOUT2FUZIX) htget.bin htget
+	$(LINKER) -o tinyirc.bin $(CRT0) tinyirc.o linein.o gethostbyname.o  $(LINKER_OPT)
+	$(AOUT2FUZIX) tinyirc.bin tinyirc
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *~
+
+rmbak:
+	rm -f *~ core
