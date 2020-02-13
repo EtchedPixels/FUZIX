@@ -18,7 +18,7 @@ int swizzling;
 
 extern int swizzling;
 
-int fd_open(char *name)
+int fd_open(char *name, int addflags)
 {
 	char *namecopy, *sd;
 	int bias = 0;
@@ -33,7 +33,7 @@ int fd_open(char *name)
 
 	printf("Opening %s (offset %d)\n", namecopy, bias);
 	dev_offset = bias;
-	if (bdopen(namecopy) < 0) {
+	if (bdopen(namecopy, addflags) < 0) {
 		free(namecopy);
 		return -1;
 	}
@@ -155,7 +155,7 @@ static int bdwrite_libdsk(unsigned int blk, uint8_t *dp)
 	return 0;
 }
 
-static int bdopen_libdsk(const char *name)
+static int bdopen_libdsk(const char *name, int addflags)
 {
 	int err;
 
@@ -200,11 +200,11 @@ static int bdwrite_raw(unsigned int blk, uint8_t *dp)
 	return 0;
 }
 
-static int bdopen_raw(const char *name)
+static int bdopen_raw(const char *name, int addflags)
 {
 	uint8_t tmp[512];
 
-	dev_fd = open(name, O_RDWR);
+	dev_fd = open(name, O_RDWR|addflags, 0600);
 	if (dev_fd == -1) {
 		perror(name);
 		return -1;
@@ -260,12 +260,12 @@ void bdclose(void)
 	bdclose_raw();
 }
 
-int bdopen(const char *name)
+int bdopen(const char *name, int addflags)
 {
 #ifdef LIBDSK
 	if (strncmp(name, "libdsk:", 7) == 0)
-		return bdopen_libdsk(name + 7);
+		return bdopen_libdsk(name + 7, addflags);
 	else
 #endif
-	return bdopen_raw(name);
+	return bdopen_raw(name, addflags);
 }

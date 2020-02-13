@@ -88,10 +88,10 @@ int main(int argc, char *argval[])
 	if (optind >= argc)
 		cmdusage();
 	if (argc - optind == 1) {
-		fd_open(argval[optind]);
+		fd_open(argval[optind], 0);
 		multiline = 1;
 	} else if (argc - optind == 2) {
-		fd_open(argval[optind]);
+		fd_open(argval[optind], 0);
 		strncpy(&line[0], argval[optind + 1], 127);
 		line[127] = '\0';
 		multiline = 0;

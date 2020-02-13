@@ -155,7 +155,7 @@ int main(int argc, char **argv)
         return 16;
     }
     
-    if(fd_open(argv[1]) < 0) {
+    if(fd_open(argv[1], 0) < 0) {
         printf("Cannot open file\n");
         return 16;
     }
