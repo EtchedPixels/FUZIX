@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -210,16 +209,19 @@ static int bdopen_raw(const char *name, int addflags)
 		return -1;
 	}
 	if (read(dev_fd, tmp, 512) != 512) {
-		fputs("ucp: unable to read 512 bytes of data.\n", stderr);
+		/* Creating a volume so don't require a size */
+		if (addflags & O_CREAT)
+			return dev_fd;
+		fputs("Unable to read 512 bytes of data.\n", stderr);
 		exit(1);
 	}
 	if (memcmp(tmp, ide_magic, 8) == 0) {
-		puts("ucp: volume is virtual IDE drive.");
+		puts("Volume is virtual IDE drive.");
 		dev_offset += 1024;
 		return 0;
 	}
 	if (memcmp(tmp, "RS-IDE", 6) == 0) {
-		puts("ucp: volume is HDF.");
+		puts("Volume is HDF.");
 		dev_offset += 534;
 	}
 	return dev_fd;
