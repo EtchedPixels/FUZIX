@@ -362,7 +362,7 @@ _set_cpu_type:
 	puls d
 	beq is8
 	lda #1
-	staa _sys_cpu_feat
+	sta _sys_cpu_feat
 is8:
 	rts
 
