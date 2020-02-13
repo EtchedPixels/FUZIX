@@ -1,0 +1,55 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -ltermcappdp11 -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+HOSTCC = gcc
+
+# 3 sets of objects co-exist: _l -> linux (host) _v -> vt52 _a -> ansi
+.SUFFIXES: .c .o-l .o-v .o-a
+
+CSRCS = beep.c blockio.c display.c doscall.c editcor.c exec.c find.c
+CSRCS += flexcall.c gemcall.c globals.c insert.c main.c misc.c modify.c
+CSRCS += move.c rmxcall.c ucsd.c undo.c unixcall.c wildargs.c
+HDRS  = extern.h grep.h levee.h proto.h
+
+OBJSL = $(CSRCS:.c=.o-l)
+OBJSA = $(CSRCS:.c=.o-a)
+OBJSV = $(CSRCS:.c=.o-v)
+
+all: levee-l levee-a levee-v
+
+# Linux version to run on Host system for debug purposes
+levee-l: $(OBJSL)
+	gcc -o levee-linux $(OBJSL)
+
+levee-a: $(OBJSA)
+	$(LINKER) -o levee-ansi.bin $(CRT0) $(OBJSA) $(LINKER_OPT)
+	$(AOUT2FUXIX) levee-ansi.bin levee-ansi
+
+levee-v: $(OBJSV) $(CRT0)
+	$(LINKER) -o levee-vt52.bin $(CRT0) $(OBJSV) $(LINKER_OPT)
+	$(AOUT2FUXIX) levee-vt52.bin levee-vt52
+
+# Build for Linux - assume appropriate host tools exist with default names
+$(OBJSL): %.o-l: %.c $(HDRS)
+	gcc -O3 -c -DVT52=0 -DANSI=1 -o $*.o-l $*.c
+
+## need to change include file and add appropriate -D -- and to z80 version, too
+
+$(OBJSA): %.o-a: %.c $(HDRS)
+	$(CC) $(CFLAGS) $(COPT) -c -DVT52=0 -DANSI=1 -o $*.o-a $*.c
+
+$(OBJSV): %.o-v: %.c $(HDRS)
+	$(CC) $(CFLAGS) $(COPT) -c -DVT52=1 -DANSI=0 -o $*.o-v $*.c
+
+clean:
+	rm -rf $(OBJS) $(OBJSL) $(OBJSA) $(OBJSV) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.rel *.asm levee levee.bin
