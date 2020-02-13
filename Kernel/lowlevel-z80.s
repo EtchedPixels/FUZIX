@@ -478,14 +478,14 @@ intret:
 	; of the handler so ensure everything is fixed before this !
 
 	call deliver_signals
-	.ifne Z80_MMU_HOOKS
-	call mmu_restore_irq
-	.endif
 
 	; Then unstack and go.
 interrupt_pop:
 	xor a
 	ld (_int_disabled),a
+	.ifne Z80_MMU_HOOKS
+	call mmu_restore_irq
+	.endif
         pop iy
         pop ix
         pop hl
@@ -515,9 +515,16 @@ null_pointer_trap:
 	ld hl, #9		; SIGKILL (take no prisoners here)
 trap_signal:
 	push hl
-        call _doexit
-	; Does not return
-	jp _platform_monitor
+	ld hl,(_udata + U_DATA__U_PTAB)
+	ld de, #P_TAB__P_PID_OFFSET
+	add hl,de
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push de
+        call _ssig
+	; Now fall into pre-emption from which we will not return
 ;
 ;	Pre-emption. We need to get off the interrupt stack, switch task
 ;	and clean up the IRQ state carefully
