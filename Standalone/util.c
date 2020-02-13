@@ -19,25 +19,8 @@ extern int swizzling;
 
 int fd_open(char *name, int addflags)
 {
-	char *namecopy, *sd;
-	int bias = 0;
-
-	namecopy = strdup(name);
-	sd = strchr(namecopy, ':');
-	if (sd) {
-		*sd = 0;
-		sd++;
-		bias = atoi(sd);
-	}
-
-	printf("Opening %s (offset %d)\n", namecopy, bias);
-	dev_offset = bias;
-	if (bdopen(namecopy, addflags) < 0) {
-		free(namecopy);
-		return -1;
-	}
-
-	free(namecopy);
+	if (bdopen(name, addflags) < 0)
+		exit(1);
 	/* printf("fd=%d, dev_offset = %d\n", dev_fd, dev_offset); */
 	return 0;
 }
@@ -159,8 +142,10 @@ static int bdopen_libdsk(const char *name, int addflags)
 	int err;
 
 	err = dsk_open(&drive, name, NULL, NULL);
-	if (err)
+	if (err) {
+		fprintf(stderr, "Unable to open '%s' with libdsk.\n", name);
 		return -1;
+	}
 	err = dsk_getgeom(drive, &dg);
 	if (err)
 		return -1;
@@ -202,12 +187,23 @@ static int bdwrite_raw(unsigned int blk, uint8_t *dp)
 static int bdopen_raw(const char *name, int addflags)
 {
 	uint8_t tmp[512];
+	char *namecopy = strdup(name);
+	char *sd = strrchr(namecopy, ':');
+	if (sd) {
+		*sd = 0;
+		sd++;
+		dev_offset = atoi(sd);
+	}
 
-	dev_fd = open(name, O_RDWR|addflags, 0600);
+	printf("Opening %s (offset %d)\n", namecopy, dev_offset);
+
+	dev_fd = open(namecopy, O_RDWR|addflags, 0600);
 	if (dev_fd == -1) {
-		perror(name);
+		perror(namecopy);
+		free(namecopy);
 		return -1;
 	}
+	free(namecopy);
 	if (read(dev_fd, tmp, 512) != 512) {
 		/* Creating a volume so don't require a size */
 		if (addflags & O_CREAT)
@@ -265,9 +261,10 @@ void bdclose(void)
 int bdopen(const char *name, int addflags)
 {
 #ifdef LIBDSK
-	if (strncmp(name, "libdsk:", 7) == 0)
+	if (strncmp(name, "libdsk:", 7) == 0) {
+		printf("MOO");
 		return bdopen_libdsk(name + 7, addflags);
-	else
+	} else
 #endif
 	return bdopen_raw(name, addflags);
 }
