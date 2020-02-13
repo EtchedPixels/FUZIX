@@ -111,26 +111,28 @@ static int blkshift(unsigned int *blk)
 	}
 }
 
-static int bdread_libdsk(unsigned int blk, uint8_t *dp)
+static int bdread_libdsk(unsigned int blk, uint8_t *dbase)
 {
+	uint8_t *dp = dbase;
 	unsigned int n = blkshift(&blk);
 
 	while(n--) {
-		if (dsk_lread(drive, &dg, dp, blk++) == -1)
+		if (dsk_lread(drive, &dg, dp, blk++) < 0)
 			return -1;
 		dp += dg.dg_secsize;
 	}
 	if (swapped)
-		bdswapkeep(dp);
+		bdswapkeep(dbase);
 	return 0;
 }
 
 static int bdwrite_libdsk(unsigned int blk, uint8_t *dp)
 {
 	unsigned int n = blkshift(&blk);
+	dp = bdswap(dp);
 
 	while(n--) {
-		if (dsk_lwrite(drive, &dg, dp, blk++))
+		if (dsk_lwrite(drive, &dg, dp, blk++) < 0)
 			return -1;
 		dp += dg.dg_secsize;
 	}
@@ -150,6 +152,8 @@ static int bdopen_libdsk(const char *name, int addflags)
 	if (err)
 		return -1;
 	libdsk = 1;
+	printf("Opening '%s' with %ld byte sectors using libdsk.\n", name,
+		dg.dg_secsize);
 	return 0;
 }
 
@@ -261,10 +265,9 @@ void bdclose(void)
 int bdopen(const char *name, int addflags)
 {
 #ifdef LIBDSK
-	if (strncmp(name, "libdsk:", 7) == 0) {
-		printf("MOO");
+	if (strncmp(name, "libdsk:", 7) == 0)
 		return bdopen_libdsk(name + 7, addflags);
-	} else
+	else
 #endif
 	return bdopen_raw(name, addflags);
 }
