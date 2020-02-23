@@ -1,4 +1,5 @@
 #ifndef __STDDEF_H
+#define __STDDEF_H
 
 typedef int ptrdiff_t;
 typedef char wchar_t;
