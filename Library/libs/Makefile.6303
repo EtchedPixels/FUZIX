@@ -8,7 +8,7 @@ ASM_OPT =
 LINKER_OPT =
 SRC_CRT0 = crt0_6303.s crt0nostdio_6303.s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
-SRC_ASM = longjmp_6303.s
+SRC_ASM = longjmp_6303.s setjmp_6303.s
 OBJ_ASM = $(SRC_ASM:.s=.o)
 #
 #	Library routines.
@@ -32,7 +32,7 @@ SRC_C += opendir.c opendir_r.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
 SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
 SRC_C += regsub.c remove.c remount.c rewind.c rindex.c rootmntent.c
-SRC_C += setbuffer.c setenv.c setjmp.c
+SRC_C += setbuffer.c setenv.c
 SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c sleep.c sprintf.c
 SRC_C += sputl.c stat.c statvfs.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
