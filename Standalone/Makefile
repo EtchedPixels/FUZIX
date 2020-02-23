@@ -1,5 +1,7 @@
 CC=gcc
-CCOPTS=-O2 -DLIBDSK -ldsk -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
+#Use this for playing with the experimental libdsk support
+#CCOPTS=-O2 -DLIBDSK -ldsk -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
+CCOPTS=-O2 -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
 TARGETS=mkfs fsck ucp chmem size
 
 all:	$(TARGETS)

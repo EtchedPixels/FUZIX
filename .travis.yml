@@ -15,7 +15,6 @@ before_install:
     - sudo add-apt-repository -y ppa:p-pisati/fuzix
     - sudo apt-get update -q
     - sudo apt-get install -y byacc automake			# FUZIX build deps
-    - sudo apt-get install -y libdsk4-dev
     - sudo update-alternatives --set yacc /usr/bin/byacc
     - |
       if [ "$TARGET" = "dragon-nx32" -o "$TARGET" = "multicomp09" ]; then
