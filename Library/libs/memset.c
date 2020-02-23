@@ -7,4 +7,5 @@ void *memset(void *dest, int data, size_t len)
 
 	while(len--)
 		*p++ = v;
+	return dest;
 }
