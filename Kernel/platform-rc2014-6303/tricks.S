@@ -9,9 +9,8 @@
 
 #include "kernel.def"
 #include "../kernel-6303.def"
-#include "zeropage6303.inc"
 
-;FIXME linker        .segment "COMMONMEM"
+	.common
 
 ; ramtop must be in common for single process swapping cases
 ; and its a constant for the others from before init forks so it'll be fine
@@ -39,8 +38,11 @@ _platform_switchout:
         ; we should never get here
         jsr _platform_monitor
 
-badswitchmsg: .byte "_switchin: FAIL"
-	.byte 13, 10, 0
+badswitchmsg:
+	.ascii "_switchin: FAIL"
+	.byte 13
+	.byte 10
+	.byte 0
 
 ;
 ;	On entry x,a holds the process to switch in
@@ -69,7 +71,7 @@ _switchin:
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
         lds _udata + U_DATA__U_SP
-	lda _inint
+	ldaa _inint
         beq swtchdone		; in ISR, leave interrupts off
 	cli
 swtchdone:

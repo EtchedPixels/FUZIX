@@ -14,11 +14,6 @@ wipeud:
 		cpx #istack_switched_sp
 		bne wipeud
 
-		lda #<__BSS_RUN__
-		sta ptr1
-		lda #>__BSS_RUN__
-		sta ptr1+1
-
 		ldx #__bss
 		ldd #__bss_size
 

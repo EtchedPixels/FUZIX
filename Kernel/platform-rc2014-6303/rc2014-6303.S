@@ -21,17 +21,18 @@
 
 #include "kernel.def"
 #include "../kernel-6303.def"
-#include "zeropage-6303.inc"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x0200 upwards after the common data blocks)
 ; -----------------------------------------------------------------------------
-            .segment "COMMONMEM"
+
+	    .common
 
 _platform_monitor:
 _platform_reboot:
-	    clr 0xFE7B		; top 16K to ROM 0
-	    jmp ($FFFC)		; check vector FIXME
+	    clr $FE7B		; top 16K to ROM 0
+	    ldx $FFFC
+	    jmp ,x		; check vector FIXME
 
 ___hard_di:
 	    tpa
@@ -71,13 +72,13 @@ init_hardware:
 	    ldd #512
 	    std _ramsize
 	    ldd #448
-	    sta _procmem
+	    std _procmem
             jmp program_vectors_k
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
-            .segment "COMMONMEM"
+            .common
 
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
@@ -182,13 +183,13 @@ saved_map:  .byte 0
 ; corrupting other registers
 
 outchar:
-	    pha
+	    psha
 outcharw:
-	    lda $FEC5
-	    and #$20
+	    ldaa $FEC5
+	    anda #$20
 	    beq outcharw
-	    pla
-	    sta $FEC0
+	    pula
+	    staa $FEC0
 	    rts
 
 ;
@@ -198,7 +199,9 @@ outcharw:
 ;	AX = ptr, length always 512, src and page in globals
 ;
 
-	.export _hd_read_data,_hd_write_data,_hd_map
+	.export _hd_read_data
+	.export _hd_write_data
+	.export _hd_map
 
 _hd_read_data:
 	tsx
