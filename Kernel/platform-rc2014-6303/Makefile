@@ -23,8 +23,8 @@ $(COBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
 
 $(AOBJS): %$(BINEXT): %.S
-	cpp $< | sed -e "s/^#.*$//" >$*.s
-	$(CROSS_AS) $(ASOPTS) $*.s -o $*$(BINEXT)
+	cpp -E $<  >$*.s
+	$(CROSS_AS) $(ASOPTS) $*.s
 
 $(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
@@ -38,7 +38,7 @@ clean:
 	rm -f $(OBJS) *.o core *~ fuzix.img fuzix.bin
 
 image:
-	$(CROSS_LD) -o ../fuzix.bin --mapfile ../fuzix.map -C ld65.cfg crt0.o commonmem.o \
+	$(CROSS_LD) -b -o ../fuzix.bin -m ../fuzix.map crt0.o commonmem.o \
 	rc2014-6303.o ../start.o ../version.o ../lowlevel-6303.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
