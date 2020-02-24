@@ -1,3 +1,5 @@
+#include <types.h>
+
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
 #define uputi  uputw			/* Copy user int type */
@@ -52,3 +54,4 @@ typedef union {            /* this structure is endian dependent */
 #define barrier()
 
 #define __fastcall
+#define inline
