@@ -1,31 +1,34 @@
 
-	.globl _di
-	.globl _ei
-	.globl _irqrestore
+	.export _di
+	.export _ei
+	.export _irqrestore
 
-	.globl _unix_syscall_entry
-	.globl _dispatch_process_signal
-	.globl _interrupt_handler
+	.export unix_syscall_entry
+	.export interrupt_handler
 
-	.globl outnewline
-	.globl outcharhex
-	.globl outstring
-	.globl outx
-	.globl outd
+	.export outnewline
+	.export outcharhex
+	.export outstring
+	.export outx
+	.export outd
+
+	.setcpu 6303
 
 #include "platform/kernel.def"
 #include "kernel-6303.def"
 
-di:
+	.code
+
+_di:
 	tpa		; return cc codes in D
 	sei
 	rts
 
-ei:
+_ei:
 	cli
 	rts
 
-irqrestore:
+_irqrestore:
 	tsx
 	ldd	2,x 
 			; D holds the return from di where A is the cc
@@ -90,7 +93,7 @@ outd:
 	rts
 
 
-deliver_signals
+deliver_signals:
 	ldaa U_DATA__U_CURSIG
 	bne deliver_signals_2
 signal_raced:
@@ -144,7 +147,7 @@ unix_syscall_entry:
 	jsr unix_syscall
 	sei
 	clr U_DATA__U_INSYS
-	call map_process_always	; no-op in pure banked
+	jsr map_process_always	; no-op in pure banked
 	lds U_DATA__U_SYSCALL_SP
 	; Now the fun bit - the CPU saves X and D so we have to patch them
 	; into the return frame
@@ -193,10 +196,11 @@ nmi_handler:
 	bra trapx
 
 illegalmsg:
-	.asciz '[illegal]'
+	.ascii '[illegal]'
+	.byte 0
 nmimsg:
-	.asciz '[NMI]'
-
+	.ascii '[NMI]'
+	.byte 0
 ;
 ;	The trap saved our entire register state for us
 ;

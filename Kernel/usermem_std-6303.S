@@ -1,7 +1,12 @@
-	.globl __uputc
-	.globl __uputw
-	.globl __ugetc
-	.globl __ugetw
+	.export __uputc
+	.export __uputw
+	.export __ugetc
+	.export __ugetw
+	.export __uzero
+	.export __uget
+	.export __uput
+
+	.code
 
 __uputc:
 	tsx
