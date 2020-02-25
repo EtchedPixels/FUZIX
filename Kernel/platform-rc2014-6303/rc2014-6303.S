@@ -6,6 +6,7 @@
             .export init_hardware
             .export _program_vectors
 	    .export map_kernel
+	    .export map_kernel_di
 	    .export map_process
 	    .export map_process_always
 	    .export map_save_kernel
@@ -89,11 +90,11 @@ _program_vectors:
 	    ; just pass it on
 	    jsr map_process
 program_vectors_k:
-	    ldd #_interrupt_handler
+	    ldd #interrupt_handler
 	    std 0xFFFE		; FIXME: correct vectors
 	    ldd #nmi_handler
 	    std 0xFFFA		; Ditto
-	    ldd #syscall_entry
+	    ldd #unix_syscall_entry
 	    std 0xFFFC		; Ditto
 	    jmp map_kernel
 
@@ -116,6 +117,7 @@ map_process:
 ;	something (that would also let us put RODATA in
 ;	common area just to balance out memory usages).
 ;
+map_kernel_di:
 map_kernel:
 	    pshb
 				; Common is left untouched as is ZP and S
@@ -253,8 +255,6 @@ hd_write256:
 	addb #1
 	bne hd_write256
 	rts
-
-;FIXME linker	.segment "COMMONDATA"
 
 _hd_map:
 	.byte 0

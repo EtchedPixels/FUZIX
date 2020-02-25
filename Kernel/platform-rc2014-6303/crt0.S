@@ -1,11 +1,15 @@
 ;
 ;	So we end up first in the image
 ;
+		.code
+
 		.byte 0x03
 		.byte 0x63
 
 entry:
 		sei			; interrupts off
+		ldab #1
+		stab one+1		; set up '@one' for the compiler
 		lds #kstack_top		; C stack
 		ldx #_udata
 wipeud:
@@ -29,8 +33,3 @@ gogogo:
 		sei			; Spin
 stop:		jmp stop
 
-; FIXME: linker
-;		.segment "VECTORS"
-		.word	vector
-		.word	entry		; does it matter ???
-		.word	nmi_handler

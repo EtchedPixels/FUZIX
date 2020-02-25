@@ -172,6 +172,10 @@ _create_init_common:
 	stab 0xFE7A		;	and 0x8000
 	jsr bank2bank
 	jmp map_kernel
+
+bank2bank:
+	; TODO
+	rts
 ;
 ;	The switch proc pointer cannot live anywhere in common as we switch
 ;	common on process switch

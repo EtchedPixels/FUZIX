@@ -7,6 +7,7 @@
 #include <devtty.h>
 
 uint8_t kernel_flag = 1;
+uint8_t need_resched;
 uint16_t swap_dev = 0xFFFF;
 
 void platform_idle(void)
@@ -87,3 +88,24 @@ void devide_write_data(void)
 	hd_write_data(blk_op.addr);	
 }
 
+
+/* C library equivalents */
+
+void *memcpy(void *dest, const void *src, size_t len)
+{
+	uint8_t *dp = dest;
+	const uint8_t *sp = src;
+	while(len-- > 0)
+		*dp++=*sp++;
+	return dest;
+}
+
+void *memset(void *dest, int data, size_t len)
+{
+	char *p = dest;
+	char v = (char)data;
+
+	while(len--)
+		*p++ = v;
+	return dest;
+}
