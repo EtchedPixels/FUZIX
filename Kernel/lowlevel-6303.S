@@ -2,9 +2,15 @@
 	.export _di
 	.export _ei
 	.export _irqrestore
-
+	.export _swab
+	.export _doexec
+	.export _sys_cpu
+	.export _sys_stubs
+	.export _sys_cpu_feat
+	.export _set_cpu_type
 	.export unix_syscall_entry
 	.export interrupt_handler
+	.export nmi_handler
 
 	.export outnewline
 	.export outcharhex
@@ -34,6 +40,14 @@ _irqrestore:
 			; D holds the return from di where A is the cc
 	tap		; we trash overflow and carry but they are assumed
 	rts		; clobbered anyway
+
+_swab:
+	tsx
+	ldab	3,x
+	ldaa	4,x
+	rts
+
+	.common
 
 outnewline:
 	ldab #0x0d
@@ -144,7 +158,7 @@ unix_syscall_entry:
 	lds #kstack_top
 	jsr map_kernel_di		; no-op in pure banked
 	cli
-	jsr unix_syscall
+	jsr _unix_syscall
 	sei
 	clr U_DATA__U_INSYS
 	jsr map_process_always	; no-op in pure banked
@@ -164,11 +178,14 @@ via_signal:
 	rti
 
 _doexec:
+	tsx
+	ldx 3,x
 	sei
 	jsr map_process_always
 	lds U_DATA__U_ISP
 	clr U_DATA__U_INSYS
 	cli
+	ldd PROGLOAD
 	jmp 0,x
 
 null_handler:
@@ -248,7 +265,7 @@ not_running:
 	jsr _platform_switchout
 	clr U_DATA__U_ININTERRUPT
 	clr U_DATA__U_INSYS
-	jsr _map_process_always
+	jsr map_process_always
 	lds U_DATA__U_SYSCALL_SP
 	ldaa U_DATA__U_CURSIG
 	beq no_signals
@@ -266,3 +283,34 @@ null_pointer_trap:
 	pulx
 	rts
 
+	.code
+
+;
+;	FIXME: eventually test 6803 v 6303 and for 6303
+;	set features to 3 (xgdx as well as 6803) 
+;
+_set_cpu_type:
+	rts
+
+	.data
+_sys_cpu:
+	.byte 2		; 6800 class CPU
+_sys_cpu_feat:
+	.byte 1		; 6800 with 6801/3 features
+_sys_stubs:
+	swi
+	rts
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop

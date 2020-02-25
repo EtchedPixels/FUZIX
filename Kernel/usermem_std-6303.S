@@ -60,20 +60,20 @@ __uget:
 	ldd 7,x		; len
 	std tmp
 	ldd 5,x		; to
-	std to
+	std @to
 	ldx 3,x		; from
-	stx from
+	stx @from
 ugetl:
-	ldx from
+	ldx @from
 	jsr map_process_always
 	ldab ,x
 	inx
 	jsr map_kernel
-	stx from
-	ldx to
+	stx @from
+	ldx @to
 	stab ,x
 	inx
-	stx to
+	stx @to
 	ldd tmp
 	subd #1
 	std tmp
@@ -90,20 +90,20 @@ __uput:
 	ldd 7,x		; len
 	std tmp
 	ldd 5,x		; to
-	std to
+	std @to
 	ldx 3,x		; from
-	stx from
+	stx @from
 uputl:
-	ldx from
+	ldx @from
 	ldab ,x
 	inx
-	stx from
-	ldx to
+	stx @from
+	ldx @to
 	jsr map_process_always
 	stab ,x
 	jsr map_kernel
 	inx
-	stx to
+	stx @to
 	ldd tmp
 	subd #1
 	std tmp
@@ -112,3 +112,13 @@ uputl:
 	clra
 	rts
 
+	.zp
+
+;
+;	We should be ok not saving these on IRQ as we don't allow IRQs to
+;	poke user space
+;
+to:
+	.word 0
+from:
+	.word 0
