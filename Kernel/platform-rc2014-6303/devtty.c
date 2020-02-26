@@ -7,8 +7,8 @@
 #include <vt.h>
 #include <tty.h>
 
-/* 16550A at FEC0 */
-static volatile uint8_t *uart = (volatile uint8_t *)0xFEC0;
+/* Onboard UART */
+static volatile uint8_t *cpuio = (volatile uint8_t *)0;
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -34,43 +34,41 @@ void kputchar(uint8_t c)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	if (uart[5] & 0x20)
-	        return TTY_READY_NOW;
+	/* Console is the 6803 onboard port */
+	if (cpuio[0x11] & 0x20)
+		return TTY_READY_NOW;
 	return TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	while(!(uart[5] & 0x20));
-	uart[0] = c;
+	while(!(cpuio[0x11] & 0x20));	/* Hack FIXME */
+	cpuio[0x13] = c;
 }
 
 void tty_setup(uint8_t minor, uint8_t flag)
 {
+	/* Fudge for now - it is set up by the boot ROM */
 }
 
 void tty_sleeping(uint8_t minor)
 {
 }
 
-/* For the moment */
+/* No carrier signal */
 int tty_carrier(uint8_t minor)
 {
 	return 1;
 }
 
+/* No flow control */
 void tty_data_consumed(uint8_t minor)
 {
 }
 
+/* Should eventually be called from IRQ */
 void tty_poll(void)
 {
-        uint8_t x;
-        
-        x = uart[5] & 1;
-        if (x) {
-        	x = uart[0];
-		tty_inproc(1, x);
-	}
+	if (cpuio[0x11] & 0x80)
+		tty_inproc(1, cpuio[0x13]);
 }
-                
