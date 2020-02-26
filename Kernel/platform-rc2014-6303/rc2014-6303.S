@@ -187,18 +187,18 @@ saved_map:  .byte 0
 outchar:
 	    psha
 outcharw:
-	    ldaa $FEC5
+	    ldaa $11
 	    anda #$20
 	    beq outcharw
 	    pula
-	    staa $FEC0
+	    staa $13
 	    rts
 
 ;
 ;	Disk copier (needs to be in common), call with ints off
 ;	for now
 ;
-;	AX = ptr, length always 512, src and page in globals
+;	TOS = ptr, length always 512, src and page in globals
 ;
 
 	.export _hd_read_data
