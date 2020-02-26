@@ -35,10 +35,10 @@ $(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
 	mv ../dev/$*.o .
 
 clean:
-	rm -f $(OBJS) *.o core *~ fuzix.img fuzix.bin
+	rm -f $(OBJS) *.o core *~ fuzix.bin fuzix.tmpmap
 
 image:
-	$(CROSS_LD) -b -C 0x100 -S 0xF800 -o ../fuzix.bin -m ../fuzix.map crt0.o commonmem.o \
+	$(CROSS_LD) -b -C 0x400 -S 0xF600 -Z 0x20 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
 	rc2014-6303.o ../start.o ../version.o ../lowlevel-6303.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
@@ -46,4 +46,5 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-6303.o devtty.o /opt/cc68/lib/libc.a
-	
+	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
+	dd if=../fuzix.bin of=fuzix.img bs=256 skip=4
