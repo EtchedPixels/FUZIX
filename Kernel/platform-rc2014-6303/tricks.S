@@ -5,7 +5,6 @@
         .export _switchin
         .export _dofork
 	.export _ramtop
-	.export _create_init_common
 
 #include "kernel.def"
 #include "../kernel-6303.def"
@@ -165,16 +164,29 @@ fork_copy:
 	; TODO
 	rts
 
-_create_init_common:
-	ldab #32
-	stab 0xFE79		;	set the map for 0x4000
-	ldab #36
-	stab 0xFE7A		;	and 0x8000
-	jsr bank2bank
-	jmp map_kernel
-
+;
+;	The 680x isn't very good at block copying. We can do tricks with
+;	the stack pointer but lets avoid that for now. We could really do
+;	with an MMU with split read/write mappings so we could ldx,stx the
+;	same address.
+;
 bank2bank:
-	; TODO
+	ldx #0x8000
+	stx @tmp
+	ldx #0x4000
+bankcp:
+	ldd 0,x		; Fetch from the read page
+	inx
+	inx
+	stx @tmp1
+	ldx @tmp
+	std 0,x
+	inx
+	inx
+	stx @tmp
+	ldx @tmp1
+	cpx #0x8000
+	bne bankcp
 	rts
 ;
 ;	The switch proc pointer cannot live anywhere in common as we switch

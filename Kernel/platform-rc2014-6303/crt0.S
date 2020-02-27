@@ -9,7 +9,7 @@
 entry:
 		sei			; interrupts off
 		ldab #1
-		stab one+1		; set up '@one' for the compiler
+		stab @one+1		; set up '@one' for the compiler
 		lds #kstack_top		; C stack
 		ldx #_udata
 wipeud:

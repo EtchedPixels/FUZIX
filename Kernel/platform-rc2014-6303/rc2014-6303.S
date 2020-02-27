@@ -60,12 +60,6 @@ irq_on:
             .code
 
 init_early:
-	    ; Hack for now - create a common copy for init. We should then
-	    ; recycle page 32 into a final process but that means awkward
-	    ; handling - or does it - we wrap the bit ?? FIXME
-	    jsr _create_init_common
-	    ldab #36
-	    stab 0xFE78		; set low page to copy
             rts			; stack was copied so this is ok
 
 init_hardware:
@@ -91,17 +85,25 @@ _program_vectors:
 	    jsr map_process
 program_vectors_k:
 	    ldd #interrupt_handler
-	    std 0xFFFE		; FIXME: correct vectors
+	    std 0xFFF2		; timer overflow
+	    std 0xFFF0		; serial interrupt
+	    std 0xFFF8		; external int
+	    ldd #nullirq
+	    std 0xFFF4		; OCF
+	    std 0xFFF6		; ICF
 	    ldd #nmi_handler
-	    std 0xFFFA		; Ditto
+	    std 0xFFFC		; NMI vector
 	    ldd #unix_syscall_entry
-	    std 0xFFFC		; Ditto
+	    std 0xFFFA		; SWI vector
 	    jmp map_kernel
+
+nullirq:
+	    rti
 
 map_process_always:
 	    pshb
 	    ldab _udata + U_DATA__U_PAGE
-	    jsr map_bank_i
+	    jsr map_bank
 	    pulb
 	    rts
 ;
@@ -120,37 +122,31 @@ map_process:
 map_kernel_di:
 map_kernel:
 	    pshb
-				; Common is left untouched as is ZP and S
+				; Common is left untouched
 	    ldab #$20		; Kernel RAM
-	    jsr map_bank_i
+	    jsr map_bank
 	    pulb
 	    rts
 
 ;
-;	Entry point to map a linear bank range. We switch 4000-BFFF
-;	C000-FFFF are constant, 0000-3FFF are switched on the task switch
-;	so are valid for map_process_always cases but not mapping an
-;	arbitrary process. This is ok - when we add swap it uses
-;	map_for_swap and that will map a 16K window in and out (which will
-;	need us to fix save/restore)
-;
-;	FIXME: correct for actual 6303 memory map we use and for 16K x 4
-;	bank logic ?
+;	For now we are using the 4x16K MMU but this will probably change.
+;	Switch the low 48K, the task switch flips the top. Hack until we
+;	enable the real MMU and banking setup.
 ;
 map_bank:
 	    stab 0xFE78
-map_bank_i:			; We are not mapping the first user page yet
 	    stab cur_map
 	    addb #1
 	    stab 0xFE79
 	    addb #1
 	    stab 0xFE7A
+	    ; And don't swap the common here but in the task switch
 	    rts
 
 ; X holds the map table of this process
 map_process_2:
 	    ldab 0,x
-	    jmp map_bank_i
+	    jmp map_bank
 
 
 ;
@@ -162,7 +158,7 @@ map_process_2:
 map_restore:
 	    pshb
 	    ldab saved_map	; First bank we skip half of
-	    jsr map_bank_i
+	    jsr map_bank
 	    pulb
 	    rts
 
