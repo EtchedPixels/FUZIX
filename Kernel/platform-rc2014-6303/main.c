@@ -78,6 +78,7 @@ void platform_interrupt(void)
 
 	/* Reading the register resets the flag if set */
 	if (cpuio[0x08] & 0x20) {
+		cpuio[9];	/* Read tmer to clear interrupt */
 		tickmod++;
 		if (tickmod == 7)
 			tickmod = 0;
@@ -117,10 +118,10 @@ void devide_write_data(void)
 
 void *memcpy(void *dest, const void *src, size_t len)
 {
-	uint8_t *dp = dest;
-	const uint8_t *sp = src;
-	while(len-- > 0)
-		*dp++=*sp++;
+	uint8_t *dp = (uint8_t *)dest - 1;
+	const uint8_t *sp = (uint8_t *)src - 1;
+	while(len--)
+		*++dp=*++sp;
 	return dest;
 }
 
