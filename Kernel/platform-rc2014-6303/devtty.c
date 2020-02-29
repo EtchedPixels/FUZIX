@@ -69,5 +69,5 @@ void tty_data_consumed(uint8_t minor)
 void tty_poll(void)
 {
 	if (cpuio[0x11] & 0x80)
-		tty_inproc(1, cpuio[0x13]);
+		tty_inproc(1, cpuio[0x12]);
 }
