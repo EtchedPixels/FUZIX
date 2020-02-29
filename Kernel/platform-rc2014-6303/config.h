@@ -16,7 +16,7 @@
  */
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS 	9   /* 9 x 48K */
-#define MAP_SIZE    0xF600
+#define MAP_SIZE    0xF400
 
 #define TICKSPERSEC 20	    /* Ticks per second */
 
@@ -24,7 +24,7 @@
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100
-#define PROGTOP     0xF600
+#define PROGTOP     0xF400
 
 #define CONFIG_IDE
 #define MAX_BLKDEV 1
