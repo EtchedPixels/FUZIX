@@ -298,6 +298,7 @@ uint16_t get_root_dev(void)
 		udata.u_done = 0;
 
 		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
+		bootline[udata.u_done] = 0;
 		rd = bootdevice(bootline);
 	}
 
