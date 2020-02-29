@@ -66,7 +66,6 @@ void tty_data_consumed(uint8_t minor)
 {
 }
 
-/* Should eventually be called from IRQ */
 void tty_poll(void)
 {
 	if (cpuio[0x11] & 0x80)
