@@ -37,10 +37,11 @@ _platform_reboot:
 
 ___hard_di:
 	    tpa
+	    tab
 	    sei			; Save old state in return to C
 	    rts
 ___hard_ei:
-	    cli			; on 6502 cli enables IRQs!!!
+	    cli			; on 680x cli enables IRQs!!!
 	    rts
 
 ___hard_irqrestore:
@@ -95,6 +96,9 @@ program_vectors_k:
 	    std 0xFFFC		; NMI vector
 	    ldd #unix_syscall_entry
 	    std 0xFFFA		; SWI vector
+	    ldd #trap_handler
+	    std 0xFFEE		; 6303 TRAP (usually executing 0 but also
+				; illegals)
 	    jmp map_kernel
 
 nullirq:
