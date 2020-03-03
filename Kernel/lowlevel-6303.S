@@ -140,11 +140,13 @@ signal_return:
 
 ;
 ;	We are called from SWI. The stack holds 7 bytes of return
-;	information, B holds the syscall number on entry
+;	information, A holds the syscall number on entry
+;
+;	FIXME L->R syscall arguments with B holding the length
 ;
 unix_syscall_entry:
 	tsx
-	stab _udata+U_DATA__U_CALLNO
+	staa _udata+U_DATA__U_CALLNO
 	ldd 11,x
 	std _udata+U_DATA__U_ARGN
 	ldd 13,x
@@ -239,6 +241,8 @@ interrupt_handler:
 	pshx
 	ldx @tmp1
 	pshx
+	ldx @tmp2
+	pshx
 	ldx @sreg
 	pshx
 	ldx @fp
@@ -249,6 +253,8 @@ interrupt_handler:
 	stx @fp
 	pulx
 	stx @sreg
+	pulx
+	stx @tmp2
 	pulx
 	stx @tmp1
 	pulx
