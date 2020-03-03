@@ -1,4 +1,4 @@
-CC = cc68
+CC = cc68 -X
 ASM = as68
 AR = ar
 LINKER = ld68
@@ -27,7 +27,7 @@ SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c htons.c htonl.c index.c initgroups.c
 SRC_C += isatty.c killpg.c libintl.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
-SRC_C += malloc.c mkfifo.c mkstemps.c mntent.o nanosleep.c
+SRC_C += malloc.c memmove.c mkfifo.c mkstemps.c mntent.o nanosleep.c
 SRC_C += opendir.c opendir_r.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
 SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
@@ -45,7 +45,7 @@ SRC_C += strtok_r.c strtol.c
 # ctype
 SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
 SRC_C += isgraph.c islower.c isprint.c ispunct.c isspace.c isupper.c
-SRC_C += isxdigit.c
+SRC_C += isxdigit.c toupper.c tolower.c
 # tty layer
 SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c
@@ -80,20 +80,20 @@ fuzix6303/Makefile: ../tools/syscall_6303.c ../../Kernel/include/syscall_name.h
 
 syslib.lib: fuzix6303/Makefile $(OBJ_ALL)
 	(cd fuzix6303; make)
-	$(AR) a syslib.lib $(OBJ_ALL)
-	ln -sf syslib.lib c6303.lib
+	$(AR) cr syslib.lib $(OBJ_ALL)
+	ln -sf syslib.lib c6303.a
 
 termcap.lib: fuzix6303/Makefile $(OBJ_TC)
-	$(AR) a termcap.lib $(OBJ_TC)
-	ln -sf termcap.lib termcap6303.lib
+	$(AR) cr termcap.lib $(OBJ_TC)
+	ln -sf termcap.lib termcap6303.a
 
 readline.lib: fuzix6303/Makefile $(OBJ_RL)
-	$(AR) a readline.lib $(OBJ_RL)
-	ln -sf readline.lib readline6303.lib
+	$(AR) cr readline.lib $(OBJ_RL)
+	ln -sf readline.lib readline6303.a
 
 curses.lib: fuzix6303/Makefile $(OBJ_CURS)
-	$(AR) a curses.lib $(OBJ_CURS)
-	ln -sf curses.lib curses6303.lib
+	$(AR) cr curses.lib $(OBJ_CURS)
+	ln -sf curses.lib curses6303.a
 
 liberror.txt:
 	../tools/liberror > liberror.txt
