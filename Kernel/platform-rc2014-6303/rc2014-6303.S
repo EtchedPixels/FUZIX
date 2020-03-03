@@ -31,9 +31,8 @@
 
 _platform_monitor:
 _platform_reboot:
-	    clr $FE7B		; top 16K to ROM 0
-	    ldx $FFFC
-	    jmp ,x		; check vector FIXME
+	    jsr map_kernel
+	    jmp rebootit
 
 ___hard_di:
 	    tpa
@@ -59,6 +58,11 @@ irq_on:
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
             .code
+
+rebootit:
+	    clr $FE7B		; top 16K to ROM 0
+	    ldx $FFFE		; restart vector
+	    jmp ,x		; and go
 
 init_early:
             rts			; stack was copied so this is ok
@@ -106,7 +110,7 @@ nullirq:
 
 map_process_always:
 	    pshb
-	    ldab _udata + U_DATA__U_PAGE
+	    ldab _udata + U_DATA__U_PAGE+1	; big endian
 	    jsr map_bank
 	    pulb
 	    rts
@@ -149,7 +153,7 @@ map_bank:
 
 ; X holds the map table of this process
 map_process_2:
-	    ldab 0,x
+	    ldab 1,x		; Big endian
 	    jmp map_bank
 
 

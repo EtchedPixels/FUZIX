@@ -160,8 +160,36 @@ _dofork:
 ;	number. This wants optimising to avoid copying all the unused
 ;	space!
 ;
+;	Copy memory
+;
 fork_copy:
-	; TODO
+	ldx _udata+U_PTAB
+	ldaa _udata+P_TAB__P_PAGE_OFFSET+1,x
+	ldab _udata+U_DATA__U_PAGE+1
+	pshb
+	psha
+	bsr banktobank
+	pula
+	pulb
+	inca
+	incb
+	pshb
+	psha
+	bsr banktobank
+	pula
+	pulb
+	inca
+	incb
+	pshb
+	psha
+	bsr banktobank
+	pula
+	pulb
+	inca
+	incb
+	; This last one copies more than needed of the common space but
+	; will be relevant when we go to proper banking
+	bsr banktobank
 	rts
 
 ;
@@ -170,24 +198,35 @@ fork_copy:
 ;	with an MMU with split read/write mappings so we could ldx,stx the
 ;	same address.
 ;
+;	In fact for the 6803/6303 it's actually better to pretend to have
+;	an MMU that works like that and keep switching the MMU
+;
+;	Alas we can't use EIM here because it doesn't do extended addresses
+;	and our MMU is in I/O space ($FExx)
+;
+;	Copy 16K from page A to page B. Caller is responsible for putting
+;	banks back sane
+;
 bank2bank:
-	ldx #0x8000
-	stx @tmp
-	ldx #0x4000
-bankcp:
-	ldd 0,x		; Fetch from the read page
+	stab $FE79		; Switch to destination bank
+	staa patch1		; Patch the source bank return id
+	staa $FE79		; Switch to source bank
+	stab patch2		; And patch the dest bank switch
+	ldx #$4000		; Start address
+copyloop:
+	ldab ,x
+patch1:
+	ldaa #0
+	staa #$FE79		; Switch bank to secondary
+	stab ,x
 	inx
-	inx
-	stx @tmp1
-	ldx @tmp
-	std 0,x
-	inx
-	inx
-	stx @tmp
-	ldx @tmp1
-	cpx #0x8000
-	bne bankcp
+patch2:
+	ldaa #0
+	staa #$FE79		; And back
+	cpx #$8000		; End at 0x8000
+	bne copyloop
 	rts
+
 ;
 ;	The switch proc pointer cannot live anywhere in common as we switch
 ;	common on process switch

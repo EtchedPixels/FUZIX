@@ -30,3 +30,8 @@ RC2014 bus
 512K RAM/ROM
 16550A UART	(switch to internal TODO)
 
+
+Things to address
+- bank to bank copies
+- once stable switch to 16K banks (right now our trickery means swap won't
+  work unless we limit user top to BFFF etc)
