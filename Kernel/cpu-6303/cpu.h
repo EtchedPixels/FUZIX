@@ -41,6 +41,8 @@ typedef union {            /* this structure is endian dependent */
 
 #define cpu_to_le16(x)	swab(x)
 #define le16_to_cpu(x)	swab(x)
+
+/* This is horrid, asm it */
 #define cpu_to_le32(x)	((((uint32_t)cpu_to_le16((x) & 0xFFFF)) << 16) | \
 				(uint32_t)cpu_to_le16((x) >> 16))
 #define le32_to_cpu(x)	cpu_to_le32(x)
