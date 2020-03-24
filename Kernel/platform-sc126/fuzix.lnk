@@ -1,0 +1,52 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _COMMONMEM=0xF600
+-b _DISCARD=0xE000
+-l z180
+platform-sc126/crt0.rel
+platform-sc126/commonmem.rel
+platform-sc126/z180.rel
+platform-sc126/sc126.rel
+platform-sc126/main.rel
+start.rel
+version.rel
+lowlevel-z180.rel
+usermem_std-z180.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-sc126/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+syscall_net.rel
+tty.rel
+mm.rel
+bankfixed.rel
+swap.rel
+devsys.rel
+platform-sc126/discard.rel
+platform-sc126/devtty.rel
+platform-sc126/devide.rel
+platform-sc126/devide_discard.rel
+platform-sc126/spi.rel
+platform-sc126/devsd.rel
+platform-sc126/devsd_discard.rel
+platform-sc126/mbr.rel
+platform-sc126/blkdev.rel
+platform-sc126/monitor.rel
+platform-sc126/ds1302.rel
+platform-sc126/ds1302_discard.rel
+platform-sc126/ds1302_rc2014_z180.rel
+platform-sc126/i2c.rel
+platform-sc126/i2c_bitbang.rel
+platform-sc126/devi2c.rel
+-e
