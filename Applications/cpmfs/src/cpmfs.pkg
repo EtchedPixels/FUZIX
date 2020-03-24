@@ -1,0 +1,4 @@
+package cpmfs
+if-file cpm
+
+f 0755 /usr/bin/cpm	cpm
