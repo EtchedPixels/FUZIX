@@ -1,4 +1,5 @@
         .module tricks
+	.globl _udata
 
         .include "platform/kernel.def"
         .include "../../kernel-z80.def" ; Kernel
@@ -11,7 +12,7 @@ TOP_PORT	.equ	0x13
 
 
 fork_copy:
-	ld hl, (U_DATA__U_TOP)
+	ld hl, (_udata + U_DATA__U_TOP)
 	ld de, #0x0fff
 	add hl, de		; + 0x1000 (-1 for the rounding to follow)
 	ld a, h
@@ -26,7 +27,7 @@ fork_copy:
 	ld de, #P_TAB__P_PAGE_OFFSET
 	add hl, de
 	; hl now points into the child pages
-	ld de, #U_DATA__U_PAGE
+	ld de, #_udata + U_DATA__U_PAGE
 	; and de is the parent
 fork_next:
 	ld a,(hl)
