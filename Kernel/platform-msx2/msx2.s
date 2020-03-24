@@ -25,6 +25,7 @@
 	    .globl _need_resched
             .globl _bufpool
 	    .globl _int_disabled
+            .globl _udata
 
 	    ; video driver
 	    .globl _vtinit
@@ -159,7 +160,7 @@ _program_vectors:
             ld hl, #unix_syscall_entry
             ld (0x0031), hl
 
-            ld (0x0000), a   
+            ld (0x0000), a
             ld hl, #null_handler   ;   to Our Trap Handler
             ld (0x0001), hl
 
@@ -174,7 +175,7 @@ _program_vectors:
 map_process_always:
 map_process_always_di:
 	    push hl
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_process_2
 	    pop hl
 	    ret
@@ -359,7 +360,7 @@ setexp1:
 
 
 map_table:
-	    .db 0,0,0,0	
+	    .db 0,0,0,0
 map_savearea:
 	    .db 0,0,0,0
 map_kernel_data:
@@ -381,4 +382,3 @@ outchar:
 	    out (0x2F), a
 	    pop af
 	    ret
-
