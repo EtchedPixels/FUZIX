@@ -32,14 +32,14 @@ This currently works on the NC100 only (the NC200 won't boot from PCMCIA yet).
 
 On a PC, do:
 
-    $ mkfs filesystem.img 64 1408
-    $ ucp filesystem.img
-    (copy files into the filesystem here)
+    $ mkfs filesystem.img 64 1408  
+    $ ucp filesystem.img  
+    (copy files into the filesystem here)  
 
 then
 
-    $ dd if=fuzix,bin of=mycard.img bs=16384
-    $ dd if=myfs of=mycard.img bs=16384 seek=20 conv=notrunc
+    $ dd if=fuzix,bin of=mycard.img bs=16384  
+    $ dd if=myfs of=mycard.img bs=16384 seek=20 conv=notrunc  
 
 Now copy `mycard.img` onto the PCMCIA card. Insert into the NC100 and do
 YELLOW+X to boot. At the bootdev prompt, use 0 to mount the PCMCIA file
@@ -69,31 +69,31 @@ is at least 320kB, and instead will crash obscurely.)
 
 No CP/M emulation (due to NMI)
 
-0x0000	Vectors
-0x0100  Application
-0xEFFF  Application end
-0xF000  Common, uarea
-0xFFFF	Common top  (including video helpers)
+0x0000	Vectors  
+0x0100  Application  
+0xEFFF  Application end  
+0xF000  Common, uarea  
+0xFFFF	Common top  (including video helpers)  
 
 Overlaid with
 
-0x0000	Vectors
-0x0100  Bootstrap code
-0x0213	Kernel
-0xBFFF  End of kernel space
+0x0000	Vectors  
+0x0100  Bootstrap code  
+0x0213	Kernel  
+0xBFFF  End of kernel space  
 
-Overlaid at times with
+Overlaid at times with  
 0x4000-0x7FFF video bank (vram used by ROM OS)
 
 NC200 is similar but CP/M should be possible
 
 On the PCMCIA card the layout looks like
 
-0,1,2		Bootblocks, state, kernel
-3,4,5		Running kernel
-6		Initial common (boot and inherited by init)
-8-19		User pages (12 * 16K)
-20-63		Filesystem
+0,1,2		Bootblocks, state, kernel  
+3,4,5		Running kernel  
+6		Initial common (boot and inherited by init)  
+8-19		User pages (12 * 16K)  
+20-63		Filesystem  
 
 
 ## NC200 differences
