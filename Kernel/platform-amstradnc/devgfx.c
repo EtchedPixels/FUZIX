@@ -8,19 +8,7 @@
 #include <graphics.h>
 #include <devgfx.h>
 
-#ifdef CONFIG_NC100
-static struct display ncdisplay = {
-  0,
-  480, 64,
-  512, 64,
-  0xFF, 0xFF,		/* For now */
-  FMT_MONO_WB,
-  HW_UNACCEL,
-  GFX_TEXT,
-  0,
-  GFX_DRAW
-};
-#else
+#ifdef CONFIG_NC200
 static struct display ncdisplay = {
   0,
   480, 128,
@@ -31,6 +19,18 @@ static struct display ncdisplay = {
   GFX_TEXT,
   0,
   GFX_DRAW,
+};
+#else
+static struct display ncdisplay = {
+  0,
+  480, 64,
+  512, 64,
+  0xFF, 0xFF,		/* For now */
+  FMT_MONO_WB,
+  HW_UNACCEL,
+  GFX_TEXT,
+  0,
+  GFX_DRAW
 };
 #endif
 
