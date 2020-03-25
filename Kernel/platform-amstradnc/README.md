@@ -69,31 +69,31 @@ is at least 320kB, and instead will crash obscurely.)
 
 No CP/M emulation (due to NMI)
 
-0x0000	Vectors  
-0x0100  Application  
-0xEFFF  Application end  
-0xF000  Common, uarea  
-0xFFFF	Common top  (including video helpers)  
+	0x0000	Vectors  
+	0x0100  Application  
+	0xEFFF  Application end  
+	0xF000  Common, uarea  
+	0xFFFF	Common top  (including video helpers)  
 
 Overlaid with
 
-0x0000	Vectors  
-0x0100  Bootstrap code  
-0x0213	Kernel  
-0xBFFF  End of kernel space  
+	0x0000	Vectors  
+	0x0100  Bootstrap code  
+	0x0213	Kernel  
+	0xBFFF  End of kernel space  
 
 Overlaid at times with  
-0x4000-0x7FFF video bank (vram used by ROM OS)
+	0x4000-0x7FFF video bank (vram used by ROM OS)
 
 NC200 is similar but CP/M should be possible
 
 On the PCMCIA card the layout looks like
 
-0,1,2		Bootblocks, state, kernel  
-3,4,5		Running kernel  
-6		Initial common (boot and inherited by init)  
-8-19		User pages (12 * 16K)  
-20-63		Filesystem  
+	0,1,2		Bootblocks, state, kernel  
+	3,4,5		Running kernel  
+	6		Initial common (boot and inherited by init)  
+	8-19		User pages (12 * 16K)  
+	20-63		Filesystem  
 
 
 ## NC200 differences
@@ -117,11 +117,12 @@ The NC200 differs from the NC100 in various ways we care about
 - Different rtc (same base address but a 146818 not a tc8521)
 - There is a floppy drive, this is sort of described in MESS
 
-	0x30 bit 5 set to 0 for FDC use ?
-	0x60 bit 5 is the FDC interrupt (same bit masks in 0x90 as usual)
-	0x70 bit 1 is the disk motor (1 = off)
-	0x70 bit 0 is the 765 terminal count
-	0xE0/E1 is the upd765
+
+	0x30 bit 5 set to 0 for FDC use ?  
+	0x60 bit 5 is the FDC interrupt (same bit masks in 0x90 as usual)  
+	0x70 bit 1 is the disk motor (1 = off)  
+	0x70 bit 0 is the 765 terminal count  
+	0xE0/E1 is the upd765  
 
 
 ## Todo
