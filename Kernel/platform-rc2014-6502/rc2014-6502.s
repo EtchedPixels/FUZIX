@@ -403,8 +403,6 @@ no_preempt:
 	    beq irqout
 	    tay
 
-	    lda #255
-;	    sta $FE00
 	    ; Right now the stack holds Y X A P rti addr
 	    ; Push a helper to clean up and restore the register state
 	    lda #>(irqout-1)
@@ -583,7 +581,7 @@ noargs:
 	    ; frame. If the handler made syscalls then we set the registers
 	    ; up in sigret
 	    cli
-	    jmp (PROGLOAD + 20)
+	    jmp (PROGLOAD + 16)
 
 sigret:
 	    pla		; Unstack the syscall return pieces
@@ -614,15 +612,15 @@ platform_doexec:
 ;
 	    stx ptr1+1
 	    sta ptr1		; Save execution address in ptr1
-	    stx ptr2+1		; Point ptr2 at base page + 0x20
-	    lda #$20
+	    stx ptr2+1		; Point ptr2 at base page + 16
+	    lda #16
 	    sta ptr2
 	    ldy #0
 	    lda (ptr2),y	; Get the signal vector pointer
-	    sta PROGLOAD+$20	; if we loaded high put the vector in
+	    sta PROGLOAD+16	; if we loaded high put the vector in
 	    iny
 	    lda (ptr2),y
-	    sta PROGLOAD+$21	; the low space where it is expected
+	    sta PROGLOAD+17	; the low space where it is expected
 
 ;
 ;	Set up the C stack. FIXME: assumes for now our sp in ZP matches it
