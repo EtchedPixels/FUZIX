@@ -28,7 +28,7 @@ __syscall_hook:				; Stubs overlay this
 head:
 	.word 	$80A8
 	.byte	3			; 6502 family
-	.byte	1			; 65C02 required (TODO)
+	.byte	0			; 6502 (we don't yet use 65C02 ops)
 	.byte	>head			; Load address page
 	.byte	0			; No hint bits
 	.word	__CODE_SIZE__ + __RODATA_SIZE__ + __STARTUP_SIZE__
