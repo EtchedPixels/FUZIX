@@ -224,6 +224,8 @@ map_bank_i:			; We are not mapping the first user page yet
 	    stx $FE79
 	    inx
 	    stx $FE7A
+	    inx
+	    stx $FE7B
 	    rts
 
 ; X,A holds the map table of this process
@@ -611,14 +613,9 @@ platform_doexec:
 ;	Start address of executable
 ;
 	    stx ptr1+1
-	    sta ptr1
-
-	    clc
-	    adc #$20
-	    bcc noincx
-	    inx
-noincx:
-	    stx ptr2+1		; Point ptr2 at base + 0x20
+	    sta ptr1		; Save execution address in ptr1
+	    stx ptr2+1		; Point ptr2 at base page + 0x20
+	    lda #$20
 	    sta ptr2
 	    ldy #0
 	    lda (ptr2),y	; Get the signal vector pointer

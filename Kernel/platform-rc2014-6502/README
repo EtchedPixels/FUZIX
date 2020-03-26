@@ -7,34 +7,28 @@ still looks like this
 
 	0x0000-0x00FF	ZP
 	0x0100-0x01FF	6502 Stack (per proc)
-	0x0200-0x03FF	Loader (need to reclaim this FIXME)
-	0x0400-0x1FFF	Common data and whatever code fills the rest
+	0x0200-0x03FF	Loader (reclaimed for udata)
+	0x0400-0x1FFF	Common data, compiler support and whatever code fills
+			the rest (compiler support is assumed to be common by
+			several bits of asm)
+	0x2000-0x3FFF	Window of user memory
 
-	0x4000-0xBFFF	Kernel code
-	0xC000-0xC0FF	I/O Window
-	0xC000-0xFDFF	Kernel code/common/data/vectors
+	0x4000-0xFDFF	Kernel code/vectors
 	0xFE00-0xFEFF	I/O Window
 	0xFF00-0xFFF9	Not yet used (FIXME)
 	0xFFFA-0xFFFF	Vectors
 
-Everything we need to copy to/from userspace lives above C000
-
 In user space
 
 	0x0000-0x1FFF	Kernel common and work area
-	0x2000-0xBFFF	User space
-	0xC000-0xC0FF	Unused
-	0xC100-0xFDFF	Kernel code/common/data/vectors
+	0x2000-0xFDFF	User space
 	0xFE00-0xFEFF	I/O Window
+	0xFF00-0xFFF9	Not yet used
 	0xFFFA-0xFFFF	Vectors
 
 We operate roughly like a 16K x 4 paged setup except that for now for simplicity
 we treat user space as a fixed 48K bank switch. The other difference is that
 being a 6502 we need it the other way up.
-
-We currently stuff the low space with kernel code limiting process size to
-0xC000 bytes. In theory we can trim that down and tidy up the maps a bit to
-make user bigger. That can wait however.
 
 Interrupts deal wth the shared ZP by swapping the ZP back and forth with the
 interrupt copies (about 20 bytes involved)

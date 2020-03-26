@@ -20,8 +20,8 @@
  *	have to copy stuff/watching sharing
  */
 #define CONFIG_BANK_FIXED
-#define MAX_MAPS 	9   /* 9 x 48K */
-#define MAP_SIZE    0xC000
+#define MAX_MAPS 	7   /* 9 x 64K */
+#define MAP_SIZE    0xDE00
 
 #define TICKSPERSEC 100	    /* Ticks per second */
 
@@ -29,7 +29,7 @@
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x2000  /* also data base */
 #define PROGLOAD    0x2000
-#define PROGTOP     0xC000
+#define PROGTOP     0xFE00
 
 #define CONFIG_IDE
 #define MAX_BLKDEV 1

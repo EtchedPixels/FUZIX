@@ -27,10 +27,10 @@ void do_beep(void)
 void pagemap_init(void)
 {
     int i;
-    /* 32-35 are the kernel, 36-38 / 39-41 / etc are user */
-    /* Add 36-38 last as we hardcode 36 into our init creation in tricks.s */
-    for (i = 8; i >= 0; i--)
-        pagemap_add(36 + i * 3);
+    /* Add the user banks, taking care to land 36 as the last one as we
+       use that for init  (32-35 are the kernel) */
+    for (i = 6; i >= 0; i--)
+        pagemap_add(36 + i * 4);
 }
 
 void map_init(void)

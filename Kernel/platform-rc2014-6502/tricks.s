@@ -35,7 +35,7 @@
 ; and its a constant for the others from before init forks so it'll be fine
 ; here
 _ramtop:
-	.word $C000
+	.word $FE00
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -83,12 +83,12 @@ _switchin:
 	; CPU
 	sta	switch_proc_ptr
 	stx	switch_proc_ptr+1
-;	jsr	outxa
+	jsr	outxa
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
-;	pha
-;	jsr	outcharhex
-;	pla
+	pha
+	jsr	outcharhex
+	pla
 	sta	$FE78		; switches zero page, stack memory area
 	; ------- New stack and ZP -------
 
@@ -97,6 +97,7 @@ _switchin:
 	sta	ptr1
 	lda	switch_proc_ptr+1
 	sta	ptr1+1
+	jsr	outxa
 
         ; check u_data->u_ptab matches what we wanted
 	lda	_udata + U_DATA__U_PTAB
@@ -142,11 +143,6 @@ switchinfail:
 	; something went wrong and we didn't switch in what we asked for
         jmp _platform_monitor
 
-; Must not put this in ZP ?
-;
-; Move to commondata ??
-;
-fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -271,6 +267,14 @@ fork_copy:
 	sta $FE7A
 	lda tmp2
 	sta $FE79
+	jsr bank2bank		; third 16K
+
+	inc tmp1
+	inc tmp2
+	lda tmp1
+	sta $FE7A
+	lda tmp2
+	sta $FE79
 	jsr bank2bank		; final block
 
 	jmp map_kernel		; put the kernel mapping back as it should be
@@ -307,8 +311,12 @@ _create_init_common:
 	jmp map_kernel
 ;
 ;	The switch proc pointer cannot live anywhere in common as we switch
-;	common on process switch
+;	common on process switch, and we need it to live about 0x4000
 ;
-	.data
+;	For now BSS will do but we ought to have a proper high space or
+;	something.
+;
+	.bss
 
 switch_proc_ptr: .word 0
+fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
