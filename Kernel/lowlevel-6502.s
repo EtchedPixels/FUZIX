@@ -188,6 +188,7 @@ deci1:
 	adc #48			; ascii zero
 	jsr outchar
 	pla
+	pha
 	and #$0f
 	cmp #10
 	bcc deci2
@@ -196,7 +197,9 @@ deci1:
 deci2:
 	clc
 	adc #48
-	jmp outchar
+	jsr outchar
+	pla
+	rts
 
 outxa:	pha
 	txa
