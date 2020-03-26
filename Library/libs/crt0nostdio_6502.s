@@ -7,10 +7,11 @@
 
 	.import		__CODE_SIZE__, __RODATA_SIZE__
 	.import		__DATA_SIZE__, __BSS_SIZE__
+	.import		__STARTUP_SIZE__
 	.import		_exit
 	.export		_environ
 	.export		initmainargs
-	.export		__syscall
+	.export		__syscall_hook
 	.import		_main
 	.import		popax, pushax
 	.import		___stdio_init_vars
@@ -23,14 +24,14 @@
 
 .segment "STARTUP"
 
-__syscall:				; Stubs overlay this
+__syscall_hook:				; Stubs overlay this
 head:
 	.word 	$80A8
 	.byte	3			; 6502 family
 	.byte	1			; 65C02 required (TODO)
 	.byte	>head			; Load address page
 	.byte	0			; No hint bits
-	.word	__CODE_SIZE__ + __RODATA_SIZE__
+	.word	__CODE_SIZE__ + __RODATA_SIZE__ + __STARTUP_SIZE__
 	.word	__DATA_SIZE__
 	.word	__BSS_SIZE__
 	.byte 	<start			; Offset from load page as entry
@@ -97,6 +98,9 @@ start:
 ;
 ; Need to save the environment ptr. The rest of the stack should be
 ; fine.
+;
+;
+;	FIXME: sort out some sort of constructor mechanism for this
 ;
 	lda	sp
 	ldx	sp+1
