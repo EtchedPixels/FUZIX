@@ -15,6 +15,7 @@
 	.export _sys_cpu
 	.export _sys_cpu_feat
 	.export _set_cpu_type
+	.export _use_mvn
 
 	.export _need_resched
 
@@ -210,7 +211,49 @@ _sys_cpu:
 	.byte 3			; 6502 series processors
 _sys_cpu_feat:
 	.byte 1			; FIXME: for now hardcode 65C02
+_use_mvn:
+	.byte 0
 
+	.p816
+	.a8
+	.i8
+;
+;	Interrupts are off at this point and we rely on that
+;
 _set_cpu_type:
-	; FIXME: TODO
+	lda #$00
+	inc
+	cmp #$01
+	bmi is_02		; 6502 must be handled first
+	; xba will not do anything on the 65C02
+	xba
+	dec
+	xba
+	cmp #$01
+	bmi is_c02	
+	; 65C816 in compat mode - make the 16bit stack match the 8bit one
+	rep #$30
+	.a16
+	.i16
+	tsx
+	txa			; 16bit stack pointer into A
+	and #$00FF
+	ora #$0100
+	tax
+	txs
+	sep #$30
+	.a8
+	.i8
+	lda #3
+	sta _sys_cpu_feat
+	lda #1
+	sta _use_mvn
+	rts
+is_c02:
+	lda #1
+	sta _sys_cpu_feat
+	rts
+is_02:
+	lda #1			; FIXME HACK
+	sta _sys_cpu_feat
 	rts
