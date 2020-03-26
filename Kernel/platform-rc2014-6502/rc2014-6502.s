@@ -252,7 +252,7 @@ map_restore:
 	    pha
 	    txa
 	    pha
-	    ldx saved_map	; First bank we skip half of
+	    ldx saved_map
 	    jsr map_bank_i
 	    pla
 	    tax
@@ -659,11 +659,8 @@ _platform_interrupt_i:
 ;
 ;	Uses ptr3/4 as 1/2 are reserved for the mappers
 ;
-;	FIXME: need to reserve some ZP space for this in user banks, and
-;	also be clear which ZP is map_process_x safe
-;
 ;	FIXME: map_process_always doesn't map the low 16K for 6502 so we
-;	have more work to do here.
+;	have more work to do here to support swap.
 ;
 
 	.export _hd_read_data,_hd_write_data,_hd_map

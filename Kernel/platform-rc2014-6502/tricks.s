@@ -83,21 +83,18 @@ _switchin:
 	; CPU
 	sta	switch_proc_ptr
 	stx	switch_proc_ptr+1
-	jsr	outxa
+;	jsr	outxa
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
-	pha
-	jsr	outcharhex
-	pla
+;	jsr	outcharhex
 	sta	$FE78		; switches zero page, stack memory area
-	; ------- New stack and ZP -------
+	; ------- No valid stack, new ZP ----- stack must not be used
 
 	; Set ptr1 back up (the old ptr1 was on the other ZP)
 	lda	switch_proc_ptr
 	sta	ptr1
 	lda	switch_proc_ptr+1
 	sta	ptr1+1
-	jsr	outxa
 
         ; check u_data->u_ptab matches what we wanted
 	lda	_udata + U_DATA__U_PTAB
@@ -119,6 +116,9 @@ _switchin:
         ; _switchout or _dofork
         ldx _udata + U_DATA__U_SP
 	txs
+
+	; ------- Stack now valid again
+
 	pla
 	sta sp+1
 	pla
