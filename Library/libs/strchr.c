@@ -14,7 +14,7 @@ char *strchr(const char *s, int c)
 
 	for (;;) {
 		if ((ch = *s) == c)
-			return s;
+			return (char *)s;
 		if (ch == 0)
 			return 0;
 		s++;

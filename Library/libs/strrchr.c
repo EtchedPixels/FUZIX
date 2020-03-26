@@ -13,10 +13,10 @@ char *strrchr(const char *s, int c)
 
 	/* For null it's just like strlen */
 	if (c == '\0')
-		return p;
+		return (char *)p;
 	while (p != s) {
 		if (*--p == c)
-			return p;
+			return (char *)p;
 	}
 	return NULL;
 }
