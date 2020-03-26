@@ -213,7 +213,7 @@ _need_resched:
 _sys_cpu:
 	.byte 3			; 6502 series processors
 _sys_cpu_feat:
-	.byte 1			; FIXME: for now hardcode 65C02
+	.byte 0
 _use_mvn:
 	.byte 0
 
@@ -255,8 +255,5 @@ _set_cpu_type:
 is_c02:
 	lda #1
 	sta _sys_cpu_feat
-	rts
 is_02:
-	lda #1			; FIXME HACK
-	sta _sys_cpu_feat
 	rts
