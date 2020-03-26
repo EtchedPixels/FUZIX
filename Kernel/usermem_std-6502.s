@@ -29,6 +29,9 @@
 ;
 ;	ptr1 and tmp1 are reserved for map_* functions
 ;
+;	This code relies upon the fact that the ZP is not switched when
+;	switching between user and kernel for the same process.
+;
 ;
 		.segment "COMMONMEM"
 
@@ -138,16 +141,16 @@ __uput_done:
 
 __uputc:	sta ptr2
 		stx ptr2+1
-		jsr map_process_always
 		jsr popax
+		jsr map_process_always
 		ldy #0
 		sta (ptr2),y
 		jmp map_kernel
 
 __uputw:	sta ptr2
 		stx ptr2+1
-		jsr map_process_always
 		jsr popax
+		jsr map_process_always
 		ldy #0
 		sta (ptr2),y
 		txa
@@ -157,10 +160,12 @@ __uputw:	sta ptr2
 
 __uzero:	sta tmp2
 		stx tmp2+1
-		jsr map_process_always
 		jsr popax		; ax is now the usermode address
 		sta ptr2
 		stx ptr2+1
+
+		; Our C stack vanishes at this point
+		jsr map_process_always
 
 		ldy #0
 		tya
