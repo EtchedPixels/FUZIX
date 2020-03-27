@@ -78,15 +78,6 @@
 ;			  values and keep them in ->page.
 ;
 ;
-;	TODO:
-;	- add vectors and stubs to bank 0 setup, and to other banks for
-;	  stubs (syscall and signal return)
-;	- audit and begin testing
-;
-
-syscall	=	$fe
-
-
 ;
 ;	CPU features. Hardcoded as we know our CPU type
 ;
@@ -370,7 +361,7 @@ signal_out:
 	pha
 	plb				; get the right user data bank
 
-	ldx	PROGLOAD+16		; trap handler in user app
+	ldx	PROGLOAD+$10		; trap handler in user app
 	dex				; rtl incs this
 	phx
 
@@ -419,8 +410,8 @@ _doexec:
 
 	; ptr1 might be PROGBASE but that's fine !!
 	ldx	ptr1		;	target address
-	lda	a:$20,x		;	fetch the signal vector pointer
-	sta	PROGBASE+$20	;	and stuff it in the base
+	lda	a:$10,x		;	fetch the signal vector pointer
+	sta	PROGBASE+$10	;	and stuff it in the base
 
 	sep	#$20
 	.a8
@@ -460,9 +451,6 @@ _doexec:
 	lda	U_DATA__U_PAGE	;	bank for data
 	pha			;	switch to userdata bank
 	plb
-
-	; lda U_DATA__U_PAGE+1	;	bank for code
-	sty	a:syscall	;	and in bank:00FE
 
 	pha			;	stack bank for rtl
 
