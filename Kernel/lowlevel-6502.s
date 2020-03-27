@@ -234,26 +234,23 @@ _set_cpu_type:
 	xba
 	cmp #$01
 	bmi is_c02	
-	; 65C816 in compat mode - make the 16bit stack match the 8bit one
-	rep #$30
-	.a16
-	.i16
-	tsx
-	txa			; 16bit stack pointer into A
-	and #$00FF
-	ora #$0100
-	tax
-	txs
-	sep #$30
-	.a8
-	.i8
 	lda #3
 	sta _sys_cpu_feat
 	lda #1
 	sta _use_mvn
 	rts
 is_c02:
+	; But not so fast! This could be a Renesas 740 which is a 6502
+	; compatible with half baked 65C02 support and other features
 	lda #1
+	sta tmp1
+	stz tmp1	; stz (0x64) is missing on 740
+			; instead this is tst tmp1
+	lda tmp1
+	bne is_740
+	inc
 	sta _sys_cpu_feat
+is_740:
+	; We don't care right now about the 740 just call it a 6502
 is_02:
 	rts
