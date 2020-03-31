@@ -655,7 +655,7 @@ static void build_command(int pass)
     add_option("-o", add_delete_late(extendname("",relocmap(undotslash(rootname), pass), "ihx")));
     if (nocrt0 == 0) {
       if (dynlib)
-        snprintf(buf, sizeof(buf), FCC_DIR, "/lib/lib0%s%s%s.rel", hp, platform, rp);
+        snprintf(buf, sizeof(buf), FCC_DIR "/lib/lib0%s%s%s.rel", hp, platform, rp);
       else if (nostdio)
         snprintf(buf, sizeof(buf), FCC_DIR "/lib/crt0%s%snostdio%s.rel", hp, platform, rp);
       else
