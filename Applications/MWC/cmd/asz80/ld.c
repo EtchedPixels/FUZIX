@@ -422,6 +422,8 @@ static struct object *load_object(FILE * fp, off_t off, int lib, const char *pat
 
 	xfseek(fp, off);
 	if (fread(&o->oh, sizeof(o->oh), 1, fp) != 1 || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0) {
+		/* either way, free object */
+		free_object(o);
 		/* A library may contain other things, just ignore them */
 		if (lib)
 			return NULL;
