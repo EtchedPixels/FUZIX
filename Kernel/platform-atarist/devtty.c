@@ -24,27 +24,12 @@
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS,
-	_LSYS
-};
-
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	/* FIXME: break */
-	_OSYS,
 	/* FIXME CTS/RTS, CSTOPB ? */
 	CSIZE|CBAUD|PARENB|PARODD|_CSYS,
-	_LSYS,
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	uart_mask,
-	console_mask
+	_CSYS
 };
 
 static unsigned char tbuf1[TTYSIZ];

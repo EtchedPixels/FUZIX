@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include <kernel.h>
 
 /* FIXME: use proper fast methods */
 

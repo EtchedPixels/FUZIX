@@ -28,19 +28,12 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
 };
 
 /* We have no actual controls on the virtual ports */
-static tcflag_t port_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	port_mask,
-	port_mask,
-	port_mask,
-	port_mask
+	_CSYS,
+	_CSYS,
+	_CSYS
 };
 
 static uint8_t ttypoll;

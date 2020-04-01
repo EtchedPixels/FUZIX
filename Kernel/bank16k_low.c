@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 /*
  *	This module manages a system with flexible 16K sized banks. It assumes
@@ -111,7 +112,7 @@ int pagemap_alloc(ptptr p)
 /*
  *	Reallocate the maps for a process
  */
-int pagemap_realloc(uint16_t size)
+int pagemap_realloc(struct exec *hdr, uint16_t size)
 {
 	int have = maps_needed(udata.u_top);
 	int want = maps_needed(size);
@@ -150,6 +151,18 @@ int pagemap_realloc(uint16_t size)
 	udata.u_ptab->p_page = udata.u_page;
 	udata.u_ptab->p_page2 = udata.u_page2;
 
+	return 0;
+}
+
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr->a_base == 0)
+		hdr->a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr->a_size == 0)
+		hdr->a_size = (ramtop >> 8) - hdr->a_base;
 	return 0;
 }
 

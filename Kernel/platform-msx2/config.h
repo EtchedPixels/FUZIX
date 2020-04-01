@@ -6,8 +6,6 @@
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 #define CONFIG_VT_MULTI
@@ -52,7 +50,8 @@
 
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
-#define BOOTDEVICE 0x0100
+
+#define BOOTDEVICENAMES	"hd#,fd"
 
 #define MAX_BLKDEV 1      /* Single SD drive */
 #define CONFIG_RTC

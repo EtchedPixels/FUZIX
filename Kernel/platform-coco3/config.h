@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 /* Use C helpers for usermem */
 #undef CONFIG_USERMEM_C
 
@@ -20,7 +18,7 @@
 #define MAX_MAPS 128-3
 #define MAPBASE 0x0000
 /* And swapping */
-extern unsigned int swapdev;
+extern uint16_t swapdev;
 #define SWAPDEV  swapdev
 #define SWAP_SIZE   0x71
 /* FIXME */
@@ -110,3 +108,4 @@ typedef unsigned char *queueptr_t;
 #define SD_DRIVE_COUNT 1
 #define CONFIG_SD
 
+#define CONFIG_DEV_PLATFORM

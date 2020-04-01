@@ -23,12 +23,15 @@ U_DATA = udata
 
 // Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      = 0
-P_TAB__P_TTY_OFFSET         = 1
-P_TAB__P_PID_OFFSET         = 2
-P_TAB__P_PAGE_OFFSET        = 14
+P_TAB__P_FLAGS_OFFSET	    = 1
+P_TAB__P_TTY_OFFSET         = 2
+P_TAB__P_PID_OFFSET         = 4
+P_TAB__P_PAGE_OFFSET        = 16
 
 P_RUNNING                   = 1            // value from include/kernel.h
 P_READY                     = 2            // value from include/kernel.h
+
+PFL_BATCH		    = 4
 
 EAGAIN                      = 11           // value from include/kernel.h
 

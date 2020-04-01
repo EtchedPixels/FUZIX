@@ -23,34 +23,29 @@
 		.globl s__DATA
 		.globl l__DATA
 		.globl _brk
+		.globl __call_sys
 
 		.area _CODE
 
-; start at 0x100
-start:		jr start2		; must be relative
-		nop
-		.db 'F'
-		.db 'Z'
-		.db 'X'
-		.db '1'
+__call_sys:				; Because the stubs overlay this
+					; executable header
+start:
+		.dw 0x80A8		; Magic number
+		.db 0x01		; 8080 family
+		.db 0x02		; Z80 featureset required
+		.db 0x01		; Load at 0x0100
 
-;
-;	Borrowed idea from UMZIX - put the info in known places then
-;	we can write "size" tools
-;
-;	This is confusing. SDCC doesn't produce a BSS, instead it
-;	produces an INITIALIZED (which everyone else calls DATA) and a
-;	DATA which everyone else would think of as BSS.
-;
-;	FIXME: we need to automate the load page setting
-;
-		.db 0x01		; page to load at
-		.dw 0			; chmem ("0 - 'all'")
-		; These three are set by binman
-		.dw 0			; code
-		.dw 0			; data
-		.dw 0			; bss size
-		.dw 0			; spare
+		.db 0x00		; No hints
+		.dw 0x0000		; Text size (updated by tools)
+		.dw 0x0000		; Data size (updated by tools)
+		.dw 0x0000		; BSS size (updated by tools)
+		.db 18			; Start address
+		.db 0			; Default hint for grab all space
+		.db 0			; Default no stack hint
+		.db 0			; No zero page on Z80
+
+		.dw __sighandler	; Signal handling vector
+
 
 start2:
 ;
@@ -68,9 +63,9 @@ start2:
 		add hl,de		; hl is now the relocations
 					; de is the code base
 		ld b,#0			; on the code base bits
-		ex de,hl		; de is relocatios as loop swaps
+		ex de,hl		; de is relocations as loop swaps
 relnext:
-		; Read each relocatin byte and zero it (because it's really
+		; Read each relocation byte and zero it (because it's really
 		; stolen BSS so should start zero)
 		ex de,hl
 		ld a,(hl)
@@ -116,6 +111,13 @@ relocdone:
 		call _main		; go
 		push hl
 		call _exit
+;
+;	Simple for Z80 case (the 8080 binaries have a lot more to do)
+;
+__sighandler:
+		ex de,hl
+		jp (hl)
+
 
 		.area _GSINIT
 ;

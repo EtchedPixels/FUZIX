@@ -59,7 +59,7 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_getppid,		/* FUZIX system call 19 */
 	_getuid,		/* FUZIX system call 20 */
 	_umask,			/* FUZIX system call 21 */
-	_getfsys,		/* FUZIX system call 22 */
+	_statfs,		/* FUZIX system call 22 */
 	_execve,		/* FUZIX system call 23 */
 	_getdirent,		/* FUZIX system call 24 */
 	_setuid,		/* FUZIX system call 25 */

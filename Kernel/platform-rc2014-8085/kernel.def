@@ -3,7 +3,7 @@
 U_DATA                      = 0xE800       ! (this is struct u_data from kernel.h)
 U_DATA__TOTALSIZE           = 0x200        ! 256+256 bytes.
 
-U_DATA_STASH		    = 0xBE00	   ! BE00-BFFF
+U_DATA_STASH		    = 0xDE00	   ! DE00-DFFF
 
 PROGBASE		    = 0x0000
 PROGLOAD		    = 0x0100
@@ -11,14 +11,9 @@ PROGLOAD		    = 0x0100
 CONFIG_SWAP		    = 1
 
 #define INT_ENTER
-#define INT_EXIT	ei
+#define INT_EXIT
 #define DI		di
 
 #define EI		ei
 
-!
-!	This sequence clears \M1, then causes the ED 4D pattern to be seen
-!	in memory reads. It saves the needed registers to avoid mess
-!
-#define FAKE_IRET	push h; mvi a,0x40; sim; lxi h,0x4DED; mvi a,0xC0; sim; pop h
-
+#define FAKE_IRET

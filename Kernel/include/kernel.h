@@ -12,10 +12,15 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #include <stdbool.h>
 
+/* Import the CPU types before the config.h as config.h wants to use types */
+#include "types.h"
 #include "config.h"
+#include "exec.h"
+
 #include "cpu.h"
 
 #include "panic.h"
+
 
 #ifndef NULL
 #define NULL (void *)0
@@ -76,24 +81,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define dump_core(sig)	sig
 #define in_group(x)	0
 #endif
-
-/* CPU families */
-#define CPUTYPE_Z80	0
-#define CPUTYPE_6809	1
-#define CPUTYPE_6502	2
-#define CPUTYPE_68000	3
-#define CPUTYPE_PDP11	4
-#define CPUTYPE_MSP430	5
-#define CPUTYPE_68HC11	6
-#define CPUTYPE_8086	7
-#define CPUTYPE_65C816	8
-#define CPUTYPE_R2K	9
-#define CPUTYPE_Z280	10
-#define CPUTYPE_8080	11
-#define CPUTYPE_8085	12
-#define CPUTYPE_EZ80	13
-#define CPUTYPE_NS32K	14
-#define CPUTYPE_TMS9900 15
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
@@ -388,6 +375,7 @@ struct mount {
 };
 #define MS_RDONLY	1
 #define MS_NOSUID	2	/* Not yet implemented */
+#define MS_NOEXEC	4	/* Not yet implemented */
 #define MS_REMOUNT	128
 
 /* Process table p_status values */
@@ -474,6 +462,10 @@ struct sigbits {
 typedef struct p_tab {
     /* WRS: UPDATE kernel.def IF YOU CHANGE THIS STRUCTURE */
     uint8_t     p_status;       /* Process status: MUST BE FIRST MEMBER OF STRUCT */
+    uint8_t	p_flags;	/* Bitflags: must be adjacent */
+#define PFL_CHKSIG	1	/* Signal check required */
+#define PFL_ALARM	2	/* On alarm queue */
+#define PFL_BATCH	4	/* Used full time quantum */
     uint8_t     p_tty;          /* Process' controlling tty minor # */
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
@@ -501,9 +493,6 @@ typedef struct p_tab {
     uint8_t	p_nice;
     uint8_t	p_event;	/* Events */
     usize_t	p_top;		/* Copy of u_top */
-    uint8_t	p_flags;	/* Bitflags */
-#define PFL_CHKSIG	1	/* Signal check required */
-#define PFL_ALARM	2	/* On alarm queue */
 #ifdef CONFIG_LEVEL_2
     uint16_t	p_session;
 #endif
@@ -784,6 +773,14 @@ struct s_argblk {
  */
 
 /*
+ *	GPIO ioctls 0x053x (see gpio.h)
+ */
+
+/*
+ *	RTC ioctls 0x053x (see rtc.h)
+ */
+
+/*
  *	Tape ioctls 0x06xx (see tape.h)
  */
 
@@ -802,6 +799,10 @@ struct s_argblk {
  *			07F0	Get platform name string (unique)
  *				required if have non CPU specific ioctls
  *			07F1	Cache writeback/flush
+ */
+
+/*
+ *	Printer ioctls 0x08xx (see printer.h)
  */
 
 
@@ -868,8 +869,8 @@ extern int _uzero(uint8_t *user, usize_t count);
 #define _uputc(v, p) ((*(uint8_t*)(p) = (v)), 0)
 #define _uputw(v, p) ((*(uint16_t*)(p) = (v)), 0)
 #else
-extern int16_t _ugetc(const uint8_t *user);
-extern uint16_t _ugetw(const uint16_t *user);
+extern int16_t _ugetc(const uint8_t *user) __fastcall;
+extern uint16_t _ugetw(const uint16_t *user) __fastcall;
 extern int _uputc(uint16_t value,  uint8_t *user);
 extern int _uputw(uint16_t value,  uint16_t *user);
 #endif
@@ -1019,6 +1020,9 @@ extern arg_t _select(void);
 #define selwake_dev(major,minor,smask) do {} while(0)
 #endif
 
+/* start.c */
+extern void set_boot_line(const char *p);
+
 /* swap.c */
 extern uint16_t swappage;
 
@@ -1051,6 +1055,7 @@ extern void rdtime32(uint32_t *tloc);
 extern void wrtime(time_t *tloc);
 extern void updatetod(void);
 extern void inittod(void);
+extern void sync_clock(void);
 
 /* provided by architecture or helpers */
 extern void device_init(void);	/* provided by platform */
@@ -1059,9 +1064,15 @@ extern void copy_common(uint8_t page);
 extern void pagemap_add(uint8_t page);	/* FIXME: may need a page type for big boxes */
 extern void pagemap_free(ptptr p);
 extern int pagemap_alloc(ptptr p);
-extern int pagemap_realloc(usize_t c, usize_t d, usize_t s);
+extern int pagemap_prepare(struct exec *hdr);
+extern int pagemap_realloc(struct exec *hdr, usize_t m);
 extern usize_t pagemap_mem_used(void);
 extern void map_init(void);
+extern void set_cpu_type(void);
+
+/* Executable header checks and stubs */
+extern uint8_t sys_cpu, sys_cpu_feat;
+extern uint8_t sys_stubs[];
 
 /* Platform interfaces */
 
@@ -1075,6 +1086,7 @@ extern void platform_idle(void);
 extern uint_fast8_t platform_rtc_secs(void);
 extern int platform_rtc_read(void);
 extern int platform_rtc_write(void);
+extern int platform_rtc_ioctl(uarg_t request, char *data);
 extern void platform_reboot(void);
 extern void platform_monitor(void);
 extern uint_fast8_t platform_param(char *p);
@@ -1087,6 +1099,8 @@ extern void platform_swap_found(uint_fast8_t part, uint_fast8_t letter);
 extern uint_fast8_t platform_canswapon(uint16_t devno);
 
 extern int platform_dev_ioctl(uarg_t request, char *data);
+
+extern uint8_t platform_tick_present;
 
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
@@ -1129,7 +1143,7 @@ extern arg_t _getpid(void);       /* FUZIX system call 18 */
 extern arg_t _getppid(void);      /* FUZIX system call 19 */
 extern arg_t _getuid(void);       /* FUZIX system call 20 */
 extern arg_t _umask(void);        /* FUZIX system call 21 */
-extern arg_t _getfsys(void);      /* FUZIX system call 22 */
+extern arg_t _statfs(void);       /* FUZIX system call 22 */
 extern arg_t _execve(void);       /* FUZIX system call 23 */
 extern arg_t _getdirent(void);    /* FUZIX system call 24 */
 extern arg_t _setuid(void);       /* FUZIX system call 25 */

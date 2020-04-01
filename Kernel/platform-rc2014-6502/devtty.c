@@ -7,8 +7,8 @@
 #include <vt.h>
 #include <tty.h>
 
-/* 16550A at C0C0 */
-static volatile uint8_t *uart = (volatile uint8_t *)0xC0C0;
+/* 16550A at FEC0 */
+static volatile uint8_t *uart = (volatile uint8_t *)0xFEC0;
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -19,16 +19,9 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	PTY_QUEUES
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS	/* TODO */
 };
 
 /* Output for the system console (kprintf etc) */

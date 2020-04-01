@@ -66,6 +66,10 @@ doread:
     inir
     ld a,(_vtborder)
     out (0xfe),a
+    in a,(0x3f)		; required according to CP/M driver
+    nop
+    nop
+    in a,(0x3f)
     pop af
     or a
     jp nz,map_kernel

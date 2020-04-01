@@ -11,8 +11,9 @@
 		; expand all over it for buffers
 		.area _BUFFERS2
 		.area _DISCARD2
-		.area _COMMONDATA
+		.area _UDATA
 		.area _BOOT
+		.area _COMMONDATA
 	        .area _COMMONMEM
 		.area _STUBS
 	        .area _CONST

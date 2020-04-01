@@ -22,6 +22,9 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
+
+#undef DEBUG
 
 #ifdef CONFIG_BANK16FC
 /*
@@ -65,7 +68,7 @@ void pagemap_free(ptptr p)
 static int maps_needed(uint16_t top)
 {
 	/* Allow 512 bytes for the udata stash at the top */
-	uint16_t needed = top + 0xFFFF - PROGTOP + sizeof(struct u_block);
+	uint16_t needed = top + sizeof(struct u_block) - PROGBASE - 1;
 	needed >>= 14;		/* in banks */
 	needed++;		/* rounded */
 	return needed;
@@ -107,7 +110,7 @@ int pagemap_alloc(ptptr p)
  *
  *	FIXME: review swap case and ENOMEM
  */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size + MAPBASE);
@@ -115,11 +118,23 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	int8_t i;
 	uint8_t update = 0;
 	irqflags_t irq;
+	int8_t needed = want - have;
 
-	/* If we are shrinking then free pages and propogate the
-	   common page into the freed spaces */
+	/* No size change - no work required: usual path */
 	if (want == have)
 		return 0;
+
+#ifdef SWAPDEV
+	/* Throw our toys out of our pram until we have enough room */
+	if (needed > 0) {
+		while ((uint8_t)needed > pfptr)
+			if (swapneeded(udata.u_ptab, 1) == NULL)
+				return ENOMEM;
+	}
+#else
+	if (needed > pfptr)	/* We have no swap so poof... */
+		return ENOMEM;
+#endif
 
 	/* We don't want to take an interrupt here while our page mappings are
 	   incomplete. We may restore bogus mappings and then take a second IRQ
@@ -159,6 +174,18 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	return 0;
 }
 
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr->a_base == 0)
+		hdr->a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr->a_size == 0)
+		hdr->a_size = (ramtop >> 8) - hdr->a_base;
+	return 0;
+}
+
 usize_t pagemap_mem_used(void)
 {
 	return procmem - (pfptr << 4);
@@ -187,7 +214,7 @@ int swapout(ptptr p)
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
 #ifdef DEBUG
-	kprintf("Swapping out %x (%d)\n", p, p->p_page);
+	kprintf("Swapping out %x (%x%x)\n", p, p->p_page, p->p_page2);
 #endif
 
 	/* Are we out of swap ? */
@@ -197,6 +224,10 @@ int swapout(ptptr p)
 	blk = map * SWAP_SIZE;
 	/* Write the app and udata stash to disk */
 	for (i = 0; i < 3; i++) {
+#ifdef DEBUG
+		kprintf("%d: swapwrite block %d, size %x, base %x\n",
+			p->p_pid, blk, size, base);
+#endif
 		swapwrite(SWAPDEV, blk, size << 9, base, *pt++);
 		base += 0x4000;
 		base &= 0xC000;	/* Snap to bank alignment */
@@ -230,7 +261,7 @@ void swapin(ptptr p, uint16_t map)
 	uint8_t *pt = (uint8_t *) & p->p_page;
 
 #ifdef DEBUG
-	kprintf("Swapin %x, %d\n", p, p->p_page);
+	kprintf("Swapin %x, %x%x\n", p, p->p_page, p->p_page2);
 #endif
 	if (!p->p_page) {
 		kprintf("%x: nopage!\n", p);
@@ -238,6 +269,10 @@ void swapin(ptptr p, uint16_t map)
 	}
 
 	for (i = 0; i < 3; i++) {
+#ifdef DEBUG
+		kprintf("%d: swapread block %d, size %x, base %x\n",
+			p->p_pid, blk, size, base);
+#endif
 		swapread(SWAPDEV, blk, size << 9, base, *pt++);
 		base += 0x4000;
 		base &= 0xC000;

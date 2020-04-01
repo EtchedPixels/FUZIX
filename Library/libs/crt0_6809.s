@@ -8,17 +8,21 @@
 
 		.area .header
 
-start:		jmp start2
-		.db 'F'
-		.db 'Z'
-		.db 'X'
-		.db '1'
+start:
+		.dw 0x80A8
+		.db 0x04			; 6809
+		.db 0x00			; 6309 not needed
 		.db __sectionbase_.header__/256	; page to load at
-		.dw 0				; chmem ("0 - 'all'")
-		.dw __sectionlen_.text__	; gives us code size info
+		.db 0				; no hints
+		.dw __sectionbase_.data__-__sectionbase_.header__ ; gives us header + all text segments
 		.dw __sectionlen_.data__	; gives us data size info
 		.dw __sectionlen_.bss__		; bss size info
-		.dw 0			; spare
+		.db 16				; entry relative to start
+		.db 0				; no chmem hint
+		.db 0				; no stack hint
+		.db 0				; ZP not used on 6809
+
+		jmp start2
 
 		.area .text
 

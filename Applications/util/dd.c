@@ -152,14 +152,6 @@ int main(int argc, char *argv[])
 	}
     }
 
-    if (infile == NULL) {
-	fprintf(stderr, "No input file specified\n");
-	return 1;
-    }
-    if (outfile == NULL) {
-	fprintf(stderr, "No output file specified\n");
-	return 1;
-    }
     buf = localbuf;
     if (blocksize > sizeof(localbuf)) {
 	buf = malloc(blocksize);
@@ -171,21 +163,29 @@ int main(int argc, char *argv[])
     intotal = 0;
     outtotal = 0;
 
-    infd = open(infile, 0);
-    if (infd < 0) {
-	perror(infile);
-	if (buf != localbuf)
-	    free(buf);
-	return 1;
-    }
-    outfd = creat(outfile, 0666);
-    if (outfd < 0) {
-	perror(outfile);
-	close(infd);
-	if (buf != localbuf)
-	    free(buf);
-	return 1;
-    }
+    if (infile) {
+	infd = open(infile, 0);
+	if (infd < 0) {
+	    perror(infile);
+	    if (buf != localbuf)
+	        free(buf);
+	    return 1;
+	}
+    } else
+    	infd = 0;
+
+    if (outfile) {
+        outfd = creat(outfile, 0666);
+        if (outfd < 0) {
+            perror(outfile);
+	    close(infd);
+	    if (buf != localbuf)
+	        free(buf);
+	    return 1;
+	}
+    } else
+    	outfile = 1;
+
     if (skipval) {
 	if (lseek(infd, skipval * blocksize, 0) < 0) {
 	    while (skipval-- > 0) {

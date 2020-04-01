@@ -49,6 +49,7 @@ static void ProcessMap(FILE *fp)
 
 static void sweep_relocations(void)
 {
+  struct exec *ex;
   uint8_t *base = buf + 0x0100;
   uint8_t *base2 = bufb + 0x0200;
   uint8_t *relptr = buf + s__DATA;	/* write relocs into BSS head */
@@ -153,16 +154,20 @@ int main(int argc, char *argv[])
 
   sweep_relocations();
 
-  bp = buf + progload + 7;
-  *bp++ = 0;
-  *bp++ = 0;
-  *bp++ = 0;
+  /* Now update the header. We do this byte by byte because we want to be
+     sure we get the right alignment when cross building. See
+     kernel/include/exec.h */
+  bp = buf + progload + 6;
+  /* Text size (little endian) */
   *bp++ = s__INITIALIZED - progload;
   *bp++ = (s__INITIALIZED - progload) >> 8;
+  /* Data size (little endian) */
   *bp++ = s__DATA - s__INITIALIZED;
   *bp++ = (s__DATA - s__INITIALIZED) >> 8;
+  /* BSS size (little endian */
   *bp++ = l__DATA;
   *bp = l__DATA >> 8;
+  /* And the rest we dont need to touch for Z80 */
 
   /* Write out everything that is data, omit everything that will 
      be zapped */

@@ -1,4 +1,4 @@
-#include <config.h>
+#include <kernel.h>
 
 #ifdef CONFIG_FONT_4X6
 

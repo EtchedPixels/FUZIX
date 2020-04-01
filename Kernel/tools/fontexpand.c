@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     const uint8_t *p = fontdata_8x8;
     unsigned int i;
 
-    puts("#include <config.h>\n#include <kernel.h>\n");
+    puts("#include <kernel.h>\n");
     puts("#ifdef CONFIG_FONT_8X8_EXP2\n");
     puts("/* Automatically generated do not edit */\n");
     printf("const uint8_t fontdata_8x8_exp2[%d] = {\n", FONTDATAMAX);

@@ -8,8 +8,6 @@
 
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
-static char tbuf3[TTYSIZ];
-static char tbuf4[TTYSIZ];
 
 static uint8_t sleeping;
 
@@ -17,37 +15,19 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
 	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf4, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	_OSYS,
-	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS
-};
-
-static tcflag_t uartctc_mask[4] = {
-	_ISYS,
-	/* FIXME: break */
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	/* FIXME CTS/RTS */
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS,
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uartctc_mask,
-	uartctc_mask,
-	uart_mask,
-	uart_mask
+	/* FIXME CTS/RTS */
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS
 };
 
 uint8_t sio_r[] = {
 	0x03, 0xC1,
-	0x04, 0xC4,
+	0x04, 0x44,
 	0x05, 0xEA
 };
 
@@ -71,20 +51,16 @@ static uint16_t siobaud[] = {
 	0x01	/* 115200 */
 };
 
-static const uint8_t sio2_cmap[5] = {
+static const uint8_t sio2_cmap[3] = {
 	0x00,	/* unused */
 	0x81,
 	0x83,
-	0x84,
-	0x86
 };
 
-static const uint8_t sio_dmap[5] = {
+static const uint8_t sio_dmap[3] = {
 	0x00,	/* unused */
 	0x80,
 	0x82,
-	0x85,
-	0x87
 };
 
 static void sio2_setup(uint8_t minor, uint8_t flags)
@@ -95,7 +71,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 
 	used(flags);
 
-	baud = t->c_cflag & ~CBAUD;
+	baud = t->c_cflag & CBAUD;
 	if (baud < B134)
 		baud = B134;
 
@@ -114,7 +90,7 @@ static void sio2_setup(uint8_t minor, uint8_t flags)
 	if (baud >= B600)	/* Use x16 clock and CTC divider */
 		r = 0x44;
 
-	t->c_cflag &= CBAUD;
+	t->c_cflag &= ~CBAUD;
 	t->c_cflag |= baud;
 
 	if (t->c_cflag & CSTOPB)
@@ -148,49 +124,40 @@ int tty_carrier(uint8_t minor)
 
 void tty_drain_sio(void)
 {
-	static uint8_t old_ca[4];
-	uint8_t n;
-	uint8_t l = 2;
+	static uint8_t old_ca[2];
 
-	if (sio1_present)
-		l = 4;
+	while(sio_rxl[0])
+		tty_inproc(1, sioa_rx_get());
+	if (sio_dropdcd[0]) {
+		sio_dropdcd[0] = 0;
+		tty_carrier_drop(1);
+	}
+	if (((old_ca[0] ^ sio_state[0]) & sio_state[0]) & 8)
+		tty_carrier_raise(1);
+	old_ca[0] = sio_state[0];
+	if (sio_txl[0] < 64 && (sleeping & (1 << 1))) {
+		sleeping &= ~(1 << 1);
+		tty_outproc(1);
+	}
 
-	for (n = 0; n < l; n++) {
-		while(sio_rxl[n]) {
-			switch(n) {
-			case 0:
-				tty_inproc(1, sioa_rx_get());
-				break;
-			case 1:
-				tty_inproc(2, siob_rx_get());
-				break;
-			case 2:
-				tty_inproc(3, sioc_rx_get());
-				break;
-			case 3:
-				tty_inproc(4, siod_rx_get());
-				break;
-			}
-		}
-		if (sio_dropdcd[n]) {
-			sio_dropdcd[n] = 0;
-			tty_carrier_drop(n + 1);
-		}
-		if (((old_ca[n] ^ sio_state[n]) & sio_state[n]) & 8)
-		tty_carrier_raise(n + 1);
-		old_ca[n] = sio_state[n];
-		if (sio_txl[n] < 64 && (sleeping & (1 << (n + 1)))) {
-			sleeping &= ~(1 << (n + 1));
-			tty_outproc(n + 1);
-		}
+	while(sio_rxl[1])
+		tty_inproc(2, siob_rx_get());
+	if (sio_dropdcd[1]) {
+		sio_dropdcd[1] = 0;
+		tty_carrier_drop(2);
+	}
+	if (((old_ca[1] ^ sio_state[1]) & sio_state[1]) & 8)
+		tty_carrier_raise(2);
+	old_ca[1] = sio_state[1];
+	if (sio_txl[1] < 64 && (sleeping & (1 << 2))) {
+		sleeping &= ~(1 << 2);
+		tty_outproc(2);
 	}
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	irqflags_t irqflags;
-
-	irqflags = di();
+	irqflags_t irqflags = di();
 
 	switch(minor) {
 	case 1:
@@ -198,12 +165,6 @@ void tty_putc(uint8_t minor, unsigned char c)
 		break;
 	case 2:
 		siob_txqueue(c);
-		break;
-	case 3:
-		sioc_txqueue(c);
-		break;
-	case 4:
-		siod_txqueue(c);
 		break;
 	}
 	irqrestore(irqflags);
@@ -227,22 +188,23 @@ void tty_data_consumed(uint8_t minor)
 }
 
 /* kernel writes to system console -- never sleep! */
+
 void kputchar(char c)
 {
 	/* Can't use the normal paths as we must survive interrupts off */
 	irqflags_t irq = di();
+
 	while(!(SIOA_C & 0x04));
 	SIOA_D = c;
+
 	if (c == '\n')
 		kputchar('\r');
+
 	irqrestore(irq);
 }
 
 int rctty_open(uint8_t minor, uint16_t flag)
 {
-	if ((minor == 3 || minor == 4) && !sio1_present) {
-		udata.u_error = ENODEV;
-		return -1;
-	}
+	/* Will need extending if we are support for plug in serial */
 	return tty_open(minor, flag);
 }

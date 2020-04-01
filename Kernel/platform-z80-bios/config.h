@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 
 /* Select a banked memory set up */
 #define CONFIG_BANK_FIXED
@@ -28,9 +26,9 @@
 /*
  *	Definitions for swapping.
  */
-extern unsigned char swap_size;
+extern uint8_t swap_size;
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   (swap_size) /* In 512 byte blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    (ramtop)	/* vectors so its a round number of sectors */
@@ -72,7 +70,11 @@ extern unsigned int swap_dev;
 /* Specify that there is a full real time clock that can supply the date and
    time to the system. */
 #define CONFIG_RTC_FULL
-
+/* Allow for the case where the system has no timer tick - not recommended */
+#define CONFIG_NO_CLOCK
+/* We set this at runtime */
+extern uint8_t rtc_delay;
+#define CONFIG_RTC_INTERVAL	(rtc_delay)
 /*
  * How fast does the clock tick (if present), or how many times a second do
  * we simulate if not. For a machine without video 10 is a good number. If

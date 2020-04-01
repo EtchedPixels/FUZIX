@@ -12,44 +12,55 @@
 #include <errno.h>
 #include <fcntl.h>
 
-static uint8_t *__sys_errlist;
-static uint16_t *__sys_errptr;
-static int __sys_nerr;
-static char retbuf[80];
+#define LONGEST_STRING 50
 
-#define ALIGNMENT	16
-
-#define ALIGNUP(s) (((s) + ALIGNMENT - 1) & ~(ALIGNMENT - 1))
-
-static void _load_errlist(void)
-{
-	struct stat st;
-	int fd = open(_PATH_LIBERR, O_RDONLY|O_CLOEXEC);
-	if (fd < 0)
-		return;
-	if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode))
-		goto bad;
-	__sys_errlist = sbrk(ALIGNUP(st.st_size));
-	if (__sys_errlist == (void *) -1)
-		goto bad;
-	if (read(fd,__sys_errlist, st.st_size) == st.st_size) {
-		__sys_nerr = *__sys_errlist;
-		__sys_errptr = (uint16_t *)__sys_errlist + 1;
-		close(fd);
-		return;
-	}
-bad:
-	close(fd);
-	__sys_errlist = NULL;
-	return;
-}
+static char retbuf[LONGEST_STRING + 1];
+static int last_err = -1;
 
 char *strerror(int err)
 {
-	if (!__sys_errlist)
-		_load_errlist();
-	if (__sys_errlist && err >= 0 && err < __sys_nerr)
-		return __sys_errlist + __sys_errptr[err];
+	uint16_t nerr;
+	struct stat st;
+	int fd;
+
+	if (err < 0)
+		goto sad;
+
+	if (err == last_err)
+		return retbuf;
+
+	fd = open(_PATH_LIBERR, O_RDONLY|O_CLOEXEC);
+	if (fd < 0)
+		goto sad;
+
+	if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode))
+		goto bad;
+
+	if (read(fd, &nerr, 2) == 2 && err < nerr) {
+		uint16_t index;
+		uint16_t nexti;
+		int len;
+
+		lseek(fd, 2 + err * 2, SEEK_SET);
+		read(fd, &index, 2);
+		if (err < nerr - 1) {
+			read(fd, &nexti, 2);
+			len = nexti - index;
+		} else {
+			len = LONGEST_STRING;
+		}
+		lseek(fd, index, SEEK_SET);
+		len = read(fd, retbuf, len);
+		retbuf[len] = '\0';
+		last_err = err;
+
+		close(fd);
+		return retbuf;
+	}
+
+bad:
+	close(fd);
+sad:
 	strcpy(retbuf, "Unknown error ");
 	strcpy(retbuf + 14, _itoa(err));
 	return retbuf;

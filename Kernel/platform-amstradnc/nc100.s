@@ -52,6 +52,7 @@
             .globl unix_syscall_entry
 	    .globl nmi_handler
 	    .globl null_handler
+	    .globl _udata
 
 	     ; debug symbols
             .globl outcharhex
@@ -285,7 +286,7 @@ map_process_always:
 map_process_always_di:
 	    push hl
 	    push af
-	    ld hl, #U_DATA__U_PAGE
+	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_process_2
 	    pop af
 	    pop hl

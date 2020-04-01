@@ -16,16 +16,9 @@ uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
 uint8_t vtborder;
 uint8_t curattr = 7;
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS
 };
 
 

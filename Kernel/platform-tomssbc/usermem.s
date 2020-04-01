@@ -94,10 +94,6 @@ uout:
 	ret
 
 __ugetc:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	ld a,#0x01
 	out (0x3E),a
 	ld l,(hl)
@@ -105,10 +101,6 @@ __ugetc:
 	jr uout
 
 __ugetw:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	ld a,#0x1
 	out (0x3E),a
 	ld a,(hl)

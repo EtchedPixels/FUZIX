@@ -1,8 +1,8 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0000
--b _COMMONMEM=0xF400
--b _DISCARD=0xEA00
+-b _COMMONMEM=0xF300
+-b _DISCARD=0xD000
 -l z80
 platform-pcw8256/crt0.rel
 platform-pcw8256/commonmem.rel
@@ -14,9 +14,11 @@ usermem_std-z80.rel
 usermem.rel
 platform-pcw8256/tricks.rel
 platform-pcw8256/main.rel
+platform-pcw8256/discard.rel
 timer.rel
 kdata.rel
 platform-pcw8256/devfd.rel
+platform-pcw8256/devfdc765.rel
 platform-pcw8256/fdc765.rel
 platform-pcw8256/devices.rel
 devio.rel
@@ -44,6 +46,8 @@ platform-pcw8256/blkdev.rel
 platform-pcw8256/mbr.rel
 platform-pcw8256/devide.rel
 platform-pcw8256/devide_discard.rel
+platform-pcw8256/devvd.rel
+platform-pcw8256/vd.rel
 platform-pcw8256/devinput.rel
 platform-pcw8256/net_native.rel
 -e

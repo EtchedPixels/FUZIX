@@ -55,10 +55,6 @@ F000-F1FF	Kernel stack alternative (used during some bank switch ops)
 F200-F2FF	Istack alternate (we may take interrupts in either bank)
 F300-FFFF	Common (mostly valid in both banks)
 
-BUGS
-
-Some systems misdetect a second SIO at 0x84. Cause as yet unknown
-
 TO DO
 Support setting the serial clocks and CTC maps with a tool
 Support the bitbang port for output only (copy kputchar and outchar there for debugging ?)

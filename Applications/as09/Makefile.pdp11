@@ -1,0 +1,52 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+HOSTCC = gcc
+.SUFFIXES: .c .o
+
+
+OBJS		=as.o assemble.o errors.o express.o \
+		 genbin.o genlist.o genobj.o gensym.o \
+		 keywords.o macro.o mops.o pops.o readsrc.o \
+		 scan.o table.o typeconv.o alloc.o
+
+all: as09
+
+as09: $(OBJS)
+	$(LINKER) -o $@.bin $(CRT0) $(OBJS) $(LINKER_OPT) 
+	$(AOUT2FUZIX) $@.bin $@
+
+clean realclean clobber:
+	rm -f *.o as09 *~
+
+.c.o:
+	$(CC) $(CFLAGS) $(COPT) -c $<
+
+$(OBJS): const.h errors.h
+
+as.o: const.h type.h byteord.h macro.h file.h flag.h globvar.h
+assemble.o: const.h type.h address.h globvar.h opcode.h scan.h
+error.o: const.h type.h
+express.o: const.h type.h address.h globvar.h scan.h source.h
+genbin.o: const.h type.h address.h file.h globvar.h
+genlist.o: const.h type.h address.h flag.h file.h globvar.h macro.h scan.h \
+	   source.h
+genobj.o: const.h type.h address.h file.h globvar.h
+gensym.o: const.h type.h flag.h file.h globvar.h
+keywords.o: const.h type.h globvar.h opcode.h
+macro.o: const.h type.h globvar.h scan.h macro.h
+mops.o: const.h type.h globvar.h opcode.h scan.h address.h
+pops.o: const.h type.h address.h flag.h globvar.h opcode.h scan.h
+readsrc.o: const.h type.h flag.h file.h globvar.h macro.h scan.h source.h
+scan.o: const.h type.h globvar.h scan.h 
+table.o: const.h type.h globvar.h opcode.h scan.h

@@ -12,6 +12,11 @@
 	.export outxa
 	.export stash_zp
 
+	.export _sys_cpu
+	.export _sys_cpu_feat
+	.export _set_cpu_type
+	.export _use_mvn
+
 	.export _need_resched
 
 	.import outchar
@@ -183,6 +188,7 @@ deci1:
 	adc #48			; ascii zero
 	jsr outchar
 	pla
+	pha
 	and #$0f
 	cmp #10
 	bcc deci2
@@ -191,7 +197,9 @@ deci1:
 deci2:
 	clc
 	adc #48
-	jmp outchar
+	jsr outchar
+	pla
+	rts
 
 outxa:	pha
 	txa
@@ -201,3 +209,48 @@ outxa:	pha
 
 _need_resched:
 	.byte 0
+
+_sys_cpu:
+	.byte 3			; 6502 series processors
+_sys_cpu_feat:
+	.byte 0
+_use_mvn:
+	.byte 0
+
+	.p816
+	.a8
+	.i8
+;
+;	Interrupts are off at this point and we rely on that
+;
+_set_cpu_type:
+	lda #$00
+	inc
+	cmp #$01
+	bmi is_02		; 6502 must be handled first
+	; xba will not do anything on the 65C02
+	xba
+	dec
+	xba
+	cmp #$01
+	bmi is_c02	
+	lda #3
+	sta _sys_cpu_feat
+	lda #1
+	sta _use_mvn
+	rts
+is_c02:
+	; But not so fast! This could be a Renesas 740 which is a 6502
+	; compatible with half baked 65C02 support and other features
+	lda #1
+	sta tmp1
+	stz tmp1	; stz (0x64) is missing on 740
+			; instead this is tst tmp1
+	lda tmp1
+	bne is_740
+	inc
+	sta _sys_cpu_feat
+is_740:
+	; We don't care right now about the 740 just call it a 6502
+is_02:
+	rts

@@ -54,26 +54,12 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2}
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS,
-	_LSYS
-};
-
 /* FIXME: The hardware is actually wired with full support for RTS/CTS
    DTR so we should add RTS/CTS support eventually */
-static tcflag_t serial_mask[4] = {
-	_ISYS,
-	_OSYS,
 	_CSYS|CBAUD|CSIZE|PARENB|PARODD|CSTOPB,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	console_mask
 };
 
 
@@ -155,6 +141,7 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 
 void tty_data_consumed(uint_fast8_t minor)
 {
+	used(minor);
 }
 
 /* We save the value so that we can use it for future changes like flow
@@ -165,6 +152,9 @@ static uint8_t uart_ctrl;
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	uint8_t b;
+
+	used(flags);
+
 	if (minor == 1)
 		return;
 	b = ttydata[2].termios.c_cflag & CBAUD;
@@ -200,12 +190,13 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 /* The NC100 and NC200 don't have a carrier input on the connector */
 int tty_carrier(uint_fast8_t minor)
 {
-    minor;
+    used(minor);
     return 1;
 }
 
 void tty_sleeping(uint_fast8_t minor)
 {
+    used(minor);
     txwait = 1;
 }
 

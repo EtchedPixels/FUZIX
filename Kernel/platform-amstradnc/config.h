@@ -4,6 +4,8 @@
 /* We have an RTC */
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
+/* And it's a fast to access RTC */
+#define CONFIG_RTC_INTERVAL 10
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -12,8 +14,6 @@
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 /* We have a key that needs remapping into unicode space */

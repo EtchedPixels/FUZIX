@@ -34,6 +34,7 @@
 		.globl _callback_tty
 		.globl _callback_timer
 		.globl _callback_tick
+		.globl _callback_kprintf
 
 		.globl _do_callback_tty
 		.globl _do_callback_timer
@@ -41,6 +42,8 @@
 		.globl map_save_kernel
 		.globl map_restore
 		.globl interrupt_handler
+
+		.globl _kprintf
 ;
 ;	Stubs
 ;
@@ -63,6 +66,11 @@ _callback_timer:
 		ret
 _callback_tick:
 		jp interrupt_handler
+_callback_kprintf:
+		push hl
+		call _kprintf
+		pop hl
+		ret
 
 		.area _COMMONDATA
 

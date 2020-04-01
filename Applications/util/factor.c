@@ -78,7 +78,7 @@ static void factor(char *s)
         l /= ll;
       }
     }
-    putc('\n', stderr);
+    putc('\n', stdout);
   }
 }
 
@@ -89,7 +89,7 @@ int main(int argc,char *argv[])
   if (argc > 1) {
     char **ss;
 
-    for (ss = argv; *ss; ss++) factor(*ss);
+    for (ss = argv + 1; *ss; ss++) factor(*ss);
   } else for (;;) {
     char s[LINE_MAX];
 

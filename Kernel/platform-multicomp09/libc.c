@@ -1,4 +1,4 @@
-#include "cpu.h"
+#include <kernel.h>
 
 
 size_t strlen(const char *p)

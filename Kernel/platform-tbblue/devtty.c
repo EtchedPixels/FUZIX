@@ -23,24 +23,10 @@ static uint8_t sleeping;
 uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
 extern uint8_t curattr;
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS,
-	_LSYS
-};
-
-static tcflag_t serial_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS|CBAUD,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	serial_mask,
+	_CSYS|CBAUD
 };
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */

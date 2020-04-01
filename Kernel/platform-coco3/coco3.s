@@ -197,9 +197,10 @@ b@	sta	,x+
         ;; need vectors
 	ldu	#0xfeee		; vector area
 	lda	#$7e		; jump opcode
-	ldx 	#badswi_handler	; swi2 and swi3 are bad
+	ldx	#swi3_handler
 	sta	,u+
-	stx 	,u++
+	stx	,u++
+	ldx 	#swi2_handler
 	sta	,u+
 	stx	,u++
 	ldx 	#firq_handler
@@ -247,10 +248,23 @@ my_interrupt_handler
 	lda	$ff02		; clear pia irq latch by reading data port
 	jmp	interrupt_handler ; jump to regular handler
 
+
+;;; This is the swi2 handler. Only user-space will be calling this so
+;;; assume userspace is already mapped in.  we take our final vectors from
+;;; the current userspace as each proc can have it's own vector.
+swi3_handler
+	ldx	$fe		; load swi3 vector
+	bra	b@
+swi2_handler
+	ldx	$fc		; load swi2 vector
+b@	beq	a@		; if zero do nothing
+	jmp	,x		;
+a@	rti
+
+
 ;;;  FIXME:  these interrupt handlers should prolly do something
 ;;;  in the future.
 firq_handler:
-badswi_handler:
 	    rti
 
 

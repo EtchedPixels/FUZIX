@@ -1,0 +1,34 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -lcursespdp11 -ltermcappdp11 -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+.SUFFIXES: .c .o
+
+SRCS  = invaders.c
+OBJS = $(SRCS:.c=.o)
+APPS = $(OBJS:.o=)
+
+all: $(APPS) size.report
+
+$(APPS): $(CRT0)
+
+$(APPS) $(APPSNS): %: %.o
+	$(LINKER) $^ -o $@ $(LINKER_OPT)
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) *.o core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+
+rmbak:
+	rm -f *~ core

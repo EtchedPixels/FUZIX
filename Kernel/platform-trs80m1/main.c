@@ -86,12 +86,14 @@ struct blkbuf *bufpool_end = &bufpool[NBUFS];
 /* Turn DISCARD into space in bank 2 for buffers */
 void platform_discard(void)
 {
-        extern uint8_t bufdata_end[];
+	extern uint8_t *bdnext;
+
 	/* The buffers are the last kept thing in segment 2, so we can blow
 	   away from the buffers end to FFFF */
 	bufptr bp;
-	uint16_t space = 0xFFFF - bufdata_end;
-	space /= sizeof(blkbuf);
+	uint16_t space = 0xFFFF - bdnext;
+
+	space /= BLKSIZE;
 	if (space > MAX_BUFS - NBUFS)
 		space = MAX_BUFS - NBUFS;
 	bufpool_end += space;
@@ -100,6 +102,7 @@ void platform_discard(void)
 	for( bp = bufpool + NBUFS; bp < bufpool_end; ++bp ){
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
+		bp->bf_time = 0;
 	}
 	/* Assign data to the extra buffers */
 	bufsetup();

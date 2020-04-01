@@ -6,8 +6,6 @@
 #define CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* CP/M emulation */
 #define CONFIG_CPM_EMU
 /* We use flexible 16K banks so use the helper */

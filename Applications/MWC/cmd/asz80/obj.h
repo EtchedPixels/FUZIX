@@ -10,6 +10,9 @@ struct objhdr
 #define OA_8080		1
 #define OA_6502		2
 #define OA_DGNOVA	3	/* So I can test PC relative */
+#define OA_6800		4
+#define OA_Z8		5
+#define OA_1802		6
     uint8_t o_flags;
 #define OF_BIGENDIAN	1
 #define OF_WORDMACHINE	2	/* 16bit word addressed */
@@ -32,6 +35,11 @@ struct objhdr
 #define OA_DGNOVA_FPU	2
 #define OA_DGNOVA_NOVA3	4
 #define	OA_DGNOVA_NOVA4	8
+
+#define OA_6800_6803	1
+#define OA_6800_6303	2
+#define OA_6800_68HC11	4
+
     uint16_t o_unused;		/* So it packs right */
     uint32_t o_segbase[OSEG];
     uint16_t o_size[OSEG];
@@ -44,7 +52,7 @@ struct objhdr
 
 #define REL_SIZE	0x30	/* 1-4 bytes */
 /* If REL_SIMPLE then ... */
-#define REL_SIMPLE	0x80	/* relocationto base of segment */
+#define REL_SIMPLE	0x80	/* relocation to base of segment */
 #define REL_SEG		0x0F	/* segment 0-15 */	
 
 /*    followed by the bytes to relocate */
@@ -69,6 +77,8 @@ struct objhdr
    write where the two bytes of reloc are relocated and the high byte used. If
    used with overflow must follow it directly */
 #define REL_HIGH	(REL_SPECIAL| (3 << 4))	/* 30 */
+/* Indicate a change in address for ABS areas */
+#define REL_ORG		(REL_SPECIAL| (4 << 4))	/* 40 */
 
 /* symbols and debug are in the format 
     uint8_t flags

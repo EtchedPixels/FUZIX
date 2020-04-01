@@ -239,6 +239,7 @@ outchar:
 ;	gone onto a dud stack, but if so that is ok as we won't be returning
 ;
 mmu_kernel:
+	    push af
 	    push hl
 	    ld hl,#0
 	    add hl,sp
@@ -254,6 +255,7 @@ do_mmu_kernel:
 	    xor a			; Switch MMU off
 	    out (23),a
 	    pop hl
+	    pop af
 	    ret
 ;
 ;	We have been called with SP pointing into la-la land. That means

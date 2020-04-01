@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 /* Pure swap */
 #undef CONFIG_SWAP_ONLY
 
@@ -48,6 +46,7 @@
 #define VT_RIGHT	(vt_tright[curtty])
 #define VT_BOTTOM	(vt_tbottom[curtty])
 #define VT_INITIAL_LINE	0
+#define MAX_VT 4
 
 #define VIDEO_BASE	0x0800	/* 0x800 - 0x1FFF (6K) */
 #define VC_BASE		0x0400	/* Two 32x16 virtual consoles here */

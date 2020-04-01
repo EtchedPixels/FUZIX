@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 sudo: required
 
 matrix:
@@ -7,7 +7,6 @@ matrix:
         - env: TARGET=multicomp09
         - env: TARGET=sbcv2
         - env: TARGET=sc108
-        - env: TARGET=v65c816
         - env: TARGET=v68
         - env: TARGET=tiny68k
         - env: TARGET=n8vem-mark4

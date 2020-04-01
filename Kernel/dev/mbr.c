@@ -4,7 +4,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <blkdev.h>
-#include <config.h>
 #include "mbr.h"
 #include "gpt.h"
 
@@ -68,6 +67,14 @@ void mbr_parse(uint_fast8_t letter)
 #endif
 	    break;
         }
+
+#ifndef BOOTDEVICE
+        /* Valid first MBR, look for boot command string */
+        if (seen == 0) {
+		if (le16_to_cpu(br->cmdflag) == MBR_BOOT_CMD)
+			set_boot_line((const char *)br->cmdline);
+	}
+#endif
 
 	/* avoid an infinite loop where extended boot records form a loop */
 	if(seen >= 50)

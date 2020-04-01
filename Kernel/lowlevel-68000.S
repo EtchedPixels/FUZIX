@@ -396,6 +396,8 @@ SYM (__umodsi3):
 		.globl swap_blocks
 		.globl install_vectors
 		.globl vdso
+		.globl sys_cpu
+		.globl sys_cpu_feat
 
 .mri 1
 get_usp:	move.l	usp,a0
@@ -412,6 +414,7 @@ set_usp:	move.l 4(sp),a0
 __hard_di:
 		move.w sr,d0
 		move.w d0,d1
+		and.w #$0700,d0
 		and.w #$F8FF,d1
 		or.w #DI_MASK,d1
 		move.w d1,sr
@@ -469,19 +472,24 @@ noflush:
 ;	is memory protection.
 ;
 doexec:
+		bsr flush_icache
+
 		move.l 4(sp),a1			; go address
 		lea.l 1024(a5),a7		; reset the supervisor stack
 
-		bsr flush_icache
 
-		and.w #$F8FF,sr			; IRQ on
+		move.w sr,d0			; Set the IRQ mask
+		and.w #$D8FF,d0			; Supervisor off
+		or.w #EI_MASK,d0		; May be some masked even
+		; Don't put the status back yet - we will unmask in the rte
+		; as we clear the supervisor frame
 
 		tst.b cpu_has_trapvec
 		beq threeword
 		clr.w -(sp)			; push vector
 threeword:
 		move.l a1,-(sp)			; return address
-		clr.w -(sp)			; set up the status register
+		move.w d0,-(sp)			; set up the status register
 		move.l U_DATA__U_ISP(a5),a0
 		move.l a0,usp			; set the user stack
 		moveq #0,d0			; wipe the registers
@@ -1090,3 +1098,5 @@ cpu_has_trapvec:
 		byte 0
 cpu_has_icache:
 		byte 0
+sys_cpu:	byte 9		; 68000
+sys_cpu_feat:	byte 0		; 68000 base features (updated as we boot)

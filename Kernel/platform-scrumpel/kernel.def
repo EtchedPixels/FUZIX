@@ -11,7 +11,7 @@ FIRST_RAM_BANK              .equ 0x00         ; low 512K of physical memory is R
 Z180_IO_BASE                .equ 0x00
 
 USE_FANCY_MONITOR           .equ 1            ; disabling this saves around approx 0.5KB
-CPU_CLOCK_KHZ               .equ 18432        ; 18.432MHz * 1
+CPU_CLOCK_KHZ               .equ 16000        ; 16.000MHz * 1
 Z180_TIMER_SCALE            .equ 20           ; CPU clocks per timer tick
 TICKSPERSEC                 .equ 40           ; timer interrupt rate (Hz)
 

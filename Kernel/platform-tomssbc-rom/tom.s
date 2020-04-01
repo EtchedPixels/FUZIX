@@ -662,24 +662,12 @@ __uputw:
 	jp map_kernel
 
 __ugetc:
-	pop de
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
-	push de
 	call map_process_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel
 
 __ugetw:
-	pop de
-	pop bc	; return
-	pop hl	; address
-	push hl
-	push bc
-	push de
 	call map_process_always
         ld a, (hl)
 	inc hl

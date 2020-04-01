@@ -1,6 +1,6 @@
 -mwxuy
 -i fuzix.ihx
--b _CODE=0x1000
+-b _CODE=0x0100
 -b _COMMONMEM=0xF600
 -b _DISCARD=0xE000
 -l z180
@@ -27,6 +27,7 @@ syscall_fs2.rel
 syscall_fs3.rel
 syscall_proc.rel
 syscall_other.rel
+syscall_net.rel
 tty.rel
 mm.rel
 bankfixed.rel
@@ -43,4 +44,5 @@ platform-scrumpel/devsd_discard.rel
 platform-scrumpel/mbr.rel
 platform-scrumpel/blkdev.rel
 platform-scrumpel/monitor.rel
+platform-scrumpel/net_native.rel
 -e

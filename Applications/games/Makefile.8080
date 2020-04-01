@@ -23,6 +23,8 @@ APPSNS = $(OBJSNS:.o=)
 
 all: $(APPS) $(APPSNS) size.report
 
+CFLAGS += -DCONFIG_IO_CUSS
+
 $(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
 

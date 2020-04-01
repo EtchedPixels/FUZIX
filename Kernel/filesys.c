@@ -194,7 +194,7 @@ nodir:
 
 inoptr srch_dir(inoptr wd, uint8_t *compname)
 {
-    int curentry;
+    uint_fast8_t curentry;
     blkno_t curblock;
     struct blkbuf *buf;
     struct direct *d;

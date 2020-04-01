@@ -26,7 +26,7 @@
  *
  */
 
-#include <config.h>
+#include <kernel.h>
 
 #ifdef CONFIG_FONT6X8
 
@@ -544,13 +544,13 @@ const unsigned char fontdata_6x8[96][8] = {
 	      __O___,
 	      __OOO_,
 	      ______},
-    [0x3c] = {_O___O,
-	      __O_O_,
-	      _OOOOO,
+    [0x3c] = {______,
+	      _O____,
+	      __O___,
 	      ___O__,
-	      _OOOOO,
-	      ___O__,
-	      ___O__,
+	      ____O_,
+	      _____O,
+	      ______,
 	      ______},
     [0x3d] = {__OOO_,
 	      ____O_,

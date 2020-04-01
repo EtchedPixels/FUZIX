@@ -25,10 +25,9 @@ Status: Under development.
 
 ### Cromemco System III
 
-Ran under emulation at one point. Needs debugging again to deal with the
-fallout from the serial changes. One big problem is that the existing
-emulation does not cover hard disks, and there appears to be no useful
-documentation on the hard disk controller.
+Ran under emulation at one point. One big challenge is that the emulation does
+not cover hard disks, and there appears to be no useful documentation on the
+hard disk controller.
 
 Status: On hold.
 
@@ -47,7 +46,8 @@ and disk controllers.
 
 ### Pentagon
 
-Scoping and initial work only.
+Scoping and initial work only. Needs support for ROM only in the low 16K
+which needs future syscall changes.
 
 ### PX4 Plus
 
@@ -79,3 +79,10 @@ Status: abandoned
 Z280 port to Bill Shen's Z280RC system.
 
 Status: On hold.
+
+### ZX Spectrum Uno
+
+Port to use all the pieces of the ZXUno including the 512pixel screen,
+combined Spectrum and Timex banking etc.
+
+Status: In progress (you can use the existing zxdiv port)

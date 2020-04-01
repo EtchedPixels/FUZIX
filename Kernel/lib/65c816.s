@@ -60,7 +60,7 @@ _platform_switchout:
 	lda	#U_DATA__TOTALSIZE-1		; including our live stack
 	phb
 switch_patch_1:
-	mvn	0,KERNEL_BANK		; save stack and udata
+	mvn	#KERNEL_BANK,#0		; save stack and udata
 
 .if ( KERNEL_BANK )
 	;
@@ -72,7 +72,7 @@ switch_patch_1:
 	lda	#$FF
 	ldx	#kstack_base
 switch_patch_2:
-	mvn	0,0
+	mvn	#0,#0
 
 .endif
 	plb
@@ -115,7 +115,7 @@ _switchin:
 	ldy	#U_DATA
 	lda	#U_DATA__TOTALSIZE-1
 switch_patch_3:
-	mvn	KERNEL_BANK,0
+	mvn	#0,#KERNEL_BANK
 
 .if ( KERNEL_BANK )
 	;
@@ -124,7 +124,7 @@ switch_patch_3:
 	ldy	#kstack_base
 	lda	#$FF
 switch_patch_4:
-	mvn	0,0
+	mvn	#0,#0
 
 .endif
 
@@ -227,12 +227,12 @@ _dofork:
 	lda	#MAP_SIZE-1	; 64K - udata shadow
 	phb
 fork_patch:
-	mvn	0,0		; copy the entire bank below the save
+	mvn	#0,#0		; copy the entire bank below the save
 	ldx	#U_DATA
 	ldy	#U_DATA_STASH
 	lda	#U_DATA__TOTALSIZE-1
 fork_patch_2:
-	mvn	0,KERNEL_BANK
+	mvn	#KERNEL_BANK,#0
 .if ( KERNEL_BANK )
 	;
 	;	For big kernels copy the kstack separately as it's in
@@ -241,7 +241,7 @@ fork_patch_2:
 	ldx	#kstack_base
 	lda	#$FF
 fork_patch_3:
-	mvn	0,0
+	mvn	#0,#0
 .endif
 	;
 	;	Clone DP and stack between parent and child
@@ -250,7 +250,7 @@ fork_patch_3:
 	ldy	ptr3		; in DP
 	lda	#$01FF		; DP and stack
 
-	mvn	0,0
+	mvn	#0,#0
 	plb			; back to corect bank register
 
 	;

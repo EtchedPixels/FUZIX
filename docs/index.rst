@@ -20,11 +20,13 @@ Welcome to Fuzix's documentation!
    ExternalBuffers
    Process
    Tickless
+   DeviceDrivers
    TTY
    VT
    65C816
    M68000
    BankedZ80
    Z80Thunked
+   RC2014
 
 * :ref:`search`

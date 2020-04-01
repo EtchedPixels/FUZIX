@@ -2154,7 +2154,7 @@ static const unsigned char data[FONTDATAMAX] = {
 int main(int argc, char *argv[]) 
 {
 	int i;
-	printf("#include <config.h>\n\n");
+	printf("#include <kernel.h>\n\n");
 	printf("#ifdef CONFIG_FONT_4X6\n\n");
 	printf("const unsigned char font4x6[] = {\n");
 	for (i = 0; i < 1536/2; i++) {

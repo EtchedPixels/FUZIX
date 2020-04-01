@@ -59,7 +59,7 @@ int hd_open(uint8_t minor, uint16_t flag)
     used(flag);
     err = peek(0x35);
     poke(0x3300|minor);
-    if(peek(0x35)) {
+    if(err) {
         udata.u_error = ENODEV;
         return -1;
     }

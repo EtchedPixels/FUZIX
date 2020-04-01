@@ -209,6 +209,11 @@ ptptr getproc(void)
 			kprintf("[getproc returning %p pid=%d]\n",
 				getproc_nextp, getproc_nextp->p_pid);
 #endif
+			/* Punish CPU hogs by selecting them less often */
+			if (getproc_nextp->p_flags & PFL_BATCH) {
+				getproc_nextp->p_flags &= ~PFL_BATCH;
+				continue;
+			}
 			return getproc_nextp;
 		}
 		/* Take a nap: not that it makes much difference to power on most
@@ -377,6 +382,7 @@ ptptr ptab_alloc(void)
 			} else {
 				udata.u_error = ENOMEM;
 				newp = NULL;
+				break;
 	                }
 	                newp->p_pgrp = udata.u_ptab->p_pgrp;
 	                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
@@ -957,7 +963,7 @@ void doexit(uint16_t val)
 	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
 #endif
 #ifdef CONFIG_ACCT
-	acctexit(p);
+	acctexit(udata.u_ptab);
 #endif
         udata.u_page = 0xFFFFU;
         udata.u_page2 = 0xFFFFU;

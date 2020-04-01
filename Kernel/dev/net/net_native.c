@@ -4,6 +4,11 @@
 #include <net_native.h>
 #include <printf.h>
 
+/*
+ *	TODO: support using a malloc pool of out of bank (or flat space)
+ *	memory buffers for networking not just file buffers. That way
+ *	it's much nicer on big boxes.
+ */
 #ifdef CONFIG_NET_NATIVE
 
 /* This holds the additional kernel context for the sockets */
@@ -31,8 +36,8 @@ static struct netevent ne;
 
 int netdev_write(uint8_t flags)
 {
-	struct socket *s;
-	struct sockdata *sd;
+	regptr struct socket *s;
+	regptr struct sockdata *sd;
 
 	used(flags);
 	/* Grab a message from the service daemon */
@@ -200,7 +205,7 @@ int netdev_ioctl(uarg_t request, char *data)
  */
 int netdev_close(uint8_t minor)
 {
-	struct socket *s = sockets;
+	regptr struct socket *s = sockets;
 	used(minor);
 	if (net_ino) {
 		i_deref(net_ino);
@@ -522,7 +527,7 @@ void net_close(struct socket *s)
  *	Read or recvfrom a socket. We don't yet handle message addresses
  *	sensibly and that needs fixing
  */
-arg_t net_read(struct socket *s, uint8_t flag)
+arg_t net_read(regptr struct socket *s, uint8_t flag)
 {
 	uint16_t n = 0;
 	struct sockdata *sd = s->s_priv;
@@ -571,7 +576,7 @@ arg_t net_read(struct socket *s, uint8_t flag)
  *	Write or sendto a socket. We don't yet handle message addresses
  *	sensibly and that needs fixing
  */
-arg_t net_write(struct socket * s, uint8_t flag)
+arg_t net_write(regptr struct socket * s, uint8_t flag)
 {
 	uint16_t n = 0, t = 0;
 	uint16_t l = udata.u_count;

@@ -26,7 +26,7 @@ void outpass(void)
 
 	if (pass == 1) {
 		/* Lay the file out */
-		for (i = 1; i < NSEGMENT; i++) {
+		for (i = 0; i < NSEGMENT; i++) {
 			segbase[i] = base;
 			if (i != BSS && i != ZP) {
 				obh.o_segbase[i] = base;
@@ -36,12 +36,14 @@ void outpass(void)
 		}
 		obh.o_magic = 0;
 		obh.o_arch = ARCH;
-		obh.o_flags = 0;
+		obh.o_flags = ARCH_FLAGS;
 		obh.o_cpuflags = cpu_flags;
 		obh.o_symbase = base;
 		obh.o_dbgbase = 0;	/* for now */
 		/* Number the symbols for output */
 		numbersymbols();
+		segment = ABSOLUTE;
+		outsegment(segment);
 	}
 }
 
@@ -51,6 +53,14 @@ void outpass(void)
 
 void outabsolute(int addr)
 {
+	if (segment != ABSOLUTE)
+		qerr(MUST_BE_ABSOLUTE);
+	else {
+		outbyte(REL_ESC);
+		outbyte(REL_ORG);
+		outbyte(addr & 0xFF);
+		outbyte(addr >> 8);
+	}
 }
 
 /*
@@ -91,7 +101,7 @@ static void check_store_allowed(uint8_t segment, uint16_t value)
 }
 
 /*
- *	Symbol numbers and relocatios are always written little endian
+ *	Symbol numbers and relocations are always written little endian
  *	for simplicity.
  *
  *	A_LOW and A_HIGH indicate 8bit partial relocations. We handle these
@@ -100,7 +110,10 @@ static void check_store_allowed(uint8_t segment, uint16_t value)
 void outraw(ADDR *a)
 {
 	int s = 1 << 4;
-	if (a->a_segment != ABSOLUTE) {
+	/* We must insert a relocation record for anything relocatable,
+	   but also for anything which is a symbol, as the linker may
+	   need to do absolute resolution between modules */
+	if (a->a_segment != ABSOLUTE || a->a_sym) {
 		outbyte(REL_ESC);
 		check_store_allowed(segment, 1);
 		/* low bits of 16 bit is an 8bit relocation with
@@ -136,9 +149,6 @@ void outab(uint8_t b)
 {
 	/* Not allowed to put data in the BSS except zero */
 	check_store_allowed(segment, b);
-	/* FIXME: wrong error ?? */
-	if (segment == ABSOLUTE)
-		err('A', MUST_BE_ABSOLUTE);
 	outbyte(b);
 	if (b == REL_ESC)	/* Quote relocation markers */
 		outbyte(REL_REL);
@@ -157,19 +167,17 @@ void outabchk(uint16_t b)
 
 void outrabrel(ADDR *a)
 {
-	if (a->a_segment != ABSOLUTE) {
-		check_store_allowed(segment, 1);
-		if (a->a_sym) {
-			outbyte(REL_ESC);
-			outbyte((0 << 4 ) | REL_PCREL);
-			outbyte(a->a_sym->s_number & 0xFF);
-			outbyte(a->a_sym->s_number >> 8);
-			outbyte(a->a_value);
-			outab(a->a_value >> 8);
-			return;
-		}
-		/* relatives without a symbol don't need relocation */
+	check_store_allowed(segment, 1);
+	if (a->a_sym) {
+		outbyte(REL_ESC);
+		outbyte((0 << 4 ) | REL_PCREL);
+		outbyte(a->a_sym->s_number & 0xFF);
+		outbyte(a->a_sym->s_number >> 8);
+		outbyte(a->a_value);
+		outab(a->a_value >> 8);
+		return;
 	}
+	/* relatives without a symbol don't need relocation */
 	if (a->a_value < -128 || a->a_value > 127)
 		err('o', CONSTANT_RANGE);
 	outab(a->a_value);
@@ -281,6 +289,10 @@ void outeof(void)
 	if (noobj || pass == 0)
 		return;
 
+	segment = ABSOLUTE;
+	outsegment(ABSOLUTE);
+	outbyte(REL_ESC);
+	outbyte(REL_EOF);
 	segment = CODE;
 	outsegment(CODE);
 	outbyte(REL_ESC);
@@ -293,17 +305,17 @@ void outeof(void)
 	rewind(ofp);
 	obh.o_magic = MAGIC_OBJ;
 	fwrite(&obh, sizeof(obh), 1, ofp);
-/*	printf("Code %d bytes: Data %d bytes: BSS %d bytes\n",
-		truesize[CODE], truesize[DATA], truesize[BSS]); */
+//	printf("Abs %d bytes: Code %d bytes: Data %d bytes: BSS %d bytes\n",
+//		truesize[ABSOLUTE], truesize[CODE], truesize[DATA], truesize[BSS]);
 }
 
 /*
  * Output a byte and track our position. For BSS we care about sizes
- * only.
+ * only. ZP is similar but not yet really used.
  */
 void outbyte(uint8_t b)
 {
-	if (pass == 1 && segment != BSS)
+	if (pass == 1 && segment != BSS && segment != ZP)
 		putc(b, ofp);
 	segbase[segment]++;
 	segsize[segment]++;

@@ -17,4 +17,14 @@ struct cmos_rtc
 #define CMOS_RTC_TIME	2
 /* Unix time format */
 
+struct cmos_nvram
+{
+	uint16_t offset;
+	uint8_t val;
+};
+
+#define RTCIO_NVGET	0x0501
+#define RTCIO_NVSET	0x4502
+#define RTCIO_NVSIZE	0x0503
+
 #endif

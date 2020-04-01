@@ -20,6 +20,8 @@
 #include <stdbool.h>
 #include <blkdev.h>
 
+#ifdef CONFIG_SD
+
 /****************************************************************************/
 /* Code in this file is used only once, at startup, so we want it to live   */
 /* in the DISCARD segment. sdcc only allows us to specify one segment for   */
@@ -138,3 +140,5 @@ int sd_spi_init(void)
 
     return CT_NONE; /* failed */
 }
+
+#endif

@@ -1,0 +1,67 @@
+This is Fuzix for the SC126 Z180 RC2014 system booting from ROMWBW. It should
+also work on the SC130 although you won't get the status light display.
+
+Based upon the N8VEM Mark IV port by Will Sowerbutts <will@sowerbutts.com>
+
+Required:
+- SC126 SBC set to boot from ROMWBW
+
+Options:
+ - RC2014 CF adapter at 0x10
+
+Not yet supported but planned:
+ - SPI chip select expansion
+ - RC2014 serial/ctc interfaces (only the onboard ports are handled)
+ - RC2014 TMS9918A
+ - Swap
+ - Other generic Z180 RC2014 boards with ROMWBW (Black Adder, Tom's Z180 etc)
+   (although these should just work with a 512K/512K board)
+
+To set up
+Write fuzix.romwbw to blocks 2+
+Partition with a vaguely modern fdisk (2048 block offset base, not 63)
+Add partition for filesystem
+Copy filesystem onto partition
+
+The root filesystem device can be specified as either a decimal number, or as a
+a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
+
+TODO:
+- Identify SC111 v SC126 so we can merge the ports
+- Add "turbo" option for clock doubling
+- Add wait state control option for mem/io/cf wait states
+- More CF testing
+- Can we do CF with DMA1 ? (ought to get us to 3MBytes/second which is about the
+PIO 0 limit with 0 mem 1 ide wait). 36MHz would get us closer to 6 but less
+due to wait stating so probably ok as PIO1.
+
+Notes:
+
+On SC126
+- 0x0D drives an 8 LED port (WO)
+- bitbang I2C port
+- 0x0C is
+	7: RTC d out | I2C SDA
+	6: RTC sclk
+	5: /RTC_WE
+	4: /RTC_CE
+	3: /SD_CS2 	(really SPI CS2)
+	2: /SD_CS1	(and SPI CS1)
+	1: Flash selection (if not set by user)
+	0: I2C SCL
+
+So 0x0C high 4 bits are the same as the classic DS1302 but we need
+a register tracking bits.
+
+On SC130
+- 0x0E
+	0: status LED
+- 0x0C
+	2: SPI CS for SD card (no second CS)
+
+SC130 TODO:
+	Because the classic RTC is not always fully decoded we need to ensure
+that when the LED control is added or SPI CS is played with are not mid RTC
+transaction or we shadow those bits. As we don't do SPI in an IRQ it's currently
+safe by chance.
+

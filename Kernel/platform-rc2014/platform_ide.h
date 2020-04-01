@@ -3,9 +3,12 @@
 
 #ifndef CONFIG_PPIDE
 
-/*CF card: 8bit, no altstatus/control */
+/* CF card: 8bit, no altstatus/control */
 #define IDE_8BIT_ONLY
 #define IDE_REG_CS1_BASE   0x10
+
+/* We use the Z80DMA engine if we can */
+#define IDE_NONSTANDARD_XFER
 
 #else
 

@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Fixed banking: 8 x 64K banks, top 4KB is shared with kernel, 60KB-62KB is user memory  */
 #define CONFIG_BANK_FIXED
 /* Permit large I/O requests to bypass cache and go direct to userspace */
@@ -39,11 +37,7 @@
 /* Hardware parameters : internal hardware at 0x40-0x7F */
 #define Z180_IO_BASE       0x40
 
-#define MAX_BLKDEV 3	    /* 2 IDE drives, 1 SD drive */
-
-/* SD via CSIO : Needs an additional GPIO pin */
-#define CONFIG_SD
-#define SD_DRIVE_COUNT 1
+#define MAX_BLKDEV 2	    /* 2 IDE drives */
 
 #define NUM_DEV_TTY	2
 /* UART0 as the console */
@@ -54,13 +48,13 @@
 
 /* Z180 does not yet support swap - need to fix that */
 //#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x7D 	/* 62.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xFA00	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-#define CONFIG_DYNAMIC_SWAP
+//#define CONFIG_DYNAMIC_SWAP
 #define swap_map(x)	((uint8_t *)(x))
 
 #define platform_copyright()		// for now

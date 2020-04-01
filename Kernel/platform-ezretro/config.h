@@ -10,8 +10,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
 /* 8x 56K banks, 1 is kernel */

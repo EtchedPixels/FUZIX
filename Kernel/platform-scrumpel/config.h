@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Fixed banking: 8 x 64K banks, top 4KB is shared with kernel, 60KB-62KB is user memory  */
 #define CONFIG_BANK_FIXED
 /* Permit large I/O requests to bypass cache and go direct to userspace */
@@ -37,6 +35,10 @@
 #define NBUFS    5        /* Number of block buffers, keep in line with space reserved in scrumpel.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
+/* Enable networking and netd support */
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
+
 /* Hardware parameters : internal hardware at 0x00-0x3F */
 #define Z180_IO_BASE       0x00
 
@@ -50,13 +52,13 @@
 #define NUM_DEV_TTY	2
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)
-#define TTY_INIT_BAUD B115200	/* Hardwired generally */
+#define TTY_INIT_BAUD B9600	/* Hardwired generally */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 /* Z180 does not yet support swap - need to fix that */
 //#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x7C 	/* 62K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xF800	/* Swap out udata and program */

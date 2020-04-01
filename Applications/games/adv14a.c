@@ -1825,12 +1825,14 @@ const uint8_t automap[] = {
 	71,
 	0,
 };
+#include <stdio.h>	/* Not really used but needed for perror */
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <setjmp.h>
+#include <termios.h>
 
 #ifdef __linux__
 #include <stdio.h>
@@ -1863,8 +1865,8 @@ static uint8_t actmatch;
 static uint8_t continuation;
 static uint16_t *param;
 static uint16_t param_buf[5];
-static uint8_t redraw;
 static uint8_t rows, cols;
+static uint8_t redraw;
 
 static struct savearea game;
 
@@ -1969,7 +1971,7 @@ static char readchar(void)
   return wgetch(botwin);
 }
 
-static void line_input(void)
+static void line_input(int m)
 {
   int c;
   char *p = linebuf;
@@ -2053,7 +2055,496 @@ static void display_exit(void)
   endwin();
 }
 
+#elif defined(CONFIG_IO_CUSS)
+
+/* ---- */
+
+#include <termcap.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/wait.h>
+#include <termios.h>
+
+/* A mini look alike to David Given's libcuss. If useful will probably
+   become a library. For now pasted around to experiment */
+
+uint_fast8_t screenx, screeny, screen_height, screen_width;
+
+static char *t_go, *t_clreol, *t_clreos;
+static uint8_t conbuf[64];
+static uint8_t *conp = conbuf;
+
+extern void con_puts(const char *s);
+
+/* Queue a character to the output buffer */
+static int conq(int c)
+{
+	if (conp == conbuf + sizeof(conbuf)) {
+		write(1, conbuf, sizeof(conbuf));
+		conp = conbuf;
+	}
+	*conp++ = (uint8_t) c;
+	return 0;
+}
+
+/* Make sure the output buffer is written */
+void con_flush(void)
+{
+	write(1, conbuf, conp - conbuf);
+	conp = conbuf;
+}
+
+static const char hex[] = "0123456789ABCDEF";
+
+/* Put a character to the screen. We handle unprintables and tabs */
+void con_putc(uint8_t c)
+{
+	if (c == '\t') {
+		uint8_t n = 8 - (screenx & 7);
+		while (n--)
+			con_putc(' ');
+		return;
+	}
+	if (c > 127) {
+		con_puts("\\x");
+		con_putc(hex[c >> 4]);
+		con_putc(hex[c & 0x0F]);
+		return;
+	} else if (c == 127) {
+		con_puts("^?");
+		return;
+	}
+	if (c < 32) {
+		con_putc('^');
+		c += '@';
+	}
+	conq(c);
+	screenx++;
+adjust:
+	if (screenx == screen_width) {
+		screenx = 0;
+		screeny++;
+	}
+}
+
+/* Write a termcap string out */
+static void con_twrite(char *p, int n)
+{
+#if !defined(__linux__)
+	tputs(p, n, conq);
 #else
+	while (*p)
+		conq(*p++);
+#endif
+}
+
+/* Write a string of symbols including quoting */
+void con_puts(const char *s)
+{
+	uint8_t c;
+	while (c = (uint8_t) *s++)
+		con_putc(c);
+}
+
+/* Add a newline */
+void con_newline(void)
+{
+	if (screeny >= screen_height)
+		return;
+	conq('\n');
+	screenx = 0;
+	screeny++;
+}
+
+/* We need to optimize this but firstly we need to fix our
+   tracking logic as we use con_goto internally but don't track
+   that verus the true user values */
+void con_force_goto(uint_fast8_t y, uint_fast8_t x)
+{
+	con_twrite(tgoto(t_go, x, y), 2);
+	screenx = x;
+	screeny = y;
+}
+
+void con_goto(uint_fast8_t y, uint_fast8_t x)
+{
+#if 0
+	if (screenx == x && screeny == y)
+		return;
+	if (screeny == y && x == 0) {
+		conq('\r');
+		screenx = 0;
+		return;
+	}
+	if (screeny == y - 1 && x == 0) {
+		con_newline();
+		return;
+	}
+#endif	
+	con_force_goto(y, x);
+}
+
+/* Clear to end of line */
+void con_clear_to_eol(void)
+{
+	if (screenx == screen_width - 1)
+		return;
+	if (t_clreol)
+		con_twrite(t_clreol, 1);
+	else {
+		uint_fast8_t i;
+		/* Write spaces. This tends to put the cursor where
+		   we want it next time too. Might be worth optimizing ? */
+		for (i = screenx; i < screen_width; i++)
+			con_putc(' ');
+	}
+}
+
+/* Clear to the bottom of the display */
+
+void con_clear_to_bottom(void)
+{
+	/* Most terminals have a clear to end of screen */
+	if (t_clreos)
+		con_twrite(t_clreos, screen_height);
+	/* If not then clear each line, which may in turn emit
+	   a lot of spaces in desperation */
+	else {
+		uint_fast8_t i;
+		for (i = 0; i < screen_height; i++) {
+			con_goto(i, 0);
+			con_clear_to_eol();
+		}
+	}
+	con_force_goto(0, 0);
+}
+
+void con_clear(void)
+{
+	con_goto(0, 0);
+	con_clear_to_bottom();
+}
+
+int con_scroll(int n)
+{
+	if (n == 0)
+		return 0;
+	/* For now we don't do backscrolls: FIXME */
+	if (n < 0)
+		return 1;
+	/* Scrolling down we can do */
+	con_force_goto(screen_height - 1, 0);
+	while (n--)
+		conq('\n');
+	con_force_goto(screeny, screenx);
+}
+
+/* TODO: cursor key handling */
+int con_getch(void)
+{
+	uint8_t c;
+	con_flush();
+	if (read(0, &c, 1) != 1)
+		return -1;
+	return c;
+}
+
+int con_size(uint8_t c)
+{
+	if (c == '\t')
+		return 8 - (screenx & 7);
+	/* We will leave unicode out 8) */
+	if (c > 127)
+		return 4;
+	if (c < 32 || c == 127)
+		return 2;
+	return 1;
+}
+
+static int do_read(int fd, void *p, int len)
+{
+	int l;
+	if ((l = read(fd, p, len)) != len) {
+		if (l < 0)
+			perror("read");
+		else
+			write(2, "short read from tchelp.\n", 28);
+		return -1;
+	}
+	return 0;
+}
+
+static char *tnext(char *p)
+{
+	return p + strlen(p) + 1;
+}
+
+static int tty_init(void)
+{
+	int fd[2];
+	pid_t pid;
+	int ival[3];
+	int n;
+	int status;
+
+	if (pipe(fd) < 0) {
+		perror("pipe");
+		return -1;
+	}
+
+	pid = fork();
+	if (pid == -1) {
+		perror("fork");
+		return -1;
+	}
+
+	if (pid == 0) {
+		close(fd[0]);
+		dup2(fd[1], 1);
+		execl("/usr/lib/tchelp", "tchelp", "li#co#cm$ce$cd$cl$", NULL);
+		perror("tchelp");
+		_exit(1);
+	}
+	close(fd[1]);
+	waitpid(pid, &status, 0);
+
+	do_read(fd[0], ival, sizeof(int));
+	if (ival[0] == 0)
+		return -1;
+	do_read(fd[0], ival + 1, 2 * sizeof(int));
+
+	ival[0] -= 2 * sizeof(int);
+	t_go = sbrk((ival[0] + 3) & ~3);
+
+	if (t_go == (void *) -1) {
+		perror("sbrk");
+		return -1;
+	}
+
+	if (do_read(fd[0], t_go, ival[0]))
+		return -1;
+
+	close(fd[0]);
+	t_clreol = tnext(t_go);
+	t_clreos = tnext(t_clreol);
+	if (*t_clreos == 0)	/* No clr eos - try for clr/home */
+		t_clreos++;	/* cl cap if present */
+	if (*t_go == 0) {
+		write(2, "Insufficient terminal features.\n", 32);
+		return -1;
+	}
+	/* TODO - screen sizes */
+	screen_height = ival[1];
+	screen_width = ival[2];
+	/* need to try WINSZ and VT ioctls */
+	return 0;
+}
+
+static struct termios con_termios, old_termios;
+
+void con_exit(void)
+{
+	tcsetattr(0, TCSANOW, &old_termios);
+}
+
+int con_init(void)
+{
+	int n;
+	static struct winsize w;
+	if (tty_init())
+		return -1;
+	if (tcgetattr(0, &con_termios) == -1)
+		return -1;
+	memcpy(&old_termios, &con_termios, sizeof(struct termios));
+	atexit(con_exit);
+	con_termios.c_lflag &= ~(ICANON | ECHO | ISIG);
+	con_termios.c_iflag &= ~(IXON);
+	con_termios.c_cc[VMIN] = 1;
+	con_termios.c_cc[VTIME] = 0;
+	if (tcsetattr(0, TCSANOW, &con_termios) == -1)
+		return -1;
+#ifdef VTSIZE
+	n = ioctl(0, VTSIZE, 0);
+	if (n != -1) {
+		screen_width = n & 0xFF;
+		screen_height = (n >> 8) & 0xFF;
+	}
+#endif
+	if (ioctl(0, TIOCGWINSZ, &w) == 0) {
+		screen_width = w.ws_col;
+		screen_height = w.ws_row;
+	}
+	return 0;
+}
+
+
+/* ---- */
+
+/* Glue to the library */
+
+#define REDRAW_MASK	0
+
+static char wbuf[81];
+static int wbp = 0;
+static int xpos = 0;
+static int upper;
+
+static void display_exit(void)
+{
+  con_newline();
+  con_flush();
+}
+
+static void display_init(void)
+{
+  if (con_init())
+    exit(1);
+  con_clear();
+  con_goto(screen_height - 1, 0);
+}
+
+static void flush_word(void)
+{
+  wbuf[wbp] = 0;
+  con_puts(wbuf);
+  wbp = 0;
+}
+
+static void char_out(char c)
+{
+  if (c == '\n') {
+    flush_word();
+    if (upper) {
+      con_clear_to_eol();
+      con_newline();
+    } else {
+      con_scroll(1);
+      con_goto(screen_height - 1, 0);
+    }
+    xpos = 0;
+    return;
+  }
+  if (c != ' ') {
+    if (wbp < 80)
+      wbuf[wbp++] = c;
+    return;
+  }
+  if (xpos + wbp >= screen_width) {
+    xpos = 0;
+    if (upper) {
+      con_clear_to_eol();
+      con_newline();
+    } else {
+      con_scroll(1);
+      con_goto(screen_height - 1, 0);
+    }
+  }
+  flush_word();
+  con_putc(' ');
+  xpos++;
+}
+
+static void strout_lower(const uint8_t *p)
+{
+  while(*p)
+    char_out(*p++);
+}
+
+static void strout_lower_spc(const uint8_t *p)
+{
+  strout_lower(p);
+  char_out(' ');
+}
+
+static void decout_lower(uint16_t v)
+{
+#ifdef __linux__
+  char buf[9];
+  snprintf(buf, 8, "%d", v);	/* FIXME: avoid expensive snprintf */
+  strout_lower((uint8_t *)buf);
+#else
+  strout_lower((uint8_t *)_itoa(v));
+#endif
+}
+
+static void strout_upper(const uint8_t *p)
+{
+  strout_lower(p);
+}
+
+static void action_look(void);
+
+static void line_input(int m)
+{
+  int c;
+  char *p = linebuf;
+
+  if (m == 0)
+    action_look();
+
+  do {
+    c = con_getch();
+    if (c == 8 || c == 127) {
+      if (p > linebuf) {
+        con_goto(screen_height - 1, screenx - 1);
+        con_putc(' ');
+        con_goto(screen_height - 1, screenx - 1);
+        p--;
+      }
+      continue;
+    }
+    if (c > 31 && c < 127) {
+      if (p < linebuf + 80 && xpos < screen_width - 1) {
+        *p++ = c;
+        con_putc(c);
+      }
+      continue;
+    }
+  }
+  while (c != 13 && c != 10);
+  *p = 0;
+  con_scroll(1);
+  con_goto(screen_height - 1, 0);
+}
+
+static char readchar(void)
+{
+  line_input(1);
+  return *linebuf;
+}
+
+
+static uint8_t ly, lx;
+
+static void begin_upper(void)
+{
+  ly = screeny;
+  lx = screenx;
+  flush_word();
+  con_goto(0,0);
+  upper = 1;
+}
+
+char xbuf[] = "<@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@><@>";
+
+static void end_upper(void)
+{
+  flush_word();
+  con_clear_to_eol();
+  con_newline();
+  upper = 0;
+  xbuf[screen_width] = 0;
+  con_puts(xbuf);  
+  con_goto(ly, lx);
+}
+
+#else
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/wait.h>
+#include <termios.h>
 
 #define REDRAW_MASK	REDRAW
 
@@ -2068,7 +2559,7 @@ static void display_init(void)
   struct winsize w;
   if (ioctl(0, TIOCGWINSZ, &w) != -1) {
     rows = w.ws_row;
-    cols = ws.ws_col;
+    cols = w.ws_col;
     return;
   }
 #elif VTSIZE
@@ -2148,7 +2639,7 @@ static void strout_upper(const uint8_t *p)
 }
 
 
-static void line_input(void)
+static void line_input(int m)
 {
   int l = read(0, linebuf, sizeof(linebuf));
   if (l < 0)
@@ -2160,7 +2651,7 @@ static void line_input(void)
 
 static char readchar(void)
 {
-  line_input();
+  line_input(0);
   return *linebuf;
 }
 
@@ -2547,7 +3038,7 @@ static void action_inventory(void)
 static char *filename(void)
 {
   strout_lower("File name ? ");
-  line_input();
+  line_input(1);
   return skip_spaces(linebuf);
 }
 
@@ -2625,7 +3116,7 @@ static void run_actions(const uint8_t *p, uint8_t n)
         break;
       case 54: /* Go */
         game.location = *param++;
-        redraw = REDRAW;
+        redraw |= REDRAW;
         break;
       case 55: /* Destroy */
       case 59: /* ?? */
@@ -2709,7 +3200,7 @@ static void run_actions(const uint8_t *p, uint8_t n)
         tmp = game.savedroom;
         game.savedroom = game.location;
         game.location = tmp;
-        redraw = REDRAW;
+        redraw |= REDRAW;
         break;
       case 81:	/* Swap counter and counter n */
         tmp16 = game.counter;
@@ -2739,7 +3230,7 @@ static void run_actions(const uint8_t *p, uint8_t n)
         game.roomsave[tmp16] = game.location;
         if (tmp != game.location) {
           game.location = tmp;
-          redraw = REDRAW;
+          redraw |= REDRAW;
         }
         break;
       case 88:
@@ -2887,7 +3378,7 @@ void process_light(void)
     game.bitflags &= ~(ONEBIT << LIGHTOUT);	/* Check clear ! */
     if (l == 255 || l == game.location) {
       strout_lower(lightout);
-      redraw = REDRAW_MAYBE;
+      redraw |= REDRAW_MAYBE;
       return;
     }
   }
@@ -2912,16 +3403,17 @@ void main_loop(void)
       first = 0;
     verb = 0;
     noun = 0;
+
     run_table(status);
 
     if (redraw & REDRAW_MASK)
       action_look();
-
     strout_lower(whattodo);
+
     do {
       do {
         strout_lower(prompt);
-        line_input();
+        line_input(0);
         abbrevs();
         p = skip_spaces(linebuf);
       }
@@ -2960,7 +3452,7 @@ void main_loop(void)
           continue;
         }
         game.location = dir;
-        redraw = REDRAW;
+        redraw |= REDRAW;
         continue;
       }
     }

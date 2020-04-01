@@ -27,16 +27,9 @@ static uint8_t writeq;
  *	TTY masks - define which bits can be changed for each port
  */
 
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS,
-	_LSYS,
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart_mask,
 };
 
 

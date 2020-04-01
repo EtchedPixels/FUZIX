@@ -5,6 +5,8 @@
 #include <ctype.h>
 #include <fcntl.h>
 
+#define EMULATOR_SIZE	0x0900
+
 static char path[] = "/usr/lib/cpm/emulator.bin";
 
 void writes(const char *p)
@@ -14,18 +16,99 @@ void writes(const char *p)
 
 /* Stack space is valuable constant space is almost free */
 struct stat st;
-unsigned char buf[4];
+unsigned char buf[16];
 unsigned char *basep;
-void (*exec)(void);
 char pathbuf[512];
+uint8_t image[EMULATOR_SIZE];
 char *pathp;
 int fd;
 int len, len2;
 uint8_t *fcb = (uint8_t *)0x5C;
 uint8_t *tail = (uint8_t *)0x81;
 uint8_t *tailsize = (uint8_t *)0x80;
+uint8_t *cpmtop;
 char **argp;
 int nfcb;
+
+
+/*
+ *	Take the loaded emulator, stuff it as high up as possible with the
+ *	stack pointer below it.
+ */
+void to_emulator(void) __naked
+{
+__asm
+		ld hl,(_image + 6)	; code size (and copy size)
+		ld b,h
+		ld c,l			; Save copy size
+		; Don't bother adding in BSS/DATA we don't have any and
+		; we leave the reloc table in image
+		ex de,hl
+		; DE is now the total image size space we need
+		ld hl,(_cpmtop)
+		or a
+		sbc hl,de		; Proposed binary base
+		ld l,#0			; Align on a page boundary
+		ex de,hl		; DE is now the image destination
+
+		ld hl,#_image
+		push de
+		ldir
+		pop de
+		push de			; save DE so we ret to it at the end
+		;
+		;	Relocator
+		;	DE = relocation address
+		;
+		ld hl,#_image
+		ld bc,(_image + 6)
+		add hl,bc		; Find the base of the relocations
+		ld b,#0
+
+		push de
+		exx
+		pop de		; relocation base into DE and alt DE
+		ld b,#0		; code base
+		ex de,hl		; de is relocations as loop swaps
+
+		;
+		;	Taken from the loader
+		;
+relnext:
+		; Read each relocation byte from image and apply it to the
+		; CP/M emulator binary
+		ex de,hl
+		ld a,(hl)
+		inc hl
+		ex de,hl
+		; 0 means done, 255 means skip 254, 254 or less means
+		; skip that many and relocate  (runs are 255,255,....)
+		or a		; 0 ?
+		jr z, relocdone
+		ld c,a
+		inc a		; 255 ?
+		jr z, relocskip
+		add hl,bc
+		ld a,(hl)
+		exx
+		add d
+		exx
+		ld (hl),a
+		jr relnext
+relocskip:	add hl,bc
+		dec hl
+		jr relnext
+relocdone:
+		;
+		;	Relocation done
+		;
+                pop de	; base of relocated image
+                ld hl,#16
+                add hl,de
+                jp (hl)	; entry point
+__endasm;
+}
+
 
 void prepare_fcb(char *p)
 {
@@ -49,7 +132,7 @@ void prepare_fcb(char *p)
 
 int main(int argc, char *argv[])
 {
-
+  uint8_t top;
   if (argc < 2) {
     writes("runcpm [app.com] [args...]\n");
     exit(1);
@@ -57,7 +140,12 @@ int main(int argc, char *argv[])
 
   /* Quick idiot trap */
   if ((uint16_t)main >= 0x1000U) {
-    writes("runcpm: low memory base platform needed.\n");
+    writes("runcpm: platform does not support CP/M emulation.\n");
+    exit(1);
+  }
+
+  if (((uint8_t *)sbrk(0)) + 32768 + EMULATOR_SIZE >= &top) {
+    writes("runcpm: insufficient memory.\n");
     exit(1);
   }
 
@@ -66,23 +154,15 @@ int main(int argc, char *argv[])
     writes("runcpm: emulator.bin missing\n");
     exit(1);
   }
-  if (read(fd, buf, 4) != 4 || buf[2] < 0x80) {
+  if (read(fd, image, EMULATOR_SIZE) != EMULATOR_SIZE) {
+    writes("runcpm: emulator.bin too short\n");
+    exit(1);
+  }
+  if (image[0] != 0x18 || image[3] != 'L' || image[4] != 'Z' || image[5] != 'L' || image[6] != '1') {
     writes("runcpm: emulator.bin invalid\n");  
     exit(1);
   }
 
-  basep = (unsigned char *)(((unsigned int)buf[2]) << 8);
-
-  if (brk(basep + 0xC00)) {
-    writes("runcpm: insufficient memory\n");
-    exit(1);
-  }
-
-  memcpy(basep, buf, 4);
-  if (read(fd, basep + 4, 0xBFC) != 0xBFC) {
-    writes("runcpm: emulator.bin too short\n");
-    exit(1);
-  }
   close(fd);
 
   /* FIXME: worth having a CP/M search path ? */
@@ -118,7 +198,6 @@ int main(int argc, char *argv[])
     writes(" does not appear to be a CP/M .COM file\n");
     exit(1);
   }
-  exec = (void *)basep;
   /* Make sure we pass the binary as fd 3 */
   if (fd != 3) {
     dup2(fd, 3);
@@ -147,8 +226,15 @@ int main(int argc, char *argv[])
   }
   *tailsize = len;
 
+  /* CP/M apps don't respect our normal rules of the road. Make sure we
+     brk right up high so that the OS resource handling behaves. */
+  cpmtop = &top - 560;
+  if (brk(cpmtop)) {
+	writes("runcpm: unable to allocate workspace\n");
+	exit(1);
+  }
   /* If this works it blows us away and we never return */
-  (*exec)();
+  to_emulator();
   writes("runcpm: exec failure\n");
   exit(1);
 }

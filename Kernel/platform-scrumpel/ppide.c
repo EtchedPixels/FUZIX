@@ -13,8 +13,7 @@
 #ifdef CONFIG_PPIDE
 
 __sfr __at (PPIDE_BASE + 0x00) ppi_port_a;   /* IDE bus LSB */
-__sfr __at (PPIDE_BASE + 0x01) ppi_port_b;   /* IDE bus MSB */
-__sfr __at (PPIDE_BASE + 0x02) ppi_port_c;   /* IDE bus control signals */
+__sfr __at (PPIDE_BASE + 0x01) ppi_port_b;   /* IDE bus control signals */
 __sfr __at (PPIDE_BASE + 0x03) ppi_control;  /* 8255 command register */
 
 void ppide_init(void)
@@ -28,24 +27,24 @@ uint_fast8_t devide_readb(uint_fast8_t regaddr)
     uint8_t r;
 
     /* note: ppi_control should contain PPIDE_PPI_BUS_READ already */
-    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
+    ppi_port_b = regaddr | PPIDE_CS0_LINE;
     ppi_port_b = regaddr;
     ppi_port_b = regaddr | PPIDE_RD_LINE; /* begin /RD pulse */
-    r = ppi_port_a;
     ppi_port_b = regaddr;	 /* end /RD pulse */
-    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
+    r = ppi_port_a;
+    ppi_port_b = regaddr & PPIDE_CS0_LINE;
     return r;
 }
 
 void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value)
 {
     ppi_control = PPIDE_PPI_BUS_WRITE;
-    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
+    ppi_port_b = regaddr | PPIDE_CS0_LINE;
     ppi_port_b = regaddr;
     ppi_port_a = value;
     ppi_port_b = regaddr | PPIDE_WR_LINE;
     ppi_port_b = regaddr;
-    ppi_port_b = regaddr & ~PPIDE_CS0_LINE;
+    ppi_port_b = regaddr & PPIDE_CS0_LINE;
     ppi_control = PPIDE_PPI_BUS_READ;
 }
 
@@ -76,27 +75,28 @@ void devide_read_data(void) __naked
             call nz, map_process_always             ; map user memory first if required
 goread:     ; now we do the transfer
             out (c), e                              ; assert /RD
-            dec c
+    	    out (c), d                              ; de-assert /RD
+    	    dec c
             ini                                     ; read byte from LSB
             jr z, goread_next
             inc c                                   ; control lines
-            out (c), d                              ; de-assert /RD
-            jp goread                               ; (delay) next byte
+            jr goread                               ; (delay) next byte
 goread_next:
             inc c
             out (c), d
 goread2:    ; next 256 bytes
             out (c), e                              ; assert /RD
-            dec c
+            out (c), d				    ; de-assert /RD
+	    dec c
             ini                                     ; read byte from LSB
             jr z, goread_done
             inc c                                   ; control lines
-            out (c), d                              ; de-assert /RD
-            jp goread2                              ; (delay) next byte
-            res 7,d
-            out (c), d				    ; de-assert /CS to make the LED go out
+            jr goread2                              ; (delay) next byte
             ; read completed
 goread_done:
+            inc	c
+	    res 7,d
+            out (c), d				    ; de-assert /CS to make the LED go out
             pop af                                  ; recover is_user test result
             ret z                                   ; done if kernel memory transfer
             jp map_kernel                           ; else map kernel then return
@@ -119,12 +119,12 @@ void devide_write_data(void) __naked
             push af                                 ; save flags
             call nz, map_process_always             ; map user memory first if required
 gowrite:    ; now we do the transfer
-            out (c), d                              ; de-assert /WR
             dec c				    ; data (port A)
             outi                                    ; write byte to LSB
             jr z, gowrite_next
             inc c                                   ; up to MSB
             out (c), e                              ; assert /WR
+	    out (c), d			            ; de-assert /WR
             jp gowrite                              ; (delay) next word
 gowrite_next:
             inc c

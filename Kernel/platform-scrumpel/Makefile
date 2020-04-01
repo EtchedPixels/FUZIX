@@ -4,6 +4,7 @@ DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devsd.c
 DASRCS = 
+NSRCS = ../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
@@ -11,8 +12,9 @@ DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
+NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(DAOBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(DAOBJS) $(NOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -37,6 +39,9 @@ $(DISCARD_COBJS): %.rel: %.c
 
 $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(NOBJS): %.rel: ../dev/net/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader loader.bin *.tmp

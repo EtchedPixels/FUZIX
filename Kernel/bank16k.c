@@ -24,6 +24,9 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
+
+#undef DEBUG
 
 #ifdef CONFIG_BANK16
 /*
@@ -121,7 +124,7 @@ int pagemap_alloc( ptptr p ){
  *
  *	FIXME: review swap case and ENOMEM
  */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	int8_t have = maps_needed(udata.u_top);
 	int8_t want = maps_needed(size + MAPBASE);
@@ -173,6 +176,18 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
 	return 0;
 }
 
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr->a_base == 0)
+		hdr->a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr->a_size == 0)
+		hdr->a_size = ramtop >> 8 - hdr->a_base;
+	return 0;
+}
+
 usize_t pagemap_mem_used(void)
 {
 	return procmem - (pfptr << 4);
@@ -184,6 +199,10 @@ usize_t pagemap_mem_used(void)
    used by swapping 16k platforms to procure a common page.
    platforms will have to provide a void copy_common(uint8_t page)
    that copies the current common page to the specified page.
+
+   FIXME: don't assume common always freed last. Probably means always
+   calling copy_common, but this is swap in so it's already slow so this
+   shouldn't be a big deal.
 */
 
 uint8_t get_common(void)

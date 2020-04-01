@@ -19,6 +19,9 @@
 
 	.globl ldir_from_user
 	.globl ldir_to_user
+	.globl sio_reg
+	.globl bits_to_user
+	.globl bits_from_user
 
 	.globl _int_disabled
 
@@ -80,9 +83,9 @@ __uzero:
 	or c
 	ret z
 	di
-	ld a,#1
+	ld a,(sio_reg)
 	out (0x03),a		; Port B WR 1
-	ld a,#0x58
+	ld a,(bits_to_user)
 	out (0x03),a		; port B WR 1 to 0x58
 	ld (hl),#0
 	ld a,(_int_disabled)
@@ -100,9 +103,9 @@ noteiz:
 	ldir
 uout:
 	di
-	ld a,#1			; port B WR 1
+	ld a,(sio_reg)		; port B WR 1
 	out (0x03),a
-	ld a,#0x18
+	ld a,(bits_from_user)
 	out (0x03),a		; back to kernel
 	ld a,(_int_disabled)
 	or a
@@ -111,28 +114,20 @@ uout:
 	ret
 
 __ugetc:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	di
-	ld a,#1
+	ld a,(sio_reg)
 	out (0x03),a
-	ld a,#0x58
+	ld a,(bits_to_user)
 	out (0x03),a
 	ld l,(hl)
 	ld h,#0
 	jr uout
 
 __ugetw:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	di
-	ld a,#1
+	ld a,(sio_reg)
 	out (0x03),a
-	ld a,#0x58
+	ld a,(bits_to_user)
 	out (0x03),a
 	ld a,(hl)
 	inc hl
@@ -148,9 +143,9 @@ __uputc:
 	push de
 	push bc
 	di
-	ld a,#1
+	ld a,(sio_reg)
 	out (0x03),a
-	ld a,#0x58
+	ld a,(bits_to_user)
 	out (0x03),a
 	ld (hl),e
 	jr uout
@@ -163,9 +158,9 @@ __uputw:
 	push de
 	push bc
 	di
-	ld a,#1
+	ld a,(sio_reg)
 	out (0x03),a
-	ld a,#0x58
+	ld a,(bits_to_user)
 	out (0x03),a
 	ld (hl),e
 	inc hl

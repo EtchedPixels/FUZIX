@@ -337,7 +337,7 @@ f142 f142 d d3f7
 f142 f142 s 		out (0xF7), a
 f144 f144 s 
 f144 f144 s ;
-f144 f144 s ;	9 * 512 byte sectors/track on the boot image. We load 10 tracks
+f144 f144 s ;	9 * 512 byte sectors/track on the boot image. We load 12 tracks
 f144 f144 s ;
 f144 f144 d 
 f144 f144 s fd765_boot	
@@ -406,8 +406,8 @@ f183 f183 d 3af4f1
 f183 f183 s 		ld a, (fd765_cyl)
 f186 f186 d 3c
 f186 f186 s 		inc a
-f187 f187 d fe0b
-f187 f187 s 		cp 11
+f187 f187 d fe0d
+f187 f187 s 		cp 13
 f189 f189 d 302c
 f189 f189 s 		jr nc, fd765_done
 f18b f18b d 32f4f1
@@ -546,9 +546,8 @@ f1fd f1fd s 		db 0
 f1fe f1fe d 00
 f1fe f1fe s fd765_cyl2:	db 0
 f1ff f1ff s 		; Checksum
-f1ff f1ff f 765.s
-f1ff f1ff d 3f
-f1ff f1ff s checksum:	db 0x3f
+f1ff f1ff d 3d
+f1ff f1ff s checksum:	db 0x3d
 f083 a ldir8
 f0ea a fd_go
 f063 a fonte

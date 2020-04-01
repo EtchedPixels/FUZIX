@@ -48,7 +48,8 @@ int platform_input_read(uint8_t *slot)
 {
     uint8_t r;
     if (remq(&kqueue, &r)) {
-	*slot++ = KEYPRESS_CODE | KEYPRESS_UP;
+	*slot++ = KEYPRESS_CODE | r;
+        remq(&kqueue, &r);
 	*slot++ = r;
 	return 2;
     }
@@ -131,4 +132,5 @@ uint8_t platform_input_init(void)
     if ((kemp_js & 0x80) == 0)
         has_kempjs = 1;
     /* TODO: DkTronics sound card has a joystick port too */
+    return 0;
 }

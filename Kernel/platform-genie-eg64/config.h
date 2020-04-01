@@ -9,8 +9,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #undef CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 /* Memory set up */

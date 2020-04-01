@@ -15,6 +15,11 @@ uint8_t need_resched = 0;
 
 uint8_t ctc_present;
 
+uint8_t platform_tick_present;
+
+uint16_t rtc_port = 0xC0;
+uint8_t rtc_shadow;
+
 void platform_discard(void)
 {
 	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {

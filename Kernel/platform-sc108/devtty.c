@@ -21,28 +21,13 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf4, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-static tcflag_t uart0_mask[4] = {
-	_ISYS,
-	_OSYS,
-	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS
-};
-
-static tcflag_t uart1_mask[4] = {
-	_ISYS,
-	/* FIXME: break */
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	/* FIXME CTS/RTS */
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS,
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart0_mask,
-	uart1_mask,
-	uart0_mask,
-	uart0_mask
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS
 };
 
 uint8_t sio_r[] = {
@@ -129,26 +114,27 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 		/* There is no obvious logic to this */
 		switch(t->c_cflag & (CSIZE|PARENB|PARODD|CSTOPB)) {
 		case CS7|PARENB:
-			r = 0xEB;
+			r = 0x8A;
 			break;
 		case CS7|PARENB|PARODD:
-			r = 0xEF;
+			r = 0x8E;
 			break;
 		case CS7|PARENB|CSTOPB:
-			r = 0xE3;
+			r = 0x82;
 		case CS7|PARENB|PARODD|CSTOPB:
-			r = 0xE7;
+			r = 0x86;
 		case CS8|CSTOPB:
-			r = 0xF3;
+			r = 0x92;
 			break;
+		default:
 		case CS8:
-			r = 0xF7;
+			r = 0x96;
 			break;
 		case CS8|PARENB:
-			r = 0xFB;
+			r = 0x9A;
 			break;
 		case CS8|PARENB|PARODD:
-			r = 0xFF;
+			r = 0x9E;
 			break;
 		}
 		ACIA_C = r;
@@ -190,7 +176,7 @@ void tty_pollirq_sio0(void)
 		SIOA_C = 0;		// read register 0
 		ca = SIOA_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[1])) {
+		if (ca & 1) {
 			progress = 1;
 			tty_inproc(1, SIOA_D);
 		}
@@ -212,7 +198,7 @@ void tty_pollirq_sio0(void)
 		}
 		SIOB_C = 0;		// read register 0
 		cb = SIOB_C;
-		if ((cb & 1) && !fullq(&ttyinq[2])) {
+		if (cb & 1) {
 			tty_inproc(2, SIOB_D);
 			progress = 1;
 		}
@@ -248,7 +234,7 @@ void tty_pollirq_sio1(void)
 		SIOC_C = 0;		// read register 0
 		ca = SIOC_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[3])) {
+		if (ca & 1) {
 			progress = 1;
 			tty_inproc(3, SIOC_D);
 		}
@@ -270,7 +256,7 @@ void tty_pollirq_sio1(void)
 		}
 		SIOD_C = 0;		// read register 0
 		cb = SIOD_C;
-		if ((cb & 1) && !fullq(&ttyinq[4])) {
+		if (cb & 1) {
 			tty_inproc(4, SIOD_D);
 			progress = 1;
 		}
@@ -366,17 +352,20 @@ void kputchar(uint_fast8_t c)
 
 int rctty_open(uint_fast8_t minor, uint16_t flag)
 {
-	if (acia_present && minor != 1) {
-		udata.u_error = ENODEV;
-		return -1;
-	}
-	if ((minor == 1 || minor == 2) && !sio_present) {
-		udata.u_error = ENODEV;
-		return -1;
-	}
-	if ((minor == 3 || minor == 4) && !sio1_present) {
-		udata.u_error = ENODEV;
-		return -1;
+	if (acia_present) {
+		if (minor != 1) {
+			udata.u_error = ENODEV;
+			return -1;
+		}
+	} else {
+		if ((minor == 1 || minor == 2) && !sio_present) {
+			udata.u_error = ENODEV;
+			return -1;
+		}
+		if ((minor == 3 || minor == 4) && !sio1_present) {
+			udata.u_error = ENODEV;
+			return -1;
+		}
 	}
 	return tty_open(minor, flag);
 }

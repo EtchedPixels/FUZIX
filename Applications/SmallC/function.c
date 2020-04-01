@@ -175,7 +175,7 @@ int doAnsiArguments(void) {
         if (type != -1) {
             doLocalAnsiArgument(type);
         } else {
-            error("wrong number args");
+            error("wrong number of args");
             break;
         }
         if (match(",")) {

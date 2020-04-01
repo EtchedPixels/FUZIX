@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 /* 32bit with flat memory */
 #define CONFIG_FLAT
 #define CONFIG_32BIT

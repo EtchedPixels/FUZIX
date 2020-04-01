@@ -44,7 +44,7 @@ start:
 	ld hl,#hello
 	call serstr
 
-	xor a
+	ld a,#0x01
 	out (0x38),a
 
 	call ide_ready

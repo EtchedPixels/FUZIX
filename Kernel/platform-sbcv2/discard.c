@@ -25,6 +25,7 @@ uint8_t platform_param(unsigned char *p)
 {
 	if (strcmp(p, "msr") == 0) {
 		timermsr = 1;
+		platform_tick_present = 1;
 		return 1;
         }
 	return 0;

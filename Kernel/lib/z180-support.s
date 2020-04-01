@@ -5,9 +5,7 @@
 	.module z180_support
 	.z180
 
-        .include "kernel.def"
         .include "../cpu-z180/z180.def"
-        .include "../kernel-z80.def"
 
 	.globl _z180_setup
         .globl interrupt_table ; not used elsewhere but useful to check correct alignment

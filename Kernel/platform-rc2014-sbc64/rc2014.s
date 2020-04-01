@@ -202,8 +202,10 @@ serial_up:
 	out (CTC_CH2),a
 	in a,(CTC_CH2)
 	cp #0xAA			; Should not have changed
+	jr z, maybe_ctc
+	cp #0xA9			; But might by one
 	jr nz, no_ctc
-
+maybe_ctc:
 	ld a,#0x07
 	out (CTC_CH2),a
 	ld a,#2

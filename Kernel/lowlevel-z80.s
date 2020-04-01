@@ -46,6 +46,12 @@
 	.globl ___hard_irqrestore
 	.globl _out
 	.globl _in
+	.globl _out16
+	.globl _in16
+	.globl _sys_cpu
+	.globl _sys_cpu_feat
+	.globl _sys_stubs
+	.globl _set_cpu_type
 
 	.globl mmu_irq_ret
 
@@ -67,8 +73,6 @@
 
 ; these make the code below more readable. sdas allows us only to 
 ; test if an expression is zero or non-zero.
-CPU_CMOS_Z80	    .equ    Z80_TYPE-0
-CPU_NMOS_Z80	    .equ    Z80_TYPE-1
 CPU_Z180	    .equ    Z80_TYPE-2
 
         .area _COMMONMEM
@@ -114,14 +118,13 @@ deliver_signals_2:
 	ld bc, #signal_return
 	push bc		; bc is passed in as the return vector
 
-	ex de, hl
 	ei
 	.ifne Z80_MMU_HOOKS
 	call mmu_user		; must preserve HL
 	.endif
-	jp (hl)		; return to user space. This will then return via
-			; the return path handler passed in BC
-
+	ld hl,(PROGLOAD+16); return to user space. This will then return via
+			; the return path handler stacked above via BC
+	jp (hl)
 ;
 ;	Syscall signal return path
 ;
@@ -153,42 +156,45 @@ signal_return:
 ;
 ;	Syscall processing path
 ;
+;	This is the first part of the big API change. This is in effect
+;	a temporary ABI so don't build stuff to it!
+;
 unix_syscall_entry:
 	; We know the previous state was EI and that we won't do anything
 	; clever until we EI again, so we can avoid the helpers on the fast
 	; path.
         di
-        ; store processor state
-        ex af, af'
-        push af
-        ex af, af'
-        exx
-        push bc		; FIXME we don't I think need to save bc/de/hl
-        push de		; as they are compiler caller save once we fix the API
-        push hl
+        ; store processor state. We destroy AF, AF', DE, HL
         exx
         push bc
         push de
+        push hl
+        exx
+	push bc
         push ix
         push iy
-	; We don't save AF or HL
+
         ; locate function call arguments on the userspace stack
-        ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
+        ld hl, #16     ; 12 bytes machine state, plus 2 bytes return address x 2
         add hl, sp
 
 	.ifne Z80_MMU_HOOKS
-	call mmu_kernel			; must preserve HL
+	call mmu_kernel			; must preserve A,HL
 	.endif
         ; save system call number
-        ld a, (hl)
         ld (_udata + U_DATA__U_CALLNO), a
         ; advance to syscall arguments
-        inc hl
-        inc hl
         ; copy arguments to common memory
-        ld bc, #8      ; four 16-bit values
         ld de, #_udata + U_DATA__U_ARGN
-        ldir           ; copy  FIXME use LDI x 8
+
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
 
 	ld a, #1
 	ld (_udata + U_DATA__U_INSYS), a
@@ -218,6 +224,9 @@ unix_syscall_entry:
         di	; Again we know we won't mess up calling di/ei directly
 
 
+	; FIXME: another spot we di but have the flag wrong and call stuff
+	; although we probably just need a rule that _di versions can't
+	; rely on it!
 	call map_process_always_di
 
 	xor a
@@ -258,16 +267,12 @@ unix_pop:
         ; restore machine state
         pop iy
         pop ix
-        pop de
-        pop bc
+	pop bc
         exx
         pop hl
         pop de
         pop bc
         exx
-        ex af, af'
-        pop af
-        ex af, af'
         ei
         ret ; must immediately follow EI
 
@@ -473,14 +478,14 @@ intret:
 	; of the handler so ensure everything is fixed before this !
 
 	call deliver_signals
-	.ifne Z80_MMU_HOOKS
-	call mmu_restore_irq
-	.endif
 
 	; Then unstack and go.
 interrupt_pop:
 	xor a
 	ld (_int_disabled),a
+	.ifne Z80_MMU_HOOKS
+	call mmu_restore_irq
+	.endif
         pop iy
         pop ix
         pop hl
@@ -504,14 +509,22 @@ interrupt_pop:
 ;	corrupt we assume the worst and just blow the process away
 ;
 null_pointer_trap:
+	call map_kernel_di
 	ld a, #0xC3		; Repair
 	ld (0), a
 	ld hl, #9		; SIGKILL (take no prisoners here)
 trap_signal:
 	push hl
-        call _doexit
-	; Does not return
-	jp _platform_monitor
+	ld hl,(_udata + U_DATA__U_PTAB)
+	ld de, #P_TAB__P_PID_OFFSET
+	add hl,de
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push de
+        call _ssig
+	; Now fall into pre-emption from which we will not return
 ;
 ;	Pre-emption. We need to get off the interrupt stack, switch task
 ;	and clean up the IRQ state carefully
@@ -571,6 +584,8 @@ intret2:call map_kernel_di
 	cp (hl)
 	jr nz, not_running
 	ld (hl), #P_READY
+	inc hl
+	set #PFL_BATCH,(hl)
 not_running:
 	call _platform_switchout
 	;
@@ -698,9 +713,20 @@ _out:
 	push bc
 	jp (hl)
 
+_out16:
+	pop hl
+	pop bc
+	pop de
+	push de
+	push bc
+	out (c),e
+	jp (hl)
+
 ;
 ;	Use z88dk_fastcall for in.
 ;
+_in16:
+	ld b,h
 _in:
 	ld c,l
 	in l, (c)
@@ -738,4 +764,43 @@ ___hard_irqrestore:
 	or a
 	ret nz
 	ei
+	ret
+
+	.area _CONST
+
+_sys_stubs:
+	jp unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
+	.area _DATA
+
+_sys_cpu:
+	.db 0
+_sys_cpu_feat:
+	.db 0
+
+	.area _DISCARD
+
+_set_cpu_type:
+	ld h,#2		; Assume Z80
+	xor a
+	dec a
+	daa
+	jr c,is_z80
+	ld h,#6		; Nope Z180
+is_z80:
+	ld l,#1		; 8080 family
+	ld (_sys_cpu),hl	; Write cpu and cpu feat
 	ret

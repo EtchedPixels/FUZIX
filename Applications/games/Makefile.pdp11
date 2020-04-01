@@ -1,0 +1,61 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -ltermcappdp11 -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+HOSTCC = gcc
+.SUFFIXES: .c .o
+
+SRCSNS = qrun.c fortune.c z1.c z2.c z3.c z4.c z5.c z8.c
+
+SRCS  = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
+        adv08.c adv09.c adv10.c adv11.c adv12.c adv13.c adv14a.c adv14b.c \
+        myst01.c myst02.c myst03.c myst04.c myst05.c myst06.c myst07.c \
+        myst08.c myst09.c myst10.c myst11.c fortune-gen.c startrek.c \
+	hamurabi.c advint.c cowsay.c
+
+OBJS = $(SRCS:.c=.o)
+OBJSNS = $(SRCSNS:.c=.o)
+
+APPS = $(OBJS:.o=)
+APPSNS = $(OBJSNS:.o=)
+
+CFLAGS += -DCONFIG_IO_CUSS
+
+all: $(APPS) $(APPSNS) $(APPSFP) size.report
+
+$(APPS): $(CRT0)
+$(APPSFP): $(CRT0)
+$(APPSNS): $(CRT0NS)
+
+$(APPS): %: %.o
+	$(LINKER) $(CRT0) $< -o $@.bin $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+$(APPSNS): %: %.o
+	$(LINKER) $(CRT0NS) $< -o $@.bin $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+fortune-gen-linux: fortune-gen.c
+	$(HOSTCC) -o $@ $<
+
+fortune.dat: fortune-gen-linux
+	./fortune-gen-linux < fort.db >fortune.dat
+
+fortune: | fortune.dat
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) *.lst *.map size.report
+	rm -f fortune.dat fortune-gen-linux
+

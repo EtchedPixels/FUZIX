@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #undef CONFIG_MULTI
-/* Single tasking - for now while we get it booting */
-#undef CONFIG_SINGLETASK
 /* Pure swap */
 #define CONFIG_SWAP_ONLY
 #define CONFIG_SPLIT_UDATA
@@ -16,7 +14,7 @@
 #define CONFIG_BANKS	1
 /* And swapping */
 
-extern unsigned int cocoswap_dev;
+extern uint16_t cocoswap_dev;
 
 #define SWAPDEV     cocoswap_dev    /* Uses part of IDE slice 0 or SD 0*/
 #define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */

@@ -8,8 +8,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 /* Banked memory set up */
@@ -64,7 +62,7 @@
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 
 #define platform_copyright()
 

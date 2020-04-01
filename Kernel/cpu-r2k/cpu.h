@@ -1,25 +1,3 @@
-typedef unsigned long uint32_t;
-typedef signed long int32_t;
-typedef unsigned short uint16_t;
-typedef signed short int16_t;
-typedef unsigned char uint8_t;
-typedef signed char int8_t;
-
-typedef unsigned char uint_fast8_t;
-typedef signed char int_fast8_t;
-
-typedef uint16_t size_t;
-typedef int16_t ssize_t;
-
-typedef int16_t  arg_t;			/* Holds arguments */
-typedef uint16_t uarg_t;		/* Holds arguments */
-typedef uint16_t usize_t;		/* Largest value passed by userspace */
-typedef int16_t susize_t;
-typedef uint16_t uaddr_t;		/* User address */
-typedef uint16_t uptr_t;		/* Userspace pointer equivalent */
-
-#define MAXUSIZE	0xFFFF
-
 #define uputp  uputw			/* Copy user pointer type */
 #define ugetp  ugetw			/* between user and kernel */
 #define uputi  uputw			/* Copy user int type */
@@ -30,9 +8,6 @@ typedef uint16_t irqflags_t;
 extern void out(uint8_t addr, uint8_t val);
 extern uint8_t in(uint8_t addr) __z88dk_fastcall;
 
-/* Rabbit binaries start with a JP FIXME: sort this in new binfmt */
-#define EMAGIC    0xc3    /* Header of executable */
-#define EMAGIC_2  0x18	  /* JR */
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)
 
@@ -89,8 +64,6 @@ typedef union {            /* this structure is endian dependent */
 #define ntohl(x)	((((x) & 0xFF) << 24) | (((x) & 0xFF00) << 8) | \
                          (((x) & 0xFF0000) >> 8) | (((x >> 24) & 0xFF)))
 
-#define CPUTYPE	CPUTYPE_R2K
-
 /* Deal with SDCC code gen issue */
 #define HIBYTE32(x)	(((uint8_t *)&(x))[3])
 
@@ -99,3 +72,5 @@ typedef union {            /* this structure is endian dependent */
 
 #define __packed
 #define barrier()
+
+#define __fastcall

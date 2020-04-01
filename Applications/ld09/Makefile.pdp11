@@ -1,0 +1,46 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+HOSTCC = gcc
+.SUFFIXES: .c .o
+
+LIBDIR	=/usr/bin
+LDFLAGS	=
+
+DEFS	=
+
+# An alternative file for a non-standard a.out.h (eg i386 linux on an Alpha)
+#
+# NATIVE=-DA_OUT_INCL='"a_out_local.h"' 
+
+OBJS= dumps.o io.o ld.o readobj.o table.o typeconv.o linksyms.o writefuzix.o
+
+all: ld09
+
+ld09: $(OBJS)
+	$(LINKER) -o $@.bin $(CRT0) $(OBJS) $(LINKER_OPT) 
+	$(AOUT2FUZIX) $@.bin $@
+
+clean realclean clobber:
+	rm -f *.o ld09 ld09r objchop catimage objdump09 *~
+
+$(OBJS): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
+	 syshead.h type.h
+
+ar.h:
+	test -f ar.h || \
+	{ rm -f ar.h ; ln -s ../libc/include/ar.h . ; } || \
+	ln ../libc/include/ar.h .
+
+.c.o:
+	$(CC) $(COPT) $(CFLAGS) $(DEFS) -c $< -o $@

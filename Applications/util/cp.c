@@ -155,9 +155,9 @@ Usage: %s [-f] [-i] f1 f2\n\
 			const char nstr[] = "[-n] ";
 #endif				/* !SUS */
 			fprintf(stderr, "\
-Usage: %s [-f] %s[-s] f1 f2\n\
-       %s [-f] %s[-s] f1 ... fn d1\n\
-       %s [-f] %s[-s] d1 d2\n", progname, nstr, progname, nstr, progname, nstr);
+Usage: %s [-f] %s f1 f2\n\
+       %s [-f] %s f1 ... fn d1\n\
+       %s [-f] %s d1 d2\n", progname, nstr, progname, nstr, progname, nstr);
 		}
 		break;
 	}
@@ -802,7 +802,7 @@ static const char *getfl(void)
 		go = cpmv;
 	} else if (progname[0] == 'l' && progname[1] == 'n') {
 		pers = PERS_LN;
-		optstring = "fns";
+		optstring = "fn";
 #if defined (SUS)
 		nflag = 1;
 #endif				/* SUS */

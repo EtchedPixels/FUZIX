@@ -1,6 +1,0 @@
-A minimal FUZIX target for z80pack.
-
-
-This is used to test the simple single processing mode. We run on Z80pack
-with no swap and with the OS in bank 0 and the userspace in bank 1. Common
-area is owned by the userspace and also holds the uarea.

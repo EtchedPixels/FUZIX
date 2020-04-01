@@ -63,6 +63,27 @@ Tested On 0.2
 - Dragon32 with NX: Yes - real system
 - COCO2 with IDE: Yes - emulation
 
+## Memotech MTX-512
+
+The Memotech is a mostly UK system designed to run both as a games machine
+or with expansions as a CP/M system including memory banking. To run Fuzix
+you require at least 3 48K banks of memory plus common, and also a suitable
+disk controller.
+
+Supported Features
+- Keyboard
+- Video (40 column, SDX 80 column, propellor 80 column(partial))
+- Serial Port
+- CFX or CFX-II IDE interface
+- Rememorizer SD (untested)
+- MTXplus RTC (untested)
+- SDX floppy disk
+- Printer
+
+Unsupported
+- MTXplus video (at this point.. WIP)
+- Rememorizer (although it probably is not much work)
+
 ## Microbee
 
 Microbee produced a range of Z80 based systems primarily in and for the
@@ -408,7 +429,7 @@ Unsupported
 - Bitbang serial port
 - Customising baud rate clocks and control
 
-Due to the limited memory the SC104/SC114 systems are not recommended for
+Due to the limited memory the SC108/SC114 systems are not recommended for
 multi-user usage. It is also not possible to use these boards with a banked
 ROM/RAM card.
 

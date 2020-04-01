@@ -34,7 +34,6 @@ SRCSNS = \
 	touch.c \
 	tr.c \
 	true.c \
-	vile.c \
 	while1.c \
 	whoami.c \
 	yes.c
@@ -81,6 +80,7 @@ SRCS  = \
 	remount.c \
 	sed.c \
 	seq.c \
+	setboot.c \
 	setdate.c \
 	size.c \
 	sleep.c \
@@ -107,6 +107,7 @@ SRCS  = \
 
 SRCTC = tget.c \
         tchelp.c \
+	vile.c \
 	marksman.c
 
 SRCOTHER = cpuinfo.c cpuinfo-8080.s

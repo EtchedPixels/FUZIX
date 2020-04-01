@@ -7,9 +7,11 @@
 
 	.import		__CODE_SIZE__, __RODATA_SIZE__
 	.import		__DATA_SIZE__, __BSS_SIZE__
+	.import		__STARTUP_SIZE__
 	.import		_exit
 	.export		_environ
 	.export		initmainargs
+	.export		__syscall_hook
 	.import		_main
 	.import		popax, pushax
 	.import		___stdio_init_vars
@@ -22,20 +24,21 @@
 
 .segment "STARTUP"
 
+__syscall_hook:				; Stubs overlay this
 head:
-	jmp	start
-
-	.byte	'F'
-	.byte	'Z'
-	.byte	'X'
-	.byte	'1'
-	.byte	>head
-	.word	0
-	.word	__CODE_SIZE__ + __RODATA_SIZE__
+	.word 	$80A8
+	.byte	3			; 6502 family
+	.byte	0			; 6502 (we don't yet use 65C02 ops)
+	.byte	>head			; Load address page
+	.byte	0			; No hint bits
+	.word	__CODE_SIZE__ + __RODATA_SIZE__ + __STARTUP_SIZE__
 	.word	__DATA_SIZE__
 	.word	__BSS_SIZE__
-	.word	0
-	.word   0	; padding
+	.byte 	<start			; Offset from load page as entry
+	.byte	0			; No size hint
+	.byte	0			; No stack hint
+	.byte	0			; TODO - ZP size
+
 	.word	__sighandler		; IRQ path signal handling helper
 
 ;
@@ -56,9 +59,8 @@ head:
 __sighandler:
 	dec	sp+1		; ensure we are safe C stack wise
 	lda	jmpvec+1
-	pha
-	lda	jmpvec+2
-	pha
+	ldx	jmpvec+2
+	jsr 	pushax
 	jsr	decsp8
 	jsr	decsp8
 	jsr	decsp2
@@ -75,11 +77,10 @@ __sighandler:
 	jsr	incsp2
 	jsr	incsp8
 	jsr	incsp8
-	inc	sp+1		; back to old stack
-	pla
-	sta	jmpvec+2
-	pla
+	jsr	popax
+	stx	jmpvec+2
 	sta	jmpvec+1
+	inc	sp+1		; back to old stack
 initmainargs:			; Hardcoded compiler dumbness
 	rts			; will return via the kernel stub
 ;
@@ -120,7 +121,7 @@ l1:	sta	_environ
 				; for a fastcall return to nowhere.
 
 ;
-; Swap the C temporaries - smaller tha separate save/loaders
+; Swap the C temporaries - smaller than separate save/loaders
 ;
 stash_zp:
 	ldy	#0
@@ -129,10 +130,10 @@ stash_loop:
 	pha
 	ldx	sp+2,y		; and ZP variable
 	txa
-	sta	(sp+2),y
+	sta	(sp),y
 	pla
 	tax
-	stx	sp,y
+	stx	sp+2,y
 	iny
 	cpy	#zpsavespace - 2	; 18 bytes
 	bne	stash_loop

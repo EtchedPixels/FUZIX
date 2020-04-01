@@ -27,10 +27,10 @@ void do_beep(void)
 void pagemap_init(void)
 {
     int i;
-    /* 32-35 are the kernel, 36-38 / 39-41 / etc are user */
-    /* Add 36-38 last as we hardcode 36 into our init creation in tricks.s */
-    for (i = 8; i >= 0; i--)
-        pagemap_add(36 + i * 3);
+    /* Add the user banks, taking care to land 36 as the last one as we
+       use that for init  (32-35 are the kernel) */
+    for (i = 6; i >= 0; i--)
+        pagemap_add(36 + i * 4);
 }
 
 void map_init(void)
@@ -42,7 +42,7 @@ uint8_t platform_param(char *p)
     return 0;
 }
 
-static volatile uint8_t *via = (volatile uint8_t *)0xC060;
+static volatile uint8_t *via = (volatile uint8_t *)0xFE60;
 
 void device_init(void)
 {
@@ -62,6 +62,7 @@ void device_init(void)
 void platform_interrupt(void)
 {
 	uint8_t dummy;
+
 	tty_poll();
 	if (via[13] & 0x40) {
 		dummy = via[4]; /* Reset interrupt */

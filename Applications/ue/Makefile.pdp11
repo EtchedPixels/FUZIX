@@ -1,0 +1,45 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+.SUFFIXES: .c .o
+
+APPS = ue.fuzix ue.ansi ue
+
+SRCS  = ue.c term-fuzix.c term-ansi.c term.c
+
+OBJS = $(SRCS:.c=.o)
+
+# Linker busted on these still
+all:
+#all:  $(APPS) size.report
+
+$(APPS): ue.h
+
+ue.fuzix: ue.o term-fuzix.o
+	$(LINKER) -o $@.bin $(CRT0NS) ue.o term-fuzix.o $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+ue.ansi: ue.o term-ansi.o
+	$(LINKER) -o $@.bin $(CRT0) ue.o term-ansi.o $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+ue: ue.o term.o
+	$(LINKER) -o $@.bin $(CRT0NS) ue.o term.o -ltermcappdp11 $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+size.report: $(APPS)
+	ls -l $< > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel
+

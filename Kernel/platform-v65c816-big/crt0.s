@@ -15,7 +15,7 @@
 	.import  __BSS_RUN__, __BSS_SIZE__
 	.importzp	ptr1, ptr2, tmp1
 
-	; startup code @0200
+	; startup code @0300
         .include "kernel.def"
         .include "../kernel816.def"
 	.include "zeropage.inc"
@@ -33,7 +33,7 @@
 
 entry:
 ;
-;	We are entered at $0102 just after the required magic number
+;	We are entered at $0302 just after the required magic number
 ;
 ;	The big image load is much more complicated as we need to shuffle
 ;	chunks of it into banks, clear spaces and fire things up
@@ -56,28 +56,32 @@ entry:
 	ldx	#$0000
 	ldy	#$FF00
 	lda	#$00FF
-	mvn	$0,$0
+	mvn	#$0,#$0
+
 ;
 ;	Move the stubs into bank 1 
 ;
 	ldx	#$0000
 	ldy	#$FF00
 	lda	#$00FF
-	mvn	$1,$0
+	mvn	#$0,#$1
+
 ;
 ;	Move the code into bank 1
 ;
 	ldx	#$0300
 	ldy	#$0300
 	lda	#$EEFF
-	mvn	$1,$0
+	mvn	#$0,#$1
+
 ;
 ;	Move the data into bank 2
 ;
 	ldx	#$F200
 	ldy	#$0300
 	lda	#$09FF
-	mvn	$2,$0
+	mvn	#$0,#$2
+
 ;
 ;	Wipe the rest (bank was left as 2 here)
 ;
@@ -85,7 +89,7 @@ entry:
 	ldy	#$0C01
 	stz	$0C00
 	lda	#$EFFE		; Wipe 0C00-FBFF
-	mvn	$2,$2
+	mvn	#$2,#$2
 
 ;
 ;	Wipe the low spaces
@@ -93,12 +97,12 @@ entry:
 	ldx	#$0C00
 	ldy	#$0000
 	lda	#$1FF
-	mvn	$2,$2		; Wipe low memory using clear space in bank 2
+	mvn	#$2,#$2		; Wipe low memory using clear space in bank 2
 
 	ldx	#$0C00
 	ldy	#$0000
 	lda	#$1FF
-	mvn	$0,$2		; Wipe low memory using clear space in bank 2
+	mvn	#$2,#$0		; Wipe low memory using clear space in bank 2
 	
 
 	sep	#$30

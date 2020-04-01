@@ -1,8 +1,8 @@
 ;
-;    Pentagon hardware support
+;    Scorpion hardware support
 ;
 
-        .module pentagon
+        .module scorpion
 
         ; exported symbols
         .globl init_early

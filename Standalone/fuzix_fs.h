@@ -32,12 +32,7 @@
 
 extern int dev_fd;
 extern int dev_offset;
-int fd_open(char *name);
 void panic(char *s);
-
-extern uint16_t swizzle16(uint32_t v);
-extern uint32_t swizzle32(uint32_t v);
-extern int swizzling;
 
 typedef struct s_queue {
     char *q_base;    /* Pointer to data */
@@ -242,8 +237,6 @@ static uint8_t *zerobuf (void);
 static void brelse(bufptr bp);
 static void bawrite(bufptr bp);
 static int bfree(bufptr bp, int dirty);
-static int bdwrite(bufptr bp);
-static int bdread(bufptr bp);
 static void bufinit(void);
 static bufptr bfind(int dev, blkno_t blk);
 static bufptr freebuf(void);

@@ -94,10 +94,6 @@ uout:
 	ret
 
 __ugetc:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a
 	ld l,(hl)
@@ -105,10 +101,6 @@ __ugetc:
 	jr uout
 
 __ugetw:
-	pop bc
-	pop hl
-	push hl
-	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
 	out (0x40),a
 	ld a,(hl)

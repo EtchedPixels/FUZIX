@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 #ifdef CONFIG_BANK32
 
@@ -118,7 +119,7 @@ int pagemap_alloc(ptptr p)
  *
  *	FIXME: needs fixing as we update memory management
  */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack) {
+int pagemap_realloc(struct exec *hdr, usize_t size) {
 	int have = maps_needed(udata.u_top);
 	int want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
@@ -155,6 +156,18 @@ int pagemap_realloc(usize_t code, usize_t size, usize_t stack) {
 	   we switch to this memory map */
 	program_vectors(&udata.u_page);
 	__hard_irqrestore(irq);
+	return 0;
+}
+
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr->a_base == 0)
+		hdr->a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr->a_size == 0)
+		hdr->a_size = (ramtop >> 8) - hdr->a_base;
 	return 0;
 }
 

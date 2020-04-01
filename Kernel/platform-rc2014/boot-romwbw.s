@@ -85,6 +85,8 @@ bootit:
 	ld de,#0x4000
 	ld bc,#0x4000		; We've loaded 0000-4000
 	ld a,#32
+
+	di
 	out (MPGSEL_1),a	; Low bank at 0x4000 please
 	ldir
 
@@ -115,6 +117,8 @@ bootit:
 	ld de,#0x4000
 	ld bc,#0x4000
 	ld a,#34
+
+	di
 	out (MPGSEL_1),a
 	ldir
 	pop bc
@@ -131,6 +135,8 @@ bootit:
 	ld de,#0x4000
 	ld bc,#0x4000
 	ld a,#35
+	di
+
 	out (MPGSEL_1),a
 	ldir
 	pop bc
@@ -146,6 +152,8 @@ bootit:
 	ld de,#0x4000
 	ld bc,#0x4000
 	ld a,#36
+
+	di
 	out (MPGSEL_1),a
 	ldir
 	pop bc
@@ -160,6 +168,8 @@ bootit:
 	ld de,#0x4000
 	ld bc,#0x4000
 	ld a,#37
+
+	di
 	out (MPGSEL_1),a
 	ldir
 

@@ -8,17 +8,10 @@
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	CSIZE|CSTOPB|CBAUD|PARENB|PARODD|CRTSCTS|_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart_mask,
-	uart_mask
+	CSIZE|CSTOPB|CBAUD|PARENB|PARODD|CRTSCTS|_CSYS
 };
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */

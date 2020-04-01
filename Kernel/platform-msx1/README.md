@@ -70,7 +70,7 @@ Move the switch helper into both banks so we can fix the FIXME in map_kernel
 To do
 
 Detection logic by ROM hash and find the sunrise etc
-Fix cursor interaction with fsck (don't xx bs flush but bs xx flush)
+Switch to inverse video cursor and inverse high font
 Can we put find_ram etc in discard ?
 Do we need a font and should it move somewhere to make const space ?
 Tune swap logic so we only read/write relevant pages

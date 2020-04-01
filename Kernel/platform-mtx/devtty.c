@@ -59,27 +59,13 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
  *	TTY masks - define which bits can be changed for each port
  */
 
-static tcflag_t dart_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS,
+	_CSYS,
 	/* FIXME CTS/RTS, CSTOPB */
 	CSIZE | CBAUD | PARENB | PARODD | _CSYS,
-	_LSYS,
-};
-
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
-	console_mask,
-	dart_mask,
-	dart_mask
+	CSIZE | CBAUD | PARENB | PARODD | _CSYS,
 };
 
 
@@ -179,7 +165,6 @@ static uint8_t dartbits[] = {
 	0x00, 0x40, 0x80, 0xC0
 };
 
-/* FIXME: Can we do CSTOPB - need to look into that */
 void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 {
 	irqflags_t flags;
@@ -212,6 +197,8 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flagbits)
 		if (!(cf & PARODD))
 			r |= 2;
 	}
+	if (cf & CSTOPB)
+		r |= 0x08;
 	dart_setup[7] = r;
 	dart_setup[7] = r;
 
@@ -319,14 +306,18 @@ static void keyproc(void)
 }
 
 /* TODO: non UK keyboards as identified by bits 12-11 of scan */
+
+/* Note that we have extra entries for the 3 unused keys. These map to things
+   on MTX+, PC keyboard interface module and MEMU */
+
 uint8_t keyboard[8][10] = {
 	{'1', '3', '5', '7', '9', '-', '\\', KEY_PAUSE, CTRL('C'), KEY_F1},
 	{KEY_ESC, '2', '4', '6', '8', '0', '^', 0 /*eol */ , KEY_BS, KEY_F5},
 	{0 /*ctrl */ , 'w', 'r', 'y', 'i', 'p', '[', KEY_UP, KEY_TAB, KEY_F2},
 	{'q', 'e', 't', 'u', 'o', '@', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6},
-	{0 /*capsl */ , 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, 0, KEY_F7},
-	{'a', 'd', 'g', 'j', 'l', ':', CTRL('M'), KEY_HOME, 0, KEY_F3},
-	{0 /*shift */ , 'x', 'v', 'n', ',', '/', 0 /*shift */ , KEY_DOWN, 0, KEY_F8},
+	{0 /*capsl */ , 's', 'f', 'h', 'k', ';', ']', KEY_RIGHT, '=', KEY_F7},
+	{'a', 'd', 'g', 'j', 'l', ':', CTRL('M'), KEY_HOME, '\'', KEY_F3},
+	{0 /*shift */ , 'x', 'v', 'n', ',', '/', 0 /*shift */ , KEY_DOWN, '#', KEY_F8},
 	{'z', 'c', 'b', 'm', '.', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4}
 };
 
@@ -335,9 +326,9 @@ uint8_t shiftkeyboard[8][10] = {
 	{KEY_ESC, '"', '$', '&', '(', 0, '~', 0 /*eol */ , KEY_BS, KEY_F5},
 	{0 /*ctrl */ , 'W', 'R', 'Y', 'I', 'P', '{', KEY_UP, KEY_TAB, KEY_F2},
 	{'Q', 'E', 'T', 'U', 'O', '`', KEY_ENTER, KEY_LEFT, KEY_DEL, KEY_F6},
-	{0 /*capsl */ , 'S', 'F', 'H', 'K', '+', '}', KEY_RIGHT, 0, KEY_F7},
-	{'A', 'D', 'G', 'J', 'L', '*', CTRL('M'), KEY_HOME, 0, KEY_F3},
-	{0 /*shift */ , 'X', 'V', 'N', '<', '/', 0 /*shift */ , KEY_DOWN, 0, KEY_F8},
+	{0 /*capsl */ , 'S', 'F', 'H', 'K', '+', '}', KEY_RIGHT, '^', KEY_F7},
+	{'A', 'D', 'G', 'J', 'L', '*', CTRL('M'), KEY_HOME, '@', KEY_F3},
+	{0 /*shift */ , 'X', 'V', 'N', '<', '/', 0 /*shift */ , KEY_DOWN, ':', KEY_F8},
 	{'Z', 'C', 'B', 'M', '>', '_', KEY_INSERT, KEY_CLEAR, ' ', KEY_F4}
 };
 

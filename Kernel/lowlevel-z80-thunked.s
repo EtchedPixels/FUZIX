@@ -47,6 +47,12 @@
 	.globl ___hard_irqrestore
 	.globl _out
 	.globl _in
+	.globl _out16
+	.globl _in16
+	.globl _sys_cpu
+	.globl _sys_cpu_feat
+	.globl _sys_stubs
+	.globl _set_cpu_type
 
         ; imported symbols
 	.globl _chksigs
@@ -62,11 +68,6 @@
 
         .include "platform/kernel.def"
         .include "kernel-z80.def"
-
-; these make the code below more readable. sdas allows us only to 
-; test if an expression is zero or non-zero.
-CPU_CMOS_Z80	    .equ    Z80_TYPE-0
-CPU_NMOS_Z80	    .equ    Z80_TYPE-1
 
 	HIGH
 ;
@@ -253,7 +254,7 @@ interrupt_sig:
 	ld e,a
 	xor a
 	ld (_int_disabled),a
-	ld e,a
+	ld d,a
 	ld c,a
 	ld (_udata + U_DATA__U_CURSIG),a
 	ld hl,#_udata + U_DATA__U_SIGVEC
@@ -309,6 +310,8 @@ intret2:
 	cp (hl)
 	jr nz, not_running
 	ld (hl), #P_READY
+	inc hl
+	set PFL_BATCH,(hl)
 not_running:
 	; Give up the CPU
 	; FIXME: can we get here on timers when only one thing is running
@@ -428,6 +431,17 @@ _out:
 	push bc
 	jp (hl)
 
+_out16:
+	pop hl
+	pop bc
+	pop de
+	push de
+	push bc
+	out (c),e
+	jp (hl)
+
+_in16:
+	ld b,h
 _in:
 	ld c,l
 	in l, (c)
@@ -465,4 +479,43 @@ ___hard_irqrestore:
 	or a
 	ret nz
 	ei
+	ret
+
+	.area _CONST
+
+_sys_stubs:
+	jp unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
+	.area _DATA
+
+_sys_cpu:
+	.db 0
+_sys_cpu_feat:
+	.db 0
+
+	.area _DISCARD
+
+_set_cpu_type:
+	ld h,#2		; Assume Z80
+	xor a
+	dec a
+	daa
+	jr c,is_z80
+	ld h,#6		; Nope Z180
+is_z80:
+	ld l,#1		; 8080 family
+	ld (_sys_cpu),hl	; Write cpu and cpu feat
 	ret

@@ -12,7 +12,7 @@ OBJ = $(SRC:.c=.o)
 all: advent advent.db
 
 advent.db: advgen
-	./advgen -x > advent.db
+	./advgen > advent.db
 
 advgen: advgen.c
 	cc advgen.c -o ./advgen

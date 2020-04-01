@@ -13,8 +13,18 @@
 #include <ds1302.h>
 
 uint8_t ds1302_present;
+uint8_t rtc_defer;
 
-void ds1302_send_byte(uint8_t byte)
+void ds1302_write_register(uint_fast8_t reg, uint_fast8_t val)
+{
+    ds1302_set_pin_ce(true);
+    ds1302_send_byte(reg);
+    ds1302_send_byte(val);
+    ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
+}
+
+void ds1302_send_byte(uint_fast8_t byte)
 {
     uint8_t i;
 
@@ -34,7 +44,7 @@ void ds1302_send_byte(uint8_t byte)
     }
 }
 
-uint8_t ds1302_receive_byte(void)
+uint_fast8_t ds1302_receive_byte(void)
 {
     uint8_t i, b;
 
@@ -56,15 +66,17 @@ uint8_t ds1302_receive_byte(void)
     return b;
 }
 
-uint8_t uint8_from_bcd(uint8_t value)
+uint_fast8_t uint8_from_bcd(uint_fast8_t value)
 {
     return (value & 0x0F) + (10 * (value >> 4));
 }
 
-void ds1302_read_clock(uint8_t *buffer, uint8_t length)
+void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
 {
     uint8_t i;
     irqflags_t irq = di();
+
+    platform_ds1302_setup();
 
     ds1302_set_pin_ce(true);
     ds1302_send_byte(0x81 | 0x3E); /* burst read all calendar data */
@@ -76,14 +88,71 @@ void ds1302_read_clock(uint8_t *buffer, uint8_t length)
     }
     ds1302_set_pin_ce(false);
     ds1302_set_pin_clk(false);
+
+    platform_ds1302_restore();
+
     irqrestore(irq);
 }
+
+#ifdef CONFIG_RTC_EXTENDED
+
+uint_fast8_t rtc_nvread(uint_fast8_t r)
+{
+    uint_fast8_t v;
+    irqflags_t irq;
+
+    irq = di();
+
+    platform_ds1302_setup();
+
+    ds1302_set_pin_ce(true);
+
+    ds1302_send_byte(0xC1 + 2 * r);
+    v = ds1302_receive_byte();
+
+    ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
+
+    platform_ds1302_restore();
+
+    irqrestore(irq);
+    return v;
+}
+
+int platform_rtc_ioctl(uarg_t request, char *data)
+{
+    struct cmos_nvram *rtc = (struct cmos_nvram *)data;
+    uint16_t r = ugetw(&rtc->offset);
+    int v;
+    if (r > 29) {
+        udata.u_error = ERANGE;
+        return -1;
+    }
+    switch(request) {
+    case RTCIO_NVGET:
+        return uputc(rtc_nvread(r), &rtc->val);
+    case RTCIO_NVSET:
+        v = ugetc(&rtc->val);
+        if (v < 0)
+            return -1;
+        ds1302_write_register(0xC0 + 2 * r, v);
+        return 0;
+    case RTCIO_NVSIZE:
+        return 30;
+    default:
+        return -1;
+    }
+}
+
+#endif
 
 /* define CONFIG_RTC in platform's config.h to hook this into timer.c */
 uint_fast8_t platform_rtc_secs(void)
 {
     uint8_t buffer;
-    if (ds1302_present) {
+    /* On some platforms the RTC is accessed via a shared interface, so
+       we skip seconds polling off interrupts if directed to do so */
+    if (ds1302_present && !rtc_defer) {
         ds1302_read_clock(&buffer, 1);   /* read out only the seconds value */
         return uint8_from_bcd(buffer & 0x7F); /* mask off top bit (clock-halt) */
     }

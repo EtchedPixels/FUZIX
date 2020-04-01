@@ -15,16 +15,9 @@ static char tbuf1[TTYSIZ];
 uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
 extern uint8_t curattr;
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS
 };
 
 
@@ -79,60 +72,6 @@ void tty_data_consumed(uint8_t minor)
 
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
-
-/* For now we only support 64 char mode - we should add the mode setting
-   logic an dother modes FIXME */
-static struct display specdisplay = {
-	0,
-	512, 192,
-	512, 192,
-	0xFF, 0xFF,
-	FMT_TIMEX64,
-	HW_UNACCEL,
-	GFX_VBLANK|GFX_MAPPABLE|GFX_TEXT,
-	0
-};
-
-static struct videomap specmap = {
-	0,
-	0,
-	0x4000,
-	14336,
-	0,
-	0,
-	0,
-	MAP_FBMEM|MAP_FBMEM_SIMPLE
-};
-
-/*
- *	Graphics ioctls. Very minimal for this platform. It's a single fixed
- *	mode with direct memory mapping.
- */
-int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
-{
-	if (minor != 1 || arg >> 8 != 0x03)
-		return vt_ioctl(minor, arg, ptr);
-	switch(arg) {
-	case GFXIOC_GETINFO:
-		return uput(&specdisplay, ptr, sizeof(struct display));
-	case GFXIOC_MAP:
-		return uput(&specmap, ptr, sizeof(struct videomap));
-	case GFXIOC_UNMAP:
-		return 0;
-	case GFXIOC_WAITVB:
-		/* Our system clock is vblank */
-		timer_wait++;
-		psleep(&timer_interrupt);
-		timer_wait--;
-		chksigs();
-		if (udata.u_cursig) {
-			udata.u_error = EINTR;
-			return -1;
-		}
-		return 0;
-	}
-	return -1;
-}
 
 void vtattr_notify(void)
 {

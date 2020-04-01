@@ -15,7 +15,7 @@
 # mtx:		Memotech MTX512 with SDX (or MEMU emulator)
 # multicomp09:	Extended multicomp 6809
 # n8vem-mark4:	RBC/N8VEM Retrobrew Z180 board
-# pentagon-1024: Pentagon 1MB
+# pentagon1024: Pentagon 1MB
 # p112:		DX Designs P112
 # rc2014:	RC2014 with 512K RAM/ROM and RTC
 # rc2014-sbc64: RC2014 Z80SBC64 128K system and RTC
@@ -24,6 +24,7 @@
 # sbcv2:	RBC/N8VEM SBC v2
 # sc108:	Small Computer Central SC108 and SC114 systems
 # sc111:	Small Computer Central SC111 system
+# sc126:	Small Computer Central SC126 system
 # scorpion:	Scorpion 256K (and some relatives) with NemoIDE
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # tc2068:	Timex TC2068/TS2068 with DivIDE/DivMMC disk interface

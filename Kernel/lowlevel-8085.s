@@ -363,6 +363,13 @@ preemption:
 	cmp m
 	jnz not_running
 	mvi m,P_READY
+	!
+	!	Punish the process for using all of its time.
+	!
+	inx h
+	mvi a,PFL_BATCH
+	ora m
+	mov m,a
 not_running:
 	!
 	!	We will disappear into this and reappear somewhere else. In
@@ -605,3 +612,81 @@ unimp:	.asciz 'rt:unimp'
 ddz:	.asciz 'rt:ddz'
 case:	.asciz 'rt:case'
 divz:	.asciz 'rt:div0'
+
+!
+!	I/O helpers. ACK lacks inline assembly which is annoying. Doubly so
+!	because 8080/8085 can only access variable ports by self modifying
+!	code.. which is fun with interrupts. Bletch!
+!
+!	For speed critical cases you need asm stubs, for the others these
+!	will do.
+!
+.define _in
+.define _out
+
+_in:
+	lda	_int_disabled
+	push	psw
+	ldsi	4
+	ldax	d
+	di
+	sta	inpatch+1
+inpatch:
+	in 0
+	mov	e,a
+	mvi	d,0
+popout:
+	pop	psw
+	ora	a
+	rnc
+	ei
+	ret
+
+_out:
+	lda	_int_disabled
+	push	psw
+	ldsi	4
+	ldax	d
+	di
+	sta	outpatch+1
+	ldsi	6
+	ldax	d
+outpatch:
+	out	0
+	jmp	popout
+
+.define _set_cpu_type
+
+_set_cpu_type:
+	ret
+
+!
+!	CPU setup and properties. As we are hardcoded for 8085 this isn't
+!	too hard
+!
+.define _sys_cpu
+.define _sys_cpu_feat
+.define _sys_stubs
+
+.sect .data
+
+_sys_cpu:
+	.data1 1		! 8080 family
+_sys_cpu_feat:
+	.data1 1		! 8085 feature set
+
+_sys_stubs:
+	jmp	unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop

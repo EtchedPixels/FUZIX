@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     buf[0x30] = 40;
     buf[0x31] = 1;
     buf[0x32] = 0;
-    buf[0x33] = 13;
+    buf[0x33] = 0x13;
 
     if (argc != 3) {
         fprintf(stderr, "%s: source dest.\n", argv[0]);

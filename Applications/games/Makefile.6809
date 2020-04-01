@@ -5,7 +5,7 @@ ASM = m6809-unknown-as
 AR = m6809-unknown-ar
 LINKER = m6809-unknown-ld
 CFLAGS = -I../../Library/include -I../../Library/include/6809
-LINKER_OPT = --oformat=raw -L../../Library/libs -lc6809
+LINKER_OPT = --oformat=raw -L../../Library/libs -lc6809 -ltermcap6809
 LINKER_FP_OPT = --oformat=raw -L../../Library/libs -lm6809 -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += -L$(LIBGCCDIR) -lgcc
@@ -35,6 +35,8 @@ OBJSNS = $(SRCSNS:.c=.o)
 APPS = $(OBJS:.o=)
 APPSFP = $(OBJSFP:.o=)
 APPSNS = $(OBJSNS:.o=)
+
+CFLAGS += -DCONFIG_IO_CUSS
 
 all: $(APPS) $(APPSNS) $(APPSFP) size.report
 

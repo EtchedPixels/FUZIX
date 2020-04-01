@@ -45,6 +45,5 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-6502.o devtty.o
-	# The linker left the C000-C0FF hole ready for us
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=4 
 	

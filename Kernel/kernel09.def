@@ -21,12 +21,15 @@ U_DATA__U_SIGVEC            equ (U_DATA+32)  ; table of function pointers (void 
 
 ; Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      equ 0
-P_TAB__P_TTY_OFFSET         equ 1
-P_TAB__P_PID_OFFSET         equ 2
-P_TAB__P_PAGE_OFFSET        equ 14
+P_TAB__P_FLAGS_OFFSET	    equ 1
+P_TAB__P_TTY_OFFSET         equ 2
+P_TAB__P_PID_OFFSET         equ 3
+P_TAB__P_PAGE_OFFSET        equ 15
 
 P_RUNNING                   equ 1            ; value from include/kernel.h
 P_READY                     equ 2            ; value from include/kernel.h
+
+PFL_BATCH		    equ 4            ; value from include/kernel.h
 
 OS_BANK                     equ 0            ; value from include/kernel.h
 

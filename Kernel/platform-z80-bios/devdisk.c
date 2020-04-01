@@ -19,7 +19,7 @@ static uint8_t last_drive = 0xFF;
 uint_fast8_t vd_transfer_sector(void)
 {
     uint_fast8_t drive = blk_op.blkdev->driver_data & VD_DRIVE_NR_MASK;
-    uint8_t c;
+    uint16_t c;
 
     if (drive != last_drive) {
         c = fuzixbios_disk_select(drive);
@@ -38,8 +38,13 @@ uint_fast8_t vd_transfer_sector(void)
             c = vd_write();
     }
 
+    /* Low 8 bits are the Fuzix error code, high are the device specific info */
     if (c) {
-        kprintf("hd: drive %d error %d.\n", drive, c);
+        udata.u_error = c & 0xFF;
+        /* EROFS is not a kernel loggable event */
+        if ((c & 0xFF) != EROFS) {
+            kprintf("hd: drive %d error %d (%d).\n", drive, c & 0xFF, c >> 8);
+        }
         return 0;
     }
     return 1;

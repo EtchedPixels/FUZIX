@@ -133,7 +133,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
         for (tries = 0; tries < 4 ; tries++) {
             (void)fd_data;
-            fd_sector = sector+1;/*FIXME/skew[sector];	/* Also makes 1 based */
+            fd_sector = sector+1;/*FIXME/skew[sector];  Also makes 1 based */
             if (fd_track != trackno) {
                 fd_data = trackno;
                 if (fd_seek()) {

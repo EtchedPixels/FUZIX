@@ -8,7 +8,7 @@
 #include "devtty.h"
 #include "kbdmatrix.h"
 
-extern int megasd_probe();
+extern int megasd_probe(void);
 
 void device_init(void)
 {

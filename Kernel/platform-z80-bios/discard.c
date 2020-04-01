@@ -25,6 +25,10 @@ void init_hardware_c(void)
 	swap_size = biosinfo->common_base >> 9;
 	ramtop = biosinfo->common_base;
 	udata_stash = ramtop - sizeof(u_data);
+	if (biosinfo->features & FEATURE_TIMER)
+		platform_tick_present = 1;
+	if (biosinfo->features & FEATURE_RTC_SLOW)
+		rtc_delay = 100;
 	/* Get the tty up */
 	biostty_init();
 	/* Allocate the initial buffers */
@@ -68,6 +72,8 @@ static struct fuzixbios_callbacks fcb = {
 	callback_timer,
 	callback_tty,
 	callback_disk
+	callback_kprintf,
+	&int_disabled
 };
 
 void pagemap_init(void)
@@ -83,20 +89,14 @@ void pagemap_init(void)
  *	eventually...
  */
 
-static tcflag_t uart_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS,
-};
-
 void biostty_init(void)
 {
 	int n = biosinfo->num_serial;
 	uint8_t *p;
 	uint8_t i;
 	struct s_queue *q = &ttyinq[1];
-	tcflag_t **m = &termios_mask[1];
+	tcflag_t *m = &termios_mask[1];
+	struct fuzixbios_ttyparam *p;
 
 	if (n > NUM_DEV_TTY) {
 		kprintf("Only %d serial devices will be available.\n",
@@ -104,7 +104,16 @@ void biostty_init(void)
 		n = NUM_DEV_TTY;
 	}
 	for (i = 1; i < n; i++) {
-		*m++ = &uart_mask[0];
+		/* Set the termios mask for the port */
+		*m++ = p->termios_mask | _CSYS;
+		/* Set the initial height and width */
+		ttydata[i].winsize.ws_col = p->width;
+		ttydata[i].winsize.ws_row = p->height;
+		/* If a mode is passed then set this so the port can force
+		   parameters it know are relevant - eg boot monitor port
+		   configurations */
+		if (p->initial_mode)
+			ttydata[i].termios.t_cflag = p->initial_mode;
 		p = init_alloc(TTYSIZ);
 		if (p == NULL)
 			panic("ttybuf");

@@ -40,8 +40,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 /* Flexible 4x16K banking */
 #define CONFIG_BANK16
 /* Permit large I/O requests to bypass cache and go direct to userspace unless
@@ -53,19 +51,19 @@
 /* Banks as reported to user space */
 #define CONFIG_BANKS	4
 
-#define TICKSPERSEC 10      /* Ticks per second */
+#define TICKSPERSEC 50      /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xEA00  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xEE00  /* Top of program, base of U_DATA copy */
 #define KERNTOP     0xC000  /* Top of kernel (first 3 banks), base of shared bank */
 
 /* Adjust copy_common if you touch the above */
 
 //#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
-#define SWAP_SIZE   0x76 	/* Program + udata in blocks */
+extern uint16_t swap_dev;
+#define SWAP_SIZE   0x78 	/* Program + udata in blocks */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xEC00	/* Swap out udata and program */
+#define SWAPTOP	    0xF000	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 //#define CONFIG_DYNAMIC_SWAP
@@ -91,12 +89,14 @@ extern unsigned int swap_dev;
 
 /* On-board DS1302, we can read the time of day from it */
 #define CONFIG_RTC
+/* The DS1302 reading is painfully slow - resync only every 20 seconds */
+#define CONFIG_RTC_INTERVAL	200
 #define CONFIG_RTC_FULL
 
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	0	/* No keyboard to grab */
 
-#define NUM_DEV_TTY 4
+#define NUM_DEV_TTY 2
 
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)

@@ -24,6 +24,8 @@ OBJSNS = $(SRCSNS:.c=.o)
 APPS = $(OBJS:.o=)
 APPSNS = $(OBJSNS:.o=)
 
+CFLAGS += -DCONFIG_IO_CUSS
+
 all: $(APPS) $(APPSNS) size.report
 
 $(APPS): %: %.o

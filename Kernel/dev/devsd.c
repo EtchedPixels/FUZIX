@@ -20,6 +20,8 @@
 #include <stdbool.h>
 #include <blkdev.h>
 
+#ifdef CONFIG_SD
+
 /* for platforms with multiple SD card slots, this variable contains
  * the current operation's drive number */
 uint_fast8_t sd_drive;
@@ -47,10 +49,20 @@ uint_fast8_t devsd_transfer_sector(void)
                     sd_spi_transmit_sector();
                     sd_spi_transmit_byte(0xFF); /* dummy CRC */
                     sd_spi_transmit_byte(0xFF);
+                    /* Was the data accepted ? */
                     success = ((sd_spi_wait(false) & 0x1F) == 0x05);
+                    /* Wait for the write to finish.
+                       TODO: it would be smarter if we set a flag and
+                       did this in sync and also before issuing other
+                       commands. However we may then also have to watch
+                       and defer CS handling.
+                       
+                       Could also do a 250ms timeout here */
+                    if (success)
+                        while(sd_spi_wait(false) == 0x00);
                 }
             }
-	}else
+	} else
 	    success = false;
 
 	sd_spi_release();
@@ -111,7 +123,7 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
     /* Select the card and wait for ready */
     sd_spi_release(); /* raise CS, then sends 8 clocks (some cards require this) */
     sd_spi_lower_cs();
-    if(sd_spi_wait(true) != 0xFF)
+    if(cmd != CMD0 && sd_spi_wait(true) != 0xFF)
         return 0xFF;
 
     /* Send command packet */
@@ -136,12 +148,15 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
     sd_spi_transmit_byte(n);
 
     /* Receive command response */
-    if (cmd == CMD12) 
+/*    if (cmd == CMD12)  - ignore first reply byte anyway because it may
+      be floating bus */
         sd_spi_receive_byte();     /* Skip a stuff byte when stop reading */
     n = 20;                             /* Wait for a valid response */
-    do{
+    do {
         res = sd_spi_receive_byte();
-    }while ((res & 0x80) && --n);
+    } while ((res & 0x80) && --n);
 
     return res;         /* Return with the response value */
 }
+
+#endif

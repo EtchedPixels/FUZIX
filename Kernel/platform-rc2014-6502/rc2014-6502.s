@@ -1,5 +1,5 @@
 ;
-;	    v65 platform functions
+;	    rc2014 6502 platform functions
 ;
 
             .export init_early
@@ -23,6 +23,7 @@
 	    .export ___hard_ei
 	    .export ___hard_irqrestore
 	    .export vector
+	    .export _sys_stubs
 
 	    .import interrupt_handler
 	    .import _udata
@@ -52,10 +53,6 @@
             .include "../kernel02.def"
 	    .include "zeropage.inc"
 
-;
-;	syscall is jsr [$00fe]
-;
-syscall	     =  $FE
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x0200 upwards after the common data blocks)
 ; -----------------------------------------------------------------------------
@@ -64,7 +61,7 @@ syscall	     =  $FE
 _platform_monitor:
 _platform_reboot:
 	    lda #0
-	    sta $C07B		; top 16K to ROM 0
+	    sta $FE7B		; top 16K to ROM 0
 	    jmp ($FFFC)
 
 ___hard_di:
@@ -96,7 +93,7 @@ init_early:
 	    ; handling - or does it - we wrap the bit ?? FIXME
 	    jsr _create_init_common
 	    lda #36
-	    sta $C078		; set low page to copy
+	    sta $FE78		; set low page to copy
             rts			; stack was copied so this is ok
 
 init_hardware:
@@ -110,6 +107,17 @@ init_hardware:
 	    lda #1
 	    sta _procmem+1
             jmp program_vectors_k
+
+	    ; copied into the stubs of each binary
+_sys_stubs:
+	    jmp syscall_entry
+	    .byte 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
@@ -133,13 +141,6 @@ program_vectors_k:
 	    sta $FFFA
 	    lda #>nmi_handler
 	    sta $FFFB
-	    ; However tempting it may be to use BRK for system calls we
-	    ; can't do this on an NMOS 6502 because the chip has brain
-	    ; dead IRQ handling bits that could simply "lose" the syscall!
-	    lda #<syscall_entry
-	    sta syscall
-	    lda #>syscall_entry
-	    sta syscall+1
 	    jmp map_kernel
 
 ;
@@ -216,13 +217,15 @@ map_kernel:
 ;	need us to fix save/restore)
 ;
 map_bank:
-	    stx $C078
+	    stx $FE78
 map_bank_i:			; We are not mapping the first user page yet
 	    stx cur_map
 	    inx
-	    stx $C079
+	    stx $FE79
 	    inx
-	    stx $C07A
+	    stx $FE7A
+	    inx
+	    stx $FE7B
 	    rts
 
 ; X,A holds the map table of this process
@@ -249,7 +252,7 @@ map_restore:
 	    pha
 	    txa
 	    pha
-	    ldx saved_map	; First bank we skip half of
+	    ldx saved_map
 	    jsr map_bank_i
 	    pla
 	    tax
@@ -279,11 +282,11 @@ saved_map:  .byte 0
 outchar:
 	    pha
 outcharw:
-	    lda $C0C5
+	    lda $FEC5
 	    and #$20
 	    beq outcharw
 	    pla
-	    sta $C0C0
+	    sta $FEC0
 	    rts
 
 ;
@@ -400,17 +403,11 @@ no_preempt:
 	    beq irqout
 	    tay
 
-	    lda #255
-	    sta $C000
-	    tsx
-	    txa
-	    sec
-	    sbc #6			; move down past the existing rti
-	    tax
-	    txs
-	    lda #>irqout
+	    ; Right now the stack holds Y X A P rti addr
+	    ; Push a helper to clean up and restore the register state
+	    lda #>(irqout-1)
 	    pha
-	    lda #<irqout
+	    lda #<(irqout-1)
 	    pha				; stack a return vector
 	    tya
 	    pha				; stack signal number
@@ -418,16 +415,17 @@ no_preempt:
 	    stx _udata+U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda _udata+U_DATA__U_SIGVEC,y	; Our vector (low)
+	    lda _udata+U_DATA__U_SIGVEC+1,y	; Our vector (low)
 	    pha				; stack half of vector
-	    lda _udata+U_DATA__U_SIGVEC+1,y	; High half
+	    lda _udata+U_DATA__U_SIGVEC,y	; High half
 	    pha				; stack rest of vector
 	    txa
 	    sta _udata+U_DATA__U_SIGVEC,y	; Wipe the vector
 	    sta _udata+U_DATA__U_SIGVEC+1,y
-	    lda #<PROGLOAD + 20
+	    lda #>(PROGLOAD + 16)
 	    pha
-	    lda #>PROGLOAD + 20
+	    lda #<(PROGLOAD + 16)
+	    pha
 	    lda #0
 	    pha				; dummy flags, with irq enable
 	    rti	    			; return on the fake frame
@@ -549,15 +547,6 @@ noargs:
 	    beq syscout
 	    tay
 
-	    lda #255
-	    sta $C000
-
-	    tsx				; Move past existing return stack
-	    dex
-	    dex
-	    dex
-	    txs
-
 	    ;
 	    ;	The signal handler might make syscalls so we need to get
 	    ;	our return saved and return the right value!
@@ -568,9 +557,9 @@ noargs:
 	    pha
 	    lda _udata+U_DATA__U_RETVAL+1
 	    pha
-	    lda #>sigret		; Return address
+	    lda #>(sigret-1)		; Return address
 	    pha
-	    lda #<sigret
+	    lda #<(sigret-1)
 	    pha
 
 	    tya
@@ -579,9 +568,9 @@ noargs:
 	    stx _udata+U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda _udata+U_DATA__U_SIGVEC,y	; Our vector
+	    lda _udata+U_DATA__U_SIGVEC+1,y	; Our vector
 	    pha
-	    lda _udata+U_DATA__U_SIGVEC+1,y
+	    lda _udata+U_DATA__U_SIGVEC,y
 	    pha
 	    txa
 	    sta _udata+U_DATA__U_SIGVEC,y	; Wipe the vector
@@ -589,12 +578,11 @@ noargs:
 
 	    ; Invoke the helper with signal and vector stacked
 	    ; it will then return to syscout and recover the original
-	    ; frame. If the handler made syscalls then
-	    jmp (PROGLOAD + 20)
+	    ; frame. If the handler made syscalls then we set the registers
+	    ; up in sigret
+	    cli
+	    jmp (PROGLOAD + 16)
 
-	    ;
-	    ; FIXME: should loop for more signals if appropriate
-	    ;
 sigret:
 	    pla		; Unstack the syscall return pieces
 	    tax
@@ -623,21 +611,16 @@ platform_doexec:
 ;	Start address of executable
 ;
 	    stx ptr1+1
-	    sta ptr1
-
-	    clc
-	    adc #$20
-	    bcc noincx
-	    inx
-noincx:
-	    stx ptr2+1		; Point ptr2 at base + 0x20
+	    sta ptr1		; Save execution address in ptr1
+	    stx ptr2+1		; Point ptr2 at base page + 16
+	    lda #16
 	    sta ptr2
 	    ldy #0
 	    lda (ptr2),y	; Get the signal vector pointer
-	    sta PROGLOAD+$20	; if we loaded high put the vector in
+	    sta PROGLOAD+16	; if we loaded high put the vector in
 	    iny
 	    lda (ptr2),y
-	    sta PROGLOAD+$21	; the low space where it is expected
+	    sta PROGLOAD+17	; the low space where it is expected
 
 ;
 ;	Set up the C stack. FIXME: assumes for now our sp in ZP matches it
@@ -674,11 +657,8 @@ _platform_interrupt_i:
 ;
 ;	Uses ptr3/4 as 1/2 are reserved for the mappers
 ;
-;	FIXME: need to reserve some ZP space for this in user banks, and
-;	also be clear which ZP is map_process_x safe
-;
 ;	FIXME: map_process_always doesn't map the low 16K for 6502 so we
-;	have more work to do here.
+;	have more work to do here to support swap.
 ;
 
 	.export _hd_read_data,_hd_write_data,_hd_map
@@ -703,7 +683,7 @@ hd_kmap:
 	rts
 
 hd_read256:
-	lda $C010
+	lda $FE10
 	sta (ptr3),y
 	iny
 	bne hd_read256
@@ -730,7 +710,7 @@ hd_kmapw:
 
 hd_write256:
 	lda (ptr3),y
-	sta $C010
+	sta $FE10
 	iny
 	bne hd_write256
 	rts

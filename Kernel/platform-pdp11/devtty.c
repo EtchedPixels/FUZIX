@@ -12,6 +12,12 @@ volatile uint8_t *uart_txstatus = (volatile uint8_t *)0177564;
 volatile uint8_t *uart_txdata = (volatile uint8_t *)0177566;
 
 static unsigned char tbuf1[TTYSIZ];
+static uint8_t sleeping;
+
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS
+};
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -19,7 +25,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 };
 
 /* Output for the system console (kprintf etc) */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
 	while(tty_writeready(1) != TTY_READY_NOW);
 	if (c == '\n')
@@ -40,7 +46,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 	*uart_txdata = c;
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 }
 
@@ -51,7 +57,7 @@ int tty_carrier(uint8_t minor)
 
 void tty_sleeping(uint8_t minor)
 {
-	sleeping |= (1 << minor);
+	sleeping |= 1 << minor;
 }
 
 void tty_data_consumed(uint8_t minor)

@@ -1,0 +1,49 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -I../../../Library/include -I../../../Library/include/pdp11
+LINKER_OPT = -L../../../Library/libs -lcpdp11 -T../../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../../Library/elf2flt.ld
+CRT0 = ../../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+
+#
+# FIXME : optimisation turned off
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=93719
+#
+
+.SUFFIXES: .c .o .y
+
+
+SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c du.c ed.c \
+	expr.c find.c m4.c make.c moo.c pr.c sort.c tar.c test.c ttt.c units.c
+
+OBJS = $(SRCS:.c=.o)
+
+APPS = $(OBJS:.o=)
+
+all: $(APPS) size.report
+
+$(APPS): $(CRT0)
+
+$(APPS): %: %.o
+	$(LINKER) -o $@.bin $^ $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+expr.c: expr.y
+
+find.c: find.y
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+
+rmbak:
+	rm -f *~ core

@@ -1,134 +1,89 @@
-
-8bit/some 16bit platforms
-
-	magic XX YY		; magic is the CPU specific magic
-				; XX and YY are any value
-				; used to form a jump around the header
-	FZX1			; format magic (general)
-	loadpage.b		; 0 means 'relocatable'
-	chmem.w			; chmem value (0 all, will change to stack)
-	code.w			; size of code segment
-	data.w			; size of data segment
-	bss.w			; size of the BSS
-	0.w			; reserved
-
-Header is intentionally part of the code so that we load aligned blocks into
-memory fast. The binary ends with the last block of data (and if need be
-some zeros of the BSS but see below)
-
-Address of code is deliberately passed into the crt0.S from kernel for
-relocators to be possible
-
-Proposed changes:
-	One new magic for split I/D on relevant platforms
-	chmem size will become stack size (only breaks stuff with it set)
-	0 base will mean 'has relocations'
-	BSS will start with relocation data
-
-	Rework the header so that code/data/bss are in terms of 256 byte
-	pages. Makes exec a lot simpler (no overflow maths).
-
-	0.w will become
-		cpufeature.b
-		cpuspecific.b
-
-	6502/68HC11 will use cpuspecific.b for ZP space needed
-
-	The CPUfeature bit is bits for features not CPU subtypes as
-	o65 does it so
-
-	6502 bits
-	0:	NMOS illegals		6502 only
-	1:	65C02			65C02 and friends
-	2:	65C02 bitops		Rockwell and later WDC C02
-	3:	65CE02	(Z)		65CE02
-	4:	BCD			All but 2A03
-	5:	65C802/816
-	6-7 spare for 740 family etc
-	[don't need to cover kernel only bits]
-
-	This way means we can just do an and and a compare to check
-	compatibility
-
-	Z80 bits
-	0:	Z80 illegals
-	1:	Z180
-	2:	Z280
-	3:	R800
-
-	6809 bits
-	0:	6309
-
-	8086 bits
-	0:	8087
-	1:	801C86 instructions (push immediate etc)
-	2:	80286
-	3:	80287
-
-	68000 bits
-	0:	68010
-	1:	68020
-	2:	68030
-	3:	68040
-	4:	68060
-	5:	FPU	(might need 2 bits of FPU info)
-
-	68HC11
-	None needed I believe
-
-	PDP/11	TBD
-
-
-
-Proposed Relocation Format:
-	
-	1-255	skip 1-255 bytes and then add the high byte of the base
-		to this address.
-	0 0	end
-	0 1-255	skip 1-255 bytes
-
-6502/HC11 has a second set of entries that relocate ZP shifting the ZP offsets
-by the ZP base of the platform
-
-65C816 if we disallow swapping and support large mode will also need a 3rd
-pass that updates banks from 0..n to the ones assigned
-
-Stick relocation data at end of data segment in a place we load but then
-count as bss (so brk will go over it). So the loader will consume the relocs
-and then brk them out of existance.
-
-Need to think about compressed binaries and especially for 6502 a fixed
-lib6502 for the intrinsics code which is a fair size, common to all binaries for
-the most part, and also could be shared with kernel (eg on Apple IIe) where
-we have the right mappings.
-
-
-PDP-11
-
-Do we want to just use a.out ?
-
-
 32bit
 
-Uses binfmt_flat with tiny tweaks to avoid loading Linux binaries
+Uses binfmt_flat with tiny tweaks to avoid loading Linux binaries for now.
+
+
+8bit
+
+
+16 byte header for current style binary. We try to reflect the general
+pattern of naming in classic Unixlike systems
+
+The 16 byte header is replaced by stubs. The syscall interface for most
+8bit processors is to jump to the start of the stubs. Relocations are
+done by the application itself if required, except the 6502 where because
+of the ZP relocations this is not practicable.
+
+struct exec {
+	uint16_t a_magic;
+#define EXEC_MAGIC	0x80A8		/* Just need something to id with */
+	uint8_t a_cpu;
+#define A_8080		1		/* 8080 series processors (and Z80) */
+#define A_6800		2		/* 6800 series */
+#define A_6502		3		/* 6502 */
+#define A_6809		4		/* 6809 */
+#define A_RABBIT	5		/* Rabbit is unZ80 enough to be its own */
+#define A_MSP340	6		/* MSP340 series */
+#define A_PDP11		7		/* PDP-11 */
+#define A_8086		8		/* x86 16bit */
+#define A_68000		9		/* 68000 32bit */
+#define A_NS32K		10		/* NS32K 32bit */
+	uint8_t a_cpufeat;
+#define AF_8080_8085	1		/* Uses 8085 instructions */
+#define AF_8080_Z80	2		/* Uses legal Z80 instructions */
+#define AF_8080_Z180	4		/* Uses Z180 instructions */
+#define AF_8080_Z280	8		/* Uses Z280 instructions */
+#define AF_8080_EZ80	16		/* Uses EZ80 extensions */
+
+#define AF_6800_6803	1		/* PSHX etc */
+#define AF_6800_6303	2		/* XGDX and similar */
+#define AF_6800_68HC11	4		/* Y register and other extensions */
+
+#define AF_6C502	1		/* CMOS 6502 extra instructions */
+#define AF_65C816	2		/* Uses 65C816 instructions */
+#define AF_65C816_B0	4		/* 65C816 assuming bank 0 (so can use
+					   stack relative addressing) */
+#define AF_65C02_BITOP	8		/* SMB/RMB/TSB/TRB/BBR */
+
+#define AF_6809_6309	1		/* 6309 extensions */
+
+#define AF_RABBIT_R3K	1		/* Uses Rabbit 3000 additions */
+
+	uint8_t a_base;			/* Load address page */
+	uint8_t a_hints;
+#define HINT_GRAPHICS	1		/* Hint that this binary uses graphics */
+#define HINT_DEBUG	2		/* Debug data follows binary image */
+	uint16_t a_text;
+	uint16_t a_data;
+	uint16_t a_bss;
+	uint8_t a_entry;		/* Entry point - 0-255 bytes in only */
+	/* These are kept in pages */
+	uint8_t a_size;			/* Binary memory request 0 = all */
+	uint8_t a_stack;		/* Stack size hint */
+	uint8_t a_zp;			/* Zero/Direct page space required */
+
+	/* This isn't really part of the header but a location fixed after
+	   it */
+	/* uint16_t a_sigvec; */
+};
 
 
 Entry Conditions & System Calls
 
 6502/65C816:
-	C stack configured in zero page (unrelocated 0/1)
+	C stack pointer configured in zero page (ZP:0/1 before relocations)
+	C stack will be placed at the top of memory as normal (C and
+	CPU stack are separate)
+
 	6502 stack set to end of 6502 stack space (may not be $1FF)
+
 	X holds high byte of load address
 	A holds first zero page value allocated
 	Y undefined
 
-	Execution begins at first byte of loaded binary
-	Signal vector helper code must be present at offset 20
+	Signal vector helper code must be present at offset 16
 
-	Need to sort out syscall vector and relocations for it (maybe
-	pass it in Y ?)
-
-	System calls via jmp ($00fe) [to be fixed for relocation etc]
+	System calls via 
 	Arguments on C stack (ZP:0 + base)
 	X holds the syscall number
 	Y holds the number of arguments
@@ -178,15 +133,21 @@ Entry Conditions & System Calls
 
 	Returns error code in D, return in X
 
-Z80:
+8080/8085/Z80:
 	SP is set to the C stack
-	IY holds the base address (load for relocatables)
-	HL holds the load address
+	DE holds the load address
 
 	System calls:
-	Alternate registers are saved
+	On Z80 IX, IY and alternate registers are saved except AF' which
+	may be destroyed
 
 	On entry userspace stack holds the syscall arguments
 	On return HL holds the return value and carry is clear
 	On error return HL holds the error and carry is set
+
+	Signal vector helper will be present at offset 16. This is needed
+	for ACK 8080 binaries but for current SDCC Z80 binaries it's just
+
+	ex de,hl
+	jp (hl)
 

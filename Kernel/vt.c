@@ -210,6 +210,17 @@ static int escout(unsigned char c)
 	return 0;
 }
 
+void vt_cursor_off(void)
+{
+	if (!cursorhide)
+		cursor_off();
+}
+
+void vt_cursor_on(void)
+{
+	if (!cursorhide)
+		cursor_on(cursory, cursorx);
+}
 
 /* VT52 alike functionality */
 void vtoutput(unsigned char *p, unsigned int len)
@@ -233,8 +244,7 @@ void vtoutput(unsigned char *p, unsigned int len)
 	}
 	vtbusy = 1;
 	irqrestore(irq);
-	if (!cursorhide)
-		cursor_off();
+	vt_cursor_off();
 	/* FIXME: do we ever get called with len > 1, if not we could strip
 	   this right down */
 	do {
@@ -284,15 +294,13 @@ void vtoutput(unsigned char *p, unsigned int len)
 		len = 1;
 		/* Until we don't get interrupted */
 	} while(cq);
-	if (!cursorhide)
-		cursor_on(cursory, cursorx);
+	vt_cursor_on();
 	vtbusy = 0;
 }
 
+/* Note: multiple vt switching handled by platform wrapper */
 int vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
-	/* FIXME: need to address the multiple vt switching case
-	   here.. probably need to switch vt */
 	if (minor <= MAX_VT) {
 		switch(request) {
 #ifdef KEY_ROWS

@@ -23,10 +23,8 @@
 ;	Step rate
 ;	Head load/unload times
 ;	Write off time	af
-;
-;	Or do we rely on the boot loader to have gotten this right (can't
-;	for drive > 0) FIXME
-;
+;	(12ms step 30ms head stabilize, 4ms head load, max (0xf) head
+;	unload)
 ;
 		.module fdc765
 
@@ -211,7 +209,7 @@ _fd765_motor_on:
 	ld e,#10		; FIXME right value ?? 	
 wait2:
 	; The classic Z80 KHz timing loop
-	ld bc,#0x3548	; 3.548MHz
+	ld bc,#3548	; 3.548MHz
 wait1:
 	dec bc
 	ld a,b

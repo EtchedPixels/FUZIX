@@ -41,26 +41,13 @@ static void chmem_flat(FILE * fp, unsigned char *buf, int argc, char *argv[])
 }
 #endif
 
-static void chmem_fzx1(FILE * fp, unsigned char *buf, int argc, char *argv[])
+static void chmem_fzx2(FILE * fp, unsigned char *buf, int argc, char *argv[])
 {
-	unsigned int v;
+	uint32_t v;
 	unsigned short top;
-	uint8_t be;
-	if (buf[0] == 0x7E || buf[0] == 0x20)
-		be = 1;		/* 6809 */
-	else if (buf[0] == 0x4C || buf[0] == 0x38)
-		be = 0;		/* 6502 */
-	else if (buf[0] == 0xC3 || buf[0] == 0x18)
-		be = 0;		/* Z80 */
-	else {
-		fprintf(stderr, "%s: unknown Fuzix FZX1 binary type.\n", argv[1]);
-		exit(1);
-	}
+
 	if (argc == 2) {
-		if (be)
-			top = buf[9] | (buf[8] << 8);
-		else
-			top = buf[8] | (buf[9] << 8);
+		top = buf[13] << 8;
 		if (top)
 			printf("Fuzix binary set at %d bytes.\n", top);
 		else
@@ -72,15 +59,10 @@ static void chmem_fzx1(FILE * fp, unsigned char *buf, int argc, char *argv[])
 		fprintf(stderr, "%s: invalid chmem value '%s'.\n", argv[0], argv[2]);
 		exit(1);
 	}
-	if (be) {
-		buf[8] = v >> 8;
-		buf[9] = v & 0xFF;
-	} else {
-		buf[8] = v & 0xFF;
-		buf[9] = v >> 8;
-	}
+	v += 255;
+	buf[13] = v >> 8;
 	rewind(fp);
-	if (fwrite(buf, 10, 1, fp) != 1) {
+	if (fwrite(buf, 16, 1, fp) != 1) {
 		fprintf(stderr, "%s: write error.\n", argv[0]);
 		exit(1);
 	}
@@ -107,8 +89,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "%s: too short ?\n", argv[0]);
 		exit(1);
 	}
-	if (memcmp(buf + 3, "FZX1", 4) == 0)
-		chmem_fzx1(fp, buf, argc, argv);
+	/* Big endian */
+	if (*buf == 0x80 && buf[1] == 0xA8)
+		chmem_fzx2(fp, buf, argc, argv);
+	/* Little endian */
+	else if (*buf == 0xA8 && buf[1] == 0x80)
+		chmem_fzx2(fp, buf, argc, argv);
 #if defined(__m68k__)
 	else if (memcmp(buf, "bFLT", 4) == 0)
 		chmem_flat(fp, buf, argc, argv);

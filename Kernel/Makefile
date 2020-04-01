@@ -1,6 +1,6 @@
 TARGET_LIST = $(wildcard platform-*)
 
-export VERSION = "0.3pre1"
+export VERSION = "0.4pre1"
 export SUBVERSION = ""
 export ROOT_DIR
 
@@ -39,7 +39,7 @@ CDSRCS = start.c
 C1SRCS =  devio.c kdata.c
 C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
-C2SRCS += simple.c single.c bank8k.c bank16k.c bank16k_low.c bank32k.c
+C2SRCS += simple.c bank8k.c bank16k.c bank16k_low.c bank32k.c
 C3SRCS = bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c
 C2SRCS += bank8086.c bank16kfc.c
 C4SRCS = filesys.c version.c

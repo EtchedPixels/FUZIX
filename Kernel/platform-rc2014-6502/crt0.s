@@ -22,7 +22,7 @@
 
 entry:
 ;
-;	We are entered at $C102 just after the required magic number
+;	We are entered at $C002 just after the required magic number
 ;
 		sei			; interrupts off
 		cld			; decimal off

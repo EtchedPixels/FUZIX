@@ -12,7 +12,6 @@
 
 	.export sigret_irq
 	.export sigret
-	.export syscall_vector
 
 	.export illegal_inst
 	.export trap_inst
@@ -24,6 +23,11 @@
 	.export outnewline
 	.export outcharhex
 	.export outxa
+
+	.export _sys_cpu
+	.export _sys_cpu_feat
+	.export _set_cpu_type
+	.export _sys_stubs
 
 	.export _need_resched
 
@@ -74,14 +78,16 @@
 ;			  values and keep them in ->page.
 ;
 ;
-;	TODO:
-;	- add vectors and stubs to bank 0 setup, and to other banks for
-;	  stubs (syscall and signal return)
-;	- audit and begin testing
 ;
+;	CPU features. Hardcoded as we know our CPU type
+;
+_sys_cpu:
+	.byte 3
+_sys_cpu_feat:
+	.byte 3
 
-syscall	=	$fe
-
+_set_cpu_type:
+	rts
 
 ;
 ;	Helper - given the udata bank in A set the DP value correctly. May
@@ -355,7 +361,7 @@ signal_out:
 	pha
 	plb				; get the right user data bank
 
-	ldx	PROGLOAD+20		; trap handler in user app
+	ldx	PROGLOAD+$10		; trap handler in user app
 	dex				; rtl incs this
 	phx
 
@@ -404,8 +410,8 @@ _doexec:
 
 	; ptr1 might be PROGBASE but that's fine !!
 	ldx	ptr1		;	target address
-	lda	a:$20,x		;	fetch the signal vector pointer
-	sta	PROGBASE+$20	;	and stuff it in the base
+	lda	a:$10,x		;	fetch the signal vector pointer
+	sta	PROGBASE+$10	;	and stuff it in the base
 
 	sep	#$20
 	.a8
@@ -435,9 +441,6 @@ _doexec:
 	; Set the C stack pointer
 	ldy	U_DATA__U_ISP
 	sty	sp		;	sp is in DP so we write user version
-	; Fix up the syscall vector in ZP
-	ldy	#syscall_vector
-	sty	syscall		;	stores into user DP
 
 	;
 	;	From here we are entirely referencing user data but kernel
@@ -448,9 +451,6 @@ _doexec:
 	lda	U_DATA__U_PAGE	;	bank for data
 	pha			;	switch to userdata bank
 	plb
-
-	; lda U_DATA__U_PAGE+1	;	bank for code
-	sty	a:syscall	;	and in bank:00FE
 
 	pha			;	stack bank for rtl
 
@@ -639,6 +639,9 @@ ret_to_user:
 	bne	not_running
 	lda	#P_READY
 	sta	a:P_TAB__P_STATUS_OFFSET,x
+	lda	a:P_TAB__P_FLAGS_OFFSET,x
+	ora	#PFL_BATCH
+	sta	a:P_TAB__P_FLAGS_OFFSET,x
 not_running:
 	;
 	;	Drop back to a8i8 and schedule ourself out
@@ -765,7 +768,7 @@ signal_exit:
 	;	Y now points at bank, X points at PC high
 	;
 	lda	#8		; copy 9 bytes
-	mvp	0,0
+	mvp	#0,#0
 	;
 	;	At this point y points to the byte below the last
 	;	destination copied (aka s)
@@ -1013,8 +1016,7 @@ _need_resched:
 
 ;
 ;	Run when we return from a signal handler that was run when exiting
-;	a system call. The rts will actually always go the rts in
-;	syscall_vector
+;	a system call. The rts will actually always go the rts in the stubs
 ;
 sigret:
 	sep #$30
@@ -1044,6 +1046,17 @@ sigret_irq:
 	.a8
 	.i8
 
-syscall_vector:
+;
+;	The stubs is the same as the vector so use it for both
+;	until the vector goes away.
+;
+_sys_stubs:
 	jsl	KERNEL_CODE_FAR+syscall_entry
 	rts
+
+	.byte 0
+	.word 0
+	.word 0
+	.word 0
+	.word 0
+	.word 0

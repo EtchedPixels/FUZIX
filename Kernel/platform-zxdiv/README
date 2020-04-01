@@ -44,6 +44,12 @@ We run with the following mapping
 4000-5FFF	Spectrum screen memory and system variables
 6000-7FFF	Kernel data
 
+		[Note: keeping the video mapped is important for graphics
+		 and also means you can use it with the 128K/512K external
+		 48K expansions that do paging but don't do ROM switching
+		 or video switching. These have page 5 not the same as
+		 4000-7FFF so our loader may need a rework]
+
 8000-83FF	Needed to create the exec of init
 8400-BFFF	_DISCARD area - blown away when we exec init
 		(tons of room in this space)

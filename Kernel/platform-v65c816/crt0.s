@@ -53,7 +53,7 @@ entry:
 	lda	#255
 	ldx	#0
 	ldy	#$FF00
-	mvn	KERNEL_FAR,KERNEL_FAR
+	mvn	#KERNEL_FAR,#KERNEL_FAR
 
 	sep	#$30
 	.a8
@@ -90,7 +90,7 @@ entry:
 
 	lda	#__BSS_SIZE__-2	; must be >=2  bytes or else
 	stz	a:0,x
-	mvn	0,0
+	mvn	#0,#0
 		
 	sep #$30
 	.a8

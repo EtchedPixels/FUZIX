@@ -38,6 +38,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <exec.h>
 
 #undef DEBUG
 
@@ -72,12 +73,25 @@ int pagemap_alloc(ptptr p)
 }
 
 /* Realloc is trivial - we can't do anything useful */
-int pagemap_realloc(usize_t code, usize_t size, usize_t stack)
+int pagemap_realloc(struct exec *hdr, usize_t size)
 {
-	if (size > MAP_SIZE)
-		return ENOMEM;
 	return 0;
 }
+
+int pagemap_prepare(struct exec *hdr)
+{
+	/* If it is relocatable load it at PROGLOAD */
+	if (hdr.a_base == 0)
+		hdr.a_base = PROGLOAD >> 8;
+	/* If it doesn't care about the size then the size is all the
+	   space we have */
+	if (hdr.a_size == 0)
+		hdr.a_size = (ramtop >> 8) - hdr.a_base;
+	if (hdr.a_size > (MAP_SIZE >> 8))
+		return -1;
+	return 0;
+}
+
 
 uint16_t pagemap_mem_used(void)
 {
@@ -103,7 +117,8 @@ int swapout(ptptr p)
 #endif
 
 	/* We never swap the live process so the second page is always
-	   page 6 (FIXME: this will not be true once we go past 128K) */
+	   page 6 (This is not be true once we go past 128K but that has
+	   its own bankbig.c) */
         if (low_bank == p)
 		panic("swapout");
 

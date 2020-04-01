@@ -32,7 +32,9 @@ struct fuzixbios_info {
     uint8_t num_disk;
 
     uint16_t features;
-#define FEATURE_RTC	1
+#define FEATURE_RTC		1
+#define FEATURE_TIMER		2
+#define FEATURE_RTC_SLOW	4
 };
 
 struct fuzixbios_callbacks {
@@ -43,6 +45,8 @@ struct fuzixbios_callbacks {
     /* One day we may need to handle lock/unlock of disks ? */
     uint16_t (*callback_disk)(uint16_t) __z88dk_fastcall;
 #define DISK_CHANGE	0
+    uint16_t (*callback_kprintf)(uint16_t) __z88dk_fastcall;
+    uint16_t *int_disable;
 };
     
 extern struct fuzixbios_info *biosinfo;
@@ -102,7 +106,7 @@ struct fuzixbios_diskparam {
     uint16_t blocksize;		/* Real sector size */
 };
 
-/* TODO: media change event, dynamic diskparam, geometyr, fd ioctl,
+/* TODO: media change event, dynamic diskparam, geometry, fd ioctl,
    fd format, eject, unlock etc */
 extern uint8_t fuzixbios_disk_select(uint16_t info) __z88dk_fastcall;
 #define SELECT_PROBE		0x0100

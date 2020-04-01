@@ -67,19 +67,12 @@ _bufpool:
         .area _COMMONMEM
 
 _platform_monitor:
-	; Reboot ends up back in the monitor
 _platform_reboot:
-	; This is fun because when we put the EEPROM back it appears
-	; everywhere
+	;
+	; Call the helper 
+	;
 	di
-	ld a,#1			; WR 1 channel A
-	out (0x01), a
-	ld a,#0x18		; EEPROM on
-	ld hl,#0x03D3		; out (0x03),a
-	ld (0xFFFE),a		; so that we run it and then PC hits 0
-				; as it hits ROM
-	ld sp,#0
-	jp 0xFFFE		; kaboom !
+	jp 0xFFE9		; kaboom 
 
 _int_disabled:
 	.db 1
@@ -92,7 +85,7 @@ _int_disabled:
 ; -----------------------------------------------------------------------------
 
 banknum:
-	.byte 0x58		; copied into far bank then set to 0C
+	.byte 0x58		; copied into far bank then set to 18
 
 ; -----------------------------------------------------------------------------
 ;	All of discard gets reclaimed when init is run
@@ -108,18 +101,27 @@ init_hardware:
 	ld hl,#s__COMMONMEM
 	ld de,#l__COMMONMEM
 
+	; Modified board drives the RAM A16 differently
+	ld a,(0xffff)
+	and #2
+	call nz, modified_mem
+
 	; This is run once so can be slow and simple
 farput:
 	ld a,(hl)
+	push de
+	ld de,#0xe8ea		; bank 1 and 0 if extended, ignored
+				; if not
 	call 0xFFE0		; put byte in a into (HL) in far memory
-				; uses BC/HL/AF
+				; uses BC/DE/HL/AF
+	pop de
 	inc hl
 	dec de
 	ld a,d
 	or e
 	jr nz,farput
 
-	ld a,#0x18
+	ld a,(bits_from_user)
 	ld (banknum),a		; and correct page
 
 	; We now have our common in place. We can do the rest ourselves
@@ -222,7 +224,7 @@ no_ctc:
 	im 1				; set Z80 CPU interrupt mode 1
 	ret
 
-RTS_LOW	.EQU	0xEA
+BOOT_MAP .EQU	0xEA		; Bank map default
 
 sioa_setup:
 	.byte 0x00
@@ -234,7 +236,7 @@ sioa_setup:
 	.byte 0x03
 	.byte 0xE1
 	.byte 0x05
-	.byte RTS_LOW
+	.byte BOOT_MAP
 siob_setup:
 	.byte 0x00
 	.byte 0x18		; Reset
@@ -245,7 +247,7 @@ siob_setup:
 	.byte 0x03
 	.byte 0xE1
 	.byte 0x05
-	.byte RTS_LOW
+	.byte BOOT_MAP
 
 
 ;
@@ -333,9 +335,9 @@ rst10:
 	    nop
 	    nop
 rst18:
-	    ld a,#0x01
+	    ld a,(sio_reg)
 	    out (0x03),a
-	    ld a,#0x58
+	    ld a,(bits_to_user)
 	    out (0x03),a
 rst20:	    ei
 	    jp (hl)
@@ -382,25 +384,57 @@ nmi_handler:		; Should be at 0x66
 
 	    .globl ldir_to_user
 	    .globl ldir_from_user
+	    .globl modified_mem
+
+	    .globl bits_from_user
+	    .globl bits_to_user
+	    .globl sio_reg
 ;
 ;	This needs some properly optimized versions!
 ;
+;
+bits_to_user:
+	.word	0x5818
+bits_from_user:
+	.word	0x1858
+sio_reg:
+	.word	0x0103			; SIOB R 1
+
+
+;
+;	Configure the ldir helpers for a modified board
+;
+modified_mem:
+	    ld hl,#0xe8ea
+	    ld (bits_to_user),hl
+	    ld a,h
+	    ld (banknum),a
+	    ld hl,#0xeae8
+	    ld (bits_from_user),hl
+            ld hl,#0x0503		; SIOB R 5
+	    ld (sio_reg),hl
+	    ld a,#0xea
+	    ret
+
+;
+;	Copy memory between banks
+;
 ldir_to_user:
-	    ld de,#0x1858		; from bank 0 to bank  1
+	    ld de,(bits_to_user)		; from bank 0 to bank  1
 ldir_far:
 	    push bc
-	    ld bc,#0x0103
+	    ld bc,(sio_reg)
 	    exx
 	    pop bc			; get BC into alt bank
 	    di				; annoyingly : FIXME
 far_ldir_1:
 	    exx
 	    out (c),b
-	    out (c),d
+	    out (c),e
 	    ld a,(hl)
 	    inc hl
 	    out (c),b
-	    out (c),e
+	    out (c),d
 	    ld (ix),a
 	    inc ix
 	    exx
@@ -410,12 +444,12 @@ far_ldir_1:
 	    jr nz, far_ldir_1
 	    exx
 	    out (c),b
-	    ld b,#0x18
-	    out (c),b
+	    ld de,(bits_to_user)
+	    out (c),d
 	    exx
 	    ret
 ldir_from_user:
-	    ld de,#0x5818
+	    ld de,(bits_from_user)
 	    jr ldir_far
 ;
 ;	High stubs. Present in each bank in the top 256 bytes
@@ -438,9 +472,9 @@ interrupt_high:
 	    ;
 	    ;	Switch to kernel
 	    ;
-	    ld a,#0x01
+	    ld a,(sio_reg)
 	    out (0x03),a
-	    ld a,#0x18
+	    ld a,(bits_from_user)
 	    out (0x03),a
 	    ld (istack_switched_sp),sp	; istack is positioned to be valid
 	    ld sp,#istack_top		; in both banks. We just have to
@@ -460,10 +494,12 @@ interrupt_high:
 	    ; high
 	    or a
 	    jr z, kernout
+	    ;
 	    ; Returning to user space
-	    ld a,#0x01			; User bank
+	    ;
+	    ld a,(sio_reg)		; User bank
 	    out (0x03),a
-	    ld a,#0x58
+	    ld a,(bits_to_user)
 	    out (0x03),a
 	    ; User stack is now valid
 	    ; back on user stack
@@ -490,7 +526,7 @@ pops:
 kernout:
 	    ; restore bank - if we interrupt mid user copy or similar we
 	    ; have to put the right bank back
-	    ld a,#1
+	    ld a,(sio_reg)
 	    out (0x03),a
 	    ld a,c
 	    out (0x03),a
@@ -500,6 +536,8 @@ sigpath:
 	    push de		; signal number
 	    ld de,#irqsigret
 	    push de		; clean up
+	    ex de,hl
+	    ld hl,(PROGLOAD+16)	; helper vector
 	    jp (hl)
 irqsigret:
 	    inc sp		; drop signal number
@@ -510,10 +548,7 @@ syscall_high:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
-	    push de		; the syscall if must preserve de for now
-				; needs fixing when we change the syscall
-				; API for Z80 to something less sucky
-	    ld a,4(ix)
+	    push bc
 	    ld c,6(ix)
 	    ld b,7(ix)
 	    ld e,8(ix)
@@ -525,12 +560,10 @@ syscall_high:
 	    ld h,13(ix)
 	    pop ix
 	    di
-	    ; BUG: syscall corrupts AF' - should we just define some
-	    ; alt register corruptors for new API - would be sanest fix
 	    ex af, af'		; Ick - find a better way to do this bit !
-	    ld a,#1
+	    ld a,(sio_reg)
 	    out (0x03),a
-	    ld a,#0x18
+	    ld a,(bits_from_user)
 	    out (0x03),a
 	    ex af,af'
 	    ; Stack now invalid
@@ -541,26 +574,22 @@ syscall_high:
 	    ; stack now invalid. Grab the new sp before we unbank the
 	    ; memory holding it
 	    ld sp,(_udata + U_DATA__U_SYSCALL_SP)
-	    ld a,#0x01		; back to the user page
+	    ld a,(sio_reg)	; back to the user page
 	    out (0x03),a
-	    ld a,#0x58
+	    ld a,(bits_to_user)
 	    out (0x03),a
 	    xor a
 	    cp h
 	    call nz, syscall_sigret
-	    ; FIXME for now do the grungy C flag HL DE stuff from
-	    ; lowlevel-z80 until we fix the ABI
-	    ld bc,#0
+	    pop bc
 	    ld a,h
 	    or l
 	    jr nz, error
 	    ex de,hl
-	    pop de
 	    pop ix
 	    ei
 	    ret
 error:	    scf
-	    pop de
 	    pop ix
 	    ei
 	    ret

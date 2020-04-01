@@ -1206,7 +1206,7 @@ int open_after(void)
 int save(char *fn)
 {
 	int fd;
-	int i, ok = -1;
+	int i, err = 1;
 	size_t length;
 	char *gptr;
 
@@ -1218,21 +1218,21 @@ int save(char *fn)
 		movegap();
 		gptr = egap;
 		length = (size_t) (ebuf - egap);
-		ok = 0;
+		err = 0;
 		/* Write out each chunk that is bigger than INT_MAX as
 		   that is our limit per syscall */
 		while(length > INT_MAX) {
-			ok |= write(fd, gptr, INT_MAX) == INT_MAX;
+			err |= write(fd, gptr, INT_MAX) != INT_MAX;
 			length -= INT_MAX;
 			gptr += INT_MAX;
 		}
 		/* Write out the tail */
-		ok |= write(fd, gptr, length) == length;
-		ok |= close(fd);
+		err |= write(fd, gptr, length) != length;
+		err |= close(fd);
 		indexp = i;
 		modified = 0;
 	}
-	return ok;
+	return !err;
 }
 
 int save_done(char *path, uint8_t n)
@@ -1540,11 +1540,6 @@ static int doread(const char *name, int fd, char *ptr, int size)
 		perror(name);
 		exit(2);
 	}
-	if (n != size) {
-		write(2, name, strlen(name));
-		write(2, ": ", 2);
-		write(2, "short read.\n", 12);
-	}
 	return n;
 }
 
@@ -1570,27 +1565,28 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 		filename = "";
 	else {
-		size_t size;
-		size_t o = 0;
-		int n = 0;
 		fd = open(filename = *++argv, O_RDONLY);
-		if (fd == -1) {
+		if (fd == -1 && errno != ENOENT) {
 			perror(*argv);
 			return 2;
 		}
-		size = ebuf - buf;
-		/* We can have 32bit ptr, 16bit int even in theory */
-		if (size > INT_MAX) {
-			while (n = doread(*argv, fd, buf + o, INT_MAX)) {
-				gap += n;
-				size -= n;
-				o += n;
-			}
+		if (fd != -1) {
+			size_t size;
+			size_t o = 0;
+			int n = 0;
+			size = ebuf - buf;
+			/* We can have 32bit ptr, 16bit int even in theory */
+			if (size > INT_MAX) {
+				while (n = doread(*argv, fd, buf + o, INT_MAX)) {
+					gap += n;
+					size -= n;
+					o += n;
+				}
+			} else
+				n = doread(*argv, fd, buf + o, size);
+			gap += n;
+			close(fd);
 		}
-		else
-			n = doread(*argv, fd, buf + o, size);
-		gap += n;
-		close(fd);
 	}
 
 	if (con_init())

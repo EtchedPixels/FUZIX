@@ -76,28 +76,21 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
 	{tbufa, tbufa, tbufa, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	/* Virtual UART */
-	console_mask,
-	console_mask,
+	_CSYS,
+	_CSYS,
 	/* Drivewire */
-	console_mask,
-	console_mask,
-	console_mask,
-	console_mask,
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS,
 	/* Virtual Window */
-	console_mask,
-	console_mask,
-	console_mask,
-	console_mask
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS
 };
 
 

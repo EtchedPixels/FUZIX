@@ -24,16 +24,9 @@ __sfr __at 0x18 uart_tdr;
  */
 static unsigned char tbuf1[TTYSIZ];
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
 tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
 	NULL,
-	console_mask
+	_CSYS
 };
 
 /*

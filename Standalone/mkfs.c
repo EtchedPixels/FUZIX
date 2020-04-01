@@ -11,7 +11,9 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <fcntl.h>
 #include "fuzix_fs.h"
+#include "util.h"
 
 /* This makes a filesystem 
  *
@@ -29,7 +31,6 @@ direct dirbuf[64] = {
 };
 
 struct dinode inode[8];
-int swizzling = 0;
 
 void mkfs(uint16_t fsize, uint16_t isize, uint8_t shift);
 void dwrite(uint16_t blk, char *addr);
@@ -108,7 +109,7 @@ int main(int argc, char **argv)
 	printf("Making %d byte/block filesystem with %s byte order on device %s with fsize = %u and isize = %u.\n",
 	       bsize, swizzling==0 ? "normal" : "reversed", argv[optind], fsize, isize);
 
-	if (fd_open(argv[optind])) {
+	if (fd_open(argv[optind], O_CREAT)) {
 		printf("Can't open device");
 		return -1;
 	}

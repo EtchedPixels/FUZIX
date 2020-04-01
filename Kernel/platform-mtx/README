@@ -2,6 +2,7 @@ TODO
 DONE	- Fix the configuration for maximum memory banks
 DONE	- Autodetect the propeller MTX 80 column card on 0x60/61
 IP	- Driver for the propellor 80 column card
+	  (need to switch to a proper vt driver)
 DONE	- Probe what memory banks are present up to the full 640K that might be present
 DONE	- Support for the retro adapters (CF2+ etc)
 IP	   - need to auto handle CF1 v CF2
@@ -19,6 +20,8 @@ DONE	- Report graphics capabilities according to card (inc octel modes on
 DONE	- keyboard etc devinput support
 - How to expose effectively having 512 chars (same problem as ubee)
 DONE	- How to detect a rememorizer ?
+- VDP high characters as inverses for cursor like RC2014
+- Multiple virtual consoles on VDP only systems
 
 
 The following MTX512 features are supported

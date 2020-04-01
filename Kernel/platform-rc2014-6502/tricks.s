@@ -35,7 +35,7 @@
 ; and its a constant for the others from before init forks so it'll be fine
 ; here
 _ramtop:
-	.word $C000
+	.word $FE00
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -86,11 +86,9 @@ _switchin:
 ;	jsr	outxa
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
-;	pha
 ;	jsr	outcharhex
-;	pla
-	sta	$C07A		; switches zero page, stack memory area
-	; ------- New stack and ZP -------
+	sta	$FE78		; switches zero page, stack memory area
+	; ------- No valid stack, new ZP ----- stack must not be used
 
 	; Set ptr1 back up (the old ptr1 was on the other ZP)
 	lda	switch_proc_ptr
@@ -118,6 +116,9 @@ _switchin:
         ; _switchout or _dofork
         ldx _udata + U_DATA__U_SP
 	txs
+
+	; ------- Stack now valid again
+
 	pla
 	sta sp+1
 	pla
@@ -142,11 +143,6 @@ switchinfail:
 	; something went wrong and we didn't switch in what we asked for
         jmp _platform_monitor
 
-; Must not put this in ZP ?
-;
-; Move to commondata ??
-;
-fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -202,7 +198,7 @@ _dofork:
 	stx ptr1+1
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y
-	sta $C07A			; switch to child and child stack
+	sta $FE78			; switch to child and child stack
 					; and zero page etc
 	; We are now in the kernel child context
 
@@ -247,10 +243,10 @@ _dofork:
 fork_copy:
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y		; child->p_pag[0]
-	sta $C078		; 8000
+	sta $FE7A		; 8000
 	sta tmp1
 	lda _udata + U_DATA__U_PAGE
-	sta $C07B		; 4000
+	sta $FE79		; 4000
 	sta tmp2
 
 	; Now use that window to copy 48K from 0000-BFFF
@@ -260,17 +256,25 @@ fork_copy:
 	inc tmp1
 	inc tmp2
 	lda tmp1
-	sta $C078
+	sta $FE7A
 	lda tmp2
-	sta $C07B
+	sta $FE79
 	jsr bank2bank		; second 16K
 
 	inc tmp1
 	inc tmp2
 	lda tmp1
-	sta $C078
+	sta $FE7A
 	lda tmp2
-	sta $C07B
+	sta $FE79
+	jsr bank2bank		; third 16K
+
+	inc tmp1
+	inc tmp2
+	lda tmp1
+	sta $FE7A
+	lda tmp2
+	sta $FE79
 	jsr bank2bank		; final block
 
 	jmp map_kernel		; put the kernel mapping back as it should be
@@ -300,15 +304,19 @@ copy1:
 
 _create_init_common:
 	lda #32
-	sta $C07B		;	set the map for 0x4000
+	sta $FE79		;	set the map for 0x4000
 	lda #36
-	sta $C078		;	and 0x8000
+	sta $FE7A		;	and 0x8000
 	jsr bank2bank
 	jmp map_kernel
 ;
 ;	The switch proc pointer cannot live anywhere in common as we switch
-;	common on process switch
+;	common on process switch, and we need it to live about 0x4000
 ;
-	.data
+;	For now BSS will do but we ought to have a proper high space or
+;	something.
+;
+	.bss
 
 switch_proc_ptr: .word 0
+fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry

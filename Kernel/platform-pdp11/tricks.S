@@ -3,7 +3,7 @@
 	.text
 
 	.globl _switchin
-	.globl _switchout
+	.globl _platform_switchout
 	.globl _dofork
 
 _platform_switchout:
@@ -91,9 +91,10 @@ _dofork:
 	add $14,sp
 	tst r0
 	bne forked_up
-	mov 2(sp),-(sp)
-	jsr pc,_newproc
-	add $2,sp
+	mov _udata,-(sp)
+	mov 4(sp),-(sp)
+	jsr pc,_makeproc
+	add $4,sp
 	clr r0
 	clr _runticks
 	rts pc

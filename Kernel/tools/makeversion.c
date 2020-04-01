@@ -27,7 +27,7 @@ struct sysinfoblk sysinfo = {\n\
 	{0, 0, 0},\n\
 	0,\n\
 	0,\n\
-	CPUTYPE,\n\
+	0,\n\
 	{0, 0, 0},\n\
 	{0, 0, 0, 0, 0, 0, 0, 0},\n\
 	/* Quoting to work around cc65 bug */\n\

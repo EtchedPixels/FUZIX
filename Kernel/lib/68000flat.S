@@ -55,12 +55,17 @@ switchin:
 	; recover the task switch state
 	movem.l (sp)+,a0/a2-a4/a6/d2-d7
 	move.l a0,USP
-	clr.w d0
 
         tst.b U_DATA__U_ININTERRUPT(a5)
         bne keepoff ; in ISR, leave interrupts off
-        and #$F8FF,sr
+	; Switch the IRQ mask - don't assume it will be 0, we mask some
+	; interrupts all the time on some platforms.
+	move.w sr,d0
+        and #$F8FF,d0
+	or.w #EI_MASK,d0
+	move.w d0,sr
 keepoff:
+	clr.w d0
         rts ; return with interrupts on
 
 switchinfail:

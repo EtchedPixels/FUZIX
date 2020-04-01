@@ -12,10 +12,8 @@
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
 
-uint8_t acia_present;
-uint8_t ctc_present;
-uint8_t sio_present;
-uint8_t sio1_present;
+uint8_t rtc_shadow;
+uint16_t rtc_port = 0xC0;
 
 void platform_discard(void)
 {
@@ -23,13 +21,7 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	if (ctc_present)
-		__asm halt __endasm;
-	else {
-		irqflags_t irq = di();
-		sync_clock();
-		irqrestore(irq);
-	}
+	__asm halt __endasm;
 }
 
 uint8_t platform_param(unsigned char *p)
@@ -38,23 +30,8 @@ uint8_t platform_param(unsigned char *p)
 	return 0;
 }
 
-static int16_t timerct;
-
-/* Call timer_interrupt at 10Hz */
-static void timer_tick(uint8_t n)
-{
-	timerct += n;
-	while (timerct >= 16) {
-		timer_interrupt();
-		timerct -= 16;
-	}
-}
-
 void platform_interrupt(void)
 {
-	uint8_t n = 255 - CTC_CH3;
 	tty_drain_sio();
-	CTC_CH3 = 0x47;
-	CTC_CH3 = 255;
-	timer_tick(n);
+	timer_interrupt();
 }

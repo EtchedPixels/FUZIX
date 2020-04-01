@@ -26,36 +26,14 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{tbuf5, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
 };
 
-static tcflag_t uart0_mask[4] = {
-	_ISYS,
-	_OSYS,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS,
-	_LSYS
-};
-
-static tcflag_t uart1_mask[4] = {
-	_ISYS,
-	_OSYS,
-	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS
-};
-
-static tcflag_t uart2_mask[4] = {
-	_ISYS,
-	/* FIXME: break */
-	_OSYS,
 	/* FIXME CTS/RTS */
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS,
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	uart0_mask,
-	uart1_mask,
-	uart2_mask,
-	uart1_mask,
-	uart1_mask
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
 };
 
 uint8_t sio_r[] = {
@@ -174,7 +152,7 @@ void tty_pollirq_sio0(void)
 		SIOA_C = 0;		// read register 0
 		ca = SIOA_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[2])) {
+		if (ca & 1) {
 			progress = 1;
 			tty_inproc(2, SIOA_D);
 		}
@@ -196,7 +174,7 @@ void tty_pollirq_sio0(void)
 		}
 		SIOB_C = 0;		// read register 0
 		cb = SIOB_C;
-		if ((cb & 1) && !fullq(&ttyinq[3])) {
+		if (cb & 1) {
 			tty_inproc(3, SIOB_D);
 			progress = 1;
 		}
@@ -232,7 +210,7 @@ void tty_pollirq_sio1(void)
 		SIOC_C = 0;		// read register 0
 		ca = SIOC_C;
 		/* Input pending */
-		if ((ca & 1) && !fullq(&ttyinq[4])) {
+		if (ca & 1) {
 			progress = 1;
 			tty_inproc(4, SIOC_D);
 		}
@@ -254,7 +232,7 @@ void tty_pollirq_sio1(void)
 		}
 		SIOD_C = 0;		// read register 0
 		cb = SIOD_C;
-		if ((cb & 1) && !fullq(&ttyinq[5])) {
+		if (cb & 1) {
 			tty_inproc(5, SIOD_D);
 			progress = 1;
 		}

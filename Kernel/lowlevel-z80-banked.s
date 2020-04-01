@@ -50,6 +50,10 @@
 	.globl _out
 	.globl _in16
 	.globl _out16
+	.globl _sys_cpu
+	.globl _sys_cpu_feat
+	.globl _sys_stubs
+	.globl _set_cpu_type
 
         ; imported symbols
 	.globl _chksigs
@@ -69,8 +73,6 @@
 
 ; these make the code below more readable. sdas allows us only to 
 ; test if an expression is zero or non-zero.
-CPU_CMOS_Z80	    .equ    Z80_TYPE-0
-CPU_NMOS_Z80	    .equ    Z80_TYPE-1
 CPU_Z180	    .equ    Z80_TYPE-2
 
         .area _COMMONMEM
@@ -117,8 +119,8 @@ deliver_signals_2:
 	ld bc, #signal_return
 	push bc		; bc is passed in as the return vector
 
-	ex de, hl
 	ei
+	ld hl,(PROGLOAD+16)
 	jp (hl)		; return to user space. This will then return via
 			; the return path handler passed in BC
 
@@ -152,33 +154,34 @@ signal_return:
 unix_syscall_entry:
         di
         ; store processor state
-        ex af, af'
-        push af
-        ex af, af'
         exx
-        push bc
+	push bc
         push de
         push hl
         exx
         push bc
-        push de
         push ix
         push iy
-	; We don't save AF or HL
+	; We don't save AF / AF' / DE / HL. We do save BC because the 8080 user
+	; space will care about that when we unify them.
 
         ; locate function call arguments on the userspace stack
-        ld hl, #18     ; 16 bytes machine state, plus 2 bytes return address
+        ld hl, #16     ; 12 bytes machine state, plus 2 x 2 bytes return address
         add hl, sp
         ; save system call number
-        ld a, (hl)
         ld (_udata + U_DATA__U_CALLNO), a
         ; advance to syscall arguments
-        inc hl
-        inc hl
         ; copy arguments to common memory
-        ld bc, #8      ; four 16-bit values
         ld de, #_udata + U_DATA__U_ARGN
-        ldir           ; copy
+
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
+	ldi
 
 	ld a, #1
 	ld (_udata + U_DATA__U_INSYS), a
@@ -247,18 +250,13 @@ unix_pop:
         ; restore machine state
         pop iy
         pop ix
-        ; pop hl ;; WRS: skip this!
-        pop de
-        pop bc
+	pop bc
         ; pop af ;; WRS: skip this!
         exx
         pop hl
         pop de
         pop bc
         exx
-        ex af, af'
-        pop af
-        ex af, af'
         ei
         ret ; must immediately follow EI
 
@@ -552,6 +550,8 @@ intret2:di
 	cp (hl)
 	jr nz, not_running
 	ld (hl), #P_READY
+	inc hl
+	set PFL_BATCH,(hl)
 not_running:
 	call _platform_switchout
 	;
@@ -682,7 +682,6 @@ _out16:
 	pop de	; data
 	push de
 	push bc
-	push hl
 	push iy
 	out (c),e
 	jp (hl)
@@ -733,7 +732,6 @@ ___hard_irqrestore:
 	.area _COMMONMEM
 
 	.globl ___sdcc_enter_ix
-	.globl ___sdcc_enter_ix_n
 
 ___sdcc_enter_ix:
 	pop hl		; return address
@@ -741,23 +739,6 @@ ___sdcc_enter_ix:
 	ld ix, #0
 	add ix, sp	; set ix to the stack frame
 	jp (hl)		; and return
-
-;
-; Not used unless experimentally patched sdcc
-;
-___sdcc_enter_ix_n:
-	pop hl		; return address
-	push ix		; save frame pointer
-	ld ix, #0
-	add ix, sp	; frame pointer
-	ld e, (hl)	; size byte
-	ld d, #0xFF	; always minus something..
-	inc hl
-	ex de, hl
-	add hl, sp
-	ld sp, hl
-	push de
-	ret
 
 ;
 ;	This must be in common in banked builds
@@ -1347,3 +1328,41 @@ memmove_up:
 	pop	hl
 	ret
 
+	.area _CONST
+
+_sys_stubs:
+	jp unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
+	.area _DATA
+
+_sys_cpu:
+	.db 0
+_sys_cpu_feat:
+	.db 0
+
+	.area _DISCARD
+
+_set_cpu_type:
+	ld h,#2		; Assume Z80
+	xor a
+	dec a
+	daa
+	jr c,is_z80
+	ld h,#6		; Nope Z180
+is_z80:
+	ld l,#1		; 8080 family
+	ld (_sys_cpu),hl	; Write cpu and cpu feat
+	ret

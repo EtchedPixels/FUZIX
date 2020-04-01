@@ -7,8 +7,9 @@
 
 .define bankfork
 
+! Called with interrupts off
+
 bankfork:
-	di			! This nasty hack requires we really block
 	sta patch1+1		! interrupts. Might be good to go to a cleaner
 	mov a,c			! approach on a faster 8085 ?
 	sta patch2+1
@@ -41,7 +42,6 @@ copy_stack:
 copy_done:
 	lxi h,0
 	sphl
-	ei
 	ret
 
 copier:
@@ -77,7 +77,7 @@ patch3:
 !	We halt at somewhere around xx05-xx00 so we have to tidy up by hand
 !	or accept an underrun. We go the overlap approach on the grounds
 !	it's cheap and our main overcopy is at most 5 bytes in common,
-!	whlist the bank to bank overcopy is harmless and small
+!	whilst the bank to bank overcopy is harmless and small
 !
 !
 	mvi a,1

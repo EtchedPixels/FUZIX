@@ -3,7 +3,8 @@
 -b _CODE=0x0100
 -b _CODE1=0x4000
 -b _CODE2=0x4000
--b _VECTORS=0xF000
+-b _VECTORS=0xFF00
+-b _COMMONMEM=0xF000
 -b _DISCARD=0xC300
 -l z80
 platform-rc2014/crt0.rel
@@ -37,10 +38,11 @@ mm.rel
 swap.rel
 bank16k.rel
 tty.rel
+vt.rel
+font6x8.rel
 devsys.rel
 devinput.rel
 usermem.rel
-usermem_std-z80-banked.rel
 platform-rc2014/ppide_rbc.rel
 platform-rc2014/discard.rel
 platform-rc2014/devtty.rel
@@ -48,10 +50,24 @@ platform-rc2014/mbr.rel
 platform-rc2014/blkdev.rel
 platform-rc2014/devide.rel
 platform-rc2014/devide_discard.rel
+platform-rc2014/devsd.rel
+platform-rc2014/devsd_discard.rel
+platform-rc2014/sd.rel
+platform-rc2014/z80softsd.rel
+platform-rc2014/z80softspi.rel
 platform-rc2014/monitor.rel
+platform-rc2014/devgpio.rel
 platform-rc2014/devinput.rel
 platform-rc2014/ds1302.rel
 platform-rc2014/ds1302_discard.rel
-platform-rc2014/ds1302_rc2014-banked.rel
+platform-rc2014/ds1302_rc2014.rel
 platform-rc2014/net_native.rel
+platform-rc2014/z80dma.rel
+platform-rc2014/ide.rel
+platform-rc2014/usermem.rel
+platform-rc2014/zxkey.rel
+platform-rc2014/zxkeyboard.rel
+platform-rc2014/vdp1.rel
+platform-rc2014/ps2kbd.rel
+platform-rc2014/ps2bitbang-z80.rel
 -e

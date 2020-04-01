@@ -140,7 +140,7 @@ down_0:
 	    add hl, de		; relative to our position
 	    out (c), l
 	    out (c), h
-	    ld b, #0x28
+	    ld b, #40
 	    ld hl, #scrollbuf
 	    dec c
 down_1:
@@ -180,7 +180,7 @@ up_0:
 	    out (c), h
 	    dec c
 	    ld hl, #scrollbuf
-	    ld b, #0x40
+	    ld b, #40
 up_1:
 	    outi
 	    jp nz,up_1
@@ -271,6 +271,8 @@ cursor_on:
 	    out (c), l			; address
 	    out (c), h			; address
 	    dec c
+	    inc hl			; kill clocks
+	    dec hl			; to be sure the char is readable
 	    in a, (c)			; character
 	    ld (cursorpeek), a		; save it away
 	    set 6, h			; make it a write command

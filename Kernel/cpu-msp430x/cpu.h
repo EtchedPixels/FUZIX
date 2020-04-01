@@ -1,6 +1,3 @@
-#include <stddef.h>
-#include <stdint.h>
-
 /* The MSP430X has 20-bit registers. Yes, really. It defines size_t
  * to be one of those. Use that rather than uint32_t because it's
  * way more efficient, but 20-bit pointers are still stored in memory
@@ -114,12 +111,9 @@ typedef union {            /* this structure is endian dependent */
 #define cpu_to_le32(x)  (x)
 #define le32_to_cpu(x)  (x)
 
-/* jmp over the Fuzix header. Will need updating if the header size changes */
-#define EMAGIC   0x08
-#define EMAGIC_2 0x3c
-
 #define no_cache_udata()
 
-#define CPUTYPE	CPUTYPE_MSP340X
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
+
+#define __fastcall

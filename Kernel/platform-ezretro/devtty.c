@@ -20,16 +20,9 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
 };
 
 /* We have no actual controls on the virtual ports */
-static tcflag_t port_mask[4] = {
-	_ISYS,
-	_OSYS,
-	_CSYS,
-	_LSYS
-};
-
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	port_mask,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+        _CSYS
 };
 
 static uint8_t ttypoll;
@@ -59,8 +52,6 @@ void tty_putc(uint8_t minor, unsigned char c)
     used(minor);
     used(c);
 
-    /* FIXME: If compiled for z180 or ez80 then __sfr __at xx will
-       generate in0 and out0 instructions */
     while (!(ttystat & 0x20));
     ttydatap = c;
 }

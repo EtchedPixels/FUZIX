@@ -8,22 +8,26 @@
 
 .sect .text
 
+.define __text		! We will need this for the syscall changes
+			! to get at the stubs
 __text:
+		.data2 0x80A8	! Fuzix executable
+		.data1 1	! 8080 series
+		.data1 0	! No additional features
+		.data1 1	! Base 0x100
+		.data1 0	! No hints
 
-start:		jmp start2
-		.ascii 'FZX1'
-
-!
-!	Borrowed idea from UMZIX - put the info in known places then
-!	we can write "size" tools
-!
-		.data1 1			! page to load at
-		.data2 0			! chmem ("0 - 'all'")
 		! These three are set properly by binman
 		.data2 0			! code
 		.data2 0			! data
 		.data2 0			! bss size
-		.data2 __sighandler		! signal handler on 8080
+
+		.data1 18			! Run 18 bytes in
+		.data1 0			! No size hint
+		.data1 0			! No stack hint
+		.data1 0			! No ZP on 8080
+
+		.data2 __sighandler		! signal handler vector
 
 start2:
 !

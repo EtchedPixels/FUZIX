@@ -12,17 +12,9 @@ struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
 };
 
-static tcflag_t console_mask[4] = {
-	_ISYS,
-	_OSYS,
-	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
-	_LSYS
-};
-
-/* TODO: stty support for  the Z180 ports */
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
-	console_mask,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS
 };
 
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)

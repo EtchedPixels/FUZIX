@@ -6,8 +6,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Single tasking */
-#undef CONFIG_SINGLETASK
 
 /* Select a banked memory set up */
 #define CONFIG_BANK_FIXED
@@ -30,7 +28,7 @@
  *	Definitions for swapping.
  */
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x40 	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
@@ -80,6 +78,11 @@ extern unsigned int swap_dev;
    where it lacks one). This is not usually needed but for platforms it is also
    see platform-sbcv2/main.c on what is needed */
 #define CONFIG_NO_CLOCK
+/* Set how often we actually poll this RTC in ticks - 1 means always. On the
+   SBCv2 it's slow so don't sync often. If we have no timer tick then we will
+   read the RTC regularly as needed - and it'll suck accordingly regardless
+   of this setting */
+#define CONFIG_RTC_INTERVAL	100
 /*
  * How fast does the clock tick (if present), or how many times a second do
  * we simulate if not. For a machine without video 10 is a good number. If

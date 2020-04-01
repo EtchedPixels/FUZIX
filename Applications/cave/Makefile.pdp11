@@ -1,0 +1,39 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../Library/include -I../../Library/include/pdp11
+LINKER_OPT = -L../../Library/libs -ltermcappdp11 -lcpdp11 -T../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../Library/elf2flt.ld
+CRT0 = ../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+
+SRC = advent.c adventdb.c database.c english.c itverb.c lib.c saveadv.c \
+      turn.c verb.c
+
+
+OBJ = $(SRC:.c=.o)
+
+.SUFFIXES: .c .o
+
+all: advent advent.db
+
+advent.db: advgen
+	./advgen -x > advent.db
+
+advgen: advgen.c
+	cc advgen.c -o ./advgen
+	
+.c.o:
+	$(CC) $(CFLAGS) $(CCOPTS) -c $<
+
+advent: $(CRT0) $(OBJ)
+	$(LINKER) -o $@.bin $^ $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+clean:
+	rm -f advent advent.db advgen *.rel *.asm *.lst core *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.o

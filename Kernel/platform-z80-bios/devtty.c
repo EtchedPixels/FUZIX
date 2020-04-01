@@ -18,7 +18,7 @@
 
 static uint8_t sleeping;
 
-tcflag_t *termios_mask[NUM_DEV_TTY + 1];
+tcflag_t termios_mask[NUM_DEV_TTY + 1];
 
 
 /*

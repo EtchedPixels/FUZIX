@@ -1,3 +1,12 @@
+- Debug reboot
+- Test and adjust 16x50
+- QUART CTS/RTS
+- 82C54 ?
+- TMS9918A - stop console flipping when in gfx mode
+IP - PS2 driver
+- Sound
+
+
 This is Fuzix for the RC2014
 
 The starting point was Scott Baker's git tree but this has been seen been
@@ -16,12 +25,36 @@ Supported Hardware
 	management subsystem of the Zeta V2. It replaces the RC2014's
 	default ROM and RAM boards.
 
-	A serial IO board. Either an RC2014 SIO/2 board or a 68B50 ACIA board.
+	A serial IO board. Either an RC2014 SIO/2 board or a later narrow
+	decoding 68B50 adapter (eg 'The Missing Module') set to 0xA0, or
+	a 16550A serial board or QUART
 
-	DS1302 RTC at 0xC0	} You must have one or both
-	RC2014 CTC at 0x88	} CTC strongly recommended (eg SC102)
+	A clock source (CTC, QUART or TMS9918A), or an RTC. A true timer
+	interrupt source is strongly recommended as the RTC cannot provide
+	true timer events and really slows the system down
 
 	Options:
+
+	Z80DMA at 0x04
+
+	ZXKey keyboard interface (boot option "zxkey"). Works with the TMS9918A
+	videocard to provide a classic 'keyboard/screen' interface.
+
+	16x50 cards at 0xC0-0xF8 (the range is scanned).
+
+	DS1302 RTC at 0x0C/0xC0
+
+	RC2014 CTC at 0x88	(eg SC102)
+
+	QUART at 0xBA
+
+	Z80PIO or SC129 at 0x68 providing SD card bitbang
+
+	SC129 at 0x03 as GPIO
+
+	TMS9918A at 0x98/0x99. Must be jumpered as an interrupt source. For
+	version 3 or earlier note the errata and jumper it with a 1N4148
+	diode or similar.
 
 	VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD
 	Terminal will be supported. This will display all output to the serial
@@ -33,11 +66,13 @@ Supported Hardware
 
 	RC2014 Joystick
 
-	PPIDE
+	PPIDE (currently you need to change the config.h and rebuilld for this)
 
 Pending
-	TMS99918A VDP as timer
 	Sound cards (until Fuzix gets proper audio support)
+	PS2 Keyboard/Mouse/Joystick at 0xBB
+	Z80 PIO as GPIO
+	I2C at 0x6C
 
 Unsupported Hardware
 
@@ -46,13 +81,9 @@ Unsupported Hardware
 	SC111 or other Z180 CPU board with linear mapped RAM. See the SC111
 	port instead.
 
-	SC114 bit bang serial
-
-	Z80 PIO cards (really because I've no idea how to present them)
-
 	SC110 CTC/serial (does not appear to be able to chain CTC pairs, as
-	is neeed for IM1 mode). You can run a wire by hand.
-
+	is neeed for IM1 mode). You can run a wire by hand. Can still be used
+	for serial baud control.
 
 
 Things To Note When Modifying
@@ -67,15 +98,10 @@ Things that don't work
 
 Stuff To Do
 
-  * How to represent a Z80 PIO usefully to Fuzix (similar issues with Nascom)
-    both raw and hosting an interface (eg /dev/lp or even floppy)
-
   * Work out how to co-exist better and maybe even modify ROMWBW so we can
     use it
 
   * Swap (it's there but it's most certainly not debugged or wired up fully)
-
-  * TMS9918A support now there is a suitable card
 
   * Sound support once we have the core sound layer
 
@@ -83,13 +109,7 @@ Stuff To Do
     flip buffers. Also raises space issues as we'll need 256 bytes per SIO
     plus the other costs
 
-  * Move the disk buffers into banked space and up the system configuration
-    for big systems
-
-  * Support Z180 timer and serial ports
-
-  * Support TMS9918A as a clock source (disable other ints, check for IRQ
-    to detect ?)
+  * Support Z180 timer and serial ports fully
 
   * Use the ROMWBW data to support Z180 timers
 

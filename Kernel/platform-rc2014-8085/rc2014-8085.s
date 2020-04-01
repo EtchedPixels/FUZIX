@@ -5,10 +5,8 @@
 
 	#include "../kernel-8080.def"
 
-#define CTC_CH0		0x88
-#define CTC_CH1		0x89
-#define CTC_CH2		0x8A
-#define CTC_CH3		0x8B
+#define ACIA_RESET	0x03
+#define ACIA_RTS_LOW	0x96
 
 .sect .common
 
@@ -17,11 +15,9 @@
 
 _platform_monitor:
 _platform_reboot:
-	!
-	!	FIXME: needs work
-	!
-	xra a
-	out 0x78		! Map ROM back in
+	di
+	mvi a,1			! Map ROM back in low
+	out 0xFF
 	rst 0
 
 .define platform_interrupt_all
@@ -35,6 +31,15 @@ platform_interrupt_all:
 .define init_early
 
 init_early:
+	ret
+
+.define _platform_idle
+
+!
+!	We are entirely interrupt driven
+!
+_platform_idle:
+	hlt
 	ret
 
 .define _tms_interrupt
@@ -53,59 +58,12 @@ _tms_interrupt:
 
 init_hardware:
 	! 
+
 	lxi h,512		! 1 * 48K + 16K common
 	shld _ramsize
 	lxi h,432
 	shld _procmem
 
-	! Quieten the CTC
-	mvi a,0x43
-	out CTC_CH0
-	out CTC_CH1
-	out CTC_CH2
-	out CTC_CH3
-	! Probe the CTC
-	mvi a,0x47
-	out CTC_CH2
-	mvi a,0xAA
-	out CTC_CH2
-	in  CTC_CH2
-	cpi 0xA9
-	jnz no_ctc
-
-	mvi a,0x07
-	out CTC_CH2
-	mvi a,0x02
-	out CTC_CH2
-
-	!
-	!	We are now counting down from 2 very fast so we should
-	!	only see those values if we read
-	!
-	mvi b,0
-ctc_check:
-	in CTC_CH2
-	ani 0xFC
-	jnz no_ctc
-	dcr b
-	jnz ctc_check
-	!
-	!	We apparently have a CTC
-	!
-	mvi a,1
-	sta _ctc_present
-	!
-	!	Without major mods we can't use the CTC as a timer. There
-	!	are two reasons for this
-	!	1. We can't clear the interrupt as we have no M1
-	!	2. The speed is tied to CLK which with the 8085 board
-	!	   isn't well defined as the usual 7.3MHz but is twice
-	!	   the CPU clock
-	!
-	!	Instead... we use the TMS9918A. When we get a better clock
-	!	option we can use that
-	!
-no_ctc:
 	lxi h,tmsinitdata
 	mvi d,0x80
 tmsinit:
@@ -120,34 +78,130 @@ tmsinit:
 	inr d
 	jmp tmsinit
 
-	xra a
-	out 0x99		! M3 clear, external VDP input off
-	mvi a,0x80
-	out 0x99		! to register 0
-	mvi a,0x0D		! M1 on M2 clear (so text mode)
-	out 0x99		! 16K, blanked display, interrupt on
-	mvi a,0x81
-	out 0x99		! to register 1
-	xra a
-	out 0x99
-	mvi a,0x82
 tmsdone:
+	lxi h,0x8000
+tmswait:
+	dcx h
+	jk no_tms
+
+	! Now see if the device is actually present
+	in 0x99
+	rlc
+	jnc tmswait
+	!
+	! The read should have cleared the interrupt, and we will run well
+	! before the next one
+	!
+	in 0x99
+	rlc
+	jc tmswait
+	!
+	! TMS9918A is present
+	!
+	mvi a,1
+	sta _tms9918a_present
+	jmp uart_config
+	!
+	!	We still need a clock. Pray we have a 82C54 card at 0x3C
+	!
+	!	Channel 0 is clocked at the CPU clock and can output to a
+	!	user pin (eg for serial clocking)
+	!	Channel 1 is clocked at 1.8432MHz and drives
+	!	Channel 2 out drives the interrupt line
+	!
+	!	All gate lines are pulled high
+	!
+no_tms:
+	mvi a,0x76	! Counter 1, 16bit, mode 3 (square wave), not BCD
+	out 0x3F
+	mvi a,0x90	! Counter 2 , 8bit low, mode 0 (terminal count), not BCD
+	out 0x3F
+	mvi a,0xA6
+	out 0x3D	! Counter 1 LSB		}	Generate a 100Hz
+	mvi a,0x47	!			}	Square Wave into
+	out 0x3D	! Counter 1 MSB		}	Counter 2
+	mvi a,10
+	out 0x3E	! Counter 2 LSB		}	Generate an interrupt
+			!			}	at 10Hz
+
+	!
+	! See what is present. Look for 16550A and 68B50. We know that
+	! it won't be a Z80 and we can't work the 16bit ports on the QUART
+	!
+uart_config:
+	in 0xA0
+	ani 2
+	jz not_acia	! TX ready ought to be high...
+	mvi a,ACIA_RESET
+	out 0xA0
+	in 0xA0
+	ani 2
+	jnz not_acia
+	mvi a,1
+	sta _acia_present
+	mvi a,2
+	out 0xA0
+	mvi a,ACIA_RTS_LOW
+	sta 0xA0
+
+	!
+	! Now check for a 16x50
+	!
+not_acia:
+	in 0xC3		! Save the existing status
+	ani 0x7F
+	mov b,a
+	ori 0x80	! Turn on access to the rate bytes
+	out 0xC3
+	in 0xC1		! Read and save part of the rate
+	mov c,a
+	mvi a,0xAA
+	out 0xC1	! Force it to AA
+	in 0xC1
+	cpi 0xAA	! Check it is valid as AA
+	jnz no_uart
+	mov a,b
+	out 0xC3	! Flip back and should not see it
+	in 0xC1
+	cpi 0xAA
+	jz  no_uart
+	mov a,b
+	ori 0x80
+	out 0xC3
+	mov a,c
+	out 0xC1	! Restore the current baud rate
+	mov a,b
+	out 0xC3
+	mvi a,1
+	sta _uart_present
 	!
 	! Set up the interrupt on the uart
+	!
 	mvi a,0x01
 	out 0xC1	
+	!
+	! Into the C set up code
+	!
+no_uart:
+	mov a,b
+	out 0xC3
 
-	jmp _program_vectors_k
+	call _program_vectors_k
+	!
+	! We can now call C code
+	!
+	call _rctty_init	! Must run before fuzix_main
+	ret
 
 tmsinitdata:
-	.data1 0x00		! M3 clear, external VDP off, rest MBZ
-	.data1 0x0D		! M1 on M2 clear, 16K, blanked, int on
-	.data1 0x02		! Name table at 0x0800
-	.data1 0x00		! Colour table at 0x0000 (unused)
-	.data1 0x00		! Pattern table at 0x0000
-	.data1 0x00		! Sprite attribute at 0x0000 (unused)
-	.data1 0x00		! Sprite pattern at 0x0000 (unused)
-	.data1 0xF4		! White on dark blue
+	.data1 0x00
+	.data1 0xD0
+	.data1 0x00		! text at 0x0000 (room for 4 screens)
+	.data1 0x00
+	.data1 0x02		! patterns at 0x1000
+	.data1 0x00
+	.data1 0x00
+	.data1 0xF1		! white on black
 
 .define _int_disabled
 _int_disabled:
@@ -219,6 +273,7 @@ unexpected:
 unexpect:
 	.ascii '[unexpected irq]'
 	.data1 10,0
+
 !
 !	Memory mapping
 !
@@ -229,8 +284,11 @@ map_kernel:
 map_kernel_di:
 map_buffers:
 	push psw
-	mvi a,32
-	jmp setmap
+	mvi a,3
+	sta curmap
+	out 0xFF
+	pop psw
+	ret
 
 .define map_process
 .define map_process_di
@@ -244,15 +302,8 @@ map_process_di:
 	mov a,m
 map_for_swap:
 map_process_a:
-	push psw
-setmap:
 	sta curmap
-	out 0x78
-	inr a
-	out 0x79
-	inr a
-	out 0x7A
-	pop psw
+	out 0xFF
 	ret
 
 .define map_process_always
@@ -262,7 +313,11 @@ map_process_always:
 map_process_always_di:
 	push psw
 	lda U_DATA__U_PAGE
-	jmp setmap
+setmap:
+	sta curmap
+	out 0xFF
+	pop psw
+	ret
 
 .define map_save_kernel
 
@@ -270,7 +325,7 @@ map_save_kernel:
 	push psw
 	lda curmap
 	sta map_save
-	mvi a,32
+	mvi a,3
 	jmp setmap
 
 .define map_restore
@@ -284,18 +339,18 @@ map_save:
 	.data1 0
 curmap:
 	.data1 1
+
+
 .define outchar
-.define _ttyout
+.define _ttyout_uart
+.define _ttyout_acia
 
 !
-!	16550A UART for now (should probe and pick)
+!	16550A UART for now with outchar debug (FIXME: pick from probe)
 !
-_ttyout:
-	pop h
-	pop d
-	push d
-	push h
-	mov a,e
+_ttyout_uart:
+	ldsi 2
+	ldax d
 outchar:
 	push psw
 outcharw:
@@ -306,15 +361,31 @@ outcharw:
 	out 0xC0
 	ret
 
+_ttyout_acia:
+	ldsi 2
+	ldax d
+	out 0xA1
+	ret
+
 .define _uart_ready
+.define _acia_ready
 
 _uart_ready:
 	in 0xC5
 	ani 0x20
+	mvi d,0
+	mov e,a
+	ret
+
+_acia_ready:
+	in 0xA0
+	ani 2
+	mvi d,0
 	mov e,a
 	ret
 
 .define _uart_poll
+.define _acia_poll
 
 _uart_poll:
 	in 0xC5
@@ -326,132 +397,68 @@ _uart_poll:
 	mov e,a
 	ret
 
+_acia_poll:
+	in 0xA0
+	rar
+	lxi d,-1
+	rz
+	in 0xA1
+	mvi d,0
+	mov e,a
+	ret
 
 .define _uart_setup
 
 _uart_setup:
 	ret
 
+! We just pass this the control byte. It's easier than most devices
+.define _acia_setup
+
+_acia_setup:
+	ldsi 2
+	ldax d
+	out 0xA0
+	ret
+
 !
 !	Add interrupt queued serial once we have the basics debugged
 !
-
-!
-!	CTC small helper. Read the state of counter 3 (ticks elapsed) and
-!	reset it
-!
-.define _ctc_check
-
-_ctc_check:
-	in CTC_CH3
-	mov e,a
-	mvi d,0
-	mvi a,0x47
-	out CTC_CH3
-	mvi a,0xFF
-	out CTC_CH3
-	ret
 	
 !
-!	IDE controller
+!	82C54 helper
 !
-.sect .common
+.define _timer_check
 
-.define _devide_readb
-.define _devide_writeb
-
-_devide_readb:
-	ldsi 2
-	ldax d
-	sta .patch1+1
-.patch1:
-	in 0
-	mov e,a
+_timer_check:
 	mvi d,0
+	mvi a,0xE8		!	count/status are active low !
+	out 0x3F		!	Latch status of counter 2
+	in 0x3E			!	Read status
+	rlc
+	mov e,d			!	Return 0
+	rnc			!	Output is low - so not us
+	mvi a,10
+	out 0x3E		!	Set the count back to 10
+	mov e,a			!	Return nonzero
+	ret			!	Was us
+
+!
+!	Joysticks
+!
+
+.define	_jsin1
+
+_jsin1:
+	mvi d,0
+	in 0x01
+	mov e,a
 	ret
 
-_devide_writeb:
-	ldsi 2
-	ldax d
-	sta .patch2+1
-	ldsi 4
-	ldax d
-.patch2:
-	out 0
+.define _jsin2
+
+_jsin2:
+	mvi d,0
+	in 0x02
+	mov e,a
 	ret
-
-.define _devide_read_data
-.define _devide_write_data
-
-_devide_read_data:
-	push b
-	lxi d,_blk_op
-	lhlx			! Address in HL
-	xchg			! Address in DE, struct back in HL
-	inx h
-	inx h
-	mov a,m			! Mapping type
-	cpi 2
-	jnz not_swapin
-	inx h			! Swap page
-	mov a,m
-	call map_for_swap
-	jmp doread
-not_swapin:
-	ora a
-	jz rd_kernel
-	call map_process_always
-	jmp doread
-rd_kernel:
-	call map_buffers
-doread:
-	mvi b,0
-	xchg
-readloop:
-	in 0x10
-	mov m,a
-	inx h
-	in 0x10
-	mov m,a
-	inx h
-	inr b
-	jnz readloop
-	pop b
-	jmp map_kernel
-
-_devide_write_data:
-	push b
-	lxi d,_blk_op
-	lhlx
-	xchg
-	inx h
-	inx h
-	mov a,m
-	cpi 2
-	jnz not_swapout
-	inx h
-	mov a,m
-	call map_for_swap
-	jmp dowrite
-not_swapout:
-	ora a
-	jz wr_kernel
-	call map_process_always
-	jmp dowrite
-wr_kernel:
-	call map_buffers
-dowrite:
-	mvi b,0
-	xchg
-writeloop:
-	mov a,m
-	out 0x10
-	inx h
-	mov a,m
-	out 0x10
-	inx h
-	inr b
-	jnz writeloop
-	pop b
-	jmp map_kernel
-

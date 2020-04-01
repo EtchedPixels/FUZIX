@@ -1,0 +1,41 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../../Library/include -I../../../Library/include/pdp11
+LINKER_OPT = -L../../../Library/libs -lcpdp11 -T../../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../../Library/elf2flt.ld
+CRT0 = ../../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+
+.SUFFIXES: .c .o
+
+
+SRCS  = ac.c col.c dc.c diff.c makekey.c ptx.c sum.c wall.c
+SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
+SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
+SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
+SRCS += pg.c ed.c sort.c tty.c
+
+OBJS = $(SRCS:.c=.o)
+
+APPS = $(OBJS:.o=)
+
+all: $(APPS) size.report
+
+$(APPS): %: %.o
+	$(LINKER) $(CRT0) $< -o $@.bin $(LINKER_OPT)
+	$(AOUT2FUZIX) $@.bin $@
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+
+rmbak:
+	rm -f *~ core

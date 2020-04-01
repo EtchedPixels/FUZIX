@@ -3,7 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <tty.h>
-#include <config.h>
 
 #define BAD_ROOT_DEV 0xFFFF
 
@@ -21,7 +20,7 @@ static uint8_t ro = 1;
 static const struct termios ttydflt = {
 	BRKINT | ICRNL,
 	OPOST | ONLCR,
-	CS8 | TTY_INIT_BAUD | CREAD | HUPCL | CLOCAL,
+	CS8 | TTY_INIT_BAUD | CREAD | CLOCAL,
 	ISIG | ICANON | ECHO | ECHOE | ECHOK | IEXTEN,
 	{CTRL('D'), 0, CTRL('H'), CTRL('C'),
 	 CTRL('U'), CTRL('\\'), CTRL('Q'), CTRL('S'),
@@ -287,8 +286,8 @@ uint16_t get_root_dev(void)
 
 	if (cmdline && *cmdline){
 		rd = bootdevice(cmdline);
-                cmdline=NULL;                   /* ignore cmdline if get_root_dev() is called again */
         }
+        cmdline = NULL;                   /* ignore cmdline if get_root_dev() is called again */
 
 	while(rd == BAD_ROOT_DEV){
 		kputs("bootdev: ");
@@ -299,11 +298,26 @@ uint16_t get_root_dev(void)
 		udata.u_done = 0;
 
 		cdread(TTYDEV, O_RDONLY);	/* read root filesystem name from tty */
+		bootline[udata.u_done] = 0;
 		rd = bootdevice(bootline);
 	}
 
 	return rd;
 }
+
+void set_boot_line(const char *p)
+{
+	/* This is a little bit ugly but we want it in discard. Override any
+	   command line if the user already hit a key */
+	/* Give the user bit of time by calling pause(10) */
+	udata.u_argn = 10;
+	_pause();
+	if (!tty_pending(TTYDEV)) {
+		memcpy(bootline, p, 63);
+		cmdline = bootline;
+	}
+}
+
 #else
 
 static uint8_t first = 1;
@@ -340,8 +354,12 @@ void fuzix_main(void)
 			"Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
 			"Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
 			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
-			"Copyright (c) 2014-2019 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
+			"Copyright (c) 2014-2020 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
 			sysinfo.uname);
+
+	set_cpu_type();
+	sysinfo.cpu[0] = sys_cpu_feat;
+	sysinfo.cputype = sys_cpu;
 	platform_copyright();
 #ifndef SWAPDEV
 #ifdef PROC_SIZE

@@ -27,6 +27,11 @@
 	.globl _bufpool
 	.globl _int_disabled
 
+	.globl _qread
+	.globl _qwrite
+
+	.globl _code1_end
+
         ; imported symbols
         .globl _ramsize
         .globl _procmem
@@ -47,6 +52,9 @@
 	; exported debugging tools
 	.globl outchar
 	.globl inchar
+
+	.globl s__CODE1
+	.globl l__CODE1
 
         .include "kernel.def"
         .include "../kernel-z80.def"
@@ -73,8 +81,8 @@ SIOC_D		.EQU	SIOC_C+1
 SIOD_C		.EQU	SIOC_C+2
 SIOD_D		.EQU	SIOC_C+3
 
-ACIA_C          .EQU     0x80
-ACIA_D          .EQU     0x81
+ACIA_C          .EQU     0xA0
+ACIA_D          .EQU     0xA1
 ACIA_RESET      .EQU     0x03
 ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
 ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
@@ -113,6 +121,29 @@ init_hardware:
 	; up but that is ok as we will port them back in the ACIA probe
 	;
 
+	;
+	;	Look for an ACIA
+	;
+	in a,(ACIA_C)			; TX ready should be set by now
+	bit 1,a
+	jr z, not_acia
+	ld a,#ACIA_RESET
+	out (ACIA_C),a
+	; TX should now have gone
+	in a,(ACIA_C)
+	bit 1,a
+	jr nz, not_acia
+	;
+	;	Set up the ACIA
+	;
+	ld a,#2
+	out (ACIA_C),a
+        ld a, #ACIA_RTS_LOW_A
+        out (ACIA_C),a         		; Initialise ACIA
+	ld a,#1
+	ld (_acia_present),a
+
+not_acia:
 	xor a
 	ld c,#SIOA_C
 	out (c),a			; RR0
@@ -122,7 +153,7 @@ init_hardware:
 	in a,(c)
 	cp b				; Same from both reads - not an SIO
 
-	jr z, try_acia
+	jp z, serial_up
 
 	; Repeat the check on SIO B
 
@@ -135,33 +166,33 @@ init_hardware:
 	in a,(c)
 	cp b				; Same from both reads - not an SIO
 
-	jr nz, is_sio
+	jp z, serial_up
 
-try_acia:
-	;
-	;	Look for an ACIA
-	;
-	ld a,#ACIA_RESET
-	out (ACIA_C),a
-	; TX should now have gone
-	in a,(ACIA_C)
-	bit 1,a
-	jr z, not_acia_either
-	;	Set up the ACIA
+	; Now sanity check the vector register
 
-        ld a, #ACIA_RTS_LOW_A
-        out (ACIA_C),a         		; Initialise ACIA
-	ld a,#1
-	ld (_acia_present),a
-	jp serial_up
+	ld a,#2
+	out (c),a
+	ld a,#0xA0
+	out (c),a
+	ld a,#2
+	out (c),a
+	in a,(c)
+	and #0xF0
+	cp #0xA0
+	jp nz, serial_up
 
-	;
-	; Doomed I say .... doomed, we're all doomed
-	;
-	; At least until RC2014 grows a nice keyboard/display card!
-	;
-not_acia_either:
-	jp serial_up
+	ld a,#2
+	out (c),a
+	ld a,#0x50
+	out (c),a
+	ld a,#2
+	out (c),a
+	in a,(c)
+	and #0xF0
+	cp #0x50
+	jr nz, serial_up
+
+
 ;
 ;	We have an SIO so do the required SIO hdance
 ;
@@ -272,9 +303,13 @@ serial_up:
 	ld a,#0xAA			; Set a count
 	out (CTC_CH2),a
 	in a,(CTC_CH2)
-	cp #0xA9			; Should be one less
+
+	cp #0xAA
+	jr z, ctc_maybe
+	cp #0xA9			; Could be one less
 	jr nz, no_ctc
 
+ctc_maybe:
 	ld a,#0x07
 	out (CTC_CH2),a
 	ld a,#2
@@ -347,6 +382,39 @@ sio_setup:
 	.byte 0xE1
 	.byte 0x05
 	.byte RTS_LOW
+
+;
+;	TTY queues. We keep them in CODE1 so this is as simple as
+;	letting the bank logic do the natural thing. As these helpers and
+;	tty are in bank 1 it won't even cause us any grief. Common addresses
+;	and data addresses also continue to work so we don't need magic for
+;	the devinput queue.
+;
+
+	.area _CODE1
+_qread:
+	ld l,(hl)
+	ret
+_qwrite:
+	ld hl,#4
+	add hl,sp
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	ld a,(hl)
+	ld (de),a
+	ret
+
+;
+;	Return where CODE1 ends. Tricky to do in C as the linker symbols
+;	have no leading underscore.
+;
+_code1_end:
+	ld hl,#s__CODE1
+	ld de,#l__CODE1
+	add hl,de
+	ret
 
 ;=========================================================================
 ; Kernel code
@@ -525,7 +593,7 @@ map_save_kernel:
 
 ;=========================================================================
 ; map_for_swap - map a page into a bank for swap I/O
-; Inputs: none
+; Inputs: A = page
 ; Outputs: none
 ;
 ; The caller will later map_kernel to restore normality
@@ -712,6 +780,12 @@ _sio2_otir:
 ;=========================================================================
 ; Basic console I/O
 ;=========================================================================
+
+;	We need acia_present in common space because we might call these
+;	helpers from common code
+
+_acia_present:
+	.byte 0
 
 ;=========================================================================
 ; outchar - Wait for UART TX idle, then print the char in A

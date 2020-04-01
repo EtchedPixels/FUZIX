@@ -169,7 +169,7 @@ extern int shutdown(int fd, int how);
 extern int _getdirent(int fd, void *buf, int len);
 extern int _stat(const char *path, struct _uzistat *s);
 extern int _fstat(int fd, struct _uzistat *s);
-extern int _getfsys(uint16_t dev, struct _uzifilesys *fs);
+extern int _statfs(const char *path, uint8_t *fs);
 extern int _time(__ktime_t *t, uint16_t clock);
 extern int _stime(const __ktime_t *t, uint16_t clock);
 extern int _times(struct tms *t);

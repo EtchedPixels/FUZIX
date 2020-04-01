@@ -28,12 +28,6 @@ extern void *  memcpy(void *, const void *, size_t);
 extern void *  memset(void *, int, size_t);
 extern size_t  strlen(const char *);
 
-#define EMAGIC    0x4C    /* Header of executable (JMP) */
-#define EMAGIC_2  0x38	  /* SEC BCS foo */
-/* We use SEC BCS not CLC BCC because CLC is 0x18 which is the Z80 JR header
-   so the two would be identical - not good! */
-
-
 /* High byte is saved, low byte is a mystery so take worst case. Also allow
    a bit less as C stack is not return stack */
 #define brk_limit() ((((uint16_t)udata.u_syscall_sp) | 0xFF) - 384)
@@ -96,6 +90,7 @@ static inline uint8_t inb(uint16_t port)
 	return value;
 }
 
-#define CPUTYPE	CPUTYPE_8086
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
+
+#define __fastcall

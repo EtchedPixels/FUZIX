@@ -48,3 +48,20 @@ MPGSEL_3	.equ	0x7B	; Bank_3 page select register (W/O)
 MPGENA		.equ	0x7C	; memory paging enable register, bit 0 (W/O)
 
 NBUFS		.equ	5
+
+
+DMAPORT		.equ	0x04	; Z80DMA
+
+
+;
+;	SPI uses the top bit
+;
+
+.macro	ROTATE
+	rla
+.endm
+
+.macro LOADFIRST
+	in d,(c)
+	rlc d
+.endm

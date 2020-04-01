@@ -6,10 +6,10 @@
 		.globl _exit
 		.globl _environ
 		.globl ___argv
-		.globl _start
+		.globl __start
 
 
-_start:		br	_start2
+__start:	br	__start2
 		.byte	'F'
 		.byte	'Z'
 		.byte	'X'
@@ -20,7 +20,7 @@ _start:		br	_start2
 		.word	_etext		/* Patched to code size */
 		.word	_edata		/* Patched to data size */
 		.word	_ebss		/* Patched to BSS size */
-_start2:
+__start2:
 		jsr	pc,___stdio_init_vars
 		mov	sp,r0
 		mov	r0,___argv
@@ -28,7 +28,7 @@ _start2:
 		inc	r0
 		mov	r0,_environ
 		jsr	pc,_main
-		move	r0,-(sp)
+		mov	r0,-(sp)
 		jsr	pc,_exit
 
 		.data

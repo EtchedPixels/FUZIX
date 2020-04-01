@@ -9,6 +9,7 @@ f 0755 /usr/bin/accton        accton
 ##f 0755 /usr/bin/ac            ac
 ##f 0755 /usr/bin/at            at
 f 0755 /usr/bin/atrun         atrun
+f 0755 /usr/bin/clear		clear
 ##f 0755 /usr/bin/col           col
 f 0755 /usr/bin/comm          comm
 f 0755 /usr/bin/cron          cron

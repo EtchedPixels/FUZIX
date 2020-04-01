@@ -1,0 +1,47 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = pdp11-aout-ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I../../../../Library/include -I../../../../Library/include/pdp11
+LINKER_OPT = --no-relax -L../../../../Library/libs -lcpdp11 -T../../../../Library/pdp11.ld
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc 
+#-T ../../../../Library/elf2flt.ld
+CRT0 = ../../../../Library/libs/crt0_pdp11.o
+CRT0NS = ../../../../Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+
+.SUFFIXES: .c .o
+
+
+CFLAGS += -DTARGET_Z80
+
+SRCS  = as0.c as1.c as2.c as3.c as4.c as6.c
+
+INCS  = as.h obj.h
+
+OBJS = $(SRCS:.c=.o)
+
+all: as nm
+
+$(OBJS): $(INCS)
+
+$(OBJS): %.o : %.c
+	$(CC) -c $(CFLAGS) $(COPT) $<
+
+as: $(OBJS) $(CRT0)
+	$(LINKER) -o $@.bin $^ $(LINKER_OPT) 
+	$(AOUT2FUZIX) $@.bin $@
+
+nm.c: obj.h
+
+nm: nm.o $(CRT0)
+	$(LINKER) -o $@.bin $^ $(LINKER_OPT) 
+	$(AOUT2FUZIX) $@.bin $@
+
+clean:
+	rm -f $(OBJS) as $(SRCS:.c=) core *~ *.o
+
+rmbak:
+	rm -f *~ core

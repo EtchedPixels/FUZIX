@@ -23,7 +23,7 @@
 #define PROC_SIZE   61	  /* Memory needed per process (inc udata) */
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern unsigned int swap_dev;
+extern uint16_t swap_dev;
 #define SWAP_SIZE   0x7A 	/* 61K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xF000	/* Swap out program */
@@ -56,6 +56,11 @@ extern unsigned int swap_dev;
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_NO_CLOCK
+/* Set how often we actually poll this RTC in ticks - 1 means always. On the
+   SC108 it's slow so don't sync often. If we have no timer tick then we will
+   read the RTC regularly as needed - and it'll suck accordingly regardless
+   of this setting */
+#define CONFIG_RTC_INTERVAL	100
 
 /* IDE/CF support */
 #define CONFIG_IDE

@@ -54,6 +54,8 @@ static uint8_t update_keyboard(void) __naked
 	 *	0 if nothing changed. That allows us to avoid the main tty
 	 *	processing on most interrupt events which saves us a lot of
 	 *	clocks.
+	 *
+	 *	FIXME: optimise out use of e in favour of rrc b c flag clear
 	 */
 	__asm
 		ld hl,#_keybuf
