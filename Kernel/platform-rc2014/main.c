@@ -165,5 +165,6 @@ int strlen(const char *p)
 
 void do_beep(void)
 {
-	/* For now */
+	if (ps2kbd_present)
+		ps2kbd_beep();
 }

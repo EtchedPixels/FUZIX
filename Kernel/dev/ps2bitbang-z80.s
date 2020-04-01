@@ -25,6 +25,8 @@
 	.globl _ps2kbd_put
 	.globl _ps2mouse_put
 
+	.globl _ps2kbd_beep
+
 	.globl _kbsave
 	.globl _kbdelay
 	.globl _kbport
@@ -482,6 +484,29 @@ ps2outw1:
 	rra
 	jr nc,ps2outw1		; wait for clock to go back high
 	exx
+	ret
+
+_ps2kbd_beep:
+
+	ld bc,(_kbport)
+	ld b,#0
+	ld de,#150
+
+beeper:
+	ld a,#0xF0
+	out (c),a
+wait1:
+	ex (sp),hl		; These happen an even number of times
+	djnz wait1
+	xor a
+	out (c),a
+wait0:
+	ex (sp),hl
+	djnz wait0
+	dec de
+	ld a,d
+	or e
+	jr nz, beeper
 	ret
 
 	.area _DATA

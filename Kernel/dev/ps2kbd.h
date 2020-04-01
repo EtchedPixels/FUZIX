@@ -10,6 +10,8 @@ extern int ps2mouse_put(uint8_t c) __fastcall;
 extern void ps2kbd_poll(void);
 extern void ps2kbd_conswitch(uint8_t con);
 
+extern void ps2kbd_beep(void);
+
 #define PS2_NOCHAR		-1
 #define PS2_PARITY		-2
 #define PS2_TIMEOUT		-3
