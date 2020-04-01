@@ -388,6 +388,7 @@ void pagemap_init(void)
 				insert_uart(0x98, &tms_uart);
 				n++;
 			} while(n < 4 && nuart <= NUM_DEV_TTY);
+			kputs("Switching to video output.\n");
 		}
 	}
 	/* TODO: mouse init and probe */
