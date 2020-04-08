@@ -25,10 +25,12 @@ uint8_t zxkey_present;
 uint8_t copro_present;
 uint8_t ps2kbd_present;
 uint8_t ps2mouse_present;
+uint8_t sc26c92_present;
 
 uint8_t platform_tick_present;
 
 uint8_t quart_timer;
+uint8_t sc26c92_timer;
 
 /* From ROMWBW */
 uint16_t syscpu;

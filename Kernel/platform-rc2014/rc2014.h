@@ -47,8 +47,10 @@ extern uint8_t zxkey_present;
 extern uint8_t copro_present;
 extern uint8_t ps2kbd_present;
 extern uint8_t ps2mouse_present;
+extern uint8_t sc26c92_present;
 
 extern uint8_t quart_timer;
+extern uint8_t sc26c92_timer;
 
 extern uint16_t probe_z80dma(void);
 
@@ -87,6 +89,7 @@ extern struct uart z180_uart0;
 extern struct uart z180_uart1;
 extern struct uart tms_uart;
 extern struct uart quart_uart;
+extern struct uart sc26c92_uart;
 
 extern uint8_t *init_alloc(uint16_t size);
 extern uint8_t *code1_alloc(uint16_t size);

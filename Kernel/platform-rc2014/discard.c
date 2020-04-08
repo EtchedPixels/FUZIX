@@ -227,6 +227,46 @@ static void quart_clock(void)
 	quart_timer = 1;
 }
 
+__sfr __at 0xA4 sc26c92_acr;
+__sfr __at 0xA6 sc26c92_ctu;
+__sfr __at 0xA7 sc26c92_ctl;
+__sfr __at 0xA5 sc26c92_imr;
+__sfr __at 0xAE sc26c92_start;
+__sfr __at 0xAF sc26c92_stop;
+
+static uint8_t probe_sc26c92(void)
+{
+	volatile uint8_t dummy;
+
+	/* These dumm reads for timer control reply FF */
+	if (sc26c92_start != 0xFF || sc26c92_stop != 0xFF)
+		return 0;
+
+	sc26c92_acr = 0x30;		/* Count using the 7.37MHz clock */
+	dummy = sc26c92_start;		/* Set it running */
+	if (sc26c92_ctl == sc26c92_ctl)	/* Reads should show different */
+		return 0;		/* values */
+	dummy = sc26c92_stop;		/* Stop the clock */
+	if (sc26c92_ctl != sc26c92_ctl)	/* and now same values */
+		return 0;
+	/* Ok looks like an SC26C92  */
+	return 1;
+}
+
+/* Not yet supported: and this will be tricky as we usually want the timer
+   to work around the dumb baud rate rules! */
+static void sc26c92_clock(void)
+{
+	volatile uint8_t dummy;
+	/* FIXME: need to share ACR nicely with serial setup */
+	sc26c92_acr = 0x30;		/* Counter */
+	sc26c92_ctl = 46080 & 0xFF;
+	sc26c92_ctu = 46080 >> 8;
+	dummy = sc26c92_start;
+	sc26c92_imr = 0x32;		/* Timer and both rx/tx */
+	sc26c92_timer = 1;
+}
+
 void init_hardware_c(void)
 {
 #ifdef CONFIG_VFD_TERM
@@ -261,23 +301,34 @@ void init_hardware_c(void)
 	}
 	if (acia_present)
 		register_uart(0xA0, &acia_uart);
+
+	/* TODO: sc26c92 and 16x50 as boot probes */
 }
 
 __sfr __at 0xBC copro_ack;
-__sfr __banked __at 0xFFBC copro_boot;
+__sfr __banked __at 0xFFBC copro_boot;	/* INT, NMI reset high */
+__sfr __banked __at 0xBC copro_reset;	/* reset low */
 
 static uint8_t probe_copro(void)
 {
 	uint8_t i = 0;
 	uint8_t c;
 
+	copro_reset = 0x00;		/* Force a reset */
+	while(i < 255)
+		i++;
+
 	copro_boot = 0x00;
+
+	i = 0;
 	while(i < 255 && copro_ack != 0xAA) {
 		i++;
 	}
 	if (i == 255)
 		return 0;
+
 	copro_boot = 0xFF;
+	i = 0;
 	while(i < 255 && copro_ack == 0xAA) {
 		i++;
 	}
@@ -360,6 +411,15 @@ void pagemap_init(void)
 		kputs("TMS9918A VDP detected at 0x98.\n");
 	}
 
+	if (!acia_present)
+		sc26c92_present = probe_sc26c92();
+
+	if (sc26c92_present) {
+		/* platform_tick_present = 1 */
+		kputs("SC26C92 detected at 0xA0.\n");
+		register_uart(0x00A0, &sc26c92_uart);
+		register_uart(0x00A8, &sc26c92_uart);
+	}
 
 	dma_present = !probe_z80dma();
 	if (dma_present)
@@ -384,11 +444,11 @@ void pagemap_init(void)
 			/* Add the consoles */
 			uint8_t n = 0;
 			shadowcon = 0;
+			kputs("Switching to video output.\n");
 			do {
 				insert_uart(0x98, &tms_uart);
 				n++;
 			} while(n < 4 && nuart <= NUM_DEV_TTY);
-			kputs("Switching to video output.\n");
 		}
 	}
 	/* TODO: mouse init and probe */

@@ -663,6 +663,7 @@ static int log = 0;
 
 static uint8_t quart_intr(uint8_t minor)
 {
+	uint8_t d;
 	/* FIXME: we need to check for OE status and if so issue CMD 0x40 */
 	/* The QUART is really a pair of two port UARTs together */
 	/*
@@ -679,25 +680,25 @@ static uint8_t quart_intr(uint8_t minor)
 	 */
 	uint8_t r = in16(QUARTPORT + QUARTREG(ISR1));
 	if (r & 0x02) {
-		r = in16(QUARTPORT + QUARTREG(RHRA));
-		tty_inproc(minor, r);
+		d = in16(QUARTPORT + QUARTREG(RHRA));
+		tty_inproc(minor, d);
 	}
 	if (r & 0x20) {
-		r = in16(QUARTPORT + QUARTREG(RHRB));
+		d = in16(QUARTPORT + QUARTREG(RHRB));
                 if (minor + 1 <= NUM_DEV_TTY)
-			tty_inproc(minor + 1 , r);
+			tty_inproc(minor + 1 , d);
 	}
 	/* ISR2 is the same for the other half - port C/D and counter 2 */
 	r = in16(QUARTPORT + QUARTREG(ISR2));
 	if (r & 0x02) {
-		r = in16(QUARTPORT + QUARTREG(RHRC));
+		d = in16(QUARTPORT + QUARTREG(RHRC));
                 if (minor + 2 <= NUM_DEV_TTY)
-			tty_inproc(minor + 2 , r);
+			tty_inproc(minor + 2 , d);
 	}
 	if (r & 0x20) {
-		r = in16(QUARTPORT + QUARTREG(RHRD));
+		d = in16(QUARTPORT + QUARTREG(RHRD));
                 if (minor + 3 <= NUM_DEV_TTY)
-			tty_inproc(minor + 3, r);
+			tty_inproc(minor + 3, d);
 	}
 	if (quart_timer && (r & 0x10)) {
 		/* Clear the timer interrupt - in timer mode it keeps
@@ -838,6 +839,79 @@ struct uart quart_uart = {
 	carrier_unwired,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|CRTSCTS|_CSYS,
 	"QUART"
+};
+
+/*
+ *	26C92 UART driver. We use this for a lot more than UART so don't
+ *	touch anything we shouldn't as it may also be driving bit bang SPI SD
+ *	cards.
+ */
+
+static uint8_t sc26c92_intr(uint8_t minor)
+{
+	uint8_t p = ttyport[minor];
+	uint8_t r = in(p + ISR1);
+	if (r & 0x02)
+		tty_inproc(minor, in(p + RHRA));
+	if (r & 0x20)
+		tty_inproc(minor, in(p + RHRB));
+	if (r & 0x10) {
+		in(p + STC1);
+		if (sc26c92_timer)
+			timer_interrupt();
+	}
+	return 2;
+}
+
+static void sc26c92_setup(uint8_t minor)
+{
+	/* TODO */
+	uint8_t p = ttyport[minor] & 0xF0;
+	out(p + CRA, 0xB0);	/* Select MR0 */
+	out(p + MRA, 0x00);	/* Each char interrupts, normal baud rates */
+	out(p + MRA, 0x13);	/* 8N1, character interrupt */
+	out(p + MRA, 0x07);	/* 8N1 */
+	out(p + CSRA, 0xBB);	/* Speed 19200 */
+	out(p + CRA,0x05);	/* Enable RX and TX */
+
+	out(p + CRB, 0xB0);	/* Select MR0 */
+	out(p + MRB, 0x00);
+	out(p + MRB, 0x13);	/* 8N1, character interrupt */
+	out(p + MRB, 0x07);	/* 8N1 */
+	out(p + CSRB, 0xBB);	/* Speed 19200 */
+	out(p + CRB,0x05);	/* Enable RX and TX */
+
+	out(p + IMR1, 0x22);	/* Only RX ints */
+	out(p + ACR1, 0x80);	/* Standard BRG, counter, ip ints off */
+/*?? reset channels ?? */
+}
+
+static uint_fast8_t sc26c92_writeready(uint_fast8_t minor)
+{
+	uint8_t p = ttyport[minor];
+	if (in(p + SRA) & 0x04)
+		return TTY_READY_NOW;
+	return TTY_READY_SOON;
+}
+
+static void sc26c92_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	uint8_t p = ttyport[minor];
+	out(p + THRA, c);
+}
+
+/*
+ *	Very basic SC26C92 driver
+ */
+
+struct uart sc26c92_uart = {
+	sc26c92_intr,
+	sc26c92_writeready,
+	sc26c92_putc,
+	sc26c92_setup,
+	carrier_unwired,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|CRTSCTS|_CSYS,
+	"SC26C92"
 };
 
 /*
