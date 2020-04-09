@@ -46,6 +46,7 @@
 	.globl _ctc_present
 	.globl _sio_present
 	.globl _sio1_present
+	.globl _u16x50_present
 	.globl _z180_present
 	.globl _udata
 
@@ -144,6 +145,37 @@ init_hardware:
 	ld (_acia_present),a
 
 not_acia:
+	; Look for a 16x50 at 0xA0
+	in a,(0xC3)
+	ld e,a
+	or #0x80		; use the DLAB bit to detect
+	ld l,a
+	out (0xC3), a
+	in a,(0xC1)
+	ld d,a			; Remember old speed bits from ROMWBW
+	ld a,#0xAA		; Pick 0xAA as it's a valid pattern for baud
+	out (0xC1), a		; but not for the control register it overlaps
+	in a,(0xC1)
+	cp #0xAA
+	jr nz, not_16x50
+	ld a,e
+	out (0xC3),a
+	in a,(0xC1)
+	cp #0xAA
+	jr z, not_16x50
+	ld a,l
+	out (0xC3),a
+	ld a,d			; put the speed back
+	out (0xC1),a
+	ld a,e
+	out (0xC3),a		; and the other settings
+	ld a,#1
+	ld (_u16x50_present),a
+
+not_16x50:
+	ld a,e
+	out (0xC3),a
+
 	xor a
 	ld c,#SIOA_C
 	out (c),a			; RR0

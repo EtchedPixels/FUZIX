@@ -227,10 +227,14 @@ static void quart_clock(void)
 	quart_timer = 1;
 }
 
+__sfr __at 0xA0 sc26c92_mra;
+__sfr __at 0xA2 sc26c92_cra;
 __sfr __at 0xA4 sc26c92_acr;
 __sfr __at 0xA6 sc26c92_ctu;
 __sfr __at 0xA7 sc26c92_ctl;
 __sfr __at 0xA5 sc26c92_imr;
+__sfr __at 0xA8 sc26c92_mrb;
+__sfr __at 0xAA sc26c92_crb;
 __sfr __at 0xAE sc26c92_start;
 __sfr __at 0xAF sc26c92_stop;
 
@@ -238,7 +242,7 @@ static uint8_t probe_sc26c92(void)
 {
 	volatile uint8_t dummy;
 
-	/* These dumm reads for timer control reply FF */
+	/* These dummy reads for timer control reply FF */
 	if (sc26c92_start != 0xFF || sc26c92_stop != 0xFF)
 		return 0;
 
@@ -250,16 +254,32 @@ static uint8_t probe_sc26c92(void)
 	if (sc26c92_ctl != sc26c92_ctl)	/* and now same values */
 		return 0;
 	/* Ok looks like an SC26C92  */
-	return 1;
+	sc26c92_cra = 0x10;		/* MR1 always */
+	sc26c92_cra = 0xB0;		/* MR0 on a 26C92, X bit control on a 88C681 */
+	sc26c92_mra = 0x00;		/* We write MR1/MR2 or MR0/1... */
+	sc26c92_mra = 0x01;
+	sc26c92_cra = 0x10;		/* MR1 */
+	sc26c92_imr = 0x22;
+	if (sc26c92_mra == 0x00) {
+		/* SC26C92 */
+		sc26c92_crb = 0xB0;	/* Fix up MR0B, MR0A was done in the probe */
+		sc26c92_mrb = 0x00;
+		sc26c92_acr = 0x80;	/* ACR on counter off */
+		return 1;
+	}
+	/* 88C681 */
+	sc26c92_acr = 0x00;
+	return 2;
 }
 
 /* Not yet supported: and this will be tricky as we usually want the timer
-   to work around the dumb baud rate rules! */
+   to work around the dumb baud rate rules. Also need to spot 26c92 v 88c681 */
+
 static void sc26c92_clock(void)
 {
 	volatile uint8_t dummy;
 	/* FIXME: need to share ACR nicely with serial setup */
-	sc26c92_acr = 0x30;		/* Counter */
+	sc26c92_acr = 0xB0;		/* Counter */
 	sc26c92_ctl = 46080 & 0xFF;
 	sc26c92_ctu = 46080 >> 8;
 	dummy = sc26c92_start;
@@ -301,8 +321,13 @@ void init_hardware_c(void)
 	}
 	if (acia_present)
 		register_uart(0xA0, &acia_uart);
-
-	/* TODO: sc26c92 and 16x50 as boot probes */
+	/* Base 16Cx50 or 16C2552 ports */
+	if (u16x50_present) {
+		register_uart(0xA0, &ns16x50_uart);
+		if (probe_16x50(0xA8))
+			register_uart(0xA8, &ns16x50_uart);
+	}
+	/* TODO: sc26c92 as boot probe if added to ROMWBW */
 }
 
 __sfr __at 0xBC copro_ack;
@@ -414,11 +439,17 @@ void pagemap_init(void)
 	if (!acia_present)
 		sc26c92_present = probe_sc26c92();
 
-	if (sc26c92_present) {
+	if (sc26c92_present == 1) {
 		/* platform_tick_present = 1 */
 		kputs("SC26C92 detected at 0xA0.\n");
 		register_uart(0x00A0, &sc26c92_uart);
 		register_uart(0x00A8, &sc26c92_uart);
+	}
+	if (sc26c92_present == 2) {
+		/* platform_tick_present = 1 */
+		kputs("XR88C681 detected at 0xA0.\n");
+		register_uart(0x00A0, &xr88c681_uart);
+		register_uart(0x00A8, &xr88c681_uart);
 	}
 
 	dma_present = !probe_z80dma();

@@ -763,11 +763,11 @@ static void quart_setup(uint8_t minor)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint16_t port = ttyport[minor];
-	uint8_t r;
+	uint8_t r = 0;
 	uint8_t baud = t->c_cflag & CBAUD;
 
 	if (!(t->c_cflag & PARENB))
-		r = 0x08;	/* No parity */
+		r = 0x10;	/* No parity */
 	if (t->c_cflag & PARODD)
 		r |= 0x04;
 	/* 5-8 bits */
@@ -845,6 +845,16 @@ struct uart quart_uart = {
  *	26C92 UART driver. We use this for a lot more than UART so don't
  *	touch anything we shouldn't as it may also be driving bit bang SPI SD
  *	cards.
+ *
+ *	To support the EXAR version we need a different initial set up and
+ *	baud rate process.
+ *
+ *	The big differences are:
+ *	- No MR0 on the 88C681
+ *	- IM2 on 88C681
+ *	- Some commands are different
+ *	- It has useful per channel and per RX/TX BRG configuration bits
+ *	- Less/different FIFO controls
  */
 
 static uint8_t sc26c92_intr(uint8_t minor)
@@ -863,27 +873,96 @@ static uint8_t sc26c92_intr(uint8_t minor)
 	return 2;
 }
 
+/* SC26C92 @7.372MHz */
+static uint8_t sc26c92_baud[16] = {
+	0x99,
+	0xFF,	/* 50 */
+	0xFF,	/* 75 */
+	0xFF,	/* 110 */
+	0xFF,	/* 134.5 */
+	0x00,	/* 150 */
+	0x33,	/* 300 */
+	0x44,	/* 600 */
+	0x55,	/* 1200 */
+	0x66,	/* 2400 */
+	0x88,	/* 4800 */
+	0x99,	/* 9600 */
+	0xBB,	/* 19200 */
+	0xCC,	/* 38400 */
+	0xFF,	/* 57600 */
+	0xFF	/* 115200 */
+};
+
+/* XR88C681 @3.68MHz is like the quart so use that table */
+
+/* For the SC26C92 this is a fairly simple approach just using the best table.
+   We can in theory look for combinations to get high speed or if not using
+   the timer use the timer to get one port on an otherwise unreachable rate.
+   For the Exar parts it's easy we have per channel baud source select */
+
+static void xrsc_setup(uint8_t minor, uint8_t exar)
+{
+	struct termios *t = &ttydata[minor].termios;
+	uint8_t p = ttyport[minor];
+	uint8_t b = p & 0xF0;	/* Base of card */
+	uint8_t baud = t->c_cflag & CBAUD;
+	uint8_t r;
+
+	if (!(t->c_cflag & PARENB))
+		r = 0x10;	/* No parity */
+	if (t->c_cflag & PARODD)
+		r |= 0x04;	/* Odd parity */
+	r |= (t->c_cflag & CSIZE) >> 4;	/* Fill in the size bits */
+	if (t->c_cflag & CRTSCTS)	/* Enable RTS control if CTSRTS in use */
+		r |= 0x80;
+
+	out(p + CRA, 0x10);	/* Select MR1 */
+	out(p + MRA, r);	/* Set up MR1 */
+
+	r = 0;
+	if ((t->c_cflag & CSIZE) == CS5)
+		r = 0;
+	else
+		r = 7;
+	if (t->c_cflag & CRTSCTS)
+		r = 0x10;	/* CTS enables transmitter */
+	if (t->c_cflag & CSTOPB)
+		r |= 0x08;	/* Two stop bits */
+	out(p + MRA, r);	/* Set up MR2 */
+
+	if (exar) {
+		/* Assumes ACR[7] = 0 */
+		r = baudmap[baud];
+		if (r & XBIT) {
+			out(p + CRA, 0x80);
+			out(p + CRA, 0xA0);
+		} else {
+			out(p + CRA, 0x90);
+			out(p + CRA, 0xB0);
+		}
+	} else {
+		/* Baud handling. We for now just use baud 0, ACR 1 */
+		r = sc26c92_baud[baud];
+		/* Ones we cannot do yet */
+		if (r == 0xFF) {
+			t->c_cflag &= ~CBAUD;
+			t->c_cflag |= B9600;
+			r = 0x99;
+		}
+	}
+	out(p + CSRA, r);	/* Speed */
+	out(p + CRA, 0x05);	/* Enable RX and TX */
+
+}
+
 static void sc26c92_setup(uint8_t minor)
 {
-	/* TODO */
-	uint8_t p = ttyport[minor] & 0xF0;
-	out(p + CRA, 0xB0);	/* Select MR0 */
-	out(p + MRA, 0x00);	/* Each char interrupts, normal baud rates */
-	out(p + MRA, 0x13);	/* 8N1, character interrupt */
-	out(p + MRA, 0x07);	/* 8N1 */
-	out(p + CSRA, 0xBB);	/* Speed 19200 */
-	out(p + CRA,0x05);	/* Enable RX and TX */
+	xrsc_setup(minor, 0);
+}
 
-	out(p + CRB, 0xB0);	/* Select MR0 */
-	out(p + MRB, 0x00);
-	out(p + MRB, 0x13);	/* 8N1, character interrupt */
-	out(p + MRB, 0x07);	/* 8N1 */
-	out(p + CSRB, 0xBB);	/* Speed 19200 */
-	out(p + CRB,0x05);	/* Enable RX and TX */
-
-	out(p + IMR1, 0x22);	/* Only RX ints */
-	out(p + ACR1, 0x80);	/* Standard BRG, counter, ip ints off */
-/*?? reset channels ?? */
+static void xr88c681_setup(uint_fast8_t minor)
+{
+	xrsc_setup(minor, 1);
 }
 
 static uint_fast8_t sc26c92_writeready(uint_fast8_t minor)
@@ -901,7 +980,7 @@ static void sc26c92_putc(uint_fast8_t minor, uint_fast8_t c)
 }
 
 /*
- *	Very basic SC26C92 driver
+ *	SC26C92 and XR88C681 driver
  */
 
 struct uart sc26c92_uart = {
@@ -912,6 +991,16 @@ struct uart sc26c92_uart = {
 	carrier_unwired,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|CRTSCTS|_CSYS,
 	"SC26C92"
+};
+
+struct uart xr88c681_uart = {
+	sc26c92_intr,
+	sc26c92_writeready,
+	sc26c92_putc,
+	xr88c681_setup,
+	carrier_unwired,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|CRTSCTS|_CSYS,
+	"XR88C681"
 };
 
 /*
