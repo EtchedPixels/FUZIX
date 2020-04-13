@@ -14,7 +14,7 @@ start:
 		.db 0x00			; 6309 not needed
 		.db __sectionbase_.header__/256	; page to load at
 		.db 0				; no hints
-		.dw __sectionlen_.text__+__sectionlen_.header__	; gives us code size info
+		.dw __sectionbase_.data__-__sectionbase_.header__ ; gives us header + all text segments
 		.dw __sectionlen_.data__	; gives us data size info
 		.dw __sectionlen_.bss__		; bss size info
 		.db 16				; entry relative to start
