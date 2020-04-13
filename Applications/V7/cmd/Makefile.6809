@@ -10,17 +10,18 @@ LINKER_OPT += -L$(LIBGCCDIR) -lgcc
 LINKER_OPT += --script=../../util/$(TARGET).link
 ASM_OPT = -o
 CRT0 = ../../../Library/libs/crt0_6809.o
+CRT0NS = ../../../Library/libs/crt0nostdio_6809.o
 
 .SUFFIXES: .c .o
 
 
-SRCS  = ac.c col.c dc.c diff.c makekey.c ptx.c sum.c wall.c
-SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
-SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
+SRCS  = ac.c      col.c    dc.c      diff.c   ptx.c      sum.c    wall.c
+SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c
+SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c
 SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
-SRCS += pg.c ed.c sort.c tty.c wall.c
+SRCS += pg.c      sort.c   tty.c
 
-SRCSNS = ed.c
+SRCSNS = ed.c makekey.c test.c time.c
 
 SRCSTC = clear.c
 
@@ -36,16 +37,12 @@ APPS_ALL = $(APPS) $(APPSNS) $(APPSTC)
 
 all: $(APPS_ALL) size.report
 
-$(APPS): $(CRT0)
+$(APPS) $(APPSTC): $(CRT0)
+$(APPSNS): $(CRT0NS)
+$(APPSTC): LINKER_OPT += -ltermcap6809
 
-$(APPS): %: %.o
+$(APPS_ALL): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $^
-
-$(APPSNS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) $^
-
-$(APPSTC): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) -ltermcap6809 $^
 
 size.report: $(APPS)
 	ls -l $^ > $@
