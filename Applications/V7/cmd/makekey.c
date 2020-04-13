@@ -7,7 +7,6 @@
  * (a significant part of a second).
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
