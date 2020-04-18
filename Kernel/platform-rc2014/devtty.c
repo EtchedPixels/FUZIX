@@ -700,7 +700,7 @@ static uint8_t quart_intr(uint8_t minor)
                 if (minor + 3 <= NUM_DEV_TTY)
 			tty_inproc(minor + 3, d);
 	}
-	if (quart_timer && (r & 0x10)) {
+	if (timer_source == TIMER_QUART && (r & 0x10)) {
 		/* Clear the timer interrupt - in timer mode it keeps
 		   running so we don't need to reload the timer */
 		in16(QUARTPORT + QUARTREG(STC2));
@@ -867,7 +867,7 @@ static uint8_t sc26c92_intr(uint8_t minor)
 		tty_inproc(minor, in(p + RHRB));
 	if (r & 0x10) {
 		in(p + STC1);
-		if (sc26c92_timer)
+		if (timer_source == TIMER_SC26C92)
 			timer_interrupt();
 	}
 	return 2;

@@ -225,7 +225,7 @@ static void quart_clock(void)
 	/* Timer interrupt also wanted */
 	out16(QUARTREG(IMR2), 0x32);
 	/* Tell the quart driver to do do timer ticks */
-	quart_timer = 1;
+	timer_source = TIMER_QUART;
 }
 
 __sfr __at 0xA0 sc26c92_mra;
@@ -261,7 +261,7 @@ static uint8_t probe_sc26c92(void)
 	sc26c92_mra = 0x01;
 	sc26c92_cra = 0x10;		/* MR1 */
 	sc26c92_imr = 0x22;
-	if (sc26c92_mra == 0x00) {
+	if (sc26c92_mra & 0x01) {
 		/* SC26C92 */
 		sc26c92_crb = 0xB0;	/* Fix up MR0B, MR0A was done in the probe */
 		sc26c92_mrb = 0x00;
@@ -273,19 +273,18 @@ static uint8_t probe_sc26c92(void)
 	return 2;
 }
 
-/* Not yet supported: and this will be tricky as we usually want the timer
-   to work around the dumb baud rate rules. Also need to spot 26c92 v 88c681 */
-
-static void sc26c92_clock(void)
+static void sc26c92_timer(void)
 {
 	volatile uint8_t dummy;
-	/* FIXME: need to share ACR nicely with serial setup */
-	sc26c92_acr = 0xB0;		/* Counter */
+	if (sc26c92_present == 1)		/* SC26C92 */
+		sc26c92_acr = 0xB0;		/* Counter | ACR = 1 */
+	else					/* 88C681 */
+		sc26c92_acr = 0x30;		/* Counter | ACR = 0 */
 	sc26c92_ctl = 46080 & 0xFF;
 	sc26c92_ctu = 46080 >> 8;
 	dummy = sc26c92_start;
 	sc26c92_imr = 0x32;		/* Timer and both rx/tx */
-	sc26c92_timer = 1;
+	timer_source = TIMER_SC26C92;
 }
 
 void init_hardware_c(void)
@@ -298,13 +297,11 @@ void init_hardware_c(void)
 
 	tms9918a_present = probe_tms9918a();
 	if (tms9918a_present) {
-		/* Turn off our CTC interrupts */
-		CTC_CH2 = 0x43;
-		CTC_CH3 = 0x43;
 		shadowcon = 1;
+		timer_source = TIMER_TMS9918A;
 	}
 
-	/* FIXME: When ROMWBW handles 16550A or second SIO, or Z180 as
+	/* FIXME: When ROMWBW handles second SIO, or Z180 as
 	   console we will need to address this better */
 	if (z180_present) {
 		z180_setup(!ctc_present);
@@ -312,6 +309,7 @@ void init_hardware_c(void)
 		register_uart(Z180_IO_BASE + 1, &z180_uart1);
 		rtc_port = 0x0C;
 		rtc_shadow = 0x0C;
+		timer_source = TIMER_Z180;
 	}
 
 	/* Set the right console for kernel messages */
@@ -380,6 +378,9 @@ static uint8_t probe_copro(void)
 	return 1;
 }
 
+/*
+ *	Do the main memory bank and device set up
+ */
 void pagemap_init(void)
 {
 	uint8_t i, m;
@@ -407,19 +408,14 @@ void pagemap_init(void)
 	quart_present = probe_quart();
 	/* Further ports we register at this point */
 	if (quart_present) {
-		platform_tick_present = 1;
 		register_uart(0x00BA, &quart_uart);
 		register_uart(0x40BA, &quart_uart);
 		register_uart(0x80BA, &quart_uart);
 		register_uart(0xC0BA, &quart_uart);
-		/* Turn off our CTC interrupts */
-		CTC_CH2 = 0x43;
-		CTC_CH3 = 0x43;
 		/* If we don't have a TMS9918A then the QUART is the next
 		   best clock choice */
-		if (!tms9918a_present) {
+		if (timer_source == TIMER_NONE)
 			quart_clock();
-		}
 	}
 
 	if (sio1_present) {
@@ -428,12 +424,17 @@ void pagemap_init(void)
 	}
 
 	if (ctc_present) {
-		platform_tick_present = 1;
+		if (timer_source == TIMER_NONE)
+			timer_source = TIMER_CTC;
+		else {
+			/* Turn off our CTC interrupts */
+			CTC_CH2 = 0x43;
+			CTC_CH3 = 0x43;
+		}
 		kputs("Z80 CTC detected at 0x88.\n");
 	}
 
 	if (tms9918a_present) {
-		platform_tick_present = 1;
 		kputs("TMS9918A VDP detected at 0x98.\n");
 	}
 
@@ -441,17 +442,25 @@ void pagemap_init(void)
 		sc26c92_present = probe_sc26c92();
 
 	if (sc26c92_present == 1) {
-		/* platform_tick_present = 1 */
 		kputs("SC26C92 detected at 0xA0.\n");
 		register_uart(0x00A0, &sc26c92_uart);
 		register_uart(0x00A8, &sc26c92_uart);
+		if (timer_source == TIMER_NONE)
+			sc26c92_timer();
 	}
 	if (sc26c92_present == 2) {
-		/* platform_tick_present = 1 */
 		kputs("XR88C681 detected at 0xA0.\n");
 		register_uart(0x00A0, &xr88c681_uart);
 		register_uart(0x00A8, &xr88c681_uart);
+		if (timer_source == TIMER_NONE)
+			sc26c92_timer();
 	}
+
+	/* Complete the timer set up */
+	if (timer_source == TIMER_NONE)
+		kputs("Warning: no timer available.\n");
+	else
+		platform_tick_present = 1;
 
 	dma_present = !probe_z80dma();
 	if (dma_present)
@@ -474,7 +483,7 @@ void pagemap_init(void)
 	/* Port default for the PS/2 card */
 	kbport = 0xBB;
 	/* 150uS in 38 clock loops : set for 8MHz */
-	kbwait = 150;	/* Needs to be about 200us */
+	kbwait = 250;	/* Needs to be about 200us */
 	ps2kbd_present = ps2kbd_init();
 	if (ps2kbd_present) {
 		kputs("PS/2 Keyboard at 0xBB\n");

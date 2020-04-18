@@ -29,9 +29,7 @@ uint8_t sc26c92_present;
 uint8_t u16x50_present;
 
 uint8_t platform_tick_present;
-
-uint8_t quart_timer;
-uint8_t sc26c92_timer;
+uint8_t timer_source = TIMER_NONE;
 
 /* From ROMWBW */
 uint16_t syscpu;
@@ -93,7 +91,7 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	if (ctc_present || z180_present || tms9918a_present)
+	if (timer_source != TIMER_NONE && !ps2kbd_present)
 		__asm halt __endasm;
 	else {
 		irqflags_t irq = di();
@@ -120,13 +118,13 @@ void platform_interrupt(void)
 	   should fastpath them (vector 8 and 9) */
 	uint8_t ti_r = 0;
 
-	if (tms9918a_present)
+	if (timer_source == TIMER_TMS9918A)
 		ti_r = tms9918a_ctrl;
 
 	tty_pollirq();
 
 	/* On the Z180 we use the internal timer */
-	if (z180_present) {
+	if (timer_source == TIMER_Z180) {
 		if (irqvector == 3)	/* Timer 0 */
 			timer_interrupt();
 	/* The TMS9918A is our second best choice as the CTC must be wired
@@ -144,7 +142,7 @@ void platform_interrupt(void)
 			timerct = 0;
 		}
 	/* If not and we have no QUART then pray the CTC works */
-	} else if (ctc_present && !quart_timer ) {
+	} else if (timer_source == TIMER_CTC) {
 		uint8_t n = 255 - CTC_CH3;
 		CTC_CH3 = 0x47;
 		CTC_CH3 = 255;
