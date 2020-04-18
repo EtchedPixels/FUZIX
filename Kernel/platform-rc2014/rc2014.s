@@ -121,7 +121,7 @@ init_hardware:
 	; This could be the ACIA control port. If so we mash the settings
 	; up but that is ok as we will port them back in the ACIA probe
 	;
-
+	; FIXME: ROMWBW order is different ?
 	;
 	;	Look for an ACIA
 	;
@@ -146,29 +146,29 @@ init_hardware:
 
 not_acia:
 	; Look for a 16x50 at 0xA0
-	in a,(0xC3)
+	in a,(0xA3)
 	ld e,a
 	or #0x80		; use the DLAB bit to detect
 	ld l,a
-	out (0xC3), a
-	in a,(0xC1)
+	out (0xA3), a
+	in a,(0xA1)
 	ld d,a			; Remember old speed bits from ROMWBW
 	ld a,#0xAA		; Pick 0xAA as it's a valid pattern for baud
-	out (0xC1), a		; but not for the control register it overlaps
-	in a,(0xC1)
+	out (0xA1), a		; but not for the control register it overlaps
+	in a,(0xA1)
 	cp #0xAA
 	jr nz, not_16x50
 	ld a,e
-	out (0xC3),a
-	in a,(0xC1)
+	out (0xA3),a
+	in a,(0xA1)
 	cp #0xAA
 	jr z, not_16x50
 	ld a,l
-	out (0xC3),a
+	out (0xA3),a
 	ld a,d			; put the speed back
-	out (0xC1),a
+	out (0xA1),a
 	ld a,e
-	out (0xC3),a		; and the other settings
+	out (0xA3),a		; and the other settings
 	ld a,#1
 	ld (_u16x50_present),a
 
@@ -226,7 +226,7 @@ not_16x50:
 
 
 ;
-;	We have an SIO so do the required SIO hdance
+;	We have an SIO so do the required SIO dance
 ;
 is_sio:	ld a,#1
 	ld (_sio_present),a
@@ -265,14 +265,17 @@ is_sio:	ld a,#1
 	in a,(SIOD_C)			; read it back on the second SIO
 	and #0xF0
 	cp #0xF0
+	; Now put SIOB_C vector back to zero so we don't fight
+	; on the bus. Don't touch flags between here and the jr nz
+	ld a,#2
+	out (SIOB_C),a
+	ld a,#0
+	out (SIOB_C),a
 	jr nz, not_mirrored		; it's not a mirror, might not be an SIO
 
 	; Could be chance or a soft boot
+	; Check if the above clear also affected C/D
 
-	ld a,#2
-	out (SIOB_C),a
-	xor a
-	out (SIOB_C),a
 	ld a,#2
 	out (SIOD_C),a
 	in a,(SIOD_C)
@@ -280,6 +283,12 @@ is_sio:	ld a,#1
 	jr z, serial_up			; It's a mirage
 
 not_mirrored:
+
+	ld a,#2
+	out (SIOD_C),a			; Reprogram vector back to zero
+	xor a
+	out (SIOD_C),a
+
 	ld c,#SIOD_C
 
 	xor a
