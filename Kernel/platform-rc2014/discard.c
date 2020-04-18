@@ -65,10 +65,11 @@ static uint8_t probe_tms9918a(void)
 	/* Try turning it on and looking for a vblank */
 	tmsconfig(tmsreset);
 	tmsconfig(tmstext);
+
 	/* Should see the top bit go high */
 	do {
 		v = tms9918a_ctrl & 0x80;
-	} while(ct-- && !(v & 0x80));
+	} while(--ct && !(v & 0x80));
 
 	if (ct == 0)
 		return 0;
@@ -464,10 +465,16 @@ void pagemap_init(void)
 	if (copro_present)
 		kputs("Z80 Co-processor at 0xBC\n");
 
+	/* Normal RC2014 is 8 clocks/us or so. Allow more for faster
+	   processors - we don't do much output bashing anyway. Should be
+	   good to 25MHz */
 	kbsave = 0x00;
-	kbdelay = 0xFF;	/* FIXME: tune for 125uS */
+	kbdelay = 0x0A14;	/* High bits are a djnz delay for 20us
+				   Low a 44us djnz delay */
+	/* Port default for the PS/2 card */
 	kbport = 0xBB;
-	kbwait = 0xFFFF;	/* FIXME: tune */
+	/* 150uS in 38 clock loops : set for 8MHz */
+	kbwait = 150;	/* Needs to be about 200us */
 	ps2kbd_present = ps2kbd_init();
 	if (ps2kbd_present) {
 		kputs("PS/2 Keyboard at 0xBB\n");
