@@ -21,6 +21,7 @@
 	.import outcharhex
 
 	.import _udata
+	.import _use_mvn
 
 	.import pushax
 	.import incsp2
@@ -281,7 +282,38 @@ fork_copy:
 	
 bank2bank:			; copy 16K from the block mapped
 				; at 4000 to the block at 8000
-				; FIXME: interrupts need to be off right now
+				; Interrupts need to be off right now
+				; For 6502 we can FIXME this as we fix fork
+				; and interrupts in the core by fixing the
+				; interrupt save/restore logic
+				; For 65C816 we'd need a 16bit mode IRQ
+				; wrapper which would be scary code
+	lda _use_mvn
+	beq bank2bank_6502
+
+
+	.p816
+
+	clc
+	xce
+	rep #$30
+	; Stack is now insane so good job interrupts are off
+	.a16
+	.i16
+	ldx #$4000
+	ldy #$8000
+	lda #$4000
+	mvn #0,#0		; Bank is irrelevant as A16-A23 are unwired
+	sep #$30
+	.a8
+	.i8
+	sec
+	xce
+	rts
+
+	.p02
+
+bank2bank_6502:
 	lda #$40
 	sta ptr3+1
 	lda #$80
