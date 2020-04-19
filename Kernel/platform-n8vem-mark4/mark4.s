@@ -81,7 +81,5 @@ inchar:
         rlca
         jr nc, inchar
         in0 a, (ASCI_RDR0)
-        ret
-
 platform_interrupt_all:
         ret
