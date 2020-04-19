@@ -5,6 +5,7 @@
 - TMS9918A - stop console flipping when in gfx mode
 IP - PS2 driver
 - Sound
+- Autodetect PPIDE
 
 
 This is Fuzix for the RC2014
