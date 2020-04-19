@@ -290,11 +290,15 @@ static void cpu_ident(void)
 extern uint8_t cpu_identify(void);
 extern uint8_t cpu_bcdtest(void);
 extern uint8_t cpu_rortest(void);
+extern uint8_t cpu_bitop(void);
+extern uint8_t cpu_ce02(void);
+extern uint8_t cpu_huc(void);
+extern uint8_t cpu_740(void);
 
 static uint8_t cpu_vendor;
 static uint8_t cpu_id;
-static const char *vendor_name[] = { "Unknown", "WDC", "Rockwell/WDC" };
-static const char *cpu_name[3] = { "6502", "65C02", "65C816" };
+static const char *vendor_name[] = { "Unknown", "WDC", "Rockwell/WDC", "Ricoh", "Commodore", "Hudson Soft", "Renesas" };
+static const char *cpu_name[] = { "6502", "65C02", "65C816", "2A03", "65CE02", "HuC6820", "740" };
 static const int8_t cpu_step = -1;
 static const int8_t cpu_MHz = 0;
 static const uint8_t cpu_cache = 0;
@@ -317,18 +321,48 @@ static void cpu_ident(void)
             cpu_bugs = "brk jmpff invread rmw";
         /* Check if BCD mode works - 0A v 10 */
         /* 2A03: Just in case anyone ever ports Fuzix to a NES */
-        if (cpu_bcdtest() != 0x10)
+        if (cpu_bcdtest() != 0x10) {
             cpu_bugs = "brk jmpff invread rmw nobcd";
+            cpu_vendor = 3;
+            cpu_id = 3;
+        }
         cpu_flags = "nmos";
         break;
     case 1:
-        /* Q : How to safely check for rockwell bit ops ? */
-        /* Could also check here for HuC6820, Renesas 740 I guess ? */
-        cpu_flags = "bcd cmos";
+        /* Check for a 740 first. This is a weird hybrid 6502 and bits of
+           65C02 plus oddments processor. It's not 65C02 compatible but is
+           6502 compatible */
+        if (cpu_740()) {
+            cpu_flags = "bcd 740";
+            cpu_vendor = 6;
+            cpu_id = 6;
+        } else if (cpu_huc()) {
+            /* HuC 6820 aka PC Engine */
+            cpu_flags = "bcd cmos huc";
+            cpu_vendor = 5;
+        } else if (cpu_bitop()) {
+            if (cpu_ce02()) {
+                /* MOS 65CE02 */
+                cpu_flags = "bcd cmos bitop z";
+                cpu_vendor = 4;
+                cpu_id = 4;
+            } else {
+                /* Rockwell or some WDC 65C02 */
+                cpu_flags = "bcd cmos bitop";
+                cpu_vendor = 2;
+                cpu_id = 6;
+            }
+        } else {
+            /* Non Rockwell/WDC, or WDC 65SC02 */
+            cpu_flags = "bcd cmos";
+        }
         break;
     case 2:
+        /* WDC 65C802/816 */
+        /* CMD actually published a document for this but I've never seen any
+           GS65C816 hardware ? */
         cpu_vendor = 1;
-        cpu_flags = "bcd cmos ai16";
+        cpu_flags = "bcd cmos bitop ai16";
         cpu_psize = 24;
         break;
     }
