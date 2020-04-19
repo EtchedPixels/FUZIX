@@ -470,7 +470,7 @@ typedef struct p_tab {
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
     struct p_tab *p_pptr;      /* Process parent's table entry */
-    uarg_t      p_alarm;        /* Centiseconds until alarm goes off */
+    uarg_t      p_alarm;        /* Deciseconds until alarm goes off */
     uint16_t    p_exitval;      /* Exit value */
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
