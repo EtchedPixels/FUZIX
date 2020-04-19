@@ -76,6 +76,7 @@ kbget:
 	or #0x03		; let clock rise, don't pull data		
 	out (c),a
 	; Most keyboards respond within 150uS
+	; This loop is 38 clocks per non detect
 kbwclock:
 	in a,(c)
 	and #4			; sample clock input
@@ -126,7 +127,7 @@ kbdevenpar:
 	and #0x80	; mask other bits
 	cp h
 	ld h,#0
-	jr z, kbout	; parity was good
+	jr z, kbrok	; parity was good
 	ld hl,#0xFFFE	; Parity was bad
 	jr kbout
 kbdbad:
@@ -135,7 +136,9 @@ kbdbad:
 	; Check stop bits ??
 	ld hl,#0xFFFC		; report -err for wrong start
 	jr kbout
-
+kbrok:
+	call kbdbit		; throw away the stop bit
+	jr kbout
 ;
 ;	Receive a bit. Wait for the clock to go low, sample the data and
 ;	then wait for it to return high. The sampled bit is added to E
@@ -156,7 +159,7 @@ kbdbit:
 	rr e		; rotate into E
 	; Wait for the rising edge
 	; Preserve carry for this loop, our caller needs the carry
-	; from the RL E
+	; from the RR E
 	push af
 kbdbit2:
 	exx
@@ -195,7 +198,7 @@ ps2get:
 ps2wclock:
 	in a,(c)
 	rra
-	jr nc, kbdata
+	jr nc, ps2data
 	djnz ps2wclock
 	; It didn't reply so there was no interest
 	; Jam the clock again so that it can't send until we check
@@ -221,21 +224,21 @@ ps2nextbit:
 	call ps2bit
 	djnz ps2nextbit
 	; E now holds the data, C should be the start bit
-	jr nc, ps2bad
+;	jr nc, ps2bad
 	ld a,e
 	or a
 	ld h,#0x80		; For even parity of the 8bits expect a 1
 	jp pe, ps2evenpar
 	ld h,#0x00
 ps2evenpar:
-	inc b
 	ld l,a		; Save the keycode
+	inc b
 	call ps2bit
 	ld a,e		; get parity bit into A
 	and #0x80	; mask other bits
 	cp h
 	ld h,#0
-	jr z, ps2out	; parity was good
+	jr z, ps2rok	; parity was good
 	ld hl,#0xFFFE
 	jr ps2out
 ps2bad:
@@ -244,7 +247,11 @@ ps2bad:
 	; Check stop bits ??
 	ld hl,#0xFFFC		; report -err for wrong start
 	jr ps2out
-
+ps2rok:
+	call ps2bit	; wait and handle stop. Some mice get rightfully
+			; upset if we pull on clock before the stop bit is
+			; done
+	jr ps2out
 ps2bit:
 	exx
 	dec hl
@@ -253,12 +260,15 @@ ps2bit:
 	jp z,timeout
 	exx
 	in a,(c)
-	rra
+	rra		; waiting for clock to go low
 	jr c, ps2bit
-	; Falling clock edge, sample data is in bit 3
+	; Falling clock edge, sample data is in bit 1
 	rra
 	rr e		; rotate into E
 	; Wait for the rising edge
+	; Preserve carry for this loop, our caller needs the carry
+	; from the RR E
+	push af
 ps2bit2:
 	exx
 	dec hl
@@ -268,8 +278,9 @@ ps2bit2:
 	exx
 	in a,(c)
 	rra 
-	jr nc, ps2bit2
+	jr nc, ps2bit2	; wait for bit to go high again
 	; E now updated
+	pop af
 	ret
 
 ;
@@ -404,7 +415,15 @@ ps2put:
 	and #0xFC		; clock high data low
 
 	or #0x08
+	out (c),a
+	; 100uS delay
+ps2clkwait:
+	djnz ps2clkwait
+	ld a,(_kbsave)
 	ld b,#8
+	out (c),a
+	and #0xf3
+	or #0x04	; release clock
 	out (c),a
 	; No start bit needed ?
 	ld d,l		; save character
@@ -415,7 +434,7 @@ ps2putl:
 	ld a,d
 	or a
 	ld l,#1
-	jp p,ps2outp1
+	jp pe,ps2outp1
 	dec l
 ps2outp1:
 	inc b
@@ -431,7 +450,6 @@ ps2outp1:
 ps2del1:
 	djnz ps2del1
 	ld a,(_kbsave)
-	inc b
 	; force clock low data floating
 	out (c),a
 	;
@@ -453,7 +471,7 @@ ps2del2:
 	; FIXME - need a general long timeout here
 waitps2:
 	in a,(c)
-	and #4
+	and #1
 	jr nz, waitps2
 	jp ps2data
 
@@ -467,8 +485,9 @@ ps2outbit:
 	in a,(c)
 	rra
 	jr c, ps2outbit		; wait for clock low
-	rr l			; FIXME send bit order ?
 	ld a,(_kbsave)		; has the bit fixed at 0 and clock not pulled
+	or #4			; clock floating
+	rr l			; FIXME send bit order ?
 	jr nc, ps2outa
 	or #8			; set data
 ps2outa:
@@ -483,7 +502,6 @@ ps2outw1:
 	in a,(c)
 	rra
 	jr nc,ps2outw1		; wait for clock to go back high
-	exx
 	ret
 
 _ps2kbd_beep:
