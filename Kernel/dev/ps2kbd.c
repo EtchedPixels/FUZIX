@@ -21,6 +21,8 @@
  *	- Windows keys
  *	- LED setting
  *	- Keyboard map setting
+ *	- Add bottom halves to the Z80 irq logic so we can dispatch
+ *	  work like the LED and beeper
  */
 
 #include <kernel.h>
@@ -176,7 +178,7 @@ static void keycode(uint_fast8_t code, uint_fast8_t up, uint_fast8_t shifted)
         else if (code == LCTRL)
             ctrl_down &= ~1;
         else if (code == RCTRL)
-            ctrl_down |= ~1;
+            ctrl_down |= ~2;
         else if (code == LALT)
             alt_down &= ~1;
         else if (code == RALT)
@@ -223,7 +225,7 @@ static void keycode(uint_fast8_t code, uint_fast8_t up, uint_fast8_t shifted)
     if (shift_down) {
         m = KEYPRESS_SHIFT;
         /* FIXME: duplicate any blank slots to remove second condition */
-        if (key < 0x80 && keymap[code + 0x80])
+        if (code < 0x80 && keymap[code + 0x80])
             key = keymap[code + 0x80];
     }
     if (ctrl_down) {
@@ -305,7 +307,7 @@ int ps2kbd_init(void)
 
     /* We may have FF or FF AA or FF AA 00 or other info queued before
        our reset, if so empty it out */
-    for (i = 0; i < 16; i++) {
+    for (i = 0; i < 4; i++) {
         r = ps2kbd_get();
         if (r != -1) {
             /* It talked to us */
@@ -330,10 +332,27 @@ int ps2kbd_init(void)
     ps2kbd_put(0x02);
     ps2kbd_put(0xF4);	/* Clear buffer and enable */
 
+    present = 1;
+
     /* Flush out anything left over */
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < 4; i++)
         ps2kbd_get();
 
+    /* Now check for mice */
+    for (i = 0; i < 4; i++) {
+        r = ps2mouse_get();
+        if (r >= 0)
+            break;
+    }
+
+    /* Try to reset, if it times out -> no mouse */
+    r = ps2mouse_put(0xFF);
+    if (r == 0xFA)
+        present |= 2;
+    /* Flush out anything left over */
+    for (i = 0; i < 4; i++)
+            ps2mouse_get();
+done:
     ps2busy = 0;
-    return 1;
+    return present;
 }
