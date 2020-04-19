@@ -195,7 +195,7 @@ static void mark_map(void)
 				s->name);
 			exit(1);
 		}
-		if (s->start + s->len > 0xFFFF) {
+		if (s->start + s->len > 0x10000) {
 			fprintf(stderr, "Section '%s' overruns memory.\n",
 				s->name);
 			exit(1);
