@@ -1,0 +1,52 @@
+FUZIX for the N8 Retrobrew Home Computer
+
+Z180 @18.432MHz with 0x40 I/O base
+SD card via CSIO
+
+Keyboard PS/2 setup
+
+	Set 82C55 config to 082h	(A out B in C hi out C low out)
+
+Port C bit 4 is data out, clock out is bit 5
+Port B bit 1 is clock in, bit 0 is data in
+
+
+N8 Hardware layout
+
+0x40-0x7F	Z180 registers
+
+0x80		8255 for PPIDE	
+0x84		8255 for printer/keyboard/mouse
+			A = printer data
+			B = printer status & kbd/mouse in
+			C = printer control & kbd/mouse out
+0x88		RTC latch and buffer
+0x8C		FDC
+0x90		FDC utility
+0x94		Auxiliary control register
+0x96		ROM page control
+
+0x98		VDP status
+0x99		VDP address
+0x9A		VDP palette latch
+0x9B		VDP register access
+
+0x9C		Sound register (w) data (r)
+0x9D		Sound write (w)
+
+RTC latch bits
+0x80		RTC write
+0x40		RTC clock
+0x20		RTC enable data read
+0x10		RTC reset (deactivate)
+0x01		RTC data in
+0x04		SD CS
+
+FDC
+0x8C		8272 Status
+0x8D		8272 Data
+0x90		DACK
+0x91		DCR
+0x92		DOR
+0x93		TC/DACK
+

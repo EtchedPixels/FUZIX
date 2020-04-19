@@ -1,0 +1,46 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0088
+-b _COMMONMEM=0xF800
+-b _DISCARD=0xE000
+-l z180
+platform-n8/crt0.rel
+platform-n8/commonmem.rel
+platform-n8/z180.rel
+platform-n8/n8.rel
+platform-n8/main.rel
+start.rel
+version.rel
+lowlevel-z180.rel
+usermem_std-z180.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform-n8/devices.rel
+devio.rel
+filesys.rel
+process.rel
+inode.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+bankfixed.rel
+swap.rel
+devsys.rel
+platform-n8/discard.rel
+platform-n8/devtty.rel
+platform-n8/devsd.rel
+platform-n8/devsd_discard.rel
+platform-n8/devsdspi.rel
+platform-n8/mbr.rel
+platform-n8/blkdev.rel
+platform-n8/ds1302.rel
+platform-n8/ds1302_discard.rel
+platform-n8/ds1302-n8.rel
+platform-n8/monitor.rel
+-e
