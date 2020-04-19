@@ -29,3 +29,9 @@ unsigned int sleep(unsigned int seconds)
 	_time(&now, 1);
 	return div10quicki(end.time - now.time);
 }
+
+unsigned int alarm(unsigned int secs)
+{
+    unsigned int tmp = _alarm(secs * 10);
+    return div10quicki(tmp);
+}

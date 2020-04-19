@@ -596,17 +596,17 @@ arg_t _kill(void)
 
 
 /*******************************************
-_alarm (secs)                    Function 38
-uarg_t secs;
+_alarm (dsecs)                    Function 38
+uarg_t dsecs;
 ********************************************/
-#define secs (uarg_t)udata.u_argn
+#define dsecs (uarg_t)udata.u_argn
 
 arg_t _alarm(void)
 {
 	arg_t retval;
 
-	retval = udata.u_ptab->p_alarm / 10;
-	udata.u_ptab->p_alarm = secs * 10;
+	retval = udata.u_ptab->p_alarm;
+	udata.u_ptab->p_alarm = dsecs;
 	ptimer_insert();
 	return retval;
 }

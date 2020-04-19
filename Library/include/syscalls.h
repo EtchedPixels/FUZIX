@@ -164,6 +164,7 @@ extern int listen(int fd, int len);
 extern int bind(int fd, const struct sockaddr *s, int len);
 extern int connect(int fd, const struct sockaddr *s, int len);
 extern int shutdown(int fd, int how);
+extern unsigned int _alarm(unsigned int);
 
 /* asm syscall hooks with C wrappers */
 extern int _getdirent(int fd, void *buf, int len);
@@ -186,7 +187,7 @@ extern int _recvfrom(int fd, char *buf, size_t len, struct _sockio *uaddr);
 /* C library provided syscall emulation */
 extern int stat(const char *path, struct stat *s);
 extern int fstat(int fd, struct stat *s);
-extern int alarm(uint16_t seconds);
+extern unsigned int alarm(unsigned int seconds);
 extern time_t time(time_t *t);
 extern int stime(const time_t *t);
 extern int times(struct tms *tms);

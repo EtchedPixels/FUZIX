@@ -41,7 +41,7 @@ const char *syscall_name[NR_SYSCALL] = {
 	"signal",
 	"dup2",
 	"_pause",
-	"alarm",
+	"_alarm",
 	"kill",
 	"pipe",
 	"getgid",
