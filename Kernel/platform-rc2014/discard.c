@@ -498,7 +498,10 @@ void pagemap_init(void)
 			} while(n < 4 && nuart <= NUM_DEV_TTY);
 		}
 	}
-	/* TODO: mouse init and probe */
+	if (ps2kbd_present & 2) {
+		kputs("PS/2 Mouse at 0xBB\n");
+		/* TODO: wire to input layer and interrupt */
+	}
 
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
