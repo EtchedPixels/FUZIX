@@ -24,7 +24,8 @@ static void read_clock(void) __naked
         out (CLOCK_PORT+13),a
 
 retry:
-        ld bc,#(3*256 + CLOCK_PORT+12)
+        ; ini also decrements b so twice count
+        ld bc,#(6*256 + CLOCK_PORT+12)
         ld hl,#_rtc_buf
 
         ld d,#2		; loop count
@@ -43,7 +44,7 @@ l1:     ini		; high bits of field in low bits of (hl)
         inc hl
         dec c
         djnz l1
-        ld b,#3
+        ld b,#6		; twice count
         dec c		; Skip day of week
         dec d		; Loop count
         jr nz, l1
