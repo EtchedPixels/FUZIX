@@ -54,7 +54,8 @@ timeout:
 	ld bc, (_kbport)
 	or #0x03		; let it all float for debug FIXME
 	out (c),a
-	ret
+	pop iy			; our callers all leave the old IY on
+	ret			; the frame for us to recover
 
 ;
 ;	Read from Keyboard (PS/2 is different bits)
@@ -68,6 +69,7 @@ timeout:
 ;	(that is clocks down, data floating)
 ;
 _ps2kbd_get:
+	push iy
 	ld bc,(_kbport)
 kbget:
 	ld (abort_sp),sp
@@ -93,6 +95,7 @@ kbout:
 	inc b
 	or #0x02
 	out (c),a		; put the clock back down, don't pull data
+	pop iy
 	ret
 	;
 	; We got a rising edge. That means the keyboard wishes to talk to
@@ -187,6 +190,7 @@ kbdbit2:
 ;	as the keyboard but different bit numbers
 ;
 _ps2mouse_get:
+	push iy
 	ld bc,(_kbport)
 ps2get:
 	ld (abort_sp),sp
@@ -209,6 +213,7 @@ ps2out:
 	ld a,(_kbsave)
 	out (c),a
 	xor a
+	pop iy
 	ret
 ps2data:
 	;
@@ -294,11 +299,11 @@ ps2bit2:
 ;	where 0xFE means 'failed'. Must not mix interrupt polling of
 ;	keyboard with calls here.
 ;
-;	uint8_t kbput(uint8_t c) __z88dk_fastcall
+;	uint8_t _ps2kbd_put(uint8_t c) __z88dk_fastcall
 ;
 _ps2kbd_put:
 	ld bc,(_kbport)
-kbdput:
+	push iy
 	ld (abort_sp),sp
 	exx
 	ld hl,#0		; timeout timer - FIXME value ?
@@ -406,7 +411,7 @@ kbdoutw1:
 ;
 _ps2mouse_put:
 	ld bc,(_kbport)
-ps2put:
+	push iy
 	ld (abort_sp),sp
 	exx
 	ld hl,#0		; timeout timer - FIXME value ?
