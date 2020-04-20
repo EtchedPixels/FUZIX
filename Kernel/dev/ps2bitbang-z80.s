@@ -6,7 +6,6 @@
 ;	can (with care) map this over a Z180 port that is only used at
 ;	setup time.
 ;
-;	TODO: longer duration errors.
 ;	2ms: longest a send should ever take
 ;	15ms: longest we should ever have to wait for clocks when we ask
 ;	to tx
@@ -43,6 +42,13 @@
 
 	.area _CODE
 
+TIMEOUT		.equ	0	; 65536 iterations - could be tuned but
+				; seems fine as is.
+
+CLOCKONLY	.equ -1
+CLOCKIN		.equ -2
+CLOCKDATA 	.equ -3
+
 ;
 ;	Timeout long jump
 ;
@@ -52,13 +58,30 @@ timeout:
 	ld sp, (abort_sp)
 	ld a,(_kbsave)
 	ld bc, (_kbport)
-	or #0x03		; let it all float for debug FIXME
-	out (c),a
+	or CLOCKONLY(iy)
+	out (c),a		; jam the clock
 	pop iy			; our callers all leave the old IY on
 	ret			; the frame for us to recover
 
+
 ;
-;	Read from Keyboard (PS/2 is different bits)
+;	Read from PS/2 Mouse
+;
+;	A = scratch throughout
+;	C = port, B = loops to do for timeout
+;	E = code being assembled
+;	HL = return
+;
+;	Except for not needing D for the carry conversion this is the same
+;	as the keyboard but different bit numbers
+;
+_ps2mouse_get:
+	push iy
+	ld iy,#ps2bit
+	jr ps2get
+
+;
+;	Read from Keyboard (Keyboard and mouse are different bits)
 ;
 ;	A = scratch throughout
 ;	C = port, B = loops to do for timeout
@@ -70,18 +93,24 @@ timeout:
 ;
 _ps2kbd_get:
 	push iy
+	ld iy,#kbdbit
+;
+;	Shared code entry point. IY is used to index all the per port
+;	parameters
+;
+ps2get:
 	ld bc,(_kbport)
 kbget:
 	ld (abort_sp),sp
 	; Stop pulling down CLK so that the keyboard can talk
 	ld a,(_kbsave)
-	or #0x03		; let clock rise, don't pull data		
+	or CLOCKDATA(iy)	; let clock rise, don't pull data
 	out (c),a
 	; Most keyboards respond within 150uS
 	; This loop is 38 clocks per non detect
 kbwclock:
 	in a,(c)
-	and #4			; sample clock input
+	and CLOCKIN(iy)		; sample clock input
 	jr z, kbdata
 	djnz kbwclock
 	; It didn't reply so there was no interest
@@ -93,7 +122,7 @@ kbout:
 	; B is now zero - make it non zero so we can use high ports with
 	; Z180
 	inc b
-	or #0x02
+	or CLOCKONLY(iy)
 	out (c),a		; put the clock back down, don't pull data
 	pop iy
 	ret
@@ -108,12 +137,12 @@ kbdata:
 	; There should be a start, eight data and an odd parity
 	;
 	exx
-	ld hl,#0		; timeout timer - FIXME value ?
+	ld hl,#TIMEOUT
 	exx
 	ld b,#8
-	call kbdbit	; Start bit
+	call jpiy	; Start bit
 nextbit:
-	call kbdbit
+	call jpiy
 	djnz nextbit
 	; E now holds the data, carry should be the start bit
 ;	jr nc, kbdbad
@@ -125,7 +154,7 @@ nextbit:
 kbdevenpar:
 	ld l,a		; Save the keycode
 	inc b		; make sure b is non zero for Z180 ports
-	call kbdbit
+	call jpiy
 	ld a,e		; get parity bit into A
 	and #0x80	; mask other bits
 	cp h
@@ -135,23 +164,29 @@ kbdevenpar:
 	jr kbout
 kbdbad:
 	inc b
-	call kbdbit	; throw away parity
-	; Check stop bits ??
+	call jpiy	; throw away parity
+	call jpiy	; and stop bit
 	ld hl,#0xFFFC		; report -err for wrong start
 	jr kbout
 kbrok:
-	call kbdbit		; throw away the stop bit
+	call jpiy	; throw away the stop bit
 	jr kbout
 ;
 ;	Receive a bit. Wait for the clock to go low, sample the data and
 ;	then wait for it to return high. The sampled bit is added to E
 ;
+;
+;	Three bytes before function pointer are the config
+;
+	.byte 0x03	; Keyyboard clock and data pull down
+	.byte 0x04	; Keyboard clock in
+	.byte 0x02	; Keyboard clock pull down only
 kbdbit:
 	exx
 	dec hl
 	ld a,h
 	or l
-	jr z,timeout
+	jp z,timeout
 	exx
 	in a,(c)
 	bit 2,a
@@ -179,84 +214,11 @@ kbdbit2:
 	ret
 
 ;
-;	Read from PS/2
+;	Three bytes before function pointer are the config
 ;
-;	A = scratch throughout
-;	C = port, B = loops to do for timeout
-;	E = code being assembled
-;	HL = return
-;
-;	Except for not needing D for the carry conversion this is the same
-;	as the keyboard but different bit numbers
-;
-_ps2mouse_get:
-	push iy
-	ld bc,(_kbport)
-ps2get:
-	ld (abort_sp),sp
-	; Stop pulling down CLK so that the keyboard can talk
-	ld a,(_kbsave)
-	or #0x0C	;	let go of clock, don't pull data
-	out (c),a
-	; Most keyboard respond within 150uS
-ps2wclock:
-	in a,(c)
-	rra
-	jr nc, ps2data
-	djnz ps2wclock
-	; It didn't reply so there was no interest
-	; Jam the clock again so that it can't send until we check
-ps2done:
-	ld hl,#0xffff
-ps2out:
-	inc b
-	ld a,(_kbsave)
-	out (c),a
-	xor a
-	pop iy
-	ret
-ps2data:
-	;
-	; We got a clock edge, that means there is incoming data:
-	; There should be a start, eight data and an odd parity
-	;
-	exx
-	ld hl,#0		; timeout timer - FIXME value ?
-	exx
-	ld b,#8
-	call ps2bit
-ps2nextbit:
-	call ps2bit
-	djnz ps2nextbit
-	; E now holds the data, C should be the start bit
-;	jr nc, ps2bad
-	ld a,e
-	or a
-	ld h,#0x80		; For even parity of the 8bits expect a 1
-	jp pe, ps2evenpar
-	ld h,#0x00
-ps2evenpar:
-	ld l,a		; Save the keycode
-	inc b
-	call ps2bit
-	ld a,e		; get parity bit into A
-	and #0x80	; mask other bits
-	cp h
-	ld h,#0
-	jr z, ps2rok	; parity was good
-	ld hl,#0xFFFE
-	jr ps2out
-ps2bad:
-	inc b
-	call ps2bit	; throw away parity
-	; Check stop bits ??
-	ld hl,#0xFFFC		; report -err for wrong start
-	jr ps2out
-ps2rok:
-	call ps2bit	; wait and handle stop. Some mice get rightfully
-			; upset if we pull on clock before the stop bit is
-			; done
-	jr ps2out
+	.byte 0x0C	; Mouse clock and data pull down
+	.byte 0x01	; Mouse clock in
+	.byte 0x08	; Mouse clock pull down only
 ps2bit:
 	exx
 	dec hl
@@ -292,9 +254,6 @@ ps2bit2:
 ;	Send side. For an AT keyboard we also get to send it messages. Same
 ;	for fanicer mice to kick them into better modes
 ;
-;	This code needs some longer timeout logic to abort if the keyboard
-;	is unplugged or otherwise throws a fit
-;
 ;	Send character L to the keyboard and return the result code back
 ;	where 0xFE means 'failed'. Must not mix interrupt polling of
 ;	keyboard with calls here.
@@ -304,13 +263,38 @@ ps2bit2:
 _ps2kbd_put:
 	ld bc,(_kbport)
 	push iy
+	ld iy,#kbdoutbit
 	ld (abort_sp),sp
+	call ps2_put
+	ld iy,#kbdbit
+	jp kbdata
+;
+;	And mouse messages - same logic different bits
+;
+;	uint8_t ps2put(uint8_t c) __z88dk_fastcall
+;
+_ps2mouse_put:
+	ld bc,(_kbport)
+	push iy
+	ld iy,#ps2outbit
+	ld (abort_sp),sp
+	call ps2_put
+	ld iy,#ps2bit
+	jp kbdata
+
+CLOCKMASK	.equ -1
+CLOCKLOW	.equ -2
+CLOCKREL	.equ -3
+FLOATBOTH	.equ -4
+DATABIT		.equ -5
+
+ps2_put:
 	exx
-	ld hl,#0		; timeout timer - FIXME value ?
+	ld hl,#TIMEOUT
 	exx
 	ld a,(_kbsave)
-	and #0xFE		; Pull clock low
-	or #0x02		; Keep data floating
+	and CLOCKMASK(iy)	; Pull clock low
+	or CLOCKLOW(iy)		; Keep data floating
 	out (c),a		; Clock low, data floating
 	; 100uS delay		- actually right now the 125uS poll delay
 clkwait:
@@ -318,13 +302,13 @@ clkwait:
 	ld a,(_kbsave)
 	ld b,#8			; Ensure B is always non zero
 	out (c),a		; Clock and data low
-	and #0xFC
-	or #0x01		; Release clock
+	and CLOCKMASK(iy)
+	or CLOCKREL(iy)		; Release clock
 	out (c),a
 	; No specific start bit needed ?
 	ld d,l		; save character
 kbdputl:
-	call kbdoutbit
+	call jpiy
 	djnz kbdputl
 	; Check the parity bit to send
 	ld a,d
@@ -334,10 +318,10 @@ kbdputl:
 	dec l
 kbdoutp1:
 	inc b
-	call kbdoutbit
+	call jpiy
 	ld l,#0xFF	; stop bits are 1s
-	call kbdoutbit
-	call kbdoutbit
+	call jpiy
+	call jpiy
 	;
 	; Wait 20uS
 	;
@@ -358,23 +342,32 @@ del2:	djnz del2
 	;
 	; Raise clock and data
 	;
-	or #3
+	or FLOATBOTH(iy)
 	inc b
 	out (c),a
 	; FIXME - need a general long timeout here
 	; Wait for the keyboard to pull the clock low
 waitk:
 	in a,(c)
-	and #4
+	and DATABIT(iy)
 	jr nz, waitk
 	; Return the status code (FE = failed try again)
-	jp kbdata
+	ret
 
-	;
-	; Send a bit to the keyboard. The PS/2 keyboard provides the clock
-	; so we wait for the clock, then send a bit, then wait for the other
-	; clock edge.
-	;
+;
+; Send a bit to the keyboard. The PS/2 keyboard provides the clock
+; so we wait for the clock, then send a bit, then wait for the other
+; clock edge.
+;
+; Table heads the function
+;
+;
+	.byte 0x04		; data bit
+	.byte 0x03		; float clock and data
+	.byte 0x01		; release clock
+	.byte 0x02		; clock low
+	.byte 0xfe		; clock mask
+
 kbdoutbit:
 	exx
 	dec hl
@@ -404,82 +397,12 @@ kbdoutw1:
 	jr z,kbdoutw1		; wait for clock to go back high
 	ret
 
-;
-;	And mouse messages - same logic different bits
-;
-;	uint8_t ps2put(uint8_t c) __z88dk_fastcall
-;
-_ps2mouse_put:
-	ld bc,(_kbport)
-	push iy
-	ld (abort_sp),sp
-	exx
-	ld hl,#0		; timeout timer - FIXME value ?
-	exx
-	ld a,(_kbsave)
-	and #0xFC		; clock high data low
 
-	or #0x08
-	out (c),a
-	; 100uS delay
-ps2clkwait:
-	djnz ps2clkwait
-	ld a,(_kbsave)
-	ld b,#8
-	out (c),a
-	and #0xf3
-	or #0x04	; release clock
-	out (c),a
-	; No start bit needed ?
-	ld d,l		; save character
-ps2putl:
-	call ps2outbit
-	djnz ps2putl
-	; Check the parity bit to send
-	ld a,d
-	or a
-	ld l,#1
-	jp pe,ps2outp1
-	dec l
-ps2outp1:
-	inc b
-	call ps2outbit  ; clock ?
-	ld l,#0xFF	; stop bits are 1s
-	call ps2outbit
-	call ps2outbit
-	;
-	; Wait 20uS
-	;
-	ld de,(_kbdelay)
-	ld b,d
-ps2del1:
-	djnz ps2del1
-	ld a,(_kbsave)
-	; force clock low data floating
-	out (c),a
-	;
-	; Wait 44uS
-	;
-	ld b,e
-ps2del2:
-	djnz ps2del2
-	;
-	; Now we should get a reply
-	;
-	;
-	; Raise clock and data
-	;
-	ld a,(_kbsave)
-	or #0x0C
-	inc b
-	out (c),a
-	; FIXME - need a general long timeout here
-waitps2:
-	in a,(c)
-	and #1
-	jr nz, waitps2
-	jp ps2data
-
+	.byte 0x02		; data bit
+	.byte 0x0C		; float clock and data
+	.byte 0x04		; release clock
+	.byte 0x08		; clock low
+	.byte 0xf3		; clock mask
 ps2outbit:
 	exx
 	dec hl
@@ -531,6 +454,9 @@ wait0:
 	or e
 	jr nz, beeper
 	ret
+
+;	Used to create a call (iy)
+jpiy:	jp (iy)
 
 	.area _DATA
 _kbsave:
