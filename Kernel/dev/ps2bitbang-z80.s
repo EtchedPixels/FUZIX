@@ -101,20 +101,27 @@ _ps2kbd_get:
 ps2get:
 	ld bc,(_kbport)
 kbget:
+	; abort_sp is used for the timeout case
 	ld (abort_sp),sp
-	; Stop pulling down CLK so that the keyboard can talk
+	; Stop pulling down CLK so that the device can talk
 	ld a,(_kbsave)
 	or CLOCKDATA(iy)	; let clock rise, don't pull data
 	out (c),a
-	; Most keyboards respond within 150uS
-	; This loop is 38 clocks per non detect
+
+	;
+	; With the clock floating the device is allowed to talk to us
+	; if it wants. Most devices respond within 150us
+	;
+	; This loop is 50 clocks per non detect
 kbwclock:
 	in a,(c)
 	and CLOCKIN(iy)		; sample clock input
 	jr z, kbdata
 	djnz kbwclock
+	;
 	; It didn't reply so there was no interest
 	; Jam the clock again so that it can't send until we check
+	;
 kbdone:
 	ld hl,#0xffff
 kbout:
@@ -126,8 +133,9 @@ kbout:
 	out (c),a		; put the clock back down, don't pull data
 	pop iy
 	ret
+
 	;
-	; We got a rising edge. That means the keyboard wishes to talk to
+	; We got a rising edge. That means the device wishes to talk to
 	; us.
 	;
 kbdata:
@@ -162,15 +170,35 @@ kbdevenpar:
 	jr z, kbrok	; parity was good
 	ld hl,#0xFFFE	; Parity was bad
 	jr kbout
+	;
+	; We didn't get a start bit, god knows what is going on
+	;
 kbdbad:
-	inc b
-	call jpiy	; throw away parity
-	call jpiy	; and stop bit
-	ld hl,#0xFFFC		; report -err for wrong start
+	ld hl,#0xFFFC	; report -err for wrong start
 	jr kbout
+	;
+	; Wait for the stop bit. We must do this otherwise the device may
+	; think we didn't receive the data. Only after we have accepted the
+	; stop bit can we raise the clock to halt transmission.
+	;
 kbrok:
 	call jpiy	; throw away the stop bit
 	jr kbout
+
+;
+;	Helper. Read from the I/O port into A whilst managing the timeout
+;	counter
+;
+inbits:
+	exx
+	dec hl
+	ld a,h
+	or l
+	jp z, timeout	; longjmp out
+	exx
+	in a,(c)
+	ret
+
 ;
 ;	Receive a bit. Wait for the clock to go low, sample the data and
 ;	then wait for it to return high. The sampled bit is added to E
@@ -182,13 +210,7 @@ kbrok:
 	.byte 0x04	; Keyboard clock in
 	.byte 0x02	; Keyboard clock pull down only
 kbdbit:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z,timeout
-	exx
-	in a,(c)
+	call inbits
 	bit 2,a
 	jr nz, kbdbit
 	; Falling clock edge, sample data is in bit 3
@@ -200,13 +222,7 @@ kbdbit:
 	; from the RR E
 	push af
 kbdbit2:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z,timeout
-	exx
-	in a,(c)
+	call inbits
 	bit 2,a
 	jr z,kbdbit2
 	; E now updated
@@ -220,13 +236,7 @@ kbdbit2:
 	.byte 0x01	; Mouse clock in
 	.byte 0x08	; Mouse clock pull down only
 ps2bit:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z,timeout
-	exx
-	in a,(c)
+	call inbits
 	rra		; waiting for clock to go low
 	jr c, ps2bit
 	; Falling clock edge, sample data is in bit 1
@@ -237,13 +247,7 @@ ps2bit:
 	; from the RR E
 	push af
 ps2bit2:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z, timeout
-	exx
-	in a,(c)
+	call inbits
 	rra 
 	jr nc, ps2bit2	; wait for bit to go high again
 	; E now updated
@@ -369,13 +373,7 @@ waitk:
 	.byte 0xfe		; clock mask
 
 kbdoutbit:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z,timeout
-	exx
-	in a,(c)
+	call inbits
 	and #4
 	jr nz, kbdoutbit	; wait for clock low
 	ld a,(_kbsave)		;
@@ -386,13 +384,7 @@ kbdoutbit:
 kbdouta:
 	out (c),a
 kbdoutw1:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z,timeout
-	exx
-	in a,(c)
+	call inbits
 	and #4
 	jr z,kbdoutw1		; wait for clock to go back high
 	ret
@@ -404,13 +396,7 @@ kbdoutw1:
 	.byte 0x08		; clock low
 	.byte 0xf3		; clock mask
 ps2outbit:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z,timeout
-	exx
-	in a,(c)
+	call inbits
 	rra
 	jr c, ps2outbit		; wait for clock low
 	ld a,(_kbsave)		; has the bit fixed at 0 and clock not pulled
@@ -421,13 +407,7 @@ ps2outbit:
 ps2outa:
 	out (c),a
 ps2outw1:
-	exx
-	dec hl
-	ld a,h
-	or l
-	jp z,timeout
-	exx
-	in a,(c)
+	call inbits
 	rra
 	jr nc,ps2outw1		; wait for clock to go back high
 	ret
