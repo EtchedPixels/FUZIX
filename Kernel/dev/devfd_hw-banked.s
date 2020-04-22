@@ -101,8 +101,8 @@ _devfd_init:
         LD A, #0x20             ; increase delay time for init
         LD (dlyCnt),A
 
-	POP	DE		; Bank
-        POP     HL              ; Return Addr
+	POP	HL		; Bank
+        POP     DE              ; Return Addr
         POP     BC              ;  minor (in C)
         PUSH    BC              ;   Keep on Stack for Exit
 	PUSH	DE
