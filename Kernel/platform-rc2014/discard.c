@@ -166,6 +166,7 @@ static uint8_t probe_16x50(uint8_t p)
 #define CTL2	0x17
 #define CRD	0x1A
 #define IVR2	0x1C
+#define STCT2	0x1E	/* Read... */
 
 static uint8_t probe_quart(void)
 {
@@ -220,12 +221,15 @@ static void quart_clock(void)
 	/* Timer, clock / 16 */
 	out16(QUARTREG(ACR2), 0x70);	/* Adjust for RTS/CTS too */
 	/* 10 ticks per second */
-	out16(QUARTREG(CTL2), 46080 & 0xFF);
-	out16(QUARTREG(CTU2), 46080 >> 8);
+	out16(QUARTREG(CTL2), 11520 & 0xFF);
+	out16(QUARTREG(CTU2), 11520 >> 8);
 	/* Timer interrupt also wanted */
-	out16(QUARTREG(IMR2), 0x32);
+	out16(QUARTREG(IMR2), 0x22 | 0x08);
+	/* Timer on */
+	in16(QUARTREG(STCT2));
 	/* Tell the quart driver to do do timer ticks */
 	timer_source = TIMER_QUART;
+	kputs("quart clock enabled\n");
 }
 
 __sfr __at 0xA0 sc26c92_mra;
@@ -313,19 +317,18 @@ void init_hardware_c(void)
 	}
 
 	/* Set the right console for kernel messages */
-	/* ROMWBW favours the SIO then the ACIA */
+	/* ROMWBW favours the UART then SIO then ACIA */
+	if (u16x50_present) {
+		register_uart(0xA0, &ns16x50_uart);
+		if (probe_16x50(0xA8))
+			register_uart(0xA8, &ns16x50_uart);
+	}
 	if (sio_present) {
 		register_uart(0x80, &sio_uart);
 		register_uart(0x82, &sio_uartb);
 	}
 	if (acia_present)
 		register_uart(0xA0, &acia_uart);
-	/* Base 16Cx50 or 16C2552 ports */
-	if (u16x50_present) {
-		register_uart(0xA0, &ns16x50_uart);
-		if (probe_16x50(0xA8))
-			register_uart(0xA8, &ns16x50_uart);
-	}
 	/* TODO: sc26c92 as boot probe if added to ROMWBW */
 }
 

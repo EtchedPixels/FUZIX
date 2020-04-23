@@ -700,12 +700,12 @@ static uint8_t quart_intr(uint8_t minor)
                 if (minor + 3 <= NUM_DEV_TTY)
 			tty_inproc(minor + 3, d);
 	}
-	if (timer_source == TIMER_QUART && (r & 0x10)) {
+	if (timer_source == TIMER_QUART && (r & 0x08)) {
 		/* Clear the timer interrupt - in timer mode it keeps
 		   running so we don't need to reload the timer */
 		in16(QUARTPORT + QUARTREG(STC2));
 		/* Timer tick */
-		timer_interrupt();
+		do_timer_interrupt();
 	}
 	return 4;
 }
@@ -868,7 +868,7 @@ static uint8_t sc26c92_intr(uint8_t minor)
 	if (r & 0x10) {
 		in(p + STC1);
 		if (timer_source == TIMER_SC26C92)
-			timer_interrupt();
+			do_timer_interrupt();
 	}
 	return 2;
 }
@@ -1079,9 +1079,10 @@ struct uart tms_uart = {
 uint8_t register_uart(uint16_t port, struct uart *ops)
 {
 	queue_t *q = ttyinq + nuart;
-	uint8_t *buf = code1_alloc(TTYSIZ);
-	if (buf == NULL || nuart > NUM_DEV_TTY)
-		return 0;
+	uint8_t *buf;
+	if (nuart > NUM_DEV_TTY)
+	    return 0;
+	buf = code1_alloc(TTYSIZ);
 	ttyport[nuart] = port;
 	uart[nuart] = ops;
 	q->q_base = q->q_head = q->q_tail = buf;
@@ -1097,7 +1098,16 @@ void insert_uart(uint16_t port, struct uart *ops)
 {
 	struct uart **p = &uart[NUM_DEV_TTY];
 	uint16_t *pt = &ttyport[NUM_DEV_TTY];
-	uint8_t *buf = code1_alloc(TTYSIZ);
+	uint8_t *buf;
+
+	/* Are we going to throw out a UART ? If so recycle the allocated
+	   buffer, if not we need one */
+	if (nuart > NUM_DEV_TTY) {
+		buf = ttyinq[NUM_DEV_TTY].q_base;
+		nuart--;
+	} else
+		buf = code1_alloc(TTYSIZ);
+
 	while(p != uart + 1) {
 		*p = p[-1];
 		*pt = pt[-1];
@@ -1111,9 +1121,7 @@ void insert_uart(uint16_t port, struct uart *ops)
 	ttyinq[1].q_size = TTYSIZ;
 	ttyinq[1].q_count = 0;
 	ttyinq[1].q_wakeup =  TTYSIZ/2;
-	/* We may have booted one out */
-	if (nuart <= NUM_DEV_TTY)
-		nuart++;
+	nuart++;
 }
 
 /* Ditto into discard */

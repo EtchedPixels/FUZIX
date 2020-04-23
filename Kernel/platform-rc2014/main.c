@@ -100,6 +100,14 @@ void platform_idle(void)
 	}
 }
 
+
+void do_timer_interrupt(void)
+{
+	fd_tick();
+	fd_tick();
+	timer_interrupt();
+}
+
 static int16_t timerct;
 
 /* Call timer_interrupt at 10Hz */
@@ -107,7 +115,7 @@ static void timer_tick(uint8_t n)
 {
 	timerct += n;
 	while (timerct >= 20) {
-		timer_interrupt();
+		do_timer_interrupt();
 		timerct -= 20;
 	}
 }
@@ -126,7 +134,7 @@ void platform_interrupt(void)
 	/* On the Z180 we use the internal timer */
 	if (timer_source == TIMER_Z180) {
 		if (irqvector == 3)	/* Timer 0 */
-			timer_interrupt();
+			do_timer_interrupt();
 	/* The TMS9918A is our second best choice as the CTC must be wired
 	   right and may not be wired as we need it */
 	} else if (ti_r & 0x80) {
@@ -138,7 +146,7 @@ void platform_interrupt(void)
 		/* We are using the TMS9918A as a timer */
 		timerct++;
 		if (timerct == 6) {	/* Always NTSC */
-			timer_interrupt();
+			do_timer_interrupt();
 			timerct = 0;
 		}
 	/* If not and we have no QUART then pray the CTC works */

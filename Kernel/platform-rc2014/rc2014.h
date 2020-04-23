@@ -102,5 +102,6 @@ extern struct uart xr88c681_uart;
 extern uint8_t *init_alloc(uint16_t size);
 extern uint8_t *code1_alloc(uint16_t size);
 
+extern void do_timer_interrupt(void);
 
 #endif
