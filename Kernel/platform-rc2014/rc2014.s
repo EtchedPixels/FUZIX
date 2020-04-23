@@ -657,6 +657,8 @@ map_for_swap:
 
 	.globl __stub_0_1
 	.globl __stub_0_2
+	.globl __stub_1_2
+	.globl __stub_2_1
 
 ;
 ;	We are calling into bank 1 from common. We don't know the current
@@ -732,10 +734,12 @@ __bank_2_1:
 	ld bc,#MAP_BANK2
 	jr banksetbc
 
+__stub_2_1:
 __stub_0_1:
 	ld bc,#MAP_BANK1
 	jr stub_call
 __stub_0_2:
+__stub_1_2:
 	ld bc,#MAP_BANK2
 stub_call:
 	pop hl				; return address
