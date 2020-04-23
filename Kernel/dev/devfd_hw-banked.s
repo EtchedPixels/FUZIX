@@ -118,6 +118,11 @@ indel1: DJNZ    indel1          ;    (settle)
         CALL    Activ8          ;  then bring out of Reset
 indel2: DJNZ    indel2          ;    (settle, B already =0)
         IN      A,(FDC_MSR)
+	CP	#0xD0		; Came out of reset with a pending interrupt
+	JR	NZ, NoPend
+	IN	A,(FDC_DATA)	; Eat the status
+	IN	A,(FDC_MSR)	; Check again
+NoPend:
         CP      #0x80           ; Do we have correct Ready Status?
         JR      NZ,NoDrv        ; ..exit Error if Not
 
@@ -270,8 +275,10 @@ Recal1: LD      (retrys),A
         CALL    FdcDn           ; Clear Pending Ints, Wait for Seek Complete
         POP     HL              ;   (restore regs)
         POP     BC
+	JR	NZ, RecalFail
         AND     #0x10           ; Homed?  (B4=1 if No Trk0 found)
         JR      Z,RecOk         ; ..jump to Store if Ok
+RecalFail:
         LD      A,(retrys)
         DEC     A               ; Any trys left?
         JR      NZ,Recal1       ; ..loop if So
@@ -395,6 +402,7 @@ SEEK1:  LD      (retrys),A      ;  save remaining Retry Count
         LD      BC,#(3*256+0x0F);   (3-byte Seek Command = 0FH)
         CALL    FdCmd           ; Execute the Seek
         CALL    FdcDn           ; Clear Pending Int, wait for Seek Complete
+	JR	NZ,SEEK2
 
         AND     #0xE0
         CP      #0x20
@@ -432,9 +440,17 @@ SEEKX:  POP     BC              ; Restore Regs
 ; Enter: None.  Used after Seek/Recalibrate Commands
 ; Exit : A = ST0 Result Byte, C = PCN result byte
 ; Uses : AF and C.  All other registers preserved/unused
+;
+; Returns Z on timeout, NZ on success
 
 FdcDn:  PUSH    HL              ; Don't alter regs
-FdcDn0: CALL    WRdy1
+	PUSH	DE
+	LD	DE,#0x4000
+FdcDn0: CALL    WRdy1		; ? should we bail on NC here ?
+	DEC	DE
+	LD	A,D
+	OR	E
+	JR	Z, FdcNotDn	; Timed out
         LD      A,#8            ; Sense Interrupt Status Comnd
         OUT     (FDC_DATA),A
         CALL    WRdy1
@@ -448,6 +464,8 @@ FdcDn0: CALL    WRdy1
         LD      A,L
         BIT     5,A             ; Command Complete?
         JR      Z,FdcDn0        ; ..loop if Not
+FdcNotDn:
+	POP	DE
         POP     HL
         RET
 
