@@ -266,7 +266,7 @@ Recal1: LD      (retrys),A
         CALL    FdcDn           ; Clear Pending Ints, Wait for Seek Complete
         POP     HL              ;   (restore regs)
         POP     BC
-	JR	NZ, RecalFail
+	JR	Z, RecalFail
         AND     #0x10           ; Homed?  (B4=1 if No Trk0 found)
         JR      Z,RecOk         ; ..jump to Store if Ok
 RecalFail:
@@ -393,7 +393,7 @@ SEEK1:  LD      (retrys),A      ;  save remaining Retry Count
         LD      BC,#(3*256+0x0F);   (3-byte Seek Command = 0FH)
         CALL    FdCmd           ; Execute the Seek
         CALL    FdcDn           ; Clear Pending Int, wait for Seek Complete
-	JR	NZ,SEEK2
+	JR	Z,SEEK2
 
         AND     #0xE0
         CP      #0x20
