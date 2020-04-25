@@ -51,6 +51,7 @@ DATA	.equ	4
 SIZE	.equ	6		; For now 1 = 256 2 = 512
 STEP	.equ	7		; Step rate
 COMP	.equ	8		; Write compensation
+HEAD	.equ	9
 
 	.area	_COMMONMEM
 ;
@@ -125,6 +126,17 @@ waitdisk_l:
 ;	DE points to the track reg copy
 ;
 fdsetup:
+	ld	a, (fdcctrl)
+	and	#0xE0		; mask off side
+	ld	b,a
+	xor	a
+	cp	HEAD(ix)
+	jr	z, headlow
+	set	4,b		; side 1
+headlow:
+	ld	a,b
+	ld	(fdcctrl),a
+	out	(FDCCTRL),a
 	ld	a, (de)
 	out	(FDCTRK), a
 	cp	TRACK(ix)
@@ -333,7 +345,7 @@ _fdr_wait:
 	ld	l,a
 	ret
 ;
-;	fd_operation(uint16_t *cmd, uint16_t *drive) __fastcall
+;	fd_operation(uint16_t *drive) __fastcall
 ;
 ;	The caller must ensure the drive has been selected and the motor is
 ;	running.
@@ -430,4 +442,4 @@ _fd_selected:
 _fd_tab:
 	.db	0xFF, 0xFF, 0xFF, 0xFF
 _fd_cmd:
-	.ds	9
+	.ds	10
