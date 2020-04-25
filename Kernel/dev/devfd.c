@@ -152,6 +152,16 @@ static struct fdcinfo fdcmode[NUM_FDCMODES] = {
 		1,
 		0
 	},
+	{
+		6,
+		FDTYPE_PC180, 	/* 5.25" 180K */
+		0,
+		FDF_DD|FDF_SEC512,
+		40,
+		9,
+		1,
+		0
+	},
 	/* Should add some single density support or 8" ?? */
 };
 
@@ -159,15 +169,17 @@ static struct fdcinfo fdcmode[NUM_FDCMODES] = {
 
 static struct devfd_dtbl devfd_modes[NUM_FDCMODES] = {
 	/* 3.5" 3ms step */
-    	{ 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
-    	{ 0, 0xCF, 1, 27,  9, 1, DSDD35, 10, 0, 160 },
-    	/* 5.25 " */
-    	{ 0, 0xCF, 1, 27, 18, 1, IBMPC5, 10, 0, 160 },
-    	/* 360K drives step at 6ms */
+	{ 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
+	{ 0, 0xCF, 1, 27,  9, 1, DSDD35, 10, 0, 160 },
+	/* 5.25 " */
+	{ 0, 0xCF, 1, 27, 18, 1, IBMPC5, 10, 0, 160 },
+	/* 360K drives step at 6ms */
     	{ 0, 0xAF, 1, 27,  9, 1, DSDD5, 10, 0, 80 },
 	/* 3" 12ms step */
-    	{ 0, 0x4F, 1, 27,  9, 1, DSDD3, 10, 0, 40 },
-    	{ 0, 0x4F, 1, 27,  9, 1, DSDD3, 10, 0, 160 }
+	{ 0, 0x4F, 1, 27,  9, 1, DSDD3, 10, 0, 40 },
+	{ 0, 0x4F, 1, 27,  9, 1, DSDD3, 10, 0, 160 },
+	/* 5.25" 360K singled side for data transfer */
+	{ 0, 0xAF, 1, 27,  9, 1, DSDD3, 10, 0, 40 }
 };
 	
 		
@@ -257,15 +269,18 @@ int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 int fd_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
 	uint8_t m;
+	switch(request) {
+	case FDIO_GETCAP:
+		fdccap.mode = mode[minor];
+		return uput(&fdccap, data, sizeof(struct fdcinfo));
+	/* TODO: RESTORE, FMTTRK, SETSTEP */
+	}
 	m = ugetc(data);
 	if (m >= NUM_FDCMODES) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
 	switch(request) {
-	case FDIO_GETCAP:
-		fdccap.mode = mode[minor];
-		return uput(&fdccap, data, sizeof(struct fdcinfo));
 	case FDIO_GETMODE:
 		return uput(fdcmode + m, data, sizeof(struct fdcinfo));
 	case FDIO_SETMODE:
@@ -276,7 +291,6 @@ int fd_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 			return -1;
 		}
 		return 0;
-	/* TODO: RESTORE, FMTTRK, SETSTEP */
 	}
 	return -1;
 }	
@@ -285,7 +299,7 @@ int fd_open(uint_fast8_t minor, uint16_t flags)
 {
 	flags; /* unused */
 
-	if (devfd_init(minor)) {
+	if (devfd_init(minor) && !(flags & O_NDELAY)) {
 		udata.u_error = ENXIO;
 		return -1;
 	}
