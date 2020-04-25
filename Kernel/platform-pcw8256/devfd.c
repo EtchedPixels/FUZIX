@@ -63,7 +63,7 @@ static uint8_t fd_send(uint8_t cmd, uint8_t minor)
  */
 static const uint8_t setup_cmd[] = {
     0x03,		/* SPECIFY */
-    0x6f,		/* SRT and HUT - check if 6 or cpl of 6 */
+    0xaf,		/* SRT and HUT - 12ms seek */
     0x03,		/* ND, head load time */
 };
 
