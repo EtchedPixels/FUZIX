@@ -45,15 +45,14 @@ int hd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 /* Floppies are fixed to classic IBM 8" SD format */
 static struct fdcinfo fdcap = {
+    0,
+    FDC_8SSSD,
+    0,
     FDF_SD|FDF_8INCH|FDF_SEC128,
     26,			/* 26 sectors per track */
-    80,
+    77,
     1,
-    1,
-    3,
-    0,
-    FDC_FMT_AUTO,
-    0,
+    1
 };
 
 static uint8_t skewtab[4][32] = {
@@ -67,18 +66,8 @@ int fd_ioctl(uint_fast8_t minor, uarg_t request, char *buffer)
 {
     switch(request) {
     case FDIO_GETCAP:
-        return uput(&fdcap, buffer, sizeof(struct fdcinfo));
     case FDIO_GETINFO:
         return uput(&fdcap, buffer, sizeof(struct fdcinfo));
-    case FDIO_SETINFO:
-        /* Whatever - when they query to check they'll get no changes */
-        return 0;
-    case FDIO_FMTTRK:
-        /* Virtual fd has no format mechanism */
-        return 0;
-    case FDIO_RESTORE:
-        /* Virtual restore is meaningless */
-        return 0;
     case FDIO_SETSKEW:
         return uput(skewtab + minor, buffer, 32);
     default:
