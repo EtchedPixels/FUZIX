@@ -40,10 +40,11 @@ _longjmp:
 ;
 ; Detection code based on an idea by Jody Bruchon
 ;
-; Party time we have two cases
+; Party time we have three cases
 ;
 ; 6502/65C02/65WD02 etc		- S is 8bit
-; 65C816			- S is 16bit and we must merge the saved low
+; 65C816 in compat mode		- S is 8bit
+; 65C816 in native mode		- S is 16bit and we must merge the saved low
 ;				  8 with the current high 8 with IRQs off
 ;				  due to the sucky CPU design
 ;
@@ -61,6 +62,14 @@ _longjmp:
 	bmi is_8bit
 ;
 ;	16bit mode. Please ensure your barf bucket is to hand
+;
+;	If we are in compat mode then the rep/sep do nothing, we load
+;	the 8bit stack pointer into X and then A, we rewrite it with the
+;	8bit new S value and we write it back into S
+;
+;	If we are in native mode the rep/sep do stuff so we load a 16bit
+;	S into X and then A, we overwrite the low 8bits with the saved S
+;	and we stick the lot back together and put it into X and then S
 ;
 	sei			; Interrupts off
 	rep #$30
