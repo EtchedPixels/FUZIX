@@ -23,6 +23,7 @@ Welcome to Fuzix's documentation!
    DeviceDrivers
    TTY
    VT
+   Floppy
    65C816
    M68000
    BankedZ80

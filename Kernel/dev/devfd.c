@@ -1,4 +1,4 @@
-/***************************************************************
+/****************************************************************
    UZI (Unix Z80 Implementation) Kernel:  devflop.c
 ----------------------------------------------------------------
  Adapted from UZI By Doug Braun, and UZI280 by Stefan Nitschke
@@ -11,6 +11,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <fdc.h>
 #include <devfd.h>
 
 /* functions implemented in devfd2.s */
@@ -31,16 +32,17 @@ extern char *devfd_buffer;
    | +----------------- 0 = Double-Density,        1 = Single-Density
    +------------------- 0 = 250 kbps (normal MFM), 1 = 500 kbps (Hi-Density) */
 
-#define IBMPC3  0xAE    /* 10101110B HD,  DD, DS, 3.5",   512-byte Sctrs (1.44 MB) */
+#define IBMPC35 0xAE    /* 10101110B HD,  DD, DS, 3.5",   512-byte Sctrs (1.44 MB) */
 #define UZIHD3  0xAF    /* 10101111B HD,  DD, DS, 3.5",  1024-byte Sctrs (1.76 MB) */
 #define IBMPC5  0xAA    /* 10101010B HD,  DD, DS, 5.25",  512-byte Sctrs (1.2 MB)  */
 #define UZIHD5  0xAB    /* 10101011B HD,  DD, DS, 5.25", 1024-byte Sctrs (1.44 MB) */
-#define DSQD3   0x2F    /* 00101111B MFM, DD, DS, 3.5",  1024-byte Sctrs (800 KB)  */
-#define DSDD3   0x2E    /* 00101110B MFM, DD, DS, 3.5",   512-byte Sctrs (800 KB)  */
+#define DSQD35  0x2F    /* 00101111B MFM, DD, DS, 3.5",  1024-byte Sctrs (800 KB)  */
+#define DSDD35  0x2E    /* 00101110B MFM, DD, DS, 3.5",   512-byte Sctrs (800 KB)  */
+#define DSDD3	0x2E    /* 00101110B MFM, DD, DS, 3.5",   512-byte Sctrs (800 KB)  */
 #define DSQD5   0x2B    /* 00101011B MFM, DD, DS, 5.25", 1024-byte Sctrs (800 KB)  */
 #define DSDD5   0x2A    /* 00101010B MFM, DD, DS, 5.25",  512-byte Sctrs (800 KB)  */
 
-struct {
+struct devfd_dtbl {
 	uint8_t logged;	    /* logged (0xff), unlogged (0) */
 	uint8_t cbyte0;	    /* bits 7-4: step rate (4ms), bits 3-0: HUT (240ms) */
 	uint8_t cbyte1;	    /* head load time in 4ms steps (0=infinite) */
@@ -59,12 +61,116 @@ struct {
     { 0, 0xCF, 1, 27, 9, 1, DSDD3, 10, 0, 160 },
     { 0, 0xCF, 1, 27, 9, 1, DSDD3, 10, 0, 160 },
 #else
-    { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
-    { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
-    { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
-    { 0, 0xCF, 1, 27, 18, 1, IBMPC3, 10, 0, 160 },
+    { 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
+    { 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
+    { 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
+    { 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
 #endif
 };
+
+#ifdef CONFIG_FLOPPY_NOHD
+static uint8_t mode[4] = { 1, 1, 1, 1 };
+#else
+static uint8_t mode[4];
+#endif
+
+#define NUM_FDCMODES		6
+
+static struct fdcinfo fdccap = {
+	0,
+	0,
+	0,
+	/* Our low level code is only tested with 512 byte sector right now */
+	FDF_SD|FDF_DD|FDF_HD|FDF_DS|FDF_8INCH|FDF_SEC512,
+	18,
+	80,
+	2,
+	0,
+};
+	
+static struct fdcinfo fdcmode[NUM_FDCMODES] = {
+	/* IBM PC 3.5" */
+	{
+		0,
+		FDTYPE_PC144, /* 3.5" 1.44MB */
+		0,
+		FDF_HD|FDF_DS|FDF_SEC512,
+		80,
+		18,
+		2,
+		0
+	},
+	{
+		1,
+		FDTYPE_PC720, /* 3.5" 720K */
+		0,
+		FDF_DD|FDF_DS|FDF_SEC512,
+		80,
+		9,
+		2,
+		0
+	},
+	/* IBM PC 5.25" */
+	{
+		2,
+		FDTYPE_PC12, /* 5.25" 1.2MB */
+		0,
+		FDF_HD|FDF_DS|FDF_SEC512,
+		80,
+		15,
+		2,
+		0
+	},
+	{
+		3,
+		FDTYPE_PC360, /* 5.25" 360K */
+		0,
+		FDF_DD|FDF_DS|FDF_SEC512,
+		40,
+		9,
+		2,
+		0
+	},
+	/* Amstrad 3" */
+	{
+		4,
+		FDTYPE_AMS720, /* 3" 720K : looks like PC but different step rates etc */
+		0,
+		FDF_DD|FDF_DS|FDF_SEC512,
+		80,
+		9,
+		2,
+		0
+	},
+	{
+		5,
+		FDTYPE_AMS180, /* 3" 180K */
+		0,
+		FDF_DD|FDF_SEC512,
+		40,
+		9,
+		1,
+		0
+	},
+	/* Should add some single density support or 8" ?? */
+};
+
+/* Settings for the configurations as the controller wants them */
+
+static struct devfd_dtbl devfd_modes[NUM_FDCMODES] = {
+	/* 3.5" 3ms step */
+    	{ 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
+    	{ 0, 0xCF, 1, 27,  9, 1, DSDD35, 10, 0, 160 },
+    	/* 5.25 " */
+    	{ 0, 0xCF, 1, 27, 18, 1, IBMPC5, 10, 0, 160 },
+    	/* 360K drives step at 6ms */
+    	{ 0, 0xAF, 1, 27,  9, 1, DSDD5, 10, 0, 80 },
+	/* 3" 12ms step */
+    	{ 0, 0x4F, 1, 27,  9, 1, DSDD3, 10, 0, 40 },
+    	{ 0, 0x4F, 1, 27,  9, 1, DSDD3, 10, 0, 160 }
+};
+	
+		
 
 static int fd_transfer(bool rwflag, uint_fast8_t minor, uint_fast8_t rawflag)
 {
@@ -147,6 +253,33 @@ int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 	flag; /* unused */
 	return fd_transfer(false, minor, rawflag);
 }
+
+int fd_ioctl(uint_fast8_t minor, uarg_t request, char *data)
+{
+	uint8_t m;
+	m = ugetc(data);
+	if (m >= NUM_FDCMODES) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+	switch(request) {
+	case FDIO_GETCAP:
+		fdccap.mode = mode[minor];
+		return uput(&fdccap, data, sizeof(struct fdcinfo));
+	case FDIO_GETMODE:
+		return uput(fdcmode + m, data, sizeof(struct fdcinfo));
+	case FDIO_SETMODE:
+		mode[minor] = m;
+		memcpy(devfd_dtbl + minor, devfd_modes + m, sizeof(struct devfd_dtbl));
+		if (devfd_init(minor)) {
+			udata.u_error = EIO;
+			return -1;
+		}
+		return 0;
+	/* TODO: RESTORE, FMTTRK, SETSTEP */
+	}
+	return -1;
+}	
 
 int fd_open(uint_fast8_t minor, uint16_t flags)
 {
