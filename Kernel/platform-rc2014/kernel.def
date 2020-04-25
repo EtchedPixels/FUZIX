@@ -34,11 +34,25 @@ CTC_CH2		.equ	0x8A	; CTC channel 2
 CTC_CH3		.equ	0x8B	; CTC channel 3
 
 ; 37C65 FDC ports
-FDC_CCR		.equ	0x48	; Configuration Control Register (W/O)
-FDC_MSR		.equ	0x50	; 8272 Main Status Register (R/O)
-FDC_DATA	.equ	0x51	; 8272 Data Port (R/W)
-FDC_DOR		.equ	0x58	; Digital Output Register (W/O)
-FDC_TC		.equ	0x58	; Pulse terminal count (R/O)
+;
+; These depend upon the card
+;
+; Classic 'all over the I/O space' layout
+;
+;FDC_CCR		.equ	0x48	; Configuration Control Register (W/O)
+;FDC_MSR		.equ	0x50	; 37C65 Main Status Register (R/O)
+;FDC_DATA	.equ	0x51	; 37C65 Data Port (R/W)
+;FDC_DOR		.equ	0x58	; Digital Output Register (W/O)
+;FDC_TC		.equ	0x58	; Pulse terminal count (R/O)
+;
+; Tight decode cards
+;
+FDC_MSR		.equ	0x48
+FDC_DATA	.equ	0x49
+FDC_DOR		.equ	0x4A
+FDC_CCR		.equ	0x4B
+FDC_TC		.equ	0x4C
+FDC_RESET	.equ	0x4D
 
 ; MMU Ports
 MPGSEL_0	.equ	0x78	; Bank_0 page select register (W/O)
