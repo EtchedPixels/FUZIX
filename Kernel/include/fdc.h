@@ -63,6 +63,7 @@ struct fdcstep {
 #define FDTYPE_PC12	0x03	/* 1.2MB 5.25" PC */
 #define FDTYPE_PC360	0x04	/* 360K 5.25" PC */
 #define FDTYPE_PC288	0x05	/* 2.88MB EHD PC */
+#define FDTYPE_PC180	0x06	/* 180K 5.25" PC style SS 40 track */
 
 /* Amstrad and other 3" floppy formats */
 #define FDTYPE_AMS180	0x10	/* 3" 180K SSDD 40 track */
@@ -74,14 +75,14 @@ struct fdcstep {
 #define FDTYPE_8SSDD	0x1A	/* 8" SSDD 256 byte sector 77 track */
 #define FDTYPE_8DSDD	0x1B	/* 8" DSDD 256 byte sector 77 track */
 
-/* TRS80 formats */
+/* TRS80 formats 10spt for SD 18 for DD */
 #define FDTYPE_TRS35SD	0x20	/* Original TRS80 35 track */
 #define FDTYPE_TRS35DD	0x21	/* With doubler */
 #define FDTYPE_TRS40SD	0x22	/* 40 track SD */
 #define FDTYPE_TRS40DD	0x23	/* With doubler */
 #define FDTYPE_TRSDSDD	0x24	/* double sided drives in the later model 4 */
 
-#define FDTYPE_COCO	0x2C	/* 35 track SSSD, 18 spt */
+#define FDTYPE_COCO	0x2C	/* 35 track SSDD, 18 spt */
 
 /* System specific formats */
 #define FDTYPE_AMIGA	0x30	/* Amiga 880K */
@@ -102,7 +103,7 @@ struct fdcstep {
 #define FDTYPE_BBCADFSE	0x45	/* Physically ADFSD */
 #define FDTYPE_BBCADFSF	0x46	/* 2 sides, 10 sectors HD */
 #define FDTYPE_BBCADFSG	0x47	/* 2 sides, 20 sectors EHD */
-/* Other uses of the 256 byte formats */
+/* Other uses of the 256 byte 16spt formats */
 #define FDTYPE_BETA40S	0x42	/* Beta disk 40 track SSDD */
 #define FDTYPE_BETA80S	0x43	/* Beta disk 80 track SSDD */
 #define FDTYPE_BETA40D	0x48	/* No BBC equivalent 40 track DS */
@@ -119,5 +120,12 @@ struct fdcstep {
 #define FDTYPE_PC800	0x53	/* PC style 800K */
 #define FDTYPE_SAMCOUPE	0x53	/* Another user of the same format */
 
+/* NASCOM PolyDOS. Much like the BBC but 18spt not 16 for MFM. To
+   confuse further Nascom CP/M used 512x10x77 */
+#define FDTYPE_NASDSSD	0x60	/* Nascom 35 track DSSD 10spt */
+#define FDTYPE_NASDSDD	0x61	/* Nascom 35 track DSDD 18spt */
+#define FDTYPE_NASSS80	0x62	/* Nascom SSDD 80 track, 18spt */
+#define FDTYPE_NASCPMS	0x63	/* 512bps/10spt/77 track SS DD */
+#define FDTYPE_NASCPMD	0x64	/* 512bps/10spt/77 track SS DD */
 
 #endif
