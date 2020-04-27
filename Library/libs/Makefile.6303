@@ -14,7 +14,7 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 #	Library routines.
 #
 SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
-SRC_C += bcmp.c bcopy.c bsearch.c calloc.c cfree.c clock.c closedir.c
+SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c
 SRC_C += err.c errno.c error.c
@@ -32,12 +32,12 @@ SRC_C += opendir.c opendir_r.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
 SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
 SRC_C += regsub.c remove.c remount.c rewind.c rindex.c rootmntent.c
-SRC_C += setbuffer.c setenv.c
+SRC_C += seekdir.c setbuffer.c setenv.c
 SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c sleep.c sprintf.c
 SRC_C += sputl.c stat.c statvfs.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
 SRC_C += strnicmp.c strnlen.c strsep.c strsignal.c swab.c swapon.c
-SRC_C += system.c time.c tmpfile.c tmpnam.c ttyname.c
+SRC_C += system.c telldir.c time.c tmpfile.c tmpnam.c ttyname.c
 SRC_C += tzset.c umount.c ungetc.c usleep.c utent.c utimes.c utsname.c
 SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c

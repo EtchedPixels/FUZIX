@@ -2,6 +2,9 @@
 ;	Setjmp is nice and simple on the 6803/6303. X is scratch, D is
 ;	return so only the program counter and S matter
 ;
+	.setcpu 6803
+	.code
+
 _setjmp:
 	tsx
 	ldd	1,x		; return address

@@ -1,6 +1,7 @@
 
 	.export	_longjmp
 
+	.setcpu 6803
 	.code
 
 ;
