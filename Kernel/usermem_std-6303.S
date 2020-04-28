@@ -6,6 +6,8 @@
 	.export __uget
 	.export __uput
 
+	.setcpu 6303
+
 	.common
 
 __uputc:
