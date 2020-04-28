@@ -1,0 +1,22 @@
+include $(FUZIX_ROOT)/Applications/rules.6303
+
+SRC = dumps.c io.c ld.c readobj.c table.c typeconv.c linksyms.c \
+      writefuzix.c
+OBJ = $(SRC:.c=.o)
+
+all: ld09
+
+ld09: $(OBJ)
+	$(LINKER) -o $@ $(CRT0) $^  $(LINKER_LIB) 
+
+clean realclean clobber:
+	rm -f *.o as09 *~
+
+$(OBJ): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
+	 syshead.h type.h
+
+ar.h:
+	test -f ar.h || \
+	{ rm -f ar.h ; ln -s ../libc/include/ar.h . ; } || \
+	ln ../libc/include/ar.h .
+

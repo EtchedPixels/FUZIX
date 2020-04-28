@@ -81,19 +81,19 @@ fuzix6303/Makefile: ../tools/syscall_6303.c ../../Kernel/include/syscall_name.h
 syslib.lib: fuzix6303/Makefile $(OBJ_ALL)
 	(cd fuzix6303; make)
 	$(AR) cr syslib.lib $(OBJ_ALL)
-	ln -sf syslib.lib c6303.a
+	ln -sf syslib.lib libc6303.a
 
 termcap.lib: fuzix6303/Makefile $(OBJ_TC)
 	$(AR) cr termcap.lib $(OBJ_TC)
-	ln -sf termcap.lib termcap6303.a
+	ln -sf termcap.lib libtermcap6303.a
 
 readline.lib: fuzix6303/Makefile $(OBJ_RL)
 	$(AR) cr readline.lib $(OBJ_RL)
-	ln -sf readline.lib readline6303.a
+	ln -sf readline.lib libreadline6303.a
 
 curses.lib: fuzix6303/Makefile $(OBJ_CURS)
 	$(AR) cr curses.lib $(OBJ_CURS)
-	ln -sf curses.lib curses6303.a
+	ln -sf curses.lib libcurses6303.a
 
 liberror.txt:
 	../tools/liberror > liberror.txt
@@ -120,7 +120,7 @@ $(OBJ_HARD):%.o: %.c
 	$(CC) $(CC_NOOPT) $(@:.o=.c)
 
 clean:
-	rm -rf *.o *.lib *~ syscall.l  libc.l syslib.l liberror.txt
+	rm -rf *.o *.lib *~ syscall.l  libc.l syslib.l liberror.txt *.a
 	(cd curses; rm -rf *.rel *.asm *.sym *.lst *~ *.o)
 	(cd fuzix6303; make clean)
 

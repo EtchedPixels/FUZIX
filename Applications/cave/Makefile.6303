@@ -1,0 +1,20 @@
+include $(FUZIX_ROOT)/Applications/rules.6303
+
+SRC = advent.c adventdb.c database.c english.c itverb.c lib.c saveadv.c \
+      turn.c verb.c
+OBJ = $(SRC:.c=.o)
+
+all: advent advent.db
+
+advent.db: advgen
+	./advgen > advent.db
+
+advgen: advgen.c
+	cc advgen.c -o ./advgen
+
+advent: $(OBJ)
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LINKER_LIB)
+	
+
+clean:
+	rm -f advent advent.db advgen *.o *.asm *.lst core *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.o

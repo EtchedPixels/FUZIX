@@ -1,0 +1,32 @@
+include $(FUZIX_ROOT)/Applications/rules.6303
+
+SRC =	as.c assemble.c errors.c express.c \
+	genbin.c genlist.c genobj.c gensym.c \
+	keywords.c macro.c mops.c pops.c readsrc.c \
+	scan.c table.c typeconv.c alloc.c
+OBJ = $(SRC:.c=.o)
+
+all:
+
+as09: $(OBJ)
+	$(LINKER) -o $@ $(CRT0) $^  $(LINKER_LIB) 
+
+clean realclean clobber:
+	rm -f *.o as09 *~
+
+as.o: const.h type.h byteord.h macro.h file.h flag.h globvar.h
+assemble.o: const.h type.h address.h globvar.h opcode.h scan.h
+error.o: const.h type.h
+express.o: const.h type.h address.h globvar.h scan.h source.h
+genbin.o: const.h type.h address.h file.h globvar.h
+genlist.o: const.h type.h address.h flag.h file.h globvar.h macro.h scan.h \
+	   source.h
+genobj.o: const.h type.h address.h file.h globvar.h
+gensym.o: const.h type.h flag.h file.h globvar.h
+keywords.o: const.h type.h globvar.h opcode.h
+macro.o: const.h type.h globvar.h scan.h macro.h
+mops.o: const.h type.h globvar.h opcode.h scan.h address.h
+pops.o: const.h type.h address.h flag.h globvar.h opcode.h scan.h
+readsrc.o: const.h type.h flag.h file.h globvar.h macro.h scan.h source.h
+scan.o: const.h type.h globvar.h scan.h 
+table.o: const.h type.h globvar.h opcode.h scan.h

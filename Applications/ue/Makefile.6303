@@ -1,0 +1,24 @@
+include $(FUZIX_ROOT)/Applications/rules.6303
+
+OBJS = ue.o
+LIBS = term-ansi.c term-fuzix.c term.c
+
+all: ue.fuzix ue.ansi ue
+
+$(OBJS): ue.h
+$(LIBS): ue.h
+
+.c.o:
+	$(CC) $(COPT) $(CFLAGS) $(DEFS) -c $< -o $@
+
+ue.fuzix: $(OBJS) term-fuzix.o
+	$(LINKER) -o $@ $(CRT0NS) $^ $(LINKER_LIB) 
+
+ue.ansi: $(OBJS) term-ansi.o
+	$(LINKER) -o $@ $(CRT0NS) $^ $(LINKER_LIB) 
+
+ue: $(OBJS) term.o
+	$(LINKER) -o $@ $(CRT0) $^ -ltermcap6303 $(LINKER_LIB) 
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel

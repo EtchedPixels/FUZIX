@@ -1,0 +1,19 @@
+include $(FUZIX_ROOT)/Applications/rules.6303
+
+SRCS  = invaders.c
+
+OBJS = $(SRCS:.c=.o)
+APPS = $(OBJS:.o=)
+all: $(APPS) size.report
+
+$(APPS): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ -lcurses6303 -ltermcap6303 $(LINKER_LIB)
+
+size.report: $(APPS) $(APPSNS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) *.o core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+
+rmbak:
+	rm -f *~ core

@@ -1,0 +1,18 @@
+include $(FUZIX_ROOT)/Applications/rules.6303
+
+.SUFFIXES: .c .o
+
+SRC = flashrom.c
+OBJ = $(SRC:.c=.o)
+APPS = $(OBJ:.o=)
+
+all: $(APPS)
+
+$(APPS): %: %.o
+	$(LINKER) -o $@ $(CRT0) $^  $(LINKER_LIB) 
+
+clean:
+	rm -f $(OBJS) $(APPS) core *~ *.o
+
+rmbak:
+	rm -f *~ core
