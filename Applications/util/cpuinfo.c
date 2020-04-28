@@ -368,6 +368,33 @@ static void cpu_ident(void)
     }
 }
 
+#elif defined(__CC68__)
+
+extern uint8_t identify_cpu(void);
+
+static uint8_t cpu_vendor;
+static uint8_t cpu_id;
+static const char *vendor_name[] = { "Motorola", "Hitachi" };
+static const char *cpu_name[] = { "6800", "6801", "68HC11", "6303" };
+static const int8_t cpu_step = -1;
+static const int8_t cpu_MHz = 0;
+static const uint8_t cpu_cache = 0;
+static const char cpu_fpu[]="no";
+static char *cpu_bugs = "";
+static char *cpu_flags = "";
+static const uint8_t cpu_vsize = 16;
+static uint8_t cpu_psize = 16;
+static const char *cpu_pm = NULL;
+
+
+static void cpu_ident(void)
+{
+    /* For the moment: need to add 6800/1/303/HC11 tests */
+    cpu_id = identify_cpu();
+    if (cpu_id == 3)
+        cpu_vendor = 1;
+}
+
 #else
 #error "unsupported CPU"
 #endif
