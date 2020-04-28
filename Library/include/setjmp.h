@@ -17,6 +17,12 @@
 	extern int _setjmp(jmp_buf __env);
 	#define setjmp(x) _setjmp(x)
 
+#elif defined(__CC68__)
+
+	typedef char jmp_buf[4];
+	extern int _setjmp(jmp_buf __env);
+	#define setjmp(x) _setjmp(x)
+
 #elif defined(__MSP430__)
 
 	typedef uint16_t jmp_buf[11];
