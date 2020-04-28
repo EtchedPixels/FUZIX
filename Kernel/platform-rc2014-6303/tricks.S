@@ -9,6 +9,8 @@
 #include "kernel.def"
 #include "../kernel-6303.def"
 
+	.setcpu 6303
+
 	.common
 
 ; ramtop must be in common for single process swapping cases
@@ -163,33 +165,33 @@ _dofork:
 ;	Copy memory
 ;
 fork_copy:
-	ldx _udata+U_PTAB
+	ldx _udata+U_DATA__U_PTAB
 	ldaa _udata+P_TAB__P_PAGE_OFFSET+1,x
 	ldab _udata+U_DATA__U_PAGE+1
 	pshb
 	psha
-	bsr banktobank
+	bsr bank2bank
 	pula
 	pulb
 	inca
 	incb
 	pshb
 	psha
-	bsr banktobank
+	bsr bank2bank
 	pula
 	pulb
 	inca
 	incb
 	pshb
 	psha
-	bsr banktobank
+	bsr bank2bank
 	pula
 	pulb
 	inca
 	incb
 	; This last one copies more than needed of the common space but
 	; will be relevant when we go to proper banking
-	bsr banktobank
+	bsr bank2bank
 	rts
 
 ;
@@ -217,12 +219,12 @@ copyloop:
 	ldab ,x
 patch1:
 	ldaa #0
-	staa #$FE79		; Switch bank to secondary
+	staa $FE79		; Switch bank to secondary
 	stab ,x
 	inx
 patch2:
 	ldaa #0
-	staa #$FE79		; And back
+	staa $FE79		; And back
 	cpx #$8000		; End at 0x8000
 	bne copyloop
 	rts

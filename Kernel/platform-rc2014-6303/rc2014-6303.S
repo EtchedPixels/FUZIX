@@ -20,6 +20,8 @@
 	    .export ___hard_ei
 	    .export ___hard_irqrestore
 
+	    .setcpu 6303
+
 #include "kernel.def"
 #include "../kernel-6303.def"
 

@@ -1,6 +1,8 @@
 ;
 ;	So we end up first in the image
 ;
+
+		.setcpu 6303
 		.code
 
 		.byte 0x03
