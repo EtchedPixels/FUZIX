@@ -26,7 +26,7 @@ extern int io_eof;
 void greeting(void)
 {
   ShowPLATO(splash,splash_size);
-  terminal_initial_position();
+  t_initial_position();
 }
 
 void main(void)
@@ -34,7 +34,7 @@ void main(void)
   screen_init();
   io_init();
   touch_init();
-  terminal_init();
+  t_init();
   greeting();
   screen_beep();
   

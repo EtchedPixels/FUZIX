@@ -13,110 +13,110 @@
 #include "protocol.h"
 
 /**
- * terminal_init()
+ * t_init()
  * Initialize terminal state
  */
-void terminal_init(void);
+void t_init(void);
 
 /**
- * terminal_initial_position()
+ * t_initial_position()
  * Set terminal initial position after splash screen.
  */
-void terminal_initial_position(void);
+void t_initial_position(void);
 
 /**
- * terminal_set_tty(void) - Switch to TTY mode
+ * t_set_tty(void) - Switch to TTY mode
  */
-void terminal_set_tty(void);
+void t_set_tty(void);
 
 /**
- * terminal_set_plato(void) - Switch to PLATO mode
+ * t_set_plato(void) - Switch to PLATO mode
  */
-void terminal_set_plato(void);
+void t_set_plato(void);
 
 /**
- * terminal_get_features(void) - Inquire about terminal ASCII features
+ * t_get_features(void) - Inquire about terminal ASCII features
  */
-uint8_t terminal_get_features(void);
+uint8_t t_get_features(void);
 
 /**
- * terminal_get_type(void) - Return the appropriate terminal type
+ * t_get_type(void) - Return the appropriate terminal type
  */
-uint8_t terminal_get_type(void);
+uint8_t t_get_type(void);
 
 /**
- * terminal_get_subtype(void) - Return the appropriate terminal subtype
+ * t_get_subtype(void) - Return the appropriate terminal subtype
  */
-uint8_t terminal_get_subtype(void);
+uint8_t t_get_subtype(void);
 
 /**
- * terminal_get_load_file(void) - Return the appropriate terminal loadfile (should just be 0)
+ * t_get_load_file(void) - Return the appropriate terminal loadfile (should just be 0)
  */
-uint8_t terminal_get_load_file(void);
+uint8_t t_get_load_file(void);
 
 /**
- * terminal_get_configuration(void) - Return the terminal configuration
+ * t_get_configuration(void) - Return the terminal configuration
  */
-uint8_t terminal_get_configuration(void);
+uint8_t t_get_configuration(void);
 
 /**
- * terminal_get_char_address(void) - Return the base address of the character set.
+ * t_get_char_address(void) - Return the base address of the character set.
  */
-uint16_t terminal_get_char_address(void);
+uint16_t t_get_char_address(void);
 
 /**
- * terminal_mem_read - Read a byte of program memory.
+ * t_mem_read - Read a byte of program memory.
  * not needed for our terminal, but must
  * be decoded.
  */
-padByte terminal_mem_read(padWord addr);
+padByte t_mem_read(padWord addr);
 
 /**
- * terminal_mem_load - Write a byte to non-character memory.
+ * t_mem_load - Write a byte to non-character memory.
  * not needed for our terminal, but must be decoded.
  */
-void terminal_mem_load(padWord addr, padWord value);
+void t_mem_load(padWord addr, padWord value);
 
 /**
- * terminal_char_load - Store a character into the user definable
+ * t_char_load - Store a character into the user definable
  * character set.
  */
-void terminal_char_load(padWord charnum, charData theChar);
+void t_char_load(padWord charnum, charData theChar);
 
 /**
- * terminal_mode_5, 6, and 7 are basically stubbed.
+ * t_mode_5, 6, and 7 are basically stubbed.
  */
-void terminal_mode_5(padWord value);
-void terminal_mode_6(padWord value);
-void terminal_mode_7(padWord value);
+void t_mode_5(padWord value);
+void t_mode_6(padWord value);
+void t_mode_7(padWord value);
 
 /**
- * terminal_ext_allow - External Input allowed. Not implemented.
+ * t_ext_allow - External Input allowed. Not implemented.
  */
-void terminal_ext_allow(padBool allow);
+void t_ext_allow(padBool allow);
 
 /**
- * terminal_set_ext_in - Set which device to get input from.
+ * t_set_ext_in - Set which device to get input from.
  * Not implemented
  */
-void terminal_set_ext_in(padWord device);
+void t_set_ext_in(padWord device);
 
 /**
- * terminal_set_ext_out - Set which device to send external data to.
+ * t_set_ext_out - Set which device to send external data to.
  * Not implemented
  */
-void terminal_set_ext_out(padWord device);
+void t_set_ext_out(padWord device);
 
 /**
- * terminal_ext_in - get an external input from selected device.
+ * t_ext_in - get an external input from selected device.
  * Not implemented.
  */
-padByte terminal_ext_in(void);
+padByte t_ext_in(void);
 
 /**
- * terminal_ext_out - Send an external output to selected device
+ * t_ext_out - Send an external output to selected device
  * Not implemented.
  */
-void terminal_ext_out(padByte value);
+void t_ext_out(padByte value);
 
 #endif
