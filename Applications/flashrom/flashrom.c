@@ -89,7 +89,7 @@ char spinner(void)
     return spinner_char[spinner_pos];
 }
 
-unsigned char flashrom_chip_read(unsigned long address)
+unsigned char fr_chip_read(unsigned long address)
 {
     unsigned char buf;
     lseek(mem_fd, FLASHROM_PHYSICAL_BASE + address, SEEK_SET);
@@ -98,14 +98,14 @@ unsigned char flashrom_chip_read(unsigned long address)
     return buf;
 }
 
-void flashrom_chip_read_block(unsigned long address, void *buffer, int length)
+void fr_chip_read_block(unsigned long address, void *buffer, int length)
 {
     lseek(mem_fd, FLASHROM_PHYSICAL_BASE + address, SEEK_SET);
     if(read(mem_fd, buffer, length) != length)
         printf("read from /dev/mem failed: %s\n", strerror(errno));
 }
 
-void flashrom_chip_write(unsigned long address, unsigned char value)
+void fr_chip_write(unsigned long address, unsigned char value)
 {
     lseek(mem_fd, FLASHROM_PHYSICAL_BASE + address, SEEK_SET);
     if(write(mem_fd, &value, 1) != 1)
@@ -118,28 +118,28 @@ void abort_and_solicit_report(void)
     _exit(1);
 }
 
-unsigned long flashrom_sector_address(unsigned int sector)
+unsigned long fr_sector_address(unsigned int sector)
 {
     return flashrom_type->sector_size * ((unsigned long)sector);
 }
 
-void flashrom_wait_toggle_bit(unsigned long address)
+void fr_wait_toggle_bit(unsigned long address)
 {
     unsigned char a, b;
 
     /* wait for toggle bit to indicate completion */
     do{
-        a = flashrom_chip_read(address);
-        b = flashrom_chip_read(address);
+        a = fr_chip_read(address);
+        b = fr_chip_read(address);
         if(a==b){
             /* data sheet says two additional reads are required */
-            a = flashrom_chip_read(address);
-            b = flashrom_chip_read(address);
+            a = fr_chip_read(address);
+            b = fr_chip_read(address);
         }
     }while(a != b);
 }
 
-void flashrom_chip_write_block(unsigned long address, unsigned int length)
+void fr_chip_write_block(unsigned long address, unsigned int length)
 {
     unsigned char *buffer = data_buffer;
     unsigned char magic1 = 0xAA;
@@ -171,8 +171,8 @@ void flashrom_chip_write_block(unsigned long address, unsigned int length)
             // the data sheet advises you check this twice but this boat is so
             // slow there's not much point doing it at all!
 #if SLOW_BUT_SAFE
-            while(flashrom_chip_read(address) != *buffer);
-            while(flashrom_chip_read(address) != *buffer);
+            while(fr_chip_read(address) != *buffer);
+            while(fr_chip_read(address) != *buffer);
             do{
                 lseek(mem_fd, FLASHROM_PHYSICAL_BASE + address, SEEK_SET);
                 read(mem_fd, &test, 1);
@@ -184,55 +184,55 @@ void flashrom_chip_write_block(unsigned long address, unsigned int length)
     }
 }
 
-void flashrom_chip_erase(void)
+void fr_chip_erase(void)
 {
-    flashrom_chip_write(0x5555, 0xAA);
-    flashrom_chip_write(0x2AAA, 0x55);
-    flashrom_chip_write(0x5555, 0x80);
-    flashrom_chip_write(0x5555, 0xAA);
-    flashrom_chip_write(0x2AAA, 0x55);
-    flashrom_chip_write(0x5555, 0x10);
-    flashrom_wait_toggle_bit(0);
+    fr_chip_write(0x5555, 0xAA);
+    fr_chip_write(0x2AAA, 0x55);
+    fr_chip_write(0x5555, 0x80);
+    fr_chip_write(0x5555, 0xAA);
+    fr_chip_write(0x2AAA, 0x55);
+    fr_chip_write(0x5555, 0x10);
+    fr_wait_toggle_bit(0);
 }
 
-void flashrom_sector_erase(unsigned long address)
+void fr_sector_erase(unsigned long address)
 {
-    flashrom_chip_write(0x5555, 0xAA);
-    flashrom_chip_write(0x2AAA, 0x55);
-    flashrom_chip_write(0x5555, 0x80);
-    flashrom_chip_write(0x5555, 0xAA);
-    flashrom_chip_write(0x2AAA, 0x55);
-    flashrom_chip_write(address, 0x30);
-    flashrom_wait_toggle_bit(address);
+    fr_chip_write(0x5555, 0xAA);
+    fr_chip_write(0x2AAA, 0x55);
+    fr_chip_write(0x5555, 0x80);
+    fr_chip_write(0x5555, 0xAA);
+    fr_chip_write(0x2AAA, 0x55);
+    fr_chip_write(address, 0x30);
+    fr_wait_toggle_bit(address);
 }
 
 /* this is used only for programming atmel 29C parts which have a combined erase/program cycle */
-void flashrom_sector_program(unsigned long address, unsigned int count)
+void fr_sector_program(unsigned long address, unsigned int count)
 {
     unsigned long prog_address;
     unsigned char *buffer = data_buffer;
 
     prog_address = address;
 
-    flashrom_chip_write(0x5555, 0xAA);
-    flashrom_chip_write(0x2AAA, 0x55);
-    flashrom_chip_write(0x5555, 0xA0); /* software data protection activated */
+    fr_chip_write(0x5555, 0xAA);
+    fr_chip_write(0x2AAA, 0x55);
+    fr_chip_write(0x5555, 0xA0); /* software data protection activated */
 
     while(count--){
-        flashrom_chip_write(prog_address++, *(buffer++));
+        fr_chip_write(prog_address++, *(buffer++));
     }
 
-    flashrom_wait_toggle_bit(address);
+    fr_wait_toggle_bit(address);
 }
 
-bool flashrom_identify(void)
+bool fr_identify(void)
 {
     unsigned int flashrom_device_id;
 
     /* put the flash memory into identify mode */
-    flashrom_chip_write(0x5555, 0xAA);
-    flashrom_chip_write(0x2AAA, 0x55);
-    flashrom_chip_write(0x5555, 0x90);
+    fr_chip_write(0x5555, 0xAA);
+    fr_chip_write(0x2AAA, 0x55);
+    fr_chip_write(0x5555, 0x90);
 
     /* 2017-01-03 removed 2 x _pause(1) -- does this fix the intermittent failure to identify the ROM? */
 
@@ -240,11 +240,11 @@ bool flashrom_identify(void)
     // _pause(1); /* shortest delay we can request is 0.1 seconds */
 
     /* load manufacturer and device IDs */
-    flashrom_device_id = (((unsigned int)flashrom_chip_read(0x0000) & 0xFF) << 8) 
-                         | (flashrom_chip_read(0x0001) & 0xFF);
+    flashrom_device_id = (((unsigned int)fr_chip_read(0x0000) & 0xFF) << 8) 
+                         | (fr_chip_read(0x0001) & 0xFF);
 
     /* put the flash memory back into normal mode */
-    flashrom_chip_write(0x5555, 0xF0);
+    fr_chip_write(0x5555, 0xF0);
 
     /* atmel 29C parts require a pause for 10msec at this point */
     // _pause(1); /* shortest delay we can request is 0.1 seconds */
@@ -266,7 +266,7 @@ bool flashrom_identify(void)
     }
 }
 
-void flashrom_read(void)
+void fr_read(void)
 {
     unsigned long offset;
     ssize_t w;
@@ -277,7 +277,7 @@ void flashrom_read(void)
     while(offset < flashrom_size){
         printf("\rRead %d/%dKB ", (int)(offset >> 10), (int)(flashrom_size >> 10));
         fflush(stdout);
-        flashrom_chip_read_block(offset, data_buffer, DATA_BUFFER_SIZE);
+        fr_chip_read_block(offset, data_buffer, DATA_BUFFER_SIZE);
         w = write(img_fd, data_buffer, DATA_BUFFER_SIZE);
         if(w != DATA_BUFFER_SIZE){
             printf("write() failed: %s\n", strerror(errno));
@@ -312,7 +312,7 @@ void load_block(unsigned long address, unsigned int block_size)
     loaded_address = address;
 }
 
-bool flashrom_verify_and_write(bool perform_write)
+bool fr_verify_and_write(bool perform_write)
 {
     bool sector_match;
     unsigned int mismatch=0, sector, block, block_size, blocks_per_sector;
@@ -329,7 +329,7 @@ bool flashrom_verify_and_write(bool perform_write)
     for(sector=0; sector<flashrom_type->sector_count; sector++){
         printf("\r%s: sector %d/%d   ", perform_write ? "Write" : "Verify", sector, flashrom_type->sector_count);
         fflush(stdout);
-        rom_address = flashrom_sector_address(sector);
+        rom_address = fr_sector_address(sector);
 
         /* check for EOF */
         if(rom_address >= file_size)
@@ -339,7 +339,7 @@ bool flashrom_verify_and_write(bool perform_write)
         sector_match = true;
         for(block=0; sector_match && block<blocks_per_sector; block++){
             load_block(rom_address, block_size);
-            flashrom_chip_read_block(rom_address, rom_buffer, block_size);
+            fr_chip_read_block(rom_address, rom_buffer, block_size);
             if(memcmp(data_buffer, rom_buffer, block_size)){
                 sector_match = false;
             }
@@ -348,26 +348,26 @@ bool flashrom_verify_and_write(bool perform_write)
 
         if(!sector_match){
             mismatch++;
-            rom_address = flashrom_sector_address(sector); /* rewind to start of sector */
+            rom_address = fr_sector_address(sector); /* rewind to start of sector */
             if(perform_write){
                 /* erase and program sector */
                 if(flashrom_type->strategy & ST_PROGRAM_SECTORS){
                     /* This type of chip has a combined erase/program cycle that programs a whole
                        sector at once. The sectors are quite small (128 or 256 bytes) so there is
                        exactly 1 subsector. */
-                    flashrom_sector_program(rom_address, block_size);
+                    fr_sector_program(rom_address, block_size);
                 }else{
                     if(flashrom_type->strategy & ST_ERASE_CHIP)
-                        flashrom_chip_erase(); /* only 1 sector with this chip type */
+                        fr_chip_erase(); /* only 1 sector with this chip type */
                     else
-                        flashrom_sector_erase(rom_address);
+                        fr_sector_erase(rom_address);
 
                     for(block=0; block<blocks_per_sector; block++){
                         putchar(0x08);
                         putchar(spinner());
                         fflush(stdout);
                         load_block(rom_address, block_size);
-                        flashrom_chip_write_block(rom_address, block_size);
+                        fr_chip_write_block(rom_address, block_size);
                         rom_address += block_size;
                     }
                 }
@@ -504,7 +504,7 @@ int main(int argc, const char *argv[])
         return 1;
 
     /* identify flash ROM chip */
-    if(!flashrom_identify()){
+    if(!fr_identify()){
         puts("Your flash memory chip is not recognised.");
         abort_and_solicit_report();
     }
@@ -523,7 +523,7 @@ int main(int argc, const char *argv[])
                 printf("Cannot create image file \"%s\": %s\n", filename, strerror(errno));
                 return 1;
             }
-            flashrom_read();
+            fr_read();
             break;
         case ACTION_VERIFY:
         case ACTION_WRITE:
@@ -537,9 +537,9 @@ int main(int argc, const char *argv[])
             if(action == ACTION_VERIFY)
                 mismatch = true; /* force verify */
             else /* ACTION_WRITE */
-                mismatch = flashrom_verify_and_write(true); /* we avoid verifying if nothing changed */
+                mismatch = fr_verify_and_write(true); /* we avoid verifying if nothing changed */
             if(mismatch)
-                flashrom_verify_and_write(false);
+                fr_verify_and_write(false);
             break;
         default:
             puts("bug: unknown action");
