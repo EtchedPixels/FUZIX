@@ -412,7 +412,7 @@ int d_blkoff(uint_fast8_t shift)
 {
 	uint16_t m = masks[shift - 7];
 	udata.u_block = udata.u_offset >> shift;
-	if (udata.u_offset & m) {
+	if (((uint16_t)udata.u_offset) & m) {
 		udata.u_error = EIO;
 		return -1;
 	}
