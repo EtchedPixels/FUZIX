@@ -74,6 +74,8 @@ OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_TC) $(OBJ_RL) $(OBJ_CURS)
 all: syslib.lib termcap.lib curses.lib readline.lib liberror.txt \
      crt0_6303.o crt0nostdio_6303.o
 
+.PHONY: fuzix6303/Makefile
+
 fuzix6303/Makefile: ../tools/syscall_6303.c ../../Kernel/include/syscall_name.h
 	(cd ..; make tools/syscall_6303)
 	../tools/syscall_6303
