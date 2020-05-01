@@ -144,11 +144,11 @@ map_kernel:
 ;	enable the real MMU and banking setup.
 ;
 map_bank:
-	    stab 0xFE78
 	    stab cur_map
-	    addb #1
+	    stab 0xFE78
+	    incb
 	    stab 0xFE79
-	    addb #1
+	    incb
 	    stab 0xFE7A
 	    ; And don't swap the common here but in the task switch
 	    rts
@@ -233,7 +233,7 @@ hd_read256:
 	ldaa 0xFE10
 	staa ,x
 	inx
-	addb #1
+	incb
 	bne hd_read256
 	rts
 
@@ -258,7 +258,7 @@ hd_write256:
 	ldaa ,x
 	staa 0xFE10
 	inx
-	addb #1
+	incb
 	bne hd_write256
 	rts
 

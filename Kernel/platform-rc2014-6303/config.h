@@ -13,18 +13,18 @@
 
 /*
  *	512K RAM (swap yet to do )
+ *	Once we switch to 16K banking will be F400 as top
  */
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS 	9   /* 9 x 48K */
-#define MAP_SIZE    0xF400
+#define MAP_SIZE    0xC000
 
 #define TICKSPERSEC 20	    /* Ticks per second */
 
-/* We've not yet made the rest of the code - eg tricks match this ! */
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100
-#define PROGTOP     0xF400
+#define PROGTOP     0xC000
 
 #define CONFIG_IDE
 #define MAX_BLKDEV 1

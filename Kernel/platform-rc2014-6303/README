@@ -35,3 +35,8 @@ Things to address
 - bank to bank copies
 - once stable switch to 16K banks (right now our trickery means swap won't
   work unless we limit user top to BFFF etc)
+
+
+
+Put the loader on sector 0
+Put the kernel on sector 1+
