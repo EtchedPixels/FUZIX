@@ -1,4 +1,4 @@
-Initial sketches for a 6303 RC2014 banked memory platform
+Initial code  for a 6303 RC2014 banked memory platform
 
 Proposed memory mapping
 
@@ -28,15 +28,22 @@ Hardware Arrangement
 FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
 RC2014 bus
 512K RAM/ROM
-16550A UART	(switch to internal TODO)
-
+Internal UART
 
 Things to address
-- bank to bank copies
-- once stable switch to 16K banks (right now our trickery means swap won't
-  work unless we limit user top to BFFF etc)
-
-
+- Switch memory model but do we go with
+	- 8K/56K MMU card and 512K flat
+	- 16K banked 512K card
+	- Flat card and drive A16-A19 off the Port 1 I/O pins
+	  (if possible)
+- Implement/debug fork() for it
+- SPI bitbang port
+- Making the UART driver properly IRQ driven for input with its own buffer
+  and separate to the Fuzix level interrupts
+- Proper two level interrupt handling so that the timer drives Fuzix and
+  the other stuff is queued
+- Don't disable all interrupts in the Fuzix paths
+- Add device support for some of the RC2014 external devices
 
 Put the loader on sector 0
 Put the kernel on sector 1+

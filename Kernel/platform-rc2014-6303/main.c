@@ -25,16 +25,16 @@ void do_beep(void)
 }
 
 /*
- * Map handling: allocate 3 banks per process
+ * Map handling: allocate 4 banks per process
  */
 
 void pagemap_init(void)
 {
     int i;
-    /* 32-35 are the kernel, 36-38 / 39-41 / etc are user */
+    /* 32-35 are the kernel, 36-39 / 40-43 / etc are user */
     /* Add 36-38 last as we hardcode 36 into our init creation in tricks.s */
-    for (i = 8; i >= 0; i--)
-        pagemap_add(36 + i * 3);
+    for (i = 6; i >= 0; i--)
+        pagemap_add(36 + i * 4);
 }
 
 void map_init(void)
@@ -83,7 +83,7 @@ void platform_interrupt(void)
 		if (tickmod == 7)
 			tickmod = 0;
 		/* Turn it into a 20Hz timer. For now do a simple fixup
-		   for the 28->28 and ignore the extra 1% or so error */
+		   for the 28->20 and ignore the extra 1% or so error */
 		if (tickmod != 2 && tickmod != 6)
 			timer_interrupt();
 	}
@@ -111,26 +111,4 @@ void devide_write_data(void)
 	else
 		hd_map = 0;
 	hd_write_data(blk_op.addr);	
-}
-
-
-/* C library equivalents */
-
-void *memcpy(void *dest, const void *src, size_t len)
-{
-	uint8_t *dp = (uint8_t *)dest - 1;
-	const uint8_t *sp = (uint8_t *)src - 1;
-	while(len--)
-		*++dp=*++sp;
-	return dest;
-}
-
-void *memset(void *dest, int data, size_t len)
-{
-	char *p = dest;
-	char v = (char)data;
-
-	while(len--)
-		*p++ = v;
-	return dest;
 }

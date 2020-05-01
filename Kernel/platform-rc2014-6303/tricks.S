@@ -1,6 +1,10 @@
 ;
 ;	6303 version
 ;
+;	We do not save the temporaries. The direct page is tied to each
+;	map so the direct page working registers are also per process. Only
+;	the interrupt path needs to save and restore them.
+;
         .export _platform_switchout
         .export _switchin
         .export _dofork
@@ -26,6 +30,10 @@ _ramtop:
 _platform_switchout:
 	sei
 	sts _udata + U_DATA__U_SP	; Save it
+
+	clra
+	psha
+	psha				; Return code
 
         ; set inint to false
 	clr _inint
@@ -107,9 +115,7 @@ _dofork:
 	stx fork_proc_ptr
 
 	ldx P_TAB__P_PID_OFFSET,x
-	pshx
-
-	; FIXME - save compiler temporaries
+	pshx				; Push the PID
 
 	sts _udata + U_DATA__U_SP
 
@@ -131,7 +137,6 @@ _dofork:
 
         ; now the copy operation is complete we can get rid of the stuff
 	; _switchin will be expecting from our copy of the stack.
-	pulx
 	pulx
 
 	ldx fork_proc_ptr
@@ -192,7 +197,7 @@ fork_copy:
 	; This last one copies more than needed of the common space but
 	; will be relevant when we go to proper banking
 	bsr bank2bank
-	rts
+	jmp map_kernel_di
 
 ;
 ;	The 680x isn't very good at block copying. We can do tricks with
