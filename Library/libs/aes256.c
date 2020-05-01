@@ -27,7 +27,7 @@ static uint8_t rj_xtime(uint8_t);
 static void aes_subBytes(uint8_t *);
 static void aes_subBytes_inv(uint8_t *);
 static void aes_addRoundKey(uint8_t *, uint8_t *);
-static void aes_addRoundKey_cpy(uint8_t *, uint8_t *, uint8_t *);
+static void aes_cpyaddRoundKey(uint8_t *, uint8_t *, uint8_t *);
 static void aes_shiftRows(uint8_t *);
 static void aes_shiftRows_inv(uint8_t *);
 static void aes_mixColumns(uint8_t *);
@@ -215,12 +215,12 @@ static void aes_addRoundKey(uint8_t *buf, uint8_t *key)
 } /* aes_addRoundKey */
 
 /* -------------------------------------------------------------------------- */
-static void aes_addRoundKey_cpy(uint8_t *buf, uint8_t *key, uint8_t *cpk)
+static void aes_cpyaddRoundKey(uint8_t *buf, uint8_t *key, uint8_t *cpk)
 {
     register uint8_t i = 16;
 
     while (i--)  buf[i] ^= (cpk[i] = key[i]), cpk[16 + i] = key[16 + i];
-} /* aes_addRoundKey_cpy */
+} /* aes_cpyaddRoundKey */
 
 
 /* -------------------------------------------------------------------------- */
@@ -359,7 +359,7 @@ void aes256_encrypt_ecb(aes256_context *ctx, uint8_t *buf)
 {
     uint8_t i, rcon;
 
-    aes_addRoundKey_cpy(buf, ctx->enckey, ctx->key);
+    aes_cpyaddRoundKey(buf, ctx->enckey, ctx->key);
     for(i = 1, rcon = 1; i < 14; ++i)
     {
         aes_subBytes(buf);
@@ -379,7 +379,7 @@ void aes256_decrypt_ecb(aes256_context *ctx, uint8_t *buf)
 {
     uint8_t i, rcon;
 
-    aes_addRoundKey_cpy(buf, ctx->deckey, ctx->key);
+    aes_cpyaddRoundKey(buf, ctx->deckey, ctx->key);
     aes_shiftRows_inv(buf);
     aes_subBytes_inv(buf);
 
