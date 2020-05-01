@@ -184,7 +184,7 @@ int pagemap_prepare(struct exec *hdr)
 	/* If it doesn't care about the size then the size is all the
 	   space we have */
 	if (hdr->a_size == 0)
-		hdr->a_size = ramtop >> 8 - hdr->a_base;
+		hdr->a_size = (ramtop >> 8) - hdr->a_base;
 	return 0;
 }
 
