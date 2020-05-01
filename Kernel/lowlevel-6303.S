@@ -140,24 +140,37 @@ signal_return:
 
 ;
 ;	We are called from SWI. The stack holds 7 bytes of return
-;	information, A holds the syscall number on entry
+;	information, A holds the syscall number on entry, B the arg count
+;	Arguments are left to right ordered.
 ;
-;	FIXME L->R syscall arguments with B holding the length
+;	On enry our frame looks like this
+;
+;	12->	more arguments
+;	11-10	last arg
+;	9-8	return PC for caller to syscall
+;	7-6	UserPC
+;	5-4	X
+;	3	A
+;	2	B
+;	1	CC
+;
+;	We do TSX, ABX so that our arguments are the same X offset
 ;
 unix_syscall_entry:
 	tsx
+	stx _udata+U_DATA__U_SYSCALL_SP
+	abx
 	staa _udata+U_DATA__U_CALLNO
-	ldd 11,x
+	ldd 8,x
 	std _udata+U_DATA__U_ARGN
-	ldd 13,x
+	ldd 6,x
 	std _udata+U_DATA__U_ARGN+2
-	ldd 15,x
+	ldd 4,x
 	std _udata+U_DATA__U_ARGN+4
-	ldd 17,x
+	ldd 2,x
 	std _udata+U_DATA__U_ARGN+6
 	ldaa #1
 	staa _udata+U_DATA__U_INSYS	; we may want to use udata-> tricks ?
-	stx _udata+U_DATA__U_SYSCALL_SP
 	lds #kstack_top
 	jsr map_kernel_di		; no-op in pure banked
 	cli
@@ -170,9 +183,10 @@ unix_syscall_entry:
 	; into the return frame
 	ldd _udata+U_DATA__U_RETVAL
 	tsx
-	std 2,x			; return in D
+	stab 2,x			; return in D
+	staa 3,x
 	ldd _udata+U_DATA__U_ERROR
-	std 4,x			; error in X
+	std 4,x				; error in X
 	tst _udata+U_DATA__U_CURSIG
 	bne via_signal
 	rti
@@ -310,7 +324,7 @@ _set_cpu_type:
 _sys_cpu:
 	.byte 2		; 6800 class CPU
 _sys_cpu_feat:
-	.byte 1		; 6800 with 6801/3 features
+	.byte 3		; 6800 with 6801/3 and 6303 features
 _sys_stubs:
 	swi
 	rts
