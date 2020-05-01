@@ -19,4 +19,8 @@ f 0755 /usr/bin/pr         pr
 f 0755 /usr/bin/test       test
 l      /usr/bin/test       /usr/bin/[
 f 0755 /usr/games/ttt        ttt
+
+package MWC-float
+if-file units
+
 f 0755 /usr/bin/units      units

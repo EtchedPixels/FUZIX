@@ -2,7 +2,7 @@ include $(FUZIX_ROOT)/Applications/rules.6303
 
 .SUFFIXES: .c .o .y
 
-SRC  = ac.c almanac.c at.c col.c cron.c deroff.c ed.c find.c make.c \
+SRC  = ac.c almanac.c at.c col.c cron.c deroff.c du.c ed.c find.c make.c \
 	moo.c pr.c tar.c ttt.c calendar.c m4.c
 # no FP so no units
 SRCNS = expr.c test.c

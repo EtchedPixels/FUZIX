@@ -47,7 +47,7 @@ long	ranges[] = {
 	ND + NBN*NBN*NBN		/* tripple indirect */
 };
 
-extern long dufork(const char *ep);
+extern long dufork(char *ep);
 
 void usage(void)
 {
@@ -213,7 +213,7 @@ long duentry(char *ep)
  * structure that is too deep to fit into
  * user's open files.
  */
-long dufork(const char *ep)
+long dufork(char *ep)
 {
 	int i;
 	int pid;
