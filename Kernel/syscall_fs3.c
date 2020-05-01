@@ -92,7 +92,7 @@ arg_t _open(void)
 			goto idrop;
 		}
 	}
-
+	/* FIXME: run isdevice once ? */
 	if (isdevice(ino)) {
 		inoptr *iptr = &of_tab[oftindex].o_inode;
 		/* d_open may block and thus ino may become invalid as may
