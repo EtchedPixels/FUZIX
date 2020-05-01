@@ -59,6 +59,7 @@ SRCS  = banner.c \
 	free.c \
 	fsck.c \
 	fsck-fuzix.c \
+	gptparse.c \
 	grep.c \
 	id.c \
 	kbdrate.c \
@@ -104,7 +105,8 @@ SRCS  = banner.c \
 
 SRCTC = tget.c \
         tchelp.c \
-	marksman.c
+	marksman.c \
+	vile.c
 
 SRCOTHER = cpuinfo.c \
 	   cpuinfo-6303.s
