@@ -1,7 +1,11 @@
 /*
  *	Generate the syscall functions
  *
- *	6303 - arguments at expected C offset, B holds the syscall
+ *	6303 via SWI
+ *	A holds the syscall number
+ *	B holds the argument area size in bytes
+ *
+ *	On return X holds errno if there is one, D holds the return value
  */
 
 #include <stdio.h>
@@ -20,11 +24,37 @@ static void write_call(int n)
     perror(namebuf);
     exit(1);
   }
+  fprintf(fp, "\t.setcpu 6803\n\n");
+  fprintf(fp, "\t.code\n\n");
+  fprintf(fp, "\t.export _%s\n\n", syscall_name[n]);
+  fprintf(fp, "_%s:\n\tldd #%d\n", syscall_name[n], (2 * syscall_args[n]) | (n << 8));
+  fprintf(fp, "\tswi\n");
+  fprintf(fp, "\tcpx @zero\n");
+  fprintf(fp, "\tbeq noerror\n");
+  fprintf(fp, "\tstx _errno\n");
+  fprintf(fp, "noerror:\n");
+  fprintf(fp, "\trts\n");
+  fclose(fp);
+}
+
+/* In the varargs case B already holds the argument count info */
+static void write_vacall(int n)
+{
+  FILE *fp;
+  snprintf(namebuf, 128, "fuzix6303/syscall_%s.s",syscall_name[n]);
+  fp = fopen(namebuf, "w");
+  if (fp == NULL) {
+    perror(namebuf);
+    exit(1);
+  }
+  fprintf(fp, "\t.setcpu 6803\n\n");
   fprintf(fp, "\t.code\n\n");
   fprintf(fp, "\t.export _%s\n\n", syscall_name[n]);
   fprintf(fp, "_%s:\n\tldaa #%d\n", syscall_name[n], n);
+  /* This works because all varargs syscalls have 2 fixed arguments */
+  fprintf(fp, "\taddb #4\n");
   fprintf(fp, "\tswi\n");
-  fprintf(fp, "\tcpx #0\n");
+  fprintf(fp, "\tcpx @zero\n");
   fprintf(fp, "\tbeq noerror\n");
   fprintf(fp, "\tstx _errno\n");
   fprintf(fp, "noerror:\n");
@@ -36,7 +66,10 @@ static void write_call_table(void)
 {
   int i;
   for (i = 0; i < NR_SYSCALL; i++)
-    write_call(i);
+    if (syscall_args[i] == VARARGS)
+      write_vacall(i);
+    else
+      write_call(i);
 }
 
 static void write_makefile(void)
@@ -62,7 +95,7 @@ static void write_makefile(void)
   fprintf(fp, "$(AOBJS): %%.o: %%.s\n");
   fprintf(fp, "\tas68 $<\n\n");
   fprintf(fp, "clean:\n");
-  fprintf(fp, "\trm -f $(AOBJS) $(ASRCS) Makefile *~\n\n");
+  fprintf(fp, "\trm -f $(AOBJS) $(ASRCS) *~\n\n");
   fclose(fp);
 }
 
