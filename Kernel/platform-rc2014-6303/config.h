@@ -19,6 +19,9 @@
 #define MAX_MAPS 	9   /* 9 x 48K */
 #define MAP_SIZE    0xC000
 
+/* Permit large I/O requests to bypass cache and go direct to userspace */
+#define CONFIG_LARGE_IO_DIRECT(x)	1
+
 #define TICKSPERSEC 20	    /* Ticks per second */
 
 #define MAPBASE	    0x0000  /* We map from 0 */

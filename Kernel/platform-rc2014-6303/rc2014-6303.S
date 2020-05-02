@@ -1,5 +1,7 @@
 ;
-;	    rc2014 6502 platform functions
+;	    rc2014 6303 platform functions
+;
+;	The 6303 is a very clean processor so there isn't a lot required here
 ;
 
             .export init_early
@@ -36,11 +38,21 @@ _platform_reboot:
 	    jsr map_kernel
 	    jmp rebootit
 
+;
+;	For now do hard interrupt masking. We will want to change this to
+;	only do timer masking once we have separate serial I/O buffering
+;
+;
+;	Disable interrupts and return the old interrupt flag.
+;
 ___hard_di:
 	    tpa
 	    tab
 	    sei			; Save old state in return to C
 	    rts
+;
+;	Enable interrupts
+;
 ___hard_ei:
 	    cli			; on 680x cli enables IRQs!!!
 	    rts
@@ -70,7 +82,7 @@ init_early:
             rts			; stack was copied so this is ok
 
 init_hardware:
-            ; set system RAM size for test purposes
+            ; set system RAM size
 	    ldd #512
 	    std _ramsize
 	    ldd #448
@@ -85,11 +97,16 @@ init_hardware:
 _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
 	    ; will exit with interrupts off
-	    sei
 	    ;
 	    ; our C caller will invoke us with the pointer in x,a
 	    ; just pass it on
+	    ; our C caller will invoke us with the pointer C style
+	    tsx
+	    ldx 3,x
 	    jsr map_process
+	    ;
+	    ; We need to split these up
+	    ;
 program_vectors_k:
 	    ldd #interrupt_handler
 	    std 0xFFF2		; timer overflow
@@ -110,6 +127,9 @@ program_vectors_k:
 nullirq:
 	    rti
 
+;
+;	Map the current process, do not change register values
+;
 map_process_always:
 	    pshb
 	    ldab _udata + U_DATA__U_PAGE+1	; big endian
@@ -117,10 +137,10 @@ map_process_always:
 	    pulb
 	    rts
 ;
-;	X points to the map table of this process
+;	X points to the map table of this process, preserve D
 ;
 map_process:
-	    cpx #0
+	    cpx @zero
 	    bne map_process_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
@@ -142,6 +162,8 @@ map_kernel:
 ;	For now we are using the 4x16K MMU but this will probably change.
 ;	Switch the low 48K, the task switch flips the top. Hack until we
 ;	enable the real MMU and banking setup.
+;
+;	Probably we should use the 8K/56K MMU card.
 ;
 map_bank:
 	    stab cur_map
@@ -218,7 +240,7 @@ _hd_read_data:
 	;
 	;	We must flip banks before we play mmu pokery, or it will
 	; undo all our work. This means our variables must be commondata
-	;
+	; and we must reference them before we map_process
 	ldab _hd_map
 	beq hd_kmap
 	jsr map_process_always
@@ -243,6 +265,7 @@ _hd_write_data:
 	;
 	;	We must flip banks before we play mmu pokery, or it will
 	; undo all our work. This means our variables must be commondata
+	; and we must reference them before we map_process
 	;
 	ldab _hd_map
 	beq hd_kmapw
