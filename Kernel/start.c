@@ -30,7 +30,7 @@ static const struct termios ttydflt = {
 
 void tty_init(void) {
         struct tty *t = &ttydata[1];
-        int i;
+        uint_fast8_t i;
         for(i = 1; i <= NUM_DEV_TTY; i++) {
 		memcpy(&t->termios, &ttydflt, sizeof(struct termios));
 		t++;
