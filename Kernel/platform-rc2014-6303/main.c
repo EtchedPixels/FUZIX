@@ -24,46 +24,6 @@ void do_beep(void)
 {
 }
 
-/*
- * Map handling: allocate 4 banks per process
- */
-
-void pagemap_init(void)
-{
-    int i;
-    /* 32-35 are the kernel, 36-39 / 40-43 / etc are user */
-    /* Add 36-38 last as we hardcode 36 into our init creation in tricks.s */
-    for (i = 6; i >= 0; i--)
-        pagemap_add(36 + i * 4);
-}
-
-void map_init(void)
-{
-}
-
-uint8_t platform_param(char *p)
-{
-    return 0;
-}
-
-
-/*
- *	We don't have a counter but a free running timer at system E clock
- *	rate (1.8432MHz) and compare register. We can reset the timer but
- *	that horks the serial port so we have to play comparison games or
- *	just go with the timer. Now as it happens the timer wraps 28 times
- *	a second to within 1%. Good enough for scheduling but will need minor
- *	compensation logic for the clock later TODO
- */
-
-void device_init(void)
-{
-#ifdef CONFIG_IDE
-	devide_init();
-#endif
-	/* We will just use the TOF event */
-	cpuio[0x08] = 0x04;
-}
 
 /* FIXME: route serial interrupts directly in asm to a buffer and just
    queue process here */

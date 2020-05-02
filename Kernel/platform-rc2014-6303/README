@@ -2,7 +2,11 @@ Initial code  for a 6303 RC2014 banked memory platform
 
 Proposed memory mapping
 
-	0x0000-0x00FF	Direct page
+	0x0000-0x001F	On chip I/O
+	0x0020-0x0027	Reserved (I/O on some chips)
+	0x0028-0x003F	Banked direct page (kernel)
+	0x0040-0x007F	May be banked or unbanked (kernel)
+	0x0080-0x00FF	Internal (unbanked) direct page (kernel)
 	0x0100-0x03FF	Loader space for now (can be reclaimed later)
 	0x0400-0xF7FF	Kernel
 	0xF800-0xFDFF	Common data and whatever code fills the rest
@@ -10,13 +14,16 @@ Proposed memory mapping
 	0xFF00-0xFFEF
 	0xFFF0-0xFFFF	Vectors
 
-Everything we need to copy to/from userspace lives above C000
-
 In user space
 
-	0x0000-0x00FF	Direct page
+	0x0000-0x001F	On chip I/O
+	0x0020-0x0027	Reserved (I/O on some chips)
+	0x0028-0x003F	Banked direct page (user)
+	0x0040-0x007F	May be banked or unbanked (kernel)
+	0x0080-0x00FF	Internal (unbanked) direct page (kernel)
 	0x0100-0x03FF	Loader space for now (can be reclaimed later)
-	0x0400-0xF7FF	User space
+	0x0400-0xBFFF	User space
+	0xC000-0xF7FF	Kernel upper code
 	0xF800-0xFDFF	Common data and whatever code fills the rest
 	0xFE00-0xFEFF	I/O
 	0xFF00-0xFFEF
@@ -31,12 +38,9 @@ RC2014 bus
 Internal UART
 
 Things to address
-- Switch memory model but do we go with
-	- 8K/56K MMU card and 512K flat
-	- 16K banked 512K card
-	- Flat card and drive A16-A19 off the Port 1 I/O pins
-	  (if possible)
-- Implement/debug fork() for it
+- Save the right internal registers on interrupt (mostly right)
+- Dynamic buffer allocation
+- Implement/debug fork()
 - SPI bitbang port
 - Making the UART driver properly IRQ driven for input with its own buffer
   and separate to the Fuzix level interrupts
@@ -47,3 +51,21 @@ Things to address
 
 Put the loader on sector 0
 Put the kernel on sector 1+
+
+Possible Memory models: for simplicity hardware wise we use 16Kx4 for now
+- Full 64K switch
+	- Stubs in 80-FF (unbanked)
+	- Big processes, big kernel, udata copy cost
+- 56K/8K
+	- Banked, 56K room, no ability to do smaller process spaces
+	  avoids udata copy cost as can flip 8K top bank and keep only
+	  common/code in it
+- 16Kx4
+	- 48K process space, lot of wasted high page versus udata copy cost
+	  trade off. bank16kfc gives us good memory usage but udata copy,
+	  other option costs us 16K a processes in duplicate space
+
+What would cc68 ld68 banking support take ?
+
+Move udata to 0x100 kernel
+Move istack to 0x300 kernel

@@ -13,6 +13,7 @@
 	    .export map_process_always
 	    .export map_save_kernel
 	    .export map_restore
+	    .export map_process_x
 
             ; exported debugging tools
             .export _platform_monitor
@@ -131,10 +132,10 @@ nullirq:
 ;	Map the current process, do not change register values
 ;
 map_process_always:
-	    pshb
-	    ldab _udata + U_DATA__U_PAGE+1	; big endian
+	    pshx
+	    ldx #_udata + U_DATA__U_PAGE
 	    jsr map_bank
-	    pulb
+	    pulx
 	    rts
 ;
 ;	X points to the map table of this process, preserve D
@@ -151,12 +152,16 @@ map_process:
 ;
 map_kernel_di:
 map_kernel:
-	    pshb
+	    pshx
 				; Common is left untouched
-	    ldab #$20		; Kernel RAM
+	    ldx #kmap		; Kernel RAM
 	    jsr map_bank
-	    pulb
+	    pulx
 	    rts
+kmap:
+	    .byte 0x20
+	    .byte 0x21
+	    .byte 0x22
 
 ;
 ;	For now we are using the 4x16K MMU but this will probably change.
@@ -165,20 +170,22 @@ map_kernel:
 ;
 ;	Probably we should use the 8K/56K MMU card.
 ;
+map_process_x:
+	    ldab #P_TAB__P_PAGE_OFFSET
+	    abx
+map_process_2:
 map_bank:
-	    stab cur_map
-	    stab 0xFE78
-	    incb
-	    stab 0xFE79
-	    incb
+	    pshb
+	    ldab 2,x
+	    stab cur_map+2
 	    stab 0xFE7A
-	    ; And don't swap the common here but in the task switch
+	    ldx ,x
+	    stx cur_map
+	    stx 0xFE78
+	    pulb
+	    
 	    rts
 
-; X holds the map table of this process
-map_process_2:
-	    ldab 1,x		; Big endian
-	    jmp map_bank
 
 
 ;
@@ -188,10 +195,10 @@ map_process_2:
 ;	so this is fine.
 ;
 map_restore:
-	    pshb
-	    ldab saved_map	; First bank we skip half of
+	    pshx
+	    ldx #saved_map
 	    jsr map_bank
-	    pulb
+	    pulx
 	    rts
 
 ;
@@ -200,14 +207,22 @@ map_restore:
 ;
 map_save_kernel:
 	    pshb
-	    ldab cur_map
-	    stab saved_map	; always save the map in the right commonmem
+	    psha
+	    ldab cur_map+2
+	    stab saved_map+2	; always save the map in the right commonmem
+	    ldd cur_map
+	    std saved_map
 	    jsr map_kernel
+	    pula
 	    pulb
 	    rts
 
 cur_map:    .byte 0
+	    .byte 0
+	    .byte 0
 saved_map:  .byte 0
+	    .byte 0
+	    .byte 0
 
 ; outchar: Wait for UART TX idle, then print the char in a without
 ; corrupting other registers
