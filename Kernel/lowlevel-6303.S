@@ -200,6 +200,7 @@ _doexec:
 	sei
 	jsr map_process_always
 	lds _udata+U_DATA__U_ISP
+	des				; offset by 1 on the 680X
 	clr _udata+U_DATA__U_INSYS
 	cli
 	ldd PROGLOAD
