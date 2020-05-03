@@ -23,7 +23,7 @@ __uputw:
 	ldd 5,x
 	ldx 3,x
 	jsr map_process_always
-	stab 0,x
+	std 0,x
 	jmp map_kernel
 
 __ugetc:
