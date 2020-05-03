@@ -58,17 +58,17 @@ _platform_switchout:
 stash_udata:
 	ldx #_udata
 	ldd #$BE00		; Ick FIXME hardcoded
-	std @tmp
+	std work
 stash_loop:
 	ldd ,x
 	inx
 	inx
 	pshx
-	ldx @tmp
+	ldx work
 	std ,x
 	inx
 	inx
-	std @tmp
+	stx work
 	pulx
 	cpx #_udata+512
 	bne stash_loop
@@ -89,11 +89,11 @@ _switchin:
 	ldx	3,x
 	stx	switch_proc_ptr
 
-	ldab	P_TAB__P_PAGE_OFFSET+1,x
-	cmpb	U_DATA__U_PAGE+1
+	ldd	P_TAB__P_PAGE_OFFSET,x
+	cmpa	_udata+U_DATA__U_PAGE
 	beq nostash
 
-	cmpb	#0
+	subd	@zero		;compare with 0
 	bne	not_swapped
 	jsr	_swapper
 	ldx	switch_proc_ptr
@@ -106,23 +106,23 @@ not_swapped:
 	; ourselves and without stack
 	ldx	#$BE00
 	ldd	#_udata
-	std	@tmp
+	std	work
 unstash_loop:
 	ldd	,x
 	inx
 	inx
-	stx	@tmp2
-	ldx	@tmp
+	stx	work2
+	ldx	work
 	std	,x
 	inx
 	inx
-	stx	@tmp
-	ldx	@tmp2
-	cpx	#_udata+512
+	stx	work
+	ldx	work2
+	cpx	#$C000		; BE000 + 0200
 	bne	unstash_loop
 
 	; Now get the stack back sane
-	lds	U_DATA__U_SP
+	lds	_udata + U_DATA__U_SP
 	jsr	map_kernel
 nostash:
         ; check u_data->u_ptab matches what we wanted
@@ -136,9 +136,9 @@ nostash:
 
 	; fix up our pages as they may have changed
 	ldd P_TAB__P_PAGE_OFFSET,x
-	std U_DATA__U_PAGE
+	std _udata + U_DATA__U_PAGE
 	ldaa P_TAB__P_PAGE_OFFSET+2,x
-	staa U_DATA__U_PAGE+2
+	staa _udata + U_DATA__U_PAGE+2
 
 	ldd @zero
 	std _runticks
@@ -150,6 +150,8 @@ nostash:
         beq swtchdone		; in ISR, leave interrupts off
 	cli
 swtchdone:
+	pula			; recover return code
+	pulb
         rts
 
 switchinfail:
@@ -226,16 +228,16 @@ _dofork:
 ;	Copy memory
 ;
 fork_copy:
-	ldx _udata+U_DATA__U_PTAB
-	ldaa _udata+P_TAB__P_PAGE_OFFSET,x
+	ldx fork_proc_ptr
+	ldaa P_TAB__P_PAGE_OFFSET,x
 	ldab _udata+U_DATA__U_PAGE
 	bsr bank2bank
 	inx
-	ldaa _udata+P_TAB__P_PAGE_OFFSET,x
+	ldaa P_TAB__P_PAGE_OFFSET,x
 	ldab _udata+U_DATA__U_PAGE+1
 	bsr bank2bank
 	inx
-	ldaa _udata+P_TAB__P_PAGE_OFFSET,x
+	ldaa P_TAB__P_PAGE_OFFSET,x
 	ldab _udata+U_DATA__U_PAGE+2
 	bsr bank2bank
 
@@ -280,6 +282,14 @@ patch2:
 	bne copyloop
 	pulx
 	rts
+
+;
+;	These need to live in common space as we have user mapped some
+;	of the time we access them. Ideally we'd move these to a special
+;	kernel DP area in common iram: TODO
+;
+work:	.word	0
+work2:	.word	0
 
 ;
 ;	The switch proc pointer cannot live anywhere in common as we switch
