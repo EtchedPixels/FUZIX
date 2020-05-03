@@ -176,10 +176,12 @@ map_process_x:
 map_process_2:
 map_bank:
 	    pshb
+	    ; We must load these both before the map changes because we
+	    ; might be unmapping the table X points to
 	    ldab 2,x
+	    ldx ,x
 	    stab cur_map+2
 	    stab 0xFE7A
-	    ldx ,x
 	    stx cur_map
 	    stx 0xFE78
 	    pulb
@@ -234,7 +236,7 @@ outcharw:
 	    anda #$20
 	    beq outcharw
 	    pula
-	    staa $13
+	    stab $13
 	    rts
 
 ;
