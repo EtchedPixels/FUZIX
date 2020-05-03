@@ -273,17 +273,30 @@ interrupt_handler:
 	stx @tmp1
 	pulx
 	stx @tmp
+	tst _udata+U_DATA__U_INSYS
+	bne iretk
 	clr _inint
 	tst _need_resched
 	bne preemption
-	jsr map_restore
+	jsr map_process_always
 	lds istack_switched_sp
 	clr _udata+U_DATA__U_ININTERRUPT
 	tst _udata+U_DATA__U_INSYS
 	bne no_signals
 	jsr deliver_signals
 no_signals:
-	rti	
+	rti
+	;
+	; Return to kernel mode
+	; We don't check signals in this case and we use map_restore
+	;
+iretk:
+	jsr map_restore
+	lds istack_switched_sp
+	clr _udata+U_DATA__U_ININTERRUPT
+	tst _udata+U_DATA__U_INSYS
+	rti
+
 
 preemption:
 	clr _need_resched
@@ -309,7 +322,8 @@ not_running:
 	lds _udata+U_DATA__U_SYSCALL_SP
 	ldaa _udata+U_DATA__U_CURSIG
 	beq no_signals
-	jmp deliver_signals_2
+	jsr deliver_signals_2
+	rti
 
 	.code
 
