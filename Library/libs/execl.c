@@ -52,9 +52,7 @@ const char *_findPath(const char *path)
 	return NULL;
 }
 
-#ifndef __CC65__
-
-/* FIXME: The 6502 calling sequence means these need a different implementation */
+#if !defined(__CC65__) && !defined(__CC68__)
 
 /* FIXME: review typing of all of these for const stuff and standard */
 int execl(const char *pathP, const char *arg0, ...)
