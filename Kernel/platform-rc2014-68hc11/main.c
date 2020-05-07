@@ -36,9 +36,9 @@ void platform_interrupt(void)
 
 	tty_poll();
 
-	/* Reading the register resets the flag if set */
-	if (cpuio[0x08] & 0x20) {
-		cpuio[9];	/* Read tmer to clear interrupt */
+	/* RTI Timer overflow ? */
+	if (cpuio[0x25] & 0x40) {
+		cpuio[0x25] = 0x40;	/* Clear interrupt */
 		tickmod++;
 		if (tickmod == 7)
 			tickmod = 0;

@@ -2,7 +2,7 @@
 #include <devide.h>
 
 /* Onboard I/O */
-static volatile uint8_t *cpuio = (volatile uint8_t *)0;
+static volatile uint8_t *cpuio = (volatile uint8_t *)0xF000;
 
 /*
  * Map handling: allocate 4 banks per process
@@ -26,12 +26,7 @@ uint8_t platform_param(char *p)
 
 
 /*
- *	We don't have a counter but a free running timer at system E clock
- *	rate (1.8432MHz) and compare register. We can reset the timer but
- *	that horks the serial port so we have to play comparison games or
- *	just go with the timer. Now as it happens the timer wraps 28 times
- *	a second to within 1%. Good enough for scheduling but will need minor
- *	compensation logic for the clock later TODO
+ *	Do the device initialization
  */
 
 void device_init(void)
@@ -39,6 +34,8 @@ void device_init(void)
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
-	/* We will just use the TOF event */
-	cpuio[0x08] = 0x04;
+        /* Slowest RTI rate available */
+	cpuio[0x26] |= 3;
+	/* RTI interrupt enable */
+	cpuio[0x24] |= 0x40;
 }

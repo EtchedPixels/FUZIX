@@ -109,24 +109,37 @@ program_vectors:
 	    ; We need to split these up
 	    ;
 
-	; FIXME: Correct for 68HC11 v 6303
 program_vectors_k:
-	    ldd #interrupt_handler
-	    std 0xFFF2		; timer overflow
-	    std 0xFFF0		; serial interrupt
-	    std 0xFFF8		; external int
-	    ldd #nullirq
-	    std 0xFFF4		; OCF
-	    std 0xFFF6		; ICF
-	    ldd #nmi_handler
-	    std 0xFFFC		; NMI vector
-	    ldd #unix_syscall_entry
-	    std 0xFFFA		; SWI vector
+	    ldd #system_fail
+	    std 0xFFFC		; COP fail
+	    std 0xFFFA		; watchdog timeout
 	    ldd #trap_handler
-	    std 0xFFEE		; 6303 TRAP (usually executing 0 but also
-				; illegals)
+	    std 0xFFF8		; illegal instruction trap
+	    ldd #unix_syscall_entry
+	    std 0xFFF6		; SWI vector
+	    ldd #nmi_handler
+	    std 0xFFF4		; NMI vector
+	    ldd #interrupt_handler
+	    std 0xFFF2		; Interrupt from RC2014
+	    std 0xFFF0		; Interrupt from RTI (RTI overflow)
+	    std 0xFFD6		; Interrupt from SC serial
+	    ldd #nullirq
+	    std 0xFFEE		; TC1
+	    std 0xFFEA		; TC2
+	    std 0xFFE8		; TOC1
+	    std 0xFFE6		; TOC2
+	    std 0xFFE4		; TOC3
+	    std 0xFFE2		; TOC4
+	    std 0xFFE0		; TIC4/TOC5
+	    std 0xFFDE		; Timer overflow
+	    std 0xFFDC		; Pulse accumulator overflow
+	    std 0xFFDA		; Pulse accumulator input edge
+	    std 0xFFD8		; SPI transfer complete
 	    jmp map_kernel
 
+system_fail:			; we won't see this as the reset will
+				; page us back to ROM. Our ROM ought to
+				; report it but right now just dies TODO
 nullirq:
 	    rti
 
@@ -235,11 +248,11 @@ saved_map:  .byte 0
 outchar:
 	    psha
 outcharw:
-	    ldaa 0xF011
+	    ldaa 0xF02E
 	    anda #0x20
 	    beq outcharw
 	    pula
-	    stab 0xF013
+	    stab 0xF02F
 	    rts
 
 ;
