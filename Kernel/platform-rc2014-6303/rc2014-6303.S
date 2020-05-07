@@ -29,7 +29,7 @@
 #include "../kernel-6303.def"
 
 ; -----------------------------------------------------------------------------
-; COMMON MEMORY BANK (0x0200 upwards after the common data blocks)
+; COMMON MEMORY BANK
 ; -----------------------------------------------------------------------------
 
 	    .common
@@ -99,7 +99,7 @@ _program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
 	    ; will exit with interrupts off
 	    ;
-	    ; our C caller will invoke us with the pointer in x,a
+	    ; our C caller will invoke us with the pointer in 3,S
 	    ; just pass it on
 	    ; our C caller will invoke us with the pointer C style
 	    tsx
