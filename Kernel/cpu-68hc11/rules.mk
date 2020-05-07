@@ -6,6 +6,7 @@ export CROSS_CCOPTS=-fomit-frame-pointer -mrelax -mshort -c -Wall -Os -I$(ROOT_D
 export CROSS_CC_SEG1=
 export CROSS_CC_SEG2=
 export CROSS_CC_SEG3=
+# gcc expects this to be done by linker script
 export CROSS_CC_SEGDISC=
 export CROSS_CC_VIDEO=
 export ASOPTS=
