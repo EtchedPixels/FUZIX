@@ -19,24 +19,23 @@ C000-FFFF which is pageable but no bigger pageable range.
 
 We run with the following mapping
 
-0000-3FFF	IRQ vectors, common, const, commondata etc
-4000-5FFF	Spectrum screen memory and system variables
-6000-7FFF	Free for now
+0000-3FFF	System ROM (fixed)
+4000-7FFF	Kernel data/common
 8000-83FF	Needed to create the exec of init
 8400-BFFF	_DISCARD area - blown away when we exec init
 		(tons of room in this space)
 C000-FFFF
-	0:	0000-3FFF (Kernel data/common)
+	0:	Kernel CODE4 (lot of room)
 	1:	Kernel CODE (fairly full)
 	2:	Mapped at 0x8000-0xBFFF (holds current process copy)
 	3:	User process
 	4:	User process
-	5:	Mapped at 0x4000-0x7FFF (Screen, spare)
+	5:	Mapped at 0x4000-0x7FFF (kernel data/common)
 	6:	Kernel CODE2 (fairly full)
-	7:	CODE3, Video (lots of room)
+	7:	CODE3, Video (fairly full)
 
 User processes live in 3/4 and 8+. We have copy stuff back and forth
-to page 2 due to the memory manager liits.
+to page 2 due to the memory manager limits.
 
 To Do:
 -	Update the loader
@@ -59,16 +58,4 @@ To Do:
 	banks per process however so need some allocator changes
 
 Floppy disk interfaces are problematic. The standard Betadisk interface locks
-the I/O ports to its ROM being active, which sucks. Fortunately it appears
-there is a mildy insane stunt we can pull. We can use the ROM to query itself
-to find the address of the out (c),a present in all Beta ROM images.
-
-We can then do a ROP attack on the ROM in order to make it do the "right"
-out (c),a  in it in order to do a bank switch with RAM at 0000-3FFF and catch
-the next instruction. Providing we remain in the RAM below 4000 it'll leave
-the card selected.
-
-Does mean we need to patch our kernel to grab the next instruction, and then
-put it back all under di but it does look doable.
-
-
+the I/O ports to its ROM being active, which sucks.
