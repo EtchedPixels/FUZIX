@@ -6,7 +6,7 @@
 	.globl _uget
 	.globl _uput
 
-	.section common
+	.section .common
 
 _uputc:
 	tsx
@@ -93,7 +93,7 @@ uputl:
 	rts
 
 
-	.section data
+	.section .data
 
 ;
 ;	We should be ok not saving these on IRQ as we don't allow IRQs to
