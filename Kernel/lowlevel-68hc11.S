@@ -465,6 +465,8 @@ REG(_.d2)
 REG(_.d3)
 REG(_.d4)
 
+	.sect .text
+
 	.globl memcpy
 
 memcpy:
