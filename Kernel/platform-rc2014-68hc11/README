@@ -1,0 +1,77 @@
+Initial code for a bring up 68HC11 RC2014 banked memory platform based on the
+6303 code base. This probably isn't what we finally want to end up with as a
+model but it will help us get there.
+
+Proposed memory mapping
+
+	0x0000-0x001F	On chip I/O
+	0x0020-0x0027	Reserved (I/O on some chips)
+	0x0028-0x003F	Banked direct page (kernel)
+	0x0040-0x007F	May be banked or unbanked (kernel)
+	0x0080-0x00FF	Internal (unbanked) direct page (kernel)
+	0x0100-0x03FF	Loader space for now (can be reclaimed later)
+	0x0400-0xEFFF	Kernel
+	0xF000-0xF03F   Internal I/O
+	0xF040-0xF1FF	Internal RAM (unbankable)
+	0xF200-0xFDFF	Common data and whatever code fills the rest
+	0xFE00-0xFEFF	I/O
+	0xFF00-0xFFEF
+	0xFFF0-0xFFFF	Vectors
+
+In user space
+
+	0x0000-0x001F	On chip I/O
+	0x0020-0x0027	Reserved (I/O on some chips)
+	0x0028-0x003F	Banked direct page (user)
+	0x0040-0x007F	May be banked or unbanked (kernel)
+	0x0080-0x00FF	Internal (unbanked) direct page (kernel)
+	0x0100-0x03FF	Loader space for now (can be reclaimed later)
+	0x0400-0xBFFF	User space
+	0xC000-0xEFFF	Kernel upper code
+	0xF000-0xF03F   Internal I/O
+	0xF040-0xF1FF	Internal RAM (unbankable)
+	0xF200-0xFDFF	Common data and whatever code fills the rest
+	0xFE00-0xFEFF	I/O
+	0xFF00-0xFFEF
+	0xFFF0-0xFFFF	Vectors
+
+Hardware Arrangement
+
+68HC11 CPU
+FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
+RC2014 bus
+512K RAM/ROM
+Internal UART
+
+Things to address
+- Finish debugging task switching and fork
+	Right now we seem to fork ok but the udata page tables for the parent
+	are wrong when we switch to it which suggests it's not set up right
+	somewhere
+- Save the right internal registers on interrupt (mostly right)
+- Dynamic buffer allocation
+- SPI bitbang port
+- Making the UART driver properly IRQ driven for input with its own buffer
+  and separate to the Fuzix level interrupts
+- Proper two level interrupt handling so that the timer drives Fuzix and
+  the other stuff is queued
+- Don't disable all interrupts in the Fuzix paths
+- Add device support for some of the RC2014 external devices
+
+Put the loader on sector 0
+Put the kernel on sector 1+
+
+Possible Memory models: for simplicity hardware wise we use 16Kx4 for now
+- Full 64K switch
+	- Stubs in 80-FF (unbanked)
+	- Big processes, big kernel, udata copy cost
+- 56K/8K
+	- Banked, 56K room, no ability to do smaller process spaces
+	  avoids udata copy cost as can flip 8K top bank and keep only
+	  common/code in it
+- 16Kx4
+	- 48K process space, lot of wasted high page versus udata copy cost
+	  trade off. bank16kfc gives us good memory usage but udata copy,
+	  other option costs us 16K a processes in duplicate space
+
+What would cc68 ld68 banking support take ?

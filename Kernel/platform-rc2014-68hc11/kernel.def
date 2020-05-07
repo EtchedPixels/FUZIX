@@ -1,0 +1,7 @@
+; FUZIX mnemonics for memory addresses etc
+
+; (this is struct u_data from kernel.h)
+; 256+256 bytes.
+U_DATA__TOTALSIZE           = 0x200
+
+PROGLOAD		    = 0x0100
