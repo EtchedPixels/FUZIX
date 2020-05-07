@@ -8,7 +8,7 @@
 #include <tty.h>
 
 /* Onboard UART */
-static volatile uint8_t *cpuio = (volatile uint8_t *)0;
+static volatile uint8_t *cpuio = (volatile uint8_t *)0xF000;
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -21,7 +21,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
-	_CSYS	/* TODO */
+	_CSYS|CBAUD
 };
 
 /* Output for the system console (kprintf etc) */
@@ -42,13 +42,44 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	while(!(cpuio[0x11] & 0x20));	/* Hack FIXME */
-	cpuio[0x13] = c;
+	while(!(cpuio[0x2E] & 0x20));	/* Hack FIXME */
+	cpuio[0x2F] = c;
 }
 
+static uint8_t baudtable[16] = {
+	0,	/* 0 */
+	0xFF,	/* 50 */
+	0xFF,	/* 75 */
+	0xFF,	/* 110 */
+	0x36,	/* 134 (by 13 by 64 = 138 baud) */
+	0xFF,	/* 150 */
+	0x17,	/* 300 by 3 by 128 */
+	0x16,	/* 600 by 3 by 64 */
+	0x15,	/* 1200 by 3 by 32 */
+	0x14,	/* 2400 by 3 by 16 */
+	0x13,	/* 4800 by 3 by 8*/
+	0x12,	/* 9600 by 3 by 4*/
+	0x11,	/* 19200 by 3 by 2 */
+	0x10,	/* 38400 by 3 by 1 */
+	0x01,	/* 57600 by 1 by 2 */
+	0x00	/* 115200 by 1 by 1 */
+};
+
+/* The UART is fairly basic. Any modem lines are just down to GPIO usage. We
+   just drive the basic speed control. 7bit and parity are likewise down to
+   software so we don't support them */
 void tty_setup(uint8_t minor, uint8_t flag)
 {
-	/* Fudge for now - it is set up by the boot ROM */
+	struct termios *t = &ttydata[minor].termios;
+	uint8_t baud = t->c_cflag & CBAUD;
+	uint8_t sccr1;
+	/* Our base rate is 115200 with SCP 0 */
+	if ((baud = baudtable[baud]) == 0xFF) {
+		t->c_cflag &= ~CBAUD;
+		t->c_cflag |= B9600;
+		baud = 0x12;
+	}
+	cpuio[0x2B] = baud;
 }
 
 void tty_sleeping(uint8_t minor)
@@ -68,6 +99,6 @@ void tty_data_consumed(uint8_t minor)
 
 void tty_poll(void)
 {
-	if (cpuio[0x11] & 0x80)
-		tty_inproc(1, cpuio[0x12]);
+	if (cpuio[0x2E] & 0x80)
+		tty_inproc(1, cpuio[0x2F]);
 }
