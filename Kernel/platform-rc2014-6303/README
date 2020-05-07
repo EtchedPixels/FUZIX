@@ -38,9 +38,9 @@ RC2014 bus
 Internal UART
 
 Things to address
-- Save the right internal registers on interrupt (mostly right)
+- Save the right internal registers on interrupt (mostly right, need to
+  add some if use register vars)
 - Dynamic buffer allocation
-- Implement/debug fork()
 - SPI bitbang port
 - Making the UART driver properly IRQ driven for input with its own buffer
   and separate to the Fuzix level interrupts
@@ -52,20 +52,4 @@ Things to address
 Put the loader on sector 0
 Put the kernel on sector 1+
 
-Possible Memory models: for simplicity hardware wise we use 16Kx4 for now
-- Full 64K switch
-	- Stubs in 80-FF (unbanked)
-	- Big processes, big kernel, udata copy cost
-- 56K/8K
-	- Banked, 56K room, no ability to do smaller process spaces
-	  avoids udata copy cost as can flip 8K top bank and keep only
-	  common/code in it
-- 16Kx4
-	- 48K process space, lot of wasted high page versus udata copy cost
-	  trade off. bank16kfc gives us good memory usage but udata copy,
-	  other option costs us 16K a processes in duplicate space
-
 What would cc68 ld68 banking support take ?
-
-Move udata to 0x100 kernel
-Move istack to 0x300 kernel
