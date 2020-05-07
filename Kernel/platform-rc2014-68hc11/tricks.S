@@ -47,27 +47,20 @@ platform_switchout:
         ; find another process to run (may select this one again) returns it
         ; in d
         jsr getproc
-	pshb
-	psha
         jsr switchin
         ; we should never get here
         jsr platform_monitor
 
 stash_udata:
 	ldx #udata
-	ldd #0xBE00		; Ick FIXME hardcoded
-	std work
+	ldy #0xBE00		; Ick FIXME hardcoded
 stash_loop:
 	ldd ,x
 	inx
 	inx
-	pshx
-	ldx work
-	std ,x
-	inx
-	inx
-	stx work
-	pulx
+	std ,y
+	iny
+	iny
 	cpx #udata+512
 	bne stash_loop
 	rts
@@ -79,13 +72,12 @@ badswitchmsg:
 	.byte 0
 
 ;
-;	On entry x,a holds the process to switch in
+;	On entry D holds the process to switch in
 ;
 switchin:
 	sei
-	tsx
-	ldx	3,x
-	stx	switch_proc_ptr
+	std	switch_proc_ptr
+	xgdx
 
 	ldd	P_TAB__P_PAGE_OFFSET,x
 	cmpa	udata+U_DATA__U_PAGE
@@ -103,19 +95,14 @@ not_swapped:
 	; We must do this inline as we will be changing stack under
 	; ourselves and without stack
 	ldx	#0xBE00
-	ldd	#udata
-	std	work
+	ldy	#udata
 unstash_loop:
 	ldd	,x
 	inx
 	inx
-	stx	work2
-	ldx	work
-	std	,x
-	inx
-	inx
-	stx	work
-	ldx	work2
+	std	,y
+	iny
+	iny
 	cpx	#0xC000		; BE000 + 0200
 	bne	unstash_loop
 
@@ -173,11 +160,10 @@ _dofork:
 ;        ; always disconnect the vehicle battery before performing maintenance
         sei	 ; should already be the case ... belt and braces.
 
-	tsx
-	ldx 3,x
-	; new process in X, get parent pid into y
+	; new process in D, get parent pid
 
-	stx fork_proc_ptr
+	std fork_proc_ptr
+	xgdx
 
 	ldx P_TAB__P_PID_OFFSET,x
 	pshx				; Push the PID
@@ -199,16 +185,15 @@ _dofork:
 
 	ldx fork_proc_ptr
 	pshx
-	ldx #udata
-	pshx
+	ldd #udata
         jsr makeproc
-	pulx
 	pulx
 
 	; any calls to map process will now map the childs memory
 
         ; runticks = 0;
-	ldd #0
+	clra
+	clrb
 	std runticks
 
         ; in the child process, fork() returns zero.
@@ -268,11 +253,12 @@ bank2bank:
 	stab patch2+1		; And patch the dest bank switch
 	ldx #0x4000		; Start address
 copyloop:
-	ldab ,x
+	ldy ,x
 patch1:
 	ldaa #0
 	staa 0xFE79		; Switch bank to secondary
-	stab ,x
+	sty ,x
+	inx
 	inx
 patch2:
 	ldaa #0
