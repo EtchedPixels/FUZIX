@@ -10,7 +10,10 @@
 
 entry:
 		sei			; interrupts off
-		ldab #1
+		clra
+		clrb
+		stab @zero
+		incb
 		stab @one+1		; set up '@one' for the compiler
 		lds #kstack_top		; C stack
 		ldx #_udata
