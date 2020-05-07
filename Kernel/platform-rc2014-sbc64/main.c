@@ -15,7 +15,7 @@ uint16_t ramtop = 0x7E00;
 uint8_t ctc_present;
 uint8_t sio_present;
 uint8_t sio1_present;
-
+uint8_t mach_zrcc;
 uint8_t platform_tick_present;
 
 uint16_t rtc_port = 0xC0;

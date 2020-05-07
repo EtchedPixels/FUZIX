@@ -49,7 +49,7 @@ $(NOBJS): %.rel: ../dev/net/%.c
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ diskstrap fuzix.rom boot loader.inc
 
-image:	boot loader
+image:	boot loader boot-zrcc
 
 boot:	boot.s
 	sdasz80 -o boot.s
@@ -57,6 +57,11 @@ boot:	boot.s
 	makebin -s 4096 boot.ihx boot
 	od -v -w1 -tx1 boot | cut -b 9- | head -4096 | \
 		sed -e 's/^/        .db 0x/' >loader.inc
+
+boot-zrcc: boot-zrcc.s
+	sdasz80 -o boot-zrcc.s
+	sdldz80 -i boot-zrcc.rel
+	makebin -s 512 boot.ihx | dd bs=256 skip=1 | ../tools/doubleup > boot-zrcc
 
 loader:	loader.s loader.inc
 	sdasz80 -o loader.s

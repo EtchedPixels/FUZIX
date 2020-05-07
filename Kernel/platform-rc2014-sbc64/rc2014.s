@@ -40,6 +40,7 @@
 	.globl _tty_resume
 	.globl _ide_resume
 	.globl _udata
+	.globl _mach_zrcc
 
 	; exported debugging tools
 	.globl outchar
@@ -275,6 +276,10 @@ _platform_reboot:
 	rst 0
 
 _platform_suspend:
+	; No suspend on ZRCC only on SBC/MBC64
+	ld a,(_mach_zrcc)
+	or a
+	ret nz
 	call _suspend
 	; Re-initialize the CTC and basic SIO setup
 	call resume_hardware

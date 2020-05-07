@@ -53,6 +53,7 @@ extern uint16_t swap_dev;
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_NO_CLOCK
+#define CONFIG_RTC_INTERVAL	100		/* Expensive to read */
 
 /* We can suspend to RAM */
 #define CONFIG_PLATFORM_SUSPEND

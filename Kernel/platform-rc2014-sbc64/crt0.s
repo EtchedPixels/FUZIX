@@ -49,11 +49,14 @@
 	.globl nmi_handler
 	.globl outstring
 
+	.globl _mach_zrcc
+
 	.include "kernel.def"
 
 	; Starts at 0x1000 at the moment
 
-	; Entered with bank = 3 from the bootstrap logic
+	; Entered with bank = 1 from the bootstrap logic
+	; A holds the machine type: 0 = SBC64/MBC64 1 = ZRCC
 
 resume_sp .equ 0x0080
 resume_tag .equ 0x0084
@@ -90,6 +93,8 @@ start:
 	ld bc, #l__BUFFERS - 1
 	ld (hl), #0
 	ldir
+
+	ld (_mach_zrcc),a
 
 	call init_hardware
 	call _fuzix_main

@@ -1,49 +1,21 @@
-;
-;	BOOT and restart image
-;
-;	We are entered at power on with bank = 3
-;
-
-resume_tag .equ 0x0084
-
 	.area _BOOT(ABS)
 
-	.org 0x0000
+	.org 0x0100
+
 start:
-	jp init
-
-	.org 0x0080
-init:  
 	di
-	ld sp,#0x1000		; safe spot
-
+	ld sp,#0x0000		; safe spot
 	ld hl,#signon
 	call outstr
-
-	; See if we are loading an image or resuming from memory
-	or a
-	ld hl,(resume_tag)
-	ld de,#0xC0DE
-	sbc hl,de
-	jr nz, disk_load
-	ld a,(0x1003)
-	cp #0xC3
-	jr nz, disk_load
-	ld hl,#resuming
-	call outstr
-	jp 0x1003
-
-signon:
-	.ascii 'SBC64 Boot Loader'
-	.db 13,10,0
-resuming:
-	.ascii 'Resuming from memory'
-	.db 13,10,0
-
-
-disk_load:
-	ld hl,#loading
-	call outstr
+	ld a,#0x11
+	out (0x1f),a
+	ld hl,#0xB000
+	ld de,#0x0100
+	ld b,d
+	ld c,e
+	ldir
+	jp go
+go:
 	; Init the ATA CF
 	ld a,#0xE0
 	out (0x16),a
@@ -83,11 +55,12 @@ loader:
 
 	ld hl,#gogogo
 	call outstr
-	xor a
+	ld a,#1			; ZRCC
 	jp 0x1000
 
-loading:
-	.asciz 'Loading image from disk...'
+signon:
+	.ascii 'ZRCC Boot Loader'
+	.db 13,10,0
 gogogo:
 	.ascii 'done'
 	.db 13,10,0
@@ -98,7 +71,7 @@ badimage:
 	halt
 
 badbadbad:
-	.ascii 'Invalid image or CF problem'
+	.ascii 'Invalid'
 	.db 13,10,0
 
 ;
