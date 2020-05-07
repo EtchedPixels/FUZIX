@@ -1,36 +1,36 @@
-; Keep these in sync with struct u_data!!
-.equ U_DATA__U_PTAB              , (U_DATA+0)   ; struct p_tab*
-.equ U_DATA__U_PAGE              , (U_DATA+2)   ; uint16_t
-.equ U_DATA__U_PAGE2             , (U_DATA+4)   ; uint16_t
-.equ U_DATA__U_INSYS             , (U_DATA+6)   ; bool
-.equ U_DATA__U_CALLNO            , (U_DATA+7)   ; uint8_t
-.equ U_DATA__U_SYSCALL_SP        , (U_DATA+8)   ; void *
-.equ U_DATA__U_RETVAL            , (U_DATA+10)   ; int16_t
-.equ U_DATA__U_ERROR             , (U_DATA+12)  ; int16_t
-.equ U_DATA__U_SP                , (U_DATA+14)  ; void *
-.equ U_DATA__U_ININTERRUPT       , (U_DATA+16)  ; bool
-.equ U_DATA__U_CURSIG            , (U_DATA+17)  ; int8_t
-.equ U_DATA__U_ARGN              , (U_DATA+18)  ; uint16_t
-.equ U_DATA__U_ARGN1             , (U_DATA+20)  ; uint16_t
-.equ U_DATA__U_ARGN2             , (U_DATA+22)  ; uint16_t
-.equ U_DATA__U_ARGN3             , (U_DATA+24)  ; uint16_t
-.equ U_DATA__U_ISP               , (U_DATA+26)  ; void * (initial stack pointer when _exec()ing)
-.equ U_DATA__U_TOP               , (U_DATA+28)  ; uint16_t
-.equ U_DATA__U_BREAK             , (U_DATA+30)  ; uint16_t
-.equ U_DATA__U_SIGVEC            , (U_DATA+32)  ; table of function pointers (void *)
+/* Keep these in sync with struct u_data */
+#define U_DATA__U_PTAB              0   // struct p_tab*
+#define U_DATA__U_PAGE              2   // uint16_t
+#define U_DATA__U_PAGE2             4   // uint16_t
+#define U_DATA__U_INSYS             6   // bool
+#define U_DATA__U_CALLNO            7   // uint8_t
+#define U_DATA__U_SYSCALL_SP        8   // void *
+#define U_DATA__U_RETVAL            10  // int16_t
+#define U_DATA__U_ERROR             12  // int16_t
+#define U_DATA__U_SP                14  // void *
+#define U_DATA__U_ININTERRUPT       16  // bool
+#define U_DATA__U_CURSIG            17  // int8_t
+#define U_DATA__U_ARGN              18  // uint16_t
+#define U_DATA__U_ARGN1             20  // uint16_t
+#define U_DATA__U_ARGN2             22  // uint16_t
+#define U_DATA__U_ARGN3             24  // uint16_t
+#define U_DATA__U_ISP               26  // void * initial stack pointer when _execing
+#define U_DATA__U_TOP               28  // uint16_t
+#define U_DATA__U_BREAK             30  // uint16_t
+#define U_DATA__U_SIGVEC            32  // table of function pointers (void *)
 
-; Keep these in sync with struct p_tab!!
-.equ P_TAB__P_STATUS_OFFSET      , 0
-.equ P_TAB__P_FLAGS_OFFSET	 , 1
-.equ P_TAB__P_TTY_OFFSET         , 2
-.equ P_TAB__P_PID_OFFSET         , 3
-.equ P_TAB__P_PAGE_OFFSET        , 15
+// Keep these in sync with struct p_tab!!
+#define P_TAB__P_STATUS_OFFSET      0
+#define P_TAB__P_FLAGS_OFFSET	    1
+#define P_TAB__P_TTY_OFFSET         2
+#define P_TAB__P_PID_OFFSET         3
+#define P_TAB__P_PAGE_OFFSET        15
 
-.equ P_RUNNING                   , 1            ; value from include/kernel.h
-.equ P_READY                     , 2            ; value from include/kernel.h
+#define P_RUNNING                   1   // value from include/kernel.h
+#define P_READY                     2   // value from include/kernel.h
 
-.equ PFL_BATCH			 , 4
+#define PFL_BATCH		    4
 
-.equ OS_BANK                     , 0            ; value from include/kernel.h
+#define OS_BANK                     0   // value from include/kernel.h
 
-.equ EAGAIN                      , 11           ; value from include/kernel.h
+#define EAGAIN                      11  // value from include/kernel.h
