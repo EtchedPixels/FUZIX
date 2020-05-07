@@ -17,7 +17,7 @@
 ;
 ;	ROMWBW 2.9.1 has an undocumented antisocial habit - it enables
 ;	interrupts even if called with them disabled. Work around this
-;	by turnign them back off when we need too
+;	by turning them back off when we need too
 ;
 		.module boot
 
