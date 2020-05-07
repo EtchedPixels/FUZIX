@@ -19,6 +19,8 @@
 	.export outx
 	.export outd
 
+	.export preemption
+
 	.setcpu 6303
 
 #include "platform/kernel.def"
@@ -244,7 +246,6 @@ nmimsg:
 interrupt_handler:
 	sts istack_switched_sp
 	lds #istack_top
-	des
 	jsr map_save_kernel
 
 	ldaa #1
