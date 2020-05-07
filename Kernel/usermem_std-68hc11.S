@@ -10,7 +10,6 @@
 
 _uputc:
 	tsx
-	ldab 4,x
 	ldx 3,x
 	jsr map_process_always
 	stab 0,x
@@ -18,31 +17,28 @@ _uputc:
 
 _uputw:
 	tsx
-	ldd 5,x
 	ldx 3,x
 	jsr map_process_always
 	std 0,x
 	jmp map_kernel
 
 _ugetc:
-	tsx
-	ldx 3,x
+	xgdx
 	jsr map_process_always
 	ldab 0,x
 	clra
 	jmp map_kernel
 
 _ugetw:
-	tsx
-	ldx 3,x
+	xgdx
 	jsr map_process_always
 	ldd 0,x
 	jmp map_kernel
 
 _uzero:
 	tsx
-	ldd 3,x
-	ldx 5,x
+	ldx 3,x			; size
+	xgdx			; swap over as we want pointer in D
 	jsr map_process_always
 	; Optimize, unroll etc ?
 uzerolp:
@@ -52,65 +48,50 @@ uzerolp:
 	bne uzerolp
 	jmp map_kernel
 
-_uget:
-	; This one is harder as we've got to juggle two pointers
-	; We can optimize this a lot by abusing the stack etc but
-	; start simple. Take care as tmp/to/from are kernel mapped
+_uget:	
+	; source D dest 3 len 5
+	std __end
+	xgdy		; Y is now source
 	tsx
-	ldd 3,x		; len
-	std __tmp
-	ldd 5,x		; to
-	std __to
-	ldx 7,x		; from
-	stx __from
+	ldd 5,x		; len
+	addd __end
+	std __end	; stop marker
+	ldx 3,x		; to
 ugetl:
-	ldx __from
 	jsr map_process_always
-	ldab ,x
-	inx
+	ldab ,y
+	iny
 	jsr map_kernel
-	stx __from
-	ldx __to
 	stab ,x
 	inx
-	stx __to
-	ldd __tmp
-	subd #1
-	std __tmp
+	cpy __end
 	bne ugetl
 	clrb
 	clra
 	rts
 
-_uput:
-	; This one is harder as we've got to juggle two pointers
-	; We can optimize this a lot by abusing the stack etc but
-	; start simple. Take care as tmp/to/from are kernel mapped
+_uput:	
+	; source D dest 3 len 5
+	std __end
+	xgdy		; Y is now source
 	tsx
-	ldd 3,x		; len
-	std __tmp
-	ldd 5,x		; to
-	std __to
-	ldx 7,x		; from
-	stx __from
+	ldd 5,x		; len
+	addd __end
+	std __end	; stop marker
+	ldx 3,x		; to
 uputl:
-	ldx __from
-	ldab ,x
-	inx
-	stx __from
-	ldx __to
+	ldab ,y
+	iny
 	jsr map_process_always
 	stab ,x
-	jsr map_kernel
 	inx
-	stx __to
-	ldd __tmp
-	subd #1
-	std __tmp
+	jsr map_kernel
+	cpy __end
 	bne uputl
 	clrb
 	clra
 	rts
+
 
 	.section data
 
@@ -118,9 +99,5 @@ uputl:
 ;	We should be ok not saving these on IRQ as we don't allow IRQs to
 ;	poke user space. TODO: move some of these to ZP
 ;
-__to:
-	.word 0
-__from:
-	.word 0
-__tmp:
+__end:
 	.word 0
