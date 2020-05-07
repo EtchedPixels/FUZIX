@@ -317,7 +317,9 @@ preemption:
 	bne not_running
 	ldab #P_READY
 	stab P_TAB__P_STATUS_OFFSET,x
-	oim #PFL_BATCH, P_TAB__P_FLAGS_OFFSET,x
+	ldaa P_TAB__P_FLAGS_OFFSET,x
+	orab #PFL_BATCH
+	stab P_TAB__P_FLAGS_OFFSET,x
 not_running:
 	jsr _platform_switchout
 	clr _udata+U_DATA__U_ININTERRUPT
