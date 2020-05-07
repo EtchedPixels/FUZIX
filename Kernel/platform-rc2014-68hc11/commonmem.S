@@ -9,7 +9,7 @@
         .globl istack_top
         .globl istack_switched_sp
 
-	.section common
+	.section .common
 
 ;
 ;	Declared as BSS so no non zero bytes here please

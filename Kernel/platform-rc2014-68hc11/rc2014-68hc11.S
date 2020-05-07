@@ -11,6 +11,7 @@
 	    .globl map_kernel_di
 	    .globl map_process
 	    .globl map_process_always
+	    .globl map_process_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_process_x
@@ -31,7 +32,7 @@
 ; COMMON MEMORY BANK
 ; -----------------------------------------------------------------------------
 
-	    .section common
+	    .section .common
 
 platform_monitor:
 platform_reboot:
@@ -71,7 +72,7 @@ irq_on:
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
-            .section code
+            .section .text
 
 rebootit:
 	    clr 0xFE7B		; top 16K to ROM 0
@@ -92,7 +93,7 @@ init_hardware:
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
-            .section common
+            .section .common
 
 program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
@@ -133,6 +134,7 @@ nullirq:
 ;	Map the current process, do not change register values
 ;
 map_process_always:
+map_process_always_di:
 	    pshx
 	    ldx #udata + U_DATA__U_PAGE
 	    jsr map_bank

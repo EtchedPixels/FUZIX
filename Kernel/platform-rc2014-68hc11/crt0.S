@@ -2,7 +2,7 @@
 ;	So we end up first in the image
 ;
 
-		.section code
+		.section .text
 
 		.byte 0x03
 		.byte 0x63
@@ -17,9 +17,8 @@ wipeud:
 		cpx #istack_switched_sp
 		bne wipeud
 
-		ldx #__bss
+		ldx #__bss_start
 		ldd #__bss_size
-
 bss_wipe:	clr ,x
 		inx
 		subd #1
@@ -32,3 +31,10 @@ gogogo:
 		sei			; Spin
 stop:		jmp stop
 
+
+;
+;	Force our custom sections to be allocated so they appear in the
+;	final binary. That was fun to find....
+;
+		.section .discard,"a"
+		.section .common,"a"

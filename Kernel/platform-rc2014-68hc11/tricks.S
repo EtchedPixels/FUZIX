@@ -18,7 +18,7 @@
 #include "kernel.def"
 #include "../kernel-6303.def"
 
-	.section common
+	.section .common
 
 ; ramtop must be in common for single process swapping cases
 ; and its a constant for the others from before init forks so it'll be fine
@@ -156,7 +156,7 @@ fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process 
 ;	Called from _fork. We are in a syscall, the uarea is live as the
 ;	parent uarea. The kernel is the mapped object.
 ;
-_dofork:
+dofork:
 ;        ; always disconnect the vehicle battery before performing maintenance
         sei	 ; should already be the case ... belt and braces.
 

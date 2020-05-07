@@ -42,11 +42,12 @@ clean:
 	rm -f $(OBJS) *.o *.s core *~ fuzix.bin fuzix.tmpmap
 
 image:
-	$(CROSS_LD) -o ../fuzix.bin crt0.o commonmem.o \
+	$(CROSS_LD) -M -T memory.x -relax -o ../fuzix.elf crt0.o commonmem.o \
 	rc2014-68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16kfc.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
-	../usermem.o ../usermem_std-68hc11.o devtty.o
+	../usermem.o ../usermem_std-68hc11.o devtty.o >../fuzix.map
+	$(CROSS_OBJCOPY) ../fuzix.elf -O binary ../fuzix.bin
