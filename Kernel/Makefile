@@ -186,6 +186,7 @@ clean:
 	rm -f tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt
 	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion tools/trslabel
 	rm -f *.rel *.lst *.sym *.o *.bin
+	rm -f lowlevel_6303.s lowlevel_6803.s usermem_std-6303.s usermem_std-6803.s
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C tools/bankld clean
 	+$(MAKE) -C cpm-loader clean
