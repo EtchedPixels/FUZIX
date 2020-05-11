@@ -8,8 +8,8 @@
 
 __setjmp:
 	tsx
-	ldd	1,x		; return address
-	ldx	3,x		; get the jmp buffer
+	ldd	,x		; return address
+	ldx	2,x		; get the jmp buffer
 	sts	,x		; remember the stack pointer
 	std	2,x		; return address
 	clra
