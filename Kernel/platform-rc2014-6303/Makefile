@@ -42,6 +42,8 @@ $(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
 
 clean:
 	rm -f $(OBJS) *.o core *~ fuzix.bin fuzix.tmpmap
+	rm -f commonmem.s crt0.s rc2014-6303.s tricks.s
+
 
 image:
 	$(CROSS_LD) -b -C 0x400 -S 0xF400 -Z 0x20 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \

@@ -86,7 +86,7 @@ badswitchmsg:
 _switchin:
 	sei
 	tsx
-	ldx	3,x
+	ldx	2,x
 	stx	switch_proc_ptr
 
 	ldd	P_TAB__P_PAGE_OFFSET,x
@@ -175,7 +175,7 @@ _dofork:
         sei	 ; should already be the case ... belt and braces.
 
 	tsx
-	ldx 3,x
+	ldx 2,x
 	; new process in X, get parent pid into y
 
 	stx fork_proc_ptr
@@ -258,15 +258,14 @@ fork_copy:
 ;	Alas we can't use EIM here because it doesn't do extended addresses
 ;	and our MMU is in I/O space ($FExx)
 ;
-;	Copy 16K from page A to page B. Caller is responsible for putting
+;	Copy 16K from page B to page A. Caller is responsible for putting
 ;	banks back sane
 ;
 bank2bank:
 	pshx
-	stab $FE79		; Switch to destination bank
-	staa patch1+1		; Patch the source bank return id
-	staa $FE79		; Switch to source bank
-	stab patch2+1		; And patch the dest bank switch
+	staa patch1+1		; Patch the dest bank
+	stab patch2+1		; Patch the dest bank
+	stab $FE79		; Switch to source bank
 	ldx #$4000		; Start address
 copyloop:
 	ldab ,x

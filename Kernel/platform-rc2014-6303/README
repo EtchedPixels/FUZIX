@@ -48,6 +48,7 @@ Things to address
   the other stuff is queued
 - Don't disable all interrupts in the Fuzix paths
 - Add device support for some of the RC2014 external devices
+- Change syscall stubs to jmp to stub not SWI
 
 Put the loader on sector 0
 Put the kernel on sector 1+
