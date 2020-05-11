@@ -112,7 +112,7 @@ void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value);
 #define FLAG_WRITE_CACHE 0x80
 
 extern bool devide_wait(uint_fast8_t bits);
-extern uint8_t devide_transfer_sector(void);
+extern uint_fast8_t devide_transfer_sector(void);
 extern int devide_flush_cache(void);
 
 /* Platform provided, or may be defaults */

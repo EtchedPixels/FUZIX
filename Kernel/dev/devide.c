@@ -49,7 +49,7 @@ bool devide_wait(uint_fast8_t bits)
     }
 }
 
-uint8_t devide_transfer_sector(void)
+uint_fast8_t devide_transfer_sector(void)
 {
     uint_fast8_t drive;
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
