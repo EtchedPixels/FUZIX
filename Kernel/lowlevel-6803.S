@@ -42,15 +42,15 @@ _ei:
 
 _irqrestore:
 	tsx
-	ldd	2,x 
+	ldaa	3,x
 			; D holds the return from di where A is the cc
 	tap		; we trash overflow and carry but they are assumed
 	rts		; clobbered anyway
 
 _swab:
 	tsx
-	ldab	3,x
-	ldaa	4,x
+	ldab	2,x
+	ldaa	3,x
 	rts
 
 	.common
@@ -162,16 +162,16 @@ signal_return:
 ;
 unix_syscall_entry:
 	tsx
-	stx _udata+U_DATA__U_SYSCALL_SP
+	sts _udata+U_DATA__U_SYSCALL_SP
 	abx
 	staa _udata+U_DATA__U_CALLNO
-	ldd 8,x
+	ldd 7,x
 	std _udata+U_DATA__U_ARGN
-	ldd 6,x
+	ldd 5,x
 	std _udata+U_DATA__U_ARGN+2
-	ldd 4,x
+	ldd 3,x
 	std _udata+U_DATA__U_ARGN+4
-	ldd 2,x
+	ldd 1,x
 	std _udata+U_DATA__U_ARGN+6
 	ldaa #1
 	staa _udata+U_DATA__U_INSYS	; we may want to use udata-> tricks ?
@@ -187,10 +187,10 @@ unix_syscall_entry:
 	; into the return frame
 	ldd _udata+U_DATA__U_RETVAL
 	tsx
-	stab 2,x			; return in D
-	staa 3,x
+	stab 1,x			; return in D
+	staa 2,x
 	ldd _udata+U_DATA__U_ERROR
-	std 4,x				; error in X
+	std 3,x				; error in X
 	tst _udata+U_DATA__U_CURSIG
 	bne via_signal
 	rti
@@ -200,14 +200,14 @@ via_signal:
 
 _doexec:
 	tsx
-	ldx 3,x
+	ldx 2,x
 	sei
 	jsr map_process_always
 	lds _udata+U_DATA__U_ISP
 	des				; offset by 1 on the 680X
 	clr _udata+U_DATA__U_INSYS
 	cli
-	ldd PROGLOAD
+	ldd #PROGLOAD
 	jmp 0,x
 
 trap_handler:

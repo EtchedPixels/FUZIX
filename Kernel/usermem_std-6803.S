@@ -12,23 +12,23 @@
 
 __uputc:
 	tsx
-	ldab 4,x
-	ldx 3,x
+	ldab 3,x
+	ldx 2,x
 	jsr map_process_always
 	stab 0,x
 	jmp map_kernel
 
 __uputw:
 	tsx
-	ldd 5,x
-	ldx 3,x
+	ldd 4,x
+	ldx 2,x
 	jsr map_process_always
 	std 0,x
 	jmp map_kernel
 
 __ugetc:
 	tsx
-	ldx 3,x
+	ldx 2,x
 	jsr map_process_always
 	ldab 0,x
 	clra
@@ -36,15 +36,15 @@ __ugetc:
 
 __ugetw:
 	tsx
-	ldx 3,x
+	ldx 2,x
 	jsr map_process_always
 	ldd 0,x
 	jmp map_kernel
 
 __uzero:
 	tsx
-	ldd 3,x
-	ldx 5,x
+	ldd 2,x
+	ldx 4,x
 	jsr map_process_always
 	; Optimize, unroll etc ?
 uzerolp:
@@ -59,11 +59,11 @@ __uget:
 	; We can optimize this a lot by abusing the stack etc but
 	; start simple. Take care as tmp/to/from are kernel mapped
 	tsx
-	ldd 3,x		; len
-	std tmp
-	ldd 5,x		; to
+	ldd 2,x		; len
+	std @tmp
+	ldd 4,x		; to
 	std @to
-	ldx 7,x		; from
+	ldx 6,x		; from
 	stx @from
 ugetl:
 	ldx @from
@@ -76,9 +76,9 @@ ugetl:
 	stab ,x
 	inx
 	stx @to
-	ldd tmp
+	ldd @tmp
 	subd #1
-	std tmp
+	std @tmp
 	bne ugetl
 	clrb
 	clra
@@ -89,11 +89,11 @@ __uput:
 	; We can optimize this a lot by abusing the stack etc but
 	; start simple. Take care as tmp/to/from are kernel mapped
 	tsx
-	ldd 3,x		; len
+	ldd 2,x		; len
 	std @tmp
-	ldd 5,x		; to
+	ldd 4,x		; to
 	std @to
-	ldx 7,x		; from
+	ldx 6,x		; from
 	stx @from
 uputl:
 	ldx @from
@@ -106,9 +106,9 @@ uputl:
 	jsr map_kernel
 	inx
 	stx @to
-	ldd tmp
+	ldd @tmp
 	subd #1
-	std tmp
+	std @tmp
 	bne uputl
 	clrb
 	clra
