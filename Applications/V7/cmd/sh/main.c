@@ -105,7 +105,11 @@ int main(int c, const char *v[])
 	rl_hinit(history, sizeof(history));
 
 	/* set names from userenv */
-	sh_getenv();
+	/* sh_getenv can call error handlers so initialize the
+	   subshell trap and if it fails (eg being passed a broken
+	   environment) just carry on instead of entering hyperspace */
+	if (setjmp(subshell) == 0)
+		sh_getenv();
 
 	/* look for restricted */
 /*	if(c>0 && any('r', *v) ) { rflag=0 ;} */
