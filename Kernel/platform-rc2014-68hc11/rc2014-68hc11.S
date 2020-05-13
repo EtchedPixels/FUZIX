@@ -60,7 +60,7 @@ __hard_ei:
 
 __hard_irqrestore:
 	    tsx
-	    ldab 3,x
+	    ldab 2,x
 	    andb #16		; IRQ flag
 	    bne irq_on
 	    cli
@@ -99,11 +99,9 @@ program_vectors:
             ; we are called, with interrupts disabled, by both newproc() and crt0
 	    ; will exit with interrupts off
 	    ;
-	    ; our C caller will invoke us with the pointer in x,a
+	    ; our C caller will invoke us with the pointer in D
 	    ; just pass it on
-	    ; our C caller will invoke us with the pointer C style
-	    tsx
-	    ldx 3,x
+
 	    jsr map_process
 	    ;
 	    ; We need to split these up
@@ -267,8 +265,7 @@ outcharw:
 	.globl hd_map
 
 hd_read_data:
-	tsx
-	ldx 3,x
+	xgdx
 
 	;
 	;	We must flip banks before we play mmu pokery, or it will
@@ -293,8 +290,7 @@ hd_read256:
 	rts
 
 hd_write_data:
-	tsx
-	ldx 3,x
+	xgdx
 	;
 	;	We must flip banks before we play mmu pokery, or it will
 	; undo all our work. This means our variables must be commondata

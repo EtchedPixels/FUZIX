@@ -10,14 +10,14 @@
 
 _uputc:
 	tsx
-	ldx 3,x
+	ldx 2,x
 	jsr map_process_always
 	stab 0,x
 	jmp map_kernel
 
 _uputw:
 	tsx
-	ldx 3,x
+	ldx 2,x
 	jsr map_process_always
 	std 0,x
 	jmp map_kernel
@@ -37,7 +37,7 @@ _ugetw:
 
 _uzero:
 	tsx
-	ldx 3,x			; size
+	ldx 2,x			; size
 	xgdx			; swap over as we want pointer in D
 	jsr map_process_always
 	; Optimize, unroll etc ?
@@ -53,10 +53,10 @@ _uget:
 	std __end
 	xgdy		; Y is now source
 	tsx
-	ldd 5,x		; len
+	ldd 4,x		; len
 	addd __end
 	std __end	; stop marker
-	ldx 3,x		; to
+	ldx 2,x		; to
 ugetl:
 	jsr map_process_always
 	ldab ,y
@@ -75,10 +75,10 @@ _uput:
 	std __end
 	xgdy		; Y is now source
 	tsx
-	ldd 5,x		; len
+	ldd 4,x		; len
 	addd __end
 	std __end	; stop marker
-	ldx 3,x		; to
+	ldx 2,x		; to
 uputl:
 	ldab ,y
 	iny

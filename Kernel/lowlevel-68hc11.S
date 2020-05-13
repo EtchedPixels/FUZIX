@@ -187,28 +187,28 @@ signal_return:
 ;
 unix_syscall_entry:
 	tsx
-	stx udata+U_DATA__U_SYSCALL_SP
+	sts udata+U_DATA__U_SYSCALL_SP
 	staa udata+U_DATA__U_CALLNO
 	bitb #0x80			; 68HC11 or 680X call
 	beq syscall_0x
 	; Sane argument order but odd stack layout
-	ldd 10,x
+	ldd 9,x
 	std udata+U_DATA__U_ARGN
-	ldd 14,x
+	ldd 13,x
 	std udata+U_DATA__U_ARGN+2
-	ldd 16,x
+	ldd 15,x
 	std udata+U_DATA__U_ARGN+4
-	ldd 18,x
+	ldd 17,x
 	bra syscall_main
 syscall_0x:
 	abx
-	ldd 10,x
+	ldd 9,x
 	std udata+U_DATA__U_ARGN
-	ldd 8,x
+	ldd 7,x
 	std udata+U_DATA__U_ARGN+2
-	ldd 6,x
+	ldd 5,x
 	std udata+U_DATA__U_ARGN+4
-	ldd 4,x
+	ldd 3,x
 syscall_main:
 	std udata+U_DATA__U_ARGN+6
 	ldaa #1
@@ -225,10 +225,10 @@ syscall_main:
 	; into the return frame
 	ldd udata+U_DATA__U_RETVAL
 	tsx
-	stab 2,x			; return in D
-	staa 3,x
+	stab 1,x			; return in D
+	staa 2,x
 	ldd udata+U_DATA__U_ERROR
-	std 4,x				; error in X
+	std 3,x				; error in X
 	tst udata+U_DATA__U_CURSIG
 	bne via_signal
 	rti
@@ -238,7 +238,7 @@ via_signal:
 
 doexec:
 	tsx
-	ldx 3,x
+	ldx 2,x
 	sei
 	jsr map_process_always
 	lds udata+U_DATA__U_ISP
@@ -270,13 +270,16 @@ trap_handler:
 
 trap_illegal:
 	ldx #illegalmsg
-	ldx 9,x
+	jsr outstring
+	tsx
+	ldx 8,x
 	ldab ,x
 	jsr outcharhex
 trapx:
 	ldx #atmsg
 	jsr outcharhex
-	ldx 9,x
+	tex
+	ldx 8,x
 	jsr outx
 	ldx #nlmsg
 	jsr outstring
