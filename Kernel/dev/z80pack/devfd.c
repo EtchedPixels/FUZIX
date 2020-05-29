@@ -75,8 +75,6 @@ int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
 {
     switch(request) {
     case FDIO_GETCAP:
-    case FDIO_GETINFO:
-        return uput(&fdcap, buffer, sizeof(struct fdcinfo));
         return uput(&fdcap, buffer, sizeof(struct fdcinfo));
     case FDIO_FMTTRK:
         /* Virtual fd has no format mechanism */
