@@ -74,6 +74,7 @@ extern uint16_t swap_dev;
 
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
+#define CONFIG_RTC_INTERVAL 10		/* Fast RTC */
 
 /* Input device support */
 #define CONFIG_INPUT
