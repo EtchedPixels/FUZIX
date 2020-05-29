@@ -3,7 +3,6 @@
  *	on both Model 1 and Model 3
  *
  *	Things To Do
- *	- Handle double sided media (need to consider heads in the loop)
  *	- Teach the asm code about density
  *	- Teach the asm code about double sided and maybe 128 byte sectors
  *	- Rework density handling
@@ -36,7 +35,7 @@ static uint8_t motorct;
 /* Extern as they live in common */
 extern uint8_t fd_map, fd_tab[MAX_FD];
 extern uint8_t fd_selected;
-extern uint8_t fd_cmd[9];
+extern uint8_t fd_cmd[10];
 
 static struct fd_ops *fops;
 
@@ -52,111 +51,84 @@ static struct fd_ops fd3_ops = {
     fd3_motor_on
 };
 
-static struct fdcinfo fdcap[MAX_FD] = {
-    {
+static struct fdcinfo fdcap = {
+        0,
+        0,
+        FDC_DSTEP|FDC_SEC0|FDC_PRECOMP,	/* Not all done yet */
         FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
-        0,
-        80,
-        2,
-        12,
-        0,
-        0,
-        FDC_DSTEP|FDC_SEC0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
-    {
-        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
-        0,
-        80,
-        2,
-        12,
-        FDC_DSTEP|FDC_SEC0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
-    {
-        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
-        0,
-        80,
-        2,
-        12,
-        FDC_DSTEP|FDC_SEC0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
-    {
-        FDF_DD|FDF_DS|FDF_SEC256|FDF_SEC512,
-        0,
-        80,
-        2,
-        12,
-        FDC_DSTEP|FDC_SEC0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
+        18,
+        40,
+        2,			/* Actually most are single sided */
+        0			/* Precomp */
 };
 
-static struct fdcinfo fdc[MAX_FD] = {
+static uint8_t mode[MAX_FD];
+
+#define NUM_MODES	5
+static struct fdcinfo fdcmodes[NUM_MODES] = {
+    /* Classic TRS80 SS/DD */
     {
-        FDF_DD|FDF_SEC256,
+        0,
+        FDTYPE_TRS40DD,
+        FDF_DD|FDF_SEC256,	/* Double density 256 byte sectors */
+        18,			/* 18 sectors/track */
+        40,			/* 40 tracks */
+        1,			/* single sided */
+        0
+    },
+    /* Classic TRS80 DS/DD: late machines only */
+    {
+        1,
+        FDTYPE_TRS40DD,
+        FDF_DD|FDF_SEC256,	/* Double density 256 byte sectors */
+        18,			/* 18 sectors/track */
+        40,			/* 40 tracks */
+        2,			/* double sided */
+        0
+    },
+    /* TRS80 Model 1 compatible images. Will not work with TRSDOS as TRSDOS
+       uses weird DAM values. Should be fine with Fuzix<->Fuzix */
+    {
+        2,
+        FDTYPE_TRS40SD,
+        FDF_DD|FDF_SEC256,	/* Single density 256 byte sectors */
+        10,			/* 10 sectors/track */
+        40,			/* 40 tracks */
+        1,			/* double sided */
+        21
+    },
+    {
+        3,
+        FDTYPE_PC360,		/* Double sided drive, PC format */
+        FDF_DD|FDF_SEC512,
+        9,
+        40,
+        2,
+        0
+    },
+    {
+        4,
+        FDTYPE_PC180,		/* Interchange with PC and TRS80 SS drive */
+        FDF_DD|FDF_SEC512,
         9,
         40,
         1,
-        12,
-        0,
-        0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
-    {
-        FDF_DD|FDF_SEC256,
-        9,
-        40,
-        1,
-        12,
-        0,
-        0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
-    {
-        FDF_DD|FDF_SEC256,
-        9,
-        40,
-        1,
-        12,
-        0,
-        0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
-    {
-        FDF_DD|FDF_SEC256,
-        9,
-        40,
-        1,
-        12,
-        0,
-        0,
-        FDC_FMT_17XX,
-        0, /* To calc worst case */
-        0,0
-    },
+        0
+    }
 };
 
-/* Consider a struct of  this plus the fdcinfo to make the referencing
-   nice ? */
-static uint8_t shift[MAX_FD] = { 1, 1, 1, 1 };
-static uint16_t size[MAX_FD] = { 256, 256, 256, 256 };
-static uint8_t step[MAX_FD] = { 2, 2, 2, 2 };
+struct diskprop {
+    uint8_t shift;
+    uint16_t size;
+    uint8_t precomp;
+    uint8_t features;
+    uint8_t sectors;	/* per track */
+    uint8_t heads;
+    uint8_t step;
+};
+
+
+static struct diskprop diskprop[MAX_FD];
 
 /* Translate the drive into a selection. Assumes single sided on the M1 */
 static uint8_t selmap[MAX_FD] = { 0x01, 0x02, 0x04, 0x08 };
@@ -168,7 +140,7 @@ static uint8_t fd_select(uint8_t minor)
     /* Do we need to select the drive ? */
     if (trs80_model != TRS80_MODEL3 || fd_selected != minor) {
         /* Decide if we need double density */
-        if (fdc[minor].features & FDF_DD)
+        if (diskprop[minor].features & FDF_DD)
             tmp |= 0x80;
         err = fops->fd_motor_on(selmap[minor]|tmp);
         if (!err)
@@ -189,8 +161,8 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     int ct = 0;
     int tries;
     uint8_t err = 0;
+    struct diskprop *dp = diskprop + minor;
     uint8_t *driveptr = fd_tab + minor;
-    struct fdcinfo *f = fdc + minor;
 
     /* You can't swap to floppy */
     if(rawflag == 2)
@@ -207,56 +179,95 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             goto bad;
     }
 
-    /* Adjust for actual media sector size */
     fd_map = rawflag;
     if (rawflag) {
-        if (d_blkoff(BLKSHIFT - shift[minor]))
+        if (d_blkoff(9 - dp->shift))
             return -1;
     } else {
-        udata.u_nblock <<= shift[minor];
-        udata.u_block <<= shift[minor];
+        udata.u_nblock <<= dp->shift;
+        udata.u_block <<=  dp->shift;
     }
 
-    /* We only deal with single sided media for the moment */
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
     fd_cmd[3] = is_read ? OPDIR_READ: OPDIR_WRITE;
-    fd_cmd[6] = shift[minor];
-    fd_cmd[7] = step[minor];
-    fd_cmd[8] = f->precomp;
+    fd_cmd[6] = dp->shift;
+    fd_cmd[7] = dp->step;
+    fd_cmd[8] = dp->precomp;
 
     while (ct < udata.u_nblock) {
         /* For each block we need to load we work out where to find it */
-        fd_cmd[1] = udata.u_block / f->sectors;
-        fd_cmd[2] = udata.u_block % f->sectors;
+        fd_cmd[1] = udata.u_block / dp->sectors;
+        fd_cmd[2] = udata.u_block % dp->sectors;
+        if (dp->heads == 2) {
+            fd_cmd[9] = fd_cmd[1] & 1;
+            fd_cmd[1] >>= 1;
+        } else
+            fd_cmd[9] = 0;
         fd_cmd[4] = ((uint16_t)udata.u_dptr) & 0xFF;
         fd_cmd[5] = ((uint16_t)udata.u_dptr) >> 8;
         /* Some single density media has sectors numbered from zero */
-        if (!(f->config & FDC_SEC0))
+        if (!(dp->features & FDC_SEC0))
             fd_cmd[2]++;
-        /* Reading 40 track media on an 80 track drive */
-        if (f->config & FDC_DSTEP)
-            fd_cmd[1] <<= 1;
         /* Now try the I/O */
         for (tries = 0; tries < 4 ; tries++) {
             err = fops->fd_op(driveptr);
             if (err == 0)
                 break;
+            if (!is_read && err != 0xFF && (err & 0x40)) {
+                udata.u_error = EROFS;
+                return -1;
+            }
             /* Reposition the head */
             if (tries > 1)
                 fops->fd_restore(driveptr);
         }
         if (tries == 4)
             goto bad;
-        udata.u_dptr += size[minor];
+        udata.u_dptr += dp->size;
         udata.u_block++;
         ct++;
     }
-    return udata.u_nblock << (7 + shift[minor]);
+    return udata.u_nblock << (7 + dp->shift);
 bad:
     kprintf("fd%d: error %x\n", minor, err);
 bad2:
     udata.u_error = EIO;
     return -1;
+}
+
+static void fd_setup(uint8_t minor, uint8_t step)
+{
+    /* Copy the features for the mode into the device parameters */
+    struct fdcinfo *f = fdcmodes + mode[minor];
+    struct diskprop *dp = diskprop + minor;
+    uint8_t s;
+
+    dp->features = f->features;
+    dp->size = f->features & FDF_SECSIZE;
+    switch(dp->size) {
+    case 128:
+        s = 0;
+        break;
+    case 256:
+    default:
+        s = 1;
+        break;
+    case 512:
+        s = 2;
+        break;
+    }
+    dp->shift = s;
+    dp->sectors = f->sectors;
+    dp->heads = f->heads;
+    if (dp->features & FDF_DD)
+        dp->precomp = 21;		/* DD 35/40 track drives */
+    else
+        dp->precomp = 255;		/* None */
+    if (step != 255)
+        dp->step = step;
+    /* Force reconfiguration */
+    fd_tab[minor] = 0xFF;
+    fd_selected = 255;
 }
 
 int fd_open(uint8_t minor, uint16_t flag)
@@ -266,6 +277,7 @@ int fd_open(uint8_t minor, uint16_t flag)
         udata.u_error = ENODEV;
         return -1;
     }
+    fd_setup(minor, 255);
     /* No media ? */
     if (do_fd_restore(minor) && !(flag & O_NDELAY)) {
         udata.u_error = EIO;
@@ -289,20 +301,32 @@ int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
 {
     uint8_t s;
-    uint16_t w;
+    struct fdcstep step;
+
     switch(request) {
         case FDIO_GETCAP:
-            return uput(fdcap + minor, buffer, sizeof(struct fdcinfo));
-        case FDIO_GETINFO:
-            return uput(fdc + minor, buffer, sizeof(struct fdcinfo));
-        case FDIO_SETINFO:
-            /* Ick.. but we are not portable code so we know how it packs */
-            if (uget(fdc + minor, buffer, 7))
+            fdcap.mode = mode[minor];
+            return uput(&fdcap, buffer, sizeof(struct fdcinfo));
+        case FDIO_GETMODE:
+            s = ugetc(buffer);
+            if (s >= NUM_MODES) {
+                udata.u_error = EINVAL;
                 return -1;
-            fdc[minor].features &= fdcap[minor].features;
-            w = fdc[minor].features;
-            s = fdc[minor].steprate;
-            /* FIXME: WD1770 is different - consider undoubled model 1  */
+            }
+            return uput(fdcmodes + s, buffer, sizeof(struct fdcinfo));
+        case FDIO_SETMODE:
+            s = ugetc(buffer);
+            if (s >= NUM_MODES) {
+                udata.u_error = EINVAL;
+                return -1;
+            }
+            mode[minor] = s;
+            fd_setup(minor, 2);
+            return 0;
+        case FDIO_SETSTEP:
+            if (uget(buffer, &step, sizeof(step)))
+                return -1;
+            s = step.steprate;
             /* Check chip and clock details */
             /* WD1771 - 6 6 10 20 */
             if (s >= 20)
@@ -311,28 +335,11 @@ int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
                 s = 2;
             else
                 s = 0;
-            step[minor] = s;
-            if (!(fdc[minor].config & FDC_PRECOMP))
-                fdc[minor].precomp = 255;	/* Never precomp */
-            switch(w &= FDF_SECSIZE) {
-            case 128:
-                s = 2;
-                break;
-            case 256:
-                s = 1;
-                break;
-            default:
-            case 512:
-                s = 0;
-                break;
-            }
-            shift[minor] = s;
-            size[minor] = w;
-            /* Force reconfiguration */
-            fd_tab[minor] = 0xFF;
-            fd_selected = 255;
+            /* TODO: head load and settle */
+            fd_setup(minor, s);
             return 0;
         case FDIO_FMTTRK:
+            /* TODO */
             return -1;
         case FDIO_RESTORE:
             fd_selected = 255;	/* Force a re-configure */
