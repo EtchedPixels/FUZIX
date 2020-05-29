@@ -140,7 +140,8 @@ nostash:
 	ldaa P_TAB__P_PAGE_OFFSET+2,x
 	staa _udata + U_DATA__U_PAGE+2
 
-	ldd @zero
+	clra
+	clrb
 	std _runticks
 
         ; restore machine state -- note we may be returning from either
@@ -209,7 +210,8 @@ _dofork:
 	; any calls to map process will now map the childs memory
 
         ; runticks = 0;
-	ldd #0
+	clra
+	clrb
 	std _runticks
 
         ; in the child process, fork() returns zero.
