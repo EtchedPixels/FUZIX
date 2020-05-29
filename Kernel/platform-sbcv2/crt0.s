@@ -11,11 +11,9 @@
 	        .area _GSINIT
 	        .area _GSFINAL
 		.area _BUFFERS
+	        .area _INITIALIZER
 		.area _DISCARD
 	        .area _COMMONMEM
-	        ; note that areas below here may be overwritten by the heap at runtime, so
-	        ; put initialisation stuff in here
-	        .area _INITIALIZER
 
         	; imported symbols
         	.globl _fuzix_main

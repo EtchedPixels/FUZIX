@@ -1,8 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0100
--b _COMMONMEM=0xF000
--b _INITIALIZER=0xFD00
+-b _COMMONMEM=0xF400
 -l z80
 platform-sbcv2/crt0.rel
 platform-sbcv2/commonmem.rel
