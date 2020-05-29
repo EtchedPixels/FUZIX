@@ -19,6 +19,7 @@
 /* Full RTC support */
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
+#define CONFIG_RTC_INTERVAL	10
 
 /* Input layer support */
 #define CONFIG_INPUT
