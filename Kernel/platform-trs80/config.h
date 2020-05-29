@@ -59,7 +59,7 @@
 #define NUM_DEV_TTY 3
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
-#define NBUFS    10       /* Number of block buffers - keep in sync with asm! */
+#define NBUFS    5        /* Number of block buffers - keep in sync with asm! */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 /* Reclaim the discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL

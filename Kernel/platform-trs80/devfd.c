@@ -141,7 +141,6 @@ static uint8_t do_fd_restore(uint8_t minor)
     return fd_restore(fd_tab + minor);
 }
 
-/* TODO: double sided disk  */
 static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
     int ct = 0;

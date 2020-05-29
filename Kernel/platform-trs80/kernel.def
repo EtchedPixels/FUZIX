@@ -9,7 +9,7 @@ PROGLOAD		    .equ 0x0100
 
 Z80_TYPE		    .equ 1
 
-NBUFS			    .equ 10
+NBUFS			    .equ 5
 
 Z80_MMU_HOOKS		    .equ 0
 
