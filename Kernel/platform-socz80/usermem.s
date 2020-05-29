@@ -46,7 +46,7 @@ __uput:
         ld e, 8(ix) ; byte count
         ld d, 9(ix)
         call page17out
-        jr ugetputret
+        jp ugetputret
 
 __uputc:
         push ix

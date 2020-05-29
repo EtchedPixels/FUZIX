@@ -33,6 +33,7 @@
 #define NBUFS    10       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
+#define CONFIG_SD
 #define MAX_BLKDEV  1	  /* Only the one SPI supported for now */
 #define SD_DRIVE_COUNT 1
 
