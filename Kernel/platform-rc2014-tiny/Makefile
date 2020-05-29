@@ -2,7 +2,8 @@ ASRCS = crt0.s tricks.s commonmem.s rc2014.s
 CSRCS = devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/mbr.c
-DSRCS = ../dev/devide.c ../dev/blkdev.c
+DSRCS = ../dev/devide.c
+DHSRCS = ../dev/blkdev.c
 DSRCS +=  ../dev/ds1302.c
 DASRCS = ../dev/ds1302_rc2014.s
 NSRCS = 
@@ -12,10 +13,11 @@ COBJS = $(CSRCS:.c=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
+DHOBJS = $(patsubst ../dev/%.c,%.rel, $(DHSRCS))
 DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
 NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
-OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
+OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DHOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
 
 CROSS_CCOPTS += -I../dev/ -I../dev/net/
 
@@ -32,6 +34,9 @@ $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(DHOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_HIGH) -c $<
 
 $(DAOBJS): %.rel: ../dev/%.s
