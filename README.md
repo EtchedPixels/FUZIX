@@ -40,9 +40,8 @@ images should follow in time.
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on both 6502, 65C816, 68000, 6809, 8080, 8085, MSP430 (bitrotted) and Z80/Z180
-* Core code can be built for 6502, 65C816, 6809, 68HC11, 68000, 8080, 8085, 8086, MSP430, pdp11 and Z80/Z180 so should
-  be far more portable
+* Kernel boots to userspace on 6303, 6502, 65C816, 68000, 6803, 6809, 8080, 8085, MSP430 (bitrotted) and Z80/Z180
+* Core code can be built for 6303, 6502, 65C816, 68000, 6803, 6809, 8080, 8085, 8086, MSP430, pdp11, rabbit r2k/r3k and Z80/Z180 so should be far more portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
 * Helpers to make many bits of implementation wrappers to core code
@@ -85,8 +84,6 @@ friends, while UMZIX has a neat unified "make anything" function.
 
 * 6809 gcc and cc65 don't have long long 64bit (for sane time_t)
 * SDCC can generate ROMmable binaries but not banked ones (hack fixes done)
-* SDCC has no register passing function call support, and for some
-	stuff it really shows
 * None of the above have an O88 style common sequence compressor
 * CC65 can't handle larger objects on stack, and lacks float support
 * We need a 'proper' 65C816 C compiler
