@@ -1,9 +1,7 @@
 - Debug reboot
-- Test and adjust 16x50
 - QUART CTS/RTS
 - 82C54 ?
 - TMS9918A - stop console flipping when in gfx mode
-IP - PS2 driver
 - Sound
 - Autodetect PPIDE
 
@@ -41,7 +39,10 @@ Supported Hardware
 	ZXKey keyboard interface (boot option "zxkey"). Works with the TMS9918A
 	videocard to provide a classic 'keyboard/screen' interface.
 
-	16x50 cards at 0xC0-0xF8 (the range is scanned).
+	PS/2 keyboard interface. Works with the TMS9918A
+	videocard to provide a classic 'keyboard/screen' interface.
+
+	16x50 cards at 0xA0/0xC0-0xF8 (the range is scanned).
 
 	DS1302 RTC at 0x0C/0xC0
 
@@ -81,6 +82,7 @@ Unsupported Hardware
 	of the 512K ROM/RAM. Please see the relevant port instead.
 	SC111 or other Z180 CPU board with linear mapped RAM. See the SC111
 	port instead.
+	LOROM 128K memory (has its own port)
 
 	SC110 CTC/serial (does not appear to be able to chain CTC pairs, as
 	is neeed for IM1 mode). You can run a wire by hand. Can still be used
