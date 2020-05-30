@@ -1,22 +1,28 @@
-/* Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
- * This file is part of the Linux-8086 C library and is distributed
- * under the GNU Library General Public License.
+/*
+ *	Implement atol directly because
+ *	- our multiply is constant (so way faster on 8bit)
+ *	- atol should not touch errno so is not a trivial strtoul wrapper
+ *	  if you are being correct about it.
  */
 
-long atol(char *number)
-{
-   register long   n = 0, neg = 0;
+#include <stdlib.h>
+#include <ctype.h>
 
-   while (*number <= ' ' && *number > 0)
-      ++number;
-   if (*number == '-')
-   {
-      neg = 1;
-      ++number;
-   }
-   else if (*number == '+')
-      ++number;
-   while (*number>='0' && *number<='9')
-      n = (n * 10) + ((*number++) - '0');
-   return (neg ? -n : n);
+long atol(const char *str)
+{
+	uint8_t neg = 0;
+	long sum = 0;
+
+	while(isspace(*str))
+		str++;
+	if (*str == '-') {
+		neg = 1;
+		str++;
+	} else if (*str == '+')
+		str++;
+	while(isdigit(*str)) {
+		sum *= 10;
+		sum += *str - '0';
+	}
+	return neg ? -sum : sum;
 }
