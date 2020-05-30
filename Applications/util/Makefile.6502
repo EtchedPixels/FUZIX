@@ -81,6 +81,7 @@ SRCS  = banner.c \
 	mode.c \
 	more.c \
 	mount.c \
+	nvtool.c \
 	od.c \
 	passwd.c \
 	ps.c \
