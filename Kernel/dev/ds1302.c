@@ -15,15 +15,6 @@
 uint8_t ds1302_present;
 uint8_t rtc_defer;
 
-void ds1302_write_register(uint_fast8_t reg, uint_fast8_t val)
-{
-    ds1302_set_pin_ce(true);
-    ds1302_send_byte(reg);
-    ds1302_send_byte(val);
-    ds1302_set_pin_ce(false);
-    ds1302_set_pin_clk(false);
-}
-
 void ds1302_send_byte(uint_fast8_t byte)
 {
     uint8_t i;
@@ -66,6 +57,14 @@ uint_fast8_t ds1302_receive_byte(void)
     return b;
 }
 
+void ds1302_write_register(uint_fast8_t reg, uint_fast8_t val)
+{
+    ds1302_set_pin_ce(true);
+    ds1302_send_byte(reg);
+    ds1302_send_byte(val);
+    ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
+}
 uint_fast8_t uint8_from_bcd(uint_fast8_t value)
 {
     return (value & 0x0F) + (10 * (value >> 4));
@@ -86,8 +85,8 @@ void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
         kprintf("ds1302: received byte 0x%x index %d\n", buffer[i], i);
 #endif
     }
-    ds1302_set_pin_ce(false);
     ds1302_set_pin_clk(false);
+    ds1302_set_pin_ce(false);
 
     platform_ds1302_restore();
 
@@ -95,6 +94,17 @@ void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
 }
 
 #ifdef CONFIG_RTC_EXTENDED
+
+static uint8_t ds1302_read_register(uint_fast8_t reg)
+{
+    uint8_t val;
+    ds1302_set_pin_ce(true);
+    ds1302_send_byte(reg);
+    val = ds1302_receive_byte();
+    ds1302_set_pin_ce(false);
+    ds1302_set_pin_clk(false);
+    return val;
+}
 
 uint_fast8_t rtc_nvread(uint_fast8_t r)
 {
@@ -105,13 +115,7 @@ uint_fast8_t rtc_nvread(uint_fast8_t r)
 
     platform_ds1302_setup();
 
-    ds1302_set_pin_ce(true);
-
-    ds1302_send_byte(0xC1 + 2 * r);
-    v = ds1302_receive_byte();
-
-    ds1302_set_pin_ce(false);
-    ds1302_set_pin_clk(false);
+    v = ds1302_read_register(0xC1 + 2 * r);
 
     platform_ds1302_restore();
 
@@ -119,12 +123,43 @@ uint_fast8_t rtc_nvread(uint_fast8_t r)
     return v;
 }
 
+void rtc_nvwrite(uint_fast8_t r, uint_fast8_t v)
+{
+    irqflags_t irq;
+    uint8_t n;
+
+    irq = di();
+
+    platform_ds1302_setup();
+    
+    n = ds1302_read_register(0x8F);
+
+    /* Turn off write protect if we need to */
+    if (n & 0x80)
+        ds1302_write_register(0x8E, n & 0x7F);
+
+    ds1302_write_register(0xC0 + 2 * r, v);
+
+    /* Restore write protect if it was set */
+    if (n & 0x80)
+        ds1302_write_register(0x8E, n);
+
+    platform_ds1302_restore();
+
+    irqrestore(irq);
+}
+
 int platform_rtc_ioctl(uarg_t request, char *data)
 {
     struct cmos_nvram *rtc = (struct cmos_nvram *)data;
-    uint16_t r = ugetw(&rtc->offset);
+    uint16_t r;
     int v;
-    if (r > 29) {
+
+    if (request == RTCIO_NVSIZE)
+        return 31;
+
+    r = ugetw(&rtc->offset);
+    if (r > 30) {
         udata.u_error = ERANGE;
         return -1;
     }
@@ -135,10 +170,8 @@ int platform_rtc_ioctl(uarg_t request, char *data)
         v = ugetc(&rtc->val);
         if (v < 0)
             return -1;
-        ds1302_write_register(0xC0 + 2 * r, v);
+        rtc_nvwrite(r, v);
         return 0;
-    case RTCIO_NVSIZE:
-        return 30;
     default:
         return -1;
     }
