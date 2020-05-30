@@ -1,0 +1,14 @@
+SETBOOT(8)
+## NAME
+*setboot* - set the default boot command line
+## SYNOPSIS
+*setboot* device \[command\]
+## DESCRIPTION
+The *setboot* command sets or displays the default boot command set for this
+disk volume. If no command is specified then the current command will be
+displayed. If a null command (\"\") is specified then the system will always
+prompt the user at boot.
+## STANDARDS
+setboot is a Fuzix specific command
+## AUTHOR
+Written by Alan Cox

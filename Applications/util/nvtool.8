@@ -1,0 +1,20 @@
+SETBOOT(8)
+## NAME
+*nvtool* - manipulate non-volatile RAM settings
+## SYNOPSIS
+*nvtool*  \[reg val\]
+## DESCRIPTION
+The *nvtool* command displays or sets values in non-volatile memory (nvram). The
+amount of nvram available will depend upon the platform. In some platforms
+the nvram is used by the firmware so this command should be used with great
+care.
+If the command is run without arguments it will dump the nvram data for the
+platform. If run with an address and value it will update that byte of the
+nvram.
+## STANDARDS
+setboot is a Fuzix specific command
+## AUTHOR
+Written by Alan Cox
+## BUGS
+nvtool displays in hex but requires decimal on the command line
+
