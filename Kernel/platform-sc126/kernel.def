@@ -19,3 +19,17 @@ PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
 
 CONFIG_SWAP		    .equ 0
+
+
+;
+;      SPI uses the top bit
+;
+
+.macro ROTATE
+       rla
+.endm
+
+.macro LOADFIRST
+       in d,(c)
+       rlc d
+.endm
