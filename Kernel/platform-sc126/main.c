@@ -10,7 +10,7 @@ extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
 
 uint16_t rtc_port = 0x0C;
-uint8_t rtc_shadow = 0x0C;
+uint8_t rtc_shadow = 0xAF;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 
@@ -78,15 +78,16 @@ void platform_interrupt(void)
 	}
 }
 
-__sfr __at 0x0C gpio;
+/* The RTC and GPIO share the same port so manage them together using
+   the rtc shadow byte */
 
-static uint8_t gpio_shadow = 0x0C;
+__sfr __at 0x0C gpio;
 
 void gpio_set(uint8_t mask, uint8_t val)
 {
-	gpio_shadow &= ~mask;
-	gpio_shadow |= val;
-	gpio = gpio_shadow;
+	rtc_shadow &= ~mask;
+	rtc_shadow |= val;
+	gpio = rtc_shadow;
 }
 
 void platform_ds1302_setup(void)
@@ -95,5 +96,5 @@ void platform_ds1302_setup(void)
 
 void platform_ds1302_restore(void)
 {
-	gpio = gpio_shadow;
+	gpio = rtc_shadow;
 }
