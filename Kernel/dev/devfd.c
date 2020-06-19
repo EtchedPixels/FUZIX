@@ -74,7 +74,7 @@ static uint8_t mode[4] = { 1, 1, 1, 1 };
 static uint8_t mode[4];
 #endif
 
-#define NUM_FDCMODES		6
+#define NUM_FDCMODES		7
 
 static struct fdcinfo fdccap = {
 	0,
@@ -88,7 +88,7 @@ static struct fdcinfo fdccap = {
 	0,
 };
 	
-static struct fdcinfo fdcmode[NUM_FDCMODES] = {
+static const struct fdcinfo fdcmode[NUM_FDCMODES] = {
 	/* IBM PC 3.5" */
 	{
 		0,
@@ -167,7 +167,7 @@ static struct fdcinfo fdcmode[NUM_FDCMODES] = {
 
 /* Settings for the configurations as the controller wants them */
 
-static struct devfd_dtbl devfd_modes[NUM_FDCMODES] = {
+static const struct devfd_dtbl devfd_modes[NUM_FDCMODES] = {
 	/* 3.5" 3ms step */
 	{ 0, 0xCF, 1, 27, 18, 1, IBMPC35, 10, 0, 160 },
 	{ 0, 0xCF, 1, 27,  9, 1, DSDD35, 10, 0, 160 },
