@@ -40,7 +40,7 @@ extern uint8_t inputtty;		/* FIXME */
 #define inputtty 1
 #endif
 
-static uint8_t keymap[256]  = {
+static const uint8_t keymap[256]  = {
     /* 00 - 0F */
     0, KEY_F9, 0, KEY_F5, KEY_F3, KEY_F1, KEY_F2, KEY_F12,
     0, KEY_F10, KEY_F8, KEY_F6, KEY_F4, CTRL('I'),'`',0,
