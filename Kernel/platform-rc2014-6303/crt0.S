@@ -12,7 +12,7 @@ entry:
 		sei			; interrupts off
 		clra
 		clrb
-		stab @zero
+		std @zero
 		incb
 		stab @one+1		; set up '@one' for the compiler
 		lds #kstack_top		; C stack
