@@ -10,6 +10,8 @@
 #define CONFIG_MULTI
 /* Use fixed banks for now. It's simplest and we've got so much memory ! */
 #define CONFIG_BANKS	1
+/* Permit large I/O requests to bypass cache and go direct to userspace */
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 
 #define CONFIG_CALL_R2L		/* Runtime stacks arguments backwards */
 
