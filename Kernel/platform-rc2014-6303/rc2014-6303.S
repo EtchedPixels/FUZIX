@@ -35,9 +35,84 @@
 	    .common
 
 _platform_monitor:
+	    ldx #ccreg
+	    jsr outstring
+	    tsx
+	    ldab 2,x
+	    jsr outcharhex
+	    ldx #dreg
+	    jsr outstring
+	    tsx
+            ldab 4,x
+	    jsr outcharhex
+	    tsx
+            ldab 3,x
+	    jsr outcharhex
+	    ldx #xreg
+            jsr outstring
+	    tsx
+            ldab 5,x
+            jsr outcharhex
+	     tsx
+            ldab 6,x
+            jsr outcharhex
+            ldx #pcreg
+            jsr outstring
+	    tsx
+            ldab 7,x
+            jsr outcharhex
+	    tsx
+            ldab 8,x
+            jsr outcharhex
+            ldx #endtrap
+            jsr outstring
+	    tsx
+	    ldx 10,x
+            jsr outx
+            ldab #32
+	    jsr outchar
+	    tsx
+	    ldx 12,x
+            jsr outx
+            ldab #32
+	    jsr outchar
+	    tsx
+	    ldx 14,x
+            jsr outx
+            ldab #32
+	    jsr outchar
+	    tsx
+	    ldx 16,x
+            jsr outx
+            ldab #32
+	    jsr outchar
+	    tsx
+	    ldx 18,x
+            jsr outx
+            ldab #32
+	    jsr outchar
+	    tsx
+	    ldx 20,x
+            jsr outx
+            ldx #endtrap
+	    jsr outstring
 _platform_reboot:
 	    jsr map_kernel
 	    jmp rebootit
+
+ccreg:	    .byte 13,10
+	    .ascii "Trap: CC = $"
+	    .byte 0
+dreg:       .byte 13,10
+	    .ascii "      AB = $"
+	    .byte 0
+xreg:       .byte 13,10
+	    .ascii "       X = $"
+	    .byte 0
+pcreg:      .byte 13,10
+	    .ascii "      PC = $"
+	    .byte 0
+endtrap:    .byte 13,10,13,10,0
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to
