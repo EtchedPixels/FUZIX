@@ -30,7 +30,7 @@ int dump_rtc(void)
     return 0;
 }
 
-int update_rtc(const char *argv[])
+int update_rtc(char *argv[])
 {
     int val;
     nv.offset = atoi(argv[1]);
