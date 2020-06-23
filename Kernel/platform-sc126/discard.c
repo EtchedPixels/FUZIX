@@ -9,11 +9,21 @@
 #include <z180.h>
 #include <ds1302.h>
 #include <netdev.h>
+#include "sc126.h"
+
+static uint8_t has_1mb;	/* additional 512K RAM located in U2 socket */
 
 void init_hardware_c(void)
 {
-	ramsize = 512;
-	procmem = 512 - 64;
+	has_1mb = detect_1mb();
+
+	if (has_1mb) {
+		ramsize = 1024;
+		procmem = 1024 - 64;
+	} else {
+		ramsize = 512;
+		procmem = 512 - 64;
+	}
 	/* zero out the initial bufpool */
 	memset(bufpool, 0, (char *) bufpool_end - (char *) bufpool);
 	/* FIXME add a platform param for tuning wait states for memory
@@ -27,9 +37,16 @@ void pagemap_init(void)
 	/* RC2014 has RAM in the top 512K of physical memory. 
 	 * First 64K is used by the kernel. 
 	 * Each process gets the full 64K for now.
+	 * Set the low bit on the map indexes so that we can index page 0
+	 * without confusing it with swap.
 	 * Page size is 4KB. */
-	for (i = 0x90; i < (1024 >> 2); i += 0x10)
+	for (i = 0x91; i < (1024 >> 2); i += 0x10)
 		pagemap_add(i);
+	/* Modded SC126 may have additional 512K starting at 0. */
+	if (has_1mb)
+		for (i = 0x01; i < (512 >> 2); i += 0x10)
+			pagemap_add(i);
+
 	ds1302_init();
 	if (ds1302_present)
 		kputs("DS1302 detected at 0x0C.\n");
