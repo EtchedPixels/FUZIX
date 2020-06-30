@@ -23,7 +23,7 @@
 #define TICKSPERSEC 40U     /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xF800  /* Top of program, base of U_DATA */
+#define PROGTOP     0xF000  /* Top of program, base of U_DATA */
 #define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   64      /* Memory needed per process */
 
@@ -58,7 +58,7 @@
 extern uint16_t swap_dev;
 #define SWAP_SIZE   0x7D 	/* 62.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xFA00	/* Swap out udata and program */
+#define SWAPTOP	    0xF200	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 //#define CONFIG_DYNAMIC_SWAP

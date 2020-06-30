@@ -1,8 +1,8 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0100
--b _COMMONMEM=0xF600
--b _DISCARD=0xE000
+-b _COMMONMEM=0xF000
+-b _DISCARD=0xDC00
 -l z180
 platform-sc126/crt0.rel
 platform-sc126/commonmem.rel
