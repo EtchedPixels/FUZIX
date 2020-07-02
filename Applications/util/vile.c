@@ -1219,8 +1219,6 @@ int save(char *fn)
 		i = indexp;
 		indexp = 0;
 		movegap();
-		fprintf(stderr, "Buf %p, Egap %p, End %p\n",
-			buf, egap, ebuf);
 		gptr = egap;
 		length = (size_t) (ebuf - egap);
 		err = 0;
