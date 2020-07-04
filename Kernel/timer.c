@@ -24,10 +24,10 @@ timer_t set_timer_duration(uint16_t duration)
 	return a;
 }
 
-bool timer_expired(timer_t timer_val)
+uint8_t timer_expired(timer_t timer_val)
 {
 	sync_clock();
-	return ((timer_val - ticks.h.low) & 0x8000);
+	return timer_val < ticks.h.low;
 }
 
 /*-----------------------------------------------------------*/
