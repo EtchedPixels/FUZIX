@@ -1,0 +1,13 @@
+FUZIX for the TI-84+ Silver Edition
+
+Note: the original hardware revision is required.
+
+TODO:
+- Finish initial bring-up
+	- Interrupts
+	- Enter userspace
+- TTY drivers
+- Keyboard driver
+- Some kind of filesystem
+- Swap to flash?
+- Attempt to move the vectors to ROM and use IM 1
