@@ -4,6 +4,7 @@ CSRCS += devices.c main.c libc.c
 
 ASRCS = p68000.S crt0.S
 ASRCS += tricks.S
+ASRCS += cartridge.S
 
 LSRCS = ../lib/68000exception.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
@@ -61,3 +62,6 @@ loader:	loader.S loader.ld
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
 	m68k-uclinux-objcopy loader.elf -O binary loader.bin
 	../tools/atariboot loader.bin
+
+../fuzix.bin: image
+cartridge.S: ../fuzix.bin
