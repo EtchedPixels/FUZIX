@@ -62,7 +62,7 @@ run:
 load:
 	clr.w	-(sp)		; Drive A: (FIXME - should work off boot)
 	move.w #1,-(sp)		; From sector 1
-	move.w #$256,-(sp)	; 256 sectors
+	move.w #256,-(sp)	; 256 sectors
 	move.l #$40000,-(sp)	; read address
 	move.w #2,-(sp)		; read, ignore media change
 	move.w #4,-(sp)		; rwabs
