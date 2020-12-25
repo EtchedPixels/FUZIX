@@ -824,7 +824,11 @@ struct selmap {
 #define SELECT_OUT		2
 #define SELECT_EX		4
 
-
+#ifdef __GNUC__
+#define NORETURN __attribute__((__noreturn__))
+#else
+#define NORETURN
+#endif
 
 /* functions in common memory */
 
@@ -995,7 +999,7 @@ extern void unix_syscall(void);
 extern void ptimer_insert(void);
 extern void timer_interrupt(void);
 extern void doexit (uint16_t val);
-extern void panic(char *deathcry);
+extern void NORETURN panic(char *deathcry);
 extern void exec_or_die(void);
 #define need_reschedule() (nready != 1 && runticks >= udata.u_ptab->p_priority)
 

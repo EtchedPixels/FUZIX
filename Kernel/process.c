@@ -974,11 +974,13 @@ void doexit(uint16_t val)
 	panic(PANIC_DOEXIT);
 }
 
-void panic(char *deathcry)
+void NORETURN panic(char *deathcry)
 {
 	kputs("\r\npanic: ");
 	kputs(deathcry);
 	platform_monitor();
+
+	for(;;);
 }
 
 /* We put this here so that we can blow the start.c code away on exec
