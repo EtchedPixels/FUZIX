@@ -8,6 +8,9 @@
 *.sym
 *.o
 cscope.*
+/GPATH
+/GRTAGS
+/GTAGS
 # Library archives
 *.a
 # Emacs backup
