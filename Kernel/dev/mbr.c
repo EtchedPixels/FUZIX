@@ -133,7 +133,9 @@ void mbr_parse(uint_fast8_t letter)
     if(ep_offset && next >= 4)
 	kputs("> ");
 
+#ifdef CONFIG_GPT
 out:
+#endif
     /* release temporary memory */
     tmpfree(br);
 }
