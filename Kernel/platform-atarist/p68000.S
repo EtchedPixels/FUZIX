@@ -32,16 +32,16 @@ init_hardware:
 	;	Check for high reslution mode
 	;
 
-	move.b $FFFA03,d0
-	btst #7,d0
-	bne normal_monitor
+	cmp.b #2,$FFFF8260.w
+	bne.s colour_monitor
+monochrome_monitor:
 	move.w #0,videomode
 	move.b #50,videorows	; 640x400 is special
 	move.b #49,videobot
 	move.b #2,$FF8260
 	bra set_palette
 
-normal_monitor:
+colour_monitor:
 	move.w #1,videomode
 	move.b #25,videorows	; 640x200 mode
 	move.b #24,videobot
