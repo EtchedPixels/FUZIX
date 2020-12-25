@@ -576,7 +576,7 @@ probe_memory:
 		move.l #probe_error,8
 		move.l a7,a1
 		moveq #0,d0
-		move.w (a0),d1
+		tst.b (a0)
 probe_out:	move.l #bus_error,8
 		rts
 probe_error:
