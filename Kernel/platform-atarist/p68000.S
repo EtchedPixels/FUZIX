@@ -60,7 +60,7 @@ set_palette:
 
 mode_ok:
 	move.l $42E,d0		; Top of RAM
-	sub.l #32000,d0		; Frame buffer space
+	sub.l #64000,d0		; Frame buffer space FIXME: Ought to be 32000
 	move.l d0,screenbase	; Save our video base
 
 	; $FF820D on the STe will be zero already
@@ -75,7 +75,7 @@ mode_ok:
 	lsr.l #2,d0
 	move.w d0,ramsize
 	sub.w  #64,d0		; Guess for kernel
-	sub.w  #32,d0		; Video memory
+	sub.w  #64,d0		; Video memory FIXME: Ought to be 32
 	move.w d0,procmem		; guesses for now
 
 	bsr install_vectors
