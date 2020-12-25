@@ -714,6 +714,8 @@ void kprintf(const char *fmt, ...)
 		kputchar(*fmt);
 		fmt++;
 	}
+
+	va_end(ap);
 }
 
 #ifdef CONFIG_IDUMP
