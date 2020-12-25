@@ -36,6 +36,8 @@ init_hardware:
 	bne.s colour_monitor
 monochrome_monitor:
 	move.w #0,videomode
+	move.w #0,vshift
+	move.w #78,vlen
 	move.b #50,videorows	; 640x400 is special
 	move.b #49,videobot
 	move.b #2,$FF8260
@@ -43,6 +45,8 @@ monochrome_monitor:
 
 colour_monitor:
 	move.w #1,videomode
+	move.w #1,vshift
+	move.w #156,vlen
 	move.b #25,videorows	; 640x200 mode
 	move.b #24,videobot
 	move.b #1,$FF8260
@@ -228,6 +232,7 @@ vaddr:
 	    move.b d1,d3		; save X
 	    and.w #1,d3			; low bit of X (it's all in words)
 	    and.w #$fffe,d1		; rest of X
+	    lsl.w d2,d0			; adjust for words/char
 	    lsl.w d2,d1			; adjust for words/char
 	    add.w d1,d0			; total offset
 	    add.w d3,d0			; low bit
