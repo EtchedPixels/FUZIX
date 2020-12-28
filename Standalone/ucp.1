@@ -1,0 +1,96 @@
+.TH UCP 1 2020-12-28 "UCP manual"
+
+.SH NAME
+ucp \- inspect and manipulate a Fuzix file system
+
+.SH SYNOPSIS
+.B ucp [\fIOPTION\fR] <\fIfuzix-file-system-file\fR> [\fICOMMAND\fR]
+
+.SH DESCRIPTION
+
+\fIUCP\fR is a program designed for inspection and manipulation of Fuzix
+file systems.
+
+.SH OPTION
+\fIUCP\fR accepts the following option:
+
+.TP
+.BR \-b
+Byteswap file system.
+
+.SH COMMAND
+
+If the \fICOMMAND\fR argument is omitted, \fIUCP\fR starts an interactive
+session where commands are entered on the standard input. The working
+directory is the root (/).
+
+The following commands are available:
+
+.TP
+.BR ? ", " help
+Print the synopsis and exit.
+
+.TP
+.BR exit ", " quit
+Quit the program.
+
+.TP
+.BR dir ", " ls " [" \fIpath\fR "]"
+List contents of the working directory, or \fIpath\fR if given.
+
+.TP
+.BR cd " <" \fIpath\fR ">"
+Change the working directory to \fIpath\fR.
+
+.TP
+.BR mkdir " <" \fIpath\fR ">"
+Create directory \fIpath\fR if it does not already exists.
+
+.TP
+.BR mknod " <" \fIname\fR ">" " <" \fImode\fR ">" " <" \fIdev#\fR ">"
+Make a device named \fIname\fR, having \fImode\fR by an octal number
+representing a permission bit pattern, and \fIdev#\fR number.
+
+.TP
+.BR chmod " <" \fImode\fR ">" " <" \fIpath\fR ">"
+Change \fIpath\fR to \fImode\fR by an octal number representing a
+permission bit pattern.
+
+.TP
+.BR bget ", " get " <" \fIhost-path\fR ">" " [" \fIfuzix-path\fR "]"
+Copy file \fIhost-path\fR from the host file system into the Fuzix file system,
+with the optional \fIfuzix-path\fR destination name. On Unix systems the
+\fBbget\fR and \fBget\fR commands are identical, but on other systems
+\fBbget\fR may treat files as binary, as opposed to \fBget\fR that may perform
+a text conversion.
+
+.TP
+.BR bput ", " put " <" \fIfuzix-path\fR ">"
+Copy file \fIfuzix-path\fR from the Fuzix file system into the host file system.
+On Unix systems the \fBbput\fR and \fBput\fR commands are identical, but on
+other systems \fBbput\fR may treat files as binary, as opposed to \fBput\fR
+that may perform a text conversion.
+
+.TP
+.BR type ", " cat " <" \fIpath\fR ">"
+Print file \fIpath\fR on the standard output.
+
+.TP
+.BR dump " <" \fIpath\fR ">"
+Read file \fIpath\fR but do not output anything. For test purposes.
+
+.TP
+.BR rm " <" \fIpath\fR ">"
+Remove the file \fIpath\fR.
+
+.TP
+.BR rmdir " <" \fIpath\fR ">"
+Remove the directory \fIpath\fR, which must be empty.
+
+.TP
+.BR df
+Report Fuzix file system space usage.
+
+.TP
+.BR ln " <" \fItarget\fR ">" " <" \fIlink-name\fR ">"
+Create a hard link named \fIlink-name\fR sharing the \fItarget\fR file.
