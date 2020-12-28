@@ -596,6 +596,8 @@ probe_error:
 ;	bigger than a 68010 !
 ;
 cpu_type:
+		move.w sr,-(sp)
+		move #$2700,sr		; disable interrupts
 		move.l #cpu_ill_error,16
 		move.l a7,a1
 		moveq #0,d0
@@ -614,7 +616,7 @@ cpu_type:
 cpu_type_exit:
 		move.l #illegal,16
 		move.b d0,cpu_has_trapvec
-		rts
+		rte
 ;
 ;	We found the faulting instruction for this CPU type so bail
 ;
