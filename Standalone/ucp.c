@@ -99,7 +99,7 @@ int main(int argc, char *argval[])
 		cmdusage();
 	}
 
-	if (isatty(0))
+	if (isatty(0) && !line[0])
 		interactive = 1;
 
 	rdev = 0;
