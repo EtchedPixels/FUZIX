@@ -46,6 +46,9 @@ static int match(char *cmd);
 static void usage(void);
 static void prmode(int mode);
 static int cmd_ls(char *path);
+static int cmd_find_print(const char *path, void *arg);
+static int cmd_find(const char *path,
+	int (*cb)(const char *path, void *arg), void *arg);
 static int cmd_chmod(char *modes, char *path);
 static int cmd_mknod(char *path, char *modes, char *devs);
 static int cmd_mkdir(char *path);
@@ -260,6 +263,10 @@ int main(int argc, char *argval[])
 				retc = cmd_link(arg1, arg2);
 			break;
 
+		case 18:	/* find */
+			retc = cmd_find(arg1, cmd_find_print, NULL);
+			break;
+
 		case 50:	/* help */
 			usage();
 			retc = 0;
@@ -318,6 +325,8 @@ static int match(char *cmd)
 		return (14);
 	else if (strcmp(cmd, "ln") == 0)
 		return (17);
+	else if (strcmp(cmd, "find") == 0)
+		return (18);
 	else if (strcmp(cmd, "help") == 0)
 		return (50);
 	else if (strcmp(cmd, "?") == 0)
@@ -449,6 +458,122 @@ static int cmd_ls(char *path)
 		fuzix_ls_out(path);
 	fuzix_close(d);
 	return 0;
+}
+
+struct find_path {
+	int stop;
+	size_t offset;
+	size_t length;
+	char path[512];
+};
+
+static int find_path(struct find_path *fp,
+	int (*cb)(const char *path, void *arg), void *arg)
+{
+	struct uzi_stat statbuf;
+	struct direct buf;
+	int err = 0;
+	int st;
+
+	if (fuzix_stat(fp->path, &statbuf) != 0) {
+		fprintf(stderr, "find: can't stat %s\n", fp->path);
+		return -1;
+	}
+
+	st = (statbuf.st_mode & F_MASK);
+	if ((st & F_MASK) == F_DIR) {
+		const int d = fuzix_open(fp->path, 0);
+		if (d < 0) {
+			fprintf(stderr, "find: can't open %s\n", fp->path);
+			return -1;
+		}
+
+		if (fp->length + 1 >= sizeof(fp->path)) {
+			fprintf(stderr, "find: path overflow %s\n", fp->path);
+			fuzix_close(d);
+			return -1;
+		}
+
+		/* Add a trailing slash unless there is one already. */
+		if (fp->length > 0 && fp->path[fp->length - 1] != '/') {
+			fp->path[fp->length++] = '/';
+			fp->path[fp->length] = '\0';
+		}
+
+		if (fp->path[fp->offset])
+			fp->stop = cb(&fp->path[fp->offset], arg);
+
+		while (!fp->stop && fuzix_read(d, (char *)&buf, 16) == 16) {
+			const size_t d_len = strlen(buf.d_name);
+			int err_;
+
+			if (buf.d_name[0] == '\0' ||
+			    strcmp(buf.d_name, ".") == 0 ||
+			    strcmp(buf.d_name, "..") == 0)
+				continue;
+
+			if (fp->length + d_len >= sizeof(fp->path)) {
+				fprintf(stderr, "find: path overflow %s\n",
+					fp->path);
+				fuzix_close(d);
+				return -1;
+			}
+
+			memcpy(&fp->path[fp->length], buf.d_name, d_len);
+			fp->length += d_len;
+			fp->path[fp->length] = '\0';
+
+			err_ = find_path(fp, cb, arg);
+			if (err_ < 0)
+				err = err_;
+
+			fp->length -= d_len;
+			fp->path[fp->length] = '\0';
+		}
+
+		fp->path[--fp->length] = '\0';
+
+		fuzix_close(d);
+	} else
+		fp->stop = cb(&fp->path[fp->offset], arg);
+
+	return err;
+}
+
+static int cmd_find_print(const char *path, void *arg)
+{
+	puts(path);
+
+	return 0;	/* Continue processing. */
+}
+
+/**
+ * cmd_find - list files and directories in a directory hierarchy
+ * @path: path to a file or a directory
+ * @cb: callback invoked for every file and directory found; return 0 to
+ * 	continue processing and nonzero to stop further processing
+ * @arg: optional argument supplied to the @cb callback, can be %NULL
+ *
+ * Return: zero on success, nonzero on failure
+ */
+static int cmd_find(const char *path,
+	int (*cb)(const char *path, void *arg), void *arg)
+{
+	const char *p = *path ? path : "./";	/* "./" is implicit. */
+	const size_t len = strlen(p);
+	struct find_path fp;
+
+	if (len >= sizeof(fp.path)) {
+		fprintf(stderr, "find: path overflow %s\n", p);
+		return -1;
+	}
+
+	memcpy(fp.path, p, len + 1);
+	fp.stop = 0;
+	fp.offset = *path ? 0 : 2;	/* Hide implicit "./". */
+	fp.length = len;
+
+	return find_path(&fp, cb, arg);
 }
 
 static int cmd_chmod(char *modes, char *path)
