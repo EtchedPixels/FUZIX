@@ -4,6 +4,7 @@ CSRCS = devlpr.c devtty.c dma.c devfd.c devacsi.c
 CSRCS += devices.c main.c libc.c
 
 ASRCS = p68000.S crt0.S
+ASRCS += loader.S
 ASRCS += tricks.S
 ASRCS += cartridge.S
 
@@ -58,8 +59,7 @@ image:	loader fuzix.ld $(FOBJS)
 	# And now make a bootable floppy
 	cat loader.bin ../fuzix.bin | dd bs=737280 conv=sync >fuzixboot.st
 
-loader:	loader.S loader.ld ../tools/atariboot
-	$(QUIET_AS)$(CROSS_AS) $(ASOPTS) loader.S -o loader.o
+loader:	loader.o loader.ld ../tools/atariboot
 	$(QUIET_LD)$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
 	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
 	../tools/atariboot loader.bin
