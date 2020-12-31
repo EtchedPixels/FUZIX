@@ -57,7 +57,7 @@ image:	loader fuzix.ld
 	# And now make a bootable floppy
 	cat loader.bin ../fuzix.bin | dd bs=737280 conv=sync >fuzixboot.st
 
-loader:	loader.S loader.ld
+loader:	loader.S loader.ld ../tools/atariboot
 	$(CROSS_AS) $(ASOPTS) loader.S -o loader.o
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
 	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
