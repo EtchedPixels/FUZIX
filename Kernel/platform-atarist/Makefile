@@ -53,14 +53,14 @@ image:	loader fuzix.ld
 	../usermem_std-68000.o devlpr.o devtty.o libc.o ../vt.o ../malloc.o \
 	blkdev.o mbr.o devide.o devide_discard.o devacsi.o dma.o \
 	../font8x8.o >../fuzix.map
-	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
+	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 	# And now make a bootable floppy
 	cat loader.bin ../fuzix.bin | dd bs=737280 conv=sync >fuzixboot.st
 
 loader:	loader.S loader.ld
 	$(CROSS_AS) $(ASOPTS) loader.S -o loader.o
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
-	m68k-uclinux-objcopy loader.elf -O binary loader.bin
+	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
 	../tools/atariboot loader.bin
 
 ../fuzix.bin: image
