@@ -102,7 +102,7 @@ platform:
 	-rm -f platform
 	ln -sf platform-$(TARGET) platform
 
-target: include/kernel.h | platform
+target: include/kernel.h $(OBJS) | platform
 	+$(MAKE) -C platform-$(TARGET)
 
 $(OBJS): | platform
