@@ -460,7 +460,10 @@ flush_icache:
 		beq noflush
 		; Flush the icache
 		move.w #$9,d0
+		save
+		chip 68020
 		movec d0,cacr
+		restore
 noflush:
 		rts
 
@@ -593,9 +596,13 @@ probe_error:
 ;	bigger than a 68010 !
 ;
 cpu_type:
+		move.w sr,-(sp)
+		move #$2700,sr		; disable interrupts
 		move.l #cpu_ill_error,16
 		move.l a7,a1
 		moveq #0,d0
+		save
+		chip 68060
 		movec vbr,d1		; faults on a 68000
 		moveq #10,d0
 		movec cacr,d1		; faults on a 68000 and 010
@@ -605,10 +612,11 @@ cpu_type:
 		moveq #40,d0
 		movec pcr,d1		; faults on all but 68060
 		moveq #60,d0
+		restore
 cpu_type_exit:
 		move.l #illegal,16
 		move.b d0,cpu_has_trapvec
-		rts
+		rte
 ;
 ;	We found the faulting instruction for this CPU type so bail
 ;

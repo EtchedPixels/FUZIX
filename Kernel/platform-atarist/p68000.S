@@ -32,17 +32,21 @@ init_hardware:
 	;	Check for high reslution mode
 	;
 
-	move.b $FFFA03,d0
-	btst #7,d0
-	bne normal_monitor
+	cmp.b #2,$FFFF8260.w
+	bne.s colour_monitor
+monochrome_monitor:
 	move.w #0,videomode
+	move.w #0,vshift
+	move.w #78,vlen
 	move.b #50,videorows	; 640x400 is special
 	move.b #49,videobot
 	move.b #2,$FF8260
 	bra set_palette
 
-normal_monitor:
+colour_monitor:
 	move.w #1,videomode
+	move.w #1,vshift
+	move.w #156,vlen
 	move.b #25,videorows	; 640x200 mode
 	move.b #24,videobot
 	move.b #1,$FF8260
@@ -56,7 +60,7 @@ set_palette:
 
 mode_ok:
 	move.l $42E,d0		; Top of RAM
-	sub.l #32000,d0		; Frame buffer space
+	sub.l #64000,d0		; Frame buffer space FIXME: Ought to be 32000
 	move.l d0,screenbase	; Save our video base
 
 	; $FF820D on the STe will be zero already
@@ -71,7 +75,7 @@ mode_ok:
 	lsr.l #2,d0
 	move.w d0,ramsize
 	sub.w  #64,d0		; Guess for kernel
-	sub.w  #32,d0		; Video memory
+	sub.w  #64,d0		; Video memory FIXME: Ought to be 32
 	move.w d0,procmem		; guesses for now
 
 	bsr install_vectors
@@ -228,6 +232,7 @@ vaddr:
 	    move.b d1,d3		; save X
 	    and.w #1,d3			; low bit of X (it's all in words)
 	    and.w #$fffe,d1		; rest of X
+	    lsl.w d2,d0			; adjust for words/char
 	    lsl.w d2,d1			; adjust for words/char
 	    add.w d1,d0			; total offset
 	    add.w d3,d0			; low bit
