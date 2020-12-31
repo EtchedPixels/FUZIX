@@ -22,6 +22,7 @@ OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS)
 
 FUZIX_ELF := fuzix.elf
 FUZIX_BIN := ../fuzix.bin
+FUZIX_ST  := fuzixboot.st
 
 CROSS_CCOPTS += -I../dev/
 
@@ -62,9 +63,12 @@ $(FUZIX_ELF): fuzix.ld $(FOBJS)
 $(FUZIX_BIN): $(FUZIX_ELF)
 	$(QUIET_GEN)$(CROSS_COMPILE)objcopy $< -O binary $@
 
-image:	loader $(FUZIX_BIN)
-	# And now make a bootable floppy
-	cat loader.bin $(FUZIX_BIN) | dd bs=737280 conv=sync >fuzixboot.st
+# And now make a bootable floppy
+$(FUZIX_ST): loader $(FUZIX_BIN)
+	$(QUIET_GEN)cat loader.bin $(FUZIX_BIN) | dd bs=737280 conv=sync >$@
+
+.PHONY: image
+image: $(FUZIX_ST)
 
 loader:	loader.o loader.ld ../tools/atariboot
 	$(QUIET_LD)$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
