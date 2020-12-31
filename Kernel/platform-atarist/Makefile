@@ -34,15 +34,7 @@ $(DOBJS): %.o: ../dev/%.c
 $(LOBJS): %.o: ../lib/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-clean:
-	rm -f *.o *.elf core *~
-	rm -f loader
-
-tricks.S: ../lib/68000flat.S
-
-image:	loader fuzix.ld
-	$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld \
-	crt0.o \
+FOBJS = crt0.o \
 	p68000.o ../start.o ../version.o ../lowlevel-68000.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o devices.o \
 	68000exception.o \
@@ -52,7 +44,16 @@ image:	loader fuzix.ld
 	../syscall_fs3.o ../syscall_exec32.o \
 	../usermem_std-68000.o devlpr.o devtty.o libc.o ../vt.o ../malloc.o \
 	blkdev.o mbr.o devide.o devide_discard.o devacsi.o dma.o \
-	../font8x8.o >../fuzix.map
+	../font8x8.o
+
+clean:
+	rm -f *.o *.elf core *~
+	rm -f loader
+
+tricks.S: ../lib/68000flat.S
+
+image:	loader fuzix.ld $(FOBJS)
+	$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld $(FOBJS) >../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 	# And now make a bootable floppy
 	cat loader.bin ../fuzix.bin | dd bs=737280 conv=sync >fuzixboot.st
