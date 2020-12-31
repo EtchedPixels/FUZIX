@@ -1,3 +1,4 @@
+CROSS_CCOPTS += $(DEP_CFLAGS)
 
 CSRCS = devlpr.c devtty.c dma.c devfd.c devacsi.c
 CSRCS += devices.c main.c libc.c
@@ -47,7 +48,7 @@ FOBJS = crt0.o \
 	../font8x8.o
 
 clean:
-	$(QUIET_RM)rm -f *.o *.elf core *~ loader
+	$(QUIET_RM)rm -f *.o *.o.d *.elf core *~ loader
 
 tricks.S: ../lib/68000flat.S
 
@@ -66,4 +67,5 @@ loader:	loader.S loader.ld ../tools/atariboot
 ../fuzix.bin: image
 cartridge.S: ../fuzix.bin
 
+include ../dep.mk
 include ../quiet.mk
