@@ -68,7 +68,8 @@ $(FUZIX_BIN): $(FUZIX_ELF)
 
 # And now make a bootable floppy
 $(FUZIX_ST): $(LOADER_BIN) $(FUZIX_BIN)
-	$(QUIET_GEN)cat $(LOADER_BIN) $(FUZIX_BIN) | dd bs=737280 conv=sync >$@
+	$(QUIET_GEN)cat $(LOADER_BIN) $(FUZIX_BIN) |			\
+		dd bs=737280 conv=sync status=none >$@
 
 .PHONY: image
 image: $(FUZIX_ST)
