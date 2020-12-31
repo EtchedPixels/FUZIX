@@ -1,3 +1,5 @@
+#define _XOPEN_SOURCE 500	/* For swab in unistd.h */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>

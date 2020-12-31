@@ -59,7 +59,9 @@ void wrtime(time_t *tloc)
 
 static uint8_t tod_deci;	/* 10ths of a second count */
 static uint8_t rtcsec;		/* Second number we expect from the RTC */
+#ifdef CONFIG_RTC
 static uint8_t rtcsync;		/* Counter in 1/10ths until we sync with the RTC */
+#endif
 
 static void tick_clock(void)
 {
@@ -91,8 +93,10 @@ static void tick_clock(void)
 
 void updatetod(void)
 {
+#ifdef CONFIG_RTC
 	uint8_t rtcnew;
 	int8_t slide;
+#endif
 
 	tick_clock();
 
