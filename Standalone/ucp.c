@@ -99,7 +99,7 @@ int main(int argc, char *argval[])
 		cmdusage();
 	}
 
-	if (isatty(0))
+	if (isatty(0) && !line[0])
 		interactive = 1;
 
 	rdev = 0;
@@ -107,8 +107,8 @@ int main(int argc, char *argval[])
 	xfs_init(rdev);
 	strcpy(cwd, "/");
 
-	printf("Fuzix UCP version " UCP_VERSION ".%s\n",
-	       interactive ? " Type ? for help." : "");
+	if (interactive)
+		printf("Fuzix UCP version " UCP_VERSION ". Type ? for help.\n");
 
 	do {
 		if (multiline && !pending_line) {

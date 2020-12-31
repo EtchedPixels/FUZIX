@@ -154,8 +154,6 @@ static int bdopen_libdsk(const char *name, int addflags)
 	if (err)
 		return -1;
 	libdsk = 1;
-	printf("Opening '%s' with %ld byte sectors using libdsk.\n", name,
-		dg.dg_secsize);
 	return 0;
 }
 
@@ -200,8 +198,6 @@ static int bdopen_raw(const char *name, int addflags)
 		sd++;
 		dev_offset = atoi(sd);
 	}
-
-	printf("Opening %s (offset %d)\n", namecopy, dev_offset);
 
 	dev_fd = open(namecopy, O_RDWR|addflags, 0600);
 	if (dev_fd == -1) {
@@ -268,7 +264,6 @@ int bdopen(const char *name, int addflags)
 {
 #ifdef LIBDSK
 	if (strncmp(name, "libdsk:", 7) == 0) {
-		printf("MOO");
 		return bdopen_libdsk(name + 7, addflags);
 	} else
 #endif
