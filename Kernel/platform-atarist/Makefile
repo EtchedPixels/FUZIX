@@ -23,16 +23,16 @@ CROSS_CCOPTS += -I../dev/
 all:	$(OBJS)
 
 $(COBJS): %.o: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %.o: %.S
-	$(CROSS_AS) $(ASOPTS) $< -o $*.o
+	$(QUIET_AS)$(CROSS_AS) $(ASOPTS) $< -o $*.o
 
 $(DOBJS): %.o: ../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(LOBJS): %.o: ../lib/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 FOBJS = crt0.o \
 	p68000.o ../start.o ../version.o ../lowlevel-68000.o \
@@ -47,22 +47,23 @@ FOBJS = crt0.o \
 	../font8x8.o
 
 clean:
-	rm -f *.o *.elf core *~
-	rm -f loader
+	$(QUIET_RM)rm -f *.o *.elf core *~ loader
 
 tricks.S: ../lib/68000flat.S
 
 image:	loader fuzix.ld $(FOBJS)
-	$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld $(FOBJS) >../fuzix.map
+	$(QUIET_LD)$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld $(FOBJS) >../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 	# And now make a bootable floppy
 	cat loader.bin ../fuzix.bin | dd bs=737280 conv=sync >fuzixboot.st
 
 loader:	loader.S loader.ld ../tools/atariboot
-	$(CROSS_AS) $(ASOPTS) loader.S -o loader.o
-	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
+	$(QUIET_AS)$(CROSS_AS) $(ASOPTS) loader.S -o loader.o
+	$(QUIET_LD)$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
 	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
 	../tools/atariboot loader.bin
 
 ../fuzix.bin: image
 cartridge.S: ../fuzix.bin
+
+include ../quiet.mk
