@@ -85,6 +85,10 @@ libs: ltools
 apps: libs
 	+(cd Applications; $(MAKE))
 
+.PHONY: gtags
+gtags:
+	gtags
+
 kernel: ltools
 	+(cd Kernel; $(MAKE))
 
@@ -92,6 +96,7 @@ kclean:
 	+(cd Kernel; $(MAKE) clean)
 
 clean:
+	rm -f GPATH GRTAGS GTAGS
 	+(cd Standalone; $(MAKE) clean)
 	+(cd Library/libs; $(MAKE) -f Makefile.$(USERCPU) clean)
 	+(cd Library; $(MAKE) clean)
