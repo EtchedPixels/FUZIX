@@ -24,6 +24,8 @@ FUZIX_ELF := fuzix.elf
 FUZIX_BIN := ../fuzix.bin
 FUZIX_ST  := fuzixboot.st
 
+LOADER_ELF := loader.elf
+
 CROSS_CCOPTS += -I../dev/
 
 all:	$(OBJS)
@@ -70,9 +72,11 @@ $(FUZIX_ST): loader $(FUZIX_BIN)
 .PHONY: image
 image: $(FUZIX_ST)
 
-loader:	loader.o loader.ld ../tools/atariboot
-	$(QUIET_LD)$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
-	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
+$(LOADER_ELF): loader.o loader.ld
+	$(QUIET_LD)$(CROSS_LD) -M -o $@ -T loader.ld loader.o >loader.map
+
+loader:	$(LOADER_ELF) ../tools/atariboot
+	$(CROSS_COMPILE)objcopy $(LOADER_ELF) -O binary loader.bin
 	../tools/atariboot loader.bin
 
 cartridge.S: $(FUZIX_BIN)
