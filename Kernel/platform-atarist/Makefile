@@ -20,6 +20,8 @@ AOBJS = $(ASRCS:.S=.o)
 
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS)
 
+FUZIX_ELF := fuzix.elf
+
 CROSS_CCOPTS += -I../dev/
 
 all:	$(OBJS)
@@ -53,9 +55,11 @@ clean:
 
 tricks.S: ../lib/68000flat.S
 
-image:	loader fuzix.ld $(FOBJS)
-	$(QUIET_LD)$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld $(FOBJS) >../fuzix.map
-	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
+$(FUZIX_ELF): fuzix.ld $(FOBJS)
+	$(QUIET_LD)$(CROSS_LD) -M -o $@ -T fuzix.ld $(FOBJS) >../fuzix.map
+
+image:	loader $(FUZIX_ELF)
+	$(CROSS_COMPILE)objcopy $(FUZIX_ELF) -O binary ../fuzix.bin
 	# And now make a bootable floppy
 	cat loader.bin ../fuzix.bin | dd bs=737280 conv=sync >fuzixboot.st
 
