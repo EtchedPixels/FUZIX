@@ -27,9 +27,11 @@ FUZIX_ST  := fuzixboot.st
 LOADER_ELF := loader.elf
 LOADER_BIN := loader.bin
 
+CARTRIDGE := ../cartridge
+
 CROSS_CCOPTS += -I../dev/
 
-all:	$(OBJS)
+all: image cartridge
 
 $(COBJS): %.o: %.c
 	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) -c $<
@@ -85,6 +87,13 @@ $(LOADER_BIN): $(LOADER_ELF) ../tools/atariboot
 loader:	$(LOADER_BIN)
 
 cartridge.S: $(FUZIX_BIN)
+$(CARTRIDGE): cartridge.o cartridge.ld
+	$(QUIET_LD)$(CROSS_LD) --orphan-handling=error --discard-all	\
+		-nostdlib --no-relax --script=cartridge.ld		\
+		-o $@ cartridge.o
+
+.PHONY: cartridge
+cartridge: $(CARTRIDGE)
 
 include ../dep.mk
 include ../quiet.mk
