@@ -575,13 +575,15 @@ skipvec:
 ;	(Returns 1 if it errors)
 ;
 probe_memory:
-		move.l 4(sp),a0
+		move sr,-(sp)
+		move #$2700,sr		; disable interrupts
+		move.l 6(sp),a0
 		move.l #probe_error,8
 		move.l a7,a1
 		moveq #0,d0
-		move.w (a0),d1
+		tst.b (a0)
 probe_out:	move.l #bus_error,8
-		rts
+		rte
 probe_error:
 		moveq #1,d0
 		move.l a1,a7
