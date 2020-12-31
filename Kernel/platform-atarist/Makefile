@@ -25,6 +25,7 @@ FUZIX_BIN := ../fuzix.bin
 FUZIX_ST  := fuzixboot.st
 
 LOADER_ELF := loader.elf
+LOADER_BIN := loader.bin
 
 CROSS_CCOPTS += -I../dev/
 
@@ -66,8 +67,8 @@ $(FUZIX_BIN): $(FUZIX_ELF)
 	$(QUIET_GEN)$(CROSS_COMPILE)objcopy $< -O binary $@
 
 # And now make a bootable floppy
-$(FUZIX_ST): loader $(FUZIX_BIN)
-	$(QUIET_GEN)cat loader.bin $(FUZIX_BIN) | dd bs=737280 conv=sync >$@
+$(FUZIX_ST): $(LOADER_BIN) $(FUZIX_BIN)
+	$(QUIET_GEN)cat $(LOADER_BIN) $(FUZIX_BIN) | dd bs=737280 conv=sync >$@
 
 .PHONY: image
 image: $(FUZIX_ST)
@@ -75,9 +76,12 @@ image: $(FUZIX_ST)
 $(LOADER_ELF): loader.o loader.ld
 	$(QUIET_LD)$(CROSS_LD) -M -o $@ -T loader.ld loader.o >loader.map
 
-loader:	$(LOADER_ELF) ../tools/atariboot
-	$(CROSS_COMPILE)objcopy $(LOADER_ELF) -O binary loader.bin
-	../tools/atariboot loader.bin
+$(LOADER_BIN): $(LOADER_ELF) ../tools/atariboot
+	$(QUIET_GEN)$(CROSS_COMPILE)objcopy $< -O binary $@ &&		\
+		../tools/atariboot $@
+
+.PHONY: loader
+loader:	$(LOADER_BIN)
 
 cartridge.S: $(FUZIX_BIN)
 
