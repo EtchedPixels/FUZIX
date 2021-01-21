@@ -71,143 +71,66 @@ SECTIONS
     _dport0_data_end = ABSOLUTE(.);
   } >dport0_0_seg :dport0_0_phdr
 
-  .data : ALIGN(4)
-  {
-    _data_start = ABSOLUTE(.);
-    *(.data)
-    *(.data.*)
-    *(.gnu.linkonce.d.*)
-    *(.data1)
-    *(.sdata)
-    *(.sdata.*)
-    *(.gnu.linkonce.s.*)
-    *(.sdata2)
-    *(.sdata2.*)
-    *(.gnu.linkonce.s2.*)
-    *(.jcr)
-    _data_end = ABSOLUTE(.);
-  } >dram0_0_seg :dram0_0_phdr
+	.data : ALIGN(4)
+	{
+		_data_start = ABSOLUTE(.);
+		*(.data)
+		*(.data.*)
+		*(.data1)
+		*(.data1.*)
+		*(.sdata)
+		*(.sdata.*)
+		*(.sdata2)
+		*(.sdata2.*)
+		*(.jcr)
+		_data_end = ABSOLUTE(.);
+	} >dram0_0_seg :dram0_0_phdr
 
-  .rodata : ALIGN(4)
-  {
-    _rodata_start = ABSOLUTE(.);
-    *(.sdk.version)
-    *(.rodata)
-    *(.rodata.*)
-    *(.gnu.linkonce.r.*)
-    *(.rodata1)
-    __XT_EXCEPTION_TABLE__ = ABSOLUTE(.);
-    *(.xt_except_table)
-    *(.gcc_except_table)
-    *(.gnu.linkonce.e.*)
-    *(.gnu.version_r)
-    *(.eh_frame)
-    /*  C++ constructor and destructor tables, properly ordered:  */
-    KEEP (*crtbegin.o(.ctors))
-    KEEP (*(EXCLUDE_FILE (*crtend.o) .ctors))
-    KEEP (*(SORT(.ctors.*)))
-    KEEP (*(.ctors))
-    KEEP (*crtbegin.o(.dtors))
-    KEEP (*(EXCLUDE_FILE (*crtend.o) .dtors))
-    KEEP (*(SORT(.dtors.*)))
-    KEEP (*(.dtors))
-    /*  C++ exception handlers table:  */
-    __XT_EXCEPTION_DESCS__ = ABSOLUTE(.);
-    *(.xt_except_desc)
-    *(.gnu.linkonce.h.*)
-    __XT_EXCEPTION_DESCS_END__ = ABSOLUTE(.);
-    *(.xt_except_desc_end)
-    *(.dynamic)
-    *(.gnu.version_d)
-    . = ALIGN(4);		/* this table MUST be 4-byte aligned */
-    _bss_table_start = ABSOLUTE(.);
-    /*LONG(_bss_start)
-    LONG(_bss_end)*/
-    _bss_table_end = ABSOLUTE(.);
-    _rodata_end = ABSOLUTE(.);
-  } >dram0_0_seg :dram0_0_phdr
+	.bss ALIGN(8) (NOLOAD) : ALIGN(4)
+	{
+		. = ALIGN (8);
+		_bss_start = ABSOLUTE(.);
+		*(.dynsbss)
+		*(.sbss)
+		*(.sbss.*)
+		*(.gnu.linkonce.sb.*)
+		*(.scommon)
+		*(.sbss2)
+		*(.sbss2.*)
+		*(.gnu.linkonce.sb2.*)
+		*(.dynbss)
+		*(.bss)
+		*(.bss.*)
+		*(.gnu.linkonce.b.*)
+		*(COMMON)
+		. = ALIGN(8);
+		_bss_end = ABSOLUTE(.);
+		_heap_start = ABSOLUTE(.);
+	} >dram0_0_seg :dram0_0_bss_phdr
 
-  .bss ALIGN(8) (NOLOAD) : ALIGN(4)
-  {
-    . = ALIGN (8);
-	_stack_start = .;
-	. = . + 512;
-	_stack_end = .;
-    _bss_start = ABSOLUTE(.);
-    *(.dynsbss)
-    *(.sbss)
-    *(.sbss.*)
-    *(.gnu.linkonce.sb.*)
-    *(.scommon)
-    *(.sbss2)
-    *(.sbss2.*)
-    *(.gnu.linkonce.sb2.*)
-    *(.dynbss)
-    *(.bss)
-    *(.bss.*)
-    *(.gnu.linkonce.b.*)
-    *(COMMON)
-	. = ALIGN(8);
-    _bss_end = ABSOLUTE(.);
-    _heap_start = ABSOLUTE(.);
-  } >dram0_0_seg :dram0_0_bss_phdr
+	/* Loaded into the iram by the boot loader. */
 
-  .irom0.text : ALIGN(4)
-  {
-    _irom0_text_start = ABSOLUTE(.);
+	.text : ALIGN(4)
+	{
+		_stext = .;
+		_text_start = ABSOLUTE(.);
+		*boot.o(.literal .text .literal.* .text.*)
+		*boot.o(.rodata .rodata.*)
+		_text_end = ABSOLUTE(.);
+		_etext = .;
+	} >iram1_0_seg :iram1_0_phdr
 
-    *libmbedtls.a:(.literal .text .literal.* .text.*)
+	/* Access via the memory-mapped SPI flash. */
 
-    *(.irom0.literal .irom.literal .irom.text.literal .irom0.text .irom.text)
-    _irom0_text_end = ABSOLUTE(.);
-  } >irom0_0_seg :irom0_0_phdr
+	.irom0.text : ALIGN(4)
+	{
+		_irom0_text_start = ABSOLUTE(.);
 
-  .text : ALIGN(4)
-  {
-    _stext = .;
-    _text_start = ABSOLUTE(.);
-    *(.UserEnter.text)
-    . = ALIGN(16);
-    *(.DebugExceptionVector.text)
-    . = ALIGN(16);
-    *(.NMIExceptionVector.text)
-    . = ALIGN(16);
-    *(.KernelExceptionVector.text)
-    LONG(0)
-    LONG(0)
-    LONG(0)
-    LONG(0)
-    . = ALIGN(16);
-    *(.UserExceptionVector.text)
-    LONG(0)
-    LONG(0)
-    LONG(0)
-    LONG(0)
-    . = ALIGN(16);
-    *(.DoubleExceptionVector.text)
-    LONG(0)
-    LONG(0)
-    LONG(0)
-    LONG(0)
-    . = ALIGN (16);
-    *(.entry.text)
-    *(.init.literal)
-    *(.init)
-    *(.literal .text .literal.* .text.* .stub .gnu.warning .gnu.linkonce.literal.* .gnu.linkonce.t.*.literal .gnu.linkonce.t.*)
-    *(.fini.literal)
-    *(.fini)
-    *(.gnu.version)
-    _text_end = ABSOLUTE(.);
-    _etext = .;
-  } >iram1_0_seg :iram1_0_phdr
+		*(.literal .text .literal.* .text.*)
+		*(.rodata .rodata.*)
+		*(.rodata1 .rodata1.*)
 
-  .lit4 : ALIGN(4)
-  {
-    _lit4_start = ABSOLUTE(.);
-    *(*.lit4)
-    *(.lit4.*)
-    *(.gnu.linkonce.lit4.*)
-    _lit4_end = ABSOLUTE(.);
-  } >iram1_0_seg :iram1_0_phdr
+		_irom0_text_end = ABSOLUTE(.);
+	} >irom0_0_seg :irom0_0_phdr
 }
 
