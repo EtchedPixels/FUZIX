@@ -18,7 +18,6 @@ include cpu-$(CPU)/rules.mk
 -include platform-$(TARGET)/rules.mk
 
 
-
 #
 #	We put these into two code segments so that the caller can plan to
 #	bank them with a ROM banking tool. We pull out const data because on
