@@ -21,7 +21,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #include "panic.h"
 
-
 #ifndef NULL
 #define NULL (void *)0
 #endif
@@ -1197,3 +1196,5 @@ extern arg_t _memfree(void);	  /* FUZIX system call 65 */
 #endif
 
 #endif /* __FUZIX__KERNEL_DOT_H__ */
+
+

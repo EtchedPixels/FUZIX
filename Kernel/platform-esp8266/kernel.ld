@@ -1,10 +1,11 @@
 MEMORY
 {
   dport0_0_seg : org = 0x3FF00000, len = 0x10
-  dram0_0_seg :  org = 0x3FFE8000, len = 0x14000
+  userdata_seg : org = 0x3ffe8000, len = 0x10000
+  dram0_0_seg :  org = 0x3fff8000, len = 0x4000
   dram1_0_seg :  org = 0x3fffc000, len = 0x4000
-  iram1_0_seg :  org = 0x40100000, len = 0x8000
-  irom0_0_seg :  org = 0x40210000, len = 0x5C000 /* required by esptool */
+  usercode_seg : org = 0x40100000, len = 0x8000
+  irom0_0_seg :  org = 0x40210000, len = 0x5C000
 }
 
 PHDRS
@@ -16,7 +17,7 @@ PHDRS
   irom0_0_phdr PT_LOAD;
 }
 
-_dram_end = ORIGIN(dram0_0_seg) + LENGTH(dram0_0_seg);
+_user_base = ORIGIN(userdata_seg);
 
 /*  Default entry point:  */
 ENTRY(__main)
@@ -118,7 +119,7 @@ SECTIONS
 		*boot.o(.rodata .rodata.*)
 		_text_end = ABSOLUTE(.);
 		_etext = .;
-	} >iram1_0_seg :iram1_0_phdr
+	} >usercode_seg :iram1_0_phdr
 
 	/* Access via the memory-mapped SPI flash. */
 

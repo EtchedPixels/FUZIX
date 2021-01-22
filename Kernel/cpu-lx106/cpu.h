@@ -6,10 +6,10 @@
 #define ALIGNUP(v)   alignup(v, 4)
 #define ALIGNDOWN(v) aligndown(v, 4)
 
-#define uputp  uputl			/* Copy user pointer type */
-#define ugetp  ugetl			/* between user and kernel */
-#define uputi  uputl			/* Copy user int type */
-#define ugeti(x) ugetl(x, NULL) /* between user and kernel */
+#define uputp    uputl            /* Copy user pointer type */
+#define ugetp(x) ugetl(x, NULL)   /* between user and kernel */
+#define uputi    uputl            /* Copy user int type */
+#define ugeti(x) ugetl(x, NULL)   /* between user and kernel */
 
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (udata.u_syscall_sp - 512)

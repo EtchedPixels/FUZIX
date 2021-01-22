@@ -1,0 +1,27 @@
+#include <kernel.h>
+
+void* memset(void* s, int c, size_t n)
+{
+	uint8_t* ss = s;
+	while (n--)
+		*ss++ = c;
+	return s;
+}
+
+void* memcpy(void* dest, const void* src, size_t n)
+{
+	uint8_t* d = dest;
+	const uint8_t* s = src;
+	while (n--)
+		*d++ = *s++;
+	return d;
+}
+
+size_t strlen(const char* s)
+{
+	const char* p = s;
+	while (*s++)
+		;
+	return s - p - 1;
+}
+

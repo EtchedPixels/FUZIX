@@ -5,4 +5,6 @@ PROVIDE (ets_uart_printf = 0x40002544);
 PROVIDE (Cache_Read_Disable = 0x400047f0);
 PROVIDE (Cache_Read_Enable = 0x40004678);
 
+PROVIDE (__udivsi3 = 0x4000e21c);
+PROVIDE (__umodsi3 = 0x4000e268);
 

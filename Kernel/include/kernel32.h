@@ -20,8 +20,10 @@ extern void kmemaddblk(void *, size_t);
 
 /* flat.c */
 extern void pagemap_switch(ptptr p, int death);
+#if !defined PROGLOAD
 extern uaddr_t pagemap_base(void);
 #define PROGLOAD pagemap_base()
+#endif
 extern uint32_t ugetl(void *uaddr, int *err);
 extern int uputl(uint32_t val, void *uaddr);
 

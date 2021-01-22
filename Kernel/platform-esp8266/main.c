@@ -1,11 +1,12 @@
 #include <stdint.h>
 #include <eagle_soc.h>
+#include "kernel.h"
 
 extern void ets_putc(char c);
-extern void ets_uart_printf(const char* format, ...);
-extern void ets_update_cpu_frequency(int mhz);
-extern void uart_div_modify(uint8_t uart_no, uint32_t divlatch);
-extern void Cache_Read_Enable(uint8_t odd_even, uint8_t mb_count, uint8_t no_idea);
+extern void fuzix_main(void);
+
+uaddr_t ramtop = PROGTOP;
+uint8_t need_resched;
 
 static void puts(const char* s)
 {
@@ -18,8 +19,34 @@ static void puts(const char* s)
 	}
 }
 
+void map_init(void) {}
+void platform_discard(void) {}
+
+uint_fast8_t platform_param(char* p)
+{
+	return 0;
+}
+
+void platform_reboot(void)
+{
+	panic("platform_reboot()");
+}
+
+void platform_monitor(void)
+{
+	platform_reboot();
+}
+
+void device_init(void)
+{
+}
+
 int main(void)
 {
-	puts("Hello, world!\n");
+	for (int i=0; i<10; i++)
+		puts("...");
+
+	di();
+	fuzix_main();
 }
 
