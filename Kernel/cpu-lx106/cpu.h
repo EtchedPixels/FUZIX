@@ -44,6 +44,26 @@ typedef union {            /* this structure is endian dependent */
 #define cpu_to_le32(x)  (x)
 #define le32_to_cpu(x)  (x)
 
+#ifndef __STRINGIFY
+#define __STRINGIFY(a) #a
+#endif
+
+#define __rsil(level) \
+	(__extension__({ \
+		uint32_t state; \
+		__asm__ __volatile__( \
+			"rsil %0," __STRINGIFY(level) : \
+				"=a" (state) :: "memory"); \
+		state; \
+	}))
+
+#define __hard_di() __rsil(15);
+#define __hard_ei() __rsil(0);
+#define __hard_irqrestore(ps) \
+	__asm__ __volatile__(" \
+		wsr %0, ps; isync" \
+		:: "a" (ps) : "memory")
+	
 /* jmp over the Fuzix header. Will need updating if the header size changes */
 #define EMAGIC   0x08
 #define EMAGIC_2 0x3c

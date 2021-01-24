@@ -1105,9 +1105,11 @@ extern int platform_dev_ioctl(uarg_t request, char *data);
 
 extern uint8_t platform_tick_present;
 
+#ifndef CONFIG_INLINE_IRQ
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
 extern void __hard_ei(void);
+#endif
 
 #ifndef CONFIG_SOFT_IRQ
 #define di __hard_di

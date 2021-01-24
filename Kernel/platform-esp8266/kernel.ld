@@ -4,7 +4,8 @@ MEMORY
   userdata_seg : org = 0x3ffe8000, len = 0x10000
   dram0_0_seg :  org = 0x3fff8000, len = 0x4000
   dram1_0_seg :  org = 0x3fffc000, len = 0x4000
-  usercode_seg : org = 0x40100000, len = 0x8000
+  usercode_seg : org = 0x40100000, len = 0x7e00
+  iram1_0_seg :  org = 0x40107e00, len = 0x200
   irom0_0_seg :  org = 0x40210000, len = 0x5C000
 }
 
@@ -13,6 +14,7 @@ PHDRS
   dport0_0_phdr PT_LOAD;
   dram0_0_phdr PT_LOAD;
   dram0_0_bss_phdr PT_LOAD;
+  iram0_0_phdr PT_LOAD;
   iram1_0_phdr PT_LOAD;
   irom0_0_phdr PT_LOAD;
 }
@@ -119,7 +121,15 @@ SECTIONS
 		*boot.o(.rodata .rodata.*)
 		_text_end = ABSOLUTE(.);
 		_etext = .;
-	} >usercode_seg :iram1_0_phdr
+	} >usercode_seg :iram0_0_phdr
+
+	/* Loaded into the iram by the boot loader. */
+
+	.iram1.text : ALIGN(4)
+	{
+		*rawflash.o(.literal .text .literal.* .text.*)
+		*rawflash.o(.rodata .rodata.*)
+	} >iram1_0_seg :iram1_0_phdr
 
 	/* Access via the memory-mapped SPI flash. */
 
