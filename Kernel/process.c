@@ -287,6 +287,7 @@ void makeproc(regptr ptptr p, u_data *u)
 	irqflags_t irq;
 	ptptr pp;
 
+	kprintf("p=%p u=%p\n", p, u);
 	irq = di();
 	/* Note that ptab_alloc clears most of the entry */
 	/* calculate base page of process based on ptab table offset */
@@ -384,8 +385,10 @@ ptptr ptab_alloc(void)
 				newp = NULL;
 				break;
 	                }
-	                newp->p_pgrp = udata.u_ptab->p_pgrp;
-	                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			if (udata.u_ptab) {
+			    newp->p_pgrp = udata.u_ptab->p_pgrp;
+			    memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			}
 			udata.u_error = 0;
 	                break;
 		}

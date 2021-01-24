@@ -322,7 +322,7 @@ void set_boot_line(const char *p)
 
 static uint8_t first = 1;
 
-inline uint16_t get_root_dev(void)
+static inline uint16_t get_root_dev(void)
 {
 	if (first) {
 		first = 0;

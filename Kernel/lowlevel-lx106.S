@@ -1,25 +1,26 @@
 .section .text.__hard_ei
 .align 4
 .global __hard_ei
+# Turns on interrupts.
 __hard_ei:
-	movi a2, -1
-	wsr.intenable a2
+	rsil a2, 0
 	ret
 
 .section .text.__hard_di
 .align 4
 .global __hard_di
+# Turns off interrupts and returns the old status in a2.
 __hard_di:
-	rsr.intenable a2
-	movi a3, 0
-	wsr.intenable a3
+	rsil a2, 15
 	ret
 
 .section .text.__hard_irqrestore
 .align 4
 .global __hard_irqrestore
+# Sets the interrupt status to a2.
 __hard_irqrestore:
-	wsr.intenable a2
+	wsr a2, ps
+	isync
 	ret
 
 .section .text.set_cpu_type

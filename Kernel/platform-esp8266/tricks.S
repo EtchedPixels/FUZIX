@@ -1,5 +1,5 @@
 .global udata
-udata = 0x3ffe8000 # _user_base
+.comm udata, 512
 
 .global platform_switchout
 .text
