@@ -31,6 +31,7 @@ int main(void)
 {
 	ramsize = 80;
 	procmem = 64;
+    sys_cpu_feat = AF_LX106_ESP8266;
 
 	di();
 	fuzix_main();

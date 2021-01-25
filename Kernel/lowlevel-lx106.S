@@ -2,7 +2,7 @@
 .align 4
 .global set_cpu_type
 set_cpu_type:
-	movi a2, 0
+	movi a2, 11
 	movi a3, sys_cpu
 	s8i a2, a3, 0
 	ret
