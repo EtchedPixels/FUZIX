@@ -18,10 +18,6 @@ _entry:
     j .1
 .2:
 
-    # Initialise stdio.
-
-    call0 __stdio_init_vars
-
     # Fetch argc and argv from the stack and set up the environment
     # pointer.
 

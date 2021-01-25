@@ -3,15 +3,15 @@ ASM = xtensa-lx106-elf-as
 AR = xtensa-lx106-elf-ar
 PLATFORM = esp8266
 export PLATFORM
-CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/esp8266
+CC_OPT = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/esp8266
 ASM_OPT = -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
-SRC_CRT0 = crt0_$(PLATFORM).S
+SRC_CRT0 = crt0_$(PLATFORM).S crt0nostdio_$(PLATFORM).S
 OBJ_CRT0 = $(SRC_CRT0:.S=.o)
-SRC_ASM = setjmp_lx106.S longjmp_lx106.S
+SRC_ASM = setjmp_lx106.S longjmp_lx106.S helpers_esp8266.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
 SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -26,6 +26,7 @@ SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
 SRC_C += getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c
+SRC_C += htons.c htonl.c
 SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
 SRC_C += index.c initgroups.c isatty.c killpg.c
 SRC_C += libintl.c
