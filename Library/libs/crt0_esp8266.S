@@ -27,7 +27,7 @@ _entry:
 
     l32i a2, sp, 0 # argc
     l32i a3, sp, 4 # argv
-    addi a4, sp, 8 # envp
+	l32i a4, sp, 8 # envp
     
     # Store envp.
 

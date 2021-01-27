@@ -9,7 +9,7 @@
 
 volatile uint32_t* const esp8266_gpioToFn[16] = { &GPF0, &GPF1, &GPF2, &GPF3, &GPF4, &GPF5, &GPF6, &GPF7, &GPF8, &GPF9, &GPF10, &GPF11, &GPF12, &GPF13, &GPF14, &GPF15 };
 
-uaddr_t ramtop = PROGTOP;
+uaddr_t ramtop = DATATOP;
 uint8_t need_resched;
 
 void map_init(void) {}

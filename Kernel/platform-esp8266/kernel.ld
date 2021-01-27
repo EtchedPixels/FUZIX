@@ -19,7 +19,10 @@ PHDRS
   irom0_0_phdr PT_LOAD;
 }
 
-_user_base = ORIGIN(userdata_seg);
+_data_base = ORIGIN(userdata_seg);
+_data_top = _data_base + LENGTH(userdata_seg);
+_code_base = ORIGIN(usercode_seg);
+_code_top = _code_base + LENGTH(usercode_seg);
 
 /*  Default entry point:  */
 ENTRY(__main)

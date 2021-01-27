@@ -11,7 +11,7 @@
 #if !defined(CONFIG_LEVEL_0)
 
 /* Flat mode has to use its own valaddr: tidy this */
-#if !defined(CONFIG_FLAT) && !defined(CONFIG_VMMU)
+#if !defined(CONFIG_FLAT) && !defined(CONFIG_VMMU) && !defined(CONFIG_CUSTOM_VALADDR)
 
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const uint8_t *base, usize_t size)

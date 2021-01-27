@@ -14,6 +14,7 @@ PHDRS {
 SECTIONS {
 
 	.text ORIGIN(code) : {
+		__text_start = .;
 		SHORT(0x80a8); 	/* Fuzix executable */
 		BYTE(11);       /* LX106 CPU */
 		BYTE(1);        /* ESP8266 */
@@ -31,10 +32,10 @@ SECTIONS {
 
 		LONG(__sighandler);
 
-		__text_start = .;
 		*(.header)
 		*(.literal .text)
 		*(.literal.* .text.*)
+		. = ALIGN(4);
 		__text_end = .;
 	} > code : text
 
