@@ -25,7 +25,7 @@ SECTIONS {
 		SHORT(__data_end - __data_start)
 		SHORT(__bss_end - __bss_start)
 
-		BYTE(_entry - ORIGIN(code)); /* offset to entrypoint */
+		BYTE(_start - __text_start); /* offset to entrypoint */
 		BYTE(0);        /* No size hint */
 		BYTE(0);        /* No stack hint */
 		BYTE(0);        /* No ZP hint */

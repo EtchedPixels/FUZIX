@@ -8,6 +8,7 @@ PROVIDE (SpiUnlock = 0x40004878);
 PROVIDE (SpiEraseSector = 0x40004a00);
 PROVIDE (SpiWrite = 0x40004a4c);
 PROVIDE (SpiRead = 0x40004b1c);
+PROVIDE (_xtos_set_exception_handler = 0x40000454);
 
 PROVIDE (__udivsi3 = 0x4000e21c);
 PROVIDE (__umodsi3 = 0x4000e268);

@@ -1,6 +1,7 @@
 .section ".header"
 .globl _start
 _start:
+	ret
     j _entry
 
 .text
@@ -8,6 +9,7 @@ _start:
 _entry:
     # Wipe BSS.
 
+	ret
     movi a2, __bss_start
     movi a3, __bss_end
     movi a4, 0

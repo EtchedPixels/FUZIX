@@ -4,7 +4,7 @@
 #include "ftl.h"
 
 #define FLASH_BLOCK_SIZE 4096
-#define FLASH_SIZE (1*1024*1024)
+#define FLASH_SIZE (44*1024)
 #define FLASH_BLOCKS (FLASH_SIZE/FLASH_BLOCK_SIZE)
 
 union block

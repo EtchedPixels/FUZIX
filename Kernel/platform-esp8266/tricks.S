@@ -1,3 +1,5 @@
+#include "kernel-lx106.def"
+
 .global udata
 .comm udata, 512
 
@@ -38,5 +40,19 @@ platform_idle:
 .text
 .align 4
 program_vectors:
+	ret
+
+.global stub_unix_syscall
+.text
+.align 4
+# a2 = exception frame structure
+# a3 = cause
+stub_unix_syscall:
+	s32i sp, a2, 12
+	movi sp, udata + UBLOCK_SIZE
+
+	call0 unix_syscall
+
+	l32i sp, a2, 12
 	ret
 

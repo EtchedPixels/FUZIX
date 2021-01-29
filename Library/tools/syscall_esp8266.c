@@ -45,6 +45,7 @@ static void write_call(int n) {
 
   fprintf(fp, "\tbeqz a3, _no_error\n");
   fprintf(fp, "\tmovi a4, errno\n");
+  fprintf(fp, "\ts32i a3, a4, 0\n");
   fprintf(fp, "_no_error:\n");
   fprintf(fp, "\tret\n");
 

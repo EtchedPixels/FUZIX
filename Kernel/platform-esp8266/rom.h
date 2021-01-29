@@ -12,5 +12,33 @@ extern void SpiRead(uint32_t address, uint8_t* buffer, uint32_t length);
 extern void SpiUnlock(void);
 extern void SpiEraseSector(uint32_t sector);
 
+struct __exception_frame
+{
+	uint32_t epc;
+	uint32_t ps;
+	uint32_t sar;
+	uint32_t sp;
+	uint32_t a0;
+	// note: no a1 here!
+	uint32_t a2;
+	uint32_t a3;
+	uint32_t a4;
+	uint32_t a5;
+	uint32_t a6;
+	uint32_t a7;
+	uint32_t a8;
+	uint32_t a9;
+	uint32_t a10;
+	uint32_t a11;
+	uint32_t a12;
+	uint32_t a13;
+	uint32_t a14;
+	uint32_t a15;
+	uint32_t cause;
+};
+
+typedef void (*fn_c_exception_handler_t)(struct __exception_frame *ef, int cause);
+extern fn_c_exception_handler_t _xtos_set_exception_handler(int cause, fn_c_exception_handler_t fn);
+
 #endif
 
