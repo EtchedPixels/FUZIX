@@ -3,9 +3,9 @@
 #include "printf.h"
 #include "ftl.h"
 
-#define FLASH_BLOCK_SIZE 4096
-#define FLASH_SIZE (44*1024)
-#define FLASH_BLOCKS (FLASH_SIZE/FLASH_BLOCK_SIZE)
+#define LOGICAL_FLASH_SIZE (1024*1024)
+#define FLASH_BLOCKS (LOGICAL_FLASH_SIZE / 3584)
+#define FLASH_SIZE (FLASH_BLOCKS * 4096)
 
 union block
 {

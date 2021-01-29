@@ -1,2 +1,6 @@
 #define UBLOCK_SIZE		512
 
+#define U_DATA__U_SP_OFFSET 24
+#define U_DATA__U_PTAB_OFFSET 0
+#define P_TAB__P_PID_OFFSET 4
+
