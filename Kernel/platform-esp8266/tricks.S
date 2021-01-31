@@ -60,6 +60,14 @@ dofork:
 	movi a3, runticks
 	s32i a2, a3, 0
 
+	l32i a12, sp, 0*4
+	l32i a13, sp, 1*4
+	l32i a14, sp, 2*4
+	l32i a15, sp, 3*4
+	l32i a3, sp, 4*4
+	rsr.sar a3
+	l32i a2, sp, 5*4
+
 	addi sp, sp, 8*4
 	ret
 

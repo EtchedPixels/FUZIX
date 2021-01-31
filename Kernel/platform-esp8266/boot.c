@@ -24,13 +24,6 @@ void __main(void)
 	for (uint32_t* p = &_bss_start; p < &_bss_end; p++)
 		*p = 0;
 
-#if 0
-	/* Set up the vector table. */
-
-	extern uint32_t platform_vector_table;
-	asm volatile ("wsr.vecbase %0" :: "a" (&platform_vector_table));
-#endif
-
 	/* Call the main program. */
 
 	main();

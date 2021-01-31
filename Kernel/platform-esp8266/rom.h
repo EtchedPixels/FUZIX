@@ -11,6 +11,9 @@ extern void SpiWrite(uint32_t address, const uint8_t* buffer, uint32_t length);
 extern void SpiRead(uint32_t address, uint8_t* buffer, uint32_t length);
 extern void SpiUnlock(void);
 extern void SpiEraseSector(uint32_t sector);
+extern void Wait_SPI_Idle(void* flash);
+
+extern void* sdk_flashchip;
 
 struct __exception_frame
 {

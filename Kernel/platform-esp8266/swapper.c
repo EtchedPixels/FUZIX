@@ -31,6 +31,8 @@
 #include <printf.h>
 #include <exec.h>
 
+#define DEBUG
+
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const uint8_t *base, usize_t size)
 {
@@ -68,6 +70,8 @@ usize_t pagemap_mem_used(void)
 
 void pagemap_init(void)
 {
+	for (int i=0; i<MAX_SWAPS; i++)
+		swapmap_init(i);
 }
 
 /*
@@ -76,9 +80,6 @@ void pagemap_init(void)
  */
 int swapout_new(ptptr p, void *u)
 {
-	panic("swapout_new");
-
-#if 0
 	uint16_t page = p->p_page;
 	uint16_t blk;
 	int16_t map;
@@ -89,30 +90,35 @@ int swapout_new(ptptr p, void *u)
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
 	/* Are we out of swap ? */
+kprintf("%d\n", __LINE__);
 	map = swapmap_alloc();
+kprintf("%d\n", __LINE__);
 	if (map == -1)
 		return ENOMEM;
 	blk = map * SWAP_SIZE;
-	/* Write the app (and uarea etc..) to disk */
-#ifdef CONFIG_SPLIT_UDATA
+
 	/* Write the udata block as kernel. */
+
+kprintf("%d\n", __LINE__);
 	udata.u_dptr = u;
 	udata.u_block = blk;
 	udata.u_nblock = UDATA_SIZE >> BLKSHIFT;	/* 1 */
 	((*dev_tab[major(SWAPDEV)].dev_write) (minor(SWAPDEV), 0, 0));
+kprintf("%d\n", __LINE__);
+
 	/* Use the standard swapwrite helper for the rest */
-	swapwrite(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
-		  SWAPBASE, 1);
-#else
-#error "Not supported"
-#endif
+	swapwrite(SWAPDEV, blk + UDATA_BLKS, DATALEN, DATABASE, 1);
+kprintf("%d\n", __LINE__);
+	swapwrite(SWAPDEV, blk + UDATA_BLKS + (DATALEN >> BLKSHIFT),
+		CODELEN, CODEBASE, 1);
+kprintf("%d\n", __LINE__);
+
 	p->p_page = 0;
 	p->p_page2 = map;
 #ifdef DEBUG
 	kprintf("%x: swapout done %d\n", p, p->p_page2);
 #endif
 	return 0;
-#endif 
 }
 
 int swapout(ptptr p)

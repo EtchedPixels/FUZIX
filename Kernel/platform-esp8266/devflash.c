@@ -5,20 +5,61 @@
 #include <devsd.h>
 #include <stdbool.h>
 #include <blkdev.h>
-#include "ftl.h"
+#include "lib/dhara/map.h"
+#include "lib/dhara/nand.h"
 #include "globals.h"
+
+static struct dhara_map dhara;
+static const struct dhara_nand nand = 
+{
+	.log2_page_size = 9,
+	.log2_ppb = 12 - 9,
+	.num_blocks = 512,
+};
+
+static uint8_t journal_buf[512];
+static uint8_t tmp_buf[512];
+
+int dhara_nand_is_bad(const struct dhara_nand* n, dhara_block_t b)
+{
+	return 0;
+}
+
+void dhara_nand_mark_bad(const struct dhara_nand *n, dhara_block_t b) {}
+
+int dhara_nand_is_free(const struct dhara_nand *n, dhara_page_t p)
+{
+	dhara_error_t err = DHARA_E_NONE;
+
+	dhara_nand_read(&nand, p, 0, 512, tmp_buf, &err);
+	if (err != DHARA_E_NONE)
+		return 0;
+	for (int i=0; i<512; i++)
+		if (tmp_buf[i] != 0xff)
+			return 0;
+	return 1;
+}
+
+int dhara_nand_copy(const struct dhara_nand *n,
+                    dhara_page_t src, dhara_page_t dst,
+                    dhara_error_t *err)
+{
+	dhara_nand_read(&nand, src, 0, 512, tmp_buf, err);
+	if (*err != DHARA_E_NONE)
+		return -1;
+
+	return dhara_nand_prog(&nand, dst, tmp_buf, err);
+}
 
 static uint_fast8_t transfer_cb(void)
 {
-	uint32_t logical = blk_op.lba / 7;
-	int sector = blk_op.lba % 7;
-
+	dhara_error_t err = DHARA_E_NONE;
 	if (blk_op.is_read)
-		ftl_read(logical, sector, blk_op.addr);
+		dhara_map_read(&dhara, blk_op.lba, blk_op.addr, &err);
 	else
-		ftl_write(logical, sector, blk_op.addr);
+		dhara_map_write(&dhara, blk_op.lba, blk_op.addr, &err);
 	
-	return 1;
+	return (err == DHARA_E_NONE);
 }
 
 void flash_dev_init(void)
@@ -27,8 +68,11 @@ void flash_dev_init(void)
 	if (!blk)
 		return;
 
-	kprintf("Scanning flash: ");
-	uint32_t lba = ftl_init();
+	kprintf("Scanning flash:");
+	dhara_map_init(&dhara, &nand, journal_buf, 128);
+	dhara_error_t err = DHARA_E_NONE;
+	dhara_map_resume(&dhara, &err);
+	uint32_t lba = dhara_map_capacity(&dhara);
 	kprintf(" %dkB\n", lba / 2);
 	
 	blk->transfer = transfer_cb;

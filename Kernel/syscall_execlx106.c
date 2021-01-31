@@ -193,10 +193,7 @@ arg_t _execve(void)
 	udata.u_ptab->p_status = P_RUNNING;
 
 	uint32_t* code = (uint32_t*)(CODEBASE + hdr.a_entry);
-	kprintf("exec @ 0x%lx 0x%lx\n", code, *code);
-	kprintf("sp @ 0x%lx\n", udata.u_isp);
 	platform_doexec(CODEBASE + hdr.a_entry, udata.u_isp);
-	panic("doexec returned");
 
 	/* tidy up in various failure modes */
 nogood4:
