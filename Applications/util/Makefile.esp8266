@@ -1,4 +1,5 @@
-include ../rules.esp8266
+ROOT = ../..
+include $(ROOT)/Applications/rules.esp8266
 
 SRCSNS = \
 	basename.c \

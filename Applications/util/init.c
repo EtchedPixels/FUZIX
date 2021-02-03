@@ -156,6 +156,9 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 			/* Don't leak utmp into the child */
 			endutent();
 			/* Run the child */
+putstr("exec ");
+putstr(args[2]);
+putstr("\n");
 			execv(args[2], (char**) (args + 2));
 			/* If it didn't look binary run it via the shell */
 			if (errno == ENOEXEC)
@@ -758,6 +761,7 @@ static pid_t getty(const char **argv, const char *id)
 				/* parent's context: return pid of the child process */
 				return pid;
 
+			putstr("starting getty\n");
 			while(argv[0] && argv[0][0]=='-') {
 				switch(argv[0][1]) {
 				case 'L':
