@@ -1,20 +1,31 @@
 #include <stdint.h>
 #include <eagle_soc.h>
 #include "rom.h"
+#include "globals.h"
 
 extern int main(void);
 
 void __main(void)
 {
-	/* Set up the UART and system clock frequency. */
+	/* See globals.h for the clock speeds. */
 
-	ets_update_cpu_frequency(52);
+	/* Configure peripheral clock. */
+
+	rom_i2c_writeReg(103, 4, 1, 0x88);
+	rom_i2c_writeReg(103, 4, 2, 0x81); /* 189MHz */
+
+	/* Configure CPU clock. */
+
+	ets_update_cpu_frequency(CPU_CLOCK);
 	PIN_PULLUP_DIS(PERIPHS_IO_MUX_U0TXD_U);
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD);
-	uart_div_modify(0, 52e6 / 115200);
+	uart_div_modify(0, (PERIPHERAL_CLOCK * 1e6) / 115200);
 
 	/* Enable SPI flash mapping. */
 
+	SpiFlashCnfig(5, 4);
+	SpiReadModeCnfig(5);
+	Wait_SPI_Idle(sdk_flashchip);
 	Cache_Read_Enable(0, 0, 1);
 
 	/* Clear BSS. */
@@ -28,5 +39,4 @@ void __main(void)
 
 	main();
 }
-
 
