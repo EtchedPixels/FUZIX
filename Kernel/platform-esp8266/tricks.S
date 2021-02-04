@@ -3,7 +3,7 @@
 .global udata
 .comm udata, UBLOCK_SIZE
 
-#define SWAPSTACK_SIZE 1024
+#define SWAPSTACK_SIZE 1536
 .comm swapstack, SWAPSTACK_SIZE
 
 .global platform_switchout

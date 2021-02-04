@@ -89,3 +89,6 @@ bool sd_spi_transmit_sector(void)
 		xmit_recv(*addr++);
 	return 0;
 }
+
+/* vim: sw=4 ts=4 et: */
+

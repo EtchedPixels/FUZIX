@@ -1,8 +1,10 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#define CPU_CLOCK 80
+#define PERIPHERAL_CLOCK 189
+
 extern void flash_dev_init(void);
-extern int devflash_ioctl(uint_fast8_t minor, uarg_t request, char* data);
 
 extern void fuzix_main(void);
 

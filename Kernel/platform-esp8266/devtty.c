@@ -59,3 +59,5 @@ void tty_interrupt(void)
 	//tty_inproc(minor(BOOT_TTY), UCA0RXBUF);
 }
 
+// vim: sw=4 ts=4 et
+

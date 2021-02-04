@@ -23,30 +23,6 @@ uint_fast8_t platform_param(char* p)
 	return 0;
 }
 
-void device_init(void)
-{
-	flash_dev_init();
-}
-
-void syscall_handler(struct __exception_frame *ef, int cause)
-{
-	udata.u_callno = ef->a2;
-	udata.u_argn = ef->a3;
-	udata.u_argn1 = ef->a4;
-	udata.u_argn2 = ef->a5;
-	udata.u_argn3 = ef->a6;
-	udata.u_insys = 1;
-
-	unix_syscall();
-
-	udata.u_insys = 0;
-
-	ef->a2 = udata.u_retval;
-	ef->a3 = udata.u_error;
-
-	ef->epc += 3; /* skip SYSCALL instruction */
-}
-
 int main(void)
 {
 	/* Check offsets */
@@ -66,9 +42,6 @@ int main(void)
 	ramsize = 80;
 	procmem = 64;
     sys_cpu_feat = AF_LX106_ESP8266;
-
-	extern fn_c_exception_handler_t syscall_handler_trampoline;
-	_xtos_set_exception_handler(1, syscall_handler_trampoline);
 
 	di();
 	fuzix_main();

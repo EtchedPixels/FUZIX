@@ -1,6 +1,6 @@
 MEMORY
 {
-  dport0_0_seg : org = 0x3FF00000, len = 0x10
+  dport0_0_seg : org = 0x3ff00000, len = 0x10
   userdata_seg : org = 0x3ffe8000, len = 0x10000
   dram0_0_seg :  org = 0x3fff8000, len = 0x4000
   dram1_0_seg :  org = 0x3fffc000, len = 0x4000
