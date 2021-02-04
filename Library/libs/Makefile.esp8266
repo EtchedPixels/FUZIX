@@ -1,10 +1,9 @@
 CC = xtensa-lx106-elf-gcc
-ASM = xtensa-lx106-elf-as
 AR = xtensa-lx106-elf-ar
 PLATFORM = esp8266
 export PLATFORM
 CC_OPT = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/esp8266
-ASM_OPT = -o
+ASM_OPT = -g
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
@@ -155,10 +154,10 @@ readline$(PLATFORM).lib: $(OBJ_RL)
 	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
 
 $(OBJ_ASM):%.o: %.s
-	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
+	$(CC) $(ASM_OPT) -c -o $@ $(@:.o=.s)
 
 $(OBJ_CRT0):%.o: %.S
-	$(ASM) $(ASM_OPT) $@ $(@:.o=.S)
+	$(CC) $(ASM_OPT) -c -o $@ $(@:.o=.S)
 
 $(OBJ_C):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
@@ -187,3 +186,7 @@ clean:
 	-cd curses && rm -rf *.o *.asm *.sym *.lst *~
 
 install: ;
+
+crt0_$(PLATFORM).o: crt0_template_$(PLATFORM).def
+crt0nostdio_$(PLATFORM).o: crt0_template_$(PLATFORM).def
+
