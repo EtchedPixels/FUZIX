@@ -62,21 +62,12 @@ static uint_fast8_t transfer_cb(void)
 	return (err == DHARA_E_NONE);
 }
 
-int devflash_ioctl(uint_fast8_t minor, uarg_t request, char* data)
+static int trim_cb(void)
 {
-	switch (request)
-	{
-		case HDIO_TRIM:
-		{
-			dhara_sector_t sector = *(blkno_t*)data;
-			if (sector < (nand.num_blocks << nand.log2_ppb))
-				dhara_map_trim(&dhara, sector, NULL);
-			return 0;
-		}
-
-		default:
-			return blkdev_ioctl(minor, request, data);
-	}
+	dhara_sector_t sector = blk_op.lba;
+	if (sector < (nand.num_blocks << nand.log2_ppb))
+		dhara_map_trim(&dhara, sector, NULL);
+	return 0;
 }
 
 void flash_dev_init(void)
@@ -93,6 +84,7 @@ void flash_dev_init(void)
 	kprintf(" %dkB\n", lba / 2);
 	
 	blk->transfer = transfer_cb;
+	blk->trim = trim_cb;
 	blk->drive_lba_count = lba;
 	blkdev_scan(blk, 0);
 }

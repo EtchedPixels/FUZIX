@@ -72,14 +72,30 @@ int blkdev_open(uint_fast8_t minor, uint16_t flags)
     return -1;
 }
 
+static int translate_lba(uint_fast8_t minor)
+{
+    uint_fast8_t partition = minor & 0x0F;
+    if(partition == 0){
+	/* partition 0 is the whole disk and requires no translation */
+	if(blk_op.lba >= blk_op.blkdev->drive_lba_count)
+	    return 1;
+    } else {
+	/* partitions 1+ require us to add in an offset */
+	if(blk_op.lba >= blk_op.blkdev->lba_count[partition-1])
+	    return 1;
+
+	blk_op.lba += blk_op.blkdev->lba_first[partition-1];
+    }
+    return 0;
+}
+
 static int blkdev_transfer(uint_fast8_t minor, uint_fast8_t rawflag)
 {
-    uint_fast8_t partition, n;
+    uint_fast8_t n;
     uint16_t count = 0;
 
     /* we trust that blkdev_open() has already verified that this minor number is valid */
     blk_op.blkdev = &blkdev_table[minor >> 4];
-    partition = minor & 0x0F;
 
     blk_op.is_user = rawflag;
     switch(rawflag){
@@ -105,17 +121,8 @@ static int blkdev_transfer(uint_fast8_t minor, uint_fast8_t rawflag)
     blk_op.lba = udata.u_block;
     blk_op.addr = udata.u_dptr;
 
-    if(partition == 0){
-	/* partition 0 is the whole disk and requires no translation */
-	if(blk_op.lba >= blk_op.blkdev->drive_lba_count)
-	    goto xferfail;
-    } else {
-	/* partitions 1+ require us to add in an offset */
-	if(blk_op.lba >= blk_op.blkdev->lba_count[partition-1])
-	    goto xferfail;
-
-	blk_op.lba += blk_op.blkdev->lba_first[partition-1];
-    }
+    if (translate_lba(minor))
+        goto xferfail;
 
     while(blk_op.nblock){
         n = blk_op.blkdev->transfer();
@@ -151,16 +158,37 @@ int blkdev_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
     used(data); /* unused */
 
-    if (request != BLKFLSBUF)
-	return -1;
-
     /* we trust that blkdev_open() has already verified that this minor number is valid */
     blk_op.blkdev = &blkdev_table[minor >> 4];
 
-    if (blk_op.blkdev->flush)
-	return blk_op.blkdev->flush();
-    else
-	return 0;
+    switch (request)
+    {
+        case BLKFLSBUF:
+        {
+            if (blk_op.blkdev->flush)
+                return blk_op.blkdev->flush();
+            else
+                return 0;
+        }
+
+#if defined CONFIG_TRIM
+        case HDIO_TRIM:
+        {
+            if (blk_op.blkdev->trim)
+            {
+                blk_op.lba = ugetl(data, NULL);
+                if (translate_lba(minor))
+                    return -1;
+                return blk_op.blkdev->trim();
+            }
+            else
+                return 0;
+        }
+#endif
+
+        default:
+            return -1;
+    }
 }
 
 /* FIXME: this would tidier and handle odd partition types sanely if split
