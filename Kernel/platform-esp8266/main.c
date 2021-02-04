@@ -4,7 +4,6 @@
 #include "kernel.h"
 #include "kdata.h"
 #include "printf.h"
-#include "ftl.h"
 #include "globals.h"
 #include "rom.h"
 #include "kernel-lx106.def"
@@ -29,7 +28,7 @@ void device_init(void)
 	flash_dev_init();
 }
 
-static void syscall_handler_cb(struct __exception_frame *ef, int cause)
+void syscall_handler(struct __exception_frame *ef, int cause)
 {
 	udata.u_callno = ef->a2;
 	udata.u_argn = ef->a3;
@@ -54,11 +53,13 @@ int main(void)
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 	    (U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
-	    (P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)))
+	    (P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
+		(P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)))
 	{
 		kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
 		kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));
 		kprintf("P_TAB__P_PID_OFFSET = %d\n", offsetof(struct p_tab, p_pid));
+		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
 		panic("bad offsets");
 	}
 	
@@ -66,7 +67,8 @@ int main(void)
 	procmem = 64;
     sys_cpu_feat = AF_LX106_ESP8266;
 
-	_xtos_set_exception_handler(1, syscall_handler_cb);
+	extern fn_c_exception_handler_t syscall_handler_trampoline;
+	_xtos_set_exception_handler(1, syscall_handler_trampoline);
 
 	di();
 	fuzix_main();

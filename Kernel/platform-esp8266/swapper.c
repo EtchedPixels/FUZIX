@@ -31,7 +31,7 @@
 #include <printf.h>
 #include <exec.h>
 
-#define DEBUG
+#undef DEBUG
 
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const uint8_t *base, usize_t size)
@@ -74,44 +74,52 @@ void pagemap_init(void)
 		swapmap_init(i);
 }
 
+static void swapinout(int blk, void* u,
+	int (*readwrite)(uint16_t dev, blkno_t blkno, usize_t nbytes,
+                    uaddr_t buf, uint16_t page))
+{
+	const uint32_t USER_STACK = 3*1024;
+	const uint32_t USER_STACK_BLOCKS = USER_STACK >> BLKSHIFT;
+	const uaddr_t USER_STACK_BASE = DATABASE + USER_STACK;
+
+	/* Read/write the udata block. */
+
+	readwrite(SWAPDEV, blk, UDATA_BLKS<<BLKSHIFT, (uaddr_t)u, 1);
+
+	/* Data area */
+
+	/* Write out just 0..break and sp..top */
+	readwrite(SWAPDEV, blk + UDATA_BLKS,
+		(uaddr_t)alignup(udata.u_break - DATABASE, 1<<BLKSHIFT),
+		DATABASE, 1);
+	readwrite(SWAPDEV, blk + UDATA_BLKS + ((DATALEN - USER_STACK) >> BLKSHIFT),
+		USER_STACK, DATABASE + DATALEN - USER_STACK, 1);
+
+	/* Code area */
+
+	readwrite(SWAPDEV, blk + UDATA_BLKS + (DATALEN >> BLKSHIFT),
+		(uaddr_t)alignup(udata.u_texttop - CODEBASE, 1<<BLKSHIFT), CODEBASE, 1);
+}
+
 /*
  *	Swap out the memory of a process to make room
  *	for something else
  */
 int swapout_new(ptptr p, void *u)
 {
-	uint16_t page = p->p_page;
-	uint16_t blk;
-	int16_t map;
-
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_pid);
 #endif
+	uint16_t page = p->p_page;
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
 	/* Are we out of swap ? */
-kprintf("%d\n", __LINE__);
-	map = swapmap_alloc();
-kprintf("%d\n", __LINE__);
+	int map = swapmap_alloc();
 	if (map == -1)
 		return ENOMEM;
-	blk = map * SWAP_SIZE;
+	int blk = map * SWAP_SIZE;
 
-	/* Write the udata block as kernel. */
-
-kprintf("%d\n", __LINE__);
-	udata.u_dptr = u;
-	udata.u_block = blk;
-	udata.u_nblock = UDATA_SIZE >> BLKSHIFT;	/* 1 */
-	((*dev_tab[major(SWAPDEV)].dev_write) (minor(SWAPDEV), 0, 0));
-kprintf("%d\n", __LINE__);
-
-	/* Use the standard swapwrite helper for the rest */
-	swapwrite(SWAPDEV, blk + UDATA_BLKS, DATALEN, DATABASE, 1);
-kprintf("%d\n", __LINE__);
-	swapwrite(SWAPDEV, blk + UDATA_BLKS + (DATALEN >> BLKSHIFT),
-		CODELEN, CODEBASE, 1);
-kprintf("%d\n", __LINE__);
+	swapinout(blk, u, swapwrite);
 
 	p->p_page = 0;
 	p->p_page2 = map;
@@ -123,7 +131,7 @@ kprintf("%d\n", __LINE__);
 
 int swapout(ptptr p)
 {
-	return swapout_new(p, &udata);
+	return swapout_new(p, (uint8_t*)&udata);
 }
 
 /*
@@ -131,9 +139,9 @@ int swapout(ptptr p)
  */
 void swapin(ptptr p, uint16_t map)
 {
-	panic("swapin");
-#if 0
-	uint16_t blk = map * SWAP_SIZE;
+	/* Does the current process need swapping out? */
+
+	int blk = map * SWAP_SIZE;
 
 #ifdef DEBUG
 	kprintf("Swapin %x (%d, %d)\n", p, p->p_page2, p->p_pid);
@@ -143,18 +151,10 @@ void swapin(ptptr p, uint16_t map)
 		return;
 	}
 
-	/* The udata might not be in common space read it as kernel mapped */
-	udata.u_dptr = (uint8_t *)&udata;
-	udata.u_block = blk;
-	udata.u_nblock = UDATA_SIZE >> BLKSHIFT;
-	/* The driver will use the data in udata before it writes over it */
-	((*dev_tab[major(SWAPDEV)].dev_read) (minor(SWAPDEV), 0, 0));
-	swapread(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
-		 SWAPBASE, 1);
+	swapinout(blk, (uint8_t*)&udata, swapread);
 
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page2);
-#endif
 #endif
 }
 

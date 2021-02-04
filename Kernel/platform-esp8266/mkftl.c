@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <string.h>
 #include "../lib/dhara/map.h"
 #include "../lib/dhara/nand.h"
@@ -80,6 +81,14 @@ int dhara_nand_copy(const struct dhara_nand *n,
 	return 0;
 }
 
+static bool is_trimmable(const char* buffer)
+{
+	for (int i=0; i<512; i++)
+		if (buffer[i] != 'q')
+			return 0;
+	return 1;
+}
+
 int main(int argc, const char* argv[])
 {
 
@@ -106,8 +115,13 @@ int main(int argc, const char* argv[])
 	{
 		uint8_t buffer[512] = {};
 		fread(buffer, 512, 1, inf);
+
 		err = DHARA_E_NONE;
-		dhara_map_write(&dhara, sectorno, buffer, &err); 
+		if (is_trimmable(buffer))
+			dhara_map_trim(&dhara, sectorno, &err);
+		else
+			dhara_map_write(&dhara, sectorno, buffer, &err); 
+
 		if (err != DHARA_E_NONE)
 		{
 			fprintf(stderr, "FTL error %d\n", err);

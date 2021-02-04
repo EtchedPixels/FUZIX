@@ -40,8 +40,8 @@ struct __exception_frame
 	uint32_t cause;
 };
 
-typedef void (*fn_c_exception_handler_t)(struct __exception_frame *ef, int cause);
-extern fn_c_exception_handler_t _xtos_set_exception_handler(int cause, fn_c_exception_handler_t fn);
+typedef void fn_c_exception_handler_t(struct __exception_frame *ef, int cause);
+extern fn_c_exception_handler_t* _xtos_set_exception_handler(int cause, fn_c_exception_handler_t* fn);
 
 #endif
 

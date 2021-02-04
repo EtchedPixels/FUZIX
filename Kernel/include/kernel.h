@@ -567,6 +567,9 @@ typedef struct u_data {
     uint8_t	*u_dptr;	/* Address for I/O */
     usize_t	u_done;		/* Counter for driver methods */
 
+#ifdef CONFIG_UDATA_TEXTTOP
+	uaddr_t u_texttop;  /* Top of binary text (used for I/D systems) */
+#endif
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
     uint8_t	u_ngroup;
@@ -745,6 +748,7 @@ struct s_argblk {
 #define HDIO_RAWCMD		0x4104	/* Issue a raw command, ioctl data
                                            is device dependent */
 #define HDIO_EJECT		0x0105	/* Request a media eject */
+#define HDIO_TRIM       0x0106  /* Issue a TRIM request */
 
 /*
  *	Floppy disk ioctl s0x01Fx (see fdc.h)

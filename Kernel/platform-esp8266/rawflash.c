@@ -3,6 +3,7 @@
 #include <kernel.h>
 #include "lib/dhara/nand.h"
 #include "rom.h"
+#include "printf.h"
 
 #define FLASH_OFFSET 256 /* 4kB blocks */
 

@@ -287,7 +287,6 @@ void makeproc(regptr ptptr p, u_data *u)
 	irqflags_t irq;
 	ptptr pp;
 
-	kprintf("p=%p u=%p\n", p, u);
 	irq = di();
 	/* Note that ptab_alloc clears most of the entry */
 	/* calculate base page of process based on ptab table offset */

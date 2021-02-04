@@ -164,6 +164,7 @@ arg_t _execve(void)
 
 	/* Set initial break for program */
 	udata.u_break = (int)ALIGNUP(DATABASE + hdr.a_data + hdr.a_bss);
+	udata.u_texttop = CODEBASE + hdr.a_text;
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -194,6 +195,7 @@ arg_t _execve(void)
 
 	uint32_t* code = (uint32_t*)(CODEBASE + hdr.a_entry);
 	platform_doexec(CODEBASE + hdr.a_entry, udata.u_isp);
+	panic("doexec returned\n");
 
 	/* tidy up in various failure modes */
 nogood4:

@@ -57,6 +57,8 @@ void swapmap_init(uint_fast8_t swap)
 int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
                     uaddr_t buf, uint16_t page)
 {
+	int res;
+
 	udata.u_dptr = swap_map(buf);
 	udata.u_block = blkno;
 	if (nbytes & BLKMASK)
@@ -67,7 +69,18 @@ int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
 	kprintf("SR | L %p M %p Bytes %d Page %d Block %d\n",
 		buf, udata.u_dptr, nbytes, page, udata.u_block);
 #endif
-	return ((*dev_tab[major(dev)].dev_read) (minor(dev), 2, 0));
+	res = ((*dev_tab[major(dev)].dev_read) (minor(dev), 2, 0));
+
+#ifdef CONFIG_TRIM
+	while (nbytes != 0)
+	{
+		d_ioctl(dev, HDIO_TRIM, &blkno);
+		blkno++;
+		nbytes -= 512;
+	}
+#endif
+
+	return res;
 }
 
 
