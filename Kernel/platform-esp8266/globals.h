@@ -2,7 +2,7 @@
 #define GLOBALS_H
 
 #define CPU_CLOCK 80
-#define PERIPHERAL_CLOCK 189
+#define PERIPHERAL_CLOCK 80
 
 extern void flash_dev_init(void);
 

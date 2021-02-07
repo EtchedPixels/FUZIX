@@ -26,7 +26,7 @@
  * the current operation's drive number */
 uint_fast8_t sd_drive;
 
-uint_fast8_t devsd_transfer_sector(void)
+int devsd_transfer_sector(void)
 {
     uint8_t attempt;
     bool success;
@@ -83,7 +83,7 @@ void sd_spi_release(void)
     sd_spi_receive_byte();
 }
 
-uint8_t sd_spi_wait(bool want_ff)
+uint_fast8_t sd_spi_wait(bool want_ff)
 {
     unsigned int timer;
     uint_fast8_t b;

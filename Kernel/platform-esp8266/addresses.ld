@@ -20,4 +20,6 @@ PROVIDE (ets_isr_mask = 0x40000f98);
 
 PROVIDE (__udivsi3 = 0x4000e21c);
 PROVIDE (__umodsi3 = 0x4000e268);
+PROVIDE (__divsi3 = 0x4000dc88);
+PROVIDE (abs = 0x400060c0);
 

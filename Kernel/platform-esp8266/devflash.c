@@ -81,7 +81,7 @@ void flash_dev_init(void)
 	dhara_error_t err = DHARA_E_NONE;
 	dhara_map_resume(&dhara, &err);
 	uint32_t lba = dhara_map_capacity(&dhara);
-	kprintf(" %dkB\n", lba / 2);
+	kprintf(" %dkB: ", lba / 2);
 	
 	blk->transfer = transfer_cb;
 	blk->trim = trim_cb;

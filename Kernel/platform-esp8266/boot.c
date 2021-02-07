@@ -12,7 +12,8 @@ void __main(void)
 	/* Configure peripheral clock. */
 
 	rom_i2c_writeReg(103, 4, 1, 0x88);
-	rom_i2c_writeReg(103, 4, 2, 0x81); /* 189MHz */
+	//rom_i2c_writeReg(103, 4, 2, 0x81); /* 189MHz */
+	rom_i2c_writeReg(103, 4, 2, 0x91); /* 80MHz */
 
 	/* Configure CPU clock. */
 
@@ -23,7 +24,7 @@ void __main(void)
 
 	/* Enable SPI flash mapping. */
 
-	SpiFlashCnfig(5, 4);
+	SpiFlashCnfig(5, 0);
 	SpiReadModeCnfig(5);
 	Wait_SPI_Idle(sdk_flashchip);
 	Cache_Read_Enable(0, 0, 1);

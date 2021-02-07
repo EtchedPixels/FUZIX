@@ -73,6 +73,8 @@ static void timer_isr(void* user, struct __exception_frame* ef)
 void device_init(void)
 {
 	flash_dev_init();
+	sd_rawinit();
+	devsd_init();
 
 	extern fn_c_exception_handler_t syscall_handler_trampoline;
 	_xtos_set_exception_handler(1, syscall_handler_trampoline);
