@@ -51,6 +51,7 @@ int devsd_transfer_sector(void)
                     sd_spi_transmit_byte(0xFF);
                     /* Was the data accepted ? */
                     success = ((sd_spi_wait(false) & 0x1F) == 0x05);
+					#if 0
                     /* Wait for the write to finish.
                        TODO: it would be smarter if we set a flag and
                        did this in sync and also before issuing other
@@ -60,6 +61,7 @@ int devsd_transfer_sector(void)
                        Could also do a 250ms timeout here */
                     if (success)
                         while(sd_spi_wait(false) == 0x00);
+					#endif
                 }
             }
 	} else
@@ -103,6 +105,7 @@ uint_fast8_t sd_spi_wait(bool want_ff)
             kputs("sd: timeout\n");
             break;
         }
+
     }
 
     return b;

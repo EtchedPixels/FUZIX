@@ -200,21 +200,49 @@ uint_fast8_t sd_spi_receive_byte(void)
 
 bool sd_spi_receive_sector(void)
 {
-	uint8_t* addr = blk_op.addr;
-	uint8_t* endaddr = addr + 512;
+    uint8_t* dptr = (uint8_t*)blk_op.addr;
+    if ((uint32_t)dptr & 3)
+        panic("unaligned read");
+    for (int chunk = 0; chunk < 8; chunk++)
+    {
+        while (SPI1CMD & SPIBUSY)
+            ;
 
-	while (addr != endaddr)
-		*addr++ = sd_spi_receive_byte();
+        SPI1U1 = (511 << SPILMISO);
+        SPI1U = SPIUMISO;
+        SPI1CMD = SPIBUSY;
+
+        while (SPI1CMD & SPIBUSY)
+            ;
+
+        memcpy(dptr, &SPI1W0, 64);
+        dptr += 64;
+    }
+
 	return 0;
 }
 
 bool sd_spi_transmit_sector(void)
 {
-	uint8_t* addr = blk_op.addr;
-	uint8_t* endaddr = addr + 512;
+    uint8_t* sptr = (uint8_t*)blk_op.addr;
+    if ((uint32_t)sptr & 3)
+        panic("unaligned write");
+    for (int chunk = 0; chunk < 8; chunk++)
+    {
+        while (SPI1CMD & SPIBUSY)
+            ;
 
-	while (addr != endaddr)
-        sd_spi_transmit_byte(*addr++);
+        SPI1U1 = (511 << SPILMOSI);
+        SPI1U = SPIUMOSI;
+        memcpy((void*)&SPI1W0, sptr, 64);
+        SPI1CMD = SPIBUSY;
+
+        while (SPI1CMD & SPIBUSY)
+            ;
+
+        sptr += 64;
+    }
+
 	return 0;
 }
 
