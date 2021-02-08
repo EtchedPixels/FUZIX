@@ -11,4 +11,5 @@ CRT0 = $(ROOT)/Library/libs/crt0_esp8266.o
 CRT0NS = $(ROOT)/Library/libs/crt0nostdio_esp8266.o
 ELF2FUZIX = $(ROOT)/Library/tools/elf2bin -p xtensa-lx106-elf
 .SUFFIXES: .c .o
+HOSTCC = cc
 
