@@ -35,6 +35,9 @@ tools/syscall_6809: tools/syscall_6809.c ../Kernel/include/syscall_name.h
 tools/syscall-scc6809: tools/syscall-scc6809.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/syscall_esp8266: tools/syscall_esp8266.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 tools/syscall_pdp11: tools/syscall_pdp11.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
