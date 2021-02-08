@@ -101,7 +101,7 @@ static void setFrequency(uint32_t freq) {
     const int32_t preMax = (1 << 13) - 1;
 
     // find the best match for the next 63 iterations
-    while(calN <= nMax) {
+    while (calN <= nMax) {
 
         spiclock_t reg = { 0 };
         int32_t calFreq;

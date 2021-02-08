@@ -14,7 +14,7 @@ static const struct dhara_nand nand =
 {
 	.log2_page_size = 9,
 	.log2_ppb = 12 - 9,
-	.num_blocks = 512,
+	.num_blocks = 896,
 };
 
 static uint8_t journal_buf[512];

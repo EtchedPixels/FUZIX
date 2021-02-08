@@ -5,7 +5,7 @@
 #include "rom.h"
 #include "printf.h"
 
-#define FLASH_OFFSET 256 /* 4kB blocks */
+#define FLASH_OFFSET 128 /* 4kB blocks */
 
 #define FLASH_ADDRESS(page) \
 	((FLASH_OFFSET * 4096) + (page * 512))
