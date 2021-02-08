@@ -746,6 +746,7 @@ struct s_argblk {
 #define HDIO_RAWCMD		0x4104	/* Issue a raw command, ioctl data
                                            is device dependent */
 #define HDIO_EJECT		0x0105	/* Request a media eject */
+#define HDIO_TRIM       0x0106  /* Issue a TRIM request */
 
 /*
  *	Floppy disk ioctl s0x01Fx (see fdc.h)

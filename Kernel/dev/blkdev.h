@@ -5,6 +5,7 @@
    and implement a sector transfer function matching the following prototype. */
 typedef uint_fast8_t (*transfer_function_t)(void);
 typedef int (*flush_function_t)(void);
+typedef int (*trim_function_t)(void);
 
 /* the following details should be required only by partition parsing code */
 #define MAX_PARTITIONS 15                   /* must be at least 4, at most 15 */
@@ -12,6 +13,9 @@ typedef struct {
     uint8_t driver_data;                    /* opaque parameter used by underlying driver (should be first) */
     transfer_function_t transfer;           /* function to read and write sectors */
     flush_function_t flush;                 /* flush device cache */
+#if defined CONFIG_TRIM
+	trim_function_t trim;					/* trim a sector */
+#endif
     uint32_t drive_lba_count;               /* count of sectors on raw disk device */
     uint32_t lba_first[MAX_PARTITIONS];     /* LBA of first sector of each partition; 0 if partition absent */
     uint32_t lba_count[MAX_PARTITIONS];     /* count of sectors in each partition; 0 if partition absent */
