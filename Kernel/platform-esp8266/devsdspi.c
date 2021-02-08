@@ -58,15 +58,6 @@ static void set_clock(uint32_t clockDiv)
     SPI1CLK = clockDiv;
 }
 
-#if 0
-static int32_t abs(int32_t i)
-{
-    if (i < 0)
-        return -i;
-    return i;
-}
-#endif
-
 /* This code is borrowed heavily from the Arduino code at
  * https://github.com/esp8266/Arduino/blob/master/libraries/SPI/SPI.cpp
  * I don't understand how it works --- the clock computation appears
@@ -215,7 +206,7 @@ bool sd_spi_receive_sector(void)
         while (SPI1CMD & SPIBUSY)
             ;
 
-        memcpy(dptr, &SPI1W0, 64);
+        memcpy(dptr, (const void*)&SPI1W0, 64);
         dptr += 64;
     }
 

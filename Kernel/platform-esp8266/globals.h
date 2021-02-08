@@ -7,6 +7,7 @@
 extern void flash_dev_init(void);
 
 extern void fuzix_main(void);
+extern void sd_rawinit(void);
 
 #endif
 
