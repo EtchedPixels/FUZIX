@@ -51,7 +51,7 @@ int dhara_nand_copy(const struct dhara_nand *n,
 	return dhara_nand_prog(&nand, dst, tmp_buf, err);
 }
 
-static uint_fast8_t transfer_cb(void)
+static bool transfer_cb(void)
 {
 	dhara_error_t err = DHARA_E_NONE;
 	if (blk_op.is_read)

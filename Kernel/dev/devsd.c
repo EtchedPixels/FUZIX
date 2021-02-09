@@ -26,7 +26,7 @@
  * the current operation's drive number */
 uint_fast8_t sd_drive;
 
-int devsd_transfer_sector(void)
+bool devsd_transfer_sector(void)
 {
     uint8_t attempt;
     bool success;

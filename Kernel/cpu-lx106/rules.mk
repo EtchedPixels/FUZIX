@@ -12,4 +12,3 @@ export CROSS_CC_VIDEO=
 export ASOPTS=
 export ASMEXT = .S
 export BINEXT = .o
-export BITS=lx106
