@@ -76,7 +76,7 @@ int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
 	{
 		d_ioctl(dev, HDIO_TRIM, (void*)&blkno);
 		blkno++;
-		nbytes -= 512;
+		nbytes -= 1<<BLKSHIFT;
 	}
 #endif
 
