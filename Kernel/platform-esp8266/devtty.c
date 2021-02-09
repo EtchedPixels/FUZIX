@@ -95,5 +95,5 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
     irqrestore(irq);
 }
 
-// vim: sw=4 ts=4 et
+/* vim: sw=4 ts=4 et: */
 

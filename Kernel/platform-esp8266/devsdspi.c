@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <blkdev.h>
-#include <eagle_soc.h>
-#include <spi_register.h>
 #include "dev/devsd.h"
 #include "esp8266_peri.h"
 #include "globals.h"
@@ -27,13 +25,11 @@ typedef union
 
 void sd_rawinit(void)
 {
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDO_U, FUNC_GPIO15); /* CS */
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, 2); /* MOSI */
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, 2); /* MISO */
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, 2); /* CLK */
-    GPIO_REG_WRITE(GPIO_ENABLE_ADDRESS, 1<<15);
-    PIN_PULLUP_DIS(PERIPHS_IO_MUX_MTCK_U);
-    PIN_PULLUP_DIS(PERIPHS_IO_MUX_MTDI_U);
+    GPF15 = GPFFS(GPFFS_GPIO(15)); /* MTDO, CS */
+    GPF14 = GPFFS(GPFFS_BUS(14)); /* CLK */
+    GPF13 = GPFFS(GPFFS_BUS(13)); /* MTCK, MOSI */
+    GPF12 = GPFFS(GPFFS_BUS(12)); /* MTDI, MISO */
+    GPES = 1<<15; /* GPI enable pin 15 */
 
     SPI1C = 0;
     SPI1U = 0;
@@ -64,7 +60,8 @@ static void set_clock(uint32_t clockDiv)
  * to be invalid. But it does. */
 
 static void setFrequency(uint32_t freq) {
-    if(freq >= (PERIPHERAL_CLOCK*1000000))
+    const uint32_t clock = PERIPHERAL_CLOCK * 1000000;
+    if (freq >= clock)
     {
         /* magic number to set spi sysclock bit (see below.) */
         set_clock(0x80000000);
@@ -80,10 +77,8 @@ static void setFrequency(uint32_t freq) {
         return;
     }
 
-    uint8_t calN = 1;
-
-    spiclock_t bestReg = { 0 };
-    int32_t bestFreq = 0;
+    spiclock_t best_reg = { 0 };
+    int32_t best_freq = 0;
 
     // aka 0x3F, aka 63, max for n:6
     const uint8_t nMax = (1 << 6) - 1;
@@ -92,60 +87,56 @@ static void setFrequency(uint32_t freq) {
     const int32_t preMax = (1 << 13) - 1;
 
     // find the best match for the next 63 iterations
-    while (calN <= nMax) {
-
+    for (uint8_t n = 1; n <= nMax; n++)
+    {
         spiclock_t reg = { 0 };
-        int32_t calFreq;
-        int32_t calPre;
-        int8_t calPreVari = -2;
+        int32_t actual_freq;
+        int32_t pre;
 
-        reg.n = calN;
+        reg.n = n;
 
-        while(calPreVari++ <= 1)
+        for (int8_t i = -1; i <= 1; i++)
         {
-            calPre = (((ESP8266_CLOCK / (reg.n + 1)) / freq) - 1) + calPreVari;
-            if(calPre > preMax) {
+            pre = (((clock / (reg.n + 1)) / freq) - 1) + i;
+            if (pre > preMax)
                 reg.pre = preMax;
-            } else if(calPre <= 0) {
+            else if(pre <= 0)
                 reg.pre = 0;
-            } else {
-                reg.pre = calPre;
-            }
+            else
+                reg.pre = pre;
 
             reg.regL = ((reg.n + 1) / 2);
             // reg.regH = (reg.n - reg.regL);
 
             // test calculation
-            calFreq = calculate_freq(&reg);
-            //kprintf("-----[%p][%d]\t EQU: %d\t Pre: %d\t N: %d\t H: %d\t L: %d = %d\n", reg.regValue, freq, reg.regEQU, reg.pre, reg.n, reg.regH, reg.regL, calFreq);
+            actual_freq = calculate_freq(&reg);
+            //kprintf("-----[%p][%d]\t EQU: %d\t Pre: %d\t N: %d\t H: %d\t L: %d = %d\n", reg.regValue, freq, reg.regEQU, reg.pre, reg.n, reg.regH, reg.regL, actual_freq);
 
-            if (calFreq == (int32_t)(freq))
+            if (actual_freq == (int32_t)(freq))
             {
                 // accurate match use it!
-                memcpy(&bestReg, &reg, sizeof(bestReg));
+                memcpy(&best_reg, &reg, sizeof(best_reg));
                 break;
             }
-            else if (calFreq < (int32_t)(freq))
+            else if (actual_freq < (int32_t)(freq))
             {
                 // never go over the requested frequency
-                int32_t cal = abs((int32_t)(freq) - calFreq);
-                int32_t best = abs((int32_t)(freq) - bestFreq);
+                int32_t cal = abs((int32_t)(freq) - actual_freq);
+                int32_t best = abs((int32_t)(freq) - best_freq);
                 if(cal < best)
                 {
-                    bestFreq = calFreq;
-                    memcpy(&bestReg, &reg, sizeof(bestReg));
+                    best_freq = actual_freq;
+                    memcpy(&best_reg, &reg, sizeof(best_reg));
                 }
             }
         }
-        if (calFreq == (int32_t)(freq))
+        if (actual_freq == (int32_t)(freq))
             break;
-
-        calN++;
     }
 
-    //kprintf("[%p][%d]\t EQU: %d\t Pre: %d\t N: %d\t H: %d\t L: %d\t - Real Frequency: %d\n", bestReg.regValue, freq, bestReg.regEQU, bestReg.pre, bestReg.n, bestReg.regH, bestReg.regL, calculate_freq(&bestReg));
+    //kprintf("[%p][%d]\t EQU: %d\t Pre: %d\t N: %d\t H: %d\t L: %d\t - Real Frequency: %d\n", best_reg.regValue, freq, best_reg.regEQU, best_reg.pre, best_reg.n, best_reg.regH, best_reg.regL, calculate_freq(&best_reg));
 
-    set_clock(bestReg.regValue);
+    set_clock(best_reg.regValue);
 }
 
 void sd_spi_clock(bool go_fast)
@@ -155,12 +146,12 @@ void sd_spi_clock(bool go_fast)
 
 void sd_spi_raise_cs(void)
 {
-	GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1<<15);
+    GPES = 1<<15;
 }
 
 void sd_spi_lower_cs(void)
 {
-	GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1<<15);
+    GPEC = 1<<15;
 }
 
 static uint_fast8_t send_recv(uint_fast8_t data)

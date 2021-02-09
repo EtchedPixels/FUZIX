@@ -58,4 +58,6 @@ int dhara_nand_read(const struct dhara_nand *n, dhara_page_t p,
 	return 0;
 }
 
+/* vim: sw=4 ts=4 et: */
+
 

@@ -79,8 +79,6 @@ static void swapinout(int blk, void* u,
                     uaddr_t buf, uint16_t page))
 {
 	const uint32_t USER_STACK = 3*1024;
-	const uint32_t USER_STACK_BLOCKS = USER_STACK >> BLKSHIFT;
-	const uaddr_t USER_STACK_BASE = DATABASE + USER_STACK;
 
 	/* Read/write the udata block. */
 
@@ -157,4 +155,6 @@ void swapin(ptptr p, uint16_t map)
 	kprintf("%x: swapin done %d\n", p, p->p_page2);
 #endif
 }
+
+/* vim: sw=4 ts=4 et: */
 

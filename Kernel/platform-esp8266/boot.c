@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include <eagle_soc.h>
 #include "rom.h"
 #include "globals.h"
 
@@ -18,8 +17,6 @@ void __main(void)
 	/* Configure CPU clock. */
 
 	ets_update_cpu_frequency(CPU_CLOCK);
-	PIN_PULLUP_DIS(PERIPHS_IO_MUX_U0TXD_U);
-	PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD);
 	uart_div_modify(0, (PERIPHERAL_CLOCK * 1e6) / 115200);
 
 	/* Enable SPI flash mapping. */
@@ -40,4 +37,6 @@ void __main(void)
 
 	main();
 }
+
+/* vim: sw=4 ts=4 et: */
 

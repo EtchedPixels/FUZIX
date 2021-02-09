@@ -35,3 +35,6 @@ size_t strlen(const char* s)
 		;
 	return s - p - 1;
 }
+
+/* vim: sw=4 ts=4 et: */
+

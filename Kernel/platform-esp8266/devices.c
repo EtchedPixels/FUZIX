@@ -105,3 +105,5 @@ void device_init(void)
 	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
 }
 
+/* vim: sw=4 ts=4 et: */
+

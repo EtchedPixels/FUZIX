@@ -168,3 +168,5 @@ syscall_handler_trampoline:
 
 	ret
 
+/* vim: sw=4 ts=4 et: */
+

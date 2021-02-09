@@ -141,3 +141,5 @@ int main(int argc, const char* argv[])
 	return 0;
 }
 
+/* vim: sw=4 ts=4 et: */
+
