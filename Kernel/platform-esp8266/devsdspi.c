@@ -10,6 +10,8 @@
 #include "globals.h"
 #include "config.h"
 
+#define CSPIN 4 /* also change GPF5 and GPC5 below */
+
 typedef union
 {
     uint32_t regValue;
@@ -25,11 +27,12 @@ typedef union
 
 void sd_rawinit(void)
 {
-    GPF15 = GPFFS(GPFFS_GPIO(15)); /* MTDO, CS */
+    GPF4 = GPFFS(GPFFS_GPIO(CSPIN)); /* CS */
     GPF14 = GPFFS(GPFFS_BUS(14)); /* CLK */
     GPF13 = GPFFS(GPFFS_BUS(13)); /* MTCK, MOSI */
     GPF12 = GPFFS(GPFFS_BUS(12)); /* MTDI, MISO */
-    GPES = 1<<15; /* GPI enable pin 15 */
+    GPC4 = 0; /* GPIO_DATA, normal driver, interrupt disabled, wakeup disabled */
+    GPES = 1<<CSPIN;
 
     SPI1C = 0;
     SPI1U = 0;
@@ -141,17 +144,17 @@ static void setFrequency(uint32_t freq) {
 
 void sd_spi_clock(bool go_fast)
 {
-    setFrequency(go_fast ? 8000000 : 250000);
+    setFrequency(go_fast ? 4000000 : 250000);
 }
 
 void sd_spi_raise_cs(void)
 {
-    GPES = 1<<15;
+    GPOS = 1<<CSPIN;
 }
 
 void sd_spi_lower_cs(void)
 {
-    GPEC = 1<<15;
+    GPOC = 1<<CSPIN;
 }
 
 static uint_fast8_t send_recv(uint_fast8_t data)
