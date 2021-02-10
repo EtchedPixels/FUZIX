@@ -17,6 +17,16 @@ second SPI interface for the root filesystem and swap. The NAND flash is
 usable, and is mapped via a FTL to provide wear levelling, but is too slow to
 produce a useful interactive system.
 
+## Building
+
+```
+cd Kernel
+make TARGET=esp8266
+```
+
+You need the `xtensa-lx106-elf` gcc toolchain --- install the
+`gcc-xtensa-lx106` package from Debian.
+
 ## Configuration
 
 Out of the box:
