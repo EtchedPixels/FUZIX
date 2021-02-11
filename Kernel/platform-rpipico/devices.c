@@ -88,7 +88,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-//	flash_dev_init();
+	flash_dev_init();
 //	sd_rawinit();
 //	devsd_init();
 //

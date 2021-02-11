@@ -6,6 +6,7 @@ include(pico_sdk_import.cmake)
 project(fuzix C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
+set(PICO_COPY_TO_RAM 1)
 
 pico_sdk_init()
 include_directories(
@@ -18,9 +19,11 @@ include_directories(
 
 add_executable(fuzix
 	devices.c
+	devflash.c
 	devtty.c
 	main.c
 	misc.c
+	rawflash.c
 	tricks.S
 	../dev/blkdev.c
 	../dev/mbr.c
@@ -53,6 +56,9 @@ add_executable(fuzix
 	../version.c
 )
 
-target_link_libraries(fuzix pico_stdlib)
+target_link_libraries(fuzix
+	pico_stdlib
+	hardware_flash
+)
 pico_add_extra_outputs(fuzix)
 
