@@ -59,7 +59,7 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg);
 uint_fast8_t sd_spi_wait(bool want_ff);
 void sd_init_drive(void);
 int sd_spi_init(void);
-bool devsd_transfer_sector(void);
+uint_fast8_t devsd_transfer_sector(void);
 
 /* Definitions for MMC/SDC command */
 #define CMD0    (0x40+0)    /* GO_IDLE_STATE */

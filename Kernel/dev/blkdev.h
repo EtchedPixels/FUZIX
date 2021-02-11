@@ -3,7 +3,7 @@
 
 /* block device drives should call blkdev_add() for each block device found,
    and implement a sector transfer function matching the following prototype. */
-typedef bool (*transfer_function_t)(void);
+typedef uint_fast8_t (*transfer_function_t)(void);
 typedef int (*flush_function_t)(void);
 typedef int (*trim_function_t)(void);
 

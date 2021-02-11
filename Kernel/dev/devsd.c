@@ -31,7 +31,7 @@ uint_fast8_t sd_drive;
  * until this is done. */
 static bool deferredwrite;
 
-bool devsd_transfer_sector(void)
+uint_fast8_t devsd_transfer_sector(void)
 {
     uint8_t attempt;
     bool success;
