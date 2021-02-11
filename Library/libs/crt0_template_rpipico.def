@@ -1,0 +1,50 @@
+.code 16
+.section "header"
+.globl _start
+_start:
+	b _entry
+
+.text
+.globl _entry
+_entry:
+	# Wipe BSS.
+
+	ldr r0, =__bss_start
+	ldr r1, =__bss_end
+	mov r2, #0
+.1:
+	cmp r0, r1
+	bge .2
+	str r2, [r0]
+	add r0, #4
+	b .1
+.2:
+
+#if defined WITH_STDIO
+	bl __stdio_init_vars
+#endif
+
+	/* Fetch argc and argv from the stack and set up the environment pointer. */
+
+	ldr r0, [sp, #0] /* argc */
+	ldr r1, [sp, #4] /* argv */
+	add r2, sp, #8   /* envp */
+
+	/* Store envp. */
+
+	ldr r3, =environ
+	str r2, [r3]
+
+	/* Call main, and then exit. */
+
+	bl main
+	b exit
+
+.globl environ
+.comm environ, 4
+
+.text
+.global __sighandler
+__sighandler:
+	swi 0
+
