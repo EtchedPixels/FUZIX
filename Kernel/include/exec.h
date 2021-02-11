@@ -38,6 +38,7 @@ struct exec {
 #define A_8086		8		/* x86 16bit */
 #define A_68000		9		/* 68000 32bit */
 #define A_NS32K		10		/* NS32K 32bit */
+#define A_LX106     11      /* lx106 32bit */
 	uint8_t a_cpufeat;
 #define AF_8080_8085	1		/* Uses 8085 instructions */
 #define AF_8080_Z80	2		/* Uses legal Z80 instructions */
@@ -58,6 +59,8 @@ struct exec {
 #define AF_6809_6309	1		/* 6309 extensions */
 
 #define AF_RABBIT_R3K	1		/* Uses Rabbit 3000 additions */
+
+#define AF_LX106_ESP8266 1      /* ESP8266 module */
 
 	uint8_t a_base;			/* Load address page */
 	uint8_t a_hints;

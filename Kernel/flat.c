@@ -171,7 +171,9 @@ int pagemap_alloc(ptptr p)
 	/* Init is special */
 	if (p->p_pid == 1) {
 		struct memblk *mb;
+#if defined udata
 		udata_shadow = p->p_udata;
+#endif
 		store[nproc] = mem_alloc();
 		mem[nproc] = store[nproc];
 		mem[nproc]->last = 0;
@@ -357,7 +359,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	return 0;
 }
 
-unsigned long pagemap_mem_used(void)
+usize_t pagemap_mem_used(void)
 {
 	return kmemused() >> 10;	/* In kBytes */
 }

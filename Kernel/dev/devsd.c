@@ -26,6 +26,11 @@
  * the current operation's drive number */
 uint_fast8_t sd_drive;
 
+/* A write is being executed in the background; when set, we have to wait for
+ * the card to finish before issuing the next command. We won't unassert CS
+ * until this is done. */
+static bool deferredwrite;
+
 uint_fast8_t devsd_transfer_sector(void)
 {
     uint8_t attempt;
@@ -51,22 +56,19 @@ uint_fast8_t devsd_transfer_sector(void)
                     sd_spi_transmit_byte(0xFF);
                     /* Was the data accepted ? */
                     success = ((sd_spi_wait(false) & 0x1F) == 0x05);
-                    /* Wait for the write to finish.
-                       TODO: it would be smarter if we set a flag and
-                       did this in sync and also before issuing other
-                       commands. However we may then also have to watch
-                       and defer CS handling.
-                       
-                       Could also do a 250ms timeout here */
-                    if (success)
-                        while(sd_spi_wait(false) == 0x00);
                 }
             }
 	} else
 	    success = false;
 
-	sd_spi_release();
-
+	if (blk_op.is_read) {
+		sd_spi_release();
+		deferredwrite = 0;
+	} else {
+		/* Leave CS asserted so the write can complete */
+		deferredwrite = 1;
+	}
+	
 	if(success)
 	    return 1;
 
@@ -79,11 +81,20 @@ uint_fast8_t devsd_transfer_sector(void)
 
 void sd_spi_release(void)
 {
-    sd_spi_raise_cs();
-    sd_spi_receive_byte();
+	if (deferredwrite) {
+		for (;;) {
+			uint_fast8_t b = sd_spi_receive_byte();
+			if (b != 0x00)
+				break;
+		}
+		deferredwrite = 0;
+	}
+
+	sd_spi_raise_cs();
+	sd_spi_receive_byte();
 }
 
-uint8_t sd_spi_wait(bool want_ff)
+uint_fast8_t sd_spi_wait(bool want_ff)
 {
     unsigned int timer;
     uint_fast8_t b;
@@ -103,6 +114,7 @@ uint8_t sd_spi_wait(bool want_ff)
             kputs("sd: timeout\n");
             break;
         }
+
     }
 
     return b;
@@ -112,6 +124,9 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 {
     unsigned char *p;
     uint_fast8_t n, res;
+
+	/* Ensure that any deferred writes have finished. */
+	sd_spi_release();
 
     if (cmd & 0x80) {   /* ACMD<n> is the command sequense of CMD55-CMD<n> */
         cmd &= 0x7F;

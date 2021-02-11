@@ -25,6 +25,9 @@ this recipe should work on Mac.
 	lwtools 4.13
 	Add (prepend) the directory Build/tools to your PATH environment variable.
 
+  ESP8266:
+	xtensa-lx106-elf-gcc (compiler packages are in Debian in the
+	gcc-xtensa-lx106 package).
 
 - Set TARGET in the top level Makefile
 

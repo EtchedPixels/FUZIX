@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e
+infile=
+outfile=
+prefix=
+while [ "$1" != "" ]; do
+    case $1 in
+        -o)
+            outfile="$2"
+            shift
+            shift
+            ;;
+
+        -p)
+            prefix="$2"
+            shift
+            shift
+            ;;
+        -*)
+            echo "Unknown command line argument $1"
+            exit 1
+            ;;
+
+        *)
+            infile="$1"
+            shift
+            ;;
+    esac
+done
+
+$prefix-objcopy -O binary -j .text $infile $infile.text
+$prefix-objcopy -O binary -j .data $infile $infile.data
+cat $infile.text $infile.data > $outfile
+
+# vim: ft=sh sw=4 ts=4 et
+
