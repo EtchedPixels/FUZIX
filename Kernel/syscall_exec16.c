@@ -55,11 +55,11 @@ arg_t _execve(void)
 	char **nenvp;		/* In user space */
 	struct s_argblk *abuf, *ebuf;
 	int argc;
-	uint16_t progptr;
-	uint16_t progload;
-	staticfast uint16_t top;
-	uint16_t bin_size;	/* Will need to be bigger on some cpus */
-	uint16_t bss;
+	uaddr_t progptr;
+	uaddr_t progload;
+	staticfast uaddr_t top;
+	uaddr_t bin_size;	/* Will need to be bigger on some cpus */
+	uaddr_t bss;
 
 	top = ramtop;
 
@@ -206,7 +206,7 @@ arg_t _execve(void)
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	// Fill in udata.u_name with program invocation name
-	uget((void *) ugetw(nargv), udata.u_name, 8);
+	uget((void *) ugetp(nargv), udata.u_name, 8);
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
 	tmpfree(abuf);
@@ -217,11 +217,11 @@ arg_t _execve(void)
 	   FIXME: should flip them in crt0.S of app for R2L setups
 	   so we can get rid of the ifdefs */
 #ifdef CONFIG_CALL_R2L	/* Arguments are stacked the 'wrong' way around */
-	uputw((uint16_t) nargv, nenvp - 2);
-	uputw((uint16_t) argc, nenvp - 1);
+	uputp((uaddr_t) nargv, nenvp - 2);
+	uputp((uaddr_t) argc, nenvp - 1);
 #else
-	uputw((uint16_t) nargv, nenvp - 1);
-	uputw((uint16_t) argc, nenvp - 2);
+	uputp((uaddr_t) nargv, nenvp - 1);
+	uputp((uaddr_t) argc, nenvp - 2);
 #endif
 
 	/* Set stack pointer for the program */

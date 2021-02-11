@@ -1028,6 +1028,7 @@ extern arg_t _select(void);
 #endif
 
 /* start.c */
+extern void fuzix_main(void);
 extern void set_boot_line(const char *p);
 
 /* swap.c */

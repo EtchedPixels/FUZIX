@@ -16,6 +16,8 @@
 #define CONFIG_TRIM
 /* Enable single tasking */
 #define CONFIG_SINGLETASK
+#define CONFIG_SWAP_ONLY
+#define CONFIG_SPLIT_UDATA
 /* Enable SD card code. */
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
@@ -28,23 +30,21 @@
 
 /* Program layout */
 
-extern uint8_t _data_base[];
-extern uint8_t _code_base[];
-extern uint8_t _data_top[];
-extern uint8_t _code_top[];
+#define PROGSIZE 65536
+extern uint8_t progbase[PROGSIZE];
 
 #define CONFIG_CUSTOM_VALADDR
-#define CONFIG_UDATA_TEXTTOP
-#define DATABASE    ((uaddr_t)&_data_base)
-#define CODEBASE    ((uaddr_t)&_code_base)
-#define DATATOP     ((uaddr_t)&_data_top)
-#define CODETOP     ((uaddr_t)&_code_top)
-#define DATALEN     (DATATOP - DATABASE)
-#define CODELEN     (CODETOP - CODEBASE)
-#define SWAP_SIZE   ((64+33)*2) /* 64 + 31.5 + 1.5 */
+#define PROGBASE ((uaddr_t)&progbase)
+#define PROGTOP (PROGBASE + PROGSIZE)
+#define SWAPBASE PROGBASE
+#define SWAPTOP PROGTOP
+#define SWAP_SIZE   (PROGSIZE >> BLKSHIFT)
 #define MAX_SWAPS   20 /* for a 2MB swap partition */
 #define UDATA_SIZE  1536
 #define UDATA_BLKS  3
+
+static inline uaddr_t pagemap_base(void)
+{ return PROGBASE; }
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -68,6 +68,20 @@ extern uint8_t _code_top[];
 
 #define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
+
+/* Unused on this port */
+
+static inline void set_cpu_type(void) {}
+static inline void map_init(void) {}
+static inline void platform_discard(void) {}
+static inline void platform_monitor(void) {}
+static inline void platform_reboot(void) {}
+static inline void program_vectors(uint16_t* pageptr) {}
+
+/* Prevent name clashes wish the Pico SDK */
+
+#define MANGLED 1
+#include "mangle.h"
 
 /* vim: sw=4 ts=4 et: */
 

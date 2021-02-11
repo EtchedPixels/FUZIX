@@ -45,23 +45,22 @@ typedef union {            /* this structure is endian dependent */
 #define __STRINGIFY(a) #a
 #endif
 
-/*
-#define __rsil(level) \
-	(__extension__({ \
-		uint32_t state; \
-		__asm__ __volatile__( \
-			"rsil %0," __STRINGIFY(level) : \
-				"=a" (state) :: "memory"); \
-		state; \
-	}))
+inline static uint32_t __hard_di(void)
+{
+	uint32_t ps;
+	asm volatile("mrs %0, PRIMASK" : "=r" (ps));
+	asm volatile("cpsid i");
+}
 
-#define __hard_di() __rsil(15);
-#define __hard_ei() __rsil(0);
-#define __hard_irqrestore(ps) \
-	__asm__ __volatile__(" \
-		wsr %0, ps; isync" \
-		:: "a" (ps) : "memory")
-*/
+inline static void __hard_ei(void)
+{
+	asm volatile("cpsie i");
+}
+
+inline static void __hard_irqrestore(uint32_t ps)
+{
+	asm volatile("msr PRIMASK, %0" :: "r" (ps));
+}
 	
 /* jmp over the Fuzix header. Will need updating if the header size changes */
 #define EMAGIC   0x08
