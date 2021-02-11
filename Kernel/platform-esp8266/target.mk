@@ -1,0 +1,2 @@
+export CPU = lx106
+

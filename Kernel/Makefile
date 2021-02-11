@@ -18,7 +18,6 @@ include cpu-$(CPU)/rules.mk
 -include platform-$(TARGET)/rules.mk
 
 
-
 #
 #	We put these into two code segments so that the caller can plan to
 #	bank them with a ROM banking tool. We pull out const data because on
@@ -51,7 +50,12 @@ CS1SRCS = syscall_fs.c syscall_level2.c select.c
 CS2SRCS = syscall_fs2.c
 CS3SRCS = syscall_fs3.c	syscall_net.c
 CS4SRCS = syscall_other.c
+
+#   If cpu/rules.mk doesn't set BITS, then the platform needs to provide
+#   its own syscall_exec.
+ifneq ($(BITS),)
 CS5SRCS = syscall_exec$(BITS).c
+endif
 #
 #
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well

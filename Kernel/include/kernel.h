@@ -21,7 +21,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 #include "panic.h"
 
-
 #ifndef NULL
 #define NULL (void *)0
 #endif
@@ -568,6 +567,9 @@ typedef struct u_data {
     uint8_t	*u_dptr;	/* Address for I/O */
     usize_t	u_done;		/* Counter for driver methods */
 
+#ifdef CONFIG_UDATA_TEXTTOP
+	uaddr_t u_texttop;  /* Top of binary text (used for I/D systems) */
+#endif
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
     uint8_t	u_ngroup;
@@ -1107,9 +1109,11 @@ extern int platform_dev_ioctl(uarg_t request, char *data);
 
 extern uint8_t platform_tick_present;
 
+#ifndef CONFIG_INLINE_IRQ
 extern irqflags_t __hard_di(void);
 extern void __hard_irqrestore(irqflags_t f);
 extern void __hard_ei(void);
+#endif
 
 #ifndef CONFIG_SOFT_IRQ
 #define di __hard_di
@@ -1198,3 +1202,5 @@ extern arg_t _memfree(void);	  /* FUZIX system call 65 */
 #endif
 
 #endif /* __FUZIX__KERNEL_DOT_H__ */
+
+

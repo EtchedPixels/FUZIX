@@ -384,8 +384,10 @@ ptptr ptab_alloc(void)
 				newp = NULL;
 				break;
 	                }
-	                newp->p_pgrp = udata.u_ptab->p_pgrp;
-	                memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			if (udata.u_ptab) {
+			    newp->p_pgrp = udata.u_ptab->p_pgrp;
+			    memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			}
 			udata.u_error = 0;
 	                break;
 		}
