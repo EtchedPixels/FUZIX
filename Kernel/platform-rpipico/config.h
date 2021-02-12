@@ -43,9 +43,6 @@ extern uint8_t progbase[PROGSIZE];
 #define UDATA_SIZE  1536
 #define UDATA_BLKS  3
 
-static inline uaddr_t pagemap_base(void)
-{ return PROGBASE; }
-
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
                             /* Temp FIXME set to serial port for debug ease */
@@ -68,15 +65,6 @@ static inline uaddr_t pagemap_base(void)
 
 #define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
-
-/* Unused on this port */
-
-static inline void set_cpu_type(void) {}
-static inline void map_init(void) {}
-static inline void platform_discard(void) {}
-static inline void platform_monitor(void) {}
-static inline void platform_reboot(void) {}
-static inline void program_vectors(uint16_t* pageptr) {}
 
 /* Prevent name clashes wish the Pico SDK */
 

@@ -20,6 +20,7 @@ include_directories(
 add_executable(fuzix
 	devices.c
 	devflash.c
+	devsdspi.c
 	devtty.c
 	main.c
 	misc.c
@@ -59,6 +60,7 @@ add_executable(fuzix
 target_link_libraries(fuzix
 	pico_stdlib
 	hardware_flash
+	hardware_spi
 )
 pico_add_extra_outputs(fuzix)
 

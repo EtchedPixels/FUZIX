@@ -89,8 +89,8 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
 	flash_dev_init();
-//	sd_rawinit();
-//	devsd_init();
+	sd_rawinit();
+	devsd_init();
 //
 //	static const uint8_t fatal_exceptions[] =
 //		{ 0, 2, 3, 5, 6, 8, 9, 20, 28, 29 };

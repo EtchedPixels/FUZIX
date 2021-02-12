@@ -12,6 +12,20 @@ uint8_t need_resched;
 uaddr_t ramtop = (uaddr_t) PROGTOP;
 uint8_t sys_stubs[sizeof(struct exec)];
 
+/* Unused on this port */
+
+void set_cpu_type(void) {}
+void map_init(void) {}
+void platform_discard(void) {}
+void platform_monitor(void) {}
+void platform_reboot(void) {}
+void program_vectors(uint16_t* pageptr) {}
+
+uaddr_t pagemap_base(void)
+{
+    return PROGBASE;
+}
+
 usize_t valaddr(const uint8_t *base, usize_t size)
 {
         if (base + size < base)
