@@ -1,0 +1,17 @@
+PLATFORM = rpipico
+CC = arm-none-eabi-gcc
+ASM = arm-none-eabi-as
+AR = arm-none-eabi-ar
+STRIP = arm-none-eabi-strip
+LINKER = arm-none-eabi-ld
+CFLAGS = -mcpu=Cortex-M0plus -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -isystem $(ROOT)/Library/include
+LINKER_OPT = -L$(ROOT)/Library/libs -lcrpipico --relocatable
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T $(ROOT)/Library/elfexe32.ld
+STRIP_OPT = --strip-unneeded --strip-debug
+CRT0 = $(ROOT)/Library/libs/crt0_rpipico.o
+CRT0NS = $(ROOT)/Library/libs/crt0nostdio_rpipico.o
+ELF2FUZIX = $(ROOT)/Library/tools/elf2bin -p arm-none-eabi
+.SUFFIXES: .c .o
+HOSTCC = cc
+

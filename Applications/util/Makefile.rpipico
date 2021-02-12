@@ -1,0 +1,4 @@
+ROOT = ../..
+include $(ROOT)/Applications/rules.rpipico
+include Makefile.generic
+
