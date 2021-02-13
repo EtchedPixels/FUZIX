@@ -251,6 +251,9 @@ arg_t _execve(void)
 			}
 		}
 	}
+	himem += PROGLOAD;
+	lomem += PROGLOAD;
+	top += PROGLOAD;
 
 	/* Core dump and ptrace permission logic. */
 
@@ -262,8 +265,8 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
-	udata.u_top = himem + PROGLOAD;
-	udata.u_ptab->p_top = himem + PROGLOAD;
+	udata.u_top = himem;
+	udata.u_ptab->p_top = himem;
 
 	/* setuid, setgid if the executable requires it. */
 
@@ -276,11 +279,11 @@ arg_t _execve(void)
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk(). */
 
-	uzero((uint8_t *)(top + PROGLOAD), lomem - top);
+	uzero((uint8_t *)top, lomem - top);
 
 	/* Set initial break for program. */
 
-	udata.u_break = (int)ALIGNUP(lomem + PROGLOAD);
+	udata.u_break = (int)ALIGNUP(lomem);
 
 	/* Turn off caught signals. */
 
@@ -323,7 +326,7 @@ arg_t _execve(void)
 
 	/* Set stack pointer for the program */
 
-	udata.u_isp = nenvp - 2;
+	udata.u_isp = udata.u_sp = nenvp - 2;
 
 	/* Start execution (never returns) */
 

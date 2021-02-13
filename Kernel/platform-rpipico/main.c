@@ -3,6 +3,8 @@
 #include "picosdk.h"
 #include "kernel-armm0.def"
 #include <hardware/sync.h>
+#include "globals.h"
+#include "printf.h"
 
 uint_fast8_t platform_param(char* p)
 {
@@ -12,6 +14,22 @@ uint_fast8_t platform_param(char* p)
 void platform_idle(void)
 {
 	__wfi();
+}
+
+void syscall_handler(struct exception_frame* eh)
+{
+    udata.u_callno = *(uint8_t*)(eh->pc - 2);
+    udata.u_argn = eh->r0;
+    udata.u_argn1 = eh->r1;
+    udata.u_argn2 = eh->r2;
+    udata.u_argn3 = eh->r3;
+    udata.u_insys = 1;
+
+    unix_syscall();
+
+    udata.u_insys = 1;
+    eh->r0 = udata.u_retval;
+    eh->r1 = udata.u_error;
 }
 
 int main(void)

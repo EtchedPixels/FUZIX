@@ -28,7 +28,7 @@ static void write_call(int n) {
           "%1$s:\n",
           syscall_name[n]);
 
-  fprintf(fp, "\tswi %d\n", n);
+  fprintf(fp, "\tsvc #%d\n", n);
   fprintf(fp, "\tb _syscall_ret\n");
 
   fclose(fp);

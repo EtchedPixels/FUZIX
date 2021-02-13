@@ -12,5 +12,6 @@ doexec:
 	ldr r1, =udata
 	ldr r1, [r1, #U_DATA__U_SP_OFFSET]
 	mov sp, r1
+	isb
 	bx r0
 

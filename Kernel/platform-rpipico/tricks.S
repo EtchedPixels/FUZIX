@@ -3,11 +3,36 @@
 .global udata
 .comm udata, UBLOCK_SIZE
 
+.global isr_svcall
+.text
+.thumb_func
+.align 4
+# On entry, sp points at the stack frame.
+isr_svcall:
+    mov r0, sp          /* get address of exception frame (and stack) */
+
+    ldr r1, =(udata + UBLOCK_SIZE) /* switch to kernel stack */
+    mov sp, r1
+    push {r0}           /* push exception frame address */
+
+    bl syscall_handler  /* call C system call handler */
+
+    pop {r0}            /* retrieve old exception frame address */
+    mov sp, r0          /* restore stack */
+
+    ldr r0, =0xFFFFFFF9 /* magic return-from-system-call code */
+    bx r0
+
 .global platform_switchout
 .global switchin
 .text
 .align 4
 platform_switchout:
+    ldr r0, =switchout_msg
+    bl panic
+switchout_msg:
+    .asciz "platform_switchout"
+
 #if 0
 	/* Save the callee-saved registers onto the stack in the same order
 	 * that dofork does it, so switchin will restore it correctly. */
@@ -81,6 +106,10 @@ not_swapped:
 .align 4
 # a2 = ptab of the current process
 dofork:
+    ldr r0, =dofork_msg
+    bl panic
+dofork_msg:
+    .asciz "dofork"
 #if 0
 	/* Save the callee-saved registers onto the stack in the same order
 	 * that switchout will do it, so switchin will restore it correctly. */
