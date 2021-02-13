@@ -1,12 +1,9 @@
 .code 16
-.section "header"
+.text
+.thumb_func
+.align 4
 .globl _start
 _start:
-	b _entry
-
-.text
-.globl _entry
-_entry:
 	# Wipe BSS.
 
 	ldr r0, =__bss_start
@@ -38,7 +35,7 @@ _entry:
 	/* Call main, and then exit. */
 
 	bl main
-	b exit
+	bl exit
 
 .globl environ
 .comm environ, 4

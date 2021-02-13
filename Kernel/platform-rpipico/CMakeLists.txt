@@ -22,6 +22,7 @@ add_executable(fuzix
 	devflash.c
 	devsdspi.c
 	devtty.c
+	elf.c 
 	main.c
 	misc.c
 	rawflash.c
@@ -45,7 +46,7 @@ add_executable(fuzix
 	../simple.c
 	../start.c
 	../swap.c
-	../syscall_exec16.c
+	../syscall_execelf32.c
 	../syscall_fs.c
 	../syscall_fs2.c
 	../syscall_fs3.c

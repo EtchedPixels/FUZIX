@@ -3,20 +3,20 @@ ENTRY (_start)
 PHDRS {
 	text PT_LOAD;
 	data PT_LOAD;
+	noload PT_LOAD FLAGS(0);
 }
 
 SECTIONS {
-	.text : {
+	.text ALIGN(4) : {
 		__text_start = .;
 		LONG(__sighandler);
-		*(.header)
 		*(.literal .text)
 		*(.literal.* .text.*)
 		*(.rodata)
 		*(.rodata1)
 		*(.rodata.*)
 		__text_end = .;
-	} : text = 0xff
+	} : text
 
 	.data ALIGN(4) : {
 		__data_start = .;
@@ -39,6 +39,10 @@ SECTIONS {
 		*(COMMON)
 		__bss_end = .;
 	}
+
+	.rel.dyn : { *(.rel.dyn) } : noload 
+	.dynamic : { *(.dynamic) } : noload
+	.dynsym : { *(.dynsym) } : noload
 
 	/DISCARD/ : { *(.comment .note) }
 }
