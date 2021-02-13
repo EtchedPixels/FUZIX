@@ -73,7 +73,6 @@ arg_t _execve(void)
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
 	      (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
-		kprintf("%d\n", __LINE__);
 		goto eacces;
 	}
 
@@ -88,12 +87,10 @@ arg_t _execve(void)
 
 	readi(ino, 0);
 	if (udata.u_done != sizeof(ehdr)) {
-		kprintf("%d\n", __LINE__);
 		goto enoexec;
 	}
 
 	if (!IS_ELF(ehdr)) {
-		kprintf("%d\n", __LINE__);
 		goto enoexec;
 	}
 
@@ -103,7 +100,6 @@ arg_t _execve(void)
 		uint32_t psize = sizeof(Elf32_Phdr) * ehdr.e_phnum;
 
 		if ((psize > (1<<BLKSHIFT)) || (ehdr.e_phentsize != sizeof(Elf32_Phdr))) {
-		kprintf("%d\n", __LINE__);
 			goto enoexec;
 		}
 
@@ -115,7 +111,6 @@ arg_t _execve(void)
 
 		readi(ino, 0);
 		if (udata.u_done != psize) {
-		kprintf("%d\n", __LINE__);
 			goto enoexec;
 		}
 	}
@@ -127,7 +122,6 @@ arg_t _execve(void)
 		if (ph->p_flags) {
 			uaddr_t sectop = ph->p_vaddr + (uaddr_t)ALIGNUP(ph->p_filesz);
 			if (sectop > himem) {
-		kprintf("%d\n", __LINE__);
 				goto enoexec;
 			}
 		}
@@ -170,7 +164,6 @@ arg_t _execve(void)
 
 			readi(ino, 0);
 			if (udata.u_done < ph->p_filesz) {
-		kprintf("%d\n", __LINE__);
 				goto fatal;
 			}
 		}

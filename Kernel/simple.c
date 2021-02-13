@@ -86,7 +86,7 @@ int swapout_new(ptptr p, void *u)
 	int16_t map;
 
 #ifdef DEBUG
-	kprintf("Swapping out %x (%d)\n", p, p->p_pid);
+	kprintf("Swapping out %p (%d)\n", p, p->p_pid);
 #endif
 	if (!page)
 		panic(PANIC_ALREADYSWAP);
@@ -111,7 +111,7 @@ int swapout_new(ptptr p, void *u)
 	p->p_page = 0;
 	p->p_page2 = map;
 #ifdef DEBUG
-	kprintf("%x: swapout done %d\n", p, p->p_page2);
+	kprintf("%p: swapout done %d\n", p, p->p_page2);
 #endif
 	return 0;
 }
@@ -129,7 +129,7 @@ void swapin(ptptr p, uint16_t map)
 	uint16_t blk = map * SWAP_SIZE;
 
 #ifdef DEBUG
-	kprintf("Swapin %x (%d, %d)\n", p, p->p_page2, p->p_pid);
+	kprintf("Swapin %p (%d, %d)\n", p, p->p_page2, p->p_pid);
 #endif
 	if (!p->p_page) {
 		kprintf("%x: nopage!\n", p);
@@ -146,7 +146,7 @@ void swapin(ptptr p, uint16_t map)
 		 SWAPBASE, 1);
 
 #ifdef DEBUG
-	kprintf("%x: swapin done %d\n", p, p->p_page2);
+	kprintf("%p: swapin done %d\n", p, p->p_page2);
 #endif
 }
 

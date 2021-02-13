@@ -1,12 +1,12 @@
 #include "kernel-armm0.def"
 
 .global udata
+.cpu cortex-m0
 .comm udata, UBLOCK_SIZE
 
 .global isr_svcall
 .text
 .thumb_func
-.align 4
 # On entry, sp points at the stack frame.
 isr_svcall:
     mov r0, sp          /* get address of exception frame (and stack) */
@@ -26,145 +26,131 @@ isr_svcall:
 .global platform_switchout
 .global switchin
 .text
-.align 4
+.thumb_func
 platform_switchout:
-    ldr r0, =switchout_msg
-    bl panic
-switchout_msg:
-    .asciz "platform_switchout"
-
-#if 0
 	/* Save the callee-saved registers onto the stack in the same order
-	 * that dofork does it, so switchin will restore it correctly. */
+	 * that switchout will do it, so switchin will restore it correctly. */
 
-	addi sp, sp, -8*4
-	s32i a0, sp, 7*4
-	s32i a12, sp, 0*4
-	s32i a13, sp, 1*4
-	s32i a14, sp, 2*4
-	s32i a15, sp, 3*4
-	rsr.sar a3
-	s32i a3, sp, 4*4
+    push {r5, r6, r7, lr}
+    mov r1, r8
+    mov r2, r9
+    mov r3, r10
+    mov r4, r11
+    mov r5, r12
+    push {r1, r2, r3, r4, r5}
+
+	/* Dummy value used as the return value for fork. */
+
+    push {r0}
 
 	/* Save stack pointer */
 
-	movi a3, udata
-	s32i sp, a3, U_DATA__U_SP_OFFSET
+    ldr r1, =udata
+    mov r2, sp
+    str r2, [r1, #U_DATA__U_SP_OFFSET]
 
-	/* Find the next process to run */
+    /* Find the next process to run. */
 
-	call0 getproc
-#endif
-	
+    bl getproc
+
 	/* Fall through into switchin */
+
+    /* On entry, r0 is the ptab ptr of the process to run */
 switchin:
-
-#if 0
-	/* On entry, a2 is the ptptr of the process to run */
-
 	/* Is the new process actually swapped out? */
 
-	l16ui a3, a2, P_TAB__P_PAGE_OFFSET
-	bnez a3, not_swapped
+    mov r4, r0              /* save r0 (ptab ptr) in callee-saved registers */
+    ldrh r1, [r4, #P_TAB__P_PAGE_OFFSET]
+    cmp r1, #0
+    bne not_swapped
 
 	/* Switch to the swapper stack and swap in the new process. */
 
-	movi sp, swapstack + SWAPSTACK_SIZE
-	mov a15, a2				/* save a2 in callee-saved register */
-	call0 swapper
-	isync
+    ldr r1, =__StackTop
+    mov sp, r1
+    bl swapper
+	isb
 
 not_swapped:
 	/* Make the new process runnable. */
 
-	movi a3, P_RUNNING
-	s8i a3, a15, P_TAB__P_STATUS_OFFSET
+    mov r0, #P_RUNNING
+    str r0, [r4, #P_TAB__P_STATUS_OFFSET]
 
 	/* Restore process stack pointer and return. */
 
-	movi a3, udata
-	l32i sp, a3, U_DATA__U_SP_OFFSET
+    ldr r0, =udata
+    ldr r1, [r0, #U_DATA__U_SP_OFFSET]
+    mov sp, r1
 
-	movi a2, 0
-	movi a3, runticks
-	s16i a2, a3, 0
+    mov r0, #0
+    ldr r1, =runticks
+    strh r0, [r1]
 
-	l32i a12, sp, 0*4
-	l32i a13, sp, 1*4
-	l32i a14, sp, 2*4
-	l32i a15, sp, 3*4
-	l32i a3, sp, 4*4
-	wsr.sar a3
-	l16ui a2, sp, 5*4    /* sometimes the child pid, saved by dofork */
-
-	l32i a0, sp, 7*4
-	addi sp, sp, 8*4
-#endif
+    pop {r0}                /* pushed pid */
+    pop {r1, r2, r3, r4, r5}
+    mov r8, r1
+    mov r9, r2
+    mov r10, r3
+    mov r11, r4
+    mov r12, r5
+    pop {r5, r6, r7, pc}
 
 .global dofork
 .text
-.align 4
-# a2 = ptab of the current process
+.thumb_func
+# r0 = ptab of the new child process
 dofork:
-    ldr r0, =dofork_msg
-    bl panic
-dofork_msg:
-    .asciz "dofork"
-#if 0
 	/* Save the callee-saved registers onto the stack in the same order
 	 * that switchout will do it, so switchin will restore it correctly. */
 
-	addi sp, sp, -8*4
-	s32i a0, sp, 7*4
-	s32i a12, sp, 0*4
-	s32i a13, sp, 1*4
-	s32i a14, sp, 2*4
-	s32i a15, sp, 3*4
-	rsr.sar a3
-	s32i a3, sp, 4*4
+    push {r5, r6, r7, lr}
+    mov r1, r8
+    mov r2, r9
+    mov r3, r10
+    mov r4, r11
+    mov r5, r12
+    push {r1, r2, r3, r4, r5}
 
-	/* Store child's pid so the parent can return it */
+	/* Store child's pid so the parent can return it. */
 
-	l16ui a3, a2, P_TAB__P_PID_OFFSET
-	s16i a3, sp, 5*4
+    ldrh r1, [r0, #P_TAB__P_PID_OFFSET]
+    push {r1}
 
 	/* Save parent's stack pointer */
 
-	movi a3, udata
-	s32i sp, a3, U_DATA__U_SP_OFFSET
+    ldr r1, =udata
+    mov r2, sp
+    str r2, [r1, #U_DATA__U_SP_OFFSET]
 
 	/* Save the current process to disk. */
 
-	s32i a2, sp, 6*4
-	l32i a2, a3, U_DATA__U_PTAB_OFFSET
-	call0 swapout
-	l32i a2, sp, 6*4
+    push {r0, r1}
+    ldr r0, [r1, #U_DATA__U_PTAB_OFFSET]
+    bl swapout
+    pop {r0, r1}
 
 	/* We are now going to become the child; associate the child's p_tab
 	 * pointer with the current udata. */
 
-	/* a2 is already the child's p_tab pointer */
-	movi a3, udata
-	call0 makeproc
+	/* r0 is already the child's p_tab pointer; r1 points at udata. */
+    bl makeproc
 	
 	/* We are now ready to return. */
 
-	movi a2, 0
-	movi a3, runticks
-	s16i a2, a3, 0
+    mov r0, #0
+    ldr r1, =runticks
+    strh r0, [r1]
 
-	l32i a12, sp, 0*4
-	l32i a13, sp, 1*4
-	l32i a14, sp, 2*4
-	l32i a15, sp, 3*4
-	l32i a3, sp, 4*4
-	wsr.sar a3
-	movi a2, 0			/* Child process returns 0 */
-
-	l32i a0, sp, 7*4
-	addi sp, sp, 8*4
-	ret
-#endif
+    pop {r0}            /* pushed pid */
+    mov r0, #0          /* Child process returns 0 */
+    pop {r1, r2, r3, r4, r5}
+    mov r8, r1
+    mov r9, r2
+    mov r10, r3
+    mov r11, r4
+    mov r12, r5
+    pop {r5, r6, r7, pc}
 
 /* vim: sw=4 ts=4 et: */
 

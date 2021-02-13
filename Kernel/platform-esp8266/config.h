@@ -42,7 +42,7 @@ extern uint8_t _code_top[];
 #define DATALEN     (DATATOP - DATABASE)
 #define CODELEN     (CODETOP - CODEBASE)
 #define SWAP_SIZE   ((64+33)*2) /* 64 + 31.5 + 1.5 */
-#define MAX_SWAPS   20 /* for a 2MB swap partition */
+#define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 #define UDATA_SIZE  1536
 #define UDATA_BLKS  3
 

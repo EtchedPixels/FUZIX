@@ -34,7 +34,8 @@ void syscall_handler(struct exception_frame* eh)
 
 int main(void)
 {
-	#if 0
+	stdio_init_all();
+
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
 		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
@@ -46,29 +47,16 @@ int main(void)
 		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
 		panic("bad offsets");
 	}
-	#endif
 
 	ramsize = 64;
 	procmem = 64;
     //sys_cpu_feat = AF_LX106_ESP8266;
 
-	stdio_init_all();
+	for (int i=0; i<MAX_SWAPS; i++)
+		swapmap_init(i);
+
 	di();
 	fuzix_main();
-
-#if 0
-    const uint LED_PIN = 25;
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
-    while (true) {
-		puts("Hello, world!");
-
-        gpio_put(LED_PIN, 1);
-        sleep_ms(250);
-        gpio_put(LED_PIN, 0);
-        sleep_ms(250);
-    }
-#endif
 }
 
 /* vim: sw=4 ts=4 et: */

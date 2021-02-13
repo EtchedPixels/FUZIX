@@ -38,10 +38,10 @@ extern uint8_t progbase[PROGSIZE];
 #define PROGTOP (PROGBASE + PROGSIZE)
 #define SWAPBASE PROGBASE
 #define SWAPTOP PROGTOP
-#define SWAP_SIZE   (PROGSIZE >> BLKSHIFT)
-#define MAX_SWAPS   20 /* for a 2MB swap partition */
-#define UDATA_SIZE  1536
 #define UDATA_BLKS  3
+#define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
+#define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
+#define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
