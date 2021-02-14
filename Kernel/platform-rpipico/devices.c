@@ -8,6 +8,8 @@
 #include <dev/devsd.h>
 #include <printf.h>
 #include "globals.h"
+#include "picosdk.h"
+#include <hardware/irq.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -91,6 +93,7 @@ void device_init(void)
 	flash_dev_init();
 	sd_rawinit();
 	devsd_init();
+
 //
 //	static const uint8_t fatal_exceptions[] =
 //		{ 0, 2, 3, 5, 6, 8, 9, 20, 28, 29 };

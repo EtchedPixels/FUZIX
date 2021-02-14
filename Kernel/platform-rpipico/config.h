@@ -15,7 +15,6 @@
 /* Trim disk blocks when no longer used */
 #define CONFIG_TRIM
 /* Enable single tasking */
-#define CONFIG_SINGLETASK
 #define CONFIG_SWAP_ONLY
 #define CONFIG_SPLIT_UDATA
 /* Enable SD card code. */

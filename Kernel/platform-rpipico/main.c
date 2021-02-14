@@ -11,12 +11,19 @@ uint_fast8_t platform_param(char* p)
 	return 0;
 }
 
-void platform_idle(void)
+void fatal_exception_handler(struct extended_exception_frame* eh)
 {
-	__wfi();
+    kprintf("EXCEPTION %d\n", eh->cause);
+    kprintf(" r0=%p r1=%p  r2=%p  r3=%p\n", eh->r0, eh->r1, eh->r2, eh->r3);
+    kprintf(" r4=%p r5=%p  r6=%p  r7=%p\n", eh->r4, eh->r5, eh->r6, eh->r7);
+    kprintf(" r8=%p r9=%p r10=%p r11=%p\n", eh->r8, eh->r9, eh->r10, eh->r11);
+    kprintf("r12=%p sp=%p  lr=%p  pc=%p\n", eh->r12, eh->sp, eh->lr, eh->pc);
+    if ((eh->pc >= PROGLOAD) && (eh->pc < PROGTOP))
+        kprintf("user mode exception: lr=%p pc=%p\n", eh->lr-PROGLOAD, eh->pc-PROGLOAD);
+    panic("fatal exception");
 }
 
-void syscall_handler(struct exception_frame* eh)
+void syscall_handler(struct svc_frame* eh)
 {
     udata.u_callno = *(uint8_t*)(eh->pc - 2);
     udata.u_argn = eh->r0;
@@ -34,7 +41,7 @@ void syscall_handler(struct exception_frame* eh)
 
 int main(void)
 {
-	stdio_init_all();
+    tty_rawinit();
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||

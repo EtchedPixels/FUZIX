@@ -50,6 +50,7 @@ inline static uint32_t __hard_di(void)
 	uint32_t ps;
 	asm volatile("mrs %0, PRIMASK" : "=r" (ps));
 	asm volatile("cpsid i");
+	return ps;
 }
 
 inline static void __hard_ei(void)
