@@ -5,6 +5,8 @@
 #include <exec.h>
 #include <elf.h>
 
+#undef DEBUG
+
 /* This is a simple relocatable ELF loader. It requires -pie -static files
  *
  * It requires -r files with no
@@ -67,12 +69,22 @@ arg_t _execve(void)
 
 	himem = ramtop - PROGLOAD;
 
-	if (!(ino = n_open_lock(name, NULLINOPTR)))
+	#ifdef DEBUG
+		kprintf("_execve(%s)\n", name);
+	#endif
+	if (!(ino = n_open_lock(name, NULLINOPTR))) {
+		#ifdef DEBUG
+			kprintf("failed: file not found\n");
+		#endif
 		return (-1);
+	}
 
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
 	      (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
+		#ifdef DEBUG
+			kprintf("failed: not accessible\n");
+		#endif
 		goto eacces;
 	}
 
@@ -87,10 +99,16 @@ arg_t _execve(void)
 
 	readi(ino, 0);
 	if (udata.u_done != sizeof(ehdr)) {
+		#ifdef DEBUG
+			kprintf("failed: could not read ELF header\n");
+		#endif
 		goto enoexec;
 	}
 
 	if (!IS_ELF(ehdr)) {
+		#ifdef DEBUG
+			kprintf("failed: not an ELF file\n");
+		#endif
 		goto enoexec;
 	}
 
@@ -100,6 +118,9 @@ arg_t _execve(void)
 		uint32_t psize = sizeof(Elf32_Phdr) * ehdr.e_phnum;
 
 		if ((psize > (1<<BLKSHIFT)) || (ehdr.e_phentsize != sizeof(Elf32_Phdr))) {
+			#ifdef DEBUG
+				kprintf("failed: too many phdrs / invalid phdr size\n");
+			#endif
 			goto enoexec;
 		}
 
@@ -111,6 +132,9 @@ arg_t _execve(void)
 
 		readi(ino, 0);
 		if (udata.u_done != psize) {
+			#ifdef DEBUG
+				kprintf("failed: could not read phdrs\n");
+			#endif
 			goto enoexec;
 		}
 	}
@@ -122,6 +146,9 @@ arg_t _execve(void)
 		if (ph->p_flags) {
 			uaddr_t sectop = ph->p_vaddr + (uaddr_t)ALIGNUP(ph->p_filesz);
 			if (sectop > himem) {
+				#ifdef DEBUG
+					kprintf("failed: out of memory (have %p, asked for %p)\n", himem, sectop);
+				#endif
 				goto enoexec;
 			}
 		}
@@ -133,6 +160,9 @@ arg_t _execve(void)
 	abuf = (struct s_argblk *) tmpbuf();
 	ebuf = (struct s_argblk *) tmpbuf();
 	if (rargs(argv, abuf) || rargs(envp, ebuf)) {
+		#ifdef DEBUG
+			kprintf("failed: failed to read parameters\n");
+		#endif
 		goto enomem;
 	}
 	udata.u_ptab->p_status = P_NOSLEEP;
@@ -164,6 +194,9 @@ arg_t _execve(void)
 
 			readi(ino, 0);
 			if (udata.u_done < ph->p_filesz) {
+				#ifdef DEBUG
+					kprintf("failed: couldn't read program data\n");
+				#endif
 				goto fatal;
 			}
 		}
@@ -180,6 +213,9 @@ arg_t _execve(void)
 	{
 		uint32_t ssize = sizeof(Elf32_Shdr) * ehdr.e_shnum;
 		if ((ssize > (1<<BLKSHIFT)) || (ehdr.e_shentsize != sizeof(Elf32_Shdr))) {
+			#ifdef DEBUG
+				kprintf("failed: too many shdrs / invalid shdr size\n");
+			#endif
 			goto fatal;
 		}
 
@@ -190,11 +226,14 @@ arg_t _execve(void)
 
 		readi(ino, 0);
 		if (udata.u_done != ssize) {
+			#ifdef DEBUG
+				kprintf("failed: couldn't read shdrs\n");
+			#endif
 			goto fatal;
 		}
 	}
 
-	/* Now, scan the section headers. */
+	/* Now, scan the section headers and perform housekeeping and relocation. */
 
 	top = 0;
 	lomem = 0;
@@ -223,27 +262,44 @@ arg_t _execve(void)
 
 				udata.u_offset = sh->sh_offset;
 
-				while (count--) {
+				while (count) {
 					if (thischunk == chunksize) {
-						udata.u_count = 1<<BLKSHIFT;
+						int remaining = count * sizeof(Elf32_Rel);
+						if (remaining > (1<<BLKSHIFT))
+							remaining = 1<<BLKSHIFT;
+						udata.u_count = remaining;
 						udata.u_base = (void*) rbuf;
 						udata.u_sysio = true;
 
 						readi(ino, 0);
-						if (udata.u_done != (1<<BLKSHIFT))
+						if (udata.u_done != remaining) {
+							#ifdef DEBUG
+								kprintf("failed: couldn't read relocs\n");
+							#endif
 							goto fatal;
+						}
 						thischunk = 0;
 					}
 
-					Elf32_Rel* r = &rbuf[thischunk++];
-					if (platform_relocate_rel(r, PROGLOAD))
+					Elf32_Rel* r = &rbuf[thischunk];
+					if (platform_relocate_rel(r, PROGLOAD)) {
+						#ifdef DEBUG
+							kprintf("failed: relocation failed\n");
+						#endif
 						goto fatal;
+					}
+
+					count--;
+					thischunk++;
 				}
 
 				break;
 			}
 		}
 	}
+	#ifdef DEBUG
+		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem, top);
+	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
 	top += PROGLOAD;
@@ -344,7 +400,7 @@ error:
 	if (shdr)
 		tmpfree(shdr);
 	i_unlock_deref(ino);
-	return (-1);
+	return -1;
 
 enomem:
 	udata.u_error = ENOMEM;
