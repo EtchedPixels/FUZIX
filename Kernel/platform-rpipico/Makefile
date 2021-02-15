@@ -9,17 +9,17 @@ build/Makefile: CMakeLists.txt $(wildcard ../*.[chS]) $(wildcard ../*/*.[chS])
 
 clean:
 	rm -rf build
-	$(MAKE) -C ../../Library/libs -f Makefile.rpipico clean
-	$(MAKE) -C ../../Applications/util -f Makefile.rpipico clean
-	$(MAKE) -C ../../Applications/V7/cmd -f Makefile.rpipico clean
-	$(MAKE) -C ../../Applications/V7/cmd/sh -f Makefile.rpipico clean
-	$(MAKE) -C ../../Applications/games -f Makefile.rpipico clean
-	$(MAKE) -C ../../Applications/levee -f Makefile.rpipico clean
+	$(MAKE) -C ../../Library/libs -f Makefile.armm0 clean
+	$(MAKE) -C ../../Applications/util -f Makefile.armm0 clean
+	$(MAKE) -C ../../Applications/V7/cmd -f Makefile.armm0 clean
+	$(MAKE) -C ../../Applications/V7/cmd/sh -f Makefile.armm0 clean
+	$(MAKE) -C ../../Applications/games -f Makefile.armm0 clean
+	$(MAKE) -C ../../Applications/levee -f Makefile.armm0 clean
 
 world: build/fuzix.elf
-	$(MAKE) -C ../../Library/libs -f Makefile.rpipico
-	$(MAKE) -C ../../Applications/util -f Makefile.rpipico
-	$(MAKE) -C ../../Applications/V7/cmd -f Makefile.rpipico
-	$(MAKE) -C ../../Applications/V7/cmd/sh -f Makefile.rpipico
-	$(MAKE) -C ../../Applications/games -f Makefile.rpipico
-	$(MAKE) -C ../../Applications/levee -f Makefile.rpipico
+	$(MAKE) -C ../../Library/libs -f Makefile.armm0
+	$(MAKE) -C ../../Applications/util -f Makefile.armm0
+	$(MAKE) -C ../../Applications/V7/cmd -f Makefile.armm0
+	$(MAKE) -C ../../Applications/V7/cmd/sh -f Makefile.armm0
+	$(MAKE) -C ../../Applications/games -f Makefile.armm0
+	$(MAKE) -C ../../Applications/levee -f Makefile.armm0

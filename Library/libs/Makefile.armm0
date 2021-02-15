@@ -1,6 +1,6 @@
 CC = arm-none-eabi-gcc
 AR = arm-none-eabi-ar
-PLATFORM = rpipico
+PLATFORM = armm0
 export PLATFORM
 CC_OPT = -mcpu=Cortex-M0plus -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -g -Os -c -I../include 
 ASM_OPT = -g
@@ -10,7 +10,7 @@ KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).S crt0nostdio_$(PLATFORM).S
 OBJ_CRT0 = $(SRC_CRT0:.S=.o)
-SRC_ASM = setjmp_armm0.S longjmp_armm0.S helpers_rpipico.S
+SRC_ASM = setjmp_armm0.S longjmp_armm0.S helpers_armm0.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
 SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
