@@ -63,6 +63,7 @@ target_link_libraries(fuzix
 	hardware_flash
 	hardware_spi
 	hardware_uart
+	hardware_timer
 )
 pico_add_extra_outputs(fuzix)
 

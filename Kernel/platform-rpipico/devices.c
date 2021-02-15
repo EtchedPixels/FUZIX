@@ -10,6 +10,7 @@
 #include "globals.h"
 #include "picosdk.h"
 #include <hardware/irq.h>
+#include <hardware/structs/timer.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -28,6 +29,8 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 
+static absolute_time_t now;
+
 bool validdev(uint16_t dev)
 {
     /* This is a bit uglier than needed but the right hand side is
@@ -38,21 +41,18 @@ bool validdev(uint16_t dev)
         return true;
 }
 
-//static void timer_isr(void* user, struct __exception_frame* ef)
-//{
-//	const uint32_t clocks_per_tick = (CPU_CLOCK*1000000) / TICKSPERSEC;
-//	irqflags_t irq = di();
-//
-//	uint32_t ccount;
-//	asm volatile ("rsr.ccount %0" : "=a" (ccount));
-//
-//	asm volatile ("wsr.ccompare0 %0" :: "a" (ccount + clocks_per_tick));
-//	asm volatile ("esync");
-//
-//	timer_interrupt();
-//
-//	irqrestore(irq);
-//}
+static void timer_tick_cb(unsigned alarm)
+{
+    absolute_time_t next;
+    update_us_since_boot(&next, to_us_since_boot(now) + (1000000 / TICKSPERSEC));
+    if (hardware_alarm_set_target(0, next)) 
+    {
+        update_us_since_boot(&next, time_us_64() + (1000000 / TICKSPERSEC));
+        hardware_alarm_set_target(0, next);
+    }
+
+    timer_interrupt();
+}
 
 void device_init(void)
 {
@@ -64,17 +64,10 @@ void device_init(void)
 	sd_rawinit();
 	devsd_init();
 
-//
-//	static const uint8_t fatal_exceptions[] =
-//		{ 0, 2, 3, 5, 6, 8, 9, 20, 28, 29 };
-//	for (int i=0; i<sizeof(fatal_exceptions)/sizeof(*fatal_exceptions); i++)
-//		_xtos_set_exception_handler(fatal_exceptions[i], fatal_exception_cb);
-//
-//	extern fn_c_exception_handler_t syscall_handler_trampoline;
-//	_xtos_set_exception_handler(1, syscall_handler_trampoline);
-//
-//	ets_isr_attach(ETS_CCOMPARE0_INUM, timer_isr, NULL);
-//	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
+    hardware_alarm_claim(0);
+    update_us_since_boot(&now, time_us_64());
+    hardware_alarm_set_callback(0, timer_tick_cb);
+    timer_tick_cb(0);
 }
 
 /* vim: sw=4 ts=4 et: */
