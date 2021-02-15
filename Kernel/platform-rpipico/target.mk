@@ -1,0 +1,2 @@
+export CPU = armm0
+
