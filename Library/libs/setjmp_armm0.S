@@ -1,3 +1,4 @@
+	.cpu cortex-m0
 	.code 16
     .text
     .align 4
@@ -18,7 +19,7 @@ setjmp:
 	mov	r5, sp
 	mov	r6, lr
 	stmia r0!, {r1, r2, r3, r4, r5, r6}
-	sub	r0, r0, #40
+	sub	r0, #10*4
 
 	/* Restore callee-saved low regs.  */
 

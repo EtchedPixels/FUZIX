@@ -1,3 +1,4 @@
+	.cpu cortex-m0
 	.code 16
     .text
     .align 4
@@ -7,7 +8,7 @@
 longjmp:
 	/* Restore high regs. */
 
-	add	r0, r0, #16
+	add	r0, #4*4
 	ldmia r0!, {r2, r3, r4, r5, r6}
 	mov	r8, r2
 	mov	r9, r3
@@ -18,7 +19,7 @@ longjmp:
 
 	/* Restore low regs.  */
 
-	sub	r0, r0, #40
+	sub	r0, #10*4
 	ldmia r0!, {r4, r5, r6, r7}
 
 	/* Return val ? val : 1. */

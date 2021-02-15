@@ -2,7 +2,7 @@ CC = arm-none-eabi-gcc
 AR = arm-none-eabi-ar
 PLATFORM = rpipico
 export PLATFORM
-CC_OPT = -mcpu=Cortex-M0plus -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include 
+CC_OPT = -mcpu=Cortex-M0plus -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -g -Os -c -I../include 
 ASM_OPT = -g
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h

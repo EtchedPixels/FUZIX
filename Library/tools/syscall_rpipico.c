@@ -23,7 +23,7 @@ static void write_call(int n) {
 		  "\t.code 16\n"
           "\t.text\n"
 		  "\t.thumb_func\n"
-          "\t.align 4\n"
+          "\t.align 2\n"
           "\t.globl %1$s\n\n"
           "%1$s:\n",
           syscall_name[n]);

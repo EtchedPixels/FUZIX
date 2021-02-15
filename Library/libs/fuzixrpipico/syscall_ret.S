@@ -8,7 +8,7 @@
 #   r1 = errno
 _syscall_ret:
 	cmp r1, #0
-	bne _no_error
+	beq _no_error
 	ldr r2, =errno
 	str r1, [r2]
 _no_error:
