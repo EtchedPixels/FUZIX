@@ -14,6 +14,7 @@ platform_idle:
 .text
 .thumb_func
 fatal_exception_handler_trampoline:
+    mrs r0, IPSR
     mov r1, sp
     push {r0, r1, r4, r5, r6, r7}
     mov r0, r8
@@ -26,17 +27,11 @@ fatal_exception_handler_trampoline:
     mov sp, r1
     bl fatal_exception_handler
 
-.text
-.thumb_func
 .global isr_hardfault
-.align 4
-isr_hardfault:
-    mov r0, #0
-    b fatal_exception_handler_trampoline
+isr_hardfault = fatal_exception_handler_trampoline
     
 .global isr_svcall
 .text
-.align 4
 .thumb_func
 # On entry, sp points at the stack frame.
 isr_svcall:

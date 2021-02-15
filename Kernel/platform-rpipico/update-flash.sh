@@ -123,6 +123,7 @@ bget ../../Applications/util/ll
 bget ../../Applications/util/logname
 bget ../../Applications/util/ls
 bget ../../Applications/util/man
+bget ../../Applications/util/marksman
 bget ../../Applications/util/mkdir
 bget ../../Applications/util/mkfs
 bget ../../Applications/util/mkfifo
@@ -159,6 +160,7 @@ bget ../../Applications/util/uniq
 bget ../../Applications/util/uptime
 bget ../../Applications/util/uud
 bget ../../Applications/util/uue
+bget ../../Applications/util/vile
 bget ../../Applications/util/wc
 bget ../../Applications/util/which
 bget ../../Applications/util/who
@@ -202,6 +204,7 @@ chmod 0755 ll
 chmod 0755 logname
 chmod 0755 ls
 chmod 0755 man
+chmod 0755 marksman
 chmod 0755 mkdir
 chmod 0755 mkfifo
 chmod 0755 mkfs
@@ -236,6 +239,7 @@ chmod 0755 uniq
 chmod 0755 uptime
 chmod 0755 uud
 chmod 0755 uue
+chmod 0755 vile
 chmod 0755 wc
 chmod 0755 which
 chmod 0755 who
@@ -247,7 +251,6 @@ chmod 4755 passwd
 chmod 4755 su
 ln cp mv
 ln cp ln
-
 
 bget ../../Applications/V7/cmd/sh/sh
 chmod 0755 sh
@@ -328,7 +331,9 @@ chmod 0644 levee.1
 
 cd /usr/lib
 bget ../../Library/libs/liberror.txt
+bget ../../Applications/util/tchelp
 chmod 0644 liberror.txt
+chmod 0755 tchelp
 
 cd /usr
 mkdir games

@@ -38,40 +38,6 @@ bool validdev(uint16_t dev)
         return true;
 }
 
-//void syscall_handler(struct __exception_frame* ef, int cause)
-//{
-//	udata.u_callno = ef->a2;
-//	udata.u_argn = ef->a3;
-//	udata.u_argn1 = ef->a4;
-//	udata.u_argn2 = ef->a5;
-//	udata.u_argn3 = ef->a6;
-//	udata.u_insys = 1;
-//
-//	unix_syscall();
-//
-//	udata.u_insys = 0;
-//
-//	ef->a2 = udata.u_retval;
-//	ef->a3 = udata.u_error;
-//
-//	ef->epc += 3; /* skip SYSCALL instruction */
-//}
-//
-//static void fatal_exception_cb(struct __exception_frame* ef, int cause)
-//{
-//	di();
-//	uint32_t vaddr;
-//	asm volatile ("rsr.excvaddr %0" : "=a" (vaddr));
-//
-//	kprintf("FATAL EXCEPTION %d @ %p with %p:\n", cause, ef->epc, vaddr);
-//	kprintf("   a0=%p  sp=%p  a2=%p  a3=%p\n", ef->a0, ef->sp, ef->a2, ef->a3);
-//	kprintf("   a4=%p  a5=%p  a6=%p  a7=%p\n", ef->a4, ef->a5, ef->a6, ef->a7);
-//	kprintf("   a8=%p  a9=%p a10=%p a11=%p\n", ef->a8, ef->a9, ef->a10, ef->a11);
-//	kprintf("  a12=%p a13=%p a14=%p a15=%p\n", ef->a12, ef->a13, ef->a14, ef->a15);
-//	for (;;)
-//		;
-//}
-
 //static void timer_isr(void* user, struct __exception_frame* ef)
 //{
 //	const uint32_t clocks_per_tick = (CPU_CLOCK*1000000) / TICKSPERSEC;
@@ -90,7 +56,11 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-	flash_dev_init();
+    /* The flash device is too small to be useful, and a corrupt flash will
+     * cause a crash on startup... oddly. */
+
+	//flash_dev_init();
+    
 	sd_rawinit();
 	devsd_init();
 
