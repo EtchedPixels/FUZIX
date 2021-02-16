@@ -39,7 +39,7 @@ You need to install the [Raspberry Pi Pico SDK](https://www.raspberrypi.org/docu
 cd Kernel/platform-rpipico
 vi Makefile
 # At this point, you need to edit the Makefile to tell it where the Raspberry Pi Pico SDK lives.
-make world -j0
+make world -j
 ```
 
 The `build/fuzix.uf2` file contains just the kernel, and can be flashed in the
