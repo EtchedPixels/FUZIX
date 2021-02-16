@@ -1,13 +1,13 @@
 #!/bin/sh
 
-IMG=/dev/sdg
+IMG=filesystem.img
 
 set -e
 #truncate --size=1450k filesystem.img
 #sudo losetup -P /dev/loop0 filesystem.img
 #trap 'sudo losetup -d /dev/loop0' EXIT
-sudo ../../Standalone/mkfs ${IMG}2 256 65535
-sudo ../../Standalone/ucp ${IMG}2 <<EOF
+../../Standalone/mkfs ${IMG} 256 65535
+../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
 mkdir dev
