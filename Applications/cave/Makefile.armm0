@@ -1,0 +1,30 @@
+ROOT = ../..
+include $(ROOT)/Applications/rules.armm0
+
+SRC = advent.c adventdb.c database.c english.c itverb.c lib.c saveadv.c \
+      turn.c verb.c
+
+OBJ = $(SRC:.c=.o)
+
+.SUFFIXES: .c .o
+
+all: advent advent.db
+
+advent.db: advgen
+	./advgen -x > advent.db
+
+advgen: advgen.c
+	cc advgen.c -o ./advgen
+
+.c.o:
+	$(CC) $(CFLAGS) $(CCOPTS) -c $<
+
+advent: $(CRT0) $(OBJ)
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+	$(STRIP) $(STRIP_OPT) -o $@ $@.debug
+
+clean:
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+
+rmbak:
+	rm -f *~ core
