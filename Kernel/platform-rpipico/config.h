@@ -10,12 +10,15 @@
 #undef CONFIG_FLAT
 /* Pure swap */
 #define CONFIG_BANKS 1
+/* Single-tasking mode */
+#define CONFIG_SINGLETASK
 /* Inlined irq handling */
 #define CONFIG_INLINE_IRQ
 /* Trim disk blocks when no longer used */
 #define CONFIG_TRIM
 /* Enable single tasking */
-#define CONFIG_SINGLETASK
+#define CONFIG_SWAP_ONLY
+#define CONFIG_SPLIT_UDATA
 /* Enable SD card code. */
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
@@ -28,23 +31,18 @@
 
 /* Program layout */
 
-extern uint8_t _data_base[];
-extern uint8_t _code_base[];
-extern uint8_t _data_top[];
-extern uint8_t _code_top[];
+#define PROGSIZE 65536
+extern uint8_t progbase[PROGSIZE];
 
 #define CONFIG_CUSTOM_VALADDR
-#define CONFIG_UDATA_TEXTTOP
-#define DATABASE    ((uaddr_t)&_data_base)
-#define CODEBASE    ((uaddr_t)&_code_base)
-#define DATATOP     ((uaddr_t)&_data_top)
-#define CODETOP     ((uaddr_t)&_code_top)
-#define DATALEN     (DATATOP - DATABASE)
-#define CODELEN     (CODETOP - CODEBASE)
-#define SWAP_SIZE   ((64+33)*2) /* 64 + 31.5 + 1.5 */
-#define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
-#define UDATA_SIZE  1536
+#define PROGBASE ((uaddr_t)&progbase)
+#define PROGTOP (PROGBASE + PROGSIZE)
+#define SWAPBASE PROGBASE
+#define SWAPTOP PROGTOP
 #define UDATA_BLKS  3
+#define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
+#define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
+#define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -54,8 +52,8 @@ extern uint8_t _code_top[];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0012 /* hdb2 */
-#define SWAPDEV    0x0011 /* hdb1 */
+#define BOOTDEVICE 0x0002 /* hda2 */
+#define SWAPDEV    0x0001 /* hda1 */
 
 /* Device parameters */
 #define NUM_DEV_TTY 1
@@ -68,6 +66,11 @@ extern uint8_t _code_top[];
 
 #define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
+
+/* Prevent name clashes wish the Pico SDK */
+
+#define MANGLED 1
+#include "mangle.h"
 
 /* vim: sw=4 ts=4 et: */
 
