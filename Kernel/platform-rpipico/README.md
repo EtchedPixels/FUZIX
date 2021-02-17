@@ -61,7 +61,7 @@ n         # create partition
 p         # primary
 <return>  # default partition number, 1
 <return>  # default first sector
-+1M       # partition size
++2M       # partition size
 n         # create partition
 p         # primary
 <return>  # default partition number, 2
