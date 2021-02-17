@@ -57,8 +57,6 @@ static void jvc_writeheaders(uint8_t * ptr)
 			}
 		}
 	}
-	/* Writeable */
-	*ptr = 1;
 }
 
 
@@ -77,8 +75,6 @@ static void jvc_pc_writeheaders(uint8_t * ptr)
 			}
 		}
 	}
-	/* Writeable */
-	*ptr = 1;
 }
 
 static char buf[512];
@@ -198,6 +194,7 @@ void main(int argc, char *argv[])
 		perror(argv[3]);
 		exit(1);
 	}
+	memset(hdrbuf, 0xff, sizeof(hdrbuf));
 	if (pc) {
 		if (!ddens)
 			usage();
@@ -219,3 +216,4 @@ void main(int argc, char *argv[])
 	close(outfd);
 	exit(0);
 }
+
