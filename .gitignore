@@ -7,6 +7,7 @@
 *.rst
 *.sym
 *.o
+*.o.d
 cscope.*
 /GPATH
 /GRTAGS

@@ -65,7 +65,7 @@ struct exec {
 
 #define AF_CORTEX_M0    1       /* Cortex M0 ARM */
 
-	uint8_t a_base;			/* Load address page */
+  uint8_t a_base;			/* Load address page */
 	uint8_t a_hints;
 #define HINT_GRAPHICS	1		/* Hint that this binary uses graphics */
 #define HINT_DEBUG	2		/* Debug data follows binary image */

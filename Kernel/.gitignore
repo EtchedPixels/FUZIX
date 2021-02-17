@@ -18,6 +18,7 @@ bank[0-9].ihx
 # target system images
 *.sna
 *.z80
+cartridge
 
 # automatically generated includes
 include/sysinfoblk.h
