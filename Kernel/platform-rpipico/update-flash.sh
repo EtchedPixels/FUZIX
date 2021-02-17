@@ -28,6 +28,7 @@ chmod 0700 root
 
 mkdir /usr/man
 mkdir /usr/man/man1
+mkdir /var/run
 
 cd /usr
 mkdir lib
