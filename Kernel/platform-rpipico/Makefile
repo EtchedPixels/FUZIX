@@ -19,6 +19,7 @@ clean:
 	$(MAKE) -C ../../Applications/games -f Makefile.armm0 clean
 	$(MAKE) -C ../../Applications/levee -f Makefile.armm0 clean
 	$(MAKE) -C ../../Applications/cave -f Makefile.armm0 clean
+	$(MAKE) -C ../../Applications/cursesgames -f Makefile.armm0 clean
 	$(MAKE) -C ../../Standalone clean
 
 world: build/fuzix.elf
@@ -29,5 +30,6 @@ world: build/fuzix.elf
 	$(MAKE) -C ../../Applications/games -f Makefile.armm0
 	$(MAKE) -C ../../Applications/levee -f Makefile.armm0
 	$(MAKE) -C ../../Applications/cave -f Makefile.armm0
+	$(MAKE) -C ../../Applications/cursesgames -f Makefile.armm0
 	$(MAKE) -C ../../Standalone
 

@@ -339,87 +339,87 @@ chmod 0755 tchelp
 cd /usr
 mkdir games
 cd /usr/games
-bget ../../Applications/games/adv01
-bget ../../Applications/games/adv02
-bget ../../Applications/games/adv03
-bget ../../Applications/games/adv04
-bget ../../Applications/games/adv05
-bget ../../Applications/games/adv06
-bget ../../Applications/games/adv07
-bget ../../Applications/games/adv08
-bget ../../Applications/games/adv09
-bget ../../Applications/games/adv10
-bget ../../Applications/games/adv11
-bget ../../Applications/games/adv12
-bget ../../Applications/games/adv13
-bget ../../Applications/games/adv14a
-bget ../../Applications/games/adv14b
+#bget ../../Applications/games/adv01
+#bget ../../Applications/games/adv02
+#bget ../../Applications/games/adv03
+#bget ../../Applications/games/adv04
+#bget ../../Applications/games/adv05
+#bget ../../Applications/games/adv06
+#bget ../../Applications/games/adv07
+#bget ../../Applications/games/adv08
+#bget ../../Applications/games/adv09
+#bget ../../Applications/games/adv10
+#bget ../../Applications/games/adv11
+#bget ../../Applications/games/adv12
+#bget ../../Applications/games/adv13
+#bget ../../Applications/games/adv14a
+#bget ../../Applications/games/adv14b
 bget ../../Applications/games/advint
 bget ../../Applications/games/cowsay
 bget ../../Applications/games/fortune
-bget ../../Applications/games/fortune-gen
 bget ../../Applications/games/fortune.dat
 bget ../../Applications/games/hamurabi
-bget ../../Applications/games/myst01
-bget ../../Applications/games/myst02
-bget ../../Applications/games/myst03
-bget ../../Applications/games/myst04
-bget ../../Applications/games/myst05
-bget ../../Applications/games/myst06
-bget ../../Applications/games/myst07
-bget ../../Applications/games/myst08
-bget ../../Applications/games/myst09
-bget ../../Applications/games/myst10
-bget ../../Applications/games/myst11
+#bget ../../Applications/games/myst01
+#bget ../../Applications/games/myst02
+#bget ../../Applications/games/myst03
+#bget ../../Applications/games/myst04
+#bget ../../Applications/games/myst05
+#bget ../../Applications/games/myst06
+#bget ../../Applications/games/myst07
+#bget ../../Applications/games/myst08
+#bget ../../Applications/games/myst09
+#bget ../../Applications/games/myst10
+#bget ../../Applications/games/myst11
 bget ../../Applications/games/qrun
 bget ../../Applications/games/startrek
-bget ../../Applications/games/z1
-bget ../../Applications/games/z2
-bget ../../Applications/games/z3
-bget ../../Applications/games/z4
-bget ../../Applications/games/z5
-bget ../../Applications/games/z8
+#bget ../../Applications/games/z1
+#bget ../../Applications/games/z2
+#bget ../../Applications/games/z3
+#bget ../../Applications/games/z4
+#bget ../../Applications/games/z5
+#bget ../../Applications/games/z8
+bget ../../Applications/cursesgames/invaders
 
-chmod 0755 adv01
-chmod 0755 adv02
-chmod 0755 adv03
-chmod 0755 adv04
-chmod 0755 adv05
-chmod 0755 adv06
-chmod 0755 adv07
-chmod 0755 adv08
-chmod 0755 adv09
-chmod 0755 adv10
-chmod 0755 adv11
-chmod 0755 adv12
-chmod 0755 adv13
-chmod 0755 adv14a
-chmod 0755 adv14b
+#chmod 0755 adv01
+#chmod 0755 adv02
+#chmod 0755 adv03
+#chmod 0755 adv04
+#chmod 0755 adv05
+#chmod 0755 adv06
+#chmod 0755 adv07
+#chmod 0755 adv08
+#chmod 0755 adv09
+#chmod 0755 adv10
+#chmod 0755 adv11
+#chmod 0755 adv12
+#chmod 0755 adv13
+#chmod 0755 adv14a
+#chmod 0755 adv14b
 chmod 0755 advint
 chmod 0755 cowsay
 chmod 0755 fortune
-chmod 0755 fortune-gen
 chmod 0644 fortune.dat
 chmod 0755 hamurabi
-chmod 0755 myst01
-chmod 0755 myst02
-chmod 0755 myst03
-chmod 0755 myst04
-chmod 0755 myst05
-chmod 0755 myst06
-chmod 0755 myst07
-chmod 0755 myst08
-chmod 0755 myst09
-chmod 0755 myst10
-chmod 0755 myst11
+#chmod 0755 myst01
+#chmod 0755 myst02
+#chmod 0755 myst03
+#chmod 0755 myst04
+#chmod 0755 myst05
+#chmod 0755 myst06
+#chmod 0755 myst07
+#chmod 0755 myst08
+#chmod 0755 myst09
+#chmod 0755 myst10
+#chmod 0755 myst11
 chmod 0755 qrun
 chmod 0755 startrek
-chmod 0755 z1
-chmod 0755 z2
-chmod 0755 z3
-chmod 0755 z4
-chmod 0755 z5
-chmod 0755 z8
+#chmod 0755 z1
+#chmod 0755 z2
+#chmod 0755 z3
+#chmod 0755 z4
+#chmod 0755 z5
+#chmod 0755 z8
+chmod 0755 invaders
 
 bget ../../Applications/cave/advent
 chmod 0755 advent
