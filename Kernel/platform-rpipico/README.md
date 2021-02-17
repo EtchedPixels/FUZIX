@@ -31,7 +31,9 @@ Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
 
 The console is UART0, and runs at 115200 baud.
 
-## Building
+![Wiring diagram](doc/wiring.jpg)
+
+## Building and installation
 
 You need to install the [Raspberry Pi Pico SDK](https://www.raspberrypi.org/documentation/pico/getting-started/).
 
@@ -40,12 +42,49 @@ cd Kernel/platform-rpipico
 vi Makefile
 # At this point, you need to edit the Makefile to tell it where the Raspberry Pi Pico SDK lives.
 make world -j
+./update-flash.sh
 ```
 
-The `build/fuzix.uf2` file contains just the kernel, and can be flashed in the
-normal way. It won't be much use without a filesystem.  There's a script called
-`update-flash.sh` which will create a userland filesystem which can be dd'd
-onto the SD card.
+You should now end up with `build/fuzix.uf2` and `filesystem.img`. The `uf2`
+file can be flashed onto the Pico in the usual way (i.e. connect it up as a
+mass storage device and copy the file on). Alternatively, you can use OpenOCD
+to load `build/fuzix.elf`.
+
+To create the SD card, take a blank card and do this (ignoring everything after
+the `#`):
+
+```
+$ CARD=/dev/sdz # change this to whereever your card is
+$ sudo fdisk $CARD
+o         # creates a new DOS partition table
+n         # create partition
+p         # primary
+<return>  # default partition number, 1
+<return>  # default first sector
++1M       # partition size
+n         # create partition
+p         # primary
+<return>  # default partition number, 2
+<return>  # default first sector
++32M      # partition size
+w         # save partition table
+$ sudo dd if=filesystem.img of=${CARD}2 bs=1M
+```
+
+The card should now be ready to use. Insert it into the card reader and power
+cycle the Pico; you should see the boot messages appear on the serial console.
+When prompted for the date and time, just hit RETURN. Once you get to the login
+prompt, log in as root (no password).
+
+The first thing you probably want to do is `stty erase '^?'` to make the DELETE
+key in your terminal work properly. There are also some games in `/usr/games`.
+
+Important notes:
+
+  - this will destroy whatever's on the card. Make sure you don't misstype the
+	device name or you could destroy what's on your hard disk.
+  - if your card is a `/dev/mmcblk0` device, that last line should use
+	`of=/dev/mmcblk0p2` instead of `of=/dev/sdz2`.
 
 ## Userland
 
