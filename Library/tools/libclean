@@ -6,6 +6,11 @@
 #
 CPU=$1
 LIBZ80=$(../../Kernel/tools/findsdcc $CPU)
+if [ ! -d $LIBZ80 ]; then
+	THISSCRIPT=$(readlink -f "$0")
+	echo "ERROR: Autodetected \$LIBZ80 is not a directory. Please edit $THISSCRIPT and set LIBZ80 manually" >&2
+	exit 1
+fi
 
 cp $LIBZ80/$CPU.lib tmp.lib
 #
