@@ -1,3 +1,5 @@
+# Define V=1 for more verbose compilation.
+
 TARGET_LIST = $(wildcard platform-*)
 
 export VERSION = "0.4pre1"
@@ -106,7 +108,7 @@ platform:
 	-rm -f platform
 	ln -sf platform-$(TARGET) platform
 
-target: include/kernel.h | platform
+target: include/kernel.h $(OBJS) | platform
 	+$(MAKE) -C platform-$(TARGET)
 
 $(OBJS): | platform
@@ -116,52 +118,52 @@ $(CSRCS): include/kernel.h
 include/kernel.h: include/sysinfoblk.h
 
 include/sysinfoblk.h: tools/makeversion
-	tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
+	$(QUIET_GEN)tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
 $(C1OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) $<
 
 $(CDOBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) $<
 
 $(C2OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) $<
 
 $(C3OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) $<
 
 $(C4OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG4) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG4) $<
 
 $(CFONTOBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_FONT) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_FONT) $<
 
 $(CVIDEOOBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_VIDEO) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_VIDEO) $<
 
 $(CS1OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS1) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS1) $<
 
 $(CS2OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS2) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS2) $<
 
 $(CS3OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS3) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS3) $<
 
 $(CS4OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS4) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS4) $<
 
 $(CS5OBJS): %$(BINEXT): %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS5) $<
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS5) $<
 
 $(AOBJS): %$(BINEXT): %$(ASMEXT)
-	$(CROSS_AS) $(ASOPTS) -o $*$(BINEXT) $<
+	$(QUIET_AS)$(CROSS_AS) $(ASOPTS) -o $*$(BINEXT) $<
 
 version.c: tools/makeversion
-	tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
+	$(QUIET_GEN)tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
 font8x8_exp2.c: font8x8.c tools/fontexpand
-	tools/fontexpand <font8x8.c >font8x8_exp2.c
+	$(QUIET_GEN)tools/fontexpand <font8x8.c >font8x8_exp2.c
 
 tools/makeversion: tools/makeversion.c
 
@@ -200,6 +202,8 @@ clean-all: clean
 	(cd tools/bankld; $(MAKE) clean)
 	$(foreach target,$(TARGET_LIST), $(MAKE) -C $(target) clean;)
 	-rm -f platform
+
+include quiet.mk
 
 include cpu-$(CPU)/image.mk
 -include platform-$(TARGET)/image.mk

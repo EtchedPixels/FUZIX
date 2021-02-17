@@ -46,8 +46,8 @@ image:
 	../syscall_fs3.o ../syscall_exec32.o blkdev.o devide.o devide_discard.o mbr.o  \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
-	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
+	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 
 	$(CROSS_CC) -c loader.S
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
-	m68k-uclinux-objcopy loader.elf -O binary loader.bin
+	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
