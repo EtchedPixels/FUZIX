@@ -11,7 +11,7 @@ OBJ = $(SRC:.c=.o)
 all: advent advent.db
 
 advent.db: advgen
-	./advgen -x > advent.db
+	./advgen > advent.db
 
 advgen: advgen.c
 	cc advgen.c -o ./advgen
@@ -24,7 +24,7 @@ advent: $(CRT0) $(OBJ)
 	$(STRIP) $(STRIP_OPT) -o $@ $@.debug
 
 clean:
-	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o advent.db advgen
 
 rmbak:
 	rm -f *~ core

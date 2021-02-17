@@ -424,6 +424,7 @@ chmod 0755 invaders
 bget ../../Applications/cave/advent
 chmod 0755 advent
 
+cd /usr/games
 mkdir lib
 cd lib
 bget ../../Applications/cave/advent.db
