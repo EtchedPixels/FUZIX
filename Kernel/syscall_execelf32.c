@@ -54,12 +54,12 @@ arg_t _execve(void)
 	char **nenvp;		/* In user space */
 	Elf32_Ehdr ehdr;
 	Elf32_Phdr* phdr = NULL;
-	Elf32_Shdr* shdr = NULL;
 	Elf32_Rel* rbuf = NULL;
 	Elf32_Sym* symtab;
 	struct s_argblk* abuf = NULL;
 	struct s_argblk* ebuf = NULL;
 	int argc;
+	int relidx;
 	uaddr_t section_address[8] = {0};
 	uaddr_t top;
 	uaddr_t lomem;
@@ -139,19 +139,43 @@ arg_t _execve(void)
 		}
 	}
 
-	/* Verify that we can load this executable. */
+	/* Scan the program headers to figure out where things are. */
 
+	top = 0;
+	lomem = 0;
+	relidx = -1;
 	for (i=0; i<ehdr.e_phnum; i++) {
 		Elf32_Phdr* ph = &phdr[i];
-		if (ph->p_flags) {
-			uaddr_t sectop = ph->p_vaddr + (uaddr_t)ALIGNUP(ph->p_filesz);
-			if (sectop > himem) {
-				#ifdef DEBUG
-					kprintf("failed: out of memory (have %p, asked for %p)\n", himem, sectop);
-				#endif
-				goto enoexec;
-			}
+		uaddr_t sectop = ph->p_vaddr + (uaddr_t)ALIGNUP(ph->p_memsz);
+		switch (ph->p_type)
+		{
+			case PT_LOAD: /* Code or initalised data */
+				if (ph->p_flags && (sectop > top))
+					top = sectop;
+				break;
+
+			case PT_FUZIX_BSS: /* BSS */
+				if (sectop > lomem)
+					lomem = sectop;
+				break;
+
+			case PT_FUZIX_REL:
+				relidx = i;
+				break;
 		}
+	}
+	if (lomem == 0)
+		lomem = top;
+	if (top > lomem) {
+		#ifdef DEBUG
+			kprintf("failed: lomem (%p) > top (%p)\n", lomem, top);
+		#endif
+	}
+	if (lomem > himem) {
+		#ifdef DEBUG
+			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, lomem);
+		#endif
+		goto enoexec;
 	}
 
 	/* We've confirmed that there's room. Now, copy the command line arguments
@@ -185,12 +209,16 @@ arg_t _execve(void)
 
 	for (i=0; i<ehdr.e_phnum; i++) {
 		Elf32_Phdr* ph = &phdr[i];
-		if (ph->p_flags) {
+		if ((ph->p_type == PT_LOAD) && ph->p_flags) {
 			uaddr_t ssize = (uaddr_t)ALIGNUP(ph->p_filesz);
 			udata.u_offset = ph->p_offset;
 			udata.u_count = ssize;
 			udata.u_base = (uint8_t*) (PROGLOAD + ph->p_vaddr);
 			udata.u_sysio = false;
+
+			#ifdef DEBUG
+				kprintf("loading %p bytes from %p to %p\n", ssize, udata.u_offset, udata.u_base);
+			#endif
 
 			readi(ino, 0);
 			if (udata.u_done < ph->p_filesz) {
@@ -202,101 +230,59 @@ arg_t _execve(void)
 		}
 	}
 
-	/* We've finished the load, so give up the program headers and load the
-	 * section headers instead. */
+	/* Relocate, if a relocation phdr was found. */
 
-	shdr = (Elf32_Shdr*) phdr;
-	phdr = NULL;
-
-	/* Read in the section headers. */
-
+	if (relidx != -1)
 	{
-		uint32_t ssize = sizeof(Elf32_Shdr) * ehdr.e_shnum;
-		if ((ssize > (1<<BLKSHIFT)) || (ehdr.e_shentsize != sizeof(Elf32_Shdr))) {
-			#ifdef DEBUG
-				kprintf("failed: too many shdrs / invalid shdr size\n");
-			#endif
-			goto fatal;
-		}
+		Elf32_Phdr* relph = &phdr[relidx];
+		int count = relph->p_filesz / sizeof(Elf32_Rel);
+		int chunksize = (1<<BLKSHIFT) / sizeof(Elf32_Rel);
+		int thischunk = chunksize;
+		rbuf = (Elf32_Rel*) tmpbuf();
 
-		udata.u_offset = ehdr.e_shoff;
-		udata.u_count = ssize;
-		udata.u_base = (void*)shdr;
-		udata.u_sysio = true;
+		udata.u_offset = relph->p_offset;
 
-		readi(ino, 0);
-		if (udata.u_done != ssize) {
-			#ifdef DEBUG
-				kprintf("failed: couldn't read shdrs\n");
-			#endif
-			goto fatal;
-		}
-	}
+		#ifdef DEBUG
+			kprintf("performing %d relocations\n", count);
+		#endif
+		while (count) {
+			if (thischunk == chunksize) {
+				int remaining = count * sizeof(Elf32_Rel);
+				if (remaining > (1<<BLKSHIFT))
+					remaining = 1<<BLKSHIFT;
+				udata.u_count = remaining;
+				udata.u_base = (void*) rbuf;
+				udata.u_sysio = true;
 
-	/* Now, scan the section headers and perform housekeeping and relocation. */
-
-	top = 0;
-	lomem = 0;
-	for (i=0; i<ehdr.e_shnum; i++) {
-		Elf32_Shdr* sh = &shdr[i];
-		switch (sh->sh_type) {
-			/* This is real data; use it to determine the top of the BSS. */
-
-			case SHT_PROGBITS:
-			case SHT_NOBITS: {
-				uaddr_t sectop = sh->sh_addr + sh->sh_size;
-				if ((sh->sh_type == SHT_PROGBITS) && (sectop > top))
-					top = sectop;
-				if (sectop > lomem)
-					lomem = sectop;
-				break;
-			}
-
-			/* This is the relocations table. */
-
-			case SHT_REL: {
-				int count = sh->sh_size / sh->sh_entsize;
-				int chunksize = (1<<BLKSHIFT) / sizeof(Elf32_Rel);
-				int thischunk = chunksize;
-				rbuf = (Elf32_Rel*) tmpbuf();
-
-				udata.u_offset = sh->sh_offset;
-
-				while (count) {
-					if (thischunk == chunksize) {
-						int remaining = count * sizeof(Elf32_Rel);
-						if (remaining > (1<<BLKSHIFT))
-							remaining = 1<<BLKSHIFT;
-						udata.u_count = remaining;
-						udata.u_base = (void*) rbuf;
-						udata.u_sysio = true;
-
-						readi(ino, 0);
-						if (udata.u_done != remaining) {
-							#ifdef DEBUG
-								kprintf("failed: couldn't read relocs\n");
-							#endif
-							goto fatal;
-						}
-						thischunk = 0;
-					}
-
-					Elf32_Rel* r = &rbuf[thischunk];
-					if (platform_relocate_rel(r, PROGLOAD)) {
-						#ifdef DEBUG
-							kprintf("failed: relocation failed\n");
-						#endif
-						goto fatal;
-					}
-
-					count--;
-					thischunk++;
+				readi(ino, 0);
+				if (udata.u_done != remaining) {
+					#ifdef DEBUG
+						kprintf("failed: couldn't read relocs\n");
+					#endif
+					goto fatal;
 				}
-
-				break;
+				thischunk = 0;
 			}
+
+			Elf32_Rel* r = &rbuf[thischunk];
+			if (r->r_offset >= lomem) {
+				#ifdef DEBUG
+					kprintf("failed: relocation not in binary\n");
+				#endif
+				goto fatal;
+			}
+			if (platform_relocate_rel(r, PROGLOAD)) {
+				#ifdef DEBUG
+					kprintf("failed: relocation failed\n");
+				#endif
+				goto fatal;
+			}
+
+			count--;
+			thischunk++;
 		}
 	}
+
 	#ifdef DEBUG
 		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem, top);
 	#endif
@@ -356,9 +342,7 @@ arg_t _execve(void)
 	if (ebuf)
 		tmpfree(ebuf);
 	if (phdr)
-		tmpfree(shdr);
-	if (shdr)
-		tmpfree(shdr);
+		tmpfree(phdr);
 	i_deref(ino);
 
 	/* Shove argc and the address of argv just below envp
@@ -396,9 +380,7 @@ error:
 	if (ebuf)
 		tmpfree(ebuf);
 	if (phdr)
-		tmpfree(shdr);
-	if (shdr)
-		tmpfree(shdr);
+		tmpfree(phdr);
 	i_unlock_deref(ino);
 	return -1;
 

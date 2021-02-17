@@ -3,6 +3,8 @@ ENTRY (_start)
 PHDRS {
 	text PT_LOAD;
 	data PT_LOAD;
+	bss 0x60000000;
+	rel 0x60000001;
 	noload PT_LOAD FLAGS(0);
 }
 
@@ -16,6 +18,10 @@ SECTIONS {
 		*(.rodata1)
 		*(.rodata.*)
 		__text_end = .;
+	} : text
+
+	.special ALIGN(4) : {
+		*(.ARM.exidx)
 	} : text
 
 	.data ALIGN(4) : {
@@ -38,9 +44,9 @@ SECTIONS {
 		*(.bss*)
 		*(COMMON)
 		__bss_end = .;
-	}
+	} : bss
 
-	.rel.dyn : { *(.rel.dyn) } : noload 
+	.rel.dyn : { *(.rel.dyn) } : rel 
 	.dynamic : { *(.dynamic) } : noload
 	.dynsym : { *(.dynsym) } : noload
 

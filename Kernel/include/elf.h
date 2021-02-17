@@ -310,6 +310,8 @@ typedef struct {
 #define PT_SHLIB	5		/* reserved - purpose undefined */
 #define PT_PHDR		6		/* program header */
 #define PT_NUM		7		/* Number of segment types */
+#define PT_LOOS     0x60000000  /* reserved range for operating system */
+#define PT_HIOS     0x6fffffff  /*  specific segment types */
 #define PT_LOPROC	0x70000000	/* reserved range for processor */
 #define PT_HIPROC	0x7fffffff	/*  specific segment types */
 
@@ -451,6 +453,11 @@ struct elf_args {
 #define AuxInfo		Aux32Info
 
 #define ELF_TARG_VER	1	/* The ver for which this code is intended */
+
+/* Private Fuzix program header types */
+
+#define PT_FUZIX_BSS    (PT_LOOS+0)
+#define PT_FUZIX_REL    (PT_LOOS+1)
 
 /* ARM relocations */
 
