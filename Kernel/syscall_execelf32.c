@@ -64,6 +64,7 @@ arg_t _execve(void)
 	uaddr_t top;
 	uaddr_t lomem;
 	uaddr_t himem;
+	uaddr_t stacktop;
 	int symsect;
 	int i;
 
@@ -171,9 +172,10 @@ arg_t _execve(void)
 			kprintf("failed: lomem (%p) > top (%p)\n", lomem, top);
 		#endif
 	}
-	if (lomem > himem) {
+	stacktop = (uaddr_t)ALIGNUP(lomem) + USERSTACK;
+	if (stacktop > himem) {
 		#ifdef DEBUG
-			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, lomem);
+			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
 		#endif
 		goto enoexec;
 	}
@@ -284,11 +286,12 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem, top);
+		kprintf("himem=%p lomem=%p stacktop=%p top=%p\n", himem, lomem, stacktop, top);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
 	top += PROGLOAD;
+	stacktop += PROGLOAD;
 
 	/* Core dump and ptrace permission logic. */
 
@@ -311,14 +314,14 @@ arg_t _execve(void)
 	if (ino->c_node.i_mode & SET_GID)
 		udata.u_egid = ino->c_node.i_gid;
 
-	/* Wipe the memory in the BSS. We don't wipe the memory above
+	/* Wipe the memory in the BSS and stack. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk(). */
 
-	uzero((uint8_t *)top, lomem - top);
+	uzero((uint8_t *)top, stacktop - top);
 
 	/* Set initial break for program. */
 
-	udata.u_break = (int)ALIGNUP(lomem);
+	udata.u_break = (int)ALIGNUP(stacktop);
 
 	/* Turn off caught signals. */
 
@@ -326,7 +329,7 @@ arg_t _execve(void)
 
 	/* Write back the arguments and environment. */
 
-	nargv = wargs(((char *) himem - 4), abuf, &argc);
+	nargv = wargs(((char *) stacktop - sizeof(uaddr_t)), abuf, &argc);
 	nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	/* Fill in udata.u_name with program invocation name. */
