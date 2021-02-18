@@ -604,14 +604,17 @@ cpu_type:
 		move.l a7,a1
 		moveq #0,d0
 		save
-		chip 68060
+		chip 68010
 		movec vbr,d1		; faults on a 68000
 		moveq #10,d0
+		chip 68020
 		movec cacr,d1		; faults on a 68000 and 010
 		move.b #1,cpu_has_icache
 		moveq #20,d0
+		chip 68040
 		movec itt0,d1		; faults on 68020/30
 		moveq #40,d0
+		chip 68060
 		movec pcr,d1		; faults on all but 68060
 		moveq #60,d0
 		restore
