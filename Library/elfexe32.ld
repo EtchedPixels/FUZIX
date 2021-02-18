@@ -1,9 +1,10 @@
 ENTRY (_start)
 
 PHDRS {
+	dynamic PT_DYNAMIC;
 	text PT_LOAD;
 	data PT_LOAD;
-	noload PT_LOAD FLAGS(0);
+	info PT_LOAD;
 }
 
 SECTIONS {
@@ -17,6 +18,10 @@ SECTIONS {
 		*(.rodata.*)
 		__text_end = .;
 	} : text
+
+	.got ALIGN(4) : { *(.got*) } : text
+	.plt ALIGN(4) : { *(.plt*) } : text
+	.ARM.exidx ALIGN(4) : { *(.ARM.exidx) } : text
 
 	.data ALIGN(4) : {
 		__data_start = .;
@@ -38,11 +43,12 @@ SECTIONS {
 		*(.bss*)
 		*(COMMON)
 		__bss_end = .;
-	}
+	} : data
 
-	.rel.dyn : { *(.rel.dyn) } : noload 
-	.dynamic : { *(.dynamic) } : noload
-	.dynsym : { *(.dynsym) } : noload
+	.dynamic : { *(.dynamic) } :dynamic :info
+	.dynsym : { *(.dynsym) } :info
+	.rel.dyn : { *(.rel*) } :info
+	.hash : { *(.hash*) } :info
 
 	/DISCARD/ : { *(.comment .note) }
 }
