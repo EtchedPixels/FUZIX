@@ -359,6 +359,7 @@ typedef struct {
 #define DT_JMPREL	23		/* add. of PLT's relocation entries */
 #define DT_BIND_NOW	24		/* Bind now regardless of env setting */
 #define DT_NUM		25		/* Number used. */
+#define DT_RELCOUNT 0x6ffffffa  /* GNU extension: number of relocations */
 #define DT_LOPROC	0x70000000	/* reserved range for processor */
 #define DT_HIPROC	0x7fffffff	/*  specific dynamic array tags */
 
@@ -453,11 +454,6 @@ struct elf_args {
 #define AuxInfo		Aux32Info
 
 #define ELF_TARG_VER	1	/* The ver for which this code is intended */
-
-/* Private Fuzix program header types */
-
-#define PT_FUZIX_BSS    (PT_LOOS+0)
-#define PT_FUZIX_REL    (PT_LOOS+1)
 
 /* ARM relocations */
 

@@ -50,22 +50,14 @@ arg_t _execve(void)
 {
 	/* We aren't re-entrant where this matters */
 	inoptr ino;
-	char **nargv;		/* In user space */
-	char **nenvp;		/* In user space */
 	Elf32_Ehdr ehdr;
 	Elf32_Phdr* phdr = NULL;
-	Elf32_Rel* rbuf = NULL;
 	Elf32_Sym* symtab;
 	struct s_argblk* abuf = NULL;
 	struct s_argblk* ebuf = NULL;
-	int argc;
-	int relidx;
-	uaddr_t section_address[8] = {0};
-	uaddr_t top;
+	uaddr_t dynamic;
 	uaddr_t lomem;
 	uaddr_t himem;
-	int symsect;
-	int i;
 
 	himem = ramtop - PROGLOAD;
 
@@ -141,35 +133,32 @@ arg_t _execve(void)
 
 	/* Scan the program headers to figure out where things are. */
 
-	top = 0;
 	lomem = 0;
-	relidx = -1;
-	for (i=0; i<ehdr.e_phnum; i++) {
+	dynamic = 0;
+	for (int i=0; i<ehdr.e_phnum; i++) {
 		Elf32_Phdr* ph = &phdr[i];
-		uaddr_t sectop = ph->p_vaddr + (uaddr_t)ALIGNUP(ph->p_memsz);
 		switch (ph->p_type)
 		{
-			case PT_LOAD: /* Code or initalised data */
-				if (ph->p_flags && (sectop > top))
-					top = sectop;
-				break;
-
-			case PT_FUZIX_BSS: /* BSS */
+			case PT_LOAD:
+			{
+				uaddr_t sectop = ph->p_vaddr + (uaddr_t)ALIGNUP(ph->p_memsz);
 				if (sectop > lomem)
 					lomem = sectop;
 				break;
+			}
 
-			case PT_FUZIX_REL:
-				relidx = i;
+			case PT_DYNAMIC:
+			{
+				dynamic = ph->p_vaddr;
 				break;
+			}
 		}
 	}
-	if (lomem == 0)
-		lomem = top;
-	if (top > lomem) {
+	if (dynamic == 0) {
 		#ifdef DEBUG
-			kprintf("failed: lomem (%p) > top (%p)\n", lomem, top);
+			kprintf("failed: no dynamic area\n");
 		#endif
+		goto enoexec;
 	}
 	if (lomem > himem) {
 		#ifdef DEBUG
@@ -207,13 +196,14 @@ arg_t _execve(void)
 
 	/* Now, load the data. */
 
-	for (i=0; i<ehdr.e_phnum; i++) {
+	for (int i=0; i<ehdr.e_phnum; i++) {
 		Elf32_Phdr* ph = &phdr[i];
 		if ((ph->p_type == PT_LOAD) && ph->p_flags) {
 			uaddr_t ssize = (uaddr_t)ALIGNUP(ph->p_filesz);
+			uaddr_t base = PROGLOAD + ph->p_vaddr;
 			udata.u_offset = ph->p_offset;
 			udata.u_count = ssize;
-			udata.u_base = (uint8_t*) (PROGLOAD + ph->p_vaddr);
+			udata.u_base = (uint8_t*) base;
 			udata.u_sysio = false;
 
 			#ifdef DEBUG
@@ -227,68 +217,64 @@ arg_t _execve(void)
 				#endif
 				goto fatal;
 			}
+
+			if (ph->p_filesz != ph->p_memsz) {
+				#ifdef DEBUG
+					kprintf("clearing %p to %p\n", base+ph->p_filesz, base+ph->p_memsz);
+				#endif
+				uzero((uint8_t*) (PROGLOAD + ph->p_vaddr + ph->p_filesz), ph->p_memsz - ph->p_filesz);
+			}
 		}
 	}
 
-	/* Relocate, if a relocation phdr was found. */
+	/* Scan the dynamic area looking for the DT_REL and DT_RELCOUNT records. */
 
-	if (relidx != -1)
+	Elf32_Rel* rel = NULL;
+	uint32_t relsz = 0;
+	Elf32_Dyn* dyn = (Elf32_Dyn*)(dynamic + PROGLOAD);
+	while (dyn->d_tag != DT_NULL)
 	{
-		Elf32_Phdr* relph = &phdr[relidx];
-		int count = relph->p_filesz / sizeof(Elf32_Rel);
-		int chunksize = (1<<BLKSHIFT) / sizeof(Elf32_Rel);
-		int thischunk = chunksize;
-		rbuf = (Elf32_Rel*) tmpbuf();
+		switch (dyn->d_tag)
+		{
+			case DT_REL:
+				rel = (Elf32_Rel*)(dyn->d_un.d_ptr + PROGLOAD);
+				break;
 
-		udata.u_offset = relph->p_offset;
-
-		#ifdef DEBUG
-			kprintf("performing %d relocations\n", count);
-		#endif
-		while (count) {
-			if (thischunk == chunksize) {
-				int remaining = count * sizeof(Elf32_Rel);
-				if (remaining > (1<<BLKSHIFT))
-					remaining = 1<<BLKSHIFT;
-				udata.u_count = remaining;
-				udata.u_base = (void*) rbuf;
-				udata.u_sysio = true;
-
-				readi(ino, 0);
-				if (udata.u_done != remaining) {
-					#ifdef DEBUG
-						kprintf("failed: couldn't read relocs\n");
-					#endif
-					goto fatal;
-				}
-				thischunk = 0;
-			}
-
-			Elf32_Rel* r = &rbuf[thischunk];
-			if (r->r_offset >= lomem) {
-				#ifdef DEBUG
-					kprintf("failed: relocation not in binary\n");
-				#endif
-				goto fatal;
-			}
-			if (platform_relocate_rel(r, PROGLOAD)) {
-				#ifdef DEBUG
-					kprintf("failed: relocation failed\n");
-				#endif
-				goto fatal;
-			}
-
-			count--;
-			thischunk++;
+			case DT_RELSZ:
+				relsz = dyn->d_un.d_val;
+				break;
 		}
+		dyn++;
+	}
+	uint32_t relcount = relsz / sizeof(Elf32_Rel);
+	#ifdef DEBUG
+		kprintf("found %d relocations at %p\n", relcount, rel);
+	#endif
+		
+	/* Relocate, if a relocation table was found. */
+
+	while (relcount--)
+	{
+		if (rel->r_offset >= lomem) {
+			#ifdef DEBUG
+				kprintf("failed: relocation not in binary\n");
+			#endif
+			goto fatal;
+		}
+		if (platform_relocate_rel(rel, PROGLOAD)) {
+			#ifdef DEBUG
+				kprintf("failed: relocation failed\n");
+			#endif
+			goto fatal;
+		}
+		rel++;
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem, top);
+		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
-	top += PROGLOAD;
 
 	/* Core dump and ptrace permission logic. */
 
@@ -311,11 +297,6 @@ arg_t _execve(void)
 	if (ino->c_node.i_mode & SET_GID)
 		udata.u_egid = ino->c_node.i_gid;
 
-	/* Wipe the memory in the BSS. We don't wipe the memory above
-	   that on 8bit boxes, but defer it to brk/sbrk(). */
-
-	uzero((uint8_t *)top, lomem - top);
-
 	/* Set initial break for program. */
 
 	udata.u_break = (int)ALIGNUP(lomem);
@@ -326,8 +307,9 @@ arg_t _execve(void)
 
 	/* Write back the arguments and environment. */
 
-	nargv = wargs(((char *) himem - 4), abuf, &argc);
-	nenvp = wargs((char *) (nargv), ebuf, NULL);
+	int argc;
+	char** nargv = wargs(((char *) himem - 4), abuf, &argc);
+	char** nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	/* Fill in udata.u_name with program invocation name. */
 
@@ -335,8 +317,6 @@ arg_t _execve(void)
 	memcpy(udata.u_ptab->p_name, udata.u_name, 8);
 
 	uaddr_t entry = ehdr.e_entry + PROGLOAD;
-	if (rbuf)
-		tmpfree(rbuf);
 	if (abuf)
 		tmpfree(abuf);
 	if (ebuf)
@@ -373,8 +353,6 @@ fatal:
 	udata.u_ptab->p_status = P_RUNNING;
 	ssig(udata.u_ptab, SIGKILL);
 error:
-	if (rbuf)
-		tmpfree(rbuf);
 	if (abuf)
 		tmpfree(abuf);
 	if (ebuf)
