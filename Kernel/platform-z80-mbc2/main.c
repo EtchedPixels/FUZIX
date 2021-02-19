@@ -19,16 +19,6 @@ void platform_idle(void)
 {
 	/* Everything we need is interrupt driven */
 	__asm halt __endasm;
-#if 0	
-	/* Disable interrupts so we don't accidentally process a polled tty
-	   and interrupt call at once and make a mess */
-	irqflags_t irq = di();
-	opcode = OP_GET_SYSFLAGS;
-	if (opread & 4)
-		tty_poll();
-	/* Restore prior state. */
-	irqrestore(irq);
-#endif	
 }
 
 /*

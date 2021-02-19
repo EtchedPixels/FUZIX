@@ -66,6 +66,8 @@ extern uint16_t swap_dev;
 /* Specify that there is a full real time clock that can supply the date and
    time to the system. */
 #define CONFIG_RTC_FULL
+/* Query is quite expensive so don't track it too hard */
+#define CONFIG_RTC_INTERVAL 200
 
 /*
  * How fast does the clock tick (if present), or how many times a second do
