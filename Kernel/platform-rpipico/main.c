@@ -20,7 +20,8 @@ void fatal_exception_handler(struct extended_exception_frame* eh)
     kprintf("r12=%p sp=%p  lr=%p  pc=%p\n", eh->r12, eh->sp, eh->lr, eh->pc);
     kprintf("PROGLOAD=%p PROGTOP=%p\n", PROGLOAD, PROGTOP);
     if ((eh->pc >= PROGLOAD) && (eh->pc < PROGTOP))
-        kprintf("user mode exception: lr=%p pc=%p\n", eh->lr-PROGLOAD, eh->pc-PROGLOAD);
+        kprintf("user mode exception: lr=%p pc=%p isp=%p brk=%p\n",
+            eh->lr-PROGLOAD, eh->pc-PROGLOAD, udata.u_isp, udata.u_break);
     panic("fatal exception");
 }
 

@@ -158,7 +158,9 @@ arg_t _execve(void)
 		#endif
 		goto enoexec;
 	}
-	stacktop = (uaddr_t)ALIGNUP(lomem) + USERSTACK;
+	/* dynamic points at the load address of the relocation data; this is also
+	 * the top of BSS. */
+	stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
 	if (stacktop > himem) {
 		#ifdef DEBUG
 			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
@@ -270,7 +272,7 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p dynamic=%p\n", himem, lomem, dynamic);
+		kprintf("himem=%p lomem=%p dynamic=%p stacktop=%p\n", himem, lomem, dynamic, stacktop);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
@@ -290,6 +292,10 @@ arg_t _execve(void)
 	udata.u_top = himem;
 	udata.u_ptab->p_top = himem;
 
+	/* Clear the stack (the BSS has already been cleared by the loader). */
+
+	uzero((void*)dynamic, USERSTACK);
+
 	/* setuid, setgid if the executable requires it. */
 
 	if (ino->c_node.i_mode & SET_UID)
@@ -300,7 +306,7 @@ arg_t _execve(void)
 
 	/* Set initial break for program. */
 
-	udata.u_break = (int)ALIGNUP(dynamic);
+	udata.u_break = (uaddr_t)ALIGNUP(stacktop);
 
 	/* Turn off caught signals. */
 
@@ -309,7 +315,7 @@ arg_t _execve(void)
 	/* Write back the arguments and environment. */
 
 	int argc;
-	char** nargv = wargs(((char *) himem - 4), abuf, &argc);
+	char** nargv = wargs(((char *) stacktop - sizeof(uaddr_t)), abuf, &argc);
 	char** nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	/* Fill in udata.u_name with program invocation name. */
