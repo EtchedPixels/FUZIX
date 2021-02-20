@@ -55,6 +55,7 @@ arg_t _execve(void)
 	uaddr_t dynamic;
 	uaddr_t lomem;
 	uaddr_t himem;
+	uaddr_t stacktop;
 
 	himem = ramtop - PROGLOAD;
 
@@ -157,9 +158,10 @@ arg_t _execve(void)
 		#endif
 		goto enoexec;
 	}
-	if (lomem > himem) {
+	stacktop = (uaddr_t)ALIGNUP(lomem) + USERSTACK;
+	if (stacktop > himem) {
 		#ifdef DEBUG
-			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, lomem);
+			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
 		#endif
 		goto enoexec;
 	}
@@ -273,6 +275,7 @@ arg_t _execve(void)
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
 	dynamic += PROGLOAD;
+	stacktop += PROGLOAD;
 
 	/* Core dump and ptrace permission logic. */
 
