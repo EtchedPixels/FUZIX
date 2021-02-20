@@ -10,6 +10,8 @@
 #undef CONFIG_FLAT
 /* Pure swap */
 #define CONFIG_BANKS 1
+/* Single-tasking mode */
+#define CONFIG_SINGLETASK
 /* Inlined irq handling */
 #define CONFIG_INLINE_IRQ
 /* Trim disk blocks when no longer used */
