@@ -7,15 +7,12 @@
 
 #undef DEBUG
 
-/* This is a simple relocatable ELF loader. It requires -pie -static files
- *
- * It requires -r files with no
- * program headers but with the section headers present. It's intended for the
- * no-MMU flat-memory use case with a fixed size process slot (if you have an
- * MMU, then use one of the other formats, or an EXEC format prelinked ELF file
- * with a different loader). For simplicity, it assumes that user mode memory
- * can be directly accessed. It also does very little validation of the ELF
- * file as there's no point on such systems.
+/* This is a simple relocatable ELF loader. It requires -pie -static files with
+ * a DYNAMIC program header. The dynamic relocation data is loaded into memory
+ * and must be immediately after the bss (it's used to determine the location
+ * of brk). For simplicity, it assumes that user mode memory can be directly
+ * accessed. It also does very little validation of the ELF file as there's no
+ * point on such systems.
  *
  * There are almost certainly incorrect assumptions in here because ELF is
  * awful. Use at your own risk.
@@ -271,10 +268,11 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem);
+		kprintf("himem=%p lomem=%p dynamic=%p\n", himem, lomem, dynamic);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
+	dynamic += PROGLOAD;
 
 	/* Core dump and ptrace permission logic. */
 
@@ -299,7 +297,7 @@ arg_t _execve(void)
 
 	/* Set initial break for program. */
 
-	udata.u_break = (int)ALIGNUP(lomem);
+	udata.u_break = (int)ALIGNUP(dynamic);
 
 	/* Turn off caught signals. */
 
