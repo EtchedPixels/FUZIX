@@ -39,7 +39,7 @@ add_executable(fuzix
 	../filesys.c
 	../inode.c
 	../kdata.c
-	../lowlevel-armm0.S
+	../lowlevel-armm0.c
 	../malloc.c
 	../mm.c
 	../process.c

@@ -67,6 +67,8 @@ isr_svcall_user:
     pop {r0}
 
     mov sp, r0                  /* restore stack */
+    bl deliver_signals          /* may not return if signal handler longjmps out */
+
     pop {r0, r2, r3}            /* r2 is new PC, r3 is the old lr */
     mov lr, r3
     mov r12, r0
@@ -121,7 +123,9 @@ switchin:
 
     ldr r1, =__StackTop
     mov sp, r1
-    bl swapper
+
+    mov r0, r4
+    bl swapinout
 	isb
 
 not_swapped:
@@ -205,5 +209,5 @@ dofork:
     mov r12, r5
     pop {r5, r6, r7, pc}
 
-/* vim: sw=4 ts=4 et: */
+// vim: sw=4 ts=4 et:
 
