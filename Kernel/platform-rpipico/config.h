@@ -10,8 +10,6 @@
 #undef CONFIG_FLAT
 /* Pure swap */
 #define CONFIG_BANKS 1
-/* Single-tasking mode */
-#define CONFIG_SINGLETASK
 /* Inlined irq handling */
 #define CONFIG_INLINE_IRQ
 /* Trim disk blocks when no longer used */
@@ -34,11 +32,13 @@
 #define PROGSIZE 65536
 extern uint8_t progbase[PROGSIZE];
 
+#define USERSTACK (4*2048) /* 4kB */
+
 #define CONFIG_CUSTOM_VALADDR
 #define PROGBASE ((uaddr_t)&progbase)
 #define PROGTOP (PROGBASE + PROGSIZE)
 #define SWAPBASE PROGBASE
-#define SWAPTOP PROGTOP
+#define SWAPTOP (PROGBASE + (uaddr_t)alignup(udata.u_break - PROGBASE, 1<<BLKSHIFT)) /* never swap in/out data above break */
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 #define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
@@ -72,5 +72,5 @@ extern uint8_t progbase[PROGSIZE];
 #define MANGLED 1
 #include "mangle.h"
 
-/* vim: sw=4 ts=4 et: */
+// vim: sw=4 ts=4 et
 

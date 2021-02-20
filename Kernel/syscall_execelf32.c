@@ -7,15 +7,12 @@
 
 #undef DEBUG
 
-/* This is a simple relocatable ELF loader. It requires -pie -static files
- *
- * It requires -r files with no
- * program headers but with the section headers present. It's intended for the
- * no-MMU flat-memory use case with a fixed size process slot (if you have an
- * MMU, then use one of the other formats, or an EXEC format prelinked ELF file
- * with a different loader). For simplicity, it assumes that user mode memory
- * can be directly accessed. It also does very little validation of the ELF
- * file as there's no point on such systems.
+/* This is a simple relocatable ELF loader. It requires -pie -static files with
+ * a DYNAMIC program header. The dynamic relocation data is loaded into memory
+ * and must be immediately after the bss (it's used to determine the location
+ * of brk). For simplicity, it assumes that user mode memory can be directly
+ * accessed. It also does very little validation of the ELF file as there's no
+ * point on such systems.
  *
  * There are almost certainly incorrect assumptions in here because ELF is
  * awful. Use at your own risk.
@@ -58,6 +55,7 @@ arg_t _execve(void)
 	uaddr_t dynamic;
 	uaddr_t lomem;
 	uaddr_t himem;
+	uaddr_t stacktop;
 
 	himem = ramtop - PROGLOAD;
 
@@ -160,9 +158,12 @@ arg_t _execve(void)
 		#endif
 		goto enoexec;
 	}
-	if (lomem > himem) {
+	/* dynamic points at the load address of the relocation data; this is also
+	 * the top of BSS. */
+	stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
+	if (stacktop > himem) {
 		#ifdef DEBUG
-			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, lomem);
+			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
 		#endif
 		goto enoexec;
 	}
@@ -271,10 +272,12 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem);
+		kprintf("himem=%p lomem=%p dynamic=%p stacktop=%p\n", himem, lomem, dynamic, stacktop);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
+	dynamic += PROGLOAD;
+	stacktop += PROGLOAD;
 
 	/* Core dump and ptrace permission logic. */
 
@@ -289,6 +292,10 @@ arg_t _execve(void)
 	udata.u_top = himem;
 	udata.u_ptab->p_top = himem;
 
+	/* Clear the stack (the BSS has already been cleared by the loader). */
+
+	uzero((void*)dynamic, USERSTACK);
+
 	/* setuid, setgid if the executable requires it. */
 
 	if (ino->c_node.i_mode & SET_UID)
@@ -299,7 +306,7 @@ arg_t _execve(void)
 
 	/* Set initial break for program. */
 
-	udata.u_break = (int)ALIGNUP(lomem);
+	udata.u_break = (uaddr_t)ALIGNUP(stacktop);
 
 	/* Turn off caught signals. */
 
@@ -308,7 +315,7 @@ arg_t _execve(void)
 	/* Write back the arguments and environment. */
 
 	int argc;
-	char** nargv = wargs(((char *) himem - 4), abuf, &argc);
+	char** nargv = wargs(((char *) stacktop - sizeof(uaddr_t)), abuf, &argc);
 	char** nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	/* Fill in udata.u_name with program invocation name. */
