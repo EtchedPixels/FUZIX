@@ -176,7 +176,7 @@ int blkdev_ioctl(uint_fast8_t minor, uarg_t request, char *data)
         {
             if (blk_op.blkdev->trim)
             {
-                blk_op.lba = ugetl(data, NULL);
+                blk_op.lba = ugetw(data);
                 if (translate_lba(minor))
                     return -1;
                 return blk_op.blkdev->trim();
