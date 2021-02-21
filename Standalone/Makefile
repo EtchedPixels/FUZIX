@@ -2,7 +2,7 @@ CC=gcc
 #Use this for playing with the experimental libdsk support
 #CCOPTS=-O2 -DLIBDSK -ldsk -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
 CCOPTS=-O2 -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
-TARGETS=mkfs fsck ucp chmem size
+TARGETS=mkfs fsck ucp chmem size elf2flt
 
 all:	$(TARGETS)
 
@@ -22,6 +22,9 @@ chmem:	chmem.o
 	$(CC) $(CCOPTS) -o $@ $<
 
 size:	size.o
+	$(CC) $(CCOPTS) -o $@ $<
+
+elf2flt:	elf2flt.o
 	$(CC) $(CCOPTS) -o $@ $<
 
 %.o:	%.c
