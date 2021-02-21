@@ -97,6 +97,26 @@ The Pico's mask ROM contains many useful routines which can be used instead of
 libgcc, which would reduce the binary size. This hasn't been done yet because
 it would render the binaries non-portable.
 
+## Using the NAND flash
+
+The Pico's built-in NAND flash is supported, but not terribly useful as you
+still need an SD card for swap. It appears as `/dev/hda` inside Fuzix (the SD
+card is `/dev/hdb`). It's mapped via the Dhara FTL library, so you get proper
+wear levelling, but it requires formatting before use. To do this, from inside
+Fuzix do:
+
+```
+$ blkdiscard /dev/hda
+$ mkfs -f /dev/hda 32 2746
+```
+
+The FTL library requires empty flash sectors to work efficiently; the Fuzix
+filesystem has trim support, so the FTL library gets notified when sectors
+become free, but the flash needs initialising first. `blkdiscard` erases the
+entire flash; `mkfs -f` prevents `mkfs` from writing zeroes to the entire
+filesystem. If you let it do this, then the FTL library will think every block
+will be in use and will work extraordinarily badly.
+
 ## Issues
 
 There are many.
@@ -105,7 +125,6 @@ There are many.
   - CPU exceptions should be mapped to signals.
   - single-tasking mode should be switched off (which would allow pipes to
     work).
-  - the NAND flash driver is broken and disabled.
 
 ...and probably others.
 
