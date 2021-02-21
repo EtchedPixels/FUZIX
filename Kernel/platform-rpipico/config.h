@@ -32,13 +32,11 @@
 #define PROGSIZE 65536
 extern uint8_t progbase[PROGSIZE];
 
-#define USERSTACK (4*2048) /* 4kB */
-
 #define CONFIG_CUSTOM_VALADDR
 #define PROGBASE ((uaddr_t)&progbase)
 #define PROGTOP (PROGBASE + PROGSIZE)
 #define SWAPBASE PROGBASE
-#define SWAPTOP (PROGBASE + (uaddr_t)alignup(udata.u_break - PROGBASE, 1<<BLKSHIFT)) /* never swap in/out data above break */
+#define SWAPTOP PROGTOP
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 #define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
@@ -52,8 +50,8 @@ extern uint8_t progbase[PROGSIZE];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0002 /* hda2 */
-#define SWAPDEV    0x0001 /* hda1 */
+#define BOOTDEVICE 0x0012 /* hdb2 */
+#define SWAPDEV    0x0011 /* hdb1 */
 
 /* Device parameters */
 #define NUM_DEV_TTY 1
