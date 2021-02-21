@@ -749,6 +749,7 @@ struct s_argblk {
                                            is device dependent */
 #define HDIO_EJECT		0x0105	/* Request a media eject */
 #define HDIO_TRIM       0x0106  /* Issue a TRIM request */
+#define BLKGETSIZE      0x0107  /* Use the Linux name */
 
 /*
  *	Floppy disk ioctl s0x01Fx (see fdc.h)
