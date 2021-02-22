@@ -1,0 +1,47 @@
+Fuzix for the RC2014 system with 6809 processor card
+
+(This is an initial sketch for the port, it does not yet work)
+
+This uses the standard RC2014 cards and mappings. The 6809 card maps the I/O
+space on the bus to MMIO $FExx on the 6809 CPU.
+
+The standard 512K RAM card is used with 4x16K bank control. The I/O window
+has priority over the memory banking.
+
+For now we use simple banking not 16K paging, this wants fixing once we are
+up and running. The map however is arranged roughly as it should end up
+
+Memory map:
+
+User mode
+0000-BCFF:		User process
+BD00-BEFF:		udata stash
+C000-FBFF:		common/kernel
+FC00-FDFF:		udata
+FE00-FEFF:		I/O
+FF00-FFFF:		vectors etc
+
+Kernel mode
+0000-FBFF:		common/kernel
+FC00-FDFF:		udata
+FE00-FEFF:		I/O
+FF00-FFFF:		vectors etc
+
+Devices
+
+IDE at 0xFE10
+6522 VIA at 0xFE60
+16x50 UART at 0xFEC0
+
+(It would be nice to support 68xx peripherals too but that needs a suitable
+ card designing with an ACIA and PIA)
+
+
+TODO:
+
+Rework the boot ROM bootstrap checks before starting CUBIX from ROM
+Bootstrap loader
+Align crt0 and bootstrap
+Ensure constants end up 0xC000 and higher (.link)
+Timer/VIA set up
+Move istack to FF00-FF??

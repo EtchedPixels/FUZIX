@@ -1,0 +1,27 @@
+; FUZIX mnemonics for memory addresses etc
+; TODO
+
+U_DATA                      equ 0xFB00       ; (this is struct u_data from kernel.h)
+U_DATA__TOTALSIZE           equ 0x200        ; 256+256 (we don't save istack)
+
+U_DATA_STASH                equ 0xBE00       ; BE00-BFFF
+
+IDEDATA			    equ 0xFE10
+
+PROGBASE                    equ 0x0000       ; programs and data start here
+
+NBUFS			    equ 5
+
+; Have these defined so that lowlevel-6809.s can be used as-is
+SAM_USER macro
+	endm
+
+SAM_KERNEL macro
+	endm
+
+SAM_SAVE macro
+	endm
+
+SAM_RESTORE macro
+	endm
+
