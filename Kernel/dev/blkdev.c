@@ -194,6 +194,8 @@ int blkdev_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 		   it's needed so use uput() */
 		return uput(&size, data, sizeof(long));
 	}
+	default:
+	    return -1;
     }
 }
 
