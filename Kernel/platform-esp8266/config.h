@@ -35,6 +35,7 @@ extern uint8_t _code_top[];
 
 #define CONFIG_CUSTOM_VALADDR
 #define CONFIG_UDATA_TEXTTOP
+#define USERSTACK   (4*4096)
 #define DATABASE    ((uaddr_t)&_data_base)
 #define CODEBASE    ((uaddr_t)&_code_base)
 #define DATATOP     ((uaddr_t)&_data_top)

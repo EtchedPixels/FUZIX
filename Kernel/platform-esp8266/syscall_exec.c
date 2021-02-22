@@ -87,7 +87,7 @@ arg_t _execve(void)
 
 	/* Does it fit? */
 
-	uint32_t datasize = hdr.a_data + hdr.a_bss + 1024;
+	uint32_t datasize = hdr.a_data + hdr.a_bss + USERSTACK;
 	if ((hdr.a_text > CODELEN) || (datasize > DATALEN))
 	{
 		udata.u_error = ENOMEM;
@@ -163,17 +163,17 @@ arg_t _execve(void)
 	uzero((uint8_t *)(DATABASE + hdr.a_data), hdr.a_bss);
 
 	/* Set initial break for program */
-	udata.u_break = (int)ALIGNUP(DATABASE + hdr.a_data + hdr.a_bss);
+	udata.u_break = (int)ALIGNUP(DATABASE + hdr.a_data + hdr.a_bss + USERSTACK);
 	udata.u_texttop = CODEBASE + hdr.a_text;
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
 
-	// place the arguments, environment and stack at the top of userspace memory,
+	// place the arguments, environment and stack immediately above the bss.
 
 	// Write back the arguments and the environment
 	int argc;
-	char** nargv = wargs((char *) datatop, abuf, &argc);
+	char** nargv = wargs((char *) udata.u_break - sizeof(uaddr_t), abuf, &argc);
 	char** nenvp = wargs((char *) nargv, ebuf, NULL);
 
 	// Fill in udata.u_name with program invocation name
@@ -185,7 +185,7 @@ arg_t _execve(void)
 	i_deref(ino);
 
 	/* The LX106 stack pointer must be 16-aligned. */
-	udata.u_isp = aligndown(nenvp - 3, 16);
+	udata.u_sp = udata.u_isp = aligndown(nenvp - 3, 16);
 	uputp((uint32_t) nenvp, udata.u_isp + 8);
 	uputp((uint32_t) nargv, udata.u_isp + 4);
 	uputp((uint32_t) argc, udata.u_isp + 0);
@@ -193,7 +193,6 @@ arg_t _execve(void)
 	/* Start execution (never returns) */
 	udata.u_ptab->p_status = P_RUNNING;
 
-	uint32_t* code = (uint32_t*)(CODEBASE + hdr.a_entry);
 	platform_doexec(CODEBASE + hdr.a_entry, udata.u_isp);
 	panic("doexec returned\n");
 
