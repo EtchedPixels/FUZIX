@@ -291,21 +291,22 @@ arg_t _close(void)
 pipe (fildes)                    Function 40		?
 int fildes[];
 ********************************************/
-#define fildes (int16_t *)udata.u_argn
+#define fildes (int *)udata.u_argn
 
 arg_t _pipe(void)
 {
-	int_fast8_t u1, u2, oft1, oft2;
+	int u[2];
+	int_fast8_t oft1, oft2;
 	regptr inoptr ino;
 
 /* bug fix SN */
-	if ((u1 = uf_alloc()) == -1)
+	if ((u[0] = uf_alloc()) == -1)
 		goto nogood;
 	if ((oft1 = oft_alloc()) == -1)
 		goto nogood;
-	udata.u_files[u1] = oft1;
+	udata.u_files[u[0]] = oft1;
 
-	if ((u2 = uf_alloc()) == -1)
+	if ((u[1] = uf_alloc()) == -1)
 		goto nogood2;
 	if ((oft2 = oft_alloc()) == -1)
 		goto nogood2;
@@ -320,7 +321,7 @@ arg_t _pipe(void)
 		goto nogood3;
 	}
 
-	udata.u_files[u2] = oft2;
+	udata.u_files[u[1]] = oft2;
 
 	of_tab[oft1].o_ptr = 0;
 	of_tab[oft1].o_inode = ino;
@@ -337,15 +338,14 @@ arg_t _pipe(void)
 	ino->c_writers++;
 
 	// write results to userspace
-	uputw(u1, fildes);
-	uputw(u2, fildes + 1);
+	uput(u, fildes, sizeof(u));
 	return (0);
 
       nogood3:
 	i_deref(ino);
       nogood2:
 	oft_deref(oft1);
-	udata.u_files[u1] = NO_FILE;
+	udata.u_files[u[0]] = NO_FILE;
       nogood:
 	return (-1);
 }
