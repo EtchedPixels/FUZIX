@@ -291,7 +291,7 @@ arg_t _close(void)
 pipe (fildes)                    Function 40		?
 int fildes[];
 ********************************************/
-#define fildes (int16_t *)udata.u_argn
+#define fildes (int *)udata.u_argn
 
 arg_t _pipe(void)
 {
@@ -337,8 +337,8 @@ arg_t _pipe(void)
 	ino->c_writers++;
 
 	// write results to userspace
-	uputw(u1, fildes);
-	uputw(u2, fildes + 1);
+	uputi(u1, fildes);
+	uputi(u2, fildes + 1);
 	return (0);
 
       nogood3:
