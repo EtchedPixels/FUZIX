@@ -32,11 +32,13 @@
 #define PROGSIZE 65536
 extern uint8_t progbase[PROGSIZE];
 
+#define USERSTACK (4*2048) /* 4kB */
+
 #define CONFIG_CUSTOM_VALADDR
 #define PROGBASE ((uaddr_t)&progbase)
 #define PROGTOP (PROGBASE + PROGSIZE)
 #define SWAPBASE PROGBASE
-#define SWAPTOP PROGTOP
+#define SWAPTOP (PROGBASE + (uaddr_t)alignup(udata.u_break - PROGBASE, 1<<BLKSHIFT)) /* never swap in/out data above break */
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 #define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
