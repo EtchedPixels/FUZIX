@@ -186,17 +186,18 @@ int blkdev_ioctl(uint_fast8_t minor, uarg_t request, char *data)
         }
 #endif
 
-		case BLKGETSIZE:
-		{
-			uint_fast8_t partition = minor & 0x0F;
-			uint32_t size = (partition == 0) ? blk_op.blkdev->drive_lba_count : blk_op.blkdev->lba_count[partition-1];
-			return uputl(size, data);
-		}
+	case BLKGETSIZE:
+	{
+		uint_fast8_t partition = minor & 0x0F;
+		uint32_t size = (partition == 0) ? blk_op.blkdev->drive_lba_count : blk_op.blkdev->lba_count[partition-1];
+		/* We lack a generic uputl and this at the moment is the only case
+		   it's needed so use uput() */
+		return uput(&size, data, sizeof(long));
+	}
+	default:
+	    return -1;
     }
 }
-
-/* FIXME: this would tidier and handle odd partition types sanely if split
-   into blkdev_alloc() - just returns a device, and blkdev_scan() */
 
 blkdev_t *blkdev_alloc(void)
 {

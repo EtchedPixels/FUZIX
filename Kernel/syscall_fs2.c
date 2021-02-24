@@ -415,7 +415,7 @@ arg_t _acct(void)
   Wrapped by the various C library translators to standard
   APIs
  ********************************************/
-#define path (char *)udata.u_argn
+#define path (uint8_t *)udata.u_argn
 #define buf (uint8_t *)udata.u_argn1
 
 arg_t _statfs(void)
