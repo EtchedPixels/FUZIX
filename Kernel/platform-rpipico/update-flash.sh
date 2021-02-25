@@ -91,6 +91,7 @@ cd /bin
 bget ../../Applications/util/banner
 bget ../../Applications/util/basename
 bget ../../Applications/util/bd
+bget ../../Applications/util/blkdiscard
 bget ../../Applications/util/cal
 bget ../../Applications/util/cat
 bget ../../Applications/util/chgrp
@@ -172,6 +173,7 @@ bget ../../Applications/util/yes
 chmod 0755 banner
 chmod 0755 basename
 chmod 0755 bd
+chmod 0755 blkdiscard
 chmod 0755 cal
 chmod 0755 cat
 chmod 0755 chgrp

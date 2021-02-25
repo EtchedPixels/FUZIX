@@ -109,7 +109,7 @@ uint_fast8_t tty_writeready(uint_fast8_t minor)
 {
 	/* FIXME: flow control */
 	if (ttymap[minor] == 1)
-		return uart_lsr & 0x20 ? TTY_READY_NOW : TTY_READY_SOON;
+		return (uart_lsr & 0x20) ? TTY_READY_NOW : TTY_READY_SOON;
 	return prop_tty_writeready();
 }
 

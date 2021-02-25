@@ -42,7 +42,7 @@ extern uint16_t swap_dev;
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
-#define swap_map(x)	(x)
+#define swap_map(x)	((uint8_t)(x))
 
 #define CONFIG_IDE
 #define MAX_BLKDEV 1
