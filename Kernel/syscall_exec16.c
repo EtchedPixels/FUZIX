@@ -149,7 +149,6 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
-	udata.u_top = top;
 	udata.u_ptab->p_top = top;
 
 	/* setuid, setgid if executable requires it */
