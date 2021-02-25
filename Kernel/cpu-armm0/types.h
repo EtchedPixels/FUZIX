@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-typedef uint16_t irqflags_t;
+typedef uint32_t irqflags_t;
 
 typedef int32_t arg_t;
 typedef uint32_t uarg_t;		/* Holds arguments */

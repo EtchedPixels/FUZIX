@@ -29,8 +29,9 @@
 
 /* Program layout */
 
+#define USERMEM (128*1024)
 #define PROGSIZE 65536
-extern uint8_t progbase[PROGSIZE];
+extern uint8_t progbase[USERMEM];
 
 #define USERSTACK (4*2048) /* 4kB */
 

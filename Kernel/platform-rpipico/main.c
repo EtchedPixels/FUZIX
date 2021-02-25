@@ -58,8 +58,7 @@ int main(void)
 	}
 
 	ramsize = 64;
-	procmem = 64;
-    //sys_cpu_feat = AF_LX106_ESP8266;
+	procmem = USERMEM / 1024;
 
 	for (int i=0; i<MAX_SWAPS; i++)
 		swapmap_init(i);

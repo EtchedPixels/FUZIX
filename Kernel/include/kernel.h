@@ -491,7 +491,7 @@ typedef struct p_tab {
     uint16_t	p_pgrp;		/* Process group */
     uint8_t	p_nice;
     uint8_t	p_event;	/* Events */
-    usize_t	p_top;		/* Copy of u_top */
+    usize_t	p_top;		/* Top of user memory */
 #ifdef CONFIG_LEVEL_2
     uint16_t	p_session;
 #endif
@@ -528,7 +528,6 @@ typedef struct u_data {
     arg_t       u_argn2;	/* Third C argument */
     arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
-    usize_t	u_top;		/* Top of memory for this task */
     uaddr_t	u_break;	/* Top of data space */
 #ifdef CONFIG_32BIT
     uaddr_t	u_codebase;	/* 32bit platform base pointers */

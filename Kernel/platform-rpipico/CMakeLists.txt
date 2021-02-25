@@ -9,6 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(PICO_COPY_TO_RAM 1)
 
 pico_sdk_init()
+
 include_directories(
 	.
 	..
@@ -26,6 +27,7 @@ add_executable(fuzix
 	main.c
 	misc.c
 	rawflash.c
+	swapper.c
 	tricks.S
 	../dev/blkdev.c
 	../dev/mbr.c
@@ -43,7 +45,6 @@ add_executable(fuzix
 	../malloc.c
 	../mm.c
 	../process.c
-	../simple.c
 	../start.c
 	../swap.c
 	../syscall_execelf32.c
@@ -63,7 +64,9 @@ target_link_libraries(fuzix
 	hardware_flash
 	hardware_spi
 	hardware_uart
-	hardware_timer
 )
+
+pico_set_float_implementation(fuzix none)
+pico_set_double_implementation(fuzix none)
 pico_add_extra_outputs(fuzix)
 

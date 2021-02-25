@@ -115,17 +115,13 @@ switchin:
 	/* Is the new process actually swapped out? */
 
     mov r4, r0              /* save r0 (ptab ptr) in callee-saved registers */
-    ldrh r1, [r4, #P_TAB__P_PAGE_OFFSET]
-    cmp r1, #0
-    bne not_swapped
 
-	/* Switch to the swapper stack and swap in the new process. */
+	/* Switch to the swapper stack and context switch in the new process. */
 
     ldr r1, =__StackTop
     mov sp, r1
 
-    mov r0, r4
-    bl swapinout
+    bl contextswitch
 	isb
 
 not_swapped:
@@ -183,8 +179,7 @@ dofork:
 	/* Save the current process to disk. */
 
     push {r0, r1}
-    ldr r0, [r1, #U_DATA__U_PTAB_OFFSET]
-    bl swapout
+    bl clonecurrentprocess
     pop {r0, r1}
 
 	/* We are now going to become the child; associate the child's p_tab
