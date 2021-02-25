@@ -185,10 +185,8 @@ arg_t _execve(void)
 	 * on a variable-sized process system. This must be the last test as it
 	 * makes changes if it works. */
 
-	#if 0
-	if (pagemap_realloc(NULL, ))
-		goto nogood3;
-	#endif
+	if (pagemap_realloc(NULL, (uaddr_t)ALIGNUP(stacktop)))
+		goto enomem;
 
 	/* At this point, we are committed to reading in and
 	 * executing the program. This call must not block. */
