@@ -375,7 +375,7 @@ ptptr ptab_alloc(void)
 						break;
 					}
 			}
-			newp->p_top = udata.u_top;
+			newp->p_top = udata.u_ptab->p_top;
 			if (pagemap_alloc(newp) == 0) {
 				newp->p_status = P_FORKING;
 				nproc++;
@@ -845,8 +845,6 @@ void acctexit(ptptr p)
 
 	/* Reuse the field before we write out accounting data */
 	udata.u_mask = p->p_uid;
-	/* More useful information is u_top */
-	udata.u_break = udata.u_top;
 
 	udata.u_sysio = true;
 	udata.u_base = (char *) &udata.u_mask;

@@ -120,7 +120,7 @@ int pagemap_alloc(ptptr p)
  *	FIXME: needs fixing as we update memory management
  */
 int pagemap_realloc(struct exec *hdr, usize_t size) {
-	int have = maps_needed(udata.u_top);
+	int have = maps_needed(udata.u_ptab->p_top);
 	int want = maps_needed(size);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
 	irqflags_t irq;

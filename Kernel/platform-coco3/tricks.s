@@ -179,7 +179,7 @@ _dofork:
 	;; process.
 
 	;; --------- we switch stack copies in this call -----------
-	jsr 	fork_copy	; copy 0x000 to udata.u_top and the
+	jsr 	fork_copy	; copy 0x000 to ptab.p_top and the
 				; uarea and return on the childs
 				; common
 	;; We are now in the kernel child context

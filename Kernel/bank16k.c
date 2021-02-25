@@ -126,7 +126,7 @@ int pagemap_alloc( ptptr p ){
  */
 int pagemap_realloc(struct exec *hdr, usize_t size)
 {
-	int8_t have = maps_needed(udata.u_top);
+	int8_t have = maps_needed(udata.u_ptab->p_top);
 	int8_t want = maps_needed(size + MAPBASE);
 	uint8_t *ptr = (uint8_t *) & udata.u_page;
 	int8_t i;

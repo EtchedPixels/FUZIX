@@ -287,7 +287,6 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
-	udata.u_top = himem;
 	udata.u_ptab->p_top = himem;
 
 	/* Clear the stack (the BSS has already been cleared by the loader). */
