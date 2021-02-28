@@ -8,8 +8,7 @@
 #define uputi    uputl            /* Copy user int type */
 #define ugeti(x) ugetl(x, NULL)   /* between user and kernel */
 
-/* Allow a minimum of 512 bytes gap between stack and top of allocations */
-#define brk_limit() (udata.u_syscall_sp - 512)
+#define brk_limit() (udata.u_ptab->p_top)
 
 extern void* memcpy(void*, const void*, size_t);
 extern void* memset(void*, int, size_t);

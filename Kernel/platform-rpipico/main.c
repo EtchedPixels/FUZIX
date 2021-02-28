@@ -18,7 +18,7 @@ void fatal_exception_handler(struct extended_exception_frame* eh)
     kprintf(" r4=%p r5=%p  r6=%p  r7=%p\n", eh->r4, eh->r5, eh->r6, eh->r7);
     kprintf(" r8=%p r9=%p r10=%p r11=%p\n", eh->r8, eh->r9, eh->r10, eh->r11);
     kprintf("r12=%p sp=%p  lr=%p  pc=%p\n", eh->r12, eh->sp, eh->lr, eh->pc);
-    kprintf("PROGLOAD=%p PROGTOP=%p\n", PROGLOAD, PROGTOP);
+    kprintf("PROGBASE=%p PROGLOAD=%p PROGTOP=%p\n", PROGBASE, PROGLOAD, PROGTOP);
     if ((eh->pc >= PROGLOAD) && (eh->pc < PROGTOP))
         kprintf("user mode exception: lr=%p pc=%p isp=%p brk=%p\n",
             eh->lr-PROGLOAD, eh->pc-PROGLOAD, udata.u_isp, udata.u_break);
@@ -57,11 +57,13 @@ int main(void)
 		panic("bad offsets");
 	}
 
-	ramsize = 64;
+	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
 
-	for (int i=0; i<MAX_SWAPS; i++)
-		swapmap_init(i);
+    #ifdef SWAPDEV
+        for (int i=0; i<MAX_SWAPS; i++)
+            swapmap_init(i);
+    #endif
 
 	di();
 	fuzix_main();

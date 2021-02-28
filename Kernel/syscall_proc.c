@@ -238,17 +238,22 @@ arg_t _brk(void)
 	   can keep it portable */
 
 	if (addr >= brk_limit()) {
-		kprintf("%d: out of memory by %d\n", udata.u_ptab->p_pid,
-			addr - brk_limit());
-		udata.u_error = ENOMEM;
-		return -1;
+		#if defined CONFIG_BRK_CALLS_REALLOC
+			/* Claim more memory for this process. */
+			if (pagemap_realloc(NULL, addr - PROGBASE))
+		#endif
+		{
+			kprintf("%d: out of memory by %d\n", udata.u_ptab->p_pid,
+				addr - brk_limit());
+			panic("memory");
+			udata.u_error = ENOMEM;
+			return -1;
+		}
 	}
-#if (PROGBASE > 0)
 	if (addr < PROGBASE) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
-#endif
 	/* If we have done a break that gives us more room we must zero
 	   the extra as we no longer guarantee it is clear already */
 	if (addr > udata.u_break)

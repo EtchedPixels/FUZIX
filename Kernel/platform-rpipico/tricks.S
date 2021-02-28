@@ -2,7 +2,8 @@
 
 .global udata
 .cpu cortex-m0
-.comm udata, UBLOCK_SIZE
+
+udata = progbase
 
 .text
 .thumb_func
@@ -112,23 +113,17 @@ platform_switchout:
 
     /* On entry, r0 is the ptab ptr of the process to run */
 switchin:
-	/* Is the new process actually swapped out? */
-
-    mov r4, r0              /* save r0 (ptab ptr) in callee-saved registers */
-
-	/* Switch to the swapper stack and context switch in the new process. */
-
-    ldr r1, =__StackTop
+    ldr r1, =__StackTop     /* switch to swapper stack */
     mov sp, r1
 
+    mov r4, r0              /* save r0 (ptab ptr) in callee-saved registers */
     bl contextswitch
 	isb
 
-not_swapped:
 	/* Make the new process runnable. */
 
     mov r0, #P_RUNNING
-    str r0, [r4, #P_TAB__P_STATUS_OFFSET]
+    strb r0, [r4, #P_TAB__P_STATUS_OFFSET]
 
 	/* Restore process stack pointer and return. */
 
@@ -176,10 +171,15 @@ dofork:
     mov r2, sp
     str r2, [r1, #U_DATA__U_SP_OFFSET]
 
-	/* Save the current process to disk. */
+	/* Copy the current process to the new parent. */
 
     push {r0, r1}
+    mov r4, sp          /* save SP in callee-saved register */
+    ldr r1, =__StackTop /* switch to the swapper stack */
+    mov sp, r1
     bl clonecurrentprocess
+    isb
+    mov sp, r4          /* restore old stack */
     pop {r0, r1}
 
 	/* We are now going to become the child; associate the child's p_tab

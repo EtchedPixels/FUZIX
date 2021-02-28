@@ -22,3 +22,20 @@ void doexec(uaddr_t entrypoint)
     __builtin_unreachable();
 }
 
+void swap_blocks(void* p1, void* p2, size_t len)
+{
+	uint32_t* u1 = p1;
+	uint32_t* u2 = p2;
+
+	while (len != 0)
+    {
+        uint32_t t = *u1;
+        *u1 = *u2;
+        *u2 = t;
+        u1++;
+        u2++;
+		len -= 4;
+    }
+}
+
+

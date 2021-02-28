@@ -161,12 +161,14 @@ arg_t _execve(void)
 	/* dynamic points at the load address of the relocation data; this is also
 	 * the top of BSS. */
 	stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
-	if (stacktop > himem) {
+	if ((stacktop > himem) || (lomem > himem)) {
 		#ifdef DEBUG
 			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
 		#endif
 		goto enoexec;
 	}
+	if (stacktop > lomem)
+		lomem = stacktop;
 
 	/* We've confirmed that there's room. Now, copy the command line arguments
 	 * into temporary storage because we're about to trash userland. */
@@ -185,7 +187,7 @@ arg_t _execve(void)
 	 * on a variable-sized process system. This must be the last test as it
 	 * makes changes if it works. */
 
-	if (pagemap_realloc(NULL, (uaddr_t)ALIGNUP(stacktop)))
+	if (pagemap_realloc(NULL, lomem))
 		goto enomem;
 
 	/* At this point, we are committed to reading in and
@@ -287,8 +289,6 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
-	udata.u_ptab->p_top = himem;
-
 	/* Clear the stack (the BSS has already been cleared by the loader). */
 
 	uzero((void*)dynamic, USERSTACK);

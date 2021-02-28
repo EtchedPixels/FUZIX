@@ -10,6 +10,8 @@
 #undef CONFIG_FLAT
 /* Pure swap */
 #define CONFIG_BANKS 1
+/* brk() calls pagemap_realloc() to get more memory. */
+#define CONFIG_BRK_CALLS_REALLOC
 /* Inlined irq handling */
 #define CONFIG_INLINE_IRQ
 /* Trim disk blocks when no longer used */
@@ -29,19 +31,21 @@
 
 /* Program layout */
 
-#define USERMEM (128*1024)
-#define PROGSIZE 65536
+#define UDATA_BLKS  3
+#define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
+#define USERMEM (160*1024)
+#define PROGSIZE (65536 - UDATA_SIZE)
 extern uint8_t progbase[USERMEM];
+#define udata (*(struct u_data*)progbase)
 
 #define USERSTACK (4*2048) /* 4kB */
 
 #define CONFIG_CUSTOM_VALADDR
-#define PROGBASE ((uaddr_t)&progbase)
-#define PROGTOP (PROGBASE + PROGSIZE)
+#define PROGBASE ((uaddr_t)&progbase[0])
+#define PROGLOAD ((uaddr_t)&progbase[UDATA_SIZE])
+#define PROGTOP (PROGLOAD + PROGSIZE)
 #define SWAPBASE PROGBASE
 #define SWAPTOP (PROGBASE + (uaddr_t)alignup(udata.u_break - PROGBASE, 1<<BLKSHIFT)) /* never swap in/out data above break */
-#define UDATA_BLKS  3
-#define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 #define SWAP_SIZE   ((PROGSIZE >> BLKSHIFT) + UDATA_BLKS)
 #define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 
@@ -54,7 +58,7 @@ extern uint8_t progbase[USERMEM];
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 #define BOOTDEVICE 0x0012 /* hdb2 */
-#define SWAPDEV    0x0011 /* hdb1 */
+//#define SWAPDEV    0x0011 /* hdb1 */
 
 /* Device parameters */
 #define NUM_DEV_TTY 1

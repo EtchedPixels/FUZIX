@@ -4,8 +4,6 @@
 #include <exec.h>
 #include "picosdk.h"
 
-struct u_data udata;
-uint8_t progbase[USERMEM];
 uint8_t sys_cpu = A_ARM;
 uint8_t sys_cpu_feat = AF_CORTEX_M0;
 uint8_t need_resched;
