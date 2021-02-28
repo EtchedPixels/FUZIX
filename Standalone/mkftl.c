@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
-#include "../lib/dhara/map.h"
-#include "../lib/dhara/nand.h"
+#include "../Kernel/lib/dhara/map.h"
+#include "../Kernel/lib/dhara/nand.h"
 
 #define FLASH_SIZE (2*1024*1024)
 
@@ -81,7 +81,7 @@ int dhara_nand_copy(const struct dhara_nand *n,
 	return 0;
 }
 
-static bool is_trimmable(const char* buffer)
+static bool is_trimmable(const uint8_t* buffer)
 {
 	for (int i=0; i<512; i++)
 		if (buffer[i] != 'q')
@@ -113,7 +113,7 @@ int main(int argc, const char* argv[])
 
 	for (int sectorno=0; sectorno<sectors; sectorno++)
 	{
-		uint8_t buffer[512] = {};
+		uint8_t buffer[512] = {0};
 		fread(buffer, 512, 1, inf);
 
 		err = DHARA_E_NONE;
