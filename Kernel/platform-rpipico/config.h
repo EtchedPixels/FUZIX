@@ -57,7 +57,7 @@ extern uint8_t progbase[USERMEM];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0012 /* hdb2 */
+#define BOOTDEVICE 0x0000 /* hda */
 //#define SWAPDEV    0x0011 /* hdb1 */
 
 /* Device parameters */

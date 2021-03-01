@@ -1,7 +1,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#define FLASH_OFFSET (128*1024)
+#define FLASH_OFFSET (96*1024)
 
 extern void flash_dev_init(void);
 extern void sd_rawinit(void);
