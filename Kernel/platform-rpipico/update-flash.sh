@@ -1,13 +1,10 @@
 #!/bin/sh
+set -e
 
 IMG=filesystem.img
 
-set -e
-#truncate --size=1450k filesystem.img
-#sudo losetup -P /dev/loop0 filesystem.img
-#trap 'sudo losetup -d /dev/loop0' EXIT
 rm -f ${IMG}
-../../Standalone/mkfs ${IMG} 32 2794
+../../Standalone/mkfs ${IMG} 32 2708
 ../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
@@ -335,9 +332,9 @@ bget ../../Applications/util/tchelp
 chmod 0644 liberror.txt
 chmod 0755 tchelp
 
-#cd /usr
-#mkdir games
-#cd /usr/games
+cd /usr
+mkdir games
+cd /usr/games
 #bget ../../Applications/games/adv01
 #bget ../../Applications/games/adv02
 #bget ../../Applications/games/adv03
@@ -354,7 +351,7 @@ chmod 0755 tchelp
 #bget ../../Applications/games/adv14a
 #bget ../../Applications/games/adv14b
 #bget ../../Applications/games/advint
-#bget ../../Applications/games/cowsay
+bget ../../Applications/games/cowsay
 #bget ../../Applications/games/fortune
 #bget ../../Applications/games/fortune.dat
 #bget ../../Applications/games/hamurabi
@@ -395,7 +392,7 @@ chmod 0755 tchelp
 #chmod 0755 adv14a
 #chmod 0755 adv14b
 #chmod 0755 advint
-#chmod 0755 cowsay
+chmod 0755 cowsay
 #chmod 0755 fortune
 #chmod 0644 fortune.dat
 #chmod 0755 hamurabi
@@ -420,14 +417,14 @@ chmod 0755 tchelp
 #chmod 0755 z8
 #chmod 0755 invaders
 
-#bget ../../Applications/cave/advent
-#chmod 0755 advent
-#
-#cd /usr/games
-#mkdir lib
-#cd lib
-#bget ../../Applications/cave/advent.db
-#chmod 0644 advent.db
+bget ../../Applications/cave/advent
+chmod 0755 advent
+
+cd /usr/games
+mkdir lib
+cd lib
+bget ../../Applications/cave/advent.db
+chmod 0644 advent.db
 
 #cd /usr/lib
 #mkdir trek
@@ -445,11 +442,15 @@ chmod 0755 tchelp
 
 EOF
 
-#sudo ../Standalone/ucp /dev/loop0p2 <<EOF
-#bget padding.img
-#rm padding.img
-#EOF
+# Write lots of 0xff bytes to fill up the rest of the filesystem; mkftl will
+# detect these and mark the sectors as unused.
 
-#sudo losetup -d /dev/loop0
-#platform-esp8266/mkftl filesystem.img filesystem.ftl
+tr '\000-\377' '\377' < ${IMG} > padding.tmp
+(../../Standalone/ucp ${IMG} || true) <<EOF
+bget padding.tmp
+rm padding.tmp
+df
+EOF
+../../Standalone/fsck -a ${IMG}
+
 

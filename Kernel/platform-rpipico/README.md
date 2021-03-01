@@ -76,6 +76,9 @@ The Pico's mask ROM contains many useful routines which can be used instead of
 libgcc, which would reduce the binary size. This hasn't been done yet because
 it would render the binaries non-portable.
 
+There's a Forth interpreter as `fforth` (use capital letters) and some games
+are in `/usr/games`.
+
 ## Using the NAND flash
 
 The Pico's built-in NAND flash is supported, appearing as `/dev/hda` insize
