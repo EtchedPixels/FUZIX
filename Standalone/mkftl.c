@@ -14,6 +14,7 @@
 static uint32_t pagesize = 512;
 static uint32_t erasesize = 4096;
 static uint32_t flashsize = 1024*1024; /* bytes */
+static uint8_t gcratio = 128;
 
 static uint8_t* flashdata;
 
@@ -114,6 +115,7 @@ static void syntax_error(void)
     fprintf(stderr, "  -p <number>   set page size, in bytes (default: %d bytes)\n", pagesize);
     fprintf(stderr, "  -e <number>   set erase block size, in bytes (default: %d bytes)\n", erasesize);
     fprintf(stderr, "  -s <number>   set image size, in kilobytes (default: %d kB)\n", flashsize/1024);
+    fprintf(stderr, "  -g <number>   set garbage collection ratio (default: %d)\n", gcratio);
     exit(1);
 }
 
@@ -124,7 +126,7 @@ int main(int argc, char* const* argv)
 
     for (;;)
     {
-        int opt = getopt(argc, argv, "o:p:e:s:");
+        int opt = getopt(argc, argv, "o:p:e:s:g:");
         if (opt == -1)
             break;
         switch (opt)
@@ -143,6 +145,10 @@ int main(int argc, char* const* argv)
 
             case 's':
                 flashsize = strtoul(optarg, NULL, 0) * 1024;
+                break;
+
+            case 'g':
+                gcratio = strtoul(optarg, NULL, 0);
                 break;
 
             default:
@@ -179,7 +185,7 @@ int main(int argc, char* const* argv)
 
     uint8_t journal_buf[512];
     struct dhara_map dhara;
-    dhara_map_init(&dhara, &nand, journal_buf, 128);
+    dhara_map_init(&dhara, &nand, journal_buf, gcratio);
     dhara_error_t err = DHARA_E_NONE;
     dhara_map_resume(&dhara, &err);
     printf("Number of physical erase blocks: %d\n", nand.num_blocks);
