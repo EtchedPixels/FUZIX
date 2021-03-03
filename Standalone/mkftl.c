@@ -14,7 +14,7 @@
 static uint32_t pagesize = 512;
 static uint32_t erasesize = 4096;
 static uint32_t flashsize = 1024*1024; /* bytes */
-static uint8_t gcratio = 128;
+static uint8_t gcratio = 2;
 
 static uint8_t* flashdata;
 
@@ -199,7 +199,7 @@ int main(int argc, char* const* argv)
     }
     if (sectors == lba)
     {
-        fprintf(stderr, "WARNING: logical image completely fills the FTL filesystem; you");
+        fprintf(stderr, "WARNING: logical image completely fills the FTL filesystem; you\n");
         fprintf(stderr, "will have GC thrash if you try to write to it");
     }
 
@@ -232,5 +232,5 @@ int main(int argc, char* const* argv)
     return 0;
 }
 
-/* vim: sw=4 ts=4 et: */
+// vim: sw=4 ts=4 et:
 
