@@ -21,7 +21,7 @@ Out of the box:
   - /dev/hdb is the SD card. Fuzix understands DOS partition tables. It's not
 	hot swappable as the SD card is only probed at boot time.
 
-Connect the SD card to the following pins:
+If you have an SD card reader, connect the SD card to the following pins:
 
         Pico pin     RP2040 pin    SD card pin
         --------------------------------------
@@ -63,7 +63,8 @@ $ mkfs -f /dev/hdb1 32 65535
 The last argument is the filesystem size in 512-byte blocks.
 
 The first thing you probably want to do is `stty erase '^?'` to make the DELETE
-key in your terminal work properly.
+key in your terminal work properly. (Use the `levee` editor to add it to
+`$HOME/.profile`.)
 
 ## Userland
 
