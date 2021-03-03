@@ -36,6 +36,7 @@ add_executable(fuzix
 	../lib/dhara/error.c
 	../lib/dhara/journal.c
 	../lib/dhara/map.c
+	../lib/hexdump.c
 	../devio.c
 	../devsys.c
 	../filesys.c

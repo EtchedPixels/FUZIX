@@ -49,6 +49,7 @@ void tty_data_consumed(uint_fast8_t minor)
 
 static void tty_isr(void)
 {
+    extern int dump;
     while (uart_is_readable(uart_default))
     {
         uint8_t b = uart_get_hw(uart_default)->dr;

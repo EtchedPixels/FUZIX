@@ -35,7 +35,7 @@ int dhara_nand_read(const struct dhara_nand *n, dhara_page_t p,
                     dhara_error_t *err)
 {
     memcpy(data,
-        (uint8_t*)XIP_NOCACHE_BASE + FLASH_OFFSET + (p*512) + offset,
+        (uint8_t*)XIP_NOCACHE_NOALLOC_BASE + FLASH_OFFSET + (p*512) + offset,
         length);
 	if (err)
 		*err = DHARA_E_NONE;

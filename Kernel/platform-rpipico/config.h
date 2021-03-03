@@ -64,7 +64,7 @@ extern uint8_t progbase[USERMEM];
 #define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    10       /* Number of block buffers */
+#define NBUFS    20       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV	4

@@ -4,7 +4,7 @@ set -e
 IMG=filesystem.img
 
 rm -f ${IMG}
-../../Standalone/mkfs ${IMG} 32 2708
+../../Standalone/mkfs ${IMG} 32 2547
 ../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
@@ -442,15 +442,6 @@ chmod 0644 advent.db
 
 EOF
 
-# Write lots of 0xff bytes to fill up the rest of the filesystem; mkftl will
-# detect these and mark the sectors as unused.
-
-tr '\000-\377' '\377' < ${IMG} > padding.tmp
-(../../Standalone/ucp ${IMG} || true) <<EOF
-bget padding.tmp
-rm padding.tmp
-df
-EOF
 ../../Standalone/fsck -a ${IMG}
 
 
