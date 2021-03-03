@@ -90,14 +90,6 @@ static void panic(const char* s, ...)
     exit(1);
 }
 
-static bool is_trimmable(const uint8_t* buffer)
-{
-    for (int i=0; i<512; i++)
-        if (buffer[i] != 'q')
-            return 0;
-    return 1;
-}
-
 static bool is_power_of_2(uint32_t i)
 {
     return i && !((i-1) & i);
@@ -205,6 +197,11 @@ int main(int argc, char* const* argv)
             sectors, lba);
         exit(1);
     }
+    if (sectors == lba)
+    {
+        fprintf(stderr, "WARNING: logical image completely fills the FTL filesystem; you");
+        fprintf(stderr, "will have GC thrash if you try to write to it");
+    }
 
     for (int sectorno=0; sectorno<sectors; sectorno++)
     {
@@ -212,10 +209,7 @@ int main(int argc, char* const* argv)
         fread(buffer, 512, 1, inf);
 
         err = DHARA_E_NONE;
-        if (is_trimmable(buffer))
-            dhara_map_trim(&dhara, sectorno, &err);
-        else
-            dhara_map_write(&dhara, sectorno, buffer, &err); 
+        dhara_map_write(&dhara, sectorno, buffer, &err); 
 
         if (err != DHARA_E_NONE)
         {
