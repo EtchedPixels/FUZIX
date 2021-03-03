@@ -199,7 +199,7 @@ int main(int argc, char* const* argv)
     }
     if (sectors == lba)
     {
-        fprintf(stderr, "WARNING: logical image completely fills the FTL filesystem; you");
+        fprintf(stderr, "WARNING: logical image completely fills the FTL filesystem; you\n");
         fprintf(stderr, "will have GC thrash if you try to write to it");
     }
 
