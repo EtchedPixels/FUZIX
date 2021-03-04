@@ -1,0 +1,44 @@
+.TH MKFTL 1 2021-03-03 "mkftl manual"
+
+.SH NAME
+mkftl \- create Dhara FTL images
+
+.SH SYNOPSIS
+.B mkftl [\fIOPTION\fR] <\fIinputfile.img\fR> -o <\fIoutputfile.ftl\fR>
+
+.SH DESCRIPTION
+
+\fImkftl\fR is a program which converts normal images into FTL images used by
+the Dhara FTL layer. It's useful for creating images which can be written to
+NAND devices.
+
+.SH OPTIONS
+\fImkftl\fR accepts the following options:
+
+.TP
+.BR \-p " size in bytes"
+Specifies the page size of the Dhara map. Default: 512 bytes.
+
+.TP
+.BR \-e " size in bytes"
+Specifies the erase block size of the Dhara map. Default: 4096 bytes.
+
+.TP
+.BR \-g " ratio"
+Specifies the garbage collection ratio of the Dhara map. Default: 2. The larger
+the number, the less waste there will be in the map, but the more garbage
+collection will be done on each write.
+
+.TP
+.BR \-s " size in kilobytes"
+Specifies the physical size of the Dhara map. The bigger it is, the bigger a
+logical image can be contained within it; however, if the logical image
+completely fills the map, Dhara will have trouble operating on it and will
+probably perform garbage collection thrashing.
+
+The filesystem parameters must match those of the device which will be using
+it, or else you'll get random corruption and crashes.
+
+.SH SEE ALSO
+https://github.com/dlbeer/dhara
+

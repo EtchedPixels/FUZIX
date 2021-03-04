@@ -51,7 +51,7 @@ KOBJS = \
 
 JUNK = *.o *.lst *.asm *.sym *.rst
 
-all:	$(OBJS) mkftl
+all:	$(OBJS)
 
 $(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) -I.. $< -o $@
@@ -60,9 +60,6 @@ $(OBJS): ../kernel-lx106.def
 
 $(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -I../dev $< -o $@
-
-mkftl: mkftl.c ../lib/dhara/journal.c ../lib/dhara/error.c ../lib/dhara/map.c
-	$(CC) -g -o $@ $^
 
 image.elf: kernel.ld addresses.ld $(KOBJS)
 	$(CROSS_CC) -T kernel.ld -T addresses.ld -flto -mlongcalls -nostdlib -o image.elf \
