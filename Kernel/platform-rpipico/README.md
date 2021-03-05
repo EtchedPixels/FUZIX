@@ -9,7 +9,9 @@ system, and 264kB of RAM.
 
 The Fuzix port runs in swapless cooperative multitasking mode with the root
 filesystem on NAND, and with an optional SD card on the second SPI interface
-for anything else. There's enough memory to run four or five processes at once.
+for anything else. It supports both console over UART and it'll also pretend to
+be a USB serial device. There's enough memory to run four or five processes at
+once.
 
 ## Configuration
 
@@ -33,7 +35,15 @@ If you have an SD card reader, connect the SD card to the following pins:
 Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
 3.3V. Not 5V, or it won't work.
 
-The console is UART0, and runs at 115200 baud.
+The console is accessible either via UART0 (at 115200 baud) or by connecting
+the Pico up via USB to a PC, at which point it'll present itself as a standard
+USB CDC serial device. Both work simultaneously although odd things can happen
+if you type on both concurrently.
+
+**Note:** when using the USB console, you're unlikely to be able to connect
+quickly enough after boot to see the startup messages. Most likely when you
+connect, the Pico will be sitting waiting at the prompt to set the time. Press
+RETURN a few times to get to the getty login prompt.
 
 ![Wiring diagram](doc/wiring.jpg)
 
