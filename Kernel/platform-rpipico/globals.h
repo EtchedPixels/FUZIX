@@ -5,7 +5,6 @@
 
 extern void flash_dev_init(void);
 extern void sd_rawinit(void);
-extern void tty_rawinit(void);
 
 extern void contextswitch(ptptr p);
 

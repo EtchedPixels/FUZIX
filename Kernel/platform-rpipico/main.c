@@ -2,9 +2,9 @@
 #include <kdata.h>
 #include "picosdk.h"
 #include "kernel-armm0.def"
-#include <hardware/sync.h>
 #include "globals.h"
 #include "printf.h"
+#include "core1.h"
 
 uint_fast8_t platform_param(char* p)
 {
@@ -43,7 +43,7 @@ void syscall_handler(struct svc_frame* eh)
 
 int main(void)
 {
-    tty_rawinit();
+    core1_init();
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||

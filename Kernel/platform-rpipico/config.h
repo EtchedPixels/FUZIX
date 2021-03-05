@@ -33,7 +33,7 @@
 
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
-#define USERMEM (224*1024)
+#define USERMEM (160*1024)
 #define PROGSIZE (65536 - UDATA_SIZE)
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
