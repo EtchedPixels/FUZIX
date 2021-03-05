@@ -45,6 +45,11 @@
 // for this bootloader
 #define UF2_MAX_FILESIZE (64 * 1024 * 1024)
 
+#define UF2_FLAG_FAMILY_ID_PRESENT  0x00002000u
+#define UF2_FLAG_MD5_PRESENT        0x00004000u
+
+#define RP2040_FAMILY_ID 0xe48bff56
+
 typedef struct {
     // 32 byte header
     uint32_t magicStart0;

@@ -52,6 +52,8 @@ int main(int argc, char **argv) {
     bl.magicStart0 = UF2_MAGIC_START0;
     bl.magicStart1 = UF2_MAGIC_START1;
     bl.magicEnd = UF2_MAGIC_END;
+    bl.flags = UF2_FLAG_FAMILY_ID_PRESENT;
+    bl.fileSize = RP2040_FAMILY_ID;
     bl.targetAddr = address;
     bl.numBlocks = (sz + 255) / 256;
     bl.payloadSize = 256;
