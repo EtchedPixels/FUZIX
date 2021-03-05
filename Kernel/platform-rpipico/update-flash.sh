@@ -149,6 +149,7 @@ bget ../../Applications/util/stty
 bget ../../Applications/util/sum
 bget ../../Applications/util/su
 bget ../../Applications/util/sync
+bget ../../Applications/util/tar
 bget ../../Applications/util/tee
 bget ../../Applications/util/tail
 bget ../../Applications/util/touch
@@ -229,6 +230,7 @@ chmod 0755 stty
 chmod 0755 sum
 chmod 0755 sync
 chmod 0755 tail
+chmod 0755 tar
 chmod 0755 tee
 chmod 0755 touch
 chmod 0755 tr
