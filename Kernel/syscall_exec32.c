@@ -27,24 +27,11 @@
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
+#include <flat.h>
 
 /* FIXME: we need to put this back on boxes with a malloc but for now
    lets keep it easy */
 #define ARGBUF_SIZE	512
-
-struct binfmt_flat {
-	uint8_t magic[4];
-	uint32_t rev;
-	uint32_t entry;
-	uint32_t data_start;
-	uint32_t data_end;
-	uint32_t bss_end;
-	uint32_t stack_size;
-	uint32_t reloc_start;
-	uint32_t reloc_count;
-	uint32_t flags;
-	uint32_t filler[6];
-};
 
 static void close_on_exec(void)
 {
@@ -60,7 +47,7 @@ static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 {
 	if (bf->stack_size < 4096)
 		bf->stack_size = 4096;
-	if (bf->rev != 4)
+	if (bf->rev != FLAT_VERSION)
 		return 0;
 	if (bf->entry >= bf->data_start)
 		return 0;
@@ -156,7 +143,7 @@ arg_t _execve(void)
 
 	/* Hard coded for our 68K format. We don't quite use the ucLinux
 	   names, we don't want to load a ucLinux binary in error! */
-	if (memcmp(binflat.magic, "bFLT", 4) || !valid_hdr(ino, &binflat)) {
+	if (memcmp(binflat.magic, FLAT_FUZIX_MAGIC, 4) || !valid_hdr(ino, &binflat)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}

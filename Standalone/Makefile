@@ -30,8 +30,5 @@ elf2flt:	elf2flt.o
 mkftl: mkftl.o ../Kernel/lib/dhara/journal.c ../Kernel/lib/dhara/error.c ../Kernel/lib/dhara/map.c
 	$(CC) $(CCOPTS) -o $@ $^
 
-mkftl: mkftl.o ../Kernel/lib/dhara/journal.c ../Kernel/lib/dhara/error.c ../Kernel/lib/dhara/map.c
-	$(CC) $(CCOPTS) -o $@ $^
-
 %.o:	%.c
 	$(CC) $(CCOPTS) -c -o $@ $<
