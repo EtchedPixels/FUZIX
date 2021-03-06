@@ -340,5 +340,11 @@ void clonecurrentprocess(ptptr p)
     #endif
 }
 
+uint_fast8_t platform_canswapon(uint16_t devno)
+{
+    /* Only allow swapping to hd devices. */
+    return (devno >> 8) == 0;
+}
+
 // vim: ts=4 sw=4 et
 

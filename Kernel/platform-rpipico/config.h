@@ -22,6 +22,8 @@
 /* Enable SD card code. */
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
+/* Enable dynamic swap. */
+#define CONFIG_PLATFORM_SWAPCTL
 
 #define CONFIG_32BIT
 #define CONFIG_USERMEM_DIRECT
@@ -51,14 +53,13 @@ extern uint8_t progbase[USERMEM];
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
-                            /* Temp FIXME set to serial port for debug ease */
 
 #define TICKSPERSEC 200   /* Ticks per second */
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 #define BOOTDEVICE 0x0000 /* hda */
-//#define SWAPDEV    0x0011 /* hdb1 */
+#define SWAPDEV    (swap_dev) /* dynamic swap */
 
 /* Device parameters */
 #define NUM_DEV_TTY 1

@@ -9,6 +9,7 @@ uint8_t sys_cpu_feat = AF_CORTEX_M0;
 uint8_t need_resched;
 uaddr_t ramtop = (uaddr_t) PROGTOP;
 uint8_t sys_stubs[sizeof(struct exec)];
+uint16_t swap_dev = 0xffff;
 
 /* Unused on this port */
 

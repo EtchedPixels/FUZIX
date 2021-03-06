@@ -60,11 +60,6 @@ int main(void)
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
 
-    #ifdef SWAPDEV
-        for (int i=0; i<MAX_SWAPS; i++)
-            swapmap_init(i);
-    #endif
-
 	di();
 	fuzix_main();
 }
