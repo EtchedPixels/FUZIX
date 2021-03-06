@@ -63,7 +63,8 @@ static void core1_main(void)
 		}
 
 		if (multicore_fifo_wready()
-			&& tud_cdc_connected() && tud_cdc_available())
+			&& ((tud_cdc_connected() && tud_cdc_available())
+				|| uart_is_readable(uart_default)))
 		{
 			/* Only service a byte from CDC *or* the UART, in case two show
 			 * up at the same time and we end up blocking. No big loss, the
@@ -75,7 +76,12 @@ static void core1_main(void)
 				int count = tud_cdc_read(&b, 1);
 				if (count)
 					multicore_fifo_push_blocking(b);
-			} 
+			}
+			else if (uart_is_readable(uart_default))
+			{
+				uint8_t b = uart_get_hw(uart_default)->dr;
+				multicore_fifo_push_blocking(b);
+			}
 		}
 	}
 }
