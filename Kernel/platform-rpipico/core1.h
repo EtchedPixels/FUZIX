@@ -1,7 +1,7 @@
 #ifndef USBCONSOLE_H
 #define USBCONSOLE_H
 
-extern void usbconsole_init(void);
+extern void core1_init(void);
 
 extern bool usbconsole_is_readable(void);
 extern bool usbconsole_is_writable(void);
