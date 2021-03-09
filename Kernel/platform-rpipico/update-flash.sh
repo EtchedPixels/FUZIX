@@ -113,6 +113,7 @@ bget ../../Applications/util/false
 bget ../../Applications/util/fdisk
 bget ../../Applications/util/fforth
 bget ../../Applications/util/fgrep
+bget ../../Applications/util/free
 bget ../../Applications/util/fsck
 bget ../../Applications/util/fsck-fuzix
 bget ../../Applications/util/grep
@@ -195,6 +196,7 @@ chmod 0755 false
 chmod 0755 fdisk
 chmod 0755 fforth
 chmod 0755 fgrep
+chmod 0755 free
 chmod 0755 fsck
 chmod 0755 fsck-fuzix
 chmod 0755 grep
