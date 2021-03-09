@@ -40,7 +40,7 @@
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
 
-#define USERSTACK (4*2048) /* 4kB */
+#define USERSTACK (4*1024) /* 4kB */
 
 #define CONFIG_CUSTOM_VALADDR
 #define PROGBASE ((uaddr_t)&progbase[0])

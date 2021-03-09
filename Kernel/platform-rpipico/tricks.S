@@ -60,7 +60,7 @@ isr_svcall_user:
     push {r0, r1, lr}           /* save r12, PC, LR */
 
     mov r0, sp                  /* get pointer to svc frame */
-    ldr r1, =(udata + UBLOCK_SIZE) /* switch to kernel stack */
+    ldr r1, =(udata + UDATA_SIZE_ASM) /* switch to kernel stack */
     mov sp, r1
 
     push {r0}

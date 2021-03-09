@@ -272,7 +272,8 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p dynamic=%p stacktop=%p\n", himem, lomem, dynamic, stacktop);
+		kprintf("himem=%p lomem=%p (%p) dynamic=%p stacktop=%p\n",
+			himem, lomem, lomem+PROGLOAD, dynamic, stacktop);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;

@@ -13,15 +13,15 @@ uint_fast8_t platform_param(char* p)
 
 void fatal_exception_handler(struct extended_exception_frame* eh)
 {
-    kprintf("EXCEPTION %d\n", eh->cause);
+    kprintf("FLAGRANT SYSTEM ERROR! EXCEPTION %d\n", eh->cause);
     kprintf(" r0=%p r1=%p  r2=%p  r3=%p\n", eh->r0, eh->r1, eh->r2, eh->r3);
     kprintf(" r4=%p r5=%p  r6=%p  r7=%p\n", eh->r4, eh->r5, eh->r6, eh->r7);
     kprintf(" r8=%p r9=%p r10=%p r11=%p\n", eh->r8, eh->r9, eh->r10, eh->r11);
     kprintf("r12=%p sp=%p  lr=%p  pc=%p\n", eh->r12, eh->sp, eh->lr, eh->pc);
     kprintf("PROGBASE=%p PROGLOAD=%p PROGTOP=%p\n", PROGBASE, PROGLOAD, PROGTOP);
-    if ((eh->pc >= PROGLOAD) && (eh->pc < PROGTOP))
-        kprintf("user mode exception: lr=%p pc=%p isp=%p brk=%p\n",
-            eh->lr-PROGLOAD, eh->pc-PROGLOAD, udata.u_isp, udata.u_break);
+    kprintf("UDATA=%p KSTACK=%p-%p\n", &udata, &udata+1, ((uint32_t)&udata) + UDATA_SIZE);
+    kprintf("user mode relative: lr=%p pc=%p isp=%p brk=%p\n",
+        eh->lr-PROGLOAD, eh->pc-PROGLOAD, udata.u_isp, udata.u_break);
     panic("fatal exception");
 }
 
@@ -48,7 +48,8 @@ int main(void)
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
 		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
 		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
-			(P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)))
+        (P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)) ||
+        (UDATA_SIZE_ASM != UDATA_SIZE))
 	{
 		kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
 		kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));

@@ -40,7 +40,7 @@ static uaddr_t get_proc_size(ptptr p)
         return 0;
     /* init is initially created with a p_top of 0, but it actually needs 512 bytes. */
     if (!p->p_top)
-        p->p_top = PROGBASE + 512;
+        p->p_top = PROGLOAD + 512;
     return p->p_top - PROGBASE;
 }
 
@@ -64,13 +64,15 @@ static struct mapentry* find_block(uint8_t slot, uint8_t block)
 #ifdef DEBUG
     static void debug_blocks(void)
     {
-        kprintf("current process size %p bytes %d blocks\n",
-            get_proc_size(udata.u_ptab), get_proc_size_blocks(udata.u_ptab));
+        kprintf("current process size %p bytes %d blocks; isp %d rel\n",
+            get_proc_size(udata.u_ptab), get_proc_size_blocks(udata.u_ptab),
+            udata.u_isp - PROGBASE);
         for (int i=0; i<NUM_ALLOCATION_BLOCKS; i++)
         {
             const struct mapentry* b = &allocation_map[i];
+            void* p = (void*)PROGBASE + i*BLOCKSIZE;
             if (b->block != 0xff)
-                kprintf("#%d: slot %d block %d\n", i, b->slot, b->block);
+                kprintf("#%d: slot %d block %d %p\n", i, b->slot, b->block, p);
         }
     }
 #endif
@@ -125,13 +127,13 @@ int pagemap_alloc(ptptr p)
 	return 0;
 }
 
-/* FIXME: update once we have the new mm logic in place */
+/* size does *not* include udata */
 int pagemap_realloc(struct exec *hdr, usize_t size)
 {
     struct p_tab* p = udata.u_ptab;
 
     uaddr_t oldblocks = get_proc_size_blocks(p);
-    int blocks = (int)alignup(size, BLOCKSIZE) / BLOCKSIZE;
+    int blocks = (int)alignup(size + UDATA_SIZE, BLOCKSIZE) / BLOCKSIZE;
     int slot = get_slot(p);
     #ifdef DEBUG
         kprintf("realloc %d from %d to %d blocks\n", get_slot(udata.u_ptab), oldblocks, blocks);

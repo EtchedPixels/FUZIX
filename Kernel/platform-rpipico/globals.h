@@ -10,9 +10,9 @@ extern void contextswitch(ptptr p);
 
 struct svc_frame
 {
-	uint32_t lr;
-	uint32_t pc;
 	uint32_t r12;
+	uint32_t pc;
+	uint32_t lr;
 	uint32_t r0;
 	uint32_t r1;
 	uint32_t r2;
