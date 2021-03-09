@@ -174,7 +174,14 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 
 usize_t pagemap_mem_used(void)
 {
-	return (PROGTOP - PROGBASE) >> 10;
+    usize_t count = 0;
+    for (int i=0; i<NUM_ALLOCATION_BLOCKS; i++)
+    {
+        struct mapentry* b = &allocation_map[i];
+        if (b->slot != 0xff)
+            count++;
+    }
+    return count * (BLOCKSIZE/1024);
 }
 
 void pagemap_init(void)
