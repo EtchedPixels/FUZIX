@@ -61,6 +61,25 @@ static struct mapentry* find_block(uint8_t slot, uint8_t block)
     return NULL;
 }
 
+static struct mapentry* find_free_block(ptptr p)
+{
+    for (;;)
+    {
+        struct mapentry* b = find_block(0xff, 0xff); /* find a free block */
+        if (b)
+            return b;
+
+        #ifdef DEBUG
+            kprintf("alloc failed, finding a process to swap out");
+        #endif
+        if (!swapneeded(p, true))
+        {
+            kprintf("warning: out of memory\n");
+            return NULL;
+        }
+    }
+}
+
 #ifdef DEBUG
     static void debug_blocks(void)
     {
@@ -111,10 +130,9 @@ int pagemap_alloc(ptptr p)
 
     for (int i=0; i<blocks; i++)
     {
-        struct mapentry* b = find_block(0xff, 0xff); /* find a free block */
+        struct mapentry* b = find_free_block(p);
         if (!b)
-            panic("ran out of memory");
-
+            return ENOMEM;
         b->slot = slot;
         b->block = i;
     }
@@ -156,9 +174,9 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
         #endif
         for (int i=oldblocks; i<blocks; i++)
         {
-            struct mapentry* b = find_block(0xff, 0xff);
+            struct mapentry* b = find_free_block(p);
             if (!b)
-                panic("no memory in realloc");
+                return ENOMEM;
             b->slot = slot;
             b->block = i;
         }
@@ -193,88 +211,14 @@ void pagemap_init(void)
 	udata.u_ptab = NULL;
 }
 
-#if 0
-/*
- *	Swap out the memory of a process to make room
- *	for something else
- */
-int swapout_new(ptptr p, void *u)
-{
-	uint16_t page = p->p_page;
-	uint16_t blk;
-	int16_t map;
-    panic("swapout");
-
-#ifdef DEBUG
-	kprintf("Swapping out %d (%d)\n", get_slot(p), p->p_pid);
-#endif
-	if (!page)
-		panic(PANIC_ALREADYSWAP);
-	/* Are we out of swap ? */
-	map = swapmap_alloc();
-	if (map == -1)
-		return ENOMEM;
-	blk = map * SWAP_SIZE;
-	/* Write the app (and uarea etc..) to disk */
-
-	/* Write the udata block as kernel. */
-	udata.u_dptr = u;
-	udata.u_block = blk;
-	udata.u_nblock = UDATA_SIZE >> BLKSHIFT;	/* 1 */
-	((*dev_tab[major(SWAPDEV)].dev_write) (minor(SWAPDEV), 0, 0));
-	/* Use the standard swapwrite helper for the rest */
-	swapwrite(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
-		  SWAPBASE, 1);
-
-	p->p_page = 0;
-	p->p_page2 = map;
-#ifdef DEBUG
-	kprintf("%p: swapout done %d\n", p, p->p_page2);
-#endif
-	return 0;
-}
-
-int swapout(ptptr p)
-{
-	return swapout_new(p, &udata);
-}
-
-/*
- * Swap ourself in: must be on the swap stack when we do this
- */
-void swapin(ptptr p, uint16_t map)
-{
-    panic("swapin");
-	uint16_t blk = map * SWAP_SIZE;
-
-#ifdef DEBUG
-	kprintf("Swapin %d (%d, %d)\n", get_slot(p), p->p_page2, p->p_pid);
-#endif
-	if (!p->p_page) {
-		kprintf("%x: nopage!\n", p);
-		return;
-	}
-
-	/* The udata might not be in common space read it as kernel mapped */
-	udata.u_dptr = (uint8_t *)&udata;
-	udata.u_block = blk;
-	udata.u_nblock = UDATA_SIZE >> BLKSHIFT;
-	/* The driver will use the data in udata before it writes over it */
-	((*dev_tab[major(SWAPDEV)].dev_read) (minor(SWAPDEV), 0, 0));
-	swapread(SWAPDEV, blk + UDATA_BLKS, SWAPTOP - SWAPBASE,
-		 SWAPBASE, 1);
-
-#ifdef DEBUG
-	kprintf("%p: swapin done %d\n", p, p->p_page2);
-#endif
-}
-#endif
-
 void contextswitch(ptptr p)
 {
     #ifdef DEBUG
         kprintf("context switch from %d to %d\n", get_slot(udata.u_ptab), get_slot(p));
     #endif
+
+    if (!p->p_page)
+        swapin(p, p->p_page2);
 
     int slot = get_slot(p);
     int blocks = get_proc_size_blocks(p);
@@ -286,6 +230,8 @@ void contextswitch(ptptr p)
         if ((b1->slot != slot) || (b1->block != i))
         {
             struct mapentry* b2 = find_block(slot, i);
+            if (!b2)
+                panic("missing block");
             int i2 = b2 - allocation_map;
             void* p2 = (void*)PROGBASE + i2*BLOCKSIZE;
             if (b1->slot == 0xff)
@@ -353,6 +299,70 @@ uint_fast8_t platform_canswapon(uint16_t devno)
 {
     /* Only allow swapping to hd devices. */
     return (devno >> 8) == 0;
+}
+
+int swapout(ptptr p)
+{
+#ifdef DEBUG
+	kprintf("swapping out %d (%d)\n", get_slot(p), p->p_pid);
+#endif
+
+	uint16_t page = p->p_page;
+	if (!page)
+		panic(PANIC_ALREADYSWAP);
+    if (SWAPDEV == 0xffff)
+        return ENOMEM;
+
+	/* Are we out of swap ? */
+	int16_t map = swapmap_alloc();
+	if (map == -1)
+		return ENOMEM;
+
+	uint16_t swaparea = map * SWAP_SIZE;
+
+    int slot = get_slot(p);
+    int blocks = get_proc_size_blocks(p);
+    for (int i=0; i<blocks; i++)
+    {
+        struct mapentry* b = find_block(slot, i);
+        int blockindex = b - allocation_map;
+        void* p = (void*)PROGBASE + blockindex*BLOCKSIZE;
+
+        swapwrite(SWAPDEV, swaparea + (i*(BLOCKSIZE>>BLKSHIFT)),
+            BLOCKSIZE, (uaddr_t)p, 1);
+
+        b->slot = b->block = 0xff;
+    }
+
+	p->p_page = 0;
+	p->p_page2 = map;
+	return 0;
+}
+
+/*
+ * Swap ourself in: must be on the swap stack when we do this
+ */
+void swapin(ptptr p, uint16_t map)
+{
+    uint16_t swaparea = map * SWAP_SIZE;
+
+    int slot = get_slot(p);
+    int blocks = get_proc_size_blocks(p);
+    for (int i=0; i<blocks; i++)
+    {
+        struct mapentry* b = find_free_block(p);
+        int blockindex = b - allocation_map;
+        void* p = (void*)PROGBASE + blockindex*BLOCKSIZE;
+
+        swapread(SWAPDEV, swaparea + (i*(BLOCKSIZE>>BLKSHIFT)),
+            BLOCKSIZE, (uaddr_t)p, 1);
+
+        b->slot = slot;
+        b->block = i;
+    }
+
+    p->p_page = 1;
+    p->p_page2 = 0;
 }
 
 // vim: ts=4 sw=4 et

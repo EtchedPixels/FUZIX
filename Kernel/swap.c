@@ -145,7 +145,7 @@ static ptptr swapvictim(ptptr p, int notself)
 	/* Oldest waiter gets the boot */
 	if (f) {
 #ifdef DEBUG
-		kprintf("swapvictim %x (page %d, state %d\n)", f,
+		kprintf("swapvictim %x (page %d, state %d)\n", f,
 			f->p_page, f->p_status);
 #endif
 		return f;

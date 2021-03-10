@@ -7,11 +7,11 @@ based around the Raspberry Pi Foundation's RP2040 chip. It's got two Cortex-M0+
 cores, 2MB of onboard NAND flash which can be used for code via a demand-paging
 system, and 264kB of RAM.
 
-The Fuzix port runs in swapless cooperative multitasking mode with the root
-filesystem on NAND, and with an optional SD card on the second SPI interface
-for anything else. It supports both console over UART and it'll also pretend to
-be a USB serial device. There's enough memory to run four or five processes at
-once.
+The Fuzix port runs in cooperative multitasking mode with the root filesystem
+on NAND, and with an optional SD card on the second SPI interface for anything
+else. It supports both console over UART and it'll also pretend to be a USB
+serial device. There's enough memory to run four or five processes at once, and
+you can enable swapping to the SD card for up to 15.
 
 ## Configuration
 
@@ -89,6 +89,35 @@ it would render the binaries non-portable.
 
 There's a Forth interpreter as `fforth` (use capital letters) and some games
 are in `/usr/games`.
+
+## Swap
+
+Out of the box, Fuzix runs in swapless mode. This gives enough memory to run
+most normal programs (you can use `free` to see how much you have left). If you
+want more, you can enable swapping to the SD card.
+
+To do this, create a partition of up to 2048kB (4096 blocks) on the SD card.
+Then use the `swapon` command to enable swap. You can see swap usage with
+`free`.
+
+```
+# fdisk -l
+                      START                  END
+Device    Boot  Head Sector Cylinder   Head Sector Cylinder  Type  Sector count
+
+/dev/hdb1        33      3        0     38      6        1    83          4096
+/dev/hdb2        38      7        1     58      8       18    83         65536
+# swapon /dev/hdb1 4096
+# free
+         total         used         free
+Mem:       160           56          104
+Swap:     2048            0         2048
+# 
+```
+
+You can't turn swap off again.
+
+You probably can swap to the NAND flash, but it's a terrible idea.
 
 ## Using the NAND flash
 

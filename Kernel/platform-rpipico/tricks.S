@@ -117,7 +117,7 @@ switchin:
     mov sp, r1
 
     mov r4, r0              /* save r0 (ptab ptr) in callee-saved registers */
-    bl contextswitch
+    bl contextswitch        /* may swap a process in */
 	isb
 
 	/* Make the new process runnable. */

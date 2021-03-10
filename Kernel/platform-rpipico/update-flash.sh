@@ -149,6 +149,7 @@ bget ../../Applications/util/sort
 bget ../../Applications/util/stty
 bget ../../Applications/util/sum
 bget ../../Applications/util/su
+bget ../../Applications/util/swapon
 bget ../../Applications/util/sync
 bget ../../Applications/util/tar
 bget ../../Applications/util/tee
@@ -230,6 +231,7 @@ chmod 0755 sort
 chmod 0755 ssh
 chmod 0755 stty
 chmod 0755 sum
+chmod 0755 swapon
 chmod 0755 sync
 chmod 0755 tail
 chmod 0755 tar

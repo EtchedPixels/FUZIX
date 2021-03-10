@@ -5,7 +5,7 @@
 /* Profil syscall support (not yet complete) */
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#undef CONFIG_MULTI
+#define CONFIG_MULTI
 /* 32bit with flat memory */
 #undef CONFIG_FLAT
 /* Pure swap */
