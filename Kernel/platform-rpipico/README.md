@@ -60,8 +60,10 @@ make image -j
 
 You should now end up with `build/fuzix.uf2` and `filesystem.uf2`. The `uf2`
 files can be flashed onto the Pico in the usual way (i.e. connect it up as a
-mass storage device and copy the file on). Alternatively, you can use OpenOCD
-to load `build/fuzix.elf`. Then, connect a UART and boot.
+mass storage device and copy the files on). Alternatively, you can use OpenOCD
+to load `build/fuzix.elf`. Once the board has rebooted it will appear as a USB
+serial device which you can connect to. Alternatively, connect a terminal to
+UART 0 on the Pico.
 
 If you want to use an SD card, note that only filesystems up to 32MB are
 supported. To format a file system, do this from the Fuzix shell:
