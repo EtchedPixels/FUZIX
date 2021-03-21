@@ -1,8 +1,9 @@
 PLATFORM = 68000
-CC = m68k-uclinux-gcc
-ASM = m68k-uclinux-as
-AR = m68k-uclinux-ar
-LINKER = m68k-uclinux-ld
+CROSS_COMPILE=m68k-uclinux-
+CC = $(CROSS_COMPILE)gcc
+ASM = $(CROSS_COMPILE)as
+AR = $(CROSS_COMPILE)ar
+LINKER = $(CROSS_COMPILE)ld
 CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../Library/include -I../../Library/include/68000
 LINKER_OPT = -L../../Library/libs -lc68000
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))

@@ -1,6 +1,8 @@
-CC = m68k-uclinux-gcc
-ASM = m68k-uclinux-as
-AR = m68k-uclinux-ar
+CROSS_COMPILE=m68k-uclinux-
+CC = $(CROSS_COMPILE)gcc
+ASM = $(CROSS_COMPILE)as
+AR = $(CROSS_COMPILE)ar
+LINKER = $(CROSS_COMPILE)ld
 PLATFORM = 68000
 export PLATFORM
 CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -msoft-float -c -I../include -I../include/68000 -I../include/68000/fixed
