@@ -209,12 +209,11 @@ map_kernel:
 	    rts
 
 ;
-;	Entry point to map a linear bank range. We switch 4000-BFFF
-;	C000-FFFF are constant, 0000-3FFF are switched on the task switch
-;	so are valid for map_process_always cases but not mapping an
-;	arbitrary process. This is ok - when we add swap it uses
-;	map_for_swap and that will map a 16K window in and out (which will
-;	need us to fix save/restore)
+;	Entry point to map a linear bank range. We switch 4000-FFFF
+;	0000-3FFF are switched on the task switch so are valid for
+;	map_process_always cases but not mapping an arbitrary process.
+;	This is ok - when we add swap it uses map_for_swap and that will map
+;	a 16K window in and out (which will need us to fix save/restore)
 ;
 map_bank:
 	    stx $FE78
