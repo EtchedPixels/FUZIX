@@ -67,7 +67,7 @@ init_hardware:
 
 opsave:	    .db 0x06	; used as a word so keep together
 save94:	    .db 0x01
-_opreg:	    .db 0x06	; kernel map, 80 columns
+_opreg:	    .db 0x86	; kernel map, 80 columns, linear video memory
 _modout:    .db 0x50	; 80 column, sound enabled, altchars off,
 			; external I/O enabled, 4MHz
 
