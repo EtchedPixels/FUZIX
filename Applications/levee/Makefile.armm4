@@ -1,0 +1,27 @@
+ROOT = ../..
+include $(ROOT)/Applications/rules.armm4
+
+CSRCS = beep.c blockio.c display.c doscall.c editcor.c exec.c find.c
+CSRCS += flexcall.c gemcall.c globals.c insert.c main.c misc.c modify.c
+CSRCS += move.c rmxcall.c ucsd.c undo.c unixcall.c wildargs.c
+HDRS  = extern.h grep.h levee.h proto.h
+
+OBJS = $(CSRCS:.c=.o)
+
+all: levee
+
+levee: $(OBJS) $(CRT0)
+	$(LINKER) -o levee.debug $(CRT0) $(OBJS) $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o levee.bin $(STRIP_OPT) levee.debug
+	$(ELF2FUZIX) -o levee levee.bin
+else
+	$(STRIP) -o levee $(STRIP_OPT) levee.debug
+endif
+
+.c.o:
+	$(CC) $(CFLAGS) $(COPT) -c -DVT52=0 -DANSI=1 -o $@ $<
+
+clean:
+	rm -f $(OBJS) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.rel *.asm *.debug
+	rm -f levee *.bin levee-termcap

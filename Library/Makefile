@@ -4,7 +4,7 @@ CFLAGS += -I../Kernel/include
 
 all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
      tools/syscall_6502 tools/syscall_68000 tools/syscall_8080 \
-     tools/syscall_6809 tools/syscall-scc6809 \
+     tools/syscall_6809 tools/syscall-scc6809 tools/syscall_armm4 \
      tools/ack2fuzix tools/binman \
      tools/liberror tools/relocbin tools/relocbin65 tools/fuzixlib \
      tools/relocbinhc11 tools/relocbin8080
@@ -14,7 +14,7 @@ clean:
 	rm -f tools/relocbin tools/ack2fuzix tools/fuzixlib
 	rm -f tools/syscall-z88dk tools/syscall_6502 tools/syscall_6809 tools/syscall_68000 tools/syscall-scc6809
 	rm -f tools/syscall_pdp11 tools/syscall_8080 tools/syscall_6303
-	rm -f tools/relocbin65 tools/relocbinhc11 tools/relocbin8080
+	rm -f tools/relocbin65 tools/relocbinhc11 tools/relocbin8080 tools/syscall_armm4
 
 tools/syscall: tools/syscall.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
@@ -47,6 +47,9 @@ tools/syscall_esp8266: tools/syscall_esp8266.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_pdp11: tools/syscall_pdp11.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/syscall_armm4: tools/syscall_armm4.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/binman: tools/binman.c

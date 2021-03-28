@@ -107,6 +107,8 @@ void mbr_parse(uint_fast8_t letter)
 		    /* Extended boot record, or chained table; in principle a drive should contain
 		       at most one extended partition so this code is OK even for parsing the MBR.
 		       Chained EBR addresses are relative to the start of the extended partiton. */
+		    if(i >= MAX_PARTITIONS)
+			break;
 		    blk_op.lba = ep_offset + le32_to_cpu(br->partition[i].lba_first);
 		    if(next >= 4)
 			break;

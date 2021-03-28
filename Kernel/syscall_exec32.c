@@ -60,7 +60,11 @@ static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 	if (bf->data_end > ino->c_node.i_size)
 		return 0;
 	/* Revisit this for other ports. Avoid alignment traps */
-	if ((bf->data_start | bf->data_end | bf->bss_end | bf->entry) & 1)
+	if ((bf->data_start | bf->data_end | bf->bss_end
+#ifndef __arm__
+		| bf->entry
+#endif
+		) & 1U)
 		return 0;
 	/* Fix up the BSS so that it's big enough to hold the relocations
 	   FIXME: this is a) ugly and b) overcautious as we should factor
@@ -82,7 +86,7 @@ static void relocate(struct binfmt_flat *bf, uaddr_t progbase, uint32_t size)
 	uint32_t *rp = (uint32_t *)(progbase + bf->reloc_start);
 	uint32_t n = bf->reloc_count;
 	while (n--) {
-		uint32_t v = *rp++;
+		uint32_t v = ntohl(*rp++);
 		if (v < size && !(v&1))	/* Revisit for non 68K */
 			/* FIXME: go via user access methods */
 			*((uint32_t *)(progbase + 0x40 + v)) += progbase + 0x40;
@@ -144,6 +148,16 @@ arg_t _execve(void)
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
+
+	binflat.rev = ntohl(binflat.rev);
+	binflat.entry = ntohl(binflat.entry);
+	binflat.data_start = ntohl(binflat.data_start);
+	binflat.data_end = ntohl(binflat.data_end);
+	binflat.bss_end = ntohl(binflat.bss_end);
+	binflat.stack_size = ntohl(binflat.stack_size);
+	binflat.reloc_start = ntohl(binflat.reloc_start);
+	binflat.reloc_count = ntohl(binflat.reloc_count);
+	binflat.flags = ntohl(binflat.flags);
 
 	/* FIXME: ugly - save this as valid_hdr modifies it */
 	true_brk = binflat.bss_end;
@@ -356,6 +370,9 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	/* Set argv to point below the argument strings */
 	argc = argbuf->a_argc;
 	argbase = argv = ptr - sizeof(uptr_t) * (argc + 1);
+#ifdef ALIGNDOWN
+	argbase = argv = ((uptr_t *)(ALIGNDOWN((uint8_t *)(argbase))));
+#endif
 
 	if (cnt) {
 		*cnt = argc;

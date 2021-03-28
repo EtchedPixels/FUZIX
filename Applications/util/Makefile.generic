@@ -133,15 +133,30 @@ $(APPCURSES): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
 	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
 	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
 
 $(APPTC): %: %.o
 	$(LINKER) $^ -o $@.debug -ltermcap$(PLATFORM) $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
 	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
 
 $(APPCURSES): %: %.o
 	$(LINKER) $^ -o $@.debug -lcurses$(PLATFORM) -ltermcap$(PLATFORM) $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
 	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
 
 size.report: $(APPS) $(APPSNS) $(APPTC)
 	ls -l $^ > $@
@@ -149,7 +164,7 @@ size.report: $(APPS) $(APPSNS) $(APPTC)
 clean:
 	rm -f $(OBJS) $(OBJSNS) $(OBJTC) $(OBJCURSES)
 	rm -f $(APPS) $(APPSNS) $(APPTC) $(APPCURSES)
-	rm -f $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+	rm -f $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o *.text *.data *.debug
 
 rmbak:
 	rm -f *~ core

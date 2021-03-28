@@ -300,7 +300,7 @@ static uint8_t pbuff[TTYSIZ];\
     {pbuf4, pubf4, pubf4, TTYSIZ, 0, TTYSIZ/2}, \
     {pbuf5, pubf5, pubf5, TTYSIZ, 0, TTYSIZ/2}, \
     {pbuf6, pubf6, pubf6, TTYSIZ, 0, TTYSIZ/2}, \
-    {pbuf7, pubf7, pubf7, TTYSIZ, 0, TTYSIZ/2}
+    {pbuf7, pubf7, pubf7, TTYSIZ, 0, TTYSIZ/2}, \
     {pbuf8, pubf8, pubf8, TTYSIZ, 0, TTYSIZ/2}, \
     {pbuf9, pubf9, pubf9, TTYSIZ, 0, TTYSIZ/2}, \
     {pbufa, pubfa, pubfa, TTYSIZ, 0, TTYSIZ/2}, \

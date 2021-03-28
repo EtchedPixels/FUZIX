@@ -1,0 +1,493 @@
+/****************************************************************************
+ * arch/arm/include/armv7-m/irq.h
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ *
+ ****************************************************************************/
+
+/* This file should never be included directly but, rather, only indirectly
+ * through nuttx/irq.h
+ */
+
+#ifndef __ARCH_ARM_INCLUDE_ARMV7_M_IRQ_H
+#define __ARCH_ARM_INCLUDE_ARMV7_M_IRQ_H
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
+#include <config-nuttx.h>
+
+#include <arch/tiva/chip.h>
+
+#include <nuttx/irq.h>
+#ifndef __ASSEMBLY__
+#  include <nuttx/compiler.h>
+#  include <arch/armv7-m/nvicpri.h>
+#  include <stdint.h>
+#  include <inline-irq.h> /* Let FUZIX take over */
+#endif
+
+/* Included implementation-dependent register save structure layouts */
+
+#ifndef CONFIG_ARMV7M_LAZYFPU
+#  include <arch/armv7-m/irq_cmnvector.h>
+#else
+#  include <arch/armv7-m/irq_lazyfpu.h>
+#endif
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/* Configuration ************************************************************/
+
+/* If this is a kernel build, how many nested system calls should we
+ * support?
+ */
+
+#ifndef CONFIG_SYS_NNEST
+#  define CONFIG_SYS_NNEST 2
+#endif
+
+/* Alternate register names *************************************************/
+
+#define REG_A1              REG_R0
+#define REG_A2              REG_R1
+#define REG_A3              REG_R2
+#define REG_A4              REG_R3
+#define REG_V1              REG_R4
+#define REG_V2              REG_R5
+#define REG_V3              REG_R6
+#define REG_V4              REG_R7
+#define REG_V5              REG_R8
+#define REG_V6              REG_R9
+#define REG_V7              REG_R10
+#define REG_SB              REG_R9
+#define REG_SL              REG_R10
+#define REG_FP              REG_R11
+#define REG_IP              REG_R12
+#define REG_SP              REG_R13
+#define REG_LR              REG_R14
+#define REG_PC              REG_R15
+
+/* The PIC register is usually R10. It can be R9 is stack checking is enabled
+ * or if the user changes it with -mpic-register on the GCC command line.
+ */
+
+#define REG_PIC             REG_R10
+
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
+#ifndef __ASSEMBLY__
+
+/* This is the size of the interrupt state save returned by up_irq_save().
+ * For ARM, a 32 register value is returned, for the thumb2, Cortex-M3, the
+ * 16-bit primask register value is returned,
+ */
+
+#ifdef __thumb2__
+#if defined(CONFIG_ARMV7M_USEBASEPRI) || defined(CONFIG_ARCH_ARMV6M) || defined(CONFIG_ARMV8M_USEBASEPRI)
+typedef unsigned char      irqstate_t;
+#else
+typedef unsigned short     irqstate_t;
+#endif
+#else /* __thumb2__ */
+typedef unsigned int       irqstate_t;
+#endif /* __thumb2__ */
+
+/* This structure represents the return state from a system call */
+
+#ifdef CONFIG_LIB_SYSCALL
+struct xcpt_syscall_s
+{
+  uint32_t excreturn;   /* The EXC_RETURN value */
+  uint32_t sysreturn;   /* The return PC */
+};
+#endif
+
+/* The following structure is included in the TCB and defines the complete
+ * state of the thread.
+ */
+
+struct xcptcontext
+{
+  /* The following function pointer is non-zero if there
+   * are pending signals to be processed.
+   */
+
+  FAR void *sigdeliver; /* Actual type is sig_deliver_t */
+
+  /* These are saved copies of LR, PRIMASK, and xPSR used during
+   * signal processing.
+   *
+   * REVISIT:  Because there is only one copy of these save areas,
+   * only a single signal handler can be active.  This precludes
+   * queuing of signal actions.  As a result, signals received while
+   * another signal handler is executing will be ignored!
+   */
+
+  uint32_t saved_pc;
+#ifdef CONFIG_ARMV7M_USEBASEPRI
+  uint32_t saved_basepri;
+#else
+  uint32_t saved_primask;
+#endif
+  uint32_t saved_xpsr;
+#ifdef CONFIG_BUILD_PROTECTED
+  uint32_t saved_lr;
+
+  /* This is the saved address to use when returning from a user-space
+   * signal handler.
+   */
+
+  uint32_t sigreturn;
+
+#endif
+
+#ifdef CONFIG_LIB_SYSCALL
+  /* The following array holds the return address and the exc_return value
+   * needed to return from each nested system call.
+   */
+
+  uint8_t nsyscalls;
+  struct xcpt_syscall_s syscall[CONFIG_SYS_NNEST];
+
+#endif
+
+  /* Register save area */
+
+  uint32_t regs[XCPTCONTEXT_REGS];
+};
+#endif
+
+/****************************************************************************
+ * Inline functions
+ ****************************************************************************/
+
+#ifndef __ASSEMBLY__
+
+/* Name: up_irq_save, up_irq_restore, and friends.
+ *
+ * NOTE: This function should never be called from application code and,
+ * as a general rule unless you really know what you are doing, this
+ * function should not be called directly from operation system code either:
+ * Typically, the wrapper functions, enter_critical_section() and
+ * leave_critical section(), are probably what you really want.
+ */
+
+#if 0
+
+/* Get/set the PRIMASK register */
+
+static inline uint8_t getprimask(void) inline_function;
+static inline uint8_t getprimask(void)
+{
+  uint32_t primask;
+  __asm__ __volatile__
+    (
+     "\tmrs  %0, primask\n"
+     : "=r" (primask)
+     :
+     : "memory");
+
+  return (uint8_t)primask;
+}
+
+static inline void setprimask(uint32_t primask) inline_function;
+static inline void setprimask(uint32_t primask)
+{
+  __asm__ __volatile__
+    (
+      "\tmsr primask, %0\n"
+      :
+      : "r" (primask)
+      : "memory");
+}
+
+static inline void cpsie(void) inline_function;
+static inline void cpsie(void)
+{
+  __asm__ __volatile__ ("\tcpsie  i\n");
+}
+
+static inline void cpsid(void) inline_function;
+static inline void cpsid(void)
+{
+  __asm__ __volatile__ ("\tcpsid  i\n");
+}
+
+/* Get/set the BASEPRI register.  The BASEPRI register defines the minimum
+ * priority for exception processing. When BASEPRI is set to a nonzero
+ * value, it prevents the activation of all exceptions with the same or
+ * lower priority level as the BASEPRI value.
+ */
+
+static inline uint8_t getbasepri(void) inline_function;
+static inline uint8_t getbasepri(void)
+{
+  uint32_t basepri;
+
+  __asm__ __volatile__
+    (
+     "\tmrs  %0, basepri\n"
+     : "=r" (basepri)
+     :
+     : "memory");
+
+  return (uint8_t)basepri;
+}
+
+static inline void setbasepri(uint32_t basepri) inline_function;
+static inline void setbasepri(uint32_t basepri)
+{
+  __asm__ __volatile__
+    (
+      "\tmsr basepri, %0\n"
+      :
+      : "r" (basepri)
+      : "memory");
+}
+
+#ifdef CONFIG_ARMV7M_BASEPRI_WAR  /* Cortex-M7 r0p1 Errata 837070 Workaround */
+/* Set the BASEPRI register (possibly increasing the priority).
+ *
+ * This may be retaining or raising priority.  Cortex-M7 r0p1 Errata
+ * 837070 Workaround may be required if we are raising the priority.
+ */
+
+static inline void raisebasepri(uint32_t basepri) inline_function;
+static inline void raisebasepri(uint32_t basepri)
+{
+  register uint32_t primask;
+
+  /* 1. Retain the previous value of the PRIMASK register,
+   * 2  Disable all interrupts via the PRIMASK register.  NOTE:  They
+   *    could possibly already be disabled.
+   * 3. Set the BASEPRI register as requested (possibly increasing the
+   *    priority)
+   * 4. Restore the original value of the PRIMASK register, probably re-
+   *    enabling interrupts.  This avoids the possibly undesirable side-
+   *    effect of unconditionally re-enabling interrupts.
+   */
+
+  __asm__ __volatile__
+    (
+     "\tmrs   %0, primask\n"
+     "\tcpsid i\n"
+     "\tmsr   basepri, %1\n"
+     "\tmsr   primask, %0\n"
+     : "+r" (primask)
+     : "r"  (basepri)
+     : "memory");
+}
+#else
+#  define raisebasepri(b) setbasepri(b);
+#endif
+
+#endif /* 0 */
+
+/* Disable IRQs */
+
+#if 0
+
+static inline void up_irq_disable(void) inline_function;
+static inline void up_irq_disable(void)
+{
+#ifdef CONFIG_ARMV7M_USEBASEPRI
+  /* Probably raising priority */
+
+  raisebasepri(NVIC_SYSH_DISABLE_PRIORITY);
+#else
+  __asm__ __volatile__ ("\tcpsid  i\n");
+#endif
+}
+
+#else /* 0 */
+
+#define up_irq_disable() __hard_di()
+
+#endif /* 0 */
+
+/* Save the current primask state & disable IRQs */
+
+#if 0
+
+static inline irqstate_t up_irq_save(void) inline_function;
+static inline irqstate_t up_irq_save(void)
+{
+#ifdef CONFIG_ARMV7M_USEBASEPRI
+  /* Probably raising priority */
+
+  uint8_t basepri = getbasepri();
+  raisebasepri(NVIC_SYSH_DISABLE_PRIORITY);
+  return (irqstate_t)basepri;
+
+#else
+
+  unsigned short primask;
+
+  /* Return the current value of primask register and set
+   * bit 0 of the primask register to disable interrupts
+   */
+
+  __asm__ __volatile__
+    (
+     "\tmrs    %0, primask\n"
+     "\tcpsid  i\n"
+     : "=r" (primask)
+     :
+     : "memory");
+
+  return primask;
+#endif
+}
+
+#else /* 0 */
+
+#define up_irq_save() __hard_di()
+
+#endif /* 0 */
+
+/* Enable IRQs */
+
+#if 0
+
+static inline void up_irq_enable(void) inline_function;
+static inline void up_irq_enable(void)
+{
+  /* In this case, we are always retaining or lowering the priority value */
+
+  setbasepri(NVIC_SYSH_PRIORITY_MIN);
+  __asm__ __volatile__ ("\tcpsie  i\n");
+}
+
+#else /* 0 */
+
+#define up_irq_enable() __hard_ei()
+
+#endif /* 0 */
+
+/* Restore saved primask state */
+
+#if 0
+
+static inline void up_irq_restore(irqstate_t flags) inline_function;
+static inline void up_irq_restore(irqstate_t flags)
+{
+#ifdef CONFIG_ARMV7M_USEBASEPRI
+  /* In this case, we are always retaining or lowering the priority value */
+
+  setbasepri((uint32_t)flags);
+
+#else
+  /* If bit 0 of the primask is 0, then we need to restore
+   * interrupts.
+   */
+
+  __asm__ __volatile__
+    (
+      "\ttst    %0, #1\n"
+      "\tbne.n  1f\n"
+      "\tcpsie  i\n"
+      "1:\n"
+      :
+      : "r" (flags)
+      : "memory");
+
+#endif
+}
+
+#else /* 0 */
+
+#define up_irq_restore(flags) __hard_irqrestore(flags)
+
+#endif /* 0 */
+
+#if 0
+
+/* Get/set IPSR */
+
+static inline uint32_t getipsr(void) inline_function;
+static inline uint32_t getipsr(void)
+{
+  uint32_t ipsr;
+  __asm__ __volatile__
+    (
+     "\tmrs  %0, ipsr\n"
+     : "=r" (ipsr)
+     :
+     : "memory");
+
+  return ipsr;
+}
+
+/* Get/set CONTROL */
+
+static inline uint32_t getcontrol(void) inline_function;
+static inline uint32_t getcontrol(void)
+{
+  uint32_t control;
+  __asm__ __volatile__
+    (
+     "\tmrs  %0, control\n"
+     : "=r" (control)
+     :
+     : "memory");
+
+  return control;
+}
+
+static inline void setcontrol(uint32_t control) inline_function;
+static inline void setcontrol(uint32_t control)
+{
+  __asm__ __volatile__
+    (
+      "\tmsr control, %0\n"
+      :
+      : "r" (control)
+      : "memory");
+}
+
+#endif /* 0 */
+
+#endif /* __ASSEMBLY__ */
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+#ifndef __ASSEMBLY__
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+#undef EXTERN
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+#endif /* __ARCH_ARM_INCLUDE_ARMV7_M_IRQ_H */

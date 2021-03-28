@@ -1,0 +1,35 @@
+ROOT = ../../..
+include $(ROOT)/Applications/rules.armm4
+
+SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c du.c ed.c expr.c
+SRCS += find.c m4.c make.c moo.c pr.c tar.c test.c ttt.c units.c
+
+OBJS = $(SRCS:.c=.o)
+
+APPS = $(OBJS:.o=)
+
+all: $(APPS) size.report
+
+$(APPS): $(CRT0)
+
+$(APPS): %: %.o
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+expr.c: expr.y
+
+find.c: find.y
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.data *.text *.debug size.report *.o
+
+rmbak:
+	rm -f *~ core

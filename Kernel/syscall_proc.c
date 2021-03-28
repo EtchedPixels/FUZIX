@@ -243,11 +243,18 @@ arg_t _brk(void)
 		udata.u_error = ENOMEM;
 		return -1;
 	}
+#ifdef PROGBASE_HAS_EXPR
+	if (addr < PROGBASE) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+#else
 #if (PROGBASE > 0)
 	if (addr < PROGBASE) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
+#endif
 #endif
 	/* If we have done a break that gives us more room we must zero
 	   the extra as we no longer guarantee it is clear already */

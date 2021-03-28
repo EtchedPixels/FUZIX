@@ -273,6 +273,9 @@ syscall_exec16.o: include/version.h include/kdata.h include/printf.h
 syscall_exec32.o: include/kernel.h include/panic.h include/sysinfoblk.h
 syscall_exec32.o: include/kernel32.h include/version.h include/kdata.h
 syscall_exec32.o: include/printf.h
+syscall_execelf32.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_execelf32.o: include/kernel32.h include/version.h include/kdata.h
+syscall_execelf32.o: include/printf.h
 syscall_fs2.o: include/kernel.h include/panic.h include/sysinfoblk.h
 syscall_fs2.o: include/version.h include/kdata.h include/printf.h
 syscall_fs3.o: include/kernel.h include/panic.h include/sysinfoblk.h
