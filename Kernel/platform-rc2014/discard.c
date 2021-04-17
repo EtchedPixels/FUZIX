@@ -152,7 +152,7 @@ static uint8_t probe_16x50(uint8_t p)
 
 /* Look for a QUART at 0xBA */
 
-#define QUARTREG(x)	(((x) << 11) | 0xBA)
+#define QUARTREG(x)	((uint16_t)(((x) << 11) | 0xBA))
 
 #define MRA	0x00
 #define CRA	0x02
@@ -381,6 +381,8 @@ static uint8_t probe_copro(void)
 	return 1;
 }
 
+__sfr __at 0xED z512_ctrl;
+
 /*
  *	Do the main memory bank and device set up
  */
@@ -511,10 +513,24 @@ void pagemap_init(void)
 		i = 0xC0;
 		while(i) {
 			if (!ds1302_present || rtc_port != i) {
-				if (m = probe_16x50(i))
+				if (m = probe_16x50(i)) {
 					register_uart(i, &ns16x50_uart);
+					/* Can't be a Z80-512K if there is a
+					   UART at 0xE8 */
+					if (i == 0xE8)
+						z512_present = 0;
+				}
 			}
 			i += 0x08;
+		}
+		/* Now check for Z80-512K if still possible */
+		if (z512_present) {
+			z512_ctrl = 7;
+			if (z512_ctrl != 7)
+				z512_present = 0;
+			z512_ctrl = 0;
+			if (z512_ctrl != 0)
+				z512_present = 0;
 		}
 	}
 	display_uarts();

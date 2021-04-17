@@ -27,6 +27,7 @@ uint8_t ps2kbd_present;
 uint8_t ps2mouse_present;
 uint8_t sc26c92_present;
 uint8_t u16x50_present;
+uint8_t z512_present = 1;	/* We assume so and turn it off if not */
 
 uint8_t platform_tick_present;
 uint8_t timer_source = TIMER_NONE;

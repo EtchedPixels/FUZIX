@@ -4,6 +4,7 @@
 - TMS9918A - stop console flipping when in gfx mode
 - Sound
 - Autodetect PPIDE
+- Mouse connect
 
 
 This is Fuzix for the RC2014
@@ -50,7 +51,7 @@ Supported Hardware
 
 	QUART at 0xBA
 
-	Z80PIO or SC129 at 0x68 providing SD card bitbang
+	Z80PIO or SC129 at 0x68 providing SD card bitbang or GPIO
 
 	SC129 at 0x03 as GPIO
 
@@ -70,10 +71,15 @@ Supported Hardware
 
 	PPIDE (currently you need to change the config.h and rebuilld for this)
 
+	Z80-512K CLK2 divider (not yet tested)
+
+	PS/2 Keyboard at 0xBB (mouse/stick are not yet supported)
+
+	Console switch card at 0xFF as GPIO
+
+
 Pending
 	Sound cards (until Fuzix gets proper audio support)
-	PS2 Keyboard/Mouse/Joystick at 0xBB
-	Z80 PIO as GPIO
 	I2C at 0x6C
 
 Unsupported Hardware
@@ -82,7 +88,6 @@ Unsupported Hardware
 	of the 512K ROM/RAM. Please see the relevant port instead.
 	SC111 or other Z180 CPU board with linear mapped RAM. See the SC111
 	port instead.
-	LOROM 128K memory (has its own port)
 
 	SC110 CTC/serial (does not appear to be able to chain CTC pairs, as
 	is neeed for IM1 mode). You can run a wire by hand. Can still be used
