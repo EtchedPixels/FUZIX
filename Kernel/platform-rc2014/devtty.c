@@ -265,7 +265,7 @@ uint8_t sio_r[] = {
 	0x05, 0xEA
 };
 
-static uint16_t siobaud[] = {
+static uint8_t siobaud[] = {
 	0xC0,	/* 0 */
 	0,	/* 50 */
 	0,	/* 75 */
@@ -283,6 +283,30 @@ static uint16_t siobaud[] = {
 	0x04,	/* 57600 */
 	0x02	/* 115200 */
 };
+
+/* Note: in theory we can support below 300 baud in some cases but it's
+   not useful so we don't bother right now */
+
+static uint8_t siobaud2[] = {
+	0x00,	/* 0 */
+	0,	/* 50 */
+	0,	/* 75 */
+	0,	/* 110 */
+	0,	/* 134 */
+	0,	/* 150 */
+	0x17,	/* 300 */
+	0x16,	/* 600 */
+	0x15,	/* 1200 */
+	0x14,	/* 2400 */
+	0x13,	/* 4800 */
+	0x12,	/* 9600 */
+	0x11,	/* 19200 */
+	0x10,	/* 38400 */
+	0x01,	/* 57600 */
+	0x00	/* 115200 */
+};
+
+__sfr __at 0xED z512_ctl;
 
 static void sio_setup(uint_fast8_t minor)
 {
@@ -304,7 +328,9 @@ static void sio_setup(uint_fast8_t minor)
 		CTC_CH1 = siobaud[baud];
 		if (baud > B600)	/* Use x16 clock and CTC divider */
 			r = 0x44;
-	} else
+	} else if (z512_present && p == SIOB_C)
+		z512_ctl = siobaud2[baud];
+	else
 		baud = B115200;
 
 	t->c_cflag &= ~CBAUD;

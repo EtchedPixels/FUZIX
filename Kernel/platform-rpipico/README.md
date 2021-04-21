@@ -32,7 +32,7 @@ If you have an SD card reader, connect the SD card to the following pins:
            19           14            SCK
            20           15            MOSI
 
-Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
+Remember to also connect the SD card's GND to any Raspberry Pico GND pin and Vcc to
 3.3V. Not 5V, or it won't work.
 
 The console is accessible either via UART0 (at 115200 baud) or by connecting
