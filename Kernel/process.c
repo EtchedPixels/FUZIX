@@ -521,15 +521,21 @@ void timer_interrupt(void)
 #include "syscall_name.h"
 #endif
 
-// Fuzix system call handler
-// we arrive here from syscall.s with the kernel paged in, using the kernel stack, interrupts enabled.
+/*
+ * Fuzix system call handler
+ *
+ * we arrive here from syscall interfaces with the kernel paged in, using
+ * the kernel stack, interrupts enabled. The glue code has also placed the
+ * system call number and arguments into the udata for ease of access and
+ * portability.The routine returns two parameters to the platform glue via
+ * u_retval and u_error. The platform glue is responsible for returning these
+ * in a sensible form to the caller.
+ */
 void unix_syscall(void)
 {
+	uint8_t rv;
 	udata.u_error = 0;
 
-	/* Fuzix saves the Stack Pointer and arguments in the
-	 * Assembly Language Function handler in lowlevel.s
-	 */
 	if (udata.u_callno >= FUZIX_SYSCALL_COUNT) {
 		udata.u_error = ENOSYS;
 	} else {
@@ -539,8 +545,14 @@ void unix_syscall(void)
 			syscall_name[udata.u_callno], udata.u_argn,
 			udata.u_argn1, udata.u_argn2);
 #endif
-		// dispatch system call
-		udata.u_retval = (*syscall_dispatch[udata.u_callno]) ();
+		/* Dispatch system call */
+		rv = (*syscall_dispatch[udata.u_callno]) ();
+		/* There is subtle magic here: The system call may change the
+		   current process and on some systems that changes how the
+		   macro for udata is evaluated. C does not define whether the
+		   left side of the assignment evaluates first so we must
+		   go via a temporary to force a sequence point */
+		udata.u_retval = rv;
 
 #ifdef DEBUG_SYSCALL
 		kprintf("\t\t\tpid %d: ret syscall %d, ret %p err %p\n",
