@@ -1,0 +1,12 @@
+Initial testing build for rc2014-68008
+
+You need a disk image with the boot loader on LBA 0 and the kernel on LBA 1+
+Block 0 should hold a partition table as well.
+
+At the moment a 16x50 is expected at 0xC0 and is just driven as the ROM left
+it.
+
+At this point the tree compiles and you can boot it with the current ROM to
+early spots in the kernel. However the Fuzix 68K code assumes writable vectors
+but the board has ROM in the low 512K. The next stage is to update the ROM
+to support revectoring the exceptions and interrupts that Fuzix needs.
