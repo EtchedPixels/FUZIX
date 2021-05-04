@@ -28,14 +28,14 @@ loader:
    happens to be a safe bet but we ought to check and do either direction */
 
 	move.l 8(sp),a0
-	move.l #$80000,a1
-	move.w #$1FFF,d0		; 64K
+	move.l #$80400,a1
+	move.w #$3FFF,d0		; 64K
 
 copy:
 	move.l (a0)+,(a1)+
 	dbra d0,copy
 
-	jmp $80000
+	jmp $80400
 
 syscb:
 	long $F1			; raw read

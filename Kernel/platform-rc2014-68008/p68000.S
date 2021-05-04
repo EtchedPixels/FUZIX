@@ -36,14 +36,16 @@ init_hardware:
 	    move.w #512,d0
 	    move.w d0,ramsize
 	    move.l #_end+512,d1
+	    sub.l #$80000,d1
 	    lsr.l #8,d1
 	    lsr.l #2,d1
 	    sub.w  d1,d0		; Guess for kernel
 	    move.w d0,procmem		; guesses for now
 
-	    bsr install_vectors
+	    lea.l $80000,a0		; RAM revector copy
+	    bsr install_vectors_at
 
-	    move.l #autovec_irq,$68	; autovector 2 is the only one we use
+	    move.l #autovec_irq,$80068	; autovector 2 is the only one we use
             rts
 
 autovec_irq:
