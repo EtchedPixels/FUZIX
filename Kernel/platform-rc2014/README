@@ -93,6 +93,9 @@ Unsupported Hardware
 	is neeed for IM1 mode). You can run a wire by hand. Can still be used
 	for serial baud control.
 
+	Picked Dog 128/128K and 512/512K boards (different memory paging
+	model to the standard RC2014)
+
 
 Things To Note When Modifying
 
