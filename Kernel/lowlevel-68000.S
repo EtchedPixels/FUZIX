@@ -395,6 +395,7 @@ SYM (__umodsi3):
 		.globl copy_blocks
 		.globl swap_blocks
 		.globl install_vectors
+		.globl install_vectors_at
 		.globl vdso
 		.globl sys_cpu
 		.globl sys_cpu_feat
@@ -512,8 +513,22 @@ threeword:
 		move.l d0,a6
 		rte		; hit user space (and will enable interrupts)
 
+;
+;	Standard 680x0 vector install in low memory, leaving the low 8
+;	bytes untouched (reset is often magic), and skipping the extra
+;	register magic at F0-FF on 683xx
+;
 install_vectors:
-		move.l #8,a0
+		move.w #0,a0
+;
+;	Entry point for custom vector pointer (68010+) or platforms that
+;	revector a mirror of ROM based vectors
+;
+install_vectors_at:
+		move.l a0,vectorbase
+		add.w #8,a0
+doinstall:
+		move.l a0,a1
 		move.w #253,d0
 		move.l #unexpected,d1
 		;
@@ -533,7 +548,7 @@ skipvec:
 		;
 		; Now set the vectors we care about
 		;
-		move.w #8,a0
+		move.l a1,a0		; vector addresses
 		move.l #bus_error,(a0)+
 		move.l #addr_error,(a0)+
 		move.l #illegal,(a0)+
@@ -544,7 +559,8 @@ skipvec:
 		move.l #trace,(a0)+
 		move.l #unimpa,(a0)+	; A and F line traps
 		move.l #unimpf,(a0)+
-		move.w #$80,a0
+		move.l a1,a0
+		add.w  #$78,a0		; gives us vector + $80
 		move.l #trap0,(a0)+
 		move.l #trap1,(a0)+
 		move.l #trap2,(a0)+
@@ -561,7 +577,7 @@ skipvec:
 		move.l #trap13,(a0)+
 		move.l #trap14,(a0)+
 		move.l #trap15,(a0)
-		move.w #$0,a0
+		move.l a1,a0
 		move.l #uninit,$3c(a0)
 		move.l #spurious,$60(a0)
 		rts
@@ -578,11 +594,12 @@ probe_memory:
 		move sr,-(sp)
 		move #$2700,sr		; disable interrupts
 		move.l 6(sp),a0
-		move.l #probe_error,8
+		move.l vectorbase,a1
+		move.l #probe_error,8(a1)
 		move.l a7,a1
 		moveq #0,d0
 		tst.b (a0)
-probe_out:	move.l #bus_error,8
+probe_out:	move.l #bus_error,8(a1)
 		rte
 probe_error:
 		moveq #1,d0
@@ -599,8 +616,9 @@ probe_error:
 ;
 cpu_type:
 		move.w sr,-(sp)
+		move.l vectorbase,a0
 		move #$2700,sr		; disable interrupts
-		move.l #cpu_ill_error,16
+		move.l #cpu_ill_error,16(a0)
 		move.l a7,a1
 		moveq #0,d0
 		save
@@ -619,7 +637,7 @@ cpu_type:
 		moveq #60,d0
 		restore
 cpu_type_exit:
-		move.l #illegal,16
+		move.l #illegal,16(a0)
 		move.b d0,cpu_has_trapvec
 		rte
 ;
@@ -1113,3 +1131,4 @@ cpu_has_icache:
 		byte 0
 sys_cpu:	byte 9		; 68000
 sys_cpu_feat:	byte 0		; 68000 base features (updated as we boot)
+vectorbase:	long 0		; 680x0 trap vector table base address
