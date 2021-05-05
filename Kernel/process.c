@@ -533,7 +533,7 @@ void timer_interrupt(void)
  */
 void unix_syscall(void)
 {
-	uint8_t rv;
+	arg_t rv;
 	udata.u_error = 0;
 
 	if (udata.u_callno >= FUZIX_SYSCALL_COUNT) {
