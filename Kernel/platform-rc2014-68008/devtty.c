@@ -5,7 +5,6 @@
 #include <devtty.h>
 #include <tty.h>
 
-#define io	((volatile uint8_t *)0x10000)
 
 /*
  *	To start with a minimal 16x50 UART driver
@@ -30,18 +29,18 @@ void kputchar(uint8_t c)
 {
 	if (c == '\n')
 		kputchar('\r');
-	while(!(io[0xC5] & 0x20));
-	io[0xC0] = c;
+	while(!(in(0xC5) & 0x20));
+	out(0xC0, c);
 }
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	return io[0xC5] & 0x20 ? TTY_READY_NOW : TTY_READY_SOON;
+	return in(0xC5) & 0x20 ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	io[0xC0] = c;
+	out(0xC0, c);
 }
 
 void tty_setup(uint8_t minor, uint8_t flags)
@@ -65,8 +64,8 @@ void tty_data_consumed(uint8_t minor)
 
 static void tty_interrupt(void)
 {
-	if (io[0xC5] & 0x01)
-		tty_inproc(1, io[0xC0]);
+	if (in(0xC5) & 0x01)
+		tty_inproc(1, in(0xC0));
 }
 
 void platform_interrupt(void)
@@ -74,4 +73,10 @@ void platform_interrupt(void)
 	tty_interrupt();
 	/* TODO: a timer source */
 //	timer_interrupt();
+}
+
+/* Hack for now */
+void platform_idle(void)
+{
+	tty_interrupt();
 }

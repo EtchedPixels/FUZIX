@@ -58,3 +58,7 @@
 #define BOOTDEVICENAMES "hd#"
 
 #define TTY_INIT_BAUD	B38400
+
+/* Our I/O window is at 64K for 64K. */
+
+#define IOMAP(x)	(0x10000+((uint16_t)(x)))

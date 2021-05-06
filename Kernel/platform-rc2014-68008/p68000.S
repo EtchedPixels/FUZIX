@@ -26,9 +26,11 @@ init_early:
 	    move.l a5,udata_shadow	; shadow copy for entry/exit
             rts
 
+#if 0
 platform_idle:
 	    stop #($2000+EI_MASK)
 	    rts
+#endif
 ;
 ;	FIXME: could be in discard if we wanted
 ;
