@@ -11,6 +11,12 @@ uint8_t nuart;
 uint8_t quart_present;
 uint8_t sc26c92_present;
 
+/* Udata and kernel stacks */
+/* We need an initial kernel stack and udata so the slot for init is
+   set up at compile time */
+u_block udata_block0;
+static u_block *udata_block[PTABSIZE] = {&udata_block0,};
+
 void do_beep(void)
 {
 }
@@ -217,6 +223,31 @@ static void sc26c92_timer(uint8_t port)
 	timer_source = TIMER_SC26C92;
 }
 
+/*
+ *	We allocate the kernel init memory from the top of memory. This
+ *	will allow us eventually to have a discard segment that is at
+ *	the end of the kernel image. If we allocated this low then we'd
+ *	either go over the init image too early, or not have a single linear
+ *	space.
+ *
+ *	The end of memory is fixed by the platform so not probed in this
+ *	case.
+ */
+
+static uint8_t *memtop = (uint8_t *)0x100000;
+
+uint8_t *init_alloc(unsigned int size)
+{
+	extern uint8_t _end;
+
+	size = (size + 3) & ~3;
+	memtop -= size;
+
+	if (memtop < &_end)
+		panic("out of memory");
+	return memtop;
+}
+
 void init_hardware_c(void)
 {
 	/* TODO: ACIA */
@@ -258,14 +289,17 @@ void init_hardware_c(void)
 
 void pagemap_init(void)
 {
+	unsigned short i;
 	/* Linker provided end of kernel */
-	/* TODO: create a discard area at the end of the image and start
-	   there */
 	extern uint8_t _end;
-	uint32_t e = (uint32_t)&_end;
+
+	/* Allocate the udata blocks at boot time so we don't fragment
+	   memory with them */
+	for (i = 1; i < PTABSIZE; i++)
+		udata_block[i] = (u_block *)init_alloc(sizeof(u_block));
 
 	/* Allocate the rest of memory to the userspace */
-	kmemaddblk((void *)e, 0x100000 - e);
+	kmemaddblk(&_end, memtop - &_end);
 
 	kprintf("Motorola 680%s%d processor detected.\n",
 		sysinfo.cpu[1]?"":"0",sysinfo.cpu[1]);
@@ -276,11 +310,6 @@ void pagemap_init(void)
 		kputs("Warning: no timer available.\n");
 }
 
-/* Udata and kernel stacks */
-/* We need an initial kernel stack and udata so the slot for init is
-   set up at compile time */
-u_block udata_block0;
-static u_block *udata_block[PTABSIZE] = {&udata_block0,};
 
 /* This will belong in the core 68K code once finalized */
 
@@ -291,16 +320,11 @@ void install_vdso(void)
 	memcpy((void *)udata.u_codebase, &vdso, 0x40);
 }
 
-/* FIXME: this tends to leave fixed objects messing up the memory pool.
-   Allocate them at boot instead */
+/* We allocate these at boot to avoid fragmenting memory. Really we need
+   a hook to free them back up on process exit to go dynamic FIXME */
 uint8_t platform_udata_set(ptptr p)
 {
 	u_block **up = &udata_block[p - ptab];
-	if (*up == NULL) {
-		*up = kmalloc(sizeof(struct u_block), 0);
-		if (*up == NULL)
-			return ENOMEM;
-	}
 	p->p_udata = &(*up)->u_d;
 	return 0;
 }

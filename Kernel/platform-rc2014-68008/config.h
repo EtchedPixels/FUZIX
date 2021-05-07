@@ -32,7 +32,7 @@
 
 /* Device parameters */
 #define TTYDEV BOOT_TTY
-#define NUM_DEV_TTY 4
+#define NUM_DEV_TTY 8
 
 /* Could be bigger but we need to add hashing first and it's not clearly
    a win with a CF card anyway */
@@ -46,14 +46,10 @@
 
 #define platform_copyright()
 
-/* Note: select() in the level 2 code will not work on this configuration
-   at the moment as select is limited to 16 processes. FIXME - support a
-   hash ELKS style for bigger systems where wakeup aliasing is cheaper */
-
-#define PTABSIZE	125
+#define PTABSIZE	16
 #define UFTSIZE		16
-#define OFTSIZE		160
-#define ITABSIZE	176
+#define OFTSIZE		40
+#define ITABSIZE	50
 
 #define BOOTDEVICENAMES "hd#"
 

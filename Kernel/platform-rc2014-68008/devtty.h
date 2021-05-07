@@ -12,6 +12,8 @@ void do_timer_interrupt(void);
 void tty_putc(uint_fast8_t minor, uint_fast8_t c);
 void tty_pollirq(void);
 
+extern uint8_t *init_alloc(unsigned int);
+
 extern uint8_t nuart;
 
 extern const char *uart_name[];

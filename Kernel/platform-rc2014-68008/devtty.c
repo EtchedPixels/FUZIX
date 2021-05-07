@@ -17,25 +17,15 @@ uint16_t ttyport[NUM_DEV_TTY + 1];
 
 static uint8_t sleeping;
 
-/* For now just use static buffers. Could do with a generic 68K flat model
-   boot allocator */
-
-static uint8_t tbuf1[TTYSIZ];
-static uint8_t tbuf2[TTYSIZ];
-static uint8_t tbuf3[TTYSIZ];
-static uint8_t tbuf4[TTYSIZ];
-
-struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
-	{NULL, NULL, NULL, 0, 0, 0},
-	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf2, tbuf2, tbuf2, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf3, tbuf3, tbuf3, TTYSIZ, 0, TTYSIZ / 2},
-	{tbuf4, tbuf4, tbuf4, TTYSIZ, 0, TTYSIZ / 2},
-};
+struct s_queue ttyinq[NUM_DEV_TTY + 1];
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
 	/* FIXME CTS/RTS */
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
@@ -788,10 +778,21 @@ struct uart tms_uart = {
 
 uint8_t register_uart(uint16_t port, struct uart *ops)
 {
+	queue_t *q = ttyinq + nuart;
+	uint8_t *buf;
+
 	if (nuart > NUM_DEV_TTY)
 	    return 0;
+
+	buf = init_alloc(TTYSIZ);
 	ttyport[nuart] = port;
 	uart[nuart] = ops;
+
+	q->q_base = q->q_head = q->q_tail = buf;
+	q->q_size = TTYSIZ;
+	q->q_count = 0;
+	q->q_wakeup =  TTYSIZ/2;
+
 	return nuart++;
 }
 
@@ -801,10 +802,14 @@ void insert_uart(uint16_t port, struct uart *ops)
 {
 	struct uart **p = &uart[NUM_DEV_TTY];
 	uint16_t *pt = &ttyport[NUM_DEV_TTY];
+	uint8_t *buf;
 
 	/* Are we going to throw out a UART ? */
-	if (nuart > NUM_DEV_TTY)
+	if (nuart > NUM_DEV_TTY) {
+		buf = ttyinq[NUM_DEV_TTY].q_base;
 		nuart--;
+	} else
+		buf = init_alloc(TTYSIZ);
 
 	while(p != uart + 1) {
 		*p = p[-1];
@@ -815,6 +820,10 @@ void insert_uart(uint16_t port, struct uart *ops)
 	uart[1] = ops;
 	ttyport[1] = port;
 	first_poll++;
+	ttyinq[1].q_base = ttyinq[1].q_head = ttyinq[1].q_tail = buf;
+	ttyinq[1].q_size = TTYSIZ;
+	ttyinq[1].q_count = 0;
+	ttyinq[1].q_wakeup =  TTYSIZ/2;
 	nuart++;
 }
 
