@@ -8,6 +8,8 @@ extern uint8_t timer_source;
 #define TIMER_QUART		2
 #define TIMER_SC26C92		3
 
+extern uint8_t sc26c92_present;
+
 void do_timer_interrupt(void);
 void tty_putc(uint_fast8_t minor, uint_fast8_t c);
 void tty_pollirq(void);

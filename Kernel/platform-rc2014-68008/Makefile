@@ -3,9 +3,10 @@ CSRCS = devtty.c
 CSRCS += devices.c main.c libc.c ppide.c
 
 ASRCS = p68000.S crt0.S
-ASRCS += tricks.S
+ASRCS += tricks.S spi.S
 
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devide_discard.c
+DSRCS += ../dev/devsd.c ../dev/devsd_discard.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
 LSRCS = ../lib/68000exception.c
@@ -45,6 +46,7 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o blkdev.o devide.o devide_discard.o mbr.o  \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o ppide.o \
+	devsd.o devsd_discard.o spi.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
 

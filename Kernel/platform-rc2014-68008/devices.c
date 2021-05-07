@@ -6,6 +6,8 @@
 #include <devsys.h>
 #include <tty.h>
 #include <vt.h>
+#include <devtty.h>
+#include <devsd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -37,4 +39,6 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
   devide_init();
+  if (sc26c92_present == 1)
+    devsd_init();
 }

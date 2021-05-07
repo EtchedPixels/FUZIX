@@ -39,10 +39,13 @@
 #define NBUFS    16       /* Number of block buffers */
 #define NMOUNTS	 8	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 2
+#define MAX_BLKDEV	5
 
 #define CONFIG_IDE
 #define CONFIG_PPIDE
+
+#define CONFIG_SD
+#define SD_DRIVE_COUNT	3
 
 #define platform_copyright()
 
