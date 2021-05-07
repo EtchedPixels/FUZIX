@@ -2,6 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
+#include <vt.h>
 #include <devtty.h>
 #include <blkdev.h>
 #include <ds1302.h>
@@ -12,6 +13,8 @@ uint8_t nuart;
 uint8_t quart_present;
 uint8_t sc26c92_present;
 uint8_t rtc_shadow;
+uint8_t tms9918a_present;
+uint8_t shadowcon;
 
 /* Udata and kernel stacks */
 /* We need an initial kernel stack and udata so the slot for init is
@@ -46,6 +49,91 @@ void platform_discard(void)
 void memzero(void *p, usize_t len)
 {
 	memset(p, 0, len);
+}
+
+static const uint8_t tmstext[] = {
+	0x00,		/* m2:0 extvideo:0 */
+	0xF0,		/* 16K, not blanked, int on, m1:1 m3:0 */
+	0x00,		/* Text at 0x0000 (space for 4 screens) */
+	0x00,
+	0x02,		/* Patterns at 0x1000 */
+	0x00,
+	0x00,
+	0xF1		/* white on black */
+};
+
+static const uint8_t tmsreset[] = {
+	0x00,
+	0x80,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00
+};
+
+static void tmsconfig(const uint8_t *r)
+{
+	uint8_t c = 0x80;
+	while(c < 0x88) {
+		out(0x99, *r++);
+		out(0x99, c++);
+	}
+}
+
+extern uint8_t fontdata_6x8[];
+
+static uint8_t probe_tms9918a(void)
+{
+	uint16_t ct = 0;
+	uint8_t v;
+	uint8_t *fp;
+
+	/* Try turning it on and looking for a vblank */
+	tmsconfig(tmsreset);
+	tmsconfig(tmstext);
+
+	/* Should see the top bit go high */
+	do {
+		v = in(0x99) & 0x80;
+	} while(--ct && !(v & 0x80));
+
+	if (ct == 0)
+		return 0;
+
+	/* Reading the F bit should have cleared it */
+	v = in(0x99);
+	if (v & 0x80)
+		return 0;
+
+	/* We have a TMS9918A, load up the fonts */
+	ct = 0;
+
+
+	out(0x99, 0x00);
+	out(0x99, 0x40 | 0x00);		/* Console 0 */
+	while(ct++ < 4096)		/* Four consoles of spaces */
+		out(0x98, ' ');
+
+	fp = fontdata_6x8;
+	out(0x99, 0x00);
+	out(0x99, 0x40 | 0x11);		/* Base of character 32 */
+	ct = 0;
+	while(ct++ < 768)
+		out(0x98, *fp++ << 2);
+
+	fp = fontdata_6x8;
+	out(0x99, 0x00);
+	out(0x99, 0x40 | 0x15);		/* Base of character 160 */
+	ct = 0;
+	/* Load inverse video font data */
+	while(ct++ < 768)
+		out(0x99,~(*fp++ << 2));
+
+	/* Initialize the VT layer */
+	vtinit();
+	return 1;
 }
 
 /* Some of this could be discard when we add that but we are not short of RAM
@@ -253,6 +341,11 @@ uint8_t *init_alloc(unsigned int size)
 void init_hardware_c(void)
 {
 	/* TODO: ACIA */
+	tms9918a_present = probe_tms9918a();
+	if (tms9918a_present) {
+		shadowcon = 1;
+		timer_source = TIMER_TMS9918A;
+	}
 	if (probe_16x50(0xC0))
 		register_uart(0xC0, &ns16x50_uart);
 	if (probe_16x50(0xC8))

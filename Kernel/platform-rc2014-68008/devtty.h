@@ -9,10 +9,15 @@ extern uint8_t timer_source;
 #define TIMER_SC26C92		3
 
 extern uint8_t sc26c92_present;
+extern uint8_t tms9918a_present;
+extern uint8_t shadowcon;
+extern uint8_t inputtty;
 
 void do_timer_interrupt(void);
 void tty_putc(uint_fast8_t minor, uint_fast8_t c);
 void tty_pollirq(void);
+
+void set_console(void);
 
 extern uint8_t *init_alloc(unsigned int);
 

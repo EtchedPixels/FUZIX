@@ -16,17 +16,19 @@ Minimum requirement:
 
 Optional:
 	DS1302 RTC at 0x0C
+	Joysticks at 0x01 and 0x02
+	SC129 GPIO at 0x00
+	Console switches at 0xFF
+
 
 Untested but code now present for:
 	QUART
 	26C92 including SD card via SPI
+	TMS9918A at 0x98 (work needed for graphics due to I/O blocking)
 
 To add:
-	TMS9918A
 	PS/2 Keyboard/Mouse
 	ZXKey
-	GPIO
-	Console switch GPIO
 	Floppy ?
 
 

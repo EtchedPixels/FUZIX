@@ -9,10 +9,10 @@
 
 /* We need to share some this between bigger platforms better once we
    have a good picture of what is needed */
-
+   
 struct uart *uart[NUM_DEV_TTY + 1];
-uint8_t nuart = 1;
 static uint8_t first_poll = 1;
+uint8_t nuart = 1;
 uint16_t ttyport[NUM_DEV_TTY + 1];
 
 static uint8_t sleeping;
@@ -63,11 +63,9 @@ void tty_pollirq(void)
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
         /* If we have a video display then the first console output will
-	   go to it as well *unless it has a keyboard too* */
-#if 0
+	   go to it as well *unless it has a keyboard too */
         if (minor == 1 && shadowcon)
 		vtoutput(&c, 1);
-#endif
         uart[minor]->putc(minor, c);
 }
 
@@ -698,9 +696,6 @@ struct uart xr88c681_uart = {
 	"XR88C681"
 };
 
-#if 0
-/* For now : we need to write the 68K support code for the TMS9918A */
-
 /*
  *	Console driver for the TMS9918A
  */
@@ -772,8 +767,6 @@ struct uart tms_uart = {
 	"TMS9918A"
 };
 
-#endif
-
 /* FIXME: could move this routine into discard */
 
 uint8_t register_uart(uint16_t port, struct uart *ops)
@@ -843,32 +836,34 @@ void display_uarts(void)
 	}
 }
 
-#if 0
 /*
  *	Graphics layer interface (for TMS9918A)
+ *
+ *	FIXME: this won't actually work as you can't hit I/O from user
+ *	mode. We'll need a TMS specific helper ioctl to blat data.
  */
 
 static const struct videomap tms_map = {
+	(uaddr_t)IOMAP(0x98),
 	0,
-	0x98,
 	0, 0,
 	0, 0,
 	1,
-	MAP_PIO
+	MAP_MMIO
 };
 
 /* FIXME: we need a way of reporting CPU speed/TMS delay info as unlike the
    ports so far we need delays on the RC2014 */
 static const struct display tms_mode = {
-    1,
-    256, 192,
-    256, 192,
-    255, 255,
-    FMT_VDP,
-    HW_VDP_9918A,
-    GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
-    16,
-    0
+	1,
+	256, 192,
+	256, 192,
+	255, 255,
+	FMT_VDP,
+	HW_VDP_9918A,
+	GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
+	16,
+	0
 };
 
 int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
@@ -882,6 +877,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		case GFXIOC_UNMAP:
 			return 0;
 		}
+#if 0
 		/* Only the ZX keyboard has support for the bitmapped matrix ops
 		   and map setting.  We need to add different map setting for PS/2
 		   and different auto repeat if we support setting it */
@@ -889,7 +885,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			( arg == KBMAPSIZE && arg == KBMAPGET || arg == KBSETTRANS ||
 				arg == KBRATE ))
 				return -1;
+#endif				
 	}
 	return vt_ioctl(minor, arg, ptr);
 }
-#endif

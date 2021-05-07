@@ -34,6 +34,20 @@
 #define TTYDEV BOOT_TTY
 #define NUM_DEV_TTY 8
 
+/* Video terminal, not just a serial tty */
+#define CONFIG_VT
+/* Multiple consoles */
+#define CONFIG_VT_MULTI
+/* Vt definitions */
+#define VT_WIDTH	40
+#define VT_HEIGHT	24
+#define VT_RIGHT	39
+#define VT_BOTTOM	23
+/* Keyboard contains non-ascii symbols */
+#define CONFIG_UNIKEY
+/* Font for the TMS9918A */
+#define CONFIG_FONT6X8
+
 /* Could be bigger but we need to add hashing first and it's not clearly
    a win with a CF card anyway */
 #define NBUFS    16       /* Number of block buffers */
@@ -52,6 +66,11 @@
 
 #define CONFIG_SD
 #define SD_DRIVE_COUNT	3
+
+#define CONFIG_INPUT			/* Input device for joystick */
+#define CONFIG_INPUT_GRABMAX	3
+
+#define CONFIG_DEV_GPIO
 
 #define platform_copyright()
 

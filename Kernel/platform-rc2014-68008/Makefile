@@ -1,6 +1,6 @@
 
-CSRCS = devtty.c
-CSRCS += devices.c main.c libc.c ppide.c
+CSRCS = devtty.c devinput.c devgpio.c
+CSRCS += devices.c main.c libc.c ppide.c tms9918.c 
 
 ASRCS = p68000.S crt0.S
 ASRCS += tricks.S spi.S ds1302io.S
@@ -44,10 +44,12 @@ image:
 	tricks.o main.o ../timer.o ../kdata.o 68000exception.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
-	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
-	../syscall_fs3.o ../syscall_exec32.o blkdev.o devide.o devide_discard.o mbr.o  \
+	../tty.o ../vt.o ../devsys.o ../usermem.o ../syscall_fs2.o \
+	../syscall_fs3.o ../syscall_exec32.o ../font6x8.o \
+	blkdev.o devide.o devide_discard.o mbr.o  \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o ppide.o \
 	devsd.o devsd_discard.o spi.o ds1302.o ds1302_discard.o ds1302io.o \
+	devinput.o ../devinput.o devgpio.o tms9918.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
 
