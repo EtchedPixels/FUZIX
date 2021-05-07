@@ -41,6 +41,12 @@
 
 #define MAX_BLKDEV	5
 
+/* On-board DS1302, we can read the time of day from it */
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
+#define CONFIG_RTC_EXTENDED
+#define CONFIG_RTC_INTERVAL	100
+
 #define CONFIG_IDE
 #define CONFIG_PPIDE
 

@@ -4,12 +4,14 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
+#include <ds1302.h>
 
 uint16_t swap_dev = 0xFFFF;
 uint8_t timer_source;
 uint8_t nuart;
 uint8_t quart_present;
 uint8_t sc26c92_present;
+uint8_t rtc_shadow;
 
 /* Udata and kernel stacks */
 /* We need an initial kernel stack and udata so the slot for init is
@@ -285,6 +287,7 @@ void init_hardware_c(void)
 		if (timer_source == TIMER_NONE)
 			quart_clock();
 	}
+	ds1302_init();
 }
 
 void pagemap_init(void)
