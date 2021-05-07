@@ -26,11 +26,9 @@ init_early:
 	    move.l a5,udata_shadow	; shadow copy for entry/exit
             rts
 
-#if 0
 platform_idle:
 	    stop #($2000+EI_MASK)
 	    rts
-#endif
 ;
 ;	FIXME: could be in discard if we wanted
 ;
@@ -48,7 +46,8 @@ init_hardware:
 	    bsr install_vectors_at
 
 	    move.l #autovec_irq,$80068	; autovector 2 is the only one we use
-            rts
+
+	    jmp init_hardware_c
 
 autovec_irq:
 	    ; C will save and restore a2+/d2+

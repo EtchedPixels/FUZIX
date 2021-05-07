@@ -31,8 +31,8 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 2
-#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
+#define TTYDEV BOOT_TTY
+#define NUM_DEV_TTY 4
 
 /* Could be bigger but we need to add hashing first and it's not clearly
    a win with a CF card anyway */
