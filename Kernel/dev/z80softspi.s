@@ -88,7 +88,7 @@ spi0_bit_tx:
 	ret			; 10
 spi0_tx0:
 	out (c),e		; 12		low | 0
-	out (c),d		; 12		high | 1	(sample)
+	out (c),d		; 12		high | 0	(sample)
 	djnz spi0_bit_tx	; 13/8
 	ret
 ;
