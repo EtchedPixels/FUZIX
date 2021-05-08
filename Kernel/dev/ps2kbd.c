@@ -280,12 +280,13 @@ static uint8_t ps2busy = 0;
 
 void ps2kbd_poll(void)
 {
-    int n;
+    uint16_t n;
+
     if (ps2busy)
         return;
 
     n = ps2kbd_get();
-    if (n >= 0)
+    if (n < 0x8000)
         ps2kbd_byte(n);
 }
 
@@ -299,7 +300,7 @@ static void kbd_set_leds(uint_fast8_t byte)
 
 int ps2kbd_init(void)
 {
-    int r;
+    uint16_t r;
     uint8_t present = 0;
     uint8_t i;
 
@@ -311,7 +312,7 @@ int ps2kbd_init(void)
         r = ps2kbd_get();
         if (r != -1) {
             /* It talked to us */
-            if (r >= 0)
+            if (r < 0x8000)
                 present = 1;
         }
     }
@@ -320,7 +321,7 @@ int ps2kbd_init(void)
     r = ps2kbd_put(0xFF);
     if (r != 0xFA) {
         ps2kbd_get();
-        if (r < 0 && present == 0) {
+        if ((r & 0x8000) && present == 0) {
             ps2busy = 0;
             return 0;
         }
@@ -341,7 +342,7 @@ int ps2kbd_init(void)
     /* Now check for mice */
     for (i = 0; i < 4; i++) {
         r = ps2mouse_get();
-        if (r >= 0)
+        if (r < 0x8000)
             break;
     }
 
@@ -352,7 +353,7 @@ int ps2kbd_init(void)
     /* Flush out anything left over */
     for (i = 0; i < 4; i++)
             ps2mouse_get();
-done:
+
     ps2busy = 0;
     return present;
 }
