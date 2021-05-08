@@ -156,6 +156,7 @@ nextbit:
 ;	jr nc, kbdbad
 	ld a,e
 	or a		; Generate parity flag
+
 	ld h,#0x80	; For even parity of the 8bits send a 1 to get odd
 	jp pe, kbdevenpar
 	ld h,#0x00	; If we are odd parity send a 0 so we stay odd
@@ -353,9 +354,10 @@ del2:	djnz del2
 	; Wait for the keyboard to pull the clock low
 waitk:
 	in a,(c)
+	; '***	FIXME  ** - DATABIT or CLOCK ? ***
 	and DATABIT(iy)
 	jr nz, waitk
-	; Return the status code (FE = failed try again)
+	; The keyboard will now return the status code (FE = failed try again)
 	ret
 
 ;
