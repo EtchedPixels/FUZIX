@@ -7,6 +7,7 @@
 		.globl program_vectors
 		.globl platform_idle
 		.globl outchar
+		.globl napus
 		.globl platform_monitor
 		.globl udata_block0
 		.globl devide_read_data
@@ -118,6 +119,23 @@ outcharw:
 	beq outcharw
 	move.b d0,$0100C0
 	rts
+
+;
+;	Delay for about n usec (assumes 7.3MHz 68008)
+;
+;	This will break with non standard clocking or if you use some kind
+;	of non 68008 CPU card. Shouldn't matter for this platform.
+;
+napus:
+	move.w 4(sp),d0
+	lsr.w #2,d0		; 7.3 clocks per us so divide by 4
+
+				; and loop that many times
+loopus:
+	subq.l #1,d1		; 12 clocks
+	dbra.w d0,loopus	; 18 clocks each taken, 20 for the exit
+	rts
+
 #if 0
 ;
 ;	IDE:

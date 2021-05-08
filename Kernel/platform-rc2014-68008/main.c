@@ -6,6 +6,8 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <ds1302.h>
+#include <zxkey.h>
+#include <ps2kbd.h>
 
 uint16_t swap_dev = 0xFFFF;
 uint8_t timer_source;
@@ -15,6 +17,8 @@ uint8_t sc26c92_present;
 uint8_t rtc_shadow;
 uint8_t tms9918a_present;
 uint8_t shadowcon;
+uint8_t zxkey_present;
+uint8_t ps2kbd_present;
 
 /* Udata and kernel stacks */
 /* We need an initial kernel stack and udata so the slot for init is
@@ -37,8 +41,24 @@ void map_init(void)
 uaddr_t ramtop;
 uint8_t need_resched;
 
-uint8_t platform_param(char *p)
+uint_fast8_t platform_param(char *p)
 {
+	/* If we have a keyboard then the TMS9918A becomes a real tty
+	   and we make it the primary console */
+	if (strcmp(p, "zxkey") == 0 && !zxkey_present && !ps2kbd_present) {
+		zxkey_present = 1;
+		zxkey_init();
+		if (tms9918a_present) {
+			/* Add the consoles */
+			uint8_t n = 0;
+			shadowcon = 0;
+			do {
+				insert_uart(0x98, &tms_uart);
+				n++;
+			} while(n < 4 && nuart <= NUM_DEV_TTY);
+		}
+		return 1;
+	}
 	return 0;
 }
 
@@ -379,6 +399,24 @@ void init_hardware_c(void)
 		   best clock choice */
 		if (timer_source == TIMER_NONE)
 			quart_clock();
+	}
+	ps2kbd_present = ps2kbd_init();
+	if (ps2kbd_present) {
+		kputs("PS/2 Keyboard at 0xBB\n");
+		if (!zxkey_present && tms9918a_present) {
+			/* Add the consoles */
+			uint8_t n = 0;
+			shadowcon = 0;
+			kputs("Switching to video output.\n");
+			do {
+				insert_uart(0x98, &tms_uart);
+				n++;
+			} while(n < 4 && nuart <= NUM_DEV_TTY);
+		}
+	}
+	if (ps2kbd_present & 2) {
+		kputs("PS/2 Mouse at 0xBB\n");
+		/* TODO: wire to input layer and interrupt */
 	}
 	ds1302_init();
 }

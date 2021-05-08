@@ -18,8 +18,9 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c);
 void tty_pollirq(void);
 
 void set_console(void);
+void do_conswitch(uint8_t c);
 
-extern uint8_t *init_alloc(unsigned int);
+uint8_t *init_alloc(unsigned int);
 
 extern uint8_t nuart;
 
