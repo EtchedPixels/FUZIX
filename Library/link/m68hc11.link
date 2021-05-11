@@ -190,6 +190,8 @@ SECTIONS
   {
     KEEP (*(.jcr))
   }  > ram
+   __code_end = .;
+   PROVIDE (__code_end = .);
   /* Relocation for some bss and data sections.  */
   .data    :
   {
@@ -197,6 +199,8 @@ SECTIONS
     *(.data.*)
     *(.gnu.linkonce.r*)
   }  > ram
+  __data_size = SIZEOF(.data);
+  PROVIDE (__data_size = SIZEOF(.data));
   .bss   :
   {
     __bss_start = .;
@@ -217,6 +221,8 @@ SECTIONS
     *(.common.*)
     PROVIDE (__common_end = .);
   }  > ram
+  __bss_size = SIZEOF(.bss) + SIZEOF(.common);
+  PROVIDE (__bss_size = SIZEOF(.bss) + SIZEOF(.common));
   /* Stabs debugging sections.  */
   .stab		 0 : { *(.stab) }
   .stabstr	 0 : { *(.stabstr) }
