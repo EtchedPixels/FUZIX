@@ -278,7 +278,7 @@ trap_illegal:
 trapx:
 	ldx #atmsg
 	jsr outcharhex
-	tex
+	tsx
 	ldx 8,x
 	jsr outx
 	ldx #nlmsg
@@ -313,12 +313,26 @@ interrupt_handler:
 	ldaa #1
 	staa udata+U_DATA__U_ININTERRUPT
 	staa inint
+
 	; Save the C direct page values so we can re-enter
-	; If we turn on register variables we will need to save them too
-	; TODO
+	; If we turn on register variables we will need to save _.d1-n as
+	; well.
+	ldx _.tmp
+	pshx
+	ldx _.xy
+	pshx
+	ldx _.z
+	pshx
+
 	jsr platform_interrupt
-	; Restore the C direct page
-	; TODO
+
+	pulx
+	stx _.z
+	pulx
+	stx _.xy
+	pulx
+	stx _.tmp
+
 	tst udata+U_DATA__U_INSYS
 	bne iretk
 	clr inint
@@ -475,8 +489,8 @@ REG(_.d4)
 memcpy:
 	xgdy
 	tsx
-	ldd	5,x
-	ldx	3,x	; SRC = X, DST = Y
+	ldd	4,x
+	ldx	2,x	; SRC = X, DST = Y
 	cpd	#0
 	beq	End
 	pshy
@@ -506,8 +520,8 @@ End:
 memset:
 	xgdx
 	tsy
-	ldab	6,y
-	ldy	7,y		; DST = X, CNT = Y
+	ldab	5,y
+	ldy	6,y		; DST = X, CNT = Y
 	beq	L3
 	pshx
 L2:
