@@ -26,7 +26,7 @@
 
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../kernel-hc11.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -316,3 +316,118 @@ hd_write256:
 
 hd_map:
 	.byte 0
+
+;
+;	SD card
+;
+
+	.globl sd_spi_transmit_byte
+	.globl sd_spi_receive_byte
+	.globl sd_spi_raise_cs
+	.globl sd_spi_lower_cs
+	.globl sd_spi_clock
+	.globl sd_spi_transmit_sector
+	.globl sd_spi_receive_sector
+
+;
+;	Select the SD card
+;
+sd_spi_lower_cs:
+	ldx #0xF000
+	bclr 0x08,x 0x20	; port D bit 5
+	rts
+;
+;	Deselect SD and send clocks
+;
+sd_spi_raise_cs:
+	ldx #0xF000
+	bset 0x08,x 0x20
+;
+;	Send 0xFF and receive a byte
+;
+sd_spi_receive_byte:
+	ldab #0xFF
+;
+;	Send a byte and return the resulting reply
+;
+sd_spi_transmit_byte:
+	ldx #0xF000
+	stab 0x2A,x		; Write to data starts the transfer
+sendwt:
+	brclr 0x29,x 0x80 sendwt
+	ldab 0x2A,x		; Read data
+	rts
+;
+;	Switch clock speeds
+;	0 = init (100-400Khz)
+;	!0 depends on card but is always faster than we can manage
+;
+sd_spi_clock:
+	tstb
+	bne clkfast
+	ldaa #0x52		; Master, mode 0, 125KHz
+	staa 0xFE28
+	rts
+clkfast:
+	ldaa #0x50		; Master, mode 0, 1MHz
+	staa 0xFE28
+	rts
+;
+;	Sector transfers (for speed)
+;
+sd_spi_transmit_sector:
+	ldx #blk_op
+	ldy ,x
+	ldaa 2,x
+	beq from_k
+	bsr map_process_always
+from_k:
+	clra
+	ldx #0xF000
+txloop:
+	ldab ,y
+	stab 0x2A,x
+	iny
+txw1:
+	brclr 0x29,x 0x80 txw1
+	tst 0x2A,x		; Read data
+
+	ldab ,y
+	stab 0x2A,x
+	iny
+txw2:
+	brclr 0x29,x 0x80 txw2
+	tst 0x2A,x		; Read data
+	deca
+	bne txloop
+	bra map_kernel
+
+sd_spi_receive_sector:
+	ldx #blk_op
+	ldy ,x
+	ldaa 2,x
+	beq to_k
+	bsr map_process_always
+to_k:
+	clra
+	ldx #0xF000
+rxloop:
+	ldab #0xFF
+	stab 0x2A,x
+rxw1:
+	brclr 0x29,x 0x80 rxw1
+	ldab 0x2A,x		; Read data
+	stab ,y
+	iny
+
+	ldab #0xFF
+	stab 0x2A,x
+rxw2:
+	brclr 0x29,x 0x80 rxw2
+	ldab 0x2A,x		; Read data
+	stab ,y
+	iny
+
+	deca
+	bne rxloop
+	bra map_kernel

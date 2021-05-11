@@ -45,7 +45,10 @@ extern uint16_t swap_dev;
 #define swap_map(x)	(x)
 
 #define CONFIG_IDE
-#define MAX_BLKDEV 1
+#define MAX_BLKDEV 3
+#define CONFIG_SD
+#define SD_DRIVE_COUNT 1
+
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
 

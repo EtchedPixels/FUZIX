@@ -7,8 +7,8 @@ ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c
 
-DSRCS = ../dev/devide.c ../dev/blkdev.c
-DISCARD_DSRCS = ../dev/mbr.c ../dev/devide_discard.c
+DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/devsd.c
+DISCARD_DSRCS = ../dev/mbr.c ../dev/devide_discard.c ../dev/devsd_discard.c
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
@@ -46,6 +46,7 @@ image:
 	rc2014-68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
+	devsd.o devsd_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16kfc.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
