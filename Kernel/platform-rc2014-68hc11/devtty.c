@@ -71,7 +71,6 @@ void tty_setup(uint8_t minor, uint8_t flag)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t baud = t->c_cflag & CBAUD;
-	uint8_t sccr1;
 	/* Our base rate is 115200 with SCP 0 */
 	if ((baud = baudtable[baud]) == 0xFF) {
 		t->c_cflag &= ~CBAUD;
