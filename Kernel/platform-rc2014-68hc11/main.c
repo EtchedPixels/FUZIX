@@ -16,7 +16,7 @@ static volatile uint8_t *cpuio = (volatile uint8_t *)0;
 void platform_idle(void)
 {
     irqflags_t flags = di();
-    tty_poll();
+//    tty_poll();
     irqrestore(flags);
 }
 
