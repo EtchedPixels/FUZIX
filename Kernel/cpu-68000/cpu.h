@@ -70,9 +70,13 @@ extern int cpu_type(void);
    driver code. The platform defines IOMAP(x) to return the value of the
    memory location for that I/O port */
 
-#define IOMEM(x)		((volatile uint8_t *)IOMAP(x))
+#define IOMEM(x)		((volatile uint8_t *)IOMAP((uint8_t)x))
+#define IOMEM16(x)		((volatile uint8_t *)IOMAP(x))
 
 #define in(x)			(*IOMEM(x))
 #define out(x,y)		do { *IOMEM(x) = (y); } while(0)
+/* 16bit port numbers with 8bit data - not 16bit data */
+#define in16(x)			(*IOMEM16(x))
+#define out16(x,y)		do { *IOMEM16(x) = (y); } while(0)
 
 #define __fastcall
