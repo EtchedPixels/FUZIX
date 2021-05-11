@@ -79,6 +79,7 @@ void tty_setup(uint8_t minor, uint8_t flag)
 		baud = 0x12;
 	}
 	cpuio[0x2B] = baud;
+	cpuio[0x2D] = 0x2C;	/* rx interrupt on, tx and rx on */
 }
 
 void tty_sleeping(uint8_t minor)
