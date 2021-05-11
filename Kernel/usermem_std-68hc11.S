@@ -38,7 +38,7 @@ _ugetw:
 _uzero:
 	tsx
 	ldx 2,x			; size
-	xgdx			; swap over as we want pointer in D
+	xgdx			; swap over as we want pointer in X
 	jsr map_process_always
 	; Optimize, unroll etc ?
 uzerolp:
