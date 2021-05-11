@@ -516,12 +516,12 @@ End:
 
 ;;; D    = dst	Pmode
 ;;; 2,sp = src	SImode
-;;; 6,sp = size	HImode (size_t)
+;;; 4,sp = size
 memset:
 	xgdx
 	tsy
-	ldab	5,y
-	ldy	6,y		; DST = X, CNT = Y
+	ldab	3,y
+	ldy	4,y		; DST = X, CNT = Y
 	beq	L3
 	pshx
 L2:
