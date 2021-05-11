@@ -25,10 +25,10 @@ Untested but code now present for:
 	QUART
 	26C92 including SD card via SPI
 	TMS9918A at 0x98 (work needed for graphics due to I/O blocking)
-
-To add:
 	PS/2 Keyboard/Mouse
 	ZXKey
+
+To add:
 	Floppy ?
 
 

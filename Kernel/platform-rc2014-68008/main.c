@@ -435,8 +435,12 @@ void pagemap_init(void)
 	/* Allocate the rest of memory to the userspace */
 	kmemaddblk(&_end, memtop - &_end);
 
+	/* We can't tell 68000 from 68008 but the board is a 68008 so
+	   any other kind of 68000 would be unlikely */
+	if (sysinfo.cpu[1] == 0)
+		sysinfo.cpu[1] = 8;
 	kprintf("Motorola 680%s%d processor detected.\n",
-		sysinfo.cpu[1]?"":"0",sysinfo.cpu[1]);
+		sysinfo.cpu[1] > 9 ?"":"0",sysinfo.cpu[1]);
 	enable_icache();
 	display_uarts();
 	/* Complete the timer set up */
