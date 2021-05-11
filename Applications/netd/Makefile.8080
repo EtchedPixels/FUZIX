@@ -1,6 +1,6 @@
 include $(FUZIX_ROOT)/Applications/rules.8080
 
-CFLAGS += -DNETD_BIG_ENDIAN
+CFLAGS += -DNETD_LITTLE_ENDIAN
 
 SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c ping.c ntpdate.c
