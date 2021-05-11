@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+m6811-elf-ld $*
+TARGET=a.out
+
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	*)
+	shift
+	;;
+esac
+done
+m6811-elf-nm -n "$TARGET" >"$TARGET".map
+m6811-elf-objcopy "$TARGET" -O binary .tmpbin
+mv .tmpbin "$TARGET"
+
