@@ -56,9 +56,9 @@ int gpio_ioctl(uarg_t request, char *data)
     uint8_t port;
     static struct gpioreq gr;
 
-    /* No autodetect so always report the possible 32 */
+    /* No autodetect so always report the possible max */
     if (request == GPIOC_COUNT)
-        return 40;
+        return 8 * NUM_GPIO;
 
     if (uget(data, &gr, sizeof(struct gpioreq)) == -1)
         return -1;
