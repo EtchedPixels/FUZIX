@@ -4,9 +4,6 @@
 
 		.section .text
 
-		.byte 0x03
-		.byte 0x63
-
 entry:
 		sei			; interrupts off
 		lds #kstack_top		; C stack
