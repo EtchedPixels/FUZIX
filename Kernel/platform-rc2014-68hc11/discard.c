@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <devide.h>
+#include <devsd.h>
 
 /* Onboard I/O */
 static volatile uint8_t *cpuio = (volatile uint8_t *)0xF000;
@@ -34,8 +35,11 @@ void device_init(void)
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
-        /* Slowest RTI rate available */
-	cpuio[0x26] |= 3;
+#ifdef CONFIG_SD
+        devsd_init();
+#endif
+        /* RTI isn't really that useful but it's ok as an
+          event timer that will do nicely for bring up */
 	/* RTI interrupt enable */
-	cpuio[0x24] |= 0x40;
+//	cpuio[0x24] |= 0x40;
 }
