@@ -11,7 +11,7 @@ static volatile uint8_t *cpuio = (volatile uint8_t *)0xF000;
 void pagemap_init(void)
 {
     uint8_t i;
-    for (i = 36; i <= 63; i++)
+    for (i = 36; i <= 63; i+= 4)
         pagemap_add(i);
 }
 

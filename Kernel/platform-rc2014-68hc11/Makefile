@@ -51,3 +51,5 @@ image:
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-68hc11.o devtty.o >../fuzix.map
 	$(CROSS_OBJCOPY) ../fuzix.elf -O binary ../fuzix.bin
+	dd if=../fuzix.bin bs=1 skip=61440 count=3072 of=fuzix.common
+	dd if=fuzix.common of=../fuzix.bin bs=1 seek=53760 conv=notrunc
