@@ -1,0 +1,19 @@
+include $(FUZIX_ROOT)/Applications/rules.68hc11
+
+APPS = flashrom
+
+SRCS  = flashrom.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(APPS) size.report
+
+flashrom: flashrom.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $< $(LINKER_TAIL)
+
+size.report: $(APPS)
+	ls -l $< > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report
+
