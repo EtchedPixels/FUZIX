@@ -6,7 +6,7 @@
 __sfr __at 0x01 js1;
 __sfr __at 0x02 js2;
 
-static char buf[32];
+static uint8_t buf[32];
 
 static struct s_queue kqueue = {
  buf, buf, buf, sizeof(buf), 0, sizeof(buf) / 2
