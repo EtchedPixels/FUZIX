@@ -313,9 +313,8 @@ interrupt_handler:
 	staa udata+U_DATA__U_ININTERRUPT
 	staa inint
 
-	; Save the C direct page values so we can re-enter
-	; If we turn on register variables we will need to save _.d1-n as
-	; well.
+	; Save the C direct page values so we can re-enter along with the
+	; four register variables we use.
 	ldx _.tmp
 	pshx
 	ldx _.xy
@@ -323,7 +322,25 @@ interrupt_handler:
 	ldx _.z
 	pshx
 
+	ldx _.d1
+	pshx
+	ldx _.d2
+	pshx
+	ldx _.d3
+	pshx
+	ldx _.d4
+	pshx
+
 	jsr platform_interrupt
+
+	pulx
+	stx _.d4
+	pulx
+	stx _.d3
+	pulx
+	stx _.d2
+	pulx
+	stx _.d1
 
 	pulx
 	stx _.z
