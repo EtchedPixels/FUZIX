@@ -25,12 +25,15 @@ static void write_call(int n)
   fprintf(fp, "\t.text\n\n");
   fprintf(fp, "\t.globl %s\n\n", syscall_name[n]);
   fprintf(fp, "%s:\n", syscall_name[n]);
-  fprintf(fp, "\tldd #%d\n", 0x80 | (2 * syscall_args[n]) | (n << 8));
+  fprintf(fp, "\tpshb\n");
+  fprintf(fp, "\tpsha\n");
+  fprintf(fp, "\tldd #%d\n", 0x80 | (n << 8));
   fprintf(fp, "\tswi\n");
   fprintf(fp, "\tcpx #0\n");
   fprintf(fp, "\tbeq noerror\n");
   fprintf(fp, "\tstx errno\n");
   fprintf(fp, "noerror:\n");
+  fprintf(fp, "\tpulx\n");	/* Remove saved parameter */
   fprintf(fp, "\trts\n");
   fclose(fp);
 }
@@ -49,12 +52,15 @@ static void write_vacall(int n)
   fprintf(fp, "\t.text\n\n");
   fprintf(fp, "\t.globl %s\n\n", syscall_name[n]);
   fprintf(fp, "%s:\n", syscall_name[n]);
-  fprintf(fp, "\tldd #%d\n", 0x80 | (2 * syscall_args[n]) | (n << 8));
+  fprintf(fp, "\tpshb\n");
+  fprintf(fp, "\tpsha\n");
+  fprintf(fp, "\tldd #%d\n", 0x80 | (n << 8));
   fprintf(fp, "\tswi\n");
   fprintf(fp, "\tcpx #0\n");
   fprintf(fp, "\tbeq noerror\n");
   fprintf(fp, "\tstx errno\n");
   fprintf(fp, "noerror:\n");
+  fprintf(fp, "\tpulx\n");	/* Remove saved parameter */
   fprintf(fp, "\trts\n");
   fclose(fp);
 }
