@@ -10,9 +10,9 @@ head:
 	.word	0x80A8
 	.byte	2		;	6800 series
 	.byte	4		;	Needs 68HC11 features
-	.byte   2 		;	Load page (FIXME hardcoded)
+	.byte   1 		;	Load page (FIXME hardcoded)
 	.byte	0		;	No hints
-	.word	__code_end-0x200	;	code_size
+	.word	__code_end-0x100	;	code_size
 	.word	__data_size	;	data_size
 	.word	__bss_size	;	bss_size
 	.byte	__start-head	;	Offset to execute from

@@ -9,7 +9,7 @@
 MEMORY
 {
     page0 (rw) : ORIGIN = 0x0000, LENGTH = 192
-    ram   (rwx) : ORIGIN = 0x0200, LENGTH = 0xFE00
+    ram   (rwx) : ORIGIN = 0x0100, LENGTH = 0xFF00
 }
 
 OUTPUT_ARCH(m68hc11)
