@@ -6,13 +6,13 @@
 static volatile uint8_t *cpuio = (volatile uint8_t *)0xF000;
 
 /*
- * Map handling: allocate 4 banks per process
+ * Map handling: allocate 3 banks per process for now
  */
 
 void pagemap_init(void)
 {
     uint8_t i;
-    for (i = 36; i <= 63; i+= 4)
+    for (i = 0x20; i <= 0x3D; i+= 3)
         pagemap_add(i);
 }
 

@@ -83,8 +83,9 @@ switchin:
 	std	switch_proc_ptr
 	xgdx
 
+	; FIXME: sort out offset rules
 	ldd	P_TAB__P_PAGE_OFFSET,x
-	cmpa	udata+U_DATA__U_PAGE
+	cmpb	udata+U_DATA__U_PAGE+1
 	beq nostash
 
 	subd	#0		;compare with 0
@@ -187,9 +188,9 @@ dofork:
 	; _switchin will be expecting from our copy of the stack.
 	pulx
 
-	ldx fork_proc_ptr
+	ldx #udata
 	pshx
-	ldd #udata
+	ldd fork_proc_ptr
         jsr makeproc
 	pulx
 
@@ -215,6 +216,7 @@ dofork:
 ;
 ;	Copy memory
 ;
+#if 0
 fork_copy:
 	ldx fork_proc_ptr
 	ldaa P_TAB__P_PAGE_OFFSET,x
@@ -229,6 +231,33 @@ fork_copy:
 	ldab udata+U_DATA__U_PAGE+2
 	bsr bank2bank
 
+	ldx udata+U_DATA__U_PTAB
+	jsr map_process_x
+	jsr stash_udata
+	jmp map_kernel_di
+#endif
+;
+;	Copier until we switch to proper 16K banked
+;
+fork_copy:
+	ldx fork_proc_ptr
+	ldaa P_TAB__P_PAGE_OFFSET+1,x
+	ldab udata+U_DATA__U_PAGE+1
+	psha
+	pshb
+	jsr bank2bank
+	pulb
+	pula
+	inca
+	incb
+	psha
+	pshb
+	jsr bank2bank
+	pulb
+	pula
+	incb
+	inca
+	jsr bank2bank
 	ldx udata+U_DATA__U_PTAB
 	jsr map_process_x
 	jsr stash_udata

@@ -147,7 +147,7 @@ nullirq:
 map_process_always:
 map_process_always_di:
 	    pshx
-	    ldx #udata + U_DATA__U_PAGE
+	    ldx #udata + U_DATA__U_PAGE+1
 	    jsr map_bank
 	    pulx
 	    rts
@@ -185,10 +185,21 @@ kmap:
 ;	Probably we should use the 8K/56K MMU card.
 ;
 map_process_x:
-	    ldab #P_TAB__P_PAGE_OFFSET
+	    ldab #P_TAB__P_PAGE_OFFSET+1
 	    abx
 map_process_2:
 map_bank:
+	    pshb
+	    ldab ,x
+	    stab cur_map
+	    stab 0xFE78
+            incb
+            stab 0xFE79
+            incb
+            stab 0xFE7A
+	    pulb
+            rts
+#if 0
 	    pshb
 	    ; We must load these both before the map changes because we
 	    ; might be unmapping the table X points to
@@ -201,7 +212,7 @@ map_bank:
 	    pulb
 	    
 	    rts
-
+#endif
 
 
 ;

@@ -14,16 +14,18 @@
  *	style MMU card and linear RAM and that might be better
  */
 /* 16K reported page size */
-#define CONFIG_PAGE_SIZE	16
+#define CONFIG_PAGE_SIZE	48
 /* We use flexible 16K banks with a fixed common */
-#define CONFIG_BANK16FC
-#define CONFIG_BANKS	4	/* 4 banks 16K page size */
+#define CONFIG_BANK_FIXED
+#define CONFIG_BANKS	1	/* 1 banks 64K page size */
 #define MAX_MAPS	32
+#define MAP_SIZE	0xBE00
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-/* Arguments the other way around */
+/* Arguments are tricky. The 680x binaries stack one way the 68HC11 the other.
+   We deal with that in the syscall stubs and in crt0 */
 #define CONFIG_CALL_R2L
 
 #define TICKSPERSEC 20	    /* Ticks per second */

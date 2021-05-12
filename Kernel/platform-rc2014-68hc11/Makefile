@@ -48,7 +48,7 @@ image:
 	blkdev.o mbr.o devide.o devide_discard.o \
 	devsd.o devsd_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16kfc.o \
+	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-68hc11.o devtty.o >../fuzix.map
 	$(CROSS_OBJCOPY) ../fuzix.elf -O binary ../fuzix.bin
