@@ -156,7 +156,7 @@ signal_return:
 ;	information, A holds the syscall number on entry, B the arg count
 ;	Arguments are left to right ordered.
 ;
-;	On enry our frame if called from a 6800 series CPU (ACCB >= 0). This
+;	On enry our frame if called from a 6800 series CPU (ACCB < 0x80). This
 ;	is the same as the 6800 itself but offset 2 bytes because the trap
 ;	frame also contains Y so is 2 bytes bigger on an HC11
 ;
@@ -237,16 +237,15 @@ via_signal:
 	rti
 
 doexec:
-	tsx
-	ldx 2,x
+	xgdx				; execute address into x
 	sei
 	jsr map_process_always
 	lds udata+U_DATA__U_ISP
 	des				; offset by 1 on the 680X
 	clr udata+U_DATA__U_INSYS
 	cli
-	ldd PROGLOAD
-	jmp 0,x
+	ldd #PROGLOAD			; relocation info
+	jmp 0,x				; from the caller D
 
 trap_handler:
 	; Were we in kernel - if so die horribly
