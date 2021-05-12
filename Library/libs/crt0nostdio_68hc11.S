@@ -25,13 +25,18 @@ head:
 __sighandler:
 	rts
 
+;	4(sp)+	environ
+;	2(sp)	argv
+;	0(sp)	argc
 __start:
 	tsx
 	ldab	#4
 	abx
 	stx	environ
-	; Now call main
-	decb		; In case someone defines it vararg! (4 bytes of arg)
+	tsx
+	ldd	2,x
+	; Now call main. After the call is staked We need
+	; D = argc, 2(sp) = argv
 	jsr	main
 	pshb
 	psha
