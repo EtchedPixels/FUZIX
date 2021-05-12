@@ -2,6 +2,8 @@
 #define __STDINT_H
 
 /* C types */
+typedef unsigned long long uint64_t;
+typedef signed long long int64_t;
 typedef unsigned long uint32_t;
 typedef signed long int32_t;
 typedef unsigned short uint16_t;
@@ -19,9 +21,10 @@ typedef uint16_t uint_fast16_t;
 typedef int16_t int_fast16_t;
 typedef uint32_t uint_fast32_t;
 typedef int32_t int_fast32_t;
+typedef uint64_t uint_fast64_t;
+typedef int64_t int_fast64_t;
 
 #define __SIZE_T_DEFINED
-#define NO_64BIT
 
 #define __BYTE_ORDER__ 4321
 #define __ORDER_BIG_ENDIAN__ 4321
