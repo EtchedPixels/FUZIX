@@ -136,10 +136,7 @@ static void bitset(uint16_t b)
     bitmap[b >> 3] |= (1 << (b & 7));
 }
 
-static void bitclear(uint16_t b)
-{
-    bitmap[b >> 3] &= ~(1 << (b & 7));
-}
+static const uint8_t bmask[] = { 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 
 static int bittest(uint16_t b)
 {
@@ -464,12 +461,10 @@ static void pass3(void)
     uint32_t nmax;
     /*--- was blk_alloc ---*/
 
-    /* FIXME:
-        1. Set the bits below s_isize
-     */
-    /* FIXME: performance */
-    for (b = superblock.s_isize; b < bmax; ++b)
-        bitclear(b);
+    memset(bitmap, 0x00, (bmax + 7) >> 3);
+
+    for (n = 0; n < superblock.s_isize; n++)
+        bitset(n);
 
     for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
