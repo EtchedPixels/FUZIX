@@ -255,8 +255,8 @@ fork_copy:
 	jsr bank2bank
 	pulb
 	pula
-	incb
 	inca
+	incb
 	jsr bank2bank
 	ldx udata+U_DATA__U_PTAB
 	jsr map_process_x
@@ -270,10 +270,11 @@ fork_copy:
 ;
 bank2bank:
 	pshx
-	stab 0xFE79		; Switch to destination bank
-	staa patch1+1		; Patch the source bank return id
-	staa 0xFE79		; Switch to source bank
-	stab patch2+1		; And patch the dest bank switch
+	stab 0xFE79		; Switch to source bank
+	staa patch1+1		; Patch the destination bank in
+	staa 0xFE79		; Switch to destination bank
+	stab patch2+1		; And patch the source bank in
+	stab 0xFE79		; Now switch to source bank
 	ldx #0x4000		; Start address
 copyloop:
 	ldy ,x
