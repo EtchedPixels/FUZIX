@@ -3,7 +3,8 @@ ASM = m6811-elf-gcc
 AR = m6811-elf-ar
 PLATFORM = 68hc11
 export PLATFORM
-CC_OPT = -fomit-frame-pointer -mrelax -mshort -c -Os -I../include -I../include/68hc11
+# Optimisation off for now - looks like the compiler will need debug too 8(
+CC_OPT = -fomit-frame-pointer -mrelax -mshort -Os -c -I../include -I../include/68hc11
 # for stuff that gives gcc nightmares
 CC_NOOPT = -mshort -c -I../include -I../include/68hc11
 ASM_OPT =  $(CC_OPT)
@@ -46,7 +47,7 @@ SRC_C += err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fdatasync.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fork.c fprintf.c fputc.c fputs.c fread.c
-SRC_C += free.c fsetpos.c fsync.c ftell.c fwrite.c getcwd.c
+SRC_C += fsetpos.c fsync.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
 SRC_C += getopt.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
@@ -55,10 +56,10 @@ SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pto
 SRC_C += index.c initgroups.c isatty.c killpg.c
 SRC_C += libintl.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
-SRC_C += malloc.c mkfifo.c mkstemps.c mntent.o nanosleep.c
+SRC_C += mkfifo.c mkstemps.c mntent.o nanosleep.c
 SRC_C += opendir.c opendir_r.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putchar.c putpwent.c putw.c pwent.c qsort.c
-SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
+SRC_C += raise.c rand.c readdir.c readlink.c regerror.c
 SRC_C += regsub.c remount.c remove.c rewind.c rewinddir.c rindex.c rootmntent.c
 SRC_C += seekdir.c setbuffer.c setenv.c
 SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c sleep.c sprintf.c
@@ -84,6 +85,8 @@ SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
 SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
 SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c strtok_r.c
 SRC_C += memchr.c memcmp.c memmove.c
+
+SRC_HARD = malloc.c realloc.c free.c
 
 #
 #	Termcap
