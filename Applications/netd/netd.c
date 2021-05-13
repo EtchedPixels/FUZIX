@@ -34,7 +34,6 @@ todo:
 #include <ctype.h>
 #include <unistd.h>
 #include <errno.h>
-#include <sys/drivewire.h>
 #include <sys/netdev.h>
 #include <sys/net_native.h>
 
