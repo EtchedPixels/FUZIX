@@ -258,8 +258,7 @@ fork_copy:
 	inca
 	incb
 	jsr bank2bank
-	ldx udata+U_DATA__U_PTAB
-	jsr map_process_x
+	jsr map_process_always_di
 	jsr stash_udata
 	jmp map_kernel_di
 
