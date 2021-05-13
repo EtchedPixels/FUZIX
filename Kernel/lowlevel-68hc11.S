@@ -128,18 +128,17 @@ signal_raced:
 	rts
 deliver_signals_2:
 	tab
-	ldx #udata+U_DATA__U_SIGVEC
-	abx
-	abx
-	ldx 0,x
+	ldy #udata+U_DATA__U_SIGVEC
+	aby
+	aby
+	ldy 0,y
 	beq signal_raced
-	clrb
-	pshb
-	psha
-	ldd #signal_return
-	psha
-	pshb
-	jmp ,x
+	tab
+	clra
+	ldx #signal_return
+	pshx
+	ldx PROGLOAD+18		; FIXME assumes binary at base address
+	jsr ,x
 signal_return:
 	sei
 	sts udata+U_DATA__U_SYSCALL_SP
