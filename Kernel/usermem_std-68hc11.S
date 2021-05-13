@@ -54,6 +54,7 @@ _uget:
 	xgdy		; Y is now source
 	tsx
 	ldd 4,x		; len
+	beq nowork
 	addd __end
 	std __end	; stop marker
 	ldx 2,x		; to
@@ -66,6 +67,7 @@ ugetl:
 	inx
 	cpy __end
 	bne ugetl
+nowork:
 	clrb
 	clra
 	rts
@@ -76,6 +78,7 @@ _uput:
 	xgdy		; Y is now source
 	tsx
 	ldd 4,x		; len
+	beq nowork
 	addd __end
 	std __end	; stop marker
 	ldx 2,x		; to
