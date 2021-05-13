@@ -7,7 +7,6 @@ DONE	Change vector table for HC11
 DONE -	Turn most of the HC11 lowlevel code into the 6303 codebase
 DONE -	Use Y register for efficiency in copiers
 NO	Do we need to save Y over a switch
--	Signals
 DONE -	Align syscall handling with 6303 somehow (this is tricky due to the
 	reversed arguments). May need to remember personality or something
 	(eg ACCB = 0x80-0xFF = sane C argument passing with hole in odd place
@@ -19,3 +18,10 @@ NO	Our 6303 code only uses xgdx from 6303, can we use the invalid instr
 
 	(HC11 Y pefix is 6303 XGDX so not fixable 6303 binaries will not run
 	on HC11)
+
+-	Identify which of the library routines is miscompiling
+-	Why do we run with kernel syscall trace on but not off
+-	Timers
+-	Signals
+-	Move to 16K x 4 banking mode
+-	Experiment with flat mode
