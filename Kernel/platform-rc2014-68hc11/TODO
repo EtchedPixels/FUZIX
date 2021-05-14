@@ -16,12 +16,14 @@ NO	Our 6303 code only uses xgdx from 6303, can we use the invalid instr
 	we can run more stuff nicely (and can make fixup handler swap the
 	byte and restart it)
 
-	(HC11 Y pefix is 6303 XGDX so not fixable 6303 binaries will not run
+	(HC11 Y prefix is 6303 XGDX so not fixable 6303 binaries will not run
 	on HC11)
 
 -	Identify which of the library routines is miscompiling
--	Why do we run with kernel syscall trace on but not off
--	Timers
--	Signals
+DONE -	Timers
+IP -	Signals (written but not tested)
+-	Debug pre-emption (irq time premption currently crashes if enabled)
+-	Identify why asctime/ctime produce nonsense
+-	Why does async serial tx break ?
 -	Move to 16K x 4 banking mode
 -	Experiment with flat mode

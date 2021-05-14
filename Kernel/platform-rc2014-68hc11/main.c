@@ -11,7 +11,6 @@ uint8_t need_resched;
 uint16_t swap_dev = 0xFFFF;
 
 /* Onboard I/O */
-static volatile uint8_t *cpuio = (volatile uint8_t *)0;
 
 void platform_idle(void)
 {
@@ -28,24 +27,25 @@ void do_beep(void)
 /* FIXME: route serial interrupts directly in asm to a buffer and just
    queue process here */
 
-static uint8_t tickmod;
+/* Our E clock is 1.8432MHz, the prescaler divides it by 8 giving us
+   230400 timer clocks per second which for 50Hz is 4608 timer clocks */
+#define CLK_PER_TICK	4608
 
-void platform_interrupt(void)
+uint16_t timer_step = CLK_PER_TICK;
+
+/* This is incremented at 50Hz by the asm code */
+uint8_t timer_ticks;
+
+/* Each timer event we get called after the asm code has set up the timer
+   again. ticks will usually be incremented by one each time, but if we
+   miss a tick the overflow logic may make ticks larger */
+void platform_event(void)
 {
-	uint8_t dummy;
-
 	tty_poll();
 
-	/* RTI Timer overflow ? */
-	if (cpuio[0x25] & 0x40) {
-		cpuio[0x25] = 0x40;	/* Clear interrupt */
-		tickmod++;
-		if (tickmod == 7)
-			tickmod = 0;
-		/* Turn it into a 20Hz timer. For now do a simple fixup
-		   for the 28->20 and ignore the extra 1% or so error */
-		if (tickmod != 2 && tickmod != 6)
-			timer_interrupt();
+	while(timer_ticks >= 5) {
+		timer_interrupt();
+		timer_ticks -= 5;
 	}
 }
 

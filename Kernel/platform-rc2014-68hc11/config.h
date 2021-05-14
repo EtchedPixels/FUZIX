@@ -67,3 +67,6 @@ extern uint16_t swap_dev;
 #define platform_copyright()
 
 #define BOOTDEVICENAMES "hd#"
+
+/* 68HC11 specific stuff */
+#define IOBASE	0xF000

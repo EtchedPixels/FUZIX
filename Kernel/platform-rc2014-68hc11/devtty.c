@@ -5,6 +5,7 @@
 #include <devtty.h>
 #include <vt.h>
 #include <tty.h>
+#include <sci.h>
 
 /* Onboard UART */
 static volatile uint8_t *cpuio = (volatile uint8_t *)0xF000;
@@ -28,21 +29,20 @@ void kputchar(uint8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
-	tty_putc(1, c);
+	sci_tx_console(c);
 }
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	/* Console is the 68HC11 onboard port */
-	if (cpuio[0x2E] & 0x80)
+	/* 68HC11 onboard port only for now */
+	if (sci_tx_space())
 		return TTY_READY_NOW;
 	return TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	while(!(cpuio[0x2E] & 0x80));	/* Hack FIXME */
-	cpuio[0x2F] = c;
+	sci_tx_console(c);//queue(c);
 }
 
 static uint8_t baudtable[16] = {
@@ -78,7 +78,9 @@ void tty_setup(uint8_t minor, uint8_t flag)
 		baud = 0x12;
 	}
 	cpuio[0x2B] = baud;
-	cpuio[0x2D] = 0x2C;	/* rx interrupt on, tx and rx on */
+	cpuio[0x2D] = 0xAC;	/* tx/rx interrupt on, tx and rx on */
+	/* If we turn tx ints on in error the next tx int will turn it back
+	   off */
 }
 
 void tty_sleeping(uint8_t minor)
@@ -98,6 +100,8 @@ void tty_data_consumed(uint8_t minor)
 
 void tty_poll(void)
 {
-	if (cpuio[0x2E] & 0x20)
-		tty_inproc(1, cpuio[0x2F]);
+	uint16_t c = sci_rx_get();
+	if (c < 0)
+		return;
+	tty_inproc(1, (uint8_t)c);
 }

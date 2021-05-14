@@ -10,15 +10,18 @@ CDSRCS = discard.c
 DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/devsd.c
 DISCARD_DSRCS = ../dev/mbr.c ../dev/devide_discard.c ../dev/devsd_discard.c
 
+A68SRCS = ../dev/68hc11/sci.S
+
 COBJS = $(CSRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.S=$(BINEXT))
+A68OBJS = $(patsubst ../dev/68hc11/%.S,%.o, $(A68SRCS))
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.o, $(DISCARD_DSRCS))
 
-OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DISCARD_DOBJS)
+OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(A68OBJS) $(DOBJS) $(DISCARD_DOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../dev/ -I../dev/68hc11/
 
 all:	$(OBJS)
 
@@ -30,6 +33,10 @@ $(CDOBJS): %$(BINEXT): %.c
 
 $(AOBJS): %$(BINEXT): %.S
 	cpp -E $<  >$*.s
+	$(CROSS_AS) $(ASOPTS) $*.s -o $*.o
+
+$(A68OBJS): %$(BINEXT): ../dev/68hc11/%.S
+	cpp -I. -E $<  >$*.s
 	$(CROSS_AS) $(ASOPTS) $*.s -o $*.o
 
 $(DOBJS): %$(BINEXT): ../dev/%.c
@@ -46,7 +53,7 @@ image:
 	rc2014-68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
-	devsd.o devsd_discard.o \
+	devsd.o devsd_discard.o sci.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \

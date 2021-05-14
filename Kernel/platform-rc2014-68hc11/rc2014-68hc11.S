@@ -15,6 +15,7 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_process_x
+	    .globl platform_interrupt
 
             ; exported debugging tools
             .globl platform_monitor
@@ -83,12 +84,42 @@ init_early:
             rts			; stack was copied so this is ok
 
 init_hardware:
+	    ldx #IOBASE
+	    ; set up the timer
+            ldd 0x0E,x		; system timer clock
+	    addd timer_step
+	    std 0x18,x		; set compare
+	    clr 0x20,x		; disable output pin logic
+	    bset 0x22,x 0x40	; turn on timer 2 interrupt
             ; set system RAM size
 	    ldd #512
 	    std ramsize
 	    ldd #448
 	    std procmem
             jmp program_vectors_k
+
+	     ;
+	     ;	The timers require we know 16bit load/stores are generated
+	     ;  so we do this bit in assembler
+	     ;
+platform_interrupt:
+	    ldx #IOBASE
+	    bset 0x23,x 0x40	; clear OC2F
+timer_tick_again:
+	    inc timer_ticks
+	    ldd 0x0E,x		; get the current timer
+	    std timer_tmp
+	    ldd 0x18,x		; current match
+	    addd timer_step	; move on 1/50th of a second
+	    std 0x18,x
+	    subd timer_tmp	; if x > timer_tmp then we are good
+				; if not then we missed ticks
+	    bmi timer_tick_again
+timer_good:
+	    jmp platform_event
+
+timer_tmp:
+	    .word 0
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
@@ -119,13 +150,14 @@ program_vectors_k:
 	    std 0xFFF4		; NMI vector
 	    ldd #interrupt_handler
 	    std 0xFFF2		; Interrupt from RC2014
-	    std 0xFFF0		; Interrupt from RTI (RTI overflow)
-	    std 0xFFD6		; Interrupt from SC serial
+	    std 0xFFE6		; TOC2
+	    ldd #sci_intr
+	    std 0xFFD6		; Interrupt from SCI serial
 	    ldd #nullirq
+	    std 0xFFF0		; Interrupt from RTI (RTI overflow)
 	    std 0xFFEE		; TC1
 	    std 0xFFEA		; TC2
 	    std 0xFFE8		; TOC1
-	    std 0xFFE6		; TOC2
 	    std 0xFFE4		; TOC3
 	    std 0xFFE2		; TOC4
 	    std 0xFFE0		; TIC4/TOC5
@@ -185,11 +217,14 @@ kmap:
 ;	Probably we should use the 8K/56K MMU card.
 ;
 map_process_x:
+	    pshb
 	    ldab #P_TAB__P_PAGE_OFFSET+1
 	    abx
+	    bra map_in
 map_process_2:
 map_bank:
 	    pshb
+map_in:
 	    ldab ,x
 	    stab cur_map
 	    stab 0xFE78
@@ -263,6 +298,29 @@ outcharw:
 	    pula
 	    stab 0xF02F
 	    rts
+
+;
+;	SCI variables (their location is very platform and mapping
+;	specific). For us commonmem is sufficient. We put the buffer in
+;	the iram at F100 for now
+;
+
+	.globl sci_txl, sci_rxl, sci_rxp, sci_rxe, sci_txp, sci_txe, sci_err
+
+sci_txl:
+	.byte 0
+sci_rxl:
+	.byte 0
+sci_err:
+	.byte 0
+sci_rxp:
+	.word 0xF100
+sci_rxe:
+	.word 0xF100
+sci_txp:
+	.word 0xF180
+sci_txe:
+	.word 0xF180
 
 ;
 ;	Disk copier (needs to be in common), call with ints off
