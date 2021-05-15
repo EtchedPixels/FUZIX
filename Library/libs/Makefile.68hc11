@@ -19,6 +19,7 @@ KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 #	Header for binaries
 #
 SRC_CRT0 = crt0_$(PLATFORM).S crt0nostdio_$(PLATFORM).S
+SRC_CRT0 += crt0_$(PLATFORM)_rel.S crt0nostdio_$(PLATFORM)_rel.S
 OBJ_CRT0 = $(SRC_CRT0:.S=.o)
 
 #
