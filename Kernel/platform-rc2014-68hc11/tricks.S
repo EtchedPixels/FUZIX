@@ -136,7 +136,7 @@ nostash:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
-        lds udata + U_DATA__U_SP
+        lds udata + U_DATA__U_SP	; not needed ?
 	ldaa inint
         beq swtchdone		; in ISR, leave interrupts off
 	cli
