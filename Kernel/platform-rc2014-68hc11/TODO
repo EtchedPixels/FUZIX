@@ -19,11 +19,14 @@ NO	Our 6303 code only uses xgdx from 6303, can we use the invalid instr
 	(HC11 Y prefix is 6303 XGDX so not fixable 6303 binaries will not run
 	on HC11)
 
--	Identify which of the library routines is miscompiling
+DONE	Identify which of the library routines is miscompiling
 DONE -	Timers
-IP -	Signals (written but not tested)
--	Debug pre-emption (irq time premption currently crashes if enabled)
--	Identify why asctime/ctime produce nonsense
+DONE -	Signals
+DONE -	Debug pre-emption (irq time premption currently crashes if enabled)
+DONE -	Identify why asctime/ctime produce nonsense (compiler)
+DONE  -	68HC11 relocator
+-	exec hooks to clear DP area on execve
+-	RTC driver
 -	Why does async serial tx break ?
 -	Move to 16K x 4 banking mode
 -	Experiment with flat mode
