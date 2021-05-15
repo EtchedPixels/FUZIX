@@ -39,7 +39,7 @@ OBJ_ASM = $(SRC_ASM:.S=.o)
 #
 #	Shared C library functions
 #
-SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c aes256.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c
@@ -86,7 +86,7 @@ SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
 SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c strtok_r.c
 SRC_C += memchr.c memcmp.c memmove.c
 
-SRC_HARD = free.c
+SRC_HARD = asctime.c free.c
 
 #
 #	Termcap
