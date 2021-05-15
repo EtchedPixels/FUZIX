@@ -791,8 +791,8 @@ void ssig(ptptr proc, uint_fast8_t sig)
 	sigm = 1 << (sig & 0x0F);
 
 #ifdef DEBUG_SLEEP
-	kprintf("sig to %d(%d) %p %p\n",
-		proc->p_pid, proc->p_status, proc, udata.u_ptab);
+	kprintf("sig %d to %d(%d) %p %p\n",
+		sig, proc->p_pid, proc->p_status, proc, udata.u_ptab);
 #endif
 
 	irq = di();
