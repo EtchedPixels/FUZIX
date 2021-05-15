@@ -129,17 +129,18 @@ deliver_signals:
 signal_raced:
 	rts
 deliver_signals_2:
+	clr udata+U_DATA__U_CURSIG
 	tab
-	ldy #udata+U_DATA__U_SIGVEC
-	aby
-	aby
-	ldy 0,y
+	ldx #udata+U_DATA__U_SIGVEC
+	abx
+	abx
+	ldy 0,x
 	beq signal_raced
+	clr 0,x
+	clr 1,x
 	tab
 	clra
-	ldx #signal_return
-	pshx
-	ldx PROGLOAD+18		; FIXME assumes binary at base address
+	ldx PROGLOAD+16		; FIXME assumes binary at base address
 	jsr ,x
 signal_return:
 	sei
@@ -230,7 +231,7 @@ syscall_main:
 	staa 2,x
 	ldd udata+U_DATA__U_ERROR
 	std 3,x				; error in X
-	tst udata+U_DATA__U_CURSIG
+	ldaa udata+U_DATA__U_CURSIG
 	bne via_signal
 	rti
 via_signal:
