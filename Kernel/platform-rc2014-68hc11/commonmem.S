@@ -1,6 +1,5 @@
 ;
-;	We keep our common area right down low, with the ZP and stack
-;
+;	Common space for stacks and user data
 ;
         ; exported symbols
         .globl ub
@@ -12,8 +11,6 @@
 	.section .common
 
 ;
-;	Declared as BSS so no non zero bytes here please
-;
 ;	The stacks are a bit odd. The stack pointer points to the next byte
 ;	that will be written on a push so we want the top to be the last
 ;	byte inclusive, not exclusive as on most processors.
@@ -23,12 +20,14 @@
 ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 udata:
 kstack_base:
-	.ds 256,0
+	.ds 255,0
+	.byte 0
 kstack_top:
 	.byte 0
 
 istack_base:
-	.ds 127,0
+	.ds 126,0
+	.byte 0
 istack_top:
 	.byte 0
 istack_switched_sp: .word 0
