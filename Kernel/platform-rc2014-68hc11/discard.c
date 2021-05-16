@@ -3,6 +3,8 @@
 #include <devsd.h>
 #include <ds1302.h>
 
+static const volatile uint8_t *iobase = (uint8_t *)IOBASE;
+
 /*
  * Map handling: allocate 3 banks per process for now
  */
@@ -12,6 +14,8 @@ void pagemap_init(void)
     uint8_t i;
     for (i = 0x20; i <= 0x3D; i+= 3)
         pagemap_add(i);
+    if (iobase[0x3F] & 3)
+        panic("bad CONFIG");
 }
 
 void map_init(void)
