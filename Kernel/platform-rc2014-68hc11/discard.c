@@ -12,7 +12,7 @@ static const volatile uint8_t *iobase = (uint8_t *)IOBASE;
 void pagemap_init(void)
 {
     uint8_t i;
-    for (i = 0x20; i <= 0x3D; i+= 3)
+    for (i = 0x24; i <= 0x3D; i+= 3)
         pagemap_add(i);
     if (iobase[0x3F] & 3)
         panic("bad CONFIG");
