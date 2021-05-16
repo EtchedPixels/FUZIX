@@ -110,6 +110,12 @@ arg_t _execve(void)
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
+#ifdef DP_SIZE
+	if (hdr.a_zp > DP_SIZE) {
+		udata.u_error = ENOMEM;
+		goto nogood2;
+	}
+#endif
 	progptr = bin_size + 1024 + bss;
 	if (bin_size < 64 || progload < PROGLOAD || top - progload < progptr || progptr < bin_size) {
 		udata.u_error = ENOMEM;
@@ -192,6 +198,11 @@ arg_t _execve(void)
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk() */
 	uzero((uint8_t *)progptr, bss);
+
+	/* Wipe zero page/direct page spaces if present */
+#ifdef DP_SIZE
+	uzero((uint8_t *)DP_BASE, DP_SIZE);
+#endif
 
 	/* Set initial break for program */
 	udata.u_break = (int)ALIGNUP(progptr + bss);
