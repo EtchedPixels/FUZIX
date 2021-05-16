@@ -225,11 +225,15 @@ map_process_x:
 	    ldab #P_TAB__P_PAGE_OFFSET+1
 	    abx
 	    bra map_in
+map_for_swap:
+	    pshb
+	    bra map_write
 map_process_2:
 map_bank:
 	    pshb
 map_in:
 	    ldab ,x
+map_write:
 	    stab cur_map
 	    stab 0xFE78
             incb
@@ -336,6 +340,7 @@ sci_txe:
 	.globl hd_read_data
 	.globl hd_write_data
 	.globl hd_map
+	.globl hd_swap
 
 hd_read_data:
 	xgdx
@@ -346,6 +351,12 @@ hd_read_data:
 	; and we must reference them before we map_process
 	ldab hd_map
 	beq hd_kmap
+	deca
+	beq hd_umap
+	ldab hd_swap
+	bsr map_for_swap
+	bra hd_kmap
+hd_umap:
 	jsr map_process_always
 hd_kmap:
 	clrb
@@ -371,6 +382,12 @@ hd_write_data:
 	;
 	ldab hd_map
 	beq hd_kmapw
+	deca
+	beq hd_umapw
+	ldab hd_swap
+	bsr map_for_swap
+	bra hd_kmapw
+hd_umapw:
 	jsr map_process_always
 hd_kmapw:
 	clrb
@@ -388,6 +405,8 @@ hd_write256:
 	rts
 
 hd_map:
+	.byte 0
+hd_swap:
 	.byte 0
 
 ;
@@ -453,6 +472,12 @@ sd_spi_transmit_sector:
 	ldy ,x
 	ldaa 2,x
 	beq from_k
+	deca
+	beq from_u
+	ldab 3,x
+	bsr map_for_swap
+	bra from_k
+from_u:
 	bsr map_process_always
 from_k:
 	clra
@@ -480,6 +505,12 @@ sd_spi_receive_sector:
 	ldy ,x
 	ldaa 2,x
 	beq to_k
+	deca
+	beq to_u
+	ldab 3,x
+	bsr map_for_swap
+	bra to_k
+to_u:
 	bsr map_process_always
 to_k:
 	clra

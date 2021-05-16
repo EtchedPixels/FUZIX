@@ -52,14 +52,14 @@ void platform_event(void)
 	}
 }
 
-/* For now this and the supporting logic don't handle swap */
-
 extern uint8_t hd_map;
+extern uint8_t hd_swap;
 extern void hd_read_data(uint8_t *p);
 extern void hd_write_data(uint8_t *p);
 
 void devide_read_data(void)
 {
+	hd_swap = blk_op.swap_page;
 	if (blk_op.is_user)
 		hd_map = 1;
 	else
@@ -69,6 +69,7 @@ void devide_read_data(void)
 
 void devide_write_data(void)
 {
+	hd_swap = blk_op.swap_page;
 	if (blk_op.is_user)
 		hd_map = 1;
 	else
