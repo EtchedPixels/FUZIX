@@ -10,11 +10,8 @@
  *	the magic segments in the kernel
  *
  *	Our input is
- *	file 1:	linked at 0x100 ZP = 0
- *	file 2: linked at 0x200 ZP = 2
- *
- *	A maximum of 255 ZP entries is permitted (and most systems can't fit
- *	that). The relocation data is handled in the usual way.
+ *	file 1:	linked at 0x100
+ *	file 2: linked at 0x200
  */
 
 static uint8_t buf[65536];
@@ -25,9 +22,7 @@ static uint16_t numzp;
 static void sweep_relocations(void)
 {
   /* We link at 0x0100 and 0x0200. Do not relocate the header except for
-     the sig vector. In order to identify ZP relocations we generate those at
-     0 and 2 base. Thus an offset of 2 is a ZP ref, an offset of 1 is a 16bit
-     high byte ref and any other difference is badness */
+     the sig vector. */
   uint8_t *base = buf + 0x10;
   uint8_t *base2 = bufb + 0x10;
   uint8_t *relbase = buf + csize + dsize; /* write relocs into BSS head */
@@ -42,65 +37,9 @@ static void sweep_relocations(void)
      cleaner */
   bufb[0x12] = 0x01;	/* Force a relocation */
 
-  /* Relocate zero page entries first */
-  while(len--) {
-    if (*base == *base2) {
-      base++;
-      base2++;
-      pos++;
-      continue;
-    }
-    /* Code/Data reloc - ignore this pass */
-    if (*base == *base2 - 1) {
-      base++;
-      base2++;
-      pos++;
-      continue;
-    }
-    if (*base == *base2 - 2) {
-      int diff = pos - lastrel;
-
-      /* Track the highest ZP reloc we see - it's zero based so this
-         in turn gives us the limit. Add one to get size from offset */
-      if (numzp < *base)
-        numzp = *base + 1;
-      /* 1 - 254 skip that many and reloc, 255 move on 254, 0 end */
-      while(diff > 254) {
-          diff -= 254;
-          *relptr++ = 255;
-      }
-      *relptr++ = diff;
-      lastrel = pos;
-      pos++;
-      base++;
-      base2++;
-      continue;
-    }
-    fprintf(stderr, "Bad relocation at %x (%02X:%02X:%02X v %02X:%02X:%02x)\n", pos,
-      base[-1], *base, base[1], base2[-1], *base2, base2[1]);
-    fprintf(stderr, "base2 - bufb = %x base-buf = %x\n",
-      base2-bufb, base-buf);
-    exit(1);
-  }
-  /* End marker */
-  *relptr++ = 0;
-  
-  pos = 0x10;
-  lastrel = 0;
-  len = csize + dsize - 0x10;
-  base = buf + 0x10;
-  base2 = bufb + 0x10;
-
   /* Relocation table two is the code/data references */
   while(len--) {
     if (*base == *base2) {
-      base++;
-      base2++;
-      pos++;
-      continue;
-    }
-    /* We shift the binary by 0x100 and the ZP by two so we can find both */
-    if (*base == *base2 - 2) {
       base++;
       base2++;
       pos++;
@@ -192,8 +131,6 @@ int main(int argc, char *argv[])
   buf[9] = dsize >> 8;
   buf[10] = bsize;
   buf[11] = bsize >> 8;
-  /* We calculate this as it's not known beforehand */
-  buf[15] = numzp;
   /* User 16/17 are reserved already for signal vector */
   buf[18] = relbase;
   buf[19] = relbase >> 8;
