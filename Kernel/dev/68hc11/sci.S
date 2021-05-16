@@ -101,11 +101,12 @@ txdoq:
 	inc sci_txl
 	ldx sci_txe
 	stab ,x
-	clrb
 	inc sci_txe+1
-	bpl sci_txe_ok
+	bne sci_txe_ok
+	ldab #0x80		; wrap to start
 	stab sci_txe+1
 sci_txe_ok:
+	clrb
 	pula
 	tap
 	rts
@@ -137,19 +138,22 @@ sci_tx_space:
 sci_tx_console:
 	ldx #IOBASE
 	tpa
-	sei
-	; Wait for any pending byte to go out. The IRQ block ensures that
-	; the interrupt won't fire and restart the queue
+	; Wait for pending character
 conwait:
 	brclr 0x2E,x 0x80 conwait
+	; Check with interrupts off to avoid a race
+	sei
+	brclr 0x2E,x 0x80 conwait2
 	stab 0x2F,x
-	; At this point there are two possibilities both fine:
-	; - there is queued transmit data - our tx will cause the interrupt
-	; to fire and it will pick up from the queue
-	; - there is no queued transmit data - our tx will not cause an
-	; interrupt
+	; Our write will have cleared any left over transmit interrupt
+	; driving the queue. Turn the tx irq back on - the irq will turn
+	; itself off if not needed
+	bset 0x2D,x 0x80
 	tap
 	rts
+conwait2:
+	tap
+	bra conwait
 
 ;
 ;	Check if there is a byte in the queue we can use.

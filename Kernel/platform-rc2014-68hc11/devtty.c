@@ -28,7 +28,7 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 void kputchar(uint8_t c)
 {
 	if (c == '\n')
-		tty_putc(1, '\r');
+		sci_tx_console('\r');
 	sci_tx_console(c);
 }
 
@@ -42,7 +42,7 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	sci_tx_console(c);//queue(c);
+	sci_tx_queue(c);
 }
 
 static uint8_t baudtable[16] = {
