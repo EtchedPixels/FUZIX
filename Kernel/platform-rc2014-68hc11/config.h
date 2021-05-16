@@ -19,7 +19,7 @@
 #define CONFIG_BANK_FIXED
 #define CONFIG_BANKS	1	/* 1 banks 64K page size */
 #define MAX_MAPS	32
-#define MAP_SIZE	0xBE00
+#define MAP_SIZE	0xC000
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
