@@ -90,10 +90,9 @@ switchin:
 
 	subd	#0		;compare with 0
 	bne	not_swapped
+	xgdx			; switch_proc_ptr back into D
 	jsr	swapper
 	ldx	switch_proc_ptr
-	ldab	P_TAB__P_PAGE_OFFSET+1,x
-
 not_swapped:
 	jsr	map_process_x
 
@@ -231,8 +230,7 @@ fork_copy:
 	ldab udata+U_DATA__U_PAGE+2
 	bsr bank2bank
 
-	ldx udata+U_DATA__U_PTAB
-	jsr map_process_x
+	jsr map_process_always_di
 	jsr stash_udata
 	jmp map_kernel_di
 #endif
