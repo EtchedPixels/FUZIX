@@ -26,6 +26,7 @@
 
 ds1302_get_pin_data:
 	ldab RTCREG		; read input register
+	clra
         andb #PIN_DATA_IN        ; mask off data pin
         rts
 
@@ -37,9 +38,9 @@ ds1302_set_pin_data_driven:
 	andb #1
 	bne writereg
         orab #PIN_DATA_HIZ
-writreg:
-	stab RTCREG
-	stab rtc_shadow
+writereg:
+	staa RTCREG
+	staa rtc_shadow
 	rts
 
 	.globl ds1302_set_pin_data
@@ -65,6 +66,6 @@ setpin:
         anda rtc_shadow		; current & mask
 	cpx #0
 	beq writereg
-	stab _.tmp		; no oraa b
-        oraa _.tmp              ; set if relevant
+	stab *_.tmp		; no oraa b
+        oraa *_.tmp              ; set if relevant
 	bra writereg
