@@ -252,6 +252,7 @@ doexec:
 	clr udata+U_DATA__U_INSYS
 	cli
 	ldd #PROGLOAD+DPBASE		; relocation info
+	ldy #0				; clear register
 	jmp 0,x				; from the caller D
 
 trap_handler:
