@@ -129,9 +129,6 @@ APPCURSES = $(OBJCURSES:.o=)
 
 all: $(APPS) $(APPSNS) $(APPTC) $(APPCURSES) size.report
 
-$(APPS): $(CRT0)
-$(APPSNS): $(CRT0NS)
-
 $(APPS) $(APPSNS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LINKER_TAIL)
 

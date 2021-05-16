@@ -6,8 +6,10 @@
 	.mode mshort
 
 	.globl environ
+	.globl __sysvector
 
 head:
+__sysvector:
 	.word	0x80A8
 	.byte	2		;	6800 series
 	.byte	4		;	Needs 68HC11 features

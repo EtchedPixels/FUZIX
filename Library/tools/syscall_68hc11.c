@@ -28,7 +28,7 @@ static void write_call(int n)
   fprintf(fp, "\tpshb\n");
   fprintf(fp, "\tpsha\n");
   fprintf(fp, "\tldd #%d\n", 0x80 | (n << 8));
-  fprintf(fp, "\tswi\n");
+  fprintf(fp, "\tjsr __sysvector\n");
   fprintf(fp, "\tcpx #0\n");
   fprintf(fp, "\tbeq noerror\n");
   fprintf(fp, "\tstx errno\n");
@@ -55,7 +55,7 @@ static void write_vacall(int n)
   fprintf(fp, "\tpshb\n");
   fprintf(fp, "\tpsha\n");
   fprintf(fp, "\tldd #%d\n", 0x80 | (n << 8));
-  fprintf(fp, "\tswi\n");
+  fprintf(fp, "\tjsr __sysvector\n");
   fprintf(fp, "\tcpx #0\n");
   fprintf(fp, "\tbeq noerror\n");
   fprintf(fp, "\tstx errno\n");
