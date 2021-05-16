@@ -2,6 +2,8 @@ Initial code for a bring up 68HC11 RC2014 banked memory platform based on the
 6303 code base. This probably isn't what we finally want to end up with as a
 model but it will help us get there.
 
+CPU configuration: 68HC11 with ROM, EEPROM, COP disabled.
+
 Current model
 
 	0x0000-0xBFFF	3 48K pages treated as bank
@@ -50,11 +52,6 @@ RC2014 bus
 Internal UART
 
 Things to address
-- Finish debugging task switching and fork
-	Right now we seem to fork ok but the udata page tables for the parent
-	are wrong when we switch to it which suggests it's not set up right
-	somewhere
-- Save the right internal registers on interrupt (mostly right)
 - Dynamic buffer allocation
 - SPI bitbang port
 - Making the UART driver properly IRQ driven for input with its own buffer
@@ -78,3 +75,22 @@ F040-F1FF	Fixed as common space (common data, disk I/O etc)
 F200-FFFF	Common read only copies and vectors
 
 Will have Z180 like problem with swap ?
+
+
+Emulation:
+
+dd if=/dev/zero of=sdcard.img bs=1M count=64
+fsck sdcard.img
+add primary partition at default offset 2048, 65536 blocks (32Mb)
+make
+cd Standalone/filesystem-src
+./build-filesystem -X ../../scratch.fs 256 65535
+cd ../..
+dd if=Kernel/fuzix.bin of=sdcard.img bs=512 seek=1 conv=notrunc
+dd if=scratch.fs of=sdcard.img bs=512 seek=2048 conv=notrunc
+
+Then from the ROM package
+
+dd if=loadsd of=sdcard.img conv=notrunc
+
+rc2014-68hc11 -b -r romsd512 -S sdcard.img -R

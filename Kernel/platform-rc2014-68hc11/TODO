@@ -27,7 +27,7 @@ DONE -	Identify why asctime/ctime produce nonsense (compiler)
 DONE -	68HC11 relocator
 DONE -	exec hooks to clear DP area on execve
 DONE	RTC driver
--	Why does async serial tx break ?
+DONE	Why does async serial tx break ?
 -	Move to 16K x 4 banking mode
+-	Swap
 -	Experiment with flat mode
-- eerom and rom off
