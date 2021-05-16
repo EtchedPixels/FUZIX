@@ -141,7 +141,10 @@ deliver_signals_2:
 	tab
 	clra
 	ldx PROGLOAD+16		; FIXME assumes binary at base address
+	; Stack the vector as well, needed for running 680x binaries
+	pshy
 	jsr ,x
+	pulx			; discard vector
 signal_return:
 	sei
 	sts udata+U_DATA__U_SYSCALL_SP
@@ -311,39 +314,39 @@ nlmsg:
 call_c_irq:
 	; Save the C direct page values so we can re-enter along with the
 	; four register variables we use.
-	ldx _.tmp
+	ldx *_.tmp
 	pshx
-	ldx _.xy
+	ldx *_.xy
 	pshx
-	ldx _.z
+	ldx *_.z
 	pshx
 
-	ldx _.d1
+	ldx *_.d1
 	pshx
-	ldx _.d2
+	ldx *_.d2
 	pshx
-	ldx _.d3
+	ldx *_.d3
 	pshx
-	ldx _.d4
+	ldx *_.d4
 	pshx
 
 	jsr ,y
 
 	pulx
-	stx _.d4
+	stx *_.d4
 	pulx
-	stx _.d3
+	stx *_.d3
 	pulx
-	stx _.d2
+	stx *_.d2
 	pulx
-	stx _.d1
+	stx *_.d1
 
 	pulx
-	stx _.z
+	stx *_.z
 	pulx
-	stx _.xy
+	stx *_.xy
 	pulx
-	stx _.tmp
+	stx *_.tmp
 	rts
 
 ;
