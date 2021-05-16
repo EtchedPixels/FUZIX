@@ -104,6 +104,10 @@ init_hardware:
 	     ;
 platform_interrupt:
 	    ldx #IOBASE
+	    ldaa #0x55
+	    staa 0x3a,x		; reset watchdog. We shouldn't have it on
+	    coma		; but we might as well reset it in case
+	    staa 0x3a,x
 	    bset 0x23,x 0x40	; clear OC2F
 timer_tick_again:
 	    inc timer_ticks
