@@ -33,24 +33,24 @@ head:
 ;	X = undefined
 ;
 ;	Return address is the correct route back to the kernel. Above it is
-;	an RTI frame.
+;	a copy of the vector and an RTI frame.
 ;
 __sighandler:
 	; Save our compiler temporaries and dp register variables
 	
-	ldx	_.tmp
+	ldx	*_.tmp
 	pshx
-	ldx	_.xy
+	ldx	*_.xy
 	pshx
-	ldx	_.z
+	ldx	*_.z
 	pshx
-	ldx	_.d1
+	ldx	*_.d1
 	pshx
-	ldx	_.d2
+	ldx	*_.d2
 	pshx
-	ldx	_.d3
+	ldx	*_.d3
 	pshx
-	ldx	_.d4
+	ldx	*_.d4
 	pshx
 	tsx
 	pshx		; stack the address base of the signal frame
@@ -59,19 +59,19 @@ __sighandler:
 
 	pulx		; discard signal stack info
 	pulx
-	stx	_.d4
+	stx	*_.d4
 	pulx
-	stx	_.d3
+	stx	*_.d3
 	pulx
-	stx	_.d2
+	stx	*_.d2
 	pulx
-	stx	_.d1
+	stx	*_.d1
 	pulx
-	stx	_.z
+	stx	*_.z
 	pulx
-	stx	_.xy
+	stx	*_.xy
 	pulx
-	stx	_.tmp
+	stx	*_.tmp
 	rts		; to the return provided by the kernel
 
 ;
