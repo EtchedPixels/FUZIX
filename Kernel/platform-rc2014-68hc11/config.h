@@ -51,6 +51,11 @@ extern uint16_t swap_dev;
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
 
+/* On-board DS1302, we can read the time of day from it */
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
+#define CONFIG_RTC_EXTENDED
+#define CONFIG_RTC_INTERVAL	100
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
 
@@ -70,3 +75,6 @@ extern uint16_t swap_dev;
 
 /* 68HC11 specific stuff */
 #define IOBASE	0xF000
+
+#define DP_BASE 0x0000
+#define DP_SIZE 0x00C0	/* C0-FF is for the kernel */

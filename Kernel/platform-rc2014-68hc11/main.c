@@ -10,6 +10,9 @@ uint8_t kernel_flag = 1;
 uint8_t need_resched;
 uint16_t swap_dev = 0xFFFF;
 
+/* RTC bit copy */
+uint8_t rtc_shadow = 0;
+
 /* Onboard I/O */
 
 void platform_idle(void)

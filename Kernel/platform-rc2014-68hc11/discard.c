@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <devide.h>
 #include <devsd.h>
+#include <ds1302.h>
 
 /*
  * Map handling: allocate 3 banks per process for now
@@ -29,6 +30,7 @@ uint8_t platform_param(char *p)
 
 void device_init(void)
 {
+	ds1302_init();
 #ifdef CONFIG_IDE
 	devide_init();
 #endif

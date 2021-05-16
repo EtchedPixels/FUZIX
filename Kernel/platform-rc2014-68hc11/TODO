@@ -24,9 +24,10 @@ DONE -	Timers
 DONE -	Signals
 DONE -	Debug pre-emption (irq time premption currently crashes if enabled)
 DONE -	Identify why asctime/ctime produce nonsense (compiler)
-DONE  -	68HC11 relocator
--	exec hooks to clear DP area on execve
--	RTC driver
+DONE -	68HC11 relocator
+DONE -	exec hooks to clear DP area on execve
+DONE	RTC driver
 -	Why does async serial tx break ?
 -	Move to 16K x 4 banking mode
 -	Experiment with flat mode
+- eerom and rom off

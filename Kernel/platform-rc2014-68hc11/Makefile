@@ -7,8 +7,10 @@ ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c
 
-DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/devsd.c
+DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/devsd.c ../dev/ds1302.c
+DASRCS += ../dev/ds1302_68hc11.S
 DISCARD_DSRCS = ../dev/mbr.c ../dev/devide_discard.c ../dev/devsd_discard.c
+DISCARD_DSRCS += ../dev/ds1302_discard.c
 
 A68SRCS = ../dev/68hc11/sci.S
 
@@ -17,9 +19,10 @@ CDOBJS = $(CDSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.S=$(BINEXT))
 A68OBJS = $(patsubst ../dev/68hc11/%.S,%.o, $(A68SRCS))
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
+DAOBJS = $(DASRCS:.S=$(BINEXT))
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.o, $(DISCARD_DSRCS))
 
-OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(A68OBJS) $(DOBJS) $(DISCARD_DOBJS)
+OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(A68OBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS)
 
 CROSS_CCOPTS += -I../dev/ -I../dev/68hc11/
 
@@ -42,6 +45,9 @@ $(A68OBJS): %$(BINEXT): ../dev/68hc11/%.S
 $(DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
+$(DAOBJS): %$(BINEXT): ../dev/%.S
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+
 $(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
@@ -52,8 +58,8 @@ image:
 	$(CROSS_LD) -M -T memory.x -relax -o ../fuzix.elf crt0.o commonmem.o \
 	rc2014-68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
-	blkdev.o mbr.o devide.o devide_discard.o \
-	devsd.o devsd_discard.o sci.o \
+	blkdev.o mbr.o devide.o devide_discard.o devsd.o \
+	devsd_discard.o sci.o ds1302_discard.o ds1302.o ds1302_68hc11.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \

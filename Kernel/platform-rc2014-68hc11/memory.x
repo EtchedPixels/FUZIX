@@ -151,6 +151,10 @@ SECTIONS
     devide_discard.o(.text.*)
     devsd_discard.o(.text)
     devsd_discard.o(.text.*)
+    ds1302_discard.o(.text)
+    ds1302_discard.o(.text.*)
+    mbr.o(.text)
+    mbr.o(.text.*)
     discard.o(.text)
     discard.o(.text.*)
   }  > discard
