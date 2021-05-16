@@ -179,7 +179,9 @@ signal_return:
 ;
 ;	On an HC11 the arguments are in 'classic' C order but there
 ;	is a hole caused by the fact that D is used to pass argument 1
-;	and pushed by the stubs
+;	and pushed by the stubs and a 2 byte return from the stubs to
+;	the syscall wrappers
+;
 ;	Thus:
 ;
 ;	19-18	Arg3
@@ -197,13 +199,13 @@ unix_syscall_entry:
 	bitb #0x80			; 68HC11 or 680X call
 	beq syscall_0x
 	; Sane argument order but odd stack layout
-	ldd 9,x
+	ldd 11,x
 	std udata+U_DATA__U_ARGN
-	ldd 13,x
-	std udata+U_DATA__U_ARGN+2
 	ldd 15,x
-	std udata+U_DATA__U_ARGN+4
+	std udata+U_DATA__U_ARGN+2
 	ldd 17,x
+	std udata+U_DATA__U_ARGN+4
+	ldd 19,x
 	bra syscall_main
 syscall_0x:
 	abx
