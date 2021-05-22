@@ -12,7 +12,7 @@
 
 __uputc:
 	tsx
-	ldab 3,x
+	ldab 5,x
 	ldx 2,x
 	jsr map_process_always
 	stab 0,x
