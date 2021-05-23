@@ -207,6 +207,10 @@ include quiet.mk
 
 include cpu-$(CPU)/image.mk
 -include platform-$(TARGET)/image.mk
+
+diskimage:
+	+$(MAKE) -C platform-$(TARGET) diskimage
+
 # DO NOT DELETE
 
 audio.o: include/kernel.h include/panic.h include/sysinfoblk.h
