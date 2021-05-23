@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <errno.h>
 
 unsigned int port;
 uint8_t port_opt;
