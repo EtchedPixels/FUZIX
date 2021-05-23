@@ -193,7 +193,7 @@ clean:
 	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion tools/trslabel
 	rm -f tools/atariboot tools/fontexpand font8x8_exp2.c 
 	rm -f *.rel *.lst *.sym *.o *.bin
-	rm -f lowlevel_6303.s lowlevel_6803.s usermem_std-6303.s usermem_std-6803.s
+	rm -f lowlevel-6303.s lowlevel-6803.s usermem_std-6303.s usermem_std-6803.s
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C tools/bankld clean
 	+$(MAKE) -C cpm-loader clean
