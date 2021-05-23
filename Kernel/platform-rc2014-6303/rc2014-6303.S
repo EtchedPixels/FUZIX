@@ -67,38 +67,43 @@ _platform_monitor:
             ldx #endtrap
             jsr outstring
 	    tsx
-	    ldx 10,x
-            jsr outx
+
+	    ldaa #8
+stkrow:
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+	    jsr outx
+            ldab #':'
+	    jsr outchar
+	    ldab #' '
+            jsr outchar
+            clrb
+stkword:
+	    pshb
+	    psha
+	    ldd 10,x
+            jsr outd
+	    pula
+	    pulb
+	    inx
+	    inx
+	    incb
+	    cmpb #8
+	    beq endrow
+	    pshb
             ldab #32
 	    jsr outchar
-	    tsx
-	    ldx 12,x
-            jsr outx
-            ldab #32
-	    jsr outchar
-	    tsx
-	    ldx 14,x
-            jsr outx
-            ldab #32
-	    jsr outchar
-	    tsx
-	    ldx 16,x
-            jsr outx
-            ldab #32
-	    jsr outchar
-	    tsx
-	    ldx 18,x
-            jsr outx
-            ldab #32
-	    jsr outchar
-	    tsx
-	    ldx 20,x
-            jsr outx
-            ldx #endtrap
-	    jsr outstring
+	    pulb
+	    bra stkword
+endrow:	    deca
+	    bne stkrow
+
 _platform_reboot:
 	    jsr map_kernel
 	    jmp rebootit
+
 
 ccreg:	    .byte 13,10
 	    .ascii "Trap: CC = $"
@@ -112,7 +117,7 @@ xreg:       .byte 13,10
 pcreg:      .byte 13,10
 	    .ascii "      PC = $"
 	    .byte 0
-endtrap:    .byte 13,10,13,10,0
+endtrap:    .byte 13,10,0
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to
