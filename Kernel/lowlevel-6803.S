@@ -92,24 +92,28 @@ outstring:
 	bra outstring
 
 outx:
+	pshb
+	psha
 	stx @tmp
 	ldab @tmp
 	bsr outcharhex
 	ldab @tmp+1
 	bsr outcharhex
+	pula
+	pulb
 outsdone:
 	rts
 
 outd:
-	pshb
 	psha
+	pshb
 	tab
 	bsr outcharhex
-	pula
-	psha
-	bsr outcharhex
-	pula
 	pulb
+	pshb
+	bsr outcharhex
+	pulb
+	pula
 	rts
 
 deliver_signals:
