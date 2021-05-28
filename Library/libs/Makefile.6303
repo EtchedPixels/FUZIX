@@ -98,7 +98,7 @@ curses.lib: fuzix6303/Makefile $(OBJ_CURS)
 	ln -sf curses.lib libcurses6303.a
 
 liberror.txt:
-	../tools/liberror > liberror.txt
+	../tools/liberror -X > liberror.txt
 
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $(@:.o=.s)
