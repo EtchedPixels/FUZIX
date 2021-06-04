@@ -11,6 +11,7 @@
 	    .export map_kernel_di
 	    .export map_process
 	    .export map_process_always
+	    .export map_process_always_di
 	    .export map_save_kernel
 	    .export map_restore
 	    .export map_process_x
@@ -99,6 +100,10 @@ stkword:
 	    bra stkword
 endrow:	    deca
 	    bne stkrow
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
 
 _platform_reboot:
 	    jsr map_kernel
@@ -212,6 +217,7 @@ nullirq:
 ;	Map the current process, do not change register values
 ;
 map_process_always:
+map_process_always_di:
 	    pshx
 	    ldx #_udata + U_DATA__U_PAGE
 	    jsr map_bank
