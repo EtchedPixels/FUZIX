@@ -30,6 +30,13 @@ Untested but code now present for:
 
 To add:
 	Floppy ?
+	TMS9918 graphics - can't access directly so need a helper something
+	like
+
+	[Count.B][Stream]
+
+	where bit 7 of count indicates data/control and we also do minimal
+	filtering on control writes
 
 
 Memory Map:

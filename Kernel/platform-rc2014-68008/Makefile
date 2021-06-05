@@ -60,7 +60,18 @@ image:
 	ps2kbd.o ps2bitbang.o ps2bitbang_rc2014.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
-
 	$(CROSS_CC) -c loader.S
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
 	m68k-uclinux-objcopy loader.elf -O binary loader.bin
+
+diskimage:
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=../../disk.img bs=40017920 conv=sync
+	# Add the bootstrap loader
+	dd if=loader.bin of=../../disk.img conv=notrunc
+	# Add the file system
+	dd if=../../filesys.img of=../../disk.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=../fuzix.bin of=../../disk.img bs=512 seek=1 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M ../../disk.img > ../../emu-ide.img
