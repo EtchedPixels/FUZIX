@@ -64,7 +64,7 @@ static struct block *find_smallest(size_t length)
 	struct block *smallest = &dummy;
 	struct block *b = &start;
 
-	while (b->next)
+	while (b)
 	{
 		if (UNUSED(b)
 			&& (b->length >= length)
