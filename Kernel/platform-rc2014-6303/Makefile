@@ -61,7 +61,7 @@ loader.o: loader.S
 	$(CROSS_AS) $(ASOPTS) $*.s
 
 loader: loader.o
-	$(CROSS_LD) -b -C 0x200 -Z 0x20 -o loader.bin
+	$(CROSS_LD) -b -C 0x200 -Z 0x20 -o loader.bin loader.o
 
 diskimage: loader
 	# Make a blank disk image with partition
