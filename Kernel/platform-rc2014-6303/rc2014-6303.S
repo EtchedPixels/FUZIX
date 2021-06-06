@@ -331,6 +331,8 @@ outcharw:
 ;
 ;	TOS = ptr, length always 512, src and page in globals
 ;
+;	FIXME: swap support
+;
 
 	.export _hd_read_data
 	.export _hd_write_data
