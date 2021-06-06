@@ -1,7 +1,8 @@
 ;
-;	    rc2014 6303 platform functions
+;	    rc2014 6800 platform functions
 ;
-;	The 6303 is a very clean processor so there isn't a lot required here
+;	The 6800 is a very clean processor so there isn't a lot required
+;	here, it's a bit longer winded compared with 6803/6303
 ;
 
             .export init_early
@@ -11,6 +12,7 @@
 	    .export map_kernel_di
 	    .export map_process
 	    .export map_process_always
+	    .export map_process_always_di
 	    .export map_save_kernel
 	    .export map_restore
 	    .export map_process_x
@@ -24,7 +26,7 @@
 	    .export ___hard_irqrestore
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../kernel-6800.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -147,10 +149,18 @@ nullirq:
 ;	Map the current process, do not change register values
 ;
 map_process_always:
+map_process_always_di:
+	    psha
+	    tpa
+	    psha
+	    sei
 	    stx mapsavex
 	    ldx #_udata + U_DATA__U_PAGE
 	    jsr map_bank
 	    ldx mapsavex
+	    pula
+	    tap
+	    pula
 	    rts
 ;
 ;	X points to the map table of this process, preserve D
@@ -167,11 +177,18 @@ map_process:
 ;
 map_kernel_di:
 map_kernel:
+	    psha
+	    tpa
+	    psha
+	    sei
 	    stx mapsavex
 				; Common is left untouched
 	    ldx #kmap		; Kernel RAM
 	    jsr map_bank
 	    ldx mapsavex
+	    pula
+	    tap
+	    pula
 	    rts
 kmap:
 	    .byte 0x20
@@ -226,10 +243,17 @@ map_bank:
 ;	so this is fine.
 ;
 map_restore:
+	    psha
+	    tpa
+	    psha
+	    sei
 	    stx mapsavex
 	    ldx #saved_map
 	    jsr map_bank
 	    ldx mapsavex
+	    pula
+	    tap
+	    pula
 	    rts
 
 ;
