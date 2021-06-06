@@ -128,14 +128,19 @@ deliver_signals_2:
 	abx
 	ldx 0,x
 	beq signal_raced
+	clr 0,x
+	clr 1,x
 	clrb
-	pshb
+	; The value we need is in A so push AB not BA and we get the
+	; right 16bit result
 	psha
-	ldd #signal_return
-	psha
 	pshb
-	jmp ,x
-signal_return:
+	; stack the vector
+	pshx
+	ldx PROGLOAD+16
+	jsr ,x
+	; discard the vector
+	pulx
 	sei
 	sts _udata+U_DATA__U_SYSCALL_SP
 	lds #kstack_top
