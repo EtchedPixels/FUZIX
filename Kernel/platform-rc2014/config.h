@@ -83,8 +83,7 @@ extern uint16_t swap_dev;
 /*
  *	When the kernel swaps something it needs to map the right page into
  *	memory using map_for_swap and then turn the user address into a
- *	physical address. For a simple banked setup there is no conversion
- *	needed so identity map it.
+ *	physical address. We use the second 16K window
  */
 #define swap_map(x)	((uint8_t *)((((x) & 0x3FFF)) + 0x4000))
 
