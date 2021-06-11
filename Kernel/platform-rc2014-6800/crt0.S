@@ -12,6 +12,7 @@ entry:
 		clra
 		clrb
 		stab @zero
+		stab @zero+1
 		incb
 		stab @one+1		; set up '@one' for the compiler
 		ldab #0x7E
