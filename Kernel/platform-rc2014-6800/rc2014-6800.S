@@ -370,11 +370,11 @@ saved_map:  .byte 0
 outchar:
 	    psha
 outcharw:
-	    ldaa 0x11
+	    ldaa 0xFEC5
 	    anda #0x20
 	    beq outcharw
 	    pula
-	    stab 0x13
+	    stab 0xFEC0
 	    rts
 
 ;
