@@ -78,7 +78,7 @@ outcharhex:
 outnibble:
 	andb #0x0F
 	cmpb #0x0A
-	ble outh2
+	blt outh2
 	addb #0x07
 outh2:	addb #0x30
 outchar_call:
@@ -402,7 +402,6 @@ iretk:
 	jsr map_restore
 	lds istack_switched_sp
 	clr udata+U_DATA__U_ININTERRUPT
-	tst udata+U_DATA__U_INSYS
 	rti
 
 ;
