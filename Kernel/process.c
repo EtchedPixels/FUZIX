@@ -345,7 +345,9 @@ void makeproc(regptr ptptr p, u_data *u)
 /* This allocates a new process table slot, and fills in its
  * p_pid field with a unique number.
  */
-uint16_t nextpid = 0;
+
+static uint16_t nextpid = 0;
+
 ptptr ptab_alloc(void)
 {
 	regptr ptptr p;
@@ -364,7 +366,7 @@ ptptr ptab_alloc(void)
 
 			/* select a unique pid */
 			while (newp->p_pid == 0) {
-				if (nextpid++ > MAXPID)
+				if (++nextpid >= MAXPID)
 					nextpid = 20;
 				newp->p_pid = nextpid;
 
