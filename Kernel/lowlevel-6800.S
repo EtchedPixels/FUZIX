@@ -47,8 +47,8 @@ _irqrestore:
 
 _swab:
 	tsx
-	ldab	3,x
-	ldaa	4,x
+	ldab	2,x
+	ldaa	3,x
 	jmp ret2
 
 	.common
@@ -99,15 +99,15 @@ outsdone:
 	rts
 
 outd:
-	pshb
 	psha
+	pshb
 	tab
 	bsr outcharhex
-	pula
-	psha
-	bsr outcharhex
-	pula
 	pulb
+	pshb
+	bsr outcharhex
+	pulb
+	pula
 	rts
 
 deliver_signals:
