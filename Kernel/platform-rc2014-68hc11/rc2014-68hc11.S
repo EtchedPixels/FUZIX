@@ -16,6 +16,8 @@
 	    .globl map_restore
 	    .globl map_process_x
 	    .globl platform_interrupt
+	    .globl copy_common
+	    .globl cur_map
 
             ; exported debugging tools
             .globl platform_monitor
@@ -36,9 +38,104 @@
 	    .section .common
 
 platform_monitor:
+	    ldx #ccreg
+	    jsr outstring
+	    tsx
+	    ldab 2,x
+	    jsr outcharhex
+	    ldx #dreg
+	    jsr outstring
+	    tsx
+            ldab 4,x
+	    jsr outcharhex
+	    tsx
+            ldab 3,x
+	    jsr outcharhex
+	    ldx #xreg
+            jsr outstring
+	    tsx
+            ldab 5,x
+            jsr outcharhex
+	     tsx
+            ldab 6,x
+            jsr outcharhex
+	    ldx #yreg
+            jsr outstring
+	    tsx
+            ldab 7,x
+            jsr outcharhex
+	     tsx
+            ldab 8,x
+            jsr outcharhex
+            ldx #pcreg
+            jsr outstring
+	    tsx
+            ldab 9,x
+            jsr outcharhex
+	    tsx
+            ldab 10,x
+            jsr outcharhex
+            ldx #endtrap
+            jsr outstring
+	    tsx
+
+	    ldaa #8
+stkrow:
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+	    jsr outx
+            ldab #':'
+	    jsr outchar
+	    ldab #' '
+            jsr outchar
+            clrb
+stkword:
+	    pshb
+	    psha
+	    ldd 10,x
+            jsr outd
+	    pula
+	    pulb
+	    inx
+	    inx
+	    incb
+	    cmpb #8
+	    beq endrow
+	    pshb
+            ldab #32
+	    jsr outchar
+	    pulb
+	    bra stkword
+endrow:	    deca
+	    bne stkrow
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+
 platform_reboot:
 	    jsr map_kernel
 	    jmp rebootit
+
+
+ccreg:	    .byte 13,10
+	    .ascii "Trap: CC = $"
+	    .byte 0
+dreg:       .byte 13,10
+	    .ascii "      AB = $"
+	    .byte 0
+xreg:       .byte 13,10
+	    .ascii "       X = $"
+	    .byte 0
+yreg:       .byte 13,10
+	    .ascii "       Y = $"
+	    .byte 0
+pcreg:      .byte 13,10
+	    .ascii "      PC = $"
+	    .byte 0
+endtrap:    .byte 13,10,0
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to
@@ -59,9 +156,10 @@ __hard_ei:
 	    cli			; on 680x cli enables IRQs!!!
 	    rts
 
+;
+;	Old flag is passed to use in B
+;
 __hard_irqrestore:
-	    tsx
-	    ldab 2,x
 	    andb #16		; IRQ flag
 	    bne irq_on
 	    cli
@@ -137,6 +235,7 @@ program_vectors:
 	    ; our C caller will invoke us with the pointer in D
 	    ; just pass it on
 
+	    xgdx
 	    jsr map_process
 	    ;
 	    ; We need to split these up
@@ -178,6 +277,24 @@ nullirq:
 	    rti
 
 ;
+;	Copy the common memory into the page given (in D)
+;
+copy_common:
+	   bsr map_for_swap	; map the page in B at 0x4000
+	   ldx #__common_start
+	   ldy #__common_start-0x8000	; offset into new page
+commoncp:
+	   ldd ,x
+           std ,y
+           inx
+           inx
+           iny
+           iny
+	   cpx #__common_end
+	   bne commoncp
+	   bra map_kernel	; restore the map
+
+;
 ;	Map the current process, do not change register values
 ;
 map_process_always:
@@ -214,36 +331,22 @@ kmap:
 	    .byte 0x22
 
 ;
-;	For now we are using the 4x16K MMU but this will probably change.
-;	Switch the low 48K, the task switch flips the top. Hack until we
-;	enable the real MMU and banking setup.
+;	Switch the low 48K of the memory map. We switch the top bank in
+;	the task switcher as it contains stacks and other interesting items.
 ;
-;	Probably we should use the 8K/56K MMU card.
+;	This all works because the only time we access memory belonging to
+;	another process is when we swap and swap is handled by a different
+;	mapping technique
 ;
 map_process_x:
 	    pshb
 	    ldab #P_TAB__P_PAGE_OFFSET+1
 	    abx
 	    bra map_in
-map_for_swap:
-	    pshb
-	    bra map_write
 map_process_2:
 map_bank:
 	    pshb
 map_in:
-	    ldab ,x
-map_write:
-	    stab cur_map
-	    stab 0xFE78
-            incb
-            stab 0xFE79
-            incb
-            stab 0xFE7A
-	    pulb
-            rts
-#if 0
-	    pshb
 	    ; We must load these both before the map changes because we
 	    ; might be unmapping the table X points to
 	    ldab 2,x
@@ -253,10 +356,15 @@ map_write:
 	    stx cur_map
 	    stx 0xFE78
 	    pulb
-	    
 	    rts
-#endif
 
+;
+;	Map the page in B into the 16K window for swap
+;
+map_for_swap:
+	    stab cur_map+1
+	    stab 0xFE79
+	    rts
 
 ;
 ;	Restore mapping. This may not be sufficient. We may need to do a
@@ -301,7 +409,7 @@ outchar:
 	    psha
 outcharw:
 	    ldaa 0xF02E
-	    anda #0x20
+	    anda #0x80
 	    beq outcharw
 	    pula
 	    stab 0xF02F

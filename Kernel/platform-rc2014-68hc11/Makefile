@@ -61,9 +61,24 @@ image:
 	blkdev.o mbr.o devide.o devide_discard.o devsd.o \
 	devsd_discard.o sci.o ds1302_discard.o ds1302.o ds1302_68hc11.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
+	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16k.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-68hc11.o devtty.o >../fuzix.map
 	$(CROSS_OBJCOPY) ../fuzix.elf -O binary ../fuzix.bin
 	dd if=../fuzix.bin bs=1 skip=61440 count=3072 of=fuzix.common
 	dd if=fuzix.common of=../fuzix.bin bs=1 seek=53760 conv=notrunc
+
+loadsd:
+	$(CROSS_CC) -c loadsd.S
+	$(CROSS_LD) -M -T loadsd.x -relax -o loadsd.elf loadsd.o
+	$(CROSS_OBJCOPY) loadsd.elf -O binary loadsd >loadsd.map
+
+diskimage: loadsd
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=../../sd.img bs=40017920 conv=sync
+	# Add the bootstrap loader
+	dd if=loadsd of=../../sd.img conv=notrunc
+	# Add the file system
+	dd if=../../filesys.img of=../../sd.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=../fuzix.bin of=../../sd.img bs=512 seek=1 conv=notrunc

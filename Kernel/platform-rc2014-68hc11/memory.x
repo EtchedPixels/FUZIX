@@ -9,8 +9,11 @@
 MEMORY
 {
     page0 (rw) : ORIGIN = 0x00C0, LENGTH = 64
+    /* We need to recover 0x0100-0x01FF one day */
     ram   (rwx) : ORIGIN = 0x0200, LENGTH = 0xBF00
-    discard (rwx) : ORIGIN = 0xC000, LENGTH = 0x1400
+    /* C000-C3FF are needed to bootstrap the user init process, then all
+       of discard takes a hike anyway */
+    discard (rwx) : ORIGIN = 0xC400, LENGTH = 0x1000
     io		: ORIGIN = 0xF000, LENGTH = 0x40
     iram	: ORIGIN = 0xF040, LENGTH = 0x1C0
     /* We keep the common at D400 when loading hence the discard size */
@@ -241,6 +244,7 @@ SECTIONS
   PROVIDE (__bss_size = SIZEOF(.bss));
   .common :
   {
+    __common_start = .;
     *(.common)
     *(.common.*)
     PROVIDE (__common_end = .);

@@ -1,28 +1,19 @@
-Initial code for a bring up 68HC11 RC2014 banked memory platform based on the
-6303 code base. This probably isn't what we finally want to end up with as a
-model but it will help us get there.
+Fuzix for RC2014 with the following configuration
+	68HC11 CPU card:
+		CPU configuration: 68HC11 with ROM, EEPROM, COP disabled.
+	512K RAM/ROM card:
+	5v SD card adapter attached to the SPI port. CS on port D 0x20
+	and/or IDE CF adapter at I/O 0x10
 
-CPU configuration: 68HC11 with ROM, EEPROM, COP disabled.
+	(Lots of other cards should work but they are not yet supported)
 
-Current model
-
-	0x0000-0xBFFF	3 48K pages treated as bank
-	C000-EFFF	Fixed common and high space
-	F000-F03F	Internal I/O
-	F040-F1FF	Internal RAM (unbanked)
-	F200-FDFF	Common
-	FE00-FEFF	I/O
-	FF00-FFFF	Common and vectors
-
-	For user BE00-BFFF is udata stash
-
-
-Proposed memory mapping
+Memory mapping
 
 	0x0000-0x00BF	Direct page (user)
 	0x00C0-0x00FF	Direct page (kernel)
 	0x0100-0x01FF	Loader space for now (can be reclaimed later)
-	0x0200-0xEFFF	Kernel
+	0x0200-0xBFFF	Kernel
+	0xC000-0xEFFF	User space chunk of the common copy
 	0xF000-0xF03F   Internal I/O (other possible place)
 	0xF040-0xF1FF	Internal RAM (unbankable)
 	0xF200-0xFDFF	Common data and whatever code fills the rest
@@ -34,8 +25,7 @@ In user space
 
 	0x0000-0x00BF	Direct page (user)
 	0x00C0-0x00FF	Direct page (kernel)
-	0x0100-0xBFFF	User space
-	0xC000-0xEFFF	Kernel upper code
+	0x0100-0xEFFF	User space
 	0xF000-0xF03F   Internal I/O
 	0xF040-0xF1FF	Internal RAM (unbankable)
 	0xF200-0xFDFF	Common data and whatever code fills the rest
@@ -53,44 +43,14 @@ Internal UART
 
 Things to address
 - Dynamic buffer allocation
-- SPI bitbang port
-- Making the UART driver properly IRQ driven for input with its own buffer
-  and separate to the Fuzix level interrupts
 - Proper two level interrupt handling so that the timer drives Fuzix and
   the other stuff is queued
 - Don't disable all interrupts in the Fuzix paths
 - Add device support for some of the RC2014 external devices
 
-Put the loader on sector 0
-Put the kernel on sector 1+
-
-
-Ideal end mode is probably 512K flat
-
-64K switching but with
-
-0000-EFFF	User space
-F000-F03F	I/O window
-F040-F1FF	Fixed as common space (common data, disk I/O etc)
-F200-FFFF	Common read only copies and vectors
-
-Will have Z180 like problem with swap ?
-
-
 Emulation:
 
-dd if=/dev/zero of=sdcard.img bs=1M count=64
-fsck sdcard.img
-add primary partition at default offset 2048, 65536 blocks (32Mb)
-make
-cd Standalone/filesystem-src
-./build-filesystem -X ../../scratch.fs 256 65535
-cd ../..
-dd if=Kernel/fuzix.bin of=sdcard.img bs=512 seek=1 conv=notrunc
-dd if=scratch.fs of=sdcard.img bs=512 seek=2048 conv=notrunc
-
-Then from the ROM package
-
-dd if=loadsd of=sdcard.img conv=notrunc
+ROM is in the RC2014 ROM package
+make diskimage
 
 rc2014-68hc11 -b -r romsd512 -S sdcard.img -R
