@@ -18,40 +18,8 @@
 
 /* Everything in here is discarded after init starts */
 
-static const uint8_t tmstext[] = {
-	0x00,		/* m2:0 extvideo:0 */
-	0xF0,		/* 16K, not blanked, int on, m1:1 m3:0 */
-	0x00,		/* Text at 0x0000 (space for 4 screens) */
-	0x00,
-	0x02,		/* Patterns at 0x1000 */
-	0x00,
-	0x00,
-	0xF1		/* white on black */
-};
-
-static const uint8_t tmsreset[] = {
-	0x00,
-	0x80,
-	0x00,
-	0x00,
-	0x00,
-	0x00,
-	0x00,
-	0x00
-};
-
 static void nap(void)
 {
-}
-
-static void tmsconfig(uint8_t *r)
-{
-	uint8_t c = 0x80;
-	while(c < 0x88) {
-		tms9918a_ctrl = *r++;
-		tms9918a_ctrl = c++;
-		nap();
-	}
 }
 
 extern uint8_t fontdata_6x8[];
@@ -63,12 +31,12 @@ static uint8_t probe_tms9918a(void)
 	uint8_t *fp;
 
 	/* Try turning it on and looking for a vblank */
-	tmsconfig(tmsreset);
-	tmsconfig(tmstext);
+	tms9918a_reset();
 
 	/* Should see the top bit go high */
 	do {
 		v = tms9918a_ctrl & 0x80;
+		nap();
 	} while(--ct && !(v & 0x80));
 
 	if (ct == 0)
@@ -91,27 +59,18 @@ static uint8_t probe_tms9918a(void)
 		nap();
 	}
 
+	/* Load the font into 3C00-3FFF */
 	fp = fontdata_6x8;
 	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x40 | 0x11;	/* Base of character 32 */
-	ct = 0;
-	while(ct++ < 768) {
+	tms9918a_ctrl = 0x40 | 0x3C;	/* Base of font stash */
+	for (ct = 0; ct < 256; ct++) {
+		tms9918a_data = 0;
+		nap();
+	}
+	while(ct++ < 1024) {
 		tms9918a_data = *fp++ << 2;
 		nap();
 	}
-
-	fp = fontdata_6x8;
-	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x40 | 0x15;	/* Base of character 160 */
-	ct = 0;
-	/* Load inverse video font data */
-	while(ct++ < 768) {
-		tms9918a_data = ~(*fp++ << 2);
-		nap();
-	}
-
-	/* Initialize the VT layer */
-	vtinit();
 	return 1;
 }
 
@@ -303,6 +262,8 @@ void init_hardware_c(void)
 	if (tms9918a_present) {
 		shadowcon = 1;
 		timer_source = TIMER_TMS9918A;
+		tms9918a_reload();
+		vtinit();
 	}
 
 	/* FIXME: When ROMWBW handles second SIO, or Z180 as
@@ -447,18 +408,18 @@ void pagemap_init(void)
 		sc26c92_present = probe_sc26c92();
 
 	if (sc26c92_present == 1) {
-		kputs("SC26C92 detected at 0xA0.\n");
 		register_uart(0x00A0, &sc26c92_uart);
 		register_uart(0x00A8, &sc26c92_uart);
 		if (timer_source == TIMER_NONE)
 			sc26c92_timer();
+		kputs("SC26C92 detected at 0xA0.\n");
 	}
 	if (sc26c92_present == 2) {
-		kputs("XR88C681 detected at 0xA0.\n");
 		register_uart(0x00A0, &xr88c681_uart);
 		register_uart(0x00A8, &xr88c681_uart);
 		if (timer_source == TIMER_NONE)
 			sc26c92_timer();
+		kputs("XR88C681 detected at 0xA0.\n");
 	}
 
 	/* Complete the timer set up */

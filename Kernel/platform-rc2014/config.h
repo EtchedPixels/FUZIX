@@ -114,10 +114,12 @@ extern uint16_t swap_dev;
 /* Multiple consoles */
 #define CONFIG_VT_MULTI
 /* Vt definitions */
-#define VT_WIDTH	40
+#define VT_WIDTH	vt_twidth
 #define VT_HEIGHT	24
-#define VT_RIGHT	39
+#define VT_RIGHT	vt_tright
 #define VT_BOTTOM	23
+#define MAX_VT		4		/* Always come up as lowest minors */
+
 /* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
 /* Font for the TMS9918A */

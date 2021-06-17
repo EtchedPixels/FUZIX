@@ -127,6 +127,8 @@ void platform_interrupt(void)
 	   should fastpath them (vector 8 and 9) */
 	uint8_t ti_r = 0;
 
+
+	/* We must never read this from interrupt unless it is our timer */
 	if (timer_source == TIMER_TMS9918A)
 		ti_r = tms9918a_ctrl;
 

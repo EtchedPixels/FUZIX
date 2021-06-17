@@ -19,8 +19,6 @@
 ;	Timing rules
 ;	Text RAM access worst case ~26 clocks
 ;	
-;	TODO: support multiple text consoles
-;
 
             .module vdp
 
@@ -44,7 +42,17 @@
 	    .globl _outputtty
 
 	    .globl _vtattr_notify
+
 	    .globl _vtattr_cap
+	    .globl _vidmode
+
+	    .globl _vt_twidth
+
+	    .globl _scrolld_s1
+	    .globl _scrollu_w
+	    .globl _scrollu_mov
+	    .globl _scrolld_base
+	    .globl _scrolld_mov
 
 	    .area _CODE1
 ;
@@ -77,6 +85,9 @@ videopos:	; turn E=Y D=X into HL = addr
 	    add a, a			; x 8
 	    ld l, a
 	    ld h, #0
+	    ld a, (_vidmode)
+	    or a
+	    jr nz, pos32
 	    push hl
 	    add hl, hl			; x 16
 	    add hl, hl			; x 32
@@ -86,6 +97,13 @@ videopos:	; turn E=Y D=X into HL = addr
 	    ld e, a
 	    ld d, b			; 0 for read 0x40 for write
 	    add hl, de			; + X
+	    ret
+pos32:
+	    add hl,hl
+	    add hl,hl
+            ld e,d
+	    ld d,b
+	    add hl,de
 	    ret
 ;
 ;	Eww.. wonder if VT should provide a hint that its the 'next char'
@@ -125,7 +143,8 @@ popret:
 ;	We can keep the buffer in banked code as we only use it here
 ;
 
-scrollbuf:   .ds		40
+scrollbuf:
+	    .ds		40
 
 ;
 ;	We don't yet use attributes, we should support inverse video but
@@ -142,12 +161,12 @@ _scroll_down:
 	    ld h,a
 	    ld l,#0
 	    ld b, #23
-	    ld de, #0x3C0	; start of bottom line
+	    ld de, (_scrolld_base) ; start of bottom line
 	    add hl,de
 	    ex de,hl
 upline:
 	    push bc
-	    ld bc, (_vdpport)	; vdpport + 1 always holds #40
+	    ld bc, (_vdpport)	; vdpport + 1 always holds the width (40)
 	    ld hl, #scrollbuf
 	    out (c), e		; our position
 	    out (c), d
@@ -162,18 +181,18 @@ down_0:
 	    ini			; 16 clocks
 	    jp nz, down_0	; 10 clocks
 	    inc c
-	    ld hl, #0x4028	; go down one line and into write mode
+	    ld hl, (_scrolld_s1); go down one line and into write mode
+	    ld b, l		; get the number of chars as it's in l
 	    add hl, de		; relative to our position
 	    out (c), l
 	    out (c), h
-	    ld b, #0x28
 	    ld hl, #scrollbuf
 	    dec c
 down_1:
 	    outi		; video ptr is to the line below so keep going
 	    jp nz,down_1	; total 26 clocks per loop
 	    pop bc		; recover line counter
-	    ld hl, #0xffd8
+	    ld hl, (_scrolld_mov)
 	    add hl, de		; up 40 bytes
 	    ex de, hl		; and back into DE
 	    djnz upline
@@ -190,7 +209,7 @@ _scroll_up:
 	    ld h,a
 	    ld l,#0
 	    ld b, #23
-	    ld de, #40		; start of second line
+	    ld de, (_scrollu_w)		; start of second line (base = width)
 	    add hl,de
 	    ex de,hl
 downline:   push bc
@@ -204,7 +223,7 @@ up_0:
 	    ini
 	    jp nz, up_0
 	    inc c
-	    ld hl, #0x3FD8	; up 40 bytes in the low 12 bits, add 0x40
+	    ld hl, (_scrollu_mov); up w bytes in the low 12 bits, add 0x40
 				; for write ( we will carry one into the top
 				; nybble)
 	    add hl, de
@@ -212,12 +231,13 @@ up_0:
 	    out (c), h
 	    dec c
 	    ld hl, #scrollbuf
-	    ld b, #40
+	    ld a,(_scrollu_w)	; get width
+	    ld b, a
 up_1:
 	    outi
 	    jp nz,up_1
 	    pop bc
-	    ld hl, #40
+	    ld hl, (_scrollu_w)	; get width
 	    add hl, de
 	    ex de, hl
 	    djnz downline
@@ -241,9 +261,10 @@ _clear_lines:
 	    ld bc, (_vdpport)
 	    out (c), l
 	    out (c), h
-            ld a, #' '
 	    dec c
-l2:	    ld b, #40   	
+l2:	    ld a, (_vt_twidth)
+	    ld b,a
+            ld a, #' '
 l1:	    out (c), a		; Inner loop clears a line, outer counts
 				; need 26 clocks between writes. DJNZ is 13,
 				; out is 11
@@ -265,7 +286,8 @@ _clear_across:
 	    ld a,(_int_disabled)
 	    push af
 	    di
-	    ld b, #0x40
+	    ld a, (_vt_twidth)
+	    ld b,a
 	    call videopos
 	    ld a, c
 	    ld bc, (_vdpport)
@@ -344,3 +366,15 @@ _set_console:
 	    .area _DATA
 cursorpos:  .dw 0
 cursorpeek: .db 0
+
+_scrolld_base:
+	    .dw		0x03C0		; Start of bottom line
+_scrolld_mov:
+	    .dw		0xFFD8		; -40
+_scrolld_s1:
+	    .dw		0x4028		; 4000 turns on write 40 chars
+_scrollu_w:
+	    .dw		0x0028		; width
+_scrollu_mov:
+	    .dw		0x3FD8		; up 40 bytes in low 12, add 0x4000
+					; carry 11->12

@@ -15,7 +15,6 @@ struct uart *uart[NUM_DEV_TTY + 1];
 uint8_t nuart = 1;
 static uint8_t first_poll = 1;
 uint16_t ttyport[NUM_DEV_TTY + 1];
-
 static uint8_t sleeping;
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1];
@@ -32,6 +31,11 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS
 };
+
+uint8_t vidmode = 1;
+static uint8_t vswitch;	/* Track vt switch locking due top graphics maps */
+uint8_t vt_twidth;
+uint8_t vt_tright;
 
 /* FIXME: CBAUD general handling - may need 0.4 changes to fix */
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
@@ -1078,6 +1082,9 @@ static void tms_putc(uint_fast8_t minor, uint_fast8_t c)
 /* Callback from the keyboard driver for a console switch */
 void do_conswitch(uint8_t c)
 {
+	/* No switch if the console is locked for graphics */
+	if (vswitch)
+		return;
 	tms_setoutput(inputtty);
 	vt_cursor_off();
 	inputtty = c;
@@ -1089,7 +1096,7 @@ void do_conswitch(uint8_t c)
 /* PS/2 call back for alt-Fx */
 void ps2kbd_conswitch(uint8_t console)
 {
-	if (console > 4 || console == inputtty)
+	if (console > 4 || console == inputtty || vswitch)
 		return;
 	do_conswitch(console);
 }
@@ -1171,50 +1178,236 @@ void display_uarts(void)
 }
 
 /*
+ *	TMS9918A configuration
+ *	Text mode is wired into vdp1.s
+ *
+ *	0x3C00-0x3FFF are reserved by the OS.
+ *
+ *	The text mode configuration we use is
+ *	Secret font store at 3C00-3FFF (128 base symbols copy)
+ *	4 screens base 0x0000 + 0x400 per screen
+ *	Patterns base 0x1000
+ *
+ *	For graphics one we'd need to add:
+ *		Sprite Patterns 0x1800
+ *		Colour table 0x2000
+ *		Sprite attribute 3B00-3BFF
+ *	For graphics two non-standard we can maybe do similar ?
+ */
+
+static const uint8_t tmsreset[8] = {
+	0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static const uint8_t tmstext[8] = {
+	0x00, 0xD0, 0x00, 0x00, 0x02, 0x00, 0x00, 0xF1 /* Text, no IRQ */
+};
+
+static const uint8_t tmstext32[8] = {
+	0x00, 0xC2, 0x00, 0x80, 0x02, 0x76, 0x03, 0x01/* Text, no IRQ */
+};
+
+/* Should move these helpers into asm TODO */
+static void nap(void)
+{
+}
+
+void tms9918a_config(const uint8_t *r)
+{
+	irqflags_t irq = di();
+	uint8_t c = 0x80;
+	while(c < 0x88) {
+		tms9918a_ctrl = *r++;
+		tms9918a_ctrl = c++;
+		nap();
+	}
+	irqrestore(irq);
+}
+
+static uint8_t tms_readb(uint16_t addr)
+{
+	tms9918a_ctrl = addr;
+	tms9918a_ctrl = addr >> 8;
+	nap();
+	return tms9918a_data;
+}
+
+static void tms_writeb(uint16_t addr, uint8_t data)
+{
+	tms9918a_ctrl = addr;
+	tms9918a_ctrl = (addr >> 8) | 0x40;
+	tms9918a_data = data;
+}
+
+/* Reset the TMS9918A and turn off its interrupt */
+void tms9918a_reset(void)
+{
+	tms9918a_config(tmsreset);
+}
+
+
+struct tmsinfo {
+	uint16_t lastline;
+	uint16_t dmov;
+	uint16_t s1;
+	uint16_t w;
+	uint16_t umov;
+	uint8_t *conf;
+	uint8_t inton;
+};
+
+static struct tmsinfo tmsdat[2] = {
+	{
+		0x03C0,
+		0xFFD8,
+		0x4028,
+		0x0028,
+		0x3FD8,
+		tmstext,
+		0xF0
+	}, {
+		0x02E0,
+		0xFFE0,
+		0x4020,
+		0x0020,
+		0x3FE0,
+		tmstext32,
+		0xE2
+	}
+};
+
+/* This relies on the TMS9918A interrupt being off */
+void tms9918a_reload(void)
+{
+	uint16_t r;
+	uint8_t b;
+	struct tmsinfo *t = tmsdat + vidmode;
+
+	for (r = 0; r < 0x400; r++) {
+		b = tms_readb(0x3C00 + r);
+		tms_writeb(0x1000 + r, b);
+		tms_writeb(0x1400 + r , ~b);
+	}
+	for (r = 0x2000; r < 0x201F; r++)
+		tms_writeb(r, 0xF1);
+	tms_writeb(0x3B00, 0xD0);
+	tms9918a_config(t->conf);
+	vt_twidth = t->w;
+	vt_tright = vt_twidth - 1;
+	/* Set up the scrollers in the asm side */
+	scrolld_base = t->lastline;	/* Start of last line */
+	scrolld_mov = t->dmov;		/* How to move up */
+	scrolld_s1 = t->s1;		/* Move back and turn on write */
+	scrollu_w = t->w;		/* Start upscroll on line 1 */
+	scrollu_mov = t->umov;		/* Move up 40 bytes, and add 0x4000 (write) */
+	vdpport &= 0xFF;
+	vdpport |= t->w  << 8;		/* Set up width counters */
+	/* Turn on the IRQ if we need it */
+	if (timer_source == TIMER_TMS9918A) {
+		tms9918a_ctrl = t->inton;
+		tms9918a_ctrl = 0x81;
+	}
+	vt_cursor_off();
+	tms_setoutput(inputtty);
+	vt_cursor_on();
+}
+
+/*
  *	Graphics layer interface (for TMS9918A)
  */
 
-static const struct videomap tms_map = {
+static struct videomap tms_map = {
 	0,
 	0x98,
-	0, 0,
+	0, 0x4000,		/* 16K memory */
 	0, 0,
 	1,
 	MAP_PIO
 };
 
 /* FIXME: we need a way of reporting CPU speed/TMS delay info as unlike the
-   ports so far we need delays on the RC2014 */
-static const struct display tms_mode = {
-    1,
-    256, 192,
-    256, 192,
-    255, 255,
-    FMT_VDP,
-    HW_VDP_9918A,
-    GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
-    16,
-    0
+   ports so far we need delays on the RC2014
+   FIXME2: need to report char info as well as graphic size
+   FIXME3: some kind of SIGWINCH mechanism is needed here
+   and make "mode" set the tty rows/cols too */
+static struct display tms_mode[2] = {
+	{
+		0,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
+		16,
+		0
+	},
+	{
+		1,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
+		16,
+		0
+	}
 };
 
+/* We can have up to 4 vt consoles or it may be shadowing serial input */
 int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-  if (minor == 1 && tms9918a_present) {
+  if ((minor == 1 && shadowcon) ||
+                 uart[minor] == &tms_uart) {
   	switch(arg) {
   	case GFXIOC_GETINFO:
-  		return uput(&tms_mode, ptr, sizeof(struct display));
+                return uput(&tms_mode[vidmode], ptr, sizeof(struct display));
 	case GFXIOC_MAP:
+		if (vswitch)
+			return -EBUSY;
+		vswitch = minor;
 		return uput(&tms_map, ptr, sizeof(struct display));
 	case GFXIOC_UNMAP:
+		if (vswitch) {
+			tms9918a_reset();
+			tms9918a_reload();
+			vswitch = 0;
+		}
 		return 0;
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE: {
+		uint8_t m = ugetc(ptr);
+		if (m > 1) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(&tms_mode[m], ptr, sizeof(struct display));
+		vidmode = m;
+		tms9918a_reload();
+		return 0;
+		}
 	}
 	/* Only the ZX keyboard has support for the bitmapped matrix ops
-	   and map setting.  We need to add different map setting for PS/2
+	   and map setting. We need to add different map setting for PS/2
 	   and different auto repeat if we support setting it */
 	if (!zxkey_present &&
 		( arg == KBMAPSIZE && arg == KBMAPGET || arg == KBSETTRANS ||
 			arg == KBRATE ))
 			return -1;
+	return vt_ioctl(minor, arg, ptr);
   }
-  return vt_ioctl(minor, arg, ptr);
+  /* Not a VT port so don't go via generic VT */
+  return tty_ioctl(minor, arg, ptr);
+}
+
+int rctty_close(uint_fast8_t minor)
+{
+	if (minor == vswitch) {
+		tms9918a_reset();
+		tms9918a_reload();
+		vswitch = 0;
+	}
+	return tty_close(minor);
 }
