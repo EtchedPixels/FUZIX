@@ -129,8 +129,11 @@ void platform_interrupt(void)
 
 
 	/* We must never read this from interrupt unless it is our timer */
-	if (timer_source == TIMER_TMS9918A)
+	if (timer_source == TIMER_TMS9918A) {
 		ti_r = tms9918a_ctrl;
+		if (ti_r & 0x80)
+			wakeup(&shadowcon);
+	}
 
 	tty_pollirq();
 

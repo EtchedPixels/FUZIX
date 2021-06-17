@@ -13,6 +13,7 @@
 #include <zxkey.h>
 #include <ps2bitbang.h>
 #include <ps2kbd.h>
+#include <graphics.h>
 #include "vfd-term.h"
 #include "z180_uart.h"
 
@@ -23,6 +24,8 @@ static void nap(void)
 }
 
 extern uint8_t fontdata_6x8[];
+
+static const char *vdpname = "TMS9918A";	/* Could be 28 or 29 */
 
 static uint8_t probe_tms9918a(void)
 {
@@ -36,11 +39,11 @@ static uint8_t probe_tms9918a(void)
 	/* Should see the top bit go high */
 	do {
 		v = tms9918a_ctrl & 0x80;
-		nap();
 	} while(--ct && !(v & 0x80));
 
 	if (ct == 0)
 		return 0;
+
 	nap();
 
 	/* Reading the F bit should have cleared it */
@@ -48,9 +51,38 @@ static uint8_t probe_tms9918a(void)
 	if (v & 0x80)
 		return 0;
 
+	ct = 0;
+	/* Now try and version detect : the TMS9918A IRQ must be off here */
+	while(--ct && (tms9918a_ctrl & 0x80) == 0);
+	if (ct == 0)
+		return 0;
+
+	/* On a VDP this selects register 2 for status reads, on a TMS9918A
+	  we just wrote all over register 7 */
+	tms9918a_ctrl = 0x02;
+	tms9918a_ctrl = 0x8F;
+	/* Read either status or S#2 */
+	if (tms9918a_data & 0x40) {
+		/* We have a VDP9938/9958 */
+		tms9918a_ctrl = 1;
+		tms9918a_ctrl = 0x8F;	/* Status register 1 please */
+		v = tms9918a_data;	/* Version bits for the 9958 */
+		tms9918a_ctrl = 0;
+		tms9918a_ctrl = 0x8F;	/* Put the normal status register back */
+		v >>= 1;		/* VDP id bits */
+		/* Strictly speaking 9958 could be something higher.. */
+		if (v & 0x1F)  {
+			vdpname = "VDP9958";
+			v = HW_VDP_9958;
+		} else {
+			vdpname = "VDP9938";
+			v = HW_VDP_9938;
+		}
+	} else
+		v = HW_VDP_9918A;
+
 	/* We have a TMS9918A, load up the fonts */
 	ct = 0;
-
 
 	tms9918a_ctrl = 0x00;
 	tms9918a_ctrl = 0x40 | 0x00;	/* Console 0 */
@@ -71,7 +103,7 @@ static uint8_t probe_tms9918a(void)
 		tms9918a_data = *fp++ << 2;
 		nap();
 	}
-	return 1;
+	return v;
 }
 
 static uint8_t probe_16x50(uint8_t p)
@@ -401,7 +433,7 @@ void pagemap_init(void)
 	}
 
 	if (tms9918a_present) {
-		kputs("TMS9918A VDP detected at 0x98.\n");
+		kprintf("%s detected at 0x98.\n", vdpname);
 	}
 
 	if (!acia_present)

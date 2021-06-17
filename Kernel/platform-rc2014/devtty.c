@@ -32,7 +32,7 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS
 };
 
-uint8_t vidmode = 1;
+uint8_t vidmode = 0;
 static uint8_t vswitch;	/* Track vt switch locking due top graphics maps */
 uint8_t vt_twidth;
 uint8_t vt_tright;
@@ -73,7 +73,7 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 #endif
         /* If we have a video display then the first console output will
 	   go to it as well *unless it has a keyboard too* */
-        if (minor == 1 && shadowcon)
+        if (minor == 1 && shadowcon && !vswitch)
 		vtoutput(&c, 1);
         uart[minor]->putc(minor, c);
 }
@@ -1076,7 +1076,8 @@ static void tms_putc(uint_fast8_t minor, uint_fast8_t c)
 	if (outputtty != minor)
 		tms_setoutput(minor);
 	irqrestore(irq);
-	vtoutput(&c, 1);
+	if (!vswitch)
+		vtoutput(&c, 1);
 }
 
 /* Callback from the keyboard driver for a console switch */
@@ -1178,6 +1179,54 @@ void display_uarts(void)
 }
 
 /*
+ *	Graphics layer interface (for TMS9918A and friends)
+ */
+
+static struct videomap tms_map = {
+	0,
+	0x98,
+	0, 0,
+	0, 0,
+	1,
+	MAP_PIO
+};
+
+/* FIXME: we need a way of reporting CPU speed/TMS delay info as unlike the
+   ports so far we need delays on the RC2014 */
+
+/*
+ *	We always report a TMS9918A. Now it is possible that someone
+ *	is using a 9938 or 9958 so we might want to add some VDP autodetect
+ *	code and report accordingly but that's a minor TODO
+ */
+static struct display tms_mode[2] = {
+	{
+		0,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT|GFX_VBLANK,
+		16,
+		0,
+		40, 24
+	},
+	{
+		1,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT|GFX_VBLANK,
+		16,
+		0,
+		32, 24
+	}
+};
+
+/*
  *	TMS9918A configuration
  *	Text mode is wired into vdp1.s
  *
@@ -1188,7 +1237,7 @@ void display_uarts(void)
  *	4 screens base 0x0000 + 0x400 per screen
  *	Patterns base 0x1000
  *
- *	For graphics one we'd need to add:
+ *	For graphics:
  *		Sprite Patterns 0x1800
  *		Colour table 0x2000
  *		Sprite attribute 3B00-3BFF
@@ -1310,54 +1359,14 @@ void tms9918a_reload(void)
 	vt_cursor_off();
 	tms_setoutput(inputtty);
 	vt_cursor_on();
+	tms_mode[0].hardware = tms9918a_present;
+	tms_mode[1].hardware = tms9918a_present;
 }
-
-/*
- *	Graphics layer interface (for TMS9918A)
- */
-
-static struct videomap tms_map = {
-	0,
-	0x98,
-	0, 0x4000,		/* 16K memory */
-	0, 0,
-	1,
-	MAP_PIO
-};
-
-/* FIXME: we need a way of reporting CPU speed/TMS delay info as unlike the
-   ports so far we need delays on the RC2014
-   FIXME2: need to report char info as well as graphic size
-   FIXME3: some kind of SIGWINCH mechanism is needed here
-   and make "mode" set the tty rows/cols too */
-static struct display tms_mode[2] = {
-	{
-		0,
-		256, 192,
-		256, 192,
-		255, 255,
-		FMT_VDP,
-		HW_VDP_9918A,
-		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
-		16,
-		0
-	},
-	{
-		1,
-		256, 192,
-		256, 192,
-		255, 255,
-		FMT_VDP,
-		HW_VDP_9918A,
-		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,
-		16,
-		0
-	}
-};
 
 /* We can have up to 4 vt consoles or it may be shadowing serial input */
 int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
+  uint8_t map[8];
   if ((minor == 1 && shadowcon) ||
                  uart[minor] == &tms_uart) {
   	switch(arg) {
@@ -1369,7 +1378,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		vswitch = minor;
 		return uput(&tms_map, ptr, sizeof(struct display));
 	case GFXIOC_UNMAP:
-		if (vswitch) {
+		if (vswitch == minor) {
 			tms9918a_reset();
 			tms9918a_reload();
 			vswitch = 0;
@@ -1388,6 +1397,22 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		tms9918a_reload();
 		return 0;
 		}
+	case GFXIOC_WAITVB:
+		psleep(&shadowcon);
+		return 0;
+	case VDPIOC_SETUP:
+		/* Must be locked to issue */
+		if (vswitch == 0) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (uget(ptr, map, 8) == -1)
+			return -1;
+		map[1] |= 0x80;
+		if (timer_source == TIMER_TMS9918A)
+			map[1] |= 0x20;
+		tms9918a_config(map);
+		return 0;
 	}
 	/* Only the ZX keyboard has support for the bitmapped matrix ops
 	   and map setting. We need to add different map setting for PS/2
@@ -1404,7 +1429,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 
 int rctty_close(uint_fast8_t minor)
 {
-	if (minor == vswitch) {
+	if (vswitch == minor) {
 		tms9918a_reset();
 		tms9918a_reload();
 		vswitch = 0;
