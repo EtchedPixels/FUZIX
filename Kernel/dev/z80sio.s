@@ -68,9 +68,11 @@ sio'X'_txd:
 	set 7,l
 	ld (sio'X'_txp),hl
 	pop hl
+	jr txon
 tx_'X'_none:
 	ld a,#0x28
 	out (CP),a		; silence tx interrupt
+txon:
 	switchback
 	pop af
 	ei
