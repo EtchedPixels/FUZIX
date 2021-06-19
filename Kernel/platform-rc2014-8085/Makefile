@@ -65,3 +65,22 @@ image:
 	anm fuzix.bin | ../tools/8080map > ../fuzix.map
 	../tools/ack2kernel -v fuzix.bin ../fuzix.bin
 	../tools/check8080 fuzix.bin
+
+loader.o: loader.s
+	ack -mcpm -c loader.s
+
+loader: loader.o
+	$(ACK_ROOT)/lib/ack/em_led -b0:0xFE00 loader.o -o loader.bin
+	../tools/ack2kernel < loader.bin >loader
+
+diskimage: loader
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=../../disk.img bs=40017920 conv=sync
+	# Add the bootstrap loader
+	dd if=loader of=../../disk.img conv=notrunc
+	# Add the file system
+	dd if=../../filesys.img of=../../disk.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=../fuzix.bin of=../../disk.img bs=512 seek=1 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M ../../disk.img > ../../emu-ide.img
