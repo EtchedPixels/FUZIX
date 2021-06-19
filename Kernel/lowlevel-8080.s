@@ -8,6 +8,29 @@
 
 #include "kernel-8080.def"
 
+.sect .data
+
+_sys_cpu:
+	.data1 1		! 8080 family
+_sys_cpu_feat:
+	.data1 0		! No features
+
+_sys_stubs:
+	jmp	unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
 .sect .common
 
 deliver_signals:
@@ -650,25 +673,3 @@ is8080:
 .define _sys_cpu_feat
 .define _sys_stubs
 
-.sect .data
-
-_sys_cpu:
-	.data1 1		! 8080 family
-_sys_cpu_feat:
-	.data1 0		! No features
-
-_sys_stubs:
-	jmp	unix_syscall_entry
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
