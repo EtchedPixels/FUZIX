@@ -56,14 +56,14 @@
 /* Device parameters */
 #define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    9       /* Number of block buffers */
+#define NBUFS    5       /* Number of block buffers */
 #ifdef CONFIG_NC200
 #define NMOUNTS	2	  /* Floppy can also be mounted */
 #define BOOTDEVICENAMES "hd#,fd#"
 #define MAX_BLKDEV 1  /* Single floppy */
 #else
 #define NMOUNTS	 1	  /* Number of mounts at a time - nothing mountable! */
-#define BOOTDEVICE 0x0100	/* Only one possible option */
+#define BOOTDEVICE 0x0000	/* Only one possible option */
 #endif
 
 #define CONFIG_LARGE_IO_DIRECT(m)	1
