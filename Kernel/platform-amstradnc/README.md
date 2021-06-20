@@ -11,6 +11,20 @@ The 720kB image from fuzix.org will just work.
 
 Use 0 to boot from PCMCIA, 256 to boot from floppy. 
 
+## Building
+
+make diskimage
+
+This will create the following image files in Images/amstradnc/...
+
+* fuzixboot.img: raw disk image for the boot floppy
+* fuzixboot.DSK: emulator disk image for the boot floppy
+* fuzixroot.img: floppy root image
+* fuzixroot.DSK: emulator floppy root image
+* pcmcia.img: raw image (can be used with emulator) of the PCMCIA card
+
+The floppy images are only useful on the NC200 series machines. The
+PCMCIA image differs between the NC100 and NC200.
 
 ## Installation to floppy
 
@@ -24,7 +38,6 @@ to mount the floppy root.
 
 **Bonus tip:** if you format your disks on the NC200 itself, it'll boot
 faster (due to using non-standard sector skew).
-
 
 ## Installation to PCMCIA card
 
@@ -45,6 +58,10 @@ Now copy `mycard.img` onto the PCMCIA card. Insert into the NC100 and do
 YELLOW+X to boot. At the bootdev prompt, use 0 to mount the PCMCIA file
 system.
 
+*Note*: The Linux PCMCIA support in modern systems is generally terminally
+broken and orphaned. The best approach is to load a very old Linux (2.4 era)
+onto an old laptop and use that. It's also cheaper to buy an old laptop than
+the various insanely priced modern adapters for PCMCIA memory cards.
 
 ## Booting with nc100em
 
@@ -62,6 +79,14 @@ Copy a card image into `~/nc100/nc100.card`, and then do:
 Fuzix will boot. (Note that it won't start at all unless the card image
 is at least 320kB, and instead will crash obscurely.)
 
+## Booting with nc200
+
+The NC200 emulator from the RC2014 emulator git can run the NC200 version of
+the system but as it currently lacks a disk change command you'll need to
+use the PCMCIA root file system. Unlike the NC100 you will need a set of
+genuine ROM images from your actual NC200.
+
+nc200 -r nc200.rom -p pcmcia.img -A fuzixboot.DSK
 
 ## NC100 memory map
 
