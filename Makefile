@@ -1,4 +1,5 @@
 # Set this to the desired platform to build
+
 #
 # Useful values for general work
 #
@@ -54,7 +55,7 @@
 # v68:		Virtual platform for 68000 development
 # v85:		Virtual platform for 8085 development
 
-TARGET=rc2014-6303
+TARGET=amstradnc/nc100
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk
@@ -99,11 +100,12 @@ gtags:
 	gtags
 
 kernel: ltools
+	mkdir -p Images/$(TARGET)
 	+(cd Kernel; $(MAKE))
 
-# TODO - big endian
 diskimage: stand ltools libs apps kernel
-	+(cd Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAG) ../../filesys.img 256 65535)
+	mkdir -p Images/$(TARGET)
+	+(cd Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img 256 65535)
 	+(cd Kernel; $(MAKE) diskimage)
 
 kclean:
@@ -111,7 +113,8 @@ kclean:
 
 clean:
 	rm -f GPATH GRTAGS GTAGS
-	rm -f filesys.img disk.img emu-ide.img
+	rm -f Images/$(TARGET)/*.img
+	rm -f Images/$(TARGET)/*.DSK
 	+(cd Standalone; $(MAKE) clean)
 	+(cd Library/libs; $(MAKE) -f Makefile.$(USERCPU) clean)
 	+(cd Library; $(MAKE) clean)
