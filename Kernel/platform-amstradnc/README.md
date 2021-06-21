@@ -1,5 +1,16 @@
 # Support for the Amstrad NC series of Z80 portable computers.
 
+## Supported Platforms
+
+* Amstrad NC100
+* Amstrad NC150	(use the NC100 image, no serial floppy support)
+* Amstrad NC200
+* Dreamwriter 225
+
+## Known Bugs
+
+* Suspend/Resume is broken on the NC100. On an NMI shutdown you'll not be able to get back
+
 Use:
 
     TARGET=amstradnc/nc100 for the NC100
@@ -23,7 +34,7 @@ This will create the following image files in Images/amstradnc/...
 * fuzixroot.DSK: emulator floppy root image
 * pcmcia.img: raw image (can be used with emulator) of the PCMCIA card
 
-The floppy images are only useful on the NC200 series machines. The
+The floppy images are only created on the NC200 series machines. The
 PCMCIA image differs between the NC100 and NC200.
 
 ## Installation to floppy
@@ -63,28 +74,14 @@ broken and orphaned. The best approach is to load a very old Linux (2.4 era)
 onto an old laptop and use that. It's also cheaper to buy an old laptop than
 the various insanely priced modern adapters for PCMCIA memory cards.
 
-## Booting with nc100em
-
-You can use the [nc100em](https://github.com/Nilquader/nc100em) emulator
-to run the NC100 image. You don't need a set of NC100 roms.
-
-To do this, install the emulator; then in the Fuzix distribution, do:
-
-    $ make -C Kernel/platform-amstradnc/nc100 nc100emu.bin
-
-Copy a card image into `~/nc100/nc100.card`, and then do:
-
-    $ xnc100em Kernel/platform-amstradnc/nc100/nc100emu.bin
-
-Fuzix will boot. (Note that it won't start at all unless the card image
-is at least 320kB, and instead will crash obscurely.)
-
-## Booting with nc200
+## Booting with nc100 and nc200
 
 The NC200 emulator from the RC2014 emulator git can run the NC200 version of
 the system but as it currently lacks a disk change command you'll need to
 use the PCMCIA root file system. Unlike the NC100 you will need a set of
 genuine ROM images from your actual NC200.
+
+nc100 -r nc100.rom -p pcmcia.img
 
 nc200 -r nc200.rom -p pcmcia.img -A fuzixboot.DSK
 
