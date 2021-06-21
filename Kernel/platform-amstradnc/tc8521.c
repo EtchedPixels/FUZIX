@@ -64,6 +64,7 @@ uint_fast8_t platform_rtc_secs(void) __naked
     __asm
         in a, (CLOCK_PORT)
         ld l,a
+        ret
     __endasm;
 }
 
