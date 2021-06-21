@@ -75,7 +75,7 @@ diskimage: floppyimage
 	cat pcmcia.tmp2 $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp >$(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.img
 	rm -f $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp pcmcia.tmp2
 	dd if=$(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.img of=$(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.full bs=737280 conv=sync
-	dsktrans $(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.full $(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.DSK
+	dsktrans -itype raw -format ibm720 $(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.full $(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.DSK
 	rm -f $(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.full
-	dsktrans $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img $(FUZIX_ROOT)/Images/$(TARGET)/fuzixroot.DSK
+	dsktrans -itype raw -format ibm720 $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img $(FUZIX_ROOT)/Images/$(TARGET)/fuzixroot.DSK
 
