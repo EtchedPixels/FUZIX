@@ -94,12 +94,22 @@ init_early:
             ret
 
 init_hardware:
+
+	    call probe_pcmcia
+	    jr z, pcmciabootable
+
+	    ld hl,#304
+	    ld (_ramsize),hl
+	    ld hl,#304-64
+	    ld (_procmem),hl
+	    jr to_setup
+pcmciabootable:
             ; set system RAM size
             ld hl, #256
             ld (_ramsize), hl
             ld hl, #(256-64)		; 64K for kernel
             ld (_procmem), hl
-
+to_setup:
 	    ; 100Hz timer on
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
@@ -122,6 +132,17 @@ init_hardware:
 ; COMMON MEMORY PROCEDURES FOLLOW
 
             .area _COMMONMEM
+
+probe_pcmcia:
+	    ld bc,#0x8011
+	    in a,(c)
+	    out (c),b
+	    ld hl,(0x4200)
+	    out (c),a
+	    ld de,#0x434E		; should be "NC"
+	    or a
+	    sbc hl,de
+	    ret
 
 _program_vectors:
 	    ;

@@ -38,12 +38,11 @@ void pagemap_init(void)
     int i;
     /* 0/1/2 image, 3/4/5 kernel 6-19 apps */
     /* Don't add page 6 yet - it's the initial common at boot */
-#ifdef CONFIG_NC200
-    /* We can steal 3 more pages on the NC200 as we don't need the reload
-       image */
-    for (i = 0x80; i < 0x82; i++)
-        pagemap_add(i);
-#endif
+
+    /* If the PCMCIA card is not bootable we can steal 3 more blocks */
+    if (ramsize == 304)
+        for (i = 0x80; i < 0x82; i++)
+            pagemap_add(i);
     for (i = 0x80 + 7; i < 0x80 + 20; i++)
         pagemap_add(i);
     /*
