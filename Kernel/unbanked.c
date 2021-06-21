@@ -238,7 +238,7 @@ static uint16_t pagemap_do_alloc(ptptr p, uint16_t size)
 
 int pagemap_alloc(ptptr p)
 {
-	uint16_t hole = pagemap_do_alloc(p, udata.u_top);
+	uint16_t hole = pagemap_do_alloc(p, udata.u_ptab->p_top);
 	if (hole == 0)
 		return ENOMEM;
 	p->p_page = hole;
@@ -260,9 +260,9 @@ static int pagemap_can_alloc(uint16_t size)
  */
 int pagemap_realloc(usize_t size)
 {
-	if (size == udata.u_top)
+	if (size == udata.u_ptab->p_top)
 		return 0;
-	if (size > udata.u_top && pagemap_can_alloc(size))
+	if (size > udata.u_ptab->p_top && pagemap_can_alloc(size))
 		return ENOMEM;
 	pagemap_free(udata.u_page);
 	pagemap_do_alloc(udata.u_ptab, size);

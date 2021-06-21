@@ -82,10 +82,9 @@ void create_init(void)
 {
 	uint8_t *j, *e;
 
-	udata.u_top = PROGLOAD + 512;	/* Plenty for the boot */
 	init_process = ptab_alloc();
+	init_process->p_top = PROGLOAD + 512;	/* Plenty for the boot */
 	udata.u_ptab = init_process;
-	init_process->p_top = udata.u_top;
 	map_init();
 
 	/* wipe file table */
