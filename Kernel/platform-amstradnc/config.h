@@ -21,6 +21,9 @@
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
 #define MAX_MAPS 16
+/* As we  have low resources default all binaries to about 44K so that
+   they fit within 3 pages */
+#define DEFAULT_TOP	0xB000
 /* We want the 4x6 font */
 #define CONFIG_FONT_4X6
 /* We have audio (just about) */
