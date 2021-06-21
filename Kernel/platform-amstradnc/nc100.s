@@ -447,7 +447,7 @@ rd_write:   ld c, 10(ix)
 	    ld b, 14(ix)
 	    ld a, 4(ix)
 	    or a
-	    jr z, rd_part2
+	    jr nz, rd_part2
 	    ld hl, #0x8000
 	    jr copy_part2
 rd_part2:   ld de, #0x8000
