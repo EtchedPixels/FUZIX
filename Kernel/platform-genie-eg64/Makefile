@@ -60,3 +60,9 @@ trs80load.bin: trs80load.s
 	sdasz80 -o trs80load.s
 	sdldz80 -i trs80load.rel -m
 	makebin -s 256 trs80load.ihx trs80load.bin
+
+diskimage: image
+	cp boot.jv3 $(FUZIX_ROOT)/Images/$(TARGET)/boot.jv3
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img 256 21760)
+	cat xtrsheader $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img >$(FUZIX_ROOT)/Images/$(TARGET)/hard1-0
+	../tools/trslabel $(FUZIX_ROOT)/Images/$(TARGET)/hard1-0
