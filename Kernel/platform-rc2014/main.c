@@ -36,6 +36,7 @@ uint8_t timer_source = TIMER_NONE;
 uint16_t syscpu;
 uint16_t syskhz;
 uint8_t systype;
+uint8_t romver;
 
 /* For RTC */
 uint8_t rtc_shadow;

@@ -10,9 +10,6 @@
 platform-rc2014/crt0.rel
 platform-rc2014/commonmem.rel
 platform-rc2014/rc2014.rel
-platform-rc2014/vfd-debug.rel
-platform-rc2014/vfdterm.rel
-platform-rc2014/vfd-term.rel
 start.rel
 version.rel
 lowlevel-z80-banked.rel

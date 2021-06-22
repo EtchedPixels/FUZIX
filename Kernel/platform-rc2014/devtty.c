@@ -8,8 +8,6 @@
 #include <rc2014.h>
 #include <vt.h>
 #include "z180_uart.h"
-#include "vfd-term.h"
-#include "vfd-debug.h"
 
 struct uart *uart[NUM_DEV_TTY + 1];
 uint8_t nuart = 1;
@@ -67,10 +65,6 @@ void tty_pollirq(void)
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-#ifdef CONFIG_VFD_TERM
-	if (minor == 1)
-		vfd_term_write(c);
-#endif
         /* If we have a video display then the first console output will
 	   go to it as well *unless it has a keyboard too* */
         if (minor == 1 && shadowcon && !vswitch)

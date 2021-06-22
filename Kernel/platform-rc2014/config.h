@@ -8,8 +8,6 @@
 #undef CONFIG_RC2014_PPIDE
 /* Set this if you have the floppy interface */
 #define CONFIG_RC2014_FLOPPY
-/* Set this if you have a VFD interface */
-#undef CONFIG_RC2014_VFD
 /* Set this for SD card support via PIO or SC129 at 0x68 */
 #define CONFIG_RC2014_SD
 
@@ -37,9 +35,6 @@
 #endif
 #ifdef CONFIG_RC2014_FLOPPY
 #define CONFIG_FLOPPY
-#endif
-#ifdef CONFIG_RC2014_VFD
-#define CONFIG_VFD_TERM
 #endif
 #ifdef CONFIG_RC2014_SD
 #define CONFIG_SD

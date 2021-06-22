@@ -59,10 +59,6 @@ Supported Hardware
 	version 3 or earlier note the errata and jumper it with a 1N4148
 	diode or similar.
 
-	VFD Display. If config.h:CONFIG_VFD_TERM is defined, then the VFD
-	Terminal will be supported. This will display all output to the serial
-	port on the VFD.
-
 	The RC2014 CF card interface, or compatible at 0x10.
 
 	Floppy Drive Interface

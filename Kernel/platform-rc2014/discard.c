@@ -14,7 +14,6 @@
 #include <ps2bitbang.h>
 #include <ps2kbd.h>
 #include <graphics.h>
-#include "vfd-term.h"
 #include "z180_uart.h"
 
 /* Everything in here is discarded after init starts */
@@ -284,9 +283,8 @@ static void sc26c92_timer(void)
 
 void init_hardware_c(void)
 {
-#ifdef CONFIG_VFD_TERM
-	vfd_term_init();
-#endif
+	extern struct termios ttydflt;
+
 	ramsize = 512;
 	procmem = 512 - 80;
 

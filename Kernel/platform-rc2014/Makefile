@@ -1,5 +1,5 @@
-ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vfdterm.s vdp1.s
-CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c ide.c sd.c
+ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s
+CSRCS = devices.c main.c devtty.c ide.c sd.c
 CSRCS += devinput.c devgpio.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
@@ -40,7 +40,7 @@ $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(DAOBJS): %.rel: ../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
@@ -52,10 +52,10 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(NOBJS): %.rel: ../dev/net/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DROBJS): %.rel: ../dev/rc2014/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(DRAOBJS): %.rel: ../dev/rc2014/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
