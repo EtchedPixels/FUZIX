@@ -60,6 +60,7 @@ arg_t _execve(void)
 	staticfast uaddr_t top;
 	uaddr_t bin_size;	/* Will need to be bigger on some cpus */
 	uaddr_t bss;
+	uint_fast8_t mflags;
 
 	top = ramtop;
 
@@ -69,6 +70,12 @@ arg_t _execve(void)
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
 	      (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
+		udata.u_error = EACCES;
+		goto nogood;
+	}
+
+	mflags = fs_tab[ino->c_super].m_flags;
+	if (mflags & MS_NOEXEC) {
 		udata.u_error = EACCES;
 		goto nogood;
 	}
@@ -158,12 +165,13 @@ arg_t _execve(void)
 	udata.u_top = top;
 	udata.u_ptab->p_top = top;
 
-	/* setuid, setgid if executable requires it */
-	if (ino->c_node.i_mode & SET_UID)
-		udata.u_euid = ino->c_node.i_uid;
-
-	if (ino->c_node.i_mode & SET_GID)
-		udata.u_egid = ino->c_node.i_gid;
+	if (!(mflags & MS_NOSUID)) {
+		/* setuid, setgid if executable requires it */
+		if (ino->c_node.i_mode & SET_UID)
+			udata.u_euid = ino->c_node.i_uid;
+		if (ino->c_node.i_mode & SET_GID)
+			udata.u_egid = ino->c_node.i_gid;
+	}
 
 	/* FIXME: In the execve case we may on some platforms have space
 	   below PROGLOAD to clear... */

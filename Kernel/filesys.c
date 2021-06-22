@@ -1261,6 +1261,10 @@ void setftime(inoptr ino, uint_fast8_t flag)
     if (ino->c_flags & CRDONLY)
         return;
 
+    /* If only ATIME is due an update then skip it for a noatime fs */
+    if (flag == A_TIME && fs_tab[ino->c_super].m_flags & MS_NOATIME)
+        return;
+
     ino->c_flags |= CDIRTY;
 
     if(flag & A_TIME)

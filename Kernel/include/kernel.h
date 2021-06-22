@@ -373,8 +373,9 @@ struct mount {
     struct filesys m_fs;
 };
 #define MS_RDONLY	1
-#define MS_NOSUID	2	/* Not yet implemented */
-#define MS_NOEXEC	4	/* Not yet implemented */
+#define MS_NOSUID	2
+#define MS_NOEXEC	4
+#define MS_NOATIME	8
 #define MS_REMOUNT	128
 
 /* Process table p_status values */
