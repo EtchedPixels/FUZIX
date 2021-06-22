@@ -65,6 +65,7 @@
 	.globl istack_top
 	.globl _ssig
 	.globl _udata
+	.globl syscall_platform
 
         .include "platform/kernel.def"
         .include "kernel-z80.def"
@@ -484,7 +485,7 @@ ___hard_irqrestore:
 	.area _CONST
 
 _sys_stubs:
-	jp unix_syscall_entry
+	jp syscall_platform	; different entry rules for thunked
 	nop
 	nop
 	nop
