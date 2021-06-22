@@ -168,4 +168,3 @@ TRS80 model 4 board and very experimentally the Lowe Electronics LE18.
 The various TRS80 software downloadable character devices are not handled as
 displays but where supported as user defined graphics.
 
-## 
