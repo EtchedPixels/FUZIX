@@ -15,6 +15,9 @@ extern void tms9918a_reload(void);
 /* Until we move this lot into asm for neatness */
 extern uint16_t scrolld_base, scrolld_mov, scrolld_s1, scrollu_w, scrollu_mov;
 extern uint16_t vdpport;
+extern uint16_t vdp_rop(struct vdp_rw *rw) __fastcall;
+extern uint16_t vdp_wop(struct vdp_rw *rw) __fastcall;
+
 
 /* For console */
 extern uint8_t vt_twidth, vt_tright;

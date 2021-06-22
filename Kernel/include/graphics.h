@@ -115,6 +115,16 @@ struct videomap {
  *	VDP specific ioctls: The 0x032X range is reused for each type
  */
 
+struct vdp_rw {		/* Do not touch without changing asm helpers */
+  uaddr_t data;
+  uint16_t vdpaddr;		/* 0000-3BFF */
+  uint8_t lines;
+  uint8_t cols;
+  uint8_t stride;
+};
+
 #define VDPIOC_SETUP		0x0320	/* Set TMS9918A registers */
+#define VDPIOC_READ		0x0321	/* Read TMS9918A space */
+#define VDPIOC_WRITE		0x0322	/* Write TMS9918A space */
 
 #endif

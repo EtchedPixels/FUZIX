@@ -33,6 +33,10 @@
 	    .globl _cursor_disable
 	    .globl _set_console
 
+	    ; graphics API
+	    .globl _vdp_rop
+	    .globl _vdp_wop
+
 	    .globl cursorpos
 
 	    .globl _int_disabled
@@ -54,6 +58,11 @@
 	    .globl _scrolld_base
 	    .globl _scrolld_mov
 
+;
+;	Core support
+;
+	    .globl map_process_always
+	    .globl map_kernel
 	    .area _CODE1
 ;
 ;	Register write value E to register A. This is a pure VDP register
@@ -345,7 +354,6 @@ _cursor_off:
 	    di
 	    ld de, (cursorpos)
 	    ld a, (cursorpeek)
-	    ld c, a
 	    jp plotit
 
 _vtattr_notify:
@@ -360,6 +368,115 @@ _set_console:
 	    ld a,#0x82
 	    out (c),a
 	    ret
+
+;
+;	Read write low level helpers (fastcall). Need IRQ off
+;
+;	These are designed to run with the user space mapped so we
+;	directly burst rectangles to and from the VDP. We check for
+;	writes into the 3C00-3FFF area reserved for the font cache. It's
+;	perhaps a silly check on an unprotected Z80 but when we get to Z280
+;	it might matter rather more!
+;
+_vdp_rop:
+	    push ix
+	    push hl
+	    pop ix
+	    ld l, 2(ix)	; VDP offset
+	    ld a, 3(ix)
+	    cp #0x3C
+	    ld h, a
+	    jr nc, bounds	; Offset exceeds boundary
+	    ld e, 6(ix)		; Stride
+	    ld d, #0
+	    ld bc, (_vdpport)
+	    out (c), l
+	    out (c), h		; Set starting pointer
+	    exx
+	    ld l, (ix)		; User pointer
+	    ld h, 1(ix)
+	    ld d, 5(ix)		; cols
+	    ld e, 4(ix)		; lines
+	    ld bc,(_vdpport);
+	    inc c		; data port
+	    call map_process_always
+ropl:
+	    ld b,d
+ropc:
+	    ini
+	    nop
+	    djnz ropc
+	    ; Stride ?
+	    exx
+	    add hl, de		; stride
+	    ld a, #0x3B		; we don't care about a read overruning 3C
+	    cp h		; just 3F
+	    jr c, bounds
+	    out (c), l		; next line
+	    out (c), h
+	    exx
+	    dec e
+	    jr nz, ropl
+	    pop ix
+	    ld hl, #0
+	    jp map_kernel
+bounds:
+	    pop ix
+	    ld hl, #-1
+            jp map_kernel
+
+_vdp_wop:
+	    push ix
+	    push hl
+	    pop ix
+	    ld l, 2(ix)		; VDP offset
+	    ld a, 3(ix)
+	    or #0x40		; Write operation
+	    cp #0x7C
+	    ld h, a
+	    jr nc, bounds	; Offset exceeds boundary
+	    ld bc, (_vdpport)
+	    ld b, 5(ix)		; cols
+	    ld e, 6(ix)		; Stride
+	    ld d, #0
+	    out (c),l
+	    out (c),h		; Set starting pointer
+	    exx
+	    ld l,(ix)		; User pointer
+	    ld h,1(ix)
+	    ld d,5(ix)		; cols
+	    ld e,4(ix)		; lines
+	    ld bc,(_vdpport)	;
+	    inc c		; data port
+	    call map_process_always
+wopl:
+	    ld b,d
+wopc:
+	    outi
+	    nop
+	    djnz wopc
+	    ; Stride ?
+	    exx
+	    add hl,de		; stride
+	    ld a,#0x7C
+	    cp h
+	    jr nc, boundclear
+	    jr c, bounds	; going over boundary
+	    ; We could cross the boundary during the line
+	    ld a, l
+	    add b
+	    jr c, bounds
+boundclear:
+	    out (c), l		; next line
+	    out (c), h
+	    exx
+	    dec e
+	    jr nz, ropl
+	    pop ix
+	    ld hl,#0
+	    jp map_kernel
+
+
 ;
 ;	This must be in data or common not code
 ;

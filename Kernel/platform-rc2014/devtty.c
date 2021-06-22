@@ -3,8 +3,8 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <tty.h>
-#include <devtty.h>
 #include <graphics.h>
+#include <devtty.h>
 #include <rc2014.h>
 #include <vt.h>
 #include "z180_uart.h"
@@ -1407,6 +1407,29 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			map[1] |= 0x20;
 		tms9918a_config(map);
 		return 0;
+	case VDPIOC_READ:
+	case VDPIOC_WRITE:
+	{
+		struct vdp_rw rw;
+		uint16_t size;
+		uint8_t *addr = (uint8_t *)rw.data;
+		if (uget(ptr, &rw, sizeof(struct vdp_rw)) != sizeof(struct vdp_rw)) {
+			udata.u_error = EFAULT;
+			return -1;
+		}
+		size = rw.lines * rw.cols;
+		if (valaddr(addr, size) != size) {
+			udata.u_error = EFAULT;
+			return -1;
+		}
+		if (arg == VDPIOC_READ)
+			udata.u_error = vdp_rop(&rw);
+		else
+			udata.u_error = vdp_wop(&rw);
+		if (udata.u_error)
+			return -1;
+		return 0;
+	}
 	}
 	/* Only the ZX keyboard has support for the bitmapped matrix ops
 	   and map setting. We need to add different map setting for PS/2
