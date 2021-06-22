@@ -17,6 +17,7 @@
 	.globl _platform_doexec
 	.globl _platform_reboot
 	.globl _int_disabled
+	.globl syscall_platform
 
         ; exported debugging tools
         .globl _platform_monitor
@@ -32,6 +33,8 @@
         .globl outcharhex
 	.globl _ctc_present
 	.globl outstring
+
+	.globl _sys_stubs
 
 	.globl s__COMMONMEM
 	.globl l__COMMONMEM
@@ -102,7 +105,7 @@ init_hardware:
 	ld de,#l__COMMONMEM
 
 	; Modified board drives the RAM A16 differently
-	ld a,(0xffff)
+	ld a,(0xfffe)
 	and #2
 	call nz, modified_mem
 
@@ -121,7 +124,7 @@ farput:
 	or e
 	jr nz,farput
 
-	ld a,(bits_from_user)
+	ld a,(bits_from_user+1)
 	ld (banknum),a		; and correct page
 
 	; We now have our common in place. We can do the rest ourselves
@@ -250,10 +253,7 @@ siob_setup:
 	.byte BOOT_MAP
 
 
-;
-;	Our memory setup is weird and common is kind of meaningless here
-;
-	    .area _CODE
+	    .area _COMMONMEM
 
 _kernel_flag:
 	    .db 1	; We start in kernel mode
@@ -267,6 +267,7 @@ map_page_low:
 _program_vectors:
 	    ret
 
+	.area _CODE
 ;
 ;	A little SIO helper
 ;
@@ -335,15 +336,12 @@ rst10:
 	    nop
 	    nop
 rst18:
-	    ld a,(sio_reg)
-	    out (0x03),a
-	    ld a,(bits_to_user)
-	    out (0x03),a
-rst20:	    ei
+	    ld bc,(sio_reg)
+	    out (c),b
+	    ld a,(bits_to_user+1)
+rst20:	    out (c),a
+	    ei
 	    jp (hl)
-	    nop
-	    nop
-	    nop
 	    nop
 	    nop
 	    nop
@@ -355,7 +353,7 @@ rst28:	    ret
 	    nop
 	    nop
 	    nop
-rst30:	    jp syscall_high
+rst30:	    jp syscall_platform
 	    nop
 	    nop
 	    nop
@@ -414,6 +412,11 @@ modified_mem:
             ld hl,#0x0503		; SIOB R 5
 	    ld (sio_reg),hl
 	    ld a,#0xea
+	    ld a,l			; get the register
+	    ld (bankpatch1+1),a
+	    ld (bankpatch2+1),a
+	    ld (bankpatch3+1),a
+	    ld (bankpatch4+1),a
 	    ret
 
 ;
@@ -445,7 +448,7 @@ far_ldir_1:
 	    exx
 	    out (c),b
 	    ld de,(bits_to_user)
-	    out (c),d
+	    out (c),e
 	    exx
 	    ret
 ldir_from_user:
@@ -468,14 +471,14 @@ interrupt_high:
 	    push ix
 	    push iy
 	    ld a,(banknum)
-	    ld c,a
+	    ld e,a
 	    ;
 	    ;	Switch to kernel
 	    ;
-	    ld a,(sio_reg)
-	    out (0x03),a
-	    ld a,(bits_from_user)
-	    out (0x03),a
+	    ld bc,(sio_reg)
+	    out (c),b
+	    ld a,(bits_from_user+1)
+	    out (c),a
 	    ld (istack_switched_sp),sp	; istack is positioned to be valid
 	    ld sp,#istack_top		; in both banks. We just have to
 	    ;
@@ -484,9 +487,10 @@ interrupt_high:
 	    ;	kernel so the case we care about bc is always safe. This is
 	    ;	not a good way to write code and should be fixed! FIXME
 	    ;
-	    push bc
+	    push de
 	    call interrupt_handler	; switch on the right SP
-	    pop bc
+	    pop bc	; C is now the return bank info
+	    ld d,c	; as we need BC clear and D is free
 	    ; Restore stack pointer to user. This leaves us with an invalid
 	    ; stack pointer if called from user but interrupts are off anyway
 	    ld sp,(istack_switched_sp)
@@ -497,10 +501,10 @@ interrupt_high:
 	    ;
 	    ; Returning to user space
 	    ;
-	    ld a,(sio_reg)		; User bank
-	    out (0x03),a
-	    ld a,(bits_to_user)
-	    out (0x03),a
+	    ld bc,(sio_reg)		; User bank
+	    out (c),b
+	    ld a,(bits_to_user+1)
+	    out (c),a
 	    ; User stack is now valid
 	    ; back on user stack
 	    xor a
@@ -525,11 +529,11 @@ pops:
 	    ret
 kernout:
 	    ; restore bank - if we interrupt mid user copy or similar we
-	    ; have to put the right bank back
-	    ld a,(sio_reg)
-	    out (0x03),a
+	    ; have to put the right bank back. BC is free at this point
 	    ld a,c
-	    out (0x03),a
+	    ld bc,(sio_reg)
+	    out (c),b
+	    out (c),a
 	    jr pops
 	    
 sigpath:
@@ -544,7 +548,7 @@ irqsigret:
 	    inc sp
 	    ret
 
-syscall_high:
+syscall_platform:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
@@ -561,22 +565,30 @@ syscall_high:
 	    pop ix
 	    di
 	    ex af, af'		; Ick - find a better way to do this bit !
-	    ld a,(sio_reg)
+	    ; FIXME: will need patching on the out calls to make this work
+	    ; on the revised board
+	    ld a,(sio_reg+1)
+bankpatch1:
 	    out (0x03),a
-	    ld a,(bits_from_user)
+	    ld a,(bits_from_user+1)
+bankpatch2:
 	    out (0x03),a
 	    ex af,af'
 	    ; Stack now invalid
 	    ld (_udata + U_DATA__U_SYSCALL_SP),sp
 	    ld sp,#kstack_top
 	    call unix_syscall_entry
-	    ; FIXME check di rules
 	    ; stack now invalid. Grab the new sp before we unbank the
 	    ; memory holding it
 	    ld sp,(_udata + U_DATA__U_SYSCALL_SP)
-	    ld a,(sio_reg)	; back to the user page
+	    ;
+	    ; FIXME: also needs patch for revised board
+	    ;
+	    ld a,(sio_reg+1)	; back to the user page
+bankpatch3:
 	    out (0x03),a
-	    ld a,(bits_to_user)
+	    ld a,(bits_to_user+1)
+bankpatch4:
 	    out (0x03),a
 	    xor a
 	    cp h
