@@ -888,18 +888,14 @@ static uchr runact(ushrt ccond, uchr noun)
 				if (ybrk)
 					break;
 			}
-			/* FIXME: n = 0 means 256/50 seconds */
-			if (n > 0)
-				n--;
-			n = n / 50;
-			n++;
-			wait1 = time(NULL);
-			while (time(NULL) < (wait1 + n))
-#ifdef YES_GETCH		/* In case the clock is nonexistent */
-				if (kbhit())
-					break	/* (as on some CP/M boxes) */
-#endif
-					    ;
+			/* 0 means 256 50ths so this works fine */
+			n--;
+			n = (n + 3) / 5;
+			/* Always delay a bit */
+			if (n == 0)
+				n = 1;
+			/* Not portable but clock_nanosleep is even less so */
+			_pause(n);
 			break;
 		case 19:	/* INK */
 			if (arch == ARCH_CPC)
