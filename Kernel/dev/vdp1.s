@@ -26,6 +26,8 @@
 	    .globl _fontdata_6x8
 	    .globl _vtattr_notify
 
+	    .globl _outputtty
+	    .globl _vidmode
 	    .globl outcharhex
 
 	    .area _CODE
@@ -207,12 +209,21 @@ vdpout:	    ld bc, (_vdpport)
 videopos:	; turn E=Y D=X into HL = addr
 	        ; pass B = 0x40 if writing
 	        ; preserves C
+	    ld a, (_outputtty)
+	    dec a
+	    add a			; 1K per screen
+	    add a
+	    add b
+	    ld b,a
 	    ld a, e			; 0-24 Y
 	    add a, a
 	    add a, a
 	    add a, a			; x 8
 	    ld l, a
 	    ld h, #0
+	    ld a, (_vidmode)
+	    or a
+	    jr nz, pos32
 	    push hl
 	    add hl, hl			; x 16
 	    add hl, hl			; x 32
@@ -222,6 +233,13 @@ videopos:	; turn E=Y D=X into HL = addr
 	    ld e, a
 	    ld d, b			; 0 for read 0x40 for write
 	    add hl, de			; + X
+	    ret
+pos32:
+	    add hl,hl
+	    add hl,hl
+            ld e,d
+	    ld d,b
+	    add hl,de
 	    ret
 ;
 ;	Eww.. wonder if VT should provide a hint that its the 'next char'
@@ -403,7 +421,7 @@ l3:	    out (c), a
 	    jp popret
 
 ;
-;	FIXME: should use attribute blink flag not a char
+;	cursor_on(void)		-	cursor on save old char
 ;
 		.if VDP_DIRECT
 _cursor_on:
@@ -429,9 +447,12 @@ cursor_on:
 	    in a, (c)			; character
 	    ld (cursorpeek), a		; save it away
 	    set 6, h			; make it a write command
-	    ld a, #'_'			; write the cursor
+	    xor #0x80			; write the cursor in inverse
 	    jp plotit2
 
+;
+;	cursor_off(void)	-	turn the cursor off, restore char
+;
 		.if VDP_DIRECT
 _cursor_off:
 		.endif

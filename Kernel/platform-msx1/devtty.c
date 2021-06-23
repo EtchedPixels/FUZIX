@@ -20,6 +20,9 @@ uint8_t keymap[11];
 struct vt_repeat keyrepeat;
 uint8_t vtattr_cap;
 
+uint8_t outputtty = 1;		/* Fixed but needed by the VDP layer */
+uint8_t vidmode = 0;		/* Will be needed when we add the mode setting */
+
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 
