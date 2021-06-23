@@ -145,6 +145,8 @@ _do_ide_begin_reset:
 	push ix
 	ld ix,(_ide_base)
 	call map_sunrise_k
+	ld a,#0x01
+	ld (0x4104),a
 	ld IDE_REG_DEVHEAD(ix),#0xE0
 	ld IDE_REG_CONTROL(ix),#0x06	; start reset (bit 2)
 	call map_kernel

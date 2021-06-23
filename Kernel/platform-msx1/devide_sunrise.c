@@ -125,8 +125,10 @@ failout:
     tmpfree(devide_buf);
 }
 
-static const uint16_t sunrise_roms[2] = {
+static const uint16_t sunrise_roms[4] = {
     0x8FB3,
+    0xBB0E,
+    0xABF2,
     0x0000
 };
 
