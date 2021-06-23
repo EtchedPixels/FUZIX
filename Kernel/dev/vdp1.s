@@ -8,6 +8,13 @@
 	    .globl clear_across
 	    .globl cursor_on
 	    .globl cursor_off
+	    .globl _cursor_disable
+	    .globl _set_console
+
+	    ; graphics API
+	    .globl _vdp_rop
+	    .globl _vdp_wop
+
 	    .globl cursorpos
 
 	    .globl _int_disabled
@@ -21,11 +28,15 @@
 	    .globl _vdp_restore_font
 	    .globl _vdp_text40
 	    .globl _vdp_text32
+	    .globl _vdp_setup40
+	    .globl _vdp_setup32
+
 	    .globl platform_interrupt_all
 
 	    .globl _fontdata_6x8
 	    .globl _vtattr_notify
 
+	    .globl _inputtty
 	    .globl _outputtty
 	    .globl _vidmode
 	    .globl outcharhex
@@ -41,13 +52,6 @@ _vdp_text32:
 	    .byte 0x00, 0xE2, 0x00, 0x80, 0x02, 0x76, 0x03, 0xF4
 
 ;
-;	vdp_init(void)
-;
-;	Initialize the VDP to 40 columns
-;
-_vdp_init:
-	    ld hl,#_vdp_text40
-;
 ;	vdp_setup(uint8_t *table)
 ;
 ;	Initialize the VDP using the table
@@ -62,6 +66,29 @@ setupl:	    outi
 	    out (c),d
 	    djnz setupl
 	    ret
+;
+;	vdp_setup40(void)
+;	vdp_init(void)
+;	vdp_setup32(void)
+;
+;	Video mode setup
+;
+_vdp_init:
+_vdp_setup40:
+	    ld hl,#_vdp_text40
+	    call _vdp_setup
+	    ld hl, #scrollconf40
+setscroll:
+	    ld de, #_scrolld_base
+	    ld bc, #10
+	    ldir
+	    ret
+
+_vdp_setup32:
+	    ld hl,#_vdp_text32
+	    call _vdp_setup
+	    ld hl, #scrollconf32
+	    jr setscroll
 ;
 ;	vdp_type(void)	-	return the type of VDP present
 ;
@@ -288,11 +315,16 @@ scrollbuf:   .ds		40
 _scroll_down:
 		.endif
 scroll_down:
-	    ld a,(_int_disabled)
-	    push af
-	    di
+	    ld a, (_outputtty)
+	    dec a
+	    add a			; 1K per screen
+	    add a
+	    ld h,a
+	    ld l,#0
 	    ld b, #23
-	    ld de, #0x3C0	; start of bottom line
+	    ld de, (_scrolld_base) ; start of bottom line
+	    add hl,de
+	    ex de,hl
 upline:
 	    push bc
 	    ld bc, (_vdpport)	; vdpport + 1 always holds #80
@@ -304,7 +336,7 @@ down_0:
 	    ini
 	    jp nz, down_0
 	    inc c
-	    ld hl, #0x4028	; go down one line and into write mode
+	    ld hl, (_scrolld_s1); go down one line and into write mode
 	    add hl, de		; relative to our position
 	    out (c), l
 	    out (c), h
@@ -315,7 +347,7 @@ down_1:
 	    outi		; video ptr is to the line below so keep going
 	    jp nz,down_1
 	    pop bc		; recover line counter
-	    ld hl, #0xffd8
+	    ld hl, (_scrolld_mov)
 	    add hl, de		; up 40 bytes
 	    ex de, hl		; and back into DE
 	    djnz upline
@@ -331,8 +363,16 @@ scroll_up:
 	    ld a,(_int_disabled)
 	    push af
 	    di
+	    ld a, (_outputtty)
+	    dec a
+	    add a			; 1K per screen
+	    add a
+	    ld h,a
+	    ld l,#0
 	    ld b, #23
-	    ld de, #40		; start of second line
+	    ld de, (_scrollu_w)		; start of second line (base = width)
+	    add hl,de
+	    ex de,hl
 downline:   push bc
 	    ld bc, (_vdpport)
 	    ld hl, #scrollbuf
@@ -343,7 +383,7 @@ up_0:
 	    ini
 	    jp nz, up_0
 	    inc c
-	    ld hl, #0x3FD8	; up 40 bytes in the low 12 bits, add 0x40
+	    ld hl, (_scrollu_mov); up w bytes in the low 12 bits, add 0x40
 				; for write ( we will carry one into the top
 				; nybble)
 	    add hl, de
@@ -351,12 +391,13 @@ up_0:
 	    out (c), h
 	    dec c
 	    ld hl, #scrollbuf
-	    ld b, #40
+	    ld a,(_scrollu_w)	; get width
+	    ld b, a
 up_1:
 	    outi
 	    jp nz,up_1
 	    pop bc
-	    ld hl, #40
+	    ld hl, (_scrollu_w)	; get width
 	    add hl, de
 	    ex de, hl
 	    djnz downline
@@ -383,9 +424,10 @@ clear_lines:
 	    out (c), h
 				; Safe on MSX 2 to loop the data with IRQ on
 				; but *not* on MSX 1
-            ld a, #' '
 	    dec c
-l2:	    ld b, #40   	
+l2:	    ld a, (_vt_twidth)
+	    ld b,a
+            ld a, #' '
 l1:	    out (c), a		; Inner loop clears a line, outer counts
 				; need 20 clocks between writes. DJNZ is 13,
 				; out is 11
@@ -407,7 +449,8 @@ clear_across:
 	    ld a,(_int_disabled)
 	    push af
 	    di
-	    ld b, #0x40
+	    ld a, (_vt_twidth)
+	    ld b,a
 	    call videopos
 	    ld a, c
 	    ld bc, (_vdpport)
@@ -421,7 +464,7 @@ l3:	    out (c), a
 	    jp popret
 
 ;
-;	cursor_on(void)		-	cursor on save old char
+;	cursor_on()		-	cursor on save old char
 ;
 		.if VDP_DIRECT
 _cursor_on:
@@ -431,6 +474,11 @@ cursor_on:
 	    pop de
 	    push de
 	    push hl
+	    ld a,(_outputtty)
+	    ld c,a
+	    ld a,(_inputtty)
+	    cp c
+	    ret nz
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -457,6 +505,11 @@ cursor_on:
 _cursor_off:
 		.endif
 cursor_off:
+	    ld a,(_outputtty)
+	    ld c,a
+	    ld a,(_inputtty)
+	    cp c
+	    ret nz
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -466,7 +519,125 @@ cursor_off:
 	    jp plotit
 
 _vtattr_notify:
+_cursor_disable:
 	    ret
+
+_set_console:
+	    ld a,(_inputtty)
+	    ld bc, (_vdpport)
+	    dec a
+	    out (c), a
+	    ld a,#0x82
+	    out (c),a
+	    ret
+
+;
+;	Read write low level helpers (fastcall). Need IRQ off
+;
+;	These are designed to run with the user space mapped so we
+;	directly burst rectangles to and from the VDP. We check for
+;	writes into the 3C00-3FFF area reserved for the font cache. It's
+;	perhaps a silly check on an unprotected Z80 but when we get to Z280
+;	it might matter rather more!
+;
+_vdp_rop:
+	    push ix
+	    push hl
+	    pop ix
+	    ld l, 2(ix)	; VDP offset
+	    ld a, 3(ix)
+	    cp #0x3C
+	    ld h, a
+	    jr nc, bounds	; Offset exceeds boundary
+	    ld e, 6(ix)		; Stride
+	    ld d, #0
+	    ld bc, (_vdpport)
+	    out (c), l
+	    out (c), h		; Set starting pointer
+	    exx
+	    ld l, (ix)		; User pointer
+	    ld h, 1(ix)
+	    ld d, 5(ix)		; cols
+	    ld e, 4(ix)		; lines
+	    ld bc,(_vdpport);
+	    inc c		; data port
+	    call map_process_always
+ropl:
+	    ld b,d
+ropc:
+	    ini
+	    nop
+	    djnz ropc
+	    ; Stride ?
+	    exx
+	    add hl, de		; stride
+	    ld a, #0x3B		; we don't care about a read overruning 3C
+	    cp h		; just 3F
+	    jr c, bounds
+	    out (c), l		; next line
+	    out (c), h
+	    exx
+	    dec e
+	    jr nz, ropl
+	    pop ix
+	    ld hl, #0
+	    jp map_kernel
+bounds:
+	    pop ix
+	    ld hl, #-1
+            jp map_kernel
+
+_vdp_wop:
+	    push ix
+	    push hl
+	    pop ix
+	    ld l, 2(ix)		; VDP offset
+	    ld a, 3(ix)
+	    or #0x40		; Write operation
+	    cp #0x7C
+	    ld h, a
+	    jr nc, bounds	; Offset exceeds boundary
+	    ld bc, (_vdpport)
+	    ld b, 5(ix)		; cols
+	    ld e, 6(ix)		; Stride
+	    ld d, #0
+	    out (c),l
+	    out (c),h		; Set starting pointer
+	    exx
+	    ld l,(ix)		; User pointer
+	    ld h,1(ix)
+	    ld d,5(ix)		; cols
+	    ld e,4(ix)		; lines
+	    ld bc,(_vdpport)	;
+	    inc c		; data port
+	    call map_process_always
+wopl:
+	    ld b,d
+wopc:
+	    outi
+	    nop
+	    djnz wopc
+	    ; Stride ?
+	    exx
+	    add hl,de		; stride
+	    ld a,#0x7C
+	    cp h
+	    jr nc, boundclear
+	    jr c, bounds	; going over boundary
+	    ; We could cross the boundary during the line
+	    ld a, l
+	    add b
+	    jr c, bounds
+boundclear:
+	    out (c), l		; next line
+	    out (c), h
+	    exx
+	    dec e
+	    jr nz, ropl
+	    pop ix
+	    ld hl,#0
+	    jp map_kernel
+
 
 ;
 ;	This must be in data or common not code
@@ -475,3 +646,19 @@ _vtattr_notify:
 cursorpos:  .dw 0
 cursorpeek: .db 0
 
+_scrolld_base:
+	    .dw		0x03C0		; Start of bottom line
+_scrolld_mov:
+	    .dw		0xFFD8		; -40
+_scrolld_s1:
+	    .dw		0x4028		; 4000 turns on write 40 chars
+_scrollu_w:
+	    .dw		0x0028		; width
+_scrollu_mov:
+	    .dw		0x3FD8		; up 40 bytes in low 12, add 0x4000
+					; carry 11->12
+
+scrollconf40:
+	    .dw 0x03C0, 0xFFD8, 0x4028, 0x0028, 0x3FD8
+scrollconf32:
+	    .dw 0x02E0, 0xFFE0, 0x4020, 0x0020, 0x3FE0
