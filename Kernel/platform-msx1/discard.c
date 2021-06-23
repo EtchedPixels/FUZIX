@@ -14,7 +14,7 @@ extern uint8_t vdptype;
 static const char *vdpnametab[] = {
   "TMS9918A",
   "V9938",
-  "V9958"
+  "V9958",
 };
 
 void map_init(void)
@@ -32,7 +32,9 @@ void map_init(void)
 
   cp = bp[5] & 3;
 
-  kprintf("VDP %s@%x\n", vdpname, vdpport);  
+  if (((infobits & INTFREQ_MASK) == INTFREQ_50Hz) && vdptype == 0)
+    vdpname = "TMS9928/9";
+  kprintf("VDP %s@%x\n", vdpname, (vdpport & 0xFF)- 1);
   kprintf("Subslots %x\n", subslots);
   kprintf("Cartridge in slot %d", cp);
   if (subslots &  (1 << cp))

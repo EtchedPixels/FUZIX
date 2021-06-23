@@ -32,24 +32,4 @@ platform_interrupt_all:
 _cursor_disable:
 	    ret
 
-_vdp_load_font:
-	    ld hl,#0x4900
-	    ld bc,(_vdpport)
-	    out (c),l
-	    out (c),h
-	    ld hl,#_fontdata_6x8
-	    ld de,#768
-	    dec c
-fontloop:
-	    ld a,(hl)
-	    rlca
-	    rlca
-	    out (c),a
-            inc hl
-	    dec de
-	    ld a,d
-	    or e
-	    jr nz,fontloop
-	    ret
-
 _vdpport:   .word 0x2899	; port 0x99, 40 byte count in fastest load

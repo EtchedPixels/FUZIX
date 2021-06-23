@@ -14,29 +14,183 @@
 
 	    .globl _vdpport
 
-	    .globl vdpinit
+	    .globl _vdp_init
+	    .globl _vdp_type
+	    .globl _vdp_load_font
+	    .globl _vdp_wipe_consoles
+	    .globl _vdp_restore_font
+	    .globl _vdp_text40
+	    .globl _vdp_text32
 	    .globl platform_interrupt_all
 
+	    .globl _fontdata_6x8
 	    .globl _vtattr_notify
+
+	    .globl outcharhex
 
 	    .area _CODE
 
 ;
-;	FIXME: table.. and move into init RAM
+;	These are with the IRQ on. Subtract 0x20 from R1 for IRQ off
 ;
-vdpinit:    ld de, #0x8000		; M4 }
-	    call vdpout 		;    }	40x25 mode
-	    ld de, #0x81F0		; M1 }  screen on, virq on hirq off
-					; F0 ????
-	    call vdpout
-	    ld de, #0x8200		; characters at VRAM 0
-	    call vdpout
-	    ld de, #0x8300		; blink is unused
-	    call vdpout
-	    ld de, #0x8400 + VRAM_CH	; font at 0x0800
-	    call vdpout
-	    ld de, #0x87F5		; white text on black
-;	Fall through...
+_vdp_text40:
+	    .byte 0x00, 0xF0, 0x00, 0x00, 0x02, 0x00, 0x00, 0xF4
+_vdp_text32:
+	    .byte 0x00, 0xE2, 0x00, 0x80, 0x02, 0x76, 0x03, 0xF4
+
+;
+;	vdp_init(void)
+;
+;	Initialize the VDP to 40 columns
+;
+_vdp_init:
+	    ld hl,#_vdp_text40
+;
+;	vdp_setup(uint8_t *table)
+;
+;	Initialize the VDP using the table
+;
+_vdp_setup:
+	    ld d,#0x7F			; 0x80 is first register
+	    ld bc, (_vdpport)
+	    ld b,#16
+setupl:	    outi
+	    inc d
+	    nop
+	    out (c),d
+	    djnz setupl
+	    ret
+;
+;	vdp_type(void)	-	return the type of VDP present
+;
+_vdp_type:
+	    ; Program the video engine
+
+	    ld bc,(_vdpport)
+	    ; Play with status register 2
+	    dec c
+	    ld a,#0x8F
+	    out (c),a
+	    nop
+	    nop
+	    in a,(c)
+	    ld a,#2
+	    out (c),a
+	    ld a,#0x8F
+	    out (c),a
+	    nop
+	    nop
+vdpwait:    in a,(c)
+	    and #0xE0
+	    add a
+	    jr nz, not9918a	; bit 5 or 6
+	    jr nc, vdpwait	; not bit 7
+	    ; we vblanked out - TMS9918A
+	    ld l,#0
+	    ret
+not9918a:   ; Use the version register
+	    ld a,#1
+	    out (c),a
+	    ld a,#0x8F
+	    out (c),a
+	    nop
+	    nop
+	    in a,(c)
+	    rrca
+	    and #0x1F
+	    inc a
+	    ld l,a
+	    ret
+
+;
+;	Load the font into the stash area
+;
+_vdp_load_font:
+	    ld bc,(_vdpport)
+	    ld de,#0x7C00
+	    out (c),e			; set write and font area
+	    out (c),d
+	    ld hl,#_fontdata_6x8
+	    ld b,e
+	    dec c
+wipelow:			; below font
+	    out (c),e
+	    nop
+	    djnz wipelow
+	    call lf256
+	    call lf256
+lf256:	    ; b is 0 at this point
+	    ex (sp),hl
+	    ex (sp),hl
+	    ex (sp),hl
+	    ex (sp),hl
+            ld a,(hl)
+	    inc hl
+	    add a
+	    add a
+            out (c),a
+            djnz lf256
+	    ret
+
+;
+;	vdp_restore_font(void)
+;
+;	Reset the font from the cache at 3C00-3FFF in the video memory
+;
+_vdp_restore_font:
+	    ld de,#0x3c00
+	    ld hl,#0x5054
+	    ld bc,(_vdpport)
+	    in a,(c)			; debug check REMOVE
+	    ld a,#13
+	    out (0x2f),a
+	    ld a,#10
+	    out (0x2f),a
+fontnext:
+	    out (c),e
+	    out (c),d
+	    ex (sp),hl			; delay needed ?
+	    ex (sp),hl
+	    dec c
+	    in a,(c)
+	    inc c
+	    out (c),e
+	    out (c),h
+	    dec c
+	    out (c),a
+	    inc c
+	    out (c),e
+	    out (c),l
+	    cpl
+	    dec c
+	    out (c),a
+	    inc c
+	    inc e
+	    jr nz, fontnext
+	    inc d
+	    inc h
+	    inc l
+	    bit 6,d
+	    jr z, fontnext
+	    ret
+
+_vdp_wipe_consoles:
+	    ld bc, (_vdpport)
+	    ld b,#0
+	    ld a,#0x40
+	    out (c),b			; 0x0000 for writing
+	    out (c),a
+	    dec c
+	    ld a,#32
+	    ld d,#16			; 4K
+wipe_con:
+	    out (c),a
+	    nop
+	    djnz wipe_con
+	    dec d
+	    jr nz, wipe_con
+	    ret
+
 ;
 ;	Register write value E to register A
 ;
@@ -102,10 +256,6 @@ popret:
 	    ret
 
 ;
-;	FIXME: on the VDP9958 we can set R25 bit 6 and use the GPU
-;	operations
-;
-;
 ;	Painful
 ;
 	    .area	_DATA
@@ -114,7 +264,7 @@ scrollbuf:   .ds		40
 
 	    .area	_CODE
 ;
-;	We don't yet use attributes...
+;	scroll_down(void)
 ;
 		.if VDP_DIRECT
 _scroll_down:
@@ -153,6 +303,9 @@ down_1:
 	    djnz upline
 	    jp popret
 
+;
+;	scroll_up(void)
+;
 		.if VDP_DIRECT
 _scroll_up:
 		.endif

@@ -61,9 +61,9 @@ void device_init(void)
     inittod();
 #endif
 
-    kprintf ("Running on a ");
+    kprintf ("Running on an ");
     if (machine_type == MACHINE_MSX1) {
-	kprintf("MSX1\n");
+	kprintf("MSX1 ");
     } else if (machine_type == MACHINE_MSX2) {
 	kprintf("MSX2 ");
     } else if (machine_type == MACHINE_MSX2P) {
@@ -89,14 +89,14 @@ void device_init(void)
 	memcpy(&keyboard[1][0], keyboard_es, sizeof(keyboard_es));
 	memcpy(&shiftkeyboard[1][0], shiftkeyboard_es, sizeof(shiftkeyboard_es));
     } else {
-	kprintf("INT ");
+	kprintf("INTL ");
     }
 
     if ((infobits & INTFREQ_MASK) == INTFREQ_60Hz) {
-	kprintf("60Hz\n");
+	kprintf("NTSC\n");
 	ticks_per_dsecond = 6;
     } else {
-	kprintf("50Hz\n");
+	kprintf("PAL\n");
 	ticks_per_dsecond = 5;
     }
 
