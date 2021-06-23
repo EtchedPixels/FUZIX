@@ -56,7 +56,7 @@ void map_init(void)
 
   /* Compute the user mapping from the top down */
   for (i = 0; i < 3; i++) {
-    /* We found now RAM for this 16K block - fail */
+    /* We found no RAM for this 16K block - fail */
     if (*rp == 0xFF)
       panic("can't find RAM");
     /* This is subslotted. Add this subslot to the subslots we must
