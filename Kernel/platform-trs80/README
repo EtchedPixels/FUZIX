@@ -11,7 +11,6 @@ This port supports the following configurations currently
 		Dave Huffman style banked memory (on Port 0x94)
 	In Progress:
 		Tandy hi-res graphics
-		Orchestra 90 sound card
 	Planned:
 		Micro Labs Grafyx
 		Alpha Joystick
@@ -34,6 +33,8 @@ Emulator Bugs:
 
 	Other bugs in RETI, IFF handling etc have been fixed in my xtrs
 	tree.
+
+	These fixes should now be in the current official xtrs.
 
 Requirements: 
 	128K or banked RAM fitted
@@ -80,38 +81,22 @@ Adding Support For Other Banked RAM:
 	Finally up MAX_BANKS in platform/config.h accordingly.
 
 
-Setting It Up (xtrs from EtchedPixels github)
+Setting It Up (xtrs from EtchedPixels github needed for some of the extra
+memory emulations)
 
-	This needs patches currently in progress
+	make diskimage
 
-	# Tool to make disk images
-	make tools/makejv3
-	# Double density single sided 40 track boot disk
-	tools/makejv3 -t dd40s disk4p-0
-	# Build kernel and boot block (edit Makefile, set target then)
-	make
-	# Add pieces to the disk (boot block in sector 0, kernel at end)
-	dd if=zout/trs80load.cim of=disk4p-0 bs=1 seek=8960 conv=notrunc
-	dd if=fuzix.bin of=disk4p-0 bs=1 seek=142336 conv=notrunc
-	# Once we get that far you can also put a filesystem in the lower
-	# blocks
-	#
+	cp ??/Images/trs80/hdboot.jv3 disk4p-0
+	cp ??/Images/trs80/hard4p-0 hard4p-0
+
 	xtrs -model 4p
 
-To set up for hard disk, create a hard disk with the xtrs tools and
-
-	mkdisk -h hard4p-0
-	# This assumes the default disk size
-	cd Standalone/filesystem-src
-	./build-filesystem trs80.hd 256 21760
-	dd if=trs80.hd of=hard4p-0 bs=256 seek=1 conv=notrunc
-	tools/trslabel hard4p-0
-	#
-	xtrs -model 4p
-
+You can add on various memory expanders, bankers and graphics options to
+taste. For example -huffman will give you the extreme maxed out 2MB version
+of the Huffman memory expansion.
 
 You will still need a boot floppy at this point but just boot with device
-0 (or hit return). Swap is configured to be on the end of the hard disk
+1. Swap is configured to be on the end of the hard disk
 
 Banking Models
 
@@ -131,3 +116,9 @@ TODO
 	Add floppy write for other sector sizes
 	Debug other sector sizes
 	Add floppy format
+
+	Write a bootblock for floppy that loads the kernel from hard disk
+	- Add a 2 cylinder partition (64K) for the kernel with a new type
+	- Make the floppy blindly load from the right offset if it's hard
+	  to find it, if not find it and do that by type
+
