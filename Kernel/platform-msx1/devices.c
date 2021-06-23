@@ -48,8 +48,17 @@ bool validdev(uint16_t dev)
  *	A4B6 = Sony HBD-F1
  *	3B49 = Sony HBK-30
  */
+
+static const char *vdpnametab[] = {
+  "TMS9918A",
+  "V9938",
+  "V9958",
+};
+
 void device_init(void)
 {
+  const char *vdpname = "??";
+
 #if 0
   int i;
   for (i = 0; i < 16; i++) {
@@ -57,19 +66,22 @@ void device_init(void)
       kprintf("%d.%d: %x\n", (i>>2) & 3, i & 3, slot_table[i]);
   }
 #endif
+
 #ifdef CONFIG_RTC
     inittod();
 #endif
 
-    kprintf ("Running on an ");
+  if (vdptype < 3)
+    vdpname = vdpnametab[vdptype];
+
     if (machine_type == MACHINE_MSX1) {
-	kprintf("MSX1 ");
+	kprintf("MSX1");
     } else if (machine_type == MACHINE_MSX2) {
-	kprintf("MSX2 ");
+	kprintf("MSX2");
     } else if (machine_type == MACHINE_MSX2P) {
-        kprintf("MSX2+ ");
+        kprintf("MSX2+");
     } else if (machine_type == MACHINE_MSXTR) {
-	kprintf("MSX TurboR ");
+	kprintf("MSX TurboR");
     }
 
     /* keyboard layout initialization: default is international,
@@ -78,27 +90,29 @@ void device_init(void)
     memcpy(shiftkeyboard, shiftkeyboard_int, sizeof(shiftkeyboard_int));
 
     if ((infobits & KBDTYPE_MASK) == KBDTYPE_JPN) {
-	kprintf("JPN ");
+	kprintf("(JPN)");
 	memcpy(keyboard, keyboard_jp, sizeof(keyboard_jp));
 	memcpy(shiftkeyboard, shiftkeyboard_jp, sizeof(shiftkeyboard_jp));
     } else if ((infobits & KBDTYPE_MASK) == KBDTYPE_UK) {
-	kprintf("UK ");
+	kprintf("(UK)");
 	memcpy(&shiftkeyboard[2][0],shiftkeyboard_uk, sizeof(shiftkeyboard_uk));
     } else if ((infobits & KBDTYPE_MASK) == KBDTYPE_ES) {
-	kprintf("ES ");
+	kprintf("(ES)");
 	memcpy(&keyboard[1][0], keyboard_es, sizeof(keyboard_es));
 	memcpy(&shiftkeyboard[1][0], shiftkeyboard_es, sizeof(shiftkeyboard_es));
-    } else {
-	kprintf("INTL ");
     }
+    kputs(" with a");
 
     if ((infobits & INTFREQ_MASK) == INTFREQ_60Hz) {
-	kprintf("NTSC\n");
+	kputs("n NTSC ");
 	ticks_per_dsecond = 6;
     } else {
-	kprintf("PAL\n");
+	kputs(" PAL ");
+	if (vdptype == 0)
+	  vdpname = "TMS9928/9";
 	ticks_per_dsecond = 5;
     }
+    kprintf("%s.\n", vdpname);
 
     /* Default key repeat values in 10ths of seconds */
     keyrepeat.first = 2 * ticks_per_dsecond;

@@ -56,6 +56,10 @@ out
 Sunrise IDE support (except probing)
 Swapping
 Fast user copy routines
+Detection logic by ROM hash and find the sunrise etc
+Switch to inverse video cursor and inverse high font
+Copy the RC2014 style font cache and layout for consistency - not needed
+  here, but might be on MSX1/megaram type setups later
 
 To Debug
 
@@ -69,11 +73,7 @@ Move the switch helper into both banks so we can fix the FIXME in map_kernel
 
 To do
 
-Detection logic by ROM hash and find the sunrise etc
-Switch to inverse video cursor and inverse high font
 Can we put find_ram etc in discard ?
-Do we need a font and should it move somewhere to make const space ?
-[Cache a font at 3C00 like RC2014]
 Tune swap logic so we only read/write relevant pages
 We badly need the cached path walk or some other optimizations on user copy
 or the bank switch
