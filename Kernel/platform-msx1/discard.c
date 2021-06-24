@@ -18,9 +18,9 @@ void map_init(void)
   uint8_t *rp;
   uint8_t i;
   uint8_t pp;
+#ifdef DEBUG
   uint8_t cp;
 
-#ifdef DEBUG
 
   cp = bp[5] & 3;
 

@@ -18,6 +18,9 @@ uint8_t keyboard[11][8];
 uint8_t shiftkeyboard[11][8];
 uint8_t keymap[11];
 
+int8_t vt_twidth = 40;
+int8_t vt_tright = 39;
+
 struct vt_repeat keyrepeat;
 uint8_t vtattr_cap;
 
@@ -213,10 +216,15 @@ void vdp_reload(void)
 {
 	irqflags_t irq = di();
 
-	if (vidmode == 0)
+	if (vidmode == 0) {
 		vdp_setup40();
-	else
+		vt_twidth = 40;
+		vt_tright = 39;
+	} else {
 		vdp_setup32();
+		vt_twidth = 32;
+		vt_tright = 31;
+	}
 	vdp_restore_font();
 	vt_cursor_off();
 	vt_cursor_on();

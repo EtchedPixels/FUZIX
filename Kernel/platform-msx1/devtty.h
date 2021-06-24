@@ -11,4 +11,7 @@ extern void kbd_interrupt(void);
 extern int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 extern int vdptty_close(uint8_t minor);
 
+extern int8_t vt_twidth;
+extern int8_t vt_tright;
+
 #endif
