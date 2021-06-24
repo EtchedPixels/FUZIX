@@ -67,7 +67,8 @@ void tty_putc(uint8_t minor, unsigned char c)
 	minor;
 	tty_debug2 = c;	
 //	if (minor == 1) {
-		vtoutput(&c, 1);
+		if (!vswitch)
+			vtoutput(&c, 1);
 //		return;
 //	}
 }
@@ -170,7 +171,7 @@ static void keydecode(void)
 	vt_inproc(/*inputtty +*/1, c);
 }
 
-void update_keyboard()
+void update_keyboard(void)
 {
 	int n;
 	uint8_t r;
@@ -274,8 +275,10 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	case GFXIOC_GETINFO:
                 return uput(&tms_mode[vidmode], ptr, sizeof(struct display));
 	case GFXIOC_MAP:
-		if (vswitch)
-			return -EBUSY;
+		if (vswitch) {
+			udata.u_error = EBUSY;
+			return -1;
+		}
 		vswitch = minor;
 		return uput(&tms_map, ptr, sizeof(struct display));
 	case GFXIOC_UNMAP:
@@ -317,6 +320,10 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		struct vdp_rw rw;
 		uint16_t size;
 		uint8_t *addr = (uint8_t *)rw.data;
+		if (vswitch == 0) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
 		if (uget(ptr, &rw, sizeof(struct vdp_rw)) != sizeof(struct vdp_rw)) {
 			udata.u_error = EFAULT;
 			return -1;

@@ -72,7 +72,7 @@ In Progress
 Move the switch helper into both banks so we can fix the FIXME in map_kernel
 
 To do
-
+** Fix console size reporting on a change **
 Can we put find_ram etc in discard ?
 Tune swap logic so we only read/write relevant pages
 We badly need the cached path walk or some other optimizations on user copy
