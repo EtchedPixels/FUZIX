@@ -9,7 +9,6 @@
 	    .globl cursor_on
 	    .globl cursor_off
 	    .globl _cursor_disable
-	    .globl _set_console
 
 	    ; graphics API
 	    .globl _vdp_rop
@@ -31,6 +30,7 @@
 	    .globl _vdp_setup40
 	    .globl _vdp_setup32
 	    .globl _vdp_setup
+	    .globl _vdp_set_console
 
 	    .globl platform_interrupt_all
 
@@ -522,11 +522,13 @@ cursor_off:
 	    ld c, a
 	    jp plotit
 
+		.if VDP_DIRECT
 _vtattr_notify:
-_cursor_disable:
+_cursor_off:
 	    ret
+		.endif
 
-_set_console:
+_vdp_set_console:
 	    ld a,(_inputtty)
 	    ld bc, (_vdpport)
 	    dec a

@@ -15,5 +15,6 @@ extern int16_t vdp_rop(struct vdp_rw *op) __fastcall;
 extern int16_t vdp_wop(struct vdp_rw *op) __fastcall;
 extern void vdp_setup40(void);
 extern void vdp_setup32(void);
+extern void vdp_set_console(void);
 
 #endif
