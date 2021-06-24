@@ -50,7 +50,7 @@ extern uint16_t swap_dev;
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 4	/* Will be 4 two monitors, two serial */
+#define NUM_DEV_TTY 7	/* 4 VDP, 1 80 col, 2 serial */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
@@ -60,9 +60,9 @@ extern uint16_t swap_dev;
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 /* Terminal definitions */
-#define VT_WIDTH	vt_twidth[curtty]
+#define VT_WIDTH	vt_twidth[outputtty + 1]
 #define VT_HEIGHT	24
-#define VT_RIGHT	vt_tright[curtty]
+#define VT_RIGHT	vt_tright[outputtty + 1]
 #define VT_BOTTOM	23
 
 #define CONFIG_IDE

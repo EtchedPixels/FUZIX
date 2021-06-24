@@ -9,9 +9,9 @@ extern int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data);
 
 extern int probe_prop(void);
 
-extern signed char vt_twidth[2];
-extern signed char vt_tright[2];
-extern uint8_t curtty;
+extern signed char vt_twidth[6];
+extern signed char vt_tright[6];
+extern uint8_t outputtty;
 
 #define KEY_ROWS	8
 #define KEY_COLS	16

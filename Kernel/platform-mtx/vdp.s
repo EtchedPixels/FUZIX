@@ -5,7 +5,7 @@
 
 	    .include "../dev/vdp1.s"
 
-	    .globl _curtty
+	    .globl _outputtty
 	    .globl _scroll_up
 	    .globl _scroll_down
 	    .globl _clear_across
@@ -14,7 +14,7 @@
 	    .globl _cursor_on
 	    .globl _cursor_disable
 	    .globl _plot_char
-	    .globl vdpload
+	    .globl _vtattr_notify
 
 	    .globl _fontdata_6x8
 ;
@@ -24,41 +24,6 @@
 VDP_DIRECT   .equ	0
 
 	    .area _COMMONMEM
-
-;
-;	Font uploader
-;
-vdpload:
-	     ld hl, #_fontdata_6x8
-	     ; Remember the first 32 symbols (256 bytes) are unused
-	     ld de, #0x4000 + 0x1900 	; write to 0x4000 + fontbase
-	     ld bc, (_vdpport)		; port
-	     ld b, #0			; but we want 256 not the rows
-	     ld a, #3
-vdploadl:
-	     push af
-vdploadl2:
-	     out (c), e		; select target
-	     out (c), d
-	     dec c		; write font byte
-	     ld a, (hl)
-	     rlca		; font packed left
-	     rlca
-	     out (c), a
-	     inc c
-	     inc de
-	     inc hl
-	     djnz vdploadl2	; 256 bytes done
-	     pop af
-	     dec a
-	     jr nz, vdploadl	; 768 bytes total
-
-	     ld de,#0x1800	; 24 lines from 0
-	     push de
-	     call clear_lines
-	     pop de
-	     ret
-
 
 ;
 ;	Turn co-ordinates D,E into offset HL
@@ -91,8 +56,9 @@ videopos6:
 ; port
 ;
 
-_cursor_on:  ld a, (_curtty)
-	     or a
+_cursor_on:
+	     ld a, (_outputtty)
+	     cp #4
 	     jp nz,  cursor_on		; VDP
 	     pop hl
 	     pop de
@@ -108,15 +74,15 @@ _cursor_on:  ld a, (_curtty)
 	     out (c), l
 	     ret
 
-_cursor_off: ld a, (_curtty)
-	     or a
+_cursor_off: ld a, (_outputtty)
+	     cp #4
 	     jp nz, cursor_off		; VDP
 _cursor_disable:
 	     ret
 
 _clear_across:
-	     ld a, (_curtty)
-	     or a
+	     ld a, (_outputtty)
+	     cp #4
 	     jp nz, clear_across
 	     pop hl
 	     pop de
@@ -141,8 +107,8 @@ clearbyte:
 	     ret
 
 _clear_lines:
-	     ld a, (_curtty)
-	     or a
+	     ld a, (_outputtty)
+	     cp #4
 	     jp nz, clear_lines
 	     pop hl
 	     pop de
@@ -171,8 +137,9 @@ clearone:
 	     jr nz, clearonel
 	     ret
 
-_scroll_up:  ld a, (_curtty)
-	     or a
+_scroll_up:
+	     ld a, (_outputtty)
+	     cp #4
 	     jp nz, scroll_up
 
 	     ld hl, (crtcbase)
@@ -193,16 +160,16 @@ do_scroll:
 	     ret
 
 _scroll_down:
-	     ld a, (_curtty)
-	     or a
+	     ld a, (_outputtty)
+	     cp #4
 	     jp nz, scroll_down
 	     ld hl, (crtcbase)
 	     ld de, #0xFF80
 	     jr do_scroll
 
 _plot_char:
-	     ld a, (_curtty)
-	     or a
+	     ld a, (_outputtty)
+	     cp #4
 	     jp nz, plot_char
 	     ; Plot via 6845
 	     pop hl
@@ -221,6 +188,7 @@ _plot_char:
 	     out (0x31), a
 	     ld a,l
 	     out (0x30), a
+_vtattr_notify:
 	     ret
 
 

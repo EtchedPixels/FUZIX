@@ -20,8 +20,8 @@ DONE	- Report graphics capabilities according to card (inc octel modes on
 DONE	- keyboard etc devinput support
 - How to expose effectively having 512 chars (same problem as ubee)
 DONE	- How to detect a rememorizer ?
-- VDP high characters as inverses for cursor like RC2014
-- Multiple virtual consoles on VDP only systems
+DONE	- VDP high characters as inverses for cursor like RC2014
+IP	- Multiple virtual consoles on VDP only systems
 
 
 The following MTX512 features are supported
@@ -29,7 +29,7 @@ The following MTX512 features are supported
   (or propellor based 80 column support).
 - VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) as
   /dev/tty2. TTY usage is supported.
-- Keyboard including shift-F1/F2 to switch tty
+- Keyboard including shift-F1-F5 to switch tty
 - SDX WD1791 style floppy controller at 0x10
 - Silicon discs. These are mapped as device 8 not as /dev/hd because their
   contents (on real ones) vanish if you power off.
@@ -41,7 +41,7 @@ The following are not yet supported
 - Colour/attributes on the displays (graphics ioctls)
 - FDX SASI DMA controller
 - SN76489A sound
-IP - Rememorizer double height mode
+- Rememorizer double height mode
 - MTXplus VDP9958
 - MTXplus DS12887
 
@@ -98,3 +98,11 @@ utilities removed.
 A CF image can be built the normal way with the cfloader.bin on the first
 block and the kernel following. It will then honour normal partition table
 rules.
+
+TODO
+* Find a way to shrink the size of some of it
+* Double check autorepeat
+* Build CF images and floppy images
+* Submit CF emulation to master Memu tree ?
+* Put MEMU CF patches somewhere and doc how to use
+* Need to compact memory usage somehow
