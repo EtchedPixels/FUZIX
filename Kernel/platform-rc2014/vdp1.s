@@ -295,8 +295,7 @@ _clear_across:
 	    ld a,(_int_disabled)
 	    push af
 	    di
-	    ld a, (_vt_twidth)
-	    ld b,a
+	    ld b,#0x40
 	    call videopos
 	    ld a, c
 	    ld bc, (_vdpport)
@@ -314,17 +313,17 @@ l3:	    out (c),a
 ;	Turn on the cursor if this is the displayed console
 ;
 _cursor_on:
+	    ld a,(_outputtty)
+	    ld c,a
+	    ld a,(_inputtty)
+	    cp c
+	    ret nz
 	    pop bc
 	    pop hl
 	    pop de
 	    push de
 	    push hl
 	    push bc
-	    ld a,(_outputtty)
-	    ld c,a
-	    ld a,(_inputtty)
-	    cp c
-	    ret nz
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -354,6 +353,7 @@ _cursor_off:
 	    di
 	    ld de, (cursorpos)
 	    ld a, (cursorpeek)
+	    ld c,a
 	    jp plotit
 
 _vtattr_notify:

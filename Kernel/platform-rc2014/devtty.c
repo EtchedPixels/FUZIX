@@ -30,7 +30,8 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS
 };
 
-uint8_t vidmode = 0;
+uint8_t vidmode;	/* For live screen */
+static uint8_t mode[4];	/* Per console */
 static uint8_t vswitch;	/* Track vt switch locking due top graphics maps */
 uint8_t vt_twidth;
 uint8_t vt_tright;
@@ -1080,9 +1081,12 @@ void do_conswitch(uint8_t c)
 	/* No switch if the console is locked for graphics */
 	if (vswitch)
 		return;
+
 	tms_setoutput(inputtty);
 	vt_cursor_off();
 	inputtty = c;
+	if (vidmode != mode[c])
+		tms9918a_reload();
 	set_console();
 	tms_setoutput(c);
 	vt_cursor_on();
@@ -1243,11 +1247,11 @@ static const uint8_t tmsreset[8] = {
 };
 
 static const uint8_t tmstext[8] = {
-	0x00, 0xD0, 0x00, 0x00, 0x02, 0x00, 0x00, 0xF1 /* Text, no IRQ */
+	0x00, 0xD0, 0x00, 0x00, 0x02, 0x00, 0x00, 0xF4 /* Text, no IRQ */
 };
 
 static const uint8_t tmstext32[8] = {
-	0x00, 0xC2, 0x00, 0x80, 0x02, 0x76, 0x03, 0x01/* Text, no IRQ */
+	0x00, 0xC2, 0x00, 0x80, 0x02, 0x76, 0x03, 0x04/* Text, no IRQ */
 };
 
 /* Should move these helpers into asm TODO */
@@ -1324,7 +1328,10 @@ void tms9918a_reload(void)
 {
 	uint16_t r;
 	uint8_t b;
-	struct tmsinfo *t = tmsdat + vidmode;
+	struct tmsinfo *t;
+
+	vidmode = mode[inputtty];
+	t = tmsdat + vidmode;
 
 	for (r = 0; r < 0x400; r++) {
 		b = tms_readb(0x3C00 + r);
@@ -1332,7 +1339,7 @@ void tms9918a_reload(void)
 		tms_writeb(0x1400 + r , ~b);
 	}
 	for (r = 0x2000; r < 0x201F; r++)
-		tms_writeb(r, 0xF1);
+		tms_writeb(r, 0xF4);
 	tms_writeb(0x3B00, 0xD0);
 	tms9918a_config(t->conf);
 	vt_twidth = t->w;
@@ -1365,7 +1372,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
                  uart[minor] == &tms_uart) {
   	switch(arg) {
   	case GFXIOC_GETINFO:
-                return uput(&tms_mode[vidmode], ptr, sizeof(struct display));
+                return uput(&tms_mode[mode[minor]], ptr, sizeof(struct display));
 	case GFXIOC_MAP:
 		if (vswitch)
 			return -EBUSY;
@@ -1387,7 +1394,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		}
 		if (arg == GFXIOC_GETMODE)
 			return uput(&tms_mode[m], ptr, sizeof(struct display));
-		vidmode = m;
+		mode[minor] = m;
 		tms9918a_reload();
 		return 0;
 		}
@@ -1396,7 +1403,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	case VDPIOC_SETUP:
 		/* Must be locked to issue */
-		if (vswitch == 0) {
+		if (vswitch != minor) {
 			udata.u_error = EINVAL;
 			return -1;
 		}
@@ -1413,6 +1420,11 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		struct vdp_rw rw;
 		uint16_t size;
 		uint8_t *addr = (uint8_t *)rw.data;
+		
+		if (vswitch != minor) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
 		if (uget(ptr, &rw, sizeof(struct vdp_rw)) != sizeof(struct vdp_rw)) {
 			udata.u_error = EFAULT;
 			return -1;
