@@ -524,7 +524,7 @@ cursor_off:
 
 		.if VDP_DIRECT
 _vtattr_notify:
-_cursor_off:
+_cursor_disable:
 	    ret
 		.endif
 
