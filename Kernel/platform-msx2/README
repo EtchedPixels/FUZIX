@@ -1,7 +1,6 @@
 Fuzix for MSX2/2+/TurboR
 
 Current status
-
 	Boots to shell and runs some userland utils.
 	There are some video glitches in real hardware not visible in the emulator.
 	MegaSD support, no floppy driver. RTC support.
@@ -17,6 +16,12 @@ TODO/Ongoing
 
 	Sunrise CF-IDE interface
 	Improved video driver
+	Performance (I/O seems very slow - need to look at a pure native SD
+		driver to avoid thrashing the maps)
+	VDP1 driver so you can use it with MSX1 + mapper
+	Multiple consoles
+	Graphics mode support and hooks
+	Floppy drivers
 
 Running in real hardware
 
@@ -40,8 +45,9 @@ Running in real hardware
 
 Running in openmsx:
 
-	You need a recent snapshot of openmsx, openmsx-0.11.0 contains sd card
-	emulation bugs that have been fixed as a result of fuzix development.
+	You need a modern snapshot of openmsx, openmsx-0.11.0 and higher
+	contains sd card emulation bugs that have been fixed as a result of
+	fuzix development.
 
 	Before using openmsx you need to set up your MegaFlashROM_SCC+_SD emulated
 	interface so that it can be detected by Fuzix. You need a MSX-DOS hdd image
@@ -55,3 +61,6 @@ Running in openmsx:
 	# openmsx -extb MegaFlashROM_SCC+_SD -carta fuzix.ascii8.rom -extc debugdevice -hda fuzixfs.img -machine Panasonic_FS-A1GT
 
 	It should detect the MegaSD interface in slot 2-3
+
+	If you want to use CBIOS that should also work providing fuzix is the
+	slot a cartridge.
