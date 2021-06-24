@@ -38,6 +38,7 @@ void platform_interrupt(void)
 {
         uint8_t r = in((uint8_t)vdpport);
         if (r & 0x80) {
+          wakeup(&vdpport);
   	  kbd_interrupt();
   	  timer_interrupt();
         }

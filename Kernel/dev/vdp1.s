@@ -30,6 +30,7 @@
 	    .globl _vdp_text32
 	    .globl _vdp_setup40
 	    .globl _vdp_setup32
+	    .globl _vdp_setup
 
 	    .globl platform_interrupt_all
 
@@ -40,6 +41,9 @@
 	    .globl _outputtty
 	    .globl _vidmode
 	    .globl outcharhex
+
+	    .globl map_process_always
+	    .globl map_kernel
 
 	    .area _CODE
 
@@ -425,7 +429,7 @@ clear_lines:
 				; Safe on MSX 2 to loop the data with IRQ on
 				; but *not* on MSX 1
 	    dec c
-l2:	    ld a, (_vt_twidth)
+l2:	    ld a, (_scrollu_w)
 	    ld b,a
             ld a, #' '
 l1:	    out (c), a		; Inner loop clears a line, outer counts
@@ -449,7 +453,7 @@ clear_across:
 	    ld a,(_int_disabled)
 	    push af
 	    di
-	    ld a, (_vt_twidth)
+	    ld a, (_scrollu_w)
 	    ld b,a
 	    call videopos
 	    ld a, c
@@ -642,7 +646,7 @@ boundclear:
 ;
 ;	This must be in data or common not code
 ;
-	    .area _DATA
+	    .area _COMMONMEM
 cursorpos:  .dw 0
 cursorpeek: .db 0
 
