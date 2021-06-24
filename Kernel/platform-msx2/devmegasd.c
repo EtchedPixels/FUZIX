@@ -57,11 +57,7 @@ int megasd_probe(void)
             goto found;
     }
     mapslot_bank1(slotram);
-    // XXX: this that makes it easier to run witn megaSD when using openmsx
-    //      otherwise setting up the megaSD for proper detection is a hassle
-    slot = 2;
-    slotmfr = 0x80 | MSD_SUBSLOT << 2 | 2;
-    //return 0;
+    return 0;
 
 found:
     mapslot_bank1(slotram);
