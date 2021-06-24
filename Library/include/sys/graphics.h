@@ -116,7 +116,7 @@ struct videomap {
  */
 
 struct vdp_rw {		/* Do not touch without changing asm helpers */
-  uaddr_t data;
+  uint8_t *data;
   uint16_t vdpaddr;		/* 0000-3BFF */
   uint8_t lines;
   uint8_t cols;
