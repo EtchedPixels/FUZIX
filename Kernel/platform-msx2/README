@@ -13,11 +13,10 @@ Current status
 	Switches to R800 CPU ROM mode on boot if available.
 
 TODO/Ongoing
-
+	I/O: need a mostly asm megasd transfer routine so we can turn on
+		direct copies and remove all the expensive bank thrashing
 	Sunrise CF-IDE interface
 	Improved video driver
-	Performance (I/O seems very slow - need to look at a pure native SD
-		driver to avoid thrashing the maps)
 	VDP1 driver so you can use it with MSX1 + mapper
 	Multiple consoles
 	Graphics mode support and hooks
