@@ -1,11 +1,40 @@
 /*
- * v99xx video display processor driver
+ * v99xx video display processor driver (currently only used for the MSX2 port)
  *
  * (tms9918a, v9938 and v9958)
+ *
+ * [@MSX speed: 3.58MHz]
+ * Timing rules:	80col Text	40col Text	 Graphic 1
+ *	TMS9918A:		12		12		29
+ *	VDP9938:		20		20		15
+ *	VDP9958:		20		20		15
+ *
+ *	Our loops run at 25 and 26 clocks.
+ *
+ *	PLATFORM_VDP_DELAY should be defined to be the appropriate instructions
+ *	for the timing of the system if needed:
+ *
+ *	MSX1:		define it as nop
+ *	MSX2;		leave empty
+ *	MTX:		define it as a  "ld e,#0" or similar
+ *	RC2014:		at standard speed you need 34 cycles, a pair
+ *			of EX (SP),HL gives you that and four clocks of
+ *			headroom for 8MHz or so boxes.
+ *
+ *	For text modes only
+ *	MSX1/MSX2:	leave empty
+ *	MTX:		leave empty
+ *	RC2014:		leave empty (just about - 8MHz will need a nop)
+ *			RC2014 with a VDP9938/58 will need 16 clocks eg
+ *			JR 0, NOP
  */
 
 #include <v99xx.h>
 #include <kernel.h>
+
+#ifndef PLATFORM_VDP_DELAY
+#define PLATFORM_VDP_DELAY
+#endif
 
 /* v99xx doesn't support register read
  * need to keep a local copy to change bits */
@@ -111,11 +140,21 @@ void v99xx_memset_vram(uint16_t addr, uint8_t value, uint16_t size)
 	or #0x40
 	out (c),a
 	dec c
-memset_loop:
-	out (c),b
+	;
+	;	TODO: could be a little bit faster using djnz loops
+	;
+	ld a,b
+	ld b,e
 	dec de
-	ld a,d
-	or e
+	inc d
+	;
+	;	This loop takes 25 cycles, E is free for timing delays
+	;
+memset_loop:
+	out (c),a
+	PLATFORM_VDP_DELAY
+	djnz memset_loop
+	dec d
 	jr nz,memset_loop
 	__endasm;
 
@@ -144,15 +183,26 @@ void v99xx_copy_from_vram(uint8_t *dst, uint16_t vaddr, uint16_t size)
 	push hl
 	push iy
 	dec c
+
+	ld b,e	; Turn a 16 bit count into a number of repeats of an 8bit
+	dec de	; count where 0 means 256
+	inc d
+
 	cp #0x3f
 	jp m,cpfvram_loop
+
 	in a,(c)
 cpfvram_loop:
+	;
+	;	This loop must take 8us for worst case (TMS9918A Graphics 1)
+	;	or 29 cycles on MSX1. The loop itself takes 26, E is free
+	;	for timing delays
+	;
 	ini
-	dec de
-	ld a,d
-	or e
-	jr nz,cpfvram_loop
+	PLATFORM_VDP_DELAY
+	jp nz, cpfvram_loop
+	dec d
+	jp nz,cpfvram_loop	; faster when taken than jr
 	__endasm;
 }
 
@@ -180,12 +230,20 @@ void v99xx_copy_to_vram(uint16_t vaddr, uint8_t *src, uint16_t size)
 	push de
 	push iy
 	dec c
-cptvram_loop:
-	outi
+	ld b,e
 	dec de
-	ld a,d
-	or e
-	jr nz,cptvram_loop
+	inc d
+cptvram_loop:
+	;
+	;	This loop must take 8us for worst case (TMS9918A Graphics 1)
+	;	or 29 cycles on MSX1. The loop itself takes 26, E is free
+	;	for timing delays
+	;
+	outi
+	PLATFORM_VDP_DELAY
+	jp nz, cptvram_loop
+	dec d
+	jp nz,cptvram_loop
 	__endasm;
 }
 
