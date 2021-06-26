@@ -1,5 +1,4 @@
 # Set this to the desired platform to build
-
 #
 # Useful values for general work
 #
@@ -39,7 +38,7 @@
 # tc2068:	Timex TC2068/TS2068 with DivIDE/DivMMC disk interface
 # tiny68k:	Bill Shen's Tiny68K or T68KRC
 # tomssbc:	Tom's SBC running in RAM
-# tomssbc-rom:	TOm's SBC using the 4x16K banked ROM for the kernel
+# tomssbc-rom:	Tom's SBC using the 4x16K banked ROM for the kernel
 # trs80:	TRS80 Model 4/4D/4P with 128K RAM (or some other mappers)
 # trs80m1:	TRS80 Model I/III with suitable banker (also clones)
 # ubee:		Microbee
@@ -53,9 +52,8 @@
 #
 # v65c816:	Virtual platform for 65c816 development (flat memory)
 # v68:		Virtual platform for 68000 development
-# v85:		Virtual platform for 8085 development
 
-TARGET=amstradnc/nc100
+TARGET=trs80m1
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk
