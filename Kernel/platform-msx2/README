@@ -13,20 +13,16 @@ Current status
 	Switches to R800 CPU ROM mode on boot if available.
 
 TODO/Ongoing
-	I/O: need a mostly asm megasd transfer routine so we can turn on
-		direct copies and remove all the expensive bank thrashing
+	Switch to banked memory model - say
+		3,2,1,4
+		3,0,5,4
+	I/O: need a mostly asm megasd transfer routine to speed it up more
 	Sunrise CF-IDE interface
-	Improved video driver
+	put buffers, tty queues (grow to 256 bytes) into bank space
 	VDP1 driver so you can use it with MSX1 + mapper
-	Multiple consoles
 	Graphics mode support and hooks
 	Floppy drivers
-	Memory model choice is probably wrong: bank16kfc might be a better
-	fit, or we could bank the kernel (bank 0 is free still). Moving buffers
-	into bank 0, along with font and some code would be good.
-	Load the font somewhere at the top of the vdp space and copy it back
-	down on restores, kick it out of main memory so we can force the top
-	of memory up.
+	Swap
 
 Running in real hardware
 
