@@ -34,6 +34,15 @@ does not save and restore the entire slot/subslot setup. We could add logic
 for the special cases but it gets very expensive. We could also go with
 a soft interrupt and keep a serial driver in high memory if needed.
 
+## Device Drivers
+
+For MMIO we can generally not use the existing driver frameworks well as we
+have to keep the drvier code and everything it depends upon in the top or
+bottom 16K or common memory space. The compiler support code ends up in the
+segment called _CODE and we use _CODE and_CODE1 to pack all the code we want
+low into the bottom of memory so that the C support code and specific drivers
+are the only things packed low with the main kernel code (_CODE2) following.
+
 ## Bootstrap
 
 The current setup uses an ASCII 8K style mapping for the boot part of the

@@ -169,7 +169,6 @@ static void sd_spi_txrx_sector(bool is_read)
     sd_spi_unmap_interface(irq);
 }
 
-
 bool sd_spi_receive_sector(void)
 {
     sd_spi_txrx_sector(true);

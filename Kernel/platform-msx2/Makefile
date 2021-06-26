@@ -27,7 +27,7 @@ $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg CODE2 -c $<
 
 $(COMMON_COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg COMMONMEM -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg CODE1 -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
