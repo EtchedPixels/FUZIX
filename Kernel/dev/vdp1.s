@@ -101,7 +101,8 @@ _vdp_type:
 
 	    ld bc,(_vdpport)
 	    ; Play with status register 2
-	    dec c
+	    ld a,#0x07
+	    out (c),a
 	    ld a,#0x8F
 	    out (c),a
 	    nop
@@ -133,6 +134,10 @@ not9918a:   ; Use the version register
 	    and #0x1F
 	    inc a
 	    ld l,a
+	    xor a
+	    out (c),a
+	    ld a,#0x8F
+	    out (c),a
 	    ret
 
 ;
