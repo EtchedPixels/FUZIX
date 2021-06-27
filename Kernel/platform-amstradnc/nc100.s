@@ -204,20 +204,22 @@ my_nmi_handler:
 	    push af
 	    xor a
 	    jr suspend_1
-	    push af
 suspend:
+	    push af
 	    ld a,#1
 suspend_1:
 	    ld (suspend_r),a
 	    ld a, (_int_disabled)
 	    push af
+	    push bc
 	    di
+	    in a,(0x10)
+	    ld c,a
 	    ld a,#0x80
 	    out (0x10),a
 	    ; Save our SP
 	    ld (kernel_sp), sp
 	    ld sp,#suspend_stack
-	    push bc
 	    push de
 	    push hl
 	    push ix
@@ -228,9 +230,19 @@ suspend_1:
 	    push hl
 	    ex af,af'
 	    push af
-	    ; Register map saved
+	    exx
+	    ; Register map saved (first one is wrong)
 	    ld hl,#suspend_map
-	    call save_maps
+	    ld (hl),c
+	    inc hl
+	    in a,(0x11)
+	    ld (hl),a
+	    inc hl
+	    in a,(0x12)
+	    ld (hl),a
+	    inc hl
+	    in a,(0x13)
+	    ld (hl),a
 	    ld hl,#resume
 	    ld (resume_vector),hl
 	    ld de,(suspend_r)
@@ -258,9 +270,17 @@ nmi_and_resume:
 ;	already set the high 16K correctly before calling us there
 ;
 resume:
+	    di
 	    ld hl,#0
 	    ld (resume_vector),hl
 	    ld hl,#suspend_map+1
+	    ; Restore hardware state
+	    ld a,#0x08
+	    out (0x60),a		; keyboard IRQ only
+	    xor a
+	    out (0x90),a
+	    im 1
+	    in a,(0xB9)			; clear pending
 	    ; Begin by restoring the mapping for 0x4000-0xBFFF
 	    ld a,(hl)
 	    out (0x11),a
@@ -272,7 +292,7 @@ resume:
             ld a,#0x80
 	    out (0x10),a
 	    ; Restore the registers
-	    ld sp,#suspend_stack-36
+	    ld sp,#suspend_stack-16
 	    pop af
 	    ex af,af
 	    pop hl
@@ -283,7 +303,7 @@ resume:
 	    pop ix
 	    pop hl
 	    pop de
-	    pop bc
+
 	    ; Switch back to the kernel stack pointer. This could be in any
 	    ; bank so we must not dereference it until we fix the low 16K
 	    ld sp,(kernel_sp)
@@ -291,6 +311,8 @@ resume:
 	    ld a,(suspend_map)
 	    out (0x10),a	; booter page in 0x0000-0x3FFF vanishes here
 				; and our vectors re-appear
+	    pop bc		; BC was saved on the other stack so we had
+				; work room
 	    pop af		; IRQ state
 	    or a
 	    jr nz,no_irq_on

@@ -56,7 +56,7 @@ relocated:
 ; vector. As we're running from 0x0000, we can do that directly.
 
 	ld a, (suspend_map + 3)
-	out (0x12), a
+	out (0x13), a
 	jp (hl)
 
 no_resume:
