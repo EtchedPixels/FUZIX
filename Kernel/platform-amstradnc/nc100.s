@@ -765,8 +765,6 @@ clear_end:
             jr z,clear_1	; Clear top 6 bits of next byte
             dec a
             jr z,clear_2	; Clear 4 bits
-            dec a
-            jr nz, nextrow
             ld a,(hl)		; Clear 2 bits
             and #0x3F
 nextrow:
