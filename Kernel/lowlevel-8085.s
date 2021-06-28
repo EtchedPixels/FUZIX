@@ -202,7 +202,8 @@ _doexec:
 	xra a
 	sta U_DATA__U_INSYS
 	xchg
-	lxi d,PROGLOAD
+	mov d,h
+	mvi e,0
 	EI
 	pchl
 !

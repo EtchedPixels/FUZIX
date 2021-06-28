@@ -300,7 +300,9 @@ _doexec:
         ex de, hl
 
 	; for the relocation engine - tell it where it is
-	ld de,#PROGLOAD
+	; we can generate this from the start address
+	ld d,h
+	ld e,#0
         ei
         jp (hl)
 

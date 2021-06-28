@@ -1,5 +1,5 @@
 ;
-;	Closely related to the 6803/6303 code but there are ABi differences
+;	Closely related to the 6803/6303 code but there are ABI differences
 ; 	and a lot less instructions we can use!
 ;
 	.export _di
@@ -228,8 +228,9 @@ _doexec:
 	des				; offset by 1 on the 680X
 	clr _udata+U_DATA__U_INSYS
 	cli
-	ldaa #>PROGLOAD
-	ldab #<PROGLOAD
+	stx @tmp			; X & 0xFF00 is our base
+	ldaa @tmp
+	clrb
 	jmp 0,x
 
 trap_handler:

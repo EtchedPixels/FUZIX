@@ -251,7 +251,9 @@ doexec:
 	des				; offset by 1 on the 680X
 	clr udata+U_DATA__U_INSYS
 	cli
-	ldd #PROGLOAD+DPBASE		; relocation info
+	pshx
+	pula				; high byte is our reloc base
+	ldab #DPBASE			; relocation info for DP
 	ldy #0				; clear register
 	jmp 0,x				; from the caller D
 

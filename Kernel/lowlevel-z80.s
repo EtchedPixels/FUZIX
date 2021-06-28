@@ -319,7 +319,10 @@ _doexec:
 	call mmu_user		; must preserve HL
 	.endif
 	; for the relocation engine - tell it where it is
-	ld de, #PROGLOAD
+	; we always start in the low 256 bytes of our binary so we can
+	; just generate the relocation base accordingly
+	ld d,h
+	ld e,#0
         ei
         jp (hl)
 

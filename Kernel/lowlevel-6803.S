@@ -216,7 +216,10 @@ _doexec:
 	des				; offset by 1 on the 680X
 	clr _udata+U_DATA__U_INSYS
 	cli
-	ldd #PROGLOAD
+	pshx
+	pula				; base is exec addr & FF00
+	ins
+	clrb
 	jmp 0,x
 
 trap_handler:
