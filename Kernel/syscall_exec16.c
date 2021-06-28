@@ -176,6 +176,8 @@ arg_t _execve(void)
 	/* FIXME: In the execve case we may on some platforms have space
 	   below PROGLOAD to clear... */
 
+	udata.u_codebase = progload;
+
 	/*
 	 * We place the stubs below the program in the hole left by the
 	 * header. It's like the Linux VDSO except that it's not virtual
