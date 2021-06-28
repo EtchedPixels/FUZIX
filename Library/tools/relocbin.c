@@ -157,7 +157,10 @@ int main(int argc, char *argv[])
   /* Now update the header. We do this byte by byte because we want to be
      sure we get the right alignment when cross building. See
      kernel/include/exec.h */
-  bp = buf + progload + 6;
+  bp = buf + progload + 4;
+  /* Mark as relocatable */
+  *bp++ = 0;
+  bp++;	/* Don't touch hints */
   /* Text size (little endian) */
   *bp++ = s__INITIALIZED - progload;
   *bp++ = (s__INITIALIZED - progload) >> 8;
