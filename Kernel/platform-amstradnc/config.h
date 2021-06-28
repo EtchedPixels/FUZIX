@@ -23,8 +23,8 @@
 /* As we  have low resources default all binaries to about 44K so that
    they fit within 3 pages */
 #define DEFAULT_TOP	0xB000
-/* We want the 4x6 font */
-#define CONFIG_FONT_4X6
+/* We want the 6x8 font */
+#define CONFIG_FONT6X8
 /* We have audio (just about) */
 #define CONFIG_AUDIO
 
@@ -33,15 +33,15 @@
 
 /* VT definitions */
 #ifdef CONFIG_NC200
-#define VT_WIDTH	120
-#define VT_HEIGHT	21
-#define VT_RIGHT	119
-#define VT_BOTTOM	20
+#define VT_WIDTH	80
+#define VT_HEIGHT	16
+#define VT_RIGHT	79
+#define VT_BOTTOM	15
 #else
-#define VT_WIDTH	120
-#define VT_HEIGHT	10
-#define VT_RIGHT	119
-#define VT_BOTTOM	9
+#define VT_WIDTH	80
+#define VT_HEIGHT	8
+#define VT_RIGHT	79
+#define VT_BOTTOM	7
 #endif
 
 #define TICKSPERSEC 100   /* Ticks per second */

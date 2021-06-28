@@ -19,7 +19,7 @@ static struct display ncdisplay = {
   GFX_TEXT|GFX_MAPPABLE,
   0,
   GFX_DRAW,
-  120,20
+  80,16
 };
 
 static struct videomap ncmap = {
@@ -44,7 +44,7 @@ static struct display ncdisplay = {
   GFX_TEXT|GFX_MAPPABLE,
   0,
   GFX_DRAW,
-  120,10
+  80,8
 };
 
 static struct videomap ncmap = {
