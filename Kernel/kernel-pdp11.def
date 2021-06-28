@@ -18,7 +18,8 @@
 #define U_DATA__U_ISP		26
 #define U_DATA__U_TOP		28
 #define U_DATA__U_BREAK		30
-#define U_DATA__U_SIGVEC	32
+#define U_DATA__U_CODEBASE	30
+#define U_DATA__U_SIGVEC	34
 
 #define P_TAB__P_STATUS_OFFSET	0
 #define P_TAB__P_FLAGS_OFFSET	1

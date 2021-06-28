@@ -466,6 +466,8 @@ typedef struct p_tab {
 #define PFL_CHKSIG	1	/* Signal check required */
 #define PFL_ALARM	2	/* On alarm queue */
 #define PFL_BATCH	4	/* Used full time quantum */
+#define PFL_GRAPHICS	8	/* Graphics hint flag for some platforms
+                                   (platform owned) */
     uint8_t     p_tty;          /* Process' controlling tty minor # */
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
@@ -531,9 +533,7 @@ typedef struct u_data {
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
     uaddr_t	u_break;	/* Top of data space */
-#ifdef CONFIG_32BIT
     uaddr_t	u_codebase;	/* 32bit platform base pointers */
-#endif
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
 
     uint8_t *   u_base;         /* Source or dest for I/O */

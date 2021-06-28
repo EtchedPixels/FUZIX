@@ -20,10 +20,11 @@ U_DATA__U_ARGN3             .equ 24  ; uint16_t
 U_DATA__U_ISP               .equ 26  ; void * (initial stack pointer when _exec()ing)
 U_DATA__U_TOP               .equ 28  ; uint16_t
 U_DATA__U_BREAK             .equ 30  ; uint16_t
-U_DATA__U_SIGVEC            .equ 32  ; table of function pointers (void *)
-U_DATA__U_BASE              .equ 96  ; uint8_t *
-U_DATA__U_COUNT             .equ 98  ; uint16_t
-U_DATA__U_OFFSET            .equ 100 ; uint32_t
+U_DATA__U_CODEBASE          .equ 32  ; uint16_t
+U_DATA__U_SIGVEC            .equ 34  ; table of function pointers (void *)
+U_DATA__U_BASE              .equ 98  ; uint8_t *
+U_DATA__U_COUNT             .equ 100  ; uint16_t
+U_DATA__U_OFFSET            .equ 102 ; uint32_t
 
 ; Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      .equ 0
@@ -37,6 +38,7 @@ P_RUNNING                   .equ 1            ; value from include/kernel.h
 P_READY                     .equ 2            ; value from include/kernel.h
 
 PFL_BATCH		    .equ 2	      ; bit number
+PFL_GRAPHICS		    .equ 3	      ; bit number
 
 OS_BANK                     .equ 0            ; value from include/kernel.h
 

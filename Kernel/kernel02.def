@@ -17,7 +17,8 @@ U_DATA__U_ARGN3             .set (24)  ; uint16_t
 U_DATA__U_ISP               .set (26)  ; void * (initial stack pointer when _exec()ing)
 U_DATA__U_TOP               .set (28)  ; uint16_t
 U_DATA__U_BREAK             .set (30)  ; uint16_t
-U_DATA__U_SIGVEC            .set (32)  ; table of function pointers (void *)
+U_DATA__U_CODEBASE          .set (32)  ; uint16_t
+U_DATA__U_SIGVEC            .set (34)  ; table of function pointers (void *)
 
 ; Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      .set 0
