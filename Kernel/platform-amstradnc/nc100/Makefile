@@ -1,6 +1,6 @@
 
 CSRCS = ../devlpr.c ../devtty.c ../devrd.c ../devaudio.c ../devgfx.c
-CSRCS += ../devices.c ../main.c ../tc8521.c
+CSRCS += ../devices.c ../main.c ../tc8521.c ../bank.c
 
 ASRCS = ../nc100.s ../crt0.s
 ASRCS += ../tricks.s ../commonmem.s

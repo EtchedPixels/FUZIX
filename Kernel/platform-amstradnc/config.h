@@ -18,8 +18,7 @@
 #define CONFIG_VT
 /* We have a key that needs remapping into unicode space */
 #define CONFIG_UNIKEY
-/* We use flexible 16K banks so use the helper */
-#define CONFIG_BANK16
+/* Custom banking 16 maps */
 #define MAX_MAPS 16
 /* As we  have low resources default all binaries to about 44K so that
    they fit within 3 pages */
