@@ -68,10 +68,10 @@ autoprg.bin: autoprg.s
  		autoprg.ihx -intel -offset -0xa000 \
  		-output autoprg.bin -binary
 
-diskimage: floppyimage
+diskimage: cardimage floppyimage
 	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAGH) $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img 64 1440)
 	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAGH) $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp 64 1408)
-	dd if=/dev/zero bs=16384 count=20 >pcmcia.tmp2
+	dd if=$(ROOT_DIR)/fuzix.bin bs=327680 conv=sync >pcmcia.tmp2
 	cat pcmcia.tmp2 $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp >$(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.img
 	rm -f $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp pcmcia.tmp2
 	dd if=$(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.img of=$(FUZIX_ROOT)/Images/$(TARGET)/fuzixboot.full bs=737280 conv=sync
