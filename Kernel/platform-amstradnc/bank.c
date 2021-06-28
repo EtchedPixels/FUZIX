@@ -210,7 +210,6 @@ int pagemap_prepare(struct exec *hdr)
 		if (hdr->a_size == 0)
 			hdr->a_size = (DEFAULT_TOP >> 8) - hdr->a_base;
 	}
-	kprintf("base %x size %x\n", hdr->a_base, hdr->a_size);
 	return 0;
 }
 
