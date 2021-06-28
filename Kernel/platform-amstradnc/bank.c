@@ -1,6 +1,13 @@
 /*
  *	The NC100 and NC200 banking we drive slightly differently in order
- *	to deal with graphical apps.	
+ *	to deal with graphical apps.
+ *
+ *	We switch between stanard bank16k mappings and a mapping of
+ *
+ *	app page 0
+ *	app page 1
+ *	0x43 (video memory)
+ *	kernel common for this app
  */
 
 #include <kernel.h>
@@ -9,6 +16,8 @@
 #include <exec.h>
 
 #undef DEBUG
+
+#define BANK_VIDEO	0x43
 
 /*
  * Map handling: We have flexible paging. Each map table consists of a set of pages
@@ -37,10 +46,10 @@ void pagemap_free(ptptr p)
 	uint8_t last = 0xff;
 	int i = 0;
 
-	/* Don't try and put the graphics page into free space */
-	if (p->p_flags & PFL_GRAPHICS)
-		i++;
 	for (; i < 4; i++) {
+		/* Don't try and put the graphics page into free space */
+		if (i == 2 && p->p_flags & PFL_GRAPHICS)
+			continue;
 		if (*ptr != last) {
 			pfree[pfptr++] = *ptr;
 			last = *ptr;
@@ -53,7 +62,9 @@ static int maps_needed(uint16_t top)
 {
 	/* On many platforms if you touch this or PROGTOP you must
 	   touch tricks.s */
-	uint16_t needed = top + 0xFFFF - PROGTOP;
+	uint16_t needed;
+
+	needed = top + 0xFFFF - PROGTOP;
 	/* Usually we have 0x1000 common - 1 for shift and inc */
 	needed >>= 14;		/* in banks */
 	needed++;		/* rounded */
@@ -71,18 +82,25 @@ int pagemap_alloc(ptptr p)
 {
 	uint8_t *ptr = (uint8_t *) & p->p_page;
 	int needed = maps_needed(p->p_top);
-	int i = 0;
+	uint8_t i;
 
 	if (p->p_flags & PFL_GRAPHICS)
-		ptr[i++] = 0x43;
+		needed = 3;
 
-	if (needed - i > pfptr)	/* We have no swap so poof... */
+	if (needed > pfptr)	/* We have no swap so poof... */
 		return ENOMEM;
 
+	if (p->p_flags & PFL_GRAPHICS) {
+		/* Special graphics map */
+		*ptr++ = pfree[--pfptr];
+		*ptr++ = pfree[--pfptr];
+		*ptr++ = BANK_VIDEO;
+		*ptr = pfree[--pfptr];
+		return 0;
+	}
 	/* Pages in the low then repeat the top one */
-	for (; i < needed; i++)
+	for (i = 0; i < needed; i++)
 		ptr[i] = pfree[--pfptr];
-
 	while (i < 4) {
 		ptr[i] = ptr[i - 1];
 		i++;
@@ -105,18 +123,28 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	uint8_t update = 0;
 	irqflags_t irq;
 
-	/* Fix up mapping 0 */
+	/* Transitioning from graphics, swap the graphics page for a common
+	   copy */
 	if (hdr->a_hints & HINT_GRAPHICS) {
-		/* Graphics on - switch map 0 */
-		if (ptr[0] != 0x43) {
-			pfree[pfptr++] = ptr[0];
-			ptr[0] = 0x43;
+		if (ptr[2] != BANK_VIDEO) {
+			want = 3;
+			if (want - have > pfptr)
+				return ENOMEM;
+			/* Free or add map pages as needed */
+			if (have == 4)
+				pfree[--pfptr] = ptr[2];
+			if (have == 1)
+				ptr[0] = pfree[pfptr++];
+			if (have < 3)
+				ptr[1] = pfree[pfptr++];
+			ptr[2] = BANK_VIDEO;
 		}
-	} else if (ptr[0] == 0x43) {
-		/* Graphics off, get a new map 0 */
-		if (pfptr == 0)
-			return -ENOMEM;
-		ptr[0] = pfree[--pfptr];
+		return 0;
+	}
+	else if (ptr[2] == BANK_VIDEO) {
+		/* Graphics off, fix up the map */
+		ptr[2] = ptr[3];
+		have = 3;
 	}
 			
 	/* If we are shrinking then free pages and propogate the
@@ -164,27 +192,24 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 int pagemap_prepare(struct exec *hdr)
 {
 	ptptr p = udata.u_ptab;
-	/* Graphical apps get loaded at 0x4000 or higher so we can flip the
-	   low page */
-	if (hdr->a_hints & HINT_GRAPHICS) {
-		if (hdr->a_base == 0)
-			hdr->a_base = 0x40;
-		else if (hdr->a_base < 0x40) {
-			kprintf("low base %x\n", hdr->a_base);
-			udata.u_error = ENOMEM;
-			return -1;
-		}
-		p->p_flags |= PFL_GRAPHICS;
-	} else
-		p->p_flags &= ~PFL_GRAPHICS;
+
 	
 	/* If it is relocatable load it at PROGLOAD */
 	if (hdr->a_base == 0)
 		hdr->a_base = PROGLOAD >> 8;
 	/* If it doesn't care about the size then the size is all the
 	   space we have */
-	if (hdr->a_size == 0)
-		hdr->a_size = (DEFAULT_TOP >> 8) - hdr->a_base;
+
+	if (hdr->a_hints & HINT_GRAPHICS) {
+		p->p_flags |= PFL_GRAPHICS;
+		/* Has to fit below the video mapping */
+		if (hdr->a_size == 0)
+			hdr->a_size = 0x80 - hdr->a_base;
+	} else {
+		p->p_flags &= ~PFL_GRAPHICS;
+		if (hdr->a_size == 0)
+			hdr->a_size = (DEFAULT_TOP >> 8) - hdr->a_base;
+	}
 	kprintf("base %x size %x\n", hdr->a_base, hdr->a_size);
 	return 0;
 }
