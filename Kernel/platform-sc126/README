@@ -18,10 +18,14 @@ Not yet supported but planned:
    (although these should just work with a 512K/512K board)
 
 To set up
-Write fuzix.romwbw to blocks 2+
-Partition with a vaguely modern fdisk (2048 block offset base, not 63)
-Add partition for filesystem
-Copy filesystem onto partition
+
+make diskimage
+Write the disk.img file to disk
+Boot ROMWBW and at the boot prompt give the number of the device to boot from
+(SD or CF)
+
+Note that if you are using ROMWBW 3 or higher the Fuzix kernel will be running
+at 38400 baud whilst ROMWBW now runs at 115200.
 
 The root filesystem device can be specified as either a decimal number, or as a
 a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
@@ -34,6 +38,7 @@ TODO:
 - Can we do CF with DMA1 ? (ought to get us to 3MBytes/second which is about the
 PIO 0 limit with 0 mem 1 ide wait). 36MHz would get us closer to 6 but less
 due to wait stating so probably ok as PIO1.
+- Detect ROMWBW version and set baud rate
 
 Notes:
 
