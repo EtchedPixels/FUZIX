@@ -7,7 +7,8 @@ CSRCS = \
 	../devgfx.c \
 	../devices.c \
 	../main.c \
-	../m146818.c
+	../m146818.c \
+	../bank.c
 
 ASRCS = \
 	../nc100.s \
