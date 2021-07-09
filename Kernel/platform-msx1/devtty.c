@@ -228,6 +228,7 @@ void vdp_reload(void)
 	vdp_restore_font();
 	vt_cursor_off();
 	vt_cursor_on();
+	irqrestore(irq);
 }
 
 /*

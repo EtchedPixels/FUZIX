@@ -1395,7 +1395,8 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		if (arg == GFXIOC_GETMODE)
 			return uput(&tms_mode[m], ptr, sizeof(struct display));
 		mode[minor] = m;
-		tms9918a_reload();
+		if (minor == inputtty)
+			tms9918a_reload();
 		return 0;
 		}
 	case GFXIOC_WAITVB:
