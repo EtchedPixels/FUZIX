@@ -50,10 +50,21 @@
 ;
 ;	These are with the IRQ on. Subtract 0x20 from R1 for IRQ off
 ;
+
+.if VDP_IRQ
 _vdp_text40:
 	    .byte 0x00, 0xF0, 0x00, 0x00, 0x02, 0x00, 0x00, 0xF4
 _vdp_text32:
 	    .byte 0x00, 0xE2, 0x00, 0x80, 0x02, 0x76, 0x03, 0xF4
+
+.else
+
+_vdp_text40:
+	    .byte 0x00, 0xF0, 0x00, 0x00, 0x02, 0x00, 0x00, 0xF4
+_vdp_text32:
+	    .byte 0x00, 0xE2, 0x00, 0x80, 0x02, 0x76, 0x03, 0xF4
+
+.endif
 
 ;
 ;	vdp_setup(uint8_t *table)
@@ -66,7 +77,7 @@ _vdp_setup:
 	    ld b,#16
 setupl:	    outi
 	    inc d
-	    nop
+	    VDP_DELAY
 	    out (c),d
 	    djnz setupl
 	    ret
@@ -91,6 +102,7 @@ setscroll:
 _vdp_setup32:
 	    ld hl,#_vdp_text32
 	    call _vdp_setup
+	    call _vdp_setcolour
 	    ld hl, #scrollconf32
 	    jr setscroll
 ;
@@ -105,15 +117,13 @@ _vdp_type:
 	    out (c),a
 	    ld a,#0x8F
 	    out (c),a
-	    nop
-	    nop
+	    VDP_DELAY2
 	    in a,(c)
 	    ld a,#2
 	    out (c),a
 	    ld a,#0x8F
 	    out (c),a
-	    nop
-	    nop
+	    VDP_DELAY2
 vdpwait:    in a,(c)
 	    and #0xE0
 	    add a
@@ -127,8 +137,7 @@ not9918a:   ; Use the version register
 	    out (c),a
 	    ld a,#0x8F
 	    out (c),a
-	    nop
-	    nop
+	    VDP_DELAY2
 	    in a,(c)
 	    rrca
 	    and #0x1F
@@ -153,15 +162,12 @@ _vdp_load_font:
 	    dec c
 wipelow:			; below font
 	    out (c),e
-	    nop
+	    VDP_DELAY
 	    djnz wipelow
 	    call lf256
 	    call lf256
 lf256:	    ; b is 0 at this point
-	    ex (sp),hl
-	    ex (sp),hl
-	    ex (sp),hl
-	    ex (sp),hl
+	    VDP_DELAY
             ld a,(hl)
 	    inc hl
 	    add a
@@ -187,8 +193,7 @@ _vdp_restore_font:
 fontnext:
 	    out (c),e
 	    out (c),d
-	    ex (sp),hl			; delay needed ?
-	    ex (sp),hl
+	    VDP_DELAY2
 	    dec c
 	    in a,(c)
 	    inc c
@@ -196,11 +201,13 @@ fontnext:
 	    out (c),h
 	    dec c
 	    out (c),a
+	    VDP_DELAY
 	    inc c
 	    out (c),e
 	    out (c),l
 	    cpl
 	    dec c
+	    VDP_DELAY
 	    out (c),a
 	    inc c
 	    inc e
@@ -223,12 +230,26 @@ _vdp_wipe_consoles:
 	    ld d,#16			; 4K
 wipe_con:
 	    out (c),a
-	    nop
+	    VDP_DELAY
 	    djnz wipe_con
 	    dec d
 	    jr nz, wipe_con
 	    ret
 
+_vdp_setcolour:
+	    ld bc,(_vdpport)
+	    ld b,#0
+	    ld a,#0x60			; 0x2000 in the VDP, for write
+	    out (c),b
+	    out (c),a
+	    dec c
+	    ld b,#32
+	    ld a,#0xF4			; Hardcoded for now
+set_cmap:
+	    out (c),a
+	    VDP_DELAY
+	    djnz set_cmap
+	    ret
 ;
 ;	Register write value E to register A
 ;
@@ -307,6 +328,11 @@ popret:
 	    or a
 	    ret nz
 	    ei
+	    ;
+	    ;	We assume our worst case char-char delay is sufficient to
+	    ;   skip a VDP delay here. This ought to be true even on a fast
+	    ;	Z180 box.
+	    ;
 	    ret
 
 ;
@@ -343,6 +369,7 @@ upline:
 	    dec c
 down_0:
 	    ini
+	    VDP_DELAY
 	    jp nz, down_0
 	    inc c
 	    ld hl, (_scrolld_s1); go down one line and into write mode
@@ -354,6 +381,7 @@ down_0:
 	    dec c
 down_1:
 	    outi		; video ptr is to the line below so keep going
+	    VDP_DELAY
 	    jp nz,down_1
 	    pop bc		; recover line counter
 	    ld hl, (_scrolld_mov)
@@ -390,6 +418,7 @@ downline:   push bc
 	    dec c
 up_0:
 	    ini
+	    VDP_DELAY
 	    jp nz, up_0
 	    inc c
 	    ld hl, (_scrollu_mov); up w bytes in the low 12 bits, add 0x40
@@ -404,6 +433,7 @@ up_0:
 	    ld b, a
 up_1:
 	    outi
+	    VDP_DELAY
 	    jp nz,up_1
 	    pop bc
 	    ld hl, (_scrollu_w)	; get width
@@ -440,6 +470,7 @@ l2:	    ld a, (_scrollu_w)
 l1:	    out (c), a		; Inner loop clears a line, outer counts
 				; need 20 clocks between writes. DJNZ is 13,
 				; out is 11
+	    VDP_DELAY
             djnz l1
 	    dec e
 	    jr nz, l2
@@ -469,6 +500,7 @@ clear_across:
             ld a, #' '
 	    dec c
 l3:	    out (c), a
+	    VDP_DELAY
             djnz l1
 	    jp popret
 
@@ -499,8 +531,7 @@ cursor_on:
 	    out (c), l			; address
 	    out (c), h			; address
 	    dec c
-	    inc hl			; kill clocks
-	    dec hl			; to be sure the char is readable
+	    VDP_DELAY2
 	    in a, (c)			; character
 	    ld (cursorpeek), a		; save it away
 	    set 6, h			; make it a write command
@@ -577,9 +608,8 @@ ropl:
 	    ld b,d
 ropc:
 	    ini
-	    nop
+	    VDP_DELAY
 	    djnz ropc
-	    ; Stride ?
 	    exx
 	    add hl, de		; stride
 	    ld a, #0x3B		; we don't care about a read overruning 3C
@@ -626,9 +656,8 @@ wopl:
 	    ld b,d
 wopc:
 	    outi
-	    nop
+	    VDP_DELAY
 	    djnz wopc
-	    ; Stride ?
 	    exx
 	    add hl,de		; stride
 	    ld a,#0x7C
@@ -652,8 +681,10 @@ boundclear:
 
 ;
 ;	This must be in data or common not code
+;	Note: do not put them in common space on a thunked platform or any
+;	other where the common data is per instance
 ;
-	    .area _COMMONMEM
+	    .area _VIDEO
 cursorpos:  .dw 0
 cursorpeek: .db 0
 

@@ -23,7 +23,18 @@
 ; VDP routines are directly hooked into the vt layer
 ;
 VDP_DIRECT	.equ	1
+VDP_IRQ		.equ	1
 
+;
+;	On an MSX at 3.5Mhz our loop worst case is 26 clocks so for
+;	graphics one we need a nop
+;
+.macro VDP_DELAY
+	    nop
+.endm
+.macro VDP_DELAY2
+	    nop
+.endm
 	    .include "../dev/vdp1.s"
 
 	    .area _COMMONMEM
