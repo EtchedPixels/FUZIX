@@ -32,6 +32,8 @@ mm.rel
 bankfixed.rel
 swap.rel
 devsys.rel
+vt.rel
+font6x8.rel
 platform-n8/discard.rel
 platform-n8/devtty.rel
 platform-n8/devsd.rel
@@ -43,4 +45,5 @@ platform-n8/ds1302.rel
 platform-n8/ds1302_discard.rel
 platform-n8/ds1302-n8.rel
 platform-n8/monitor.rel
+platform-n8/vdp.rel
 -e

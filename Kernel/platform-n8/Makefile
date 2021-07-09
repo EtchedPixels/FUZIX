@@ -1,4 +1,4 @@
-ASRCS = crt0.s z180.s commonmem.s n8.s ds1302-n8.s monitor.s
+ASRCS = crt0.s z180.s commonmem.s n8.s ds1302-n8.s monitor.s vdp.s
 CSRCS += devices.c main.c devtty.c devsdspi.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devsd_discard.c ../dev/ds1302_discard.c

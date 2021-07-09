@@ -14,9 +14,16 @@ static uint16_t high_mem = 0;
 
 void init_hardware_c(void)
 {
-    /* TODO: We can in theory have 128K or 512K RAM in each bank or an empty
-       slot */
     uint8_t i;
+
+    /* Bring up the video so we can see what is going on */
+    vdp_init();
+    vdp_load_font();
+    vdp_wipe_consoles();
+    vdp_restore_font();
+    vtinit();
+    vdp_reload();
+
     /* Label memory (we are using bank 0 for kernel) */
     far_write(1);
     far_write(3);	/* 128K above */
