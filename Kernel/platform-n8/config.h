@@ -11,7 +11,7 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* 8 60K banks, 1 is kernel */
-#define MAX_MAPS	8
+#define MAX_MAPS	15
 #define MAP_SIZE	PROGTOP    /* WRS: I feel this should be 60KB, but setting it so breaks pagemap_realloc() when exec calls it */
 
 /* Banks as reported to user space */
