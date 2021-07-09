@@ -53,7 +53,7 @@
 ;	low including our expected RST hooks for HBIOS
 ;
 ;	We need to go get our device/subunit back from the BIOS because
-;	it's has RST 8 interfaces for this rather than just passing
+;	it has RST 8 interfaces for this rather than just passing
 ;	them in a register.
 ;
 ;	For now we can do a simple load as we fit in 64K easily. If we
