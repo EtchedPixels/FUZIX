@@ -2,7 +2,7 @@
 ;	N8 platform specific code. Not too much here as the ROM did a lot of
 ;	work for us
 ;
-        .module mark4
+        .module n8
         .z180
 
         ; exported symbols

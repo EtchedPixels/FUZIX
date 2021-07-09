@@ -75,7 +75,7 @@ void sd_spi_raise_cs(void)
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     /* Raise CS */
-    rtc_config(0x04, 0x04);
+    rtc_config(0x04, 0x00);
 }
 
 void sd_spi_lower_cs(void)
@@ -83,7 +83,7 @@ void sd_spi_lower_cs(void)
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     /* Lower CS */
-    rtc_config(0x04, 0x00);
+    rtc_config(0x04, 0x04);
 }
 
 void sd_spi_transmit_byte(unsigned char byte)

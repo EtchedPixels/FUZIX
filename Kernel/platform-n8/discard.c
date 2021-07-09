@@ -17,8 +17,8 @@ void pagemap_init(void)
 {
     uint8_t i;
 
-    /* Top 512K is RAM */
-    for(i = 0x90; i <= 0xF0; i+=0x10)
+    /* Low 512K is RAM */
+    for(i = 0x00; i < 0x80; i+=0x10)
         pagemap_add(i);
 }
 
