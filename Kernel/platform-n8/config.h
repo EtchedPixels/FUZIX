@@ -48,6 +48,7 @@
 
 /* ASCI0 as the console */
 #define TTYDEV   (512+1)  /* System console (used by kernel, init) */
+#define TTY_INIT_BAUD B38400
 
 #define platform_copyright()
 
