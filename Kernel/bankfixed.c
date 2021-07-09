@@ -53,6 +53,8 @@ static uint_fast8_t pfmax;
 
 void pagemap_add(uint8_t page)
 {
+	if (pfptr == MAX_MAPS)
+		panic(PANIC_MAPOVER);
 	pfree[pfptr++] = page;
 	pfmax = pfptr;
 }
