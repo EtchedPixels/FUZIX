@@ -1,3 +1,20 @@
+**
+**	Obsolete: the compiler fork used for SDCC is now at
+**	https://github.com/EtchedPixels/sdcc280
+**
+**	This fork is only needed to build banked kernels. A standard
+**	distribution SDCC should build other code correctly as the kernel
+**	contains workarounds for the wrong segment constants bug (which is
+**	*still* present)
+**
+
+
+
+
+
+
+
+
 Bank Switching for SDCC 3.5
 
 Correct problem where SDCC puts string constants in code not in const
