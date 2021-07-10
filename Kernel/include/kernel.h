@@ -1009,7 +1009,7 @@ extern void exec_or_die(void);
 #define need_reschedule() (nready != 1 && runticks >= udata.u_ptab->p_priority)
 
 #ifdef CONFIG_LEVEL_2
-extern uint_fast8_t dump_core(uint8_t sig);
+extern uint_fast8_t dump_core(uint_fast8_t sig);
 #endif
 
 /* select.c */
