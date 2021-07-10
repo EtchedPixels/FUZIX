@@ -455,6 +455,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	return (char **)argbase;
 }
 
+#ifndef CONFIG_FLAT
 /*
  *	Stub the 32bit only allocator calls
  */
@@ -470,6 +471,7 @@ arg_t _memfree(void)
 	udata.u_error = ENOMEM;
 	return -1;
 }
+#endif
 
 #ifdef CONFIG_LEVEL_2
 
