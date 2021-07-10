@@ -107,6 +107,11 @@ init_hardware:
         ld a, #0x0C
         out (FDC_DOR), a
 
+	; Let keyboard initialize freely - float all the lines
+
+	ld a,#0xFF
+	out (0xBB),a
+
 	; Play guess the serial port
 
 	;
