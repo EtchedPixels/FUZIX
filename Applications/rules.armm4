@@ -1,11 +1,9 @@
 PLATFORM = armm4
-CROSS_PATH = $(HOME)/tm4c129x/toolchain
-CROSS_PATH_BIN = $(CROSS_PATH)/bin
-CC = $(CROSS_PATH_BIN)/arm-none-eabi-gcc
-ASM = $(CROSS_PATH_BIN)/arm-none-eabi-as
-AR = $(CROSS_PATH_BIN)/arm-none-eabi-ar
-STRIP = $(CROSS_PATH_BIN)/arm-none-eabi-strip
-LINKER = $(CROSS_PATH_BIN)/arm-none-eabi-ld
+CC = arm-none-eabi-gcc
+ASM = arm-none-eabi-as
+AR = arm-none-eabi-ar
+STRIP = arm-none-eabi-strip
+LINKER = arm-none-eabi-ld
 CFLAGS = -mcpu=cortex-m4 -mtune=cortex-m4 -march=armv7e-m+nofp -mthumb -fpie -DPIE -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin -Wall -g -Os -isystem $(ROOT)/Library/include
 LINKER_OPT = -L$(ROOT)/Library/libs -lc$(PLATFORM) -pie -static -no-dynamic-linker -z max-page-size=4
 LIBGCCDIR = $(dir $(shell $(CC) $(CFLAGS) -print-libgcc-file-name))
