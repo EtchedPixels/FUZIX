@@ -335,6 +335,7 @@ int ps2kbd_init(void)
 
     present = 1;
 
+#if 0
     /* Flush out anything left over */
     for (i = 0; i < 4; i++)
         ps2kbd_get();
@@ -353,7 +354,7 @@ int ps2kbd_init(void)
     /* Flush out anything left over */
     for (i = 0; i < 4; i++)
             ps2mouse_get();
-
+#endif
     ps2busy = 0;
     return present;
 }

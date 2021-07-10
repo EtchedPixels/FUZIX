@@ -184,6 +184,8 @@ kbdbad:
 	;
 kbrok:
 	call jpiy	; throw away the stop bit
+	; Wait for rising edge of clock
+
 	jr kbout
 
 ;
@@ -292,6 +294,7 @@ CLOCKLOW	.equ -2
 CLOCKREL	.equ -3
 FLOATBOTH	.equ -4
 DATABIT		.equ -5
+CLOCKBIT	.equ -6
 
 ps2_put:
 	exx
@@ -302,13 +305,19 @@ ps2_put:
 	or CLOCKLOW(iy)		; Keep data floating
 	out (c),a		; Clock low, data floating
 	; 100uS delay		- actually right now the 125uS poll delay
+	push bc
 clkwait:
 	djnz clkwait
 	ld a,(_kbsave)
 	ld b,#8			; Ensure B is always non zero
 	out (c),a		; Clock and data low
+	; 100uS delay		- actually right now the 125uS poll delay
+	pop bc
+clkwait2:
+	djnz clkwait2
 	and CLOCKMASK(iy)
 	or CLOCKREL(iy)		; Release clock
+	ld b,#8			; Ensure B is always non zero
 	out (c),a
 	; No specific start bit needed ?
 	ld d,l		; save character
@@ -326,37 +335,30 @@ kbdoutp1:
 	call jpiy
 	ld l,#0xFF	; stop bits are 1s
 	call jpiy
-	call jpiy
-	;
-	; Wait 20uS
-	;
-	ld de,(_kbdelay)
-	ld b,d
-del1:	djnz del1
+
+	; Let the lines float
 	ld a,(_kbsave)
-	; force clock low, data floating
-	out (c),a
-	;
-	; Wait 44uS
-	;
-	ld b,e
-del2:	djnz del2
-	;
-	; Now we should get a reply
-	;
-	;
-	; Raise clock and data
-	;
+	and CLOCKMASK(iy)
 	or FLOATBOTH(iy)
-	inc b
 	out (c),a
-	; FIXME - need a general long timeout here
-	; Wait for the keyboard to pull the clock low
+	;
+	;	The device should now pull data and clock low.
+	; 	FIXME: hardcoded for kbd
+	;
 waitk:
-	in a,(c)
-	; '***	FIXME  ** - DATABIT or CLOCK ? ***
-	and DATABIT(iy)
+	in a,(c)		; Wait for data to go low
+	bit 3,a
 	jr nz, waitk
+waitk2:
+	in a,(c)
+	bit 2,a			; wait for clock low
+	jr nz, waitk2
+
+waitk3:
+	in a,(c)
+	bit 2,a			; wait for clock to float
+
+	jr z, waitk3
 	; The keyboard will now return the status code (FE = failed try again)
 	ret
 
@@ -368,6 +370,7 @@ waitk:
 ; Table heads the function
 ;
 ;
+	.byte 0x08		; clock input bit
 	.byte 0x04		; data bit
 	.byte 0x03		; float clock and data
 	.byte 0x01		; release clock
