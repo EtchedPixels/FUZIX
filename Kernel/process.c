@@ -610,7 +610,7 @@ void sgrpsig(uint16_t pgrp, uint_fast8_t sig)
 }
 
 #ifdef CONFIG_LEVEL_2
-uint8_t dump_core(uint_fast8_t sig)
+uint_fast8_t dump_core(uint_fast8_t sig)
 {
         if (!(udata.u_flags & U_FLAG_NOCORE) && ((sig == SIGQUIT || sig == SIGILL || sig == SIGTRAP ||
             sig == SIGABRT || sig == SIGBUS || sig == SIGFPE ||
