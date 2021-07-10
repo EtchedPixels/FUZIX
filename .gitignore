@@ -20,4 +20,5 @@ cscope.*
 size.report
 # Build system output
 .obj
+*.elf
 bin

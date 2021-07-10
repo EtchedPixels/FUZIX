@@ -188,7 +188,7 @@ int main(int argc, char* const* argv)
 		.rev = htonl(FLAT_VERSION),
 		.flags = htonl(FLAT_FLAG_RAM),
 		.entry = htonl(elffile->e_entry + sizeof(flatheader)),
-		.data_start = htonl(textlo + sizeof(flatheader)),
+		.data_start = htonl(datalo + sizeof(flatheader)),
 		.data_end = htonl(datahi + sizeof(flatheader)),
 		.bss_end = htonl(bsshi + sizeof(flatheader)),
 		.reloc_start = htonl(datahi + sizeof(flatheader)),
