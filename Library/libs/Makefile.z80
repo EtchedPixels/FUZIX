@@ -53,7 +53,7 @@ SRC_C += strnlen.c strnicmp.c strsep.c strxfrm.c strcoll.c strsignal.c
 SRC_C += strtod.c strtok_r.c strtol.c swab.c system.c swapon.c telldir.c
 SRC_C += tfind.c time.c tmpfile.c tmpnam.c tsearch.c ttyname.c
 SRC_C += tzset.c umount.c ungetc.c usleep.c utent.c utimes.c utsname.c
-SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
+SRC_C += vfork.c vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # ctype
 SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
