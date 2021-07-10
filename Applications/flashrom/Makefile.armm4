@@ -1,0 +1,25 @@
+ROOT = ../..
+include $(ROOT)/Applications/rules.armm4
+
+APPS = flashrom
+
+SRCS  = flashrom.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(APPS) size.report
+
+flashrom: $(CRT0) flashrom.o
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+size.report: $(APPS)
+	ls -l $< > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map *.bin *.data *.text *.debug size.report
