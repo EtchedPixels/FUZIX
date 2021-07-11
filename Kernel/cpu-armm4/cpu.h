@@ -83,17 +83,19 @@ typedef union {            /* this structure is endian dependent */
 
 #define barrier() asm volatile("":::"memory")
 
-#define getreg8(a)     (*((volatile uint8_t *)(a)))
-#define putreg8(v, a)  (*((volatile uint8_t *)(a)) = (v))
-#define getreg16(a)    (*((volatile uint16_t *)(a)))
-#define putreg16(v, a) (*((volatile uint16_t *)(a)) = (v))
-#define getreg32(a)    (*((volatile uint32_t *)(a)))
-#define putreg32(v, a) (*((volatile uint32_t *)(a)) = (v))
+/* Our I/O is memory mapped. Provide equivalent functions. Note that we
+   follow the sane ordering in out() not the DOS one */
+#define in(a)		(*((volatile uint8_t *)(a)))
+#define out(a, v)	(*((volatile uint8_t *)(a)) = (v))
+#define inw(a)		(*((volatile uint16_t *)(a)))
+#define outw(a, v)	(*((volatile uint16_t *)(a)) = (v))
+#define inl(a)		(*((volatile uint32_t *)(a)))
+#define outl(a, v)	(*((volatile uint32_t *)(a)) = (v))
 
 /* Non-atomic modification of registers */
-#define modreg8(v, m, a)  putreg8((getreg8(a) & ~(m)) | ((v) & (m)), (a))
-#define modreg16(v, m, a) putreg16((getreg16(a) & ~(m)) | ((v) & (m)), (a))
-#define modreg32(v, m, a) putreg32((getreg32(a) & ~(m)) | ((v) & (m)), (a))
+#define outmod8(a, m, v)  out((a),  (in(a) & ~(m)) | ((v) & (m)))
+#define outmod16(a, m, v) outw((a), (inw(a) & ~(m)) | ((v) & (m)))
+#define outmod32(a, m, v) outl((a), (inl(a) & ~(m)) | ((v) & (m)))
 
 #define cpu_to_le16(x) (x)
 #define le16_to_cpu(x) (x)
