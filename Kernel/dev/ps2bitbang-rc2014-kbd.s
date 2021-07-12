@@ -168,6 +168,7 @@ kbd_bit_out:
 	bit 	2,a
 	jr 	nz, kbd_bit_out
 	ld	a, (_kbsave)		; get the state of the other bits
+	and	#0xFD
 	or	#1			; we need to leave the clock floating
 	rr	l
 	jr	nc, kbdout0		; write a 0 bit then
