@@ -1,0 +1,17 @@
+
+;
+;	The control structure
+;
+	PORT		.equ	0 ; byte - the I/O port reference
+				  ; passed in C
+	POLL_DELAY	.equ	1 ; byte - 100uS delay loop count
+	RESPONSE_DELAY	.equ	2 ; longer delay for keyboard to respond
+	
+
+	RECEIVE_BIT	.equ	3 ; word - function to receive a bit
+	SEND_BIT	.equ	5 ; word - function to send a bit
+	HOLD_OFF	.equ	7 ; word - function to set data float, clock low
+	GET_CLOCK	.equ	9 ; word - function to get clock in
+	FLOAT_CLOCK	.equ	11 ; word - function to float the clock
+	LOWER_CLOCK	.equ	13 ; word - function pull clock low
+	LOWER_DATA	.equ	15 ; word - function to pull data low

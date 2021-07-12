@@ -470,16 +470,6 @@ void pagemap_init(void)
 	if (copro_present)
 		kputs("Z80 Co-processor at 0xBC\n");
 
-	/* Normal RC2014 is 8 clocks/us or so. Allow more for faster
-	   processors - we don't do much output bashing anyway. Should be
-	   good to 25MHz */
-	kbsave = 0x00;
-	kbdelay = 0x0A14;	/* High bits are a djnz delay for 20us
-				   Low a 44us djnz delay */
-	/* Port default for the PS/2 card */
-	kbport = 0xBB;
-	/* 150uS in 38 clock loops : set for 8MHz */
-	kbwait = 250;	/* Needs to be about 200us */
 	ps2kbd_present = ps2kbd_init();
 	if (ps2kbd_present) {
 		kputs("PS/2 Keyboard at 0xBB\n");
