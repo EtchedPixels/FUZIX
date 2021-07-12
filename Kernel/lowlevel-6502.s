@@ -19,6 +19,8 @@
 
 	.export _need_resched
 
+	.export _relocator
+
 	.import outchar
 	.import _kernel_flag
 	.import _unix_syscall_i
@@ -254,3 +256,93 @@ is_740:
 	; We don't care right now about the 740 just call it a 6502
 is_02:
 	rts
+
+;
+;	Relocation helper. Has to happen kernel side due to limits on the
+;	6502 architecture. Must live in commonmem as it's run on exec in
+;	the user memory space
+;
+;	Our asm caller has set up
+;	ptr1 = data to relocate (ie program head)
+;	ptr2 = relocation table
+;	tmp1 = relocation value
+;
+;	Y is used to hold 0
+;	X is usually the offset from ptr2
+;	A varies
+;	
+;
+relocate_set:
+	ldy #0
+	ldx #0
+	beq reloc_loop
+reloc_next:
+	; Move on to the next relocation information byte
+	inc ptr2
+	bne reloc_loop
+	inc ptr2 + 1
+reloc_loop:
+	lda (ptr2),y
+	; 0 is the end marker
+	beq reloc_done
+	tax
+	tya
+	sta (ptr2),y
+	txa
+	; 255 is special
+	cmp #$FF
+	bne reloc_byte
+	; We move on 254 bytes and go back round the loop
+	lda #$FE
+	clc
+	adc ptr1
+	sta ptr1
+	bcc reloc_next
+	inc ptr1+1		; will bever end up 0
+	bne reloc_next		; so we can short form this
+reloc_byte:
+	; Move on 1-254 bytes
+	clc
+	adc ptr1
+	sta ptr1
+	bcc reloc_nc
+	inc ptr1+1
+reloc_nc:
+	; Now relocate the byte at the resulting address
+	lda (ptr1),y
+	clc
+	adc tmp1
+	sta (ptr1),y
+	jmp reloc_next
+reloc_done:
+	rts
+
+;
+;	Entry point to the relocation helper
+;
+;	ptr3 holds the run address and ptr3 & 0xFF00 = base
+;
+_relocator:
+	lda #0
+	sta ptr1		; always page aligned
+	lda ptr3+1
+	sta ptr1+1		; upper byte of address
+	lda #ZPBASE
+	sta tmp1
+	ldy #18			; offset of relocation offset
+	lda (ptr1),y
+	sta ptr2
+	iny
+	lda (ptr1),y
+	clc
+	adc #>PROGLOAD		; reloc offset to address
+	sta ptr2+1
+	jsr relocate_set
+	; Reset for second relocation table
+	lda #0
+	sta ptr1
+	lda ptr3+1
+	sta ptr1+1
+	sta tmp1		; and the base is the relocation
+	jmp reloc_next
+

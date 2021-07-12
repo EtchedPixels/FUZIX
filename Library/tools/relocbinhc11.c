@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
   sweep_relocations();
   
   /* Modify the existing binary header. We touch only the data/bss size */
-  buf[3] = 0;	/* Relocatable */
+  buf[4] = 0;	/* Relocatable */
   buf[8] = dsize >> 8;
   buf[9] = dsize;
   buf[10] = bsize >> 8;
