@@ -326,6 +326,7 @@ int ps2kbd_init(void)
             return 0;
         }
     }
+
     ps2kbd_put(0xF6);	/* Restore default */
     ps2kbd_put(0xED);	/* LEDs off */
     ps2kbd_put(0x00);
@@ -336,10 +337,6 @@ int ps2kbd_init(void)
     present = 1;
 
 #if 0
-    /* Flush out anything left over */
-    for (i = 0; i < 4; i++)
-        ps2kbd_get();
-
     /* Now check for mice */
     for (i = 0; i < 4; i++) {
         r = ps2mouse_get();
