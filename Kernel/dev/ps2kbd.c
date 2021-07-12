@@ -319,6 +319,8 @@ int ps2kbd_init(void)
 
     /* Try to reset, if it times out -> no keyboard */
     r = ps2kbd_put(0xFF);
+    if (r == 0)
+        r = ps2kbd_get();
     if (r != 0xFA) {
         ps2kbd_get();
         if ((r & 0x8000) && present == 0) {
@@ -328,10 +330,13 @@ int ps2kbd_init(void)
     }
 
     ps2kbd_put(0xF6);	/* Restore default */
+    ps2kbd_get();	/* Eat the reply */
     ps2kbd_put(0xED);	/* LEDs off */
     ps2kbd_put(0x00);
     ps2kbd_put(0xF0);	/* Scan code 2 */
+    ps2kbd_get();
     ps2kbd_put(0x02);
+    ps2kbd_get();
     ps2kbd_put(0xF4);	/* Clear buffer and enable */
 
     present = 1;

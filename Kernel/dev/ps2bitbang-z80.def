@@ -128,10 +128,6 @@ _ps2'X'_put:
 
 	ld (abort_sp),sp
 
-	push af
-	ld a,#0x10
-	out (0xFD),a
-	pop af
 	ld d, l
 	call set_timeout
 	;
@@ -183,15 +179,8 @@ out_parity_1:
 	rl e		;	check received bit (top bit)
 
 	jr c, receive_no_ack
-
-	;
-	;	The timings are awkward so we end up doing this
-	;	here rather than re-ordering the rx path nicely to
-	;	avoid this work
-	;
-	ld d,#0xFF	;	Helper for carry
-	ld b,#9			; start and 8 data bits
-	jp receive_after_tx
+	ld de, #0
+	jp receive_done
 
 receive_no_ack:
 	;	The keyboard did not ack our request. So we are dome
