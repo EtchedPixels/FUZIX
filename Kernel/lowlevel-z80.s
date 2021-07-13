@@ -39,6 +39,7 @@
 	.globl unix_syscall_entry
         .globl _doexec
 	.globl nmi_handler
+	.globl interrupt_legacy
 	.globl interrupt_handler
 	.globl synchronous_fault
 	.globl ___hard_ei
@@ -372,6 +373,15 @@ nmi_handler:
 ;	stack everything and we must get off the IRQ stack and then
 ;	process need_resched and signals
 ;
+interrupt_legacy:
+.ifeq CPU_Z180
+	; Make sure we mark the Z80 legacy interrupt as vector FF
+	ex af,af'
+	push af
+	ld a,#0xFF
+	ld (hw_irqvector),a
+	jr intvec
+.endif
 interrupt_handler:
         ; store machine state
         ex af,af'
