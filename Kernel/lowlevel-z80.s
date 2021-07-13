@@ -378,7 +378,7 @@ interrupt_legacy:
 	; Make sure we mark the Z80 legacy interrupt as vector FF
 	ex af,af'
 	push af
-	ld a,#0xFF
+	xor a
 	ld (hw_irqvector),a
 	jr intvec
 .endif
@@ -386,6 +386,7 @@ interrupt_handler:
         ; store machine state
         ex af,af'
         push af
+intvec:
         ex af,af'
         exx
         push bc
