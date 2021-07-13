@@ -179,7 +179,7 @@ not_acia:
 
 not_16x50:
 	ld a,e
-	out (0xC3),a
+	out (0xA3),a
 
 	xor a
 	ld c,#SIOA_C

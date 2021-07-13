@@ -139,6 +139,6 @@ extern void qwrite(uint8_t *addr, uint8_t val);
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define Z180_IO_BASE	0x40
+#define Z180_IO_BASE	0xC0
 
 #define platform_copyright()		// for now
