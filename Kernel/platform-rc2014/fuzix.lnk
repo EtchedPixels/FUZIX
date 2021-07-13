@@ -66,6 +66,5 @@ platform-rc2014/zxkey.rel
 platform-rc2014/zxkeyboard.rel
 platform-rc2014/vdp1.rel
 platform-rc2014/ps2kbd.rel
-platform-rc2014/ps2bitbang-z80.rel
 platform-rc2014/ps2bitbang-rc2014-kbd.rel
 -e
