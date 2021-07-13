@@ -38,7 +38,7 @@
         .globl _init_hardware_c
         .globl outhl
         .globl outnewline
-	.globl interrupt_handler
+	.globl interrupt_legacy
 	.globl unix_syscall_entry
 	.globl nmi_handler
 	.globl null_handler
@@ -519,7 +519,7 @@ do_program_vectors:
 	; now install the interrupt vector at 0x0038
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
-	ld hl,#interrupt_handler
+	ld hl,#interrupt_legacy
 	ld (0x0039),hl
 
 	; set restart vector for UZI system calls
