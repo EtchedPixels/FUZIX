@@ -93,7 +93,7 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	if (timer_source != TIMER_NONE && !ps2kbd_present)
+	if (timer_source != TIMER_NONE)
 		__asm halt __endasm;
 	else {
 		irqflags_t irq = di();
@@ -122,6 +122,9 @@ static void timer_tick(uint8_t n)
 	}
 }
 
+__sfr __at (Z180_IO_BASE + 0x10) TIME_TCR;      /* Timer control register                     */
+__sfr __at (Z180_IO_BASE + 0x0C) TIME_TMDR0L;   /* Timer data register,    channel 0L         */
+
 void platform_interrupt(void)
 {
 	/* FIXME: For Z180 we know if the ASCI ports are the source so
@@ -140,8 +143,12 @@ void platform_interrupt(void)
 
 	/* On the Z180 we use the internal timer */
 	if (timer_source == TIMER_Z180) {
-		if (irqvector == 3)	/* Timer 0 */
+		if (irqvector == 3) {	/* Timer 0 */
+			uint8_t r;
+			r = TIME_TMDR0L;
+			r = TIME_TCR;
 			do_timer_interrupt();
+		}
 	/* The TMS9918A is our second best choice as the CTC must be wired
 	   right and may not be wired as we need it */
 	} else if (ti_r & 0x80) {
