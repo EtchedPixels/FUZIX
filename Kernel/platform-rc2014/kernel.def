@@ -14,14 +14,12 @@ PROGLOAD		.equ	0x0100
 ; Z180 properties
 Z180_IO_BASE		.equ 0xC0
 CPU_CLOCK_KHZ           .equ 18432        ; 18.432MHz * 1
-Z180_TIMER_SCALE        .equ 80           ; CPU clocks per timer tick
-TICKSPERSEC             .equ 10           ; timer interrupt rate (Hz)
+Z180_TIMER_SCALE        .equ 20           ; CPU clocks per timer tick
+TICKSPERSEC             .equ 40           ; timer interrupt rate (Hz)
 
 ; Mnemonics for I/O ports etc
 
 CONSOLE_RATE		.equ	115200
-
-CPU_CLOCK_KHZ		.equ	7372
 
 ; VFD Debugging (clashes with Joystick port)
 VFD_C   .EQU    0     ; control register

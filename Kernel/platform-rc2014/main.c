@@ -147,7 +147,11 @@ void platform_interrupt(void)
 			uint8_t r;
 			r = TIME_TMDR0L;
 			r = TIME_TCR;
-			do_timer_interrupt();
+			timerct++;
+			if (timerct == 4) {
+				do_timer_interrupt();
+				timerct = 0;
+			}
 		}
 	/* The TMS9918A is our second best choice as the CTC must be wired
 	   right and may not be wired as we need it */
