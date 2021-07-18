@@ -37,6 +37,7 @@ receive_timeout_loop:
 
 	; Keyboard is not talking to us
 	; Stop it from talking until the next poll
+receive_timeout:
 	ld de, #-1		; error code for 'nowt received'
 
 receive_done:
@@ -79,11 +80,16 @@ _ps2'X'_get:
 receive_wait:
 	GET_CLOCK
 	jr nz, receive_timeout_loop
-	ld b,#255
-receive_wait2:
-	GET_CLOCK
-	jr z, receive_wait2
 
+	; Now wait for it to go high again
+
+	ld b,#255
+receive_wait_2:
+	GET_CLOCK
+	jr nz, receive_go
+	djnz receive_wait_2
+	jr receive_timeout
+receive_go:
 	ld e,#0
 	ld b,#8
 	; In the after_tx case this will be 9 as we have the time
