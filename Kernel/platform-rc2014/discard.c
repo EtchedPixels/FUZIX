@@ -11,8 +11,8 @@
 #include <vt.h>
 #include <netdev.h>
 #include <zxkey.h>
-#include <ps2bitbang.h>
 #include <ps2kbd.h>
+#include <ps2mouse.h>
 #include <graphics.h>
 #include "z180_uart.h"
 
@@ -484,11 +484,14 @@ void pagemap_init(void)
 			} while(n < 4 && nuart <= NUM_DEV_TTY);
 		}
 	}
-	if (ps2kbd_present & 2) {
+	ps2mouse_present = ps2mouse_init();
+	if (ps2mouse_present) {
 		kputs("PS/2 Mouse at 0xBB\n");
 		/* TODO: wire to input layer and interrupt */
 	}
 
+	if (fpu_detect())
+		kputs("AMD9511 FPU at 0x50\n");
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;

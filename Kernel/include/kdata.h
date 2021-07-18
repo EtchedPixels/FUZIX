@@ -86,14 +86,10 @@ struct runload {
 extern struct runload loadavg[];
 
 // the system call dispatch table
-#ifdef CONFIG_NET
-#define FUZIX_SYSCALL_COUNT 99
-#else
 #ifdef CONFIG_LEVEL_2
 #define FUZIX_SYSCALL_COUNT 80
 #else
-#define FUZIX_SYSCALL_COUNT 66
-#endif
+#define FUZIX_SYSCALL_COUNT 67
 #endif
 
 typedef arg_t (*syscall_t)(void);

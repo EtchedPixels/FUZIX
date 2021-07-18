@@ -40,6 +40,9 @@ font6x8.rel
 devsys.rel
 devinput.rel
 usermem.rel
+network.rel
+platform-rc2014/net_w5100.rel
+platform-rc2014/wiznet.rel
 platform-rc2014/ppide_rbc.rel
 platform-rc2014/discard.rel
 platform-rc2014/devtty.rel
@@ -58,7 +61,6 @@ platform-rc2014/devinput.rel
 platform-rc2014/ds1302.rel
 platform-rc2014/ds1302_discard.rel
 platform-rc2014/ds1302_rc2014.rel
-platform-rc2014/net_native.rel
 platform-rc2014/z80dma.rel
 platform-rc2014/ide.rel
 platform-rc2014/usermem.rel
@@ -66,5 +68,8 @@ platform-rc2014/zxkey.rel
 platform-rc2014/zxkeyboard.rel
 platform-rc2014/vdp1.rel
 platform-rc2014/ps2kbd.rel
+platform-rc2014/ps2mouse.rel
 platform-rc2014/ps2bitbang-rc2014-kbd.rel
+platform-rc2014/ps2bitbang-rc2014-mouse.rel
+platform-rc2014/amd9511.rel
 -e

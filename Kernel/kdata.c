@@ -104,14 +104,17 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_memalloc,		/* FUZIX system call 64 */
 	_memfree,		/* FUZIX system call 65 */
 	/* Level 2 calls and Networking calls */
-#if defined(CONFIG_LEVEL_2) || defined(CONFIG_NET)
-	_nosys,			/* 66-71 reserved */
+#if defined(CONFIG_NET)
+	_netcall,		/* Fuzix system call 66 */
+#else
+	_nosys
+#endif
+#if defined(CONFIG_LEVEL_2)
+	_nosys,			/* 67-71 reserved */
 	_nosys,
 	_nosys,
 	_nosys,
 	_nosys,
-	_nosys,
-#ifdef CONFIG_LEVEL_2
 	_select,		/* FUZIX system call 72 */
 	_setgroups,		/* FUZIX system call 73 */
 	_getgroups,		/* FUZIX system call 74 */
@@ -120,36 +123,5 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 	_setpgid,		/* FUZIX system call 77 */
 	_setsid,		/* FUZIX system call 78 */
 	_getsid,		/* FUZIX system call 79 */
-#else
-	_nosys, 	        /* FUZIX system call 72 */
-	_nosys, 	        /* FUZIX system call 73 */
-	_nosys, 	        /* FUZIX system call 74 */
-	_nosys, 	        /* FUZIX system call 75 */
-	_nosys, 	        /* FUZIX system call 76 */
-	_nosys, 	        /* FUZIX system call 77 */
-	_nosys, 	        /* FUZIX system call 78 */
-	_nosys, 	        /* FUZIX system call 79 */
-#endif
-#ifdef CONFIG_NET
-	_nosys,			/* 80-89 reserved */
-	_nosys,
-	_nosys,
-	_nosys,
-	_nosys,
-	_nosys,
-	_nosys,
-	_nosys,
-	_nosys,
-	_nosys,
-	_socket,		/* FUZIX system call 90 */
-	_listen,		/* FUZIX system call 91 */
-	_bind,			/* FUZIX system call 92 */
-	_connect,		/* FUZIX system call 93 */
-	_accept,		/* FUZIX system call 94 */
-	_getsockaddrs,		/* FUZIX system call 95 */
-	_sendto,		/* FUZIX system call 96 */
-	_recvfrom,		/* FUZIX system call 97 */
-	_shutdown,		/* FUZIX system call 98 */
-#endif
 #endif
 };

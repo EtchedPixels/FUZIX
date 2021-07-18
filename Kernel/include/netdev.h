@@ -1,8 +1,13 @@
+#ifndef _NETDEV_H
+#define _NETDEV_H
+
 #define AF_INET		1
+#define PF_INET		AF_INET
 
 #define SOCK_RAW	1
 #define SOCK_DGRAM	2
 #define SOCK_STREAM	3
+#define SOCK_SEQPACKET	4
 
 #define IPPROTO_ICMP	1
 #define IPPROTO_TCP	6
@@ -20,28 +25,29 @@ struct sockaddr_in {
   uint8_t sin_zero[8];
 };
 
-/* This one is used internally to deal with many argumented net
-   functions */
-struct sockio {
-  uint16_t sio_flags;		/* Keep the order so we can use partial */
-  uint16_t sio_addr_len;	/* structs for simple cases */
-  struct sockaddr_in sio_addr;
-};
-
 #define INADDR_ANY		0L
 #define INADDR_BROADCAST	0xFFFFFFFFUL
 #define INADDR_LOOPBACK		0x7F000001UL
 #define IN_LOOPBACK(a)		(((a) >> 24) == 0x7F)
 
-
 #ifndef NSOCKET
 #define NSOCKET 8
 #endif
 
+struct ksockaddr {
+	union {
+		struct sockaddr_in sin;
+		uint16_t family;
+	} sa;
+};
 
-struct sockaddrs {
-	uint32_t addr;
-	uint16_t port;
+#define MIN_SOCKADDR		sizeof(uint16_t)
+#define MAX_SOCKADDR		sizeof(struct ksockaddr)
+
+struct sockproto
+{
+	/* Dummy for now */
+	uint8_t slot;
 };
 
 struct socket
@@ -62,30 +68,26 @@ struct socket
 #define SS_CLOSED		11	/* Protocol layers done, not close()d */
 #define SS_DEAD			12	/* Closed byuser space but not yet
 					   free of any stack resources */
-	/* FIXME: need state for shutdown handling */
-	uint8_t s_data;			/* Socket we are an accept() for */
-	uint8_t s_error;
-	uint8_t s_num;			/* To save expensive maths */
-	struct sockaddrs s_addr[3];
-#define SADDR_SRC	0
-#define SADDR_DST	1
-#define SADDR_TMP	2
-	uint8_t s_flag;
-#define SFLAG_ATMP	1		/* Use SADDR_TMP */
-	uint8_t s_iflag;		/* Flags touched in IRQ handlers */
+	uint8_t s_iflags;
 #define SI_SHUTR	1
 #define SI_SHUTW	2
 #define SI_DATA		4		/* Data is ready */
 #define SI_EOF		8		/* At EOF */
 #define SI_THROTTLE	16		/* Transmit is throttled */
-	void *s_priv;			/* Private pointer for lower layers */
-	inoptr s_ino;			/* Inode back pointer */
-};
 
-#define NSOCKTYPE 3
-#define SOCKTYPE_TCP	0
-#define SOCKTYPE_UDP	1
-#define SOCKTYPE_RAW	2
+	uint8_t wake;		/* REVIEW */
+
+	/* FIXME: need state for shutdown handling */
+	uint8_t s_data;			/* Socket we are an accept() for */
+	uint8_t s_error;
+	uint8_t s_num;			/* To save expensive maths */
+	struct ksockaddr src_addr;
+	uint8_t src_len;
+	struct ksockaddr dst_addr;
+	uint8_t dst_len;
+	inoptr s_ino;			/* Inode back pointer */
+	struct sockproto proto;
+};
 
 struct netdevice
 {
@@ -95,40 +97,52 @@ struct netdevice
 #define IFF_POINTOPOINT		1
 };
 
+struct udata_net {
+	arg_t args[7];			/* Arguments to netcall */
+	inoptr inode;			/* Inode bound to socket */
+	uint16_t sock;			/* Socket index */
+	uint8_t sig;			/* Signal to deliver */
+	uint8_t addrlen;		/* Length of the address */
+	struct ksockaddr addrbuf;	/* A network address */
+};
+
 extern struct socket sockets[NSOCKET];
 extern uint32_t our_address;
 
 /* Network layer syscalls */
-extern arg_t _socket(void);
-extern arg_t _listen(void);
-extern arg_t _bind(void);
-extern arg_t _connect(void);
-extern arg_t _accept(void);
-extern arg_t _getsockaddrs(void);
-extern arg_t _sendto(void);
-extern arg_t _recvfrom(void);
-extern arg_t _shutdown(void);
+extern arg_t _netcall(void);
 
 /* Hooks for inode.c into the networking */
-extern void sock_close(inoptr ino);
+extern int sock_close(inoptr ino);
 extern int sock_read(inoptr ino, uint8_t flag);
 extern int sock_write(inoptr ino, uint8_t flag);
 extern bool issocket(inoptr ino);
 
-/* Hooks between the network implementation and the socket layer */
-extern int net_init(struct socket *s);
-extern int net_bind(struct socket *s);
-extern int net_connect(struct socket *s);
-extern void net_close(struct socket *s);
-extern int net_listen(struct socket *s);
-extern arg_t net_read(struct socket *s, uint8_t flag);
-extern arg_t net_write(struct socket *s, uint8_t flag);
-extern arg_t net_ioctl(uint8_t op, void *p);
-extern arg_t net_shutdown(struct socket *s, uint8_t how); /* bit 0 rd, bit 1 wr */
-extern void netdev_init(void);
-extern struct socket *sock_find(uint8_t type, uint8_t sv, struct sockaddrs *sa);
+/* Hooks between the core kernel and networking */
+extern void net_free(void);
+extern int net_read(void);
+extern int net_write(void);
+extern int net_close(void);
+extern void *net_poll(void);
 extern void sock_init(void);
-extern int sock_error(struct socket *s);
-extern struct netdevice net_dev;
-extern void sock_closed(struct socket *s);
-extern struct socket *sock_alloc_accept(struct socket *s);
+extern int net_syscall(void);
+/* Helpers between core and protocol */
+extern void net_setup(struct socket *s);
+
+/* Hooks betweek the networking framework and the implementation */
+extern int netproto_socket(void);
+extern int netproto_listen(struct socket *s);
+extern int netproto_find_local(struct ksockaddr *addr);
+extern int netproto_autobind(struct socket *s);
+extern int netproto_accept(struct socket *s);
+extern int netproto_accept_complete(struct socket *s);
+extern int netproto_bind(struct socket *s);
+extern int netproto_begin_connect(struct socket *s);
+extern struct socket *netproto_sockpending(struct socket *s);
+extern int netproto_write(struct socket *s, struct ksockaddr *addr);
+extern int netproto_read(struct socket *s);
+extern int netproto_shutdown(struct socket *s, uint8_t how);
+extern int netproto_close(struct socket *s);
+extern void netproto_setup(struct socket *s);
+extern void netproto_free(struct socket *s);
+#endif

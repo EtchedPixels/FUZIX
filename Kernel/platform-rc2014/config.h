@@ -30,8 +30,7 @@
 #ifdef CONFIG_RC2014_NET
 /* Core Networking support */
 #define CONFIG_NET
-/* User mode uIP TCP/IP daemon */
-#define CONFIG_NET_NATIVE
+#define CONFIG_NET_WIZNET
 #endif
 #ifdef CONFIG_RC2014_FLOPPY
 #define CONFIG_FLOPPY
@@ -140,5 +139,11 @@ extern void qwrite(uint8_t *addr, uint8_t val);
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 #define Z180_IO_BASE	0xC0
+
+/* AMD FPU */
+#define CONFIG_FPU
+#define CONFIG_FPU_AMD9511
+#define AMD_DATA	0x50
+#define AMD_CTL		0x51
 
 #define platform_copyright()		// for now

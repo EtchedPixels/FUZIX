@@ -24,6 +24,8 @@
 #include <net_w5100.h>
 
 static uint8_t irqmask;
+static uint8_t sock_free = 0x0F;
+static uint8_t wiz2sock_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
 #define RX_MASK 	0x07FF
 #define TX_MASK		0x07FF
@@ -102,7 +104,7 @@ static uint8_t irqmask;
 
 
 /* FIXME: look for ways to fold these four together */
-static void w5100_queue(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_queue(uint16_t i, uint16_t n, void *p)
 {
 	uint16_t dm = w5100_readw(Sn_TX_WR0 + i) & TX_MASK;
 	uint16_t tx_base = 0x4000 + (i << 3);	/* i is already << 8 */
@@ -115,7 +117,7 @@ static void w5100_queue(uint16_t i, uint16_t n, uint8_t * p)
 		w5100_bwrite(dm + tx_base, p, n);
 }
 
-static void w5100_queue_u(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_queue_u(uint16_t i, uint16_t n, void *p)
 {
 	uint16_t dm = w5100_readw(Sn_TX_WR0 + i) & TX_MASK;
 	uint16_t tx_base = 0x4000 + (i << 3);	/* i is already << 8 */
@@ -128,7 +130,7 @@ static void w5100_queue_u(uint16_t i, uint16_t n, uint8_t * p)
 		w5100_bwriteu(dm + tx_base, p, n);
 }
 
-static void w5100_dequeue(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_dequeue(uint16_t i, uint16_t n, void *p)
 {
 	uint16_t dm = w5100_readw(Sn_RX_RD0 + i) & RX_MASK;
 	uint16_t rx_base = 0x6000 + (i << 3);	/* i is already << 8 */
@@ -141,7 +143,7 @@ static void w5100_dequeue(uint16_t i, uint16_t n, uint8_t * p)
 		w5100_bread(dm + rx_base, p, n);
 }
 
-static void w5100_dequeue_u(uint16_t i, uint16_t n, uint8_t * p)
+static void w5100_dequeue_u(uint16_t i, uint16_t n, void *p)
 {
 	uint16_t dm = w5100_readw(Sn_RX_RD0 + i) & RX_MASK;
 	uint16_t rx_base = 0x6000 + (i << 3);	/* i is already << 8 */
@@ -154,37 +156,36 @@ static void w5100_dequeue_u(uint16_t i, uint16_t n, uint8_t * p)
 		w5100_breadu(dm + rx_base, p, n);
 }
 
-static void w5100_wakeall(struct socket *s)
-{
-	wakeup(s);
-	wakeup(&s->s_iflag);
-	wakeup(&s->s_data);
-}
-
 static void w5100_eof(struct socket *s)
 {
-	s->s_iflag |= SI_EOF;
-	w5100_wakeall(s);
+	s->s_iflags |= SI_EOF;
+	s->wake = 1;
 }
 
-/* Mapping between Wiznet and host sockets. We can't have a 1:1 mapping due
-   to the differing way the Wiznet processes accepting a connection */
-
-static uint8_t sock2wiz_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-static uint8_t wiz2sock_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
-
-/* State management for creation of a socket. If need be allocate the socket
-   on the IP offload device. May block */
+/* State management for creation of a socket. */
 static int net_alloc(void)
 {
-	uint8_t *p = wiz2sock_map;
-	uint8_t i;
-	for (i = 0; i < 4; i++) {
-		if (*p++ == 0xFF)
+	uint8_t i = 0;
+	uint8_t j = 1;
+	while(i < NSOCKET) {
+		if (sock_free & j) {
+			sock_free &= ~j;
 			return i;
-		i++;
+		}
+		j <<= 1;
 	}
 	return -1;
+}
+
+void netproto_free(struct socket *s)
+{
+	sock_free |= (1 << s->proto.slot);
+}
+
+/* Until we do incoming socket support */
+struct socket *netproto_sockpending(struct socket *s)
+{
+	return NULL;
 }
 
 /*
@@ -206,26 +207,26 @@ static void w5100_event_s(uint8_t i)
 		return;
 	}
 
-	s = &sockets[sn];
+	s = sockets + sn;
 
 	if (stat & 0x1000) {
 		/* Transmit completed: window re-open. We can allow more
 		   data to flow from the user */
-		s->s_iflag &= ~SI_THROTTLE;
-		wakeup(&s->s_data);
+		s->s_iflags &= ~SI_THROTTLE;
+		s->wake = 1;
 	}
 	if (stat & 0x800) {
 		/* Timeout */
 		s->s_error = ETIMEDOUT;
 		w5100_writeb(Sn_CR + offset, CLOSE);
-		w5100_wakeall(s);
+		s->wake = 1;
 		w5100_eof(s);
 		/* Fall through and let CLOSE state processing do the work */
 	}
 	if (stat & 0x400) {
 		/* Receive wake: Poke the user in case they are reading */
-		s->s_iflag |= SI_DATA;
-		wakeup(&s->s_iflag);
+		s->s_iflags |= SI_DATA;
+		s->wake = 1;
 	}
 	if (stat & 0x200) {
 		/* Disconnect: Just kill our host socket. Not clear if this
@@ -239,7 +240,7 @@ static void w5100_event_s(uint8_t i)
 		/* Connect: Move into connected state */
 		if (s->s_state == SS_CONNECTING) {
 			s->s_state = SS_CONNECTED;
-			wakeup(s);
+			s->wake = 1;
 		}
 	}
 	/* Clear interrupt sources down */
@@ -248,21 +249,21 @@ static void w5100_event_s(uint8_t i)
 	switch ((uint8_t)stat) {
 	case 0:		/* SOCK_CLOSED */
 		if (s->s_state != SS_CLOSED && s->s_state != SS_UNUSED) {
-			if (s->s_state != SS_CLOSING && s->s_state != SS_DEAD) {
+			if (s->s_state != SS_CLOSING && s->s_state != SS_DEAD)
 				s->s_error = ECONNRESET;	/* Sort of a guess */
-				w5100_wakeall(s);
-			} else
-				wakeup(s);
-			irqmask &= ~(1 << i);
-			w5100_writeb(IMR, irqmask);
-			w5100_eof(s);
-			/* Net layer wants us to burn the socket */
-			if (s->s_state == SS_DEAD) {
-				wiz2sock_map[i] = 0xFF;
-				sock_closed(s);
-			}
-			else	/* so net_close() burns the socket */
-				s->s_state = SS_CLOSED;
+				s->wake = 1;
+				irqmask &= ~(1 << i);
+				w5100_writeb(IMR, irqmask);
+				w5100_eof(s);
+				/* Net layer wants us to burn the socket */
+				if (s->s_state == SS_DEAD) {
+					/* FIXME: some of this should be in network.c */
+					wiz2sock_map[i] = 0xFF;
+					netproto_free(s);
+					s->s_state = SS_UNUSED;
+				}
+				else	/* so net_close() burns the socket */
+					s->s_state = SS_CLOSED;
 		}
 		break;
 	case 0x13:		/* SOCK_INIT */
@@ -272,8 +273,9 @@ static void w5100_event_s(uint8_t i)
 	case 0x17:		/* SOCK_ESTABLISHED */
 		if (s->s_state == SS_CONNECTING) {
 			s->s_state == SS_CONNECTED;
-			wakeup(s);
+				s->wake = 1;
 		} else if (s->s_state == SS_LISTENING) {
+#if 0
 			/*
 			 * The WizNET believes you allocte a LISTEN socket and
 			 * it turns into a connection and you then if need be
@@ -311,7 +313,8 @@ static void w5100_event_s(uint8_t i)
 			net_bind(ac);
 			net_listen(ac);
 			/* And kick the accepter */
-			wakeup(s);
+			s->wake = 1;
+#endif
 		}
 		break;
 	case 0x1C:		/* SOCK_CLOSE_WAIT */
@@ -328,9 +331,12 @@ static void w5100_event_s(uint8_t i)
 	case 0x42:		/* SOCK_MACRAW */
 		/* Socket has been created */
 		s->s_state = SS_UNCONNECTED;
-		wakeup(s);
+		s->wake = 1;
 		break;
 	}
+	/* Until we work out how to make this a nice callback */
+	if (s->wake)
+		wakeup(s);
 }
 
 void w5100_event(void)
@@ -360,42 +366,87 @@ void w5100_poll(void)
 		w5100_event();
 }
 
+#define W5100_TCP	0x21
+#define W5100_UDP	0x02
+#define W5100_RAW	0x03
 
-int net_init(struct socket *s)
+struct socktype {
+	uint8_t family;
+	uint8_t type;
+	uint8_t protocol;
+	uint8_t info;
+};
+
+static struct socktype socktype[4] = {
+	{ AF_INET, SOCK_STREAM, IPPROTO_TCP, W5100_TCP },
+	{ AF_INET, SOCK_DGRAM, IPPROTO_UDP, W5100_UDP },
+	{ AF_INET, SOCK_RAW, 0, W5100_RAW },
+	{ 0, }
+};
+
+/* Set up protocol private fields in new socket */
+void netproto_setup(struct socket *s)
 {
-	int i = s - sockets;
+}
+
+/* Helper belongs in network.c ? */
+int netproto_socket(void)
+{
+	struct socktype *st = socktype;
 	int n = net_alloc();
+	uint8_t famok = 0;
+	struct socket *s = sockets + n;
 	if (n < 0) {
-		udata.u_error = ENOENT;//FIXME ENOBUFS;
-		return -1;
+		udata.u_error = ENOBUFS;
+		return 0;
 	}
-	wiz2sock_map[n] = i;
-	sock2wiz_map[i] = n;
-	s->s_state = SS_UNCONNECTED;
+	/* Now check if it's one we can do */
+	while(st->family) {
+		if (st->family == udata.u_argn) {
+			famok = 1;
+			if (st->type == udata.u_argn1 &&
+				(st->protocol == 0 || udata.u_net.args[3] == 0 || udata.u_net.args[3] == st->protocol)) {
+				net_setup(s);
+				s->s_state = SS_UNCONNECTED;
+				s->s_type = st->info;
+				/* For now */
+				s->proto.slot = n;
+				udata.u_net.sock = n;
+				/* Set up socket state etc */
+				return 0;
+			}
+		}
+	}
+	if (famok)
+		udata.u_error = EPROTONOSUPPORT;
+	else
+		udata.u_error = EAFNOSUPPORT;
 	return 0;
 }
 
 /* Bind a socket to an address. May block */
-int net_bind(struct socket *s)
+/* We arrange the internal types we use to match the chip
+   - 21 TCP 02 UDP 03 RAW
+
+   The higher level stuff is done further done in netproto_bind, this
+   function merely handles the poking of the device */
+static int do_netproto_bind(struct socket *s)
 {
-	uint16_t i = sock2wiz_map[s - sockets];
+	uint16_t i = s->proto.slot;
 	uint8_t r = SOCK_INIT;
 	uint16_t off = i << 8;
 
+	w5100_writeb(Sn_MR + off, s->s_type);
 	switch (s->s_type) {
-	case SOCKTYPE_TCP:
-		w5100_writeb(Sn_MR + off, 0x21);	/* TCP, delayed ack */
-		/* We keep ports net endian so don't byte swap */
-		w5100_bwrite(Sn_PORT0 + off, &s->s_addr[SADDR_SRC].port, 2);
-		break;
-	case SOCKTYPE_UDP:
-		w5100_writeb(Sn_MR + off, 0x02);	/* UDP */
-		w5100_bwrite(Sn_PORT0 + off, &s->s_addr[SADDR_SRC].port, 2);
+	case W5100_UDP:
 		r = SOCK_UDP;
+	case W5100_TCP:
+		/* We keep ports net endian so don't byte swap */
+		w5100_bwrite(Sn_PORT0 + off, &udata.u_net.addrbuf.sa.sin.sin_port, 2);
 		break;
-	case SOCKTYPE_RAW:
-		w5100_writeb(Sn_PROTO + off, s->s_addr[SADDR_SRC].port);	/* hack */
-		w5100_writeb(Sn_MR + off, 0x03);	/* RAW */
+	case W5100_RAW:
+		/* FIXME: check endianness here */
+		w5100_writeb(Sn_MR + off,udata.u_net.addrbuf.sa.sin.sin_port);
 		r = SOCK_IPRAW;
 	}
 	/* Make an open request to open the socket */
@@ -409,21 +460,16 @@ int net_bind(struct socket *s)
 	/* Interrupt on if available mark as bound */
 	irqmask |= 1 << i;
 	w5100_writeb(IMR, irqmask);
-	s->s_state = SS_BOUND;
-	/* Do we need to delay the SS_BOUND until the chip interrupts ? */
 	return 0;
 }
 
-/* Start a socket listening. This expects BSD unix like semantics so you
-   may well need to map between host and offload sockets. May block. */
-
-/* This isn't quite right - we need to allocate a free socket and use it
-   as the listener and keep doing so when one comes in. The listening socket
-   in fact has no real binding to the wiz one - fixme and use s->s_lcn for
-   channel mapping */
-int net_listen(struct socket *s)
+/* TODO: the wiznet is very different in API here - when a connection
+   completes incoming it takes over that socket and we need to create a new
+   socket for the next one. That will need some kind of split socket/wiznet
+   indexing or a way to update the host side mapping (which may be cleaner) */
+int netproto_listen(struct socket *s)
 {
-	uint16_t i = sock2wiz_map[s - sockets];
+	uint16_t i = s->proto.slot;
 
 	i <<= 8;
 
@@ -431,24 +477,27 @@ int net_listen(struct socket *s)
 	w5100_writeb(Sn_CR + i, LISTEN);
 	if (w5100_readb(Sn_SR + i) != SOCK_LISTEN) {
 		udata.u_error = EIO;//FIXME EPROTO;	/* ??? */
-		return -1;
+		return 0;
 	}
 	s->s_state = SS_LISTENING;
 	return 0;
 }
 
-/* Start connecting to a remote host. Should not block. Return SS_CONNECTING
-   state if in progress, SS_CONNECTED if done immediately, other states for
-   error fails. */
-int net_connect(struct socket *s)
+int netproto_accept_complete(struct socket *s)
 {
-	if (s->s_type == SOCKTYPE_TCP) {
+	return 0;
+}
+
+/* Start connecting to a remote host. We can't implement the UDP case correctly
+   in just hardware. FIXME - add filters */
+int netproto_begin_connect(struct socket *s)
+{
+	if (s->s_type == W5100_TCP) {
 		uint16_t i;
-		i = sock2wiz_map[s - sockets];
-		i <<= 8;
+		i = s->proto.slot << 8;
 		/* Already net endian */
-		w5100_bwrite(Sn_DIPR0 + i, &s->s_addr[SADDR_DST].addr, 4);
-		w5100_bwrite(Sn_DPORT0 + i, &s->s_addr[SADDR_DST].port, 2);
+		w5100_bwrite(Sn_DIPR0 + i, &udata.u_net.addrbuf.sa.sin.sin_addr, 4);
+		w5100_bwrite(Sn_DPORT0 + i, &udata.u_net.addrbuf.sa.sin.sin_port, 2);
 		w5100_writeb(Sn_CR + i, CONNECT);
 		s->s_state = SS_CONNECTING;
 	} else {
@@ -459,106 +508,93 @@ int net_connect(struct socket *s)
 }
 
 /* Close down a socket - preferably politely */
-void net_close(struct socket *s)
+int netproto_close(struct socket *s)
 {
-	uint16_t i = sock2wiz_map[s - sockets];
+	uint16_t i = s->proto.slot;
 	uint16_t off = i << 8;
 
-	if (s->s_type == SOCKTYPE_TCP && s->s_state != SS_CLOSED) {
+	if (s->s_type == W5100_TCP && s->s_state != SS_CLOSED) {
 		w5100_writeb(Sn_CR + off, DISCON);
 		s->s_state = SS_CLOSING;
 	} else {
 		irqmask &= ~(1 << i);
 		w5100_writeb(IMR, irqmask);
 		w5100_writeb(Sn_CR + off, CLOSE);
-		wiz2sock_map[i] = 0xFF;
-		sock_closed(s);
+		sock_free |= (1 << i);
 	}
+	return 0;
 }
 
-arg_t net_read(struct socket *s, uint8_t flag)
+int netproto_read(struct socket *s)
 {
 	uint16_t n = 0xFFFF;
 	uint16_t r;
-	uint16_t i = sock2wiz_map[s - sockets];
+	uint16_t i = s->proto.slot;
 	uint8_t st;
 
 	i <<= 8;
 
-	/* FIXME: IRQ protection */
-	/* Wait for data - push int core code ? */
-	while (1) {
-		/* See if we have lost the link */
-		if (s->s_state < SS_CONNECTED) {
-			udata.u_error = EINVAL;
-			return -1;
-		}
-		/* Check for an EOF (covers post close cases too) */
-		if (s->s_iflag & SI_EOF)
-			return 0;
-		/* Keep waiting until we get the right state */
-		/* Bytes available */
-		n = w5100_readw(Sn_RX_RSR + i);
-		if (n) {
-			s->s_iflag |= SI_DATA;
-			break;
-		}
-		st = w5100_readb(Sn_SR);
-		if (st >= SOCK_CLOSING && st <= SOCK_UDP)
-			return 0;
-		/* Need IRQ protection to avoid sleep race */
-		if (psleep_flags(&s->s_iflag, flag))
-			return -1;
-	}
+	/* Check for an EOF (covers post close cases too) */
+	if (s->s_iflags & SI_EOF)
+		return 0;
+	/* Bytes available */
+	n = w5100_readw(Sn_RX_RSR + i);
+	if (n)
+		s->s_iflags |= SI_DATA;
+
+	/* EOF cases - do we drain first ? */
+	st = w5100_readb(Sn_SR);
+	if (st >= SOCK_CLOSING && st <= SOCK_UDP)
+		return 0;
+
+	memcpy(&udata.u_net.addrbuf, &s->dst_addr, sizeof(struct ksockaddr));
+
 	switch (s->s_type) {
-	case SOCKTYPE_RAW:
-	case SOCKTYPE_UDP:
+	case W5100_RAW:
+	case W5100_UDP:
+		/* TODO filter */
 		/* UDP comes with a header */
-		w5100_dequeue(i, 4, (uint8_t *) & s->s_addr[SADDR_TMP].addr);
-		if (s->s_type == SOCKTYPE_UDP)
-			w5100_dequeue(i, 2,
-				    (uint8_t *) & s->s_addr[SADDR_TMP].
-				    port);
+		w5100_dequeue(i, 4, &udata.u_net.addrbuf.sa.sin.sin_addr);
+		if (s->s_type == W5100_UDP)
+			w5100_dequeue(i, 2, &udata.u_net.addrbuf.sa.sin.sin_addr);
 		w5100_dequeue(i, 2, (uint8_t *) & n);	/* Actual packet size */
 		n = ntohs(n);	/* Big endian on device */
 		/* Fall through */
-	case SOCKTYPE_TCP:
+	case W5100_TCP:
 		/* Bytes to consume */
 		r = min(n, udata.u_count);
 		/* Now dequeue some bytes into udata.u_base */
 		w5100_dequeue_u(i, r, udata.u_base);
 		/* For datagrams we always discard the entire frame */
-		if (s->s_type == SOCKTYPE_UDP)
+		if (s->s_type == W5100_UDP)
 			r = n + 8;
 		w5100_writew(Sn_RX_RD0 + i, w5100_readw(Sn_RX_RD0 + i) + r);
 		/* FIXME: figure out if SI_DATA should be cleared */
 		/* Now tell the device we ate the data */
 		w5100_writeb(Sn_CR, RECV);
 	}
-	return r;
+	udata.u_done += n;
+	udata.u_base += n;
+	return 0;
 }
 
-arg_t net_write(struct socket * s, uint8_t flag)
+arg_t netproto_write(struct socket * s, struct ksockaddr *ka)
 {
-	uint16_t i = sock2wiz_map[s - sockets];
+	uint16_t i = s->proto.slot;
 	uint16_t room;
 	uint16_t n = 0;
-	uint8_t a = s->s_flag & SFLAG_ATMP ? SADDR_TMP : SADDR_DST;
-
-	/* FIXME: blocking ?? */
-	used(flag);
 
 	i <<= 8;
 
 	room = w5100_readw(Sn_TX_FSR + i);
 
 	switch (s->s_type) {
-	case SOCKTYPE_UDP:
+	case W5100_UDP:
 		if (udata.u_count > 1472) {
 			udata.u_error = EMSGSIZE;
 			return -1;
 		}
-	case SOCKTYPE_RAW:
+	case W5100_RAW:
 		if (udata.u_count > 1500) {
 			udata.u_error = EMSGSIZE;
 			return -1;
@@ -566,12 +602,12 @@ arg_t net_write(struct socket * s, uint8_t flag)
 		if (room < udata.u_count)
 			return -2;
 		/* Already native endian */
-		w5100_bwrite(Sn_DIPR0 + i, &s->s_addr[a].addr, 4);
-		w5100_bwrite(Sn_DPORT0 + i, &s->s_addr[a].port, 2);
+		w5100_bwrite(Sn_DIPR0 + i, &ka->sa.sin.sin_addr, 4);
+		w5100_bwrite(Sn_DPORT0 + i, &ka->sa.sin.sin_addr, 4);
 		/* Fall through */
-	case SOCKTYPE_TCP:
+	case W5100_TCP:
 		if (room == 0)
-			return -2;
+			return 0;
 		n = min(room, udata.u_count);
 		w5100_queue_u(i, n, udata.u_base);
 		w5100_writew(Sn_TX_WR0 + i,
@@ -582,11 +618,11 @@ arg_t net_write(struct socket * s, uint8_t flag)
 	return n;
 }
 
-arg_t net_shutdown(struct socket *s, uint8_t flag)
+arg_t netproto_shutdown(struct socket *s, uint8_t flag)
 {
-	int i = sock2wiz_map[s - sockets] << 8;
-	s->s_iflag |= flag;
-	if (s->s_iflag & SI_SHUTW)
+	int i = s->proto.slot << 8;
+	s->s_iflags |= flag;
+	if (s->s_iflags & SI_SHUTW)
 		w5100_writeb(Sn_CR + i, DISCON);
 	/* Really we need to look for SHUTR and received data and CLOSE if
 	   so - FIXME */
@@ -635,6 +671,7 @@ static uint32_t ipa = 0x00000000;	/* Tmp hack */
 static uint8_t fakeaddr[6] = { 0xC0, 0xFF, 0xEE, 0xC0, 0xFF, 0xEE };
 static uint32_t iga = 0x020000C0;
 static uint32_t igm = 0x00FFFFFF;
+static uint16_t autoport = ntohs(5000);
 
 void netdev_init(void)
 {
@@ -654,6 +691,67 @@ void netdev_init(void)
 	for (i = 0; i < 4 * 256; i += 256) {
 		/* Do we need to set anything here */
 	}
+}
+
+/* We probably want a generic ipv4 helper layer for some of this */
+int netproto_find_local(struct ksockaddr *ka)
+{
+	struct socket *s = sockets;
+	uint8_t n = 0;
+	while(n < NSOCKET) {
+		if (s->s_state == SS_UNUSED || s->src_addr.sa.family != AF_INET) {
+			s++;
+			n++;
+			continue;
+		}
+		if (s->src_addr.sa.sin.sin_port == ka->sa.sin.sin_port) {
+			if (s->src_addr.sa.sin.sin_addr.s_addr ==
+				ka->sa.sin.sin_addr.s_addr ||
+			    s->src_addr.sa.sin.sin_addr.s_addr == 0)
+			        return n;
+		}
+		s++;
+	}
+	return -1;
+}
+
+
+static void inc_autoport(void)
+{
+	uint16_t port = ntohs(autoport);
+	port++;
+	if (port == 32767)
+		port = 5000;
+	autoport = ntohs(port);
+}
+
+int netproto_autobind(struct socket *s)
+{
+	s->src_addr.sa.family = AF_INET;
+	s->src_addr.sa.sin.sin_addr.s_addr = 0;
+	do {
+		s->src_addr.sa.sin.sin_port = autoport;
+		inc_autoport();
+	} while (netproto_find_local(&s->src_addr) != -1);
+	return 0;
+}
+
+int netproto_bind(struct socket *s)
+{
+	if (udata.u_net.addrbuf.sa.family != AF_INET) {
+		udata.u_error = EPROTONOSUPPORT;
+		return 0;
+	}
+	if (udata.u_net.addrbuf.sa.sin.sin_addr.s_addr != ipa) {
+		udata.u_error = EADDRNOTAVAIL;
+		return 0;
+	}
+	if (ntohs(udata.u_net.addrbuf.sa.sin.sin_port) < 1024 && udata.u_euid != 0) {
+		udata.u_error = EACCES;
+		return 0;
+	}
+	memcpy(&s->src_addr, &udata.u_net.addrbuf, sizeof(struct ksockaddr));
+	return 0;
 }
 
 #endif

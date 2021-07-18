@@ -18,6 +18,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #include "exec.h"
 
 #include "cpu.h"
+#include "fpu.h"
 
 #include "panic.h"
 
@@ -508,6 +509,10 @@ typedef struct p_tab {
     struct p_tab *p_timerq;
 } p_tab, *ptptr;
 
+#ifdef CONFIG_NET
+#include "netdev.h"
+#endif
+
 /*
  *	We copy the u_data block between processes when we fork and on some
  *	platforms it moves. This means that there must be *no* internal pointer
@@ -569,7 +574,10 @@ typedef struct u_data {
     usize_t	u_done;		/* Counter for driver methods */
 
 #ifdef CONFIG_UDATA_TEXTTOP
-	uaddr_t u_texttop;  /* Top of binary text (used for I/D systems) */
+    uaddr_t u_texttop;  /* Top of binary text (used for I/D systems) */
+#endif
+#ifdef CONFIG_NET
+    struct udata_net u_net;
 #endif
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
@@ -577,6 +585,9 @@ typedef struct u_data {
     uint8_t	u_flags;
 #define U_FLAG_NOCORE		1	/* Set if no core dump */
     struct rlimit u_rlimit[NRLIMIT];	/* Resource limits */
+#endif
+#ifdef CONFIG_FPU
+     struct fpu_context u_fpu;
 #endif
 } u_data;
 
@@ -711,6 +722,8 @@ struct s_argblk {
 #define ESHUTDOWN	55		/* Cannot send after transport endpoint shutdown */
 #define EISCONN         56              /* Socket is already connected */
 #define EDESTADDRREQ    57              /* No destination address specified */
+#define ENOBUFS		58		/* No buffer space available */
+#define EPROTONOSUPPORT	59		/* Protocol not supported */
 
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
