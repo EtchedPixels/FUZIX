@@ -1,25 +1,16 @@
+#include <syscalls.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <string.h>
-#include <syscalls.h>
 
-ssize_t recvfrom(int fd, void *buf, size_t len, int flags, struct sockaddr *addr,
-    socklen_t *addr_len)
+int recvfrom(int fd, void *buf, size_t len, int flags, struct sockaddr *addr, socklen_t *addrlen)
 {
-    struct _sockio tmp;
-    int err;
-    tmp.sio_flags = flags;
-    tmp.sio_addr_len = 0;
-    if (addr) {
-        tmp.sio_addr_len = sizeof(tmp.sio_addr);
-        if (tmp.sio_addr_len < *addr_len)
-            tmp.sio_addr_len = *addr_len;
-    }
-    err = _recvfrom(fd, buf, len, &tmp);
-    if (err == 0 && tmp.sio_addr_len) {
-        memcpy(addr, tmp.sio_addr, tmp.sio_addr_len);
-        if (addr_len)
-            *addr_len = tmp.sio_addr_len;
-    }
-    return err;
+    __uarg_t args[7];
+    args[0] = 7;
+    args[1] = fd;
+    args[2] = (__uarg_t)buf;
+    args[3] = len;
+    args[4] = flags;
+    args[5] = (__uarg_t)addr;
+    args[6] = (__uarg_t)addrlen;
+    return __netcall(args);
 }
