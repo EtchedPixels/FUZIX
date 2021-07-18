@@ -276,7 +276,7 @@ void ps2kbd_byte(uint_fast8_t byte)
     }
 }
 
-static uint8_t ps2busy = 0;
+uint8_t ps2busy = 0;
 
 void ps2kbd_poll(void)
 {
@@ -341,22 +341,6 @@ int ps2kbd_init(void)
 
     present = 1;
 
-#if 0
-    /* Now check for mice */
-    for (i = 0; i < 4; i++) {
-        r = ps2mouse_get();
-        if (r < 0x8000)
-            break;
-    }
-
-    /* Try to reset, if it times out -> no mouse */
-    r = ps2mouse_put(0xFF);
-    if (r == 0xFA)
-        present |= 2;
-    /* Flush out anything left over */
-    for (i = 0; i < 4; i++)
-            ps2mouse_get();
-#endif
     ps2busy = 0;
     return present;
 }
