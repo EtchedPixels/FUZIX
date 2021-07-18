@@ -25,8 +25,6 @@
 
 #define	LIGHTPEN_ABS	0x50		/* Light pen or similar, 16 x 16bit virtual coords */
 
-#define MOUSE_REL_WHEEL	0x60		/* As MOUSE_REL but with a wheel byte */
-
 #define BUTTON(x)	(1 << (x))	/* Button 1-7 (top bit never used) */
 #define BUTTONS(x)	((x)&0x07)	/* 0-7 buttons */
 
