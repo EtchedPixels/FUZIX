@@ -67,17 +67,10 @@ typedef uint16_t fsfilcnt_t;
 
 #if defined(NO_64BIT)
 typedef uint32_t time_t;
-/* For kernel struct alignment */
-typedef struct {
-  uint32_t time;
-  uint32_t pad;
-} __ktime_t;
 #else
 typedef int64_t time_t;
-typedef struct {
-  uint64_t time;
-} __ktime_t;
 #endif
+
 typedef int32_t clock_t;
 typedef uint32_t useconds_t;
 

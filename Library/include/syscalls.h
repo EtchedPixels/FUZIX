@@ -66,6 +66,11 @@ struct hd_geometry {
 	uint32_t start;
 };
 
+typedef struct {
+        uint32_t low;
+        uint32_t high;
+} __ktime_t;
+
 struct sockaddr;
 struct sockaddr_in;
 
