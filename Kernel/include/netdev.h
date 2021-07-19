@@ -87,12 +87,13 @@ struct socket
 #define SI_EOF		8		/* At EOF */
 #define SI_THROTTLE	16		/* Transmit is throttled */
 
-	uint8_t wake;		/* REVIEW */
+	uint8_t s_wake;		/* REVIEW */
 
 	/* FIXME: need state for shutdown handling */
-	uint8_t s_data;			/* Socket we are an accept() for */
 	uint8_t s_error;
 	uint8_t s_num;			/* To save expensive maths */
+	uint8_t s_parent;		/* For accept */
+	uint8_t s_class;		/* Class of socket (stream etc) */
 	struct ksockaddr src_addr;
 	uint8_t src_len;
 	struct ksockaddr dst_addr;

@@ -1,10 +1,11 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <netdev.h>
+#include <printf.h>
 
 #ifdef CONFIG_NET
 
-#define is_datagram(s)	((s)->s_type == SOCK_STREAM || (s)->s_type == SOCK_SEQPACKET)
+#define is_datagram(s)	((s)->s_class != SOCK_STREAM && (s)->s_class != SOCK_SEQPACKET)
 
 struct socket sockets[NSOCKET];
 
@@ -28,7 +29,6 @@ int net_syscall(void)
 	case 1:		/* listen */
 		if (s->s_state == SS_UNCONNECTED && netproto_autobind(s))
 			return 0;
-		/* Should just check dgram/stream */
 		if (is_datagram(s) || s->s_state != SS_BOUND) {
 			udata.u_error = EINVAL;
 			return 0;
@@ -70,10 +70,8 @@ int net_syscall(void)
 			udata.u_error = EALREADY;
 			return 0;
 		}
-
 		if ((n = netproto_sockpending(s)) == NULL)
 			return 1;
-
 		n->s_state = SS_CONNECTED;
 		netproto_accept_complete(n);
 		/* Socket back to an id */
@@ -183,7 +181,13 @@ void net_free(void)
 
 void net_setup(struct socket *s)
 {
-	memset(s, 0, sizeof(struct socket));
+	s->s_state = SS_INIT;
+	s->s_iflags = 0;
+	s->s_parent = 0xFF;
+	s->s_error = 0;
+	s->src_len = 0;
+	s->dst_len = 0;
+	s->s_ino = NULL;
 	netproto_setup(s);
 }
 
