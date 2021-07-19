@@ -21,7 +21,7 @@ int lfd;
 
 
 my_open( int argc, char *argv[]){
-    int port = 80;    /* default port */
+    int port = 8080;    /* default port */
 
     addr.sin_port = htons(port);
     addr.sin_family = AF_INET;
@@ -31,16 +31,17 @@ my_open( int argc, char *argv[]){
 	perror("af_inet sock_stream 0");
 	exit(1);
     }
-
     if( bind( lfd, (struct sockaddr *)&addr, sizeof(addr) ) ){
 	perror("bind");
 	exit(1);
     }
 
     if( listen( lfd, 1 ) ){
-	perror("connect");
+	perror("listen");
 	exit(1);
     }
+    if (accept(lfd, NULL, NULL) < 0)
+     perror("accept");
 }
 
 int main( int argc, char *argv[]){
@@ -48,7 +49,6 @@ int main( int argc, char *argv[]){
 
 	my_open( argc, argv );
 	printf("httpd server\n");
-	while(1);
 	return 0;
 
 
