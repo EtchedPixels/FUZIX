@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <arpa/inet.h>
 #include "netdb.h"
 
@@ -289,7 +290,7 @@ int mywrite(uint8_t * ptr, int len)
 	return len;
 }
 
-void quit()
+void quit(int sig)
 {
 	tcsetattr(0, TCSANOW, &lprior);
 	fcntl(0, F_SETFL, flags);
@@ -342,7 +343,7 @@ int myread(void)
 			if (errno == EAGAIN) {
 				return 0;
 			} else
-				quit();
+				quit(0);
 		}
 		ipos = 0;
 		icount = l;
@@ -376,7 +377,7 @@ int myread(void)
 					lecho = ~lecho;
 					break;
 				case 'q':
-					quit();
+					quit(0);
 				case 'h':
 					hex = ~hex;
 					break;
@@ -485,16 +486,19 @@ int main(int argc, char *argv[])
 	}
 
 	tcgetattr(0, &lprior);
+	memcpy(&lnew, &lprior, sizeof(lnew));
+
+	signal(SIGINT, quit);
+	signal(SIGQUIT, quit);
+	signal(SIGPIPE, SIG_IGN);
 
 	my_open(argc, argv);
 
-	flags = fcntl(0, F_GETFL, 0);
-	fcntl(0, F_SETFL, flags | O_NDELAY);
-
-
-	tcgetattr(0, &lnew);
 	lnew.c_lflag &= ~ICANON;
 	lnew.c_lflag &= ~ECHO;
+	/* Use 1/10th delay for now - until we get select */
+	lnew.c_cc[VMIN] = 0;
+	lnew.c_cc[VTIME] = 1;
 	tcsetattr(0, TCSANOW, &lnew);
 
 	printf("Use Cntl-A ? for help.\n");
@@ -508,17 +512,17 @@ int main(int argc, char *argv[])
 				if (errno == EAGAIN) {
 					ret = 0;
 				} else
-					quit();
+					quit(0);
 			}
 			len = len - ret;
 			pos += ret;
 		}
 		len = read(fddw, ibuf, 127);
 		if (!len)
-			quit();
+			quit(0);
 		if (len < 0) {
 			if (errno != EAGAIN) {
-				quit();
+				quit(0);
 			}
 		}
 		pos = ibuf;
@@ -528,7 +532,7 @@ int main(int argc, char *argv[])
 				if (errno == EWOULDBLOCK) {
 					ret = 0;
 				} else
-					quit();
+					quit(0);
 			}
 			len = len - ret;
 			pos += ret;
