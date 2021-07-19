@@ -97,6 +97,32 @@ static int make_socket(uint16_t sock)
 	return -1;
 }
 
+typedef int (*sockfunc_t)(void);
+
+static int run_sockfunc(sockfunc_t func, uint8_t n, uint8_t flags)
+{
+	irqflags_t irq;
+
+	while(func()) {
+		if (udata.u_error && (flags & O_NDELAY))
+			return -1;
+		irq = di();
+		if (!sock_wake[n]) {
+			if (psleep_flags(sock_wake + n, flags) == -1) {
+				irqrestore(irq);
+				return -1;
+			}
+		} else
+			sock_wake[n] = 0;
+		irqrestore(irq);
+	}
+	if (udata.u_net.sig) {
+		ssig(udata.u_ptab, udata.u_net.sig);
+		udata.u_net.sig = 0;
+	}
+	return 0;
+}
+
 #define argptr ((void *)udata.u_argn)
 
 arg_t _netcall(void)
@@ -170,27 +196,8 @@ arg_t _netcall(void)
 	}
 	/* Run states of the network machine. It will return > 0 for a sleep and
 	   0 when done. We handle the rules for I/O interruption ourselves */
-/*	kprintf("Do net call %d\n", udata.u_net.args[0]); */
-	while (net_syscall()) {
-/*		kprintf("wait: %d %d %d\n",
-			udata.u_retval, udata.u_error, udata.u_net.sig); */
-		/* Caller wants us to wait but has provided an error code
-		   if non blocking */
-		if (udata.u_error && (flags & O_NDELAY))
-			return -1;
-/*		kprintf("sleep: %x\n", ino); */
-		if (psleep_flags(ino, flags) == -1)
-			return -1;
-/*		kprintf("loop: %d %d %d\n",
-			udata.u_retval, udata.u_error, udata.u_net.sig); */
-	}
-/*(	kprintf("done: %d %d %d\n",
-		udata.u_retval, udata.u_error, udata.u_net.sig); */
+	run_sockfunc(net_syscall, udata.u_net.sock, flags);
 	/* If it asked us to SIGPIPE do so */
-	if (udata.u_net.sig) {
-		ssig(udata.u_ptab, udata.u_net.sig);
-		udata.u_net.sig = 0;
-	}
 	if (udata.u_error == 0) {
 		/* The syscall makes a new socket. Allocate it an inode and
 		   make the return our file handle */
@@ -239,12 +246,7 @@ arg_t _netcall(void)
 int sock_read(inoptr ino, uint8_t flags)
 {
 	udata.u_net.sock = IN2SOCK(ino);
-	while (net_read()) {
-		if (udata.u_error && (flags & O_NDELAY))
-			return -1;
-		if (psleep_flags(ino, flags) == -1)
-			return -1;
-	}
+	run_sockfunc(net_read, udata.u_net.sock, flags);
 	return udata.u_done;
 }
 
@@ -255,12 +257,7 @@ int sock_read(inoptr ino, uint8_t flags)
 int sock_write(inoptr ino, uint8_t flags)
 {
 	udata.u_net.sock = IN2SOCK(ino);
-	while (net_write()) {
-		if (udata.u_error && (flags & O_NDELAY))
-			return -1;
-		if (psleep_flags(ino, flags) == -1)
-			return -1;
-	}
+	run_sockfunc(net_write, udata.u_net.sock, flags);
 	return udata.u_done;
 }
 

@@ -184,6 +184,8 @@ extern void net_inode(void);
 extern int net_ioctl(int req, char *data);
 extern arg_t sock_ioctl(inoptr ino, int req, char *data);
 
+extern uint8_t sock_wake[NSOCKET];
+
 /* Hooks betweek the networking framework and the implementation */
 extern int netproto_socket(void);
 extern int netproto_listen(struct socket *s);

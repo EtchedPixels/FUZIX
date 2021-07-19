@@ -23,6 +23,10 @@
 #include <netdev.h>
 #include <net_w5100.h>
 
+
+/* For now until we work out where this really belongs */
+uint8_t sock_wake[NSOCKET];
+
 static uint8_t irqmask;
 static uint8_t sock_free = 0x0F;
 static uint8_t wiz2sock_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
@@ -227,7 +231,6 @@ static void w5100_event_s(uint8_t i)
 
 	s = sockets + sn;
 
-	kprintf("event %x on socket %d\n", stat, i);
 	if (stat & 0x1000) {
 		/* Transmit completed: window re-open. We can allow more
 		   data to flow from the user */
@@ -273,15 +276,11 @@ static void w5100_event_s(uint8_t i)
 			s->wake = 1;
 			w5100_eof(s);
 			/* Net layer wants us to burn the socket */
-			if (s->s_state == SS_CLOSING) {
+			if (s->s_state == SS_CLOSING)
 				/* FIXME: some of this should be in network.c */
-				kputs("Socket was dead so go unused\n");
 				netproto_cleanup(s);
-			}
-			else {	/* so net_close() burns the socket */
+			else	/* so net_close() burns the socket */
 				s->s_state = SS_CLOSED;
-				kputs("go to closed, let process finish it\n");
-			}
 		}
 		break;
 	case 0x13:		/* SOCK_INIT */
@@ -352,9 +351,12 @@ static void w5100_event_s(uint8_t i)
 		s->wake = 1;
 		break;
 	}
-	/* Until we work out how to make this a nice callback */
+	/* Set the socket wake up flag and then wake it. We will need
+	   sock_wake to be common for splitting it properly, and the wakeup
+	   to be a callback */
 	if (s->wake) {
-		wakeup(s->s_ino);
+		sock_wake[sn] = 1;
+		wakeup(sock_wake + sn);
 	}
 }
 
