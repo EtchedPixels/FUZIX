@@ -165,6 +165,13 @@ int net_read(void)
 	return r;
 }
 
+int net_ioctl(int req, char *data)	/* data is user */
+{
+	struct socket *s = sockets + udata.u_net.sock;
+	/* Nothing but devices at this point */
+	return netproto_ioctl(s, req, data);
+}
+
 void net_free(void)
 {
 	netproto_free(sockets + udata.u_net.sock);

@@ -14,6 +14,12 @@
 #define IPPROTO_UDP	17
 #define IPPROTO_RAW	255
 
+
+#define HW_NONE		0	/* e.g. loopback */
+#define HW_ETH		1
+#define HW_WLAN		2
+#define HW_SLIP		3
+
 struct in_addr {
   uint32_t s_addr;
 };
@@ -23,6 +29,11 @@ struct sockaddr_in {
   uint16_t sin_port;
   struct in_addr sin_addr;
   uint8_t sin_zero[8];
+};
+
+struct sockaddr_hw {
+  uint16_t shw_family;
+  uint8_t shw_addr[14];
 };
 
 #define INADDR_ANY		0L
@@ -37,6 +48,7 @@ struct sockaddr_in {
 struct ksockaddr {
 	union {
 		struct sockaddr_in sin;
+		struct sockaddr_hw hw;
 		uint16_t family;
 	} sa;
 };
@@ -89,14 +101,6 @@ struct socket
 	struct sockproto proto;
 };
 
-struct netdevice
-{
-	uint8_t mac_len;
-	const char *name;
-	uint16_t flags;
-#define IFF_POINTOPOINT		1
-};
-
 struct udata_net {
 	arg_t args[7];			/* Arguments to netcall */
 	inoptr inode;			/* Inode bound to socket */
@@ -109,6 +113,53 @@ struct udata_net {
 extern struct socket sockets[NSOCKET];
 extern uint32_t our_address;
 
+#define IFNAMSIZ	8
+/*
+ * Interfaces for network configuration
+ */
+
+struct ifreq {
+	char ifr_name[IFNAMSIZ];
+	union {
+		struct ksockaddr ifr_addr;
+		struct ksockaddr ifr_dstaddr;
+		struct ksockaddr ifr_broadaddr;
+		struct ksockaddr ifr_netmask;
+		struct ksockaddr ifr_hwaddr;
+		short ifr_flags;
+		int ifr_ifindex;
+		int ifr_mtu;
+	};
+};
+
+#define IFF_UP		0x0001
+#define IFF_BROADCAST	0x0002
+#define IFF_LOOPBACK	0x0004
+#define IFF_POINTOPOINT	0x0008
+#define IFF_RUNNING	0x0010
+#define IFF_NOARP	0x0020
+#define IFF_PROMISC	0x0040
+#define IFF_MULTICAST	0x0080
+#define IFF_LINKUP	0x0100
+
+#define SIOCGIFNAME	0x0400
+#define SIOCGIFINDEX	0x0401
+#define SIOCGIFFLAGS	0x0402
+#define SIOCSIFFLAGS	(0x0403|IOCTL_SUPER)
+#define SIOCGIFADDR	0x0404
+#define SIOCSIFADDR	(0x0405|IOCTL_SUPER)
+#define SIOCGIFDSTADDR	0x0406
+#define SIOCSIFDSTADDR	(0x0407|IOCTL_SUPER)
+#define SIOCGIFBRDADDR	0x0408
+#define SIOCSIFBRDADDR	(0x0409|IOCTL_SUPER)
+#define SIOCGIFNETMASK	0x040A
+#define SIOCSIFNETMASK	(0x040B|IOCTL_SUPER)
+#define SIOCGIFHWADDR	0x040C
+#define SIOCSIFHWADDR	(0x040D|IOCTL_SUPER)
+#define SIOCGIFMTU	0x040E
+#define SIOCSIFMTU	(0x040F|IOCTL_SUPER)
+
+
 /* Network layer syscalls */
 extern arg_t _netcall(void);
 
@@ -116,6 +167,7 @@ extern arg_t _netcall(void);
 extern int sock_close(inoptr ino);
 extern int sock_read(inoptr ino, uint8_t flag);
 extern int sock_write(inoptr ino, uint8_t flag);
+extern arg_t sock_ioctl(inoptr ino, int req, char *data);
 extern bool issocket(inoptr ino);
 
 /* Hooks between the core kernel and networking */
@@ -129,6 +181,8 @@ extern int net_syscall(void);
 /* Helpers between core and protocol */
 extern void net_setup(struct socket *s);
 extern void net_inode(void);
+extern int net_ioctl(int req, char *data);
+extern arg_t sock_ioctl(inoptr ino, int req, char *data);
 
 /* Hooks betweek the networking framework and the implementation */
 extern int netproto_socket(void);
@@ -146,4 +200,5 @@ extern int netproto_shutdown(struct socket *s, uint8_t how);
 extern int netproto_close(struct socket *s);
 extern void netproto_setup(struct socket *s);
 extern void netproto_free(struct socket *s);
+extern int netproto_ioctl(struct socket *s, int requ, char *data);
 #endif

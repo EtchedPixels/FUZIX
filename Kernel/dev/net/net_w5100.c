@@ -173,6 +173,7 @@ static int net_alloc(void)
 			return i;
 		}
 		j <<= 1;
+		i++;
 	}
 	return -1;
 }
@@ -186,6 +187,23 @@ void netproto_free(struct socket *s)
 struct socket *netproto_sockpending(struct socket *s)
 {
 	return NULL;
+}
+
+/*
+ *	Used when a socket is finally cleaned up and nobody either side
+ *	wants it.
+ */
+static void netproto_cleanup(struct socket *s)
+{
+	uint16_t i = s->proto.slot;
+	uint16_t off = i << 8;
+
+	irqmask &= ~(1 << i);
+	w5100_writeb(IMR, irqmask);
+	w5100_writeb(Sn_CR + off, CLOSE);
+	sock_free |= (1 << i);
+	wiz2sock_map[i] = 0xFF;
+	s->s_state = SS_UNUSED;
 }
 
 /*
@@ -209,7 +227,7 @@ static void w5100_event_s(uint8_t i)
 
 	s = sockets + sn;
 
-/*	kprintf("event %x on socket %d\n", stat, i); */
+	kprintf("event %x on socket %d\n", stat, i);
 	if (stat & 0x1000) {
 		/* Transmit completed: window re-open. We can allow more
 		   data to flow from the user */
@@ -250,21 +268,20 @@ static void w5100_event_s(uint8_t i)
 	switch ((uint8_t)stat) {
 	case 0:		/* SOCK_CLOSED */
 		if (s->s_state != SS_CLOSED && s->s_state != SS_UNUSED) {
-			if (s->s_state != SS_CLOSING && s->s_state != SS_DEAD)
+			if (s->s_state != SS_CLOSING)
 				s->s_error = ECONNRESET;	/* Sort of a guess */
 			s->wake = 1;
 			w5100_eof(s);
 			/* Net layer wants us to burn the socket */
-			if (s->s_state == SS_DEAD) {
+			if (s->s_state == SS_CLOSING) {
 				/* FIXME: some of this should be in network.c */
-				wiz2sock_map[i] = 0xFF;
-				irqmask &= ~(1 << i);
-				w5100_writeb(IMR, irqmask);
-				netproto_free(s);
-				s->s_state = SS_UNUSED;
+				kputs("Socket was dead so go unused\n");
+				netproto_cleanup(s);
 			}
-			else	/* so net_close() burns the socket */
+			else {	/* so net_close() burns the socket */
 				s->s_state = SS_CLOSED;
+				kputs("go to closed, let process finish it\n");
+			}
 		}
 		break;
 	case 0x13:		/* SOCK_INIT */
@@ -522,16 +539,8 @@ int netproto_close(struct socket *s)
 	if (s->s_type == W5100_TCP && s->s_state != SS_CLOSED) {
 		w5100_writeb(Sn_CR + off, DISCON);
 		s->s_state = SS_CLOSING;
-	} else {
-		irqmask &= ~(1 << i);
-		w5100_writeb(IMR, irqmask);
-		w5100_writeb(Sn_CR + off, CLOSE);
-		/* FIXME: remove duplication with interrupt close path */
-		sock_free |= (1 << i);
-		netproto_free(s);
-		wiz2sock_map[i] = 0xFF;
-		s->s_state = SS_UNUSED;
-	}
+	} else
+		netproto_cleanup(s);
 	return 0;
 }
 
@@ -540,7 +549,6 @@ int netproto_read(struct socket *s)
 	uint16_t n;
 	uint16_t r;
 	uint16_t i = s->proto.slot;
-	uint8_t st;
 
 	i <<= 8;
 
@@ -652,49 +660,87 @@ arg_t netproto_shutdown(struct socket *s, uint8_t flag)
 	return 0;
 }
 
-/* Everything below this line is still pure sketching of ideas as we don't
-   really have a configuration interface designed yet ! */
-
-struct netdevice net_dev = {
-	6,			/* MAC size */
-	"eth0",			/* Good a name as any */
-	0,			/* No special flags */
-};
-#if 0
-/* Only some of these hit this code, most are handled by the core */
-arg_t net_ioctl(uint8_t op, void *p)
-{
-	uint16_t n;
-
-	switch (op) {
-	case OP_SIFADDR:
-		w5100_bwrite(SIPR0, p, 4);
-		break;
-	case OP_SIFMASK:
-		w5100_bwrite(SUBR0, p, 4);
-		break;
-	case OP_SIFGW:
-		w5100_bwrite(GAR0, p, 4);
-		break;
-	case OP_GIFHWADDR:
-		w5100_bread(SHAR0, p, 6);
-		break;
-	case OP_SIFHWADDR:
-		w5100_bwrite(SHAR0, p, 6);
-		break;
-	case OP_GPHY:
-		return (w5100_readb(PSTATUS) & 0x20) ? LINK_UP : LINK_DOWN;
-	default:
-		return -EINVAL;
-	}
-	return 0;
-}
-#endif
 static uint32_t ipa = 0x00000000;	/* Tmp hack */
 static uint8_t fakeaddr[6] = { 0xC0, 0xFF, 0xEE, 0xC0, 0xFF, 0xEE };
 static uint32_t iga = 0x020000C0;
 static uint32_t igm = 0x00FFFFFF;
 static uint16_t autoport = ntohs(5000);
+static uint16_t mtu;
+static uint16_t ifflags = IFF_BROADCAST|IFF_RUNNING|IFF_UP;
+
+static void netdev_reload(void)
+{
+	w5100_bwrite(SIPR0, &ipa, 4);
+	w5100_bwrite(GAR0, &iga, 4);
+	w5100_bwrite(SUBR0, &igm, 4);
+	w5100_bwrite(SHAR0, fakeaddr, 6);
+}
+
+arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
+{
+	static struct ifreq ifr;
+	if (uget(ifr_u, &ifr, sizeof(struct ifreq)))
+		return -1;
+	if (ifr.ifr_ifindex) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	switch(op) {
+	/* Get side */
+	case SIOCGIFNAME:
+		memcpy(ifr.ifr_name, "wlan0", 6);
+		goto copyback;
+	case SIOCGIFINDEX:
+		ifr.ifr_ifindex = 0;
+		goto copyback;
+	case SIOCGIFFLAGS:
+		ifr.ifr_flags = ifflags;
+//		if (w5100_readb(PSTATUS) & 0x20))
+//			ifr.ifr_flags |= IFF_LINKUP;
+		goto copyback;
+	case SIOCGIFADDR:
+		ifr.ifr_addr.sa.sin.sin_addr.s_addr = ipa;
+		goto copy_addr;
+	case SIOCGIFBRDADDR:
+		/* Hardcoded in the engine */
+		ifr.ifr_broadaddr.sa.sin.sin_addr.s_addr = (ipa & igm) | ~igm;
+		goto copy_addr;
+	case SIOCGIFNETMASK:
+		ifr.ifr_netmask.sa.sin.sin_addr.s_addr = igm;
+		goto copy_addr;
+	case SIOCGIFHWADDR:
+		memcpy(ifr.ifr_hwaddr.sa.hw.shw_addr, fakeaddr, 6);
+		ifr.ifr_hwaddr.sa.hw.shw_family = HW_WLAN;
+		goto copyback;
+	case SIOCGIFMTU:
+		ifr.ifr_mtu = 1500;
+		goto copyback;
+	/* Set side */
+	case SIOCSIFFLAGS:
+		/* Doesn't really do anything ! */
+		ifflags &= ~IFF_UP;
+		ifflags |= ifr.ifr_flags & IFF_UP;
+		return 0;
+	case SIOCSIFADDR:
+		ipa = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
+		break;
+	case SIOCSIFNETMASK:
+		igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;
+		break;
+	case SIOCSIFHWADDR:
+		memcpy(fakeaddr, ifr.ifr_hwaddr.sa.hw.shw_addr, 6);
+		break;
+	default:
+		udata.u_error = EINVAL;
+		return -1;
+	}
+	netdev_reload();
+	return 0;
+copy_addr:
+	ifr.ifr_addr.sa.sin.sin_family = AF_INET;
+copyback:
+	return uput(&ifr,ifr_u, sizeof(ifr));
+}
 
 void netdev_init(void)
 {
@@ -705,10 +751,7 @@ void netdev_init(void)
 //	w5100_writeb(RTR, );
 //	w5100_writeb(RCR, );
 	/* Set GAR, SHAR, SUBR, SIPR to defaults ? */
-	w5100_bwrite(SIPR0, &ipa, 4);
-	w5100_bwrite(GAR0, &iga, 4);
-	w5100_bwrite(SUBR0, &igm, 4);
-	w5100_bwrite(SHAR0, fakeaddr, 6);
+	netdev_reload();
 	w5100_writeb(RMSR, 0x55);	/* 2k a socket */
 	w5100_writeb(TMSR, 0x55);	/* 2k a socket */
 	for (i = 0; i < 4 * 256; i += 256) {

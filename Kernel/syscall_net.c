@@ -277,6 +277,13 @@ int sock_close(inoptr ino)
 	return udata.u_retval;
 }
 
+arg_t sock_ioctl(inoptr ino, int req, char *data)
+{
+	udata.u_net.sock = IN2SOCK(ino);
+	/* For now we only support the device ioctls */
+	return net_ioctl(req, data);
+}
+
 void sock_init(void)
 {
 	netdev_init();

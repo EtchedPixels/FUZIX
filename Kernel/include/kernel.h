@@ -511,6 +511,8 @@ typedef struct p_tab {
 
 #ifdef CONFIG_NET
 #include "netdev.h"
+#else
+#define issocket(ino)	0
 #endif
 
 /*
@@ -785,7 +787,7 @@ typedef struct {
  */
 
 /*
- *	Networking ioctls 04xx (see net_native.h)
+ *	Networking ioctls 04xx (see netdev.h)
  */
 
 /*
