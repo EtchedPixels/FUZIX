@@ -23,11 +23,11 @@ unsigned int sleep(unsigned int seconds)
 {
 	__ktime_t end, now;
 	_time(&end, 1);	/* in 1/10ths */
-	end.time += seconds * 10;
+	end.low += seconds * 10;
 	if (_pause(seconds * 10) == 0)
 		return 0;
 	_time(&now, 1);
-	return div10quicki(end.time - now.time);
+	return div10quicki(end.low - now.low);
 }
 
 unsigned int alarm(unsigned int secs)

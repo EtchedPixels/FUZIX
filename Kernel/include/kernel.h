@@ -614,6 +614,12 @@ struct s_argblk {
     uint8_t a_buf[512-3*sizeof(int)];
 };
 
+/* Time is passed as 2 x 32bit values for cleanness and portability */
+
+typedef struct {
+    uint32_t low;
+    uint32_t high;
+} time_t;
 
 /* waitpid options */
 #define WNOHANG		1

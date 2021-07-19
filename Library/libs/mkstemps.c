@@ -18,7 +18,7 @@ int mkstemps(char *s, int slen)
   if (memcmp(p, "XXXXXX", 6))
     goto bad;
   _time(&t, 0);
-  value = (getuid() << 8) + getpid() + (uint16_t)t.time;
+  value = (getuid() << 8) + getpid() + (uint16_t)t.low;
   do {
     value += 7919;	/* Any old prime ought to do */
     n = _itoa(value);

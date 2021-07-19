@@ -27,11 +27,6 @@ extern uint16_t brk_limit(void);
 /* User's structure for times() system call */
 typedef unsigned long clock_t;
 
-typedef struct {
-  uint32_t low;
-  uint32_t high;
-} time_t;
-
 typedef union {            /* this structure is endian dependent */
     clock_t  full;         /* 32-bit count of ticks since boot */
     struct {

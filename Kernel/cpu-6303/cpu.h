@@ -25,11 +25,6 @@ extern uint16_t swab(uint16_t);
 /* User's structure for times() system call */
 typedef unsigned long clock_t;
 
-typedef struct {
-   uint32_t low;	   /* Always ordered low half first for 32bit only */
-   uint32_t high;	   /* No native long long type */
-} time_t;
-
 typedef union {            /* this structure is endian dependent */
     clock_t  full;         /* 32-bit count of ticks since boot */
     struct {
