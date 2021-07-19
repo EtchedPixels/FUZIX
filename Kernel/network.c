@@ -17,11 +17,12 @@ int net_syscall(void)
 {
 	struct socket *s = sockets + udata.u_net.sock;
 	struct socket *n;
+	int r;
 
 	udata.u_error = 0;
 	udata.u_retval = 0;
 
-	switch (udata.u_callno) {
+	switch (udata.u_net.args[0]) {
 	case 0:		/* socket */
 		return netproto_socket();
 	case 1:		/* listen */
@@ -50,16 +51,20 @@ int net_syscall(void)
 			udata.u_error = EALREADY;
 			return 1;
 		}
-		if (s->s_state == SS_UNCONNECTED && netproto_autobind(s))
-			return -1;
+		if (s->s_state == SS_UNCONNECTED) {
+			if (netproto_autobind(s))
+				return 0;
+			s->s_state = SS_BOUND;
+		}
 		if (s->s_state == SS_BOUND) {
 			netproto_begin_connect(s);
-			if (udata.u_error == 0) {
-				udata.u_error = EINTR;
-				return 1;
-			}
+			return 1;
 		}
-		break;
+		if (s->s_state == SS_CONNECTED)
+			return 0;
+		/* The connection closed under us */
+		udata.u_error = s->s_error;
+		return 0;
 	case 4:		/* accept */
 		if (s->s_state != SS_LISTENING) {
 			udata.u_error = EALREADY;
@@ -87,24 +92,18 @@ int net_syscall(void)
 			break;
 		if (!is_datagram(s) || udata.u_net.args[5] == 0)
 			return netproto_write(s, &s->dst_addr);
-		if (netproto_write(s, &udata.u_net.addrbuf) == 0) {
-			if (udata.u_error == 0)
-				udata.u_retval = udata.u_done;
-			return 0;
-		}
-		return 1;
+		r = netproto_write(s, &udata.u_net.addrbuf);
+		udata.u_retval = udata.u_done;
+		return r;
 	case 7:		/* recvfrom */
 		if (s->s_state == SS_UNCONNECTED && netproto_autobind(s))
 			return 0;
 		if (s->s_state < SS_BOUND)
 			break;
 		/* This will put the address into u_net.n_addr for us */
-		if (netproto_read(s)) {
-			if (udata.u_error == 0)
-				udata.u_retval = udata.u_done;
-			return 0;
-		}
-		return 1;
+		r = netproto_read(s);
+		udata.u_retval = udata.u_done;
+		return r;
 	case 8:		/* shutdown */
 		if (udata.u_argn1 > 2)
 			break;
@@ -126,13 +125,13 @@ int net_syscall(void)
 int net_close(void)
 {
 	struct socket *s = sockets + udata.u_net.sock;
-	s->s_state = SS_DEAD;
 	netproto_close(s);
 	return 0;
 }
 
 int net_write(void)
 {
+	int r;
 	struct socket *s = sockets + udata.u_net.sock;
 	if (s->s_state != SS_CONNECTED && s->s_state != SS_CLOSING) {
 		if (s->s_state >= SS_CLOSEWAIT) {
@@ -140,24 +139,30 @@ int net_write(void)
 			udata.u_error = EPIPE;
 		} else
 			udata.u_error = EINVAL;
+		return 0;
 	}
-	return netproto_write(s, &s->src_addr);
+	r = netproto_write(s, &s->src_addr);
+	udata.u_retval = udata.u_done;
+	return r;
 }
 
 int net_read(void)
 {
+	int r;
 	struct socket *s = sockets + udata.u_net.sock;
 	if (s->s_error) {
 		udata.u_error = s->s_error;
 		s->s_error = 0;
-		return -1;
+		return 0;
 	}
 	/* Q: datagram read in SS_BOUND valid but stream not ? TODO */
 	if (s->s_state < SS_CONNECTED) {
 		udata.u_error = EINVAL;
-		return -1;
+		return 0;
 	}
-	return netproto_read(s);
+	r = netproto_read(s);
+	udata.u_retval = udata.u_done;
+	return r;
 }
 
 void net_free(void)
@@ -175,5 +180,10 @@ void net_setup(struct socket *s)
 	netproto_setup(s);
 }
 
+void net_inode(void)
+{
+	struct socket *s = sockets + udata.u_net.sock;
+	s->s_ino = udata.u_net.inode;
+}
 
 #endif

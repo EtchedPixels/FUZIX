@@ -10,6 +10,7 @@
 #include <rc2014.h>
 #include <ps2kbd.h>
 #include <zxkey.h>
+#include <net_w5100.h>
 
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
@@ -99,6 +100,7 @@ void platform_idle(void)
 	else {
 		irqflags_t irq = di();
 		sync_clock();
+		w5100_poll();
 		irqrestore(irq);
 	}
 }
@@ -109,6 +111,7 @@ void do_timer_interrupt(void)
 	fd_tick();
 	fd_tick();
 	timer_interrupt();
+	w5100_poll();
 }
 
 static int16_t timerct;

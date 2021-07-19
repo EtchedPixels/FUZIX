@@ -128,6 +128,7 @@ extern void sock_init(void);
 extern int net_syscall(void);
 /* Helpers between core and protocol */
 extern void net_setup(struct socket *s);
+extern void net_inode(void);
 
 /* Hooks betweek the networking framework and the implementation */
 extern int netproto_socket(void);

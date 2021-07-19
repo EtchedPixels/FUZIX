@@ -9,6 +9,7 @@
  */
 #include <kernel.h>
 #include <kdata.h>
+#include <printf.h>
 
 #ifdef CONFIG_NET
 
@@ -43,18 +44,19 @@ bool issocket(inoptr ino)
 	return 0;
 }
 
-static uint16_t sock_get(int fd, uint8_t * flags)
+static inoptr sock_get(int fd, uint8_t * flags)
 {
 	inoptr ino = getinode(fd);
 	if (ino == NULL)
-		return 0;
+		return NULL;
 	if (!issocket(ino)) {
 		udata.u_error = EINVAL;
-		return 0;
+		return NULL;
 	}
 	*flags = of_tab[udata.u_files[fd]].o_access;
 	udata.u_net.inode = ino;
-	return udata.u_net.sock = IN2SOCK(ino);
+	udata.u_net.sock = IN2SOCK(ino);
+	return ino;
 }
 
 /* The network layer made us a socket. We just need to nail an inode to it */
@@ -80,6 +82,7 @@ static int make_socket(uint16_t sock)
 
 	/* Do we need a reverse lookup ? */
 	udata.u_net.sock = sock;
+	udata.u_net.inode = ino;
 
 	of_tab[oftindex].o_inode = ino;
 	of_tab[oftindex].o_access = O_RDWR;
@@ -121,13 +124,17 @@ arg_t _netcall(void)
 		return -1;
 	}
 
+/*	kprintf("net_syscall %d\n", cn); */
+
 	udata.u_done = 0;
+	udata.u_error = 0;
 
 	/* First argument is a file handle. Set up the wake pointer (inode) and
 	   socket number, error if it's not a valid socket */
 	if (op & N_SOCKFD) {
 		/* This also sets up u_net.sock */
-		if (!sock_get(*ap++, &flags))
+		ino = sock_get(*ap++, &flags);
+		if (ino == NULL)
 			return -1;
 	}
 	/* Next argument is data in or out (will need to tweak when we ever get
@@ -153,9 +160,8 @@ arg_t _netcall(void)
 				return -1;
 			}
 			/* Put the buffer into the kernel */
-			if (uget
-			    ((void *) *ap, &udata.u_net.addrbuf,
-			     udata.u_net.addrlen) != udata.u_net.addrlen) {
+			if (uget((void *) *ap, &udata.u_net.addrbuf,
+			     udata.u_net.addrlen)) {
 				udata.u_error = EFAULT;
 				return -1;
 			}
@@ -164,12 +170,22 @@ arg_t _netcall(void)
 	}
 	/* Run states of the network machine. It will return > 0 for a sleep and
 	   0 when done. We handle the rules for I/O interruption ourselves */
+/*	kprintf("Do net call %d\n", udata.u_net.args[0]); */
 	while (net_syscall()) {
-		if (udata.u_error && !(flags & O_NDELAY))
+/*		kprintf("wait: %d %d %d\n",
+			udata.u_retval, udata.u_error, udata.u_net.sig); */
+		/* Caller wants us to wait but has provided an error code
+		   if non blocking */
+		if (udata.u_error && (flags & O_NDELAY))
 			return -1;
-		if (psleep_flags_io(ino, flags) == -1)
+/*		kprintf("sleep: %x\n", ino); */
+		if (psleep_flags(ino, flags) == -1)
 			return -1;
+/*		kprintf("loop: %d %d %d\n",
+			udata.u_retval, udata.u_error, udata.u_net.sig); */
 	}
+/*(	kprintf("done: %d %d %d\n",
+		udata.u_retval, udata.u_error, udata.u_net.sig); */
 	/* If it asked us to SIGPIPE do so */
 	if (udata.u_net.sig) {
 		ssig(udata.u_ptab, udata.u_net.sig);
@@ -184,7 +200,8 @@ arg_t _netcall(void)
 				/* net.sock is set ready */
 				net_free();
 				return -1;
-			}
+			} else
+				net_inode();
 			udata.u_retval = n;
 		}
 		/* The syscall returns an address into the user provided buffer
@@ -198,16 +215,15 @@ arg_t _netcall(void)
 				/* Copy the buffer, oe less if truncated by size */
 				if (s > udata.u_net.addrlen)
 					s = udata.u_net.addrlen;
-				if (uput
-				    (&udata.u_net.addrbuf, (void *) *ap,
-				     s) != s) {
+				if (uput(&udata.u_net.addrbuf, (void *) *ap, s) != s) {
 					udata.u_error = EFAULT;
 					return -1;
 				}
 			}
 		}
+		return udata.u_retval;
 	}
-	return udata.u_retval;
+	return -1;
 }
 
 #undef argptr
@@ -220,26 +236,32 @@ arg_t _netcall(void)
  *	The read() syscall path. The basic validation was already done
  *	by the caller, along with setting up u_done etc.
  */
-int sock_read(inoptr ino, uint8_t flag)
+int sock_read(inoptr ino, uint8_t flags)
 {
 	udata.u_net.sock = IN2SOCK(ino);
-	while (net_read())
-		if (psleep_flags(ino, flag) == -1)
+	while (net_read()) {
+		if (udata.u_error && (flags & O_NDELAY))
 			return -1;
-	return udata.u_retval;
+		if (psleep_flags(ino, flags) == -1)
+			return -1;
+	}
+	return udata.u_done;
 }
 
 /*
  *	The write() syscall path. The basic validation was already done
  *	by the caller, along with setting up u_done etc.
  */
-int sock_write(inoptr ino, uint8_t flag)
+int sock_write(inoptr ino, uint8_t flags)
 {
 	udata.u_net.sock = IN2SOCK(ino);
-	while (net_write())
-		if (psleep_flags(ino, flag) == -1)
+	while (net_write()) {
+		if (udata.u_error && (flags & O_NDELAY))
 			return -1;
-	return udata.u_retval;
+		if (psleep_flags(ino, flags) == -1)
+			return -1;
+	}
+	return udata.u_done;
 }
 
 /*
@@ -257,6 +279,7 @@ int sock_close(inoptr ino)
 
 void sock_init(void)
 {
+	netdev_init();
 }
 
 #endif

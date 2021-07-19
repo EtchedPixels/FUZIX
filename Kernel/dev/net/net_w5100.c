@@ -209,6 +209,7 @@ static void w5100_event_s(uint8_t i)
 
 	s = sockets + sn;
 
+/*	kprintf("event %x on socket %d\n", stat, i); */
 	if (stat & 0x1000) {
 		/* Transmit completed: window re-open. We can allow more
 		   data to flow from the user */
@@ -251,19 +252,19 @@ static void w5100_event_s(uint8_t i)
 		if (s->s_state != SS_CLOSED && s->s_state != SS_UNUSED) {
 			if (s->s_state != SS_CLOSING && s->s_state != SS_DEAD)
 				s->s_error = ECONNRESET;	/* Sort of a guess */
-				s->wake = 1;
+			s->wake = 1;
+			w5100_eof(s);
+			/* Net layer wants us to burn the socket */
+			if (s->s_state == SS_DEAD) {
+				/* FIXME: some of this should be in network.c */
+				wiz2sock_map[i] = 0xFF;
 				irqmask &= ~(1 << i);
 				w5100_writeb(IMR, irqmask);
-				w5100_eof(s);
-				/* Net layer wants us to burn the socket */
-				if (s->s_state == SS_DEAD) {
-					/* FIXME: some of this should be in network.c */
-					wiz2sock_map[i] = 0xFF;
-					netproto_free(s);
-					s->s_state = SS_UNUSED;
-				}
-				else	/* so net_close() burns the socket */
-					s->s_state = SS_CLOSED;
+				netproto_free(s);
+				s->s_state = SS_UNUSED;
+			}
+			else	/* so net_close() burns the socket */
+				s->s_state = SS_CLOSED;
 		}
 		break;
 	case 0x13:		/* SOCK_INIT */
@@ -335,8 +336,9 @@ static void w5100_event_s(uint8_t i)
 		break;
 	}
 	/* Until we work out how to make this a nice callback */
-	if (s->wake)
-		wakeup(s);
+	if (s->wake) {
+		wakeup(s->s_ino);
+	}
 }
 
 void w5100_event(void)
@@ -344,7 +346,6 @@ void w5100_event(void)
 	uint8_t irq;
 	uint8_t i = 0;
 	struct socket *s = sockets;
-
 
 	/* Polling cases */
 	irq = w5100_readb(IR) & 0x0F;
@@ -402,9 +403,9 @@ int netproto_socket(void)
 	}
 	/* Now check if it's one we can do */
 	while(st->family) {
-		if (st->family == udata.u_argn) {
+		if (st->family == udata.u_net.args[1]) {
 			famok = 1;
-			if (st->type == udata.u_argn1 &&
+			if (st->type == udata.u_net.args[2] &&
 				(st->protocol == 0 || udata.u_net.args[3] == 0 || udata.u_net.args[3] == st->protocol)) {
 				net_setup(s);
 				s->s_state = SS_UNCONNECTED;
@@ -416,6 +417,7 @@ int netproto_socket(void)
 				return 0;
 			}
 		}
+		st++;
 	}
 	if (famok)
 		udata.u_error = EPROTONOSUPPORT;
@@ -442,11 +444,12 @@ static int do_netproto_bind(struct socket *s)
 		r = SOCK_UDP;
 	case W5100_TCP:
 		/* We keep ports net endian so don't byte swap */
-		w5100_bwrite(Sn_PORT0 + off, &udata.u_net.addrbuf.sa.sin.sin_port, 2);
+
+		w5100_bwrite(Sn_PORT0 + off, &s->src_addr.sa.sin.sin_port, 2);
 		break;
 	case W5100_RAW:
 		/* FIXME: check endianness here */
-		w5100_writeb(Sn_MR + off,udata.u_net.addrbuf.sa.sin.sin_port);
+		w5100_writeb(Sn_MR + off, s->src_addr.sa.sin.sin_port);
 		r = SOCK_IPRAW;
 	}
 	/* Make an open request to open the socket */
@@ -460,6 +463,8 @@ static int do_netproto_bind(struct socket *s)
 	/* Interrupt on if available mark as bound */
 	irqmask |= 1 << i;
 	w5100_writeb(IMR, irqmask);
+	/* FOR NOW TODO */
+	wiz2sock_map[i] = i;
 	return 0;
 }
 
@@ -500,6 +505,7 @@ int netproto_begin_connect(struct socket *s)
 		w5100_bwrite(Sn_DPORT0 + i, &udata.u_net.addrbuf.sa.sin.sin_port, 2);
 		w5100_writeb(Sn_CR + i, CONNECT);
 		s->s_state = SS_CONNECTING;
+		return 1;
 	} else {
 		/* UDP/RAW - note have to do our own filtering for 'connect' */
 		s->s_state = SS_CONNECTED;
@@ -520,32 +526,37 @@ int netproto_close(struct socket *s)
 		irqmask &= ~(1 << i);
 		w5100_writeb(IMR, irqmask);
 		w5100_writeb(Sn_CR + off, CLOSE);
+		/* FIXME: remove duplication with interrupt close path */
 		sock_free |= (1 << i);
+		netproto_free(s);
+		wiz2sock_map[i] = 0xFF;
+		s->s_state = SS_UNUSED;
 	}
 	return 0;
 }
 
 int netproto_read(struct socket *s)
 {
-	uint16_t n = 0xFFFF;
+	uint16_t n;
 	uint16_t r;
 	uint16_t i = s->proto.slot;
 	uint8_t st;
 
 	i <<= 8;
 
-	/* Check for an EOF (covers post close cases too) */
-	if (s->s_iflags & SI_EOF)
+	if (udata.u_count == 0)
 		return 0;
-	/* Bytes available */
-	n = w5100_readw(Sn_RX_RSR + i);
-	if (n)
-		s->s_iflags |= SI_DATA;
 
-	/* EOF cases - do we drain first ? */
-	st = w5100_readb(Sn_SR);
-	if (st >= SOCK_CLOSING && st <= SOCK_UDP)
-		return 0;
+	/* Bytes available */
+	/* FIXME: set SI_DATA on CONNECTED state or UDP connect etc and
+	   check higher up without this check here */
+	n = w5100_readw(Sn_RX_RSR + i);
+	if (n == 0) {
+		if (s->s_iflags & SI_EOF)
+			return 0;
+		return 1;
+	}
+	s->s_iflags |= SI_DATA;
 
 	memcpy(&udata.u_net.addrbuf, &s->dst_addr, sizeof(struct ksockaddr));
 
@@ -563,18 +574,25 @@ int netproto_read(struct socket *s)
 	case W5100_TCP:
 		/* Bytes to consume */
 		r = min(n, udata.u_count);
+		if (r == 0) {
+			/* Check for an EOF (covers post close cases too) */
+			if (s->s_iflags & SI_EOF)
+				return 0;
+			/* Wait */
+			return 1;
+		}
 		/* Now dequeue some bytes into udata.u_base */
 		w5100_dequeue_u(i, r, udata.u_base);
+		udata.u_done += r;
+		udata.u_base += r;
 		/* For datagrams we always discard the entire frame */
 		if (s->s_type == W5100_UDP)
 			r = n + 8;
 		w5100_writew(Sn_RX_RD0 + i, w5100_readw(Sn_RX_RD0 + i) + r);
 		/* FIXME: figure out if SI_DATA should be cleared */
 		/* Now tell the device we ate the data */
-		w5100_writeb(Sn_CR, RECV);
+		w5100_writeb(Sn_CR + i, RECV);
 	}
-	udata.u_done += n;
-	udata.u_base += n;
 	return 0;
 }
 
@@ -592,30 +610,35 @@ arg_t netproto_write(struct socket * s, struct ksockaddr *ka)
 	case W5100_UDP:
 		if (udata.u_count > 1472) {
 			udata.u_error = EMSGSIZE;
-			return -1;
+			return 0;
 		}
 	case W5100_RAW:
 		if (udata.u_count > 1500) {
 			udata.u_error = EMSGSIZE;
-			return -1;
+			return 0;
 		}
 		if (room < udata.u_count)
-			return -2;
+			return 0;
 		/* Already native endian */
 		w5100_bwrite(Sn_DIPR0 + i, &ka->sa.sin.sin_addr, 4);
 		w5100_bwrite(Sn_DPORT0 + i, &ka->sa.sin.sin_addr, 4);
 		/* Fall through */
 	case W5100_TCP:
-		if (room == 0)
-			return 0;
+		/* No room blocks, a partial write returns */
+		if (room == 0) {
+			s->s_iflags |= SI_THROTTLE;
+			return 1;
+		}
 		n = min(room, udata.u_count);
 		w5100_queue_u(i, n, udata.u_base);
 		w5100_writew(Sn_TX_WR0 + i,
 			     w5100_readw(Sn_TX_WR0 + i) + n);
-		w5100_writeb(Sn_CR, SEND);
+		w5100_writeb(Sn_CR + i, SEND);
 		break;
 	}
-	return n;
+	udata.u_done += n;
+	udata.u_base += n;
+	return 0;
 }
 
 arg_t netproto_shutdown(struct socket *s, uint8_t flag)
@@ -699,7 +722,7 @@ int netproto_find_local(struct ksockaddr *ka)
 	struct socket *s = sockets;
 	uint8_t n = 0;
 	while(n < NSOCKET) {
-		if (s->s_state == SS_UNUSED || s->src_addr.sa.family != AF_INET) {
+		if (s->s_state < SS_BOUND || s->src_addr.sa.family != AF_INET) {
 			s++;
 			n++;
 			continue;
@@ -711,6 +734,7 @@ int netproto_find_local(struct ksockaddr *ka)
 			        return n;
 		}
 		s++;
+		n++;
 	}
 	return -1;
 }
@@ -729,10 +753,14 @@ int netproto_autobind(struct socket *s)
 {
 	s->src_addr.sa.family = AF_INET;
 	s->src_addr.sa.sin.sin_addr.s_addr = 0;
-	do {
-		s->src_addr.sa.sin.sin_port = autoport;
-		inc_autoport();
-	} while (netproto_find_local(&s->src_addr) != -1);
+	/* Raw socket autobind is a no-op for port */
+	if (s->s_type != W5100_RAW) {
+		do {
+			s->src_addr.sa.sin.sin_port = autoport;
+			inc_autoport();
+		} while (netproto_find_local(&s->src_addr) != -1);
+	}
+	do_netproto_bind(s);
 	return 0;
 }
 
@@ -751,6 +779,7 @@ int netproto_bind(struct socket *s)
 		return 0;
 	}
 	memcpy(&s->src_addr, &udata.u_net.addrbuf, sizeof(struct ksockaddr));
+	do_netproto_bind(s);
 	return 0;
 }
 
