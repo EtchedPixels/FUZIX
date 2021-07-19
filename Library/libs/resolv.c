@@ -602,8 +602,8 @@ static unsigned int res_randomid(void)
 static void add_nameserver(const char *ap)
 {
 	uint32_t addr;
-	struct sockaddr_in *sin = res_state.nsaddr_list + res.nscount;
-	if (ap == NULL || res.nscount == MAXNS || !inet_aton(ap, &sin.sin_addr))
+	struct sockaddr_in *sin = res.nsaddr_list + res.nscount;
+	if (ap == NULL || res.nscount == MAXNS || !inet_aton(ap, &sin->sin_addr))
 		return;
 	sin->sin_family = AF_INET;
 	sin->sin_port = htons(NS_DEFAULTPORT);
@@ -615,8 +615,9 @@ int res_init(void)
 	char *addr;
 	FILE *fp;
 	char *tp;
+	char *ap;
 	char buf[128];
-	uint8_t srchptr = 1;
+	uint8_t srchptr = 0;
 
 	memset(&res, 0, sizeof(struct res_state));
 	res.options = RES_DEFAULT;
@@ -625,7 +626,6 @@ int res_init(void)
 	res.id = res_randomid();
 	res.ndots = 1;
 	res.nscount = 0;
-	res.dnsrch[0] = res.defdname;
 
 	fp = fopen("/etc/resolv.conf", "r");
 	if (fp) {
@@ -662,7 +662,7 @@ int res_init(void)
 		res.nsaddr_list[0].sin_port = htons(NS_DEFAULTPORT);
 		res.nscount++;
 	}
-	if (!*res.defdname) {
+	if (!*res.defdname)
 		strcpy(res.defdname, "local.domain");
 	res.dnsrch[srchptr] = res.defdname;
 	return 0;
