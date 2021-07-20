@@ -46,6 +46,6 @@ platform-sbcv2/ds1302_rbc.rel
 platform-sbcv2/devfd.rel
 platform-sbcv2/rbcfd9266_hw.rel
 platform-sbcv2/net_native.rel
-platform-sbcv2/net_w5100.rel
+platform-sbcv2/net_w5x00.rel
 platform-sbcv2/wiznet.rel
 -e
