@@ -10,7 +10,7 @@ DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/amd9511.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014.s
 DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
 DASRCS += ../dev/ps2bitbang-rc2014-kbd.s ../dev/ps2bitbang-rc2014-mouse.s
-NSRCS = ../dev/net/net_w5100.c
+NSRCS = ../dev/net/net_w5x00.c
 DRSRCS = ../dev/rc2014/zxkeyboard.c
 DRASRCS = ../dev/rc2014/zxkey.s
 

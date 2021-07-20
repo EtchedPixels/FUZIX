@@ -31,6 +31,7 @@
 /* Core Networking support */
 #define CONFIG_NET
 #define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5100
 #endif
 #ifdef CONFIG_RC2014_FLOPPY
 #define CONFIG_FLOPPY
