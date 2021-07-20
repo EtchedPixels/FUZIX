@@ -85,9 +85,9 @@ uint16_t w5x00_readcw(uint16_t off)
 
 uint16_t w5x00_readsw(uint8_t s, uint16_t off)
 {
-	uint8_t r;
+	uint16_t r;
 	spi_transaction((s << 8) + off, NULL, 0, &r, 2);
-	return r;
+	return ntohs(r);
 }
 
 void w5x00_bread(uint16_t bank, uint16_t off, void *pv, uint16_t n)
@@ -247,6 +247,7 @@ void w5x00_bwriteu(uint16_t bank, uint16_t off, void *pv, uint16_t n)
 
 void w5x00_setup(void)
 {
+	w5x00_writecb(0, 0x80);
 }
 
 #endif
