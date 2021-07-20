@@ -165,6 +165,12 @@ static void w5100_dequeue_u(uint16_t i, uint16_t n, void *p)
 		w5100_breadu(dm + rx_base, p, n);
 }
 
+static void w5100_cmd(uint16_t off, uint8_t v)
+{
+	w5100_writeb(off, v);
+	while(w5100_readb(off));
+}
+
 static void w5100_eof(struct socket *s)
 {
 	s->s_iflags |= SI_EOF;
@@ -247,7 +253,7 @@ static void netproto_cleanup(struct socket *s)
 
 	irqmask &= ~(1 << i);
 	w5100_writeb(IMR, irqmask);
-	w5100_writeb(Sn_CR + off, CLOSE);
+	w5100_cmd(Sn_CR + off, CLOSE);
 	s->s_state = SS_UNUSED;
 	netproto_free(s);
 }
@@ -266,7 +272,7 @@ static int do_netproto_bind(struct socket *s)
 
 	w5100_writeb(Sn_MR + off, s->s_type);
 	/* Make an open request to open the socket */
-	w5100_writeb(Sn_CR + off, OPEN);
+	w5100_cmd(Sn_CR + off, OPEN);
 	switch (s->s_type) {
 	case W5100_UDP:
 		r = SOCK_UDP;
@@ -306,7 +312,7 @@ static void w5100_event_s(uint8_t i)
 	/* We got a pending event for a dead socket as we killed it. Shoot it
 	   again to make sure it's dead */
 	if (sn == 0xFF) {
-		w5100_writeb(Sn_CR + offset, CLOSE);
+		w5100_cmd(Sn_CR + offset, CLOSE);
 		irqmask &= ~(1 << i);
 		w5100_writeb(IMR, irqmask);
 		return;
@@ -324,7 +330,7 @@ static void w5100_event_s(uint8_t i)
 	if (stat & 0x800) {
 		/* Timeout */
 		s->s_error = ETIMEDOUT;
-		w5100_writeb(Sn_CR + offset, CLOSE);
+		w5100_cmd(Sn_CR + offset, CLOSE);
 		s->s_wake = 1;
 		w5100_eof(s);
 		/* Fall through and let CLOSE state processing do the work */
@@ -337,7 +343,7 @@ static void w5100_event_s(uint8_t i)
 	if (stat & 0x200) {
 		/* Disconnect: Just kill our host socket. Not clear if this
 		   is right or we need to drain data first */
-		w5100_writeb(Sn_CR + offset, CLOSE);
+		w5100_cmd(Sn_CR + offset, CLOSE);
 		w5100_eof(s);
 		/* When we fall through we'll see CLOSE state and do the
 		   actual shutting down */
@@ -394,7 +400,7 @@ static void w5100_event_s(uint8_t i)
 			if (ns == NULL) {
 				/* No socket to re-use for the listen, cycle
 				   this one */
-				w5100_writeb(Sn_CR + offset, CLOSE);
+				w5100_cmd(Sn_CR + offset, CLOSE);
 				do_netproto_bind(s);
 				break;
 			}
@@ -541,7 +547,7 @@ int netproto_listen(struct socket *s)
 	i <<= 8;
 
 	/* Issue a listen command. Check the state went to SOCK_LISTEN */
-	w5100_writeb(Sn_CR + i, LISTEN);
+	w5100_cmd(Sn_CR + i, LISTEN);
 	if (w5100_readb(Sn_SR + i) != SOCK_LISTEN) {
 		udata.u_error = EIO;//FIXME EPROTO;	/* ??? */
 		return 0;
@@ -565,7 +571,7 @@ int netproto_begin_connect(struct socket *s)
 		/* Already net endian */
 		w5100_bwrite(Sn_DIPR0 + i, &udata.u_net.addrbuf.sa.sin.sin_addr, 4);
 		w5100_bwrite(Sn_DPORT0 + i, &udata.u_net.addrbuf.sa.sin.sin_port, 2);
-		w5100_writeb(Sn_CR + i, CONNECT);
+		w5100_cmd(Sn_CR + i, CONNECT);
 		s->s_state = SS_CONNECTING;
 		s->dst_len = sizeof(struct sockaddr_in);
 		return 1;
@@ -595,7 +601,7 @@ int netproto_close(struct socket *s)
 		}
 	}
 	if (s->s_type == W5100_TCP && s->s_state >= SS_CONNECTING && s->s_state <= SS_CONNECTED) {
-		w5100_writeb(Sn_CR + off, DISCON);
+		w5100_cmd(Sn_CR + off, DISCON);
 		s->s_state = SS_CLOSING;
 	} else
 		netproto_cleanup(s);
@@ -665,7 +671,7 @@ int netproto_read(struct socket *s)
 			w5100_writew(Sn_RX_RD0 + i, w5100_readw(Sn_RX_RD0 + i) + r);
 			/* FIXME: figure out if SI_DATA should be cleared */
 			/* Now tell the device we ate the data */
-			w5100_writeb(Sn_CR + i, RECV);
+			w5100_cmd(Sn_CR + i, RECV);
 		}
 	} while(filtered);
 	return 0;
@@ -708,7 +714,7 @@ arg_t netproto_write(struct socket * s, struct ksockaddr *ka)
 		w5100_queue_u(i, n, udata.u_base);
 		w5100_writew(Sn_TX_WR0 + i,
 			     w5100_readw(Sn_TX_WR0 + i) + n);
-		w5100_writeb(Sn_CR + i, SEND);
+		w5100_cmd(Sn_CR + i, SEND);
 		break;
 	}
 	udata.u_done += n;
@@ -721,7 +727,7 @@ arg_t netproto_shutdown(struct socket *s, uint8_t flag)
 	int i = s->proto.slot << 8;
 	s->s_iflags |= flag;
 	if (s->s_iflags & SI_SHUTW)
-		w5100_writeb(Sn_CR + i, DISCON);
+		w5100_cmd(Sn_CR + i, DISCON);
 	/* Really we need to look for SHUTR and received data and CLOSE if
 	   so - FIXME */
 	return 0;
