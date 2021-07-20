@@ -1,6 +1,8 @@
 #ifndef _NETDEV_H
 #define _NETDEV_H
 
+#ifdef CONFIG_NET
+
 #define AF_INET		1
 #define PF_INET		AF_INET
 
@@ -169,7 +171,7 @@ extern int sock_close(inoptr ino);
 extern int sock_read(inoptr ino, uint8_t flag);
 extern int sock_write(inoptr ino, uint8_t flag);
 extern arg_t sock_ioctl(inoptr ino, int req, char *data);
-extern bool issocket(inoptr ino);
+extern uint_fast8_t issocket(inoptr ino);
 
 /* Hooks between the core kernel and networking */
 extern void net_free(void);
@@ -204,4 +206,6 @@ extern int netproto_close(struct socket *s);
 extern void netproto_setup(struct socket *s);
 extern void netproto_free(struct socket *s);
 extern int netproto_ioctl(struct socket *s, int requ, char *data);
+
+#endif
 #endif
