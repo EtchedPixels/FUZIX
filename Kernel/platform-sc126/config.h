@@ -44,7 +44,7 @@
 
 /* SD via CSIO : Needs an additional GPIO pin */
 #define CONFIG_SD
-#define SD_DRIVE_COUNT 2
+#define SD_DRIVE_COUNT 1	/* Need to figure out how we deal with this */
 
 #define NUM_DEV_TTY	2
 /* UART0 as the console */
@@ -67,11 +67,9 @@ extern uint16_t swap_dev;
 #define platform_copyright()		// for now
 
 /* WizNET based TCP/IP */
-//#define CONFIG_NET
-//#define CONFIG_NET_NATIVE
-
-//#define CONFIG_NET_WIZNET5300
-//#define CONFIG_WIZNET_INDIRECT
+#define CONFIG_NET
+#define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5200
 
 /* I2C device */
 #define CONFIG_DEV_I2C
