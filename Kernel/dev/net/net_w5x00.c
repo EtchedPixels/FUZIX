@@ -34,7 +34,7 @@ static uint8_t irqmask;
 #define WIZ_SOCKET	4
 
 /* Offset conversions: in the W5100 into a linear 16bit space */
-#define SOCK2BANK_C(x)	(0x0400 + ((x) << 8))
+#define SOCK2BANK_C(x)	(0x0000 + ((x) << 8))
 #define SOCK2BANK_W(x)	(0x4000 + ((x) << 11))
 #define SOCK2BANK_R(x)	(0x6000 + ((x) << 11))
 #define BANK_CTRL	0
