@@ -120,6 +120,120 @@ static uint8_t wiz2sock_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 #define W5100_UDP	0x02
 #define W5100_RAW	0x03
 
+/* On the 5100 part the interrupt register low bits are what we need */
+#define SIR		IR
+#define SIMR		IMR
+#define SIR_MASK	0x0F
+
+#elif defined(CONFIG_NET_W5200)
+
+/* The 5200 is quite similar to the 5100 except that everything has moved
+   around the memory map */
+
+#define WIZ_SOCKET	8
+
+/* Offset conversions: in the W5200 into a linear 16bit space */
+#define SOCK2BANK_C(x)	(0x0000 + ((x) << 8))
+#define SOCK2BANK_W(x)	(0x8000 + ((x) << 11))
+#define SOCK2BANK_R(x)	(0xC000 + ((x) << 11))
+#define BANK_CTRL	0
+
+static uint8_t sock_free = 0xFF;
+static uint8_t wiz2sock_map[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+#define RX_MASK 	0x07FF
+#define TX_MASK		0x07FF
+
+#define MR		0x0000
+#define		MR_RESET	0x80
+#define		MR_WOL		0x20
+#define		MR_PB		0x10
+#define		MR_PPPOE	0x08
+
+#define GAR0		0x0001
+#define SUBR0		0x0005
+#define SHAR0		0x0009
+#define SIPR0		0x000F
+#define IR		0x0015
+#define IMR		0x0016
+#define RTR0		0x0017
+#define RCR		0x0019
+#define RMSR		0x001A
+#define TMSR		0x001B
+#define PATR0		0x001C
+#define PPPALGO		0x001E
+#define VERSIONR	0x001F
+#define PTIMER		0x0028
+#define PMAGIC		0x0029
+#define UIPR0		0x002A
+#define UPORT0		0x002E
+#define INTLEVEL0	0x0030
+#define INTLEVEL1	0x0031
+#define IR2		0x0034
+#define PSTATUS		0x0035
+#define IMR2		0x0036
+
+#define Sn_MR		0x4000
+#define Sn_CR		0x4001
+#define 	OPEN		0x01
+#define		LISTEN		0x02
+#define		CONNECT		0x04
+#define		DISCON		0x08
+#define		CLOSE		0x10
+#define		SEND		0x20
+#define		SEND_MAC	0x21
+#define		SEND_KEEP	0x22
+#define		RECV		0x40
+#define	Sn_IR		0x4002
+#define		I_SEND_OK	0x10
+#define		I_TIMEOUT	0x08
+#define		I_RECV		0x04
+#define		I_DISCON	0x02
+#define		I_CON		0x01
+#define Sn_SR		0x4003
+#define		SOCK_CLOSED		0x00
+#define		SOCK_ARP		0x01
+#define		SOCK_INIT		0x13
+#define		SOCK_LISTEN		0x14
+#define		SOCK_SYNSENT		0x15
+#define		SOCK_SYNRECV		0x16
+#define		SOCK_ESTABLISHED	0x17
+#define		SOCK_FIN_WAIT		0x18
+#define		SOCK_CLOSING		0x1A
+#define		SOCK_TIME_WAIT		0x1B
+#define		SOCK_CLOSE_WAIT		0x1C
+#define		SOCK_LAST_ACK		0x1D
+#define		SOCK_UDP		0x22
+#define		SOCK_IPRAW		0x32
+#define		SOCK_MACROW		0x42
+#define		SOC_PPPOE		0x5F
+#define Sn_PORT0	0x4004
+#define Sn_DHAR0	0x4006
+#define Sn_DIPR0	0x400C
+#define Sn_DPORT0	0x4010
+#define Sn_MSSR0	0x4012
+#define Sn_PROTO	0x4014
+#define Sn_TOS		0x4015
+#define Sn_TTL		0x4016
+#define Sn_RXMEM_SIZE	0x401E
+#define Sn_TXMEM_SIZE	0x401F
+#define Sn_TX_FSR	0x4020
+#define Sn_TX_RD0	0x4022
+#define Sn_TX_WR0	0x4024
+#define Sn_RX_RSR	0x4026
+#define Sn_RX_RD0	0x4028
+#define Sn_RX_WR0	0x402A
+#define Sn_IMR		0x402C
+
+#define W5100_TCP	0x21
+#define W5100_UDP	0x02
+#define W5100_RAW	0x03
+
+/* Same function different name */
+#define SIR		IR2
+#define SIMR		IMR2
+#define SIR_MASK	0xFF
+
 #elif defined(CONFIG_NET_W5500)
 
 #define WIZ_SOCKET	8
@@ -157,6 +271,7 @@ static uint8_t wiz2sock_map[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF
 #define IMR		0x0016
 /* And these deal with the 8 sockets */
 #define SIR		0x0017
+#define 	SIR_MASK	0xFF
 #define SIMR		0x0018
 #define RTR0		0x0019
 #define RTR1		0x001A
@@ -422,11 +537,7 @@ static int do_netproto_bind(struct socket *s)
 	}
 	/* Interrupt on if available mark as bound */
 	irqmask |= 1 << i;
-#ifdef CONFIG_NET_W5100
-	w5x00_writecb(IMR, irqmask);
-#else
 	w5x00_writecb(SIMR, irqmask);
-#endif	
 	s->s_state = SS_BOUND;
 	s->src_len = sizeof(struct sockaddr_in);
 	return 0;
@@ -446,11 +557,7 @@ static void w5x00_event_s(uint8_t i)
 	if (sn == 0xFF) {
 		w5x00_cmd(i, CLOSE);
 		irqmask &= ~(1 << i);
-#ifdef CONFIG_NET_W5100
-		w5x00_writecb(IMR, irqmask);
-#else		
 		w5x00_writecb(SIMR, irqmask);
-#endif
 		return;
 	}
 //	kprintf("sock %d slot %d event %x\n",
@@ -600,11 +707,7 @@ void w5x00_event(void)
 	struct socket *s = sockets;
 
 	/* Polling cases */
-#ifdef CONFIG_NET_W5100	
-	irq = w5x00_readcb(IR) & 0x0F;
-#else
-	irq = w5x00_readcb(SIR);
-#endif	
+	irq = w5x00_readcb(SIR) & SIR_MASK;
 	if (irq == 0)
 		return;
 
@@ -897,8 +1000,10 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		goto copyback;
 	case SIOCGIFFLAGS:
 		ifr.ifr_flags = ifflags;
-//		if (w5x00_readb(PSTATUS) & 0x20))
-//			ifr.ifr_flags |= IFF_LINKUP;
+#ifdef PSTATUS
+		if (w5x00_readcb(PSTATUS) & 0x20)
+			ifr.ifr_flags |= IFF_LINKUP;
+#endif
 		goto copyback;
 	case SIOCGIFADDR:
 		ifr.ifr_addr.sa.sin.sin_addr.s_addr = ipa;
@@ -949,6 +1054,10 @@ void netdev_init(void)
 	uint16_t i;
 
 	w5x00_setup();	
+
+#ifdef VERSIONR
+	kprintf("IDENT %2x", w5x00_readcb(VERSIONR));
+#endif
 	w5x00_writecb(IMR, 0);
 //	w5x00_writeb(RTR, );
 //	w5x00_writeb(RCR, );
