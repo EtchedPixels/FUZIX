@@ -37,7 +37,7 @@ static uint8_t ncall_tab[NUM_NETCALL] = {
 
 #define IN2SOCK(ino)		((ino)->c_node.i_addr[0])
 
-bool issocket(inoptr ino)
+uint_fast8_t issocket(inoptr ino)
 {
 	if ((ino->c_node.i_mode & F_MASK) == F_SOCK)
 		return 1;
