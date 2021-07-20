@@ -1,3 +1,5 @@
+#ifdef CONFIG_NET_NATIVE
+
 #include <kernel.h>
 #include <kdata.h>
 #include <netdev.h>
@@ -9,7 +11,6 @@
  *	memory buffers for networking not just file buffers. That way
  *	it's much nicer on big boxes.
  */
-#ifdef CONFIG_NET_NATIVE
 
 /* This holds the additional kernel context for the sockets */
 static struct sockdata sockdata[NSOCKET];
