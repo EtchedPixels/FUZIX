@@ -28,66 +28,88 @@ __sfr __at 0x2B idm_dr;
 /* We assume indirect, autoinc is always set */
 uint8_t w5100_readb(uint16_t off)
 {
+	irqflags_t irq = di();
+	uint8_t r;
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
-	return idm_dr;
+	r = idm_dr;
+	irqrestore(irq);
+	return r;
 }
 
 uint16_t w5100_readw(uint16_t off)
 {
+	irqflags_t irq = di();
 	uint16_t n;
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
 	n = ((uint16_t)idm_dr) << 8;
 	n |= idm_dr;
+	irqrestore(irq);
 	return n;
 }
 
-void w5100_bread(uint16_t off, uint8_t *p, uint16_t n)
+void w5100_bread(uint16_t off, void *pv, uint16_t n)
 {
+	irqflags_t irq = di();
+	uint8_t *p = pv;
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
 	while(n--)
 		*p++ = idm_dr;
+	irqrestore(irq);
 }
 
-void w5100_breadu(uint16_t off, uint8_t *p, uint16_t n)
+void w5100_breadu(uint16_t off, void *pv, uint16_t n)
 {
+	irqflags_t irq = di();
+	uint8_t *p = pv;
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
 	while(n--)
 		uputc(idm_dr, p++);
+	irqrestore(irq);
 }
 
 void w5100_writeb(uint16_t off, uint8_t n)
 {
+	irqflags_t irq = di();
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
 	idm_dr = n;
+	irqrestore(irq);
 }
 
 void w5100_writew(uint16_t off, uint16_t n)
 {
+	irqflags_t irq = di();
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
 	idm_dr = n >> 8;
 	idm_dr = n;
+	irqrestore(irq);
 }
 
-void w5100_bwrite(uint16_t off, uint8_t *p, uint16_t n)
+void w5100_bwrite(uint16_t off, void *pv, uint16_t n)
 {
+	irqflags_t irq = di();
+	uint8_t *p = pv;
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
 	while(n--)
 		idm_dr = *p++;
+	irqrestore(irq);
 }
 
-void w5100_bwriteu(uint16_t off, uint8_t *p, uint16_t n)
+void w5100_bwriteu(uint16_t off, void *pv, uint16_t n)
 {
+	irqflags_t irq = di();
+	uint8_t *p = pv;
 	idm_ar0 = off >> 8;
 	idm_ar1 = off;
 	while(n--)
 		idm_dr = ugetc(p++);
+	irqrestore(irq);
 }
 
 void w5100_setup(void)

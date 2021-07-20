@@ -27,6 +27,7 @@ syscall_fs3.rel
 syscall_proc.rel
 syscall_other.rel
 syscall_net.rel
+network.rel
 tty.rel
 mm.rel
 swap.rel

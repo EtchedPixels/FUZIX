@@ -106,7 +106,7 @@ static uint8_t wiz2sock_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 #define Sn_RX_RD0	0x0428
 
 #define W5100_TCP	0x01
-#define W5100_UDP;	0x02
+#define W5100_UDP	0x02
 #define W5100_RAW	0x03
 
 
