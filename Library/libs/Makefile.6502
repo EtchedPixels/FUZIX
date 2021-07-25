@@ -31,27 +31,29 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 #	very tightly coded. We want to make use of them eventually
 #
 #
-SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
-SRC_C += bcmp.c bcopy.c bsearch.c calloc.c cfree.c clock.c closedir.c
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
+SRC_C += bcmp.c bcopy.c bind.c bsearch.c calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
-SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c
+SRC_C += connect.c creat.c crypt.c ctermid.c ctime.c cuserid.c
 SRC_C += err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fork.c fprintf.c fputc.c fputs.c fread.c
 SRC_C += free.c fsetpos.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getopt.c
-SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
+SRC_C += getpeername.c getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c
+SRC_C += getsockname.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c htons.c htonl.c index.c initgroups.c
-SRC_C += isatty.c killpg.c libintl.c
+SRC_C += isatty.c killpg.c libintl.c listen.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c mkstemps.c mntent.o nanosleep.c
 SRC_C += opendir.c opendir_r.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putgetch.c putpwent.c putw.c pwent.c qsort.c
-SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
+SRC_C += raise.c rand.c readdir.c readlink.c realloc.c recvfrom.c regerror.c
 SRC_C += regsub.c remove.c remount.c rewind.c rindex.c rootmntent.c
-SRC_C += setbuffer.c setenv.c setjmp.c
-SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c sleep.c sprintf.c
+SRC_C += sendto.c setbuffer.c setenv.c setjmp.c
+SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c shutdown.c
+SRC_C += sleep.c socket.c sprintf.c
 SRC_C += sputl.c stat.c statvfs.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
 SRC_C += strnicmp.c strnlen.c strsep.c strsignal.c swab.c swapon.c
