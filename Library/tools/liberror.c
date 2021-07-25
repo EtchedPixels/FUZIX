@@ -71,7 +71,6 @@ const char *err[60] = {
   "Connection refused",
 
 /* 50 */
-  "Address already in use",
   "No route to host",
   "Host is down",
   "Network is unreachable",
