@@ -55,13 +55,7 @@ need addressing
 
 - There is a direct relationship between kernel and user on some ZP usage. In
   particular the user C stack zero page locations are used by the kernel to
-  access arguments. This makes applications non portable until all the
-  relocation is fixed.
-
-- There is no relocation of binaries. This should not be too hard for both
-  main memory and ZP allocations but needs a helper because the 6502 isn't
-  AFAIK smart enough to relocate its own code using entirely relocatable code
-  and data.
+  access arguments.
 
 - Signals are tricky. The C stack is maintained via ZP and is 16bits. As there
   is no way to know if the stack was mid update an interrupt cannot tell if
