@@ -1,4 +1,5 @@
 #ifndef _DEV_NET_NET_NATIVE_H
+#ifdef CONFIG_NET_NATIVE
 
 /* These are by socket and each one is
 
@@ -71,5 +72,5 @@ int netdev_read(uint8_t flag);
 int netdev_ioctl(uarg_t request, char *data);
 int netdev_close(uint8_t minor);
 
-
+#endif
 #endif
