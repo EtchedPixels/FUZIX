@@ -14,7 +14,7 @@ char *_inet_ntoa(uint32_t in)
   uint8_t *p = (uint8_t *)&in;
   char *o = b;
   
-  while(p != ((uint8_t *)&in) + 3) {
+  while(p != ((uint8_t *)&in) + 4) {
     strcpy(o, _itoa(*p++));
     o += strlen(o);
     *o++ = '.';
