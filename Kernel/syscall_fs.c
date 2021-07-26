@@ -263,7 +263,7 @@ arg_t _ioctl(void)
 	}
 #ifdef CONFIG_NET
 	if (issocket(ino))
-		sock_ioctl(ino, request, data);
+		return sock_ioctl(ino, request, data);
 #endif
 	dev = ino->c_node.i_addr[0];
 
