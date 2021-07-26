@@ -17,11 +17,11 @@ ELF2FUZIX = elf2flt -s 16384
 
 SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c coconic.c ping.c ntpdate.c
-SRCS += htget.c tinyirc.c linein.c
+SRCS += htget.c tinyirc.c linein.c ifconfig.c
 
 OBJS = $(SRCS:.c=.o)
 
-APPS = netd-slip telnet echoping dig httpd ping ntpdate htget tinyirc
+APPS = netd-slip telnet echoping dig httpd ping ntpdate htget tinyirc ifconfig
 
 all: $(APPS)
 

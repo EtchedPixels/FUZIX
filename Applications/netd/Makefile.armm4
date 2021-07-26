@@ -4,11 +4,11 @@ CFLAGS += -DNETD_LITTLE_ENDIAN
 
 SRCS  = netd.c slip.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c coconic.c ping.c ntpdate.c
-SRCS += htget.c tinyirc.c linein.c
+SRCS += htget.c tinyirc.c linein.c ifconfig.c
 
 OBJS = $(SRCS:.c=.o)
 
-APPS = netd-slip telnet echoping dig httpd ping ntpdate htget tinyirc
+APPS = netd-slip telnet echoping dig httpd ping ntpdate htget tinyirc ifconfig
 
 all: $(APPS)
 
@@ -85,6 +85,15 @@ else
 endif
 
 tinyirc: $(CRT0) tinyirc.o linein.o gethostbyname.o
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+ifconfig: $(CRT0) ifconfig.o
 	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
 ifdef ELF2FUZIX
 	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug

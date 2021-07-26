@@ -10,6 +10,7 @@ f 0755 /usr/bin/ntpdate        ntpdate
 f 0755 /usr/bin/httpd	       httpd
 f 0755 /usr/bin/htget          htget
 f 0755 /usr/bin/tinyirc	       tinyirc
+f 0755 /usr/bin/ifconfig       ifconfig
 n 20666 1089 /dev/net 
 
 
