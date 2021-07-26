@@ -1,17 +1,15 @@
 /*
- *	First draft of an implementation of the low level half of the
- *	network code for a WizNet device such as the 5200.
+ *	WizNET stack driver
  *
- *	This isn't working code of any kind but a sketch of it to check
- *	the abstractions we currently have look workable.
- */
-
-/* TODO 
-  - server socket fixes (we should allocate one channel to the listening
-    socket and when it connects allocate another one. That means we need to
-    use to break the 1:1 mapping between wiznet and OS socket numbering
-  - handle address collision interrupt
-  - rework disconnect state machine
+ *	Tested on W5100 and W5200 so far, W5500 to test
+ *
+ *	TODO
+ *	- Test and debug accept and incoming socket paths
+ *	- Pull socket_wake out somewhere sensible
+ *	- Test W5500
+ *	- Look at filtering limitations
+ *	- Setsockopt in the core and into drivers for MTU etc
+ *	- Test ifconfig interface
  */
 
 #include <kernel.h>
@@ -29,7 +27,11 @@ uint8_t sock_wake[NSOCKET];
 
 static uint8_t irqmask;
 
+static uint8_t wiznet_present;
+
 #ifdef CONFIG_NET_W5100
+
+#define HWNAME	"5100"
 
 #define WIZ_SOCKET	4
 
@@ -130,6 +132,8 @@ static uint8_t wiz2sock_map[4] = { 0xFF, 0xFF, 0xFF, 0xFF };
 /* The 5200 is quite similar to the 5100 except that everything has moved
    around the memory map */
 
+#define HWNAME	"5200"
+
 #define WIZ_SOCKET	8
 
 /* Offset conversions: in the W5200 into a linear 16bit space */
@@ -163,6 +167,7 @@ static uint8_t wiz2sock_map[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF
 #define PATR0		0x001C
 #define PPPALGO		0x001E
 #define VERSIONR	0x001F
+#define 	VERSION_ID	0x03
 #define PTIMER		0x0028
 #define PMAGIC		0x0029
 #define UIPR0		0x002A
@@ -236,6 +241,8 @@ static uint8_t wiz2sock_map[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF
 
 #elif defined(CONFIG_NET_W5500)
 
+#define HWNAME	"5500"
+
 #define WIZ_SOCKET	8
 
 /* The 5500 has bank information in the SPI control byte so there multiple
@@ -291,7 +298,7 @@ static uint8_t wiz2sock_map[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF
 #define		PHY_SPEED	0x02
 #define		PHY_LINK	0x01
 #define VERSIONR	0x0039
-#define		VER_5500	0x04
+#define 	VERSION_ID	0x04
 
 /* Socket registers live in a different space */
 #define Sn_MR		0x0000
@@ -447,7 +454,7 @@ static struct socket *netproto_create(void)
 	int n;
 	int i;
 	struct socket *s;
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < WIZ_SOCKET; i++) {
 		if (wiz2sock_map[i] == 0xFF) {
 			n = net_alloc();
 			s = sockets + n;
@@ -477,7 +484,7 @@ struct socket *netproto_sockpending(struct socket *s)
 	struct socket *n = sockets;
 	uint8_t id = s->s_num;
 	int i;
-	for (i = 0; i < 4; i++) {
+	for (i = 0; i < NSOCKET; i++) {
 		if (n->s_state != SS_UNUSED && n->s_parent == id) {
 			n->s_parent = 0xFF;
 			return n;
@@ -548,7 +555,7 @@ static int do_netproto_bind(struct socket *s)
  */
 static void w5x00_event_s(uint8_t i)
 {
-	int sn = wiz2sock_map[i];
+	uint8_t sn = wiz2sock_map[i];
 	struct socket *s;
 	uint16_t stat = w5x00_readsw(i, Sn_IR);	/* BE read of reg pair */
 
@@ -622,8 +629,8 @@ static void w5x00_event_s(uint8_t i)
 		break;
 	case 0x17:		/* SOCK_ESTABLISHED */
 		if (s->s_state == SS_CONNECTING) {
-			s->s_state == SS_CONNECTED;
-				s->s_wake = 1;
+			s->s_state = SS_CONNECTED;
+			s->s_wake = 1;
 		} else if (s->s_state == SS_LISTENING) {
 			struct socket *ns;
 			int s1;
@@ -697,6 +704,7 @@ static void w5x00_event_s(uint8_t i)
 	if (s->s_wake) {
 		sock_wake[sn] = 1;
 		wakeup(sock_wake + sn);
+//		kprintf("wake %d\n", sn);
 	}
 }
 
@@ -751,8 +759,14 @@ void netproto_setup(struct socket *s)
 int netproto_socket(void)
 {
 	struct socktype *st = socktype;
-	struct socket *s = netproto_create();
+	struct socket *s;
 	uint8_t famok = 0;
+
+	if (!wiznet_present) {
+		udata.u_error = ENETDOWN;
+		return 0;
+	}
+	s = netproto_create();
 	if (s == NULL) {
 		udata.u_error = ENOBUFS;
 		return 0;
@@ -831,7 +845,7 @@ int netproto_close(struct socket *s)
 		uint8_t j;
 		/* Close any accept queue sockets. This will only recurse
 		   one deep */
-		for (j = 0; j < 4; j++) {
+		for (j = 0; j < NSOCKET; j++) {
 			if (n->s_parent == p)
 				netproto_close(n);
 			n++;
@@ -965,10 +979,10 @@ arg_t netproto_shutdown(struct socket *s, uint8_t flag)
 	return 0;
 }
 
-static uint32_t ipa = 0x00000000;	/* Tmp hack */
+static uint32_t ipa;
 static uint8_t fakeaddr[6] = { 0xC0, 0xFF, 0xEE, 0xC0, 0xFF, 0xEE };
-static uint32_t iga = 0x020000C0;
-static uint32_t igm = 0x00FFFFFF;
+static uint32_t iga;
+static uint32_t igm;
 static uint16_t autoport = ntohs(5000);
 static uint16_t mtu;
 static uint16_t ifflags = IFF_BROADCAST|IFF_RUNNING|IFF_UP;
@@ -986,13 +1000,17 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 	static struct ifreq ifr;
 	if (uget(ifr_u, &ifr, sizeof(struct ifreq)))
 		return -1;
-	if (ifr.ifr_ifindex) {
+	if (op != SIOCGIFNAME && strcmp(ifr.ifr_name, "wlan0")) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
 	switch(op) {
 	/* Get side */
 	case SIOCGIFNAME:
+		if (ifr.ifr_ifindex) {
+			udata.u_error = ENODEV;
+			return -1;
+		}
 		memcpy(ifr.ifr_name, "wlan0", 6);
 		goto copyback;
 	case SIOCGIFINDEX:
@@ -1051,16 +1069,24 @@ copyback:
 
 void netdev_init(void)
 {
-	uint16_t i;
+	ipa = ntohl(0xC0A80001);
+	iga = ntohl(0xC0A800FE);
+	igm = ntohl(0xFFFFFF00);
 
 	w5x00_setup();	
 
 #ifdef VERSIONR
-	kprintf("IDENT %2x", w5x00_readcb(VERSIONR));
+	if (w5x00_readcb(VERSIONR) == VERSION_ID) {
+		kputs("Wiznet "HWNAME" detected.\n");
+		wiznet_present = 1;
+	}
+#else
+	w5x00_writecb(GAR0, 0x55);
+	if (w5x00_read(GAR0) == 0x55)
+		wiznet_present = 1;
 #endif
+
 	w5x00_writecb(IMR, 0);
-//	w5x00_writeb(RTR, );
-//	w5x00_writeb(RCR, );
 	/* Set GAR, SHAR, SUBR, SIPR to defaults ? */
 	netdev_reload();
 #ifdef CONFIG_NET_W5100
