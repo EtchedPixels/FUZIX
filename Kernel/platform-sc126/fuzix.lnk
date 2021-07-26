@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
--b _DISCARD=0xDC00
+-b _DISCARD=0xDE00
 -l z180
 platform-sc126/crt0.rel
 platform-sc126/commonmem.rel
