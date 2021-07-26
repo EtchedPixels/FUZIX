@@ -21,6 +21,7 @@
 #define HW_ETH		1
 #define HW_WLAN		2
 #define HW_SLIP		3
+#define HW_CSLIP	4
 
 struct in_addr {
   uint32_t s_addr;
