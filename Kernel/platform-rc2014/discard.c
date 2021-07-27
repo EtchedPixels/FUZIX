@@ -491,7 +491,7 @@ void pagemap_init(void)
 	}
 
 	if (fpu_detect())
-		kputs("AMD9511 FPU at 0x50\n");
+		kputs("AMD9511 FPU at 0x42\n");
 	/* Devices in the C0-CF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;

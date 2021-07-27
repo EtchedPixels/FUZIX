@@ -144,7 +144,7 @@ extern void qwrite(uint8_t *addr, uint8_t val);
 /* AMD FPU */
 #define CONFIG_FPU
 #define CONFIG_FPU_AMD9511
-#define AMD_DATA	0x50
-#define AMD_CTL		0x51
+#define AMD_DATA	0x42
+#define AMD_CTL		0x43
 
 #define platform_copyright()		// for now
