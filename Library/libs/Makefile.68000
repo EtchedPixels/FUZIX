@@ -1,4 +1,4 @@
-CROSS_COMPILE=m68k-uclinux-
+CROSS_COMPILE=m68k-linux-gnu-
 CC = $(CROSS_COMPILE)gcc
 ASM = $(CROSS_COMPILE)as
 AR = $(CROSS_COMPILE)ar

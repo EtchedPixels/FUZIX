@@ -1,20 +1,4 @@
-PLATFORM = 68000
-CROSS_COMPILE=m68k-uclinux-
-CC = $(CROSS_COMPILE)gcc
-ASM = $(CROSS_COMPILE)as
-AR = $(CROSS_COMPILE)ar
-LINKER = $(CROSS_COMPILE)ld
-CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../Library/include -I../../Library/include/68000
-LINKER_OPT = -L../../Library/libs -lc68000
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../Library/elf2flt.ld
-CRT0 = ../../Library/libs/crt0_68000.o
-CRT0NS = ../../Library/libs/crt0nostdio_68000.o
-# For now while we get going. Really we want to use some kind of elf2zmagic
-# with relocs.
-ELF2FUZIX = elf2flt -s 4096
-# 3 sets of objects co-exist: _l -> linux (host) _v -> vt52 _a -> ansi
-.SUFFIXES: .c .o-l .o-v .o-a
+include $(FUZIX_ROOT)/Applications/rules.68000
 
 CSRCS = beep.c blockio.c display.c doscall.c editcor.c exec.c find.c
 CSRCS += flexcall.c gemcall.c globals.c insert.c main.c misc.c modify.c
@@ -29,14 +13,14 @@ all: levee-linux levee-ansi levee-vt52
 
 # Linux version to run on Host system for debug purposes
 levee-linux: $(OBJSL)
-	gcc -o levee-linux $(OBJSL)
+	gcc -o levee-linux $(OBJSL) $(LINKER_TAIL)
 
 levee-ansi: $(OBJSA)
-	$(LINKER) -o levee-ansi.bin $(CRT0) $(OBJSA) $(LINKER_OPT)
+	$(LINKER) -o levee-ansi.bin $(CRT0) $(OBJSA) $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 levee-vt52: $(OBJSV) $(CRT0)
-	$(LINKER) -o levee-vt52.bin $(CRT0) $(OBJSV) $(LINKER_OPT)
+	$(LINKER) -o levee-vt52.bin $(CRT0) $(OBJSV) $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 # Build for Linux - assume appropriate host tools exist with default names
