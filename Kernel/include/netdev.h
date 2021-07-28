@@ -200,13 +200,13 @@ extern int netproto_accept_complete(struct socket *s);
 extern int netproto_bind(struct socket *s);
 extern int netproto_begin_connect(struct socket *s);
 extern struct socket *netproto_sockpending(struct socket *s);
-extern int netproto_write(struct socket *s, struct ksockaddr *addr);
+extern arg_t netproto_write(struct socket *s, struct ksockaddr *addr);
 extern int netproto_read(struct socket *s);
-extern int netproto_shutdown(struct socket *s, uint8_t how);
+extern arg_t netproto_shutdown(struct socket *s, uint8_t how);
 extern int netproto_close(struct socket *s);
 extern void netproto_setup(struct socket *s);
 extern void netproto_free(struct socket *s);
-extern int netproto_ioctl(struct socket *s, int requ, char *data);
+extern arg_t netproto_ioctl(struct socket *s, int requ, char *data);
 
 #endif
 #endif

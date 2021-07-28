@@ -926,7 +926,7 @@ int netproto_read(struct socket *s)
 	return 0;
 }
 
-arg_t netproto_write(struct socket * s, struct ksockaddr *ka)
+arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 {
 	uint16_t i = s->proto.slot;
 	uint16_t room;
