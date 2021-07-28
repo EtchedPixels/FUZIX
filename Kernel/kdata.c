@@ -107,7 +107,7 @@ const syscall_t syscall_dispatch[FUZIX_SYSCALL_COUNT] = {
 #if defined(CONFIG_NET)
 	_netcall,		/* Fuzix system call 66 */
 #else
-	_nosys
+	_nosys,
 #endif
 #if defined(CONFIG_LEVEL_2)
 	_nosys,			/* 67-71 reserved */
