@@ -29,6 +29,13 @@ static uint8_t *memory;
 static unsigned int memory_size;
 static unsigned int verbose;
 
+static uint32_t bsshi = 0;
+static uint32_t bsslo = 0xffffffff;
+static uint32_t datahi = 0;
+static uint32_t datalo = 0xffffffff;
+static uint32_t texthi = 0;
+static uint32_t textlo = 0xffffffff;
+
 #define reverse16(x)	((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
 #define reverse32(x)	((((x) & 0xFF) << 24) | (((x) & 0xFF00) << 8) | \
                          (((x) & 0xFF0000) >> 8) | (((x >> 24) & 0xFF)))
@@ -149,7 +156,7 @@ static void add32(uint32_t offset, uint32_t val)
 	/* Add the offset to the file endian possibly unaligned 32bit
 	   value at offset in the virtual memory image */
 	memcpy(&v, memory + offset, sizeof(uint32_t));
-	v = endian32(v) + offset;
+	v = endian32(v) + val;
 	v = endian32(v);
 	memcpy(memory + offset, &v, sizeof(uint32_t));
 }
@@ -231,13 +238,29 @@ static void relocate_rela_68k(Elf32_Rela *rel, unsigned int relcount)
 		{
 			/* Adjust the memory image as well to cope with the addend */
 			case R_68K_32:
-				add32(endian32(rel->r_offset), endian32(rel->r_addend));
+				printf("relocate @%06x\n", endian32(rel->r_offset));
+				addr = endian32(rel->r_offset);
+				add32(addr, endian32(rel->r_addend));
 				break;
 			/* Already fixed up by the linker */
 			case R_68K_PC32:
 			case R_68K_PC16:
+			case R_68K_PC8:
+			case R_68K_GOT32:
+			case R_68K_GOT16:
+			case R_68K_GOT8:
+				printf("relocatePC @%06x\n", endian32(rel->r_offset));
+				rel++;
 				continue;
-
+			case R_68K_GOT32O:
+				/* The GOT is at the start of our data */
+				printf("relocateGOT @%06x\n", endian32(rel->r_offset));
+				addr = endian32(rel->r_offset);
+				add32(addr, endian32(rel->r_addend));
+				add32(addr, datalo + sizeof(struct binfmt_flat));
+				break;
+			case R_68K_GOT16O:
+			case R_68K_GOT8O:
 			default:
 				fprintf(stderr, "Unknown ELF relocation type %d\n", type);
 				exit(1);
@@ -315,12 +338,6 @@ int main(int argc, char* const* argv)
 	FILE *outfp;
 	Elf32_Shdr *shdr;
 	Elf32_Ehdr *elffile;
-	uint32_t bsshi = 0;
-	uint32_t bsslo = 0xffffffff;
-	uint32_t datahi = 0;
-	uint32_t datalo = 0xffffffff;
-	uint32_t texthi = 0;
-	uint32_t textlo = 0xffffffff;
 	uint32_t reloff = 0xffffffff;
 	uint32_t relcount = 0;
 	unsigned int seentext = 0;
@@ -519,6 +536,8 @@ int main(int argc, char* const* argv)
 
 	/* Assemble the bFLT header. */
 
+	if (verbose)
+		printf("Writing %d relocations.\n", next_reloc);
 	struct binfmt_flat flatheader =
 	{
 		.magic = FLAT_FUZIX_MAGIC,
@@ -538,6 +557,7 @@ int main(int argc, char* const* argv)
 
 	if (fwrite(memory, memory_size, 1, outfp) != 1)
 		write_error();
+
 	if (fwrite(relocs, sizeof(uint32_t), next_reloc, outfp) != next_reloc)
 		write_error();
 
