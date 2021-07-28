@@ -64,14 +64,16 @@ image:
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
 	m68k-uclinux-objcopy loader.elf -O binary loader.bin
 
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
 diskimage:
 	# Make a blank disk image with partition
-	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=../../disk.img bs=40017920 conv=sync
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the bootstrap loader
-	dd if=loader.bin of=../../disk.img conv=notrunc
+	dd if=loader.bin of=$(IMAGES)/disk.img conv=notrunc
 	# Add the file system
-	dd if=../../filesys.img of=../../disk.img bs=512 seek=2048 conv=notrunc
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=../fuzix.bin of=../../disk.img bs=512 seek=1 conv=notrunc
+	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M ../../disk.img > ../../emu-ide.img
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
