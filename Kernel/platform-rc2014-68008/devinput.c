@@ -73,7 +73,6 @@ void poll_input(void)
 
 int platform_input_write(uint8_t flag)
 {
-    flag;
     udata.u_error = EINVAL;
     return -1;
 }

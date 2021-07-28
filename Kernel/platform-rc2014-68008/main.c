@@ -11,7 +11,7 @@
 
 uint16_t swap_dev = 0xFFFF;
 uint8_t timer_source;
-uint8_t nuart;
+uint8_t nuart = 1;
 uint8_t quart_present;
 uint8_t sc26c92_present;
 uint8_t rtc_shadow;

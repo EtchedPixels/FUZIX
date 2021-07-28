@@ -12,7 +12,6 @@
    
 struct uart *uart[NUM_DEV_TTY + 1];
 static uint8_t first_poll = 1;
-uint8_t nuart = 1;
 uint16_t ttyport[NUM_DEV_TTY + 1];
 
 static uint8_t sleeping;
