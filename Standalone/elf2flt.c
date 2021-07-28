@@ -156,7 +156,8 @@ static void add32(uint32_t offset, uint32_t val)
 	/* Add the offset to the file endian possibly unaligned 32bit
 	   value at offset in the virtual memory image */
 	memcpy(&v, memory + offset, sizeof(uint32_t));
-	v = endian32(v) + val;
+	v = endian32(v);
+	v += val;
 	v = endian32(v);
 	memcpy(memory + offset, &v, sizeof(uint32_t));
 }
@@ -238,9 +239,8 @@ static void relocate_rela_68k(Elf32_Rela *rel, unsigned int relcount)
 		{
 			/* Adjust the memory image as well to cope with the addend */
 			case R_68K_32:
-				printf("relocate @%06x\n", endian32(rel->r_offset));
 				addr = endian32(rel->r_offset);
-				add32(addr, endian32(rel->r_addend));
+//				add32(addr, endian32(rel->r_addend));
 				break;
 			/* Already fixed up by the linker */
 			case R_68K_PC32:
@@ -525,9 +525,15 @@ int main(int argc, char* const* argv)
 		}
 	}
 
+	/* Hack - should properly parse this lot to work out which ones
+	   apply to real code and data */
+	if (num_reloc_sects > 2)
+		num_reloc_sects = 2;
+
 	for (i = 0; i < num_reloc_sects; i++) {
 		void *rel = ELFSTRUCT(reloctab[i].offset);
 		unsigned int relcount = reloctab[i].count;
+		printf("Reloc block %d\n", i);
 		if (reloctab[i].addend)
 			relocate_rela(rel, relcount);
 		else
