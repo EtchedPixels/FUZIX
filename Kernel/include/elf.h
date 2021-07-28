@@ -455,6 +455,9 @@ struct elf_args {
 
 #define ELF_TARG_VER	1	/* The ver for which this code is intended */
 
+#define EM_68K	4
+#define EM_ARM	40
+
 /* ARM relocations */
 
 #define R_ARM_NONE       0
@@ -466,6 +469,12 @@ struct elf_args {
 #define R_ARM_CALL       28
 #define R_ARM_JUMP24     29
 #define R_ARM_THM_JUMP11 102
+
+#define R_68K_32	1
+#define R_68K_16	2
+#define R_68K_8		3
+#define R_68K_PC32	4
+#define R_68K_PC16	5
 
 extern int platform_relocate_rel(Elf32_Rel* rel, uaddr_t section_base);
 
