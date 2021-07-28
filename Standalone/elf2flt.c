@@ -476,7 +476,7 @@ int main(int argc, char* const* argv)
 	}
 
 	if (!seentext || !seendata || !seenbss) {
-		fprintf(stderr, "elf2fit: segments missing.\n");
+		fprintf(stderr, "elf2flt: segments missing.\n");
 		exit(1);
 	}
 	if ((bsslo < texthi) || (bsslo < datahi) || (datalo < texthi))
@@ -508,25 +508,6 @@ int main(int argc, char* const* argv)
 		}
 	}
 
-	/* Assemble the bFLT header. */
-
-	struct binfmt_flat flatheader =
-	{
-		.magic = FLAT_FUZIX_MAGIC,
-		.rev = htonl(FLAT_VERSION),
-		.flags = htonl(FLAT_FLAG_RAM),
-		.entry = htonl(elffile->e_entry + sizeof(flatheader)),
-		.data_start = htonl(datalo + sizeof(flatheader)),
-		.data_end = htonl(datahi + sizeof(flatheader)),
-		.bss_end = htonl(bsshi + sizeof(flatheader)),
-		.reloc_start = htonl(datahi + sizeof(flatheader)),
-		.reloc_count = htonl(relcount),
-		.stack_size = htonl(stacksize),
-	};
-
-	if (fwrite(&flatheader, sizeof(flatheader), 1, outfp) != 1)
-		write_error();
-
 	for (i = 0; i < num_reloc_sects; i++) {
 		void *rel = ELFSTRUCT(reloctab[i].offset);
 		unsigned int relcount = reloctab[i].count;
@@ -536,7 +517,26 @@ int main(int argc, char* const* argv)
 			relocate_rel(rel, relcount);
 	}
 
-	if (fwrite(memory, datahi, 1, outfp) != 1)
+	/* Assemble the bFLT header. */
+
+	struct binfmt_flat flatheader =
+	{
+		.magic = FLAT_FUZIX_MAGIC,
+		.rev = htonl(FLAT_VERSION),
+		.flags = htonl(FLAT_FLAG_RAM),
+		.entry = htonl(endian32(elffile->e_entry) + sizeof(flatheader)),
+		.data_start = htonl(datalo + sizeof(flatheader)),
+		.data_end = htonl(datahi + sizeof(flatheader)),
+		.bss_end = htonl(bsshi + sizeof(flatheader)),
+		.reloc_start = htonl(datahi + sizeof(flatheader)),
+		.reloc_count = htonl(next_reloc),
+		.stack_size = htonl(stacksize),
+	};
+
+	if (fwrite(&flatheader, sizeof(flatheader), 1, outfp) != 1)
+		write_error();
+
+	if (fwrite(memory, memory_size, 1, outfp) != 1)
 		write_error();
 	if (fwrite(relocs, sizeof(uint32_t), next_reloc, outfp) != next_reloc)
 		write_error();
