@@ -1,3 +1,8 @@
+/*
+ *	Turn an ELF file (or at least some subsets of an ELF file) into a
+ *	ucLinux style flat binary.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -240,7 +245,6 @@ static void relocate_rela_68k(Elf32_Rela *rel, unsigned int relcount)
 			/* Adjust the memory image as well to cope with the addend */
 			case R_68K_32:
 				addr = endian32(rel->r_offset);
-//				add32(addr, endian32(rel->r_addend));
 				break;
 			/* Already fixed up by the linker */
 			case R_68K_PC32:
@@ -249,14 +253,16 @@ static void relocate_rela_68k(Elf32_Rela *rel, unsigned int relcount)
 			case R_68K_GOT32:
 			case R_68K_GOT16:
 			case R_68K_GOT8:
-				printf("relocatePC @%06x\n", endian32(rel->r_offset));
+				if (verbose)
+					printf("relocatePC @%06x\n", endian32(rel->r_offset));
 				rel++;
 				continue;
 			case R_68K_GOT32O:
 				/* The GOT is at the start of our data */
-				printf("relocateGOT @%06x\n", endian32(rel->r_offset));
+				/* Not sure this is right */
+				if (verbose)
+					printf("relocateGOT @%06x\n", endian32(rel->r_offset));
 				addr = endian32(rel->r_offset);
-				add32(addr, endian32(rel->r_addend));
 				add32(addr, datalo + sizeof(struct binfmt_flat));
 				break;
 			case R_68K_GOT16O:
@@ -398,13 +404,19 @@ int main(int argc, char* const* argv)
 #endif
 	if (crossendian && verbose)
 		printf("[Cross endian conversion]\n");
+
+	if (endian16(elffile->e_type) != ET_EXEC) {
+		fprintf(stderr, "elf2flt: only executable files.\n");
+		exit(1);
+	}
+
 	outfp = fopen(outputfilename, "wb");
 	if (!outfp)
 		perror_exit("cannot open output file");
 	/* Scan the section headers looking for stuff. */
 
 	shdr = ELFSTRUCT(endian32(elffile->e_shoff));
-	for (int i=0; i<endian16(elffile->e_shnum); i++)
+	for (i = 0; i < endian16(elffile->e_shnum); i++)
 	{
 		uint32_t seclo, sechi, flags;
 		Elf32_Shdr* sh = &shdr[i];
@@ -415,7 +427,7 @@ int main(int argc, char* const* argv)
 		sechi = seclo + endian32(sh->sh_size);
 		flags = endian32(sh->sh_flags);
 		if (verbose)
-			printf("Section %d (%s), type %d\n", i, sectype(endian32(sh->sh_type)), endian32(sh->sh_type));
+			printf("Section %d (%s), name, %d, type %d\n", i, sectype(endian32(sh->sh_type)), endian32(sh->sh_name), endian32(sh->sh_type));
 		switch (endian32(sh->sh_type))
 		{
 			/* Things we explicitly ignore */
@@ -427,6 +439,11 @@ int main(int argc, char* const* argv)
 				break;
 
 			case SHT_PROGBITS: /* Initialised data */
+				if (verbose)
+					printf("Program bits %x - %x\n",
+						seclo, sechi);
+				if (seclo == sechi)
+					continue;
 				if (flags & SHF_ALLOC)
 				{
 					if (flags & SHF_EXECINSTR)
@@ -454,6 +471,9 @@ int main(int argc, char* const* argv)
 			case SHT_NOBITS: /* Zero-initialised data */
 				if (flags & SHF_ALLOC)
 				{
+					if (verbose)
+						printf("No bits %x - %x\n",
+							seclo, sechi);
 					/* BSS segment. */
 					seenbss = 1;
 					if (seclo < bsslo)
@@ -480,6 +500,9 @@ int main(int argc, char* const* argv)
 					endian32(sh->sh_type), sectype(endian32(sh->sh_type)));
 				break;
 		}
+		/* HACK: Ignore all the crap after the BSS */
+		if (endian32(sh->sh_type) == SHT_NOBITS)
+			break;
 	}
 
 	if (verbose) {
@@ -525,15 +548,11 @@ int main(int argc, char* const* argv)
 		}
 	}
 
-	/* Hack - should properly parse this lot to work out which ones
-	   apply to real code and data */
-	if (num_reloc_sects > 2)
-		num_reloc_sects = 2;
-
 	for (i = 0; i < num_reloc_sects; i++) {
 		void *rel = ELFSTRUCT(reloctab[i].offset);
 		unsigned int relcount = reloctab[i].count;
-		printf("Reloc block %d\n", i);
+		if (verbose)
+			printf("Reloc block %d\n", i);
 		if (reloctab[i].addend)
 			relocate_rela(rel, relcount);
 		else
