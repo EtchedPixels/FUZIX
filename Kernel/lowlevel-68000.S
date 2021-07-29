@@ -375,7 +375,6 @@ SYM (__umodsi3):
 	movel	d1, d0
 	rts
 
-
 		.globl __hard_di,__hard_ei,__hard_irqrestore
 		.globl doexec
 		.globl flush_icache
@@ -389,7 +388,6 @@ SYM (__umodsi3):
 		.globl spurious,unexpected,uninit
 		.globl cpu_type,probe_memory,cpu_has_trapvec,cpu_has_icache
 		.globl udata_shadow
-		.globl trap_via_signal
 		.globl dump_registers
 		.globl kernel_flag
 		.globl copy_blocks
@@ -402,6 +400,7 @@ SYM (__umodsi3):
 
 .mri 1
 get_usp:	move.l	usp,a0
+		move.l	a0,d0
 		rts
 
 set_usp:	move.l 4(sp),a0
