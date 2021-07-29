@@ -1,4 +1,4 @@
-CROSS_COMPILE=m68k-linux-gnu-
+CROSS_COMPILE=m68k-elf-
 CC = $(CROSS_COMPILE)gcc
 ASM = $(CROSS_COMPILE)as
 AR = $(CROSS_COMPILE)ar
@@ -109,10 +109,7 @@ OBJ_HARD = $(SRC_HARD:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_LM) $(OBJ_HARD) $(OBJ_RL)
 
 all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
-     readline$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib libgcc1-$(PLATFORM).a
-
-libgcc1-$(PLATFORM).a: m68k_support.S
-	sh ./make-68k-support.sh
+     readline$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
 
 $(OBJ_ALL): $(KRN_HEADERS_COPY)
 

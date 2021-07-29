@@ -59,10 +59,10 @@ image:
 	devinput.o ../devinput.o devgpio.o tms9918.o \
 	ps2kbd.o ps2bitbang.o ps2bitbang_rc2014.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
-	m68k-uclinux-objcopy fuzix.elf -O binary ../fuzix.bin
+	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 	$(CROSS_CC) -c loader.S
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
-	m68k-uclinux-objcopy loader.elf -O binary loader.bin
+	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
