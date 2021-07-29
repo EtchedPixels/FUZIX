@@ -5,7 +5,7 @@ AR = $(CROSS_COMPILE)ar
 LINKER = $(CROSS_COMPILE)ld
 PLATFORM = 68000
 export PLATFORM
-CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -msoft-float -c -I../include -I../include/68000 -I../include/68000/fixed
+CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -c -I../include -I../include/68000 -I../include/68000/fixed
 ASM_OPT = -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h
@@ -98,6 +98,7 @@ SRC_LM += scalbn.c
 SRC_LM += sin.c sincos.c sinh.c
 SRC_LM += sqrt.c tgamma.c
 SRC_LM += __expo2.c __double_bits.c __fpclassify.c __log1p.c
+SRC_LM += m68k_fpgnulib.c
 
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_CURS = $(SRC_CURS:.c=.o)
@@ -108,7 +109,10 @@ OBJ_HARD = $(SRC_HARD:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_LM) $(OBJ_HARD) $(OBJ_RL)
 
 all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
-     readline$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib
+     readline$(PLATFORM).lib termcap$(PLATFORM).lib m$(PLATFORM).lib libgcc1-$(PLATFORM).a
+
+libgcc1-$(PLATFORM).a: m68k_support.S
+	sh ./make-68k-support.sh
 
 $(OBJ_ALL): $(KRN_HEADERS_COPY)
 
@@ -183,7 +187,8 @@ $(OBJ_RL):%.o: %.c
 clean:
 	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
 	libc$(PLATFORM).a libm$(PLATFORM).a libtermcap$(PLATFORM).a \
-	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt
+	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt \
+	libgcc1-$(PLATFORM).a
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
 	rm -f $(KRN_HEADERS_COPY)
