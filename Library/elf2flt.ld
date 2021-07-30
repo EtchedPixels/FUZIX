@@ -13,6 +13,7 @@ PHDRS {
 SECTIONS {
 
 	.text 0x0 : {
+		__stubs = . - 0x40;
 		. = . + 4;
 		. = ALIGN(0x4) ;
 		_stext = . ;
