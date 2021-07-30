@@ -489,7 +489,7 @@ Fcn16:	LD	IY,(_arg)
 	LD	13(IY),#0	; clear file open flag
 
 	LD	A,#11		; Fuzix sync function #
-	CALL	syscall		; Execute!
+	CALL	syscall		; Execute!		FIXME???
 
 	JP	Exit0		; Return OK
 
@@ -855,21 +855,27 @@ Fcn35:	CALL	CkSrch		; Ensure Search file closed
 	OR	L		; 0?
 	JR	NZ,Fcn35X	; ..jump if Bad
 
-;		(int)fcb+33 = ((512 * statbuf.st_size.o_blkno
-;	     		      + statbuf.st_size.o_offset)
-;			      + 127)
 ;			      >> 7;
 ;	FIXME: offset is now a simple number so this is wrong
 ;
-	LD	HL,(stBuf+14)	; Get Offset
-	LD	DE,#127
-	ADD	HL,DE		;  round up to next 128-byte block
-	ADD	HL,HL		;   Shift so H has 128-byte blk #
-	LD	E,H		;    position in DE
-	LD	HL,(stBuf+16)	; Get Block
-	ADD	HL,HL		;  * 2
-	ADD	HL,HL		;   * 4 for 128-byte Block Count
-	ADD	HL,DE		; Now have CP/M Record Size
+
+	LD	D,#0
+	LD	HL,(stBuf+15)	; Upper bytes of size (256 byte blocks)
+	BIT	7,H
+	JR	Z, notover
+	INC	D		; Overflowed
+notover:
+	ADD	HL,HL		; Now in CP/M blocks
+	LD	A,(stBuf+14)	; Low byte
+	BIT	7,A
+	JR	Z, noblockadd
+	INC	HL		; There is another whole block
+	AND	#127		; Can't cause an overflow as prev value is even
+noblockadd:
+	OR	A
+	JR	Z, noround
+	INC	HL		; Partial block
+noround:
 	LD	33(IY),L
 	LD	34(IY),H	;  Store in RR fields in FCB
 	LD	35(IY),D	; (D = 0)
@@ -988,7 +994,7 @@ GetNX:	LD	0(IX),#0
 ; }
 
 ;
-;	FIXME: we need to use lseek for Fuzix
+;	We use lseek for Fuzix
 ;
 LSeek:	LD	BC,#0		; Push 0 for absolute
 	PUSH	BC
@@ -1292,7 +1298,8 @@ __cold:
 	LD	(0x0001),HL
 	LD	HL, #0x80
 	LD	(dmaadr), HL
-
+	LD	HL,#0
+	LD	(srchFD),hl
 	LD	HL,#ttTermios0	; & buf
 	LD	DE,#TCGETS	;  ioctl fcn to Get Parms
 	CALL	IoCtl		;   Execute ioctl fcn on STDIN
@@ -1449,9 +1456,10 @@ RdWrt0:	PUSH	DE
 	PUSH	HL
 	LD	HL,(curFil)	;   to this file
 	PUSH	HL
-	LD	E,A		;    A = R/W Fcn #
+	;    A = R/W Fcn #
 	CALL	syscall		;     Execute!
 	POP	BC		; Clear Stack
+	POP	BC
 	POP	BC
 	LD	A,L		; Shuffle possible byte quantity
 	RET	NC		; ..return if No Error
@@ -1511,6 +1519,9 @@ dpb:	.dw	64		; Dummy Disk Parameter Block
 syscall:
 syscall_patch:
 	call	0
+	ret	nc
+	; Error case - HL is errno code not result
+	ld	hl,#0xffff
 	ret
 ttTermios:
 	.ds	20		; Working TTY Port Settings
