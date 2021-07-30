@@ -448,7 +448,7 @@ usize_t valaddr(const uint8_t *pp, usize_t l)
 	const void *p = pp;
 	const void *e = p + l;
 	unsigned int proc = udata.u_page;
-	int n = 0;
+	unsigned int n = 0;
 	struct memblk *m = &mem[proc]->memblk[0];
 
 	while (n < MAX_BLOCKS) {
@@ -470,4 +470,22 @@ usize_t valaddr(const uint8_t *pp, usize_t l)
 	return 0;
 }
 
+#ifdef CONFIG_LEVEL_2		/* Coredump support */
+
+/* Write out each segment of memory we have. We don't do anything with the flags
+   yet - that will comne later */
+void coredump_memory_image(inoptr ino)
+{
+	unsigned int i = 0;
+	unsigned int proc = udata.u_page;
+	struct memblk *m = &mem[proc]->memblk[0];
+	while(i < MAX_BLOCKS) {
+		if (m->start)
+			coredump_memory(ino, (uaddr_t)m->start, m->end - m->start, 0);
+		m++;
+		i++;
+	}
+}
+
+#endif
 #endif

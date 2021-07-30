@@ -1105,6 +1105,37 @@ extern void set_cpu_type(void);
 extern uint8_t sys_cpu, sys_cpu_feat;
 extern uint8_t sys_stubs[];
 
+/* Core dump interfaces */
+
+/* This will change a lot in future ! */
+struct coredump {
+	uint16_t ch_magic1;
+#define MAGIC1 0xDEAD
+	uint16_t ch_magic2;
+#define MAGIC2 0xC0DE
+	uint8_t ch_type;	/* For now 16 or 32 bit number of bits - will
+				   change! */
+	uint32_t ch_base;
+	uint32_t ch_break;
+	uint32_t ch_sp;
+	uint32_t ch_top;
+};
+
+#define COREHDR_MEM		1
+
+struct coremem {
+	uint16_t mh_type;
+	uint16_t mh_flags;
+	uaddr_t mh_base;
+	usize_t mh_len;
+};
+
+/* Provided by the execve support */
+extern uint8_t write_core_image(void);
+extern void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags);
+/* Provided by the memory manager */
+extern void coredump_memory_image(inoptr ino);
+
 /* Platform interfaces */
 
 #ifndef platform_discard
