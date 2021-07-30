@@ -67,28 +67,59 @@ start2:
 ; Load the binary of argv[1] at 0x0100 (obliterating runcpm) (passed as fd
 ; 3)
 ;
+	LD	HL, (0x31)		; JP xxxx is what FUZIX leaves at 0x30
+	LD	(syscall_patch + 1), HL
+
 	LD	(SysSP), SP		; save stack pointer for cold starts
 	LD	DE,#EStart - 0x100	; largest possible binary space
+	BIT	7,D			; Oversized ?
+	JR	Z, load_in_one
+	;	Load first chunk
+	LD	DE,#0x7F00
+	PUSH	DE
+	LD	DE,#0x0100
+	PUSH	DE
+	LD	DE,#3
+	PUSH	DE
+	LD	A,#7
+	CALL	syscall
+	LD	A,H
+	AND	L
+	CP	#0xFF
+	JP	Z, Quit
+	; HL is bytes read
+	LD	A,#0x7F
+	CP	H
+	JR	NZ, short_read
+	POP	AF
+	POP	AF
+	POP	AF
+	LD	DE,#EStart-0x8000
+	PUSH	DE
+	LD	DE,#0x8000
+	JR	load_2
+load_in_one:
 	PUSH	DE
 	LD	DE, #0x0100	; address
+load_2:
 	PUSH	DE
 	LD	DE,#3		; file handle
 	PUSH	DE
-	LD	DE,#7		; read(3, 0x100, size)
-	PUSH	DE
-	RST	0x30
+	LD	A,#7		; read(3, 0x100, size)
+	CALL	syscall
+	LD	A,H
+	OR	L
+	CP	#0xFF
+	JP	Z, Quit
 	POP	DE
 	POP	DE
 	POP	DE
-	POP	DE
+short_read:
 	LD	DE,#3
 	PUSH	DE
-	DEC	DE		;  #3 close
-	PUSH	DE
-	RST	0x30
+	LD	A,#2
+	CALL	syscall		; close (3)
 	POP	DE
-	POP	DE
-
 
 	LD	DE,#dir
 	LD	B,#128
@@ -97,10 +128,6 @@ start2:
 	LD	HL,#0
 	LD	(0x0003),HL	; Clear IOBYTE and Default Drive/User
 
-	LD	HL, (0x31)		; JP xxxx is what FUZIX leaves at 0x30
-	LD	(syscall+1), HL
-	LD	A, #0xC3		; JP
-	LD	(syscall), A
 
 	JP	__bios		; Go to Cold Start setup
 
@@ -444,11 +471,9 @@ Open1:	CALL	CkSrch		;  (Close Search File)
 
 OpenF:	PUSH	DE		; Mode
 	PUSH	HL		;  Path
-	LD	HL,#1		;   Fuzix Open Fcn #
-	PUSH	HL
+	LD	A,#1		;   Fuzix Open Fcn #
 	CALL	syscall		;    _open (Path, Mode);
 	POP	BC		; Clean Stack
-	POP	BC
 	POP	BC
 	LD	A,H
 	AND	L
@@ -463,10 +488,8 @@ OpenF:	PUSH	DE		; Mode
 Fcn16:	LD	IY,(_arg)
 	LD	13(IY),#0	; clear file open flag
 
-	LD	HL,#11		; Fuzix sync function #
-	PUSH	HL
+	LD	A,#11		; Fuzix sync function #
 	CALL	syscall		; Execute!
-	POP	BC		; Clean Stack
 
 	JP	Exit0		; Return OK
 
@@ -474,11 +497,9 @@ Fcn16:	LD	IY,(_arg)
 ; Close file descriptor
 
 CloseV:	PUSH	DE
-	LD	HL,#2		;  Fuzix Close Fcn #
-	PUSH	HL
+	LD	A,#2		;  Fuzix Close Fcn #
 	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
-	POP	BC
 	RET
 
 ;------------------------------------------------
@@ -550,11 +571,9 @@ Fcn19:	CALL	CkSrch		; Ensure Search file closed
 				; DE -> arg
 	CALL	GetNam		;  Parse to String
 	PUSH	HL		; String
-	LD	HL,#6		;  UZI Unlink Fcn #
-	PUSH	HL
+	LD	A,#6		;  FUZIX Unlink Fcn #
 	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
-	POP	BC
 
 ;         return (255);
 ;     return (0);
@@ -701,11 +720,9 @@ Fcn22:	CALL	CkSrch		; Ensure Search file closed
 	LD	HL,#0x502	; O_CREAT|O_RDWR|O_TRUNC
 	CALL	GetNam		;  This name string
 	PUSH	HL
-	LD	HL,#1		;   Fuzix open Fcn #
-	PUSH	HL
+	LD	A,#1		;   Fuzix open Fcn #
 	CALL	syscall		;    Execute!
 	POP	BC		; Clean Stack
-	POP	BC
 	POP	BC
 	POP	BC
 
@@ -755,11 +772,9 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 	PUSH	HL		; New Name
 	LD	HL,#RName	;  Old Name
 	PUSH	HL
-	LD	HL,#5		;   UZI link Fcn #
-	PUSH	HL
+	LD	A,#5		;   FUZIX link Fcn #
 	CALL	syscall		;    Execute!
 	POP	BC		; Clean Stack
-	POP	BC
 	POP	BC
 
 ;         return (-1);
@@ -770,22 +785,18 @@ Fcn23:	CALL	CkSrch		; Ensure Search file closed
 
 	LD	HL,#RName	; Old Name
 	PUSH	HL
-	LD	HL,#6		;  UZI unlink Fcn #
-	PUSH	HL
+	LD	A,#6		;  UZI unlink Fcn #
 	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
-	POP	BC
 	JP	NC,Exit0	;   exit w/0 if Ok
 
 ;         unlink (FName);
 				; Else remove the new iNode
 	LD	HL,#FName	; New Name
 	PUSH	HL
-	LD	HL,#6		;  UZI unlink Fcn #
-	PUSH	HL
+	LD	A,#6		;  UZI unlink Fcn #
 	CALL	syscall		;   Execute!
 	POP	BC		; Clean Stack
-	POP	BC
 
 ;         return (-1);
 
@@ -835,11 +846,9 @@ Fcn35:	CALL	CkSrch		; Ensure Search file closed
 	LD	DE,#stBuf
 	PUSH	DE		; &statbuf
 	PUSH	HL		;  dname
-	LD	HL,#15		;   UZI stat Fcn #
-	PUSH	HL
+	LD	A,#15		;   UZI stat Fcn #
 	CALL	syscall		;    Execute!
 	POP	BC		; Clean Stk
-	POP	BC
 	POP	BC
 	LD	IY,(_arg)
 	LD	A,H
@@ -1015,11 +1024,9 @@ LSeek:	LD	BC,#0		; Push 0 for absolute
 	PUSH	BC
 	LD	HL, (curFil)
 	PUSH	HL
-	LD	HL,#9		; _lseek()
-	PUSH	HL
+	LD	A,#9		; _lseek()
 	CALL	syscall		; Syscall
 	POP	BC		; Recover stack
-	POP	BC
 	POP	BC
 	POP	BC
 	RET
@@ -1330,7 +1337,7 @@ Exit:	LD	C,#0x0D
 Quit:
 	LD	HL,#0		; Exit Good Status
 	PUSH	HL
-	PUSH	HL		;  UZI Fcn 0 (_exit)
+	XOR	A		;  UZI Fcn 0 (_exit)
 	CALL	syscall		;   Execute!
 Spin:	JR	Spin		; Can't happen!
 
@@ -1358,10 +1365,8 @@ ConIn:	call	ConSt
 	PUSH	DE
 	LD	L,#STDIN		;   fd
 	PUSH	HL
-	LD	L,#7		;    UZI Read Fcn
-ChrV0:	PUSH	HL
-	CALL	syscall		;     Execute
-	POP	BC
+	LD	A,#7		;    UZI Read Fcn
+ChrV0:	CALL	syscall		;     Execute
 	POP	BC
 	POP	BC
 	POP	BC
@@ -1379,7 +1384,7 @@ ConOut:	LD	A,C
 	PUSH	DE		;  Addr to get char
 	LD	L,#STDOUT	;   fd
 	PUSH	HL
-	LD	L,#8		;    UZI Write Fcn
+	LD	A,#8		;    UZI Write Fcn
 	JR	ChrV0		;   ..go to common code
 
 ;.....
@@ -1444,12 +1449,9 @@ RdWrt0:	PUSH	DE
 	PUSH	HL
 	LD	HL,(curFil)	;   to this file
 	PUSH	HL
-	LD	E,A		;    Position R/W Fcn #
-	PUSH	DE
+	LD	E,A		;    A = R/W Fcn #
 	CALL	syscall		;     Execute!
 	POP	BC		; Clear Stack
-	POP	BC
-	POP	BC
 	POP	BC
 	LD	A,L		; Shuffle possible byte quantity
 	RET	NC		; ..return if No Error
@@ -1469,11 +1471,9 @@ IoCtl:	PUSH	HL		; &buf
 	PUSH	DE		;  ioctl fcn
 	LD	E,#STDIN		;   fd
 	PUSH	DE
-	LD	E,#29		;    Fuzix ioctl Fcn #
-	PUSH	DE
+	LD	A,#29		;    Fuzix ioctl Fcn #
 	CALL	syscall		;     Execute!
 	POP	BC		; Clean Stack
-	POP	BC
 	POP	BC
 	POP	BC
 	RET
@@ -1498,8 +1498,20 @@ dpb:	.dw	64		; Dummy Disk Parameter Block
 
 ;----------------------- Data -----------------------
 
+;
+;	The ABI is designed for C and the stack should be
+;
+;	ARG3		; args if present
+;	ARG2
+;	ARG1
+;	<return addr>	; in C this is the return to the caller of read(...) etc
+;	<return addr>	; invocation of syscall stub
+;
+;
 syscall:
-	.ds	3
+syscall_patch:
+	call	0
+	ret
 ttTermios:
 	.ds	20		; Working TTY Port Settings
 ttTermios0:
@@ -1511,6 +1523,8 @@ BIOSIZ	.EQU	.-__bios
 CPMSIZ	.EQU	.-__bdos
 
 ; To keep the linker happy
+	.area _INITIALIZED
+	.area _INITIALIZER
 	.area _DATA
 	.area _BSS
 ;       .end
