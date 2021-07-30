@@ -73,12 +73,14 @@ loadsd:
 	$(CROSS_LD) -M -T loadsd.x -relax -o loadsd.elf loadsd.o
 	$(CROSS_OBJCOPY) loadsd.elf -O binary loadsd >loadsd.map
 
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
 diskimage: loadsd
 	# Make a blank disk image with partition
-	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=../../sd.img bs=40017920 conv=sync
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/sd.img bs=40017920 conv=sync
 	# Add the bootstrap loader
-	dd if=loadsd of=../../sd.img conv=notrunc
+	dd if=loadsd of=$(IMAGES)/sd.img conv=notrunc
 	# Add the file system
-	dd if=../../filesys.img of=../../sd.img bs=512 seek=2048 conv=notrunc
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/sd.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=../fuzix.bin of=../../sd.img bs=512 seek=1 conv=notrunc
+	dd if=../fuzix.bin of=$(IMAGES)/sd.img bs=512 seek=1 conv=notrunc
