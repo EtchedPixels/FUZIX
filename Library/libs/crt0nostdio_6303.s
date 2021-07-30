@@ -58,18 +58,20 @@ __sighandler:
 	pshx
 	ldx	@sreg
 	pshx
+
 	; Arguments signal number and frame pointer
 	pshb	; Save the signal number
 	psha
-	tsx
 	pshx
+	tsx
 	ldx	26,x	; vector
 	jsr	,x
 	; Discard arguments
 	pulx
 	pulx
-	pulx
+
 	; Restore temporaries
+	pulx
 	stx	@sreg
 	pulx
 	stx	@reg+4
@@ -85,6 +87,8 @@ __sighandler:
 	stx	@tmp3
 	pulx
 	stx	@tmp2
+	pulx
+	stx	@tmp1
 	pulx
 	stx	@tmp
 	; Back to kernel provided address

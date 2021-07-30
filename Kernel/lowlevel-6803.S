@@ -24,6 +24,8 @@
 
 	.export preemption
 
+	.export deliver_signals
+
 	.setcpu 6803
 
 #include "platform/kernel.def"
@@ -126,10 +128,19 @@ deliver_signals_2:
 	ldx #_udata+U_DATA__U_SIGVEC
 	abx
 	abx
-	ldx 0,x
+	ldd 0,x
 	beq signal_raced
 	clr 0,x
 	clr 1,x
+	clr _udata+U_DATA__U_CURSIG
+#ifdef WITH_6303
+	.setcpu 6303
+	xgdx
+	.setcpu 6803
+#else
+	std @tmp
+	ldx @tmp
+#endif
 	clrb
 	; The value we need is in A so push AB not BA and we get the
 	; right 16bit result
@@ -140,6 +151,7 @@ deliver_signals_2:
 	ldx PROGLOAD+16
 	jsr ,x
 	; discard the vector
+	pulx
 	pulx
 	sei
 	sts _udata+U_DATA__U_SYSCALL_SP
@@ -345,9 +357,6 @@ not_running:
 
 	.code
 
-;
-;	FIXME: eventually test 6803 v 6303 and for 6303
-;	set features to 3 (xgdx as well as 6803) 
 ;
 
 	.setcpu 6303
