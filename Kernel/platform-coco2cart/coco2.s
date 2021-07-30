@@ -80,7 +80,7 @@ init_early:
 init_hardware:
 	ldd #64
 	std _ramsize
-	ldd #32
+	ldb #32
 	std _procmem
 
 	; Turn on PIA  CB1 (50Hz interrupt)

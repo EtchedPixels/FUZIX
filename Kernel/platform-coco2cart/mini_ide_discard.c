@@ -4,6 +4,8 @@
 #include <timer.h>
 #include "mini_ide.h"
 
+#ifdef CONFIG_WITH_IDE
+
 #define data	((volatile uint8_t *)0xFF50)
 #define error	((volatile uint8_t *)0xFF51)
 #define count	((volatile uint8_t *)0xFF52)
@@ -99,3 +101,4 @@ void ide_probe(void)
 		ide_identify(1, buf);
 	tmpfree(buf);
 }
+#endif
