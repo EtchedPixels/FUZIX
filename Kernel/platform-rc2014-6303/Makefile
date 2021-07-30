@@ -63,14 +63,16 @@ loader.o: loader.S
 loader: loader.o
 	$(CROSS_LD) -b -C 0x200 -Z 0x20 -o loader.bin loader.o
 
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
 diskimage: loader
 	# Make a blank disk image with partition
-	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=../../disk.img bs=40017920 conv=sync
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the bootstrap loader
-	dd if=loader.bin of=../../disk.img conv=notrunc
+	dd if=loader.bin bs=512 skip=1 of=$(IMAGES)/disk.img conv=notrunc
 	# Add the file system
-	dd if=../../filesys.img of=../../disk.img bs=512 seek=2048 conv=notrunc
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=fuzix.img of=../../disk.img bs=512 seek=1 conv=notrunc
+	dd if=fuzix.img of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M ../../disk.img > ../../emu-ide.img
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
