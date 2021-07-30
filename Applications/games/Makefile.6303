@@ -33,7 +33,7 @@ $(APPSNS): %: %.o
 	$(LINKER) -o $@ $(CRT0NS) $^ $(LINKER_LIB) 
 
 fortune-gen-linux: fortune-gen.c
-	$(CC) -o fortune-gen-linux $<
+	cc -o fortune-gen-linux $<
 
 fortune.dat: fortune-gen-linux
 	./fortune-gen-linux < fort.db >fortune.dat
