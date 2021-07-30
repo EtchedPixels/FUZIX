@@ -9,6 +9,15 @@ static char linebuf[128];
 
 static char map[256];
 
+struct map {
+    struct map *next;
+    uint16_t start;
+    uint16_t end;
+    char name[16];
+};
+
+struct map *maps;
+
 int get_line(FILE *fp)
 {
     char *p;
@@ -20,16 +29,56 @@ int get_line(FILE *fp)
     return 1;
 }
 
+void map_add(struct map *m)
+{
+    struct map *mp = maps;
+    for (mp = maps; mp != NULL; mp = mp->next) {
+        if (mp->end < m->start)
+            continue;
+        if (mp->start >= m->end)
+            continue;
+        /* Discard is special - it can overlap user because it is gone by
+           the time anything occupies specific user reserved space */
+        if (strcmp(m->name, "user") == 0 && strcmp(mp->name, ".discard") == 0)
+            continue;
+        if (strcmp(mp->name, "user") == 0 && strcmp(m->name, ".discard") == 0)
+            continue;
+        /* Overlap */
+        fprintf(stderr, "***WARNING: map overlap between %s and %s\n",
+            m->name, mp->name);
+        fprintf(stderr, "%04X-%04X v %04X-%04X\n",
+            m->start, m->end, mp->start, mp->end);
+    }
+    m->next = maps;
+    maps = m;
+}
+            
 void map_insert(char *name, uint16_t start, uint16_t end)
 {
     char c = '?';
+    struct map *m = malloc(sizeof(struct map));
+    if (m == NULL) {
+        fprintf(stderr, "Out of memory.\n");
+        exit(1);
+    }
+    m->start = start;
+    m->end = end;
+    strncpy(m->name, name, 15);
+    m->name[15] = 0;
+
+    map_add(m);
+    
     end = (end + 255) >> 8;
     start >>= 8;
 
     if (strcmp(name, ".magic") == 0)
         return;
 
-    if (strcmp(name, ".vectors") == 0)
+    if (strcmp(name, "user") == 0)
+        c = 'U';
+    else if (strcmp(name, "reserve") == 0)
+        c = '+';
+    else if (strcmp(name, ".vectors") == 0)
         c = '@';
     else if (strcmp(name, ".udata") == 0)
         c = 'U';
@@ -107,9 +156,31 @@ void print_map(void)
     putchar('\n');
 }
 
+void load_info(FILE *fp)
+{
+    char name[16];
+    unsigned int st, en;
+    struct map *m;
+
+    while(get_line(fp)) {
+        if (*linebuf == '#')
+            continue;
+        if (sscanf(linebuf, "%15s %x-%x",
+            name, &st, &en) != 3) {
+                fprintf(stderr, "Unknown info line '%s'.\n", linebuf);
+                exit(1);
+        }
+        map_insert(name, st, en);
+    }
+}
 int main(int argc, char *argv[])
 {
     init_map();
+    FILE *fp = fopen("platform/map.info", "r");
+    if (fp) {
+        load_info(fp);
+        fclose(fp);
+    }
     scan_sections(stdin);
     print_map();
     exit(0);
