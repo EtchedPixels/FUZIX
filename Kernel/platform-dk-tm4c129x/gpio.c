@@ -55,8 +55,8 @@ void gpio_write(unsigned int port, unsigned int pin, unsigned int onoff)
 
 static void gpio_power_up(unsigned int port)
 {
-    outmod32(PCGCGPIO, 1 << port, 1);
-    outmod32(RCGCGPIO, 1 << port, 1);
+    outmod32(PCGCGPIO, 1 << port, 1 << port);
+    outmod32(RCGCGPIO, 1 << port, 1 << port);
 }
 
 /* Set a GPIO up as a normal output */
@@ -106,7 +106,7 @@ void gpio_altfunc(unsigned int port, unsigned int pin, unsigned int func)
     outmod32(base + GPIO_AMSEL, 1 << pin, 0);
     /* Set the alternate function */
     r = inl(base + GPIO_PCTL);
-    r &= ~0x0F << (4 * pin);
+    r &= ~(0x0F << (4 * pin));
     r |= func << (4 * pin);
     outl(base + GPIO_PCTL, r);
 }
