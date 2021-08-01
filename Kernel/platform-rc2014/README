@@ -33,6 +33,9 @@ Supported Hardware
 	interrupt source is strongly recommended as the RTC cannot provide
 	true timer events and really slows the system down
 
+	Alternatively the Z80 KIO board at 0x80 can be used instead of the
+	serial and CTC cards. It also provides SD card bit bang
+
 	Options:
 
 	Z80DMA at 0x04
@@ -51,9 +54,9 @@ Supported Hardware
 
 	QUART at 0xBA
 
-	Z80PIO or SC129 at 0x68 providing SD card bitbang or GPIO
+	Z80PIO, or Gluino at 0x68 providing SD card bitbang or GPIO
 
-	SC129 at 0x03 as GPIO
+	SC129 at 0x00 as GPIO or at 0x69 to drive an SD card
 
 	TMS9918A at 0x98/0x99. Must be jumpered as an interrupt source. For
 	version 3 or earlier note the errata and jumper it with a 1N4148
@@ -82,6 +85,7 @@ Unsupported Hardware
 
 	SC108/SC114/Z80SBC64 or other CPU boards with their own banking instead
 	of the 512K ROM/RAM. Please see the relevant port instead.
+
 	SC111 or other Z180 CPU board with linear mapped RAM. See the SC111
 	port instead.
 
@@ -105,9 +109,6 @@ Things that don't work
 
 Stuff To Do
 
-  * Work out how to co-exist better and maybe even modify ROMWBW so we can
-    use it
-
   * Swap (it's there but it's most certainly not debugged or wired up fully)
 
   * Sound support once we have the core sound layer
@@ -116,11 +117,9 @@ Stuff To Do
     flip buffers. Also raises space issues as we'll need 256 bytes per SIO
     plus the other costs
 
-  * Support Z180 timer and serial ports fully
-
-  * Use the ROMWBW data to support Z180 timers
-
   * See if we can merge some similar ports using the ROMWBW machine info ?
+
+  * New networking layuer
 
 Setting It Up
 
@@ -131,7 +130,10 @@ although you can certainly reserve on with a different type code.
 
 The loader and attached kernel image needs to be written to blocks 2+.
 
-You can manipulate the filesystem with ucp.
+"make diskimage" will do all the work to generate a file system, CF card image
+and emulator image in Images/rc2014/.
+
+if you need to do it by hand
 
 If you are doing this with the emulator then the easiest way is to use makedisk
 to create a disk of suitable size and then
@@ -152,9 +154,16 @@ When working on a real CF card or the raw file add the bootable image with
 to place the bootable image on sectors 2 and above in the hole the fdisk tool
 leaves for a bootable image.
 
+You can manipulate the filesystem with ucp.
+
 As ucp and fsck.fuzix support offsets in the format path:offset you can access
-the first file system with ucp foo.cf:1049600 if it starts at block 2048 of the
-CF card as normal.
+the first file system with ucp emu-ide.img:1049600 if it starts at block 2048
+of the emulated CF card. (use 1048576 for a real CF)
 
 Then you can run
-./rc2014 -b -r 512.rom  -i foo.cf  -s  -w -R -c 
+
+./rc2014 -b -r RCZ80_std.rom  -i emu-ide.cf  -s -w -R -c 
+
+or for a KIO system
+
+/rc2014 -b -k -r RCZ80_kio.rom -i emu-ide.cf -R
