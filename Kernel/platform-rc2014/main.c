@@ -15,7 +15,8 @@
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
 
-uint8_t ctc_present;
+uint8_t ctc_port;
+
 uint8_t sio_present;
 uint8_t sio1_present;
 uint8_t z180_present;
@@ -30,6 +31,7 @@ uint8_t sc26c92_present;
 uint8_t u16x50_present;
 uint8_t z512_present = 1;	/* We assume so and turn it off if not */
 uint8_t fpu_present;
+uint8_t kio_present;
 
 uint8_t platform_tick_present;
 uint8_t timer_source = TIMER_NONE;
@@ -100,7 +102,9 @@ void platform_idle(void)
 	else {
 		irqflags_t irq = di();
 		sync_clock();
+#ifdef CONFIG_NET_WIZNET
 		w5x00_poll();
+#endif
 		irqrestore(irq);
 	}
 }
@@ -111,7 +115,9 @@ void do_timer_interrupt(void)
 	fd_tick();
 	fd_tick();
 	timer_interrupt();
-	w5x00_poll();
+#ifdef CONFIG_NET_WIZNET
+		w5x00_poll();
+#endif
 }
 
 static int16_t timerct;
@@ -173,9 +179,9 @@ void platform_interrupt(void)
 		}
 	/* If not and we have no QUART then pray the CTC works */
 	} else if (timer_source == TIMER_CTC) {
-		uint8_t n = 255 - CTC_CH3;
-		CTC_CH3 = 0x47;
-		CTC_CH3 = 255;
+		uint8_t n = 255 - in(ctc_port + 3);
+		out(ctc_port + 3, 0x47);
+		out(ctc_port +3, 0xFF);
 		timer_tick(n);
 	}
 }

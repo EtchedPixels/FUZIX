@@ -288,27 +288,31 @@ void init_hardware_c(void)
 	ramsize = 512;
 	procmem = 512 - 80;
 
-	tms9918a_present = probe_tms9918a();
-	if (tms9918a_present) {
-		shadowcon = 1;
-		timer_source = TIMER_TMS9918A;
-		tms9918a_reload();
-		vtinit();
+	/* The TMS9918A and KIO clash */
+	if (!kio_present) {
+		tms9918a_present = probe_tms9918a();
+		if (tms9918a_present) {
+			shadowcon = 1;
+			timer_source = TIMER_TMS9918A;
+			tms9918a_reload();
+			vtinit();
+		}
 	}
 
-	/* FIXME: When ROMWBW handles second SIO, or Z180 as
-	   console we will need to address this better */
+	/* Set the right console for kernel messages */
 	if (z180_present) {
-		z180_setup(!ctc_present);
+		z180_setup(!ctc_port);
 		register_uart(Z180_IO_BASE, &z180_uart0);
 		register_uart(Z180_IO_BASE + 1, &z180_uart1);
 		rtc_port = 0x0C;
 		rtc_shadow = 0x0C;
 		timer_source = TIMER_Z180;
 	}
-
-	/* Set the right console for kernel messages */
-	/* ROMWBW favours the UART then SIO then ACIA */
+	if (kio_present) {
+		register_uart(0x88, &kio_uart);
+		register_uart(0x8C, &kio_uart);
+	}
+	/* ROMWBW favours the Z180, 16x50 then SIO then ACIA */
 	if (u16x50_present) {
 		register_uart(0xA0, &ns16x50_uart);
 		if (probe_16x50(0xA8))
@@ -419,15 +423,15 @@ void pagemap_init(void)
 		register_uart(0x86, &sio_uartb);
 	}
 
-	if (ctc_present) {
+	if (ctc_port) {
 		if (timer_source == TIMER_NONE)
 			timer_source = TIMER_CTC;
 		else {
 			/* Turn off our CTC interrupts */
-			CTC_CH2 = 0x43;
-			CTC_CH3 = 0x43;
+			out(ctc_port + 2, 0x43);
+			out(ctc_port + 3, 0x43);
 		}
-		kputs("Z80 CTC detected at 0x88.\n");
+		kprintf("Z80 CTC detected at 0x%2x.\n", ctc_port);
 	}
 
 	if (tms9918a_present) {
@@ -492,7 +496,7 @@ void pagemap_init(void)
 
 	if (fpu_detect())
 		kputs("AMD9511 FPU at 0x42\n");
-	/* Devices in the C0-CF range cannot be used with Z180 */
+	/* Devices in the C0-FF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;
 		while(i) {

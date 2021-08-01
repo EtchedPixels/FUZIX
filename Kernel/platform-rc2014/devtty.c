@@ -307,7 +307,7 @@ static uint8_t siobaud2[] = {
 
 __sfr __at 0xED z512_ctl;
 
-static void sio_setup(uint_fast8_t minor)
+static void sio_do_setup(uint_fast8_t minor)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
@@ -322,9 +322,9 @@ static void sio_setup(uint_fast8_t minor)
 	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
 
 	r = 0xC4;
-	if (ctc_present && p == SIOB_C) {
-		CTC_CH1 = 0x55;
-		CTC_CH1 = siobaud[baud];
+	if (ctc_port && p == SIOB_C) {
+		out(ctc_port + 1, 0x55);
+		out(ctc_port + 1, siobaud[baud]);
 		if (baud > B600)	/* Use x16 clock and CTC divider */
 			r = 0x44;
 	} else if (z512_present && p == SIOB_C)
@@ -343,6 +343,12 @@ static void sio_setup(uint_fast8_t minor)
 		r |= 0x02;
 	sio_r[3] = r;
 	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
+}
+
+static void sio_setup(uint_fast8_t minor)
+{
+	uint8_t p = ttyport[minor];
+	sio_do_setup(minor);
 	sio2_otir(p);
 }
 
@@ -377,6 +383,112 @@ struct uart sio_uartb = {
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
 	"Z80 SIO"
 };
+
+/*
+ *	Annoyingly the RC2014 SIO has the low bit reversed which means
+ *	the KIO (which is the right way around) needs its own entries
+ */
+static uint8_t kio_intrb(uint_fast8_t minor)
+{
+	uint8_t r;
+	uint8_t p = ttyport[minor];
+	r = in(p + 1);
+	if (r & 1)
+		tty_inproc(minor, in(p));
+	if (r & 2)
+		out(p + 1, 2 << 5);
+	if ((r ^ old_c[minor]) & 8) {
+		old_c[minor] = r;
+		if (r & 8)
+			tty_carrier_raise(minor);
+		else
+			tty_carrier_drop(minor);
+	}
+	return 1;
+}
+
+static uint8_t kio_intr(uint_fast8_t minor)
+{
+	uint8_t r;
+	uint8_t p = ttyport[minor];
+	r = in(p + 1);
+	if (!(r & 2))
+		return 2;
+	return kio_intrb(minor);
+}
+
+/* Be careful here. We need to peek at RR but we must be sure nobody else
+   interrupts as we do this. Really we want to switch to irq driven tx ints
+   on this platform I think. Need to time it and see
+
+   An asm common level tty driver might be a better idea
+
+   Need to review this we should be ok as the IRQ handler always leaves
+   us pointing at RR0 */
+static ttyready_t kio_writeready(uint_fast8_t minor)
+{
+	irqflags_t irq;
+	uint8_t c;
+
+	uint8_t p = ttyport[minor];
+
+	irq = di();
+	out(p + 1, 0);
+	c = in(p + 1);
+	irqrestore(irq);
+
+	if (c & 0x04)	/* THRE? */
+		return TTY_READY_NOW;
+	return TTY_READY_SOON;
+}
+
+
+static void kio_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	uint8_t p = ttyport[minor];
+	out(p, c);
+}
+
+static void kio_setup(uint_fast8_t minor)
+{
+	uint8_t p = ttyport[minor];
+	sio_do_setup(minor);
+	sio2_otir(p + 1);
+}
+
+
+static uint8_t kio_carrier(uint_fast8_t minor)
+{
+        uint8_t c;
+	uint8_t p = ttyport[minor];
+
+	out(p + 1, 0);
+	c = in(p + 1);
+	if (c & 0x08)
+		return 1;
+	return 0;
+}
+
+struct uart kio_uart = {
+	kio_intr,
+	kio_writeready,
+	kio_putc,
+	kio_setup,
+	kio_carrier,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"Z80 KIO"
+};
+
+struct uart kio_uartb = {
+	kio_intrb,
+	kio_writeready,
+	kio_putc,
+	kio_setup,
+	kio_carrier,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"Z80 KIO"
+};
+
 
 static uint8_t ns16x50_intr(uint_fast8_t minor)
 {

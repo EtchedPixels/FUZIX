@@ -3,6 +3,8 @@
 #include <devsd.h>
 #include <z80softspi.h>
 
+#include "rc2014.h"
+
 /*
  *	SD card bit bang. For now just a single card to get us going. We
  *	should fix the cs asm to allow for multiple cards
@@ -14,31 +16,36 @@
  *	0: MOSI
  */
 
-/* PIO port B */
-__sfr __at 0x6B	piob_c;
-__sfr __at 0x69 piob_d;
+uint8_t pio_c;
 
 void pio_setup(void)
 {
     spi_piostate = 0xE0;
-    spi_port = 0x69;
+
+    if (kio_present) {
+      pio_c = 0x83;
+      spi_port = 0x82;
+    } else {
+      pio_c = 0x6B;
+      spi_port = 0x69;
+    }
     spi_data = 0x01;
     spi_clock = 0x10;
 
-    piob_c = 0xCF;		/* Mode 3 */
-    piob_c = 0xE6;		/* MISO input, unused as input (so high Z) */
-    piob_c = 0x07;		/* No interrupt, no mask */
+    out(pio_c, 0xCF);		/* Mode 3 */
+    out(pio_c, 0xE6);		/* MISO input, unused as input (so high Z) */
+    out(pio_c, 0x07);		/* No interrupt, no mask */
 }
 
 void sd_spi_raise_cs(void)
 {
-    piob_d = spi_piostate |= 0x08;
+    out(spi_port, spi_piostate |= 0x08);
 }
 
 void sd_spi_lower_cs(void)
 {
     spi_piostate &= ~0x08;
-    piob_d = spi_piostate;
+    out(spi_port, spi_piostate);
 }
 
 void sd_spi_clock(bool go_fast) __z88dk_fastcall
