@@ -2,8 +2,8 @@
 
 /* Set this if you have the RC2014 CF adapter at 0x10/0x90 */
 #define CONFIG_RC2014_CF
-/* Set this to be able to do networking over the second serial port */
-#define CONFIG_RC2014_NET
+/* Set this to be able to do networking (not currently working) */
+#undef CONFIG_RC2014_NET
 /* Set this if you have the 8255 IDE adapter (mutually exclusive of RC2014_CF) */
 #undef CONFIG_RC2014_PPIDE
 /* Set this if you have the floppy interface */
