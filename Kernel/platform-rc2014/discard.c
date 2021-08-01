@@ -530,7 +530,7 @@ void map_init(void)
  * under the GNU Library General Public License.
  */
 
-static int strcmp(const char *d, const char *s)
+static int discard_strcmp(const char *d, const char *s)
 {
 	register char *s1 = (char *) d, *s2 = (char *) s, c1, c2;
 
@@ -542,7 +542,7 @@ uint8_t platform_param(unsigned char *p)
 {
 	/* If we have a keyboard then the TMS9918A becomes a real tty
 	   and we make it the primary console */
-	if (strcmp(p, "zxkey") == 0 && !zxkey_present && !ps2kbd_present) {
+	if (discard_strcmp(p, "zxkey") == 0 && !zxkey_present && !ps2kbd_present) {
 		zxkey_present = 1;
 		zxkey_init();
 		if (tms9918a_present) {
