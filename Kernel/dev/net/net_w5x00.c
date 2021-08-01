@@ -1082,7 +1082,7 @@ void netdev_init(void)
 	}
 #else
 	w5x00_writecb(GAR0, 0x55);
-	if (w5x00_read(GAR0) == 0x55)
+	if (w5x00_readcb(GAR0) == 0x55)
 		wiznet_present = 1;
 #endif
 
