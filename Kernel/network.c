@@ -23,6 +23,7 @@ int net_syscall(void)
 	udata.u_error = 0;
 	udata.u_retval = 0;
 
+//	kprintf("cmd %d state %d\n", udata.u_net.args[0], s->s_state);
 	switch (udata.u_net.args[0]) {
 	case 0:		/* socket */
 		return netproto_socket();
@@ -64,6 +65,9 @@ int net_syscall(void)
 			return 0;
 		/* The connection closed under us */
 		udata.u_error = s->s_error;
+		/* TODO: review if belongs in stack close path handler */
+		if (udata.u_error == 0)
+			udata.u_error = ECONNREFUSED;
 		return 0;
 	case 4:		/* accept */
 		if (s->s_state != SS_LISTENING) {
