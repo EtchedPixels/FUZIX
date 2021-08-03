@@ -55,7 +55,12 @@ static void do_ip_mask_set(char *p)
 
 static void do_ip_dst_set(char *p)
 {
-	do_ip_set(p, SIOCSIFDSTADDR, "address");
+	do_ip_set(p, SIOCSIFDSTADDR, "destination");
+}
+
+static void do_ip_gw_set(char *p)
+{
+	do_ip_set(p, SIOCSIFGWADDR, "gateway");
 }
 
 static void do_flags(unsigned int mask, unsigned int val)
@@ -86,6 +91,10 @@ static int do_keyword(char **arg)
 		do_ip_dst_set(arg[1]);
 		return 2;
 	}
+	if (strcmp(*arg, "gw") == 0) {
+		do_ip_gw_set(arg[1]);
+		return 2;
+	}
 	if (strcmp(*arg, "broadcast") == 0) {
 		do_ip_broad_set(arg[1]);
 		return 2;
@@ -114,10 +123,11 @@ static const char *fnames[] = {
 	NULL
 };
 
-static void ip_print(const char *name, int ioc)
+static void ip_print(const char *name, int ioc, int skipok)
 {
 	if (ioctl(sock, ioc, &ifr) == -1) {
-		fprintf(stderr, "ifconfig: unable to get %s.\n", name);
+		if (skipok == 0)
+			fprintf(stderr, "ifconfig: unable to get %s.\n", name);
 		return;
 	}
 	/* This is a union and all addresses overlap */
@@ -147,7 +157,7 @@ static void display_hwaddr(void)
 	case HW_ETH:
 	case HW_WLAN:
 		printf("ether: ");
-		for (i = 0; i < 7; i++)
+		for (i = 0; i < 5; i++)
 			printf("%02X:", *p++);
 		printf("%02X  ", *p);
 		break;
@@ -182,14 +192,15 @@ static void dump_interface(void)
 		printf("  mtu %d\n", ifr.ifr_mtu);
 	if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0)
 		display_hwaddr();
-	ip_print("inet", SIOCGIFADDR);
-	if (flags & IFF_POINTOPOINT)
-		ip_print("destination", SIOCGIFDSTADDR);
+	ip_print("inet", SIOCGIFADDR, 0);
+	if (flags & IFF_POINTOPOINT, 0)
+		ip_print("destination", SIOCGIFDSTADDR, 0);
 	else
-		ip_print("netmask", SIOCGIFNETMASK);
-	ip_print("broadcast", SIOCGIFBRDADDR);
-	/* And we don't keep statistics */
+		ip_print("netmask", SIOCGIFNETMASK, 0);
+	ip_print("broadcast", SIOCGIFBRDADDR, 1);
+	ip_print("gateway", SIOCGIFGWADDR, 1);
 	printf("\n");
+	/* And we don't keep statistics */
 }
 
 static void list_interfaces(void)
@@ -219,7 +230,7 @@ int main(int argc, char *argv[])
 		list_interfaces();
 		return 0;
 	}
-	strcpy(ifr.ifr_name, argv[1]);
+	strncpy(ifr.ifr_name, argv[1], sizeof(ifr.ifr_name));
 	if (ioctl(sock, SIOCGIFADDR, &ifr) == -1) {
 		perror(ifr.ifr_name);
 		return 1;

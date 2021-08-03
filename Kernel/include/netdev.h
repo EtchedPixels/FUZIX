@@ -129,12 +129,23 @@ struct ifreq {
 		struct ksockaddr ifr_dstaddr;
 		struct ksockaddr ifr_broadaddr;
 		struct ksockaddr ifr_netmask;
+		struct ksockaddr ifr_gwaddr;
 		struct ksockaddr ifr_hwaddr;
 		short ifr_flags;
 		int ifr_ifindex;
 		int ifr_mtu;
-	};
+	} ifr_ifru;
 };
+
+#define ifr_addr	ifr_ifru.ifr_addr
+#define ifr_dstaddr	ifr_ifru.ifr_dstaddr
+#define ifr_broadaddr	ifr_ifru.ifr_broadaddr
+#define ifr_netmask	ifr_ifru.ifr_netmask
+#define ifr_hwaddr	ifr_ifru.ifr_hwaddr
+#define ifr_gwaddr	ifr_ifru.ifr_gwaddr
+#define ifr_flags	ifr_ifru.ifr_flags
+#define ifr_ifindex	ifr_ifru.ifr_ifindex
+#define ifr_mtu		ifr_ifru.ifr_mtu
 
 #define IFF_UP		0x0001
 #define IFF_BROADCAST	0x0002
@@ -162,6 +173,11 @@ struct ifreq {
 #define SIOCSIFHWADDR	(0x040D|IOCTL_SUPER)
 #define SIOCGIFMTU	0x040E
 #define SIOCSIFMTU	(0x040F|IOCTL_SUPER)
+/* These two are a Fuzix specific thing. It's much easier to think about
+   simple interfaces this way than require 'route'. The native net may
+   well require 'route' but can just omit this ioctl pair */
+#define SIOCGIFGWADDR	0x0410
+#define SIOCSIFGWADDR	(0x0411|IOCTL_SUPER)
 
 
 /* Network layer syscalls */

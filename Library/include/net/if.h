@@ -19,6 +19,7 @@ struct ifreq {
 		struct sockaddr ifr_dstaddr;
 		struct sockaddr ifr_broadaddr;
 		struct sockaddr ifr_netmask;
+		struct sockaddr ifr_gwaddr;
 		struct sockaddr ifr_hwaddr;
 		short ifr_flags;
 		int ifr_ifindex;
@@ -31,6 +32,7 @@ struct ifreq {
 #define ifr_broadaddr	ifr_ifru.ifr_broadaddr
 #define ifr_netmask	ifr_ifru.ifr_netmask
 #define ifr_hwaddr	ifr_ifru.ifr_hwaddr
+#define ifr_gwaddr	ifr_ifru.ifr_gwaddr
 #define ifr_flags	ifr_ifru.ifr_flags
 #define ifr_ifindex	ifr_ifru.ifr_ifindex
 #define ifr_mtu		ifr_ifru.ifr_mtu
@@ -61,6 +63,8 @@ struct ifreq {
 #define SIOCSIFHWADDR	(0x040D|__IOCTL_SUPER)
 #define SIOCGIFMTU	0x040E
 #define SIOCSIFMTU	(0x040F|__IOCTL_SUPER)
+#define SIOCGIFGWADDR	0x0410
+#define SIOCSIFGWADDR	(0x0411|__IOCTL_SUPER)
 
 #define HW_NONE		0	/* e.g. loopback */
 #define HW_ETH		1
