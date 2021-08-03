@@ -189,7 +189,7 @@ static void dump_interface(void)
 	flags = ifr.ifr_flags;
 
 	if (ioctl(sock, SIOCGIFMTU, &ifr) == 0)
-		printf("  mtu %d\n", ifr.ifr_mtu);
+		printf(" mtu %d\n", ifr.ifr_mtu);
 	if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0)
 		display_hwaddr();
 	ip_print("inet", SIOCGIFADDR, 0);
