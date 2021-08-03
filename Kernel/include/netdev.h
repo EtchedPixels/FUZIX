@@ -89,6 +89,7 @@ struct socket
 #define SI_DATA		4		/* Data is ready */
 #define SI_EOF		8		/* At EOF */
 #define SI_THROTTLE	16		/* Transmit is throttled */
+#define SI_WAIT		32		/* Wait helper */
 
 	uint8_t s_wake;		/* REVIEW */
 
