@@ -509,7 +509,7 @@ static void netproto_cleanup(struct socket *s)
 	netproto_free(s);
 }
 
-/* Bind a socket to an address. May block */
+/* Bind a socket to an address. */
 /* We arrange the internal types we use to match the chip
    - 21 TCP 02 UDP 03 RAW
 
@@ -901,15 +901,15 @@ int netproto_read(struct socket *s)
 		case W5100_TCP:
 			/* Bytes to consume */
 			r = min(n, udata.u_count);
-			if (r == 0) {
-				/* Check for an EOF (covers post close cases too) */
-				if (s->s_iflags & SI_EOF)
-					return 0;
-				/* Wait */
-				return 1;
-			}
-			/* Now dequeue some bytes into udata.u_base */
-			if (filtered == 0) {
+			if (!filtered) {
+				if (r == 0) {
+					/* Check for an EOF (covers post close cases too) */
+					if (s->s_iflags & SI_EOF)
+						return 0;
+					/* Wait */
+					return 1;
+				}
+				/* Now dequeue some bytes into udata.u_base */
 				w5x00_dequeue_u(i, r, udata.u_base);
 				udata.u_done += r;
 				udata.u_base += r;
@@ -949,7 +949,7 @@ arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 			return 0;
 		/* Already native endian */
 		w5x00_bwrite(SOCK2BANK_C(i), Sn_DIPR0, &ka->sa.sin.sin_addr, 4);
-		w5x00_bwrite(SOCK2BANK_C(i), Sn_DPORT0, &ka->sa.sin.sin_addr, 4);
+		w5x00_bwrite(SOCK2BANK_C(i), Sn_DPORT0, &ka->sa.sin.sin_port, 2);
 		/* Fall through */
 	case W5100_TCP:
 		/* No room blocks, a partial write returns */
@@ -1000,7 +1000,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 	static struct ifreq ifr;
 	if (uget(ifr_u, &ifr, sizeof(struct ifreq)))
 		return -1;
-	if (op != SIOCGIFNAME && strcmp(ifr.ifr_name, "wlan0")) {
+	if (op != SIOCGIFNAME && strcmp(ifr.ifr_name, "eth0")) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
@@ -1011,7 +1011,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 			udata.u_error = ENODEV;
 			return -1;
 		}
-		memcpy(ifr.ifr_name, "wlan0", 6);
+		memcpy(ifr.ifr_name, "eth0", 6);
 		goto copyback;
 	case SIOCGIFINDEX:
 		ifr.ifr_ifindex = 0;
@@ -1030,12 +1030,15 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		/* Hardcoded in the engine */
 		ifr.ifr_broadaddr.sa.sin.sin_addr.s_addr = (ipa & igm) | ~igm;
 		goto copy_addr;
+	case SIOCGIFGWADDR:
+		ifr.ifr_gateway.sa.sin.sin_addr.s_addr = iga;
+		goto copy_addr;
 	case SIOCGIFNETMASK:
 		ifr.ifr_netmask.sa.sin.sin_addr.s_addr = igm;
 		goto copy_addr;
 	case SIOCGIFHWADDR:
 		memcpy(ifr.ifr_hwaddr.sa.hw.shw_addr, fakeaddr, 6);
-		ifr.ifr_hwaddr.sa.hw.shw_family = HW_WLAN;
+		ifr.ifr_hwaddr.sa.hw.shw_family = HW_ETH;
 		goto copyback;
 	case SIOCGIFMTU:
 		ifr.ifr_mtu = 1500;
@@ -1048,6 +1051,9 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		return 0;
 	case SIOCSIFADDR:
 		ipa = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
+		break;
+	case SIOCSIFGWADDR:
+		iga = ifr.ifr_gateway.sa.sin.sin_addr.s_addr;
 		break;
 	case SIOCSIFNETMASK:
 		igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;
