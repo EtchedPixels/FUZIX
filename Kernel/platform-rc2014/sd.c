@@ -5,6 +5,8 @@
 
 #include "rc2014.h"
 
+#ifdef CONFIG_SD
+
 /*
  *	SD card bit bang. For now just a single card to get us going. We
  *	should fix the cs asm to allow for multiple cards
@@ -105,3 +107,4 @@ dowrite:
   __endasm;
 }
 
+#endif
