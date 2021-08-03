@@ -4,6 +4,8 @@ extern void w5300_poll(void);
 
 /* Read a word: turn it native endian */
 extern uint16_t w5300_read(uint16_t off);
+/* Read a word: already native endian */
+extern uint16_t w5300_readn(uint16_t off);
 /* Write a word: turn native endian to big endian */
 extern void w5300_write(uint16_t off, uint16_t n);
 /* Write a word; already native endian */
