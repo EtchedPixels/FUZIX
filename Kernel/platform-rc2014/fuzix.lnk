@@ -42,6 +42,7 @@ devinput.rel
 usermem.rel
 network.rel
 platform-rc2014/net_w5x00.rel
+platform-rc2014/net_w5300.rel
 platform-rc2014/wiznet.rel
 platform-rc2014/ppide_rbc.rel
 platform-rc2014/discard.rel

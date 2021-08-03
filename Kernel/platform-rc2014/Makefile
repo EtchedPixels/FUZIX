@@ -10,7 +10,7 @@ DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/amd9511.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014.s
 DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
 DASRCS += ../dev/ps2bitbang-rc2014-kbd.s ../dev/ps2bitbang-rc2014-mouse.s
-NSRCS = ../dev/net/net_w5x00.c
+NSRCS = ../dev/net/net_w5x00.c ../dev/net/net_w5300.c
 DRSRCS = ../dev/rc2014/zxkeyboard.c
 DRASRCS = ../dev/rc2014/zxkey.s
 
@@ -55,7 +55,7 @@ $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DROBJS): %.rel: ../dev/rc2014/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DRAOBJS): %.rel: ../dev/rc2014/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
