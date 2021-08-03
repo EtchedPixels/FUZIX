@@ -105,6 +105,9 @@ void platform_idle(void)
 #ifdef CONFIG_NET_WIZNET
 		w5x00_poll();
 #endif
+#ifdef CONFIG_NET_W5300
+		w5300_poll();
+#endif
 		irqrestore(irq);
 	}
 }
@@ -116,7 +119,10 @@ void do_timer_interrupt(void)
 	fd_tick();
 	timer_interrupt();
 #ifdef CONFIG_NET_WIZNET
-		w5x00_poll();
+	w5x00_poll();
+#endif
+#ifdef CONFIG_NET_W5300
+	w5300_poll();
 #endif
 }
 
