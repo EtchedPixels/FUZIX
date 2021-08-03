@@ -33,7 +33,7 @@ extern void *memset(void *dest, int c, size_t n);
 #endif
 /* There is no compiler optimized inline memmove */
 extern void *memmove(void *dest, const void *src, size_t n);
-extern int strcmp(const void *, const void *);
+extern int strcmp(const char *, const char *);
 
 extern int16_t strlen(const char *p);
 
