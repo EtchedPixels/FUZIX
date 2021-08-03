@@ -184,8 +184,10 @@ void w5300_writen(uint16_t off, uint16_t n)
 
 void w5300_setup(void)
 {
+	uint8_t i;
 	mr1 = 0x80;	/* Reset */
-	mr0 = 0x01;	/* FIFO in little endian */
+	for (i = 0; i < 100; i++);
+	mr0 |= 0x01;	/* FIFO in little endian */
 	mr1 = 0x01;	/* Indiredct mode */
 }
 
