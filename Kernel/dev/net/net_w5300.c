@@ -4,6 +4,14 @@
  *	The W5300 is a strange offshoot of the line with 16bit registers and
  *	a somewhat wacky 16bit FIFO arrangement. We split the driver from the
  *	main WizNet driver to keep the main one clean.
+ *
+ *	TODO:
+ *	- Why does ifconfig sometimes hang
+ *	- Possible scribble
+ *	- Can we do anything in software for the bad reset case
+ *	- Test write properly
+ *	- Test UDP
+ *	- Test IPRAW socket support
  */
 
 #include <kernel.h>
@@ -20,6 +28,7 @@
 
 #define W5300_TCP	0x21
 #define W5300_UDP	0x02
+#define W5300_RAW	0x03
 
 #define MR		0x000
 #define		MR_DBW		0x8000
@@ -98,7 +107,7 @@
 #define		SOCK_LAST_ACK		0x1D
 #define		SOCK_UDP		0x22
 #define		SOCK_IPRAW		0x32
-#define		SOCK_MACROW		0x42
+#define		SOCK_MACRAW		0x42
 #define		SOC_PPPOE		0x5F
 #define Sn_PORTR	0x20A
 #define SN_DHAR		0x20C
@@ -113,7 +122,6 @@
 #define Sn_TTLR		0x21E
 #define Sn_TX_WRSR	0x220
 #define Sn_TX_WRSR2	0x222
-#define Sn_TX_FSR	0x224
 #define Sn_TX_FSR2	0x226
 #define Sn_RX_RSR	0x228
 #define Sn_RX_RSR2	0x22A
@@ -140,6 +148,23 @@ void w5300_writesn(uint_fast8_t s, uint16_t off, uint16_t val)
 uint16_t w5300_reads(uint_fast8_t s, uint16_t off)
 {
 	return w5300_read(off + 0x40 * s);
+}
+
+uint16_t w5300_reads_atomic(uint_fast8_t s, uint16_t off)
+{
+	uint16_t r,n;
+	off += 0x40 * s;
+
+	do {
+		r = w5300_read(off);
+		n = w5300_read(off);
+	} while(n != r);
+	return r;
+}
+
+uint16_t w5300_readsn(uint_fast8_t s, uint16_t off)
+{
+	return w5300_readn(off + 0x40 * s);
 }
 
 /* This is native endian already */
@@ -289,16 +314,16 @@ static int do_netproto_bind(struct socket *s)
 		/* We keep ports net endian so don't byte swap */
 		w5300_writes(i, Sn_PORTR, s->src_addr.sa.sin.sin_port);
 		break;
+	case W5300_RAW:
+		r = SOCK_IPRAW;
+		w5300_writes(i, Sn_PORTR, s->s_protocol);
+		break;
 	}
 	w5300_cmd(i, OPEN);
 	/* If the reply is not immediately SOCK_INIT we failed */
-retry:
 	n = w5300_reads(i, Sn_SSR);
-	if ((n & 0xFF) != r) {
-		kprintf("bind fail %2x\n", n);
-		w5300_cmd(i, CLOSE);
-		goto retry;
-	}
+	if ((n & 0xFF) != r)
+		kputs("w5300: bind error.\n");
 	/* Interrupt on if available mark as bound */
 	irqmask |= 1 << i;
 	w5300_write(IMR, irqmask);
@@ -508,6 +533,7 @@ struct socktype {
 static struct socktype socktype[4] = {
 	{ AF_INET, SOCK_STREAM, IPPROTO_TCP, W5300_TCP },
 	{ AF_INET, SOCK_DGRAM, IPPROTO_UDP, W5300_UDP },
+	{ AF_INET, SOCK_DGRAM, IPPROTO_UDP, W5300_RAW },
 	{ 0, }
 };
 
@@ -542,6 +568,7 @@ int netproto_socket(void)
 				s->s_class = udata.u_net.args[2];
 				s->s_state = SS_UNCONNECTED;
 				s->s_type = st->info;
+				s->s_protocol = udata.u_net.args[3];
 				udata.u_net.sock = s->s_num;
 				return 0;
 			}
@@ -632,9 +659,9 @@ int netproto_close(struct socket *s)
 
 
 struct w5300_fifo {
-    uint16_t left;
-    uint8_t val;
-    uint8_t valid;
+	uint16_t left;
+	uint8_t val;
+	uint8_t valid;
 };
 
 struct w5300_fifo rx_state[NSOCKET];
@@ -643,98 +670,103 @@ struct w5300_fifo rx_state[NSOCKET];
 /* This assumes we put the FIFO in native endian order */
 static uint8_t *fifo_readu_bytes(uint16_t addr, uint_fast8_t s, uint8_t *uptr, uint16_t len)
 {
-    struct w5300_fifo *f = rx_state + s;
+	struct w5300_fifo *f = rx_state + s;
 
-    if (len == 0)
+	if (len == 0)
+		return uptr;
+
+	/* There is half a left over FIFO word pending - use it */
+	if (f->valid) {
+		 _uputc(f->val, uptr++);
+		 len--;
+		f->valid = 0;
+	}
+	/* Copy whole words */
+	while(len > 1) {
+		_uputw(w5300_read(addr), uptr);
+		len -= 2;
+		uptr += 2;
+	}
+	/* Pull a last word from the FIFO and stash half of it for next time */
+	if (len) {
+		uint16_t v = w5300_read(addr);
+		/* If there is 1 byte left in the real packet and we are
+		 * reading it then we should not save the next byte as it's padding to
+		 * align the header correctly
+		 */
+		if (f->left > 1) {
+			f->val  = v >> 8;
+			f->valid = 1;
+		}
+		uputc(v, uptr++);
+	}
 	return uptr;
-
-    /* There is half a left over FIFO word pending - use it */
-    if (f->valid) {
-        _uputc(f->val, uptr++);
-        len--;
-        f->valid = 0;
-    }
-    /* Copy whole words */
-    while(len > 1) {
-        _uputw(w5300_read(addr), uptr);
-        len -= 2;
-        uptr += 2;
-    }
-    /* Pull a last word from the FIFO and stash half of it for next time */
-    if (len) {
-        uint16_t v = w5300_read(addr);
-        f->val  = v >> 8;
-        f->valid = 1;
-        uputc(v, uptr++);
-    }
-    return uptr;
 }
 
 static uint16_t fifo_readu(uint_fast8_t s, uint8_t *uptr, uint16_t len, uint_fast8_t flush)
 {
-    struct w5300_fifo *f = rx_state + s;
-    uint16_t addr = Sn_RX_FIFOR + 0x40 * s;
-    uint16_t n = f->left;
-    /* See how much remains, in this frame if some left, if not then
-       the FIFO top is a word giving the next packet size */
-    if (n == 0) {
-   	n = w5300_read(addr);
-   	n = ntohs(n);
-    }
-//    kprintf("fifo_readu: s %d up %p l %d f %d\n", s, uptr, len, flush);
-    /* Nothing left to copy */
-    if (n == 0)
+	struct w5300_fifo *f = rx_state + s;
+	uint16_t addr = Sn_RX_FIFOR + 0x40 * s;
+	uint16_t n;
+
+	/* See how much remains, in this frame if some left, if not then
+	   the FIFO top is a word giving the next packet size */
+
+	if (f->left == 0) {
+		f->left = w5300_readn(addr);
+//	   	kprintf("fifo: new packet size %d\n", f->left);
+	}
+	n = f->left;
+
+//	kprintf("fifo_readu: s %d up %p l %d f %d\n", s, uptr, len, flush);
+
+	/*
+	 *	Pull the bytes up to the next header if they will fit, if
+	 *	not do a partial pull
+	 */
+	if (n > len)
+		n = len;
+	f->left -= n;
+	uptr = fifo_readu_bytes(addr, s, uptr, n);
+	len -= n;
+
+	/*
+	 *	If flush is set the discard any remaining bits for this packet
+	 */
+
+	if (flush) {
+		n = f->left;
+		f->left = 0;
+		/* Discard any odd byte we had to take out the FIFO */
+		if (f->valid) {
+			f->valid = 0;
+			n--;
+		}
+		/* Flush words */
+		while(n > 1) {
+			w5300_read(addr);
+			n -= 2;
+		}
+		/* And flush any trailing byte */
+		if (n)
+			w5300_read(addr);
+	}
+	/* We finished mid packet. The remainder is in f->left so we will
+	 pick it up next time. Do not send a RECV as we don't want to
+	 flush the frame yet */
+	if (f->left)
+		return 0;
+	/* This frame is complete */
+	w5300_cmd(s, RECV);
+	/* Nothing is left  */
 	return len;
-    f->left = n;
-//    kprintf("fifo: packet size %d\n", f->left);
-    /*
-     *	Pull the bytes up to the next header if they will fit, if
-     *	not do a partial pull
-     */
-    if (n > len)
-        n = len;
-    uptr = fifo_readu_bytes(addr, s, uptr, n);
-    len -= n;
-    f->left -= n;
-    /* Packet was bigger than the buffer, len is 0, but we need to
-       throw stuff out */
-    if (flush && (n = f->left) != 0) {
-        f->left = 0;
-        /* Discard any odd byte we had to take out the FIFO */
-        if (f->valid) {
-            f->valid = 0;
-            n--;
-        }
-        /* Flush words */
-        while(n > 1) {
-            w5300_read(addr);
-            n -= 2;
-        }
-        /* And flush any trailing byte */
-        if (n)
-            w5300_read(addr);
-        /* Tell the W5300 we ate the packet */
-        w5300_cmd(s, RECV);
-        f->left = 0;
-        return len;
-    }
-    /* We finished mid packet. The remainder is in f->left so we will
-       pick it up next time. Do not send a RECV as we don't want to
-       flush the frame yet */
-    if (len == 0)
-        return 0;
-    /* This frame is complete */
-    w5300_cmd(s, RECV);
-    /* Nothing is left  */
-    f->left = 0;
-    return len;
 }
 
 static void fifo_init(uint_fast8_t s)
 {
-    struct w5300_fifo *f = rx_state + s;
-    f->valid = 0;
-    f->left = 0;
+	struct w5300_fifo *f = rx_state + s;
+	f->valid = 0;
+	f->left = 0;
 }
 	
 /*
@@ -762,7 +794,7 @@ int netproto_read(struct socket *s)
 		/* Bytes pending */
 		n = rx_state[i].left;
 		if (n == 0)
-			n = w5300_reads(i, Sn_RX_RSR2);
+			n = w5300_reads_atomic(i, Sn_RX_RSR2);
 //		kprintf("read pending %d\n", n);
 		if (n == 0) {
 			if (s->s_iflags & SI_EOF)
@@ -772,13 +804,14 @@ int netproto_read(struct socket *s)
 		memcpy(&udata.u_net.addrbuf, &s->dst_addr, sizeof(struct ksockaddr));
 
 		switch (s->s_type) {
+		case W5300_RAW:
 		case W5300_UDP:
 			/* UDP comes with a header. The FIFO is byteswapping on a little endia box
 			   but swapping bytes only not word order. The target address is big
 			   endian. Are we confused yet ? */
-			udata.u_net.addrbuf.sa.sin.sin_addr.s_addr = ntohs(w5300_reads(i, Sn_RX_FIFOR));
-			udata.u_net.addrbuf.sa.sin.sin_addr.s_addr |= ((uint32_t)ntohs(w5300_reads(i, Sn_RX_FIFOR))) << 16;
-			udata.u_net.addrbuf.sa.sin.sin_port = ntohs(w5300_reads(i, Sn_RX_FIFOR));
+			udata.u_net.addrbuf.sa.sin.sin_addr.s_addr = w5300_readsn(i, Sn_RX_FIFOR);
+			udata.u_net.addrbuf.sa.sin.sin_addr.s_addr |= ((uint32_t)w5300_readsn(i, Sn_RX_FIFOR)) << 16;
+			udata.u_net.addrbuf.sa.sin.sin_port = w5300_readsn(i, Sn_RX_FIFOR);
 
 			if (s->src_addr.sa.sin.sin_addr.s_addr && s->src_addr.sa.sin.sin_addr.s_addr !=
 				udata.u_net.addrbuf.sa.sin.sin_addr.s_addr) {
@@ -803,6 +836,7 @@ int netproto_read(struct socket *s)
 				}
 				udata.u_done += r;
 				udata.u_base += r;
+				return 0;
 			}
 		}
 	} while(filtered);
@@ -830,11 +864,16 @@ arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 		return 1;
 
 	/* FIFO is available, but what room is left ? */
-	room = w5300_reads(i, Sn_TX_FSR2);
+	room = w5300_reads_atomic(i, Sn_TX_FSR2);
 
 	switch (s->s_type) {
 	case W5300_UDP:
 		if (udata.u_count > 1472) {
+			udata.u_error = EMSGSIZE;
+			return 0;
+		}
+	case W5300_RAW:
+		if (udata.u_count > 1500) {
 			udata.u_error = EMSGSIZE;
 			return 0;
 		}
@@ -1036,10 +1075,12 @@ int netproto_autobind(struct socket *s)
 	s->src_addr.sa.family = AF_INET;
 	s->src_addr.sa.sin.sin_addr.s_addr = 0;
 	/* Raw socket autobind is a no-op for port */
-	do {
-		s->src_addr.sa.sin.sin_port = autoport;
-		inc_autoport();
-	} while (netproto_find_local(&s->src_addr) != -1);
+	if (s->s_type != W5300_RAW) {
+		do {
+			s->src_addr.sa.sin.sin_port = autoport;
+			inc_autoport();
+		} while (netproto_find_local(&s->src_addr) != -1);
+	}
 	return do_netproto_bind(s);
 }
 

@@ -2,6 +2,13 @@
 extern void w5300_event(void);
 extern void w5300_poll(void);
 
+/*
+ *	WARNING: Although it isn't well documented the FIFO on the W5300
+ *	advances on the low byte read. This means your read/readn routines
+ *	must always access the byte high then low when in 8bit direct or
+ *	indirect mode.
+ */
+
 /* Read a word: turn it native endian */
 extern uint16_t w5300_read(uint16_t off);
 /* Read a word: already native endian */
