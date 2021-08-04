@@ -532,8 +532,7 @@ static int do_netproto_bind(struct socket *s)
 		break;
 #ifdef CONFIG_NET_W5100		
 	case W5100_RAW:
-		/* FIXME: check endianness here */
-		w5x00_writesb(i, Sn_MR, s->src_addr.sa.sin.sin_port);
+		w5x00_writesb(i, Sn_PROTO, s->s_protocol);
 		r = SOCK_IPRAW;
 #endif		
 	}
@@ -1145,8 +1144,7 @@ int netproto_autobind(struct socket *s)
 			inc_autoport();
 		} while (netproto_find_local(&s->src_addr) != -1);
 	}
-	do_netproto_bind(s);
-	return 0;
+	return do_netproto_bind(s);
 }
 
 int netproto_bind(struct socket *s)
