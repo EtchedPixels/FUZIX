@@ -61,7 +61,7 @@ int net_syscall(void)
 			netproto_begin_connect(s);
 			return 1;
 		}
-		if (s->s_state == SS_CONNECTED)
+		if (s->s_state == SS_CONNECTED || s->s_state == SS_CLOSEWAIT)
 			return 0;
 		/* The connection closed under us */
 		udata.u_error = s->s_error;
