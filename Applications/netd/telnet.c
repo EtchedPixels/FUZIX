@@ -1,16 +1,25 @@
-/* dwtelnet - Drivewire - raw Telnet
+/*
+ *	Sort of a telnet client, although actually it's more of a MUD client
+ *	than that.
+ *
+ *	Rewritten from dwtelnet - Drivewire - raw Telnet
  */
+
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <signal.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <termios.h>
-#include <stdio.h>
 #include <errno.h>
+
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <signal.h>
 #include <arpa/inet.h>
+
 #include "netdb.h"
 
 
@@ -21,7 +30,6 @@
 char ibuf[256];
 int opos = 0;
 
-int flags;
 struct termios prior, new;
 struct termios lprior, lnew;
 int fddw;
@@ -41,62 +49,87 @@ int crnl = -1;
 int fc = 7;
 int bc = 0;
 int inten = 0;
+int ansivert = 0;
 
 
 struct sockaddr_in addr;
 struct sockaddr_in laddr;
-
-void puterr(char *str)
-{
-	write(2, str, strlen(str));
-}
-
-void putstr(char *str)
-{
-	write(1, str, strlen(str));
-}
-
-int isnum(char c)
-{
-	if (c >= '0' && c <= '9')
-		return 1;
-	return 0;
-}
 
 int tonum(char c)
 {
 	return c - '0';
 }
 
+
+/*
+ *	Batch output so that we generate less system calls
+ */
+static char outbuf[256];
+static char *outptr = outbuf;
+
+void outflush(void)
+{
+	if (outptr != outbuf) {
+		unsigned int len = outptr - outbuf;
+		if (write(1, outbuf, len) != len)
+			perror("write");
+		outptr = outbuf;
+	}
+}
+
+void qbyte(char c)
+{
+	*outptr++ = c;
+	if (outptr == &outbuf[256])
+		outflush();
+}
+
+void qstr(const char *p)
+{
+	while(*p)
+		qbyte(*p++);
+}
+
+void qhexdigit(char c)
+{
+	qbyte("0123456789ABCDEF"[c & 0x0F]);
+}
+
+void qhex(char c)
+{
+	qbyte('<');
+	qhexdigit(c >> 4);
+	qhexdigit(c);
+	qbyte('>');
+}
+
 void out52(char c)
 {
-	write(1, "\x1b", 1);
-	write(1, &c, 1);
+	qbyte('x1b');
+	qbyte(c);
 }
 
 void out52n(char c, char n)
 {
 	out52(c);
-	write(1, &n, 1);
+	qbyte(n);
 }
 
 void out52nn(char c, char n, char m)
 {
 	out52(c);
-	write(1, &n, 1);
-	write(1, &m, 1);
+	qbyte(n);
+	qbyte(m);
 }
-
 
 char cconv(char c)
 {
 	return colors[c];
 }
 
-
 /* check for matching fore/background colors w/ intensity bit
    we can't do intensity - so text disappears */
-void ckint()
+void ckint(void)
 {
 	if ((fc == bc) && inten) {
 		fc = fc + 1 & 0x7;
@@ -118,7 +151,7 @@ void charout(uint8_t c)
 			return;
 		}
 		if (c != ESC)
-			write(1, &c, 1);
+			qbyte(c);
 		else {
 			mode = 1;
 		}
@@ -132,7 +165,7 @@ void charout(uint8_t c)
 		return;
 		/* Multi-byte detected */
 	case 2:
-		if (isnum(c)) {
+		if (isdigit(c)) {
 			para[no] = para[no] * 10 + tonum(c);
 			return;
 		}
@@ -146,7 +179,7 @@ void charout(uint8_t c)
 	case 3:
 		switch (c) {
 		case 255:
-			write(1, &c, 1);
+			qbyte(c);
 			mode = 0;
 			return;
 
@@ -158,8 +191,8 @@ void charout(uint8_t c)
 			return;
 		case 253:
 		case 254:
-			if (hex)
-				printf("<IAC><%x>", c);
+			qstr("<IAC>");
+			qhex(c);
 			mode = 4;
 			return;
 		}
@@ -167,8 +200,10 @@ void charout(uint8_t c)
 		return;
 		/* send Telnet's WILLNOTs to server */
 	case 4:
-		if (hex)
-			printf("<%x>\n", c);
+		if (hex) {
+			qhex(c);
+			qbyte('\n');
+		}
 		write(fddw, "\xff\xfc", 2);
 		write(fddw, &c, 1);
 		mode = 0;
@@ -188,8 +223,11 @@ void charout(uint8_t c)
 		return;
 		/* received a WONT */
 	case 6:
-		if (hex)
-			printf("opt<%x>\n", c);
+		if (hex) {
+			qstr("opt");
+			qhex(c);
+			qbyte('\n');
+		}
 		if (c == 1)
 			lecho = -1;
 		else {
@@ -282,18 +320,25 @@ void charout(uint8_t c)
 }
 
 /* print string to console under ANSI/TELNET */
+/* TODO: a mode where we just pass through */
 int mywrite(uint8_t * ptr, int len)
 {
 	int i = len;
-	while (i--)
-		charout(*ptr++);
+	if (ansivert) {
+		while (i--)
+			charout(*ptr++);
+	} else {
+		while (i--)
+			qbyte(*ptr++);
+	}
 	return len;
 }
 
 void quit(int sig)
 {
+	if (sig == 0)
+		qflush();
 	tcsetattr(0, TCSANOW, &lprior);
-	fcntl(0, F_SETFL, flags);
 	close(fddw);
 	exit(0);
 }
@@ -303,15 +348,14 @@ void addstr(char *s)
 {
 	for (; ibuf[opos++] = *s; s++)
 		if (lecho)
-			write(1, s, 1);
+			qbyte(*s);
 	opos--;
 }
 
 void printd(char *s)
 {
-	while (*s)
-		write(1, s++, 1);
-	write(1, "\n", 1);
+	qstr(s);
+	qbyte('\n');
 }
 
 void printhelp(void)
@@ -333,6 +377,9 @@ int myread(void)
 	static int mode = 0;
 	static int cmode = 0;
 	int l;
+
+	/* Make sure anything received is visible */
+	outflush();
 
 	switch (mode) {
 	case 0:		// waiting for input buffer to fill middle 
@@ -422,7 +469,7 @@ int myread(void)
 				continue;
 			}
 			if (lecho)
-				write(1, &c, 1);
+				qbyte(c);
 			if ((c == 8) && del) {
 				ibuf[opos++] = 127;
 				continue;
@@ -465,7 +512,7 @@ int my_open(int argc, char *argv[])
 
 	fddw = socket(AF_INET, SOCK_STREAM, 0);
 	if (fddw < 0) {
-		perror("af_inet sock_stream 0");
+		perror("socket");
 		exit(1);
 	}
 
@@ -479,6 +526,12 @@ int my_open(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	int len;
+
+	if (argv[1] && strcmp(argv[1], "-a") == 0) {
+		ansivert = 1;
+		argv++;
+		argc--;
+	}
 
 	if (argc < 2) {
 		write(2, "telnet: server [port]\n", 22);
@@ -501,10 +554,13 @@ int main(int argc, char *argv[])
 	lnew.c_cc[VTIME] = 1;
 	tcsetattr(0, TCSANOW, &lnew);
 
-	printf("Use Cntl-A ? for help.\n");
+	qstr("Use Cntl-A ? for help.\n");
 
 	while (1) {
 		char *pos = ibuf;
+		uint8_t ct = 0;
+
+		/* Keyboard to socket */
 		len = myread();
 		while (len > 0) {
 			int ret = write(fddw, pos, len);
@@ -517,25 +573,36 @@ int main(int argc, char *argv[])
 			len = len - ret;
 			pos += ret;
 		}
-		len = read(fddw, ibuf, 127);
-		if (!len)
-			quit(0);
-		if (len < 0) {
-			if (errno != EAGAIN) {
-				quit(0);
+		/* Socket to console. We do up to 20 loops through this
+		   at a go so that big bursts of data feel fast. We don't
+		   go forever though as the poor user might be trying to
+		   stop the output */
+		while(ct++ < 20  && (len = read(fddw, ibuf, 128)) > 0)
+		{
+			pos = ibuf;
+			while (len > 0) {
+				int ret = mywrite(pos, len);
+				if (ret < 0) {
+					if (errno == EWOULDBLOCK) {
+						ret = 0;
+					} else
+						quit(0);
+				}
+				len = len - ret;
+				pos += ret;
 			}
 		}
-		pos = ibuf;
-		while (len > 0) {
-			int ret = mywrite(pos, len);
-			if (ret < 0) {
-				if (errno == EWOULDBLOCK) {
-					ret = 0;
-				} else
-					quit(0);
+		/* EOF: remote closed */
+		if (!len)
+			quit(0);
+		/* Error. EAGAIN is ok - it means we've run out of data,
+		   anything else is bad */
+		if (len < 0) {
+			if (errno != EAGAIN) {
+				qflush();
+				perror("closed");
+				quit(0);
 			}
-			len = len - ret;
-			pos += ret;
 		}
 	}
 }
