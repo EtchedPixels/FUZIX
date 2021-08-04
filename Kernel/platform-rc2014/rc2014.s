@@ -513,6 +513,13 @@ _platform_reboot:
         ; We need to map the ROM back in -- ideally into every page.
         ; This little trick based on a clever suggestion from John Coffman.
         di
+	ld a,#0x0C
+	out (FDC_DOR),a			; Floppy off
+	xor a
+	out (0x99),a
+	ld a,#0x81
+	out (0x99),a
+	; Should also turn off the CTC if present ?
         ld hl, #(MPGENA << 8) | 0xD3    ; OUT (MPGENA), A
         ld (0xFFFE), hl                 ; put it at the very top of RAM
         xor a                           ; A=0
