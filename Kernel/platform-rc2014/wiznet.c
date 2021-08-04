@@ -159,38 +159,72 @@ __sfr __at 0x2B idm_arl;
 __sfr __at 0x2C idm_drh;
 __sfr __at 0x2D idm_drl;
 
+/*
+ * Not well documented: the drh/drl pair must always be used high then low,
+ * as if they are read the other way around the FIFO gets confused
+ */
+
+/* Read a W5300 register in big endian order */
 uint16_t w5300_read(uint16_t off)
 {
+	irqflags_t irq = di();
+	uint16_t r;
 	idm_arh = off >> 8;
 	idm_arl = off;
-	return (idm_drh << 8) | idm_drl;
+	r = idm_drh << 8;
+	r |= idm_drl;
+	irqrestore(irq);
+	return r;
 }
 
+/* Read a W5300 register without byte swapping */
+uint16_t w5300_readn(uint16_t off)
+{
+	irqflags_t irq = di();
+	uint16_t r;
+	idm_arh = off >> 8;
+	idm_arl = off;
+	r = idm_drh;
+	r |= idm_drl << 8;
+	irqrestore(irq);
+	return r;
+}
+
+/* Write a W5300 register in big endian order */
 void w5300_write(uint16_t off, uint16_t n)
 {
+	irqflags_t irq = di();
 	idm_arh = off >> 8;
 	idm_arl = off;
 	idm_drh = n >> 8;
 	idm_drl = n;
+	irqrestore(irq);
 }
 
+/* Write a W5300 register without byte swapping */
 void w5300_writen(uint16_t off, uint16_t n)
 {
+	irqflags_t irq = di();
 	idm_arh = off >> 8;
 	idm_arl = off;
 	idm_drh = n;
 	idm_drl = n >> 8;
+	irqrestore(irq);
 }
 
+/*
+ *	The core W5300 code expects the FIFO to be native endian and the
+ *	registers to be kept big endian. We also need to set extended hold
+ *	because 7ns data hold is a bit too quick for the poor old Z80.
+ */
 void w5300_setup(void)
 {
-	uint8_t i;
+	uint16_t i;
 	mr1 = 0x80;	/* Reset */
-	for (i = 0; i < 100; i++);
-	mr0 |= 0x01;	/* FIFO in little endian */
+	for (i = 0; i < 1000; i++);
+	mr0 |= 0x05;	/* FIFO in little endian, extended hold */
 	mr1 = 0x01;	/* Indiredct mode */
 }
-
 
 #endif
 #endif
