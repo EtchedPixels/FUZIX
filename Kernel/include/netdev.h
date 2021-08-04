@@ -98,6 +98,7 @@ struct socket
 	uint8_t s_num;			/* To save expensive maths */
 	uint8_t s_parent;		/* For accept */
 	uint8_t s_class;		/* Class of socket (stream etc) */
+	uint16_t s_protocol;		/* Protocol given in socket() */
 	struct ksockaddr src_addr;
 	uint8_t src_len;
 	struct ksockaddr dst_addr;
