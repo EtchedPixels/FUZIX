@@ -316,7 +316,10 @@ static int do_netproto_bind(struct socket *s)
 		break;
 	case W5300_RAW:
 		r = SOCK_IPRAW;
-		w5300_writes(i, Sn_PORTR, s->s_protocol);
+		n = w5300_reads(i, Sn_PORTOR);
+		n &= 0xFF00;
+		n |= s->s_protocol;
+		w5300_writes(i, Sn_PORTOR, n);
 		break;
 	}
 	w5300_cmd(i, OPEN);
