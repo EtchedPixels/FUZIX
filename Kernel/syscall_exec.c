@@ -19,7 +19,7 @@
 bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 {
 	char *ptr;		/* Address of base of arg strings in user space */
-	void *up = (char *)userspace_argv;
+	uint8_t *up = (uint8_t *)userspace_argv;
 	uint8_t c;
 	uint8_t *bufp;
 
@@ -121,7 +121,7 @@ uint8_t write_core_image(void)
 	udata.u_error = 0;
 
 	/* FIXME: need to think more about the case sp is lala */
-	if (uput("core", udata.u_syscall_sp - 5, 5))
+	if (uput("core", (void *)(udata.u_syscall_sp - 5), 5))
 		return 0;
 
 	ino = n_open((uint8_t *)udata.u_syscall_sp - 5, &parent);
@@ -137,10 +137,14 @@ uint8_t write_core_image(void)
 			wr_inode(ino);
 			f_trunc(ino);
 			/* Write the header */
-			corehdr.ch_base = pagemap_base;
+			corehdr.ch_base = (uptr_t)pagemap_base;
 			corehdr.ch_break = udata.u_break;
 			corehdr.ch_sp = udata.u_syscall_sp;
+#ifdef PROGTOP
 			corehdr.ch_top = PROGTOP;
+#else
+			corehdr.ch_top = udata.u_top;
+#endif
 			udata.u_offset = 0;
 			udata.u_base = (uint8_t *)&corehdr;
 			udata.u_sysio = true;
