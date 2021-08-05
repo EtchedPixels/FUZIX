@@ -1,5 +1,4 @@
-ROOT = ../../../..
-include $(ROOT)/Applications/rules.esp8266
+include $(FUZIX_ROOT)/Applications/rules.esp8266
 
 SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
         macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
