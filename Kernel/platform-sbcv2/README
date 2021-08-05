@@ -29,6 +29,9 @@ Optional ECB PropIOv2 for keyboard/VGA console/SD card interface
 
 (currently the PropIOv2 is required - this will get fixed soon)
 
+RBC-MC (only emulation tested so far)
+A similar system but with slightly different memory mapping registers
+
 Hardware
 
 For more information, where to get boards etc please see:
