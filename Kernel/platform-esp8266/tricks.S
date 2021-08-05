@@ -1,4 +1,4 @@
-#include "kernel-lx106.def"
+#include "kernel-esp8266.def"
 
 .global udata
 .comm udata, UBLOCK_SIZE

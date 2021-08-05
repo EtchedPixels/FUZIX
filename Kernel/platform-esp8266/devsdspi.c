@@ -3,7 +3,6 @@
 #include <printf.h>
 #include <timer.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <blkdev.h>
 #include "dev/devsd.h"
 #include "esp8266_peri.h"

@@ -5,7 +5,7 @@
 #include "printf.h"
 #include "globals.h"
 #include "rom.h"
-#include "kernel-lx106.def"
+#include "kernel-esp8266.def"
 
 uaddr_t ramtop = DATATOP;
 uint8_t need_resched;
