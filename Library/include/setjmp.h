@@ -60,6 +60,12 @@
     extern int setjmp(jmp_buf __env);
 	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
 
+#elif defined(__XTENSA_WINDOWED_ABI__)
+
+    typedef uint32_t jmp_buf[6];
+    extern int setjmp(jmp_buf __env);
+	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
+
 #elif defined(__i80)
 	/* __setjmp is magic in ACK. We may need to go with that but it might
 	   be easier to use our own implementation */
