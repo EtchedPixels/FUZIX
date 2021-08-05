@@ -84,3 +84,34 @@ There are many.
 
 dg@cowlark.com
 
+## Building Without Debian
+
+Get gcc 10 and currentish binutils from the FSF mirrors and unpack them.
+Get the Debian source package from https://packages.debian.org/unstable/gcc-xtensa-lx106
+Unpack it and apply the three patches from local-patches in the archive to
+the gcc you unpacked. Copy the xtensa-config.h from overlay/include over
+the one in gcc.
+
+For binutils get https://packages.debian.org/unstable/binutils-xtensa-lx106
+and copy overlay/bfd/xtensa-modules.c into the bfd directory of binutils.
+Copy the xtensa-config.h over the one in the binutils include directory.
+
+
+````
+
+% mkdir /opt/esp8266
+% mkdir binutils
+% cd binutils
+% ../binutils-2.37/configure --prefix=/opt/esp8266 --target=xtensa-lx106-elf
+% make
+% make install
+% PATH=/opt/esp8266/bin:$PATH
+% mkdir gcc
+% cd gcc
+% ../gcc-10.3.0/configure --target=xtensa-lx106-elf --prefix=/opt/esp8266 --disable-decimal-float --disable-libffi --disable-libgomp --disable-libmudflap --disable-libquadmath --disable-libquadmath-support --disable-libssp --disable-libstdcxx-pch --disable-libstdc++-v3 --disable-nls --disable-shared --disable-threads --disable-lts --enable-lto --enable-target-optspace --disable-_cxa_atexit --without-long-double-128 --disable-multilib --enable-cxx-flags=-fno-exceptions --with-gnu-as --with-gnu-ld --with-headers=no --without-newlib --without-included-gettext --enable-languages=c,c++
+% make
+% make install
+
+````
+
+You now have an ESP8266 compiler set.

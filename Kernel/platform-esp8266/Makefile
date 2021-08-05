@@ -39,6 +39,7 @@ KOBJS = \
 	../process.o \
 	../start.o \
 	../swap.o \
+	../syscall_exec.o \
 	../syscall_fs.o \
 	../syscall_fs2.o \
 	../syscall_fs3.o \
@@ -77,3 +78,10 @@ burn:
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~
 
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
