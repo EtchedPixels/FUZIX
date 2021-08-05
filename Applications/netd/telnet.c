@@ -337,7 +337,7 @@ int mywrite(uint8_t * ptr, int len)
 void quit(int sig)
 {
 	if (sig == 0)
-		qflush();
+		outflush();
 	tcsetattr(0, TCSANOW, &lprior);
 	close(fddw);
 	exit(0);
@@ -599,7 +599,7 @@ int main(int argc, char *argv[])
 		   anything else is bad */
 		if (len < 0) {
 			if (errno != EAGAIN) {
-				qflush();
+				outflush();
 				perror("closed");
 				quit(0);
 			}
