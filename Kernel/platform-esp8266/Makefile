@@ -33,7 +33,7 @@ KOBJS = \
 	../filesys.o \
 	../inode.o \
 	../kdata.o \
-	../lowlevel-lx106.o \
+	../lowlevel-esp8266.o \
 	../malloc.o \
 	../mm.o \
 	../process.o \
@@ -56,7 +56,7 @@ all:	$(OBJS)
 $(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) -I.. $< -o $@
 
-$(OBJS): ../kernel-lx106.def
+$(OBJS): ../kernel-esp8266.def
 
 $(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -I../dev $< -o $@
