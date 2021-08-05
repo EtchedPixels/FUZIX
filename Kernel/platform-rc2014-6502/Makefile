@@ -43,7 +43,8 @@ image:
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bankfixed.o \
-	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
+	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
+	../syscall_exec16.o ../syscall_exec.o \
 	../usermem.o ../usermem_std-6502.o devtty.o
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=4 
 

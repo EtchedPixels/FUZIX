@@ -4,6 +4,8 @@
 #include <printf.h>
 #include <exec.h>
 
+/* We don't share this routine between the exec routines as we optimise the
+   8bit one differently */
 static void close_on_exec(void)
 {
 	/* Keep the mask separate to stop SDCC generating crap code */
@@ -234,6 +236,10 @@ arg_t _execve(void)
 	tmpfree(ebuf);
 	i_deref(ino);
 
+	/* Align to meet the CPU requirements. Not generally needed on 8bit
+	   micros but will be needed if we tackle TMS9995 or similar */
+	nenvp = ALIGNDOWN(nenvp);
+
 	/* Shove argc and the address of argv just below envp
 	   FIXME: should flip them in crt0.S of app for R2L setups
 	   so we can get rid of the ifdefs */
@@ -270,74 +276,6 @@ nogood:
 #undef argv
 #undef envp
 
-/* SN    TODO      max (1024) 512 bytes for argv
-               and max  512 bytes for environ
-*/
-
-bool rargs(char **userspace_argv, struct s_argblk * argbuf)
-{
-	char *ptr;		/* Address of base of arg strings in user space */
-	char *up = (char *)userspace_argv;
-	uint8_t c;
-	uint8_t *bufp;
-
-	argbuf->a_argc = 0;	/* Store argc in argbuf */
-	bufp = argbuf->a_buf;
-
-	while ((ptr = (char *) ugetp(up)) != NULL) {
-		up += sizeof(uptr_t);
-		++(argbuf->a_argc);	/* Store argc in argbuf. */
-		do {
-			*bufp++ = c = ugetc(ptr++);
-			if (bufp > argbuf->a_buf + 500) {
-				udata.u_error = E2BIG;
-				return true;	// failed
-			}
-		}
-		while (c);
-	}
-	argbuf->a_arglen = bufp - (uint8_t *)argbuf->a_buf;	/*Store total string size. */
-	return false;		// success
-}
-
-
-char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
-{
-	char *argv;		/* Address of users argv[], just below ptr */
-	int argc, arglen;
-	char *argbase;
-	uint8_t *sptr;
-
-	sptr = argbuf->a_buf;
-
-	/* Move them into the users address space, at the very top */
-	ptr -= (arglen = (int)ALIGNUP(argbuf->a_arglen));
-
-	if (arglen) {
-		uput(sptr, ptr, arglen);
-	}
-
-	/* Set argv to point below the argument strings */
-	argc = argbuf->a_argc;
-	argbase = argv = ptr - sizeof(uptr_t) * (argc + 1);
-
-	if (cnt) {
-		*cnt = argc;
-	}
-
-	/* Set each element of argv[] to point to its argument string */
-	while (argc--) {
-		uputp((uptr_t) ptr, argv);
-		argv += sizeof(uptr_t);
-		if (argc) {
-			do
-				++ptr;
-			while (*sptr++);
-		}
-	}
-	uputp(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
-	return (char **)argbase;
-}
 
 /*
  *	Stub the 32bit only allocator calls
@@ -355,80 +293,3 @@ arg_t _memfree(void)
 	return -1;
 }
 
-#ifdef CONFIG_LEVEL_2
-
-/*
- *	Core dump
- */
-
-static struct coredump corehdr = {
-	0xDEAD,
-	0xC0DE,
-	16,
-};
-
-static struct coremem memhdr = {
-	COREHDR_MEM
-};
-
-void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags)
-{
-	memhdr.mh_base = base;
-	memhdr.mh_len = len;
-	memhdr.mh_flags = flags;
-	udata.u_base = (uint8_t *)&memhdr;
-	udata.u_sysio = true;
-	udata.u_count = sizeof(memhdr);
-	writei(ino, 0);
-	udata.u_base = (uint8_t *)base;
-	udata.u_sysio = false;
-	udata.u_count = len;
-	writei(ino, 1);
-}
-
-uint8_t write_core_image(void)
-{
-	inoptr parent = NULLINODE;
-	inoptr ino;
-
-	udata.u_error = 0;
-
-	/* FIXME: need to think more about the case sp is lala */
-	if (uput("core", udata.u_syscall_sp - 5, 5))
-		return 0;
-
-	ino = n_open((uint8_t *)udata.u_syscall_sp - 5, &parent);
-	if (ino) {
-		i_deref(parent);
-		return 0;
-	}
-	if (parent) {
-		i_lock(parent);
-		if ((ino = newfile(parent, (uint8_t *)"core")) != NULL) {
-			ino->c_node.i_mode = F_REG | 0400;
-			setftime(ino, A_TIME | M_TIME | C_TIME);
-			wr_inode(ino);
-			f_trunc(ino);
-			/* Write the header */
-			corehdr.ch_base = pagemap_base;
-			corehdr.ch_break = udata.u_break;
-			corehdr.ch_sp = udata.u_syscall_sp;
-			corehdr.ch_top = PROGTOP;
-			udata.u_offset = 0;
-			udata.u_base = (uint8_t *)&corehdr;
-			udata.u_sysio = true;
-			udata.u_count = sizeof(corehdr);
-			writei(ino, 0);
-			/* Ask the architecture to dump the user registers */
-//TODO			coredump_user_registers(ino);
-			/* Ask the memory manager to dump the memory map */
-			coredump_memory_image(ino);
-			i_unlock_deref(ino);
-			i_unlock_deref(parent);
-			return W_COREDUMP;
-		}
-		i_unlock_deref(parent);
-	}
-	return 0;
-}
-#endif

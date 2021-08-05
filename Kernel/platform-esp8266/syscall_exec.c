@@ -193,7 +193,6 @@ arg_t _execve(void)
 	/* Start execution (never returns) */
 	udata.u_ptab->p_status = P_RUNNING;
 
-	uint32_t* code = (uint32_t*)(CODEBASE + hdr.a_entry);
 	platform_doexec(CODEBASE + hdr.a_entry, udata.u_isp);
 	panic("doexec returned\n");
 
@@ -215,75 +214,6 @@ nogood:
 #undef argv
 #undef envp
 
-/* SN    TODO      max (1024) 512 bytes for argv
-               and max  512 bytes for environ
-*/
-
-bool rargs(char **userspace_argv, struct s_argblk * argbuf)
-{
-	char *ptr;		/* Address of base of arg strings in user space */
-	char *up = (char *)userspace_argv;
-	uint8_t c;
-	uint8_t *bufp;
-
-	argbuf->a_argc = 0;	/* Store argc in argbuf */
-	bufp = argbuf->a_buf;
-
-	while ((ptr = (char *) ugetp(up)) != NULL) {
-		up += sizeof(uptr_t);
-		++(argbuf->a_argc);	/* Store argc in argbuf. */
-		do {
-			*bufp++ = c = ugetc(ptr++);
-			if (bufp > argbuf->a_buf + 500) {
-				udata.u_error = E2BIG;
-				return true;	// failed
-			}
-		}
-		while (c);
-	}
-	argbuf->a_arglen = bufp - (uint8_t *)argbuf->a_buf;	/*Store total string size. */
-	return false;		// success
-}
-
-
-char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
-{
-	char *argv;		/* Address of users argv[], just below ptr */
-	int argc, arglen;
-	char *argbase;
-	uint8_t *sptr;
-
-	sptr = argbuf->a_buf;
-
-	/* Move them into the users address space, at the very top */
-	ptr -= (arglen = (int)ALIGNUP(argbuf->a_arglen));
-
-	if (arglen) {
-		uput(sptr, ptr, arglen);
-	}
-
-	/* Set argv to point below the argument strings */
-	argc = argbuf->a_argc;
-	argbase = argv = ptr - sizeof(uptr_t) * (argc + 1);
-
-	if (cnt) {
-		*cnt = argc;
-	}
-
-	/* Set each element of argv[] to point to its argument string */
-	while (argc--) {
-		uputp((uptr_t) ptr, argv);
-		argv += sizeof(uptr_t);
-		if (argc) {
-			do
-				++ptr;
-			while (*sptr++);
-		}
-	}
-	uputp(0, argv);		/*;;26Feb- Add Null Pointer to end of array */
-	return (char **)argbase;
-}
-
 /*
  *	Stub the 32bit only allocator calls
  */
@@ -299,70 +229,4 @@ arg_t _memfree(void)
 	udata.u_error = ENOMEM;
 	return -1;
 }
-
-#ifdef CONFIG_LEVEL_2
-
-/*
- *	Core dump
- */
-
-static struct coredump corehdr = {
-	0xDEAD,
-	0xC0DE,
-	16,
-};
-
-uint8_t write_core_image(void)
-{
-	inoptr parent = NULLINODE;
-	inoptr ino;
-
-	udata.u_error = 0;
-
-	/* FIXME: need to think more about the case sp is lala */
-	if (uput("core", udata.u_syscall_sp - 5, 5))
-		return 0;
-
-	ino = n_open(udata.u_syscall_sp - 5, &parent);
-	if (ino) {
-		i_deref(parent);
-		return 0;
-	}
-	if (parent) {
-		i_lock(parent);
-		if (ino = newfile(parent, "core")) {
-			ino->c_node.i_mode = F_REG | 0400;
-			setftime(ino, A_TIME | M_TIME | C_TIME);
-			wr_inode(ino);
-			f_trunc(ino);
-
-			/* FIXME: need to add some arch specific header bits, and
-			   also pull stuff like the true sp and registers out of
-			   the return stack properly */
-
-			corehdr.ch_base = MAPBASE;
-			corehdr.ch_break = udata.u_break;
-			corehdr.ch_sp = udata.u_syscall_sp;
-			corehdr.ch_top = PROGTOP;
-			udata.u_offset = 0;
-			udata.u_base = (uint8_t *)&corehdr;
-			udata.u_sysio = true;
-			udata.u_count = sizeof(corehdr);
-			writei(ino, 0);
-			udata.u_sysio = false;
-			udata.u_base = MAPBASE;
-			udata.u_count = udata.u_break - MAPBASE;
-			writei(ino, 0);
-			udata.u_base = udata.u_sp;
-			udata.u_count = PROGTOP - (uint16_t)udata.u_sp;
-			writei(ino, 0);
-			i_unlock_deref(ino);
-			return W_COREDUMP;
-		}
-	}
-	return 0;
-}
-#endif
-
-/* vim: set ts=4 sw=4 et */
 

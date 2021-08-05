@@ -67,7 +67,7 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../syscall_fs3.o \
+	../syscall_fs3.o ../syscall_exec.o \
 	devlpr.o devtty.o libc.o ../vt.o video.o ../font8x8.o \
 	devide.o blkdev.o ide.o devide_discard.o mbr.o gpt.o \
 	devsd.o devsd_discard.o spi.o devscsi.o devscsi_discard.o \
