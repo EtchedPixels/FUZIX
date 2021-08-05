@@ -90,7 +90,8 @@ _platform_monitor:
 _platform_reboot:
 	    di
 	    xor a
-	    out (0x7C),a
+	    out (0x78),a	; On the RBCv2 this vanishes the RAM low
+	    out (0x7C),a	; and on both this puts back the ROM low
 	    rst 0
 
 ; -----------------------------------------------------------------------------
