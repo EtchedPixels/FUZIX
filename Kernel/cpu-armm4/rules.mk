@@ -13,3 +13,4 @@ export ASMEXT=.S
 export BINEXT=.o
 # export BITS=elf32
 export BITS=32
+export EXECFORMAT=32
