@@ -25,6 +25,7 @@ SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
 SRC_C += getopt.c getpeername.c getsockname.c
 SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c
+SRC_C += htons.c htonl.c
 SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
 SRC_C += index.c initgroups.c isatty.c killpg.c
 SRC_C += libintl.c listen.c
