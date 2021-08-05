@@ -46,7 +46,7 @@ int hd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 /* Floppies are fixed to classic IBM 8" SD format */
 static struct fdcinfo fdcap = {
     0,
-    FDC_8SSSD,
+    FDTYPE_8SSSD,
     0,
     FDF_SD|FDF_8INCH|FDF_SEC128,
     26,			/* 26 sectors per track */
@@ -66,7 +66,6 @@ int fd_ioctl(uint_fast8_t minor, uarg_t request, char *buffer)
 {
     switch(request) {
     case FDIO_GETCAP:
-    case FDIO_GETINFO:
         return uput(&fdcap, buffer, sizeof(struct fdcinfo));
     case FDIO_SETSKEW:
         return uput(skewtab + minor, buffer, 32);
