@@ -67,11 +67,14 @@ image.elf: kernel.ld addresses.ld $(KOBJS)
 		$(KOBJS)
 	
 image: image.elf
+	xtensa-lx106-elf-objdump -S image.elf >image.src
+	xtensa-lx106-elf-nm image.elf >../fuzix.map
 	esptool elf2image image.elf
 	touch image
 
 burn:
-	esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -ff 80m -fm dout
+	# You can use qio on a lot of parts but if it doesn't work try dio. For the ESP8285 use dout
+	esptool --port /dev/ttyUSB3 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -fs 32m -ff 80m -fm dio
 	#esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin 0x100000 ../filesystem.ftl -ff 80m -fm dout
 	#esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin -ff 80m -fm dout
 	
