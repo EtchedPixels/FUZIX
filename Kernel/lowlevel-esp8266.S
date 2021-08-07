@@ -27,15 +27,15 @@ platform_doexec:
 .section .text.vectors
 .align 16
 .global platform_vectors
-confused:				# Nothing should hit this
-	movi a2, system_restart
-	jx a2
+platform_vectors:			# Space for vector handler literals
+	nop
+	.literal_position		# Tell the assembler where to put them (max 3)
 .align 16
-debug:					# Debug exception at 0x20
+debug:					# Debug exception at 0x10
 	waiti 2
 	j debug
 .align 16
-nmi:					# NMI trap at 0x30
+nmi:					# NMI trap at 0x20
 	rfi 3
 .align 16
 kexc:					# Kernel mode trap at 0x30
@@ -54,81 +54,83 @@ unused2:
 doublefault:				# Double fault at 0x70
 	break 1,4
 	j doublefault
-.align 16
-#reset:
-#	j 0x400000a4
 
-.section .data
-.align 4
-vectortable:
-	.long  fault			# Illegal instruction	 	0
-	.long  syscall			# System call			1
-	.long  fault			# Instruction fetch error	2
-	.long  fault			# Load/store error		3
-	.long  interrupt		# Level 1 interrupt		4
-	.long  fault			# Window trap			5
-	.long  fault			# Divide by zero		6
-	.long  fault			#				7
-	.long  fault			# Privilege trap		8
-	.long  fault			# Load Store alignment		9
-	.long  fault			#				10
-	.long  fault			#				11
-	.long  fault			#				12
-	.long  fault			#				13
-	.long  fault			#				14
-	.long  fault			#				15
-	.long  fault			#				16
-	.long  fault			#				17
-	.long  fault			#				18
-	.long  fault			#				19
-	.long  fault			#				20
-	.long  fault			#				21
-	.long  fault			#				22
-	.long  fault			#				23
-	.long  fault			#				24
-	.long  fault			#				25
-	.long  fault			#				26
-	.long  fault			#				27
-	.long  fault			# Invalid address (I)		28
-	.long  fault			# Invalid address (D)		29
-	.long  fault			#				30
-	.long  fault			#				31
-	.long  fault			#				32
-	.long  fault			#				33
-	.long  fault			#				34
-	.long  fault			#				35
-	.long  fault			#				36
-	.long  fault			#				37
-	.long  fault			#				38
-	.long  fault			#				39
-	.long  fault			#				40
-	.long  fault			#				41
-	.long  fault			#				42
-	.long  fault			#				43
-	.long  fault			#				44
-	.long  fault			#				45
-	.long  fault			#				46
-	.long  fault			#				47
-	.long  fault			#				48
-	.long  fault			#				49
-	.long  fault			#				50
-	.long  fault			#				51
-	.long  fault			#				52
-	.long  fault			#				53
-	.long  fault			#				54
-	.long  fault			#				55
-	.long  fault			#				56
-	.long  fault			#				57
-	.long  fault			#				58
-	.long  fault			#				59
-	.long  fault			#				60
-	.long  fault			#				61
-	.long  fault			#				62
-	.long  fault			#				63
-
+					# On a reset the vector is reset
+					# before read so doesn't come here
 
 .section .text.handlers
 .align 4
+
+	.literal_position
+
+.global vectortable
+vectortable:
+	.word  fault			# Illegal instruction	 	0
+	.word  syscall			# System call			1
+	.word  fault			# Instruction fetch error	2
+	.word  fault			# Load/store error		3
+	.word  interrupt		# Level 1 interrupt		4
+	.word  fault			# Window trap			5
+	.word  fault			# Divide by zero		6
+	.word  fault			#				7
+	.word  fault			# Privilege trap		8
+	.word  fault			# Load Store alignment		9
+	.word  fault			#				10
+	.word  fault			#				11
+	.word  fault			#				12
+	.word  fault			#				13
+	.word  fault			#				14
+	.word  fault			#				15
+	.word  fault			#				16
+	.word  fault			#				17
+	.word  fault			#				18
+	.word  fault			#				19
+	.word  fault			#				20
+	.word  fault			#				21
+	.word  fault			#				22
+	.word  fault			#				23
+	.word  fault			#				24
+	.word  fault			#				25
+	.word  fault			#				26
+	.word  fault			#				27
+	.word  fault			# Invalid address (I)		28
+	.word  fault			# Invalid address (D)		29
+	.word  fault			#				30
+	.word  fault			#				31
+	.word  fault #interrupt		# Timer				32
+	.word  fault			#				33
+	.word  fault			#				34
+	.word  fault			#				35
+	.word  fault			#				36
+	.word  fault			#				37
+	.word  fault			#				38
+	.word  fault			#				39
+	.word  fault			#				40
+	.word  fault			#				41
+	.word  fault			#				42
+	.word  fault			#				43
+	.word  fault			#				44
+	.word  fault			#				45
+	.word  fault			#				46
+	.word  fault			#				47
+	.word  fault			#				48
+	.word  fault			#				49
+	.word  fault			#				50
+	.word  fault			#				51
+	.word  fault			#				52
+	.word  fault			#				53
+	.word  fault			#				54
+	.word  fault			#				55
+	.word  fault			#				56
+	.word  fault			#				57
+	.word  fault			#				58
+	.word  fault			#				59
+	.word  fault			#				60
+	.word  fault			#				61
+	.word  fault			#				62
+	.word  fault			#				63
+
+
 
 exception:
 	addi sp, sp, -8
@@ -138,6 +140,7 @@ exception:
 	movi a13, vectortable
 	rsr.exccause a12
 	addx4 a13, a12, a13
+	l32i.n a13,a13,0
 	jx a13
 ignored:
 	l32i.n a12, sp, 0
@@ -163,12 +166,17 @@ syscall:
 	xsr.ps a12
 	s32i.n a12, sp, 16
 	rsync
+	# TODO set insys properly
 	call0 unix_syscall
 	l32i.n a12, sp, 16
 	wsr.ps a12
 	rsync
 	l32i.n a12, sp, 12
+	addi a12,a12, 3		# Skip the syscall
 	wsr.epc1 a12
+	movi a12, udata
+	l16ui a3, a12, U_DATA__U_ERROR
+	l32i a2, a12, U_DATA__U_RETVAL
 	l32i.n a15, sp, 8
 	l32i.n a14, sp, 4
 	l32i.n a0, sp, 0
@@ -183,6 +191,9 @@ syscall:
 #	We take an exception on whatever stack we are using.
 #
 fault:
+	movi a12,65
+	movi a13,0x60000000
+	s8i a12,a13,0
 	# Our caller saved a12 and a13 save the rest for the helper
 	addi sp, sp, -72
 	s32i.n a0, sp, 0
@@ -203,9 +214,12 @@ fault:
 	rsr.epc1 a12
 	s32i.n a12, sp, 60
 	rsr.exccause a12
+	mov.n a3, a12			# Cause as second argument
 	s32i.n a12, sp, 64
 	rsr.excvaddr a12
 	s32i.n a12, sp, 68
+	# Pass the frame pointer as a C argument
+	mov.n a2,a1
 	call0 exception_handler
 	# Only restore the state the compiler damaged
 	l32i.n a12, sp, 56
@@ -227,7 +241,7 @@ fault:
 #	signals
 #
 interrupt:
-	addi sp, sp, -24
+	addi sp, sp, -28
 	# A12/A13 are saved. We need to save A14/A15/A0 SAR and EPC1
 	s32i.n a14, sp, 0
 	s32i.n a15, sp, 4
@@ -236,14 +250,16 @@ interrupt:
 	s32i.n a12, sp, 12
 	rsr.epc1 a12
 	s32i.n a12, sp, 16
-	# We choose to save A2 so we can pass the interrupt in
+	# We choose to save A2/A3 so we can pass the interrupt in
 	s32i.n a2, sp, 20
+	s32i.n a3, sp, 24
 	rsr.interrupt a2
+	rsr.exccause a3
 	# Stack switch - we keep the minimum on istack for preemption
 	# reasons
 	movi a12, udata
-	s32i.n a1, a2, U_DATA__U_SP
-	movi a12, istack_top
+	s32i.n a1, a12, U_DATA__U_SP
+	movi a12, istack + 512
 	call0 interrupt_handler
 	# Restore the state
 	movi a12, udata
@@ -256,6 +272,7 @@ interrupt:
 	# TODO signals
 restore:
 	# Recover register state
+	l32i.n a3, sp, 24
 	l32i.n a2, sp, 20
 	l32i.n a12, sp, 16
 	wsr.epc1 a12
@@ -264,10 +281,9 @@ restore:
 	l32i.n a0, sp, 8
 	l32i.n a15, sp, 4
 	l32i.n a14, sp, 0
-	addi sp, sp, 24
-	l32i.n a13, sp, 4
-	l32i.n a12, sp, 0
-	addi sp, sp, 8
+	l32i.n a13, sp, 32
+	l32i.n a12, sp, 28
+	addi sp, sp, 36
 	rfe
 
 preemption:
@@ -278,5 +294,5 @@ preemption:
 	call0 switchout
 	# switching will handle all the interrupt state for us. Note that we
 	# may never return and also that the IRQ exit path is actually long
-	# done - but we saved epc1 so all is good.
+	# gone - but we saved epc1 so all is good.
 	j restore
