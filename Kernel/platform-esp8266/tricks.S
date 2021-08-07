@@ -6,11 +6,10 @@
 #define SWAPSTACK_SIZE 1536
 .comm swapstack, SWAPSTACK_SIZE
 
-.global istack, istack_top
+.global istack
 
 #define ISTACK_SIZE 512
 .comm istack, ISTACK_SIZE
-istack_top:
 
 .global platform_switchout
 .global switchin
