@@ -21,7 +21,7 @@ void platform_monitor(void)
 
 void platform_reboot(void)
 {
-	while(1);	/* j 0x4000xxxx ? */
+	system_restart();
 }
 
 uint_fast8_t platform_param(char* p)
@@ -49,7 +49,7 @@ int main(void)
 
 	ramsize = 80;
 	procmem = 64;
-	kputs("OK.");
+	kputs("\n\n\n");
 	sys_cpu_feat = AF_LX106_ESP8266;
 
 	fuzix_main();
