@@ -139,7 +139,7 @@ SECTIONS
 	.irom0.text : ALIGN(4)
 	{
 		_irom0_text_start = ABSOLUTE(.);
-
+		*(.text.vectors)
 		*(.literal .text .literal.* .text.*)
 		*(.rodata .rodata.*)
 		*(.rodata1 .rodata1.*)
