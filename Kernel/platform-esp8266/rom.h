@@ -67,6 +67,30 @@ extern void ets_isr_attach(int intr, int_handler_t handler, void* arg);
 extern void ets_isr_mask(int intr);
 extern void ets_isr_unmask(int intr);
 
+struct exception_frame {
+	/* Saved in the fault handler */
+	uint32_t a0;
+	uint32_t a2;
+	uint32_t a3;
+	uint32_t a4;
+	uint32_t a5;
+	uint32_t a6;
+	uint32_t a7;
+	uint32_t a8;
+	uint32_t a9;
+	uint32_t a10;
+	uint32_t a11;
+	uint32_t spare;
+	uint32_t a14;
+	uint32_t a15;
+	uint32_t sar;
+	uint32_t epc1;
+	uint32_t exccause;
+	uint32_t excvaddr;
+	/* The registers saved in the initial stub */
+	uint32_t a12;
+	uint32_t a13;
+};
 #endif
 
 /* vim: sw=4 ts=4 et: */
