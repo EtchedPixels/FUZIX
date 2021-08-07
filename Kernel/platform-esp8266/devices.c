@@ -60,6 +60,7 @@ static void fatal_exception_cb(struct __exception_frame* ef, int cause)
 {
 	di();
 	uint32_t vaddr;
+	uint_fast8_t s = 0;
 	asm volatile ("rsr.excvaddr %0" : "=a" (vaddr));
 
 	kprintf("FATAL EXCEPTION %d @ %p with %p:\n", cause, ef->epc, vaddr);
@@ -67,8 +68,43 @@ static void fatal_exception_cb(struct __exception_frame* ef, int cause)
 	kprintf("   a4=%p  a5=%p  a6=%p  a7=%p\n", ef->a4, ef->a5, ef->a6, ef->a7);
 	kprintf("   a8=%p  a9=%p a10=%p a11=%p\n", ef->a8, ef->a9, ef->a10, ef->a11);
 	kprintf("  a12=%p a13=%p a14=%p a15=%p\n", ef->a12, ef->a13, ef->a14, ef->a15);
-	for (;;)
-		;
+
+	if (udata.u_insys)
+		panic("fatal");
+	/*
+	 *	Synchronous user exception
+	 */
+	switch (cause) {
+		case 0:	/* Illegal instruction usually */
+			s = SIGILL;
+			break;
+		case 2:	/* Physical address/data fetch/store error - instruction */
+		case 3: /* Physical address/data fetch/store error - data */
+			s = SIGSEGV;
+			break;
+		case 6:	/* Divide by zero */
+			s = SIGFPE;
+			break;
+		case 9:	/* Alignment trap */
+			s = SIGBUS;
+			break;
+		case 20: /* Instruction load from data space */
+			s = SIGSEGV;
+			break;
+		case 28: /* Invalid address traps */
+		case 29:
+			s = SIGSEGV;
+			break;
+		case 5:	/* Window trap - can't happen */
+		case 8:	/* Privilege trap - can't happen */
+		default: /* Should not happen */
+			panic("badex");
+			break;
+	}
+
+	/* Requeue any asynchronous pending signal */
+	recalc_cursig();
+	/* TODO : queue the resulting exception */
 }
 
 static void timer_isr(void* user, struct __exception_frame* ef)
@@ -83,7 +119,6 @@ static void timer_isr(void* user, struct __exception_frame* ef)
 	asm volatile ("esync");
 
 	timer_interrupt();
-
 	irqrestore(irq);
 }
 
@@ -105,5 +140,13 @@ void device_init(void)
 	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
 }
 
-/* vim: sw=4 ts=4 et: */
+/* Stuff for bringing up our own IRQ handling */
+
+void exception_handler(void *frame)
+{
+}
+
+void interrupt_handler(uint32_t interrupt)
+{
+}
 

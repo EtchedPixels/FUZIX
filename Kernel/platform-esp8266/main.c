@@ -34,8 +34,8 @@ int main(void)
 	di();
 	/* Check offsets */
 
-	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
-	    (U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
+	if ((U_DATA__U_SP != offsetof(struct u_data, u_sp)) ||
+	    (U_DATA__U_PTAB != offsetof(struct u_data, u_ptab)) ||
 	    (P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
 		(P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)))
 	{

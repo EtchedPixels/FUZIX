@@ -6,6 +6,12 @@
 #define SWAPSTACK_SIZE 1536
 .comm swapstack, SWAPSTACK_SIZE
 
+.global istack, istack_top
+
+#define ISTACK_SIZE 512
+.comm istack, ISTACK_SIZE
+istack_top:
+
 .global platform_switchout
 .global switchin
 .text
@@ -26,7 +32,7 @@ platform_switchout:
 	/* Save stack pointer */
 
 	movi a3, udata
-	s32i sp, a3, U_DATA__U_SP_OFFSET
+	s32i sp, a3, U_DATA__U_SP
 
 	/* Find the next process to run */
 
@@ -57,7 +63,7 @@ not_swapped:
 	/* Restore process stack pointer and return. */
 
 	movi a3, udata
-	l32i sp, a3, U_DATA__U_SP_OFFSET
+	l32i sp, a3, U_DATA__U_SP
 
 	movi a2, 0
 	movi a3, runticks
@@ -74,6 +80,7 @@ not_swapped:
 	l32i a0, sp, 7*4
 	addi sp, sp, 8*4
 
+	/* FIXME: set interrupt state properly based on inint */
 	ret
 
 .global dofork
@@ -101,12 +108,12 @@ dofork:
 	/* Save parent's stack pointer */
 
 	movi a3, udata
-	s32i sp, a3, U_DATA__U_SP_OFFSET
+	s32i sp, a3, U_DATA__U_SP
 
 	/* Save the current process to disk. */
 
 	s32i a2, sp, 6*4
-	l32i a2, a3, U_DATA__U_PTAB_OFFSET
+	l32i a2, a3, U_DATA__U_PTAB
 	call0 swapout
 	l32i a2, sp, 6*4
 
