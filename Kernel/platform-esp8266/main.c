@@ -9,11 +9,20 @@
 
 uaddr_t ramtop = DATATOP;
 uint8_t need_resched;
+uint16_t swap_dev = 0xFFFF;
 
 void map_init(void) {}
 void platform_discard(void) {}
-void platform_monitor(void) {}
-void platform_reboot(void) {}
+
+void platform_monitor(void)
+{
+	while(1);
+}
+
+void platform_reboot(void)
+{
+	while(1);	/* j 0x4000xxxx ? */
+}
 
 uint_fast8_t platform_param(char* p)
 {
@@ -22,6 +31,7 @@ uint_fast8_t platform_param(char* p)
 
 int main(void)
 {
+	di();
 	/* Check offsets */
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
@@ -36,13 +46,13 @@ int main(void)
 		panic("bad offsets");
 	}
 	
+
 	ramsize = 80;
 	procmem = 64;
-    sys_cpu_feat = AF_LX106_ESP8266;
+	kputs("OK.");
+	sys_cpu_feat = AF_LX106_ESP8266;
 
-	di();
 	fuzix_main();
 }
 
 /* vim: sw=4 ts=4 et: */
-
