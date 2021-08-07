@@ -8,9 +8,10 @@ spoke AT protocol via a UART, but it actually turns out to be a rather capable
 microcontroller in its own right.
 
 It's based around a LX106 32-bit CPU (one of the Xtensa LX6 family) with 96kB
-of data RAM, 64 kB of code RAM, and a built-in (usually) 4MB NAND flash
-connected via SPI. A rather cunning demand-paging system allows the flash to be
-memory mapped, using 32kB of the code RAM for a cache.
+of data RAM, 64 kB of code RAM, and an external 4MB NAND flash connected via SPI.
+A rather cunning demand-paging system allows the flash to be memory mapped,
+using 32kB of the code RAM for a cache. The ESP8285 is a very similar device
+except that it has an internal SPI flash that runs in a different mode.
 
 The Fuzix port runs in single-tasking mode, using an SD card connected via the
 second SPI interface for the root filesystem and swap. The NAND flash is
@@ -29,6 +30,20 @@ You need the `xtensa-lx106-elf` gcc toolchain --- install the
 
 ## Configuration
 
+The base system assumes a typical ESP8266 configuration with a 26MHz
+peripheral clock and the CPU usually running at 80MHz. If you get weird
+serial speeds run esptool and set the peripheral clock in global.h to twice
+the clock it reports.
+
+The flash mappings and clocking is managed by the hardware based upon the
+image header. These are set by the esptool when you flash the image. The
+'-ff' option sets the SPI flash frequency and the -fm the mode. 40 (Mhz) is
+a safe flash setting but most boards can do 80. The ESP8266 boards generally
+support 'qio' (the fastest option), some require 'dio' and the ESP8285 requires
+'dout'. You can adjust these in the command or the make burn settings. If it
+fails try more conservative settings. Many of the bigger ESP-12 MCUs (often
+used for NodeMCU require dio).
+
 Out of the box:
 
   - /dev/hda is the NAND flash. You get about 2.5MB of usable space.
@@ -45,14 +60,14 @@ Connect the SD card to the following pins:
             D2              4            CS
 
 Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
-3.3V. Not 5V, or it won't work.
+3.3V. Not 5V, or it won't work (and that's likely to be a permanent change).
 
 The console is UART0, and runs at 115200 baud.
 
 Doing `make -C platform-esp8266 burn` will flash the kernel onto the device
 connected on `/dev/ttyUSB0` with this command:
 
-    `esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -ff 80m -fm dout`
+    `esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -ff 80m -fm dio'
 
 ## Userland
 
@@ -71,18 +86,18 @@ might find this ROM disassembly useful:
 
 There are many.
 
-  - userland binaries can't find their error messages.
   - CPU exceptions should be mapped to signals.
-  - single-tasking mode should be switched off (which would allow pipes to
-	work).
+  - single-tasking mode should be switched off (which would allow pipes to work).
   - someone needs to overhaul the SD SPI code who understands it.
   - not all the ROM routines are hooked up to userland binaries.
+  - signal handling
+  - pre-emption
 
 ...and probably others.
 
-## Postscript
+## Author
 
-dg@cowlark.com
+dg@cowlark.com did the original port.
 
 ## Building Without Debian
 
@@ -115,3 +130,17 @@ Copy the xtensa-config.h over the one in the binutils include directory.
 ````
 
 You now have an ESP8266 compiler set.
+
+## TODO
+
+- Fix execl not to do cheap tricks that don't work on register based
+  argument passing (fixes fsck)
+- Use some of the ROM library routines that don't themselves meddle with
+  static data. Make a kernel set and a user set (RBOOT has a good list)
+- Steal the exception and interrupt vector base from the ROM so we can do
+  our own stack switching interrupt handlers
+- Enable signal and preemption processing using these
+- Switch from single to simple model
+- See if we can get away from any use of the ROM routines that use the firmware memory bank and then steal the firmware memory bank
+- Sort of things like stacks on entry and properly document the memory map
+
