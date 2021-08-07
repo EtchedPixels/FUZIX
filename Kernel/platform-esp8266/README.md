@@ -69,6 +69,45 @@ connected on `/dev/ttyUSB0` with this command:
 
     `esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -ff 80m -fm dio'
 
+## Pin Mappings We Use
+
+GPIO1		Serial TX	}	To the USB UART on the NodeMCU kits
+GPIO3		Serial RX	}
+
+GPIO4		SDcard CS	}
+GPIO12		MISO		}	SD card interface (note Arduino
+GPIO13		MOSI		}	tends to use GPIO15 not 4 but GPIO15
+GPIO14		SCK		}	is also during boot)
+
+GPIO6-11	SPI Flash
+
+GPIO0		Bootloader button
+GPIO2		Usually an on board LED, not used currently
+GPIO5		Free
+GPIO9/10	Used in QIO Flash mode, otherwise not used
+GPIO16		Deep sleep wakeup, not used
+
+A0		Not used
+
+## Memory Map
+
+````
+
+3FFE8000-3FFFBFFF	Data RAM
+	3FFE8000-3FFF7FFF	User space
+	3FFF8000-3FFFBFFF	Kernel (adjust NBUFS accordingly)
+3FFFC000-3FFFFFFF	ETS data RAM (system owned, on our hitlist)
+40000000-4000FFFF	Internal ROM (some routines  usable)
+	40100000-40107FFF	Instruction RAM (32K). Fast memory for programs
+	40100000			- Bootstrap (bottom - overwritten)
+	40100000-40107DFF		- Userspace code
+40107E00-40107FFF		- NAND flash lowlevel functions
+40200000-402FFFFF	SPI Flash (cacheable), only accessible as if it was iram
+				- Kernel
+				- NAND flash fs
+
+````
+
 ## Userland
 
 ESP8266 binaries are specific to this platform and won't run on any other ESP
@@ -133,14 +172,14 @@ You now have an ESP8266 compiler set.
 
 ## TODO
 
-- Fix execl not to do cheap tricks that don't work on register based
-  argument passing (fixes fsck)
-- Use some of the ROM library routines that don't themselves meddle with
-  static data. Make a kernel set and a user set (RBOOT has a good list)
-- Steal the exception and interrupt vector base from the ROM so we can do
-  our own stack switching interrupt handlers
+- Use some of the ROM library routines that don't themselves meddle with static data. Make a kernel set and a user set (RBOOT has a good list)
+- Steal the exception and interrupt vector base from the ROM so we can do our own stack switching interrupt handlers
 - Enable signal and preemption processing using these
 - Switch from single to simple model
 - See if we can get away from any use of the ROM routines that use the firmware memory bank and then steal the firmware memory bank
-- Sort of things like stacks on entry and properly document the memory map
+- Sort out things like stacks on entry and properly document the memory map
+- Make the buffer cache self size based on available remaining memory
+- Can we autodetect and manage stuff like peripheral clocks ?
+- Shared ROM libc
+- XIP ROM app code ?
 
