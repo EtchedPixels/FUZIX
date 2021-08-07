@@ -23,3 +23,4 @@ PROVIDE (__umodsi3 = 0x4000e268);
 PROVIDE (__divsi3 = 0x4000dc88);
 PROVIDE (abs = 0x400060c0);
 
+PROVIDE (system_restart = 0x400000a4);

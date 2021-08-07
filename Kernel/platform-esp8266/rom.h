@@ -15,6 +15,7 @@ extern void Wait_SPI_Idle(void* flash);
 extern void rom_i2c_writeReg(int reg, int hosid, int par, int val); 
 extern void SpiFlashCnfig(uint32_t spi_interface, uint32_t spi_freq);
 extern int SpiReadModeCnfig(uint32_t mode);
+extern void system_restart(void);
 
 extern void* sdk_flashchip;
 
