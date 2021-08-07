@@ -36,11 +36,13 @@ int main(void)
 
 	if ((U_DATA__U_SP != offsetof(struct u_data, u_sp)) ||
 	    (U_DATA__U_PTAB != offsetof(struct u_data, u_ptab)) ||
+	    (U_DATA__U_CALLNO != offsetof(struct u_data, u_callno)) ||
 	    (P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
 		(P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)))
 	{
 		kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
 		kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));
+		kprintf("U_DATA__U_CALLNO = %d\n", offsetof(struct u_data, u_callno));
 		kprintf("P_TAB__P_PID_OFFSET = %d\n", offsetof(struct p_tab, p_pid));
 		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
 		panic("bad offsets");
