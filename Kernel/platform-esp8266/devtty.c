@@ -17,12 +17,12 @@ struct s_queue ttyinq[NUM_DEV_TTY+1] = { /* ttyinq[0] is never used */
 
 tcflag_t termios_mask[NUM_DEV_TTY+1] = { 0, _CSYS };
 
-static int tx_buffer_fill(void)
+static unsigned int tx_buffer_fill(void)
 {
     return (U0S >> USTXC) & 0xff;
 }
 
-static int rx_buffer_fill(void)
+static unsigned int rx_buffer_fill(void)
 {
     return (U0S >> USRXC) & 0xff;
 }
