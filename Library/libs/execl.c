@@ -52,7 +52,10 @@ const char *_findPath(const char *path)
 	return NULL;
 }
 
-#if !defined(__CC65__) && !defined(__CC68__)
+/* We can't shortcut this on xtensa because it's all register based. Really we should change this to just do the shortcut on 8bit platforms
+   where it matters */
+#if !defined(__CC65__) && !defined(__CC68__) && !defined(__XTENSA_CALL0_ABI__)
+
 
 /* FIXME: review typing of all of these for const stuff and standard */
 int execl(const char *pathP, const char *arg0, ...)
