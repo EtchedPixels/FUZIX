@@ -52,6 +52,9 @@ void tty_sleeping(uint_fast8_t minor)
 {
 }
 
+/* FIXME: we should use a smaller target for this than 0x7F so we leave space to avoid blocking on
+   echoing */
+/* FIXME 2: switch to interrupt and wait burst driven */
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
     return (tx_buffer_fill() >= 0x7f) ? TTY_READY_SOON : TTY_READY_NOW;
@@ -67,14 +70,14 @@ void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
-static void tty_isr(void* user, struct __exception_frame* ef)
+void tty_interrupt(void)
 {
+    /* FIXME: should check for tty inproc queue fill */
     while (rx_buffer_fill() != 0)
     {
         uint8_t b = U0F;
         tty_inproc(minor(BOOT_TTY), b);
     }
-
     U0IC = 1 << UITO;
 }
 
@@ -89,8 +92,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
     U0IC = 0xffff;           /* clear all pending interrupts */
     U0IE = 1 << UITO;        /* RX timeout enable */
 
-	ets_isr_attach(ETS_UART_INUM, tty_isr, NULL);
-	ets_isr_unmask(1<<ETS_UART_INUM);
+    ets_isr_unmask(1<<ETS_UART_INUM);
 
     irqrestore(irq);
 }

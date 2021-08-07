@@ -56,18 +56,22 @@ void syscall_handler(struct __exception_frame* ef, int cause)
 	ef->epc += 3; /* skip SYSCALL instruction */
 }
 
-static void fatal_exception_cb(struct __exception_frame* ef, int cause)
+/* Stuff for bringing up our own IRQ handling */
+
+void exception_handler(struct exception_frame *ef, uint32_t cause)
 {
 	di();
 	uint32_t vaddr;
 	uint_fast8_t s = 0;
 	asm volatile ("rsr.excvaddr %0" : "=a" (vaddr));
 
-	kprintf("FATAL EXCEPTION %d @ %p with %p:\n", cause, ef->epc, vaddr);
-	kprintf("   a0=%p  sp=%p  a2=%p  a3=%p\n", ef->a0, ef->sp, ef->a2, ef->a3);
+	kprintf("%d @ %p %p\n", cause, vaddr, ef);
+	kprintf("FATAL EXCEPTION %d @ %p with %p(%p):\n", cause, ef->epc1, vaddr, ef->excvaddr);
+	kprintf("   a0=%p  sp=%p  a2=%p  a3=%p\n", ef->a0, ef + 1, ef->a2, ef->a3);
 	kprintf("   a4=%p  a5=%p  a6=%p  a7=%p\n", ef->a4, ef->a5, ef->a6, ef->a7);
 	kprintf("   a8=%p  a9=%p a10=%p a11=%p\n", ef->a8, ef->a9, ef->a10, ef->a11);
 	kprintf("  a12=%p a13=%p a14=%p a15=%p\n", ef->a12, ef->a13, ef->a14, ef->a15);
+	while(1);
 
 	if (udata.u_insys)
 		panic("fatal");
@@ -107,19 +111,17 @@ static void fatal_exception_cb(struct __exception_frame* ef, int cause)
 	/* TODO : queue the resulting exception */
 }
 
-static void timer_isr(void* user, struct __exception_frame* ef)
+
+static void timer_isr(void)
 {
 	const uint32_t clocks_per_tick = (CPU_CLOCK*1000000) / TICKSPERSEC;
-	irqflags_t irq = di();
-
 	uint32_t ccount;
-	asm volatile ("rsr.ccount %0" : "=a" (ccount));
 
+	asm volatile ("rsr.ccount %0" : "=a" (ccount));
 	asm volatile ("wsr.ccompare0 %0" :: "a" (ccount + clocks_per_tick));
 	asm volatile ("esync");
 
 	timer_interrupt();
-	irqrestore(irq);
 }
 
 void device_init(void)
@@ -127,26 +129,48 @@ void device_init(void)
 	flash_dev_init();
 	sd_rawinit();
 	devsd_init();
-
+#if 0
 	static const uint8_t fatal_exceptions[] =
 		{ 0, 2, 3, 5, 6, 8, 9, 20, 28, 29 };
 	for (int i=0; i<sizeof(fatal_exceptions)/sizeof(*fatal_exceptions); i++)
 		_xtos_set_exception_handler(fatal_exceptions[i], fatal_exception_cb);
-
 	extern fn_c_exception_handler_t syscall_handler_trampoline;
 	_xtos_set_exception_handler(1, syscall_handler_trampoline);
+#endif
 
-	ets_isr_attach(ETS_CCOMPARE0_INUM, timer_isr, NULL);
-	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
+//	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
 }
 
-/* Stuff for bringing up our own IRQ handling */
+/*
+ *	Interrupts
+ *	0: WDEV FIQ
+ *	1: SLC
+ *	2: SPI
+ *	3: RTC
+ *	4: GPIO
+ *	5: UART
+ *	6: TICK
+ *	7: SOFT
+ *	8: WDT
+ *	9: FRC1
+ *	10: FRC2
+ */
 
-void exception_handler(void *frame)
+static void irq_clear(uint32_t irq)
 {
+	asm volatile ("wsr %0, intclear; esync" :: "a" (irq));
 }
+
 
 void interrupt_handler(uint32_t interrupt)
 {
+	kprintf("int %d\n", interrupt);
+	if (interrupt & (1 << 6)) {
+		timer_isr();
+		irq_clear(1 << 6);
+	}
+	if (interrupt & (1 << 5)) {
+		tty_interrupt();
+		irq_clear(1 << 5);
+	}
 }
-
