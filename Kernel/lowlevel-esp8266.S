@@ -97,7 +97,7 @@ vectortable:
 	.word  fault			# Invalid address (D)		29
 	.word  fault			#				30
 	.word  fault			#				31
-	.word  fault #interrupt		# Timer				32
+	.word  fault			#				32
 	.word  fault			#				33
 	.word  fault			#				34
 	.word  fault			#				35
@@ -250,16 +250,20 @@ interrupt:
 	s32i.n a12, sp, 12
 	rsr.epc1 a12
 	s32i.n a12, sp, 16
-	# We choose to save A2/A3 so we can pass the interrupt in
+	# We choose to save A2/A3 so we can pass the interrupt arguments
 	s32i.n a2, sp, 20
 	s32i.n a3, sp, 24
 	rsr.interrupt a2
-	rsr.exccause a3
 	# Stack switch - we keep the minimum on istack for preemption
 	# reasons
 	movi a12, udata
 	s32i.n a1, a12, U_DATA__U_SP
 	movi a12, istack + 512
+	rsr.interrupt a2
+	rsr.intenable a3
+	and a2,a2,a3
+	movi a3,0x3FFF
+	and a2,a2,a3
 	call0 interrupt_handler
 	# Restore the state
 	movi a12, udata
