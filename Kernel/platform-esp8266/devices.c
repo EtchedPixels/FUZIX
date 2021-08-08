@@ -39,7 +39,7 @@ bool validdev(uint16_t dev)
 
 /* Stuff for bringing up our own IRQ handling */
 
-void exception_handler(struct exception_frame *ef, uint32_t cause)
+unsigned int exception_handler(struct exception_frame *ef, uint32_t cause)
 {
 	di();
 	uint32_t vaddr;
@@ -52,7 +52,6 @@ void exception_handler(struct exception_frame *ef, uint32_t cause)
 	kprintf("   a4=%p  a5=%p  a6=%p  a7=%p\n", ef->a4, ef->a5, ef->a6, ef->a7);
 	kprintf("   a8=%p  a9=%p a10=%p a11=%p\n", ef->a8, ef->a9, ef->a10, ef->a11);
 	kprintf("  a12=%p a13=%p a14=%p a15=%p\n", ef->a12, ef->a13, ef->a14, ef->a15);
-	while(1);
 
 	if (udata.u_insys)
 		panic("fatal");
@@ -89,7 +88,7 @@ void exception_handler(struct exception_frame *ef, uint32_t cause)
 
 	/* Requeue any asynchronous pending signal */
 	recalc_cursig();
-	/* TODO : queue the resulting exception */
+	return s;
 }
 
 
@@ -130,7 +129,7 @@ void device_init(void)
 
 static void irq_clear(uint32_t irq)
 {
-	asm volatile ("wsr %0, intclear; esync" :: "a" (irq));
+	asm volatile ("wsr.intclear %0; esync" :: "a" (irq));
 }
 
 void interrupt_handler(uint32_t interrupt)
