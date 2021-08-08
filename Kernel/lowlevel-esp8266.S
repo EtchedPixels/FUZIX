@@ -150,6 +150,8 @@ ignored:
 
 syscall:
 	movi a12, udata
+	movi a7, 1
+	s8i a7, a12, U_DATA__U_INSYS
 	s8i a2, a12, U_DATA__U_CALLNO
 	s32i.n a3, a12, U_DATA__U_ARGN
 	s32i.n a4, a12, U_DATA__U_ARGN1
@@ -175,25 +177,70 @@ syscall:
 	addi a12,a12, 3		# Skip the syscall
 	wsr.epc1 a12
 	movi a12, udata
+	l8ui a4, a12, U_DATA__U_CURSIG
 	l16ui a3, a12, U_DATA__U_ERROR
 	l32i a2, a12, U_DATA__U_RETVAL
 	l32i.n a15, sp, 8
 	l32i.n a14, sp, 4
 	l32i.n a0, sp, 0
 	movi a12, udata
+	movi a7, 0
+	s8i a7, a12, U_DATA__U_INSYS
 	l32i.n sp, a12, U_DATA__U_SYSCALL_SP
+	bnez a4, deliver_sig
+sigout:
 	l32i.n a13, sp, 4
 	l32i.n a12, sp, 0
 	addi sp, sp, 8
 	rsync
 	rfe
 
+deliver_sig:
+	addi sp, sp, -24	# keep aligned (8 already pushed)
+	s32i a2, sp, 0		# Save syscall return values
+	s32i a3, sp, 4
+	s32i a14, sp, 8
+	s32i a15, sp, 12
+	s32i a0, sp, 16
+	rsr.epc1 a14
+	s32i a14, sp, 20
+	addx4 a2, a4, a12	# Signal vector time
+	l32i a5, a2, U_DATA__U_SIGVEC
+	beqz a5, no_signal
+	movi a14, 0
+	s32i a14, a2, U_DATA__U_SIGVEC
+	s8i  a14, a12, U_DATA__U_CURSIG
+	#
+	#	A4 is the signal, A5 is the vector
+	#
+	mov.n a2,a4		# We want it in arg1
+	mov.n a3,a1		# second arg is the stack frame
+	movi a4,0x20		# User mode and status
+	wsr.ps a4		# Into user mode
+	rsync
+	callx0 a5
+	#
+	#	Now clean back up and return from the syscall. Note that we
+	#	may never reach this point but that is fine.
+	#
+	rsil a14, 15			# Interrupts back off
+	rsync
+no_signal:
+	l32i a14, sp, 20
+	wsr.epc1 a14
+	l32i a0, sp, 16
+	l32i a15, sp, 12
+	l32i a14, sp, 8
+	l32i a3, sp, 4
+	l32i a2, sp, 0
+	addi sp, sp, 24
+	j sigout
 #
 #	We take an exception on whatever stack we are using.
 #
 fault:
 	# Our caller saved a12 and a13 save the rest for the helper
-	addi sp, sp, -72
+	addi sp, sp, -72		# 8 already pushed so this keeps us aligned
 	s32i.n a0, sp, 0
 	s32i.n a2, sp, 4
 	s32i.n a3, sp, 8
@@ -219,22 +266,42 @@ fault:
 	# Pass the frame pointer as a C argument
 	mov.n a2,a1
 	call0 exception_handler
+	# Does the exception handler want to force a synchronous signal ?
+	beqz a2, no_action
+	movi a12, udata
+	addx4 a13, a2, a12
+	l32i.n a12, a13, U_DATA__U_SIGVEC
+	movi a3, 0
+	s32i.n a3, a13, U_DATA__U_SIGVEC
+	movi a3, 0x20
+	wsr.ps a3
+	rsync
+	mov.n a3, a1			# Stack frame pointer
+	callx0 a13			# Deliver the signal (may or may not return)
+	rsil a12, 15			# Interrupts back off
+no_action:
 	# Only restore the state the compiler damaged
 	l32i.n a12, sp, 56
 	wsr.sar a12
 	l32i.n a12, sp, 60
 	wsr.epc1 a12
 	l32i.n a0, sp, 0
+	l32i.n a2, sp, 4
+	l32i.n a3, sp, 8
+	l32i.n a4, sp, 12
+	l32i.n a5, sp, 16
+	l32i.n a6, sp, 20
+	l32i.n a7, sp, 24
 	l32i.n a14, sp, 48
 	l32i.n a15, sp, 42
-	addi sp, sp, 72
-	l32i.n a13, sp, 4
-	l32i.n a12, sp, 0
-	addi sp, sp, 8
+	l32i.n a12, sp, 72
+	l32i.n a13, sp, 76
+	addi sp, sp, 80
+	rsync
 	rfe
 #
 #	Interrupt. This is the trickiest one as we need to ensure nothing
-#	get mashed, but save and restore the minimum for efficiency. We also
+#	gets mashed, but save and restore the minimum for efficiency. We also
 # 	have to deal with the interrupt stack and eventually pre-emption and
 #	signals
 #
@@ -261,6 +328,9 @@ interrupt:
 	mov.n a2,a1
 	movi a1, istack + 512
 	s32i.n a2, a1, 0			# Save it in the word at the top
+	movi a3, udata
+	movi a2, 1
+	s8i a2, a3, U_DATA__U_ININTERRUPT
 	rsr.interrupt a2
 	rsr.intenable a3
 	and a2,a2,a3
@@ -278,6 +348,9 @@ interrupt:
 #	bnez a2, preemption
 	# TODO signals
 restore:
+	movi a3, udata
+	movi a2, 1
+	s8i a2, a3, U_DATA__U_ININTERRUPT
 	# Recover register state
 	l32i.n a7, sp, 40
 	l32i.n a6, sp, 36
