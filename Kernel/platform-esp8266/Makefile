@@ -60,7 +60,7 @@ $(AOBJS): %.o: %.S
 $(OBJS): ../kernel-esp8266.def
 
 $(COBJS): %.o: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -I../dev $< -o $@
+	$(CROSS_CC) -I../dev/ $(CROSS_CCOPTS) $< -o $@
 
 image.elf: kernel.ld addresses.ld $(KOBJS)
 	$(CROSS_CC) -T kernel.ld -T addresses.ld -flto -mlongcalls -nostdlib -o image.elf \
