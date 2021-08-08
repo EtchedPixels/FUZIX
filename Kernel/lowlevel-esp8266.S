@@ -156,7 +156,7 @@ syscall:
 	s32i.n a5, a12, U_DATA__U_ARGN2
 	s32i.n a6, a12, U_DATA__U_ARGN3
 	s32i.n sp, a12, U_DATA__U_SYSCALL_SP
-	movi sp, udata + UBLOCK_SIZE - 20
+	movi sp, udata + UBLOCK_SIZE - 32
 	s32i.n a0, sp, 0
 	s32i.n a14, sp, 4
 	s32i.n a15, sp, 8
@@ -166,7 +166,7 @@ syscall:
 	xsr.ps a12
 	s32i.n a12, sp, 16
 	rsync
-	# TODO set insys properly
+	# TODO set insys properly and enable ints for syscall section
 	call0 unix_syscall
 	l32i.n a12, sp, 16
 	wsr.ps a12
@@ -185,15 +185,13 @@ syscall:
 	l32i.n a13, sp, 4
 	l32i.n a12, sp, 0
 	addi sp, sp, 8
+	rsync
 	rfe
 
 #
 #	We take an exception on whatever stack we are using.
 #
 fault:
-	movi a12,65
-	movi a13,0x60000000
-	s8i a12,a13,0
 	# Our caller saved a12 and a13 save the rest for the helper
 	addi sp, sp, -72
 	s32i.n a0, sp, 0
@@ -241,7 +239,7 @@ fault:
 #	signals
 #
 interrupt:
-	addi sp, sp, -28
+	addi sp, sp, -44
 	# A12/A13 are saved. We need to save A14/A15/A0 SAR and EPC1
 	s32i.n a14, sp, 0
 	s32i.n a15, sp, 4
@@ -250,15 +248,19 @@ interrupt:
 	s32i.n a12, sp, 12
 	rsr.epc1 a12
 	s32i.n a12, sp, 16
-	# We choose to save A2/A3 so we can pass the interrupt arguments
+	# Save the argument registers
 	s32i.n a2, sp, 20
 	s32i.n a3, sp, 24
+	s32i.n a4, sp, 28
+	s32i.n a5, sp, 32
+	s32i.n a6, sp, 36
+	s32i.n a7, sp, 40
 	rsr.interrupt a2
 	# Stack switch - we keep the minimum on istack for preemption
 	# reasons
-	movi a12, udata
-	s32i.n a1, a12, U_DATA__U_SP
-	movi a12, istack + 512
+	mov.n a2,a1
+	movi a1, istack + 512
+	s32i.n a2, a1, 0			# Save it in the word at the top
 	rsr.interrupt a2
 	rsr.intenable a3
 	and a2,a2,a3
@@ -266,16 +268,21 @@ interrupt:
 	and a2,a2,a3
 	call0 interrupt_handler
 	# Restore the state
+	movi a2, istack + 512
+	l32i a1, a2, 0
 	movi a12, udata
-	l32i.n a1, a12, U_DATA__U_SP
 	l8ui a2, a12, U_DATA__U_INSYS
 	beqz a2, restore
 	movi a2, need_resched
 	l8ui a2, a2, 0
-	bnez a2, preemption
+#	bnez a2, preemption
 	# TODO signals
 restore:
 	# Recover register state
+	l32i.n a7, sp, 40
+	l32i.n a6, sp, 36
+	l32i.n a5, sp, 32
+	l32i.n a4, sp, 28
 	l32i.n a3, sp, 24
 	l32i.n a2, sp, 20
 	l32i.n a12, sp, 16
@@ -285,9 +292,11 @@ restore:
 	l32i.n a0, sp, 8
 	l32i.n a15, sp, 4
 	l32i.n a14, sp, 0
-	l32i.n a13, sp, 32
-	l32i.n a12, sp, 28
-	addi sp, sp, 36
+
+	l32i.n a13, sp, 48
+	l32i.n a12, sp, 44
+	addi sp, sp, 52
+	rsync
 	rfe
 
 preemption:

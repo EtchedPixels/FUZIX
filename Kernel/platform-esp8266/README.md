@@ -173,7 +173,9 @@ You now have an ESP8266 compiler set.
 ## TODO
 
 - Use some of the ROM library routines that don't themselves meddle with static data. Make a kernel set and a user set (RBOOT has a good list)
-- Steal the exception and interrupt vector base from the ROM so we can do our own stack switching interrupt handlers
+- Debug new handlers (why does IRQ blow up after)
+- Properly setup the inint values
+- Add interrupt state setting to the task switch code
 - Enable signal and preemption processing using these
 - Switch from single to simple model
 - See if we can get away from any use of the ROM routines that use the firmware memory bank and then steal the firmware memory bank

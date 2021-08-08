@@ -37,25 +37,6 @@ bool validdev(uint16_t dev)
         return true;
 }
 
-void syscall_handler(struct __exception_frame* ef, int cause)
-{
-	udata.u_callno = ef->a2;
-	udata.u_argn = ef->a3;
-	udata.u_argn1 = ef->a4;
-	udata.u_argn2 = ef->a5;
-	udata.u_argn3 = ef->a6;
-	udata.u_insys = 1;
-
-	unix_syscall();
-
-	udata.u_insys = 0;
-
-	ef->a2 = udata.u_retval;
-	ef->a3 = udata.u_error;
-
-	ef->epc += 3; /* skip SYSCALL instruction */
-}
-
 /* Stuff for bringing up our own IRQ handling */
 
 void exception_handler(struct exception_frame *ef, uint32_t cause)
@@ -129,16 +110,7 @@ void device_init(void)
 	flash_dev_init();
 	sd_rawinit();
 	devsd_init();
-#if 0
-	static const uint8_t fatal_exceptions[] =
-		{ 0, 2, 3, 5, 6, 8, 9, 20, 28, 29 };
-	for (int i=0; i<sizeof(fatal_exceptions)/sizeof(*fatal_exceptions); i++)
-		_xtos_set_exception_handler(fatal_exceptions[i], fatal_exception_cb);
-	extern fn_c_exception_handler_t syscall_handler_trampoline;
-	_xtos_set_exception_handler(1, syscall_handler_trampoline);
-#endif
-
-//	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
+	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
 }
 
 /*
@@ -161,10 +133,8 @@ static void irq_clear(uint32_t irq)
 	asm volatile ("wsr %0, intclear; esync" :: "a" (irq));
 }
 
-
 void interrupt_handler(uint32_t interrupt)
 {
-	kprintf("int %d\n", interrupt);
 	if (interrupt & (1 << 6)) {
 		timer_isr();
 		irq_clear(1 << 6);

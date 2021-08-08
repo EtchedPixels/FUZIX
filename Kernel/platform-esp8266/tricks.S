@@ -1,14 +1,17 @@
 #include "kernel-esp8266.def"
 
 .global udata
+.align 16
 .comm udata, UBLOCK_SIZE
 
 #define SWAPSTACK_SIZE 1536
+.align 16
 .comm swapstack, SWAPSTACK_SIZE
 
 .global istack
 
-#define ISTACK_SIZE 512
+#define ISTACK_SIZE 516		/* 512 for the stack 4 for the previous stack save */
+.align 16
 .comm istack, ISTACK_SIZE
 
 .global platform_switchout
@@ -144,34 +147,13 @@ dofork:
 .global platform_idle
 .text
 .align 4
-platform_idle:
+platform_idle:				/* TODO - waits ? */
 	ret
 
 .global program_vectors
 .text
 .align 4
 program_vectors:
-	ret
-
-.global syscall_handler_trampoline
-.text
-.align 4
-# a2 = exception frame structure
-# a3 = cause
-syscall_handler_trampoline:
-	s32i sp, a2, 12		/* save user stack to exception frame */
-	movi sp, udata + UBLOCK_SIZE /* switch to kernel stack */
-
-	addi sp, sp, -4*4
-	s32i a2, sp, 0*4
-	s32i a0, sp, 1*4
-
-	call0 syscall_handler
-
-	l32i a2, sp, 0*4
-	l32i a0, sp, 1*4
-	l32i sp, a2, 12		/* switch back to the user stack */
-
 	ret
 
 /* vim: sw=4 ts=4 et: */
