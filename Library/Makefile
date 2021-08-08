@@ -7,7 +7,7 @@ all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
      tools/syscall_6809 tools/syscall-scc6809 tools/syscall_armm4 \
      tools/ack2fuzix tools/binman \
      tools/liberror tools/relocbin tools/relocbin65 tools/fuzixlib \
-     tools/relocbinhc11 tools/relocbin8080
+     tools/relocbinhc11 tools/relocbin8080 tools/shlibgen
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
@@ -74,6 +74,9 @@ tools/ack2fuzix: tools/ack2fuzix.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/fuzixlib: tools/fuzixlib.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/shlibgen: tools/shlibgen.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 install:
