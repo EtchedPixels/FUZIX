@@ -14,8 +14,13 @@
 #define CONFIG_INLINE_IRQ
 /* Trim disk blocks when no longer used */
 #define CONFIG_TRIM
-/* Enable single tasking */
-#define CONFIG_SINGLETASK
+/* One process in memory at a time multi-tasking. We do our own custom
+   implementation so don't define this */
+#undef CONFIG_SWAP_ONLY
+/* This requires some further work but is far faster */
+#undef CONFIG_PARENT_FIRST
+/* Don't thrash when running multiple things */
+#define MAXTICKS 200
 /* Enable SD card code. */
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
