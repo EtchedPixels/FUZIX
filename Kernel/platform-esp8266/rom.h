@@ -19,38 +19,6 @@ extern void system_restart(void);
 
 extern void* sdk_flashchip;
 
-//static volatile uint32_t* DPORT_BASEADDR = (volatile uint32_t*)0x3ff00000;
-
-struct __exception_frame
-{
-	uint32_t epc;
-	uint32_t ps;
-	uint32_t sar;
-	uint32_t sp;
-	uint32_t a0;
-	// note: no a1 here!
-	uint32_t a2;
-	uint32_t a3;
-	uint32_t a4;
-	uint32_t a5;
-	uint32_t a6;
-	uint32_t a7;
-	uint32_t a8;
-	uint32_t a9;
-	uint32_t a10;
-	uint32_t a11;
-	uint32_t a12;
-	uint32_t a13;
-	uint32_t a14;
-	uint32_t a15;
-	uint32_t cause;
-};
-
-typedef void fn_c_exception_handler_t(struct __exception_frame *ef, int cause);
-extern fn_c_exception_handler_t* _xtos_set_exception_handler(int cause, fn_c_exception_handler_t* fn);
-
-/* Interrupt handling */
-
 #define ETS_SLC_INUM        1
 #define ETS_SDIO_INUM       1
 #define ETS_SPI_INUM        2
@@ -62,11 +30,7 @@ extern fn_c_exception_handler_t* _xtos_set_exception_handler(int cause, fn_c_exc
 #define ETS_WDT_INUM        8
 #define ETS_FRC_TIMER1_INUM 9  /* use edge */
 
-typedef void (*int_handler_t)(void*, struct __exception_frame*);
-extern void ets_isr_attach(int intr, int_handler_t handler, void* arg);
-extern void ets_isr_mask(int intr);
-extern void ets_isr_unmask(int intr);
-
+/* Our exception frame: needs moving from rom.h as it's no longer the ROM one */
 struct exception_frame {
 	/* Saved in the fault handler */
 	uint32_t a0;
