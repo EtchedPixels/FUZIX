@@ -1,20 +1,28 @@
 #ifndef ROM_H
 #define ROM_H
 
+/* Uses no system RAM */
 extern void uart_div_modify(uint8_t uart_no, uint32_t divlatch);
+
+/* Uses memory at 3feffe00, but can be subverted by loading bits and jumping slightly further in */
+/* Seems to be the base of the SPI register bank ? */
 extern void Cache_Read_Enable(uint8_t odd_even, uint8_t mb_count, uint8_t no_idea);
 extern void Cache_Read_Disable(void);
-extern void SpiWrite(uint32_t address, const uint8_t* buffer, uint32_t length);
-extern void SpiRead(uint32_t address, uint8_t* buffer, uint32_t length);
+
+/* These routines use a 24 byte table at 3FFFC714 */
+extern void SpiWrite(uint32_t address, const uint8_t *buffer, uint32_t length);
+extern void SpiRead(uint32_t address, uint8_t *buffer, uint32_t length);
 extern void SpiUnlock(void);
 extern void SpiEraseSector(uint32_t sector);
 extern void Wait_SPI_Idle(void* flash);
-extern void rom_i2c_writeReg(int reg, int hosid, int par, int val); 
 extern void SpiFlashCnfig(uint32_t spi_interface, uint32_t spi_freq);
 extern int SpiReadModeCnfig(uint32_t mode);
+/* The table pointer itself */
+extern void* sdk_flashchip;
+
+/* And we don't care what this one uses */
 extern void system_restart(void);
 
-extern void* sdk_flashchip;
 
 #define ETS_SLC_INUM        1
 #define ETS_SDIO_INUM       1
