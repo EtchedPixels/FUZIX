@@ -903,7 +903,6 @@ void doexit(uint16_t val)
 	uint_fast8_t j;
 	ptptr p;
 	irqflags_t irq;
-	ptptr s = udata.u_ptab;
 
 #ifdef DEBUG_SLEEP
 	kprintf("process %d exiting %d\n", udata.u_ptab->p_pid, val);
