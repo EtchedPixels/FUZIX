@@ -10,27 +10,11 @@ extern uint32_t *platform_vectors;
 void __main(void)
 {
 	uint32_t addr;
-	/* See globals.h for the clock speeds. */
-	/* Configure peripheral clock. */
-#if 0
-	rom_i2c_writeReg(103, 4, 1, 0x88);
-	//rom_i2c_writeReg(103, 4, 2, 0x81); /* 189MHz */
-	rom_i2c_writeReg(103, 4, 2, 0x91); /* 80MHz */
 
-	/* Configure CPU clock. */
-	ets_update_cpu_frequency(CPU_CLOCK);
-#endif
-
-	/* Warp emgines on */
+	/* Warp emgines on - takes us to 160MHz (doesn't affect the peripheral clock) */
 	CPU2X |= 1;
 
 	uart_div_modify(0, (PERIPHERAL_CLOCK * 1e6) / 115200);
-#if 0
-	/* Enable SPI flash mapping. */
-	SpiFlashCnfig(5, 0);
-	SpiReadModeCnfig(5);
-	Wait_SPI_Idle(sdk_flashchip);
-#endif
 	Cache_Read_Enable(0, 0, 1);
 
 	/* Clear BSS. */
@@ -44,8 +28,6 @@ void __main(void)
 	asm volatile ("wsr.ps %0" :: "a" (0x2F));
 	asm volatile ("wsr.vecbase %0" :: "a" (&platform_vectors));
 	asm volatile ("rsync");
-	asm volatile ("rsr.vecbase %0" : "=a" (addr));
-	kprintf("VT %p\n", addr);
 
 	/* Call the main program. */
 
