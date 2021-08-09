@@ -171,6 +171,11 @@ uint_fast8_t sd_spi_receive_byte(void)
 	return send_recv(0xff);
 }
 
+/*
+ *	TODO: this only works because aligned memcpy is optimized into a 32bit store. It also only
+ *	works because we don't have direct I/O enabled, which for a CPU to device speed ratio this big
+ *	may be the right thing anyway.
+ */
 bool sd_spi_receive_sector(void)
 {
 	uint8_t *dptr = (uint8_t *) blk_op.addr;
