@@ -95,8 +95,11 @@ A0		Not used
 
 3FFE8000-3FFFBFFF	Data RAM
 	3FFE8000-3FFF7FFF	User space
-	3FFF8000-3FFFBFFF	Kernel (adjust NBUFS accordingly)
-3FFFC000-3FFFFFFF	ETS data RAM (system owned, on our hitlist)
+	3FFF8000-3FFFBFFF	Kernel
+3FFFC000-3FFFFFFF	ETS data RAM
+	3FFFC000-3FFFC713	Unused (move stacks and tmp buffers?)
+	3FFFC714-3FFFC733	Firmware flash structure we need to keep alive
+	3FFFC734-3FFFFFFF	Buffers
 40000000-4000FFFF	Internal ROM (some routines  usable)
 	40100000-40107FFF	Instruction RAM (32K). Fast memory for programs
 	40100000			- Bootstrap (bottom - overwritten)
@@ -125,12 +128,9 @@ might find this ROM disassembly useful:
 
 There are many.
 
-  - CPU exceptions should be mapped to signals.
-  - single-tasking mode should be switched off (which would allow pipes to work).
   - someone needs to overhaul the SD SPI code who understands it.
   - not all the ROM routines are hooked up to userland binaries.
-  - signal handling
-  - pre-emption
+  - the tensilica asm could do with a clean up by someone who knows it better
 
 ...and probably others.
 
@@ -175,8 +175,6 @@ You now have an ESP8266 compiler set.
 - Use some of the ROM library routines that don't themselves meddle with static data. Make a kernel set and a user set (RBOOT has a good list)
 - Move to 'parent runs first' - needs some tricky changes in the platform fork code (see the Z80 examples)
 - Clean up the low level asm code - too much duplication, things saved that are not needed. Could do with a clean up by someone who speaks Tensilica LX106 properly.
-- See if we can get away from any use of the ROM routines that use the firmware memory bank and then steal the firmware memory bank
-- Make the buffer cache self size based on available remaining memory
-- Can we autodetect and manage stuff like peripheral clocks ?
+- Can we autodetect and manage stuff like peripheral clocks ? (apparently it hides in the phy structures at the end of the flash?)
 - Shared ROM libc
 - XIP ROM app code ?
