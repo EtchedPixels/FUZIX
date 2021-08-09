@@ -5,14 +5,15 @@
 #include "esp8266_peri.h"
 #include "kernel-esp8266.def"
 
+/*
+ *	Everything in this file is loaded into iRAM and discarded when we start user space
+ */
 extern int main(void);
 
 extern uint32_t *platform_vectors;
 
 extern uint32_t _bss_start;
 extern uint32_t _bss_end;
-
-static uint32_t flap;
 
 void __main(void)
 {
@@ -37,6 +38,7 @@ void _main(void)
 		*p = 0;
 
 #ifdef DO_MEM_CHECK
+	/* Move the buffers back before using this test */
 	uint32_t flap;
 	/* A small block at the start is used for various things like the SPI lock */
 	/* Pattern all the areas we believe safe to use */
