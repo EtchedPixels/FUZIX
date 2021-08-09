@@ -32,6 +32,8 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	_CSYS | CBAUD | CSTOPB | PARENB | PARODD | CSIZE
 };
 
+static unsigned int tty_stalled;
+
 static unsigned int tx_buffer_fill(void)
 {
 	return (U0S >> USTXC) & 0xff;
@@ -84,18 +86,34 @@ int tty_carrier(uint_fast8_t minor)
 	return 1;
 }
 
-void tty_data_consumed(uint_fast8_t minor)
-{
-}
-
-void tty_interrupt(void)
+/* Stuff as much from the FIFO into the tty layer as will fit */
+static void tty_rx(void)
 {
 	while (rx_buffer_fill() != 0) {
-		if (fullq(&ttyinq[1]))
+		if (fullq(&ttyinq[1])) {
+			tty_stalled = 1;
 			break;
+		}
 		uint8_t b = U0F;
 		tty_inproc(minor(BOOT_TTY), b);
 	}
+}
+
+/* Called when the tty layer has eaten input - try and empty more FIFO */
+void tty_data_consumed(uint_fast8_t minor)
+{
+	irqflags_t irq = di();
+	if (tty_stalled == 1) {
+		tty_stalled = 0;
+		tty_rx();
+	}
+	irqrestore(irq);
+}
+
+/* A tty receive interrupt (we don't enable other types at the moment). Empty the FIFO if we can */
+void tty_interrupt(void)
+{
+	tty_rx();
 	U0IC = 1 << UITO;
 }
 
