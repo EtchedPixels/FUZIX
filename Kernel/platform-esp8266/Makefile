@@ -13,6 +13,7 @@ CSRCS += \
 	devflash.c \
 	devsdspi.c \
 	devtty.c \
+	interrupt.c \
 	lib.c \
 	main.c \
 	rawflash.c \
