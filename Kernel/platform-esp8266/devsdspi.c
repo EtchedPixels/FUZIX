@@ -172,10 +172,16 @@ uint_fast8_t sd_spi_receive_byte(void)
 }
 
 /*
- *	TODO: this only works because aligned memcpy is optimized into a 32bit store. It also only
- *	works because we don't have direct I/O enabled, which for a CPU to device speed ratio this big
- *	may be the right thing anyway.
+ *	Copy an aligned 32bit block to another aligned target. We use this because we need to
+ *	write dwords to and from the SPI FIFO.
  */
+
+static void memcpy4_aligned(uint32_t *p1, uint32_t *p2, uint32_t dwords)
+{
+	while(dwords--)
+		*p1++ = *p2++;
+}
+
 bool sd_spi_receive_sector(void)
 {
 	uint8_t *dptr = (uint8_t *) blk_op.addr;
@@ -190,7 +196,7 @@ bool sd_spi_receive_sector(void)
 
 		while (SPI1CMD & SPIBUSY);
 
-		memcpy(dptr, (const void *) &SPI1W0, 64);
+		memcpy4_aligned(dptr, (const void *) &SPI1W0, 16);
 		dptr += 64;
 	}
 
@@ -207,7 +213,7 @@ bool sd_spi_transmit_sector(void)
 
 		SPI1U1 = (511 << SPILMOSI);
 		SPI1U = SPIUMOSI;
-		memcpy((void *) &SPI1W0, sptr, 64);
+		memcpy4_aligned((void *) &SPI1W0, sptr, 16);
 		SPI1CMD = SPIBUSY;
 
 		while (SPI1CMD & SPIBUSY);
