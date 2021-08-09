@@ -1030,7 +1030,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		ifr.ifr_broadaddr.sa.sin.sin_addr.s_addr = (ipa & igm) | ~igm;
 		goto copy_addr;
 	case SIOCGIFGWADDR:
-		ifr.ifr_gateway.sa.sin.sin_addr.s_addr = iga;
+		ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr = iga;
 		goto copy_addr;
 	case SIOCGIFNETMASK:
 		ifr.ifr_netmask.sa.sin.sin_addr.s_addr = igm;
@@ -1052,7 +1052,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		ipa = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
 		break;
 	case SIOCSIFGWADDR:
-		iga = ifr.ifr_gateway.sa.sin.sin_addr.s_addr;
+		iga = ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr;
 		break;
 	case SIOCSIFNETMASK:
 		igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;

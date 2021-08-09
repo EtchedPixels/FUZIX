@@ -62,7 +62,8 @@ image:
 	devsd_discard.o sci.o ds1302_discard.o ds1302.o ds1302_68hc11.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16k.o \
-	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
+	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
+	../syscall_exec.o ../syscall_exec16.o \
 	../usermem.o ../usermem_std-68hc11.o devtty.o >../fuzix.map
 	$(CROSS_OBJCOPY) ../fuzix.elf -O binary ../fuzix.bin
 	dd if=../fuzix.bin bs=1 skip=61440 count=3072 of=fuzix.common

@@ -58,10 +58,6 @@ typedef union {            /* this structure is endian dependent */
 		wsr %0, ps; isync" \
 		:: "a" (ps) : "memory")
 	
-/* jmp over the Fuzix header. Will need updating if the header size changes */
-#define EMAGIC   0x08
-#define EMAGIC_2 0x3c
-
 #define no_cache_udata()
 
 #define CPUTYPE	CPUTYPE_LX106
@@ -70,4 +66,5 @@ typedef union {            /* this structure is endian dependent */
 extern void copy_blocks(void *, void *, unsigned int);
 extern void swap_blocks(void *, void *, unsigned int);
 
-
+#define __packed		__attribute__((packed))
+#define barrier()		asm volatile("":::"memory")

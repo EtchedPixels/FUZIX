@@ -1,2 +1,1 @@
-export CPU = lx106
-
+export CPU = esp8266

@@ -40,8 +40,8 @@ images should follow in time.
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, MSP430 (bitrotted) and Z80/Z180
-* Core code can be built for 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, 8086, arm32, MSP430, pdp11, rabbit r2k/r3k and Z80/Z180 so should be far more portable
+* Kernel boots to userspace on 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, arm32, esp8266, MSP430 (bitrotted) and eZ80/Z80/Z180
+* Core code can be built for 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, 8086, arm32, esp8266, MSP430, pdp11, rabbit r2k/r3k and eZ80/Z80/Z180 so should be far more portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
 * Helpers to make many bits of implementation wrappers to core code
@@ -49,7 +49,7 @@ images should follow in time.
 
 ## What does UZI have over FUZIX
 
-* Can run in 64K of RAM (32K kernel/32K user). FUZIX would need
+* Can run in 64K of RAM (32K kernel/32K user). FUZIX needs
 	banked ROM or similar to pull this off. If you have banked
 	ROM then our kernel footprint in RAM is about 8K plus userspace
 	plus any framebuffers and similar overhead. On a 6809 it's just

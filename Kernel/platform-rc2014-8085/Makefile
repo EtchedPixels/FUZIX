@@ -57,7 +57,7 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
-	../syscall_fs3.o ../syscall_exec16.o  \
+	../syscall_fs3.o ../syscall_exec.o ../syscall_exec16.o  \
 	ppide.o devinput.o ../devinput.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	ds1302.o ds1302_discard.o ds1302_8085.o \

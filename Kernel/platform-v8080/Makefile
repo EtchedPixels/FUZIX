@@ -38,7 +38,7 @@ image: bootblock
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
-	../syscall_fs3.o ../syscall_exec16.o  \
+	../syscall_fs3.o ../syscall_exec.o ../syscall_exec16.o  \
 	../usermem_std-8080.o devfd.o $(LIBC) end.o
 	anm fuzix.bin | ../tools/8080map > ../fuzix.map
 	../tools/ack2kernel -v fuzix.bin ../fuzix.bin

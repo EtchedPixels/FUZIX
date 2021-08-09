@@ -50,7 +50,8 @@ image: loader
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16kfc.o \
-	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o ../syscall_exec16.o \
+	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
+	../syscall_exec16.o ../syscall_exec.o \
 	../usermem.o ../usermem_std-6800.o devtty.o /opt/cc68/lib/lib6800.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=1
