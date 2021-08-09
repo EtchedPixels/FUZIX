@@ -1,0 +1,62 @@
+include $(FUZIX_ROOT)/Applications/rules.6800
+
+SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cron.c crypt.c dc.c dd.c \
+	deroff.c diff3.c diff.c diffh.c join.c look.c makekey.c mesg.c \
+	newgrp.c pg.c pr.c ptx.c rev.c split.c su.c sum.c test.c time.c tsort.c \
+	tty.c wall.c
+
+SRCSNS = ed.c
+
+SRCSTC = clear.c
+
+SRCSBAD =
+
+
+SKIPPED = dc.c
+
+OBJS = $(SRCS:.c=.o)
+OBJSNS = $(SRCSNS:.c=.o)
+OBJSTC = $(SRCSTC:.c=.o)
+OBJSBAD = $(SRCSBAD:.c=.o)
+
+APPSNS = $(OBJSNS:.o=)
+
+APPSTC = $(OBJSTC:.o=)
+
+APPS = $(OBJS:.o=) $(OBJSBAD:.o=)
+
+APPS_ALL = $(APPS) $(APPSNS) $(APPSTC)
+
+all: $(APPS_ALL) sizes
+
+
+$(APPSNS): OPTS =
+
+$(APPSTC): OPTS = 
+
+$(OBJS): %.o: %.c
+
+$(OBJSNS): %.o: %.c
+
+$(OBJSTC): %.o: %.c
+
+$(OBJSBAD): %.o: %.c
+
+$(APPS): %: %.o
+	$(LINKER) -o $@ $(CRT0) $^  $(LINKER_LIB) 
+
+$(APPSNS): %: %.o
+	$(LINKER) -o $@ $(CRT0NS) $^ $(LINKER_LIB) 
+
+$(APPSTC): %: %.o
+	$(LINKER) -o $@ $(CRT0) $^ -ltermcap6800 $(LINKER_LIB) 
+
+sizes: $(APPS)
+	ls -l $(APPS) >size.report
+
+clean:
+	rm -f *.o $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+
+rmbak:
+	rm -f *~ core
+

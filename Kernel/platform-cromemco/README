@@ -27,16 +27,12 @@ Notes
 -	The emulator appears to be very flaky when it comes to serial emulation
 	but pretty decent on the floppy side. However it needs patching to
 	make it understand Fuzix DS/DD media as opposed to the weird Cromemco
-	SD/DD mixed formats. It also needs patching for uart bugs 8(
+	SD/DD mixed formats.
 
 Bugs
 
 
 TODO
-DONE	-		Interrupts properly (and IM2)
-DONE	-		not yet doing tty interrupts nicely with buffer
-			and queues
-DONE	-		Disk names (so you can say 'fd1' not 257)
 	-		Eject support for floppies
 	-		Floppy ioctls, mode set etc
 	-		Auto probe
@@ -46,11 +42,12 @@ DONE	-		Disk names (so you can say 'fd1' not 257)
 	-		fast 512 byte interbank copier
 
 Testing
--	Build the kernel and get a fuzix.dsk (SS/SD)
--	Build user space
--	cd Standalone/filesystem-src
-	./build-mini-filesystem fs.dsk 64 2464
--	Install fuzix.dsk as drivea.dsk and fs.dsk as driveb.dsk
+-	make diskimage
+
+	This will produce a pair of .dsk image files in the directory
+	Images/cromemco
+
+-	Install fuzix.dsk as drivea.dsk and root.dsk as driveb.dsk
 -	Fire up the patched cromemco simulator
 	cromemcosim -x rdos252.hex
 -	Hit power, hit run, hit return a few times to get a Booting

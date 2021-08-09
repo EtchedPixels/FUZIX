@@ -39,6 +39,7 @@
 	.globl unix_syscall_entry
         .globl _doexec
 	.globl nmi_handler
+	.globl interrupt_legacy
 	.globl interrupt_handler
 	.globl synchronous_fault
 	.globl ___hard_ei
@@ -319,7 +320,10 @@ _doexec:
 	call mmu_user		; must preserve HL
 	.endif
 	; for the relocation engine - tell it where it is
-	ld de, #PROGLOAD
+	; we always start in the low 256 bytes of our binary so we can
+	; just generate the relocation base accordingly
+	ld d,h
+	ld e,#0
         ei
         jp (hl)
 
@@ -369,10 +373,20 @@ nmi_handler:
 ;	stack everything and we must get off the IRQ stack and then
 ;	process need_resched and signals
 ;
+interrupt_legacy:
+.ifeq CPU_Z180
+	; Make sure we mark the Z80 legacy interrupt as vector FF
+	ex af,af'
+	push af
+	xor a
+	ld (hw_irqvector),a
+	jr intvec
+.endif
 interrupt_handler:
         ; store machine state
         ex af,af'
         push af
+intvec:
         ex af,af'
         exx
         push bc

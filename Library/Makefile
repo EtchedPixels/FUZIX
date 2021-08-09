@@ -4,15 +4,17 @@ CFLAGS += -I../Kernel/include
 
 all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
      tools/syscall_6502 tools/syscall_68000 tools/syscall_8080 \
-     tools/syscall_6809 tools/syscall-scc6809 \
+     tools/syscall_6809 tools/syscall-scc6809 tools/syscall_armm4 \
      tools/ack2fuzix tools/binman \
-     tools/liberror tools/relocbin tools/fuzixlib
+     tools/liberror tools/relocbin tools/relocbin65 tools/fuzixlib \
+     tools/relocbinhc11 tools/relocbin8080
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
 	rm -f tools/relocbin tools/ack2fuzix tools/fuzixlib
 	rm -f tools/syscall-z88dk tools/syscall_6502 tools/syscall_6809 tools/syscall_68000 tools/syscall-scc6809
 	rm -f tools/syscall_pdp11 tools/syscall_8080 tools/syscall_6303
+	rm -f tools/relocbin65 tools/relocbinhc11 tools/relocbin8080 tools/syscall_armm4
 
 tools/syscall: tools/syscall.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
@@ -26,6 +28,9 @@ tools/syscall_6502: tools/syscall_6502.c ../Kernel/include/syscall_name.h
 tools/syscall_8080: tools/syscall_8080.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/syscall_6800: tools/syscall_6800.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 tools/syscall_68000: tools/syscall_68000.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -35,16 +40,31 @@ tools/syscall_6809: tools/syscall_6809.c ../Kernel/include/syscall_name.h
 tools/syscall-scc6809: tools/syscall-scc6809.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/syscall_68hc11: tools/syscall_68hc11.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 tools/syscall_esp8266: tools/syscall_esp8266.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_pdp11: tools/syscall_pdp11.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/syscall_armm4: tools/syscall_armm4.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 tools/binman: tools/binman.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/relocbin: tools/relocbin.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/relocbin65: tools/relocbin65.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/relocbin8080: tools/relocbin8080.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/relocbinhc11: tools/relocbinhc11.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/liberror: tools/liberror.c
@@ -60,7 +80,8 @@ install:
 ifeq ($(USERCPU),z80)
 	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
 	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
-	mkdir -p /opt/fcc/include/msp430x /opt/fcc/include/netinet
+	mkdir -p /opt/fcc/include/msp430x
+	mkdir -p /opt/fcc/include/net /opt/fcc/include/netinet
 	mkdir -p /opt/fcc/include/readline
 	mkdir -p /opt/fcc/include/sys
 	install -m 0755 tools/binman tools/relocbin tools/fcc /opt/fcc/bin
@@ -68,6 +89,7 @@ ifeq ($(USERCPU),z80)
 	install -m 0644 include/6502/*.h /opt/fcc/include/6502
 	install -m 0644 include/arpa/*.h /opt/fcc/include/arpa
 	install -m 0644 include/msp430x/*.h /opt/fcc/include/msp430x
+	install -m 0644 include/net/*.h /opt/fcc/include/net
 	install -m 0644 include/netinet/*.h /opt/fcc/include/netinet
 	install -m 0644 include/readline/*.h /opt/fcc/include/readline
 	install -m 0644 include/sys/*.h /opt/fcc/include/sys
@@ -77,7 +99,8 @@ endif
 ifeq ($(USERCPU),ez80_z80)
 	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
 	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
-	mkdir -p /opt/fcc/include/msp430x /opt/fcc/include/netinet
+	mkdir -p /opt/fcc/include/msp430x
+	mkdir -p /opt/fcc/include/net /opt/fcc/include/netinet
 	mkdir -p /opt/fcc/include/readline
 	mkdir -p /opt/fcc/include/sys
 	install -m 0755 tools/binman tools/relocbin tools/fcc /opt/fcc/bin
@@ -85,6 +108,7 @@ ifeq ($(USERCPU),ez80_z80)
 	install -m 0644 include/6502/*.h /opt/fcc/include/6502
 	install -m 0644 include/arpa/*.h /opt/fcc/include/arpa
 	install -m 0644 include/msp430x/*.h /opt/fcc/include/msp430x
+	install -m 0644 include/net/*.h /opt/fcc/include/net
 	install -m 0644 include/netinet/*.h /opt/fcc/include/netinet
 	install -m 0644 include/readline/*.h /opt/fcc/include/readline
 	install -m 0644 include/sys/*.h /opt/fcc/include/sys

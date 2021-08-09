@@ -1,4 +1,9 @@
 /*
+ * Largely rewritten 2020 Alan Cox from the old ELKS code in order to address
+ * the incorrect behaviour of the ELKS one
+ *
+ * --------------------------------------------------------------------------
+ *
  * strtol.c - This file is part of the libc-8086 package for ELKS,
  * Copyright (C) 1995, 1996 Nat Friedman <ndf@linux.mit.edu>.
  * 
@@ -18,94 +23,103 @@
  *
  */
 
-/* TODO: This needs range clamping and setting errno when it's done. */
-
 #include <ctype.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
 
-long int
-strtol(const char *nptr, char **endptr, int base)
+static unsigned long do_conv(const char *nptr, char **endptr, int base, int uns)
 {
-  const char * ptr;
-  unsigned short negative;
-  long int number;
+	unsigned long int number = 0;
+	unsigned long int newv;
+	uint8_t negative = 0;
+	uint8_t overflow = 0;
 
-  ptr=nptr;
+	/* Sanity check the arguments */
+	if (base == 1 || base > 36 || base < 0) {
+		errno = EINVAL;
+		goto done;
+	}
 
-  while (isspace(*ptr))
-    ptr++;
+	/* advance beyond any leading whitespace */
+	while (isspace(*nptr))
+		nptr++;
 
-  negative=0;
-  if (*ptr=='-')
-    negative=1;
+	/* check for optional '+' or '-' */
+	if (*nptr == '-') {
+		negative = 1;
+		nptr++;
+	} else if (*nptr == '+')
+		nptr++;
 
-  number=(long int)strtoul(nptr, endptr, base);
+	/* The rules are a bit odd
+	   base = 0 means 0x is hex 0nnn is octal
+	   base = 16 means 0x is allowed but does nothing */
+	if (*nptr == '0') {
+		if ((base == 0 || base == 16) && (nptr[1] == 'X' || nptr[1] == 'x')) {
+			base = 16;
+			nptr += 2;
+		}
+		if (base == 0) {
+			base = 8;
+			nptr++;
+		}
+	}
+	/* If base is still 0 (it was 0 to begin with and the string didn't begin
+	   with "0"), then we are supposed to assume that it's base 10 */
+	if (base == 0)
+		base = 10;
 
-  return (negative ? -number:number);
+	/* Now walk through the characters converting */
+	while (isascii(*nptr) && isalnum(*nptr)) {
+		uint8_t ch = toupper(*nptr);
+		ch -= (ch <= '9' ? '0' : 'A' - 10);
+		if (ch > base)
+			break;
+		/* Check for unsigned overflow */
+		newv = (number * base) + ch;
+		if (newv < number)
+			overflow = 1;
+		number = newv; 
+		nptr++;
+	}
+done:
+	/* Some code is simply _impossible_ to write with -Wcast-qual .. :-\ */
+	if (endptr != NULL)
+		*endptr = (char *) nptr;
+	/* If we overflowed then return the right code */
+	if (overflow) {
+		errno = ERANGE;
+		if (uns)
+			return ULONG_MAX;
+		if (negative)
+			return LONG_MIN;
+		return LONG_MAX;
+	}
+	/* For signed cases check that even if we didn't unsigned overflow
+	   our final return will not break */
+	if (!uns) {
+		if (number == LONG_MIN && negative) {
+			errno = ERANGE;
+			return LONG_MIN;
+		}
+		if (number > LONG_MAX) {
+			errno = ERANGE;
+			number = LONG_MAX;
+		}
+	}
+	/* All done */
+	return negative ? -number : number;
 }
 
-unsigned long int
-strtoul(const char *nptr, char **endptr, int base)
+long strtol(const char *nptr, char **endptr, int base)
 {
-  unsigned long int number;
+	return (long)do_conv(nptr, endptr, base, 1);
+}
 
-  /* Sanity check the arguments */
-  if (base==1 || base>36 || base<0)
-    base=0;
-  
-  /* advance beyond any leading whitespace */
-  while (isspace(*nptr))
-    nptr++;
-
-  /* check for optional '+' or '-' */
-  if (*nptr=='-')
-      nptr++;
-  else
-    if (*nptr=='+')
-      nptr++;
-
-  /* If base==0 and the string begins with "0x" then we're supposed
-     to assume that it's hexadecimal (base 16). */
-  if (base==0 && *nptr=='0')
-    {
-      if (toupper(*(nptr+1))=='X')
-	{
-	  base=16;
-	  nptr+=2;
-	}
-  /* If base==0 and the string begins with "0" but not "0x",
-     then we're supposed to assume that it's octal (base 8). */
-      else
-	{
-	  base=8;
-	  nptr++;
-	}
-    }
-
-  /* If base is still 0 (it was 0 to begin with and the string didn't begin
-     with "0"), then we are supposed to assume that it's base 10 */
-  if (base==0)
-    base=10;
-
-  number=0;
-  while (isascii(*nptr) && isalnum(*nptr))
-    {
-      int ch = *nptr;
-      if (islower(ch)) ch = toupper(ch);
-      ch -= (ch<='9' ? '0' : 'A'-10);
-      if (ch>base)
-	break;
-
-      number= (number*base)+ch;
-      nptr++;
-    }
-
-  /* Some code is simply _impossible_ to write with -Wcast-qual .. :-\ */
-  if (endptr!=NULL)
-    *endptr=(char *)nptr;
-
-  /* All done */
-  return number;
+unsigned long strtoul(const char *nptr, char **endptr, int base)
+{
+	return do_conv(nptr, endptr, base, 0);
 }
 
 

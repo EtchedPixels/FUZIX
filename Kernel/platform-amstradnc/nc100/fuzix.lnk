@@ -27,8 +27,7 @@ syscall_fs2.rel
 syscall_fs3.rel
 syscall_other.rel
 mm.rel
-swap.rel
-bank16k.rel
+platform-amstradnc/bank.rel
 tty.rel
 vt.rel
 devsys.rel
@@ -40,5 +39,5 @@ platform-amstradnc/devtty.rel
 platform-amstradnc/devaudio.rel
 platform-amstradnc/devgfx.rel
 platform-amstradnc/tc8521.rel
-font4x6.rel
+font6x8.rel
 -e

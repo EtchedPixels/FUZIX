@@ -17,7 +17,8 @@
 #define U_DATA__U_ISP               26  // void * initial stack pointer when _execing
 #define U_DATA__U_TOP               28  // uint16_t
 #define U_DATA__U_BREAK             30  // uint16_t
-#define U_DATA__U_SIGVEC            32  // table of function pointers (void *)
+#define U_DATA__U_CODEBASE          32  // uint16_t
+#define U_DATA__U_SIGVEC            34  // table of function pointers (void *)
 
 // Keep these in sync with struct p_tab!!
 #define P_TAB__P_STATUS_OFFSET      0

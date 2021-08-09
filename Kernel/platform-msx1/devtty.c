@@ -2,9 +2,10 @@
 #include <kdata.h>
 #include <printf.h>
 #include <stdbool.h>
-#include <devtty.h>
 #include <vt.h>
 #include <tty.h>
+#include <graphics.h>
+#include <vdp1.h>
 #include <devtty.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
@@ -17,8 +18,16 @@ uint8_t keyboard[11][8];
 uint8_t shiftkeyboard[11][8];
 uint8_t keymap[11];
 
+int8_t vt_twidth = 40;
+int8_t vt_tright = 39;
+
 struct vt_repeat keyrepeat;
 uint8_t vtattr_cap;
+
+uint8_t inputtty = 1;
+uint8_t outputtty = 1;		/* Fixed but needed by the VDP layer */
+uint8_t vidmode = 0;		/* Will be needed when we add the mode setting */
+uint8_t vswitch;
 
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
@@ -61,7 +70,8 @@ void tty_putc(uint8_t minor, unsigned char c)
 	minor;
 	tty_debug2 = c;	
 //	if (minor == 1) {
-		vtoutput(&c, 1);
+		if (!vswitch)
+			vtoutput(&c, 1);
 //		return;
 //	}
 }
@@ -164,7 +174,7 @@ static void keydecode(void)
 	vt_inproc(/*inputtty +*/1, c);
 }
 
-void update_keyboard()
+void update_keyboard(void)
 {
 	int n;
 	uint8_t r;
@@ -197,3 +207,161 @@ void kbd_interrupt(void)
 
 /* This is used by the vt asm code, but needs to live in the kernel */
 uint16_t cursorpos;
+
+/*
+ *	TTY glue
+ */
+
+void vdp_reload(void)
+{
+	irqflags_t irq = di();
+
+	if (vidmode == 0) {
+		vdp_setup40();
+		vt_twidth = 40;
+		vt_tright = 39;
+	} else {
+		vdp_setup32();
+		vt_twidth = 32;
+		vt_tright = 31;
+	}
+	vdp_restore_font();
+	vt_cursor_off();
+	vt_cursor_on();
+	irqrestore(irq);
+}
+
+/*
+ *	Graphics layer interface (for TMS9918A and friends)
+ */
+
+static struct videomap tms_map = {
+	0,
+	0x98,		/* FIXME: update at boot ? */
+	0, 0,
+	0, 0,
+	1,
+	MAP_PIO
+};
+
+/*
+ *	We always report a TMS9918A. Now it is possible that someone
+ *	is using a 9938 or 9958 so we might want to add some VDP autodetect
+ *	code and report accordingly but that's a minor TODO
+ */
+static struct display tms_mode[2] = {
+	{
+		0,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT|GFX_VBLANK,
+		16,
+		0,
+		40, 24
+	},
+	{
+		1,
+		256, 192,
+		256, 192,
+		255, 255,
+		FMT_VDP,
+		HW_VDP_9918A,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT|GFX_VBLANK,
+		16,
+		0,
+		32, 24
+	}
+};
+
+int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+  uint8_t map[8];
+  if (minor == 1) {
+	switch(arg) {
+	case GFXIOC_GETINFO:
+                return uput(&tms_mode[vidmode], ptr, sizeof(struct display));
+	case GFXIOC_MAP:
+		if (vswitch) {
+			udata.u_error = EBUSY;
+			return -1;
+		}
+		vswitch = minor;
+		return uput(&tms_map, ptr, sizeof(struct display));
+	case GFXIOC_UNMAP:
+		if (vswitch == minor) {
+			vdp_reload();
+			vswitch = 0;
+		}
+		return 0;
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE: {
+		uint8_t m = ugetc(ptr);
+		if (m > 1) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(&tms_mode[m], ptr, sizeof(struct display));
+		vidmode = m;
+		vdp_reload();
+		return 0;
+		}
+	case GFXIOC_WAITVB:
+		psleep(&vdpport);
+		return 0;
+	case VDPIOC_SETUP:
+		/* Must be locked to issue */
+		if (vswitch == 0) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (uget(ptr, map, 8) == -1)
+			return -1;
+		map[1] |= 0xA0;
+		vdp_setup(map);
+		return 0;
+	case VDPIOC_READ:
+	case VDPIOC_WRITE:
+	{
+		struct vdp_rw rw;
+		uint16_t size;
+		uint8_t *addr = (uint8_t *)rw.data;
+		if (vswitch == 0) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (uget(ptr, &rw, sizeof(struct vdp_rw)) != sizeof(struct vdp_rw)) {
+			udata.u_error = EFAULT;
+			return -1;
+		}
+		size = rw.lines * rw.cols;
+		if (valaddr(addr, size) != size) {
+			udata.u_error = EFAULT;
+			return -1;
+		}
+		if (arg == VDPIOC_READ)
+			udata.u_error = vdp_rop(&rw);
+		else
+			udata.u_error = vdp_wop(&rw);
+		if (udata.u_error)
+			return -1;
+		return 0;
+	}
+	}
+	return vt_ioctl(minor, arg, ptr);
+  }
+  /* Not a VT port so don't go via generic VT */
+  return tty_ioctl(minor, arg, ptr);
+}
+
+int vdptty_close(uint_fast8_t minor)
+{
+	if (vswitch == minor) {
+		vdp_reload();
+		vswitch = 0;
+	}
+	return tty_close(minor);
+}

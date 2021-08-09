@@ -1,4 +1,4 @@
-#define NR_SYSCALL 99
+#define NR_SYSCALL 80
 
 #define VARARGS 	-1
 
@@ -69,7 +69,7 @@ const char *syscall_name[NR_SYSCALL] = {
 	"acct",
 	"memalloc",
 	"memfree",
-	"_nosys66",
+	"__netcall",
 	"_nosys67",
 	"_nosys68",
 	"_nosys69",
@@ -83,25 +83,6 @@ const char *syscall_name[NR_SYSCALL] = {
 	"setpgid",
 	"setsid",
 	"getsid",
-	"_nosys80",
-	"_nosys81",
-	"_nosys82",
-	"_nosys83",
-	"_nosys84",
-	"_nosys85",
-	"_nosys86",
-	"_nosys87",
-	"_nosys88",
-	"_nosys89",
-	"socket",
-	"listen",
-	"bind",
-	"connect",
-	"_accept",
-	"_getsockaddrs",
-	"_sendto",
-	"_recvfrom",
-	"_shutdown",
 };
 
 int syscall_args[NR_SYSCALL] = {
@@ -185,23 +166,4 @@ int syscall_args[NR_SYSCALL] = {
 	2, //setpgid
 	1, //setsid
 	1, //getsid
-	0, //nosys80
-	0, //nosys81
-	0, //nosys82
-	0, //nosys83
-	0, //nosys84
-	0, //nosys85
-	0, //nosys86
-	0, //nosys87
-	0, //nosys88
-	0, //nosys89
-	3, //socket
-	2, //listen
-	3, //bind
-	3, //connect
-	1, //accept
-	3, //getsockaddrs
-	4, //sendto
-	4, //recvfrom
-	2, //shutdown
 };

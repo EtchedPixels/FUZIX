@@ -53,6 +53,7 @@ f 0755 /bin/tr          tr
 f 0755 /bin/umount      umount
 f 0755 /bin/fsck        fsck
 f 0755 /bin/fsck-fuzix  fsck-fuzix
+f 0755 /bin/substroot   substroot
 
 
 ########################################################################
@@ -99,7 +100,6 @@ f 0755 /bin/sleep       sleep
 f 0755 /bin/sort        sort
 f 0755 /bin/sum         sum
 f 0755 /bin/su          su
-f 0755 /bin/substroot   substroot
 f 0755 /bin/swapon	swapon
 f 0755 /bin/tail        tail
 f 0755 /bin/tar         tar

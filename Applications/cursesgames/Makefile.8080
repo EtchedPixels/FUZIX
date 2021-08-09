@@ -1,11 +1,3 @@
-PLATFORM = 8080
-CC = ack
-ASM = ack
-AR = aal
-LINKER = ack
-LIBPATH=../../Library/libs
-LIBC=$(LIBPATH)/libc8080.a -lem.a
-CFLAGS = -O2 -I../../Library/include -I../../Library/include/8080
 include $(FUZIX_ROOT)/Applications/rules.8080
 
 SRCS  = invaders.c

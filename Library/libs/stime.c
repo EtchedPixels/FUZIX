@@ -9,9 +9,9 @@
 int stime(const time_t *t)
 {
   __ktime_t tmp;
-  tmp.time = *t;
-#if defined(NO_64BIT)
-  tmp.pad = 0;
+  tmp.low = *t;
+#ifndef NO_64BIT
+  tmp.high = *t >> 32;
 #endif
   return _stime(&tmp, 0);
 }

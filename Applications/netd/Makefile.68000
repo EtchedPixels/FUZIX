@@ -1,64 +1,55 @@
-PLATFORM = 68000
-CROSS_COMPILE=m68k-uclinux-
-CC = $(CROSS_COMPILE)gcc -DNETD_BIG_ENDIAN
-ASM = $(CROSS_COMPILE)as
-AR = $(CROSS_COMPILE)ar
-LINKER = $(CROSS_COMPILE)ld
-CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../Library/include -I../../Library/include/68000
-LINKER_OPT = -L../../Library/libs -lc68000
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../Library/elf2flt.ld
-CRT0 = ../../Library/libs/crt0_68000.o
-CRT0NS = ../../Library/libs/crt0nostdio_68000.o
-# For now while we get going. Really we want to use some kind of elf2zmagic
-# with relocs.
-ELF2FUZIX = elf2flt -s 16384
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.68000
 
 SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c coconic.c ping.c ntpdate.c
-SRCS += htget.c tinyirc.c linein.c
+SRCS += htget.c tinyirc.c linein.c ifconfig.c slip.c
 
 OBJS = $(SRCS:.c=.o)
 
-APPS = netd-slip telnet echoping dig httpd ping ntpdate htget tinyirc
+APPS = netd-slip telnet echoping dig httpd ping ntpdate htget tinyirc ifconfig
+
+CFLAGS += -DNETD_BIG_ENDIAN
 
 all: $(APPS)
 
 netd-slip: $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o slip.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 telnet: $(CRT0) telnet.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 echoping: $(CRT0) echoping.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 dig: $(CRT0) dig.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 httpd: $(CRT0) httpd.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 ping: $(CRT0) ping.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 ntpdate: $(CRT0) ntpdate.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 htget:	$(CRT0) htget.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 tinyirc: $(CRT0) tinyirc.o linein.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
+	$(ELF2FUZIX) -o $@ $@.bin
+
+ifconfig: $(CRT0) ifconfig.o linein.o gethostbyname.o
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 

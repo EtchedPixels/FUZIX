@@ -39,9 +39,9 @@
 
 ; This area will be covered by the boot block in the boot image and then
 ; copid into the runtime one. We reuse the low 0x80 for vectors
-		.ds	#0x213
+		.ds	#0x223
 ;
-; Execution begins with us correctly mapped and at 0x0213
+; Execution begins with us correctly mapped and at 0x0223
 ;
 ;
 ;
@@ -72,4 +72,3 @@ start:		di
 		di
 stop:		halt
 		jr stop
-

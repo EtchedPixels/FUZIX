@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
--b _DISCARD=0xDC00
+-b _DISCARD=0xDE00
 -l z180
 platform-sc126/crt0.rel
 platform-sc126/commonmem.rel
@@ -28,6 +28,7 @@ syscall_fs3.rel
 syscall_proc.rel
 syscall_other.rel
 syscall_net.rel
+network.rel
 tty.rel
 mm.rel
 bankfixed.rel
@@ -49,4 +50,6 @@ platform-sc126/ds1302_rc2014_z180.rel
 platform-sc126/i2c.rel
 platform-sc126/i2c_bitbang.rel
 platform-sc126/devi2c.rel
+platform-sc126/net_w5x00.rel
+platform-sc126/wiznet.rel
 -e

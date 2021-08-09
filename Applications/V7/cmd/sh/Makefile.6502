@@ -1,14 +1,5 @@
-CC = cl65
-ASM = ca65
-LINKER = cl65
-CFLAGS = -t none -O -D__STDC__ -c -O -I../../../../Library/include -I../../../../Library/include/6502
-LINKER_OPT = -L../../../../Library/libs -C ../../../../Library/libs/ld65-$(TARGET).cfg
-ASM_OPT = -o
-CRT0 = ../../../../Library/libs/crt0_6502.o
-CRT0NS = ../../../../Library/libs/crt0nostdio_6502.o
+include $(FUZIX_ROOT)/Applications/rules.6502
 
-
-.SUFFIXES: .c .o
 
 SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
         macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
@@ -19,15 +10,13 @@ INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
 OBJS = $(SRCS:.c=.o)
 FOBJS = $(patsubst %.c,fshbuild_%.o, $(SRCS))
 
-LIBS = ../../../../Library/libs/c6502.lib
-
 all: sh fsh
 
 sh: $(OBJS)
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LINKER_TAIL)
 
 fsh: $(FOBJS)
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ readline.lib c6502.lib -m $@.map
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ readline.lib $(LINKER_TAIL)
 
 $(OBJS): $(INCS)
 

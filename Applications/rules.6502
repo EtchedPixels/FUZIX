@@ -1,0 +1,12 @@
+PLATFORM = 6502
+CC = cl65
+AS = ca65
+LINKER = $(FUZIX_ROOT)/Library/link/ld6502
+CFLAGS = -t none -O -D__STDC__ -c -O -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/6502
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs
+LINKER_TAIL = c6502.lib
+AS_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_6502.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_6502.o
+
+.SUFFIXES: .c .o .y

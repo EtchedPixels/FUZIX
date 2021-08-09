@@ -3,6 +3,8 @@
 #include <printf.h>
 #include "mini_ide.h"
 
+#ifdef CONFIG_WITH_IDE
+
 #define MAX_HD		2
 
 uint8_t ide_present = 0;
@@ -102,3 +104,5 @@ int ide_ioctl(uint_fast8_t minor, uarg_t request, char *unused)
 
 /* TODO: probe the devices more carefully and do EDD and LBA checks in discard
    code */
+
+#endif

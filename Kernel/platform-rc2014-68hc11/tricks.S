@@ -1,14 +1,13 @@
 ;
-;	6303 version
+;	68HC11 version
 ;
 ;	We do not save the temporaries. The direct page is tied to each
 ;	map so the direct page working registers are also per process. Only
 ;	the interrupt path needs to save and restore them.
 ;
-;	The only ugly we have is that because we are using the 16Kx4 memory
-;	banking model and our code density isn't quite good enough we need
-;	to switch udata objects on task switches. With the 56K/8K MMU we
-;	could avoid this!
+;	We don't save a lot of stuff. The compiler assumes D X and Y will
+;	be changed by the called function anyway. The soft register state
+;	lives in DP so is switched with the task switch and copied by fork
 ;
         .globl platform_switchout
         .globl switchin
@@ -16,7 +15,7 @@
 	.globl ramtop
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../kernel-hc11.def"
 
 	.section .common
 
@@ -37,10 +36,6 @@ platform_switchout:
 	psha				; Return code
 	sts udata + U_DATA__U_SP	; Save old SP
 
-	jsr map_process_always
-	jsr stash_udata
-	jsr map_kernel
-
         ; set inint to false
 	clr inint
 
@@ -51,20 +46,6 @@ platform_switchout:
         ; we should never get here
         jsr platform_monitor
 
-stash_udata:
-	ldx #udata
-	ldy #0xBE00		; Ick FIXME hardcoded
-stash_loop:
-	ldd ,x
-	inx
-	inx
-	std ,y
-	iny
-	iny
-	cpx #udata+512
-	bne stash_loop
-	rts
-
 badswitchmsg:
 	.ascii "_switchin: FAIL"
 	.byte 13
@@ -72,7 +53,11 @@ badswitchmsg:
 	.byte 0
 
 ;
-;	On entry D holds the process to switch in
+;	On entry D holds the process to switch in. This is slightly more
+;	exciting that it first may appear. We are in the context of the old
+;	task, running on its stack. When we reload the memory bank we switch
+;	to our stack. We must avoid damaging anything so be careful how
+;	we sequence events
 ;
 switchin:
 	sei
@@ -80,58 +65,74 @@ switchin:
 	xgdx
 
 	ldd	P_TAB__P_PAGE_OFFSET,x
-	cmpa	udata+U_DATA__U_PAGE
-	beq nostash
-
 	subd	#0		;compare with 0
 	bne	not_swapped
-	jsr	swapper
+	;
+	;	Fun and games
+	;	We allocate a 16K page to use as the common when we swap
+	;	in. We then copy the common into it, switch into it and
+	;	start executing on our copy of the common.
+	;
+	;	Notes:
+	;	We have interrupts off so we can flip the bank before
+	;	we update cur_map. This is needed or we update the wrong
+	;	common space.
+	;
+	;	OPTIMIZE
+	;	We do have internal unpaged RAM at F040-F1FF but we'll
+	;	make use of that for truely common data once this all works.
+	;
+	pshx			; save proc ptr
+	jsr	get_common	; reallocate dead page - returns new common
+				; in B
+	pulx			; get proc ptr back
+	lds	#swapstack	; onto temporary valid stack
+	stab	0xFE7B		; and switch onto new common
+	stab    cur_map+3
+	stx	switch_proc_ptr	;
+	xgdx			; switch_proc_ptr back into D
+	jsr	swap_finish
 	ldx	switch_proc_ptr
-	ldab	P_TAB__P_PAGE_OFFSET+1,x
-
+	; fix up our pages as they may have changed. We don't need to
+	; update their MMU mapping as we will flip maps before we need them
+	ldd P_TAB__P_PAGE_OFFSET,x
+	std udata + U_DATA__U_PAGE
+	ldd P_TAB__P_PAGE_OFFSET+2,x
+	std udata + U_DATA__U_PAGE+2
+	;
+	; At this point the new process is in memory and as we fixed up
+	; the udata mappings, cur_map and switch_proc_ptr the behaviour from
+	; this point onwards is the same
+	;
 not_swapped:
-	jsr	map_process_x
-
-	; We must do this inline as we will be changing stack under
-	; ourselves and without stack
-	ldx	#0xBE00
-	ldy	#udata
-unstash_loop:
-	ldd	,x
-	inx
-	inx
-	std	,y
-	iny
-	iny
-	cpx	#0xC000		; BE000 + 0200
-	bne	unstash_loop
-
+	; Get our bank
+	ldab	P_TAB__P_PAGE_OFFSET+3,x	; top page
+	; On this instruction we change the memory under us to the other
+	; common (containing a copy of the same code) and a different stack
+	; We cannot do this out of line as our stack is no longer valid
+	;
+	; Stuff like switch_proc_ptr also goes invalid here, so be careful.
+	; We carry it across in X instead
+	;
+	stab	0xFE7B
+	stab	cur_map+3
 	; Now get the stack back sane
 	lds	udata + U_DATA__U_SP
-	jsr	map_kernel
-nostash:
+
         ; check u_data->u_ptab matches what we wanted
-	ldx	udata + U_DATA__U_PTAB
-	cpx	switch_proc_ptr
+	cpx	udata + U_DATA__U_PTAB
 	bne	switchinfail
 
 	ldab	#P_RUNNING
-	ldx	switch_proc_ptr
 	stab	P_TAB__P_STATUS_OFFSET,x
-
-	; fix up our pages as they may have changed
-	ldd P_TAB__P_PAGE_OFFSET,x
-	std udata + U_DATA__U_PAGE
-	ldaa P_TAB__P_PAGE_OFFSET+2,x
-	staa udata + U_DATA__U_PAGE+2
 
 	clra
 	clrb
 	std runticks
 
         ; restore machine state -- note we may be returning from either
-        ; _switchout or _dofork
-        lds udata + U_DATA__U_SP
+        ; switchout or dofork
+        lds udata + U_DATA__U_SP	; not needed ?
 	ldaa inint
         beq swtchdone		; in ISR, leave interrupts off
 	cli
@@ -173,19 +174,23 @@ dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	;
-	;	Assumes ptr1 still holds the new process ptr
-	;
-
 	jsr fork_copy
 
-        ; now the copy operation is complete we can get rid of the stuff
-	; _switchin will be expecting from our copy of the stack.
+	; We put the same stack into the new common so when we switch all
+	; will be good
+
 	pulx
 
 	ldx fork_proc_ptr
+	ldab P_TAB__P_PAGE_OFFSET+3,x
+	stab 0xFE7B	; switch common
+	;
+	; Move on to the new stack copy
+	;
+	stab cur_map+3
+	xgdx		; into D as argument to makeproc
+	ldx #udata	; push udata onto the new mapped stack
 	pshx
-	ldd #udata
         jsr makeproc
 	pulx
 
@@ -206,8 +211,7 @@ dofork:
 ;
 ;	On entry ptr1 points to the process table of the child, and
 ;	the U_DATA is still not fully modified so holds the parents bank
-;	number. This wants optimising to avoid copying all the unused
-;	space!
+;	number.
 ;
 ;	Copy memory
 ;
@@ -216,63 +220,61 @@ fork_copy:
 	ldaa P_TAB__P_PAGE_OFFSET,x
 	ldab udata+U_DATA__U_PAGE
 	bsr bank2bank
-	inx
-	ldaa P_TAB__P_PAGE_OFFSET,x
+
+	ldaa P_TAB__P_PAGE_OFFSET+1,x
+	cmpa P_TAB__P_PAGE_OFFSET,x	; are we done ?
+	beq same_page
 	ldab udata+U_DATA__U_PAGE+1
 	bsr bank2bank
-	inx
-	ldaa P_TAB__P_PAGE_OFFSET,x
+
+	ldaa P_TAB__P_PAGE_OFFSET+2,x
+	cmpa P_TAB__P_PAGE_OFFSET+1,x	; are we done ?
+	beq same_page
 	ldab udata+U_DATA__U_PAGE+2
 	bsr bank2bank
 
-	ldx udata+U_DATA__U_PTAB
-	jsr map_process_x
-	jsr stash_udata
+	; OPTIMIZE: don't need to copy all of this block
+	ldaa P_TAB__P_PAGE_OFFSET+3,x
+	cmpa P_TAB__P_PAGE_OFFSET+2,x	; are we done ?
+	beq same_page
+	ldab udata+U_DATA__U_PAGE+3
+	bsr bank2bank
+
+same_page:
 	jmp map_kernel_di
 
 ;
-;	The 680x isn't very good at block copying. We can do tricks with
-;	the stack pointer but lets avoid that for now. We could really do
-;	with an MMU with split read/write mappings so we could ldx,stx the
-;	same address.
-;
-;	In fact for the 6803/6303 it's actually better to pretend to have
-;	an MMU that works like that and keep switching the MMU
-;
-;	Alas we can't use EIM here because it doesn't do extended addresses
-;	and our MMU is in I/O space ($FExx)
-;
-;	Copy 16K from page A to page B. Caller is responsible for putting
-;	banks back sane
+;	Copy 16K from page B to page A. Caller is responsible for putting
+;	banks back sane. This is akin to the 6803 code except that we have
+;	the y register we can use to slightly speed up the copying and avoid
+;	patching the code
 ;
 bank2bank:
-	pshx
-	stab 0xFE79		; Switch to destination bank
-	staa patch1+1		; Patch the source bank return id
-	staa 0xFE79		; Switch to source bank
-	stab patch2+1		; And patch the dest bank switch
+	pshx			; save pointer
 	ldx #0x4000		; Start address
 copyloop:
+	stab 0xFE79		; Now switch to source bank
 	ldy ,x
-patch1:
-	ldaa #0
-	staa 0xFE79		; Switch bank to secondary
+	staa 0xFE79		; Switch bank to destination
 	sty ,x
 	inx
 	inx
-patch2:
-	ldaa #0
-	staa 0xFE79		; And back
 	cpx #0x8000		; End at 0x8000
 	bne copyloop
 	pulx
+	ldab #0x21
+	stab 0xFE79		; Put page back FIXME hardcoded is ugly
 	rts
-
 ;
 ;	These need to live in common space as we have user mapped some
 ;	of the time we access them. Ideally we'd move these to a special
 ;	kernel DP area in common iram: TODO
 ;
-work:	.word	0
-work2:	.word	0
 switch_proc_ptr: .word 0
+
+;
+;	128 byte swap stack
+;
+	.ds 64
+swapstack:
+	.byte 0

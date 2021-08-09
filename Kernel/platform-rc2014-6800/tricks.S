@@ -1,5 +1,5 @@
 ;
-;	6303 version
+;	6800 version
 ;
 ;	We do not save the temporaries. The direct page is tied to each
 ;	map so the direct page working registers are also per process. Only
@@ -16,7 +16,7 @@
 	.export _ramtop
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../kernel-6800.def"
 
 	.common
 
@@ -308,8 +308,7 @@ patch2:
 
 ;
 ;	These need to live in common space as we have user mapped some
-;	of the time we access them. Ideally we'd move these to a special
-;	kernel DP area in common iram: TODO
+;	of the time we access them.
 ;
 work:	.word	0
 work2:	.word	0

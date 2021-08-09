@@ -55,21 +55,4 @@ extern arg_t _setpgid(void);
 extern arg_t _setsid(void);
 extern arg_t _getsid(void);
 
-/* Provided by the execve support */
-extern uint8_t write_core_image(void);
-
-/* This will change a lot in future ! */
-struct coredump {
-	uint16_t ch_magic1;
-#define MAGIC1 0xDEAD
-	uint16_t ch_magic2;
-#define MAGIC2 0xC0DE
-	uint8_t ch_type;	/* For now 16 or 32 bit number of bits - will
-				   change! */
-	uint32_t ch_base;
-	uint32_t ch_break;
-	uint32_t ch_sp;
-	uint32_t ch_top;
-};
-
 #endif

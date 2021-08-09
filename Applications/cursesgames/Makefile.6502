@@ -1,14 +1,4 @@
-PLATFORM = 6502
-CC = cl65
-ASM = ca65
-LINKER = cl65
-CFLAGS = -t none -O -D__STDC__ -c -O -I../../Library/include -I../../Library/include/6502
-LINKER_OPT = -L../../Library/libs -C ../../Library/libs/ld65-$(TARGET).cfg
-ASM_OPT = -o
-CRT0 = ../../Library/libs/crt0_6502.o
-CRT0NS = ../../Library/libs/crt0nostdio_6502.o
-
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.6502
 
 SRCS  = invaders.c
 
@@ -17,7 +7,7 @@ APPS = $(OBJS:.o=)
 all: $(APPS) size.report
 
 $(APPS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ curses.lib termcap.lib c6502.lib -m $@.map
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ curses.lib termcap.lib $(LINKER_TAIL)
 
 size.report: $(APPS) $(APPSNS)
 	ls -l $^ > $@

@@ -8,6 +8,9 @@ Supported hardware:
 		cartridge RAM or separate cartridge
 	COCO SDC
 
+Please see config.h to select SDC or IDE support. There isn't room in such
+a small space for both and for a full high res display.
+
 Disk Layout
 ===========
 
@@ -47,7 +50,7 @@ FF00-FFFF	I/O etc
 Emulating in XRoar
 ==================
 
-Needs the IDE patches, no support for COCOSDC emulation in xroar as of 0.33.2
+No support for COCOSDC emulation in xroar as of 0.33.2
 
 TODO
 ====

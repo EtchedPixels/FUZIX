@@ -51,8 +51,10 @@ l1:     ini		; high bits of field in low bits of (hl)
         ; check if seconds changed (we read them last)
         dec hl		; back to seconds
         ld a,(hl)	; HL still points at the seconds
-        cp e
+        xor e
+        and #0x0f	; check low 4 bits stable
         jr nz, retry
+        ret
     __endasm;
 }
 
@@ -62,6 +64,7 @@ uint_fast8_t platform_rtc_secs(void) __naked
     __asm
         in a, (CLOCK_PORT)
         ld l,a
+        ret
     __endasm;
 }
 

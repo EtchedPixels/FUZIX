@@ -17,50 +17,7 @@ To build the kernel, edit the TARGET line in Kernel/Makefile to read:
     export TARGET=n8vem-mark4
 Then run "make clean; make all" in the "Kernel" directory.
 
-There are two ways to boot the system.
-
-The file "Kernel/platform-n8vem-mark4/fuzix.com" is a CP/M executable which
-will load and boot the Fuzix kernel from within CP/M. This works well, however
-the kernel is now starting to get quite large and may be too large for CP/M to
-load.
-
-The file "Kernel/platform-n8vem-mark4/diskboot.bin" is an UNA BIOS compatible
-boot sector which will allow the system to be booted directly from an IDE or SD
-drive. The boot sector will load the kernel image starting from the third
-sector of the drive (ie counting from 0, sector number 2).
-
-The kernel image (fuzix.bin) should be written to the disk drive from the third
-sector onwards, in the space before the first partition starts. Be careful to
-ensure there is sufficient space before the first partition to hold the kernel
-or you risk overwriting the filesystem in the first partition! Modern disk
-partitioning programs generally start the first partition at 1MB (sector 2048)
-and thus allow plenty of space.
-
-To check the space before the first partition, use "fdisk -l /dev/sdX" and
-check the value in the "Start" column for the first partition. If this number
-is 128 or larger, there is sufficient space.
-
-To write the boot sector to a disk drive, without overwriting the partition
-table, you can use dd as follows;
-    dd if=diskboot.bin bs=446 count=1 of=/dev/sdX
-
-To write the kernel image to the disk drive, use dd as follows;
-    dd if=fuzix.bin bs=512 seek=2 of=/dev/sdX
-
-The root filesystem device can be specified as either a decimal number, or as a
-a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
-
-When booting the system from both UNA BIOS and CP/M you can specify the root
-filesystem device on the command line after the command name or unit number.
-
-For example, with root filesystem on /dev/hdb1 (minor #17) at the CP/M command
-prompt:
-
-    A> FUZIX hdb1
-or  A> FUZIX 17
-
-And to boot from unit 3 in UNA BIOS:
-
-    Boot UNA unit number or ROM? [R,X,0..3] (R): 3 hdb1
-or  Boot UNA unit number or ROM? [R,X,0..3] (R): 3 17
+Fuzix now uses the ROMWBW boot system on the Mark IV. Build using
+"make diskimage" to get a standard disk.img file you can then boot on the
+system and an emulator image you can use with the RC2014 emulator set.
 

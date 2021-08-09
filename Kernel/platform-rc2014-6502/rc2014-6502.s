@@ -42,6 +42,7 @@
 	    .import _chksigs
 	    .import _platform_switchout
 	    .import _need_resched
+	    .import _relocator
 
 	    .import outcharhex
 	    .import outxa
@@ -609,8 +610,8 @@ platform_doexec:
 ;
 ;	Start address of executable
 ;
-	    stx ptr1+1
-	    sta ptr1		; Save execution address in ptr1
+	    stx ptr3+1
+	    sta ptr3		; Save execution address in ptr3
 	    stx ptr2+1		; Point ptr2 at base page + 16
 	    lda #16
 	    sta ptr2
@@ -622,7 +623,7 @@ platform_doexec:
 	    sta PROGLOAD+17	; the low space where it is expected
 
 ;
-;	Set up the C stack. FIXME: assumes for now our sp in ZP matches it
+;	Set up the C stack. Assumes our sp in ZP matches it
 ;
 	    lda _udata+U_DATA__U_ISP
 	    sta sp
@@ -634,10 +635,14 @@ platform_doexec:
 ;
 	    ldx #$ff
 	    txs
-	    ldx #>PROGLOAD	; For the relocation engine
-	    lda #ZPBASE
-	    ldy #0
-	    jmp (ptr1)		; Enter user application
+;
+;	Relocation is done in kernel because the 6502 isn't quite smart
+;	enough to do its own ZP relocations as far as I can tell (prove me
+;	wrong....)
+;
+	    jsr _relocator
+
+	    jmp (ptr3)		; Enter user application
 
 ;
 ;	Straight jumps no funny banking issues

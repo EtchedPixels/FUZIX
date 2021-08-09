@@ -5,11 +5,19 @@
 #include <stdint.h>
 #include "../include/diskgeom.h"
 
+/*
+ *	Label up a generic TRS80 volume (xtrs style)
+ *	Cylinder 0: Boot area
+ *	Last 32 cylinders reserved for the swap
+ */
 struct minipart_lba p;
 unsigned char buf[256];
 FILE *vol;
 
 int main(int argc, const char *argv[]) {
+  int i;
+  unsigned int bytespercyl;
+
   if (argc != 2) {
     fprintf(stderr, "%s: diskimage\n", argv[0]);
     exit(1);
@@ -32,17 +40,34 @@ int main(int argc, const char *argv[]) {
   p.g.magic = MP_SIG_0;
   p.g.cyl = buf[28] | (buf[29] << 8);
   p.g.head = buf[30];
-  printf("Disk is %d cylinders, %d heads\n", p.g.cyl, p.g.head);
   p.g.sec = 32;
+
+  printf("Disk is %d cylinders, %d heads (%dKib)\n", p.g.cyl, p.g.head,
+    (p.g.cyl * p.g.head * p.g.sec * 256) >> 10);
+
   p.g.precomp = 0;
   p.g.land = p.g.cyl + 1;
   p.g.seek = 0;
   p.g.secsize = 8;
+
+  /* How much do we store on one cylinder ? */
+  bytespercyl = 256 * p.g.sec * p.g.head;
   
   p.cyl[0] = 0;	/* Must be zero */
-  p.cyl[1] = p.g.cyl - 32;
-  p.type[0] = 0x55;
-  p.type[1] = 0x56;
+  p.cyl[1] = 65536 / bytespercyl;	/* Allow 64K for the boot zone */
+  p.cyl[2] = p.g.cyl - 32;
+  p.type[0] = 0xAA;
+  p.type[1] = 0x55;
+  p.type[2] = 0x56;
+
+  for (i = 0; i < 3; i++) {
+    int ncyl = p.cyl[i + 1];
+    if (ncyl == 0xFFFF)
+      ncyl = p.g.cyl;
+    printf("%2d: %02X   %4d %4d   %dK.\n",
+      i, p.type[i], p.cyl[i], ncyl - 1,
+        ((ncyl - p.cyl[i]) * bytespercyl) >> 10);
+  }
 
   /* FIXME: should fill in matching LBA bits */
 

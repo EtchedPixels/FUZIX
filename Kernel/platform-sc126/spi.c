@@ -77,6 +77,12 @@ void sd_spi_raise_cs(void)
     gpio_set(0x0C, 0x0C);
 }
 
+void spi_select_port(uint8_t port)
+{
+    while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
+    gpio_set(0x0C, (~port & 3) << 2);
+}
+
 void sd_spi_transmit_byte(unsigned char byte)
 {
     unsigned char c;

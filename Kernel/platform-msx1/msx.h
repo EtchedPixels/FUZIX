@@ -4,6 +4,7 @@
 extern uint8_t machine_type;
 extern uint16_t infobits;
 extern uint8_t subslots;
+extern uint8_t vdptype;
 
 #define MACHINE_MSX1	0
 #define MACHINE_MSX2	1

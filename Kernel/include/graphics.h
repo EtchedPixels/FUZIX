@@ -29,12 +29,13 @@ struct display {
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918A	128	/* Not neccessarily MSX... */
-#define HW_VDP_9938	129
+#define HW_VDP_9938	129	/* MSX2 etc */
 #define HW_TRS80GFX	130	/* TRS80 model 4 graphics board */
 #define HW_HRG1B	131	/* HRG1B for TRS80 and VidoeGenie */
 #define HW_MICROLABS	132	/* Microlabs Grafyx */
 #define HW_MICROLABS4	133	/* Microlabs Grafyx for Model 4 */
 #define HW_LOWE_LE18	134	/* Low Electronics LE-18 */
+#define HW_VDP_9958	135	/* VDP9958 MSX2+ etc */
   uint16_t features;
 #define GFX_MAPPABLE	1	/* Can map into process memory */
 #define GFX_PALETTE	2	/* Has colour palette */
@@ -58,6 +59,8 @@ struct display {
 #define GFX_WRITE	256	/* Supports writing a buffer */
 #define GFX_AWRITE	512	/* Supports writing an attribute buffer */
 #define GFX_EXG		1024	/* Simultaenous GFX_READ/GFX_WRITE to swap */
+  uint16_t twidth;		/* Character size information */
+  uint16_t theight;		/* Characters per line/column */
  /* We may want to add some hardware ones as we hit machines that have them */
 };
 
@@ -107,4 +110,21 @@ struct videomap {
 #define GFXIOC_WRITE		0x0313	/* Write to screen direct */
 #define GFXIOC_AWRITE		0x0314	/* Write to attributes direct */
 #define GFXIOC_EXG		0x0315	/* Exchange a block */
+
+/*
+ *	VDP specific ioctls: The 0x032X range is reused for each type
+ */
+
+struct vdp_rw {		/* Do not touch without changing asm helpers */
+  uaddr_t data;
+  uint16_t vdpaddr;		/* 0000-3BFF */
+  uint8_t lines;
+  uint8_t cols;
+  uint8_t stride;
+};
+
+#define VDPIOC_SETUP		0x0320	/* Set TMS9918A registers */
+#define VDPIOC_READ		0x0321	/* Read TMS9918A space */
+#define VDPIOC_WRITE		0x0322	/* Write TMS9918A space */
+
 #endif

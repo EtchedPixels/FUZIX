@@ -84,9 +84,6 @@ nomods:		inc hl		; keymap
 		; and update the old map as we go so that next time
 		; we see only new changes
 		;
-		ld a,#0xFF
-		out (0xFD),a
-
 		push ix
 
 		ld ix,#_keymap
@@ -107,9 +104,6 @@ keyscan:
 		djnz keyscan
 
 		pop ix
-
-		xor a
-		out (0xFD),a
 
 		;
 		;	Final bits of work

@@ -34,7 +34,7 @@
 	    .globl _cursor_disable
 	    .globl _cursorpos
 	    ; need the font
-	    .globl _font4x6
+	    .globl _fontdata_6x8
 	    .globl _vtinit
 	    .globl platform_interrupt_all
 	    .globl _video_cmd
@@ -94,12 +94,22 @@ init_early:
             ret
 
 init_hardware:
+
+	    call probe_pcmcia
+	    jr z, pcmciabootable
+
+	    ld hl,#304
+	    ld (_ramsize),hl
+	    ld hl,#304-64
+	    ld (_procmem),hl
+	    jr to_setup
+pcmciabootable:
             ; set system RAM size
             ld hl, #256
             ld (_ramsize), hl
             ld hl, #(256-64)		; 64K for kernel
             ld (_procmem), hl
-
+to_setup:
 	    ; 100Hz timer on
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
@@ -122,6 +132,17 @@ init_hardware:
 ; COMMON MEMORY PROCEDURES FOLLOW
 
             .area _COMMONMEM
+
+probe_pcmcia:
+	    ld bc,#0x8011
+	    in a,(c)
+	    out (c),b
+	    ld hl,(0x4200)
+	    out (c),a
+	    ld de,#0x434E		; should be "NC"
+	    or a
+	    sbc hl,de
+	    ret
 
 _program_vectors:
 	    ;
@@ -183,20 +204,22 @@ my_nmi_handler:
 	    push af
 	    xor a
 	    jr suspend_1
-	    push af
 suspend:
+	    push af
 	    ld a,#1
 suspend_1:
 	    ld (suspend_r),a
 	    ld a, (_int_disabled)
 	    push af
+	    push bc
 	    di
+	    in a,(0x10)
+	    ld c,a
 	    ld a,#0x80
 	    out (0x10),a
 	    ; Save our SP
 	    ld (kernel_sp), sp
 	    ld sp,#suspend_stack
-	    push bc
 	    push de
 	    push hl
 	    push ix
@@ -207,9 +230,19 @@ suspend_1:
 	    push hl
 	    ex af,af'
 	    push af
-	    ; Register map saved
+	    exx
+	    ; Register map saved (first one is wrong)
 	    ld hl,#suspend_map
-	    call save_maps
+	    ld (hl),c
+	    inc hl
+	    in a,(0x11)
+	    ld (hl),a
+	    inc hl
+	    in a,(0x12)
+	    ld (hl),a
+	    inc hl
+	    in a,(0x13)
+	    ld (hl),a
 	    ld hl,#resume
 	    ld (resume_vector),hl
 	    ld de,(suspend_r)
@@ -237,9 +270,17 @@ nmi_and_resume:
 ;	already set the high 16K correctly before calling us there
 ;
 resume:
+	    di
 	    ld hl,#0
 	    ld (resume_vector),hl
 	    ld hl,#suspend_map+1
+	    ; Restore hardware state
+	    ld a,#0x08
+	    out (0x60),a		; keyboard IRQ only
+	    xor a
+	    out (0x90),a
+	    im 1
+	    in a,(0xB9)			; clear pending
 	    ; Begin by restoring the mapping for 0x4000-0xBFFF
 	    ld a,(hl)
 	    out (0x11),a
@@ -251,7 +292,7 @@ resume:
             ld a,#0x80
 	    out (0x10),a
 	    ; Restore the registers
-	    ld sp,#suspend_stack-36
+	    ld sp,#suspend_stack-16
 	    pop af
 	    ex af,af
 	    pop hl
@@ -262,7 +303,7 @@ resume:
 	    pop ix
 	    pop hl
 	    pop de
-	    pop bc
+
 	    ; Switch back to the kernel stack pointer. This could be in any
 	    ; bank so we must not dereference it until we fix the low 16K
 	    ld sp,(kernel_sp)
@@ -270,6 +311,8 @@ resume:
 	    ld a,(suspend_map)
 	    out (0x10),a	; booter page in 0x0000-0x3FFF vanishes here
 				; and our vectors re-appear
+	    pop bc		; BC was saved on the other stack so we had
+				; work room
 	    pop af		; IRQ state
 	    or a
 	    jr nz,no_irq_on
@@ -447,7 +490,7 @@ rd_write:   ld c, 10(ix)
 	    ld b, 14(ix)
 	    ld a, 4(ix)
 	    or a
-	    jr z, rd_part2
+	    jr nz, rd_part2
 	    ld hl, #0x8000
 	    jr copy_part2
 rd_part2:   ld de, #0x8000
@@ -469,9 +512,9 @@ _scroll_up:
 	    push af
 	    ld a, #0x43		; main memory, bank 3 (video etc)
 	    out (0x11), a
-	    ld hl, #VIDEO_BASE + 384
+	    ld hl, #VIDEO_BASE + 512
 	    ld de, #VIDEO_BASE
-	    ld bc, #VIDEO_SIZE - 384 - 1
+	    ld bc, #VIDEO_SIZE - 512 - 1
 	    ldir
 	    jr vtdone
 
@@ -484,8 +527,8 @@ _scroll_down:
 	    ld a, #0x43		; main memory, bank 3 (video etc)
 	    out (0x11), a
 	    ld hl, #VIDEO_BASE + 0xFFF
-	    ld de, #VIDEO_BASE + 0xFFF - 384
-	    ld bc, #VIDEO_SIZE - 384 - 1
+	    ld de, #VIDEO_BASE + 0xFFF - 512
+	    ld bc, #VIDEO_SIZE - 512 - 1
 	    lddr
 vtdone:	    pop af
 	    out (0x11), a
@@ -499,30 +542,35 @@ _cursor_disable:
 
 ;
 ;	Turn a co-ordinate pair in DE into an address in DE and map the
-; video. Return B = 1 if this is the right hand char of the pair
+; video. Return B = 0-3 for the character within the 3 byte set
 ; preserves H, L, C
 ;
+;
+;	What we are effectively doing here is Y * 512 +  X * 3 / 4
+;	and keeping a remainder too
+;
 addr_de:
-	    ld a, #0x43
-	    out (0x11), a
-
-	    ld a, d	; X
-	    and #1
-	    ld b, a	; save the low bit so we know how to write the char
-	    ld a, e	; turn Y into a pixel row
+	    push hl
+	    ld a,#0x43
+            out (0x11),a
+	    ld a,e 	; Y. We have 64 bytes per line 8 per row so
+	    rlca	; We know high bit was 0 so low bit is 0
+	    add #VIDEO_BASEH
+	    ld h,a	; And that's the row sorted
+	    ld a,d	; X
+	    and #3
+	    ld b,a	; bit offset info (remainder)
+	    ld a,d	; X
 	    add a
-	    ld e, a
-	    add a
-            add e	; E * 6 to get E = pixel row
-	    sla d	; we want 2bits shifted into d but only 1 lost
-	    srl a	; multiple by 64 A into DE
-	    rr  d	; roll two bits into D
-	    srl a
-	    rr  d
-	    add #VIDEO_BASEH	; screen start (0x7000 or 0x6000 for NC200)
-	    ld  e, d
-	    ld  d, a
+	    add d	; X * 3	gives us the left side of the char
+	    rrca
+            rrca
+	    and #0x3F
+	    ld l,a
+	    ex de,hl
+	    pop hl
 	    ret
+
 ;
 ;	We rely upon the font data ending up above 0x8000. On the current
 ; size that should never be a problem.
@@ -542,78 +590,103 @@ _plot_char:
 	    call addr_de
 	    push de	; save while we sort the char out
 	    ld  a, c
-	    ld  h, #0
-	    and #0x7f
-	    ld l, a
-	    add hl, hl  ; x 2
+	    sub #32
+            jr nc, chok
+	    xor a	; space
+chok:
+	    add a	; 128 chars only so this also nicely wraps it
+	    ld l,a
+	    ld h,#0
+	    add hl,hl
+	    add hl,hl	; 8 bytes per char
+	    ld de,#_fontdata_6x8
+	    add hl,de	; HL is now the font bytes we want with 1 byte per
+			; line right packed
+	    ; There are four possible rendering positions
 	    push hl
-	    add hl, hl  ; x 4
-	    pop de
-	    add hl, de  ; x 6
-	    ld de, #_font4x6
-	    add hl, de  ; font base
-	    pop de
-
-noneg:	    ex de, hl
-			; DE is the source, HL is the dest, B is the mask C
-			; the char
-	    bit 0, b	; What side are we doing ?
-	    jr nz, right
-
-	    ld b, #6
-left:	    push bc
-	    ld a, (de)
-	    inc de
-	    bit 7, c
-	    jr nz, leftright
-	    ; left left
-	    and #0xf0
-	    jr writeit
-leftright:  and #0x0f
-	    rlca
-	    rlca
-	    rlca
-	    rlca
-writeit:    ld b, a		; stash symbol bits
-
-	    ld a, (hl)
-	    and #0x0f		; wipe the left
-	    or b		; add our symbol
-	    ld (hl), a
-	    push de		; bump HL on by 64
-	    ld de, #64
-	    add hl, de
-	    pop de
-	    pop bc		; recover count and char
-	    djnz left
-	    jr vtdone
-right:
-	    ld b, #6
-rightloop:  push bc
-	    ld a, (de)
-	    inc de
-	    bit 7, c
-	    jr nz, rightright
-	    ; right left
-	    and #0xf0
+            pop ix
+	    pop hl
+	    ld a,b
+	    ld b,#8
+	    ld de,#64
+	    or a
+	    jr z, render0
+	    dec a
+	    jr z, render1
+	    dec a
+	    jr z, render2
+	    ; easiest - right 6 of byte 2
+render3_l:
+	    ld a,(hl)
+            and #0xC0
+            or (ix)
+            ld (hl),a
+            inc ix
+	    add hl,de
+	    djnz render3_l
+            jr vtdone
+render0:    ; left 6 bits of byte 0
+            ld a,(hl)
+            and #0x03
+	    ld c,(ix)
+            sla c
+            sla c
+            or c
+            ld (hl),a
+	    inc ix
+	    add hl,de
+            djnz render0
+            jr vtdone
+render1:    ; 2bits of byte 0, 4 of byte 1
+render1_l:
+            ld a,(hl)
+            and #0xFC
+            ld c,a
+            ld a,(ix)
 	    rrca
-	    rrca
-	    rrca
-	    rrca
-	    jr writeitr
-rightright: and #0x0f
-writeitr:   ld b, a		; stash symbol bits
-
-	    ld a, (hl)
-	    and #0xf0		; wipe the right
-	    or b		; add our symbol
-	    ld (hl), a
-	    push de		; bump HL on by 64
-	    ld de, #64
-	    add hl, de
-	    pop de
-	    pop bc		; recover count and char
-	    djnz rightloop
+            rrca
+            rrca
+            rrca
+            ld e,a
+            and #0x03
+            or c
+            ld (hl),a
+            inc hl
+            ld a,(hl)
+            and #0x0F
+            ld c,a
+            ld a,e
+            and #0xF0
+            ld (hl),a
+            inc ix
+            ld e,#63
+            add hl,de
+            djnz render1_l
+	    jp vtdone
+render2:    ; 4 of byte 1, 2 of byte 2
+render2_l:
+	    ld a,(hl)
+            and #0xF0
+            ld c,a
+	    ld a,(ix)
+            rrca
+            rrca
+            ld e,a
+	    and #0x0F
+            or c
+            ld (hl),a
+            inc hl
+            ld a,(hl)
+            and #0x3F
+            ld c,a
+            ld a,e
+            and #0xC0
+            or c
+            ld (hl),a
+            inc ix
+            ld e,#63
+            add hl,de
+            djnz render2_l
 	    jp vtdone
 
 _clear_lines:
@@ -637,7 +710,7 @@ lines:
 	    ld l, e
 	    ld (hl), #0x0
 	    inc de
-	    ld bc, #383
+	    ld bc, #511
 	    ldir
             dec a
 	    jr nz, lines
@@ -657,34 +730,59 @@ _clear_across:
 	    push af
 	    call addr_de
 	    ex de, hl
-	    ld hl, #64
-	    bit 0, b		; half char ?
-	    jr z, nohalf
-	    push hl
-	    ld b, #6
-halfwipe:
-	    ld a, (hl)
-	    and #0xF0
-	    ld (hl), a
-	    add hl, de
-	    djnz halfwipe
-	    pop hl
-	    inc hl
-	    dec c
-nohalf:	    xor a
-	    cp c
-	    jp z, vtdone
-	    ld a, #6
-lwipe2:	    push hl
-lwipe:	    ld b, c
-	    ld (hl), #0
-	    inc hl
-	    djnz lwipe
-	    pop hl
-	    add hl, de
+	    ; How many full bytes ?
+	    ld a,c
+	    and #3
+	    ld b,a		; remainder bits in B for the moment
+            ld a,c		; 3 * count
+	    add a
+	    add c
+	    rrca
+	    rrca
+	    and #0x3F		; 3/4 count - byte count for clear
+
+	    ld c,b		; move remainder into C
+
+            ld b,#8		; Lines
+            ld de,#64		; Add for next line
+
+rowloop:
+            push bc		; Save working state
+            push hl
+	    push af
+	    or a		; We might only have parts of a byte to do
+	    jr z, clear_end
+	    ld b,a
+            xor a
+clear_l:    ld (hl),a		; Clear whole bytes
+            inc hl
+            djnz clear_l
+clear_end:
+            ld a,c		; Check on partials 0 - nop wo
+            or a		;
+	    jr z,nextrow	; No extra bits
 	    dec a
-	    jr nz, lwipe2
-	    jp vtdone
+            jr z,clear_1	; Clear top 6 bits of next byte
+            dec a
+            jr z,clear_2	; Clear 4 bits
+            ld a,(hl)		; Clear 2 bits
+            and #0x3F
+nextrow:
+            ld (hl),a
+	    pop af
+            pop hl
+            add hl,de
+            pop bc
+            djnz rowloop
+            jp vtdone
+clear_1:
+	    ld a,(hl)
+            and #0x0F
+            jr nextrow
+clear_2:
+            ld a,(hl)
+            and #0x03
+            jr nextrow
 	
 _cursor_on:
 	    pop hl
@@ -699,18 +797,57 @@ cursor_do:
 	    push af
 	    ld (_cursorpos), de
 	    call addr_de
-	    ld c, #0xF0
-	    bit 0, b
-            jr z, cleft
-	    ld c, #0x0f
-cleft:	    ex de, hl
-	    ld de, #64
-	    ld b, #6
-cursorlines:ld a, (hl)
-	    xor c
-	    ld (hl), a
+	    ex de,hl
+	    ld de,#64
+	    ld a,b
+	    ld b,#8
+	    or a
+	    jr z,cursor0
+	    dec a
+	    jr z,cursor1
+	    dec a
+	    jr z,cursor2
+cursor3:
+cursor3_l:
+	    ; low 6 bits byte 2
+	    ld a,(hl)
+            xor #0x3F
+            ld (hl),a
 	    add hl, de
-	    djnz cursorlines
+	    djnz cursor3_l
+	    jp vtdone
+cursor0:    ; top bits byte 0
+            ld a,(hl)
+            xor #0xFC
+            ld (hl),a
+            add hl,de
+            djnz cursor0
+            jp vtdone
+cursor1:    ; 2 bits byte 0 4 byte 1
+            ld e,#63
+cursor1_l:
+            ld a,(hl)
+            xor #0x03
+            ld (hl),a
+            inc hl
+            ld a,(hl)
+            xor #0xF0
+            ld (hl),a
+            add hl,de
+            djnz cursor1_l
+	    jp vtdone
+cursor2:	; 4 bits byte 1 2 of byte 2
+            ld e,#63
+cursor2_l:
+            ld a,(hl)
+            xor #0x0F
+            ld (hl),a
+            inc hl
+            ld a,(hl)
+            xor #0xC0
+            ld (hl),a
+            add hl,de
+            djnz cursor2_l
 	    jp vtdone
 
 _cursor_off:

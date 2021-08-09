@@ -1,0 +1,43 @@
+ROOT = ../..
+include $(ROOT)/Applications/rules.armm4
+
+APPS = ue.fuzix ue.ansi ue
+
+SRCS  = ue.c term-fuzix.c term-ansi.c term.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(APPS) size.report
+
+ue.fuzix: $(CRT0NS) ue.o term-fuzix.o
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+ue.ansi: $(CRT0NS) ue.o term-ansi.o
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+ue: $(CRT0) ue.o term.o
+	$(LINKER) $^ -o $@.debug -ltermcap$(PLATFORM) $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+size.report: $(APPS)
+	ls -l $< > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel *.bin *.data *.text *.debug

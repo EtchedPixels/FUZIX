@@ -1,0 +1,66 @@
+ROOT = ../..
+include $(ROOT)/Applications/rules.armm4
+LINKER_OPT += -ltermcap$(PLATFORM) -lc$(PLATFORM)
+
+SRCSNS =
+
+SRCS  = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
+        adv08.c adv09.c adv10.c adv11.c adv12.c adv13.c adv14a.c adv14b.c \
+        myst01.c myst02.c myst03.c myst04.c myst05.c myst06.c myst07.c \
+	myst08.c myst09.c myst10.c myst11.c fortune-gen.c qrun.c fortune.c \
+	z1.c z2.c z3.c z4.c z5.c z8.c startrek.c hamurabi.c cowsay.c advint.c \
+	taylormade.c
+
+SRCSFP =
+
+OBJS = $(SRCS:.c=.o)
+OBJSFP = $(SRCSFP:.c=.o)
+OBJSNS = $(SRCSNS:.c=.o)
+
+APPS = $(OBJS:.o=)
+APPSFP = $(OBJSFP:.o=)
+APPSNS = $(OBJSNS:.o=)
+
+CFLAGS += -DCONFIG_IO_CUSS
+
+all: $(APPS) $(APPSNS) $(APPSFP) size.report
+
+$(APPS): $(CRT0)
+$(APPSFP): $(CRT0)
+$(APPSNS): $(CRT0NS)
+
+$(APPS) $(APPSNS): %: %.o
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+$(APPSFP): %: %.o
+	$(LINKER) $^ -o $@.debug $(LINKER_FP_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+fortune-gen-linux: fortune-gen.c
+	$(HOSTCC) -o $@ $<
+
+fortune.dat: fortune-gen-linux
+	./fortune-gen-linux < fort.db >fortune.dat
+
+fortune: | fortune.dat
+
+
+size.report: $(APPS) $(APPSNS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.data *.text *.debug *.dat size.report fortune-gen-linux
+
+rmbak:
+	rm -f *~ core

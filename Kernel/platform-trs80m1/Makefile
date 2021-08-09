@@ -88,3 +88,23 @@ trs80load-m3.bin: trs80load-m3.s
 	sdldz80 -i trs80load-m3.rel
 	makebin -s 17408 trs80load-m3.ihx trs80load-m3.tmp
 	dd if=trs80load-m3.tmp of=trs80load-m3.bin bs=256 skip=66 count=1
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	cp boot.jv3 $(IMAGES)
+	cp boot3.jv3 $(IMAGES)
+	# Build a file system to fit
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/filesys.img 256 21632)
+	# XTRS / FREHD 12MB disk header
+	cat xtrsheader > $(IMAGES)/hard1-0
+	# Followed by space padded to 64K (Cylinder 0) including 512 bytes
+	# space at the front for the disk label. This will eventually be
+	# used for hard disk bootstrapping with a single floppy block
+	dd if=/dev/zero of=$(IMAGES)/hard1-0 bs=256 seek=1 count=256
+	# And the disk image (Cylinder 1+)
+	cat $(IMAGES)/filesys.img >> $(IMAGES)/hard1-0
+	# And swap
+	dd if=/dev/zero bs=256 count=8192 >>$(IMAGES)/hard1-0
+	# Add a label
+	../tools/trslabel $(IMAGES)/hard1-0

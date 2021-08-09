@@ -579,4 +579,3 @@ Again:
 	printf("* %g\n/ %g\n", have.u_val/want.u_val, want.u_val/have.u_val);
 	goto Again;
 }
-

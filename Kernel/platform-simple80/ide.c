@@ -25,22 +25,22 @@ void devide_read_data(void) __naked
     __asm
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-            ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
 	    or a
             jr z, via_kernel
             di
-            ld a,#0x01
-            out (0x03),a
-            ld a,#0x58
-            out (0x03),a            
+            ld bc,(sio_reg)
+            out (c),b
+            ld a,(bits_to_user + 1)
+            out (c),a
 via_kernel:
+            ld bc, #IDE_REG_DATA                    ; setup port number
             inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
-            ld a,#0x01
-            out (0x03),a
-            ld a,#0x18
-            out (0x03),a
+            ld bc,(sio_reg)
+            out (c),b
+            ld a,(bits_to_user)
+            out (c),a
             ld a,(_int_disabled)
             or a
             ret z
@@ -54,22 +54,22 @@ void devide_write_data(void) __naked
     __asm
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-            ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
 	    or a
             jr z, wvia_kernel
             di
-            ld a,#0x01
-            out (0x03),a
-            ld a,#0x58
-            out (0x03),a            
+            ld bc,(sio_reg)
+            out (c),b
+            ld a,(bits_to_user + 1)
+            out (c),a
 wvia_kernel:            
+            ld bc, #IDE_REG_DATA                    ; setup port number
             otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
-            ld a,#0x01
-            out (0x03),a
-            ld a,#0x18
-            out (0x03),a
+            ld bc,(sio_reg)
+            out (c),b
+            ld a,(bits_to_user )
+            out (c),a
             ld a,(_int_disabled)
             or a
             ret z

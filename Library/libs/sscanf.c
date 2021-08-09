@@ -9,7 +9,6 @@
  *    (alias: Dalnefre')                      St. Paul, MN  55104
  *    dal@syntel.UUCP                         United States of America
  *  "It's not reality that's important, but how you perceive things."
- *
  */
 
 #include <stdio.h>
@@ -27,9 +26,13 @@ static FILE  string[1] =
 
   va_list ptr;
   int rv;
+  unsigned char *p = string->bufpos;
+
   va_start(ptr, fmt);
   string->bufpos = (unsigned char *)sp;
   rv = vfscanf(string,fmt,ptr);
   va_end(ptr);
+
+  string->bufpos = p;
   return rv;
 }

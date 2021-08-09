@@ -1,19 +1,4 @@
-PLATFORM = 68000
-CROSS_COMPILE=m68k-uclinux-
-CC = $(CROSS_COMPILE)gcc
-ASM = $(CROSS_COMPILE)as
-AR = $(CROSS_COMPILE)ar
-LINKER = $(CROSS_COMPILE)ld
-CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../Library/include -I../../Library/include/68000
-LINKER_OPT = -L../../Library/libs -lc68000
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../Library/elf2flt.ld
-CRT0 = ../../Library/libs/crt0_68000.o
-CRT0NS = ../../Library/libs/crt0nostdio_68000.o
-# For now while we get going. Really we want to use some kind of elf2zmagic
-# with relocs.
-ELF2FUZIX = elf2flt -s 16384
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.68000
 
 SRCSNS = \
 	basename.c \
@@ -148,15 +133,15 @@ $(APPTC): $(CRT0)
 $(APPCURSES): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 $(APPTC): %: %.o
-	$(LINKER) $^ -o $@.bin -ltermcap68000 $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 $(APPCURSES): %: %.o
-	$(LINKER) $^ -o $@.bin -lcurses68000 -ltermcap68000 $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -lcurses68000 -ltermcap68000 $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 size.report: $(APPS) $(APPSNS) $(APPTC)

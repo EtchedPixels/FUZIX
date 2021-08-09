@@ -65,6 +65,7 @@
 	.globl istack_top
 	.globl _ssig
 	.globl _udata
+	.globl syscall_platform
 
         .include "platform/kernel.def"
         .include "kernel-z80.def"
@@ -87,7 +88,8 @@ _doexec:
 	ld hl,(_udata + U_DATA__U_ISP)
 	ld sp,hl
 	ex de,hl
-	ld de,#PROGLOAD
+	ld d,h
+	ld e,#0
 	ld a,(_udata + U_DATA__U_PAGE+HIGHPAGE) ; pass high page to trampoline
 	jp _platform_doexec	; jump into the low memory stub
 
@@ -484,7 +486,7 @@ ___hard_irqrestore:
 	.area _CONST
 
 _sys_stubs:
-	jp unix_syscall_entry
+	jp syscall_platform	; different entry rules for thunked
 	nop
 	nop
 	nop

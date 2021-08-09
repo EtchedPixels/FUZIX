@@ -27,6 +27,7 @@
 	    .globl _mouse_probe
 	    .globl _int_disabled
 	    .globl _udata
+	    .globl syscall_platform
 
             ; exported debugging tools
             .globl _platform_monitor
@@ -437,7 +438,7 @@ rst28:	    ret
 	    nop
 	    nop
 	    nop
-rst30:	    jp syscall_high
+rst30:	    jp syscall_platform
 	    nop
 	    nop
 	    nop
@@ -544,7 +545,7 @@ irqsigret:
 	    inc sp
 	    ret
 
-syscall_high:
+syscall_platform:
 	    push ix
 	    ld ix,#0
 	    add ix,sp

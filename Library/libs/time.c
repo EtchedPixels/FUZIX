@@ -11,7 +11,10 @@ time_t time(time_t *t)
   static time_t tr;
   __ktime_t tmp;
   _time(&tmp, 0);
-  tr = tmp.time;
+  tr = tmp.low;
+#ifndef NO_64BIT
+  tr |= ((uint64_t)tmp.high) << 32;
+#endif
   if (t)
     *t = tr;
   return tr;

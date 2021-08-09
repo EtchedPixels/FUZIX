@@ -1,18 +1,23 @@
 #include <kernel.h>
 #include <devide.h>
+#include <devsd.h>
+#include <ds1302.h>
 
-/* Onboard I/O */
-static volatile uint8_t *cpuio = (volatile uint8_t *)0xF000;
+static const volatile uint8_t *iobase = (uint8_t *)IOBASE;
 
 /*
- * Map handling: allocate 4 banks per process
+ * Map handling: allocate 3 banks per process for now
  */
 
 void pagemap_init(void)
 {
     uint8_t i;
-    for (i = 36; i <= 63; i++)
+    for (i = 32 + 4; i < 64; i++)
         pagemap_add(i);
+    /* The common page must be the first one allocated so last added */
+    pagemap_add(32 + 3);
+    if (iobase[0x3F] & 3)
+        panic("bad CONFIG");
 }
 
 void map_init(void)
@@ -31,11 +36,11 @@ uint8_t platform_param(char *p)
 
 void device_init(void)
 {
+	ds1302_init();
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
-        /* Slowest RTI rate available */
-	cpuio[0x26] |= 3;
-	/* RTI interrupt enable */
-	cpuio[0x24] |= 0x40;
+#ifdef CONFIG_SD
+        devsd_init();
+#endif
 }

@@ -9,6 +9,7 @@
         .area _CODE
         .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
+	.area _VIDEO
         .area _CONST
         .area _INITIALIZED
         .area _DATA
@@ -22,6 +23,7 @@
         .area _GSINIT
         .area _GSFINAL
         .area _DISCARD
+	.area _FONT
         .area _COMMONMEM
 
         ; imported symbols
@@ -35,6 +37,8 @@
         .globl l__DISCARD
         .globl s__DATA
         .globl l__DATA
+	.globl s__FONT
+	.globl l__FONT
         .globl kstack_top
 
         ; startup code
@@ -47,6 +51,10 @@ init:
         ld hl, #s__DATA
         ld de, #s__COMMONMEM
         ld bc, #l__COMMONMEM
+        ldir
+	; and then the font
+        ld de, #s__FONT
+        ld bc, #l__FONT
         ldir
         ; and the discard
         ld de, #s__DISCARD

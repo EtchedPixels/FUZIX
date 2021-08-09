@@ -1,19 +1,6 @@
-PLATFORM = 68000
-CROSS_COMPILE=m68k-uclinux-
-CC = $(CROSS_COMPILE)gcc -DTARGET_Z80
-ASM = $(CROSS_COMPILE)as
-AR = $(CROSS_COMPILE)ar
-LINKER = $(CROSS_COMPILE)ld
-CFLAGS = -Os -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -m68000 -I../../../../Library/include -I../../../../Library/include/68000
-LINKER_OPT = -L../../../../Library/libs -lc68000
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../../../Library/elf2flt.ld
-CRT0 = ../../../../Library/libs/crt0_68000.o
-CRT0NS = ../../../../Library/libs/crt0nostdio_68000.o
-# For now while we get going. Really we want to use some kind of elf2zmagic
-# with relocs.
-ELF2FUZIX = elf2flt
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.68000
+
+CFLAGS += -DTARGET_Z80
 
 SRCS  = as0.c as1.c as2.c as3.c as4.c as6.c
 
@@ -31,11 +18,11 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 as: $(CRT0) $(OBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 nm: $(CRT0) nm.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 nm.c: obj.h

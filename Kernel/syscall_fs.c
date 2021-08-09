@@ -250,7 +250,7 @@ arg_t _ioctl(void)
 
 	oftp = of_tab + udata.u_files[fd];
 
-	if (!(isdevice(ino)) || rclass == IOCTL_CLASS_KERNEL) {
+	if (!(isdevice(ino) || issocket(ino)) || rclass == IOCTL_CLASS_KERNEL) {
 		udata.u_error = ENOTTY;
 		return -1;
 	}
@@ -261,7 +261,10 @@ arg_t _ioctl(void)
 		udata.u_error = EPERM;
 		return -1;
 	}
-
+#ifdef CONFIG_NET
+	if (issocket(ino))
+		return sock_ioctl(ino, request, data);
+#endif
 	dev = ino->c_node.i_addr[0];
 
 	return d_ioctl(dev, request, data);

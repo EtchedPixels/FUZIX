@@ -276,16 +276,17 @@ void ps2kbd_byte(uint_fast8_t byte)
     }
 }
 
-static uint8_t ps2busy = 0;
+uint8_t ps2busy = 0;
 
 void ps2kbd_poll(void)
 {
-    int n;
+    uint16_t n;
+
     if (ps2busy)
         return;
 
     n = ps2kbd_get();
-    if (n >= 0)
+    if (n < 0x8000)
         ps2kbd_byte(n);
 }
 
@@ -299,7 +300,7 @@ static void kbd_set_leds(uint_fast8_t byte)
 
 int ps2kbd_init(void)
 {
-    int r;
+    uint16_t r;
     uint8_t present = 0;
     uint8_t i;
 
@@ -311,48 +312,35 @@ int ps2kbd_init(void)
         r = ps2kbd_get();
         if (r != -1) {
             /* It talked to us */
-            if (r >= 0)
+            if (r < 0x8000)
                 present = 1;
         }
     }
 
     /* Try to reset, if it times out -> no keyboard */
     r = ps2kbd_put(0xFF);
+    if (r == 0)
+        r = ps2kbd_get();
     if (r != 0xFA) {
         ps2kbd_get();
-        if (r < 0 && present == 0) {
+        if ((r & 0x8000) && present == 0) {
             ps2busy = 0;
             return 0;
         }
     }
+
     ps2kbd_put(0xF6);	/* Restore default */
+    ps2kbd_get();	/* Eat the reply */
     ps2kbd_put(0xED);	/* LEDs off */
     ps2kbd_put(0x00);
     ps2kbd_put(0xF0);	/* Scan code 2 */
+    ps2kbd_get();
     ps2kbd_put(0x02);
+    ps2kbd_get();
     ps2kbd_put(0xF4);	/* Clear buffer and enable */
 
     present = 1;
 
-    /* Flush out anything left over */
-    for (i = 0; i < 4; i++)
-        ps2kbd_get();
-
-    /* Now check for mice */
-    for (i = 0; i < 4; i++) {
-        r = ps2mouse_get();
-        if (r >= 0)
-            break;
-    }
-
-    /* Try to reset, if it times out -> no mouse */
-    r = ps2mouse_put(0xFF);
-    if (r == 0xFA)
-        present |= 2;
-    /* Flush out anything left over */
-    for (i = 0; i < 4; i++)
-            ps2mouse_get();
-done:
     ps2busy = 0;
     return present;
 }

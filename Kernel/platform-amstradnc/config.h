@@ -18,11 +18,13 @@
 #define CONFIG_VT
 /* We have a key that needs remapping into unicode space */
 #define CONFIG_UNIKEY
-/* We use flexible 16K banks so use the helper */
-#define CONFIG_BANK16
+/* Custom banking 16 maps */
 #define MAX_MAPS 16
-/* We want the 4x6 font */
-#define CONFIG_FONT_4X6
+/* As we  have low resources default all binaries to about 44K so that
+   they fit within 3 pages */
+#define DEFAULT_TOP	0xB000
+/* We want the 6x8 font */
+#define CONFIG_FONT6X8
 /* We have audio (just about) */
 #define CONFIG_AUDIO
 
@@ -31,15 +33,15 @@
 
 /* VT definitions */
 #ifdef CONFIG_NC200
-#define VT_WIDTH	120
-#define VT_HEIGHT	21
-#define VT_RIGHT	119
-#define VT_BOTTOM	20
+#define VT_WIDTH	80
+#define VT_HEIGHT	16
+#define VT_RIGHT	79
+#define VT_BOTTOM	15
 #else
-#define VT_WIDTH	120
-#define VT_HEIGHT	10
-#define VT_RIGHT	119
-#define VT_BOTTOM	9
+#define VT_WIDTH	80
+#define VT_HEIGHT	8
+#define VT_RIGHT	79
+#define VT_BOTTOM	7
 #endif
 
 #define TICKSPERSEC 100   /* Ticks per second */
@@ -56,14 +58,14 @@
 /* Device parameters */
 #define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    9       /* Number of block buffers */
+#define NBUFS    5       /* Number of block buffers */
 #ifdef CONFIG_NC200
 #define NMOUNTS	2	  /* Floppy can also be mounted */
 #define BOOTDEVICENAMES "hd#,fd#"
 #define MAX_BLKDEV 1  /* Single floppy */
 #else
 #define NMOUNTS	 1	  /* Number of mounts at a time - nothing mountable! */
-#define BOOTDEVICE 0x0100	/* Only one possible option */
+#define BOOTDEVICE 0x0000	/* Only one possible option */
 #endif
 
 #define CONFIG_LARGE_IO_DIRECT(m)	1

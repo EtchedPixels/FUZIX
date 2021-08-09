@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <termios.h>
 
 #include <sys/types.h>
 #include <sys/graphics.h>
@@ -64,8 +65,9 @@ static void decode_mode_c(int c)
     return;
   }
   printf("Mode: %d%s\n", disp.mode, c == disp.mode ? " (Current)":"");
-  printf("Size: %d x %d (%d x %d)\n",
-      disp.width, disp.height, disp.stride, disp.lines);
+  printf("Size: %d x %d (%d x %d) [%d x %d]\n",
+      disp.width, disp.height, disp.stride, disp.lines,
+      disp.twidth, disp.theight);
   printf("Format: ");
   format(disp.format);
   printf("\nHardware: ");
@@ -171,6 +173,7 @@ static void list_modes(void) {
 }
 
 static void set_mode(int m) {
+  struct winsize ws;
   disp.mode = m;
   if (ioctl(0, GFXIOC_GETMODE, &disp))
     ioctl_err();
@@ -180,6 +183,12 @@ static void set_mode(int m) {
     exit(1);
   }
   if (ioctl(0, GFXIOC_SETMODE, &disp) < 0)
+    ioctl_err();
+  ws.ws_xpixel = disp.width;
+  ws.ws_ypixel = disp.height;
+  ws.ws_col = disp.twidth;
+  ws.ws_row = disp.theight;
+  if (ioctl(0, TIOCSWINSZ, &ws) < 0)
     ioctl_err();
 }
 

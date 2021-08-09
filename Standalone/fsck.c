@@ -92,8 +92,10 @@ static void pass5(void);
 static int yes_noerror(void)
 {
     static char buf[16];
-    if (yflag)
+    if (yflag) {
+        puts("y");
         return 1;
+    }
     do {
         if (fgets(buf, 15, stdin) == NULL)
             exit(1);

@@ -82,8 +82,8 @@ static int maps_needed(uint16_t top)
 int pagemap_alloc(ptptr p)
 {
 	uint8_t *ptr = (uint8_t *) & p->p_page;
-	int needed = maps_needed(p->p_top);
-	int i;
+	uint_fast8_t needed = maps_needed(p->p_top);
+	uint_fast8_t i;
 
 #ifdef SWAPDEV
 	/* Throw our toys out of our pram until we have enough room */
@@ -179,6 +179,10 @@ int pagemap_prepare(struct exec *hdr)
 	/* If it is relocatable load it at PROGLOAD */
 	if (hdr->a_base == 0)
 		hdr->a_base = PROGLOAD >> 8;
+	if (hdr->a_base != (PROGLOAD >> 8)) {
+		udata.u_error = ENOEXEC;
+		return -1;
+	}
 	/* If it doesn't care about the size then the size is all the
 	   space we have */
 	if (hdr->a_size == 0)

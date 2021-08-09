@@ -56,7 +56,7 @@ relocated:
 ; vector. As we're running from 0x0000, we can do that directly.
 
 	ld a, (suspend_map + 3)
-	out (0x12), a
+	out (0x13), a
 	jp (hl)
 
 no_resume:
@@ -84,7 +84,7 @@ no_resume:
 	out (0x13), a ; Page 0x86 contains the common.
 
 	; And go.
-	jp 0x0213
+	jp 0x0223
 
 	; Copies a single page. Source is in A, dest is in B.
 	; Uses 0x4000 as the source and 0x8000 as the dest.
@@ -103,13 +103,13 @@ copy_page:
 ;	We should hide a logo in here ...
 ;
 signature:	.ascii "NC100PRG"
-padding2:	.db	0,0,0,0,0,0,0,0
+padding2:	.db	0,0,0,0,0,3,0,1
+		jp 0xC220		; start as seen from top bank
+		.asciz	"FUZIX LOADER"
 
 ;
 ;	At this point we are mapped at 0xC000 so this code is running from
-;	0xC210 in truth. Only at the jp to switch do we end up mapped low
+;	0xC220 in truth. Only at the jp to switch do we end up mapped low
 ;
-start:		jp 0xC100
-;
-;	Drops into the copy of the image
-;
+; This is 0xC220 -> jump to next byte but in right page
+		jp 0xC100		; start of our code

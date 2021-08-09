@@ -38,6 +38,8 @@ int nfcb;
 void to_emulator(void) __naked
 {
 __asm
+                ld a,#0x10
+                out (0xFD),a
 		ld hl,(_image + 6)	; code size (and copy size)
 		ld b,h
 		ld c,l			; Save copy size
@@ -55,7 +57,7 @@ __asm
 		push de
 		ldir
 		pop de
-		push de			; save DE so we ret to it at the end
+                push de
 		;
 		;	Relocator
 		;	DE = relocation address
@@ -68,8 +70,9 @@ __asm
 		push de
 		exx
 		pop de		; relocation base into DE and alt DE
+                exx
 		ld b,#0		; code base
-		ex de,hl		; de is relocations as loop swaps
+		ex de,hl	; de is relocations as loop swaps
 
 		;
 		;	Taken from the loader
@@ -77,10 +80,8 @@ __asm
 relnext:
 		; Read each relocation byte from image and apply it to the
 		; CP/M emulator binary
-		ex de,hl
-		ld a,(hl)
-		inc hl
-		ex de,hl
+		ld a,(de)
+		inc de
 		; 0 means done, 255 means skip 254, 254 or less means
 		; skip that many and relocate  (runs are 255,255,....)
 		or a		; 0 ?
@@ -106,6 +107,7 @@ relocdone:
                 ld hl,#16
                 add hl,de
                 jp (hl)	; entry point
+
 __endasm;
 }
 
@@ -134,7 +136,7 @@ int main(int argc, char *argv[])
 {
   uint8_t top;
   if (argc < 2) {
-    writes("runcpm [app.com] [args...]\n");
+    writes("runcpm app.com [args...]\n");
     exit(1);
   }
 
@@ -154,11 +156,11 @@ int main(int argc, char *argv[])
     writes("runcpm: emulator.bin missing\n");
     exit(1);
   }
-  if (read(fd, image, EMULATOR_SIZE) != EMULATOR_SIZE) {
+  if (read(fd, image, EMULATOR_SIZE) < 2200) {
     writes("runcpm: emulator.bin too short\n");
     exit(1);
   }
-  if (image[0] != 0x18 || image[3] != 'L' || image[4] != 'Z' || image[5] != 'L' || image[6] != '1') {
+  if (image[0] != 0xA9 || image[1] != 0x80) {
     writes("runcpm: emulator.bin invalid\n");  
     exit(1);
   }

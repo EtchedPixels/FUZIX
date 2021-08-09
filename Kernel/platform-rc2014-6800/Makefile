@@ -43,7 +43,7 @@ $(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
 clean:
 	rm -f $(OBJS) *.o core *~ fuzix.bin fuzix.tmpmap
 
-image:
+image: loader
 	$(CROSS_LD) -b -C 0x100 -S 0xF400 -Z 0x20 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
 	rc2014-6800.o ../start.o ../version.o ../lowlevel-6800.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
@@ -54,3 +54,22 @@ image:
 	../usermem.o ../usermem_std-6800.o devtty.o /opt/cc68/lib/lib6800.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=1
+
+loader.o: loader.S
+	cpp -E $< >$*.s
+	$(CROSS_AS) $(ASOPTS) $*.s
+
+loader: loader.o
+	$(CROSS_LD) -b -C 0x00 -Z 0xF0 -o loader.bin -m loader.map loader.o
+
+diskimage: loader
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=../../disk.img bs=40017920 conv=sync
+	# Add the bootstrap loader
+	dd if=loader.bin of=../../disk.img conv=notrunc
+	# Add the file system
+	dd if=../../filesys.img of=../../disk.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=fuzix.img of=../../disk.img bs=512 seek=1 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M ../../disk.img > ../../emu-ide.img

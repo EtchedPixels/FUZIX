@@ -121,7 +121,6 @@ void updatetod(void)
 		tod_deci--;		/* Wrapping here is fine */
 		return;
 	}
-addtod:
 	if (slide < 0)
 		slide += 60;		/* Seconds wrapped */
 	tod.low += slide;

@@ -38,7 +38,7 @@ _ugetw:
 _uzero:
 	tsx
 	ldx 2,x			; size
-	xgdx			; swap over as we want pointer in D
+	xgdx			; swap over as we want pointer in X
 	jsr map_process_always
 	; Optimize, unroll etc ?
 uzerolp:
@@ -54,6 +54,7 @@ _uget:
 	xgdy		; Y is now source
 	tsx
 	ldd 4,x		; len
+	beq nowork
 	addd __end
 	std __end	; stop marker
 	ldx 2,x		; to
@@ -66,6 +67,7 @@ ugetl:
 	inx
 	cpy __end
 	bne ugetl
+nowork:
 	clrb
 	clra
 	rts
@@ -76,6 +78,7 @@ _uput:
 	xgdy		; Y is now source
 	tsx
 	ldd 4,x		; len
+	beq nowork
 	addd __end
 	std __end	; stop marker
 	ldx 2,x		; to

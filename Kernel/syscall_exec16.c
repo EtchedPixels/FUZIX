@@ -60,6 +60,7 @@ arg_t _execve(void)
 	staticfast uaddr_t top;
 	uaddr_t bin_size;	/* Will need to be bigger on some cpus */
 	uaddr_t bss;
+	uint_fast8_t mflags;
 
 	top = ramtop;
 
@@ -69,6 +70,12 @@ arg_t _execve(void)
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
 	      (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
+		udata.u_error = EACCES;
+		goto nogood;
+	}
+
+	mflags = fs_tab[ino->c_super].m_flags;
+	if (mflags & MS_NOEXEC) {
 		udata.u_error = EACCES;
 		goto nogood;
 	}
@@ -110,6 +117,12 @@ arg_t _execve(void)
 		udata.u_error = ENOMEM;
 		goto nogood2;
 	}
+#ifdef DP_SIZE
+	if (hdr.a_zp > DP_SIZE) {
+		udata.u_error = ENOMEM;
+		goto nogood2;
+	}
+#endif
 	progptr = bin_size + 1024 + bss;
 	if (bin_size < 64 || progload < PROGLOAD || top - progload < progptr || progptr < bin_size) {
 		udata.u_error = ENOMEM;
@@ -152,15 +165,18 @@ arg_t _execve(void)
 	udata.u_top = top;
 	udata.u_ptab->p_top = top;
 
-	/* setuid, setgid if executable requires it */
-	if (ino->c_node.i_mode & SET_UID)
-		udata.u_euid = ino->c_node.i_uid;
-
-	if (ino->c_node.i_mode & SET_GID)
-		udata.u_egid = ino->c_node.i_gid;
+	if (!(mflags & MS_NOSUID)) {
+		/* setuid, setgid if executable requires it */
+		if (ino->c_node.i_mode & SET_UID)
+			udata.u_euid = ino->c_node.i_uid;
+		if (ino->c_node.i_mode & SET_GID)
+			udata.u_egid = ino->c_node.i_gid;
+	}
 
 	/* FIXME: In the execve case we may on some platforms have space
 	   below PROGLOAD to clear... */
+
+	udata.u_codebase = progload;
 
 	/*
 	 * We place the stubs below the program in the hole left by the
@@ -192,6 +208,11 @@ arg_t _execve(void)
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk() */
 	uzero((uint8_t *)progptr, bss);
+
+	/* Wipe zero page/direct page spaces if present */
+#ifdef DP_SIZE
+	uzero((uint8_t *)DP_BASE, DP_SIZE);
+#endif
 
 	/* Set initial break for program */
 	udata.u_break = (int)ALIGNUP(progptr + bss);
@@ -346,6 +367,25 @@ static struct coredump corehdr = {
 	16,
 };
 
+static struct coremem memhdr = {
+	COREHDR_MEM
+};
+
+void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags)
+{
+	memhdr.mh_base = base;
+	memhdr.mh_len = len;
+	memhdr.mh_flags = flags;
+	udata.u_base = (uint8_t *)&memhdr;
+	udata.u_sysio = true;
+	udata.u_count = sizeof(memhdr);
+	writei(ino, 0);
+	udata.u_base = (uint8_t *)base;
+	udata.u_sysio = false;
+	udata.u_count = len;
+	writei(ino, 1);
+}
+
 uint8_t write_core_image(void)
 {
 	inoptr parent = NULLINODE;
@@ -357,24 +397,20 @@ uint8_t write_core_image(void)
 	if (uput("core", udata.u_syscall_sp - 5, 5))
 		return 0;
 
-	ino = n_open(udata.u_syscall_sp - 5, &parent);
+	ino = n_open((uint8_t *)udata.u_syscall_sp - 5, &parent);
 	if (ino) {
 		i_deref(parent);
 		return 0;
 	}
 	if (parent) {
 		i_lock(parent);
-		if (ino = newfile(parent, "core")) {
+		if ((ino = newfile(parent, (uint8_t *)"core")) != NULL) {
 			ino->c_node.i_mode = F_REG | 0400;
 			setftime(ino, A_TIME | M_TIME | C_TIME);
 			wr_inode(ino);
 			f_trunc(ino);
-
-			/* FIXME: need to add some arch specific header bits, and
-			   also pull stuff like the true sp and registers out of
-			   the return stack properly */
-
-			corehdr.ch_base = MAPBASE;
+			/* Write the header */
+			corehdr.ch_base = pagemap_base;
 			corehdr.ch_break = udata.u_break;
 			corehdr.ch_sp = udata.u_syscall_sp;
 			corehdr.ch_top = PROGTOP;
@@ -383,16 +419,15 @@ uint8_t write_core_image(void)
 			udata.u_sysio = true;
 			udata.u_count = sizeof(corehdr);
 			writei(ino, 0);
-			udata.u_sysio = false;
-			udata.u_base = MAPBASE;
-			udata.u_count = udata.u_break - MAPBASE;
-			writei(ino, 0);
-			udata.u_base = udata.u_sp;
-			udata.u_count = PROGTOP - (uint16_t)udata.u_sp;
-			writei(ino, 0);
+			/* Ask the architecture to dump the user registers */
+//TODO			coredump_user_registers(ino);
+			/* Ask the memory manager to dump the memory map */
+			coredump_memory_image(ino);
 			i_unlock_deref(ino);
+			i_unlock_deref(parent);
 			return W_COREDUMP;
 		}
+		i_unlock_deref(parent);
 	}
 	return 0;
 }

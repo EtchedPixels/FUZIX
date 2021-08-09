@@ -24,6 +24,8 @@
 
 	.export preemption
 
+	.export deliver_signals
+
 	.setcpu 6803
 
 #include "platform/kernel.def"
@@ -92,24 +94,28 @@ outstring:
 	bra outstring
 
 outx:
+	pshb
+	psha
 	stx @tmp
 	ldab @tmp
 	bsr outcharhex
 	ldab @tmp+1
 	bsr outcharhex
+	pula
+	pulb
 outsdone:
 	rts
 
 outd:
-	pshb
 	psha
+	pshb
 	tab
 	bsr outcharhex
-	pula
-	psha
-	bsr outcharhex
-	pula
 	pulb
+	pshb
+	bsr outcharhex
+	pulb
+	pula
 	rts
 
 deliver_signals:
@@ -122,16 +128,31 @@ deliver_signals_2:
 	ldx #_udata+U_DATA__U_SIGVEC
 	abx
 	abx
-	ldx 0,x
+	ldd 0,x
 	beq signal_raced
+	clr 0,x
+	clr 1,x
+	clr _udata+U_DATA__U_CURSIG
+#ifdef WITH_6303
+	.setcpu 6303
+	xgdx
+	.setcpu 6803
+#else
+	std @tmp
+	ldx @tmp
+#endif
 	clrb
-	pshb
+	; The value we need is in A so push AB not BA and we get the
+	; right 16bit result
 	psha
-	ldd #signal_return
-	psha
 	pshb
-	jmp ,x
-signal_return:
+	; stack the vector
+	pshx
+	ldx PROGLOAD+16
+	jsr ,x
+	; discard the vector
+	pulx
+	pulx
 	sei
 	sts _udata+U_DATA__U_SYSCALL_SP
 	lds #kstack_top
@@ -207,7 +228,10 @@ _doexec:
 	des				; offset by 1 on the 680X
 	clr _udata+U_DATA__U_INSYS
 	cli
-	ldd #PROGLOAD
+	pshx
+	pula				; base is exec addr & FF00
+	ins
+	clrb
 	jmp 0,x
 
 trap_handler:
@@ -333,9 +357,6 @@ not_running:
 
 	.code
 
-;
-;	FIXME: eventually test 6803 v 6303 and for 6303
-;	set features to 3 (xgdx as well as 6803) 
 ;
 
 	.setcpu 6303

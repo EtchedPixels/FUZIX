@@ -37,6 +37,8 @@ fork_next:
 	ld a, (de)
 	out (0x12), a		; 0x8000 maps the parent
 	inc de
+	cp #0x43		; graphics page  - same in both so skip
+	jr z, skip_map
 	exx
 	ld hl, #0x8000		; copy the bank
 	ld de, #0x4000
@@ -44,6 +46,7 @@ fork_next:
 				; further
 	ldir
 	exx
+skip_map:
 	call map_kernel		; put the maps back so we can look in p_tab
 	djnz fork_next
 	ld a, c

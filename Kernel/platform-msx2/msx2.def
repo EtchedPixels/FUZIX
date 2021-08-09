@@ -33,6 +33,7 @@ BIOS_VERSION1		    .equ 0x002B
 BIOS_VERSION2		    .equ 0x002C
 BIOS_MACHINE_TYPE	    .equ 0x002D
 BIOS_VDP_IOPORT		    .equ 0x0006
+BIOS_ROMSLOT		    .equ 0xFCC1
 
 ;
 ; OpenMSX Debug ports
@@ -44,4 +45,9 @@ OPENMSX_DEBUG2		    .equ 0x2F
 ; TurboR CPU mode select
 ;
 BIOS_CHGCPU		    .equ 0x180
+BIOS_EXTBIO		    .equ 0xFFCA
 
+;
+; BIOS routines we need
+;
+RDSLT			    .equ 0x000C

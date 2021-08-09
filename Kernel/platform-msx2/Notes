@@ -1,0 +1,69 @@
+# MSX2 Explanatory Notes
+
+## Memory Management
+
+MSX2 adds a proper 16K bank manager (known as a "mapper") for RAM (up to 512K
+on a standard system), where any bank can appear anywhere. All of this however
+is within the existing slot/subslot mechanism so the MSX1 delights apply to
+memory mapped I/O devices and the mapper itself lives in a slot or subslot.
+You can in fact have several mappers but we don't support it.
+
+In the normal case all of the MSX2 code runs from RAM. Our memory management
+is implemented like a "normal" 16K banked system. The standard map functions
+keep a cache of the four (potentiually write only) mapping registers and
+everything there looks like a normal Fuzix process
+
+## Slots And I/O
+
+In the low 16K we pack a bunch of routines for doing slot switching. We need
+to switch the 0x4000-0x7FFF range and sometimes 0x8000-0xBFFF. We need the
+top 16K switchable for the bizarre MSX sub slot mechanism so it has to be
+below 16K. In addition these routines must avoid using the stack whilst they
+remap the top of the range to set up subslots.
+
+mapslot_bank1 and mapslot_bank2 do the magic rituals for the bank selection.
+This happens independently of the MSX2 mapper. That is you can have I/O mapped
+in at 0x4000 and change the mapper for that address range whilst I/O is mapped.
+The I/O will stay visible until the mapping in the old MSX1 way is set back
+to the mapper slot/subslot.
+
+*WARNING*
+A practical side effect of this and the interrupt handling is that you must
+have interrupts off when other mappings are present as the interrupt logic
+does not save and restore the entire slot/subslot setup. We could add logic
+for the special cases but it gets very expensive. We could also go with
+a soft interrupt and keep a serial driver in high memory if needed.
+
+## Device Drivers
+
+For MMIO we can generally not use the existing driver frameworks well as we
+have to keep the drvier code and everything it depends upon in the top or
+bottom 16K or common memory space. The compiler support code ends up in the
+segment called _CODE and we use _CODE and_CODE1 to pack all the code we want
+low into the bottom of memory so that the C support code and specific drivers
+are the only things packed low with the main kernel code (_CODE2) following.
+
+## Bootstrap
+
+The current setup uses an ASCII 8K style mapping for the boot part of the
+system (there is no reason there couldn't also be an MSXDOS-2 one).
+
+The bootstrap is responsible for the following steps
+
+- Turn on R800 mode
+- Locate the mapper
+- Size the memory
+- Install the kernel into pages 3,2,1,4 of the mapper
+- Scan the ROMs
+- Switch to all RAM mode
+- Pass the platform information on to the Kernel at 0x100
+
+The kernel will then map 0x4000 into RAM as it expects this may be used by
+the bootstap mapping.
+
+## Device Probing
+
+The MSX1 port uses ROM hashes to find devices. The MSX2 port the drivers
+scan the slots. Which method is better and to be adopted is unclear at this
+point.
+

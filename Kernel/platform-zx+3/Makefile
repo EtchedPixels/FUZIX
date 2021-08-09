@@ -60,3 +60,8 @@ image:
 	cat loader.bin ../fuzix.bin padding.bin >disk.raw
 	# And generate a 40 track plus3 disk from it
 	../tools/raw2dsk disk.raw fuzix.dsk
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	cp fuzix.dsk $(IMAGES)/

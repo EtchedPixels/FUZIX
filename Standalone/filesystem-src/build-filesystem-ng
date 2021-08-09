@@ -414,7 +414,7 @@ sub build_dsk {
         my $status = $? >> 8;
         die "ERROR ucp failed - exit status $status\n";
     }
-    if (system "../fsck $args{fsck_args} $args{file}") {
+    if (system "../fsck -y $args{fsck_args} $args{file}") {
         my $status = $? >> 8;
         if ($status & ~1) {
             die "ERROR fsck failed - exit status $status\n";

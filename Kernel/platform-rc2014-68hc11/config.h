@@ -14,16 +14,18 @@
  *	style MMU card and linear RAM and that might be better
  */
 /* 16K reported page size */
-#define CONFIG_PAGE_SIZE	16
+#define CONFIG_PAGE_SIZE	48
 /* We use flexible 16K banks with a fixed common */
-#define CONFIG_BANK16FC
-#define CONFIG_BANKS	4	/* 4 banks 16K page size */
-#define MAX_MAPS	32
+#define CONFIG_BANK16
+#define CONFIG_BANKS	4
+
+#define MAX_MAPS	(32-3)
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-/* Arguments the other way around */
+/* Arguments are tricky. The 680x binaries stack one way the 68HC11 the other.
+   We deal with that in the syscall stubs and in crt0 */
 #define CONFIG_CALL_R2L
 
 #define TICKSPERSEC 20	    /* Ticks per second */
@@ -31,21 +33,35 @@
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100
-#define PROGTOP     0xBE00
-                            /* BE00-BFFF is the udata copy */
+#define PROGTOP     0xEE00
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
-#define SWAP_SIZE   0x60 	/* 48K in blocks (prog + udata) */
+/* We swap a range including the internal I/O window. This is safe because we
+   map the memory into the swap window not directly */
+#define SWAP_SIZE   0x7A 	/* 61K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xC000	/* Swap out udata and program */
+#define SWAPTOP	    0xF400	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
-#define swap_map(x)	(x)
+/*
+ *	When the kernel swaps something it needs to map the right page into
+ *	memory using map_for_swap and then turn the user address into a
+ *	physical address. We use the second 16K window.
+ */
+#define swap_map(x)	((uint8_t *)((((x) & 0x3FFF)) + 0x4000))
 
 #define CONFIG_IDE
-#define MAX_BLKDEV 1
+#define MAX_BLKDEV 3
+#define CONFIG_SD
+#define SD_DRIVE_COUNT 1
+
+/* On-board DS1302, we can read the time of day from it */
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
+#define CONFIG_RTC_EXTENDED
+#define CONFIG_RTC_INTERVAL	100
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
 
@@ -62,3 +78,9 @@ extern uint16_t swap_dev;
 #define platform_copyright()
 
 #define BOOTDEVICENAMES "hd#"
+
+/* 68HC11 specific stuff */
+#define IOBASE	0xF000
+
+#define DP_BASE 0x0000
+#define DP_SIZE 0x00C0	/* C0-FF is for the kernel */

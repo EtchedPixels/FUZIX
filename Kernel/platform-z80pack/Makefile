@@ -41,3 +41,12 @@ image:
 	sdasz80 -o bootblock.s
 	sdldz80 -m -i bootblock.rel
 	makebin -s 128 bootblock.ihx > bootblock.bin
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	# Boot floppy
+	dd if=bootblock.bin of=$(IMAGES)/boot.dsk bs=256256 conv=sync
+	dd if=../fuzix.bin of=$(IMAGES)/boot.dsk bs=1 seek=193024 conv=notrunc
+	# Root hard disk
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/hd-fuzix.dsk 128 8160)

@@ -1,3 +1,4 @@
+#define CONFIG_MULTI
 #define CONFIG_IDE
 #define CONFIG_SD
 #define SD_DRIVE_COUNT	2

@@ -44,6 +44,7 @@ extern int getlogin_r(char * __buf, size_t __size);
 extern int system(const char *);
 extern int pause(void);
 extern pid_t fork(void);
+extern pid_t vfork(void);
 extern char *getcwd(char *, int);
 extern void swab(const void * __from, void * __to, ssize_t __count);
 

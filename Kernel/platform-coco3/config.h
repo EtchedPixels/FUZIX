@@ -97,7 +97,7 @@ extern unsigned char vt_map( unsigned char c );
 
 /* redefine tty queue primitives to use our banking ones */
 void putq( unsigned char *ptr, char c );
-unsigned char getq( unsigned *ptr );
+unsigned char getq( unsigned char *ptr );
 #define CONFIG_INDIRECT_QUEUES
 typedef unsigned char *queueptr_t;
 #define GETQ(p) getq(p)

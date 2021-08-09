@@ -371,7 +371,7 @@ void display_process(struct p_tab *pp, int i)
 		tnow = localtime(&t);
 		/* Make t the unix time at process start according to the clock
 		   at this moment in time */
-		t -= ticks.time/10;
+		t -= ticks.low/10;
 		t += pp->p_time / 10;
 
 		tm = localtime(&t);

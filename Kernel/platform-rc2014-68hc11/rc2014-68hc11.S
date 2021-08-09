@@ -15,6 +15,9 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_process_x
+	    .globl platform_interrupt
+	    .globl copy_common
+	    .globl cur_map
 
             ; exported debugging tools
             .globl platform_monitor
@@ -26,7 +29,7 @@
 
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../kernel-hc11.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -35,9 +38,104 @@
 	    .section .common
 
 platform_monitor:
+	    ldx #ccreg
+	    jsr outstring
+	    tsx
+	    ldab 2,x
+	    jsr outcharhex
+	    ldx #dreg
+	    jsr outstring
+	    tsx
+            ldab 4,x
+	    jsr outcharhex
+	    tsx
+            ldab 3,x
+	    jsr outcharhex
+	    ldx #xreg
+            jsr outstring
+	    tsx
+            ldab 5,x
+            jsr outcharhex
+	     tsx
+            ldab 6,x
+            jsr outcharhex
+	    ldx #yreg
+            jsr outstring
+	    tsx
+            ldab 7,x
+            jsr outcharhex
+	     tsx
+            ldab 8,x
+            jsr outcharhex
+            ldx #pcreg
+            jsr outstring
+	    tsx
+            ldab 9,x
+            jsr outcharhex
+	    tsx
+            ldab 10,x
+            jsr outcharhex
+            ldx #endtrap
+            jsr outstring
+	    tsx
+
+	    ldaa #8
+stkrow:
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+	    jsr outx
+            ldab #':'
+	    jsr outchar
+	    ldab #' '
+            jsr outchar
+            clrb
+stkword:
+	    pshb
+	    psha
+	    ldd 10,x
+            jsr outd
+	    pula
+	    pulb
+	    inx
+	    inx
+	    incb
+	    cmpb #8
+	    beq endrow
+	    pshb
+            ldab #32
+	    jsr outchar
+	    pulb
+	    bra stkword
+endrow:	    deca
+	    bne stkrow
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+
 platform_reboot:
 	    jsr map_kernel
 	    jmp rebootit
+
+
+ccreg:	    .byte 13,10
+	    .ascii "Trap: CC = $"
+	    .byte 0
+dreg:       .byte 13,10
+	    .ascii "      AB = $"
+	    .byte 0
+xreg:       .byte 13,10
+	    .ascii "       X = $"
+	    .byte 0
+yreg:       .byte 13,10
+	    .ascii "       Y = $"
+	    .byte 0
+pcreg:      .byte 13,10
+	    .ascii "      PC = $"
+	    .byte 0
+endtrap:    .byte 13,10,0
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to
@@ -58,9 +156,10 @@ __hard_ei:
 	    cli			; on 680x cli enables IRQs!!!
 	    rts
 
+;
+;	Old flag is passed to use in B
+;
 __hard_irqrestore:
-	    tsx
-	    ldab 2,x
 	    andb #16		; IRQ flag
 	    bne irq_on
 	    cli
@@ -83,12 +182,46 @@ init_early:
             rts			; stack was copied so this is ok
 
 init_hardware:
+	    ldx #IOBASE
+	    ; set up the timer
+            ldd 0x0E,x		; system timer clock
+	    addd timer_step
+	    std 0x18,x		; set compare
+	    clr 0x20,x		; disable output pin logic
+	    bset 0x22,x 0x40	; turn on timer 2 interrupt
             ; set system RAM size
 	    ldd #512
 	    std ramsize
 	    ldd #448
 	    std procmem
             jmp program_vectors_k
+
+	     ;
+	     ;	The timers require we know 16bit load/stores are generated
+	     ;  so we do this bit in assembler
+	     ;
+platform_interrupt:
+	    ldx #IOBASE
+	    ldaa #0x55
+	    staa 0x3a,x		; reset watchdog. We shouldn't have it on
+	    coma		; but we might as well reset it in case
+	    staa 0x3a,x
+	    bset 0x23,x 0x40	; clear OC2F
+timer_tick_again:
+	    inc timer_ticks
+	    ldd 0x0E,x		; get the current timer
+	    std timer_tmp
+	    ldd 0x18,x		; current match
+	    addd timer_step	; move on 1/50th of a second
+	    std 0x18,x
+	    subd timer_tmp	; if x > timer_tmp then we are good
+				; if not then we missed ticks
+	    bmi timer_tick_again
+timer_good:
+	    jmp platform_event
+
+timer_tmp:
+	    .word 0
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
@@ -102,6 +235,7 @@ program_vectors:
 	    ; our C caller will invoke us with the pointer in D
 	    ; just pass it on
 
+	    xgdx
 	    jsr map_process
 	    ;
 	    ; We need to split these up
@@ -119,13 +253,14 @@ program_vectors_k:
 	    std 0xFFF4		; NMI vector
 	    ldd #interrupt_handler
 	    std 0xFFF2		; Interrupt from RC2014
-	    std 0xFFF0		; Interrupt from RTI (RTI overflow)
-	    std 0xFFD6		; Interrupt from SC serial
+	    std 0xFFE6		; TOC2
+	    ldd #sci_intr
+	    std 0xFFD6		; Interrupt from SCI serial
 	    ldd #nullirq
+	    std 0xFFF0		; Interrupt from RTI (RTI overflow)
 	    std 0xFFEE		; TC1
 	    std 0xFFEA		; TC2
 	    std 0xFFE8		; TOC1
-	    std 0xFFE6		; TOC2
 	    std 0xFFE4		; TOC3
 	    std 0xFFE2		; TOC4
 	    std 0xFFE0		; TIC4/TOC5
@@ -142,12 +277,30 @@ nullirq:
 	    rti
 
 ;
+;	Copy the common memory into the page given (in D)
+;
+copy_common:
+	   bsr map_for_swap	; map the page in B at 0x4000
+	   ldx #__common_start
+	   ldy #__common_start-0x8000	; offset into new page
+commoncp:
+	   ldd ,x
+           std ,y
+           inx
+           inx
+           iny
+           iny
+	   cpx #__common_end
+	   bne commoncp
+	   bra map_kernel	; restore the map
+
+;
 ;	Map the current process, do not change register values
 ;
 map_process_always:
 map_process_always_di:
 	    pshx
-	    ldx #udata + U_DATA__U_PAGE
+	    ldx #udata + U_DATA__U_PAGE+1
 	    jsr map_bank
 	    pulx
 	    rts
@@ -178,18 +331,22 @@ kmap:
 	    .byte 0x22
 
 ;
-;	For now we are using the 4x16K MMU but this will probably change.
-;	Switch the low 48K, the task switch flips the top. Hack until we
-;	enable the real MMU and banking setup.
+;	Switch the low 48K of the memory map. We switch the top bank in
+;	the task switcher as it contains stacks and other interesting items.
 ;
-;	Probably we should use the 8K/56K MMU card.
+;	This all works because the only time we access memory belonging to
+;	another process is when we swap and swap is handled by a different
+;	mapping technique
 ;
 map_process_x:
-	    ldab #P_TAB__P_PAGE_OFFSET
+	    pshb
+	    ldab #P_TAB__P_PAGE_OFFSET+1
 	    abx
+	    bra map_in
 map_process_2:
 map_bank:
 	    pshb
+map_in:
 	    ; We must load these both before the map changes because we
 	    ; might be unmapping the table X points to
 	    ldab 2,x
@@ -199,10 +356,15 @@ map_bank:
 	    stx cur_map
 	    stx 0xFE78
 	    pulb
-	    
 	    rts
 
-
+;
+;	Map the page in B into the 16K window for swap
+;
+map_for_swap:
+	    stab cur_map+1
+	    stab 0xFE79
+	    rts
 
 ;
 ;	Restore mapping. This may not be sufficient. We may need to do a
@@ -247,11 +409,34 @@ outchar:
 	    psha
 outcharw:
 	    ldaa 0xF02E
-	    anda #0x20
+	    anda #0x80
 	    beq outcharw
 	    pula
 	    stab 0xF02F
 	    rts
+
+;
+;	SCI variables (their location is very platform and mapping
+;	specific). For us commonmem is sufficient. We put the buffer in
+;	the iram at F100 for now
+;
+
+	.globl sci_txl, sci_rxl, sci_rxp, sci_rxe, sci_txp, sci_txe, sci_err
+
+sci_txl:
+	.byte 0
+sci_rxl:
+	.byte 0
+sci_err:
+	.byte 0
+sci_rxp:
+	.word 0xF100
+sci_rxe:
+	.word 0xF100
+sci_txp:
+	.word 0xF180
+sci_txe:
+	.word 0xF180
 
 ;
 ;	Disk copier (needs to be in common), call with ints off
@@ -263,6 +448,7 @@ outcharw:
 	.globl hd_read_data
 	.globl hd_write_data
 	.globl hd_map
+	.globl hd_swap
 
 hd_read_data:
 	xgdx
@@ -273,6 +459,12 @@ hd_read_data:
 	; and we must reference them before we map_process
 	ldab hd_map
 	beq hd_kmap
+	deca
+	beq hd_umap
+	ldab hd_swap
+	bsr map_for_swap
+	bra hd_kmap
+hd_umap:
 	jsr map_process_always
 hd_kmap:
 	clrb
@@ -298,6 +490,12 @@ hd_write_data:
 	;
 	ldab hd_map
 	beq hd_kmapw
+	deca
+	beq hd_umapw
+	ldab hd_swap
+	bsr map_for_swap
+	bra hd_kmapw
+hd_umapw:
 	jsr map_process_always
 hd_kmapw:
 	clrb
@@ -316,3 +514,132 @@ hd_write256:
 
 hd_map:
 	.byte 0
+hd_swap:
+	.byte 0
+
+;
+;	SD card
+;
+
+	.globl sd_spi_transmit_byte
+	.globl sd_spi_receive_byte
+	.globl sd_spi_raise_cs
+	.globl sd_spi_lower_cs
+	.globl sd_spi_clock
+	.globl sd_spi_transmit_sector
+	.globl sd_spi_receive_sector
+
+;
+;	Select the SD card
+;
+sd_spi_lower_cs:
+	ldx #0xF000
+	bclr 0x08,x 0x20	; port D bit 5
+	rts
+;
+;	Deselect SD and send clocks
+;
+sd_spi_raise_cs:
+	ldx #0xF000
+	bset 0x08,x 0x20
+;
+;	Send 0xFF and receive a byte
+;
+sd_spi_receive_byte:
+	ldab #0xFF
+;
+;	Send a byte and return the resulting reply
+;
+sd_spi_transmit_byte:
+	ldx #0xF000
+	stab 0x2A,x		; Write to data starts the transfer
+sendwt:
+	brclr 0x29,x 0x80 sendwt
+	ldab 0x2A,x		; Read data
+	rts
+;
+;	Switch clock speeds
+;	0 = init (100-400Khz)
+;	!0 depends on card but is always faster than we can manage
+;
+sd_spi_clock:
+	tstb
+	bne clkfast
+	ldaa #0x52		; Master, mode 0, 125KHz
+	staa 0xFE28
+	rts
+clkfast:
+	ldaa #0x50		; Master, mode 0, 1MHz
+	staa 0xFE28
+	rts
+;
+;	Sector transfers (for speed)
+;
+sd_spi_transmit_sector:
+	ldx #blk_op
+	ldy ,x
+	ldaa 2,x
+	beq from_k
+	deca
+	beq from_u
+	ldab 3,x
+	bsr map_for_swap
+	bra from_k
+from_u:
+	bsr map_process_always
+from_k:
+	clra
+	ldx #0xF000
+txloop:
+	ldab ,y
+	stab 0x2A,x
+	iny
+txw1:
+	brclr 0x29,x 0x80 txw1
+	tst 0x2A,x		; Read data
+
+	ldab ,y
+	stab 0x2A,x
+	iny
+txw2:
+	brclr 0x29,x 0x80 txw2
+	tst 0x2A,x		; Read data
+	deca
+	bne txloop
+	bra map_kernel
+
+sd_spi_receive_sector:
+	ldx #blk_op
+	ldy ,x
+	ldaa 2,x
+	beq to_k
+	deca
+	beq to_u
+	ldab 3,x
+	bsr map_for_swap
+	bra to_k
+to_u:
+	bsr map_process_always
+to_k:
+	clra
+	ldx #0xF000
+rxloop:
+	ldab #0xFF
+	stab 0x2A,x
+rxw1:
+	brclr 0x29,x 0x80 rxw1
+	ldab 0x2A,x		; Read data
+	stab ,y
+	iny
+
+	ldab #0xFF
+	stab 0x2A,x
+rxw2:
+	brclr 0x29,x 0x80 rxw2
+	ldab 0x2A,x		; Read data
+	stab ,y
+	iny
+
+	deca
+	bne rxloop
+	bra map_kernel

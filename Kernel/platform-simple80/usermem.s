@@ -73,25 +73,27 @@ __uput:
 ;	logic
 ;
 __uzero:
-	pop de
-	pop hl
 	pop bc
-	push bc
-	push hl
+	pop hl
+	pop de
 	push de
-	ld a,b
-	or c
+	push hl
+	push bc
+	ld a,d
+	or e
 	ret z
 	di
-	ld a,(sio_reg)
-	out (0x03),a		; Port B WR 1
-	ld a,(bits_to_user)
-	out (0x03),a		; port B WR 1 to 0x58
+	ld bc,(sio_reg)
+	out (c),b		; Port B WR 1
+	ld a,(bits_to_user+1)
+	out (c),a		; port B WR 1 to 0x58
 	ld (hl),#0
 	ld a,(_int_disabled)
 	or a
 	jr nz, noteiz
 	ei
+	ld b,d
+	ld c,e
 noteiz:
 	dec bc
 	ld a,b
@@ -103,10 +105,10 @@ noteiz:
 	ldir
 uout:
 	di
-	ld a,(sio_reg)		; port B WR 1
-	out (0x03),a
-	ld a,(bits_from_user)
-	out (0x03),a		; back to kernel
+	ld bc,(sio_reg)		; port B WR 1
+	out (c),b
+	ld a,(bits_to_user)
+	out (c),a		; back to kernel
 	ld a,(_int_disabled)
 	or a
 	ret nz
@@ -115,20 +117,20 @@ uout:
 
 __ugetc:
 	di
-	ld a,(sio_reg)
-	out (0x03),a
-	ld a,(bits_to_user)
-	out (0x03),a
+	ld bc,(sio_reg)
+	out (c),b
+	ld a,(bits_to_user+1)
+	out (c),a
 	ld l,(hl)
 	ld h,#0
 	jr uout
 
 __ugetw:
 	di
-	ld a,(sio_reg)
-	out (0x03),a
-	ld a,(bits_to_user)
-	out (0x03),a
+	ld bc,(sio_reg)
+	out (c),b
+	ld a,(bits_to_user+1)
+	out (c),a
 	ld a,(hl)
 	inc hl
 	ld h,(hl)
@@ -143,10 +145,10 @@ __uputc:
 	push de
 	push bc
 	di
-	ld a,(sio_reg)
-	out (0x03),a
-	ld a,(bits_to_user)
-	out (0x03),a
+	ld bc,(sio_reg)
+	out (c),b
+	ld a,(bits_to_user+1)
+	out (c),a
 	ld (hl),e
 	jr uout
 
@@ -158,10 +160,10 @@ __uputw:
 	push de
 	push bc
 	di
-	ld a,(sio_reg)
-	out (0x03),a
-	ld a,(bits_to_user)
-	out (0x03),a
+	ld bc,(sio_reg)
+	out (c),b
+	ld a,(bits_to_user+1)
+	out (c),a
 	ld (hl),e
 	inc hl
 	ld (hl),d

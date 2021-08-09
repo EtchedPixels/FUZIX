@@ -15,7 +15,7 @@ __uputc:
 	jsr map_process_always
 	stab 0,x
 	jsr map_kernel
-	jmp ret2
+	jmp ret4
 
 __uputw:
 	tsx
@@ -26,7 +26,7 @@ __uputw:
 	staa 0,x
 	stab 1,x
 	jsr map_kernel
-	jmp ret2
+	jmp ret4
 
 __ugetc:
 	tsx
@@ -34,7 +34,8 @@ __ugetc:
 	jsr map_process_always
 	ldab 0,x
 	clra
-	jmp map_kernel
+	jsr map_kernel
+	jmp ret2
 
 __ugetw:
 	tsx
@@ -42,7 +43,8 @@ __ugetw:
 	jsr map_process_always
 	ldab 0,x
 	ldaa 1,x
-	jmp map_kernel
+	jsr map_kernel
+	jmp ret2
 
 __uzero:
 	tsx
@@ -57,7 +59,8 @@ uzerolp:
 	subb #1
 	sbca #0
 	bne uzerolp
-	jmp map_kernel
+	jsr map_kernel
+	jmp ret4
 
 __uget:
 	; This one is harder as we've got to juggle two pointers

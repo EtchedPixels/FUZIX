@@ -39,11 +39,13 @@
         .globl outhl
         .globl outnewline
 	.globl interrupt_handler
+	.globl interrupt_legacy
 	.globl unix_syscall_entry
 	.globl nmi_handler
 	.globl null_handler
 	.globl _acia_present
-	.globl _ctc_present
+	.globl _ctc_port
+	.globl _kio_present
 	.globl _sio_present
 	.globl _sio1_present
 	.globl _u16x50_present
@@ -82,6 +84,12 @@ SIOC_D		.EQU	SIOC_C+1
 SIOD_C		.EQU	SIOC_C+2
 SIOD_D		.EQU	SIOC_C+3
 
+
+; SIO arrangement on the KIO chip
+
+KIOA_C		.EQU	0x89
+KIOB_C		.EQU	0x8B
+
 ACIA_C          .EQU     0xA0
 ACIA_D          .EQU     0xA1
 ACIA_RESET      .EQU     0x03
@@ -106,6 +114,31 @@ init_hardware:
         ; Stop floppy drive motors
         ld a, #0x0C
         out (FDC_DOR), a
+
+	; Let keyboard initialize freely - float all the lines
+
+	ld a,#0xFF
+	out (0xBB),a
+
+	; Check for a KIO first of all
+
+	ld c,#0x84
+	call check_ctc
+	jr nz, not_kio
+
+	ld a,#1
+	ld (_kio_present),a
+
+	ld hl,#sio_setup
+	ld bc,#0xA00 + KIOA_C		; 10 bytes to SIOA_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + KIOB_C		; and to SIOB_C
+	otir
+
+	jp probe_cpu
+
+not_kio:
 
 	; Play guess the serial port
 
@@ -174,7 +207,7 @@ not_acia:
 
 not_16x50:
 	ld a,e
-	out (0xC3),a
+	out (0xA3),a
 
 	xor a
 	ld c,#SIOA_C
@@ -313,86 +346,9 @@ not_mirrored:
 
 
 serial_up:
-
-        ; ---------------------------------------------------------------------
-	; Initialize CTC
-	;
-	; Need to do autodetect on this
-	;
-	; We must initialize all channels of the CTC. The documentation
-	; states that the initial CTC state is undefined and we don't want
-	; random interrupt surprises
-	;
-	; ---------------------------------------------------------------------
-
-	;
-	; Defense in depth - shut everything up first
-	;
-
-	ld a,#0x43
-	out (CTC_CH0),a			; set CH0 mode
-	out (CTC_CH1),a			; set CH1 mode
-	out (CTC_CH2),a			; set CH2 mode
-	out (CTC_CH3),a			; set CH3 mode
-
-	;
-	; Probe for a CTC
-	;
-
-	ld a,#0x47			; CTC 2 as counter
-	out (CTC_CH2),a
-	ld a,#0xAA			; Set a count
-	out (CTC_CH2),a
-	in a,(CTC_CH2)
-
-	cp #0xAA
-	jr z, ctc_maybe
-	cp #0xA9			; Could be one less
-	jr nz, no_ctc
-
-ctc_maybe:
-	ld a,#0x07
-	out (CTC_CH2),a
-	ld a,#2
-	out (CTC_CH2),a
-
-	; We are now counting down from 2 very fast, so should only see
-	; those values on the bus
-
-	ld b,#0
-ctc_check:
-	in a,(CTC_CH2)
-	and #0xFC
-	jr nz, no_ctc
-	djnz ctc_check
-
-	;
-	; Looks like we have a CTC
-	;
-
-have_ctc:
-	ld a,#1
-	ld (_ctc_present),a
-
-	;
-	; Set up timer for 200Hz
-	;
-
-	ld a,#0xB5
-	out (CTC_CH2),a
-	ld a,#144
-	out (CTC_CH2),a	; 200 Hz
-
-	;
-	; Set up counter CH3 for SC102 or similar SIO (the SC110 sadly can't be
-	; used this way I believe).
-
-	ld a,#0x47
-	out (CTC_CH3),a
-	ld a,#255
-	out (CTC_CH3),a
-
-no_ctc:
+	ld c,#0x88
+	call check_ctc
+probe_cpu:
 	;
 	; Check CPU type. We might be a Z180 CPU board with standard
 	; RC2014 components in which case activate the additional
@@ -423,6 +379,97 @@ sio_setup:
 	.byte 0xE1
 	.byte 0x05
 	.byte RTS_LOW
+
+check_ctc:
+        ; ---------------------------------------------------------------------
+	; Initialize CTC
+	;
+	; Need to do autodetect on this
+	;
+	; C is the CTC base we want to probe
+	;
+	; We must initialize all channels of the CTC. The documentation
+	; states that the initial CTC state is undefined and we don't want
+	; random interrupt surprises
+	;
+	; ---------------------------------------------------------------------
+
+	;
+	; Defense in depth - shut everything up first
+	;
+
+	ld a,#0x43
+	out (c),a			; set CH0 mode
+	inc c
+	out (c),a			; set CH1 mode
+	inc c
+	out (c),a			; set CH2 mode
+	inc c
+	out (c),a			; set CH3 mode
+
+	;
+	; Probe for a CTC
+	;
+
+	dec c				; CTC 2
+
+	ld a,#0x47			; CTC 2 as counter
+	out (c),a
+	ld a,#0xAA			; Set a count
+	out (c),a
+	in a,(c)
+
+	cp #0xAA
+	jr z, ctc_maybe
+	cp #0xA9			; Could be one less
+	ret nz
+
+ctc_maybe:
+	ld a,#0x07
+	out (c),a
+	ld a,#2
+	out (c),a
+
+	; We are now counting down from 2 very fast, so should only see
+	; those values on the bus
+
+	ld b,#0
+ctc_check:
+	in a,(c)
+	and #0xFC
+	ret nz
+	djnz ctc_check
+
+	;
+	; Looks like we have a CTC
+	;
+
+	ld a,c
+	sub a,#2
+	ld (_ctc_port),a
+
+	;
+	; Set up timer for 200Hz
+	;
+
+	ld a,#0xB5
+	out (c),a
+	ld a,#144
+	out (c),a	; 200 Hz
+
+	;
+	; Set up counter CH3 for SC102 or similar SIO (the SC110 sadly can't be
+	; used this way I believe).
+
+	inc c
+
+	ld a,#0x47
+	out (c),a
+	ld a,#255
+	out (c),a
+
+	xor a
+	ret
 
 ;
 ;	TTY queues. We keep them in CODE1 so this is as simple as
@@ -466,6 +513,13 @@ _platform_reboot:
         ; We need to map the ROM back in -- ideally into every page.
         ; This little trick based on a clever suggestion from John Coffman.
         di
+	ld a,#0x0C
+	out (FDC_DOR),a			; Floppy off
+	xor a
+	out (0x99),a
+	ld a,#0x81
+	out (0x99),a
+	; Should also turn off the CTC if present ?
         ld hl, #(MPGENA << 8) | 0xD3    ; OUT (MPGENA), A
         ld (0xFFFE), hl                 ; put it at the very top of RAM
         xor a                           ; A=0
@@ -514,7 +568,7 @@ do_program_vectors:
 	; now install the interrupt vector at 0x0038
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
-	ld hl,#interrupt_handler
+	ld hl,#interrupt_legacy
 	ld (0x0039),hl
 
 	; set restart vector for UZI system calls

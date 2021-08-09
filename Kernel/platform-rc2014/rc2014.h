@@ -23,11 +23,6 @@ __sfr __at (SIO1_BASE + 3) SIOD_D;
 __sfr __at (ACIA_BASE + 0) ACIA_C;
 __sfr __at (ACIA_BASE + 1) ACIA_D;
 
-__sfr __at 0x88 CTC_CH0;
-__sfr __at 0x89 CTC_CH1;
-__sfr __at 0x8A CTC_CH2;
-__sfr __at 0x8B CTC_CH3;
-
 __sfr __at 0x98 tms9918a_data;
 __sfr __at 0x99 tms9918a_ctrl;
 
@@ -36,7 +31,6 @@ extern uint16_t code1_end(void);
 extern void set_console(void);
 
 extern uint8_t acia_present;
-extern uint8_t ctc_present;
 extern uint8_t sio_present;
 extern uint8_t sio1_present;
 extern uint8_t quart_present;
@@ -50,6 +44,9 @@ extern uint8_t ps2mouse_present;
 extern uint8_t sc26c92_present;
 extern uint8_t u16x50_present;
 extern uint8_t z512_present;
+extern uint8_t kio_present;
+
+extern uint8_t ctc_port;
 
 extern uint8_t timer_source;
 #define TIMER_NONE		0
@@ -92,6 +89,8 @@ extern void do_conswitch(uint8_t con);
 extern struct uart acia_uart;
 extern struct uart sio_uart;
 extern struct uart sio_uartb;
+extern struct uart kio_uart;
+extern struct uart kio_uartb;
 extern struct uart ns16x50_uart;
 extern struct uart z180_uart0;
 extern struct uart z180_uart1;

@@ -3,7 +3,6 @@
 void tty_pollirq_asci0(void);
 void tty_pollirq_asci1(void);
 
-#ifdef CONFIG_PROPIO2
-void tty_poll_propio2(void);
-#endif
+/* For console */
+extern uint8_t vt_twidth, vt_tright;
 #endif

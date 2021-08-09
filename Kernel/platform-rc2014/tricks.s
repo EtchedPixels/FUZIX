@@ -27,6 +27,8 @@ TOP_PORT	.equ	MPGSEL_3
 	.globl map_kernel_restore
 	.globl _get_common
 	.globl _swap_finish
+	.globl _fpu_save
+	.globl _fpu_restore
 
 	.globl ldir_or_dma
 
@@ -49,7 +51,9 @@ _need_resched:
 ; from switchout().
 _platform_switchout:
         ; save machine state
-
+	push af
+	call _fpu_save
+	pop af
         ld hl, #0 ; return code set here is ignored, but _switchin can
         ; return from either _switchout OR _dofork, so they must both write
         ; _udata + U_DATA__U_SP with the following on the stack:
@@ -177,6 +181,11 @@ notswapped:
 	pop hl
 	ld (_kernel_pages + 1),hl
 	call map_kernel_restore
+
+	push af
+	call _fpu_restore
+	pop af
+
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running

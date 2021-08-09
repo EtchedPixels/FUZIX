@@ -490,14 +490,16 @@ inoptr newfile(inoptr pino, uint8_t *name)
         goto nogood;
     }
 
-    /* First see if parent is writeable */
-    if (pino->c_flags & CRDONLY) {
-        udata.u_error = EROFS;
+    /* We check getperm before CRDONLY because if you reverse these two
+       it breaks gcc 68hc11 3.4 */
+    if (!(getperm(pino) & OTH_WR)) {
+        udata.u_error = EPERM;
         goto nogood;
     }
 
-    if (!(getperm(pino) & OTH_WR)) {
-        udata.u_error = EPERM;
+    /* First see if parent is writeable */
+    if (pino->c_flags & CRDONLY) {
+        udata.u_error = EROFS;
         goto nogood;
     }
 
@@ -1257,6 +1259,10 @@ uint8_t getperm(inoptr ino)
 void setftime(inoptr ino, uint_fast8_t flag)
 {
     if (ino->c_flags & CRDONLY)
+        return;
+
+    /* If only ATIME is due an update then skip it for a noatime fs */
+    if (flag == A_TIME && fs_tab[ino->c_super].m_flags & MS_NOATIME)
         return;
 
     ino->c_flags |= CDIRTY;

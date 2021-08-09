@@ -348,10 +348,14 @@ nmi_handler:
 ; but uninteresting noise
 _sys_stubs:
 
+	.area .commondata
+
 _sys_cpu:
 	.byte 4
 _sys_cpu_feat:
 	.byte 0
+
+	.area .common
 ;
 ;	Check for a 6309 (as per The 6309 Book)
 ;

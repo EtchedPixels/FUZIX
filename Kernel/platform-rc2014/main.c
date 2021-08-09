@@ -10,11 +10,13 @@
 #include <rc2014.h>
 #include <ps2kbd.h>
 #include <zxkey.h>
+#include <net_w5x00.h>
 
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
 
-uint8_t ctc_present;
+uint8_t ctc_port;
+
 uint8_t sio_present;
 uint8_t sio1_present;
 uint8_t z180_present;
@@ -28,6 +30,8 @@ uint8_t ps2mouse_present;
 uint8_t sc26c92_present;
 uint8_t u16x50_present;
 uint8_t z512_present = 1;	/* We assume so and turn it off if not */
+uint8_t fpu_present;
+uint8_t kio_present;
 
 uint8_t platform_tick_present;
 uint8_t timer_source = TIMER_NONE;
@@ -36,6 +40,7 @@ uint8_t timer_source = TIMER_NONE;
 uint16_t syscpu;
 uint16_t syskhz;
 uint8_t systype;
+uint8_t romver;
 
 /* For RTC */
 uint8_t rtc_shadow;
@@ -92,11 +97,17 @@ void platform_discard(void)
 
 void platform_idle(void)
 {
-	if (timer_source != TIMER_NONE && !ps2kbd_present)
+	if (timer_source != TIMER_NONE)
 		__asm halt __endasm;
 	else {
 		irqflags_t irq = di();
 		sync_clock();
+#ifdef CONFIG_NET_WIZNET
+		w5x00_poll();
+#endif
+#ifdef CONFIG_NET_W5300
+		w5300_poll();
+#endif
 		irqrestore(irq);
 	}
 }
@@ -107,6 +118,12 @@ void do_timer_interrupt(void)
 	fd_tick();
 	fd_tick();
 	timer_interrupt();
+#ifdef CONFIG_NET_WIZNET
+	w5x00_poll();
+#endif
+#ifdef CONFIG_NET_W5300
+	w5300_poll();
+#endif
 }
 
 static int16_t timerct;
@@ -121,21 +138,37 @@ static void timer_tick(uint8_t n)
 	}
 }
 
+__sfr __at (Z180_IO_BASE + 0x10) TIME_TCR;      /* Timer control register                     */
+__sfr __at (Z180_IO_BASE + 0x0C) TIME_TMDR0L;   /* Timer data register,    channel 0L         */
+
 void platform_interrupt(void)
 {
 	/* FIXME: For Z180 we know if the ASCI ports are the source so
 	   should fastpath them (vector 8 and 9) */
 	uint8_t ti_r = 0;
 
-	if (timer_source == TIMER_TMS9918A)
+
+	/* We must never read this from interrupt unless it is our timer */
+	if (timer_source == TIMER_TMS9918A) {
 		ti_r = tms9918a_ctrl;
+		if (ti_r & 0x80)
+			wakeup(&shadowcon);
+	}
 
 	tty_pollirq();
 
 	/* On the Z180 we use the internal timer */
 	if (timer_source == TIMER_Z180) {
-		if (irqvector == 3)	/* Timer 0 */
-			do_timer_interrupt();
+		if (irqvector == 3) {	/* Timer 0 */
+			uint8_t r;
+			r = TIME_TMDR0L;
+			r = TIME_TCR;
+			timerct++;
+			if (timerct == 4) {
+				do_timer_interrupt();
+				timerct = 0;
+			}
+		}
 	/* The TMS9918A is our second best choice as the CTC must be wired
 	   right and may not be wired as we need it */
 	} else if (ti_r & 0x80) {
@@ -152,9 +185,9 @@ void platform_interrupt(void)
 		}
 	/* If not and we have no QUART then pray the CTC works */
 	} else if (timer_source == TIMER_CTC) {
-		uint8_t n = 255 - CTC_CH3;
-		CTC_CH3 = 0x47;
-		CTC_CH3 = 255;
+		uint8_t n = 255 - in(ctc_port + 3);
+		out(ctc_port + 3, 0x47);
+		out(ctc_port +3, 0xFF);
 		timer_tick(n);
 	}
 }
@@ -177,4 +210,18 @@ void do_beep(void)
 {
 	if (ps2kbd_present)
 		ps2kbd_beep();
+}
+
+/* string.c
+ * Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
+ * This file is part of the Linux-8086 C library and is distributed
+ * under the GNU Library General Public License.
+ */
+
+int strcmp(const char *d, const char *s)
+{
+	register char *s1 = (char *) d, *s2 = (char *) s, c1, c2;
+
+	while ((c1 = *s1++) == (c2 = *s2++) && c1);
+	return c1 - c2;
 }

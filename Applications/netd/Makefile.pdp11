@@ -19,7 +19,7 @@ CFLAGS += -DNETD_LITTLE_ENDIAN
 
 SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c slip.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c ping.c ntpdate.c
-SRCS += htget.c tinyirc.c linein.c
+SRCS += htget.c tinyirc.c linein.c ifconfig.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -47,6 +47,8 @@ netd-slip: $(OBJS)
 	$(AOUT2FUZIX) htget.bin htget
 	$(LINKER) -o tinyirc.bin $(CRT0) tinyirc.o linein.o gethostbyname.o  $(LINKER_OPT)
 	$(AOUT2FUZIX) tinyirc.bin tinyirc
+	$(LINKER) -o ifconfig.bin $(CRT0) ifconfig.o $(LINKER_OPT)
+	$(AOUT2FUZIX) ifconfig.bin ifconfig
 
 size.report: $(APPS)
 	ls -l $^ > $@

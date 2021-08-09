@@ -30,7 +30,15 @@ Bank 1 to Bank n:
 ECFF		Application end
 ED00-EFFF	uarea stash
 
-Disk swap device recommended
+To build
+
+make diskimage
+
+This will produce a boot.dsk for the A drive of Z80Pack and an
+hd-fuzix.dsk file which is a Z80Pack hard disk image (4MB) for drive I. Note
+that Fuzix will use drive J as a swap device.
+
+To build by hand:
 
 Put the kernel at the end of a floppy image from cyl 60
 Add the fs in the first 58 cyls (366 blocks)

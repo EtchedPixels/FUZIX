@@ -15,6 +15,7 @@
 #include <devsdc.h>
 #include <printf.h>
 
+#ifdef CONFIG_WITH_SDC
 
 #define SDC_REG_BASE 0xff40
 #define SDC_REG_CTL (SDC_REG_BASE+0x00 )
@@ -175,3 +176,4 @@ void devsdc_init(void)
 	else kprintf("Not found.\n");
 }
 
+#endif

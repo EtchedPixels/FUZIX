@@ -1,0 +1,29 @@
+ROOT = ../..
+include $(ROOT)/Applications/rules.armm4
+LINKER_OPT += -lcurses$(PLATFORM) -ltermcap$(PLATFORM) -lc$(PLATFORM)
+
+SRCS  = invaders.c
+OBJS = $(SRCS:.c=.o)
+APPS = $(OBJS:.o=)
+
+all: $(APPS) size.report
+
+$(APPS): $(CRT0)
+
+$(APPS) : %: %.o
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+size.report: $(APPS) $(APPSNS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) *.o core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.data *.text *.debug size.report
+
+rmbak:
+	rm -f *~ core

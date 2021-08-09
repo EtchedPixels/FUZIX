@@ -1,13 +1,10 @@
 Basic support for a 6502 RC2014 banked memory platform
 
-Use a modern cc65 from https://github.com/cc65/cc65
+Use a modern cc65 from https://github.com/cc65/cc65 (2.18 as shipped in
+many Linux distributions is just fine).
 
-The boot ROM image and the disk bootstrap block live in my RC2014 ROM
-github at https://github.com/EtchedPixels/RC2014-ROM/tree/master/6502. Place
-the resulting boot block on the first block of the CF card. The kernel is
-loaded from blocks after this by the loader and then looks for a PC style
-partition table. A modern style partition table has enough boot space
-for the kernel to live before the first partition.
+The boot ROM image lives in my RC2014 ROM github at
+https://github.com/EtchedPixels/RC2014-ROM/tree/master/6502.
 
 This kernel is designed to support the following combination of RC2014
 cards
@@ -15,15 +12,14 @@ cards
 6502 CPU (or 65C816 CPU) with I/O window at 0xFExx
 512K RAM/ROM card
 16C550A compatible uart at I/O 0xC0 (0xFEC0 as the 6502 sees it)
-6522 VIA at 0x60
-IDE CF adapter at 0xFE10
+6522 VIA at I/O 0x60
+IDE CF adapter at I/O 0x10
 
 Although the memory card can operate as 4 independent 16K pages for simplicity
 at this point we treat it as if it just provided 16K and 48K
 
 Interrupts deal wth the shared ZP by swapping the ZP back and forth with the
 interrupt copies (about 20 bytes involved)
-
 
 Memory map:
 	0000-00FF		Zero page
@@ -59,13 +55,7 @@ need addressing
 
 - There is a direct relationship between kernel and user on some ZP usage. In
   particular the user C stack zero page locations are used by the kernel to
-  access arguments. This makes applications non portable until all the
-  relocation is fixed.
-
-- There is no relocation of binaries. This should not be too hard for both
-  main memory and ZP allocations but needs a helper because the 6502 isn't
-  AFAIK smart enough to relocate its own code using entirely relocatable code
-  and data.
+  access arguments.
 
 - Signals are tricky. The C stack is maintained via ZP and is 16bits. As there
   is no way to know if the stack was mid update an interrupt cannot tell if
@@ -90,3 +80,29 @@ TODO:
 Swap support
 Move entry point etc
 Look at other RC2014 device support
+
+Real System:
+
+Burn the ROM from the RC2014 ROM archive into a 512K flash if you don't already
+have it on the system
+
+make diskimage
+
+copy disk.img onto a CF adapter. The current image is about 40MB (mostly empty)
+and can be written to anything that size or larger.
+
+Insert CF card into system and power up.
+
+If you see just a letter 'R' on the console at 38400 baud then something is
+wrong with the system set up. If it is working you will get a copyright
+message and a set of debug as it loads from CF.
+
+Emulator:
+
+Build the ROM image as before
+Copy emu-ide.img somewhere
+
+./rc2014-6502 -1 -r 6502.rom -i emu-ide.img
+
+Add -R to enable an emulation of the RC2014 RTC card, add -w for the
+WizNet 830MJ.

@@ -148,7 +148,8 @@ arg_t _select(void)
 	uint16_t seltype = SELECT_BEGIN;
 	inoptr ino;
 	uint16_t sumo;
-	uint_fast8_t i, m, n;
+	uint_fast8_t i, m;
+	char n;
 	uint16_t inr = 0, outr = 0, exr = 0;
 	/* Second 16bits of each spare for expansion */
 	uint16_t in = ugetw(base);

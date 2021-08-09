@@ -1,6 +1,5 @@
 /* 
  * NC100 RD PCMCIA driver
- *
  */
 
 #include <kernel.h>

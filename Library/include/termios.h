@@ -4,6 +4,8 @@
 #include <types.h>
 #endif
 
+#include <sys/ioctl.h>
+
 typedef uint16_t tcflag_t;
 typedef uint16_t speed_t;
 typedef uint8_t cc_t;
@@ -149,12 +151,12 @@ struct termios {
 #define KBMAPSIZE	0x20
 #define KBMAPGET	0x21
 #define VTSIZE		0x22
-#define KBSETTRANS	(0x23|IOCTL_SUPER)
+#define KBSETTRANS	(0x23|__IOCTL_SUPER)
 #define VTATTRS		0x24
 #define KBRATE		0x25
 
 #define VTFONTINFO	0x30
-#define VTSETFONT	(0x31|IOCTL_SUPER)
+#define VTSETFONT	(0x31|__IOCTL_SUPER)
 #define VTGETFONT	0x32
 #define VTSETUDG	0x33
 #define VTGETUDG	0x34

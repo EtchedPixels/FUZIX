@@ -2,19 +2,21 @@
 ;	So we end up first in the image
 ;
 
-		.setcpu 6303
 		.code
 
-		.byte 0x03
-		.byte 0x63
+		.byte 0x00
+		.byte 0x68
 
 entry:
 		sei			; interrupts off
 		clra
 		clrb
 		stab @zero
+		stab @zero+1
 		incb
 		stab @one+1		; set up '@one' for the compiler
+		ldab #0x7E
+		stab @jmptmp
 		lds #kstack_top		; C stack
 		ldx #_udata
 wipeud:
@@ -24,14 +26,13 @@ wipeud:
 		bne wipeud
 
 		ldx #__bss
-		ldd #__bss_size
-
-bss_wipe:	clr ,x
+bss_wipe:	cpx #__end
+		beq wiped
+		clr ,x
 		inx
-		subd #1
-		bne bss_wipe
+		bra bss_wipe
 
-gogogo:
+wiped:
 		jsr init_early
 		jsr init_hardware
 		jsr _fuzix_main		; Should never return

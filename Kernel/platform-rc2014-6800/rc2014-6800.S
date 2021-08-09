@@ -1,7 +1,8 @@
 ;
-;	    rc2014 6303 platform functions
+;	    rc2014 6800 platform functions
 ;
-;	The 6303 is a very clean processor so there isn't a lot required here
+;	The 6800 is a very clean processor so there isn't a lot required
+;	here, it's a bit longer winded compared with 6803/6303
 ;
 
             .export init_early
@@ -11,6 +12,7 @@
 	    .export map_kernel_di
 	    .export map_process
 	    .export map_process_always
+	    .export map_process_always_di
 	    .export map_save_kernel
 	    .export map_restore
 	    .export map_process_x
@@ -24,7 +26,7 @@
 	    .export ___hard_irqrestore
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../kernel-6800.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -33,9 +35,94 @@
 	    .common
 
 _platform_monitor:
+	    ldx #ccreg
+	    jsr outstring
+	    tsx
+	    ldab 2,x
+	    jsr outcharhex
+	    ldx #dreg
+	    jsr outstring
+	    tsx
+            ldab 4,x
+	    jsr outcharhex
+	    tsx
+            ldab 3,x
+	    jsr outcharhex
+	    ldx #xreg
+            jsr outstring
+	    tsx
+            ldab 5,x
+            jsr outcharhex
+	     tsx
+            ldab 6,x
+            jsr outcharhex
+            ldx #pcreg
+            jsr outstring
+	    tsx
+            ldab 7,x
+            jsr outcharhex
+	    tsx
+            ldab 8,x
+            jsr outcharhex
+            ldx #endtrap
+            jsr outstring
+	    tsx
+
+	    ldaa #8
+stkrow:
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+	    jsr outx
+            ldab #':'
+	    jsr outchar
+	    ldab #' '
+            jsr outchar
+            clrb
+stkword:
+	    pshb
+	    psha
+	    ldaa 10,x
+	    ldab 11,x
+            jsr outd
+	    pula
+	    pulb
+	    inx
+	    inx
+	    incb
+	    cmpb #8
+	    beq endrow
+	    pshb
+            ldab #32
+	    jsr outchar
+	    pulb
+	    bra stkword
+endrow:	    deca
+	    bne stkrow
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+
 _platform_reboot:
 	    jsr map_kernel
 	    jmp rebootit
+
+
+ccreg:	    .byte 13,10
+	    .ascii "Trap: CC = $"
+	    .byte 0
+dreg:       .byte 13,10
+	    .ascii "      AB = $"
+	    .byte 0
+xreg:       .byte 13,10
+	    .ascii "       X = $"
+	    .byte 0
+pcreg:      .byte 13,10
+	    .ascii "      PC = $"
+	    .byte 0
+endtrap:    .byte 13,10,0
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to
@@ -66,7 +153,7 @@ ___hard_irqrestore:
 
 irq_on:
 	    sei
-	    rts
+	    jmp ret1
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
@@ -147,10 +234,18 @@ nullirq:
 ;	Map the current process, do not change register values
 ;
 map_process_always:
+map_process_always_di:
+	    psha
+	    tpa
+	    psha
+	    sei
 	    stx mapsavex
 	    ldx #_udata + U_DATA__U_PAGE
 	    jsr map_bank
 	    ldx mapsavex
+	    pula
+	    tap
+	    pula
 	    rts
 ;
 ;	X points to the map table of this process, preserve D
@@ -167,11 +262,18 @@ map_process:
 ;
 map_kernel_di:
 map_kernel:
+	    psha
+	    tpa
+	    psha
+	    sei
 	    stx mapsavex
 				; Common is left untouched
 	    ldx #kmap		; Kernel RAM
 	    jsr map_bank
 	    ldx mapsavex
+	    pula
+	    tap
+	    pula
 	    rts
 kmap:
 	    .byte 0x20
@@ -226,10 +328,17 @@ map_bank:
 ;	so this is fine.
 ;
 map_restore:
+	    psha
+	    tpa
+	    psha
+	    sei
 	    stx mapsavex
 	    ldx #saved_map
 	    jsr map_bank
 	    ldx mapsavex
+	    pula
+	    tap
+	    pula
 	    rts
 
 ;
@@ -261,11 +370,11 @@ saved_map:  .byte 0
 outchar:
 	    psha
 outcharw:
-	    ldaa 0x11
+	    ldaa 0xFEC5
 	    anda #0x20
 	    beq outcharw
 	    pula
-	    stab 0x13
+	    stab 0xFEC0
 	    rts
 
 ;

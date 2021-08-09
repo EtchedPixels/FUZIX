@@ -1,11 +1,11 @@
-CROSS_COMPILE=m68k-uclinux-
+CROSS_COMPILE=m68k-elf-
 CC = $(CROSS_COMPILE)gcc
 ASM = $(CROSS_COMPILE)as
 AR = $(CROSS_COMPILE)ar
 LINKER = $(CROSS_COMPILE)ld
 PLATFORM = 68000
 export PLATFORM
-CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -msoft-float -c -I../include -I../include/68000 -I../include/68000/fixed
+CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -c -I../include -I../include/68000 -I../include/68000/fixed
 ASM_OPT = -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h
@@ -15,37 +15,39 @@ SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM = setjmp_68000.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
-SRC_C =  __argv.c abort.c aes256.c asctime.c assert.c atexit.c
-SRC_C += bcmp.c bcopy.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
-SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
-SRC_C += creat.c crypt.c ctermid.c ctime.c cuserid.c
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
+SRC_C += bcmp.c bcopy.c bind.c bsearch.c bzero.c
+SRC_C += calloc.c cfree.c clock.c closedir.c closedir_r.c
+SRC_C += clock_gettime.c clock_getres.c clock_settime.c
+SRC_C += connect.c creat.c crypt.c ctermid.c ctime.c cuserid.c
 SRC_C += err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fdatasync.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
 SRC_C += fgetpos.c fgets.c fopen.c fork.c fprintf.c fputc.c fputs.c fread.c
 SRC_C += free.c fsetpos.c fsync.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
-SRC_C += getopt.c
-SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c gets.c gettimeofday.c
+SRC_C += getopt.c getpeername.c
+SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c
+SRC_C += gets.c getsockname.c gettimeofday.c
 SRC_C += getw.c gmtime.c gmtime_r.c grent.c
 SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
 SRC_C += index.c initgroups.c isatty.c killpg.c
-SRC_C += libintl.c
+SRC_C += libintl.c listen.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c mkfifo.c mkstemps.c mntent.c nanosleep.c
 SRC_C += opendir.c opendir_r.c pause.c perror.c
 SRC_C += popen.c printf.c putenv.c putchar.c putpwent.c putw.c pwent.c qsort.c
-SRC_C += raise.c rand.c readdir.c readlink.c realloc.c regerror.c
+SRC_C += raise.c rand.c recvfrom.c readdir.c readlink.c realloc.c regerror.c
 SRC_C += regsub.c remount.c remove.c rewind.c rewinddir.c rindex.c rootmntent.c
-SRC_C += seekdir.c setbuffer.c setenv.c
-SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c sleep.c sprintf.c
-SRC_C += sputl.c stat.c statvfs.c stdio0.c stime.c
+SRC_C += seekdir.c sendto.c setbuffer.c setenv.c
+SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c shutdown.c sleep.c
+SRC_C += socket.c sprintf.c sputl.c stat.c statvfs.c stdio0.c stime.c
 SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
 SRC_C += strnlen.c strnicmp.c strsep.c strxfrm.c strcoll.c strsignal.c
 SRC_C += strtod.c strtol.c swab.c swapon.c system.c
 SRC_C += telldir.c time.c tmpfile.c tmpnam.c ttyname.c
 SRC_C += tzset.c umount.c ungetc.c usleep.c utent.c utimes.c utsname.c
-SRC_C += vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
+SRC_C += vfork.c vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
 SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
 # ctype
 SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
@@ -96,6 +98,7 @@ SRC_LM += scalbn.c
 SRC_LM += sin.c sincos.c sinh.c
 SRC_LM += sqrt.c tgamma.c
 SRC_LM += __expo2.c __double_bits.c __fpclassify.c __log1p.c
+SRC_LM += m68k_fpgnulib.c
 
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_CURS = $(SRC_CURS:.c=.o)
@@ -181,7 +184,8 @@ $(OBJ_RL):%.o: %.c
 clean:
 	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
 	libc$(PLATFORM).a libm$(PLATFORM).a libtermcap$(PLATFORM).a \
-	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt
+	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt \
+	libgcc1-$(PLATFORM).a
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
 	rm -f $(KRN_HEADERS_COPY)

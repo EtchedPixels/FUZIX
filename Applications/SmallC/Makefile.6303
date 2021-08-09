@@ -1,5 +1,47 @@
-all:
+include $(FUZIX_ROOT)/Applications/rules.6303
 
-clean realclean clobber:
-	rm -f *.o sccz80 scc8080 scc6801 copt cc
+LIBDIR	=/usr/bin
+LDFLAGS	=
+
+DEFS	=
+
+OBJS = initials.o data.o error.o expr.o function.o gen.o io.o \
+       lex.o main.o outstack.o preproc.o primary.o stmt.o struct.o sym.o while.o
+
+OBJ_Z80 = codez80.o
+OBJ_8080 = code8080.o
+OBJ_6801 = code6801.o
+OBJ_6809 = code6809.o
+
+OBJ_COPT = copt.o
+
+INC = data.h defs.h prototype.h
+
+OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
+all:    scc6801 scc6809 scc8080 sccz80 copt
+
+sccz80: $(OBJS) $(OBJ_Z80)
+	$(LINKER) $(LINKER_OPT) -o sccz80 $(CRT0) $(OBJS) $(OBJ_Z80) $(LINKER_LIB)
+
+scc8080: $(OBJS) $(OBJ_8080)
+	$(LINKER) $(LINKER_OPT) -o scc8080 $(CRT0) $(OBJS) $(OBJ_8080) $(LINKER_LIB)
+
+scc6801: $(OBJS) $(OBJ_6801)
+	$(LINKER) $(LINKER_OPT) -o scc6801 $(CRT0) $(OBJS) $(OBJ_6801) $(LINKER_LIB)
+
+scc6809: $(OBJS) $(OBJ_6809)
+	$(LINKER) $(LINKER_OPT) -o scc6809 $(CRT0) $(OBJS) $(OBJ_6809) $(LINKER_LIB)
+
+copt:	$(OBJ_COPT)
+	$(LINKER) $(LINKER_OPT) -o copt $(CRT0) $(OBJ_COPT) $(LINKER_LIB)
+
+
+.c.o:
+	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
+
+$(OBJS_ALL) : $(INC)
+
+clean:
+	rm -f scc8080 sccz80 scc6801 scc6809
+	rm -f *~ *.o *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk
 
