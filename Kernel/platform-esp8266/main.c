@@ -11,12 +11,35 @@ uaddr_t ramtop = DATATOP;
 uint8_t need_resched;
 uint16_t swap_dev = 0xFFFF;
 
-void map_init(void) {}
+bufptr bufpool_end;
+
+/* End of RAM we can use for buffers */
+#define RAM_END		0x40000000
+
+void map_init(void)
+{
+	bufptr bp;
+	unsigned int nbuf;
+
+	/* Set up buffer memory */
+	nbuf = 0x40000000 - (uint32_t)bufpool;
+	nbuf /= sizeof(struct blkbuf);
+	bufpool_end = bufpool + nbuf;
+	bp = bufpool;
+	kprintf("Allocated %d disk buffers.\n", nbuf);
+	while(bp < bufpool_end) {
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = BF_FREE;
+		bp++;
+	}
+}
+
 void platform_discard(void) {}
 
 void platform_monitor(void)
 {
-	while(1);
+	while(1)
+		asm volatile ("waiti 15");
 }
 
 void platform_reboot(void)
@@ -47,13 +70,14 @@ int main(void)
 		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
 		panic("bad offsets");
 	}
-	
 
 	ramsize = 80;
 	procmem = 64;
 	kputs("\n\n\n");
 	sys_cpu_feat = AF_LX106_ESP8266;
 
+
+	/* And off we go */
 	fuzix_main();
 }
 

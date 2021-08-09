@@ -68,7 +68,9 @@ extern uint8_t _code_top[];
 #define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    9        /* Number of block buffers */
+
+#define CONFIG_DYNAMIC_BUFPOOL
+
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV	4
