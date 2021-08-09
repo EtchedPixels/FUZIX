@@ -170,7 +170,8 @@ dofork:
 .global platform_idle
 .text
 .align 4
-platform_idle:				/* TODO - waits ? */
+platform_idle:
+	waiti 0
 	ret
 
 .global program_vectors

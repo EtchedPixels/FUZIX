@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "rom.h"
 #include "globals.h"
+#include "esp8266_peri.h"
 
 extern int main(void);
 
@@ -19,6 +20,10 @@ void __main(void)
 	/* Configure CPU clock. */
 	ets_update_cpu_frequency(CPU_CLOCK);
 #endif
+
+	/* Warp emgines on */
+	CPU2X |= 1;
+
 	uart_div_modify(0, (PERIPHERAL_CLOCK * 1e6) / 115200);
 #if 0
 	/* Enable SPI flash mapping. */
