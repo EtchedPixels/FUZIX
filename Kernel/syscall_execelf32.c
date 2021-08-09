@@ -183,9 +183,9 @@ arg_t _execve(void)
 	}
 	udata.u_ptab->p_status = P_NOSLEEP;
 
-	/* FIXME. At this point we should call pagemap_realloc(), for this to work
-	 * on a variable-sized process system. This must be the last test as it
-	 * makes changes if it works. */
+	/* At this point we should call pagemap_realloc(), for this to work on a
+	 * variable-sized process system. This must be the last test as it makes
+	 * changes if it works. */
 
 	if (pagemap_realloc(NULL, lomem))
 		goto enomem;
@@ -272,8 +272,8 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p (%p) dynamic=%p stacktop=%p\n",
-			himem, lomem, lomem+PROGLOAD, dynamic, stacktop);
+	   kprintf("himem=%p lomem=%p (%p) dynamic=%p stacktop=%p\n",
+			   himem, lomem, lomem+PROGLOAD, dynamic, stacktop);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
@@ -290,6 +290,7 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
+
 	/* Clear the stack (the BSS has already been cleared by the loader). */
 
 	uzero((void*)dynamic, USERSTACK);

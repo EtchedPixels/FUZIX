@@ -40,8 +40,8 @@ usize_t valaddr(const uint8_t *base, usize_t size)
 		size = MAXUSIZE - (usize_t)base + 1;
 	if (!base || base < (const uint8_t *)DATABASE)
 		size = 0;
-	else if (base + size > (const uint8_t *)(size_t)udata.u_ptab->p_top)
-		size = (uint8_t *)(size_t)udata.u_ptab->p_top - base;
+	else if (base + size > (const uint8_t *)(size_t)udata.u_top)
+		size = (uint8_t *)(size_t)udata.u_top - base;
 	if (size == 0)
 		udata.u_error = EFAULT;
 	return size;
@@ -147,5 +147,5 @@ void swapin(ptptr p, uint16_t map)
 #endif
 }
 
-// vim: sw=4 ts=4 et:
+/* vim: sw=4 ts=4 et: */
 

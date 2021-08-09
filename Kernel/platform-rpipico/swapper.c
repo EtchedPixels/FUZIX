@@ -40,7 +40,7 @@ static uaddr_t get_proc_size(ptptr p)
         return 0;
     /* init is initially created with a p_top of 0, but it actually needs 512 bytes. */
     if (!p->p_top)
-        p->p_top = PROGLOAD + 512;
+        udata.u_top = p->p_top = PROGLOAD + 512;
     return p->p_top - PROGBASE;
 }
 
@@ -91,7 +91,11 @@ static struct mapentry* find_free_block(ptptr p)
             const struct mapentry* b = &allocation_map[i];
             void* p = (void*)PROGBASE + i*BLOCKSIZE;
             if (b->block != 0xff)
-                kprintf("#%d: slot %d block %d %p\n", i, b->slot, b->block, p);
+                kprintf("#%d: slot %d block %d/%d %p\n",
+                        i, b->slot,
+                        b->block,
+                        get_proc_size_blocks(&ptab[b->slot]),
+                        p);
         }
     }
 #endif
@@ -126,6 +130,7 @@ int pagemap_alloc(ptptr p)
     int slot = get_slot(p);
     #ifdef DEBUG
         kprintf("alloc %d, %d blocks\n", get_slot(p), blocks);
+        debug_blocks();
     #endif
 
     for (int i=0; i<blocks; i++)
@@ -182,7 +187,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
         }
     }
 
-    p->p_top = PROGBASE + blocks*BLOCKSIZE;
+    udata.u_top = p->p_top = PROGBASE + blocks*BLOCKSIZE;
     #ifdef DEBUG
         debug_blocks();
     #endif
