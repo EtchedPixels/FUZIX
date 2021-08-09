@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include "kernel.h"
 #include "rom.h"
 #include "globals.h"
 #include "esp8266_peri.h"
@@ -9,8 +9,6 @@ extern uint32_t *platform_vectors;
 
 void __main(void)
 {
-	uint32_t addr;
-
 	/* Warp emgines on - takes us to 160MHz (doesn't affect the peripheral clock) */
 	CPU2X |= 1;
 
