@@ -3,65 +3,86 @@
 #include <string.h>
 #include <unistd.h>
 
-#define ERRORS	57
-const char *err[57] = {
+#define ERRORS	60
+const char *err[60] = {
+/* 0 */
   "Success",
   "Operation not permitted",
   "No such file or directory",
   "No such process",
   "Interrupted system call",
+
   "I/O error",
   "No such device or address",
   "Arg list too long",
   "Exec format error",
   "Bad file number",
+
+/* 10 */
   "No child processes",
   "Try again",
   "Out of memory",
   "Permission denied",
   "Bad address",
+
   "Block device required",
   "Device or resource busy",
   "File exists",
   "Cross-device link",
   "No such device",
+
+/* 20 */
   "Not a directory",
   "Is a directory",
   "Invalid argument",
   "File table overflow",
   "Too many open files",
+
   "Not a typewriter",
   "Text file busy",
   "File too large",
   "No space left on device",
   "Illegal seek",
+
+/* 30 */
   "Read-only file system",
   "Too many links",
   "Broken pipe",
   "Math argument out of domain of efunc",
   "Math result not representable",
+
   "Lock table full",
   "Directory is not empty",
   "File name too long",
   "Address family not supported",
   "Operation already in progress",
+
+/* 40 */
+  "Address already in use",
   "Address not available",
   "Invalid system call number",
   "Protocol family not supported",
   "Operation not supported on transport endpoint",
+
   "Connection reset by peer",
   "Network is down",
   "Message too long",
   "Connection timed out",
   "Connection refused",
+
+/* 50 */
   "No route to host",
   "Host is down",
   "Network is unreachable",
   "Transport endpoint is not connected",
   "Operation is in progress",
+
   "Cannot send after transport endpoint shutdown",
   "Socket is already connected",
-  "No destination address specified"
+  "No destination address specified",
+  "No buffer space available",
+  "Protocol not supported"
+/* 60 */
 };
 
 static uint8_t buf[16384];

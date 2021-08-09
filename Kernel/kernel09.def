@@ -17,6 +17,7 @@ U_DATA__U_ARGN3             equ (U_DATA+24)  ; uint16_t
 U_DATA__U_ISP               equ (U_DATA+26)  ; void * (initial stack pointer when _exec()ing)
 U_DATA__U_TOP               equ (U_DATA+28)  ; uint16_t
 U_DATA__U_BREAK             equ (U_DATA+30)  ; uint16_t
+U_DATA__U_CODEBASE          equ (U_DATA+32)  ; uint16_t
 U_DATA__U_SIGVEC            equ (U_DATA+32)  ; table of function pointers (void *)
 
 ; Keep these in sync with struct p_tab!!

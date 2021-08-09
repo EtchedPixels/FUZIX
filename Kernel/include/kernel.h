@@ -18,6 +18,7 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #include "exec.h"
 
 #include "cpu.h"
+#include "fpu.h"
 
 #include "panic.h"
 
@@ -373,8 +374,9 @@ struct mount {
     struct filesys m_fs;
 };
 #define MS_RDONLY	1
-#define MS_NOSUID	2	/* Not yet implemented */
-#define MS_NOEXEC	4	/* Not yet implemented */
+#define MS_NOSUID	2
+#define MS_NOEXEC	4
+#define MS_NOATIME	8
 #define MS_REMOUNT	128
 
 /* Process table p_status values */
@@ -465,6 +467,8 @@ typedef struct p_tab {
 #define PFL_CHKSIG	1	/* Signal check required */
 #define PFL_ALARM	2	/* On alarm queue */
 #define PFL_BATCH	4	/* Used full time quantum */
+#define PFL_GRAPHICS	8	/* Graphics hint flag for some platforms
+                                   (platform owned) */
     uint8_t     p_tty;          /* Process' controlling tty minor # */
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
@@ -505,6 +509,12 @@ typedef struct p_tab {
     struct p_tab *p_timerq;
 } p_tab, *ptptr;
 
+#ifdef CONFIG_NET
+#include "netdev.h"
+#else
+#define issocket(ino)	0
+#endif
+
 /*
  *	We copy the u_data block between processes when we fork and on some
  *	platforms it moves. This means that there must be *no* internal pointer
@@ -530,9 +540,7 @@ typedef struct u_data {
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
     uaddr_t	u_break;	/* Top of data space */
-#ifdef CONFIG_32BIT
     uaddr_t	u_codebase;	/* 32bit platform base pointers */
-#endif
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
 
     uint8_t *   u_base;         /* Source or dest for I/O */
@@ -568,7 +576,10 @@ typedef struct u_data {
     usize_t	u_done;		/* Counter for driver methods */
 
 #ifdef CONFIG_UDATA_TEXTTOP
-	uaddr_t u_texttop;  /* Top of binary text (used for I/D systems) */
+    uaddr_t u_texttop;  /* Top of binary text (used for I/D systems) */
+#endif
+#ifdef CONFIG_NET
+    struct udata_net u_net;
 #endif
 #ifdef CONFIG_LEVEL_2
     uint16_t    u_groups[NGROUP]; /* Group list */
@@ -576,6 +587,9 @@ typedef struct u_data {
     uint8_t	u_flags;
 #define U_FLAG_NOCORE		1	/* Set if no core dump */
     struct rlimit u_rlimit[NRLIMIT];	/* Resource limits */
+#endif
+#ifdef CONFIG_FPU
+     struct fpu_context u_fpu;
 #endif
 } u_data;
 
@@ -602,6 +616,12 @@ struct s_argblk {
     uint8_t a_buf[512-3*sizeof(int)];
 };
 
+/* Time is passed as 2 x 32bit values for cleanness and portability */
+
+typedef struct {
+    uint32_t low;
+    uint32_t high;
+} time_t;
 
 /* waitpid options */
 #define WNOHANG		1
@@ -710,6 +730,8 @@ struct s_argblk {
 #define ESHUTDOWN	55		/* Cannot send after transport endpoint shutdown */
 #define EISCONN         56              /* Socket is already connected */
 #define EDESTADDRREQ    57              /* No destination address specified */
+#define ENOBUFS		58		/* No buffer space available */
+#define EPROTONOSUPPORT	59		/* Protocol not supported */
 
 /*
  * ioctls for kernel internal operations start at 0x8000 and cannot be issued
@@ -765,7 +787,7 @@ struct s_argblk {
  */
 
 /*
- *	Networking ioctls 04xx (see net_native.h)
+ *	Networking ioctls 04xx (see netdev.h)
  */
 
 /*
@@ -1008,7 +1030,7 @@ extern void exec_or_die(void);
 #define need_reschedule() (nready != 1 && runticks >= udata.u_ptab->p_priority)
 
 #ifdef CONFIG_LEVEL_2
-extern uint_fast8_t dump_core(uint8_t sig);
+extern uint_fast8_t dump_core(uint_fast8_t sig);
 #endif
 
 /* select.c */
@@ -1082,6 +1104,37 @@ extern void set_cpu_type(void);
 /* Executable header checks and stubs */
 extern uint8_t sys_cpu, sys_cpu_feat;
 extern uint8_t sys_stubs[];
+
+/* Core dump interfaces */
+
+/* This will change a lot in future ! */
+struct coredump {
+	uint16_t ch_magic1;
+#define MAGIC1 0xDEAD
+	uint16_t ch_magic2;
+#define MAGIC2 0xC0DE
+	uint8_t ch_type;	/* For now 16 or 32 bit number of bits - will
+				   change! */
+	uint32_t ch_base;
+	uint32_t ch_break;
+	uint32_t ch_sp;
+	uint32_t ch_top;
+};
+
+#define COREHDR_MEM		1
+
+struct coremem {
+	uint16_t mh_type;
+	uint16_t mh_flags;
+	uaddr_t mh_base;
+	usize_t mh_len;
+};
+
+/* Provided by the execve support */
+extern uint8_t write_core_image(void);
+extern void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags);
+/* Provided by the memory manager */
+extern void coredump_memory_image(inoptr ino);
 
 /* Platform interfaces */
 

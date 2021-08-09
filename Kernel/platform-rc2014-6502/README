@@ -1,70 +1,108 @@
 Basic support for a 6502 RC2014 banked memory platform
 
-Use a modern cc65 from https://github.com/cc65/cc65
+Use a modern cc65 from https://github.com/cc65/cc65 (2.18 as shipped in
+many Linux distributions is just fine).
 
-Our memory mapping hasn't been reworked from the C000 top of space so
-still looks like this
+The boot ROM image lives in my RC2014 ROM github at
+https://github.com/EtchedPixels/RC2014-ROM/tree/master/6502.
 
-	0x0000-0x00FF	ZP
-	0x0100-0x01FF	6502 Stack (per proc)
-	0x0200-0x03FF	Loader (reclaimed for udata)
-	0x0400-0x1FFF	Common data, compiler support and whatever code fills
-			the rest (compiler support is assumed to be common by
-			several bits of asm)
-	0x2000-0x3FFF	Window of user memory
+This kernel is designed to support the following combination of RC2014
+cards
 
-	0x4000-0xFDFF	Kernel code/vectors
-	0xFE00-0xFEFF	I/O Window
-	0xFF00-0xFFF9	Not yet used (FIXME)
-	0xFFFA-0xFFFF	Vectors
+6502 CPU (or 65C816 CPU) with I/O window at 0xFExx
+512K RAM/ROM card
+16C550A compatible uart at I/O 0xC0 (0xFEC0 as the 6502 sees it)
+6522 VIA at I/O 0x60
+IDE CF adapter at I/O 0x10
 
-In user space
-
-	0x0000-0x1FFF	Kernel common and work area
-	0x2000-0xFDFF	User space
-	0xFE00-0xFEFF	I/O Window
-	0xFF00-0xFFF9	Not yet used
-	0xFFFA-0xFFFF	Vectors
-
-We operate roughly like a 16K x 4 paged setup except that for now for simplicity
-we treat user space as a fixed 48K bank switch. The other difference is that
-being a 6502 we need it the other way up.
+Although the memory card can operate as 4 independent 16K pages for simplicity
+at this point we treat it as if it just provided 16K and 48K
 
 Interrupts deal wth the shared ZP by swapping the ZP back and forth with the
 interrupt copies (about 20 bytes involved)
 
-Hardware Arrangement
+Memory map:
+	0000-00FF		Zero page
+	0100-01FF		Stack
+	0200-1FFF		Common, constants, cc65 support code
+	2000-3FFF		Initial and discardable boot time
+	4000-FDFF		Kernel
+	FE00-FEFF		I/O window
+	FF00-FFFF		Vectors (mostly free)
 
-6502 CPU
-FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
-RC2014 bus
-512K RAM/ROM
-16550A UART
-
-Challenges:
-
-Next Steps
-
-DONE	Generate the binary with the correct hole at C000-C0FF
-DONE	Test and get initial boot working
-DONE	Rebuild user space for 0x2000 start
-	(need relocatable userspace yet)
-DONE	Figure out how to reclaim 0200-03FF with commondata start
-	(need to work out how loader knows where to jump...)
-DONE	Discard segment
-DONE	Write pre-emption code
-DONE	Timer interrupt (6522VIA)
-DONE	Debug signal handling
-
-DONE	New PCB design with the IO hole at FExx
-DONE	IDE card changes to qualify /R and /W with E to try and fix the IDE
-		hardware glitching
-
-IP	Real hardware testing
+User space:
+	0000-00FF		Zero page
+	0100-01FF		Stack
+	0200-1FFF		Common, constants, cc65 support code
+	2000-FDFF		User space
+	FE00-FEFF		I/O window
+	FF00-FFFF		Vectors (mostly free)
 
 
-Do buffer growth into discard
+The 6502 port has some interesting gotchas to be aware of and things that
+need addressing
+
+- We share the zero page and stack between user and kernel. The interrupt
+  path either has to have its own bank or copy/restore some state to make
+  interrupt handling in C work. For this port we don't waste 16K on an
+  interrupt bank but we could in theory. Whilst the 6502 hardware stack is
+  a precious resource the compiler makes little use of it so this seems to
+  be fine.
+
+- The common area is duplicated into each process common space. This means
+  any writes to this area are effectively process specific. For the udata it
+  is exactly what we want, for other things be careful.
+
+- There is a direct relationship between kernel and user on some ZP usage. In
+  particular the user C stack zero page locations are used by the kernel to
+  access arguments.
+
+- Signals are tricky. The C stack is maintained via ZP and is 16bits. As there
+  is no way to know if the stack was mid update an interrupt cannot tell if
+  the C stack is valid. The signal handlers deal with this by moving 256 bytes
+  down the C stack which should always land in a safe spot even if mid update.
+
+- Great care is taken to ensure nothing assumes ZP is at 0. On some 65C816
+  systems it won't be.
+
+- System calls are done via a JSR. BRK may look good but it's not reliable on
+  NMOS 6502 parts.
+
+- The cc65 support code is of reasonable size and actually the same for user
+  and kernel code. Some kind of shared library scheme for it would make
+  binaries a lot smaller.
+
+- There is minimal support for 65C816. The entire OS runs in 8bit 6502 mode
+  except for using MVN in fork, and some bits in the C library where setjmp
+  and longjmp need a minimal awareness of 65C816.
+
+TODO:
 Swap support
 Move entry point etc
-
 Look at other RC2014 device support
+
+Real System:
+
+Burn the ROM from the RC2014 ROM archive into a 512K flash if you don't already
+have it on the system
+
+make diskimage
+
+copy disk.img onto a CF adapter. The current image is about 40MB (mostly empty)
+and can be written to anything that size or larger.
+
+Insert CF card into system and power up.
+
+If you see just a letter 'R' on the console at 38400 baud then something is
+wrong with the system set up. If it is working you will get a copyright
+message and a set of debug as it loads from CF.
+
+Emulator:
+
+Build the ROM image as before
+Copy emu-ide.img somewhere
+
+./rc2014-6502 -1 -r 6502.rom -i emu-ide.img
+
+Add -R to enable an emulation of the RC2014 RTC card, add -w for the
+WizNet 830MJ.

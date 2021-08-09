@@ -40,7 +40,7 @@
 	.byte 0		; minor
 	.byte 0		; update
 	.byte 0		; patch
-	.ascii 'Fuzix 126 Loader'
+	.ascii 'Fuzix N8 Loader '
 	.byte '$'	; indicate valid label
 	.word 0		; no patch
 	.word 0xF200	; load target

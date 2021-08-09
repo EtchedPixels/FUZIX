@@ -11,12 +11,6 @@ extern uint8_t subslots;
 extern uint16_t vdpport;
 extern uint8_t vdptype;
 
-static const char *vdpnametab[] = {
-  "TMS9918A",
-  "V9938",
-  "V9958"
-};
-
 void map_init(void)
 {
   uint8_t *bp = kernel_map;
@@ -24,15 +18,12 @@ void map_init(void)
   uint8_t *rp;
   uint8_t i;
   uint8_t pp;
+#ifdef DEBUG
   uint8_t cp;
-  const char *vdpname = "??";
-  
-  if (vdptype < 3)
-    vdpname = vdpnametab[vdptype];
+
 
   cp = bp[5] & 3;
 
-  kprintf("VDP %s@%x\n", vdpname, vdpport);  
   kprintf("Subslots %x\n", subslots);
   kprintf("Cartridge in slot %d", cp);
   if (subslots &  (1 << cp))
@@ -47,6 +38,7 @@ void map_init(void)
   bp = ramtab;
   kprintf("RAM reported at %x:%x %x:%x %x:%x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
+#endif
 
   bp = user_map + 1;
   rp = ramtab + 4;
@@ -55,8 +47,10 @@ void map_init(void)
   memcpy(user_map, kernel_map, 6);
 
   /* Compute the user mapping from the top down */
+  /* TODO: when given a choice of RAM banks for a 16K range pick one that
+     is not subslotted */
   for (i = 0; i < 3; i++) {
-    /* We found now RAM for this 16K block - fail */
+    /* We found no RAM for this 16K block - fail */
     if (*rp == 0xFF)
       panic("can't find RAM");
     /* This is subslotted. Add this subslot to the subslots we must
@@ -72,9 +66,11 @@ void map_init(void)
   }
   /* Slot map with the common from the kernel map */
   user_map[5] = pp | (kernel_map[5] & 0xC0);
+#ifdef DEBUG
   bp = user_map;
   kprintf("User map %x %x %x %x %x %x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
+#endif
   copy_vectors();
   for (i = 0; i < 4; i++){
     for (pp = 0; pp < 4; pp++) {

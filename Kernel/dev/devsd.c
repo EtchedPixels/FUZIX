@@ -125,8 +125,8 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
     unsigned char *p;
     uint_fast8_t n, res;
 
-	/* Ensure that any deferred writes have finished. */
-	sd_spi_release();
+    /* Ensure that any deferred writes have finished. */
+    sd_spi_release();
 
     if (cmd & 0x80) {   /* ACMD<n> is the command sequense of CMD55-CMD<n> */
         cmd &= 0x7F;
@@ -165,7 +165,7 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
     /* Receive command response */
 /*    if (cmd == CMD12)  - ignore first reply byte anyway because it may
       be floating bus */
-        sd_spi_receive_byte();     /* Skip a stuff byte when stop reading */
+    sd_spi_receive_byte();     /* Skip a stuff byte when stop reading */
     n = 20;                             /* Wait for a valid response */
     do {
         res = sd_spi_receive_byte();

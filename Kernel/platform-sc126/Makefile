@@ -1,11 +1,11 @@
 ASRCS = crt0.s z180.s commonmem.s sc126.s monitor.s
-CSRCS += devices.c main.c devtty.c spi.c devi2c.c devenc28j60.c
+CSRCS += devices.c main.c devtty.c spi.c devi2c.c wiznet.c #devenc28j60.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/devsd_discard.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
 DSRCS += ../dev/devsd.c ../dev/i2c.c ../dev/i2c_bitbang.c
 DASRCS = ../dev/ds1302_rc2014_z180.s #../dev/z80softspi.s
-#NSRCS = ../dev/net/net_w5300.c
+NSRCS = ../dev/net/net_w5x00.c
 #NSRCS = ../dev/net/enc28j60.c ../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)
@@ -49,7 +49,7 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ boot-romwbw.tmp boot-romwbw.bin
 	rm -f fuzix.romwbw
 
-z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
+z180.rel: z180.s kernel.def ../cpu-z180/z180.s
 
 #
 #	Compile up the boot block
@@ -66,3 +66,15 @@ bootblock:
 	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
 	# Chop off the leading 61440 bytes we don't want
 	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=fuzix.romwbw of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

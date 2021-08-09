@@ -37,7 +37,7 @@ SIOA_D		.equ	0x00
 
 start:
 	; A modern partition setup has lots of room for boot space, so we
-	; just load the blocks after the loader (1-125).
+	; just load the blocks after the loader (2-126).
 
 	; FFxx we must not touch initially as it holds the banked memory
 	; helpers placed by the firmware.
@@ -60,7 +60,7 @@ go:
 	out (LBA_2),a
 	out (LBA_1),a
 
-	ld de,#0x7C01		; sectors 1-125
+	ld de,#0x7C02		; sectors 2-126
 	ld hl,#0x0100		; load address
 load_loop:
 	call ide_ready

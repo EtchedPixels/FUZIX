@@ -20,10 +20,11 @@ U_DATA__U_ARGN3             = U_DATA+24  ! uint16_t
 U_DATA__U_ISP               = U_DATA+26  ! void * initial stack pointer when _execing
 U_DATA__U_TOP               = U_DATA+28  ! uint16_t
 U_DATA__U_BREAK             = U_DATA+30  ! uint16_t
-U_DATA__U_SIGVEC            = U_DATA+32  ! table of function pointers void *
-U_DATA__U_BASE              = U_DATA+96  ! uint8_t *
-U_DATA__U_COUNT             = U_DATA+98 ! uint16_t
-U_DATA__U_OFFSET            = U_DATA+100 ! uint32_t
+U_DATA__U_CODEBASE	    = U_DATA+32  ! uint16_t
+U_DATA__U_SIGVEC            = U_DATA+34  ! table of function pointers void *
+U_DATA__U_BASE              = U_DATA+98  ! uint8_t *
+U_DATA__U_COUNT             = U_DATA+100 ! uint16_t
+U_DATA__U_OFFSET            = U_DATA+102 ! uint32_t
 
 ! Keep these in sync with struct p_tab!!
 P_TAB__P_STATUS_OFFSET      = 0

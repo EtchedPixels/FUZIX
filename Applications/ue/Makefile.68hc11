@@ -1,0 +1,27 @@
+include $(FUZIX_ROOT)/Applications/rules.68hc11
+
+APPS = ue.fuzix ue.ansi ue
+
+SRCS  = ue.c term-fuzix.c term-ansi.c term.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(APPS) size.report
+
+$(APPS): ue.h
+
+ue.fuzix: ue.o term-fuzix.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) ue.o term-fuzix.o $(LINKER_TAIL)
+
+ue.ansi: ue.o term-ansi.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) ue.o term-ansi.o $(LINKER_TAIL)
+
+ue: ue.o term.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) ue.o term.o -ltermcap68hc11 $(LINKER_TAIL)
+
+size.report: $(APPS)
+	ls -l $< > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel
+

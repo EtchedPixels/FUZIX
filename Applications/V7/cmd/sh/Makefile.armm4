@@ -1,0 +1,52 @@
+ROOT = ../../../..
+include $(ROOT)/Applications/rules.armm4
+
+SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
+        macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
+        string.c word.c xec.c glob.c
+
+INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
+
+OBJS = $(SRCS:.c=.o)
+
+all: fsh sh
+
+$(OBJS): $(INCS)
+FOBJS = $(patsubst %.c,fshbuild/%.o, $(SRCS))
+
+OBJS = $(SRCS:.c=.o)
+
+$(FOBJS): $(INCS)
+
+$(OBJS): %.o : %.c
+	$(CC) -c $(CFLAGS) $(COPT) $<
+
+$(FOBJS): fshbuild/%.o: %.c
+	$(CC) -c $(CFLAGS) $(COPT) -DBUILD_FSH $< -o $@
+
+sh: $(CRT0) $(OBJS)
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+fsh: $(CRT0) $(FOBJS)
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(FOBJS) $(OBJS) sh fsh $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.data *.text *.debug size.report *.o
+
+rmbak:
+	rm -f *~ core

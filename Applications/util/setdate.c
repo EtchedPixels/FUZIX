@@ -162,6 +162,9 @@ void usage(void)
     exit(1);
 }
 
+/* Used when we start with nonsense */
+static struct tm notime;
+
 int main(int argc, char *argv[])
 {
     struct tm *tm;
@@ -204,14 +207,15 @@ int main(int argc, char *argv[])
             tm->tm_year + 1900,
             tm->tm_mon + 1,
             tm->tm_mday);
-    }
+    } else
+        tm = &notime;
 redate:
     printf("Enter new date: ");
     fflush(stdout);
     if (fgets(newval, 128, stdin) && *newval != '\n') {
         if (sscanf(newval, "%d-%d-%d", &y, &m, &d) != 3 ||
             y < 1970 || m < 1 || m > 12 || d < 1 || d > dim[m]) {
-            fprintf(stderr, "Invalid date.\n");
+            fputs("Invalid date.\n", stderr);
             goto redate;
         }
         tm->tm_year = y - 1900;
@@ -219,7 +223,7 @@ redate:
         tm->tm_mday = d;
         set = 1;
     }
-    if (tm) {
+    if (tm != &notime) {
         printf("Current time is %2d:%02d:%02d\n",
             tm->tm_hour,
             tm->tm_min,
@@ -232,7 +236,7 @@ retime:
         s = 0;
         if (sscanf(newval, "%d:%d:%d", &h,&m,&s) < 2 ||
             h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
-            fprintf(stderr, "Invalid time.\n");
+            fputs("Invalid time.\n", stderr);
             goto retime;
         }
         tm->tm_hour = h;

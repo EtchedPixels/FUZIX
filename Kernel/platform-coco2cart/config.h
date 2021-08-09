@@ -1,3 +1,11 @@
+/*
+ *	Set this according to your system. There isn't room in such a cramped
+ *	set up for both and for 6K graphics mode.
+ */
+
+#undef CONFIG_WITH_IDE
+#define CONFIG_WITH_SDC
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -63,7 +71,6 @@ extern uint16_t cocoswap_dev;
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
 
-#define CONFIG_IDE
 #define platform_copyright()
 
 #define BOOTDEVICENAMES "hd#"

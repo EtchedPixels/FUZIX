@@ -1,0 +1,16 @@
+PLATFORM = 68hc11
+CC = m6811-elf-gcc
+ASM = m681-elf-as
+AR = m6811-elf-ar
+LINKER = $(FUZIX_ROOT)/Library/link/ld68hc11
+CFLAGS = -fomit-frame-pointer -mrelax -mshort -c -Os
+CFLAGS += -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/68hc11
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_TAIL += -lc68hc11 -L$(LIBGCCDIR) -lgcc
+#LINKER_OPT += --script=$(TARGET).link
+ASM_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_68hc11_rel.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_68hc11_rel.o
+
+.SUFFIXES: .c .o .y

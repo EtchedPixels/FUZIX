@@ -7,6 +7,7 @@ extern void *memcpy(void *, const void  *, size_t);
 extern void *memset(void *, int, size_t);
 extern int memcmp(const void *, const void *, size_t);
 extern size_t strlen(const char *);
+extern int strcmp(const char *, const char *);
 
 #define brk_limit() ((udata.u_syscall_sp) - 512)
 
@@ -14,11 +15,6 @@ extern size_t strlen(const char *);
 
 /* User's structure for times() system call */
 typedef unsigned long clock_t;
-
-typedef struct {
-  uint32_t high;
-  uint32_t low;
-} time_t;
 
 typedef union {            /* this structure is endian dependent */
     clock_t  full;         /* 32-bit count of ticks since boot */
@@ -65,5 +61,18 @@ extern void *memcpy32(void *to, const void *from, size_t bytes);
 
 extern int probe_memory(void *p);
 extern int cpu_type(void);
+
+/* Optional mapping helpers for I/O memory windows when we have portable
+   driver code. The platform defines IOMAP(x) to return the value of the
+   memory location for that I/O port */
+
+#define IOMEM(x)		((volatile uint8_t *)IOMAP((uint8_t)x))
+#define IOMEM16(x)		((volatile uint8_t *)IOMAP(x))
+
+#define in(x)			(*IOMEM(x))
+#define out(x,y)		do { *IOMEM(x) = (y); } while(0)
+/* 16bit port numbers with 8bit data - not 16bit data */
+#define in16(x)			(*IOMEM16(x))
+#define out16(x,y)		do { *IOMEM16(x) = (y); } while(0)
 
 #define __fastcall

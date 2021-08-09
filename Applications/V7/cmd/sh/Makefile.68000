@@ -1,18 +1,4 @@
-PLATFORM = 68000
-CC = m68k-uclinux-gcc
-ASM = m68k-uclinux-as
-AR = m68k-uclinux-ar
-LINKER = m68k-uclinux-ld
-CFLAGS = -Os -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -m68000 -I../../../../Library/include -I../../../../Library/include/68000
-LINKER_OPT = -L../../../../Library/libs -lc68000
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../../../Library/elf2flt.ld
-CRT0 = ../../../../Library/libs/crt0_68000.o
-CRT0NS = ../../../../Library/libs/crt0nostdio_68000.o
-# For now while we get going. Really we want to use some kind of elf2zmagic
-# with relocs.
-ELF2FUZIX = elf2flt -s 16384
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.68000
 
 SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
         macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
@@ -38,11 +24,11 @@ $(FOBJS): fshbuild/%.o: %.c
 	$(CC) -c $(CFLAGS) $(COPT) -DBUILD_FSH $< -o $@
 
 sh: $(CRT0) $(OBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 fsh: $(CRT0) $(FOBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -lreadline68000
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -lreadline68000 $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 size.report: $(APPS)

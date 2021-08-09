@@ -49,7 +49,9 @@
 #else
 #define PTSIZE		8
 #define PTNUM		8
+#ifndef PAGE_VIDEO
 #define PAGE_VIDEO	PAGE_INVALID
+#endif
 #endif
 
 /* Bank numbers we actually use */
@@ -262,6 +264,10 @@ int pagemap_prepare(struct exec *hdr)
 	/* If it is relocatable load it at PROGLOAD */
 	if (hdr->a_base == 0)
 		hdr->a_base = PROGLOAD >> 8;
+	if (hdr->a_base != (PROGLOAD >> 8)) {
+		udata.u_error = ENOEXEC;
+		return -1;
+	}
 	/* If it doesn't care about the size then the size is all the
 	   space we have */
 	if (hdr->a_size == 0)

@@ -2,7 +2,7 @@
 ;	N8 platform specific code. Not too much here as the ROM did a lot of
 ;	work for us
 ;
-        .module mark4
+        .module n8
         .z180
 
         ; exported symbols
@@ -55,6 +55,47 @@ init_hardware:
 
         jp z180_init_hardware
 
+
+	.globl _far_read
+	.globl _far_write
+	.globl _far_writable
+;
+;	Helpers for poking memory to test during early boot up. L is the
+;	bank and for writing also the code we use
+;
+_far_read:
+	; Flip the top 4K (incldes our stack!!!)
+	in0 c,(MMU_CBR)
+	out0(MMU_CBR),l
+	ld hl,(0xFFFE)
+	out0(MMU_CBR),c
+	ret
+_far_write:
+	in0 c,(MMU_CBR)
+	out0(MMU_CBR),l
+	ld (0xFFFE),hl
+	out0(MMU_CBR),c
+	ret
+_far_writable:
+	in0 c,(MMU_CBR)
+	out0(MMU_CBR),l
+	ld hl,#0xFFFE
+	ld a,(hl)
+	inc (hl)
+	cp (hl)
+	jr z, no_write
+	dec (hl)
+	cp (hl)
+	jr nz, no_write
+	ld l,#1
+	out0(MMU_CBR),c
+	ret
+no_write:
+	ld l,#0
+	out0(MMU_CBR),c
+	ret
+
+
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
 ; -----------------------------------------------------------------------------
@@ -84,3 +125,4 @@ inchar:
         in0 a, (ASCI_RDR0)
 platform_interrupt_all:
         ret
+

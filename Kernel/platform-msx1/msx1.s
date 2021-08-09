@@ -16,6 +16,13 @@
 	    ; video driver
 	    .globl _vtinit
 
+	    ; VDP driver
+	    .globl _vdp_init
+	    .globl _vdp_type
+	    .globl _vdp_load_font
+	    .globl _vdp_restore_font
+	    .globl _vdp_wipe_consoles
+
             ; exported debugging tools
             .globl _platform_monitor
             .globl outchar
@@ -47,10 +54,6 @@
 	    .globl _machine_type
 
 	    .globl _int_disabled
-	    ;
-	    ; vdp - we must initialize this bit early for the vt
-	    ;
-	    .globl vdpinit
 
 	    .globl s__DISCARD
 
@@ -117,46 +120,13 @@ init_hardware:
 	    ld a, #'2'
 	    out (0x2F), a
 
-	    ; Program the video engine
-
-	    ld bc,(_vdpport)
-	    ; Play with status register 2
-	    dec c
-	    ld a,#0x8F
-	    out (c),a
-	    nop
-	    nop
-	    in a,(c)
-	    ld a,#2
-	    out (c),a
-	    ld a,#0x8F
-	    out (c),a
-	    nop
-	    nop
-vdpwait:    in a,(c)
-	    and #0xE0
-	    add a
-	    jr nz, not9918a	; bit 5 or 6
-	    jr nc, vdpwait	; not bit 7
-	    ; we vblanked out - TMS9918A
-	    xor a
+	    call _vdp_type
+	    ld a,l
 	    ld (_vdptype),a
-	    jr vdp_setup
-not9918a:   ; Use the version register
-	    ld a,#1
-	    out (c),a
-	    ld a,#0x8F
-	    out (c),a
-	    nop
-	    nop
-	    in a,(c)
-	    rrca
-	    and #0x1F
-	    inc a
-	    ld (_vdptype),a
-vdp_setup:
-	    call vdpinit
+	    call _vdp_init
 	    call _vdp_load_font
+	    call _vdp_wipe_consoles
+	    call _vdp_restore_font
 
 	    ld a, #'3'
 	    out (0x2F), a

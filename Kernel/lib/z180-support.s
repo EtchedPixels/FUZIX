@@ -55,8 +55,8 @@ no_timer:
         ; MUST arrange for this table to be 32-byte aligned
 
 interrupt_table:
-        .dw z180_irq1               ;     1    INT1 external interrupt - ? disconnected
-        .dw z180_irq2               ;     2    INT2 external interrupt - SD card socket event
+        .dw z180_irq1               ;     1    INT1 external interrupt
+        .dw z180_irq2               ;     2    INT2 external interrupt
         .dw z180_irq3               ;     3    Timer 0
         .dw z180_irq_unused         ;     4    Timer 1
         .dw z180_irq_unused         ;     5    DMA 0

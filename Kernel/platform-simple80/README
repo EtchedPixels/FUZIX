@@ -4,7 +4,7 @@ Required firmware: Simple 80 CP/M ROM 0.12 or higher
 
 Cards required:
 
-Simple 80 processor board
+Simple 80 processor board (with the A16 fix)
 Simple 80 CF adapter (RC2014 can probably be used as it decodes 0x90)
 RTC at 0xC0 (optional)
 CTC at 0xD0 (to avoid clashes with the above)
@@ -16,6 +16,10 @@ be set to count timer 2 into timer 3 (jumper ZT2 to CT3).
 This is a design that happens to have 128K RAM but the 64K banks are flipped
 directly. The boot EEPROM must contain firmware that loads a copier into the
 top 256 bytes of both RAM banks.
+
+A16 Fix:
+
+The version 1 simple80 design has a pull up R16 that should be a pull down.
 
 Memory map
 
@@ -39,10 +43,20 @@ TODO
 
 Faster interbank copying
 Swap only needed blocks for speed up
-Finish support for the SIO modifications
+Finish support for the SIO modifications and alternate banking
 Maybe support the buggy boards (means no second serial port)
 Support the 150Hz clock board
 Fork a 512K RAM modified version
+
+Build Instructions
+
+make diskimage will leave you a ready to run disk and emulator image.
+
+The emulator can run it with
+
+	simple80 -i emu-ide.img
+
+Detail:
 
 Emulation
 

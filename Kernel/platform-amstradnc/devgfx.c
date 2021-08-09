@@ -16,10 +16,23 @@ static struct display ncdisplay = {
   0xFF, 0xFF,		/* For now */
   FMT_MONO_WB,
   HW_UNACCEL,
-  GFX_TEXT,
+  GFX_TEXT|GFX_MAPPABLE,
   0,
   GFX_DRAW,
+  80,16
 };
+
+static struct videomap ncmap = {
+  0,
+  0,
+  0xA000,
+  0x2000,
+  0,
+  0,
+  0,
+  MAP_FBMEM|MAP_FBMEM_SIMPLE
+};
+
 #else
 static struct display ncdisplay = {
   0,
@@ -28,10 +41,23 @@ static struct display ncdisplay = {
   0xFF, 0xFF,		/* For now */
   FMT_MONO_WB,
   HW_UNACCEL,
-  GFX_TEXT,
+  GFX_TEXT|GFX_MAPPABLE,
   0,
-  GFX_DRAW
+  GFX_DRAW,
+  80,8
 };
+
+static struct videomap ncmap = {
+  0,
+  0,
+  0xB000,
+  0x1000,
+  0,
+  0,
+  0,
+  MAP_FBMEM|MAP_FBMEM_SIMPLE
+};
+
 #endif
 
 int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
@@ -44,6 +70,14 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
   switch(arg) {
   case GFXIOC_GETINFO:
     return uput(&ncdisplay, ptr, sizeof(ncdisplay));
+  case GFXIOC_MAP:
+    if (!(udata.u_ptab->p_flags & PFL_GRAPHICS)) {
+      udata.u_error = ENOMEM;
+      return -1;
+    }
+    return uput(&ncmap, ptr, sizeof(ncmap));
+  case GFXIOC_UNMAP:
+    return 0;
   case GFXIOC_DRAW:
     /* Note: we assume we will not map the screen over the buffers */
     tmp = (uint8_t *)tmpbuf();

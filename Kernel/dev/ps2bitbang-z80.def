@@ -1,0 +1,196 @@
+;
+;	PS/2 protocol bit bang framework
+;
+;	To make it easy to read only a few simple substitutions are done
+;	If two are present then one will need to be generated per file as
+;	only globally needed names will be unique
+;
+;	abort_sp can be shared.
+;
+
+.macro ps2_handlers X PORTR PORTW RESPONSE_DELAY POLL_DELAY RXBIT TXBIT
+;
+;	Must preseve registers
+;
+set_timeout:
+	exx
+	ld hl,#0x4000		; hard coded for now
+	exx
+	ret
+
+ps2'X'_timeout:
+	exx
+	ld hl, #0xFFFD
+	ld sp, (abort_sp)
+	; Jam the clock
+	HOLD_OFF
+	ret
+
+;
+;	We order the failure handling code first up here as we need
+;	a tight fast path on the non error bits
+;
+;	Ugly but hard to avoid on a slower processor
+;
+receive_timeout_loop:
+	djnz receive_wait
+
+	; Keyboard is not talking to us
+	; Stop it from talking until the next poll
+receive_timeout:
+	ld de, #-1		; error code for 'nowt received'
+
+receive_done:
+	HOLD_OFF
+
+	ex de,hl		; error into HL
+	ret
+
+	; The keyboard lowered the clock - that means it will be sending
+	; us a code. Each code it sends consists of
+	;
+	; start bit 0
+	; 8 data bits low-high order
+	; parity (odd)
+	; stop bit (1)
+;
+;	The higher level protocol
+;
+_ps2'X'_get:
+	; This entry point is used when we are doing a send/receive pair
+	; Get the bit receiving function into IY
+
+	ld c, #'PORTR'
+	ld (abort_sp),sp
+
+	ld b, #'RESPONSE_DELAY'
+
+	; We have some tight timings ahead - pull what we can early
+
+	ld d, #0xFF
+	call set_timeout
+
+	; Float the clock
+	FLOAT_CLOCK
+
+	; Allow the keyboard time to respond
+	; This is our tightest timing path: the moment we see the clock go
+	; low to reading the bits is very very tight indeed. We cheat on
+	; the start bit
+receive_wait:
+	GET_CLOCK
+	jr nz, receive_timeout_loop
+
+	; Now wait for it to go high again
+
+	ld b,#255
+receive_wait_2:
+	GET_CLOCK
+	jr nz, receive_go
+	djnz receive_wait_2
+	jr receive_timeout
+receive_go:
+	ld e,#0
+	ld b,#8
+	; In the after_tx case this will be 9 as we have the time
+receive_after_tx:
+read_bits:
+	call 'RXBIT'		; call the bit in function
+	djnz read_bits
+	; Carry is now the start bit (must be 0)
+	jr c, bad_start_bit
+	; Check what parity should be
+	ld a,e
+	or a
+	ld l,e			; save character
+	ld h,#0x80		; expect a 1 bit for even
+	jp pe, even_parity
+	ld h,#0x00
+even_parity:
+	call 'RXBIT'		; read the parity bit
+	ld a,e
+	and #0x80
+	cp h			; check as expected
+	jr z, parity_good
+	ld de,#-2		; parity error
+	jr receive_done
+
+parity_good:
+	call 'RXBIT'		; we must read the stop bit or the keyboard
+				; will think we failed the receive
+	ld h,#0
+	ex de,hl		; save char in DE
+	jr receive_done
+
+bad_start_bit:
+	ld de,#-3
+	jr receive_done
+
+;
+;	The transmit protocol for sending data to the keyboard
+;
+_ps2'X'_put:
+	ld c, #'PORTW'
+
+	ld (abort_sp),sp
+
+	ld d, l
+	call set_timeout
+	;
+	; Pull the clock low to get attention
+	;
+	LOWER_CLOCK
+	;
+	;	Wait 100us with the clock pulled low for the other end to
+	;	notice the fact we are banging on the door
+
+	ld b, #'POLL_DELAY'
+send_wait_1:
+	djnz send_wait_1
+	;
+	;	Pull data low as well
+	;
+	LOWER_DATA
+	;
+	;	Release the clock
+	;
+	FLOAT_CLOCK
+	;
+	;	The host will now start sending us clocks and we send bits
+	;
+	;	The data pull down will act as the start bit
+	;
+	ld b,#8		;	Send 8 data bits
+	ld l, d		;	save byte we are sending
+
+send_byte:
+	call 'TXBIT'	;	send a bit
+	djnz send_byte
+	ld a, d
+	or a		;	Which parity ?
+	ld l, #1
+	jp pe, out_parity_1
+	dec l
+out_parity_1:
+	call 'TXBIT'	;	Send the parity bit
+	ld l, #1
+	call 'TXBIT'	;	Send the stop bit
+
+	;
+	;	We should now receive a handshake from the other
+	;	end. We know the data line is floating as we sent a 1
+	;
+
+	call 'RXBIT'
+	rl e		;	check received bit (top bit)
+
+	jr c, receive_no_ack
+	ld de, #0
+	jp receive_done
+
+receive_no_ack:
+	;	The keyboard did not ack our request. So we are dome
+	ld de, #-4
+	jp receive_done
+
+.endm

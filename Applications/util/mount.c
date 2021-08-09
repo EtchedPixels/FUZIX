@@ -59,6 +59,10 @@ static int flagsof(struct mntent *mnt)
         f |= MS_RDONLY;
     if (hasmntopt(mnt, "nosuid"))
         f |= MS_NOSUID;
+    if (hasmntopt(mnt, "noexec"))
+        f |= MS_NOEXEC;
+    if (hasmntopt(mnt, "noatime"))
+        f |= MS_NOATIME;
     return f;
 }
 

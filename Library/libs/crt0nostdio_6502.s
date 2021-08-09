@@ -7,6 +7,7 @@
 
 	.import		__CODE_SIZE__, __RODATA_SIZE__
 	.import		__DATA_SIZE__, __BSS_SIZE__
+	.import		__BSS_RUN__
 	.import		__STARTUP_SIZE__
 	.import		_exit
 	.export		_environ
@@ -14,9 +15,9 @@
 	.export		__syscall_hook
 	.import		_main
 	.import		popax, pushax
-	.import		___stdio_init_vars
 	.import		decsp8, incsp8, decsp2, incsp2
 	.import		jmpvec
+	.import		__syscall
 
 	.export __STARTUP__ : absolute = 1;
 
@@ -40,6 +41,7 @@ head:
 	.byte	0			; TODO - ZP size
 
 	.word	__sighandler		; IRQ path signal handling helper
+	.word	0			; Relocations
 
 ;
 ;	First cut at sighandling stubs, horrible on 6502!
@@ -102,6 +104,17 @@ start:
 ;
 ;	FIXME: sort out some sort of constructor mechanism for this
 ;
+;
+;	Fix our break (it may be off because of relocation packing and
+;	only we know the link time value we want
+;
+	lda	#<(__BSS_RUN__+__BSS_SIZE__)
+	ldx	#>(__BSS_RUN__+__BSS_SIZE__)
+	jsr	pushax
+	ldy	#2
+	ldx	#30
+	jsr	__syscall
+
 	lda	sp
 	ldx	sp+1
 	clc

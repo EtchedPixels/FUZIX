@@ -5,7 +5,7 @@ Z80_TYPE                    .equ 2
 OS_BANK                     .equ 0x00         ; value from include/kernel.h
 
 ; N8 mnemonics
-FIRST_RAM_BANK              .equ 0x80         ; low 512K of physical memory is ROM/ECB window.
+FIRST_RAM_BANK              .equ 0x00         ; low 512K of physical memory is ROM/ECB window.
 Z180_IO_BASE                .equ 0x40
 
 ; No standard clock speed for the Mark IV board, but this is a common choice.

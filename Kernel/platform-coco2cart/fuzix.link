@@ -5,6 +5,7 @@ section .vectors load 0x0100
 section .udata load 0x1A00
 section .magic
 section .common
+section .commondata
 section .data
 section .bss
 section .bufpool

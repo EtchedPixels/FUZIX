@@ -40,12 +40,13 @@
 
 
 /* slot and subslot containing the sd interface */
-uint8_t slotmfr;
+static uint8_t slotmfr;
 
 int megasd_probe(void)
 {
     uint8_t *sigp = (uint8_t *) MSD_MAGIC_ADDR;
     uint8_t slot;
+    irqflags_t irq = di();
 
     for (slot = 1; slot < 3; slot++) {
         /* try to find MegaFlashRom signature in slots 1 and 2 */
@@ -56,27 +57,26 @@ int megasd_probe(void)
             goto found;
     }
     mapslot_bank1(slotram);
-    // XXX: this that makes it easier to run witn megaSD when using openmsx
-    //      otherwise setting up the megaSD for proper detection is a hassle
-    slot = 2;
-    slotmfr = 0x80 | MSD_SUBSLOT << 2 | 2;
-    //return 0;
+    return 0;
 
 found:
     mapslot_bank1(slotram);
+    irqrestore(irq);
     kprintf("MegaSD found in slot %d-3\n", slot);
     return 1;
 }
 
-void sd_spi_map_interface()
+static irqflags_t sd_spi_map_interface(void)
 {
     mapslot_bank1(slotmfr);
     writeb(MSD_PAGE, MFR_BANKSEL0);
+    return di();
 }
 
-void sd_spi_unmap_interface()
+static void sd_spi_unmap_interface(irqflags_t irq)
 {
     mapslot_bank1(slotram);
+    irqrestore(irq);
 }
 
 void sd_spi_clock(bool go_fast)
@@ -86,14 +86,14 @@ void sd_spi_clock(bool go_fast)
 
 void sd_spi_raise_cs(void)
 {
-    sd_spi_map_interface();
+    irqflags_t irq = sd_spi_map_interface();
     writeb(sd_drive, MSD_DEVSEL);
 
     /* reading from MSD_CS raises CS for all cards */
 
     readb(MSD_CS);
 
-    sd_spi_unmap_interface();
+    sd_spi_unmap_interface(irq);
 }
 
 void sd_spi_lower_cs(void)
@@ -103,22 +103,21 @@ void sd_spi_lower_cs(void)
 
 void sd_spi_transmit_byte(unsigned char byte)
 {
-    sd_spi_map_interface();
+    irqflags_t irq = sd_spi_map_interface();
 
     writeb(byte, MSD_RDWR);
 
-    sd_spi_unmap_interface();
+    sd_spi_unmap_interface(irq);
 }
 
 uint8_t sd_spi_receive_byte(void)
 {
     unsigned char c;
-
-    sd_spi_map_interface();
+    irqflags_t irq = sd_spi_map_interface();
 
     c = readb(MSD_RDWR);
 
-    sd_spi_unmap_interface();
+    sd_spi_unmap_interface(irq);
 
     return c;
 }
@@ -128,18 +127,19 @@ uint8_t sd_spi_receive_byte(void)
  * Target page is always mapped to slot_page2, and the target address offset accordingly.
  *
  */
-void sd_spi_txrx_sector(bool is_read)
+static void sd_spi_txrx_sector(bool is_read)
 {
     uint16_t addr, len, len2;
     uint8_t *page;
     uint8_t page_offset;
+    irqflags_t irq;
 
     addr = ((uint16_t) blk_op.addr) % 0x4000 + 0x8000;
     page_offset = (((uint16_t)blk_op.addr) / 0x4000);
     page = &udata.u_page;
 
     len = 0xC000 - addr;
-    sd_spi_map_interface();
+    irq = sd_spi_map_interface();
 
     if (blk_op.is_user) {
         RAM_PAGE2 = *(page + page_offset);
@@ -166,9 +166,8 @@ void sd_spi_txrx_sector(bool is_read)
         else
                 memcpy((uint8_t *)MSD_RDWR, blk_op.addr, BLKSIZE);
     }
-    sd_spi_unmap_interface();
+    sd_spi_unmap_interface(irq);
 }
-
 
 bool sd_spi_receive_sector(void)
 {

@@ -1,0 +1,7 @@
+#
+#	Not for 68HC11
+#
+
+all:
+
+clean:

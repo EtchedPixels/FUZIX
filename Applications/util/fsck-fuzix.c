@@ -58,6 +58,8 @@ struct direct {
         char     d_name[30];
 };
 
+#define BLK_OVERSIZE32	0xFE
+
 #define MAXDEPTH 20	/* Maximum depth of directory tree to search */
 
 /* This checks a filesystem */
@@ -76,6 +78,7 @@ static int rootfs;
 static int aflag;
 
 static unsigned char *bitmap;
+static uint16_t bitmap_size;
 static int16_t *linkmap;
 static char *daread(uint16_t blk);
 static void dwrite(uint16_t blk, char *addr);
@@ -131,19 +134,24 @@ static void progress(void)
     }
 }
 
+static uint8_t bitmask[8] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+
 static void bitset(uint16_t b)
 {
-    bitmap[b >> 3] |= (1 << (b & 7));
+    uint16_t n = b >> 3;
+    if (n >= bitmap_size)
+        return;
+    bitmap[n] |= bitmask[b & 7];
 }
 
-static void bitclear(uint16_t b)
-{
-    bitmap[b >> 3] &= ~(1 << (b & 7));
-}
+static const uint8_t bmask[] = { 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 
 static int bittest(uint16_t b)
 {
-    return (bitmap[b >> 3] & (1 << (b & 7))) ? 1 : 0;
+    uint16_t n = b >> 3;
+    if (n >= bitmap_size)
+        return 0;
+    return (bitmap[n] & bitmask[b & 7]) ? 1 : 0;
 }
 
 static void panic(const char *s)
@@ -212,7 +220,9 @@ int perform_fsck(char *name)
         return (error |= 32);
 
     linkmap = (int16_t *) calloc(8 * superblock.s_isize, sizeof(int16_t));
-    bitmap = calloc((superblock.s_fsize + 7UL) / 8, sizeof(char));
+    /* Not worth worrying about the one spare byte in some cases */
+    bitmap_size = (superblock.s_fsize >> 3) + 1;
+    bitmap = calloc(bitmap_size, sizeof(char));
 
     if (!bitmap || !linkmap) {
         fputs(no_memory, stderr);
@@ -293,7 +303,7 @@ static void pass1(void)
 
     icount = 0;
 
-    /* Consider rescannign this basic loop in pass4 so that we don't have
+    /* Consider rescanning this basic loop in pass4 so that we don't have
        to keep both bitmap and linkmap around at the same time */
     for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);
@@ -303,7 +313,7 @@ static void pass1(void)
             continue;
 
         mode = ino.i_mode & F_MASK;
-        /* FIXME: named pipes.. */
+        /* FIXME: named pipe/socket need autoclear .. */
 
         /* Check mode */
         if (mode != F_REG && mode != F_DIR && mode != F_BDEV && mode != F_CDEV) {
@@ -320,9 +330,8 @@ static void pass1(void)
         ++icount;
         /* Check size */
 
-        /* FIXME: check not <0 but > max allowed as unsigned */
-        if (ino.i_size < 0) {
-            printf("Inode %u offset is negative with value of %ld. Fix? ",
+        if ((ino.i_size >> 24) & BLK_OVERSIZE32) {
+            printf("Inode %u offset is too large with value of %ld. Fix? ",
                     n, ino.i_size);
             if (yes()) {
                 ino.i_size = 0;
@@ -407,7 +416,6 @@ static void pass1(void)
     }
 }
 
-
 /* Clear inode free list, rebuild block free list using bit map. */
 static void pass2(void)
 {
@@ -462,14 +470,10 @@ static void pass3(void)
     blkno_t newno;
     uint16_t bmax = superblock.s_fsize;
     uint32_t nmax;
-    /*--- was blk_alloc ---*/
 
-    /* FIXME:
-        1. Set the bits below s_isize
-     */
-    /* FIXME: performance */
-    for (b = superblock.s_isize; b < bmax; ++b)
-        bitclear(b);
+    memset(bitmap, 0x00, bitmap_size);
+    for (n = 0; n < superblock.s_isize; n++)
+        bitset(n);
 
     for (n = ROOTINODE; n < max_inode; ++n) {
         iread(n, &ino);

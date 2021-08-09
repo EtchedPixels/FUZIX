@@ -1,18 +1,4 @@
-PLATFORM = 68000
-CC = m68k-uclinux-gcc
-ASM = m68k-uclinux-as
-AR = m68k-uclinux-ar
-LINKER = m68k-uclinux-ld
-CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../../Library/include -I../../../Library/include/68000
-LINKER_OPT = -L../../../Library/libs -lc68000
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../../Library/elf2flt.ld
-CRT0 = ../../../Library/libs/crt0_68000.o
-CRT0NS = ../../../Library/libs/crt0nostdio_68000.o
-# For now while we get going. Really we want to use some kind of elf2zmagic
-# with relocs.
-ELF2FUZIX = elf2flt
-.SUFFIXES: .c .o .y
+include $(FUZIX_ROOT)/Applications/rules.68000
 
 SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c du.c ed.c expr.c
 SRCS += find.c m4.c make.c moo.c pr.c tar.c test.c ttt.c units.c
@@ -23,10 +9,8 @@ APPS = $(OBJS:.o=)
 
 all: $(APPS) size.report
 
-$(APPS): $(CRT0)
-
 $(APPS): %: %.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $(LINKER_OPT) $(CRT0) $^ -o $@.bin $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 expr.c: expr.y

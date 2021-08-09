@@ -1,0 +1,12 @@
+*	syscall return path should check for signals and push a signal frame
+*	interrupt return path should check for signals and push a signal frame
+*	interrupt return path should check for pre-emption and task switch
+	if need be. As it's a flat model that is nice and simple with no
+	ugly stack contortions.
+
+*	Should probably of course run priv/user mode and use the memory
+	protections
+
+*	No swap in flat mode - this is a general issue which needs a flat like
+	buddy allocator model to keep things sane
+

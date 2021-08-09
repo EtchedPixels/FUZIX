@@ -33,8 +33,10 @@ void do_beep(void)
 void pagemap_init(void)
 {
     int i = msxmaps - 1;
-    /* Add all the RAM, except 0,1,2,3 which is the kernel data/bss, add 0
-       last to become the common for init */
+    /* Add all the RAM, except 1-4 which are the kernel data/bss, add 4
+       last to become the common for init. 0 is currently free but we
+       may use it later to stash fonts, console buffers, disk buffers and
+       maybe bank some code */
     while (i > 4)
         pagemap_add(i--);
     /* Init will pick this up correctly as its common */
@@ -48,25 +50,9 @@ void platform_interrupt(void)
 }
 
 /*
- *	Once we are about to load init we can throw the boot code away
- *	and convert it into disk cache. This gets us 7 or so buffer
- *	back which more than doubles our cache size !
+ *	Our disk buffer cache is slotted high above user space so we just
+ *	reclaim memory back for user use and nothing is needed here.
  */
 void platform_discard(void)
 {
-  extern uint16_t discard_size;
-  bufptr bp = bufpool_end;
-
-  discard_size /= sizeof(struct blkbuf);
-
-  kprintf("%d buffers reclaimed from discard\n", discard_size);
-
-  bufpool_end += discard_size;	/* Reclaim the discard space */
-
-  memset(bp, 0, discard_size * sizeof(struct blkbuf));
-  /* discard_size is in discard so it dies here */
-  for (bp = bufpool + NBUFS; bp < bufpool_end; ++bp) {
-    bp->bf_dev = NO_DEVICE;
-    bp->bf_busy = BF_FREE;
-  }
 }

@@ -21,6 +21,8 @@
 	.globl outy
 	.globl outd
 
+	.globl preemption		; for debugging
+
 #include "platform/kernel.def"
 #include "kernel-hc11.def"
 
@@ -76,7 +78,7 @@ outcharhex:
 outnibble:
 	andb #0x0F
 	cmpb #0x0A
-	ble outh2
+	blt outh2
 	addb #0x07
 outh2:	addb #0x30
 outchar_call:
@@ -127,19 +129,22 @@ deliver_signals:
 signal_raced:
 	rts
 deliver_signals_2:
+	clr udata+U_DATA__U_CURSIG
 	tab
 	ldx #udata+U_DATA__U_SIGVEC
 	abx
 	abx
-	ldx 0,x
+	ldy 0,x
 	beq signal_raced
-	clrb
-	pshb
-	psha
-	ldd #signal_return
-	psha
-	pshb
-	jmp ,x
+	clr 0,x
+	clr 1,x
+	tab
+	clra
+	ldx PROGLOAD+16		; FIXME assumes binary at base address
+	; Stack the vector as well, needed for running 680x binaries
+	pshy
+	jsr ,x
+	pulx			; discard vector
 signal_return:
 	sei
 	sts udata+U_DATA__U_SYSCALL_SP
@@ -156,7 +161,7 @@ signal_return:
 ;	information, A holds the syscall number on entry, B the arg count
 ;	Arguments are left to right ordered.
 ;
-;	On enry our frame if called from a 6800 series CPU (ACCB >= 0). This
+;	On enry our frame if called from a 6800 series CPU (ACCB < 0x80). This
 ;	is the same as the 6800 itself but offset 2 bytes because the trap
 ;	frame also contains Y so is 2 bytes bigger on an HC11
 ;
@@ -174,7 +179,9 @@ signal_return:
 ;
 ;	On an HC11 the arguments are in 'classic' C order but there
 ;	is a hole caused by the fact that D is used to pass argument 1
-;	and pushed by the stubs
+;	and pushed by the stubs and a 2 byte return from the stubs to
+;	the syscall wrappers
+;
 ;	Thus:
 ;
 ;	19-18	Arg3
@@ -192,13 +199,13 @@ unix_syscall_entry:
 	bitb #0x80			; 68HC11 or 680X call
 	beq syscall_0x
 	; Sane argument order but odd stack layout
-	ldd 9,x
+	ldd 11,x
 	std udata+U_DATA__U_ARGN
-	ldd 13,x
-	std udata+U_DATA__U_ARGN+2
 	ldd 15,x
-	std udata+U_DATA__U_ARGN+4
+	std udata+U_DATA__U_ARGN+2
 	ldd 17,x
+	std udata+U_DATA__U_ARGN+4
+	ldd 19,x
 	bra syscall_main
 syscall_0x:
 	abx
@@ -229,7 +236,7 @@ syscall_main:
 	staa 2,x
 	ldd udata+U_DATA__U_ERROR
 	std 3,x				; error in X
-	tst udata+U_DATA__U_CURSIG
+	ldaa udata+U_DATA__U_CURSIG
 	bne via_signal
 	rti
 via_signal:
@@ -237,16 +244,18 @@ via_signal:
 	rti
 
 doexec:
-	tsx
-	ldx 2,x
+	xgdx				; execute address into x
 	sei
 	jsr map_process_always
 	lds udata+U_DATA__U_ISP
 	des				; offset by 1 on the 680X
 	clr udata+U_DATA__U_INSYS
 	cli
-	ldd PROGLOAD
-	jmp 0,x
+	pshx
+	pula				; high byte is our reloc base
+	ldab #DPBASE			; relocation info for DP
+	ldy #0				; clear register
+	jmp 0,x				; from the caller D
 
 trap_handler:
 	; Were we in kernel - if so die horribly
@@ -263,7 +272,7 @@ trap_handler:
 	ldx P_TAB__P_PID_OFFSET,x
 	pshx				; expected hole
 	pshx				; arg
-	ldd #3980			; kill, 68hc11 style call
+	ldd #0x3980			; kill, 68hc11 style call
 	swi				; send ourselves a SIGILL
 	rti				; and if we come back just
 					; drop back to the expected frame
@@ -278,7 +287,7 @@ trap_illegal:
 trapx:
 	ldx #atmsg
 	jsr outcharhex
-	tex
+	tsx
 	ldx 8,x
 	jsr outx
 	ldx #nlmsg
@@ -302,33 +311,88 @@ nmimsg:
 nlmsg:
 	.byte 13,10,0
 
+
+;
+;	Call C code at Y from asm wrappers in an interrupt
+;	Preserves D into the C code, and out of it
+;
+call_c_irq:
+	; Save the C direct page values so we can re-enter along with the
+	; four register variables we use.
+	ldx *_.tmp
+	pshx
+	ldx *_.xy
+	pshx
+	ldx *_.z
+	pshx
+
+	ldx *_.d1
+	pshx
+	ldx *_.d2
+	pshx
+	ldx *_.d3
+	pshx
+	ldx *_.d4
+	pshx
+
+	jsr ,y
+
+	pulx
+	stx *_.d4
+	pulx
+	stx *_.d3
+	pulx
+	stx *_.d2
+	pulx
+	stx *_.d1
+
+	pulx
+	stx *_.z
+	pulx
+	stx *_.xy
+	pulx
+	stx *_.tmp
+	rts
+
 ;
 ;	The trap saved our entire register state for us
 ;
+;	At this point our user stack has the RTI frame on it, and the
+;	interrupt stack is clear
 interrupt_handler:
 	sts istack_switched_sp
+
+	; Switch to the interrupt stack
 	lds #istack_top
+
 	jsr map_save_kernel
 
 	ldaa #1
 	staa udata+U_DATA__U_ININTERRUPT
 	staa inint
-	; Save the C direct page values so we can re-enter
-	; If we turn on register variables we will need to save them too
-	; TODO
-	jsr platform_interrupt
-	; Restore the C direct page
-	; TODO
+
+	; Call the C code to process the interrupt
+	ldy #platform_interrupt
+	jsr call_c_irq
+
+	; Was the interrupt to kernel code ?
 	tst udata+U_DATA__U_INSYS
 	bne iretk
+
+	; Interrupts from user code may pre-empt
 	clr inint
 	tst need_resched
 	bne preemption
+
+	; No pre-emption - map the process back
 	jsr map_process_always
+	; Switch back to our kernel stack with the RTI frame
 	lds istack_switched_sp
+	; Clean up
 	clr udata+U_DATA__U_ININTERRUPT
 	tst udata+U_DATA__U_INSYS
 	bne no_signals
+	; Signals are delivered off interrupts too
 	jsr deliver_signals
 no_signals:
 	rti
@@ -340,35 +404,53 @@ iretk:
 	jsr map_restore
 	lds istack_switched_sp
 	clr udata+U_DATA__U_ININTERRUPT
-	tst udata+U_DATA__U_INSYS
 	rti
 
-
+;
+;	We enter the pre-emption code with our RTI frame on the user stack
+;	and running on the interrupt stack
+;
 preemption:
 	clr need_resched
-	; Save the stack pointer across
+	; Save the stack pointer across as istack_switched_sp is not per
+	; task
 	ldd istack_switched_sp
 	std udata+U_DATA__U_SYSCALL_SP
+	; Switch to our own process kernel stack while switched (the
+	; interrupt stack will be used by other things in the meantime).
 	lds #kstack_top
 	ldab #1
 	stab udata+U_DATA__U_INSYS
-	jsr chksigs
+
+	; Signal check
+	ldy #chksigs
+	jsr call_c_irq
+
 	ldx udata+U_DATA__U_PTAB
 	ldab P_TAB__P_STATUS_OFFSET,x
 	cmpb #P_RUNNING
 	bne not_running
+	; Move from running to ready state
 	ldab #P_READY
 	stab P_TAB__P_STATUS_OFFSET,x
-	bset P_TAB__P_FLAGS_OFFSET,x,#PFL_BATCH
+	; If we are running set the punishment flag for CPU hogs
+	bset P_TAB__P_FLAGS_OFFSET,x #PFL_BATCH
 not_running:
+	; Task switch
 	jsr platform_switchout
+	; Time will pass, things will run and eventually we will reappear
+	; here when we get rescheduled
 	clr udata+U_DATA__U_ININTERRUPT
 	clr udata+U_DATA__U_INSYS
+	; Map back in
 	jsr map_process_always
+	; Return to our user stack
 	lds udata+U_DATA__U_SYSCALL_SP
+	; Check for signals
 	ldaa udata+U_DATA__U_CURSIG
 	beq no_signals
 	jsr deliver_signals_2
+	; The RTI frame is top of our user stack
 	rti
 
 	.section .text
@@ -475,8 +557,8 @@ REG(_.d4)
 memcpy:
 	xgdy
 	tsx
-	ldd	5,x
-	ldx	3,x	; SRC = X, DST = Y
+	ldd	4,x
+	ldx	2,x	; SRC = X, DST = Y
 	cpd	#0
 	beq	End
 	pshy
@@ -502,12 +584,12 @@ End:
 
 ;;; D    = dst	Pmode
 ;;; 2,sp = src	SImode
-;;; 6,sp = size	HImode (size_t)
+;;; 4,sp = size
 memset:
 	xgdx
 	tsy
-	ldab	6,y
-	ldy	7,y		; DST = X, CNT = Y
+	ldab	3,y
+	ldy	4,y		; DST = X, CNT = Y
 	beq	L3
 	pshx
 L2:

@@ -11,50 +11,20 @@
 #include <vt.h>
 #include <netdev.h>
 #include <zxkey.h>
-#include <ps2bitbang.h>
 #include <ps2kbd.h>
-#include "vfd-term.h"
+#include <ps2mouse.h>
+#include <graphics.h>
 #include "z180_uart.h"
 
 /* Everything in here is discarded after init starts */
-
-static const uint8_t tmstext[] = {
-	0x00,		/* m2:0 extvideo:0 */
-	0xF0,		/* 16K, not blanked, int on, m1:1 m3:0 */
-	0x00,		/* Text at 0x0000 (space for 4 screens) */
-	0x00,
-	0x02,		/* Patterns at 0x1000 */
-	0x00,
-	0x00,
-	0xF1		/* white on black */
-};
-
-static const uint8_t tmsreset[] = {
-	0x00,
-	0x80,
-	0x00,
-	0x00,
-	0x00,
-	0x00,
-	0x00,
-	0x00
-};
 
 static void nap(void)
 {
 }
 
-static void tmsconfig(uint8_t *r)
-{
-	uint8_t c = 0x80;
-	while(c < 0x88) {
-		tms9918a_ctrl = *r++;
-		tms9918a_ctrl = c++;
-		nap();
-	}
-}
-
 extern uint8_t fontdata_6x8[];
+
+static const char *vdpname = "TMS9918A";	/* Could be 28 or 29 */
 
 static uint8_t probe_tms9918a(void)
 {
@@ -63,8 +33,7 @@ static uint8_t probe_tms9918a(void)
 	uint8_t *fp;
 
 	/* Try turning it on and looking for a vblank */
-	tmsconfig(tmsreset);
-	tmsconfig(tmstext);
+	tms9918a_reset();
 
 	/* Should see the top bit go high */
 	do {
@@ -73,6 +42,7 @@ static uint8_t probe_tms9918a(void)
 
 	if (ct == 0)
 		return 0;
+
 	nap();
 
 	/* Reading the F bit should have cleared it */
@@ -80,9 +50,38 @@ static uint8_t probe_tms9918a(void)
 	if (v & 0x80)
 		return 0;
 
+	ct = 0;
+	/* Now try and version detect : the TMS9918A IRQ must be off here */
+	while(--ct && (tms9918a_ctrl & 0x80) == 0);
+	if (ct == 0)
+		return 0;
+
+	/* On a VDP this selects register 2 for status reads, on a TMS9918A
+	  we just wrote all over register 7 */
+	tms9918a_ctrl = 0x02;
+	tms9918a_ctrl = 0x8F;
+	/* Read either status or S#2 */
+	if (tms9918a_data & 0x40) {
+		/* We have a VDP9938/9958 */
+		tms9918a_ctrl = 1;
+		tms9918a_ctrl = 0x8F;	/* Status register 1 please */
+		v = tms9918a_data;	/* Version bits for the 9958 */
+		tms9918a_ctrl = 0;
+		tms9918a_ctrl = 0x8F;	/* Put the normal status register back */
+		v >>= 1;		/* VDP id bits */
+		/* Strictly speaking 9958 could be something higher.. */
+		if (v & 0x1F)  {
+			vdpname = "VDP9958";
+			v = HW_VDP_9958;
+		} else {
+			vdpname = "VDP9938";
+			v = HW_VDP_9938;
+		}
+	} else
+		v = HW_VDP_9918A;
+
 	/* We have a TMS9918A, load up the fonts */
 	ct = 0;
-
 
 	tms9918a_ctrl = 0x00;
 	tms9918a_ctrl = 0x40 | 0x00;	/* Console 0 */
@@ -91,28 +90,19 @@ static uint8_t probe_tms9918a(void)
 		nap();
 	}
 
+	/* Load the font into 3C00-3FFF */
 	fp = fontdata_6x8;
 	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x40 | 0x11;	/* Base of character 32 */
-	ct = 0;
-	while(ct++ < 768) {
+	tms9918a_ctrl = 0x40 | 0x3C;	/* Base of font stash */
+	for (ct = 0; ct < 256; ct++) {
+		tms9918a_data = 0;
+		nap();
+	}
+	while(ct++ < 1024) {
 		tms9918a_data = *fp++ << 2;
 		nap();
 	}
-
-	fp = fontdata_6x8;
-	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x40 | 0x15;	/* Base of character 160 */
-	ct = 0;
-	/* Load inverse video font data */
-	while(ct++ < 768) {
-		tms9918a_data = ~(*fp++ << 2);
-		nap();
-	}
-
-	/* Initialize the VT layer */
-	vtinit();
-	return 1;
+	return v;
 }
 
 static uint8_t probe_16x50(uint8_t p)
@@ -152,7 +142,7 @@ static uint8_t probe_16x50(uint8_t p)
 
 /* Look for a QUART at 0xBA */
 
-#define QUARTREG(x)	(((x) << 11) | 0xBA)
+#define QUARTREG(x)	((uint16_t)(((x) << 11) | 0xBA))
 
 #define MRA	0x00
 #define CRA	0x02
@@ -293,31 +283,36 @@ static void sc26c92_timer(void)
 
 void init_hardware_c(void)
 {
-#ifdef CONFIG_VFD_TERM
-	vfd_term_init();
-#endif
+	extern struct termios ttydflt;
+
 	ramsize = 512;
 	procmem = 512 - 80;
 
-	tms9918a_present = probe_tms9918a();
-	if (tms9918a_present) {
-		shadowcon = 1;
-		timer_source = TIMER_TMS9918A;
+	/* The TMS9918A and KIO clash */
+	if (!kio_present) {
+		tms9918a_present = probe_tms9918a();
+		if (tms9918a_present) {
+			shadowcon = 1;
+			timer_source = TIMER_TMS9918A;
+			tms9918a_reload();
+			vtinit();
+		}
 	}
 
-	/* FIXME: When ROMWBW handles second SIO, or Z180 as
-	   console we will need to address this better */
+	/* Set the right console for kernel messages */
 	if (z180_present) {
-		z180_setup(!ctc_present);
+		z180_setup(!ctc_port);
 		register_uart(Z180_IO_BASE, &z180_uart0);
 		register_uart(Z180_IO_BASE + 1, &z180_uart1);
 		rtc_port = 0x0C;
 		rtc_shadow = 0x0C;
 		timer_source = TIMER_Z180;
 	}
-
-	/* Set the right console for kernel messages */
-	/* ROMWBW favours the UART then SIO then ACIA */
+	if (kio_present) {
+		register_uart(0x88, &kio_uart);
+		register_uart(0x8C, &kio_uart);
+	}
+	/* ROMWBW favours the Z180, 16x50 then SIO then ACIA */
 	if (u16x50_present) {
 		register_uart(0xA0, &ns16x50_uart);
 		if (probe_16x50(0xA8))
@@ -381,6 +376,8 @@ static uint8_t probe_copro(void)
 	return 1;
 }
 
+__sfr __at 0xED z512_ctrl;
+
 /*
  *	Do the main memory bank and device set up
  */
@@ -426,37 +423,37 @@ void pagemap_init(void)
 		register_uart(0x86, &sio_uartb);
 	}
 
-	if (ctc_present) {
+	if (ctc_port) {
 		if (timer_source == TIMER_NONE)
 			timer_source = TIMER_CTC;
 		else {
 			/* Turn off our CTC interrupts */
-			CTC_CH2 = 0x43;
-			CTC_CH3 = 0x43;
+			out(ctc_port + 2, 0x43);
+			out(ctc_port + 3, 0x43);
 		}
-		kputs("Z80 CTC detected at 0x88.\n");
+		kprintf("Z80 CTC detected at 0x%2x.\n", ctc_port);
 	}
 
 	if (tms9918a_present) {
-		kputs("TMS9918A VDP detected at 0x98.\n");
+		kprintf("%s detected at 0x98.\n", vdpname);
 	}
 
 	if (!acia_present)
 		sc26c92_present = probe_sc26c92();
 
 	if (sc26c92_present == 1) {
-		kputs("SC26C92 detected at 0xA0.\n");
 		register_uart(0x00A0, &sc26c92_uart);
 		register_uart(0x00A8, &sc26c92_uart);
 		if (timer_source == TIMER_NONE)
 			sc26c92_timer();
+		kputs("SC26C92 detected at 0xA0.\n");
 	}
 	if (sc26c92_present == 2) {
-		kputs("XR88C681 detected at 0xA0.\n");
 		register_uart(0x00A0, &xr88c681_uart);
 		register_uart(0x00A8, &xr88c681_uart);
 		if (timer_source == TIMER_NONE)
 			sc26c92_timer();
+		kputs("XR88C681 detected at 0xA0.\n");
 	}
 
 	/* Complete the timer set up */
@@ -477,16 +474,6 @@ void pagemap_init(void)
 	if (copro_present)
 		kputs("Z80 Co-processor at 0xBC\n");
 
-	/* Normal RC2014 is 8 clocks/us or so. Allow more for faster
-	   processors - we don't do much output bashing anyway. Should be
-	   good to 25MHz */
-	kbsave = 0x00;
-	kbdelay = 0x0A14;	/* High bits are a djnz delay for 20us
-				   Low a 44us djnz delay */
-	/* Port default for the PS/2 card */
-	kbport = 0xBB;
-	/* 150uS in 38 clock loops : set for 8MHz */
-	kbwait = 250;	/* Needs to be about 200us */
 	ps2kbd_present = ps2kbd_init();
 	if (ps2kbd_present) {
 		kputs("PS/2 Keyboard at 0xBB\n");
@@ -501,20 +488,37 @@ void pagemap_init(void)
 			} while(n < 4 && nuart <= NUM_DEV_TTY);
 		}
 	}
-	if (ps2kbd_present & 2) {
+	ps2mouse_present = ps2mouse_init();
+	if (ps2mouse_present) {
 		kputs("PS/2 Mouse at 0xBB\n");
 		/* TODO: wire to input layer and interrupt */
 	}
 
-	/* Devices in the C0-CF range cannot be used with Z180 */
+	if (fpu_detect())
+		kputs("AMD9511 FPU at 0x42\n");
+	/* Devices in the C0-FF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;
 		while(i) {
 			if (!ds1302_present || rtc_port != i) {
-				if (m = probe_16x50(i))
+				if (m = probe_16x50(i)) {
 					register_uart(i, &ns16x50_uart);
+					/* Can't be a Z80-512K if there is a
+					   UART at 0xE8 */
+					if (i == 0xE8)
+						z512_present = 0;
+				}
 			}
 			i += 0x08;
+		}
+		/* Now check for Z80-512K if still possible */
+		if (z512_present) {
+			z512_ctrl = 7;
+			if (z512_ctrl != 7)
+				z512_present = 0;
+			z512_ctrl = 0;
+			if (z512_ctrl != 0)
+				z512_present = 0;
 		}
 	}
 	display_uarts();
@@ -522,20 +526,6 @@ void pagemap_init(void)
 
 void map_init(void)
 {
-}
-
-/* string.c
- * Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
- * This file is part of the Linux-8086 C library and is distributed
- * under the GNU Library General Public License.
- */
-
-static int strcmp(const char *d, const char *s)
-{
-	register char *s1 = (char *) d, *s2 = (char *) s, c1, c2;
-
-	while ((c1 = *s1++) == (c2 = *s2++) && c1);
-	return c1 - c2;
 }
 
 uint8_t platform_param(unsigned char *p)

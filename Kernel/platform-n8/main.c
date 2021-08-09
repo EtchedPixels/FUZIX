@@ -4,6 +4,7 @@
 #include <devtty.h>
 #include "config.h"
 #include <z180.h>
+#include "n8.h"
 
 uint16_t ramtop = PROGTOP;
 extern unsigned char irqvector;
@@ -44,6 +45,7 @@ void platform_idle(void)
 
 void platform_interrupt(void)
 {
+    uint8_t dummy;
     switch(irqvector){
         case Z180_INT_TIMER0:
             z180_timer_interrupt(); 
@@ -55,6 +57,12 @@ void platform_interrupt(void)
             tty_pollirq_asci1();
             return;
         default:
+            dummy = tms9918a_ctrl;
             return;
     }
+}
+
+/* needs adding for the AY-3-8910 */
+void do_beep(void)
+{
 }

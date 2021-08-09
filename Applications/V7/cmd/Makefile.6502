@@ -1,14 +1,4 @@
-PLATFORM = 6502
-CC = cl65
-ASM = ca65
-LINKER = cl65
-CFLAGS = -t none -O -D__STDC__ -c -O -I../../../Library/include -I../../../Library/include/6502
-LINKER_OPT = -L../../../Library/libs -C ../../../Library/libs/ld65-$(TARGET).cfg
-ASM_OPT = -o
-CRT0 = ../../../Library/libs/crt0_6502.o
-CRT0NS = ../../../Library/libs/crt0nostdio_6502.o
-
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.6502
 
 SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cron.c crypt.c dd.c \
 	deroff.c diff3.c diff.c diffh.c join.c look.c makekey.c mesg.c \
@@ -53,13 +43,13 @@ $(OBJSTC): %.o: %.c
 $(OBJSBAD): %.o: %.c
 
 $(APPS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ c6502.lib -m $@.map
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LINKER_TAIL)
 
 $(APPSNS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) $^ c6502.lib -m $@.map
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) $^ $(LINKER_TAIL)
 
 $(APPSTC): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ termcap6502.lib c6502.lib -m $@.map
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ termcap6502.lib $(LINKER_TAIL)
 
 sizes: $(APPS)
 	ls -l $(APPS) >size.report

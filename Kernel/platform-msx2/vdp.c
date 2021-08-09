@@ -19,7 +19,7 @@ static uint8_t vt_buff[VT_BUFSIZE];
 static uint16_t cur_blink_addr = 0;
 static uint16_t vt_offset;
 
-void vdpinit()
+void vdpinit(void)
 {
     uint8_t i;
 
@@ -86,7 +86,7 @@ void memcpy_vram(uint16_t dst, uint16_t src, uint16_t size)
     for (i = 0; i < size; i += VT_BUFSIZE) {
 	v99xx_copy_from_vram(vt_buff, src + i, VT_BUFSIZE);
 	v99xx_copy_to_vram(dst + i, vt_buff, VT_BUFSIZE);
-}
+    }
 }
 
 void scroll_up(void)

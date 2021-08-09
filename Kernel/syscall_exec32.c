@@ -114,6 +114,7 @@ arg_t _execve(void)
 	uaddr_t progbase, top;
 	uaddr_t go;
 	uint32_t true_brk;
+	uint_fast8_t mflags;
 
 	if (!(ino = n_open_lock(name, NULLINOPTR)))
 		return (-1);
@@ -121,6 +122,12 @@ arg_t _execve(void)
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
 	      (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
+		udata.u_error = EACCES;
+		goto nogood;
+	}
+
+	mflags = fs_tab[ino->c_super].m_flags;
+	if (mflags & MS_NOEXEC) {
 		udata.u_error = EACCES;
 		goto nogood;
 	}
@@ -190,12 +197,13 @@ arg_t _execve(void)
 	   so we can start writing over the old program */
 	uput(&binflat, (uint8_t *)progbase, sizeof(struct binfmt_flat));
 
-	/* setuid, setgid if executable requires it */
-	if (ino->c_node.i_mode & SET_UID)
-		udata.u_euid = ino->c_node.i_uid;
-
-	if (ino->c_node.i_mode & SET_GID)
-		udata.u_egid = ino->c_node.i_gid;
+	if (!(mflags & MS_NOSUID)) {
+		/* setuid, setgid if executable requires it */
+		if (ino->c_node.i_mode & SET_UID)
+			udata.u_euid = ino->c_node.i_uid;
+		if (ino->c_node.i_mode & SET_GID)
+			udata.u_egid = ino->c_node.i_gid;
+	}
 
 	top = progbase + bin_size;
 
@@ -381,8 +389,27 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 static struct coredump corehdr = {
 	0xDEAD,
 	0xC0DE,
-	16,
+	32,
 };
+
+static struct coremem memhdr = {
+	COREHDR_MEM
+};
+
+void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags)
+{
+	memhdr.mh_base = base;
+	memhdr.mh_len = len;
+	memhdr.mh_flags = flags;
+	udata.u_base = (uint8_t *)&memhdr;
+	udata.u_sysio = true;
+	udata.u_count = sizeof(memhdr);
+	writei(ino, 0);
+	udata.u_base = (uint8_t *)base;
+	udata.u_sysio = false;
+	udata.u_count = len;
+	writei(ino, 1);
+}
 
 uint8_t write_core_image(void)
 {
@@ -395,45 +422,37 @@ uint8_t write_core_image(void)
 	if (uput("core", (uint8_t *)udata.u_syscall_sp - 5, 5))
 		return 0;
 
-	ino = n_open((char *)udata.u_syscall_sp - 5, &parent);
+	ino = n_open((uint8_t *)udata.u_syscall_sp - 5, &parent);
 	if (ino) {
 		i_deref(parent);
 		return 0;
 	}
 	if (parent) {
 		i_lock(parent);
-		if ((ino = newfile(parent, "core")) != NULL) {
+		if ((ino = newfile(parent, (uint8_t *)"core")) != NULL) {
 			ino->c_node.i_mode = F_REG | 0400;
 			setftime(ino, A_TIME | M_TIME | C_TIME);
 			wr_inode(ino);
 			f_trunc(ino);
-#if 0
-	/* FIXME address ranges for different models - move core writer
-	   for address spaces into helpers ?  */
-			/* FIXME: need to add some arch specific header bits, and
-			   also pull stuff like the true sp and registers out of
-			   the return stack properly */
-
-			corehdr.ch_base = pagemap_base;
+			/* Write the header */
+			corehdr.ch_base = (uaddr_t)pagemap_base;
 			corehdr.ch_break = udata.u_break;
 			corehdr.ch_sp = udata.u_syscall_sp;
-			corehdr.ch_top = PROGTOP;
+			corehdr.ch_top = udata.u_top;
 			udata.u_offset = 0;
 			udata.u_base = (uint8_t *)&corehdr;
 			udata.u_sysio = true;
 			udata.u_count = sizeof(corehdr);
 			writei(ino, 0);
-			udata.u_sysio = false;
-			udata.u_base = (uint8_t *)pagemap_base;
-			udata.u_count = udata.u_break - pagemap_base;
-			writei(ino, 0);
-			udata.u_base = udata.u_sp;
-			udata.u_count = PROGTOP - (uint32_t)udata.u_sp;
-			writei(ino, 0);
-#endif
+			/* Ask the architecture to dump the user registers */
+//TODO			coredump_user_registers(ino);
+			/* Ask the memory manager to dump the memory map */
+			coredump_memory_image(ino);
 			i_unlock_deref(ino);
+			i_unlock_deref(parent);
 			return W_COREDUMP;
 		}
+		i_unlock_deref(parent);
 	}
 	return 0;
 }

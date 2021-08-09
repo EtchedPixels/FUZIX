@@ -276,9 +276,9 @@ _doexec:
 	        ld (_udata + U_DATA__U_INSYS), a
 
 	        ex de, hl
-
+		ld d,h
+		ld e,#0
 		; for the relocation engine - tell it where it is
-		ld iy, #PROGLOAD
 ;;	call mmu_user		; must preserve HL
 	        ipres
 	        jp (hl)

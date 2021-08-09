@@ -42,6 +42,24 @@ loop:
     jp (hl)
 __endasm;
 }
+#elif defined(mc68hc11)
+
+__attribute__((naked))
+void delay(unsigned long r)
+{
+    asm(
+        " tsx\n"
+        " ldd 2,x\n"
+        " ldx 4,x\n"
+        "_a: dex\n"
+        " bne _a\n"
+        " decb\n"
+        " bne _a\n"
+        " deca\n"
+        " bne _a\n"
+        " rts\n"
+    );
+}
 #else
 #error "Unsupported platform"
 #endif

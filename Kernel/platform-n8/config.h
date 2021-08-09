@@ -11,7 +11,7 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* 8 60K banks, 1 is kernel */
-#define MAX_MAPS	8
+#define MAX_MAPS	15
 #define MAP_SIZE	PROGTOP    /* WRS: I feel this should be 60KB, but setting it so breaks pagemap_realloc() when exec calls it */
 
 /* Banks as reported to user space */
@@ -44,10 +44,25 @@
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
 
-#define NUM_DEV_TTY 2		/* Until we tackle the VDP */
+#define NUM_DEV_TTY 6
 
-/* ASCI0 as the console */
+/* Video terminal, not just a serial tty */
+#define CONFIG_VT
+/* Multiple consoles */
+#define CONFIG_VT_MULTI
+/* Vt definitions */
+#define VT_WIDTH	vt_twidth
+#define VT_HEIGHT	24
+#define VT_RIGHT	vt_tright
+#define VT_BOTTOM	23
+#define MAX_VT		4		/* Always come up as lowest minors */
+
+/* Font for the TMS9918A */
+#define CONFIG_FONT6X8
+
+/* TMS9918A as the console */
 #define TTYDEV   (512+1)  /* System console (used by kernel, init) */
+#define TTY_INIT_BAUD B38400
 
 #define platform_copyright()
 

@@ -1,5 +1,5 @@
 ;
-;	Closely related to the 6803/6303 code but there are ABi differences
+;	Closely related to the 6803/6303 code but there are ABI differences
 ; 	and a lot less instructions we can use!
 ;
 	.export _di
@@ -25,7 +25,7 @@
 	.export preemption
 
 #include "platform/kernel.def"
-#include "kernel-6303.def"
+#include "kernel-6800.def"
 
 	.code
 
@@ -47,8 +47,8 @@ _irqrestore:
 
 _swab:
 	tsx
-	ldab	3,x
-	ldaa	4,x
+	ldab	2,x
+	ldaa	3,x
 	jmp ret2
 
 	.common
@@ -99,15 +99,15 @@ outsdone:
 	rts
 
 outd:
-	pshb
 	psha
+	pshb
 	tab
 	bsr outcharhex
-	pula
-	psha
-	bsr outcharhex
-	pula
 	pulb
+	pshb
+	bsr outcharhex
+	pulb
+	pula
 	rts
 
 deliver_signals:
@@ -228,8 +228,9 @@ _doexec:
 	des				; offset by 1 on the 680X
 	clr _udata+U_DATA__U_INSYS
 	cli
-	ldaa #>PROGLOAD
-	ldab #<PROGLOAD
+	stx @tmp			; X & 0xFF00 is our base
+	ldaa @tmp
+	clrb
 	jmp 0,x
 
 trap_handler:

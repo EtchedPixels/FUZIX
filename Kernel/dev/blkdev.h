@@ -26,6 +26,8 @@ typedef struct {
  * so let's make good use of every advantage we can from it. */
 struct blkparam {
     /* do not change the order without adjusting BLKPARAM_*_OFFSET macros below */
+    /* Also note some platforms don't or can't use the macros so if you change
+       the layout grep all the asm */
     uint8_t *addr;                          /* address for transfer buffer */
     uint8_t is_user;	                    /* 0: kernel 1: user 2: swap */
     uint8_t swap_page;                      /* page to pass to map_swap */

@@ -20,12 +20,6 @@ extern uint16_t swab(uint16_t);
    non-reentrant functions static */
 #define staticfast auto
 
-/* FIXME: should be 64bits - need to add helpers and struct variants */
-typedef struct {
-   uint32_t low;
-   uint32_t high;
-} time_t;
-
 typedef union {            /* this structure is endian dependent */
     clock_t  full;         /* 32-bit count of ticks since boot */
     struct {

@@ -100,6 +100,7 @@ extern uint16_t swap_dev;
 #define CONFIG_NET
 /* With a WizNet card */
 #define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5100
 /* Or native (eg SLIP) */
 //#define CONFIG_NET_NATIVE
 

@@ -115,14 +115,11 @@ my_open( int argc, char *argv[]){
 
     fd = socket(AF_INET, SOCK_RAW, 1);
     if (fd < 0) {
-	perror("af_inet sock_stream 0");
+	perror("socket");
 	exit(1);
     }
 
-    /* fuzix raw sockets (for now) repurposes the connect() 
-       address struct's port no to pass it's protocol number
-     */  
-    addr.sin_port = 1;  
+    addr.sin_port = 0;
     addr.sin_family = AF_INET;
     if (connect(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 	perror("connect");

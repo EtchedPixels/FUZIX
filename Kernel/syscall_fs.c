@@ -250,7 +250,7 @@ arg_t _ioctl(void)
 
 	oftp = of_tab + udata.u_files[fd];
 
-	if (!(isdevice(ino)) || rclass == IOCTL_CLASS_KERNEL) {
+	if (!(isdevice(ino) || issocket(ino)) || rclass == IOCTL_CLASS_KERNEL) {
 		udata.u_error = ENOTTY;
 		return -1;
 	}
@@ -261,7 +261,10 @@ arg_t _ioctl(void)
 		udata.u_error = EPERM;
 		return -1;
 	}
-
+#ifdef CONFIG_NET
+	if (issocket(ino))
+		return sock_ioctl(ino, request, data);
+#endif
 	dev = ino->c_node.i_addr[0];
 
 	return d_ioctl(dev, request, data);
@@ -291,7 +294,7 @@ arg_t _close(void)
 pipe (fildes)                    Function 40		?
 int fildes[];
 ********************************************/
-#define fildes (int16_t *)udata.u_argn
+#define fildes (int *)udata.u_argn
 
 arg_t _pipe(void)
 {
@@ -337,8 +340,8 @@ arg_t _pipe(void)
 	ino->c_writers++;
 
 	// write results to userspace
-	uputw(u1, fildes);
-	uputw(u2, fildes + 1);
+	uputi(u1, fildes);
+	uputi(u2, fildes + 1);
 	return (0);
 
       nogood3:

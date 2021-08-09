@@ -6,6 +6,9 @@ Block 0 should hold a partition table.
 Remember: the disk is byte swapped including on the emulator so you will
 want to use conv=notrunc,swab
 
+make diskimage will build a ready to use disk image for the emulator.
+
+
 Unsupported right now:
 - RTC
 - Detect if monitor is loaded high and if so avoid it

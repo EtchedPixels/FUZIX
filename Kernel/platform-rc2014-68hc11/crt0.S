@@ -4,18 +4,34 @@
 
 		.section .text
 
-		.byte 0x03
-		.byte 0x63
-
 entry:
 		sei			; interrupts off
 		lds #kstack_top		; C stack
+
+		; The common was stashed at D400-DFFF so move it into
+		; place now the load is done
+movecommon:
+		ldx #0xd400
+		ldy #0xf200
+comloop:
+		ldd ,x
+		std ,y
+		inx
+		inx
+		iny
+		iny
+		cpx #0xe000
+		bne comloop
+
+		; Clear the udata (probably not needed as we did the move
+
 		ldx #udata
 wipeud:
 		clr 0,x
 		inx
 		cpx #istack_switched_sp
 		bne wipeud
+
 
 		ldx #__bss_start
 		ldd #__bss_size

@@ -599,9 +599,25 @@ static unsigned int res_randomid(void)
 // res_init
 //
 
+static void add_nameserver(const char *ap)
+{
+	uint32_t addr;
+	struct sockaddr_in *sin = res.nsaddr_list + res.nscount;
+	if (ap == NULL || res.nscount == MAXNS || !inet_aton(ap, &sin->sin_addr))
+		return;
+	sin->sin_family = AF_INET;
+	sin->sin_port = htons(NS_DEFAULTPORT);
+	res.nscount++;
+}
+
 int res_init(void)
 {
 	char *addr;
+	FILE *fp;
+	char *tp;
+	char *ap;
+	char buf[128];
+	uint8_t srchptr = 0;
 
 	memset(&res, 0, sizeof(struct res_state));
 	res.options = RES_DEFAULT;
@@ -611,68 +627,44 @@ int res_init(void)
 	res.ndots = 1;
 	res.nscount = 0;
 
-	/* FIXME: parse file */
-#if 0
-	if (peb->primary_dns.s_addr != INADDR_ANY) {
-		res.nsaddr_list[res.nscount].sin_addr.s_addr =
-		    peb->primary_dns.s_addr;
-		res.nsaddr_list[res.nscount].sin_family = AF_INET;
-		res.nsaddr_list[res.nscount].sin_port =
-		    htons(NS_DEFAULTPORT);
-		res.nscount++;
+	fp = fopen("/etc/resolv.conf", "r");
+	if (fp) {
+		while(fgets(buf, sizeof(buf) - 1, fp)) {
+			if (*buf == '#')
+				continue;
+			tp = strtok(buf, " \t");
+			if (tp == NULL)
+				continue;
+			ap = strtok(NULL, "#");
+			if (strcmp(tp, "nameserver") == 0) {
+				add_nameserver(ap);
+				continue;
+			}
+			if (strcmp(tp, "domain") == 0) {
+				/* Should be multiple domains here but we only do one */
+				strlcpy(res.defdname, ap, sizeof(res.defdname));
+				continue;
+			}
+			if (strcmp(tp, "search") == 0) {
+				if (srchptr < MAXDNSRCH - 1) {
+					if ((res.dnsrch[srchptr] = strdup(ap)) == NULL)
+						return -1;
+					srchptr++;
+				}
+			}
+			fprintf(stderr, "Unknown resolv option %s\n", tp);
+		}
 	}
-
-	if (peb->secondary_dns.s_addr != INADDR_ANY) {
-		res.nsaddr_list[res.nscount].sin_addr.s_addr =
-		    peb->secondary_dns.s_addr;
-		res.nsaddr_list[res.nscount].sin_family = AF_INET;
-		res.nsaddr_list[res.nscount].sin_port =
-		    htons(NS_DEFAULTPORT);
-		res.nscount++;
-	}
-
-	addr = get_property(osconfig(), "dns", "primary", NULL);
-	if (addr != NULL) {
-		res.nsaddr_list[res.nscount].sin_addr.s_addr =
-		    inet_addr(addr);
-		res.nsaddr_list[res.nscount].sin_family = AF_INET;
-		res.nsaddr_list[res.nscount].sin_port =
-		    htons(NS_DEFAULTPORT);
-		res.nscount++;
-	}
-
-	addr = get_property(osconfig(), "dns", "secondary", NULL);
-	if (addr != NULL) {
-		res.nsaddr_list[res.nscount].sin_addr.s_addr =
-		    inet_addr(addr);
-		res.nsaddr_list[res.nscount].sin_family = AF_INET;
-		res.nsaddr_list[res.nscount].sin_port =
-		    htons(NS_DEFAULTPORT);
-		if (res.nsaddr_list[res.nscount].sin_addr.s_addr !=
-		    INADDR_NONE)
-			res.nscount++;
-	}
-
+	fclose(fp);
 	if (res.nscount == 0) {
-		res.nsaddr_list[res.nscount].sin_addr.s_addr =
-		    INADDR_LOOPBACK;
-		res.nsaddr_list[res.nscount].sin_family = AF_INET;
-		res.nsaddr_list[res.nscount].sin_port =
-		    htons(NS_DEFAULTPORT);
-		if (res.nsaddr_list[res.nscount].sin_addr.s_addr !=
-		    INADDR_NONE)
-			res.nscount++;
+		res.nsaddr_list[0].sin_addr.s_addr = INADDR_LOOPBACK;
+		res.nsaddr_list[0].sin_family = AF_INET;
+		res.nsaddr_list[0].sin_port = htons(NS_DEFAULTPORT);
+		res.nscount++;
 	}
-
-	strcpy(res.defdname, peb->default_domain);
-	if (!*res.defdname) {
-		strcpy(res.defdname,
-		       get_property(osconfig(), "dns", "domain",
-				    "local.domain"));
-	}
-#endif
-
-	res.dnsrch[0] = res.defdname;
+	if (!*res.defdname)
+		strcpy(res.defdname, "local.domain");
+	res.dnsrch[srchptr] = res.defdname;
 	return 0;
 }
 

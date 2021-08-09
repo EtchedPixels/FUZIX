@@ -20,6 +20,9 @@
  *	Page numbers must not include 0 (0 is taken as swapped)
  *
  *	SWAPBASE must be in the low 16K bank
+ *
+ *	You can set DEFAULT_TOP on a small memory system with limited or
+ *	no swap so that a non chmem binary gets a lower default allocation.
  */
 #include <kernel.h>
 #include <kdata.h>
@@ -27,6 +30,10 @@
 #include <exec.h>
 
 #undef DEBUG
+
+#ifndef DEFAULT_TOP
+#define DEFAULT_TOP	(ramtop)
+#endif
 
 #ifdef CONFIG_BANK16
 /*
@@ -181,10 +188,14 @@ int pagemap_prepare(struct exec *hdr)
 	/* If it is relocatable load it at PROGLOAD */
 	if (hdr->a_base == 0)
 		hdr->a_base = PROGLOAD >> 8;
+	if (hdr->a_base != (PROGLOAD >> 8)) {
+		udata.u_error = ENOEXEC;
+		return -1;
+	}
 	/* If it doesn't care about the size then the size is all the
 	   space we have */
 	if (hdr->a_size == 0)
-		hdr->a_size = (ramtop >> 8) - hdr->a_base;
+		hdr->a_size = (DEFAULT_TOP >> 8) - hdr->a_base;
 	return 0;
 }
 

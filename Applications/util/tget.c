@@ -25,7 +25,7 @@ void usage(void)
 char termbuf[1024];
 char string[256], *pstr;
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     char *term;
     int  i, excode = 0;

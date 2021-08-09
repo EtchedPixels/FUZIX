@@ -23,33 +23,23 @@
 ; VDP routines are directly hooked into the vt layer
 ;
 VDP_DIRECT	.equ	1
+VDP_IRQ		.equ	1
 
+;
+;	On an MSX at 3.5Mhz our loop worst case is 26 clocks so for
+;	graphics one we need a nop
+;
+.macro VDP_DELAY
+	    nop
+.endm
+.macro VDP_DELAY2
+	    nop
+.endm
 	    .include "../dev/vdp1.s"
 
 	    .area _COMMONMEM
 
 platform_interrupt_all:
-_cursor_disable:
-	    ret
-
-_vdp_load_font:
-	    ld hl,#0x4900
-	    ld bc,(_vdpport)
-	    out (c),l
-	    out (c),h
-	    ld hl,#_fontdata_6x8
-	    ld de,#768
-	    dec c
-fontloop:
-	    ld a,(hl)
-	    rlca
-	    rlca
-	    out (c),a
-            inc hl
-	    dec de
-	    ld a,d
-	    or e
-	    jr nz,fontloop
 	    ret
 
 _vdpport:   .word 0x2899	; port 0x99, 40 byte count in fastest load

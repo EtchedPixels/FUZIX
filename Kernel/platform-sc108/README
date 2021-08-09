@@ -68,6 +68,11 @@ Long term fun
 - OS core in ROM, high memory holding rest (like -tiny) but with two user space
 banks ??
 
+Bulding:
+
+make diskimage will build a set of images ready to use, one for ACIA and
+one for the SIO. Only the loader actually differs.
+
 Emulation
 
 Write the bootloader once to block 0 (repair the parition tables afterwards)

@@ -8,6 +8,6 @@ Z80_TYPE		    .equ 1
 
 PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
-NBUFS                       .equ 6
+NBUFS                       .equ 7
 
 Z80_MMU_HOOKS		    .equ 0

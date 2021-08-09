@@ -69,8 +69,9 @@ bootit:
 	push de
 
 	ld bc, #0xF100		; Get system type into L
-	rst 8
+	rst 8			; and ROMWBW version into D
 
+	ld h,d
 	push hl
 
 	ld bc, #0xF8E0		; Get boot sysinfo into DE

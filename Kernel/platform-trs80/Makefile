@@ -33,15 +33,43 @@ $(DISCARD_COBJS): %.rel: %.c
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~
 
-image: trs80load.bin
+image: trs80load.bin hdload.bin
 	dd if=/dev/zero of=boot.raw bs=256 count=720
 	# Boot block at 0,0
 	dd if=trs80load.bin of=boot.raw bs=256 count=1 conv=notrunc
 	# Kernel lives on the end of the disk (so we can add an fs)
 	dd if=../fuzix.bin of=boot.raw bs=1 seek=133632 conv=notrunc
 	../tools/makejv3 -s -t dd40s -d boot.raw boot4p.jv3
+	dd if=hdload.bin of=hdboot.raw bs=256 count=1 conv=notrunc
+	../tools/makejv3 -s -t dd40s -d hdboot.raw hdboot4p.jv3
 
 trs80load.bin: trs80load.s
 	sdasz80 -o trs80load.s
 	sdldz80 -i trs80load.rel
 	makebin -s 256 trs80load.ihx trs80load.bin
+
+hdload.bin: hdload.s
+	sdasz80 -o hdload.s
+	sdldz80 -i hdload.rel
+	makebin -s 256 hdload.ihx hdload.bin
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Boot floppy
+	cp boot4p.jv3 $(IMAGES)/boot.jv3
+	cp hdboot4p.jv3 $(IMAGES)/hdboot.jv3
+	# Build a file system to fit
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/filesys.img 256 21632)
+	# XTRS / FREHD 12MB disk header
+	cat xtrsheader > $(IMAGES)/hard4p-0
+	# Followed by a kernel padded to 64K (Cylinder 0) including 512 bytes
+	# space at the front for the disk label
+	dd if=/dev/zero of=$(IMAGES)/hard4p-0 bs=256 seek=1 count=256
+	dd if=../fuzix.bin of=$(IMAGES)/hard4p-0 bs=256 seek=3 conv=notrunc
+	# And the disk image (Cylinder 1+)
+	cat $(IMAGES)/filesys.img >> $(IMAGES)/hard4p-0
+	# And swap
+	dd if=/dev/zero bs=256 count=8192 >>$(IMAGES)/hard4p-0
+	# Add a label
+	../tools/trslabel $(IMAGES)/hard4p-0

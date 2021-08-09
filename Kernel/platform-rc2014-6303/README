@@ -1,4 +1,4 @@
-Initial code  for a 6303 RC2014 banked memory platform
+Fuzix on the 6303 RC2014 banked memory platform
 
 Proposed memory mapping
 
@@ -38,8 +38,6 @@ RC2014 bus
 Internal UART
 
 Things to address
-- Save the right internal registers on interrupt (mostly right, need to
-  add some if use register vars)
 - Dynamic buffer allocation
 - SPI bitbang port
 - Making the UART driver properly IRQ driven for input with its own buffer
@@ -48,9 +46,12 @@ Things to address
   the other stuff is queued
 - Don't disable all interrupts in the Fuzix paths
 - Add device support for some of the RC2014 external devices
-- Change syscall stubs to jmp to stub not SWI
 
 Put the loader on sector 0
 Put the kernel on sector 1+
 
 What would cc68 ld68 banking support take ?
+
+To run on the emulator
+
+rc2014-6303 -b -i /tmp/emu-ide.img

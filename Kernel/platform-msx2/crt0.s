@@ -3,6 +3,7 @@
 	        ; we don't use them all, because their ordering is set
 	        ; when they are first seen.	
 	        .area _CODE
+		.area _CODE1
 	        .area _CODE2
 		.area _VIDEO
 	        .area _CONST
@@ -17,6 +18,7 @@
 	        .area _GSINIT
 	        .area _GSFINAL
 	        .area _COMMONMEM
+		.area _FONT
 		.area _DISCARD
 
         	; imported symbols
@@ -54,10 +56,20 @@
 		.include "msx2.def"
 
 ;
-; Execution begins with us correctly mapped and at 0x0x100
+; Execution begins with us correctly mapped and at 0x0x100. However the
+; 4000-7FFF bank may not be mapped to the mapper on entry.
 ;
 ; We assume here that the kernel packs below 48K for now we've got a few
 ; KBytes free but revisit as needed
+;
+; On entry the bootstrap stack holds the following we load into registers
+;
+;		IX	Number of 16K banks in the mapper
+;		DE	D = RAM bank E = ROM bank
+;		BC	MSX system info bits
+;		HL	VDP Port Info
+;		AF	Machine Type
+;
 ;
 		.ds 0x100
 start:
@@ -103,7 +115,6 @@ cpfont:
 		ld a,b
 		or c
 		jr nz, cpfont
-
 
 		; move the discardable memory where it belongs
 		ld de, #s__DISCARD

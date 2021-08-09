@@ -62,9 +62,10 @@
         ; must be at 0x0100 as we are loaded at that
 init:
 	; Get the ROM info off the stack before we flip banks about
-	pop bc
-	pop de
-	pop hl
+	pop bc			; B = ROMWBW ver C = platform
+	pop de			; DE = CPU seed in KHz
+	pop hl			; H - Z80 variant L = CPU speed in MHz
+
 	; setup the memory paging for kernel
         ld a, #33
         out (MPGSEL_1), a       ; map page 33 at 0x4000
@@ -97,8 +98,7 @@ mappedok:
 	; We now have the ROM info to hand and have cleared stuff so it
 	; is safe to write these into memory
 
-	ld a,c
-	ld (_systype), a
+	ld (_systype), bc
 	ld (_syskhz), de
 	ld (_syscpu), hl
 

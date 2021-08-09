@@ -1,6 +1,6 @@
 
 CSRCS = ../devlpr.c ../devtty.c ../devrd.c ../devaudio.c ../devgfx.c
-CSRCS += ../devices.c ../main.c ../tc8521.c
+CSRCS += ../devices.c ../main.c ../tc8521.c ../bank.c
 
 ASRCS = ../nc100.s ../crt0.s
 ASRCS += ../tricks.s ../commonmem.s
@@ -36,3 +36,10 @@ nc100emu.bin: nc100emu.s
 	srec_cat -disable-sequence-warning \
 		nc100emu.ihx -intel -offset -0x100 \
 		-output nc100emu.bin -binary
+
+diskimage: image
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAGH) $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp 64 1408)
+	dd if=$(ROOT_DIR)/fuzix.bin bs=327680 conv=sync >pcmcia.tmp2
+	cat pcmcia.tmp2 $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp >$(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.img
+	rm -f $(FUZIX_ROOT)/Images/$(TARGET)/pcmcia.tmp pcmcia.tmp2
+

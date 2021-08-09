@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+#
+#	Link at 0x100 DP 0x00
+#
+set -e
+#
+m6811-elf-ld $ARGS -o "$TARGET.t" -T "$FUZIX_ROOT/Library/link/m68hc11.link"
+m6811-elf-objcopy "$TARGET".t -O binary "$TARGET".b1
+m6811-elf-ld $ARGS -o "$TARGET.t" -T "$FUZIX_ROOT/Library/link/m68hc11.link2"
+m6811-elf-objcopy "$TARGET".t -O binary "$TARGET".b2
+m6811-elf-nm -n "$TARGET.t" >"$TARGET".map
+rm -f "$TARGET.t"
+$FUZIX_ROOT/Library/tools/relocbinhc11 "$TARGET".b1 "$TARGET".b2 "$TARGET"
+rm -f "$TARGET.b1"
+rm -f "$TARGET.b2"

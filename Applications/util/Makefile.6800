@@ -1,0 +1,147 @@
+include $(FUZIX_ROOT)/Applications/rules.6800
+
+SRCSNS = \
+	basename.c \
+	cat.c \
+	chgrp.c \
+	chmod.c \
+	chown.c \
+	cmp.c \
+	date.c \
+	dirname.c \
+	false.c \
+	groups.c \
+	head.c \
+	init.c \
+	kill.c \
+	killall.c \
+	line.c \
+	logname.c \
+	mkdir.c \
+	mkfifo.c \
+	mknod.c \
+	pagesize.c \
+	printenv.c \
+	prtroot.c \
+	pwd.c \
+	reboot.c \
+	rm.c \
+	rmdir.c \
+	substroot.c \
+	sum.c \
+	sync.c \
+	tee.c \
+	telinit.c \
+	touch.c \
+	tr.c \
+	true.c \
+	while1.c \
+	whoami.c \
+	yes.c
+
+SRCS  = banner.c \
+	bd.c \
+	cal.c \
+	chmem.c \
+	cksum.c \
+	cp.c \
+	cut.c \
+	dd.c \
+	df.c \
+	dosread.c \
+	du.c \
+	echo.c \
+	ed.c \
+	env.c \
+	factor.c \
+	fdisk.c \
+	fgrep.c \
+	free.c \
+	fsck.c \
+	fsck-fuzix.c \
+	gptparse.c \
+	grep.c \
+	id.c \
+	kbdrate.c \
+	labelfs.c \
+	ll.c \
+	ls.c \
+	man.c \
+	manscan.c \
+	mkfs.c \
+	mode.c \
+	more.c \
+	mount.c \
+	nvtool.c \
+	od.c \
+	passwd.c \
+	ps.c \
+	remount.c \
+	seq.c \
+	setboot.c \
+	setdate.c \
+	size.c \
+	sleep.c \
+	ssh.c \
+	sort.c \
+	stty.c \
+	su.c \
+	swapon.c \
+	tail.c \
+	tar.c \
+	termcap.c \
+	umount.c \
+	uname.c \
+	uniq.c \
+	uptime.c \
+	uud.c \
+	uue.c \
+	wc.c \
+	which.c \
+	who.c \
+	write.c \
+	xargs.c \
+	sed.c \
+	decomp16.c
+
+SRCTC = tget.c \
+        tchelp.c \
+	marksman.c \
+	vile.c
+
+SRCOTHER = cpuinfo.c \
+	   cpuinfo-6303.s
+
+
+
+OBJS = $(SRCS:.c=.o)
+OBJSNS = $(SRCSNS:.c=.o)
+OBJTC = $(SRCTC:.c=.o)
+OBJOTHER = $(SRCOTHER:.c=.o)
+
+APPS = $(OBJS:.o=)
+APPSNS = $(OBJSNS:.o=)
+APPTC = $(OBJTC:.o=)
+
+all: $(APPS) $(APPSNS) $(APPTC) cpuinfo size.report
+
+$(APPS): %: %.o
+	$(LINKER) -o $@ $(CRT0) $^  $(LINKER_LIB) 
+
+$(APPSNS): %: %.o
+	$(LINKER) -o $@ $(CRT0NS) $^ $(LINKER_LIB) 
+
+$(APPTC): %: %.o
+	$(LINKER) -o $@ $(CRT0) $^ -ltermcap6800 $(LINKER_LIB) 
+
+cpuinfo: cpuinfo.o cpuinfo-6303.o
+	$(LINKER) -o $@ $(CRT0) $^ $(LINKER_LIB) 
+
+size.report: $(APPS) $(APPSNS) $(APPTC)
+	ls -l $^ > $@
+
+clean:
+	rm -f *.o $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+
+rmbak:
+	rm -f *~ core

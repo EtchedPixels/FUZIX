@@ -11,6 +11,7 @@
 	    .export map_kernel_di
 	    .export map_process
 	    .export map_process_always
+	    .export map_process_always_di
 	    .export map_save_kernel
 	    .export map_restore
 	    .export map_process_x
@@ -67,38 +68,47 @@ _platform_monitor:
             ldx #endtrap
             jsr outstring
 	    tsx
-	    ldx 10,x
-            jsr outx
+
+	    ldaa #8
+stkrow:
+	    ldab #13
+	    jsr outchar
+	    ldab #10
+	    jsr outchar
+	    jsr outx
+            ldab #':'
+	    jsr outchar
+	    ldab #' '
+            jsr outchar
+            clrb
+stkword:
+	    pshb
+	    psha
+	    ldd 10,x
+            jsr outd
+	    pula
+	    pulb
+	    inx
+	    inx
+	    incb
+	    cmpb #8
+	    beq endrow
+	    pshb
             ldab #32
 	    jsr outchar
-	    tsx
-	    ldx 12,x
-            jsr outx
-            ldab #32
+	    pulb
+	    bra stkword
+endrow:	    deca
+	    bne stkrow
+	    ldab #13
 	    jsr outchar
-	    tsx
-	    ldx 14,x
-            jsr outx
-            ldab #32
+	    ldab #10
 	    jsr outchar
-	    tsx
-	    ldx 16,x
-            jsr outx
-            ldab #32
-	    jsr outchar
-	    tsx
-	    ldx 18,x
-            jsr outx
-            ldab #32
-	    jsr outchar
-	    tsx
-	    ldx 20,x
-            jsr outx
-            ldx #endtrap
-	    jsr outstring
+
 _platform_reboot:
 	    jsr map_kernel
 	    jmp rebootit
+
 
 ccreg:	    .byte 13,10
 	    .ascii "Trap: CC = $"
@@ -112,7 +122,7 @@ xreg:       .byte 13,10
 pcreg:      .byte 13,10
 	    .ascii "      PC = $"
 	    .byte 0
-endtrap:    .byte 13,10,13,10,0
+endtrap:    .byte 13,10,0
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to
@@ -207,6 +217,7 @@ nullirq:
 ;	Map the current process, do not change register values
 ;
 map_process_always:
+map_process_always_di:
 	    pshx
 	    ldx #_udata + U_DATA__U_PAGE
 	    jsr map_bank
@@ -319,6 +330,8 @@ outcharw:
 ;	for now
 ;
 ;	TOS = ptr, length always 512, src and page in globals
+;
+;	FIXME: swap support
 ;
 
 	.export _hd_read_data

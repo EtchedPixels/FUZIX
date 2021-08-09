@@ -67,6 +67,10 @@
 #define ENOTCONN	53		/* Transport endpoint is not connected */
 #define EINPROGRESS	54		/* Operation now in progress */
 #define ESHUTDOWN	55		/* Cannot send after transport endpoint shutdown */
+#define EISCONN         56              /* Socket is already connected */
+#define EDESTADDRREQ    57              /* No destination address specified */
+#define ENOBUFS		58		/* No buffer space available */
+#define EPROTONOSUPPORT	59		/* Protocol not supported */
 #define __ERRORS	56
 
 extern int sys_nerr;

@@ -43,11 +43,30 @@ clean:
 
 z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
 
-diskboot.bin:	diskboot.s
-	$(CROSS_AS) $(ASOPTS) diskboot.s
-	sdldz80 -nmi diskboot.rel
-	makebin -s 65536 diskboot.ihx | dd bs=512 skip=125 count=1 of=diskboot.bin
+bootblock:
+	sdasz80 -o boot-romwbw.s
+	sdldz80 -i boot-romwbw.rel
+	# This makes us a binary from physical 0
+	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
+	# Chop off the leading 61440 bytes we don't want
+	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
 
-image:
-	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
-	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix
+#
+#	Compile up the boot block
+#
+image: bootblock
+	cat boot-romwbw.bin >fuzix.romwbw
+	dd if=/dev/zero bs=256 count=1 >>fuzix.romwbw
+	cat ../fuzix.bin >>fuzix.romwbw
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=fuzix.romwbw of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

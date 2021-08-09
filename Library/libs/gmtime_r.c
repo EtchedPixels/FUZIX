@@ -12,7 +12,7 @@ unsigned char __mon_lengths[2][12] = {
 /* Do the basic computation and turn days/remainder into a tz */
 void __compute_tm(struct tm *tmbuf, long days, long rem)
 {
-	register int y;
+	register unsigned int y;
 	unsigned char *ip;
 
 	tmbuf->tm_hour = rem / SECS_PER_HOUR;
@@ -25,6 +25,9 @@ void __compute_tm(struct tm *tmbuf, long days, long rem)
 	if (tmbuf->tm_wday < 0)
 		tmbuf->tm_wday += 7;
 	y = 1970;
+
+	/* TODO: should we do a couple of straight checks for say 2000
+		 and 2020 base ? */
 	while (days >= (rem = __isleap(y) ? 366 : 365)) {
 		++y;
 		days -= rem;

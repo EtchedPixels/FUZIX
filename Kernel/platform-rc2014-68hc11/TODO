@@ -1,0 +1,36 @@
+DONE -	Initial cut at bootstrap logic
+DONE -	Adjust tricks.S to deal with Y register
+DONE -	Correct entry/exit SWI handling offsets for HC11
+DONE	Save registers for HC11 interrupt handler
+DONE	Correct I/O offsets for HC11
+DONE	Change vector table for HC11
+DONE -	Turn most of the HC11 lowlevel code into the 6303 codebase
+DONE -	Use Y register for efficiency in copiers
+NO	Do we need to save Y over a switch
+DONE -	Align syscall handling with 6303 somehow (this is tricky due to the
+	reversed arguments). May need to remember personality or something
+	(eg ACCB = 0x80-0xFF = sane C argument passing with hole in odd place
+	(as we will pshd for the one arg so it will be arg2 arg1 ret arg0 ...)
+NO	Our 6303 code only uses xgdx from 6303, can we use the invalid instr
+	trap to fix that up and have two 6303 flag bits (xgdx, bitops) so
+	we can run more stuff nicely (and can make fixup handler swap the
+	byte and restart it)
+
+	(HC11 Y prefix is 6303 XGDX so not fixable 6303 binaries will not run
+	on HC11)
+
+DONE	Identify which of the library routines is miscompiling
+DONE -	Timers
+DONE -	Signals
+DONE -	Debug pre-emption (irq time premption currently crashes if enabled)
+DONE -	Identify why asctime/ctime produce nonsense (compiler)
+DONE -	68HC11 relocator
+DONE -	exec hooks to clear DP area on execve
+DONE	RTC driver
+DONE	Why does async serial tx break ?
+DONE -
+TEST -	Move to 16K x 4 banking mode
+TEST -  16K bank mode swap
+-	Experiment with flat mode (hard - needs a z80-thunked style lowlevel
+	HC11 code variant)
+-	Debug the fsck fail

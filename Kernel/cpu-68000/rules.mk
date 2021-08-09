@@ -1,4 +1,4 @@
-export CROSS_COMPILE=m68k-uclinux-
+export CROSS_COMPILE=m68k-elf-
 export CROSS_LD=$(CROSS_COMPILE)ld
 export CROSS_CC=$(CROSS_COMPILE)gcc
 # Do not use the Fedora gcc 5.3.1. It miscompiles stuff badly.

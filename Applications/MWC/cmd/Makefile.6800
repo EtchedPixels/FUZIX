@@ -1,0 +1,36 @@
+include $(FUZIX_ROOT)/Applications/rules.6800
+
+.SUFFIXES: .c .o .y
+
+SRC  = ac.c almanac.c at.c col.c cron.c deroff.c du.c ed.c find.c make.c \
+	moo.c pr.c tar.c ttt.c calendar.c m4.c
+# no FP so no units
+SRCNS = expr.c test.c
+
+OBJ = $(SRC:.c=.o)
+OBJNS = $(SRCNS:.c=.o)
+
+APPS = $(OBJ:.o=) 
+APPSNS = $(OBJNS:.o=) 
+
+all: $(APPS) $(APPSNS) sizes
+
+expr.c: expr.y
+
+find.c: find.y
+
+$(APPS): %: %.o
+	$(LINKER) -o $@ $(CRT0) $^  $(LINKER_LIB) 
+
+$(APPSNS): %: %.o
+	$(LINKER) -o $@ $(CRT0NS) $^  $(LINKER_LIB) 
+
+sizes: $(APPS)
+	ls -l $(APPS) >size.report
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ size.report *.o
+
+rmbak:
+	rm -f *~ core
+

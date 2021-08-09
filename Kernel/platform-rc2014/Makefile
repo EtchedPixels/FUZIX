@@ -1,16 +1,16 @@
-ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vfdterm.s vdp1.s
-CSRCS = devices.c main.c devtty.c vfd-debug.c vfd-term.c ide.c sd.c
-CSRCS += devinput.c devgpio.c
+ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s
+CSRCS = devices.c main.c devtty.c ide.c sd.c
+CSRCS += devinput.c devgpio.c wiznet.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DISCARD_DSRCS += ../dev/devsd_discard.c
 DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c ../dev/devsd.c
-DSRCS += ../dev/ps2kbd.c
+DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/amd9511.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014.s
 DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
-DASRCS += ../dev/ps2bitbang-z80.s
-NSRCS = ../dev/net/net_native.c
+DASRCS += ../dev/ps2bitbang-rc2014-kbd.s ../dev/ps2bitbang-rc2014-mouse.s
+NSRCS = ../dev/net/net_w5x00.c ../dev/net/net_w5300.c
 DRSRCS = ../dev/rc2014/zxkeyboard.c
 DRASRCS = ../dev/rc2014/zxkey.s
 
@@ -40,7 +40,7 @@ $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
 $(DAOBJS): %.rel: ../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
@@ -52,7 +52,7 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(NOBJS): %.rel: ../dev/net/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DROBJS): %.rel: ../dev/rc2014/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
@@ -81,3 +81,15 @@ bootblock:
 	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
 	# Chop off the leading 61440 bytes we don't want
 	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=fuzix.romwbw of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

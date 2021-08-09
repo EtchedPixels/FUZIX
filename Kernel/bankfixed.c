@@ -53,6 +53,8 @@ static uint_fast8_t pfmax;
 
 void pagemap_add(uint8_t page)
 {
+	if (pfptr == MAX_MAPS)
+		panic(PANIC_MAPOVER);
 	pfree[pfptr++] = page;
 	pfmax = pfptr;
 }
@@ -88,13 +90,19 @@ int pagemap_prepare(struct exec *hdr)
 	/* If it is relocatable load it at PROGLOAD */
 	if (hdr->a_base == 0)
 		hdr->a_base = PROGLOAD >> 8;
+	if (hdr->a_base != (PROGLOAD >> 8)) {
+		udata.u_error = ENOEXEC;
+		return -1;
+	}
 	/* If it doesn't care about the size then the size is all the
 	   space we have */
 	if (hdr->a_size == 0)
 		hdr->a_size = (ramtop >> 8) - hdr->a_base;
 	/* Check it fits - we can do this early for fixed banks */
-	if (hdr->a_size > (MAP_SIZE >> 8))
+	if (hdr->a_size > (MAP_SIZE >> 8)) {
+		udata.u_error = ENOMEM;
 		return -1;
+	}
 	return 0;
 }
 

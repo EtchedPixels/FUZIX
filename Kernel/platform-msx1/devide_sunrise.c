@@ -125,8 +125,10 @@ failout:
     tmpfree(devide_buf);
 }
 
-static const uint16_t sunrise_roms[2] = {
+static const uint16_t sunrise_roms[4] = {
     0x8FB3,
+    0xBB0E,
+    0xABF2,
     0x0000
 };
 
@@ -143,9 +145,11 @@ void sunrise_probe(void)
     memcpy(&sunrise_k, map_slot1_kernel(i), sizeof(sunrise_k));
     memcpy(&sunrise_u, map_slot1_user(i), sizeof(sunrise_k));
 
+#ifdef DEBUG
     kprintf("sunrise_k: %x %x %x %x %x %x\n",
         sunrise_k.private[0], sunrise_k.private[1], sunrise_k.private[2],
         sunrise_k.private[3], sunrise_k.private[4], sunrise_k.private[5]);
+#endif
 
     do_ide_begin_reset();
     delay();

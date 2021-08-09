@@ -42,6 +42,7 @@
 	    .import _chksigs
 	    .import _platform_switchout
 	    .import _need_resched
+	    .import _relocator
 
 	    .import outcharhex
 	    .import outxa
@@ -209,12 +210,11 @@ map_kernel:
 	    rts
 
 ;
-;	Entry point to map a linear bank range. We switch 4000-BFFF
-;	C000-FFFF are constant, 0000-3FFF are switched on the task switch
-;	so are valid for map_process_always cases but not mapping an
-;	arbitrary process. This is ok - when we add swap it uses
-;	map_for_swap and that will map a 16K window in and out (which will
-;	need us to fix save/restore)
+;	Entry point to map a linear bank range. We switch 4000-FFFF
+;	0000-3FFF are switched on the task switch so are valid for
+;	map_process_always cases but not mapping an arbitrary process.
+;	This is ok - when we add swap it uses map_for_swap and that will map
+;	a 16K window in and out (which will need us to fix save/restore)
 ;
 map_bank:
 	    stx $FE78
@@ -610,8 +610,8 @@ platform_doexec:
 ;
 ;	Start address of executable
 ;
-	    stx ptr1+1
-	    sta ptr1		; Save execution address in ptr1
+	    stx ptr3+1
+	    sta ptr3		; Save execution address in ptr3
 	    stx ptr2+1		; Point ptr2 at base page + 16
 	    lda #16
 	    sta ptr2
@@ -623,7 +623,7 @@ platform_doexec:
 	    sta PROGLOAD+17	; the low space where it is expected
 
 ;
-;	Set up the C stack. FIXME: assumes for now our sp in ZP matches it
+;	Set up the C stack. Assumes our sp in ZP matches it
 ;
 	    lda _udata+U_DATA__U_ISP
 	    sta sp
@@ -635,10 +635,14 @@ platform_doexec:
 ;
 	    ldx #$ff
 	    txs
-	    ldx #>PROGLOAD	; For the relocation engine
-	    lda #ZPBASE
-	    ldy #0
-	    jmp (ptr1)		; Enter user application
+;
+;	Relocation is done in kernel because the 6502 isn't quite smart
+;	enough to do its own ZP relocations as far as I can tell (prove me
+;	wrong....)
+;
+	    jsr _relocator
+
+	    jmp (ptr3)		; Enter user application
 
 ;
 ;	Straight jumps no funny banking issues

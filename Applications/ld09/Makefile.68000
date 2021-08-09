@@ -1,18 +1,4 @@
-PLATFORM = 68000
-CC = m68k-uclinux-gcc
-ASM = m68k-uclinux-as
-AR = m68k-uclinux-ar
-LINKER = m68k-uclinux-ld
-CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I../../Library/include -I../../Library/include/68000
-LINKER_OPT = -L../../Library/libs -lc68000
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += --emit-relocs -L$(LIBGCCDIR) -lgcc -T ../../Library/elf2flt.ld
-CRT0 = ../../Library/libs/crt0_68000.o
-CRT0NS = ../../Library/libs/crt0nostdio_68000.o
-# For now while we get going. Really we want to use some kind of elf2zmagic
-# with relocs.
-ELF2FUZIX = elf2flt -s 16384
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.68000
 
 DEFS	=
 
@@ -25,7 +11,7 @@ OBJS= dumps.o io.o ld.o readobj.o table.o typeconv.o linksyms.o writefuzix.o
 all: ld09
 
 ld09: $(CRT0) $(OBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 clean realclean clobber:
