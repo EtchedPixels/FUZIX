@@ -88,6 +88,26 @@ unsigned int exception_handler(struct exception_frame *ef, uint32_t cause)
 	return s;
 }
 
+#ifdef DO_MEM_CHECK
+
+void pattern_check(void)
+{
+	uint32_t *p;
+	p = (uint32_t *)0x3FFFC040;
+
+	while(p < (uint32_t *)0x40000000) {
+		/* Flash configuration structure */
+		if (p == (uint32_t *) 0x3FFFC714) {
+			p += 8;
+			continue;
+		}
+		if (*p != 0x1DEC1DED)
+			kprintf("Stolen space used at %p\n", p);
+		p++;
+	}
+}
+#endif
+
 /*
  *	We use timer 1 as a self reloading 23bit counter. This avoids drift problems.
  */
@@ -95,6 +115,9 @@ static void timer_isr(void)
 {
 	T1I = 0;		/* Clear interrupt */
 	timer_interrupt();
+#ifdef DO_MEM_CHECK
+	pattern_check();
+#endif
 }
 
 void timer_init(void)

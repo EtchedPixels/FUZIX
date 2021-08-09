@@ -3,13 +3,13 @@
 
 /* Uses no system RAM */
 extern void uart_div_modify(uint8_t uart_no, uint32_t divlatch);
-
-/* Uses memory at 3feffe00, but can be subverted by loading bits and jumping slightly further in */
-/* Seems to be the base of the SPI register bank ? */
 extern void Cache_Read_Enable(uint8_t odd_even, uint8_t mb_count, uint8_t no_idea);
 extern void Cache_Read_Disable(void);
 
-/* These routines use a 24 byte table at 3FFFC714 */
+/* These routines use a 24 byte table pointed to by a pointer at 3FFFC714
+   Unless touched the table points to the next 6 words (3FFC718 onwards). We need
+   to preserve this table in order to use the SPI routines, and we don't want to
+   duplicate these as they must live in precious IRAM if we do */
 extern void SpiWrite(uint32_t address, const uint8_t *buffer, uint32_t length);
 extern void SpiRead(uint32_t address, uint8_t *buffer, uint32_t length);
 extern void SpiUnlock(void);
@@ -22,7 +22,6 @@ extern void* sdk_flashchip;
 
 /* And we don't care what this one uses */
 extern void system_restart(void);
-
 
 #define ETS_SLC_INUM        1
 #define ETS_SDIO_INUM       1
