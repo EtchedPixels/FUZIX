@@ -90,7 +90,9 @@ unsigned int exception_handler(struct exception_frame *ef, uint32_t cause)
 /*
  *	The ESP8266 timer, less than ideal in some ways as we have to keep reloading so it will
  *	drift over time. We should probably also use FRC2 to work out what to bump the counter
- *	by. TODO
+ *	by.
+ *
+ *	TODO - Move to FRC1  as it seems to have an auto-reload
  */
 static void timer_isr(void)
 {
@@ -115,13 +117,27 @@ static void timer_isr(void)
  *	6: TICK			(used for our clock)
  *	7: SOFT
  *	8: WDT
- *	9: FRC1
- *	10: FRC2
+ *	9: FRC1			(needs different handling as it is edge triggered)
+ *	10: FRC2		(ditto)
  */
+
+static uint32_t irqmask;	/* A set bit is an enable */
 
 static void irq_clear(uint32_t irq)
 {
 	asm volatile ("wsr.intclear %0; esync" :: "a" (irq));
+}
+
+void irq_enable(uint32_t irq)
+{
+	irqmask |= 1 << irq;
+	irq_set_mask(irqmask);
+}
+
+void irq_disable(uint32_t irq)
+{
+	irqmask &= ~(1 << irq);
+	irq_set_mask(irqmask);
 }
 
 void interrupt_handler(uint32_t interrupt)

@@ -180,5 +180,18 @@ platform_idle:
 program_vectors:
 	ret
 
-/* vim: sw=4 ts=4 et: */
+/*
+ *	Use these instead of the ROM ones. The ROM ones touch data in the
+ *	system memory bank we want to 'borrow'.
+ */
+.global irq_set_mask
+.text
+.align 4
+irq_set_mask:
+	rsil a7,2			/* Disable IRQs */
+	wsr.intenable a2
+	wsr.ps a7
+	rsync
+	ret.n
 
+/* vim: sw=4 ts=4 et: */

@@ -29,7 +29,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
-	_CSYS | CBAUD
+	_CSYS | CBAUD | CSTOPB | PARENB | PARODD | CSIZE
 };
 
 static unsigned int tx_buffer_fill(void)
@@ -66,11 +66,16 @@ void tty_sleeping(uint_fast8_t minor)
 {
 }
 
-/* FIXME: we should use a smaller target for this than 0x7F so we leave space to avoid blocking on
-   echoing */
+/*
+ *	We have a 128 byte FIFO but we leave a few bytes free for character echo to reduce the likelyhood
+ *	of the queue blocking.
+ *
+ *	TODO: we should see if we can use the transmit interrupt specifically in the case where the
+ *	FIFO is full so that we can do waiti instructions and save power until it unblocks.
+ */
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-	return (tx_buffer_fill() >= 0x7f) ? TTY_READY_SOON : TTY_READY_NOW;
+	return (tx_buffer_fill() >= 0x6f) ? TTY_READY_SOON : TTY_READY_NOW;
 }
 
 /* For the moment */
@@ -115,7 +120,7 @@ static const uint32_t baudmap[16] = {
 
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
-
+	uint32_t conf = 0;
 	irqflags_t irq = di();
 	struct termios *t = &ttydata[minor].termios;
 	uint16_t baud = baudmap[t->c_cflag & CBAUD];
@@ -125,7 +130,20 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 		t->c_cflag &= ~CBAUD;
 		t->c_cflag |= B300;
 	}
+	/* Wait for the data to write out */
+	if (flags == TCSADRAIN)
+		while(tx_buffer_fill());
+	/* Parity bits */
+	if (t->c_cflag & PARENB) {
+		conf |= (1 << UCPAE);
+		if (t->c_cflag & PARODD)
+			conf |= (1 << UCPA);
+	}
+	if (t->c_cflag & CSTOPB)
+		conf |= ( 3 << UCSBN);
+	conf |= ((t->c_cflag & CSIZE) >> 4) << UCBN;
 	/* Set the speed */
+	U0C0 = conf;
 #if 0	
 TO DEBUG	uart_div_modify(0, (PERIPHERAL_CLOCK * 1000000) / baud);
 #endif
@@ -135,7 +153,7 @@ TO DEBUG	uart_div_modify(0, (PERIPHERAL_CLOCK * 1000000) / baud);
 	/* FIXME: review IRQ clear */
 	U0IC = 0xffff;		/* clear all pending interrupts */
 	U0IE = 1 << UITO;	/* RX timeout enable */
-	ets_isr_unmask(1 << ETS_UART_INUM);
+	irq_enable(ETS_UART_INUM);
 	irqrestore(irq);
 }
 

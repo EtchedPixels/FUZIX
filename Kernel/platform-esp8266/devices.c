@@ -42,5 +42,5 @@ void device_init(void)
 	flash_dev_init();
 	sd_rawinit();
 	devsd_init();
-	ets_isr_unmask(1<<ETS_CCOMPARE0_INUM);
+	irq_enable(ETS_CCOMPARE0_INUM);
 }
