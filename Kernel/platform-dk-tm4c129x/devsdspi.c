@@ -2,7 +2,9 @@
 #include <kdata.h>
 #include <devsd.h>
 #include <blkdev.h>
+#include "inline-irq.h"
 #include "tm4c129x.h"
+#include "gpio.h"
 #include "ssi.h"
 
 /* TODO - shoul;d set a slow clock initially for old MMC cards */

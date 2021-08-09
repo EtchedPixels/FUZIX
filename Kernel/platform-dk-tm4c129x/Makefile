@@ -60,7 +60,7 @@ image:
 	../syscall_proc.o ../syscall_other.o \
 	../mm.o ../swap.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
-	../syscall_fs3.o ../syscall_exec$(BITS).o \
+	../syscall_fs3.o ../syscall_exec.o ../syscall_exec$(BITS).o \
 	../syscall_level2.o ../level2.o ../select.o \
 	../usermem_std-armm4.o ../vt.o ../malloc.o \
 	../font8x8.o >../fuzix.map
