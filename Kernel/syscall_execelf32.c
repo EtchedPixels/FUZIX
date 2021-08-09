@@ -164,7 +164,7 @@ arg_t _execve(void)
 	}
 	/* dynamic points at the load address of the relocation data; this is also
 	 * the top of BSS. */
-	stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
+	uaddr_t stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
 	if ((stacktop > himem) || (lomem > himem)) {
 		#ifdef DEBUG
 			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
