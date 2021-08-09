@@ -32,7 +32,7 @@ You need the `xtensa-lx106-elf` gcc toolchain --- install the
 
 The base system assumes a typical ESP8266 configuration with a 26MHz
 peripheral clock and the CPU usually running at 80MHz. If you get weird
-serial speeds run esptool and set the peripheral clock in global.h to twice
+serial speeds run esptool and set the peripheral clock in config.h to twice
 the clock it reports.
 
 The flash mappings and clocking is managed by the hardware based upon the
