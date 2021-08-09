@@ -19,20 +19,46 @@ static irq_handler_t irq_handler[NR_IRQS] = {
   [0 ... (NR_IRQS - 1)] = null_handler
 };
 
-static void *irq_dev[NR_IRQS];
-
-static uint32_t sysirq_bit[4] = {
-    NVIC_SYSHCON_MEMFAULTEN,
-    NVIC_SYSHCON_BUSFAULTEN,
-    NVIC_SYSHCON_USGFAULTEN,
-    NVIC_SYSTICK_CTRL_ENABLE
+static void *irq_dev[NR_IRQS] = {
+  [0 ... (NR_IRQS - 1)] = NULL
 };
 
-static uint32_t sysirq_port[4] = {
-    NVIC_SYSHCON,
-    NVIC_SYSHCON,
-    NVIC_SYSHCON,
-    NVIC_SYSTICK_CTRL
+static uint32_t sysirq_bit[SYS_NUM_IRQ] = {
+  0U,
+  0U,
+  0U,
+  0U,
+  NVIC_SYSHCON_MEMFAULTEN,
+  NVIC_SYSHCON_BUSFAULTEN,
+  NVIC_SYSHCON_USGFAULTEN,
+  0U,
+  0U,
+  0U,
+  0U,
+  0U,
+  0U,
+  0U,
+  0U,
+  NVIC_SYSTICK_CTRL_ENABLE
+};
+
+static uint32_t sysirq_port[SYS_NUM_IRQ] = {
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSHCON,
+  NVIC_SYSTICK_CTRL
 };
 
 /* We have two different interrupt controllers, the NVIC and the SYSCON. The
@@ -41,7 +67,7 @@ static uint32_t sysirq_port[4] = {
 
 void enable_irq(unsigned int irq)
 {
-    if (irq > SYS_NUM_IRQ) {
+    if (irq >= SYS_NUM_IRQ) {
         irq -= SYS_NUM_IRQ;
         /* Enable the NVIC register bit */
         outl(NVIC_ENABLE + ((irq >> 5) << 2), 1 << (irq & 31));
@@ -53,7 +79,7 @@ void enable_irq(unsigned int irq)
 
 void disable_irq(unsigned int irq)
 {
-    if (irq > SYS_NUM_IRQ) {
+    if (irq >= SYS_NUM_IRQ) {
         irq -= SYS_NUM_IRQ;
         /* Disable the NVIC register bit */
         outl(NVIC_CLRENABLE + ((irq >> 5) << 2), 1 << (irq & 31));

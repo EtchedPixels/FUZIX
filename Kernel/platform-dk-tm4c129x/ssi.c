@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include "tm4c129x.h"
+#include "gpio.h"
 #include "ssi.h"
 
 /*
@@ -291,42 +292,49 @@ void ssi_transfer(int port, const void *txbuffer, void *rxbuffer, size_t nwords)
   } while ((ssi_ports[port].nrxwords) < (ssi_ports[port].nwords));
 }
 
-static void ssi_power(unsigned int port, unsigned int onoff)
+static void ssi_power_up(unsigned int port)
 {
-  outmod32(SYSCON_PCSSI, onoff << port, 1 << port);
-  outmod32(SYSCON_RCGSSI, onoff << port, 1 << port);
+  tm4c129x_modreg(SYSCON_PCSSI, 0U, 1U << port);
+  tm4c129x_modreg(SYSCON_RCGSSI, 0U, 1U << port);
 }
 
 void ssi_init(int which)
 {
   switch (which) {
   case 0:
-    ssi_power(0, 1);
+    ssi_power_up(0U);
     break;
   case 1:
-    ssi_power(1, 1);
+    ssi_power_up(1U);
     break;
   case 2:
-    ssi_power(2, 1);
+    ssi_power_up(2U);
     break;
   case 3:
-    ssi_power(3, 1);
+    ssi_power_up(3U);
     /* PQ0/SSI3CLK */
-    gpio_altfunc(GPIO_PORT('Q'), 0, 14);
+    gpio_setup_pin(GPIO_PORT('Q'), GPIO_PINFUN_PFIO, 0U,
+                   GPIO_PAD_STD, 0U, 14U, 0U);
     /* PQ1/SSI3FSS */
-    gpio_altfunc(GPIO_PORT('Q'), 1, 14);
+    gpio_setup_pin(GPIO_PORT('Q'), GPIO_PINFUN_PFIO, 1U,
+                   GPIO_PAD_STD, 0U, 14U, 0U);
     /* PQ2/SSI3XDAT0 */
-    gpio_altfunc(GPIO_PORT('Q'), 2, 14);
+    gpio_setup_pin(GPIO_PORT('Q'), GPIO_PINFUN_PFIO, 2U,
+                   GPIO_PAD_STD, 0U, 14U, 0U);
     /* PF0/SSI3XDAT1 */
-    gpio_altfunc(GPIO_PORT('F'), 0, 14);
+    gpio_setup_pin(GPIO_PORT('F'), GPIO_PINFUN_PFIO, 0U,
+                   GPIO_PAD_STD, 0U, 14U, 0U);
     /* PF4/SSI3XDAT2 */
-    gpio_altfunc(GPIO_PORT('F'), 4, 14);
+    gpio_setup_pin(GPIO_PORT('F'), GPIO_PINFUN_PFIO, 4U,
+                   GPIO_PAD_STD, 0U, 14U, 0U);
     /* PF5/SSI3XDAT3 */
-    gpio_altfunc(GPIO_PORT('F'), 5, 14);
+    gpio_setup_pin(GPIO_PORT('F'), GPIO_PINFUN_PFIO, 5U,
+                   GPIO_PAD_STD, 0U, 14U, 0U);
     /* PH4 */
-    gpio_output(GPIO_PORT('H'), 4);
-    gpio_write(GPIO_PORT('Q'), 1, 1);
-    gpio_write(GPIO_PORT('H'), 4, 1);
+    gpio_setup_pin(GPIO_PORT('H'), GPIO_PINFUN_O, 4U,
+                   GPIO_PAD_STD, 0U, 0U, 0U);
+    gpio_write(GPIO_PORT('Q'), 1U, 1U);
+    gpio_write(GPIO_PORT('H'), 4U, 1U);
     break;
   default:
     for (;;)

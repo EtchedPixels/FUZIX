@@ -1,5 +1,7 @@
 #include <kernel.h>
 #include <tty.h>
+#include "tm4c129x.h"
+#include "gpio.h"
 #include "interrupt.h"
 #include "serial.h"
 
@@ -115,13 +117,12 @@ void serial_early_init(void)
   uint32_t ctl;
 
   /* Power up the UART */
-  outmod32(SYSCON_PCUART, 1, 1);
-  outmod32(SYSCON_RCGUART, 1, 1);
+  tm4c129x_modreg(SYSCON_PCUART, 0, 1U);
+  tm4c129x_modreg(SYSCON_RCGUART, 0, 1U);
 
   /* Put the console on the right pins and power them up */
-
-  gpio_altfunc(GPIO_PORT('A'), 0, 1);
-  gpio_altfunc(GPIO_PORT('A'), 1, 1);
+  gpio_setup_pin(GPIO_PORT('A'), GPIO_PINFUN_PFIO, 0U, GPIO_PAD_STD, 0U, 1U, 0U);
+  gpio_setup_pin(GPIO_PORT('A'), GPIO_PINFUN_PFIO, 1U, GPIO_PAD_STD, 0U, 1U, 0U);
 
   /* Can't use the UART until it finishes coming out of power gating */
   while (!(inl(SYSCON_PRUART) & 1));

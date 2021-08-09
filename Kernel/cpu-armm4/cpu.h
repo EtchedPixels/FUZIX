@@ -22,11 +22,7 @@
 #define ALIGNDOWN(v) aligndown((v), 4U)
 
 #define uputp    uputl            /* Copy user pointer type */
-#ifdef ELF32
 #define ugetp(x) ugetl((x), NULL) /* between user and kernel */
-#else /* ELF32 */
-#define ugetp    ugetl            /* between user and kernel */
-#endif /* ELF32 */
 #define uputi    uputl            /* Copy user int type */
 #define ugeti(x) ugetl((x), NULL) /* between user and kernel */
 
