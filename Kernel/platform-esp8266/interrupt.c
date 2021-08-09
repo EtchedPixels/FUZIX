@@ -8,6 +8,7 @@
 #include <dev/devsd.h>
 #include <printf.h>
 #include "globals.h"
+#include "esp8266_peri.h"
 #include "rom.h"
 
 /*
@@ -88,22 +89,24 @@ unsigned int exception_handler(struct exception_frame *ef, uint32_t cause)
 }
 
 /*
- *	The ESP8266 timer, less than ideal in some ways as we have to keep reloading so it will
- *	drift over time. We should probably also use FRC2 to work out what to bump the counter
- *	by.
- *
- *	TODO - Move to FRC1  as it seems to have an auto-reload
+ *	We use timer 1 as a self reloading 23bit counter. This avoids drift problems.
  */
 static void timer_isr(void)
 {
-	const uint32_t clocks_per_tick = (CPU_CLOCK*1000000) / TICKSPERSEC;
-	uint32_t ccount;
-
-	asm volatile ("rsr.ccount %0" : "=a" (ccount));
-	asm volatile ("wsr.ccompare0 %0" :: "a" (ccount + clocks_per_tick));
-	asm volatile ("esync");
-
+	T1I = 0;		/* Clear interrupt */
 	timer_interrupt();
+}
+
+void timer_init(void)
+{
+	/* 3.2us a tick at 256 scaling */
+	T1L = (PERIPHERAL_CLOCK * 1000000 / 256) / TICKSPERSEC;
+	/* Auto reload, edge triggered interrupt, interrupt on */
+	T1C = (1 << TCAR) | (3 << TCPD) | ( 1 << TCTE);
+	/* Edge trigger on the timer interrupt */
+	TEIE |= TEIE1;
+	T1I = 0;
+	irq_enable(ETS_FRC_TIMER1_INUM);
 }
 
 /*
@@ -142,9 +145,9 @@ void irq_disable(uint32_t irq)
 
 void interrupt_handler(uint32_t interrupt)
 {
-	if (interrupt & (1 << 6)) {
+	if (interrupt & (1 << 9)) {
 		timer_isr();
-		irq_clear(1 << 6);
+		irq_clear(1 << 9);
 	}
 	if (interrupt & (1 << 5)) {
 		tty_interrupt();
