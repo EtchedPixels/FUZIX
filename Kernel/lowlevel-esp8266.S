@@ -20,7 +20,7 @@ set_cpu_type:
 platform_doexec:
 	movi a4, 32
 	wsr.ps a4			# set user mode (and enable interrupts)
-	mov sp, a3
+	mov.n sp, a3
 	isync
 	jx a2
 
@@ -163,7 +163,7 @@ syscall:
 	s32i.n a14, sp, 4
 	s32i.n a15, sp, 8
 	rsr.epc1 a12
-	s32i a12, sp, 12
+	s32i.n a12, sp, 12
 	movi a12, 0x2F
 	xsr.ps a12
 	s32i.n a12, sp, 16
@@ -179,7 +179,7 @@ syscall:
 	movi a12, udata
 	l8ui a4, a12, U_DATA__U_CURSIG
 	l16ui a3, a12, U_DATA__U_ERROR
-	l32i a2, a12, U_DATA__U_RETVAL
+	l32i.n a2, a12, U_DATA__U_RETVAL
 	l32i.n a15, sp, 8
 	l32i.n a14, sp, 4
 	l32i.n a0, sp, 0
@@ -197,18 +197,18 @@ sigout:
 
 deliver_sig:
 	addi sp, sp, -24	# keep aligned (8 already pushed)
-	s32i a2, sp, 0		# Save syscall return values
-	s32i a3, sp, 4
-	s32i a14, sp, 8
-	s32i a15, sp, 12
-	s32i a0, sp, 16
+	s32i.n a2, sp, 0		# Save syscall return values
+	s32i.n a3, sp, 4
+	s32i.n a14, sp, 8
+	s32i.n a15, sp, 12
+	s32i.n a0, sp, 16
 	rsr.epc1 a14
-	s32i a14, sp, 20
+	s32i.n a14, sp, 20
 	addx4 a2, a4, a12	# Signal vector time
-	l32i a5, a2, U_DATA__U_SIGVEC
+	l32i.n a5, a2, U_DATA__U_SIGVEC
 	beqz a5, no_signal
 	movi a14, 0
-	s32i a14, a2, U_DATA__U_SIGVEC
+	s32i.n a14, a2, U_DATA__U_SIGVEC
 	s8i  a14, a12, U_DATA__U_CURSIG
 	#
 	#	A4 is the signal, A5 is the vector
@@ -226,13 +226,13 @@ deliver_sig:
 	rsil a14, 15			# Interrupts back off
 	rsync
 no_signal:
-	l32i a14, sp, 20
+	l32i.n a14, sp, 20
 	wsr.epc1 a14
-	l32i a0, sp, 16
-	l32i a15, sp, 12
-	l32i a14, sp, 8
-	l32i a3, sp, 4
-	l32i a2, sp, 0
+	l32i.n a0, sp, 16
+	l32i.n a15, sp, 12
+	l32i.n a14, sp, 8
+	l32i.n a3, sp, 4
+	l32i.n a2, sp, 0
 	addi sp, sp, 24
 	j sigout
 #
@@ -339,17 +339,40 @@ interrupt:
 	call0 interrupt_handler
 	# Restore the state
 	movi a2, istack + 512
-	l32i a1, a2, 0
+	l32i.n a1, a2, 0
 	movi a12, udata
 	l8ui a2, a12, U_DATA__U_INSYS
 	beqz a2, restore
 	movi a2, need_resched
 	l8ui a2, a2, 0
-#	bnez a2, preemption
+	bnez a2, preemption
 	# TODO signals
+	l8ui a2, a12, U_DATA__U_CURSIG
+	beqz a2, restore
+	movi a3,0
+	s8i a3, a2, U_DATA__U_CURSIG
+	addx4 a4, a2, a12
+	l32i.n a13, a4, U_DATA__U_SIGVEC
+	beqz a13, restore
+	s32i.n a3, a4, U_DATA__U_SIGVEC
+	# We are on the user stack, we just need to flip a few flags around
+	# Interrupts are still off
+	s8i a3, a12, U_DATA__U_ININTERRUPT
+	# Signal code is already in a2
+	# Get the frame base into a3
+	mov.n a3, a1
+	# Interrupts back on
+	movi a14, 0x20
+	xsr.ps a14
+	rsync
+	# Call the handler (which may or may not return)
+	callx0 a13
+	# If it returns we restore our irq state and stack frame
+	wsr.ps a14
+	rsync
 restore:
 	movi a3, udata
-	movi a2, 1
+	movi a2, 0
 	s8i a2, a3, U_DATA__U_ININTERRUPT
 	# Recover register state
 	l32i.n a7, sp, 40
@@ -365,7 +388,6 @@ restore:
 	l32i.n a0, sp, 8
 	l32i.n a15, sp, 4
 	l32i.n a14, sp, 0
-
 	l32i.n a13, sp, 48
 	l32i.n a12, sp, 44
 	addi sp, sp, 52
