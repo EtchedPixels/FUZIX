@@ -76,5 +76,9 @@ extern uint8_t _code_top[];
 #define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
 
+/* These reflect a stanard ESP8266 configuration */
+#define CPU_CLOCK 160		/* We switch to the double clock */
+#define PERIPHERAL_CLOCK 52	/* 26MHz crystal */
+
 /* vim: sw=4 ts=4 et: */
 
