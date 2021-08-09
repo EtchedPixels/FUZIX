@@ -173,10 +173,6 @@ You now have an ESP8266 compiler set.
 ## TODO
 
 - Use some of the ROM library routines that don't themselves meddle with static data. Make a kernel set and a user set (RBOOT has a good list)
-- Enable signal and preemption processing
-	- signal delivery from syscall and exception contexts done
-	- pre-emption not enabled yet
-	- signal delivery from interrupt context not done (the hard one)
 - Move to 'parent runs first' - needs some tricky changes in the platform fork code (see the Z80 examples)
 - Clean up the low level asm code - too much duplication, things saved that are not needed. Could do with a clean up by someone who speaks Tensilica LX106 properly.
 - See if we can get away from any use of the ROM routines that use the firmware memory bank and then steal the firmware memory bank
