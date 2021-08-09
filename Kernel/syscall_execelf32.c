@@ -161,12 +161,14 @@ arg_t _execve(void)
 	/* dynamic points at the load address of the relocation data; this is also
 	 * the top of BSS. */
 	stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
-	if (stacktop > himem) {
+	if ((stacktop > himem) || (lomem > himem)) {
 		#ifdef DEBUG
 			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
 		#endif
 		goto enoexec;
 	}
+	if (stacktop > lomem)
+		lomem = stacktop;
 
 	/* We've confirmed that there's room. Now, copy the command line arguments
 	 * into temporary storage because we're about to trash userland. */
@@ -181,14 +183,12 @@ arg_t _execve(void)
 	}
 	udata.u_ptab->p_status = P_NOSLEEP;
 
-	/* FIXME. At this point we should call pagemap_realloc(), for this to work
-	 * on a variable-sized process system. This must be the last test as it
-	 * makes changes if it works. */
+	/* At this point we should call pagemap_realloc(), for this to work on a
+	 * variable-sized process system. This must be the last test as it makes
+	 * changes if it works. */
 
-	#if 0
-	if (pagemap_realloc(NULL, ))
-		goto nogood3;
-	#endif
+	if (pagemap_realloc(NULL, lomem))
+		goto enomem;
 
 	/* At this point, we are committed to reading in and
 	 * executing the program. This call must not block. */
@@ -272,7 +272,8 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p dynamic=%p stacktop=%p\n", himem, lomem, dynamic, stacktop);
+	   kprintf("himem=%p lomem=%p (%p) dynamic=%p stacktop=%p\n",
+			   himem, lomem, lomem+PROGLOAD, dynamic, stacktop);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
@@ -289,7 +290,6 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
-	udata.u_ptab->p_top = himem;
 
 	/* Clear the stack (the BSS has already been cleared by the loader). */
 

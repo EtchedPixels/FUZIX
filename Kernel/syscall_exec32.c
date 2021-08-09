@@ -199,6 +199,7 @@ arg_t _execve(void)
 
 	top = progbase + bin_size;
 
+	udata.u_top = top;
 	udata.u_ptab->p_top = top;
 
 //	kprintf("user space at %p\n", progbase);

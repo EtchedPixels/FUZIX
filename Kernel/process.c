@@ -375,7 +375,11 @@ ptptr ptab_alloc(void)
 						break;
 					}
 			}
-			newp->p_top = udata.u_ptab->p_top;
+			if (udata.u_ptab) {
+				newp->p_top = udata.u_top;
+			    newp->p_pgrp = udata.u_ptab->p_pgrp;
+			    memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			}
 			if (pagemap_alloc(newp) == 0) {
 				newp->p_status = P_FORKING;
 				nproc++;
@@ -384,10 +388,6 @@ ptptr ptab_alloc(void)
 				newp = NULL;
 				break;
 	                }
-			if (udata.u_ptab) {
-			    newp->p_pgrp = udata.u_ptab->p_pgrp;
-			    memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
-			}
 			udata.u_error = 0;
 	                break;
 		}
@@ -845,6 +845,8 @@ void acctexit(ptptr p)
 
 	/* Reuse the field before we write out accounting data */
 	udata.u_mask = p->p_uid;
+	/* More useful information is u_top */
+	udata.u_break = udata.u_top;
 
 	udata.u_sysio = true;
 	udata.u_base = (char *) &udata.u_mask;
@@ -887,6 +889,7 @@ void doexit(uint16_t val)
 	uint_fast8_t j;
 	ptptr p;
 	irqflags_t irq;
+	ptptr s = udata.u_ptab;
 
 #ifdef DEBUG_SLEEP
 	kprintf("process %d exiting %d\n", udata.u_ptab->p_pid, val);
