@@ -30,8 +30,12 @@
 
 void devsd_init(void)
 {
-    for(sd_drive=0; sd_drive<SD_DRIVE_COUNT; sd_drive++)
+    uint8_t i;
+    for(i = 0; i < SD_DRIVE_COUNT; i++) {
+        sd_drive = i;
         sd_init_drive();
+    }
+//    sd_drive = SD_DRIVE_NONE;
 }
 
 void sd_init_drive(void)

@@ -24,7 +24,7 @@
 
 /* for platforms with multiple SD card slots, this variable contains
  * the current operation's drive number */
-uint_fast8_t sd_drive;
+uint_fast8_t sd_drive = SD_DRIVE_NONE;
 
 /* A write is being executed in the background; when set, we have to wait for
  * the card to finish before issuing the next command. We won't unassert CS
@@ -37,6 +37,10 @@ uint_fast8_t devsd_transfer_sector(void)
     bool success;
 
     sd_drive = blk_op.blkdev->driver_data & DRIVE_NR_MASK;
+
+    /* Ensure that sd_drive is visible to any IRQ handler checking for SD_DRIVE_NONE before
+       we touch the bus */
+    barrier();
 
     for(attempt=0; attempt<8; attempt++){
 	if(sd_send_command(blk_op.is_read ? CMD17 : CMD24, 
@@ -69,13 +73,16 @@ uint_fast8_t devsd_transfer_sector(void)
 		deferredwrite = 1;
 	}
 	
-	if(success)
+	if(success) {
+            sd_drive = SD_DRIVE_NONE;
 	    return 1;
+        }
 
 	kputs("sd: failed, retrying.\n");
     }
 
     udata.u_error = EIO;
+    sd_drive = SD_DRIVE_NONE;
     return 0;
 }
 
@@ -89,10 +96,42 @@ void sd_spi_release(void)
 		}
 		deferredwrite = 0;
 	}
-
 	sd_spi_raise_cs();
 	sd_spi_receive_byte();
 }
+
+#ifdef CONFIG_SPI_SHARED
+
+/*
+ *	On a system where the SPI bus is shared with another device this routine allows an IRQ level
+ *	caller to check if the SD card is still sitting on the bus, even for a writeback and if so
+ *	to prod it to see if it can have the bus back.
+ *
+ *	It can also be used in the timer loops of platforms where it is desirable to spot completion
+ *	and raise CS sooner (e.g. to provide the expected LED indication to the user).
+ */
+uint_fast8_t sd_spi_try_release(void)
+{
+    uint8_t b;
+    /* An action transaction is occurring - busy */
+    if (sd_drive != SD_DRIVE_NONE)
+        return 1;
+    /* There is no transaction and no delayed write - free */
+    if (deferredwrite == 0)
+        return 0;
+    /* Fetch a byte and see if the card is done */
+    b = sd_spi_receive_byte();
+    /* 0 indicates it is not complete - busy */
+    if (b == 0x00)
+        return 1;
+    /* The card finished, free the bus */
+    deferredwrite = 0;
+    sd_spi_raise_cs();
+    sd_spi_receive_byte();
+    /* bus is free */
+    return 0;
+}
+#endif
 
 uint_fast8_t sd_spi_wait(bool want_ff)
 {

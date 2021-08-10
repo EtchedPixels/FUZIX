@@ -48,6 +48,8 @@ uint_fast8_t sd_spi_receive_byte(void);
 bool sd_spi_receive_sector(void);
 bool sd_spi_transmit_sector(void);
 
+uint_fast8_t sd_spi_try_release(void);
+
 /* for platforms which support multiple SD cards */
 extern uint_fast8_t sd_drive; /* current card/drive number */
 
@@ -91,6 +93,8 @@ uint_fast8_t devsd_transfer_sector(void);
 /* Low four bits of driver_data are available to store drive number */
 #define DRIVE_NR_MASK 0x0F
 
+#define SD_DRIVE_NONE 0xFF /* When sd_drive is set to this there is no sd disk transaction on the bus.
+			      You *MUST* set CONFIG_SPI_SHARED for this to be useful */
 #endif
 
 #endif /* __DEVSD_DOT_H__ */
