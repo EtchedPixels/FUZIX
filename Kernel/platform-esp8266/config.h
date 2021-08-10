@@ -1,3 +1,17 @@
+/*
+ *	Settings you want to touch
+ */
+
+/* These reflect a stanard ESP8266 configuration */
+#define CPU_CLOCK 160		/* We switch to the double clock */
+#define PERIPHERAL_CLOCK 52	/* 26MHz crystal (FIXME - this is apparently in a flash block somewhere) */
+
+#define CONFIG_ESP_DUAL_SD	/* If you want two SD cards */
+
+/*
+ *	Fuzix definitions for the ESP8266 set up
+ */
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -23,7 +37,12 @@
 #define MAXTICKS 200
 /* Enable SD card code. */
 #define CONFIG_SD
+
+#ifdef CONFIG_ESP_DUAL_SD
+#define SD_DRIVE_COUNT 2
+#else
 #define SD_DRIVE_COUNT 1
+#endif
 
 #define CONFIG_32BIT
 #define CONFIG_USERMEM_DIRECT
@@ -78,9 +97,6 @@ extern uint8_t _code_top[];
 #define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
 
-/* These reflect a stanard ESP8266 configuration */
-#define CPU_CLOCK 160		/* We switch to the double clock */
-#define PERIPHERAL_CLOCK 52	/* 26MHz crystal */
 
 /* vim: sw=4 ts=4 et: */
 
