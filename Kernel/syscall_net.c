@@ -103,6 +103,10 @@ static int run_sockfunc(sockfunc_t func, uint8_t n, uint8_t flags)
 {
 	irqflags_t irq;
 
+	/*
+	 *	TODO: this is not sufficient for multiple tasks using the same socket as we might
+	 *	do something like a partial read that the next caller can progress
+	 */
 	while(func()) {
 		if (udata.u_error && (flags & O_NDELAY))
 			return -1;
@@ -120,7 +124,7 @@ static int run_sockfunc(sockfunc_t func, uint8_t n, uint8_t flags)
 		ssig(udata.u_ptab, udata.u_net.sig);
 		udata.u_net.sig = 0;
 	}
-	return 0;
+	return udata.u_done;
 }
 
 #define argptr ((void *)udata.u_argn)
@@ -149,8 +153,6 @@ arg_t _netcall(void)
 		udata.u_error = ENOSYS;
 		return -1;
 	}
-
-/*	kprintf("net_syscall %d\n", cn); */
 
 	udata.u_done = 0;
 	udata.u_error = 0;
@@ -214,7 +216,7 @@ arg_t _netcall(void)
 		/* The syscall returns an address into the user provided buffer
 		   and updates the length field. */
 		if (op & N_ADDR_OUT) {
-			if (*ap != NULL) {
+			if ((void *)*ap != NULL) {
 				/* Buffer size limit */
 				s = ugeti((void *) ap[1]);
 				/* Replace it with the actual size */
@@ -246,8 +248,7 @@ arg_t _netcall(void)
 int sock_read(inoptr ino, uint8_t flags)
 {
 	udata.u_net.sock = IN2SOCK(ino);
-	run_sockfunc(net_read, udata.u_net.sock, flags);
-	return udata.u_done;
+	return run_sockfunc(net_read, udata.u_net.sock, flags);
 }
 
 /*
@@ -257,8 +258,7 @@ int sock_read(inoptr ino, uint8_t flags)
 int sock_write(inoptr ino, uint8_t flags)
 {
 	udata.u_net.sock = IN2SOCK(ino);
-	run_sockfunc(net_write, udata.u_net.sock, flags);
-	return udata.u_done;
+	return run_sockfunc(net_write, udata.u_net.sock, flags);
 }
 
 /*
