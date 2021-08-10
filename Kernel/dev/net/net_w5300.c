@@ -383,12 +383,10 @@ static void w5300_event_s(uint8_t i)
 		s->s_wake = 1;
 	}
 	if (stat & 0x200) {
-		/* Disconnect: Just kill our host socket. Not clear if this
-		   is right or we need to drain data first */
-		w5300_cmd(i, CLOSE);
+		/* Signal an EOF */
 		w5300_eof(s);
 		/* When we fall through we'll see CLOSE state and do the
-		   actual shutting down */
+		   actual shutting down if appropriate */
 	}
 	if (stat & 0x100) {
 		/* Connect: Move into connected state */
