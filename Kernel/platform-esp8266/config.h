@@ -6,7 +6,8 @@
 #define CPU_CLOCK 160		/* We switch to the double clock */
 #define PERIPHERAL_CLOCK 52	/* 26MHz crystal (FIXME - this is apparently in a flash block somewhere) */
 
-#define CONFIG_ESP_DUAL_SD	/* If you want two SD cards */
+#undef CONFIG_ESP_DUAL_SD	/* If you want two SD cards */
+#define CONFIG_ESP_W5500	/* If you want a W5500 instead of the second card */
 
 /*
  *	Fuzix definitions for the ESP8266 set up
@@ -40,7 +41,15 @@
 
 #ifdef CONFIG_ESP_DUAL_SD
 #define SD_DRIVE_COUNT 2
-#else
+#endif
+#ifdef CONFIG_ESP_W5500
+#define CONFIG_NET
+#define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5500
+#define CONFIG_SPI_SHARED
+#endif
+
+#ifndef SD_DRIVE_COUNT
 #define SD_DRIVE_COUNT 1
 #endif
 

@@ -9,6 +9,7 @@
 #include "globals.h"
 #include "config.h"
 
+#define RESETPIN 2			/* also change GPF2 and GPC2 below */
 #define CSPIN 	4			/* also change GPF4 and GPC4 below */
 #define CSPIN2	5			/* also change GPF5 and GPC5 below */
 
@@ -25,14 +26,17 @@ typedef union {
 
 void sd_rawinit(void)
 {
+	GPF2 = GPFFS(GPFFS_GPIO(RESETPIN));	/* Reset for W5500 */
 	GPF4 = GPFFS(GPFFS_GPIO(CSPIN));	/* CS */
 	GPF5 = GPFFS(GPFFS_GPIO(CSPIN2));	/* CS for second device */
 	GPF14 = GPFFS(GPFFS_BUS(14));		/* CLK */
 	GPF13 = GPFFS(GPFFS_BUS(13));		/* MTCK, MOSI */
 	GPF12 = GPFFS(GPFFS_BUS(12));		/* MTDI, MISO */
+	GPC2 = 0;		/* GPIO_DATA, normal driver, interrupt disabled, wakeup disabled */
 	GPC4 = 0;		/* GPIO_DATA, normal driver, interrupt disabled, wakeup disabled */
 	GPC5 = 0;		/* GPIO_DATA, normal driver, interrupt disabled, wakeup disabled */
-	GPES = (1 << CSPIN) | (1 << CSPIN2);
+	GPC16 = 0;		/* GPIO_DATA, normal driver, interrupt disabled, wakeup disabled */
+	GPES = (1 << CSPIN) | (1 << CSPIN2) | (1 << RESETPIN);
 
 	SPI1C = 0;
 	SPI1U = 0;
@@ -141,36 +145,52 @@ static void setFrequency(uint32_t freq)
 static uint8_t clk_fast[2] = { 0xFF, 0xFF };
 static uint8_t last_clk;
 
-static void sd_spi_reclock(void)
+static void sd_spi_reclock(unsigned int port)
 {
-	if (last_clk == clk_fast[sd_drive])
+	if (last_clk == clk_fast[port])
 		return;
-	last_clk = clk_fast[sd_drive];
+	last_clk = clk_fast[port];
+	kprintf("reclock %d %d\n", port, last_clk);
 	setFrequency(last_clk ? 4000000 : 250000);
+}
+
+static void spi_set_clock(unsigned int port, bool go_fast)
+{
+	clk_fast[port] = go_fast;
+	sd_spi_reclock(port);
 }
 
 void sd_spi_clock(bool go_fast)
 {
-	clk_fast[sd_drive] = go_fast;
-	sd_spi_reclock();
+	spi_set_clock(sd_drive, go_fast);
+}
+
+static void spi_deselect_port(unsigned int port)
+{
+	if (port == 0)
+		GPOS = 1 << CSPIN;
+	else
+		GPOS = 1 << CSPIN2;
+	sd_spi_reclock(port);
+}
+
+static void spi_select_port(unsigned int port)
+{
+	if (port == 0)
+		GPOC = 1 << CSPIN;
+	else
+		GPOC = 1 << CSPIN2;
+	sd_spi_reclock(port);
 }
 
 void sd_spi_raise_cs(void)
 {
-	if (sd_drive == 0)
-		GPOS = 1 << CSPIN;
-	else
-		GPOS = 1 << CSPIN2;
-	sd_spi_reclock();
+	spi_deselect_port(sd_drive);
 }
 
 void sd_spi_lower_cs(void)
 {
-	if (sd_drive == 0)
-		GPOC = 1 << CSPIN;
-	else
-		GPOS = 1 << CSPIN2;
-	sd_spi_reclock();
+	spi_select_port(sd_drive);
 }
 
 static uint_fast8_t send_recv(uint_fast8_t data)
@@ -249,5 +269,133 @@ bool sd_spi_transmit_sector(void)
 
 	return 0;
 }
+
+#ifdef CONFIG_NET_WIZNET
+
+/*
+ *	Wiznet 5500 glue to the SPI layer
+ */
+
+#define _SLOT(x)	((x) << 2)
+#define SOCK2BANK_C(x)	((_SLOT(x) | 1) << 3)
+#define SOCK2BANK_W(x)	((_SLOT(x) | 2) << 3)
+#define SOCK2BANK_R(x)	((_SLOT(x) | 3) << 3)
+#define W_WRITE	0x04
+
+/* We can optimize this lot later when it works nicely */
+static void spi_transaction(uint8_t ctrl, uint16_t off,
+	uint8_t *out, uint16_t outlen, uint8_t *in, uint16_t inlen)
+{
+	irqflags_t irq = di();
+	spi_select_port(1);
+//	kprintf("[>%x.%2x ", off, ctrl);
+	send_recv(off >> 8);
+	send_recv(off);
+	send_recv(ctrl);
+	while(outlen--) {
+//		kprintf(">%2x ", *out);
+		send_recv(*out++);
+	}
+	while(inlen--) {
+		*in = send_recv(0xFF);
+//		kprintf("<%2x ", *in);
+		in++;
+	}
+//	kputs("]\n");
+	spi_deselect_port(1);
+	irqrestore(irq);
+}
+
+uint8_t w5x00_readcb(uint16_t off)
+{
+	uint8_t r;
+	spi_transaction(0, off, NULL, 0, &r, 1);
+	return r;
+}
+
+uint8_t w5x00_readsb(uint8_t s, uint16_t off)
+{
+	uint8_t r;
+	spi_transaction(SOCK2BANK_C(s), off, NULL, 0, &r, 1);
+	return r;
+}
+
+uint16_t w5x00_readcw(uint16_t off)
+{
+	uint16_t r;
+	spi_transaction(0, off, NULL, 0, (uint8_t *)&r, 2);
+	return ntohs(r);
+}
+
+uint16_t w5x00_readsw(uint8_t s, uint16_t off)
+{
+	uint16_t r;
+	spi_transaction(SOCK2BANK_C(s), off, NULL, 0, (uint8_t *)&r, 2);
+	return ntohs(r);
+}
+
+void w5x00_bread(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+	spi_transaction(bank, off, NULL, 0, pv, n);
+}
+
+void w5x00_breadu(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+	spi_transaction(bank, off, NULL, 0, pv, n);
+}
+
+void w5x00_writecb(uint16_t off, uint8_t n)
+{
+	spi_transaction(W_WRITE, off, &n, 1, NULL, 0);
+}
+
+void w5x00_writesb(uint8_t sock, uint16_t off, uint8_t n)
+{
+	spi_transaction(SOCK2BANK_C(sock) | W_WRITE, off, &n, 1, NULL, 0);
+}
+
+void w5x00_writecw(uint16_t off, uint16_t n)
+{
+	n = ntohs(n);
+	spi_transaction(W_WRITE, off, (uint8_t *)&n, 2, NULL, 0);
+}
+
+void w5x00_writesw(uint8_t sock, uint16_t off, uint16_t n)
+{
+	n = ntohs(n);
+	spi_transaction(SOCK2BANK_C(sock) | W_WRITE, off, (uint8_t *)&n, 2, NULL, 0);
+}
+
+void w5x00_bwrite(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+	spi_transaction(bank|W_WRITE, off, pv, n, NULL, 0);
+}
+
+void w5x00_bwriteu(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+	spi_transaction(bank|W_WRITE, off, pv, n, NULL, 0);
+}
+
+void w5x00_setup(void)
+{
+	/* These delays are excessive but the reset seems to be very fragile */
+	volatile uint32_t n = 0;
+	GPOC = 1 << RESETPIN;
+	while(n++ < 5000000);
+	GPOS = 1 << RESETPIN;
+	spi_set_clock(1, 1);
+	n = 0;
+	while(n++ < 5000000);
+	w5x00_writecb(0, 0x80);
+	n = 0;
+	while(n++ < 5000000);
+	w5x00_readcb(0x19);
+	w5x00_readcb(0x19);
+	w5x00_readcb(0x19);
+	w5x00_readcb(0x1A);
+	w5x00_readcb(0x1A);
+}
+
+#endif
 
 /* vim: sw=4 ts=4 et: */

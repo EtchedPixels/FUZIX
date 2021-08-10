@@ -83,7 +83,7 @@ GPIO14		SCK		}	is also during boot)
 GPIO6-11	SPI Flash
 
 GPIO0		Bootloader button
-GPIO2		Usually an on board LED, not used currently
+GPIO2		Usually an on board LED, used for W5500 reset
 GPIO9/10	Used in QIO Flash mode, otherwise not used
 GPIO16		Deep sleep wakeup, not used
 

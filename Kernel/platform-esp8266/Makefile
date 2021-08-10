@@ -5,6 +5,7 @@ CSRCS += \
 	../dev/mbr.c \
 	../dev/devsd_discard.c \
 	../dev/devsd.c \
+	../dev/net/net_w5x00.c \
 	../lib/dhara/error.c \
 	../lib/dhara/journal.c \
 	../lib/dhara/map.c \
@@ -37,6 +38,7 @@ KOBJS = \
 	../lowlevel-esp8266.o \
 	../malloc.o \
 	../mm.o \
+	../network.o \
 	../process.o \
 	../start.o \
 	../swap.o \
@@ -44,6 +46,7 @@ KOBJS = \
 	../syscall_fs.o \
 	../syscall_fs2.o \
 	../syscall_fs3.o \
+	../syscall_net.o \
 	../syscall_other.o \
 	../syscall_proc.o \
 	../timer.o \
@@ -61,7 +64,7 @@ $(AOBJS): %.o: %.S
 $(OBJS): ../kernel-esp8266.def
 
 $(COBJS): %.o: %.c
-	$(CROSS_CC) -I../dev/ $(CROSS_CCOPTS) $< -o $@
+	$(CROSS_CC) -I../dev/ -I../dev/net $(CROSS_CCOPTS) $< -o $@
 
 image.elf: kernel.ld addresses.ld $(KOBJS)
 	$(CROSS_CC) -T kernel.ld -T addresses.ld -flto -mlongcalls -nostdlib -o image.elf \
