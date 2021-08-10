@@ -6,7 +6,9 @@
 #define SDCARD_SSI_PORT 3
 
 void tm4c129x_init(void);
-int sysclock_init(void);
+void sysclock_init(void);
+
+void tm4c129x_modreg(unsigned int adr, uint32_t clr, uint32_t set);
 
 /*
  *	Hardware definitions
@@ -44,18 +46,5 @@ int sysclock_init(void);
 #define NVIC_SYSHCON_MEMFAULTEN		0x10000
 #define NVIC_SYSHCON_BUSFAULTEN		0x20000
 #define NVIC_SYSHCON_USGFAULTEN		0x40000
-
-/*
- *	GPIO
- */
-
-void gpio_write(unsigned int port, unsigned int pin, unsigned int onoff);
-void gpio_output(unsigned int port, unsigned int pin);
-void gpio_altfunc(unsigned int port, unsigned int pin, unsigned int func);
-
-/* Ports are named A B etc in the docs so this is easier to read. Mask so
-   lower case doesn't produce weird bugs */
-#define GPIO_PORT(n)	(((n) & ~0x20) - 'A')
-
 
 #endif /* __TM4C129X_H */
