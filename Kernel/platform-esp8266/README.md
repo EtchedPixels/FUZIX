@@ -75,6 +75,7 @@ GPIO1		Serial TX	}	To the USB UART on the NodeMCU kits
 GPIO3		Serial RX	}
 
 GPIO4		SDcard CS	}
+GPIO5		Second CS	}
 GPIO12		MISO		}	SD card interface (note Arduino
 GPIO13		MOSI		}	tends to use GPIO15 not 4 but GPIO15
 GPIO14		SCK		}	is also during boot)
@@ -83,7 +84,6 @@ GPIO6-11	SPI Flash
 
 GPIO0		Bootloader button
 GPIO2		Usually an on board LED, not used currently
-GPIO5		Free
 GPIO9/10	Used in QIO Flash mode, otherwise not used
 GPIO16		Deep sleep wakeup, not used
 
