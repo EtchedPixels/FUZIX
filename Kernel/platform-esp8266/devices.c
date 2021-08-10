@@ -5,8 +5,9 @@
 #include <blkdev.h>
 #include <tty.h>
 #include <devtty.h>
-#include <dev/devsd.h>
+#include <devsd.h>
 #include <printf.h>
+#include <netdev.h>
 #include "globals.h"
 #include "rom.h"
 
@@ -41,6 +42,9 @@ void device_init(void)
 {
 	flash_dev_init();
 	sd_rawinit();
+#ifdef CONFIG_NET
+	netdev_init();
+#endif
 	devsd_init();
 	timer_init();
 }

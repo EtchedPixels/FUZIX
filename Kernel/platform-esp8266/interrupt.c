@@ -118,6 +118,11 @@ static void timer_isr(void)
 #ifdef DO_MEM_CHECK
 	pattern_check();
 #endif
+#ifdef CONFIG_NET_WIZNET
+	/* Poll the W5500 if the bus is clear */
+	if (sd_spi_try_release() == 0)
+		w5x00_poll();
+#endif
 }
 
 void timer_init(void)
