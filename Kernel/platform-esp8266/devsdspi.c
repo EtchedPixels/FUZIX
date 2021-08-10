@@ -9,7 +9,8 @@
 #include "globals.h"
 #include "config.h"
 
-#define CSPIN 4			/* also change GPF5 and GPC5 below */
+#define CSPIN 	4			/* also change GPF4 and GPC4 below */
+#define CSPIN2	5			/* also change GPF5 and GPC5 below */
 
 typedef union {
 	uint32_t regValue;
@@ -25,11 +26,13 @@ typedef union {
 void sd_rawinit(void)
 {
 	GPF4 = GPFFS(GPFFS_GPIO(CSPIN));	/* CS */
-	GPF14 = GPFFS(GPFFS_BUS(14));	/* CLK */
-	GPF13 = GPFFS(GPFFS_BUS(13));	/* MTCK, MOSI */
-	GPF12 = GPFFS(GPFFS_BUS(12));	/* MTDI, MISO */
+	GPF5 = GPFFS(GPFFS_GPIO(CSPIN2));	/* CS for second device */
+	GPF14 = GPFFS(GPFFS_BUS(14));		/* CLK */
+	GPF13 = GPFFS(GPFFS_BUS(13));		/* MTCK, MOSI */
+	GPF12 = GPFFS(GPFFS_BUS(12));		/* MTDI, MISO */
 	GPC4 = 0;		/* GPIO_DATA, normal driver, interrupt disabled, wakeup disabled */
-	GPES = 1 << CSPIN;
+	GPC5 = 0;		/* GPIO_DATA, normal driver, interrupt disabled, wakeup disabled */
+	GPES = (1 << CSPIN) | (1 << CSPIN2);
 
 	SPI1C = 0;
 	SPI1U = 0;
@@ -132,19 +135,42 @@ static void setFrequency(uint32_t freq)
 	set_clock(best_reg.regValue);
 }
 
+/*
+ *	We may have two devices that run at different clocks.
+ */
+static uint8_t clk_fast[2] = { 0xFF, 0xFF };
+static uint8_t last_clk;
+
+static void sd_spi_reclock(void)
+{
+	if (last_clk == clk_fast[sd_drive])
+		return;
+	last_clk = clk_fast[sd_drive];
+	setFrequency(last_clk ? 4000000 : 250000);
+}
+
 void sd_spi_clock(bool go_fast)
 {
-	setFrequency(go_fast ? 4000000 : 250000);
+	clk_fast[sd_drive] = go_fast;
+	sd_spi_reclock();
 }
 
 void sd_spi_raise_cs(void)
 {
-	GPOS = 1 << CSPIN;
+	if (sd_drive == 0)
+		GPOS = 1 << CSPIN;
+	else
+		GPOS = 1 << CSPIN2;
+	sd_spi_reclock();
 }
 
 void sd_spi_lower_cs(void)
 {
-	GPOC = 1 << CSPIN;
+	if (sd_drive == 0)
+		GPOC = 1 << CSPIN;
+	else
+		GPOS = 1 << CSPIN2;
+	sd_spi_reclock();
 }
 
 static uint_fast8_t send_recv(uint_fast8_t data)
@@ -176,7 +202,7 @@ uint_fast8_t sd_spi_receive_byte(void)
  *	write dwords to and from the SPI FIFO.
  */
 
-static void memcpy4_aligned(uint32_t *p1, uint32_t *p2, uint32_t dwords)
+static void memcpy4_aligned(uint32_t *p1, const uint32_t *p2, uint32_t dwords)
 {
 	while(dwords--)
 		*p1++ = *p2++;
@@ -196,7 +222,7 @@ bool sd_spi_receive_sector(void)
 
 		while (SPI1CMD & SPIBUSY);
 
-		memcpy4_aligned(dptr, (const void *) &SPI1W0, 16);
+		memcpy4_aligned((void *)dptr, (const void *) &SPI1W0, 16);
 		dptr += 64;
 	}
 
@@ -213,7 +239,7 @@ bool sd_spi_transmit_sector(void)
 
 		SPI1U1 = (511 << SPILMOSI);
 		SPI1U = SPIUMOSI;
-		memcpy4_aligned((void *) &SPI1W0, sptr, 16);
+		memcpy4_aligned((void *) &SPI1W0, (const void *)sptr, 16);
 		SPI1CMD = SPIBUSY;
 
 		while (SPI1CMD & SPIBUSY);
