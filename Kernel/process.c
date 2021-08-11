@@ -903,16 +903,15 @@ void doexit(uint16_t val)
 	uint_fast8_t j;
 	ptptr p;
 	irqflags_t irq;
-	ptptr s = udata.u_ptab;
 
 #ifdef DEBUG_SLEEP
-	kprintf("process %d exiting %d\n", s->p_pid, val);
+	kprintf("process %d exiting %d\n", udata.u_ptab->p_pid, val);
 
 	kprintf
 	    ("udata.u_page %u, udata.u_ptab %p, udata.u_ptab->p_page %u\n",
-	     udata.u_page, s, s->p_page);
+	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
 #endif
-	if (s->p_pid == 1)
+	if (udata.u_ptab->p_pid == 1)
 		panic(PANIC_KILLED_INIT);
 
 	sync();		/* Not necessary, but a good idea. */
@@ -922,8 +921,8 @@ void doexit(uint16_t val)
 	/* We are exiting, hold all signals  (they will never be
 	   delivered). If we don't do this we might take a signal
 	   while exiting which would be ... unfortunate */
-	s->p_sig[0].s_held = 0xFFFFU;
-	s->p_sig[1].s_held = 0xFFFFU;
+	udata.u_ptab->p_sig[0].s_held = 0xFFFFU;
+	udata.u_ptab->p_sig[1].s_held = 0xFFFFU;
 	udata.u_cursig = 0;
 
 	/* Discard our memory before we blow away and reuse the memory */
@@ -935,7 +934,7 @@ void doexit(uint16_t val)
 	}
 
 
-	s->p_exitval = val;
+	udata.u_ptab->p_exitval = val;
 
 	i_deref(udata.u_cwd);
 	i_deref(udata.u_root);
@@ -949,7 +948,7 @@ void doexit(uint16_t val)
 	sync_clock();	/* Not that these values will be wildly accurate! */
 
 	for (p = ptab; p < ptab_end; ++p) {
-		if (p->p_status == P_EMPTY || p == s)
+		if (p->p_status == P_EMPTY || p == udata.u_ptab)
 			continue;
 		/* Set any child's parents to init */
 		if (p->p_pptr == udata.u_ptab) {
@@ -960,31 +959,31 @@ void doexit(uint16_t val)
 		}
 		/* Send SIGHUP to any pgrp members and remove
 		   them from our pgrp */
-                if (p->p_pgrp == s->p_pid) {
+                if (p->p_pgrp == udata.u_ptab->p_pid) {
 			p->p_pgrp = 0;
 			ssig(p, SIGHUP);
 			ssig(p, SIGCONT);
 		}
 		/* Sneak the alarmq dequeue into the same loop */
-		if (p->p_timerq == s)
-			p->p_timerq = s->p_timerq;
+		if (p->p_timerq == udata.u_ptab)
+			p->p_timerq = udata.u_ptab->p_timerq;
 	}
 	/* If we head the timer list then we didn't kill it in the loop */
-	if (alarms == s)
-		alarms = s->p_timerq;
+	if (alarms == udata.u_ptab)
+		alarms = udata.u_ptab->p_timerq;
 	tty_exit();
 	irqrestore(irq);
 #ifdef DEBUG_SLEEP
 	kprintf
 	    ("udata.u_page %u, udata.u_ptab %p, udata.u_ptab->p_page %u\n",
-	     udata.u_page, s, s->p_page);
+	     udata.u_page, udata.u_ptab, udata.u_ptab->p_page);
 #endif
 #ifdef CONFIG_ACCT
-	acctexit(s);
+	acctexit(udata.u_ptab);
 #endif
         udata.u_page = 0xFFFFU;
         udata.u_page2 = 0xFFFFU;
-        signal_parent(s);
+        signal_parent(udata.u_ptab);
 	nready--;
 	nproc--;
 	switchin(getproc());
