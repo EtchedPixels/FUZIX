@@ -51,6 +51,7 @@ add_executable(fuzix
 	../start.c
 	../swap.c
 	../syscall_execelf32.c
+	../syscall_exec.c
 	../syscall_fs.c
 	../syscall_fs2.c
 	../syscall_fs3.c

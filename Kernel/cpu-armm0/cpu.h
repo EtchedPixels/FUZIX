@@ -55,6 +55,8 @@ inline static void __hard_irqrestore(uint32_t ps)
 {
 	asm volatile("msr PRIMASK, %0" :: "r" (ps));
 }
+
+#define barrier() asm volatile("":::"memory")
 	
 /* jmp over the Fuzix header. Will need updating if the header size changes */
 #define EMAGIC   0x08
