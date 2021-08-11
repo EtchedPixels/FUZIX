@@ -1,9 +1,17 @@
+/* The true dram1_0_seg is 3FFFC000 for 0x4000 but we need to be sure we
+ * error if we touch a few bits of, so we split it up into spaces
+ * representing the memory we actually have. Note that the loader has no
+ * clue about this kind of abuse so all the data must be bss equvialent
+ */
+
 MEMORY
 {
   dport0_0_seg : org = 0x3ff00000, len = 0x10
   userdata_seg : org = 0x3ffe8000, len = 0x10000
   dram0_0_seg :  org = 0x3fff8000, len = 0x4000
-  dram1_0_seg :  org = 0x3fffc000, len = 0x4000
+/*  dram1_0_seg :  org = 0x3fffc000, len = 0x4000 */
+  dram1_0l_seg : org = 0x3fffc040, len = 0x06d4
+  dram1_0h_seg : org = 0x3fffc734, len = 0x38cc
   usercode_seg : org = 0x40100000, len = 0x7e00
   iram1_0_seg :  org = 0x40107e00, len = 0x200
   irom0_0_seg :  org = 0x40210000, len = 0x5C000
@@ -24,31 +32,10 @@ _data_top = _data_base + LENGTH(userdata_seg);
 _code_base = ORIGIN(usercode_seg);
 _code_top = _code_base + LENGTH(usercode_seg);
 
+PROVIDE(bufpool = 0x3fffc734);
+
 /*  Default entry point:  */
 ENTRY(__main)
-EXTERN(_DebugExceptionVector)
-EXTERN(_DoubleExceptionVector)
-EXTERN(_KernelExceptionVector)
-EXTERN(_NMIExceptionVector)
-EXTERN(_UserExceptionVector)
-PROVIDE(_memmap_vecbase_reset = 0x40000000);
-/* Various memory-map dependent cache attribute settings: */
-_memmap_cacheattr_wb_base = 0x00000110;
-_memmap_cacheattr_wt_base = 0x00000110;
-_memmap_cacheattr_bp_base = 0x00000220;
-_memmap_cacheattr_unused_mask = 0xFFFFF00F;
-_memmap_cacheattr_wb_trapnull = 0x2222211F;
-_memmap_cacheattr_wba_trapnull = 0x2222211F;
-_memmap_cacheattr_wbna_trapnull = 0x2222211F;
-_memmap_cacheattr_wt_trapnull = 0x2222211F;
-_memmap_cacheattr_bp_trapnull = 0x2222222F;
-_memmap_cacheattr_wb_strict = 0xFFFFF11F;
-_memmap_cacheattr_wt_strict = 0xFFFFF11F;
-_memmap_cacheattr_bp_strict = 0xFFFFF22F;
-_memmap_cacheattr_wb_allvalid = 0x22222112;
-_memmap_cacheattr_wt_allvalid = 0x22222112;
-_memmap_cacheattr_bp_allvalid = 0x22222222;
-PROVIDE(_memmap_cacheattr_reset = _memmap_cacheattr_wb_trapnull);
 
 SECTIONS
 {
@@ -139,7 +126,7 @@ SECTIONS
 	.irom0.text : ALIGN(4)
 	{
 		_irom0_text_start = ABSOLUTE(.);
-
+		*(.text.vectors)
 		*(.literal .text .literal.* .text.*)
 		*(.rodata .rodata.*)
 		*(.rodata1 .rodata1.*)

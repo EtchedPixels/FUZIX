@@ -1,5 +1,4 @@
-ROOT = ../..
-include $(ROOT)/Applications/rules.esp8266
+include $(FUZIX_ROOT)/Applications/rules.esp8266
 
 SRCSNS = \
 	basename.c \

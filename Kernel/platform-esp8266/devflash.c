@@ -17,6 +17,10 @@ static const struct dhara_nand nand =
 	.num_blocks = 896,
 };
 
+/*
+ *	These cannot be disk cache becaause we may need to use them during an I/O and a call to tmpbuf
+ *	could cause another I/O and recursion.
+ */
 static uint8_t journal_buf[512];
 static uint8_t tmp_buf[512];
 

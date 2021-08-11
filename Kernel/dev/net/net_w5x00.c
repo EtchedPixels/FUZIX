@@ -423,6 +423,7 @@ static void w5x00_cmd(uint8_t s, uint8_t v)
 	while(w5x00_readsb(s, Sn_CR));
 }
 
+/* Must only be called by the IRQ path */
 static void w5x00_eof(struct socket *s)
 {
 	s->s_iflags |= SI_EOF;
@@ -590,12 +591,9 @@ static void w5x00_event_s(uint8_t i)
 		s->s_wake = 1;
 	}
 	if (stat & 0x200) {
-		/* Disconnect: Just kill our host socket. Not clear if this
-		   is right or we need to drain data first */
-		w5x00_cmd(i, CLOSE);
 		w5x00_eof(s);
 		/* When we fall through we'll see CLOSE state and do the
-		   actual shutting down */
+		   actual shutting down if appropriate */
 	}
 	if (stat & 0x100) {
 		/* Connect: Move into connected state */
@@ -858,6 +856,14 @@ int netproto_close(struct socket *s)
 	return 0;
 }
 
+/* We must avoid racing an interrupt handler when maninpulating the flags */
+static void set_iflags(struct socket *s, uint8_t flags)
+{
+	irqflags_t irq = di();
+	s->s_iflags |= flags;
+	irqrestore(irq);
+}
+
 int netproto_read(struct socket *s)
 {
 	uint16_t i = s->proto.slot;
@@ -879,7 +885,7 @@ int netproto_read(struct socket *s)
 				return 0;
 			return 1;
 		}
-		s->s_iflags |= SI_DATA;
+		set_iflags(s, SI_DATA);
 
 		memcpy(&udata.u_net.addrbuf, &s->dst_addr, sizeof(struct ksockaddr));
 
@@ -925,6 +931,7 @@ int netproto_read(struct socket *s)
 	return 0;
 }
 
+
 arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 {
 	uint16_t i = s->proto.slot;
@@ -953,7 +960,7 @@ arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 	case W5100_TCP:
 		/* No room blocks, a partial write returns */
 		if (room == 0) {
-			s->s_iflags |= SI_THROTTLE;
+			set_iflags(s, SI_THROTTLE);
 			return 1;
 		}
 		n = min(room, udata.u_count);
@@ -970,9 +977,11 @@ arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 
 arg_t netproto_shutdown(struct socket *s, uint8_t flag)
 {
-	s->s_iflags |= flag;
-	if (s->s_iflags & SI_SHUTW)
+	set_iflags(s, flag);
+	if (s->s_iflags & SI_SHUTW) {
+		/* FIXME: handle SI_SHUTW in write path */
 		w5x00_cmd(s->proto.slot, DISCON);
+	}
 	/* Really we need to look for SHUTR and received data and CLOSE if
 	   so - FIXME */
 	return 0;
@@ -1030,7 +1039,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		ifr.ifr_broadaddr.sa.sin.sin_addr.s_addr = (ipa & igm) | ~igm;
 		goto copy_addr;
 	case SIOCGIFGWADDR:
-		ifr.ifr_gateway.sa.sin.sin_addr.s_addr = iga;
+		ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr = iga;
 		goto copy_addr;
 	case SIOCGIFNETMASK:
 		ifr.ifr_netmask.sa.sin.sin_addr.s_addr = igm;
@@ -1052,7 +1061,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		ipa = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
 		break;
 	case SIOCSIFGWADDR:
-		iga = ifr.ifr_gateway.sa.sin.sin_addr.s_addr;
+		iga = ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr;
 		break;
 	case SIOCSIFNETMASK:
 		igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;

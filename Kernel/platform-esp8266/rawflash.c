@@ -10,6 +10,10 @@
 #define FLASH_ADDRESS(page) \
 	((FLASH_OFFSET * 4096) + (page * 512))
 
+/*
+ *	These routines live in the iram because the flash executable memory ceases to be
+ *	available while we are performing low level flash operations
+ */
 int dhara_nand_erase(const struct dhara_nand *n, dhara_block_t b,
                      dhara_error_t *err)
 {

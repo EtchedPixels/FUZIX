@@ -1,13 +1,15 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#define CPU_CLOCK 80
-#define PERIPHERAL_CLOCK 80
-
 extern void flash_dev_init(void);
 
 extern void fuzix_main(void);
 extern void sd_rawinit(void);
+
+extern void timer_init(void);
+extern void irq_set_mask(uint32_t mask);
+extern void irq_enable(uint32_t irq);
+extern void irq_disable(uint32_t irq);
 
 #endif
 

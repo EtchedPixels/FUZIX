@@ -149,10 +149,10 @@ int syscall_args[NR_SYSCALL] = {
 	2, //flock
 	0, //getpgrp
 	0, //yield
-	1, //act
+	1, //acct
 	1, //memalloc
 	1, //memfree
-	0, //nosys 66
+	1, //netcall
 	0, //nosys 67
 	0, //nosys 68
 	0, //nosys 69

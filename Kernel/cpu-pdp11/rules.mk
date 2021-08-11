@@ -13,3 +13,4 @@ export ASOPTS=
 export ASMEXT = .S
 export BINEXT = .o
 export BITS=16
+export EXECFORMAT=16

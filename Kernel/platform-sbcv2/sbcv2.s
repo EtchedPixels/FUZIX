@@ -90,7 +90,8 @@ _platform_monitor:
 _platform_reboot:
 	    di
 	    xor a
-	    out (0x7C),a
+	    out (0x78),a	; On the RBCv2 this vanishes the RAM low
+	    out (0x7C),a	; and on both this puts back the ROM low
 	    rst 0
 
 ; -----------------------------------------------------------------------------
@@ -136,9 +137,28 @@ init_early:
 ;	program up support hardware like PIO and CTC devices here.
 ;
 init_hardware:
+	    ;
+	    ; We usually have 512K but the board can be built with 128K
+	    ;
+	    ld hl,#0x00FF	; we don't have anything here
+	    ld a,#0x81		; map page 1
+	    out (0x78),a
+	    ld (hl),a
+	    ld a,#0x85		; map page 5 (or page 1 again on 128K)
+	    out (0x78),a
+	    dec (hl)
+	    ld a,#0x81
+	    out (0x78),a
+	    cp (hl)
 	    ld hl,#512
+	    jr z, ramsize512
+	    ld hl,#128
+ramsize512:
             ld (_ramsize), hl
-	    ld hl,#448
+	    ld de,#64		; and 64K for kernel (so 128K gets you only
+				; two user banks which is OK single user)
+	    or a
+	    sbc hl,de
             ld (_procmem), hl
 
             ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)

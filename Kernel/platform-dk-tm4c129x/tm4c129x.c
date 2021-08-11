@@ -1,11 +1,14 @@
 #include <kernel.h>
 #include <kdata.h>
-#include "tm4c129x.h"
+#include "cpu.h"
+#include "types.h"
+#include "inline-irq.h"
 #include "entries.h"
 #include "interrupt.h"
 #include "systick.h"
 #include "serial.h"
 #include "ssi.h"
+#include "tm4c129x.h"
 
 extern uint8_t _sdata;
 extern uint8_t _ebss;
@@ -19,7 +22,7 @@ const uint32_t _vectors[] __attribute__((section(".vectors"))) = {
   (uint32_t)start,
   [2 ... (IRQ_SVC - 1)] = (uint32_t)exception_common,
   [IRQ_SVC] = (uint32_t)isr_svcall,
-  [(IRQ_SVC + 1) ... NR_IRQS] =
+  [(IRQ_SVC + 1) ... (NR_IRQS - 1)] =
                              (uint32_t)exception_common
 };
 
@@ -117,6 +120,18 @@ void tm4c129x_init(void)
   ssi_init(SDCARD_SSI_PORT);
   systick_init();
   serial_late_init();
+}
+
+void tm4c129x_modreg(unsigned int adr, uint32_t clr, uint32_t set)
+{
+  uint32_t regval;
+  irqflags_t flags = __hard_di();
+
+  regval = inl(adr);
+  regval &= ~clr;
+  regval |= set;
+  outl(adr, regval);
+  __hard_irqrestore(flags);
 }
 
 /* Nothing to do for the map on init */

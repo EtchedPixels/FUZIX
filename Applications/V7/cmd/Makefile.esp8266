@@ -1,5 +1,4 @@
-ROOT = ../../..
-include $(ROOT)/Applications/rules.esp8266
+include $(FUZIX_ROOT)/Applications/rules.esp8266
 
 SRCS  = ac.c col.c dc.c diff.c ed.c makekey.c ptx.c sum.c wall.c
 SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
@@ -18,7 +17,6 @@ $(APPS): $(CRT0)
 $(APPS) $(APPSNS): %: %.o
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
 	$(ELF2FUZIX) -o $@ $@.bin
-
 
 size.report: $(APPS)
 	ls -l $^ > $@

@@ -1,3 +1,18 @@
+/*
+ *	Settings you want to touch
+ */
+
+/* These reflect a stanard ESP8266 configuration */
+#define CPU_CLOCK 160		/* We switch to the double clock */
+#define PERIPHERAL_CLOCK 52	/* 26MHz crystal (FIXME - this is apparently in a flash block somewhere) */
+
+#undef CONFIG_ESP_DUAL_SD	/* If you want two SD cards */
+#define CONFIG_ESP_W5500	/* If you want a W5500 instead of the second card */
+
+/*
+ *	Fuzix definitions for the ESP8266 set up
+ */
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -14,11 +29,29 @@
 #define CONFIG_INLINE_IRQ
 /* Trim disk blocks when no longer used */
 #define CONFIG_TRIM
-/* Enable single tasking */
-#define CONFIG_SINGLETASK
+/* One process in memory at a time multi-tasking. We do our own custom
+   implementation so don't define this */
+#undef CONFIG_SWAP_ONLY
+/* This requires some further work but is far faster */
+#undef CONFIG_PARENT_FIRST
+/* Don't thrash when running multiple things */
+#define MAXTICKS 200
 /* Enable SD card code. */
 #define CONFIG_SD
+
+#ifdef CONFIG_ESP_DUAL_SD
+#define SD_DRIVE_COUNT 2
+#endif
+#ifdef CONFIG_ESP_W5500
+#define CONFIG_NET
+#define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5500
+#define CONFIG_SPI_SHARED
+#endif
+
+#ifndef SD_DRIVE_COUNT
 #define SD_DRIVE_COUNT 1
+#endif
 
 #define CONFIG_32BIT
 #define CONFIG_USERMEM_DIRECT
@@ -55,20 +88,25 @@ extern uint8_t _code_top[];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0012 /* hdb2 */
-#define SWAPDEV    0x0011 /* hdb1 */
+#define BOOTDEVICE 0x0011 /* hdb1 */
+#define SWAPDEV    (swap_dev) /* wherever */
+
+#define CONFIG_DYNAMIC_SWAP
 
 /* Device parameters */
 #define NUM_DEV_TTY 1
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    10       /* Number of block buffers */
+
+#define CONFIG_DYNAMIC_BUFPOOL
+
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV	4
 
 #define platform_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
+
 
 /* vim: sw=4 ts=4 et: */
 

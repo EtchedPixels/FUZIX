@@ -105,7 +105,7 @@ void qhex(char c)
 
 void out52(char c)
 {
-	qbyte('x1b');
+	qbyte('\x1b');
 	qbyte(c);
 }
 
@@ -132,7 +132,7 @@ char cconv(char c)
 void ckint(void)
 {
 	if ((fc == bc) && inten) {
-		fc = fc + 1 & 0x7;
+		fc = (fc + 1) & 0x7;
 		out52n('b', fc);
 	}
 }
@@ -321,7 +321,7 @@ void charout(uint8_t c)
 
 /* print string to console under ANSI/TELNET */
 /* TODO: a mode where we just pass through */
-int mywrite(uint8_t * ptr, int len)
+int mywrite(char * ptr, int len)
 {
 	int i = len;
 	if (ansivert) {
@@ -337,7 +337,7 @@ int mywrite(uint8_t * ptr, int len)
 void quit(int sig)
 {
 	if (sig == 0)
-		qflush();
+		outflush();
 	tcsetattr(0, TCSANOW, &lprior);
 	close(fddw);
 	exit(0);
@@ -389,8 +389,9 @@ int myread(void)
 		if (l < 0) {
 			if (errno == EAGAIN) {
 				return 0;
-			} else
+			} else {
 				quit(0);
+			}
 		}
 		ipos = 0;
 		icount = l;
@@ -567,8 +568,10 @@ int main(int argc, char *argv[])
 			if (ret < 0) {
 				if (errno == EAGAIN) {
 					ret = 0;
-				} else
+				} else {
+					perror("write");
 					quit(0);
+				}
 			}
 			len = len - ret;
 			pos += ret;
@@ -593,13 +596,15 @@ int main(int argc, char *argv[])
 			}
 		}
 		/* EOF: remote closed */
-		if (!len)
+		if (!len) {
+			printd("\nConnection closed.");
 			quit(0);
+		}
 		/* Error. EAGAIN is ok - it means we've run out of data,
 		   anything else is bad */
 		if (len < 0) {
 			if (errno != EAGAIN) {
-				qflush();
+				outflush();
 				perror("closed");
 				quit(0);
 			}

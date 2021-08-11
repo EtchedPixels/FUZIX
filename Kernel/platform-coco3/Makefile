@@ -109,7 +109,7 @@ image: boot.bin
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../syscall_fs3.o \
+	../syscall_fs3.o ../syscall_exec.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
 	videoll.o dwtime.o devsys.o \
 	../syscall_net.o net_native.o $(DRIVERS)

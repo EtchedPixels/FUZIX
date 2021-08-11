@@ -12,3 +12,5 @@ export CROSS_CC_VIDEO=
 export ASOPTS=
 export ASMEXT = .S
 export BINEXT = .o
+export BITS = 32
+export EXECFORFMAT = elf32

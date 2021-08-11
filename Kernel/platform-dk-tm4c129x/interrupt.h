@@ -1,3 +1,5 @@
+#ifndef __INTERRUPT_H
+#define __INTERRUPT_H
 
 #define NR_IRQS		(130)	/* Sort out exact value TODO */
 #define SYS_NUM_IRQ	16
@@ -17,8 +19,6 @@
 #define IRQ_UART0	21
 #define IRQ_UART1	22
 #define IRQ_UART2	49
-#define IRQ_UART3	75
-#define IRQ_UART4	76
 
 typedef unsigned int irqreturn_t;
 
@@ -32,3 +32,5 @@ void enable_irq(unsigned int irq);
 void disable_irq(unsigned int irq);
 
 void exception_common(void);
+
+#endif /* __INTERRUPT_H */

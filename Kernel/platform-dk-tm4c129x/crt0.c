@@ -1,4 +1,5 @@
 #include <kernel.h>
+#include "inline-irq.h"
 #include "tm4c129x.h"
 #include "entries.h"
 

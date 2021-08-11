@@ -53,12 +53,22 @@ void map_init(void)
  *	to avoid confusion.
  *
  *	Kernel in bank 0, user in banks 1-14, high 32K is bank 15
+ *	With 128K the high is bank 3. The main code continues using 14/15 for
+ *	the kernel and high pages but they wrap so there is no problem.
+ *
+ *	The pages are actually 0-15, but the top bit does nothing on the
+ *	SBCv2. However by setting this bit we magically just work on the
+ *	RB-MBC platform as well.
  */
 void pagemap_init(void)
 {
 	uint8_t i;
-	for (i = 1; i < 15; i++)
-		pagemap_add(i);
+	uint8_t imax = 15;
+	/* On a 128K system only pages 1 and 2 are free for user */
+	if (ramsize == 128)
+		imax = 3;
+	for (i = 1; i < imax; i++)
+		pagemap_add(i | 0x80);
 }
 
 /*

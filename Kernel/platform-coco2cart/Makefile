@@ -60,7 +60,7 @@ image:
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	../dev/drivewire/drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
+	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
 	../syscall_exec16.o devtty.o libc.o ../vt.o video.o  ../syscall_fs3.o \
 	../font8x8.o devsdc.o sdc.o
@@ -77,7 +77,7 @@ image:
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	../dev/drivewire/drivewire.o devdw.o mini_ide.o mini_ide_discard.o ide.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
+	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
 	../syscall_exec16.o devtty.o libc.o ../vt.o video.o  ../syscall_fs3.o \
 	../font8x8.o devsdc.o sdc.o

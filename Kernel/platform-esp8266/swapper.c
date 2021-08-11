@@ -70,8 +70,6 @@ usize_t pagemap_mem_used(void)
 
 void pagemap_init(void)
 {
-	for (int i=0; i<MAX_SWAPS; i++)
-		swapmap_init(i);
 }
 
 static void swapinout(int blk,

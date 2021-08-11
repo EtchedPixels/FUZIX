@@ -53,10 +53,12 @@ CS2SRCS = syscall_fs2.c
 CS3SRCS = syscall_fs3.c	syscall_net.c
 CS4SRCS = syscall_other.c
 
-#   If cpu/rules.mk doesn't set BITS, then the platform needs to provide
-#   its own syscall_exec.
-ifneq ($(BITS),)
-CS5SRCS = syscall_exec$(BITS).c
+#
+#	Set EXECFORMAT to use one of the standard loaders
+#
+CS5SRCS = syscall_exec.c
+ifneq ($(EXECFORMAT),)
+CS5SRCS += syscall_exec$(EXECFORMAT).c
 endif
 #
 #
@@ -270,6 +272,8 @@ start.o: include/kernel.h include/panic.h include/sysinfoblk.h
 start.o: include/version.h include/kdata.h include/printf.h include/tty.h
 swap.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
 swap.o: include/printf.h
+syscall_exec.o: include/kernel.h include/panic.h include/sysinfoblk.h
+syscall_exec.o: include/version.h include/kdata.h include/printf.h
 syscall_exec16.o: include/kernel.h include/panic.h include/sysinfoblk.h
 syscall_exec16.o: include/version.h include/kdata.h include/printf.h
 syscall_exec32.o: include/kernel.h include/panic.h include/sysinfoblk.h

@@ -18,6 +18,7 @@ export ASOPTS=-plosff
 export ASMEXT = .s
 export BINEXT = .rel
 export BITS=16
+export EXECFORMAT=16
 #
 # FIXME: should look for ez80_z80 eventually but not yet
 export LIBZ80=$(shell tools/findsdcc ez80_z80)

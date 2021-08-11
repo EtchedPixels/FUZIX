@@ -495,7 +495,7 @@ typedef struct p_tab {
     uint16_t	p_pgrp;		/* Process group */
     uint8_t	p_nice;
     uint8_t	p_event;	/* Events */
-    usize_t	p_top;		/* Top of user memory */
+    usize_t	p_top;		/* Copy of u_top */
 #ifdef CONFIG_LEVEL_2
     uint16_t	p_session;
 #endif
@@ -538,7 +538,7 @@ typedef struct u_data {
     arg_t       u_argn2;	/* Third C argument */
     arg_t       u_argn3;        /* Fourth C argument */
     void *      u_isp;          /* Value of initial sp (argv) */
-	usize_t     u_top;		/* Top of memory for this task */
+    usize_t	u_top;		/* Top of memory for this task */
     uaddr_t	u_break;	/* Top of data space */
     uaddr_t	u_codebase;	/* 32bit platform base pointers */
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
@@ -1115,10 +1115,10 @@ struct coredump {
 #define MAGIC2 0xC0DE
 	uint8_t ch_type;	/* For now 16 or 32 bit number of bits - will
 				   change! */
-	uint32_t ch_base;
-	uint32_t ch_break;
-	uint32_t ch_sp;
-	uint32_t ch_top;
+	uaddr_t ch_base;
+	uaddr_t ch_break;
+	uaddr_t ch_sp;
+	uaddr_t ch_top;
 };
 
 #define COREHDR_MEM		1

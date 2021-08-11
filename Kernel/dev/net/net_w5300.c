@@ -383,12 +383,10 @@ static void w5300_event_s(uint8_t i)
 		s->s_wake = 1;
 	}
 	if (stat & 0x200) {
-		/* Disconnect: Just kill our host socket. Not clear if this
-		   is right or we need to drain data first */
-		w5300_cmd(i, CLOSE);
+		/* Signal an EOF */
 		w5300_eof(s);
 		/* When we fall through we'll see CLOSE state and do the
-		   actual shutting down */
+		   actual shutting down if appropriate */
 	}
 	if (stat & 0x100) {
 		/* Connect: Move into connected state */
@@ -981,7 +979,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		ifr.ifr_netmask.sa.sin.sin_addr.s_addr = igm;
 		goto copy_addr;
 	case SIOCGIFGWADDR:
-		ifr.ifr_netmask.sa.sin.sin_addr.s_addr = iga;
+		ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr = iga;
 		goto copy_addr;
 	case SIOCGIFHWADDR:
 		memcpy(ifr.ifr_hwaddr.sa.hw.shw_addr, fakeaddr, 6);
@@ -1003,7 +1001,7 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 		igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;
 		break;
 	case SIOCSIFGWADDR:
-		iga = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
+		iga = ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr;
 		break;
 	case SIOCSIFHWADDR:
 		memcpy(fakeaddr, ifr.ifr_hwaddr.sa.hw.shw_addr, 6);

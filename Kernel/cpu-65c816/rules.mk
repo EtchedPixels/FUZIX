@@ -20,3 +20,4 @@ export CROSS_CC_SEGDISC=--code-name DISCARD --rodata-name DISCARDDATA
 export ASMEXT = .s
 export BINEXT = .o
 export BITS=16
+export EXECFORMAT=16

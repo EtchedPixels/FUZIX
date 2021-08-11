@@ -17,5 +17,6 @@ export ASOPTS=-plosff
 export ASMEXT = .s
 export BINEXT = .rel
 export BITS=16
+export EXECFORMAT=16
 #
 export LIBZ80=$(shell tools/findsdcc $(CPU))

@@ -11,6 +11,8 @@
 # dragon-mooh:	Dragon 32/64 with Mooh 512K card (or xroar emulator)
 # dragon-nx32:	Dragon 32/64 with Spinx 512K card (or xroar emulator)
 # easy-z80:	Easy-Z80 RC2014 compatible system
+# esp8266	ESP8266 module with added SD card
+# msx1:		MSX1 as a cartridge
 # msx2:		MSX2 with 128K or more and MegaFlashROM+SD interface
 #		(or OpenMSX suitably configured)
 # mtx:		Memotech MTX512 with SDX or SD (or MEMU emulator)
@@ -53,7 +55,7 @@
 # v65c816:	Virtual platform for 65c816 development (flat memory)
 # v68:		Virtual platform for 68000 development
 
-TARGET=trs80m1
+TARGET=esp8266
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk
@@ -62,10 +64,13 @@ ifeq ($(USERCPU),)
 	USERCPU = $(CPU)
 endif
 
+# Base of the build directory
+FUZIX_ROOT = $(shell pwd)
+
 # FIXME: we should make it possible to do things entirely without /opt/fcc
 PATH := /opt/fcc/bin:$(PATH)
-
-FUZIX_ROOT = $(shell pwd)
+# Add the tools directory
+PATH := $(FUZIX_ROOT)/Build/tools/:$(PATH)
 
 # TARGET is what we are building
 # CPU is the CPU type for the kernel
