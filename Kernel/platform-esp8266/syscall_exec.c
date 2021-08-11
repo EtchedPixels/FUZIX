@@ -193,7 +193,6 @@ arg_t _execve(void)
 	/* Start execution (never returns) */
 	udata.u_ptab->p_status = P_RUNNING;
 
-	uint32_t* code = (uint32_t*)(CODEBASE + hdr.a_entry);
 	platform_doexec(CODEBASE + hdr.a_entry, udata.u_isp);
 	panic("doexec returned\n");
 
