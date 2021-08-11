@@ -1,11 +1,15 @@
 #include <kernel.h>
 #include <tty.h>
+#include "config.h"
+#include "cpu.h"
 #include "tm4c129x.h"
 #include "gpio.h"
 #include "interrupt.h"
 #include "serial.h"
 
 static unsigned char tbuf1[TTYSIZ];
+
+uint32_t last_im = 0U;
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1U] = {
   { .q_base =   NULL,
@@ -28,15 +32,18 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1U] = {
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-  outl(UART_BASE(minor - 1) + UART_DR, c);
+  uint32_t im = 0U;
+
+  serial_disableuartint(minor - 1U, &im);
+  serial_waittxnotfull(minor - 1U);
+  serial_out(minor - 1U, UART_DR, c);
+  serial_waittxnotfull(minor - 1U);
+  serial_restoreuartint(minor - 1U, im);
 }
 
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-  /* For a CPU this fast we should switch to IRQ driven ? */
-  if (inl(UART_BASE(minor - 1) + UART_FR) & UART_FR_TXFF)
-    return TTY_READY_SOON;
-  return TTY_READY_NOW;
+  return serial_txnotfull(minor - 1U) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 int tty_carrier(uint_fast8_t minor)
@@ -61,29 +68,27 @@ void kputchar(uint8_t c)
 {
   if (c == '\n')
     kputchar('\r');
-  /* Kernel console I/O is blocking. */
-  while(tty_writeready(1) != TTY_READY_NOW)
-    tty_putc(1, c);
+  tty_putc(1U, c);
 }
 
 static irqreturn_t serial_isr(unsigned int irq, void *dev_id, uint32_t *regs)
 {
-  uint32_t mis;
+  uint32_t c, mis;
   unsigned u;
-  unsigned int dev = (unsigned int)dev_id;
-  uint32_t base = UART_BASE(dev - 1);
+  unsigned minor = (unsigned)dev_id;
 
   for (u = 0U; u < 256U; u++) {
-    mis = inl(base + UART_MIS);
-    outl(base + UART_ICR, mis);
+    mis = serial_in(minor - 1U, UART_MIS);
+    serial_out(minor - 1U, UART_ICR, mis);
     if (mis & (UART_MIS_RXMIS | UART_MIS_RTMIS)) {
-      while (!(inl(base + UART_FR) & UART_FR_RXFE))
-        /* Should do something with errors I guess one day */
-        tty_inproc(dev, inl(base + UART_DR));
+      while (serial_rxavailable(minor - 1U)) {
+        c = ((serial_in(minor - 1U, UART_DR)) & 0xffU);
+        tty_inproc(minor, ((uint8_t)(c)));
+      }
       continue;
     }
     if (mis & UART_MIS_TXMIS) {
-      tty_outproc(dev);
+      tty_outproc(minor);
       continue;
     }
     break;
@@ -94,18 +99,19 @@ static irqreturn_t serial_isr(unsigned int irq, void *dev_id, uint32_t *regs)
 void serial_late_init(void)
 {
   uint32_t u;
-  uint32_t base = UART_BASE(0);
+  const unsigned minor = minor(BOOT_TTY);
 
-  outl(base + UART_IFLS, 
+  serial_out(minor - 1U, UART_IFLS,
              UART_IFLS_TXIFLSEL_18TH | UART_IFLS_RXIFLSEL_18TH);
-  outl(base + UART_IM, UART_IM_RXIM | UART_IM_RTIM);
-  u = inl(base + UART_LCRH);
+  serial_out(minor - 1U, UART_IM, UART_IM_RXIM | UART_IM_RTIM);
+  u = serial_in(minor - 1U, UART_LCRH);
   u |= UART_LCRH_FEN;
-  outl(base + UART_LCRH, u);
-  u = inl(base + UART_CTL);
+  serial_out(minor - 1U, UART_LCRH, u);
+  u = serial_in(minor - 1U, UART_CTL);
   u |= (UART_CTL_UARTEN | UART_CTL_TXE | UART_CTL_RXE);
-  outl(base + UART_CTL, u);
-  request_irq(IRQ_UART0, serial_isr, (void *)1);
+  serial_out(minor - 1U, UART_CTL, u);
+  last_im = serial_in(minor - 1U, UART_IM);
+  request_irq(IRQ_UART0, serial_isr, (void *)(minor));
 }
 
 #define SYSCON_RCGUART	0x400FE618
@@ -115,6 +121,7 @@ void serial_late_init(void)
 void serial_early_init(void)
 {
   uint32_t ctl;
+  const unsigned minor = minor(BOOT_TTY);
 
   /* Power up the UART */
   tm4c129x_modreg(SYSCON_PCUART, 0, 1U);
@@ -130,15 +137,16 @@ void serial_early_init(void)
   /* Disable the UART by clearing the UARTEN bit in the UART CTL register */
   ctl = inl(UART_BASE(0) + UART_CTL);
   ctl &= ~UART_CTL_UARTEN;
-  outl(UART_BASE(0) + UART_CTL, ctl);
+  serial_out(minor - 1U, UART_CTL, ctl);
 
   /* We need 115200 baud, and 16 samples per bit (like a 16x50) and we run
      at 120MHz */
-  outl(UART_BASE(0) + UART_IBRD, 65);
-  outl(UART_BASE(0) + UART_FBRD, 192000);
+  serial_out(minor - 1U, UART_IBRD, 65U);
+  serial_out(minor - 1U, UART_FBRD, 192000U);
+
   /* 8N1 FIFO on */
-  outl(UART_BASE(0) + UART_LCRH, (3 << 5) | 0x10);
+  serial_out(minor - 1U, UART_LCRH, (3U << 5U) | 0x10U);
 
   ctl |= (UART_CTL_UARTEN | UART_CTL_TXE | UART_CTL_RXE);
-  outl(UART_BASE(0) + UART_CTL, ctl);
+  serial_out(minor - 1U, UART_CTL, ctl);
 }
