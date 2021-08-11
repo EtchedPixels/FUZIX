@@ -150,7 +150,6 @@ static void sd_spi_reclock(unsigned int port)
 	if (last_clk == clk_fast[port])
 		return;
 	last_clk = clk_fast[port];
-	kprintf("reclock %d %d\n", port, last_clk);
 	setFrequency(last_clk ? 4000000 : 250000);
 }
 
@@ -288,20 +287,16 @@ static void spi_transaction(uint8_t ctrl, uint16_t off,
 {
 	irqflags_t irq = di();
 	spi_select_port(1);
-//	kprintf("[>%x.%2x ", off, ctrl);
 	send_recv(off >> 8);
 	send_recv(off);
 	send_recv(ctrl);
 	while(outlen--) {
-//		kprintf(">%2x ", *out);
 		send_recv(*out++);
 	}
 	while(inlen--) {
 		*in = send_recv(0xFF);
-//		kprintf("<%2x ", *in);
 		in++;
 	}
-//	kputs("]\n");
 	spi_deselect_port(1);
 	irqrestore(irq);
 }

@@ -26,21 +26,7 @@ static void write_call(int n) {
           "%1$s:\n",
           syscall_name[n]);
 
-  switch (syscall_args[n]) {
-  case VARARGS:
-  case 4:
-    fprintf(fp, "\tmov a6, a5\n");
-  case 3:
-    fprintf(fp, "\tmov a5, a4\n");
-  case 2:
-    fprintf(fp, "\tmov a4, a3\n");
-  case 1:
-    fprintf(fp, "\tmov a3, a2\n");
-  case 0:
-    break;
-  }
-
-  fprintf(fp, "\tmovi a2, %d\n", n);
+  fprintf(fp, "\tmovi a6, %d\n", n);
   fprintf(fp, "\tsyscall\n");
 
   fprintf(fp, "\tbeqz a3, _no_error\n");

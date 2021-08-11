@@ -1,4 +1,4 @@
-# The ESP8266 port
+
 
 ## Introduction
 
@@ -172,7 +172,6 @@ You now have an ESP8266 compiler set.
 
 ## TODO
 
-- Change the syscall ABI, put the syscall number in A7, and shuffle the arguments back to A2... so the stubs become tiny
 - Use some of the ROM library routines that don't themselves meddle with static data. Make a kernel set and a user set (RBOOT has a good list) Note that we can't use many of them as they are not instruction fault aware.
 - Move to 'parent runs first' - needs some tricky changes in the platform fork code (see the Z80 examples)
 - Clean up the low level asm code - too much duplication, things saved that are not needed. Could do with a clean up by someone who speaks Tensilica LX106 properly.

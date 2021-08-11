@@ -152,11 +152,11 @@ syscall:
 	movi a12, udata
 	movi a7, 1
 	s8i a7, a12, U_DATA__U_INSYS
-	s8i a2, a12, U_DATA__U_CALLNO
-	s32i.n a3, a12, U_DATA__U_ARGN
-	s32i.n a4, a12, U_DATA__U_ARGN1
-	s32i.n a5, a12, U_DATA__U_ARGN2
-	s32i.n a6, a12, U_DATA__U_ARGN3
+	s8i a6, a12, U_DATA__U_CALLNO
+	s32i.n a2, a12, U_DATA__U_ARGN
+	s32i.n a3, a12, U_DATA__U_ARGN1
+	s32i.n a4, a12, U_DATA__U_ARGN2
+	s32i.n a5, a12, U_DATA__U_ARGN3
 	s32i.n sp, a12, U_DATA__U_SYSCALL_SP
 	movi sp, udata + UBLOCK_SIZE - 32
 	s32i.n a0, sp, 0
