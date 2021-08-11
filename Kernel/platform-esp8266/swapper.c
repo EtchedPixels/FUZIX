@@ -72,20 +72,24 @@ void pagemap_init(void)
 {
 }
 
-static void swapinout(int blk,
+static void swapinout(int blk, void* u,
 	int (*readwrite)(uint16_t dev, blkno_t blkno, usize_t nbytes,
                     uaddr_t buf, uint16_t page))
 {
+	const uint32_t USER_STACK = 3*1024;
+
 	/* Read/write the udata block. */
 
-	readwrite(SWAPDEV, blk, UDATA_BLKS<<BLKSHIFT, (uaddr_t)&udata, 1);
+	readwrite(SWAPDEV, blk, UDATA_BLKS<<BLKSHIFT, (uaddr_t)u, 1);
 
 	/* Data area */
 
-	/* Write out just 0..break  The stack is below break, so that gets written too. */
+	/* Write out just 0..break and sp..top */
 	readwrite(SWAPDEV, blk + UDATA_BLKS,
 		(uaddr_t)alignup(udata.u_break - DATABASE, 1<<BLKSHIFT),
 		DATABASE, 1);
+	readwrite(SWAPDEV, blk + UDATA_BLKS + ((DATALEN - USER_STACK) >> BLKSHIFT),
+		USER_STACK, DATABASE + DATALEN - USER_STACK, 1);
 
 	/* Code area */
 
@@ -97,7 +101,7 @@ static void swapinout(int blk,
  *	Swap out the memory of a process to make room
  *	for something else
  */
-int swapout(ptptr p)
+int swapout_new(ptptr p, void *u)
 {
 #ifdef DEBUG
 	kprintf("Swapping out %x (%d)\n", p, p->p_pid);
@@ -111,7 +115,7 @@ int swapout(ptptr p)
 		return ENOMEM;
 	int blk = map * SWAP_SIZE;
 
-	swapinout(blk, swapwrite);
+	swapinout(blk, u, swapwrite);
 
 	p->p_page = 0;
 	p->p_page2 = map;
@@ -119,6 +123,11 @@ int swapout(ptptr p)
 	kprintf("%x: swapout done %d\n", p, p->p_page2);
 #endif
 	return 0;
+}
+
+int swapout(ptptr p)
+{
+	return swapout_new(p, (uint8_t*)&udata);
 }
 
 /*
@@ -138,7 +147,7 @@ void swapin(ptptr p, uint16_t map)
 		return;
 	}
 
-	swapinout(blk, swapread);
+	swapinout(blk, (uint8_t*)&udata, swapread);
 
 #ifdef DEBUG
 	kprintf("%x: swapin done %d\n", p, p->p_page2);
