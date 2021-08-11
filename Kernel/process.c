@@ -377,7 +377,11 @@ ptptr ptab_alloc(void)
 						break;
 					}
 			}
-			newp->p_top = udata.u_top;
+			if (udata.u_ptab) {
+				newp->p_top = udata.u_top;
+			    newp->p_pgrp = udata.u_ptab->p_pgrp;
+			    memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
+			}
 			if (pagemap_alloc(newp) == 0) {
 				newp->p_status = P_FORKING;
 				nproc++;
@@ -386,10 +390,6 @@ ptptr ptab_alloc(void)
 				newp = NULL;
 				break;
 	                }
-			if (udata.u_ptab) {
-			    newp->p_pgrp = udata.u_ptab->p_pgrp;
-			    memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
-			}
 			udata.u_error = 0;
 	                break;
 		}

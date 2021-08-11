@@ -7,15 +7,12 @@
 
 #undef DEBUG
 
-/* This is a simple relocatable ELF loader. It requires -pie -static files
- *
- * It requires -r files with no
- * program headers but with the section headers present. It's intended for the
- * no-MMU flat-memory use case with a fixed size process slot (if you have an
- * MMU, then use one of the other formats, or an EXEC format prelinked ELF file
- * with a different loader). For simplicity, it assumes that user mode memory
- * can be directly accessed. It also does very little validation of the ELF
- * file as there's no point on such systems.
+/* This is a simple relocatable ELF loader. It requires -pie -static files with
+ * a DYNAMIC program header. The dynamic relocation data is loaded into memory
+ * and must be immediately after the bss (it's used to determine the location
+ * of brk). For simplicity, it assumes that user mode memory can be directly
+ * accessed. It also does very little validation of the ELF file as there's no
+ * point on such systems.
  *
  * There are almost certainly incorrect assumptions in here because ELF is
  * awful. Use at your own risk.
@@ -82,10 +79,8 @@ arg_t _execve(void)
 	}
 
 	mflags = fs_tab[ino->c_super].m_flags;
-	if (mflags & MS_NOEXEC) {
-		udata.u_error = EACCES;
-		goto nogood;
-	}
+	if (mflags & MS_NOEXEC)
+		goto eacces;
 
 	setftime(ino, A_TIME);
 
@@ -167,12 +162,17 @@ arg_t _execve(void)
 		#endif
 		goto enoexec;
 	}
-	if (lomem > himem) {
+	/* dynamic points at the load address of the relocation data; this is also
+	 * the top of BSS. */
+	uaddr_t stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
+	if ((stacktop > himem) || (lomem > himem)) {
 		#ifdef DEBUG
-			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, lomem);
+			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
 		#endif
 		goto enoexec;
 	}
+	if (stacktop > lomem)
+		lomem = stacktop;
 
 	/* We've confirmed that there's room. Now, copy the command line arguments
 	 * into temporary storage because we're about to trash userland. */
@@ -187,14 +187,12 @@ arg_t _execve(void)
 	}
 	udata.u_ptab->p_status = P_NOSLEEP;
 
-	/* FIXME. At this point we should call pagemap_realloc(), for this to work
-	 * on a variable-sized process system. This must be the last test as it
-	 * makes changes if it works. */
+	/* At this point we should call pagemap_realloc(), for this to work on a
+	 * variable-sized process system. This must be the last test as it makes
+	 * changes if it works. */
 
-#if 0
-	if (pagemap_realloc(NULL, ))
-		goto nogood3;
-#endif
+	if (pagemap_realloc(NULL, lomem))
+		goto enomem;
 
 	/* At this point, we are committed to reading in and
 	 * executing the program. This call must not block. */
@@ -278,10 +276,13 @@ arg_t _execve(void)
 	}
 
 	#ifdef DEBUG
-		kprintf("himem=%p lomem=%p top=%p\n", himem, lomem);
+	   kprintf("himem=%p lomem=%p (%p) dynamic=%p stacktop=%p\n",
+			   himem, lomem, lomem+PROGLOAD, dynamic, stacktop);
 	#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
+	dynamic += PROGLOAD;
+	stacktop += PROGLOAD;
 
 	/* Core dump and ptrace permission logic. */
 
@@ -293,8 +294,10 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
-	udata.u_top = himem;
-	udata.u_ptab->p_top = himem;
+
+	/* Clear the stack (the BSS has already been cleared by the loader). */
+
+	uzero((void*)dynamic, USERSTACK);
 
 	if (!(mflags & MS_NOSUID)) {
 		/* setuid, setgid if executable requires it */
@@ -306,7 +309,7 @@ arg_t _execve(void)
 
 	/* Set initial break for program. */
 
-	udata.u_break = (int)ALIGNUP(lomem);
+	udata.u_break = (uaddr_t)ALIGNUP(stacktop);
 
 	/* Turn off caught signals. */
 
@@ -315,7 +318,7 @@ arg_t _execve(void)
 	/* Write back the arguments and environment. */
 
 	int argc;
-	char** nargv = wargs(((char *) himem - 4), abuf, &argc);
+	char** nargv = wargs(((char *) stacktop - sizeof(uaddr_t)), abuf, &argc);
 	char** nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	/* Fill in udata.u_name with program invocation name. */
