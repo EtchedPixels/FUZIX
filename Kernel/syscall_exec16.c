@@ -236,10 +236,6 @@ arg_t _execve(void)
 	tmpfree(ebuf);
 	i_deref(ino);
 
-	/* Align to meet the CPU requirements. Not generally needed on 8bit
-	   micros but will be needed if we tackle TMS9995 or similar */
-	nenvp = ALIGNDOWN(nenvp);
-
 	/* Shove argc and the address of argv just below envp
 	   FIXME: should flip them in crt0.S of app for R2L setups
 	   so we can get rid of the ifdefs */
