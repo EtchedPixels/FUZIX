@@ -10,6 +10,7 @@
 	        ; startup code
 	        .area .start
 
+		fdb 0x6809
 start:
 		orcc #0x10		; interrupts definitely off
 		lds #kstack_top		; note we'll wipe the stack later
