@@ -36,7 +36,7 @@ extern int string(int s);
 extern int eat(int, char);
 extern int fold(char);
 extern void publ(int);
-extern int publish(char *);
+extern void publish(char *);
 extern int segment(char *, char *[]);
 extern int perm(char *u[],int m,char *v[],int n,int p[]);
 extern int find(char *u[],int m);
@@ -221,7 +221,7 @@ void pub1(int s)
 	}
 }
 
-int publish(char *t)
+void publish(char *t)
 {
 	ev = t;
 	pub1(1);
@@ -304,8 +304,13 @@ void readindex(void)
 void talloc(void)
 {
 	int i;
-	for(i=0;i<NF;i++)
+	for(i=0;i<NF;i++) {
 		tmp[i] = malloc(SL);
+		if (tmp[i] == NULL) {
+			fputs("Out of memory,\n", stderr);
+			exit(1);
+		}
+	}
 }
 
 int main(int argc, char *argv[])

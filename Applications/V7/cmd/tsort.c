@@ -77,6 +77,16 @@ int cmp(const char *s, const char *t)
 	return (0);
 }
 
+static void *xmalloc(size_t size)
+{
+	void *p = malloc(size);
+	if (p == NULL) {
+		fputs("Out of memory.\n", stderr);
+		exit(1);
+	}
+	return p;
+}
+
 /*	turn a string into a node pointer
 */
 struct nodelist *stringindex(const char *s)
@@ -88,8 +98,8 @@ struct nodelist *stringindex(const char *s)
 		if (cmp(s, i->name))
 			return (i);
 	for (t = s; *t; t++);
-	n = malloc((unsigned) (t + 1 - s));
-	i->nextnode = (struct nodelist *) malloc(sizeof(struct nodelist));
+	n = xmalloc((unsigned) (t + 1 - s));
+	i->nextnode = (struct nodelist *) xmalloc(sizeof(struct nodelist));
 	if (i->nextnode == NULL || n == NULL)
 		error("too many items", empty);
 	i->name = n;
@@ -167,7 +177,7 @@ int main(int argc, const char *argv[])
 		j = stringindex(follows);
 		if (i == j || present(i, j))
 			continue;
-		t = (struct predlist *) malloc(sizeof(struct predlist));
+		t = (struct predlist *) xmalloc(sizeof(struct predlist));
 		t->nextpred = j->inedges;
 		t->pred = i;
 		j->inedges = t;

@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
 {
 	init(argc, argv);
 	commnds();
+	return 0;
 }
 
 void commnds(void)
@@ -1095,6 +1096,8 @@ void init(int argc, char *argv[])
 		exit(1);
 	}
 	dummy = malloc(1);
+	if (dummy == NULL)
+		ospace("dummy");
 	scalptr = salloc(1);
 	sputc(scalptr, 0);
 	basptr = salloc(1);

@@ -179,6 +179,10 @@ int main(int argc, char *argv[])
 		globp = "r";
 	}
 	zero = (int *)malloc(nlall*sizeof(int));
+	if (zero == NULL) {
+		write(2, "Out of memory.\n", 15);
+		exit(1);
+	}
 	init();
 	if (((int)oldintr&01) == 0)
 		signal(SIGINT, onintr);
