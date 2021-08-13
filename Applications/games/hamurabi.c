@@ -98,6 +98,10 @@ uint16_t int_random(uint16_t n)
 
 city_st *new_city_st(void) {
   city_st *cty = (city_st *) malloc(sizeof(city_st));
+  if (cty == NULL) {
+    fprintf(stderr, "Out of memory.\n");
+    exit(EXIT_FAILURE);
+  }
 
   cty->population  = 95;
   cty->migrated    = 5;
