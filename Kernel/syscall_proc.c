@@ -272,16 +272,17 @@ arg_t _brk(void)
 sbrk (incr)                      Function 31
 uint16_t incr;
 ********************************************/
-#define incr (usize_t)udata.u_argn
+#define incr (size_t)udata.u_argn
 
 arg_t _sbrk(void)
 {
 	uaddr_t oldbrk;
+	size_t inc = incr;
 
 	udata.u_argn += (oldbrk = udata.u_break);
 
 	/* Check for wraps */
-	if ((incr > 0 && oldbrk > udata.u_argn) || (incr < 0 && oldbrk < udata.u_argn)) {
+	if ((inc > 0 && oldbrk > udata.u_argn) || (inc < 0 && oldbrk < udata.u_argn)) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
