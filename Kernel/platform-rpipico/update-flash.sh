@@ -1,12 +1,10 @@
 #!/bin/sh
+set -e
 
 IMG=filesystem.img
 
-set -e
-#truncate --size=1450k filesystem.img
-#sudo losetup -P /dev/loop0 filesystem.img
-#trap 'sudo losetup -d /dev/loop0' EXIT
-../../Standalone/mkfs ${IMG} 256 65535
+rm -f ${IMG}
+../../Standalone/mkfs ${IMG} 32 2547
 ../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
@@ -115,6 +113,7 @@ bget ../../Applications/util/false
 bget ../../Applications/util/fdisk
 bget ../../Applications/util/fforth
 bget ../../Applications/util/fgrep
+bget ../../Applications/util/free
 bget ../../Applications/util/fsck
 bget ../../Applications/util/fsck-fuzix
 bget ../../Applications/util/grep
@@ -130,7 +129,6 @@ bget ../../Applications/util/mkdir
 bget ../../Applications/util/mkfs
 bget ../../Applications/util/mkfifo
 bget ../../Applications/util/mknod
-bget ../../Applications/util/mode
 bget ../../Applications/util/more
 bget ../../Applications/util/mount
 bget ../../Applications/util/od
@@ -151,7 +149,9 @@ bget ../../Applications/util/sort
 bget ../../Applications/util/stty
 bget ../../Applications/util/sum
 bget ../../Applications/util/su
+bget ../../Applications/util/swapon
 bget ../../Applications/util/sync
+bget ../../Applications/util/tar
 bget ../../Applications/util/tee
 bget ../../Applications/util/tail
 bget ../../Applications/util/touch
@@ -162,7 +162,7 @@ bget ../../Applications/util/uniq
 bget ../../Applications/util/uptime
 bget ../../Applications/util/uud
 bget ../../Applications/util/uue
-bget ../../Applications/util/vile
+#bget ../../Applications/util/vile
 bget ../../Applications/util/wc
 bget ../../Applications/util/which
 bget ../../Applications/util/who
@@ -197,6 +197,7 @@ chmod 0755 false
 chmod 0755 fdisk
 chmod 0755 fforth
 chmod 0755 fgrep
+chmod 0755 free
 chmod 0755 fsck
 chmod 0755 fsck-fuzix
 chmod 0755 grep
@@ -212,7 +213,6 @@ chmod 0755 mkdir
 chmod 0755 mkfifo
 chmod 0755 mkfs
 chmod 0755 mknod
-chmod 0755 mode
 chmod 0755 more
 chmod 0755 mount
 chmod 0755 od
@@ -231,8 +231,10 @@ chmod 0755 sort
 chmod 0755 ssh
 chmod 0755 stty
 chmod 0755 sum
+chmod 0755 swapon
 chmod 0755 sync
 chmod 0755 tail
+chmod 0755 tar
 chmod 0755 tee
 chmod 0755 touch
 chmod 0755 tr
@@ -242,7 +244,7 @@ chmod 0755 uniq
 chmod 0755 uptime
 chmod 0755 uud
 chmod 0755 uue
-chmod 0755 vile
+#chmod 0755 vile
 chmod 0755 wc
 chmod 0755 which
 chmod 0755 who
@@ -260,7 +262,6 @@ chmod 0755 sh
 
 bget ../../Applications/V7/cmd/ac
 bget ../../Applications/V7/cmd/accton
-bget ../../Applications/V7/cmd/at
 bget ../../Applications/V7/cmd/at
 bget ../../Applications/V7/cmd/atrun
 bget ../../Applications/V7/cmd/col
@@ -293,7 +294,6 @@ bget ../../Applications/V7/cmd/tty
 bget ../../Applications/V7/cmd/wall
 chmod 0755 ac
 chmod 0755 accton
-chmod 0755 at
 chmod 0755 at
 chmod 0755 atrun
 chmod 0755 col
@@ -356,11 +356,11 @@ cd /usr/games
 #bget ../../Applications/games/adv13
 #bget ../../Applications/games/adv14a
 #bget ../../Applications/games/adv14b
-bget ../../Applications/games/advint
+#bget ../../Applications/games/advint
 bget ../../Applications/games/cowsay
-bget ../../Applications/games/fortune
-bget ../../Applications/games/fortune.dat
-bget ../../Applications/games/hamurabi
+#bget ../../Applications/games/fortune
+#bget ../../Applications/games/fortune.dat
+#bget ../../Applications/games/hamurabi
 #bget ../../Applications/games/myst01
 #bget ../../Applications/games/myst02
 #bget ../../Applications/games/myst03
@@ -372,15 +372,15 @@ bget ../../Applications/games/hamurabi
 #bget ../../Applications/games/myst09
 #bget ../../Applications/games/myst10
 #bget ../../Applications/games/myst11
-bget ../../Applications/games/qrun
-bget ../../Applications/games/startrek
+#bget ../../Applications/games/qrun
+#bget ../../Applications/games/startrek
 #bget ../../Applications/games/z1
 #bget ../../Applications/games/z2
 #bget ../../Applications/games/z3
 #bget ../../Applications/games/z4
 #bget ../../Applications/games/z5
 #bget ../../Applications/games/z8
-bget ../../Applications/cursesgames/invaders
+#bget ../../Applications/cursesgames/invaders
 
 #chmod 0755 adv01
 #chmod 0755 adv02
@@ -397,11 +397,11 @@ bget ../../Applications/cursesgames/invaders
 #chmod 0755 adv13
 #chmod 0755 adv14a
 #chmod 0755 adv14b
-chmod 0755 advint
+#chmod 0755 advint
 chmod 0755 cowsay
-chmod 0755 fortune
-chmod 0644 fortune.dat
-chmod 0755 hamurabi
+#chmod 0755 fortune
+#chmod 0644 fortune.dat
+#chmod 0755 hamurabi
 #chmod 0755 myst01
 #chmod 0755 myst02
 #chmod 0755 myst03
@@ -413,15 +413,15 @@ chmod 0755 hamurabi
 #chmod 0755 myst09
 #chmod 0755 myst10
 #chmod 0755 myst11
-chmod 0755 qrun
-chmod 0755 startrek
+#chmod 0755 qrun
+#chmod 0755 startrek
 #chmod 0755 z1
 #chmod 0755 z2
 #chmod 0755 z3
 #chmod 0755 z4
 #chmod 0755 z5
 #chmod 0755 z8
-chmod 0755 invaders
+#chmod 0755 invaders
 
 bget ../../Applications/cave/advent
 chmod 0755 advent
@@ -432,27 +432,22 @@ cd lib
 bget ../../Applications/cave/advent.db
 chmod 0644 advent.db
 
-cd /usr/lib
-mkdir trek
-chmod 0711 trek
-cd /usr/lib/trek
-
-bget ../../Applications/games/startrek.doc
-bget ../../Applications/games/startrek.fatal
-bget ../../Applications/games/startrek.intro
-bget ../../Applications/games/startrek.logo
-chmod 0755 startrek.doc
-chmod 0755 startrek.fatal
-chmod 0755 startrek.intro
-chmod 0755 startrek.logo
+#cd /usr/lib
+#mkdir trek
+#chmod 0711 trek
+#cd /usr/lib/trek
+#
+#bget ../../Applications/games/startrek.doc
+#bget ../../Applications/games/startrek.fatal
+#bget ../../Applications/games/startrek.intro
+#bget ../../Applications/games/startrek.logo
+#chmod 0755 startrek.doc
+#chmod 0755 startrek.fatal
+#chmod 0755 startrek.intro
+#chmod 0755 startrek.logo
 
 EOF
 
-#sudo ../Standalone/ucp /dev/loop0p2 <<EOF
-#bget padding.img
-#rm padding.img
-#EOF
+../../Standalone/fsck -a ${IMG}
 
-#sudo losetup -d /dev/loop0
-#platform-esp8266/mkftl filesystem.img filesystem.ftl
 

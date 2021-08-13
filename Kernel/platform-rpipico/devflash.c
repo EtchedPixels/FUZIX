@@ -79,14 +79,17 @@ void flash_dev_init(void)
 		return;
 
 	kprintf("NAND flash, ");
-	dhara_map_init(&dhara, &nand, journal_buf, 128);
+	dhara_map_init(&dhara, &nand, journal_buf, 10);
 	dhara_error_t err = DHARA_E_NONE;
 	dhara_map_resume(&dhara, &err);
 	uint32_t lba = dhara_map_capacity(&dhara);
-	kprintf("%dkB: ", lba / 2);
+	kprintf("%dkB physical %dkB logical at 0x%p: ",
+        nand.num_blocks * 4, lba / 2, XIP_NOCACHE_NOALLOC_BASE + FLASH_OFFSET);
 	
 	blk->transfer = transfer_cb;
-	blk->trim = trim_cb;
+    #ifdef CONFIG_TRIM
+        blk->trim = trim_cb;
+    #endif
 	blk->drive_lba_count = lba;
 	blkdev_scan(blk, 0);
 }

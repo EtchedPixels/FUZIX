@@ -150,5 +150,15 @@ void swapin(ptptr p, uint16_t map)
 #endif
 }
 
+void swapinout(ptptr p)
+{
+	/* If there's an existing process in memory, swap it out; then swap in the
+	 * new process. */
+	if (udata.u_ptab->p_page)
+		swapout(udata.u_ptab);
+	swapper(p);
+	p->p_page = 1;
+}
+
 #endif
 

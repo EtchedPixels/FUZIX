@@ -2,7 +2,8 @@
 
 .global udata
 .cpu cortex-m0
-.comm udata, UBLOCK_SIZE
+
+udata = progbase
 
 .text
 .thumb_func
@@ -59,7 +60,7 @@ isr_svcall_user:
     push {r0, r1, lr}           /* save r12, PC, LR */
 
     mov r0, sp                  /* get pointer to svc frame */
-    ldr r1, =(udata + UBLOCK_SIZE) /* switch to kernel stack */
+    ldr r1, =(udata + UDATA_SIZE_ASM) /* switch to kernel stack */
     mov sp, r1
 
     push {r0}
@@ -67,6 +68,8 @@ isr_svcall_user:
     pop {r0}
 
     mov sp, r0                  /* restore stack */
+    bl deliver_signals          /* may not return if signal handler longjmps out */
+
     pop {r0, r2, r3}            /* r2 is new PC, r3 is the old lr */
     mov lr, r3
     mov r12, r0
@@ -110,25 +113,17 @@ platform_switchout:
 
     /* On entry, r0 is the ptab ptr of the process to run */
 switchin:
-	/* Is the new process actually swapped out? */
+    ldr r1, =__StackTop     /* switch to swapper stack */
+    mov sp, r1
 
     mov r4, r0              /* save r0 (ptab ptr) in callee-saved registers */
-    ldrh r1, [r4, #P_TAB__P_PAGE_OFFSET]
-    cmp r1, #0
-    bne not_swapped
-
-	/* Switch to the swapper stack and swap in the new process. */
-
-    ldr r1, =__StackTop
-    mov sp, r1
-    bl swapper
+    bl contextswitch        /* may swap a process in */
 	isb
 
-not_swapped:
 	/* Make the new process runnable. */
 
     mov r0, #P_RUNNING
-    str r0, [r4, #P_TAB__P_STATUS_OFFSET]
+    strb r0, [r4, #P_TAB__P_STATUS_OFFSET]
 
 	/* Restore process stack pointer and return. */
 
@@ -176,11 +171,15 @@ dofork:
     mov r2, sp
     str r2, [r1, #U_DATA__U_SP_OFFSET]
 
-	/* Save the current process to disk. */
+	/* Copy the current process to the new parent. */
 
     push {r0, r1}
-    ldr r0, [r1, #U_DATA__U_PTAB_OFFSET]
-    bl swapout
+    mov r4, sp          /* save SP in callee-saved register */
+    ldr r1, =__StackTop /* switch to the swapper stack */
+    mov sp, r1
+    bl clonecurrentprocess
+    isb
+    mov sp, r4          /* restore old stack */
     pop {r0, r1}
 
 	/* We are now going to become the child; associate the child's p_tab
@@ -205,5 +204,5 @@ dofork:
     mov r12, r5
     pop {r5, r6, r7, pc}
 
-/* vim: sw=4 ts=4 et: */
+// vim: sw=4 ts=4 et:
 

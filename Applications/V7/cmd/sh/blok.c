@@ -132,7 +132,7 @@ void sh_free(void *ap)
 {
 	BLKPTR p = ap;
 
-	if (p && p < bloktop) {
+	if (p && p >= end && p < bloktop) {
 	        /* Step back from data to header */
 	        p--;
 	        /* Clear the busy bit */

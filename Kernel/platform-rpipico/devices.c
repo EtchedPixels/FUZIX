@@ -11,6 +11,8 @@
 #include "picosdk.h"
 #include <hardware/irq.h>
 #include <hardware/structs/timer.h>
+#include <pico/multicore.h>
+#include "core1.h"
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -52,6 +54,12 @@ static void timer_tick_cb(unsigned alarm)
     }
 
     timer_interrupt();
+
+    if (usbconsole_is_readable())
+    {
+        uint8_t c = usbconsole_getc_blocking();
+        tty_inproc(minor(BOOT_TTY), c);
+    }
 }
 
 void device_init(void)

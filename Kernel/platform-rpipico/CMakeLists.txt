@@ -9,6 +9,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(PICO_COPY_TO_RAM 1)
 
 pico_sdk_init()
+
 include_directories(
 	.
 	..
@@ -26,7 +27,10 @@ add_executable(fuzix
 	main.c
 	misc.c
 	rawflash.c
+	swapper.c
 	tricks.S
+	core1.c
+	usbdescriptors.c
 	../dev/blkdev.c
 	../dev/mbr.c
 	../dev/devsd_discard.c
@@ -34,19 +38,20 @@ add_executable(fuzix
 	../lib/dhara/error.c
 	../lib/dhara/journal.c
 	../lib/dhara/map.c
+	../lib/hexdump.c
 	../devio.c
 	../devsys.c
 	../filesys.c
 	../inode.c
 	../kdata.c
-	../lowlevel-armm0.S
+	../lowlevel-armm0.c
 	../malloc.c
 	../mm.c
 	../process.c
-	../simple.c
 	../start.c
 	../swap.c
 	../syscall_execelf32.c
+	../syscall_exec.c
 	../syscall_fs.c
 	../syscall_fs2.c
 	../syscall_fs3.c
@@ -60,10 +65,15 @@ add_executable(fuzix
 
 target_link_libraries(fuzix
 	pico_stdlib
+	pico_multicore
 	hardware_flash
 	hardware_spi
 	hardware_uart
-	hardware_timer
+	tinyusb_device_unmarked
+	tinyusb_board
 )
+
+pico_set_float_implementation(fuzix none)
+pico_set_double_implementation(fuzix none)
 pico_add_extra_outputs(fuzix)
 

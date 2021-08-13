@@ -1,17 +1,18 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#define FLASH_OFFSET (128*1024)
+#define FLASH_OFFSET (96*1024)
 
 extern void flash_dev_init(void);
 extern void sd_rawinit(void);
-extern void tty_rawinit(void);
+
+extern void contextswitch(ptptr p);
 
 struct svc_frame
 {
-	uint32_t lr;
-	uint32_t pc;
 	uint32_t r12;
+	uint32_t pc;
+	uint32_t lr;
 	uint32_t r0;
 	uint32_t r1;
 	uint32_t r2;

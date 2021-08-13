@@ -8,8 +8,7 @@
 #define uputi    uputl            /* Copy user int type */
 #define ugeti(x) ugetl(x, NULL)   /* between user and kernel */
 
-/* Allow a minimum of 512 bytes gap between stack and top of allocations */
-#define brk_limit() (udata.u_syscall_sp - 512)
+#define brk_limit() (udata.u_ptab->p_top)
 
 extern void* memcpy(void*, const void*, size_t);
 extern void* memset(void*, int, size_t);
@@ -56,6 +55,8 @@ inline static void __hard_irqrestore(uint32_t ps)
 {
 	asm volatile("msr PRIMASK, %0" :: "r" (ps));
 }
+
+#define barrier() asm volatile("":::"memory")
 	
 /* jmp over the Fuzix header. Will need updating if the header size changes */
 #define EMAGIC   0x08
