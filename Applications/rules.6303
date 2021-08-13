@@ -1,0 +1,12 @@
+CC = cc68
+AS = as68
+LINKER = $(FUZIX_ROOT)/Library/link/ld6303
+CFLAGS = -X -m6303 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/6303
+LINKER_LIB = -s -L $(FUZIX_ROOT)/Library/libs -lc6303 -M
+ASM_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_6303_rel.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_6303_rel.o
+
+.SUFFIXES: .c .o .y
+
+
