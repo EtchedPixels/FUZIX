@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
     perror(argv[1]);
     exit(1);
   }
-  if (fread(buf, 1, 65536, bin) == 0) {
+  if (fseek(bin, 0x100, SEEK_SET) < 0 || fread(buf, 1, 0xFF00, bin) == 0) {
     fprintf(stderr, "%s: read error on %s\n", argv[0], argv[1]);
     exit(1);
   }
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
     perror(argv[2]);
     exit(1);
   }
-  if (fread(bufb, 1, 65536, bin) == 0) {
+  if (fseek(bin, 0x200, SEEK_SET) < 0 || fread(bufb, 1, 0xFE00, bin) == 0) {
     fprintf(stderr, "%s: read error on %s\n", argv[0], argv[2]);
     exit(1);
   }
