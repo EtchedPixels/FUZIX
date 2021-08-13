@@ -760,6 +760,14 @@ static void do_proc_include(void)
    return;
 }
 
+static void *xmalloc(size_t size)
+{
+    p = malloc(size);
+    if(ptr==0)
+        cfatal("Preprocessor out of memory");
+    return p;
+}
+
 static void do_proc_define(void)
 {
    int ch, ch1;
@@ -785,8 +793,7 @@ static void do_proc_define(void)
       for(ch=ch1=pgetc(); ch == ' ' || ch == '\t' ; ch=pgetc()) ;
 
       len = WORDSIZE; 
-      ptr = malloc(sizeof(struct define_item) + WORDSIZE);
-      if(ptr==0) cfatal("Preprocessor out of memory");
+      ptr = xmalloc(sizeof(struct define_item) + WORDSIZE);
       ptr->value[cc=0] = '\0';
 
       /* Add in arguments */
@@ -1244,7 +1251,7 @@ void gen_substrings(char *macname, char *data_str, int arg_count, int is_vararg)
    int commas_found = 0;
    int args_found = 0;
 
-   arg_list = malloc(sizeof(struct arg_store) * arg_count);
+   arg_list = xmalloc(sizeof(struct arg_store) * arg_count);
    memset(arg_list, 0, sizeof(struct arg_store) * arg_count);
 
    for(ac=0; *data_str && ac < arg_count; data_str++) {
@@ -1372,7 +1379,7 @@ static char *insert_substrings(char *data_str, struct arg_store *arg_list, int a
    }
 #endif
 
-   rv = malloc(4); *rv = '\0'; len = 4;
+   rv = xmalloc(4); *rv = '\0'; len = 4;
 
    while(*data_str) {
       p = curword;
