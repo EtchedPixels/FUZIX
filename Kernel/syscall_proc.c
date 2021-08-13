@@ -225,35 +225,37 @@ arg_t _times(void)
 brk (addr)                       Function 30
 char *addr;
 ********************************************/
+
+#ifndef CONFIG_PLATFORM_BRK
+
+/*
+ *	Implement the default brk() growth behaviour for a basic memory model
+ *	where you have code, data, bss and above the bss space until some point
+ *	(usually stack pointer minus a buffer)
+ */
+
+arg_t brk_extend(uaddr_t addr)
+{
+#ifdef PROGBASE
+    if (addr < PROGBASE)
+        return EINVAL;
+#endif
+    if (addr >= brk_limit()) {
+	kprintf("%d: out of memory by %d\n", udata.u_ptab->p_pid,
+	    addr - brk_limit());
+        return ENOMEM;
+    }
+    return 0;
+}
+#endif
+
 #define addr (uaddr_t)udata.u_argn
 
 arg_t _brk(void)
 {
-	/* Don't allow break to be set outside of the range the platform
-	   permits. For most platforms this is within 512 bytes of the
-	   stack pointer
-
-	   FIXME: if we get more complex mapping rule types then we may
-	   need to make this something like  if (brk_valid(addr)) so we
-	   can keep it portable */
-
-	if (addr >= brk_limit()) {
-		#if defined CONFIG_BRK_CALLS_REALLOC
-			/* Claim more memory for this process. */
-			if (pagemap_realloc(NULL, addr - PROGBASE))
-		#endif
-		{
-			kprintf("%d: out of memory by %d\n", udata.u_ptab->p_pid,
-				addr - brk_limit());
-			panic("memory");
-			udata.u_error = ENOMEM;
-			return -1;
-		}
-	}
-	if (addr < PROGBASE) {
-		udata.u_error = EINVAL;
+	/* Attempt to grow the BSS: this function can be customised by the architecture/platform */
+	if (udata.u_error = brk_extend(addr))
 		return -1;
-	}
 	/* If we have done a break that gives us more room we must zero
 	   the extra as we no longer guarantee it is clear already */
 	if (addr > udata.u_break)
@@ -277,6 +279,12 @@ arg_t _sbrk(void)
 	uaddr_t oldbrk;
 
 	udata.u_argn += (oldbrk = udata.u_break);
+
+	/* Check for wraps */
+	if ((incr > 0 && oldbrk > udata.u_argn) || (incr < 0 && oldbrk < udata.u_argn)) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
 	if (_brk())		/* brk (udata.u_argn) */
 		return (-1);
 
