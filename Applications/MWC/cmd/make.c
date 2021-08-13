@@ -469,7 +469,7 @@ char *path(const char *p1, const char *p2, int mode)
 	int l1 = strlen(p1);
 	if (pv)
 		free(pv);
-	pv = malloc(strlen(p1) + strlen(p2) + 2);
+	pv = mmalloc(strlen(p1) + strlen(p2) + 2);
 	strcpy(pv, p1);
 	pv[l1] = '/';
 	strcpy(pv + l1 + 1, p2);
@@ -682,7 +682,7 @@ DEP *adddep(char *name, char *action, DEP *next)
 			}
 			return(next);
 		}
-	v = (DEP *)malloc(sizeof (*v));	/*necessary?*/
+	v = (DEP *)mmalloc(sizeof (*v));	/*necessary?*/
 	v->symbol=s;
 	v->action=action;
 	v->next=NULL;
