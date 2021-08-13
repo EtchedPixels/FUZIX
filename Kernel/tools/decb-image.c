@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
       case PREAMBLE_4:
         base += c;
         state = BYTESTREAM;
-        if (base + size > 65535) {
-          fprintf(stderr, "Oversized image\n");
+        if (base + size > 65536) {
+          fprintf(stderr, "Oversized image (0x%x to 0x%x)\n", base, base + size - 1);
           exit(1);
         }
         break;
