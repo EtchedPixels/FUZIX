@@ -1,4 +1,4 @@
-CC = cc68 -X
+CC = cc68
 ASM = as68
 AR = ar
 LINKER = ld68
