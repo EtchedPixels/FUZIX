@@ -83,6 +83,10 @@ static char input[256];
 static struct dlist *additem(char *item, struct dlist *p)
 {
 	newobj = (struct dlist *) malloc(sizeof(struct dlist));
+	if (newobj == NULL) {
+		fprintf(stderr, "Out of memory.\n");
+		exit(1);
+	}
 	strlcpy(newobj->name, item, 64);
 	newobj->mode[0] = '\0';
 	newobj->next = p;
