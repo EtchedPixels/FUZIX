@@ -165,6 +165,8 @@ rebootit:
 	    jmp ,x		; and go
 
 init_early:
+	    ; Turn off RAMCR RAME bit just in case
+	    clr 0x14
             rts			; stack was copied so this is ok
 
 init_hardware:
