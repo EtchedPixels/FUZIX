@@ -37,10 +37,10 @@ void bindfile( char *filename, char *outfile, char *dataname, char *funcname,
   }
 
 
-  hfile = (char *)malloc(strlen(base)+3);
+  hfile = (char *)xmalloc(strlen(base)+3);
   strcpy( hfile, base );
   strcat( hfile, ".h" );
-  srcfile = (char *)malloc(strlen(base)+3);
+  srcfile = (char *)xmalloc(strlen(base)+3);
   strcpy( srcfile, base );
   strcat( srcfile, ".c" );
 

@@ -7,7 +7,7 @@ rpinfo *new_rpinfo()
 {
   rpinfo *r;
 
-  r = (rpinfo *)malloc( sizeof(rpinfo) );
+  r = (rpinfo *)xmalloc( sizeof(rpinfo) );
 
   r->currline = NULL;
   r->linehead = NULL;

@@ -10,7 +10,7 @@ condex *new_condex( char *str )
   int i = -1;
   condex *c;
 
-  c = (condex *)malloc( sizeof(condex) );
+  c = (condex *)xmalloc( sizeof(condex) );
   c->next = NULL;
 
   if( !strcmp(str, "") ) {
@@ -98,7 +98,7 @@ char *get_condex( condex *curr )
 {
   char *buffer;
 
-  buffer = (char *)malloc(1024);
+  buffer = (char *)xmalloc(1024);
   
   sprintf( buffer, "%s ", curr->lside );
   

@@ -5,11 +5,21 @@
 
 #include <stdlib.h>
 
+void *xmalloc(size_t size)
+{
+  void *p = malloc(size);
+  if (p == NULL) {
+    fprintf(stderr, "Out of memory.\n");
+    exit(1);
+  }
+  return p;
+}
+
 stkitem *new_stkitem( line *lne )
 {
   stkitem *si;
 
-  si = (stkitem *)malloc( sizeof(stkitem) );
+  si = (stkitem *)xmalloc( sizeof(stkitem) );
   si->item = lne;
   si->prev = NULL;
 
@@ -21,7 +31,7 @@ stack *new_stack( line *lne )
   stack *s;
   stkitem *si;
 
-  s = (stack *)malloc( sizeof(stack) );
+  s = (stack *)xmalloc( sizeof(stack) );
   si = new_stkitem( lne );
 
   s->head = si;

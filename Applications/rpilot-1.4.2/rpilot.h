@@ -61,4 +61,5 @@ void init();
 int readfile( char *filename );
 extern rpinfo *rpi;
 
+extern void *xmalloc(size_t);
 #endif

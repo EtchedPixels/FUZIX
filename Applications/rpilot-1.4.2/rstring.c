@@ -55,7 +55,7 @@ char *new_string( char *src )
 {
   char *str;
 
-  str = (char *)malloc( strlen(src)+1 );
+  str = (char *)xmalloc( strlen(src)+1 );
   strncpy( str, src, strlen(src) );
 
   // prevent junk from being tacked on the end

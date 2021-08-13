@@ -14,7 +14,7 @@
 
 line *new_line( char *str, char lastcmd, int linenum )
 {
-  line *l = (line *)malloc( sizeof(line) );
+  line *l = (line *)xmalloc( sizeof(line) );
   int colon; 
   int rparen, lparen;
   int i;

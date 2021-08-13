@@ -170,7 +170,7 @@ void init()
 
   linehead = new_line( "", ' ', -1 );
   lblhead = new_label( "", NULL, -1 );
-  rpi = (rpinfo *)malloc( sizeof(rpinfo) );
+  rpi = (rpinfo *)xmalloc( sizeof(rpinfo) );
 
   rpi->linehead = (struct line *)linehead;
   rpi->lblhead = (struct label *)lblhead;
