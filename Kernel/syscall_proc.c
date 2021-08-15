@@ -236,7 +236,7 @@ char *addr;
 
 arg_t brk_extend(uaddr_t addr)
 {
-#ifdef PROGBASE
+#if (PROGBASE > 0)
     if (addr < PROGBASE)
         return EINVAL;
 #endif
@@ -277,7 +277,7 @@ uint16_t incr;
 arg_t _sbrk(void)
 {
 	uaddr_t oldbrk;
-	size_t inc = incr;
+	ssize_t inc = incr;
 
 	udata.u_argn += (oldbrk = udata.u_break);
 
