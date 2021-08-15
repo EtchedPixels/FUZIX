@@ -22,6 +22,7 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 	uint8_t *up = (uint8_t *)userspace_argv;
 	uint8_t c;
 	uint8_t *bufp;
+	uint8_t *ep = argbuf->a_buf + ARGBUF_SIZE - 12;
 
 	argbuf->a_argc = 0;	/* Store argc in argbuf */
 	bufp = argbuf->a_buf;
@@ -31,7 +32,7 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 		++(argbuf->a_argc);	/* Store argc in argbuf. */
 		do {
 			*bufp++ = c = ugetc(ptr++);
-			if (bufp > argbuf->a_buf + ARGBUF_SIZE - 12) {
+			if (bufp > ep) {
 				udata.u_error = E2BIG;
 				return true;	// failed
 			}
@@ -47,7 +48,7 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
 {
 	char *argv;		/* Address of users argv[], just below ptr */
-	int argc, arglen;
+	unsigned int argc, arglen;
 	char *argbase;
 	uint8_t *sptr;
 
@@ -57,7 +58,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 	ptr -= (arglen = (int)ALIGNUP(argbuf->a_arglen));
 
 	if (arglen) {
-		uput(sptr, ptr, arglen);
+		_uput(sptr, ptr, arglen);
 	}
 
 	/* Set argv to point below the argument strings */
