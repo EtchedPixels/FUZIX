@@ -139,9 +139,20 @@ waitrx:
         ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
         ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
         ld bc, #512                             ; sector size
+#ifdef SWAPDEV
+        cp #2
+        jr nz, not_swapin
+        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        call map_for_swap
+        jr rxnextbyte
+not_swapin:
+#endif
         or a
-        push af                                 ; stash is_user flag now in Z bit (we cannot load it again after we remap)
-        call nz, map_process_always             ; map user process
+        jr z, rd_kernel
+        call map_process_always             ; map user process
+        jr rxnextbyte
+rd_kernel:
+        call map_buffers
 rxnextbyte:
         dec bc                  ; length--
         ld a, b
@@ -187,9 +198,20 @@ bool sd_spi_transmit_sector(void) __naked
         ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
         ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
         ld hl, #512                             ; sector size
+#ifdef SWAPDEV
+        cp #2
+        jr nz, not_swapout
+        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        call map_for_swap
+        jr gotransmit
+not_swapout:
+#endif
         or a
-        push af                                 ; stash is_user flag now in Z bit (we cannot load it again after we remap)
-        call nz, map_process_always             ; map user process
+        jr z, wr_kernel
+        call map_process_always             ; map user process
+        jr gotransmit
+wr_kernel:
+        call map_buffers
 gotransmit:
         in0 a, (_CSIO_CNTR)
         and #0xDF               ; mask off RE bit
@@ -225,8 +247,6 @@ waittx:
         jr nz, txnextbyte       ; length != 0, go again
 transferdone:                   ; note this code is shared with sd_spi_receive_block
         ld l, #1                ; return true
-        pop af                  ; recover is_user bit in Z flag
-        ret z                   ; return if kernel still mapped
-        jp map_kernel           ; else map kernel and return
+        jp map_kernel_restore   ; map kernel and return
     __endasm;
 }

@@ -7,6 +7,7 @@
 
 uint16_t ramtop = PROGTOP;
 extern unsigned char irqvector;
+uint16_t swap_dev = 0xFFFF;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS; /* minimal for boot -- expanded after we're done with _DISCARD */
 
