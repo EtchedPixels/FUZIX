@@ -62,7 +62,6 @@ bool sd_spi_receive_sector(void) __naked
   __asm
     ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
-    push af
 #ifdef SWAPDEV
     cp #2
     jr nz, not_swapin
@@ -72,13 +71,14 @@ bool sd_spi_receive_sector(void) __naked
 not_swapin:
 #endif
     or a
-    call nz,map_process_always
+    jr nz, from_user
+    call map_buffers
+    jr doread
+to_user:
+    call map_process_always
 doread:
     call _sd_spi_rx_sector
-    pop af
-    or a
-    jp nz,map_kernel
-    ret
+    jp map_kernel
   __endasm;
 }
 
@@ -87,7 +87,6 @@ bool sd_spi_transmit_sector(void) __naked
   __asm
     ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
-    push af
 #ifdef SWAPDEV
     cp #2
     jr nz, not_swapout
@@ -97,13 +96,14 @@ bool sd_spi_transmit_sector(void) __naked
 not_swapout:
 #endif
     or a
-    call nz,map_process_always
+    jr nz, from_user
+    call map_buffers
+    jr dowrite
+from_user:
+    call map_process_always
 dowrite:
     call _sd_spi_tx_sector
-    pop af
-    or a
-    jp nz,map_kernel
-    ret
+    jp map_kernel_restore
   __endasm;
 }
 
