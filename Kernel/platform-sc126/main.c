@@ -66,7 +66,9 @@ void platform_interrupt(void)
 	switch (irqvector) {
 	case Z180_INT_TIMER0:
 		z180_timer_interrupt();
+#ifdef CONFIG_NET_W5X00		
 		w5x00_poll();
+#endif		
 		return;
 	case Z180_INT_ASCI0:
 		tty_pollirq_asci0();
