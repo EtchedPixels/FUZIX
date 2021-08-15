@@ -193,7 +193,7 @@ unix_syscall_entry:
         ld sp, #kstack_top
 
         ; map in kernel keeping common
-	call map_kernel
+	call map_kernel_di
 
         ; re-enable interrupts
         ei
@@ -350,7 +350,7 @@ nmimsg: .ascii "[NMI]"
         .db 13,10,0
 
 nmi_handler:
-	call map_kernel
+	call map_kernel_di
         ld hl, #nmimsg
         call outstring
         jp _platform_monitor
@@ -540,7 +540,7 @@ preemption:
 
 	;
 intret2:di
-	call map_kernel
+	call map_kernel_di
 	;
 	; Semantically we are doing a null syscall for pre-empt. We need
 	; to record ourselves as in a syscall so we can't be recursively
