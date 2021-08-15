@@ -12,10 +12,10 @@
 #define SSI_CR0		0x0000
 #define		CR0_SPH	0x80
 #define		CR0_SPO	0x40
-#define		CR0_FRF	0x18
+#define		CR0_FRF	0x30
 #define		CR0_DSS 0x0F
 #define		CR0_SCR 0xFF00
-#define		CR0_SCR_SHIFT	16
+#define		CR0_SCR_SHIFT 8U
 
 #define SSI_CR1		0x0004
 #define		CR1_SSE	0x02
