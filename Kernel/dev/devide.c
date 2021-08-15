@@ -170,7 +170,7 @@ rd_kernel:
 doread:
             inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
-            jp map_kernel                           ; else map kernel then return
+            jp map_kernel_restore                   ; else map kernel then return
     __endasm;
 }
 
@@ -198,7 +198,7 @@ wr_kernel:
 dowrite:
             otir                                    ; transfer first 256 bytes
             otir                                    ; transfer second 256 bytes
-            jp map_kernel                           ; else map kernel then return
+            jp map_kernel_restore                   ; else map kernel then return
     __endasm;
 }
 #endif
