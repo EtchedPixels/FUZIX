@@ -16,7 +16,6 @@
         .globl _need_resched
 	.globl _int_disabled
 	.globl _udata
-	.globl _swapout
 
         ; imported symbols
         .globl _ramsize
@@ -31,7 +30,6 @@
         .globl _switchin
         .globl _platform_switchout
         .globl _dofork
-	.globl _do_swapout
 	.globl map_buffers
         .globl map_kernel
 	.globl map_kernel_restore
@@ -52,6 +50,10 @@
         .globl outstring
         .globl outstringhex
 
+.ifne CONFIG_SWAP
+	.globl _do_swapout
+	.globl _swapout
+.endif
         .include "kernel.def"
         .include "../cpu-z180/z180.def"
         .include "../kernel-z80.def"
@@ -689,6 +691,7 @@ z180_irq_unused:
         ld a, #0xFF
         jr z180_irqgo
 
+.ifne CONFIG_SWAP
 ;
 ;	Swapping requires the swap out is done on a different stack so we
 ;	can flip the common of the victim for the write out
@@ -721,6 +724,7 @@ _swapout:
 	ld sp,hl		; Switch stack
 	ex de,hl		; Return value back into HL
 	jp map_kernel		; Ensure the lower mapping is fixed up if needed
+.endif
 ;
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -920,6 +924,7 @@ map_restore: ; restore the saved process/kernel mapping
 map_store:  ; storage for map_save/map_restore
         .db 0
 
+.ifne CONFIG_SWAP
 	.area _COMMONMEM
 
 	; Combining these is tricky so for the sake of 128 bytes or so we
@@ -928,3 +933,4 @@ map_store:  ; storage for map_save/map_restore
 swapstack:
 	.ds 128
 swapinstack:
+.endif
