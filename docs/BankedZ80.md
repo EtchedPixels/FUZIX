@@ -93,8 +93,8 @@ NBUFS: should match NBUFS in the kernel.
 
 ### Kernel Map
 
-The initial segment the kernel runs from plus common memory is laid out in
-the following order:
+The initial segment the kernel runs from plus common memory is typically laid
+out in the following order:
 
 Vectors: Low 0x100 bytes. Except for the needed RST instructions the rest of
 this space can be used and some platforms even load the kernel lower. For
@@ -124,6 +124,9 @@ udata and stack. This holds data specific to the current process that can be
 swapped out with that process, and which is only needed when that process is
 running.
 
+As the platform controls the loading and the use of "binman" to pack
+binaries it can opt for a different layout.
+
 ### User Map
 
 The user space memory map is in the following order
@@ -152,6 +155,10 @@ Save Area: The top 768 bytes of the per process memory map hold a saved copy
 of the udata when that process is not executing.
 
 Above this is the common area of the kernel map.
+
+Again this may vary by platform. Z80 user executables are relocatable and
+some systems will not have writeable vectors, and may load the applications
+at higher addresses.
 
 ### Dealing With Awkward Common Sizes
 
@@ -228,6 +235,30 @@ invokes_fuzix_main which enters the C environment and never returns.
 
 platform-z80pack provides an example of a fairly minimal crt0.s
 
+### General Assumptions
+
+Stacks live in common space. All the common helper routines discussed below
+will be called with a valid stack in common space. When user memory of any
+kind is mapped in only code in the common space may be executed. The same is
+true for mappings for swap.
+
+The functions mapping user space and their map_kernel_restore pairs do not
+need to stack layers of state. A map_process/map_kernel_restore pair will
+execute to completion before any further user mapping is made. Interrupts
+will occur during this period and map_save_kernel/map_restore pairs will
+need to do the right thing if they interrupt a user mapping.
+
+The map_save_kernel function is paired with map_restore, and interrupts are
+not-reentrant. It is however not guaranteed that a map_save_kernel will be
+paired with a map_restore. In some cases a new map will be set on the exit
+path instead.
+
+The map_buffers function maps the buffers if they are not in the same space
+as the kernel itself. On most systems this is a no-op. However it is paired
+with map_kernel_restore so when you have a system with buffers in the kernel
+mapping and kernel banking you must ensure map_buffers even if it is a no-op
+causes the matching map_kernel_restore to be a no-op too.
+
 ### The following should be placed in common memory (.area _COMMONMEM)
 
 _platform_monitor: called when something bad happens. This can either spin
@@ -252,6 +283,14 @@ normally just be a ret instruction.
 map_kernel: set the bank mapping up so that the kernel is mapped into
 memory. This routine should save and restore any registers it uses.
 
+map_kernel_di: the same function when called from a point where interrupts
+are known to be off. Usually this is the same as map_kernel but on a few
+platforms this can provide a useful optimization.
+
+map_kernel_restore: set the bank mapping to the kernel mapping as it was
+before the last call to a process or swap mapping. On a system with a simple
+single kernel mapping this is the same as map_kernel.
+
 map_process: map the process whose bank number is in (HL), or if NULL map
 the kernel. This function may corrupt HL and AF but no other registers.
 
@@ -271,6 +310,16 @@ registers. On most platforms it can be implemented as
 	ret
 
 but in some cases there may be more efficient methods to do this.
+
+map_for_swap: on systems supporting swap this will map the page in the A
+register into memory such that it can be written to disk. The macro swap_map in
+config.h converts an address into the relevant swap mapping. For
+simple banked systems this is generally the same function as map_process_a,
+but in multi-bank setups it may be more complicated
+
+map_buffers: map the disk buffers if they are not part of the standard
+kernel mapping. Usually therefore this is a no-op but it does pair with
+map_kernel_restore even so.
 
 map_save_kernel: saves a copy of the current mapping and map the kernel.
 If any additional banking is being done within the kernel (such as video or ROM
