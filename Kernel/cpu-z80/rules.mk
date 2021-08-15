@@ -1,5 +1,5 @@
 export CROSS_AS=sdasz80
-export CROSS_LD=tools/bankld/sdldz80
+export CROSS_LD=$(FUZIX_ROOT)/Kernel/tools/bankld/sdldz80
 export CROSS_CC=sdcc
 #export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 1000000 --opt-code-size --stack-auto --constseg CONST
 #export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 200000 --opt-code-size --stack-auto --constseg CONST
