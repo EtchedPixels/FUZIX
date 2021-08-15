@@ -32,7 +32,7 @@ syscall_net.rel
 network.rel
 tty.rel
 mm.rel
-bankfixed.rel
+banksplit.rel
 swap.rel
 devsys.rel
 platform-sc126/discard.rel
