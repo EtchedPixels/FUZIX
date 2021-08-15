@@ -19,6 +19,9 @@ export CROSS_CC_SYS4=--code-name SYS4
 export CROSS_CC_SYS5=--code-name SYS5
 export CROSS_CC_VIDEO=--code-name SEG3
 export CROSS_CC_SEGDISC=--code-name DISCARD --rodata-name DISCARDDATA
+export CROSS_CC_FONT=--code-name SEG3
+export CROSS_CC_NETWORK=--code-name SEG4
+
 export ASMEXT = .s
 export BINEXT = .o
 export BITS=16
