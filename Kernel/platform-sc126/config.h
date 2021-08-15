@@ -67,9 +67,9 @@ extern uint16_t swap_dev;
 #define platform_copyright()		// for now
 
 /* WizNET based TCP/IP */
-#define CONFIG_NET
-#define CONFIG_NET_WIZNET
-#define CONFIG_NET_W5200
+#undef CONFIG_NET
+#undef CONFIG_NET_WIZNET
+#undef CONFIG_NET_W5200
 
 /* I2C device */
 #define CONFIG_DEV_I2C
