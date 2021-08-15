@@ -28,8 +28,8 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
+	tools/visualize < fuzix.map
 	tools/bihx fuzix.ihx
 	tools/binprep
 	+make -C platform-$(TARGET) image
-	tools/visualize < fuzix.map
 
