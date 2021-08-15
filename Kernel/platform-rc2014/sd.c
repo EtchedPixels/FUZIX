@@ -78,7 +78,7 @@ to_user:
     call map_process_always
 doread:
     call _sd_spi_rx_sector
-    jp map_kernel
+    jp map_kernel_restore
   __endasm;
 }
 
