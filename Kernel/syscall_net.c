@@ -120,6 +120,9 @@ static int run_sockfunc(sockfunc_t func, uint8_t n, uint8_t flags)
 			sock_wake[n] = 0;
 		irqrestore(irq);
 	}
+	/* We made progress but there may be more progress left to make, so poke anyone else */
+	sock_wake[n] = 1;
+	wakeup(sock_wake + n);
 	if (udata.u_net.sig) {
 		ssig(udata.u_ptab, udata.u_net.sig);
 		udata.u_net.sig = 0;
