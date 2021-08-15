@@ -23,7 +23,7 @@
         .globl __uzero
 
 	.globl  map_process_always
-	.globl  map_kernel
+	.globl  map_kernel_restore
 ;
 ;	We need these in common as they bank switch
 ;
@@ -61,7 +61,7 @@ __uputc:
 	call map_process_always
 	ld (hl), e
 uputc_out:
-	jp map_kernel			; map the kernel back below common
+	jp map_kernel_restore			; map the kernel back below common
 
 __uputw:
 	pop bc	;	return
@@ -74,13 +74,13 @@ __uputw:
 	ld (hl), e
 	inc hl
 	ld (hl), d
-	jp map_kernel
+	jp map_kernel_restore
 
 __ugetc:
 	call map_process_always
         ld l, (hl)
 	ld h, #0
-	jp map_kernel
+	jp map_kernel_restore
 
 __ugetw:
 	call map_process_always
@@ -88,7 +88,7 @@ __ugetw:
 	inc hl
 	ld h, (hl)
 	ld l, a
-	jp map_kernel
+	jp map_kernel_restore
 
 __uput:
 	push ix
@@ -101,7 +101,7 @@ uput_l:	ld a, (hl)
 	inc hl
 	call map_process_always
 	ld (de), a
-	call map_kernel
+	call map_kernel_restore
 	inc de
 	djnz uput_l
 	dec c
@@ -124,7 +124,7 @@ uget_l:
 	call map_process_always
 	ld a, (hl)
 	inc hl
-	call map_kernel
+	call map_kernel_restore
 	ld (de), a
 	inc de
 	djnz uget_l
