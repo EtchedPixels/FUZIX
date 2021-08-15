@@ -17,6 +17,7 @@ export CROSS_CC_SYS2=--codeseg CODE2
 export CROSS_CC_SYS3=--codeseg CODE2
 export CROSS_CC_SYS4=--codeseg CODE2
 export CROSS_CC_SYS5=--codeseg CODE2
+export CROSS_CC_NETWORK=--codeseg NETWORK --constseg NETWORK --dataseg NETDATA
 export ASOPTS=-plosff
 export ASMEXT = .s
 export BINEXT = .rel
