@@ -10,6 +10,7 @@ export CROSS_CC_SEG4=
 export CROSS_CC_SEGDISC=-Ras=$(ROOT_DIR)/tools/discard85
 export CROSS_CC_FONT=
 export CROSS_CC_VIDEO=
+export CROSS_CC_NETWORK=
 export CROSS_CC_SYS1=
 export CROSS_CC_SYS2=
 export CROSS_CC_SYS3=
