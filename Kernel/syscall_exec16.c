@@ -51,7 +51,7 @@ static int header_ok(struct exec *pp)
 arg_t _execve(void)
 {
 	/* We aren't re-entrant where this matters */
-	struct exec hdr;
+	staticfast struct exec hdr;
 	staticfast inoptr ino;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
