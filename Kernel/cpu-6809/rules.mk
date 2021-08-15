@@ -11,11 +11,13 @@ export CROSS_CC_SEG2=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SEG3=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SEGDISC=-mcode-section=.discard -mdata-section=.discard -mfar-code-page=3
 export CROSS_CC_VIDEO=-mcode-section=.video -mdata-section=.videodata -mfar-code-page=4
+export CROSS_CC_FONT=-mcode-section=.video -mdata-section=.videodata -mfar-code-page=4
 export CROSS_CC_SYS1=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SYS2=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SYS3=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SYS4=-mcode-section=.text2 -mfar-code-page=2
 export CROSS_CC_SYS5=-mcode-section=.text2 -mfar-code-page=2
+export CROSS_CC_NETWORK=-mcode-section=.text2 -mfar-code-page=2
 export ASOPTS=
 export ASMEXT = .s
 export BINEXT = .o
