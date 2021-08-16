@@ -11,6 +11,7 @@
 	    .globl platform_interrupt_all
             .globl _program_vectors
 	    .globl map_kernel
+	    .globl map_kernel_restore
 	    .globl map_process
 	    .globl _map_kernel
 	    .globl map_process_always
@@ -192,6 +193,7 @@ map_process_di:
 ;	so our cached copy is correct.
 ;
 _map_kernel:
+map_kernel_restore:
 map_kernel_di:
 map_kernel:
 	    push hl
