@@ -145,7 +145,7 @@ int platform_input_read(uint8_t *slot)
         return 0;
     /* Calculate delta relative to counters - they are not zeroed on read
        so we do deltas */
-    *slot++ = MOUSE_REL_WHEEL|flipbits(m);
+    *slot++ = MOUSE_REL|flipbits(m);
     *slot++ = x - mousex;
     *slot++ = y - mousey;
     /* K Mouse Turbo */
