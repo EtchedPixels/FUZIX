@@ -9,6 +9,7 @@
             .globl init_hardware
 	    .globl map_kernel
 	    .globl map_kernel_di
+	    .globl map_kernel_restore
 	    .globl map_process
 	    .globl map_process_di
 	    .globl map_process_a
@@ -130,6 +131,7 @@ bank94_absent:
 ;
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	    push af
 	    ld a, (_opreg)
 	    and #0x8C		; keep video bits
