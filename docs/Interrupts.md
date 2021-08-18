@@ -10,14 +10,14 @@ this for things like serial or audio drivers.
 
 ## How Fuzix Sees The World
 
-As far as Fuzix is concerned there is a single interrupt entry point into C
-code, and platform low level code to switch to the Kernel interrupt stack
-and execute both system and platform interrupt code including timer events.
-The code decides what needs to be done by inspecting interrupt controller
-state or values set by the platform code, and invokes any needed functions.
-It returns to the assembly code in lowlevel-[cpu].s which may then also
-perform signal delivery or task switches, returning directly to the relevant
-task.
+As far as most Fuzix platforms are concerned there is a single interrupt entry
+point into C code, and platform low level code to switch to the Kernel
+interrupt stack and execute both system and platform interrupt code including
+timer events. The code decides what needs to be done by inspecting interrupt
+controller state or values set by the platform code, and invokes any needed
+functions. It returns to the assembly code in lowlevel-[cpu].s which may then
+also perform signal delivery or task switches, returning directly to the
+relevant task.
 
 This interrupt handler is prevented from executing by the di() function, and
 re-enabled by the corresponding irqrestore or ei() functions.
