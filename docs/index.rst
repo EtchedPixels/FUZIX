@@ -19,6 +19,7 @@ Welcome to Fuzix's documentation!
    MemoryManagement
    ExternalBuffers
    Process
+   Interrupts
    Tickless
    DeviceDrivers
    TTY
