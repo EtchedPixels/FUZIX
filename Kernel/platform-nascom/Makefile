@@ -1,5 +1,5 @@
 
-CSRCS = devnascom.c devgm8x9.c devgm833.c
+CSRCS = devnascom.c devgm8x9.c devgm833.c mm58174.c
 CSRCS += devices.c main.c devinput.c
 DISCARD_CSRCS = discard.c
 

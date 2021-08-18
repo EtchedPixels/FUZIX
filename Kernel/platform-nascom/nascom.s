@@ -27,6 +27,8 @@
             .globl outcharhex
 	    .globl null_handler
 	    .globl map_kernel
+	    .globl map_kernel_di
+	    .globl map_kernel_restore
 	    .globl map_process
 	    .globl map_process_a
 	    .globl map_process_always
