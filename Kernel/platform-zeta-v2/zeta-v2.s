@@ -7,6 +7,7 @@
         .globl init_hardware
 	.globl _program_vectors
 	.globl map_kernel
+	.globl map_kernel_restore
 	.globl map_process
 	.globl map_process_always
 	.globl map_buffers
@@ -265,6 +266,7 @@ map_process_di:
 map_buffers:
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	push hl
 	ld hl,#_kernel_pages
         jr map_process_2_pophl_ret
