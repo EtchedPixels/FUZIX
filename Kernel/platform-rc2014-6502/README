@@ -38,6 +38,16 @@ User space:
 	FE00-FEFF		I/O window
 	FF00-FFFF		Vectors (mostly free)
 
+The memory banks are allocated as follows
+
+	0			Bootstrap ROM
+	1-31			ROM (not used - may one day hold ehbasic
+				and other OS stuff)
+	32			RAM mapped initially at 0-16K
+	33			RAM mapped initially at 16-32K
+	34			RAM mapped by the bootloader at 32-48K
+	35			RAM mapped by the bootloader at 48-64K
+	36-63			Handed out in fours for process maps
 
 The 6502 port has some interesting gotchas to be aware of and things that
 need addressing
@@ -55,7 +65,8 @@ need addressing
 
 - There is a direct relationship between kernel and user on some ZP usage. In
   particular the user C stack zero page locations are used by the kernel to
-  access arguments.
+  access arguments. The relocator ensures the kernel and user share the C
+  stack ZP locations so the applications are portable.
 
 - Signals are tricky. The C stack is maintained via ZP and is 16bits. As there
   is no way to know if the stack was mid update an interrupt cannot tell if
@@ -78,7 +89,6 @@ need addressing
 
 TODO:
 Swap support
-Move entry point etc
 Look at other RC2014 device support
 
 Real System:
