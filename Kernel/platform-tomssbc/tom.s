@@ -8,6 +8,7 @@
         .globl init_hardware
         .globl interrupt_handler
         .globl _program_vectors
+	.globl syscall_platform
 	.globl _kernel_flag
 	.globl map_page_low
 	.globl map_kernel_low
@@ -420,6 +421,7 @@ irqsigret:
 	    inc sp
 	    ret
 
+syscall_platform:
 syscall_high:
 	    push ix
 	    ld ix,#0
