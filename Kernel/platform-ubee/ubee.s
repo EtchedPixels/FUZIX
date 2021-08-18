@@ -12,6 +12,7 @@
 	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_kernel_di
+	    .globl map_kernel_restore
 	    .globl map_process
 	    .globl map_process_di
 	    .globl map_process_a
@@ -370,6 +371,7 @@ _program_vectors:
 map_buffers:
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	    push af
 	    ld a, #0x0C		; bank 0, 1 no ROM or video
 	    ld (mapreg), a
