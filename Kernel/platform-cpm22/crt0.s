@@ -26,6 +26,7 @@
         .area _GSINIT
         .area _GSFINAL
         .area _COMMONMEM
+	.area _COMMONDATA
         .area _INITIALIZER
 
         ; imported symbols
