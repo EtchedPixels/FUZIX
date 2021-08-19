@@ -78,12 +78,12 @@ void tty_pollirq(void)
 	if (cpm_busy)
 		return;
 
-	while (cpm_const()) {
+	while (cpm_const() && !fullq(&ttyinq[1])) {
 		c = cpm_conin();
 		tty_inproc(1, c);
 	}
 	if (info->features & FEATURE_AUX) {
-		while (sysmod_auxist()) {
+		while (sysmod_auxist() && !fullq(&ttyinq[2])) {
 			c = cpm_reader();
 			tty_inproc(2, c);
 		}

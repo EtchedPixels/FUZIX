@@ -260,7 +260,7 @@ sysmod_rtc_secs:
 		rra
 		rra
 		rra
-		and 15
+		and #15
 		add a			; high x 2
 		ld h,a
 		add a			; high x 4

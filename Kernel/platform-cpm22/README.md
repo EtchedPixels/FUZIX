@@ -147,6 +147,8 @@ Feature flags allocated
 		bit 1:  a timer is present
 		bit 2:	disable interrupts during CP/M READ and WRITE calls
 		bit 3:	disable interrupts during CP/M CONOUT
+		bit 4:	direct floppy disk I/O via a bounce buffer
+		bit 5:	direct hard disk I/O via a bounce buffer
 
 Patching In The SysMod
 
@@ -202,6 +204,16 @@ re-entered except for sysmod_set_map which must always do the right thing.
 
 No provision is made for this as the sysmod_init function is perfectly able
 to patch the BIOS jump tables if desired.
+
+## DMA
+
+Most CP/M systems do not use DMA. On a system which uses DMA the use of the
+CP/M BIOS while bank switched may not place the data in the right location.
+On such systems for the affected devices it is necessary to wrap the BIOS
+READ and WRITE methods to use a bounce buffer in high memory. Feature bits
+can be set to bounce floppy or hard disk I/O through a common buffer - but
+as always at a speed cost. In some cases it may be possible to load the
+DMA bank registers in sysmod_set_map instead.
 
 ## Serial Interrupts
 

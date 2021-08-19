@@ -101,6 +101,7 @@ static int fd_transfer(bool is_read, uint8_t type, uint8_t rawflag)
     uint16_t ct = 0;
     uint8_t err;
     uint8_t hint;
+    uint8_t bounce = 0;
     irqflags_t irq;
 
     if(rawflag == 1) {
@@ -118,6 +119,11 @@ static int fd_transfer(bool is_read, uint8_t type, uint8_t rawflag)
         udata.u_block <<= 2;
         cpm_map = 0;
     }
+
+    if (type == 'f' && info->features & FEATURE_DMAFD)
+        bounce = 1;
+    if (type == 'h' && info->features & FEATURE_DMAHD)
+        bounce = 1;
 
     cpm_busy = 1;
 
@@ -139,17 +145,25 @@ static int fd_transfer(bool is_read, uint8_t type, uint8_t rawflag)
         return -1;
     }
 
+    /* Use the scratch area the BIOS itself provides to CP/M when
+       bouncing buffers */
+    if (bounce)
+        cpm_setdma(cpm_dph->buffer);
+
     ct = 0;
     while (ct < udata.u_nblock) {
         cpm_geom();
 
-        cpm_setdma(udata.u_dptr);
+        if (bounce == 0)
+            cpm_setdma(udata.u_dptr);
 
         if (info->features & FEATURE_IODI)
             irq = di();
-        if (is_read)
-            err = cpm_diskread();            
-        else {
+        if (is_read) {
+            err = cpm_diskread();
+            if (bounce == 1)
+               uput(cpm_dph->buffer, udata.u_dptr, 128);
+        } else {
             /* For each 512 byte sector we use the pattern 2, 0, 0, 1
                write without pre-read, write defer, write defer, write */
             if ((udata.u_block & 3) == 0)
@@ -158,6 +172,8 @@ static int fd_transfer(bool is_read, uint8_t type, uint8_t rawflag)
                 hint = 0;	
             else
                 hint = 1;
+            if (bounce == 1)
+                uget(udata.u_dptr, cpm_dph->buffer, 128);
             err = cpm_diskwrite(hint);
         }
         if (info->features & FEATURE_IODI)

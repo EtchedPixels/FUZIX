@@ -12,6 +12,8 @@ struct sysinfo {
 #define FEATURE_TICK	2	/* Timer tick */
 #define FEATURE_IODI	4	/* Disable interrupts in READ/WRITE */
 #define FEATURE_CONDI	8	/* Disable interrupts in CONOUT */
+#define FEATURE_DMAFD	16	/* Use common bounce buffer for floppy I/O */
+#define FEATURE_DMAHD	32	/* Use common bounce buffer for hard disk I/O */
         uint8_t tickdivider;	/* Ticks per 1/10th */
         uint8_t swap;		/* CP/M drive 0-15 to use for swap, 0xFF for none */
         uint16_t common;	/* Start of common space */

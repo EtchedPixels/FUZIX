@@ -36,7 +36,6 @@
 ;	Call the bios function in the byte following, return to the layer
 ;	above.
 ;
-
 ; These calls also copy A into L on return but it doesn't matter
 
 	.area _COMMONMEM
