@@ -48,7 +48,7 @@ void init_hardware_c(void)
 	cpm_banks = info->nbanks;
 	procmem = info->nbanks * (info->common >> 10);
 	ramsize = procmem + 64;
-	kprintf("common at %x, banks %d\n", info->common, info->nbanks);
+	kprintf("Common at %x, banks %d\n", info->common, info->nbanks);
 }
 		
 /* Nothing to do for the map of init */
@@ -69,7 +69,6 @@ void platform_idle(void)
 	irq = di();
 	tty_pollirq();
 	irqrestore(irq);
-	kputs(".");
 }
 
 uint8_t platform_rtc_secs(void)
