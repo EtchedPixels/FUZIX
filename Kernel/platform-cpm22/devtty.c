@@ -79,21 +79,16 @@ void tty_pollirq(void)
 		kputs("B");
 		return;
 	}
-	kputs("P");
 	while (cpm_const()) {
-		kputs("R");
 		c = cpm_conin();
 		tty_inproc(1, c);
 	}
-	kputs("q");
 	if (info->features & FEATURE_AUX) {
-		kputs("A");
 		while (sysmod_auxist()) {
 			c = cpm_reader();
 			tty_inproc(2, c);
 		}
 	}
-	kputs("p");
 }
 
 /* Not much we can do */
@@ -125,12 +120,10 @@ static uint8_t tcount;
 
 void platform_interrupt(void)
 {
-	kputs("i");
 	tty_pollirq();
 	tcount++;
 	if (tcount == info->tickdivider) {
 		tcount = 0;
-		kputs("I");
 		timer_interrupt();
 	}
 }
