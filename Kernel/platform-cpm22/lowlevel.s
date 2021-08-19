@@ -54,6 +54,7 @@ _bufpool:
 		.area _CODE
 
 init_early:
+		im 1
 		ld a,#0x08
 		out (20),a
 		ret
@@ -116,6 +117,7 @@ map_kernel_restore:
 		xor a
 		call map_process_a
 		pop af
+platform_interrupt_all:
 		ret
 
 map_save_kernel:
@@ -177,14 +179,6 @@ map:
 saved_map:
 		.byte 0
 
-
-platform_interrupt_all:
-		push af
-		ld a,#'@'
-		out (1),a
-		pop af
-		ret
-
 ;
 ;	Functions and data that will be provided by the platform
 ;	module in the end
@@ -234,8 +228,6 @@ sysmod_irq_handler:
 		ld a,#0xC3
 		ld (0x38),a
 		ld (0x39),hl
-		ld a,#'!'
-		out (1),a
 sysmod_idle:
 		ret
 sysmod_nmi_handler:
@@ -244,10 +236,6 @@ sysmod_nmi_handler:
 		ld (0x67),hl
 		ret
 sysmod_set_map:
-		push af
-		add #48
-		out (1),a
-		pop af
 		out (21),a		; set the page to A, 0 = kernel
 		ret			; ie default CP/M TPA
 sysmod_info:
