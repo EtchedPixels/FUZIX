@@ -42,6 +42,7 @@
 	.area _COMMONMEM
 
 bioscall_bchl:
+	ld b,h
 bioscall_cl:
 	ld c,l
 bioscall_a:
@@ -109,11 +110,11 @@ _cpm_seldsk:
 	call bioscall_hl
 	.byte 27	; call 9	DPH in HL
 _cpm_sectran:		; can't be fastcall
-	pop hl
-	pop de
-	pop bc
+	pop hl		; return address
+	pop bc		; sector
+	pop de		; table
+	push de		; put them back
 	push bc
-	push de
 	push hl
 	call bioscall_hl
 	.byte 48

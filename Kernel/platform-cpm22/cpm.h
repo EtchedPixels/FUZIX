@@ -33,7 +33,9 @@ extern void cpm_list(uint8_t c) __z88dk_fastcall;
 extern void cpm_punch(uint8_t c) __z88dk_fastcall;
 extern uint8_t cpm_reader(void);
 extern void cpm_home(void);
-extern struct cpm_dph *cpm_seldsk(uint16_t disk, uint16_t opt);
+extern struct cpm_dph *cpm_seldsk(uint16_t disk) __z88dk_fastcall;
+#define SELDSK_WARM	0xFF00
+
 extern void cpm_settrk(uint16_t track) __z88dk_fastcall;
 extern void cpm_setsec(uint16_t sector) __z88dk_fastcall;
 extern void cpm_setdma(uint8_t *dma) __z88dk_fastcall;

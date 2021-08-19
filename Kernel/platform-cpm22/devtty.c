@@ -75,10 +75,9 @@ void tty_pollirq(void)
 {
 	uint8_t c;
 	/* CP/M is not re-entrant by guarantee */
-	if (cpm_busy) {
-		kputs("B");
+	if (cpm_busy)
 		return;
-	}
+
 	while (cpm_const()) {
 		c = cpm_conin();
 		tty_inproc(1, c);

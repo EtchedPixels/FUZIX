@@ -31,6 +31,12 @@ is no ability to make better use of things like 4 x 16K banking. Performance is
 also limited by the lack of serial interrupts and the performance overhead of
 the CP/M disk interface.
 
+A system with at least three banks is required. One needs to be the full
+memory space below common and enough above it to reach to the end of the
+common area and BIOS. The other banks need to be at least 32K. If the memory
+mapping is flexible it is possible to run on a 128K system by using the
+extra memory as if it were two 32K banks.
+
 ## Advantages
 
 For most candidate systems under 100 lines of actual assembler code are
@@ -46,14 +52,13 @@ be suitable. fuzix48.com places the customisation and common space at C000
 instead.
 
 Fuzix56 can be used with a common area at or below E000, fuzix48 requires a
-common are at or below C000.
+common area at or below C000.
 
-User
+User 	(48K common, Exxx not Cxxx for 56K)
 
 0000-00FF	Vectors
 0100-02FF	Udata stash
-0300-BEFF	User
-BF00-BFFF	Unused
+0300-BFFF	User
 C000-C3FF	Customisation Area
 C400-		Kernel common and space
 
@@ -100,7 +105,8 @@ sysmod_irq_handler
 
 sysmod_nmi_handler
 		Install the OS NMI handler. Can be a no-op if the NMI handler
-		is really needed by the system
+		is needed by the system. The OS handler merely displays a
+		diagnostic.
 
 sysmod_conost
 sysmod_auxist
@@ -117,15 +123,25 @@ sysmod_rtc_secs
 		On a platform with an RTC return the seconds field (0-59) in
 		L. If no RTC is present return 0xFF in L. This is used both
 		to handle timing when no timer is present and to lock the
-		system to the actual time and avoid drift.
+		system to the actual time and avoid drift. If the timer
+		is temporarily unavailable return 0xFF.
+
+sysmod_monitor
+		Exit the OS into a monitor if available, if not reboot
+
+sysmod_reboot
+		Reboot the system, if not possible just stop (eg di halt)
 
 SysInfo structure
 		byte	banks		; number of banks present
 		byte 	features	; feature bits (see below)
 		byte	tickrate	; number of irq calls per 1/10th sec
+		byte	swap		; drive for swap (0xFF if not)
 		word	commonbase	; first address in the common space
 
-feature flags allocated
+		Drives are encoded 0-15 for A-P.
+
+Feature flags allocated
 		bit 0:	set if auxist/auxost present and aux port should be
 			a second tty device
 		bit 1:  a timer is present
@@ -136,9 +152,11 @@ Patching In The SysMod
 
 The .COM file for the OS load starts with
 
+````
 	JR	xx
 	DEFW	0x1DEA
 	DEFW	offset
+````
 
 Where offset is the offset into the file of the customisation area
 
@@ -150,7 +168,17 @@ interrupt handler or at the tail of any existing handlers. It may switch
 tasks and perform other activity. If there is no existing handler required
 then setting 0x38 to a JP and 0x39/40 to the given vector is normally
 sufficient. If a handler exists then terminating the existing handler with
-a JP to the OS handler instead of a RET will do the right thing.
+a JP to the OS handler instead of a RET will do the right thing. If the
+existing handler cannot be patched then it usually works to generate a new
+interrupt handling stub of the form
+
+````
+                   CALL old_handler
+                   JP XXXX
+````
+
+where XXXX is then patched with the address provided by Fuzix. In systems
+using IM2 this may not work.
 
 Interrupts may occur during a CP/M or customisation function. This is not
 normally a problem however there are two cases to be careful of.
@@ -174,3 +202,16 @@ re-entered except for sysmod_set_map which must always do the right thing.
 
 No provision is made for this as the sysmod_init function is perfectly able
 to patch the BIOS jump tables if desired.
+
+## Serial Interrupts
+
+Currently there is no real provision for serial interrupt handling. If the
+BIOS has buffered interrupt driven serial this will however work.
+
+## Possible Future Directions
+
+- Support for direct serial interrupt handling
+- Optional video and keyboard interface (as opposed to virtual serial)
+- Optional direct disk interface for high speed devices
+- Support for single user bank systems
+- Serial baud rate setting

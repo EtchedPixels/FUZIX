@@ -78,8 +78,9 @@ outchar:
 		ret
 
 _platform_monitor:
+		jp _sysmod_monitor
 _platform_reboot:
-		jr _platform_reboot
+		jp _sysmod_reboot
 
 init_hardware:
 		; Set up the BIOS calling interface
@@ -194,6 +195,8 @@ saved_map:
 		.globl _sysmod_auxost
 		.globl _sysmod_idle
 		.globl _sysmod_rtc_secs
+		.globl _sysmod_monitor
+		.globl _sysmod_reboot
 
 		.area _SYSMOD
 _sysmod_base:
@@ -217,6 +220,10 @@ _sysmod_idle:
 		jp sysmod_idle
 _sysmod_rtc_secs:
 		jp sysmod_rtc_secs
+_sysmod_monitor:
+		jp sysmod_monitor
+_sysmod_reboot:
+		jp sysmod_reboot
 
 sysmod_init:
 		im 1
@@ -242,7 +249,25 @@ sysmod_info:
 		ld hl,#sysinfo
 		ret
 sysmod_rtc_secs:
-		ld a,#0xff		; no idea
+		xor a
+		out (25),a		; RTC register for seconds
+		in a,(26)		; Seconds in BCD
+		ld h,a
+		and #15
+		ld l,a			; BCD low bits
+		ld a,h
+		rra
+		rra
+		rra
+		rra
+		and 15
+		add a			; high x 2
+		ld h,a
+		add a			; high x 4
+		add a			; high x 8
+		add h			; high x 10
+		or l			; now decimal
+		ld l,a
 		ret
 ;
 ;	I/O routines we would like that are missing from CP/M 2.2 but in
@@ -257,6 +282,14 @@ sysmod_auxist:
 sysmod_auxost:
 		ld l,#0xff
 		ret
+
+sysmod_monitor:				; no monitor so just reboot
+sysmod_reboot:
+		; if you have no reboot just spin here
+		ld a,#1			; reboot
+		out (29),a
+failed:					; shouldn't get here
+		jr failed
 		
 sysinfo:
 		.db 8			; mumber of banks

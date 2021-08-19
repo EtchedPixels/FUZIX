@@ -18,7 +18,7 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag);
 
 static uint8_t cpm_sys;
 
-static uint8_t cpm_drive;
+static uint8_t cpm_drive = 0xFF;
 
 static uint8_t fd_map[16], hd_map[16];
 static uint8_t num_hd, num_fd;
@@ -63,8 +63,10 @@ static uint8_t last_dev = 255;
 static void cpm_geom(void)
 {
     uint16_t track;
+    uint16_t sec = udata.u_block % cpm_dpb->spt;
     /* Zero based sector */
-    cpm_setsec(cpm_sectran(udata.u_block % cpm_dpb->spt, cpm_dph->xlt));
+    sec = cpm_sectran(sec, cpm_dph->xlt);
+    cpm_setsec(sec);
     /* Logical track number */
     track = udata.u_block / cpm_dpb->spt;
     /* Avoid system area */
@@ -79,8 +81,9 @@ static void cpm_geom(void)
 static uint8_t cpm_setup_drive(void)
 {
     if (cpm_drive != last_dev) {
-        cpm_dph = cpm_seldsk(cpm_drive, 0);
+        cpm_dph = cpm_seldsk(cpm_drive);
         if (cpm_dph == NULL) {
+            kprintf("Unable to set up drive %c\n", 'A' + cpm_drive);
             udata.u_error = ENXIO;
             return 1;
         }
@@ -117,6 +120,7 @@ static int fd_transfer(bool is_read, uint8_t type, uint8_t rawflag)
     }
 
     cpm_busy = 1;
+
     /* Select the drive and check all is good */
     if (cpm_setup_drive()) {
         cpm_busy = 0;
@@ -135,7 +139,8 @@ static int fd_transfer(bool is_read, uint8_t type, uint8_t rawflag)
         return -1;
     }
 
-    while (udata.u_done < udata.u_nblock) {
+    ct = 0;
+    while (ct < udata.u_nblock) {
         cpm_geom();
 
         cpm_setdma(udata.u_dptr);
@@ -157,30 +162,18 @@ static int fd_transfer(bool is_read, uint8_t type, uint8_t rawflag)
         }
         if (info->features & FEATURE_IODI)
             irqrestore(irq);
+
         if (err) {
             kprintf("%c: block %d, error %d\n",
                 cpm_drive+'A', udata.u_block, err);
             break;
         }
         udata.u_dptr += 128;
-        udata.u_done++;
+        ct++;
         udata.u_block++;
     }
     cpm_busy = 0;
-    return ct >> 2;
-}
-
-static int fd_probe(uint8_t drive)
-{
-    cpm_drive = drive;
-    cpm_busy++;
-    cpm_dph = cpm_seldsk(drive, 0);
-    cpm_busy--;
-    if (cpm_dph == NULL) {
-        udata.u_error = ENXIO;
-        return -1;
-    }
-    return 0;
+    return ct << 7;
 }
 
 int fd_open(uint8_t minor, uint16_t flag)
@@ -190,7 +183,8 @@ int fd_open(uint8_t minor, uint16_t flag)
         udata.u_error = ENODEV;
         return -1;
     }
-    return fd_probe(fd_map[minor & 0x0F]);
+    cpm_drive = fd_map[minor & 0x0F];
+    return cpm_setup_drive();
 }
 
 int hd_open(uint8_t minor, uint16_t flag)
@@ -200,7 +194,8 @@ int hd_open(uint8_t minor, uint16_t flag)
         udata.u_error = ENODEV;
         return -1;
     }
-    return fd_probe(hd_map[minor & 0x0F]);
+    cpm_drive = hd_map[minor & 0x0F];
+    return cpm_setup_drive();
 }
 
 int fd_close(uint8_t minor)
@@ -225,7 +220,7 @@ void fdhd_init(void)
     cpm_busy++;
 
     for (i = 0; i < 16; i++) {
-        h = cpm_seldsk(i, 0);
+        h = cpm_seldsk(i);
         if (h) {
             d = h->dpb;
             kprintf("%c: mapped to /dev/", i + 'A');

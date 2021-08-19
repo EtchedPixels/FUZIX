@@ -11,6 +11,7 @@ uint8_t cpm_busy = 0;
 uint16_t sys_prog_top;
 uint8_t platform_tick_present;
 uint16_t swap_dev = 0xFFFF;
+uint8_t copybanks;
 
 struct sysinfo *info;
 
@@ -46,6 +47,7 @@ void init_hardware_c(void)
 	platform_tick_present = !!(info->features & FEATURE_TICK);
 	
 	cpm_banks = info->nbanks;
+	copybanks = info->common >> 8;
 	procmem = info->nbanks * (info->common >> 10);
 	ramsize = procmem + 64;
 	kprintf("Common at %x, banks %d\n", info->common, info->nbanks);
