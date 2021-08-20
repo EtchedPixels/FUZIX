@@ -14,13 +14,27 @@
 start:
 		orcc #0x10		; interrupts definitely off
 		lds #kstack_top		; note we'll wipe the stack later
-		; Undo any remaining ROM map
-		jsr map_kernel
-		jmp premain
+
+		ldx #$E000
+		ldy #$0
+copy1:
+		ldd ,--x
+		std ,--y
+		cmpy #$C000
+		beq move_done
+		; Don't copy into the I/O window
+		cmpy #$FF00
+		bne copy1
+		leax $-100,x
+		leay $-100,y
+		bra copy1
+move_done:	jmp premain
 
 		.area .discard
 
-premain:	clra
+		; We pack the data 2K down so we fit under the loader
+premain:
+		clra
 		ldx #__sectionbase_.udata__
 udata_wipe:	sta ,x+
 		cmpx #__sectionbase_.udata__+__sectionlen_.udata__

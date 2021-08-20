@@ -52,6 +52,10 @@ image:
 	../tools/pad256 ../fuzix.bin
 	../tools/lw-checkmap ../fuzix.map
 	../tools/decb-image <../fuzix.bin fuzix.img
+	# Pack the image down
+	dd if=fuzix.img bs=49152 skip=1 >fuzix.high
+	dd if=fuzix.high of=fuzix.img bs=40960 seek=1
+	#rm fuzix.high
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
