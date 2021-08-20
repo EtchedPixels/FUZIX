@@ -197,6 +197,8 @@ saved_map:
 		.globl _sysmod_rtc_secs
 		.globl _sysmod_monitor
 		.globl _sysmod_reboot
+		.globl _sysmod_conconf
+		.globl _sysmod_auxconf
 
 		.area _SYSMOD
 _sysmod_base:
@@ -224,6 +226,10 @@ _sysmod_monitor:
 		jp sysmod_monitor
 _sysmod_reboot:
 		jp sysmod_reboot
+_sysmod_conconf:
+		jp sysmod_conconf
+_sysmod_auxconf:
+		jp sysmod_auxconf
 
 sysmod_init:
 		im 1
@@ -290,6 +296,10 @@ sysmod_reboot:
 		out (29),a
 failed:					; shouldn't get here
 		jr failed
+
+sysmod_conconf:				; Not supported
+sysmod_auxconf:
+		ret
 		
 sysinfo:
 		.db 8			; mumber of banks
@@ -297,5 +307,5 @@ sysinfo:
 		.db 10			; interrupt to 1/10ths divider
 		.db 0xff		; no swap
 		.dw 0xC000		; common start
-
-
+		.dw 0			; console doesn't support config
+		.dw 0			; aux doesn't support config

@@ -2,6 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
+#include <tty.h>
 #include <devtty.h>
 #include <cpm.h>
 #include <sysmod.h>
@@ -50,6 +51,10 @@ void init_hardware_c(void)
 	copybanks = info->common >> 8;
 	procmem = info->nbanks * (info->common >> 10);
 	ramsize = procmem + 64;
+
+	termios_mask[1] |= info->conflags;
+	termios_mask[2] |= info->auxflags;
+
 	kprintf("Common at %x, banks %d\n", info->common, info->nbanks);
 }
 		

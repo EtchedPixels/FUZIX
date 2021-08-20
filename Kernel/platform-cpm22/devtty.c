@@ -90,10 +90,14 @@ void tty_pollirq(void)
 	}
 }
 
-/* Not much we can do */
 void tty_setup(uint8_t minor, uint8_t flags)
 {
-	used(minor);
+	if (minor == 1)
+		ttydata[1].termios.c_cflag =
+				sysmod_conconf(ttydata[1].termios.c_cflag);
+	else
+		ttydata[2].termios.c_cflag =
+				sysmod_auxconf(ttydata[2].termios.c_cflag);
 }
 
 int tty_carrier(uint8_t minor)

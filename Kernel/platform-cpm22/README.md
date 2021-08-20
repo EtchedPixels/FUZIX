@@ -43,6 +43,15 @@ For most candidate systems under 100 lines of actual assembler code are
 needed, and customisation to one of systems or S100 setups where the BIOS is
 the platform definition are possible.
 
+## User Space
+
+Fuzix Z80 binaries are relocatable and the system can therefore run existing
+Fuzix Z80 binaries without any rebuilding being required. In addition,
+unlike CP/M the Fuzix file system is a self describing file system
+abstracted from the physical layout. It is therefore merely necessary to
+build or use a file system the same size as (or smaller than) the CP/M
+volume upon which it is being put.
+
 ## Versions
 Two versions of the binary are built. fuzix56.com is a binary where the common
 space is linked at E000-EFFF with E000-E3FF available for the customisation.
@@ -132,12 +141,72 @@ sysmod_monitor
 sysmod_reboot
 		Reboot the system, if not possible just stop (eg di halt)
 
+sysmod_conconf
+		Configure the console port according to the properties
+		passed in HL. HL should be returned giving the actual
+		configuration set. For example if the user asks for 50 baud
+		but cannot be given it then HL should encode the baud
+		rate actually set.
+
+sysmod_auxconf
+		Configure the auxiilary port according to the properties
+		passed in HL. HL should be returned giving the actual
+		configuration set.
+
+Serial properties
+	bits 3-0	:	speed
+		0	Not in use
+		1	50
+		2	75
+		3	110
+		4	134
+		5	150
+		6	300
+		7	600
+		8	1200
+		9	2400
+		A	4800
+		B	9600
+		C	19200
+		D	38400
+		E	57600
+		F	115200
+	bit 5-4
+		0	5 bit
+		1	6 bit
+		2	7 bit
+		3	8 bit
+	bit 6
+		1	two stop bits
+		0	one stop bit
+	bit 7
+		0	receiver disabled
+		1	receiver enabled
+	bit 8
+		0	no parity
+		1	parity enabled
+	bit 9
+		0	even parity (if parity)
+		1	odd parity (if parity)
+	bit 10-11
+		Internal OS use
+	bit 12
+		0	no flow control
+		1	hardware flow control
+	bits 13-15
+		reserved
+
+
+
 SysInfo structure
 		byte	banks		; number of banks present
 		byte 	features	; feature bits (see below)
 		byte	tickrate	; number of irq calls per 1/10th sec
 		byte	swap		; drive for swap (0xFF if not)
 		word	commonbase	; first address in the common space
+		word	conflags	; console changable serial properties
+		word	auxflags	; aux changeable serial properties
+					; set bits are supported changes
 
 		Drives are encoded 0-15 for A-P.
 
@@ -226,4 +295,3 @@ BIOS has buffered interrupt driven serial this will however work.
 - Optional video and keyboard interface (as opposed to virtual serial)
 - Optional direct disk interface for high speed devices
 - Support for single user bank systems
-- Serial baud rate setting

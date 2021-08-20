@@ -17,6 +17,8 @@ struct sysinfo {
         uint8_t tickdivider;	/* Ticks per 1/10th */
         uint8_t swap;		/* CP/M drive 0-15 to use for swap, 0xFF for none */
         uint16_t common;	/* Start of common space */
+        uint16_t conflags;	/* con: modifyable termios cflags bits */
+        uint16_t auxflags;	/* aux: modifyable termios cflags bits */
 };
         
 extern void sysmod_init(void);
@@ -26,6 +28,8 @@ extern uint8_t sysmod_auxist(void);
 extern uint8_t sysmod_auxost(void);
 extern void sysmod_idle(void);
 extern uint8_t sysmod_rtc_secs(void);
+extern uint16_t sysmod_conconf(uint16_t cflag) __z88dk_fastcall;
+extern uint16_t sysmod_auxconf(uint16_t cflag) __z88dk_fastcall;
 
 extern struct sysinfo *info;
 
