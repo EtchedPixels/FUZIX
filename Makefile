@@ -55,7 +55,7 @@
 # v65c816:	Virtual platform for 65c816 development (flat memory)
 # v68:		Virtual platform for 68000 development
 
-TARGET=esp8266
+TARGET=cpm22
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk
@@ -72,10 +72,13 @@ PATH := /opt/fcc/bin:$(PATH)
 # Add the tools directory
 PATH := $(FUZIX_ROOT)/Build/tools/:$(PATH)
 
+# Use Berkeley yacc always (Bison output is too large)
+YACC = byacc
+
 # TARGET is what we are building
 # CPU is the CPU type for the kernel
 # USERCPU is the CPU type for userspace and may be different
-export TARGET CPU USERCPU PATH FUZIX_ROOT
+export TARGET CPU USERCPU PATH FUZIX_ROOT YACC
 
 # FUZIX_CCOPTS is the global CC optimization level
 ifeq ($(FUZIX_CCOPTS),)
