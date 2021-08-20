@@ -13,6 +13,11 @@ System Problems To Solve:
 - C000-CFFF are unavailable putting a big hole mid memory, how do we handle
   that sanely on the user side.
 - Can we do more banking tricks to get more of Fuzix in language card space
+	- Tricky because cc65 has no banking support
+	- Could put the tty buffer there and also asm drivers like floppy
+- Figure out the memory map. We want buffers next to discard so we can use
+  discard for buffers. In theory we need only 2 buffers at boot providing we can
+  reclaim at least 3 from discard.
 - How do we cleanly deal with Z and S when we can't load directly into them
 - How do you tell a ram drive from a hard disk
 - How do we pick the right swap device
@@ -60,8 +65,7 @@ Our planned memory mapping looks like this
 	0100-01FF	Stack (Kernel/Interrupt/Firmware usually)
 	0200-03FF	Firmware reserved for now (to be cautious)
 	0400-07FF	Half of 80 column display / All of 40
-	0800-1FFF	Discard area
-	2000-BEFF	Kernel load and execution area (covers double
+	0800-BEFF	Kernel load and execution area (covers double
 			hi-res space)
 	BF00-BFFF	ProDOS leaves us info here before we kill it off
 	C000-CFFF	I/O

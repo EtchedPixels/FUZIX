@@ -8,7 +8,7 @@
 	    .export map_kernel
 	    .export map_process
 	    .export map_process_always
-	    .export map_save
+	    .export map_save_kernel
 	    .export map_restore
 
 	    .export _unix_syscall_i
@@ -25,6 +25,7 @@
 	    .export ___hard_ei
 	    .export ___hard_irqrestore
 	    .export vector
+	    .export _sys_stubs
 
 	    .import interrupt_handler
 	    .import _ramsize
@@ -39,6 +40,8 @@
 	    .import _kernel_flag
 	    .import stash_zp
 	    .import pushax
+	    .import _relocator
+	    .import _udata
 
 	    .import outcharhex
 	    .import outxa
@@ -105,6 +108,18 @@ init_hardware:
 	    lda #0
 	    sta _procmem+1
 	    rts
+
+	    ; copied into the stubs of each binary
+_sys_stubs:
+	    jmp syscall_entry
+	    .byte 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+	    .word 0
+
 ;
 ;	We will set the vectors and stubs up early in boot for both banks  so
 ;	need do nothing here.
@@ -168,11 +183,15 @@ map_restore:
 ;	user or kernel. We may eventually need to track language bank
 ;	switches, video and more.
 ;
-map_save:
+map_save_kernel:
 	    pha
 	    lda $C013
 	    and #$80
 	    sta saved_map
+	    ; and map in the kernel
+	    sta $C002
+	    sta $C004
+	    sta $C054
 	    pla
 	    rts
 
@@ -207,8 +226,7 @@ vector:
 ;	it's not too hard - if we are in kernel mapping an IRQ will always
 ;	exit in kernel mapping.
 
-	    jsr map_save
-	    sta $C008				; Kernel ZP and stack
+	    jsr map_save_kernel
 
 ;
 ;	Q: do we want to spot brk() instructions and signal them ?
@@ -257,7 +275,7 @@ vector:
 ;	values, invoke the signal handler and then return.
 ;
 
-	    lda U_DATA__U_CURSIG
+	    lda _udata + U_DATA__U_CURSIG
 	    beq irqout
 
 
@@ -276,16 +294,16 @@ vector:
 	    tya
 	    pha				; stack signal number
 	    ldx #0
-	    stx U_DATA__U_CURSIG
+	    stx _udata + U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda U_DATA__U_SIGVEC,y	; Our vector (low)
+	    lda _udata + U_DATA__U_SIGVEC,y	; Our vector (low)
 	    pha				; stack half of vector
-	    lda U_DATA__U_SIGVEC+1,y	; High half
+	    lda _udata + U_DATA__U_SIGVEC+1,y	; High half
 	    pha				; stack rest of vector
 	    txa
-	    sta U_DATA__U_SIGVEC,y	; Wipe the vector
-	    sta U_DATA__U_SIGVEC+1,y
+	    sta _udata + U_DATA__U_SIGVEC,y	; Wipe the vector
+	    sta _udata + U_DATA__U_SIGVEC+1,y
 	    lda #<PROGLOAD + 20
 	    pha
 	    lda #>PROGLOAD + 20
@@ -315,7 +333,7 @@ syscall_entry:
 	    sei
 	    cld
 
-	    stx U_DATA__U_CALLNO
+	    stx _udata + U_DATA__U_CALLNO
 
 	    ; No arguments - skip all the copying and stack bits
 	    cpy #0
@@ -341,10 +359,10 @@ syscall_entry:
 copy_args:
 	    dey
 	    lda (ptr1),y		; copy the arguments over
-	    sta U_DATA__U_ARGN+1,x
+	    sta _udata + U_DATA__U_ARGN+1,x
 	    dey
 	    lda (ptr1),y
-	    sta U_DATA__U_ARGN,x
+	    sta _udata + U_DATA__U_ARGN,x
             inx
 	    inx
 	    cpy #0
@@ -359,12 +377,12 @@ noargs:
 	    lda sp+1
 	    pha
 	    tsx
-	    stx U_DATA__U_SYSCALL_SP
+	    stx _udata + U_DATA__U_SYSCALL_SP
 ;
 ;	We save a copy of the high byte of sp here as we may need it to get
 ;	the brk() syscall right.
 ;
-	    sta U_DATA__U_SYSCALL_SP + 1
+	    sta _udata + U_DATA__U_SYSCALL_SP + 1
 ;
 ;	Now switch to the kernel ZP/S
 ;
@@ -395,7 +413,7 @@ noargs:
 ;
 ;	Correct the system stack
 ;
-	    ldx U_DATA__U_SYSCALL_SP
+	    ldx _udata + U_DATA__U_SYSCALL_SP
 
 	    sta $C009			; Switch to user stsck and Zp
 
@@ -407,7 +425,7 @@ noargs:
 	    sta sp+1
 	    pla
 	    sta sp
-	    lda U_DATA__U_CURSIG
+	    lda _udata + U_DATA__U_CURSIG
 	    beq syscout
 	    tay
 
@@ -421,11 +439,11 @@ noargs:
 	    ;	The signal handler might make syscalls so we need to get
 	    ;	our return saved and return the right value!
 	    ;
-	    lda U_DATA__U_ERROR
+	    lda _udata + U_DATA__U_ERROR
 	    pha
-	    lda U_DATA__U_RETVAL
+	    lda _udata + U_DATA__U_RETVAL
 	    pha
-	    lda U_DATA__U_RETVAL+1
+	    lda _udata + U_DATA__U_RETVAL+1
 	    pha
 	    lda #>sigret		; Return address
 	    pha
@@ -435,16 +453,16 @@ noargs:
 	    tya
 	    pha				; signal
 	    ldx #0
-	    stx U_DATA__U_CURSIG
+	    stx _udata + U_DATA__U_CURSIG
 	    asl a
 	    tay
-	    lda U_DATA__U_SIGVEC,y	; Our vector
+	    lda _udata + U_DATA__U_SIGVEC,y	; Our vector
 	    pha
-	    lda U_DATA__U_SIGVEC+1,y
+	    lda _udata + U_DATA__U_SIGVEC+1,y
 	    pha
 	    txa
-	    sta U_DATA__U_SIGVEC,y	; Wipe the vector
-	    sta U_DATA__U_SIGVEC+1,y
+	    sta _udata + U_DATA__U_SIGVEC,y	; Wipe the vector
+	    sta _udata + U_DATA__U_SIGVEC+1,y
 
 	    ; Invoke the helper with signal and vector stacked
 	    ; it will then return to syscout and recover the original
@@ -470,10 +488,10 @@ syscout:
 
 ;	Copy the return data over
 ;
-	    ldy U_DATA__U_RETVAL
-	    ldx U_DATA__U_RETVAL+1
+	    ldy _udata + U_DATA__U_RETVAL
+	    ldx _udata + U_DATA__U_RETVAL+1
 ;	Also sets Z for us
-	    lda U_DATA__U_ERROR
+	    lda _udata + U_DATA__U_ERROR
 
 	    rts
 
@@ -484,14 +502,17 @@ platform_doexec:
 ;
 ;	Start address of executable
 ;
-	    stx ptr2+1		; Point ptr2 at base + 0x20
+	    stx ptr3+1		; Point ptr3 at base
+	    sta ptr3
+	    stx ptr2+1		; Point ptr2 at base + 0x10
+	    lda #16
 	    sta ptr2
-	    ldy #$20
+	    ldy #0
 	    lda (ptr2),y	; Get the signal vector pointer
-	    sta PROGLOAD+$20	; if we loaded high put the vector in
+	    sta PROGLOAD+16	; if we loaded high put the vector in
 	    iny
 	    lda (ptr2),y
-	    sta PROGLOAD+$21	; the low space where it is expected
+	    sta PROGLOAD+17	; the low space where it is expected
 
 	    lda ptr2
 
@@ -507,9 +528,9 @@ platform_doexec:
 ;
 ;	Set up the C stack. FIXME: assumes for now our sp in ZP matches it
 ;
-	    lda U_DATA__U_ISP
+	    lda _udata + U_DATA__U_ISP
 	    sta sp
-	    ldx U_DATA__U_ISP+1
+	    ldx _udata + U_DATA__U_ISP+1
             stx sp+1
 
 ;
@@ -517,10 +538,14 @@ platform_doexec:
 ;
 	    ldx #$ff
 	    txs
-	    ldx #>PROGLOAD	; For the relocation engine
-	    lda #ZPBASE
-	    ldy #0
-	    jmp (ptr1)		; Enter user application
+;
+;	Relocation is done in kernel because the 6502 isn't quite smart
+;	enough to do its own ZP relocations as far as I can tell (prove me
+;	wrong....)
+;
+	    jsr _relocator
+
+	    jmp (ptr3)		; Enter user application
 
 ;
 ;	Straight jumps no funny banking issues yet
