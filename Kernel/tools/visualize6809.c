@@ -173,10 +173,14 @@ void load_info(FILE *fp)
         map_insert(name, st, en);
     }
 }
+
 int main(int argc, char *argv[])
 {
+    FILE *fp;
+
     init_map();
-    FILE *fp = fopen("platform/map.info", "r");
+
+    fp = fopen("platform/map.info", "r");
     if (fp) {
         load_info(fp);
         fclose(fp);
