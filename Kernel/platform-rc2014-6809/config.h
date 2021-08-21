@@ -33,8 +33,11 @@
 #define TICKSPERSEC 10   /* Ticks per second */
 
 #define PROGBASE    0x0000  /* also data base */
-#define PROGLOAD    0x0000  /* also data base */
+#define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xBE00  /* Top of program */
+
+#define DP_BASE 0x0000
+#define DP_SIZE 0x0100
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
