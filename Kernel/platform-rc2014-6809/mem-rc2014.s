@@ -123,8 +123,8 @@ __uputw:
 	ldd 2,s
 	jsr map_process_always
 	exg d,x
-	jsr map_kernel
 	std ,x
+	jsr map_kernel
 	ldx #0
 	rts
 ;
