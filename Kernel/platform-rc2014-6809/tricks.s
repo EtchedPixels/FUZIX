@@ -212,12 +212,9 @@ fork_copy:
 	ldx fork_proc_ptr
 	ldb P_TAB__P_PAGE_OFFSET+1,x	; new bank
 	lda U_DATA__U_PAGE+1		; old bank
-	ldx #PROGBASE
-	ldu U_DATA__U_BREAK		; top of data
-	jsr copybank			; preserves A,B, clobbers X,U
-	ldx U_DATA__U_SYSCALL_SP
-	ldu U_DATA__U_TOP		; top of process memory
-	jsr copybank
+	pshs a
+	jsr copybanks			; copy A into B
+	puls a
 
 ; stash parent uarea (including kernel stack)
 	jsr map_process_a

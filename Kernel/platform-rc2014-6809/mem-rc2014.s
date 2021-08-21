@@ -81,7 +81,7 @@ map_restore
 	bra map_set_a
 
 ;
-;	If we could split text/const we could optimzie this because all our
+;	If we could split text/const we could optimize this because all our
 ;	consts could be above 0xC000 so available directly from the user map
 ;	but alas the tool chain can't do it. For now we just do it the slow
 ;	way but it might well be worth checking in uput/uget so that 99%+ of
@@ -90,6 +90,8 @@ map_restore
 __ugetc:
 	jsr map_process_always
 	ldb ,x
+	clra
+	tfr d,x
 	jmp map_kernel
 __ugetw:
 	jsr map_process_always
