@@ -72,7 +72,7 @@ after the header). This routine is invoked with
 	Y = handler address
 
 When the handler code is invoked the top of the stack is a return address
-to unwind from the signal handler, and above it is anothr copy of the
+to unwind from the signal handler, and above it is another copy of the
 handler address (this is needed for non 68HC11 specific code that cannot use
 the Y register).
 
