@@ -57,7 +57,7 @@ int inputdev_ioctl(uarg_t request, char *data)
     uint_fast8_t r;
 #ifdef CONFIG_INPUT_GRABMAX
     if (request == INPUT_GRABKB) {
-        r = ((uint8_t)data) & 0x03;
+        r = ugetc(data);
         if (r > CONFIG_INPUT_GRABMAX) {
             udata.u_error = EOPNOTSUPP;
             return -1;
