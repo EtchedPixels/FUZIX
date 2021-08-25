@@ -64,6 +64,9 @@ inline static void __hard_irqrestore(uint32_t ps)
 
 #define no_cache_udata()
 
+#define ntohs(x) ((uint16_t)(__builtin_bswap16((uint16_t)(x))))
+#define ntohl(x) ((uint32_t)(__builtin_bswap32((uint32_t)(x))))
+
 #define CPUTYPE	CPUTYPE_ARMM0
 
 /* Memory helpers: Max of 32767 blocks (16MB) as written */
