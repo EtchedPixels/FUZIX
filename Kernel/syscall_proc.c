@@ -254,7 +254,7 @@ arg_t brk_extend(uaddr_t addr)
 arg_t _brk(void)
 {
 	/* Attempt to grow the BSS: this function can be customised by the architecture/platform */
-	if (udata.u_error = brk_extend(addr))
+	if ((udata.u_error = brk_extend(addr)) != 0)
 		return -1;
 	/* If we have done a break that gives us more room we must zero
 	   the extra as we no longer guarantee it is clear already */
