@@ -15,3 +15,4 @@ CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_68000.o
 # with relocs.
 ELF2FUZIX = $(FUZIX_ROOT)/Standalone/elf2flt -s 16384
 .SUFFIXES: .c .o
+HOSTCC = gcc
