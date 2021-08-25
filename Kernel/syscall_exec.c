@@ -16,9 +16,9 @@
                and max  512 bytes for environ
 */
 
-bool rargs(char **userspace_argv, struct s_argblk * argbuf)
+bool rargs(uint8_t **userspace_argv, struct s_argblk * argbuf)
 {
-	char *ptr;		/* Address of base of arg strings in user space */
+	uint8_t *ptr;		/* Address of base of arg strings in user space */
 	uint8_t *up = (uint8_t *)userspace_argv;
 	uint8_t c;
 	uint8_t *bufp;
@@ -27,7 +27,7 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 	argbuf->a_argc = 0;	/* Store argc in argbuf */
 	bufp = argbuf->a_buf;
 
-	while ((ptr = (char *) ugetp(up)) != NULL) {
+	while ((ptr = (uint8_t *) ugetp(up)) != NULL) {
 		up += sizeof(uptr_t);
 		++(argbuf->a_argc);	/* Store argc in argbuf. */
 		do {
@@ -45,11 +45,11 @@ bool rargs(char **userspace_argv, struct s_argblk * argbuf)
 }
 
 
-char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
+uint8_t **wargs(uint8_t *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
 {
-	char *argv;		/* Address of users argv[], just below ptr */
+	uint8_t *argv;		/* Address of users argv[], just below ptr */
 	unsigned int argc, arglen;
-	char *argbase;
+	uint8_t *argbase;
 	uint8_t *sptr;
 
 	sptr = argbuf->a_buf;
@@ -80,7 +80,7 @@ char **wargs(char *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspac
 		}
 	}
 	uputp(0, argv);
-	return (char **)argbase;
+	return (uint8_t **)argbase;
 }
 
 #ifdef CONFIG_LEVEL_2

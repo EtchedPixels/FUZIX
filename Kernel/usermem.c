@@ -134,7 +134,7 @@ int uputl(uint32_t val, void *uaddr)
  */
 #ifdef CONFIG_USERMEM_C
 
-usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
+int _uget(const uint8_t *user, uint8_t *dest, usize_t count)
 {
 	uint8_t tmp;
 	while(count--) {
