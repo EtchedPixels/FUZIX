@@ -228,7 +228,7 @@ int _uputl(uint32_t val, void *uaddr)
 
 /* Systems where all memory is always mapped for live processes and kernel */
 
-usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
+int _uget(const uint8_t *user, uint8_t *dest, usize_t count)
 {
 	memcpy(dest, user, count);
 	return 0;
