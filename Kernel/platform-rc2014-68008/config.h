@@ -11,7 +11,6 @@
 #define CONFIG_MULTI
 #define CONFIG_FLAT
 #define CONFIG_PARENT_FIRST
-#define CONFIG_USERMEM_DIRECT
 /* It's not that meaningful but we currently chunk to 512 bytes */
 #define CONFIG_BANKS 	(65536/512)
 
