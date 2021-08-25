@@ -246,19 +246,5 @@ int _uzero(uint8_t *user, usize_t count)
 	return 0;
 }
 
-#ifdef CONFIG_32BIT
-
-uint32_t _ugetl(void *uaddr)
-{
-	return *(uint32_t *)uaddr;
-}
-
-int _uputl(uint32_t val, void *uaddr)
-{
-	*(uint32_t *)uaddr = val;
-	return 0;
-}
-
-#endif
 #endif
 #endif
