@@ -42,6 +42,7 @@ extern struct u_data *udata_ptr;
 /* Allow a minimum of 512 bytes gap between stack and top of allocations */
 #define brk_limit() (((udata).u_syscall_sp) - 512)
 
+int memcmp(const void *a, const void *b, size_t n);
 void *memcpy(void *, const void *, size_t);
 void *memset(void *, int, size_t);
 size_t strlen(const char *);
