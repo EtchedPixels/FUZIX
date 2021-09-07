@@ -8,6 +8,7 @@
 #		(or xroar emulator )
 # coco3:	Tandy COCO3 512K (or MAME)
 # cromemco:	Cromemco with banked memory
+# dk-tm4c129x:	Texas Instruments Tiva C Series Development Board
 # dragon-mooh:	Dragon 32/64 with Mooh 512K card (or xroar emulator)
 # dragon-nx32:	Dragon 32/64 with Spinx 512K card (or xroar emulator)
 # easy-z80:	Easy-Z80 RC2014 compatible system

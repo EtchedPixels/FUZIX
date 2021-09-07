@@ -85,9 +85,9 @@ static void relocate(struct binfmt_flat *bf, uaddr_t progbase, uint32_t size)
 	/* We can use _uput/_uget as we set up the memory map so we know
 	   it is valid */
 	while (n--) {
-		uint32_t v = _ugetl(rp++);
+		uint32_t v = ntohl(_ugetl(rp++));
 		if (v < size) {
-			uint32_t *mp = (uint32_t *)(progbase + ntohl(v));
+			uint32_t *mp = (uint32_t *)(progbase + v);
 			_uputl(_ugetl(mp) + progbase, mp);
 		}
 	}

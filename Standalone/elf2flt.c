@@ -502,7 +502,7 @@ int main(int argc, char* const* argv)
 				break;
 		}
 		/* HACK: Ignore all the crap after the BSS */
-		if (endian32(sh->sh_type) == SHT_NOBITS)
+		if ((endian32(sh->sh_type) == SHT_NOBITS) && (arch != EM_ARM))
 			break;
 	}
 
