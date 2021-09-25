@@ -19,6 +19,7 @@
 #define IRQ_UART0	21
 #define IRQ_UART1	22
 #define IRQ_UART2	49
+#define IRQ_ETHCON	56
 
 typedef unsigned int irqreturn_t;
 
