@@ -95,6 +95,8 @@ typedef union {            /* this structure is endian dependent */
 
 #define ntohs(x) ((uint16_t)(__builtin_bswap16((uint16_t)(x))))
 #define ntohl(x) ((uint32_t)(__builtin_bswap32((uint32_t)(x))))
+#define htons(x) ((uint16_t)(__builtin_bswap16((uint16_t)(x))))
+#define htonl(x) ((uint32_t)(__builtin_bswap32((uint32_t)(x))))
 
 void copy_blocks(void *, void *, size_t);
 void swap_blocks(void *, void *, size_t);

@@ -15,6 +15,7 @@ void tm4c129x_modreg(unsigned int adr, uint32_t clr, uint32_t set);
  */
 
 #define SYS_CLOCK			120000000	/* 120MHz */
+#define BOARD_LOOPSPERMSEC		11401U
 
 /*
  *	NVIC interrupt controller
