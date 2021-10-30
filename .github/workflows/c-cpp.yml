@@ -132,4 +132,9 @@ jobs:
         sudo apt-get install -y gcc-xtensa-lx106
     - name: make kernel
       run: make -C Kernel TARGET=esp8266 -j`nproc`
+    - name: make libraries
+      run: |
+        make -C Library -j`nproc`
+        make -C Library/libs -f Makefile.esp8266 -j`nproc`
+
 
