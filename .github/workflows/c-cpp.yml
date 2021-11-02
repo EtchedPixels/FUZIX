@@ -137,4 +137,15 @@ jobs:
         make -C Library -j`nproc`
         make -C Library/libs -f Makefile.esp8266 -j`nproc`
 
+  build-rpipico:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+    - name: make kernel
+      run: make -C Kernel TARGET=rpipico -j`nproc`
+
 
