@@ -64,6 +64,8 @@ void device_init(void)
 #endif
 	dw_init();
 	inittod();
+#ifdef CONFIG_NET
 	sock_init();
+#endif
 }
 

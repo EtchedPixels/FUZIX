@@ -13,13 +13,15 @@
 	.import _swapper
 	.import _swapout
 
-	.import	_newproc
+	.import	_makeproc
 	.import _getproc
 	.import _runticks
 	.import _inint
 	.import outstring
 	.import outxa
 	.import outcharhex
+	.import pushax
+	.import _udata
 
         .include "kernel.def"
         .include "../kernel02.def"
@@ -53,7 +55,7 @@ _platform_switchout:
 	lda sp+1
 	pha
 	tsx
-	stx U_DATA__U_SP	; Save it
+	stx _udata + U_DATA__U_SP	; Save it
 
         ; set inint to false
 	lda #0
@@ -84,8 +86,8 @@ _switchin:
 
 	bne	not_swapped
 
-	lda	U_DATA__U_PTAB
-	ldx	U_DATA__U_PTAB+1
+	lda	_udata + U_DATA__U_PTAB
+	ldx	_udata + U_DATA__U_PTAB+1
 	;
 	; FIXME - need the extra logic to swap out the kernel Z/S bits of
 	; interest.
@@ -133,7 +135,7 @@ _switchin:
 	;
 	sta	$C008			; Back to real C stack
 
-	ldx	U_DATA__U_SP		; Use the memory below the
+	ldx	_udata + U_DATA__U_SP	; Use the memory below the
 					; CPU stack we swapped in
 	txs
 
@@ -149,10 +151,10 @@ _switchin:
 
 not_swapped:
 	; Make sure we swapped in the right process
-	lda	U_DATA__U_PTAB
+	lda	_udata + U_DATA__U_PTAB
 	cmp	switch_proc_ptr
 	bne	switchinfail
-	ldx	U_DATA__U_PTAB+1
+	ldx	_udata + U_DATA__U_PTAB+1
 	cpx	switch_proc_ptr+1
 	bne	switchinfail
 	; XA holds the process ptr as a sidde effect, now construct a
@@ -167,9 +169,9 @@ not_swapped:
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	#0
 	lda	(ptr1),y
-	sta	U_DATA__U_PAGE
+	sta	_udata + U_DATA__U_PAGE
 	; Fix up the stack pointer from the one we are hiding in
-	ldx	U_DATA__U_SP
+	ldx	_udata + U_DATA__U_SP
 	txs
 	
 	lda #0
@@ -238,7 +240,7 @@ _dofork:
 	lda sp+1
 	pha
 	tsx
-	stx U_DATA__U_SP
+	stx _udata + U_DATA__U_SP
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process so write it out to disk.
@@ -259,8 +261,13 @@ _dofork:
         lda fork_proc_ptr
 	ldx fork_proc_ptr+1
 
+	jsr pushax
+
+	lda #<_udata
+	ldx #>_udata
+
 	; Perform the necessary magic to turn into the child
-        jsr _newproc
+        jsr _makeproc
 
 	; any calls to map process will now map the childs memory
         ; runticks = 0;

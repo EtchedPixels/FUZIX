@@ -45,6 +45,10 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 #define ALIGNDOWN(v) (v)
 #endif
 
+#ifndef UNALIGNED
+#define UNALIGNED(x)	0
+#endif
+
 #ifndef FS_MAX_SHIFT
 #define FS_MAX_SHIFT	0
 #endif
@@ -865,45 +869,51 @@ extern void idump(void);
 extern bool validdev(uint16_t dev);
 
 /* usermem.c */
+
+/* This option can only be used on a CPU without alignment rules */
 #ifdef CONFIG_LEVEL_0
-extern size_t strlcpy(char *, const char *, size_t);
 #define valaddr(a,b)	(1)
 #define uget(a,b,c)	(memcpy(b,a,c) && 0)
 #define uput(a,b,c)	(memcpy(b,a,c) && 0)
 #define ugetc(a)	(*(uint8_t *)(a))
 #define _ugetc(a)	(*(uint8_t *)(a))
-#define ugetw(a)	(*(uint8_t *)(a))
+#define ugetw(a)	(*(uint16_t *)(a))
+#define ugetl(a)	(*(uint32_t *)(a))
 #define uputc(v, p)	((*(uint8_t*)(p) = (v)) && 0)
 #define uputw(v, p)	((*(uint16_t*)(p) = (v)) && 0)
+#define uputl(v, p)	((*(uint32_t*)(p) = (v)) && 0)
 #define uzero(a,b)	(memset(a,0,b) && 0)
 #else
 extern usize_t valaddr(const uint8_t *base, usize_t size);
 extern int uget(const void *userspace_source, void *dest, usize_t count);
 extern int16_t  ugetc(const void *userspace_source);
 extern uint16_t ugetw(const void *userspace_source);
-extern uint32_t _ugetl(void *uaddr);
 extern int uput (const void *source,   void *userspace_dest, usize_t count);
 extern int uputc(uint16_t value,  void *userspace_dest);	/* u16_t so we don't get wacky 8bit stack games */
 extern int uputw(uint16_t value, void *userspace_dest);
-extern int _uputl(uint32_t val, void *uaddr);
 extern int uzero(void *userspace_dest, usize_t count);
+#endif
 
 /* usermem.c or usermem_std.s */
-extern usize_t _uget(const uint8_t *user, uint8_t *dst, usize_t count);
+extern int _uget(const uint8_t *user, uint8_t *dst, usize_t count);
 extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
 extern int _uzero(uint8_t *user, usize_t count);
 
+/* This option can only be used on a CPU without alignment rules */
 #if defined CONFIG_USERMEM_DIRECT
 #define _ugetc(p) (*(uint8_t*)(p))
 #define _ugetw(p) (*(uint16_t*)(p))
+#define _ugetl(p) (*(uint32_t*)(p))
 #define _uputc(v, p) ((*(uint8_t*)(p) = (v)), 0)
 #define _uputw(v, p) ((*(uint16_t*)(p) = (v)), 0)
+#define _uputl(v, p) ((*(uint32_t*)(p) = (v)), 0)
 #else
 extern int16_t _ugetc(const uint8_t *user) __fastcall;
 extern uint16_t _ugetw(const uint16_t *user) __fastcall;
-extern int _uputc(uint16_t value,  uint8_t *user);
-extern int _uputw(uint16_t value,  uint16_t *user);
-#endif
+extern uint32_t _ugetl(const uint32_t *user) __fastcall;
+extern int _uputc(uint16_t value, uint8_t *user);
+extern int _uputw(uint16_t value, uint16_t *user);
+extern int _uputl(uint32_t value, uint32_t *uaddr);
 #endif
 
 /* platform/tricks.s */
@@ -1077,8 +1087,8 @@ extern void swapin(ptptr p, uint16_t map);
 /* syscalls_fs.c, syscalls_proc.c, syscall_other.c etc */
 extern void updoff(void);
 extern int stcpy(inoptr ino, uint8_t *buf);
-extern bool rargs (char **userspace_argv, struct s_argblk *argbuf);
-extern char **wargs(char *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
+extern bool rargs (uint8_t **userspace_argv, struct s_argblk *argbuf);
+extern uint8_t **wargs(uint8_t *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
 
 /* timer.c */
 extern void rdtime(time_t *tloc);

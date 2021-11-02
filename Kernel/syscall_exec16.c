@@ -51,7 +51,7 @@ static int header_ok(struct exec *pp)
 arg_t _execve(void)
 {
 	/* We aren't re-entrant where this matters */
-	struct exec hdr;
+	staticfast struct exec hdr;
 	staticfast inoptr ino;
 	char **nargv;		/* In user space */
 	char **nenvp;		/* In user space */
@@ -235,10 +235,6 @@ arg_t _execve(void)
 	tmpfree(abuf);
 	tmpfree(ebuf);
 	i_deref(ino);
-
-	/* Align to meet the CPU requirements. Not generally needed on 8bit
-	   micros but will be needed if we tackle TMS9995 or similar */
-	nenvp = ALIGNDOWN(nenvp);
 
 	/* Shove argc and the address of argv just below envp
 	   FIXME: should flip them in crt0.S of app for R2L setups

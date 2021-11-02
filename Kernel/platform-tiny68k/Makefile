@@ -8,7 +8,7 @@ ASRCS += tricks.S
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devide_discard.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
-LSRCS = ../lib/68000exception.c
+LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -43,8 +43,9 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
-	../syscall_fs3.o ../syscall_exec32.o blkdev.o devide.o devide_discard.o mbr.o  \
-	../usermem_std-68000.o devtty.o libc.o ../malloc.o \
+	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
+	blkdev.o devide.o devide_discard.o mbr.o \
+	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o ../malloc.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 

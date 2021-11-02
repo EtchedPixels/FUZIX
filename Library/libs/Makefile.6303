@@ -1,4 +1,4 @@
-CC = cc68 -X
+CC = cc68
 ASM = as68
 AR = ar
 LINKER = ld68
@@ -6,7 +6,7 @@ CC_OPT = -D__STDC__ -c -I../include/ -I../include/6303/
 CC_NOOPT = -D__STDC__ -c -I../include/ -I../include/6303/
 ASM_OPT =
 LINKER_OPT =
-SRC_CRT0 = crt0_6303.s crt0nostdio_6303.s
+SRC_CRT0 = crt0_6303.s crt0nostdio_6303.s crt0_6303_rel.s crt0nostdio_6303_rel.s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM = longjmp_6303.s setjmp_6303.s
 OBJ_ASM = $(SRC_ASM:.s=.o)
@@ -75,7 +75,7 @@ OBJ_HARD = $(SRC_HARD:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_TC) $(OBJ_RL) $(OBJ_CURS)
 
 all: syslib.lib termcap.lib curses.lib readline.lib liberror.txt \
-     crt0_6303.o crt0nostdio_6303.o
+     $(OBJ_CRT0)
 
 .PHONY: fuzix6303/Makefile
 

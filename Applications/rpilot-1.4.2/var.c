@@ -9,7 +9,7 @@ strvar *new_strvar( char *name, char *val )
 {
   strvar *ret;
   
-  if( (ret = (strvar *)malloc(sizeof(strvar))) == NULL ) {
+  if( (ret = (strvar *)xmalloc(sizeof(strvar))) == NULL ) {
     err( NO_MEM, "" );
   }
   
@@ -24,7 +24,7 @@ numvar *new_numvar( char *name, int val )
 {
   numvar *ret;
 
-  if( (ret = (numvar *)malloc(sizeof(numvar))) == NULL ) {
+  if( (ret = (numvar *)xmalloc(sizeof(numvar))) == NULL ) {
     err( NO_MEM, "" );
   }  
 

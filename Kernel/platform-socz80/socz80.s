@@ -19,6 +19,7 @@
 	    .globl map_kernel_di
 	    .globl map_process_di
 	    .globl map_process_always_di
+	    .globl map_kernel_restore
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl platform_interrupt_all
@@ -412,6 +413,7 @@ map_process_always_di:
 ;
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	    push hl
 	    ld hl, #os_bank
 	    call map_loadhl

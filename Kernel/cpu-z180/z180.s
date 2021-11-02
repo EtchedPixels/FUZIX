@@ -32,11 +32,13 @@
         .globl _dofork
 	.globl map_buffers
         .globl map_kernel
+	.globl map_kernel_restore
         .globl map_process_always
         .globl map_kernel_di
         .globl map_process_always_di
         .globl map_save_kernel
         .globl map_restore
+	.globl map_for_swap
         .globl unix_syscall_entry
         .globl null_handler
         .globl nmi_handler
@@ -48,6 +50,10 @@
         .globl outstring
         .globl outstringhex
 
+.ifne CONFIG_SWAP
+	.globl _do_swapout
+	.globl _swapout
+.endif
         .include "kernel.def"
         .include "../cpu-z180/z180.def"
         .include "../kernel-z80.def"
@@ -685,6 +691,41 @@ z180_irq_unused:
         ld a, #0xFF
         jr z180_irqgo
 
+.ifne CONFIG_SWAP
+;
+;	Swapping requires the swap out is done on a different stack so we
+;	can flip the common of the victim for the write out
+;
+_swapout:
+	pop de
+	pop hl
+	push hl
+	push de			; HL is now the process to swap
+	ld b,h			; Save the process pointer
+	ld c,l
+	ld de,#P_TAB__P_PAGE_OFFSET
+	add hl,de
+	ld a,(hl)		; Get the page info for this process
+	ld hl,#0
+	add hl,sp		; get the current SP into a register pair
+	ld sp,#swapinstack
+	in0 e,(MMU_CBR)		; save the old mapping
+	out0 (MMU_CBR),a	; Swap the common to the victim
+	push hl			; Save old stack frame
+	push de			; Save old mapping
+	push bc			; Argument for do_swapout
+	call _do_swapout	; Swap the victim out in its own context
+	pop bc			; discard
+	pop bc			; Recover old mapping
+	pop de			; Recover old stack
+	ex de,hl		; DE is now return value, HL the stack
+	di
+	out0 (MMU_CBR), c	; Restore map first in case we takn an IRQ
+	ld sp,hl		; Switch stack
+	ex de,hl		; Return value back into HL
+	jp map_kernel		; Ensure the lower mapping is fixed up if needed
+.endif
+;
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
@@ -730,19 +771,18 @@ _switchin:
         ld hl, #P_TAB__P_PAGE_OFFSET
         add hl, de  ; now HL points at the p_page value for the next process
 
-        ; when we add support for swap we should check here that (hl) is non-zero
-
         ; map in the common memory for the new process -- this swaps common
         ; memory and the stack under our feet so let's hope that common memory
         ; contains a copy of this code, eh?
-        ld a, (hl)
 
 .ifne CONFIG_SWAP
 	.globl _swapper
 
+        ld a, (hl)
 	or a
 	jr nz, is_resident
 	; Swap in the new process (and maybe out an old one)
+	ld sp, #swapstack
 	ei
 	xor a
 	ld (_int_disabled),a
@@ -754,9 +794,12 @@ _switchin:
 	ld a,#1
 	ld (_int_disabled),a
 	di
-	ld a,(hl)
 .endif
 is_resident:
+	;
+	; We have no valid stack at this point
+	;
+	ld a, (hl)
         ; out0 (MMU_BBR), a -- WRS: leave the kernel mapped in
         out0 (MMU_CBR), a
 
@@ -784,6 +827,9 @@ is_resident:
 
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
+	;
+	; Only from here is the stack valid again
+	;
         ld sp, (_udata + U_DATA__U_SP)
 
         pop iy
@@ -805,6 +851,7 @@ switchinfail:
         call outstring
         jp _platform_monitor
 
+map_kernel_restore:
 map_buffers:
 map_kernel_di:
 map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
@@ -833,6 +880,19 @@ map_process_always: ; map the process into the low 60K based on current common m
         ; MMU_CBR is left unchanged
         pop af
         ret
+
+map_for_swap:
+.if DEBUGBANK
+	push af
+        ld a, #'s'
+        call outchar
+.endif
+	out0 (MMU_BBR),a	; the page is passed in A, so we just do an out0
+.if DEBUGBANK
+        call outcharhex
+	pop af
+.endif
+	ret
 
 map_save_kernel:   ; save the current process/kernel mapping
         push af
@@ -863,3 +923,14 @@ map_restore: ; restore the saved process/kernel mapping
 
 map_store:  ; storage for map_save/map_restore
         .db 0
+
+.ifne CONFIG_SWAP
+	.area _COMMONMEM
+
+	; Combining these is tricky so for the sake of 128 bytes or so we
+	; don't try at this point.
+	.ds 128
+swapstack:
+	.ds 128
+swapinstack:
+.endif

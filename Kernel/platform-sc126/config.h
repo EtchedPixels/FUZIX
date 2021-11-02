@@ -6,13 +6,14 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* Fixed banking: 8 x 64K banks, top 4KB is shared with kernel, 60KB-62KB is user memory  */
-#define CONFIG_BANK_FIXED
+/* Fixed banking: 8 x 64K banks, top 4KB is shared with kernel, 60KB-62KB is user memory upper
+   bank is switchable separately */
+#define CONFIG_BANK_SPLIT
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* 8 60K banks, 1 is kernel */
 #define MAX_MAPS	16
-#define MAP_SIZE	PROGTOP    /* WRS: I feel this should be 60KB, but setting it so breaks pagemap_realloc() when exec calls it */
+#define MAP_SPLIT	PROGTOP
 
 #define MAP_TRANS_8TO16(M)	(((M) & (unsigned char)0xFE) | 0x8000)
 #define MAP_TRANS_16TO8(M)	((unsigned char)(M) | (unsigned char)0x01)
@@ -53,23 +54,22 @@
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-/* Z180 does not yet support swap - need to fix that */
-//#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
 #define SWAP_SIZE   0x7D 	/* 62.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xF200	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-//#define CONFIG_DYNAMIC_SWAP
+#define CONFIG_DYNAMIC_SWAP
 #define swap_map(x)	((uint8_t *)(x))
 
 #define platform_copyright()		// for now
 
 /* WizNET based TCP/IP */
-#define CONFIG_NET
-#define CONFIG_NET_WIZNET
-#define CONFIG_NET_W5200
+#undef CONFIG_NET
+#undef CONFIG_NET_WIZNET
+#undef CONFIG_NET_W5200
 
 /* I2C device */
 #define CONFIG_DEV_I2C

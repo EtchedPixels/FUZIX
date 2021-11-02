@@ -6,11 +6,18 @@ SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
 SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
 SRCS += pg.c ed.c sort.c tty.c
 
-OBJS = $(SRCS:.c=.o)
+SRCST = clear.c
 
+OBJS = $(SRCS:.c=.o)
 APPS = $(OBJS:.o=)
 
-all: $(APPS) size.report
+OBJST = $(SRCST:.c=.o)
+APPST = $(OBJST:.o=)
+
+all: $(APPS) $(APPST) size.report
+
+$(APPST): %: %.o
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ -ltermcap68hc11 $(LINKER_TAIL)
 
 $(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LINKER_TAIL)

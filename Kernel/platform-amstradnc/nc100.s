@@ -10,6 +10,7 @@
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl map_kernel
+	    .globl map_kernel_restore
 	    .globl map_process
 	    .globl map_process_always
 	    .globl map_kernel_di
@@ -346,6 +347,7 @@ map_process_di:
 ;	Map in the kernel below the current common, all registers preserved
 ;
 map_kernel:
+map_kernel_restore:
 map_kernel_di:
 	    push af
 	    ; kernel is in banks 3/4/5, common starts at 6 but then gets

@@ -236,7 +236,7 @@ map_kernel:
 	    push af
 	    ; ROMWBW TPA is last but one bank (last bank is high space)
 	    ; so for now we hardcode this. We should ask ROMWBW at boot
-	    ld a,#14
+	    ld a,#0x8E
 	    ld (mapreg),a
 	    out (0x78), a
 	    pop af

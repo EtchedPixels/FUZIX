@@ -481,6 +481,7 @@ doexec:
 		lea.l 1024(a5),a7		; reset the supervisor stack
 
 
+		clr.b kernel_flag
 		move.w sr,d0			; Set the IRQ mask
 		and.w #$D8FF,d0			; Supervisor off
 		or.w #EI_MASK,d0		; May be some masked even

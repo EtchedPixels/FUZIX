@@ -1,8 +1,8 @@
 ;
-;	Glennside style IDE block transfer logic
+;	RC2014 CF Adapter IDE
 ;
 
-	.module dragonide
+	.module ide
 
 	.globl _devide_read_data
 	.globl _devide_write_data
@@ -32,7 +32,7 @@ _devide_read_data:
 	jsr map_process_always
 readbyte:
 	lda <IDEDATA
-	sta ,x++
+	sta ,x+
 	cmpx endp
 	bne readbyte
 	jsr map_kernel
@@ -49,7 +49,7 @@ _devide_write_data:
 	beq writebyte
 	jsr map_process_always
 writebyte:
-	lda ,x++
+	lda ,x+
 	sta <IDEDATA
 	cmpx endp
 	bne writebyte

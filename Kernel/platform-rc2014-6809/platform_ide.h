@@ -5,4 +5,4 @@
 
 #define IDE_REG_CS1_BASE 0xFE10
 #define IDE_IS_MMIO  1		/* MMIO IDE */
-
+#define IDE_8BIT_ONLY

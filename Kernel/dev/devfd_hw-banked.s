@@ -19,7 +19,7 @@ CPU_Z180	.equ	Z80_TYPE-2
 
         ; imported symbols
         .globl map_buffers
-        .globl map_kernel
+        .globl map_kernel_restore
         .globl map_process_always
         .globl _devfd_dtbl
 	.globl _platform_idle
@@ -679,7 +679,7 @@ FdCiR3: AND     #0x20           ; are we still in the Execution Phase? (1 cycle 
 
 ; tidy up and return
 FdCmdXferDone:
-        JP      map_kernel      ; else remap kernel and return
+        JP      map_kernel_restore      ; else remap kernel and return
 
 ;-------------------------------------------------------------
 ; Wait for FDC RQM to become Ready, return DIO status in

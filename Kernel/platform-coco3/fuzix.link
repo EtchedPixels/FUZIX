@@ -13,5 +13,6 @@ section .discard
 section	.bss
 section .udata load 0xe000
 section .common
+section .commondata
 section .cpage load 0xfe00
 entry start

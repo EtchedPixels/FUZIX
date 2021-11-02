@@ -253,6 +253,7 @@ doexec:
 	cli
 	pshx
 	pula				; high byte is our reloc base
+	ins				; drop the other byte
 	ldab #DPBASE			; relocation info for DP
 	ldy #0				; clear register
 	jmp 0,x				; from the caller D

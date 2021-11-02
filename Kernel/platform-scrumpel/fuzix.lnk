@@ -1,7 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0100
--b _COMMONMEM=0xF600
+-b _COMMONMEM=0xF400
 -b _DISCARD=0xE000
 -l z180
 platform-scrumpel/crt0.rel
@@ -31,7 +31,7 @@ syscall_other.rel
 syscall_net.rel
 tty.rel
 mm.rel
-bankfixed.rel
+banksplit.rel
 swap.rel
 devsys.rel
 platform-scrumpel/discard.rel

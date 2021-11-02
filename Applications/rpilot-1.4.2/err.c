@@ -33,7 +33,7 @@ int err( int errnum, char *msg )
     linenum = -1;
   }
 
-  errbuf = (char *)malloc( strlen(errstr(errnum)) + strlen(msg) );
+  errbuf = (char *)xmalloc( strlen(errstr(errnum)) + strlen(msg) );
   sprintf( errbuf, errstr(errnum), msg );
 
   if( rpi != NULL ) {

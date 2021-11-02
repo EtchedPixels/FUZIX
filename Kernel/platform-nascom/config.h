@@ -1,5 +1,6 @@
 /* Set if you want RTC support */
 #define CONFIG_RTC
+#define CONFIG_RTC_INTERVAL 100
 /* We don't have a clock interrupt */
 #define CONFIG_NO_CLOCK
 /* Enable to make ^Z dump the inode table for debug */

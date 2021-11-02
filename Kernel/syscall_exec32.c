@@ -56,7 +56,7 @@ static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 	if (bf->data_end > ino->c_node.i_size)
 		return 0;
 	/* Revisit this for other ports. Avoid alignment traps */
-	if ((bf->data_start | bf->data_end | bf->bss_end | bf->entry) & 1)
+	if (UNALIGNED(bf->reloc_start | bf->stack_size | bf->data_start | bf->data_end | bf->bss_end | bf->entry))
 		return 0;
 	/* Fix up the BSS so that it's big enough to hold the relocations
 	   FIXME: this is a) ugly and b) overcautious as we should factor
@@ -77,11 +77,19 @@ static void relocate(struct binfmt_flat *bf, uaddr_t progbase, uint32_t size)
 {
 	uint32_t *rp = (uint32_t *)(progbase + bf->reloc_start);
 	uint32_t n = bf->reloc_count;
+
+	/* TODO: check should this be -0x43 */
+	size -= 3;		/* We work in 32bit chunks */
+	progbase += 0x40;	/* Offset is relative the header end */
+
+	/* We can use _uput/_uget as we set up the memory map so we know
+	   it is valid */
 	while (n--) {
-		uint32_t v = *rp++;
-		if (v < size && !(v&1))	/* Revisit for non 68K */
-			/* FIXME: go via user access methods */
-			*((uint32_t *)(progbase + 0x40 + v)) += progbase + 0x40;
+		uint32_t v = ntohl(_ugetl(rp++));
+		if (v < size) {
+			uint32_t *mp = (uint32_t *)(progbase + v);
+			_uputl(_ugetl(mp) + progbase, mp);
+		}
 	}
 }
 
@@ -94,16 +102,16 @@ char *argv[];
 char *envp[];
 ********************************************/
 #define name (uint8_t *)udata.u_argn
-#define argv (char **)udata.u_argn1
-#define envp (char **)udata.u_argn2
+#define argv (uint8_t **)udata.u_argn1
+#define envp (uint8_t **)udata.u_argn2
 
 arg_t _execve(void)
 {
 	/* Not ideal on stack */
 	struct binfmt_flat binflat;
 	inoptr ino;
-	char **nargv;		/* In user space */
-	char **nenvp;		/* In user space */
+	uint8_t **nargv;	/* In user space */
+	uint8_t **nenvp;	/* In user space */
 	struct s_argblk *abuf, *ebuf;
 	int argc;
 	uint32_t bin_size;	/* Will need to be bigger on some cpus */
@@ -140,6 +148,16 @@ arg_t _execve(void)
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
+
+	binflat.rev = ntohl(binflat.rev);
+	binflat.entry = ntohl(binflat.entry);
+	binflat.data_start = ntohl(binflat.data_start);
+	binflat.data_end = ntohl(binflat.data_end);
+	binflat.bss_end = ntohl(binflat.bss_end);
+	binflat.stack_size = ntohl(binflat.stack_size);
+	binflat.reloc_start = ntohl(binflat.reloc_start);
+	binflat.reloc_count = ntohl(binflat.reloc_count);
+	binflat.flags = ntohl(binflat.flags);
 
 	/* FIXME: ugly - save this as valid_hdr modifies it */
 	true_brk = binflat.bss_end;
@@ -249,8 +267,8 @@ arg_t _execve(void)
 	/* place the arguments, environment and stack at the top of userspace memory. */
 
 	/* Write back the arguments and the environment */
-	nargv = wargs(((char *) top - 4), abuf, &argc);
-	nenvp = wargs((char *) (nargv), ebuf, NULL);
+	nargv = wargs(((uint8_t *) top - 4), abuf, &argc);
+	nenvp = wargs((uint8_t *) (nargv), ebuf, NULL);
 
 	/* Fill in udata.u_name with Program invocation name */
 	uget((void *) ugetl(nargv, NULL), udata.u_name, 8);

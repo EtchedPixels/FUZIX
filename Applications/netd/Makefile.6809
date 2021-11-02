@@ -35,6 +35,7 @@ netd: $(OBJS)
 	$(LINKER) $(LINKER_OPT) -o echoping $(CRT0) echoping.o
 	$(LINKER) $(LINKER_OPT) -o dig $(CRT0) dig.o
 	$(LINKER) $(LINKER_OPT) -o httpd $(CRT0) httpd.o
+	$(LINKER) $(LINKER_OPT) -o ifconfig $(CRT0) ifconfig.o
 	$(LINKER) $(LINKER_OPT) -o ping $(CRT0) ping.o gethostbyname.o
 	$(LINKER) $(LINKER_OPT) -o ntpdate $(CRT0) ntpdate.o gethostbyname.o
 	$(LINKER) $(LINKER_OPT) -o htget $(CRT0) htget.o gethostbyname.o

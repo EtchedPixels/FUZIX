@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+#
+#	Link at 0x100 DP 0x00 then 0x200 DP 0x02
+#
+set -e
+#
+cl65 -o "$TARGET.b1" $ARGS -C $FUZIX_ROOT/Library/link/ld65-1.cfg -m "$TARGET.map"
+cl65 -o "$TARGET.b2" $ARGS -C $FUZIX_ROOT/Library/link/ld65-2.cfg
+$FUZIX_ROOT/Library/tools/relocbin65 "$TARGET".b1 "$TARGET".b2 "$TARGET"
+rm -f "$TARGET.b1"
+rm -f "$TARGET.b2"

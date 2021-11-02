@@ -9,6 +9,9 @@ uint16_t swap_dev = 0xFFFF;
 
 void platform_idle(void)
 {
+  irqflags_t irq = di();
+  tty_interrupt();
+  irqrestore(irq);
 }
 
 void do_beep(void)

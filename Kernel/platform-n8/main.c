@@ -7,6 +7,7 @@
 #include "n8.h"
 
 uint16_t ramtop = PROGTOP;
+uint16_t swap_dev = 0xFFFF;
 extern unsigned char irqvector;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS; /* minimal for boot -- expanded after we're done with _DISCARD */

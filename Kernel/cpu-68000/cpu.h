@@ -75,4 +75,9 @@ extern int cpu_type(void);
 #define in16(x)			(*IOMEM16(x))
 #define out16(x,y)		do { *IOMEM16(x) = (y); } while(0)
 
+/* We require word alignment */
+#define UNALIGNED(x)		((x) & 1)
+#define ALIGNUP(x)		(((x) + 1) & ~1)
+#define ALIGNDOWN(x)		((x) & ~1)
+
 #define __fastcall

@@ -153,8 +153,8 @@ void swapin(ptptr p, uint16_t map)
 void swapinout(ptptr p)
 {
 	/* If there's an existing process in memory, swap it out; then swap in the
-	 * new process. */
-	if (udata.u_ptab->p_page)
+	 * new process. (0xFFFF indicates a dead process in memory) */
+	if (udata.u_ptab->p_page && udata.u_ptab->p_page != 0xFFFF)
 		swapout(udata.u_ptab);
 	swapper(p);
 	p->p_page = 1;

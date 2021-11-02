@@ -1,0 +1,2 @@
+reserve C000-CFFF
+reserve 0400-07FF

@@ -640,8 +640,13 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (Option != PASS)
+	if (Option != PASS) {
 		Wp = Dbuf = malloc(Bufsize);
+		if (Dbuf == NULL) {
+			err("Out of memory.\n");
+			exit(1);
+		}
+	}
 	Wct = Bufsize >> 1;
 
 	if (Option == PASS && Rename) {

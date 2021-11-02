@@ -51,13 +51,13 @@ void kputchar(uint_fast8_t c)
 
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-	uint8_t c = uart[minor].lsr;
+	uint8_t c = uart[minor - 1].lsr;
 	return (c & 0x20) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-	uart[minor].data = c;	/* Data */
+	uart[minor - 1].data = c;	/* Data */
 }
 
 void tty_sleeping(uint_fast8_t minor)
@@ -101,7 +101,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	uint8_t d;
 	uint16_t w;
-	struct uart16x50 volatile *u = &uart[minor];
+	struct uart16x50 volatile *u = &uart[minor - 1];
 	struct termios *t = &ttydata[minor].termios;
 	/* 16x50. Can actually be configured */
 	d = 0x80;	/* DLAB (so we can write the speed) */
@@ -125,7 +125,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 
 int tty_carrier(uint_fast8_t minor)
 {
-	return uart[minor].msr & 0x80;
+	return uart[minor - 1].msr & 0x80;
 }
 
 void tty_data_consumed(uint_fast8_t minor)

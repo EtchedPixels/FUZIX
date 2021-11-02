@@ -26,43 +26,48 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	PTY_QUEUES
 };
 
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
+	_CSYS	/* Nothing configurable */
+};
+
 /* tty1 is the screen tty2+ are the serial ports */
 
 /* Output for the system console (kprintf etc) */
-void kputchar(uint8_t c)
+void kputchar(char c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
         return TTY_READY_NOW;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	vtoutput(&c,1);
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	minor;
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	minor;
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	minor;
 	return 1;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
@@ -101,33 +106,33 @@ void platform_interrupt(void)
 /* Line start table for 40 or 80 column. The only difference is that for
    40 column you add X, for 80 column you add X/2 and bit 0 of X tells you
    if its alternate (0) or main (1) memory. */
-static volatile uint8_t *vtmap[24] = {
-	(volatile uint8_t *)0x400,
-	(volatile uint8_t *)0x480,
-	(volatile uint8_t *)0x500,
-	(volatile uint8_t *)0x580,
-	(volatile uint8_t *)0x600,
-	(volatile uint8_t *)0x680,
-	(volatile uint8_t *)0x700,
-	(volatile uint8_t *)0x780,
+static uint8_t *vtmap[24] = {
+	(uint8_t *)0x400,
+	(uint8_t *)0x480,
+	(uint8_t *)0x500,
+	(uint8_t *)0x580,
+	(uint8_t *)0x600,
+	(uint8_t *)0x680,
+	(uint8_t *)0x700,
+	(uint8_t *)0x780,
 	
-	(volatile uint8_t *)0x428,
-	(volatile uint8_t *)0x4A8,
-	(volatile uint8_t *)0x528,
-	(volatile uint8_t *)0x5A8,
-	(volatile uint8_t *)0x628,
-	(volatile uint8_t *)0x6A8,
-	(volatile uint8_t *)0x728,
-	(volatile uint8_t *)0x7A8,
+	(uint8_t *)0x428,
+	(uint8_t *)0x4A8,
+	(uint8_t *)0x528,
+	(uint8_t *)0x5A8,
+	(uint8_t *)0x628,
+	(uint8_t *)0x6A8,
+	(uint8_t *)0x728,
+	(uint8_t *)0x7A8,
 	
-	(volatile uint8_t *)0x450,
-	(volatile uint8_t *)0x4D0,
-	(volatile uint8_t *)0x550,
-	(volatile uint8_t *)0x5D0,
-	(volatile uint8_t *)0x650,
-	(volatile uint8_t *)0x6D0,
-	(volatile uint8_t *)0x750,
-	(volatile uint8_t *)0x7D0
+	(uint8_t *)0x450,
+	(uint8_t *)0x4D0,
+	(uint8_t *)0x550,
+	(uint8_t *)0x5D0,
+	(uint8_t *)0x650,
+	(uint8_t *)0x6D0,
+	(uint8_t *)0x750,
+	(uint8_t *)0x7D0
 };
 
 /* Simple driver for 40 column text */
@@ -138,7 +143,7 @@ void plot_char(int8_t y, int8_t x, uint16_t c)
 }
 
 /* Point at ourselves so the first dummy cursor_off is harmless */
-static volatile uint8_t *cursorptr = (uint8_t *)&cursorptr;
+static uint8_t *cursorptr = (uint8_t *)&cursorptr;
 
 void cursor_off(void)
 {
@@ -151,15 +156,20 @@ void cursor_on(int8_t y, int8_t x)
 	*cursorptr &= 127;
 }
 
+/* Not a hardware cursor */
+void cursor_disable(void)
+{
+}
+
 void clear_across(int8_t y, int8_t x, int16_t l)
 {
-	volatile uint8_t *addr = vtmap[y] + x;
+	uint8_t *addr = vtmap[y] + x;
 	memset(addr, ' '|0x80, l);
 }
 
 void clear_lines(int8_t y, int8_t n)
 {
-	volatile uint8_t *addr;
+	uint8_t *addr;
 	while(n--) {
 		addr = vtmap[y++];
 		memset(addr, ' '|0x80, 40);
@@ -174,8 +184,8 @@ void scroll_up(void)
 {
 	uint8_t y;
 	for (y = 1; y <= 23; y++) {
-		volatile uint8_t *src = vtmap[y];
-		volatile uint8_t *dst = vtmap[y-1];
+		uint8_t *src = vtmap[y];
+		uint8_t *dst = vtmap[y-1];
 		memcpy(dst, src, 40);
 	}
 }
@@ -184,8 +194,8 @@ void scroll_down(void)
 {
 	uint8_t y;
 	for (y = 23; y > 1; y--) {
-		volatile uint8_t *src = vtmap[y-1];
-		volatile uint8_t *dst = vtmap[y];
+		uint8_t *src = vtmap[y-1];
+		uint8_t *dst = vtmap[y];
 		memcpy(dst, src, 40);
 	}
 }

@@ -10,7 +10,8 @@ static unsigned int s__CODE, s__CODE2, s__INITIALIZER, s__DATA,
     s__INITIALIZED, s__INITIALIZER, s__COMMONMEM, s__VIDEO, l__INITIALIZED,
     l__GSFINAL, l__GSINIT, l__COMMONMEM, s__FONT, l__FONT, s__DISCARD,
     l__DISCARD, l__CODE, l__CODE2, l__VIDEO, l__DATA, s__CONST, l__CONST,
-    s__HEAP, l__HEAP, s__BOOT=0xFFFF, l__BOOT, s__PAGE0 = 0xFFFF;
+    s__HEAP, l__HEAP, s__BOOT=0xFFFF, l__BOOT, s__PAGE0 = 0xFFFF,
+    s__SYSMOD, l__SYSMOD;
 
 
 static void ProcessMap(FILE * fp)
@@ -77,6 +78,10 @@ static void ProcessMap(FILE * fp)
 			sscanf(p1, "%x", &s__BOOT);
 		if (strcmp(p2, "l__BOOT") == 0)
 			sscanf(p1, "%x", &l__BOOT);
+		if (strcmp(p2, "s__SYSMOD") == 0)
+			sscanf(p1, "%x", &s__SYSMOD);
+		if (strcmp(p2, "l__SYSMOD") == 0)
+			sscanf(p1, "%x", &l__SYSMOD);
 		if (strcmp(p2, "s__PAGE0") == 0)
 			sscanf(p1, "%x", &s__PAGE0);
 	}
@@ -222,7 +227,12 @@ int main(int argc, char *argv[])
 		   relocated */
 		if (!no_pack && (!s__DISCARD || pack_discard)) {
 		        base = s__DATA;
-			tail = l__COMMONMEM;
+		        tail = l__SYSMOD;
+		        if (tail) {
+				memcpy(out + base, buf + s__SYSMOD, l__SYSMOD);
+				base += l__SYSMOD;
+			}
+			tail += l__COMMONMEM;
 			memcpy(out + base, buf + s__COMMONMEM,
 			       l__COMMONMEM);
 			base += l__COMMONMEM;

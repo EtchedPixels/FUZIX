@@ -1,5 +1,5 @@
 CSRCS = libc.c tm4c129x.c devtty.c devsdspi.c devices.c systick.c \
-        syscall.c ssi.c procman.c gpio.c interrupt.c clock.c
+        syscall.c ssi.c procman.c eth.c gpio.c interrupt.c clock.c
 ifeq ($(BITS),elf32)
 CSRCS += elf.c
 endif
@@ -57,8 +57,8 @@ image:
 	../start.o ../version.o ../lowlevel-armm4.o \
 	../timer.o ../kdata.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o \
-	../mm.o ../swap.o ../flat.o \
+	../syscall_proc.o ../syscall_net.o ../syscall_other.o \
+	../network.o ../mm.o ../swap.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec.o ../syscall_exec$(BITS).o \
 	../syscall_level2.o ../level2.o ../select.o \

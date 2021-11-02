@@ -67,7 +67,7 @@ extern void copy_blocks(void *, void *, unsigned int);
 extern void swap_blocks(void *, void *, unsigned int);
 
 #define __packed		__attribute__((packed))
-#define barrier()		asm volatile("":::"memory")
+#define barrier()		__asm__ volatile("":::"memory")
 
 #define ntohs(x) ((uint16_t)(__builtin_bswap16((uint16_t)(x))))
 #define ntohl(x) ((uint32_t)(__builtin_bswap32((uint32_t)(x))))

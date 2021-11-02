@@ -42,7 +42,7 @@ C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c bank8k.c bank16k.c bank16k_low.c bank32k.c
 C3SRCS = bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c
-C2SRCS += bank8086.c bank16kfc.c
+C2SRCS += bank8086.c bank16kfc.c banksplit.c
 C4SRCS = filesys.c version.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
@@ -69,8 +69,7 @@ C3SRCS += devsys.c mm.c swap.c usermem.c timer.c audio.c level2.c devinput.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c font8x8_exp2.c font4x8.c
 
-#	For now until we round networkig up a bit more
-C3SRCS += network.c
+CNETSRCS = network.c
 
 ASRCS =  lowlevel-$(CPU)$(BANKED)$(ASMEXT) usermem_std-$(CPU)$(BANKED)$(ASMEXT)
 
@@ -88,14 +87,15 @@ CS4OBJS = $(CS4SRCS:.c=$(BINEXT))
 CS5OBJS = $(CS5SRCS:.c=$(BINEXT))
 
 CFONTOBJS = $(CFONTSRCS:.c=$(BINEXT))
+CNETOBJS = $(CNETSRCS:.c=$(BINEXT))
 CVIDEOOBJS = $(CVIDEOSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:$(ASMEXT)=$(BINEXT))
 
 CSSRCS = $(CS1SRCS) $(CS2SRCS) $(CS3SRCS) $(CS4SRCS) $(CS5SRCS)
 CSOBJS = $(CS1OBJS) $(CS2OBJS) $(CS3OBJS) $(CS4OBJS) $(CS5OBJS)
 
-CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(C4SRCS) $(CFONTSRCS) $(CVIDEOSRCS) $(CSSRCS)
-COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(C4OBJS) $(CFONTOBJS) $(CVIDEOOBJS) $(CSOBJS)
+CSRCS = $(CDSRCS) $(C1SRCS) $(C2SRCS) $(C3SRCS) $(C4SRCS) $(CFONTSRCS) $(CVIDEOSRCS) $(CSSRCS) $(CNETSRCS)
+COBJS = $(CDOBJS) $(C1OBJS) $(C2OBJS) $(C3OBJS) $(C4OBJS) $(CFONTOBJS) $(CVIDEOOBJS) $(CSOBJS) $(CNETOBJS)
 
 OBJS  = $(COBJS) $(AOBJS)
 
@@ -159,6 +159,9 @@ $(CS4OBJS): %$(BINEXT): %.c
 
 $(CS5OBJS): %$(BINEXT): %.c
 	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SYS5) $<
+
+$(CNETOBJS): %$(BINEXT): %.c
+	$(QUIET_CC)$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_NETWORK) $<
 
 $(AOBJS): %$(BINEXT): %$(ASMEXT)
 	$(QUIET_AS)$(CROSS_AS) $(ASOPTS) -o $*$(BINEXT) $<

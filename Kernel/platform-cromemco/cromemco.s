@@ -33,6 +33,7 @@
 	.globl s__COMMONMEM
 	.globl l__COMMONMEM
 
+	.globl syscall_platform
 	.globl unix_syscall_entry
 	.globl my_nmi_handler
 	.globl interrupt_handler
@@ -831,6 +832,7 @@ irqsigret:
 	inc sp
 	ret
 
+syscall_platform:
 syscall_high:
 	push ix
 	ld ix,#0

@@ -29,7 +29,7 @@ rd_kernel:
             call map_buffers
 doread:
             call sector_dma_in
-            jp map_kernel                           ; else map kernel then return
+            jp map_kernel_restore                   ; else map kernel then return
     __endasm;
 }
 
@@ -56,6 +56,6 @@ wr_kernel:
             call map_buffers
 dowrite:
             call sector_dma_out
-            jp map_kernel                           ; else map kernel then return
+            jp map_kernel_restore                   ; else map kernel then return
     __endasm;
 }

@@ -40,7 +40,7 @@
 #define PROGTOP     0xC000  /* When we hit the data space */
 
 #define SWAP_SIZE   0x60	/* 48K - allow for udata and our magic */
-#define SWAPBASE    0x0800
+#define SWAPBASE    0x0800	/* FIXME: will need to swap ZP and stack too */
 #define SWAPTOP	    0xC000
 #define MAX_SWAPS   PTABSIZE
 #define swap_map(x)	((uint8_t *)(x))
@@ -58,7 +58,8 @@
 /* Device parameters */
 #define NUM_DEV_TTY 1	  /* For now until we add console switches */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    6        /* Number of block buffers */
+#define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 3	  /* Number of mounts at a time */
 
 #define platform_discard()
+#define platform_copyright()

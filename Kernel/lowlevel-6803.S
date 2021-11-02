@@ -231,7 +231,7 @@ _doexec:
 	pshx
 	pula				; base is exec addr & FF00
 	ins
-	clrb
+	ldab #DPBASE			; DP base is set by the platform header
 	jmp 0,x
 
 trap_handler:

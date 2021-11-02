@@ -134,7 +134,7 @@ int uputl(uint32_t val, void *uaddr)
  */
 #ifdef CONFIG_USERMEM_C
 
-usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
+int _uget(const uint8_t *user, uint8_t *dest, usize_t count)
 {
 	uint8_t tmp;
 	while(count--) {
@@ -228,7 +228,7 @@ int _uputl(uint32_t val, void *uaddr)
 
 /* Systems where all memory is always mapped for live processes and kernel */
 
-usize_t _uget(const uint8_t *user, uint8_t *dest, usize_t count)
+int _uget(const uint8_t *user, uint8_t *dest, usize_t count)
 {
 	memcpy(dest, user, count);
 	return 0;
@@ -246,19 +246,5 @@ int _uzero(uint8_t *user, usize_t count)
 	return 0;
 }
 
-#ifdef CONFIG_32BIT
-
-uint32_t _ugetl(void *uaddr)
-{
-	return *(uint32_t *)uaddr;
-}
-
-int _uputl(uint32_t val, void *uaddr)
-{
-	*(uint32_t *)uaddr = val;
-	return 0;
-}
-
-#endif
 #endif
 #endif

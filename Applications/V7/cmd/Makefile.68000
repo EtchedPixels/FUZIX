@@ -6,16 +6,25 @@ SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
 SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
 SRCS += pg.c	  tty.c
 
-OBJS = $(SRCS:.c=.o)
+SRCST = clear.c
 
+OBJS = $(SRCS:.c=.o)
 APPS = $(OBJS:.o=)
 
-all: $(APPS) size.report
+OBJST = $(SRCST:.c=.o)
+APPST = $(OBJST:.o=)
+
+all: $(APPS) $(APPST) size.report
 
 $(APPS): $(CRT0)
+$(APPST): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
+	$(ELF2FUZIX) -o $@ $@.bin
+
+$(APPST) $(APPSNS): %: %.o
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
 
 

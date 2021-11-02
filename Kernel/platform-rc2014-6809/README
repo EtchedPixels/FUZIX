@@ -39,9 +39,9 @@ IDE at 0xFE10
 
 TODO:
 
-Rework the boot ROM bootstrap checks before starting CUBIX from ROM
-Bootstrap loader
-Align crt0 and bootstrap
-Ensure constants end up 0xC000 and higher (.link)
-Timer/VIA set up
-Move istack to FF00-FF??
+DONE	Rework the boot ROM bootstrap checks before starting CUBIX from ROM
+	Align crt0 and bootstrap
+	Pack and unpack the high space
+	Ensure constants end up 0xC000 and higher (.link)
+	Timer/VIA set up
+	Move istack to FF00-FF??

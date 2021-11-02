@@ -52,7 +52,7 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(NOBJS): %.rel: ../dev/net/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_NETWORK) -c $<
 
 $(DROBJS): %.rel: ../dev/rc2014/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<

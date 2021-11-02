@@ -9,6 +9,8 @@ export CROSS_CC_SEG3=
 # gcc expects this to be done by linker script
 export CROSS_CC_SEGDISC=
 export CROSS_CC_VIDEO=
+export CROSS_CC_FONT=
+export CROSS_CC_NETWORK=
 export ASOPTS=
 export ASMEXT = .s
 export BINEXT = .o

@@ -405,7 +405,8 @@ int main(int argc, char* const* argv)
 	if (crossendian && verbose)
 		printf("[Cross endian conversion]\n");
 
-	if (endian16(elffile->e_type) != ET_EXEC) {
+	if ((endian16(elffile->e_type) != ET_EXEC) &&
+	    (endian16(elffile->e_type) != ET_DYN)) {
 		fprintf(stderr, "elf2flt: only executable files.\n");
 		exit(1);
 	}
@@ -501,7 +502,7 @@ int main(int argc, char* const* argv)
 				break;
 		}
 		/* HACK: Ignore all the crap after the BSS */
-		if (endian32(sh->sh_type) == SHT_NOBITS)
+		if ((endian32(sh->sh_type) == SHT_NOBITS) && (arch != EM_ARM))
 			break;
 	}
 

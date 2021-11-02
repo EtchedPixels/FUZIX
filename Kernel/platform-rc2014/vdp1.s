@@ -62,7 +62,7 @@
 ;	Core support
 ;
 	    .globl map_process_always
-	    .globl map_kernel
+	    .globl map_kernel_restore
 	    .area _CODE1
 ;
 ;	Register write value E to register A. This is a pure VDP register
@@ -419,11 +419,11 @@ ropc:
 	    jr nz, ropl
 	    pop ix
 	    ld hl, #0
-	    jp map_kernel
+	    jp map_kernel_restore
 bounds:
 	    pop ix
 	    ld hl, #-1
-            jp map_kernel
+            jp map_kernel_restore
 
 _vdp_wop:
 	    push ix
@@ -474,7 +474,7 @@ boundclear:
 	    jr nz, ropl
 	    pop ix
 	    ld hl,#0
-	    jp map_kernel
+	    jp map_kernel_restore
 
 
 ;

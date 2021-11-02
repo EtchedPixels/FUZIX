@@ -1,4 +1,4 @@
-const /* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
+/* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
 /* ANSIfied for FUZIX */
 
 /*	diff - differential file comparison
@@ -209,7 +209,7 @@ void filename(char **pa1, char **pa2)
 	a2 = *pa2;
 	if (stat(a1, &stbuf) != -1
 	    && ((stbuf.st_mode & S_IFMT) == S_IFDIR)) {
-		b1 = *pa1 = malloc(100);
+		b1 = *pa1 = talloc(100);
 		while (*b1++ = *a1++);
 		b1[-1] = '/';
 		a1 = b1;

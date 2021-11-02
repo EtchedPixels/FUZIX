@@ -10,7 +10,7 @@ label *new_label( char *name, line *lne, int linenum )
 {
   label *l;
 
-  l = (label *)malloc( sizeof(label) );
+  l = (label *)xmalloc( sizeof(label) );
   l->linenum = linenum;
   l->stmnt = lne;
   l->name = new_string( name );

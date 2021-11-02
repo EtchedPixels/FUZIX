@@ -1,0 +1,140 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  M68K_CROSS_URL: https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/11.1.0/x86_64-gcc-11.1.0-nolibc-m68k-linux.tar.gz
+  M68K_CROSS_DIR: gcc-11.1.0-nolibc
+
+jobs:
+
+  build-dragon-nx32:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo add-apt-repository -n -y ppa:p-pisati/fuzix
+        sudo apt-get update -q
+        sudo apt-get install -y lwtools gcc6809
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make TARGET=dragon-nx32 -j`nproc`
+
+  build-multicomp09:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo add-apt-repository -n -y ppa:p-pisati/fuzix
+        sudo apt-get update -q
+        sudo apt-get install -y lwtools gcc6809
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make TARGET=multicomp09 -j`nproc`
+
+  build-sbcv2:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y sdcc
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make TARGET=sbcv2 -j`nproc`
+
+  build-sc108:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y sdcc
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make TARGET=sc108 -j`nproc`
+
+  build-n8vem-mark4:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y sdcc
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make TARGET=n8vem-mark4 -j`nproc`
+
+  build-v65c816:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y cc65
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make TARGET=v65c816 -j`nproc`
+
+  build-v68:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+        wget -O - "${M68K_CROSS_URL}" | sudo tar zxvf - -C /usr/local
+    - name: update env
+      run: echo "/usr/local/${M68K_CROSS_DIR}/m68k-linux/bin" >> $GITHUB_PATH
+    - name: make
+      run: make CROSS_COMPILE=m68k-linux- TARGET=v68 -j`nproc`
+
+  build-tiny68k:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+        wget -O - "${M68K_CROSS_URL}" | sudo tar zxvf - -C /usr/local
+    - name: update env
+      run: echo "/usr/local/${M68K_CROSS_DIR}/m68k-linux/bin" >> $GITHUB_PATH
+    - name: make
+      run: make CROSS_COMPILE=m68k-linux- TARGET=tiny68k -j`nproc`
+
+  build-esp8266:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y gcc-xtensa-lx106
+    - name: make kernel
+      run: make -C Kernel TARGET=esp8266 -j`nproc`
+    - name: make libraries
+      run: |
+        make -C Library -j`nproc`
+        make -C Library/libs -f Makefile.esp8266 -j`nproc`
+
+
