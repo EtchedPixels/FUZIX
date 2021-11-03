@@ -24,6 +24,8 @@
 #define SD_DRIVE_COUNT 1
 /* Enable dynamic swap. */
 #define CONFIG_PLATFORM_SWAPCTL
+/* Platform manages process brk. */
+#define CONFIG_PLATFORM_BRK
 
 #define CONFIG_32BIT
 #define CONFIG_USERMEM_DIRECT
