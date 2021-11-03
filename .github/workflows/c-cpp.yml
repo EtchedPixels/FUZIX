@@ -122,21 +122,6 @@ jobs:
     - name: make
       run: make CROSS_COMPILE=m68k-linux- TARGET=tiny68k -j`nproc`
 
-  build-esp8266:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: install build deps
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -y gcc-xtensa-lx106
-    - name: make kernel
-      run: make -C Kernel TARGET=esp8266 -j`nproc`
-    - name: make libraries
-      run: |
-        make -C Library -j`nproc`
-        make -C Library/libs -f Makefile.esp8266 -j`nproc`
-
   build-rpipico:
     runs-on: ubuntu-20.04
     steps:
