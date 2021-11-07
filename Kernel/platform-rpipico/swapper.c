@@ -370,5 +370,22 @@ void swapin(ptptr p, uint16_t map)
     p->p_page2 = 0;
 }
 
+arg_t brk_extend(uaddr_t addr)
+{
+    if (addr < PROGBASE)
+        return EINVAL;
+    if (addr >= brk_limit()) {
+        /* Claim more memory for this process. */
+        if (pagemap_realloc(NULL, addr - PROGBASE))
+		{
+			kprintf("%d: out of memory by %d\n", udata.u_ptab->p_pid,
+				addr - brk_limit());
+            return ENOMEM;
+		}
+        return 0;
+    }
+    return 0;
+}
+
 // vim: ts=4 sw=4 et
 
