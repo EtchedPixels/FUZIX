@@ -43,6 +43,6 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank65c816.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
 	../syscall_exec16.o ../usermem.o ../usermem_std-65c816.o devtty.o \
-	../syscall_net.o net_native.o ../vt.o ../font8x8.o
+	../syscall_net.o ../syscall_exec.o net_native.o ../vt.o ../font8x8.o
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=255 count=1
 	dd if=../fuzix.bin of=fuzix.img bs=256 seek=1 skip=1 conv=notrunc
