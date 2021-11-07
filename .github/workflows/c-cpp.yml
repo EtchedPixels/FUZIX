@@ -133,19 +133,3 @@ jobs:
     - name: make kernel
       run: make -C Kernel TARGET=rpipico -j`nproc`
 
-  build-esp8266:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: install build deps
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -y gcc-xtensa-lx106 picolibc-xtensa-lx106-elf
-    - name: make kernel
-      run: make -C Kernel TARGET=esp8266 -j`nproc`
-    - name: make libraries
-      run: |
-        make -C Library -j`nproc`
-        make -C Library/libs -f Makefile.esp8266 -j`nproc`
-
-
