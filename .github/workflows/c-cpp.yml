@@ -142,7 +142,7 @@ jobs:
         sudo apt-get update -q
         sudo apt-get install -y gcc-xtensa-lx106
     - name: make kernel
-      run: make -C Kernel TARGET=esp8266 -j`nproc`
+      run: make -C Kernel TARGET=esp8266 -j`nproc` FUZIX_ROOT=$PWD
     - name: make libraries
       run: |
         make -C Library -j`nproc` FUZIX_ROOT=$PWD
