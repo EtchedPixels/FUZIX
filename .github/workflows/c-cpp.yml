@@ -140,7 +140,7 @@ jobs:
     - name: install build deps
       run: |
         sudo apt-get update -q
-        sudo apt-get install -y gcc-xtensa-lx106
+        sudo apt-get install -y gcc-xtensa-lx106 esptool
     - name: make kernel
       run: make -C Kernel TARGET=esp8266 -j`nproc` FUZIX_ROOT=$PWD
     - name: make libraries
