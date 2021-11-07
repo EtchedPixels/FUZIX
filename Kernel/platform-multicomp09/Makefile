@@ -53,8 +53,8 @@ image:
 	devsdc.o sdc.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
-	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../syscall_fs3.o \
+	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
+	../syscall_exec.o ../syscall_exec16.o ../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o \
 	videoll.o
 
