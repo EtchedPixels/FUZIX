@@ -11,7 +11,7 @@ env:
   M68K_CROSS_DIR: gcc-11.1.0-nolibc
 
 concurrency: 
-  group: ${{ github.head_ref }}
+  group: environment-${{ github.head_ref }}
   cancel-in-progress: true
 
 jobs:
@@ -150,6 +150,4 @@ jobs:
       run: |
         make -C Library -j`nproc` FUZIX_ROOT=$PWD
         make -C Library/libs -f Makefile.esp8266 -j`nproc` FUZIX_ROOT=$PWD
-
-
 
