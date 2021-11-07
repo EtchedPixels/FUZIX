@@ -80,4 +80,7 @@ extern int cpu_type(void);
 #define ALIGNUP(x)		(((x) + 1) & ~1)
 #define ALIGNDOWN(x)		((x) & ~1)
 
+/* In a 32bit environment udata.u_codebase is the progrram base for brk */
+#define PROGBASE		(udata.u_codebase)
+
 #define __fastcall

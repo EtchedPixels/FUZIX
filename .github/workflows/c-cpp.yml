@@ -79,7 +79,7 @@ jobs:
     - name: make
       run: make TARGET=n8vem-mark4 -j`nproc`
 
-  build-v65c816:
+  build-rc2014-6502:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -90,9 +90,9 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=v65c816 -j`nproc`
+      run: make TARGET=rc2014-6502 -j`nproc`
 
-  build-v68:
+  build-rc2014-68008:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -105,7 +105,7 @@ jobs:
     - name: update env
       run: echo "/usr/local/${M68K_CROSS_DIR}/m68k-linux/bin" >> $GITHUB_PATH
     - name: make
-      run: make CROSS_COMPILE=m68k-linux- TARGET=v68 -j`nproc`
+      run: make CROSS_COMPILE=m68k-linux- TARGET=rc2014-68008 -j`nproc`
 
   build-tiny68k:
     runs-on: ubuntu-20.04
