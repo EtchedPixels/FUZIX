@@ -10,8 +10,11 @@ env:
   M68K_CROSS_URL: https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/11.1.0/x86_64-gcc-11.1.0-nolibc-m68k-linux.tar.gz
   M68K_CROSS_DIR: gcc-11.1.0-nolibc
 
-jobs:
+concurrency: 
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
 
+jobs:
   build-dragon-nx32:
     runs-on: ubuntu-20.04
     steps:
