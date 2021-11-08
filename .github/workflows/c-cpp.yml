@@ -144,6 +144,8 @@ jobs:
       run: |
         sudo apt-get update -q
         sudo apt-get install -y gcc-xtensa-lx106 esptool
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make libraries
       run: |
         make TARGET=esp8266 -j`nproc`
