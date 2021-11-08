@@ -134,7 +134,7 @@ jobs:
         sudo apt-get update -q
         sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     - name: make kernel
-      run: make TARGET=rpipico -j`nproc`
+      run: make TARGET=rpipico kernel -j`nproc`
 
   build-esp8266:
     runs-on: ubuntu-20.04
@@ -162,5 +162,18 @@ jobs:
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
       run: make USERCPU=z80 libs -j`nproc`
+
+  build-armm0-libc:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y sdcc
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make USERCPU=armm0 libs -j`nproc`
 
 
