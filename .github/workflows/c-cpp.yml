@@ -54,7 +54,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make -C Kernel TARGET=sbcv2 -j`nproc` FUZIX_ROOT=$PWD
+      run: make TARGET=sbcv2 kernel -j`nproc`
 
   build-sc108:
     runs-on: ubuntu-20.04
@@ -67,7 +67,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make -C Kernel TARGET=sc108 -j`nproc` FUZIX_ROOT=$PWD
+      run: make TARGET=sc108 kernel -j`nproc`
 
   build-n8vem-mark4:
     runs-on: ubuntu-20.04
@@ -80,7 +80,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make -C Kernel TARGET=n8vem-mark4 -j`nproc` FUZIX_ROOT=$PWD
+      run: make TARGET=n8vem-mark4 kernel -j`nproc`
 
   build-rc2014-6502:
     runs-on: ubuntu-20.04
@@ -134,7 +134,7 @@ jobs:
         sudo apt-get update -q
         sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     - name: make kernel
-      run: make -C Kernel TARGET=rpipico -j`nproc`
+      run: make TARGET=rpipico -j`nproc`
 
   build-esp8266:
     runs-on: ubuntu-20.04
@@ -148,8 +148,7 @@ jobs:
       run: make -C Kernel TARGET=esp8266 -j`nproc` FUZIX_ROOT=$PWD
     - name: make libraries
       run: |
-        make -C Library -j`nproc` FUZIX_ROOT=$PWD
-        make -C Library/libs -f Makefile.esp8266 -j`nproc` FUZIX_ROOT=$PWD
+        make TARGET=esp8266 -j`nproc`
 
   build-z80-libc:
     runs-on: ubuntu-20.04
@@ -162,8 +161,6 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: |
-        (cd Library && make USERCPU=z80 && make install USERCPU=z80)
-        make -C Library/libs -f Makefile.z80 -j`nproc` USERCPU=z80 FUZIX_CCOPT=-O0
+      run: make USERCPU=z80 libs -j`nproc`
 
 
