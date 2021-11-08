@@ -10,8 +10,11 @@ env:
   M68K_CROSS_URL: https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/11.1.0/x86_64-gcc-11.1.0-nolibc-m68k-linux.tar.gz
   M68K_CROSS_DIR: gcc-11.1.0-nolibc
 
-jobs:
+concurrency: 
+  group: environment-${{ github.head_ref }}
+  cancel-in-progress: true
 
+jobs:
   build-dragon-nx32:
     runs-on: ubuntu-20.04
     steps:
@@ -51,7 +54,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=sbcv2 -j`nproc`
+      run: make TARGET=sbcv2 kernel -j`nproc`
 
   build-sc108:
     runs-on: ubuntu-20.04
@@ -64,7 +67,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=sc108 -j`nproc`
+      run: make TARGET=sc108 kernel -j`nproc`
 
   build-n8vem-mark4:
     runs-on: ubuntu-20.04
@@ -77,7 +80,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=n8vem-mark4 -j`nproc`
+      run: make TARGET=n8vem-mark4 kernel -j`nproc`
 
   build-rc2014-6502:
     runs-on: ubuntu-20.04
@@ -131,6 +134,44 @@ jobs:
         sudo apt-get update -q
         sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     - name: make kernel
-      run: make -C Kernel TARGET=rpipico -j`nproc`
+      run: make TARGET=rpipico kernel -j`nproc`
+
+  build-esp8266:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y gcc-xtensa-lx106 esptool
+    - name: make libraries
+      run: |
+        make TARGET=esp8266 -j`nproc`
+
+  build-z80-libc:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y sdcc
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make USERCPU=z80 libs -j`nproc`
+
+  build-armm0-libc:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y sdcc
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make USERCPU=armm0 libs -j`nproc`
 
 

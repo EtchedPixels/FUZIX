@@ -1,2 +1,2 @@
 #!/bin/sh
-echo $(which sdcc | sed -e "s/bin\/sdcc//")share/sdcc/lib/$1
+echo $(command -v sdcc | sed -e "s/bin\/sdcc//")share/sdcc/lib/$1
