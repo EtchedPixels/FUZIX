@@ -162,6 +162,8 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make -C Library -f Makefile.z80 -j`nproc` USERCPU=z80 FUZIX_CCOPT=-O0
+      run: |
+        (cd Library && make && make install)
+        make -C Library/libs -f Makefile.z80 -j`nproc` USERCPU=z80 FUZIX_CCOPT=-O0
 
 
