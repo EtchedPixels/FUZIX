@@ -54,7 +54,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=sbcv2 -j`nproc`
+      run: make -C Kernel TARGET=sbcv2 -j`nproc`
 
   build-sc108:
     runs-on: ubuntu-20.04
@@ -67,7 +67,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=sc108 -j`nproc`
+      run: make -C Kernel TARGET=sc108 -j`nproc`
 
   build-n8vem-mark4:
     runs-on: ubuntu-20.04
@@ -80,7 +80,7 @@ jobs:
         sudo apt-get install -y byacc automake
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=n8vem-mark4 -j`nproc`
+      run: make -C Kernel TARGET=n8vem-mark4 -j`nproc`
 
   build-rc2014-6502:
     runs-on: ubuntu-20.04
@@ -150,4 +150,18 @@ jobs:
       run: |
         make -C Library -j`nproc` FUZIX_ROOT=$PWD
         make -C Library/libs -f Makefile.esp8266 -j`nproc` FUZIX_ROOT=$PWD
+
+  build-z80-libc:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y cc65
+        sudo apt-get install -y byacc automake
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make -C Library/libs -f Makefile.z80 -j`nproc` USERCPU=z80 FUZIX_CCOPT=-O0
+
 
