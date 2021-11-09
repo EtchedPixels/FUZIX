@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false # keep on building even if one target fails
       matrix:
-        target: [dragon-nx32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, sbcv2, sc108]
+        target: [dragon-nx32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, rpipico, sbcv2, sc108]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -39,6 +39,10 @@ jobs:
           ;;
           rc2014-6502)
           PKGS="cc65"
+          ;;
+          rpipico)
+          PKGS="cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib"
+          echo "sub_target=kernel" >> $GITHUB_ENV
           ;;
           esac
         sudo apt-get update -q
@@ -76,17 +80,6 @@ jobs:
       run: echo "/usr/local/${M68K_CROSS_DIR}/m68k-linux/bin" >> $GITHUB_PATH
     - name: make
       run: make CROSS_COMPILE=m68k-linux- TARGET=tiny68k -j`nproc`
-
-  build-rpipico:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: install build deps
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-    - name: make kernel
-      run: make TARGET=rpipico kernel -j`nproc`
 
   build-z80-libc:
     runs-on: ubuntu-20.04
