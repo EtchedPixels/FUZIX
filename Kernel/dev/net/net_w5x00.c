@@ -373,7 +373,7 @@ static void w5x00_queue(uint16_t i, uint16_t n, void *p)
 	if (dm + n > TX_MASK) {
 		uint16_t us = TX_MASK + 1 - dm;
 		w5x00_bwrite(i, dm, p, us);
-		w5x00_bwrite(i, 0, p + us, n - us);
+		w5x00_bwrite(i, 0, (uint8_t *)p + us, n - us);
 	} else
 		w5x00_bwrite(i, dm, p, n);
 }
@@ -386,7 +386,7 @@ static void w5x00_queue_u(uint16_t i, uint16_t n, void *p)
 	if (dm + n > TX_MASK) {
 		uint16_t us = TX_MASK + 1 - dm;
 		w5x00_bwriteu(i, dm, p, us);
-		w5x00_bwriteu(i, 0, p + us, n - us);
+		w5x00_bwriteu(i, 0, (uint8_t *)p + us, n - us);
 	} else
 		w5x00_bwriteu(i, dm, p, n);
 }
@@ -399,7 +399,7 @@ static void w5x00_dequeue(uint16_t i, uint16_t n, void *p)
 	if (dm + n > RX_MASK) {
 		uint16_t us = RX_MASK + 1 - dm;
 		w5x00_bread(i, dm, p, us);
-		w5x00_bread(i, 0, p + us, n - us);
+		w5x00_bread(i, 0, (uint8_t *)p + us, n - us);
 	} else
 		w5x00_bread(i, dm, p, n);
 }
@@ -412,7 +412,7 @@ static void w5x00_dequeue_u(uint16_t i, uint16_t n, void *p)
 	if (dm + n > RX_MASK) {
 		uint16_t us = RX_MASK + 1 - dm;
 		w5x00_breadu(i, dm, p, us);
-		w5x00_breadu(i, 0, p + us, n - us);
+		w5x00_breadu(i, 0, (uint8_t *)p + us, n - us);
 	} else
 		w5x00_breadu(i, dm, p, n);
 }
