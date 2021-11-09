@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false # keep on building even if one target fails
       matrix:
-        target: [dragon-nx32, esp8266, multicomp09, rc2014-6502]
+        target: [dragon-nx32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, sbcv2, sc108]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -33,6 +33,10 @@ jobs:
           esp8266)
           PKGS="gcc-xtensa-lx106 esptool"
           ;;
+          n8vem-mark4|sbcv2|sc108)
+          PKGS="sdcc"
+          echo "sub_target=kernel" >> $GITHUB_ENV
+          ;;
           rc2014-6502)
           PKGS="cc65"
           ;;
@@ -41,46 +45,7 @@ jobs:
         sudo apt-get install -y byacc automake ${PKGS}
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make TARGET=${{ matrix.target }} -j`nproc`
-
-  build-sbcv2:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: install build deps
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -y sdcc
-        sudo apt-get install -y byacc automake
-        sudo update-alternatives --set yacc /usr/bin/byacc
-    - name: make
-      run: make TARGET=sbcv2 kernel -j`nproc`
-
-  build-sc108:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: install build deps
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -y sdcc
-        sudo apt-get install -y byacc automake
-        sudo update-alternatives --set yacc /usr/bin/byacc
-    - name: make
-      run: make TARGET=sc108 kernel -j`nproc`
-
-  build-n8vem-mark4:
-    runs-on: ubuntu-20.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: install build deps
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -y sdcc
-        sudo apt-get install -y byacc automake
-        sudo update-alternatives --set yacc /usr/bin/byacc
-    - name: make
-      run: make TARGET=n8vem-mark4 kernel -j`nproc`
+      run: make TARGET=${{ matrix.target }} ${{ env.sub_target }} -j`nproc`
 
   build-rc2014-68008:
     runs-on: ubuntu-20.04
