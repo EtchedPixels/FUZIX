@@ -1,0 +1,73 @@
+name: Continuous integration
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  M68K_CROSS_URL: https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/11.1.0/x86_64-gcc-11.1.0-nolibc-m68k-linux.tar.gz
+  M68K_CROSS_DIR: gcc-11.1.0-nolibc
+
+concurrency: 
+  group: environment-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false # keep on building even if one target fails
+      matrix:
+        target: [dragon-nx32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, rc2014-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: install build deps
+      run: |
+        case ${{ matrix.target }} in
+          armm0-libc)
+          PKGS="sdcc"
+          echo "target=USERCPU=armm0" >> $GITHUB_ENV
+          echo "sub_target=libs" >> $GITHUB_ENV
+          ;;
+          dragon-nx32|multicomp09)
+          sudo add-apt-repository -n -y ppa:p-pisati/fuzix
+          PKGS="lwtools gcc6809"
+          echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          ;;
+          esp8266)
+          PKGS="gcc-xtensa-lx106 esptool"
+          echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          ;;
+          n8vem-mark4|sbcv2|sc108)
+          PKGS="sdcc"
+          echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          echo "sub_target=kernel" >> $GITHUB_ENV
+          ;;
+          rc2014-6502)
+          PKGS="cc65"
+          echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          ;;
+          rc2014-68008|tiny68k)
+          wget -O - "${M68K_CROSS_URL}" | sudo tar zxvf - -C /usr/local
+          echo "/usr/local/${M68K_CROSS_DIR}/m68k-linux/bin" >> $GITHUB_PATH
+          echo "cross_cc=CROSS_COMPILE=m68k-linux-" >> $GITHUB_ENV
+          echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          ;;
+          rpipico)
+          PKGS="cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib"
+          echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          echo "sub_target=kernel" >> $GITHUB_ENV
+          ;;
+          z80-libc)
+          PKGS="sdcc"
+          echo "target=USERCPU=z80" >> $GITHUB_ENV
+          echo "sub_target=libs" >> $GITHUB_ENV
+          ;;
+          esac
+        sudo apt-get update -q
+        sudo apt-get install -y byacc automake ${PKGS}
+        sudo update-alternatives --set yacc /usr/bin/byacc
+    - name: make
+      run: make ${{ env.cross_cc }} ${{ env.target }} ${{ env.sub_target }} -j`nproc`
