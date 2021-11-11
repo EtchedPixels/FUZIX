@@ -27,7 +27,7 @@ jobs:
       run: |
         case ${{ matrix.target }} in
           armm0-libc)
-          PKGS="sdcc"
+          PKGS="cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib"
           echo "target=USERCPU=armm0" >> $GITHUB_ENV
           echo "sub_target=libs" >> $GITHUB_ENV
           ;;
