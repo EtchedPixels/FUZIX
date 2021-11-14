@@ -115,22 +115,22 @@ $(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
-syscall.l: fuzix$(PLATFORM)/syslib.l
-	../tools/syscall_$(PLATFORM)
-	(cd fuzix$(PLATFORM); make)
-	cat fuzix$(PLATFORM)/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix$(PLATFORM)\//" >syscall.l
+syscall.l: fuzixlx106/syslib.l
+	../tools/syscall_lx106
+	(cd fuzixlx106; make)
+	cat fuzixlx106/syslib.l | tr " " "\\n" | sed -e "s/^/fuzixlx106\//" >syscall.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
 	$(AR) rc syslib$(PLATFORM).lib $$(cat syslib.l)
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 
-fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
+fuzixlx106/syslib.l: ../tools/syscall_lx106
 	$<
-	make -C fuzix$(PLATFORM)
+	make -C fuzixlx106
 
-../tools/syscall_$(PLATFORM): ../tools/syscall_$(PLATFORM).c
-	make -C .. tools/syscall_$(PLATFORM)
+../tools/syscall_lx106: ../tools/syscall_lx106.c
+	make -C .. tools/syscall_lx106
 
 liberror.txt: ../tools/liberror
 	$< > $@
