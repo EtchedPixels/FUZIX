@@ -211,6 +211,13 @@ arg_t _execve(void)
 			udata.u_base = (uint8_t*) base;
 			udata.u_sysio = false;
 
+			if (base < PROGLOAD || (base + ssize) > (PROGLOAD + lomem)){
+				#ifdef DEBUG
+				kprintf("failed: invalid ph->p_vaddr\n");
+				#endif
+				goto fatal;
+			}
+
 			#ifdef DEBUG
 				kprintf("loading %p bytes from %p to %p\n", ssize, udata.u_offset, udata.u_base);
 			#endif
