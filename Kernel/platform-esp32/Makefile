@@ -8,6 +8,9 @@ build/fuzix.bin::
 menuconfig::
 	($(SETUP) && idf.py menuconfig)
 
+size::
+	($(SETUP) && idf.py size)
+
 clean: idf/Makefile
 	($(SETUP) && idf.py clean)
 
