@@ -3,12 +3,12 @@ CC = xtensa-lx106-elf-gcc
 ASM = xtensa-lx106-elf-as
 AR = xtensa-lx106-elf-ar
 LINKER = xtensa-lx106-elf-ld
-CFLAGS = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -isystem $(FUZIX_ROOT)/Library/include -isystem $(FUZIX_ROOT)/Library/include/esp8266
+CFLAGS = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -isystem $(FUZIX_ROOT)/Library/include -isystem $(FUZIX_ROOT)/Library/include/lx106
 LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs -lcesp8266
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += --gc-sections --emit-relocs -L$(LIBGCCDIR) -lgcc -T $(FUZIX_ROOT)/Library/elf2esp8266.ld
-CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_esp8266.o
-CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_esp8266.o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_lx106.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_lx106.o
 ELF2FUZIX = $(FUZIX_ROOT)/Library/tools/elf2bin -p xtensa-lx106-elf
 .SUFFIXES: .c .o
 HOSTCC = cc

@@ -1,6 +1,6 @@
 CC = xtensa-lx106-elf-gcc
 AR = xtensa-lx106-elf-ar
-PLATFORM = esp8266
+PLATFORM = esp32
 export PLATFORM
 CC_OPT = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/lx106
 ASM_OPT = -g
@@ -10,7 +10,7 @@ KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_lx106.S crt0nostdio_lx106.S
 OBJ_CRT0 = $(SRC_CRT0:.S=.o)
-SRC_ASM = setjmp_lx106.S longjmp_lx106.S helpers_esp8266.S
+SRC_ASM = setjmp_lx106.S longjmp_lx106.S helpers_esp32.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
 SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bind.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
