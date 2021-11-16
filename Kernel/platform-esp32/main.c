@@ -8,21 +8,7 @@
 
 #define LED 2
 
-extern unsigned int _sbss, _ebss, _sidata, _sdata, _edata;
-
-volatile int b = '0';
 volatile int v;
-
-static void putc(char c)
-{
-	uart_dev_t* uart = &UART0;
-	while (!uart->int_raw.txfifo_empty)
-		;
-	uart->fifo.val = c;
-	while (!uart->int_raw.txfifo_empty)
-		;
-	
-}
 
 void __attribute__((noreturn)) __pro_cpu_main(void) {
 	bool state = true;
@@ -37,7 +23,8 @@ void __attribute__((noreturn)) __pro_cpu_main(void) {
 	
 	for (;;)
 	{
-		putc(b + state);
+		//kprintf("flash %d!\n", state);
+		kputchar('0'+state);
 		if (state)
 			gpio->out_w1ts = 1<<LED;
 		else
@@ -45,9 +32,35 @@ void __attribute__((noreturn)) __pro_cpu_main(void) {
 
 		state = !state;
 
-		
 		v = 1000000;
 		while (v--)
 			;
 	}
 }
+
+uint16_t swap_dev = 0xffff;
+uint8_t need_resched;
+
+void map_init(void)
+{
+	panic("map_init");
+}
+
+void platform_discard(void) {}
+
+void platform_monitor(void)
+{
+	while(1)
+		asm volatile ("waiti 15");
+}
+
+void platform_reboot(void)
+{
+	panic("reboot");
+}
+
+uint_fast8_t platform_param(char* p)
+{
+	return 0;
+}
+

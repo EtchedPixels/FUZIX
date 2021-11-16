@@ -3,8 +3,7 @@
  */
 
 /* These reflect a stanard ESP32 configuration */
-#define CPU_CLOCK 160		/* We switch to the double clock */
-#define PERIPHERAL_CLOCK 52	/* 26MHz crystal (FIXME - this is apparently in a flash block somewhere) */
+#define CPU_CLOCK 240		/* We switch to the double clock */
 
 /*
  *	Fuzix definitions for the ESP32 set up
@@ -94,7 +93,8 @@ extern uint8_t _code_top[];
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define CONFIG_DYNAMIC_BUFPOOL
+#undef CONFIG_DYNAMIC_BUFPOOL
+#define NBUFS 4
 
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 

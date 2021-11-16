@@ -1,13 +1,27 @@
 LIBC=
 
 CROSS_CCOPTS += \
+	-I $(HOME)/src/esp-idf/components/esp_common/include \
+	-I $(HOME)/src/esp-idf/components/soc/include \
 	-I $(HOME)/src/esp-idf/components/soc/esp32/include \
+	-I $(HOME)/src/esp-idf/components/hal/include \
+	-I $(HOME)/src/esp-idf/components/hal/esp32/include \
+	-I $(HOME)/src/esp-idf/components/hal/platform_port/include \
 
 CSRCS += \
-	main.c
+	../dev/blkdev.c \
+	../dev/mbr.c \
+	devices.c \
+	devtty.c \
+	interrupt.c \
+	lib.c \
+	main.c \
+	swapper.c \
+	syscall_exec.c \
 
 ASRCS = \
-	boot.S
+	boot.S \
+	tricks.S \
 
 AOBJS = $(ASRCS:.S=.o)
 COBJS = $(CSRCS:.c=.o)
@@ -15,7 +29,30 @@ COBJS = $(CSRCS:.c=.o)
 OBJS = $(AOBJS) $(COBJS)
 
 KOBJS = \
-	$(OBJS)
+	$(OBJS) \
+	../devio.o \
+	../devsys.o \
+	../filesys.o \
+	../inode.o \
+	../kdata.o \
+	../lowlevel-esp32.o \
+	../malloc.o \
+	../mm.o \
+	../network.o \
+	../process.o \
+	../start.o \
+	../swap.o \
+	../syscall_exec.o \
+	../syscall_fs.o \
+	../syscall_fs2.o \
+	../syscall_fs3.o \
+	../syscall_net.o \
+	../syscall_other.o \
+	../syscall_proc.o \
+	../timer.o \
+	../tty.o \
+	../usermem.o \
+	../version.o \
 
 JUNK = *.o *.lst *.asm *.sym *.rst
 
@@ -34,7 +71,7 @@ image.elf: kernel.ld addresses.ld $(KOBJS)
 		$(KOBJS)
 
 image: image.elf
-	xtensa-lx106-elf-objdump -S image.elf >image.src
+	xtensa-lx106-elf-objdump -Sr image.elf >image.src
 	xtensa-lx106-elf-nm image.elf >../fuzix.map
 	esptool --chip esp32 elf2image -o $@ $<
 
