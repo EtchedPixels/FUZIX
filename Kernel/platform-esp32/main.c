@@ -10,6 +10,7 @@
 
 extern unsigned int _sbss, _ebss, _sidata, _sdata, _edata;
 
+volatile int b = '0';
 volatile int v;
 
 static void putc(char c)
@@ -36,7 +37,7 @@ void __attribute__((noreturn)) __pro_cpu_main(void) {
 	
 	for (;;)
 	{
-		putc('0' + state);
+		putc(b + state);
 		if (state)
 			gpio->out_w1ts = 1<<LED;
 		else
