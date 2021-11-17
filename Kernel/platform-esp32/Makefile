@@ -14,6 +14,7 @@ CROSS_CCOPTS += $(ESP_INCLUDES)
 CSRCS += \
 	../dev/blkdev.c \
 	../dev/mbr.c \
+	../lib/hexdump.c \
 	devices.c \
 	devtty.c \
 	interrupt.c \
@@ -23,7 +24,7 @@ CSRCS += \
 	swapper.c \
 	syscall_exec.c \
 
-ASRCS = \
+ASRCS += \
 	boot.S \
 	tricks.S \
 
@@ -34,7 +35,6 @@ OBJS = $(AOBJS) $(COBJS)
 
 KOBJS = \
 	$(OBJS) \
-	../lib/hexdump.o 
 	../devio.o \
 	../devsys.o \
 	../filesys.o \
@@ -61,7 +61,7 @@ KOBJS = \
 
 JUNK = *.o *.lst *.asm *.sym *.rst
 
-all:    $(OBJS)
+all: $(OBJS)
 
 $(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) -I.. $< -o $@
@@ -76,10 +76,10 @@ image.elf: kernel.ld addresses.ld $(KOBJS)
 		$(KOBJS)
 
 image: image.elf Makefile
-	xtensa-lx106-elf-objdump -Sr image.elf >image.src
-	xtensa-lx106-elf-nm image.elf >../fuzix.map
-	xtensa-lx106-elf-objcopy image.elf -O binary image.bin
-	xtensa-lx106-elf-objcopy -I binary image.bin -O elf32-xtensa-le --change-addresses 0x40080000 image-absolute.elf
+	xtensa-esp32-elf-objdump -Sr image.elf >image.src
+	xtensa-esp32-elf-nm image.elf >../fuzix.map
+	xtensa-esp32-elf-objcopy image.elf -O binary image.bin
+	xtensa-esp32-elf-objcopy -I binary image.bin -O elf32-xtensa-le --change-addresses 0x40080000 image-absolute.elf
 	esptool --chip esp32 elf2image -o $@ image-absolute.elf
 
 clean:

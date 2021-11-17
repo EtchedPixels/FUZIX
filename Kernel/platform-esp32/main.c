@@ -8,19 +8,14 @@
 volatile int v;
 
 void __attribute__((noreturn)) __app_cpu_main(void) {
-	bool state = true;
 	gpio_dev_t* gpio = &GPIO;
-
 	gpio->func_out_sel_cfg[LED].func_sel = 0x100;
 	gpio->enable_w1ts = 1<<LED;
+	gpio->out_w1ts = 1<<LED;
 
-	extern uint8_t __udivsi3[];
-	hexdump(__udivsi3, 32);
-	
+	bool state = true;
 	for (;;)
 	{
-		kprintf("flash %x!\n", state);
-		//kputchar('0'+state);
 		if (state)
 			gpio->out_w1ts = 1<<LED;
 		else

@@ -43,6 +43,7 @@ platform_switchout:
 	call0 getproc
 	
 	/* Fall through into switchin */
+    .align 4
 switchin:
 	/* Interrupts off */
 	rsil a3, 15
