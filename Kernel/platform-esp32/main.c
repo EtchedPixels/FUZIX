@@ -2,20 +2,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "soc/gpio_struct.h"
-#include "soc/timer_group_struct.h"
-#include "soc/rtc_cntl_struct.h"
-#include "soc/uart_struct.h"
 
 #define LED 2
 
 volatile int v;
 
-void __attribute__((noreturn)) __pro_cpu_main(void) {
+void __attribute__((noreturn)) __app_cpu_main(void) {
 	bool state = true;
-	TIMERG0.wdtconfig0.val = 0;
-	TIMERG1.wdtconfig0.val = 0;
-	RTCCNTL.wdt_config0.val = 0;
-
 	gpio_dev_t* gpio = &GPIO;
 
 	gpio->func_out_sel_cfg[LED].func_sel = 0x100;

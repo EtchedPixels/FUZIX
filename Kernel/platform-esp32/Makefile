@@ -1,12 +1,15 @@
 LIBC=
 
-CROSS_CCOPTS += \
+ESP_INCLUDES = \
 	-I $(HOME)/src/esp-idf/components/esp_common/include \
 	-I $(HOME)/src/esp-idf/components/soc/include \
 	-I $(HOME)/src/esp-idf/components/soc/esp32/include \
 	-I $(HOME)/src/esp-idf/components/hal/include \
 	-I $(HOME)/src/esp-idf/components/hal/esp32/include \
 	-I $(HOME)/src/esp-idf/components/hal/platform_port/include \
+
+ASOPTS += $(ESP_INCLUDES)
+CROSS_CCOPTS += $(ESP_INCLUDES)
 
 CSRCS += \
 	../dev/blkdev.c \
@@ -16,6 +19,7 @@ CSRCS += \
 	interrupt.c \
 	lib.c \
 	main.c \
+	procore.c \
 	swapper.c \
 	syscall_exec.c \
 
@@ -70,10 +74,12 @@ image.elf: kernel.ld addresses.ld $(KOBJS)
 	$(CROSS_CC) -T kernel.ld -T addresses.ld -flto -mlongcalls -nostdlib -o image.elf \
 		$(KOBJS)
 
-image: image.elf
+image: image.elf Makefile
 	xtensa-lx106-elf-objdump -Sr image.elf >image.src
 	xtensa-lx106-elf-nm image.elf >../fuzix.map
-	esptool --chip esp32 elf2image -o $@ $<
+	xtensa-lx106-elf-objcopy image.elf -O binary image.bin
+	xtensa-lx106-elf-objcopy -I binary image.bin -O elf32-xtensa-le --change-addresses 0x40080000 image-absolute.elf
+	esptool --chip esp32 elf2image -o $@ image-absolute.elf
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~

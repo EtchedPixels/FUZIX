@@ -3,16 +3,18 @@
  */
 
 /* Default entry point */
-ENTRY(__pro_cpu_entry);
+ENTRY(__relocate);
 
 /* Specify main memory areas */
 MEMORY
 {
-  /* Use values from the ESP-IDF 'bootloader' component.
-  /* TODO: Use human-readable lengths */
-  /* TODO: Use the full memory map - this is just a test */
-  iram_seg ( RX )       : ORIGIN = 0x400a0000, len = 0x20000
-  dram_seg ( RW )       : ORIGIN = 0x3FFce000, len = 72*1024
+    sram2(RW):  ORIGIN = 0x3ffae000, len = 72*1024
+    pdata(RW):  ORIGIN = 0x3ffc0000, len = 128*1024
+    sram1d(RW): ORIGIN = 0x3ffe0000, len = 128*1024
+
+    sram0(RWX): ORIGIN = 0x40070000, len = 64*1024
+    pcode(RWX): ORIGIN = 0x40080000, len = 128*1024
+    sram1c(RWX): ORIGIN = 0x400a0000, len = 128*1024
 }
 
 _code_base = 0x40080000;
@@ -20,51 +22,51 @@ _code_top = 0x400a0000;
 _data_base = 0x3ffc0000;
 _data_top = 0x3ffe0000;
 
-/* Define output sections */
-SECTIONS {
-  /* The program code and other data goes into Instruction RAM */
-  .iram.text :
-  {
-    . = ALIGN(16);
-    KEEP(*(.entry.text))
-    *(.text)
-    *(.text*)
-    KEEP (*(.init))
-    KEEP (*(.fini))
-    *(.rodata)
-    *(.rodata*)
+SECTIONS
+{
+    .relocate :
+    {
+        *(.text.relocate)
+        . = ALIGN(4);
+    } >pcode
 
-    . = ALIGN(4);
-    _etext = .;
-  } >iram_seg
+    .text :
+    {
+        . = ALIGN(4);
+        _stext_start = LOADADDR(.text);
+        _text_start = .;
+        KEEP(*(.entry.text))
+        *(.text)
+        *(.text*)
+        . = ALIGN(4);
+        _text_end = .;
+    } >sram0 AT>pcode
 
-  /* Initialized data goes into Data RAM */
-  _sidata = .;
-  .data : AT(_sidata)
-  {
-    . = ALIGN(4);
-    _sdata = .;
-    *(.data)
-    *(.data*)
+    .data :
+    {
+        . = ALIGN(4);
+        _sdata_start = LOADADDR(.data);
+        _data_start = .;
+        *(.rodata)
+        *(.rodata*)
+        *(.data)
+        *(.data*)
+        *(.sdata)
+        *(.sdata*)
+        . = ALIGN(4);
+        _data_end = .;
+    } >sram2 AT>pcode
 
-    . = ALIGN(4);
-    _edata = .;
-  } >dram_seg
+    .bss ALIGN(4) (NOLOAD) :
+    {
+        _bss_start = .;
+        *(.bss)
+        *(.bss*)
+        *(COMMON)
 
-  /* Uninitialized data also goes into Data RAM */
-  .bss :
-  {
-    . = ALIGN(4);
-    _sbss = .;
-    *(.bss)
-    *(.bss*)
-    *(COMMON)
-
-    . = ALIGN(4);
-    _ebss = .;
-  } >dram_seg
-
-  . = ALIGN(4);
-  PROVIDE ( end = . );
-  PROVIDE ( _end = . );
+        . = ALIGN(4);
+        _bss_end = .;
+    } >sram2
 }
+
+/* vim: set sw=4 ts=4 et: */
