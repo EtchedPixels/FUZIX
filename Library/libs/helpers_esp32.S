@@ -95,4 +95,7 @@ helper __umulsidi3, 0x4000c7d8
 helper __unorddf2, 0x400637f4
 helper __unordsf2, 0x40063478
 
+helper setjmp, 0x40056268
+helper longjmp, 0x400562cc
+
 # vim: sw=4 ts=4 et

@@ -1,16 +1,16 @@
-CC = xtensa-lx106-elf-gcc
-AR = xtensa-lx106-elf-ar
+CC = xtensa-esp32-elf-gcc
+AR = xtensa-esp32-elf-ar
 PLATFORM = esp32
 export PLATFORM
-CC_OPT = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/lx106
+CC_OPT = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/esp32
 ASM_OPT = -g
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
-SRC_CRT0 = crt0_lx106.S crt0nostdio_lx106.S
+SRC_CRT0 = crt0_esp32.S crt0nostdio_esp32.S
 OBJ_CRT0 = $(SRC_CRT0:.S=.o)
-SRC_ASM = setjmp_lx106.S longjmp_lx106.S helpers_esp32.S
+SRC_ASM = helpers_esp32.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
 SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bind.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -115,22 +115,22 @@ $(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
-syscall.l: fuzixlx106/syslib.l
-	../tools/syscall_lx106
-	(cd fuzixlx106; make)
-	cat fuzixlx106/syslib.l | tr " " "\\n" | sed -e "s/^/fuzixlx106\//" >syscall.l
+syscall.l: fuzix$(PLATFORM)/syslib.l
+	../tools/syscall_$(PLATFORM)
+	(cd fuzix$(PLATFORM); make)
+	cat fuzix$(PLATFORM)/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix$(PLATFORM)\//" >syscall.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
 	$(AR) rc syslib$(PLATFORM).lib $$(cat syslib.l)
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 
-fuzixlx106/syslib.l: ../tools/syscall_lx106
+fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
 	$<
-	make -C fuzixlx106
+	make -C fuzix$(PLATFORM)
 
-../tools/syscall_lx106: ../tools/syscall_lx106.c
-	make -C .. tools/syscall_lx106
+../tools/syscall_$(PLATFORM): ../tools/syscall_$(PLATFORM).c
+	make -C .. tools/syscall_$(PLATFORM)
 
 liberror.txt: ../tools/liberror
 	$< > $@
@@ -188,6 +188,6 @@ clean:
 
 install: ;
 
-crt0_$(PLATFORM).o: crt0_template_lx106.def
-crt0nostdio_$(PLATFORM).o: crt0_template_lx106.def
+crt0_$(PLATFORM).o: crt0_template_$(PLATFORM).def
+crt0nostdio_$(PLATFORM).o: crt0_template_$(PLATFORM).def
 
