@@ -34,6 +34,7 @@ OBJS = $(AOBJS) $(COBJS)
 
 KOBJS = \
 	$(OBJS) \
+	../lib/hexdump.o 
 	../devio.o \
 	../devsys.o \
 	../filesys.o \

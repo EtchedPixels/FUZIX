@@ -19,7 +19,7 @@ Data:
 
 Instructions:
 
-0x4000_0000  0x4005_ffff  384kB    RAM0
+0x4000_0000  0x4005_ffff  384kB    ROM0
 0x4007_0000  0x4007_ffff  64kB     SRAM0 (static) / XIP cache
 0x4008_0000  0x4009_ffff  128kB    SRAM0 (MMU)
 0x400a_0000  0x400b_ffff  128kB    SRAM1

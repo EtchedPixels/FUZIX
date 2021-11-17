@@ -13,11 +13,14 @@ void __attribute__((noreturn)) __app_cpu_main(void) {
 
 	gpio->func_out_sel_cfg[LED].func_sel = 0x100;
 	gpio->enable_w1ts = 1<<LED;
+
+	extern uint8_t __udivsi3[];
+	hexdump(__udivsi3, 32);
 	
 	for (;;)
 	{
-		//kprintf("flash %d!\n", state);
-		kputchar('0'+state);
+		kprintf("flash %x!\n", state);
+		//kputchar('0'+state);
 		if (state)
 			gpio->out_w1ts = 1<<LED;
 		else
