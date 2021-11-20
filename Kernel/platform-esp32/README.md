@@ -1,3 +1,10 @@
+## Processor
+
+The ESP32 has two LX6 processor cores with a huge number of architecture
+options. You can find the full list here:
+
+https://github.com/espressif/esp-idf/blob/1cb31e50943bb757966ca91ed7f4852692a5b0ed/components/xtensa/esp32/include/xtensa/config/core-isa.h
+
 ## Memory map
 
 The ESP32 is semi-Harvard architecture, with everything above 0x40000000 being

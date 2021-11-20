@@ -144,13 +144,13 @@ static void irq_clear(uint32_t irq)
 void irq_enable(uint32_t irq)
 {
 	irqmask |= 1 << irq;
-	irq_set_mask(irqmask);
+	//irq_set_mask(irqmask);
 }
 
 void irq_disable(uint32_t irq)
 {
 	irqmask &= ~(1 << irq);
-	irq_set_mask(irqmask);
+	//irq_set_mask(irqmask);
 }
 
 void interrupt_handler(uint32_t interrupt)

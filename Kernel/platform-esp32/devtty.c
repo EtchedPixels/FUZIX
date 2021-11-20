@@ -32,6 +32,7 @@ static void do_putc(uint8_t c)
     uart_ll_write_txfifo(&UART, &c, 1);
 }
 
+#if 0
 /* Output for the system console (kprintf etc) */
 void kputchar(uint_fast8_t c)
 {
@@ -39,6 +40,7 @@ void kputchar(uint_fast8_t c)
 		do_putc('\r');
 	do_putc(c);
 }
+#endif
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {

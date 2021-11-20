@@ -124,3 +124,11 @@ __umulsidi3 = 0x4000c7d8;
 __unorddf2 = 0x400637f4;
 __unordsf2 = 0x40063478;
 
+ets_set_appcpu_boot_addr = 0x4000689c;
+bzero = 0x4000c1f4;
+ets_printf = 0x40007d54;
+ets_write_char_uart = 0x40007cf8;
+memcpy = 0x4000c2c8;
+memset = 0x4000c44c;
+strlen = 0x400014c0;
+xthal_memcpy = 0x4000c0bc;

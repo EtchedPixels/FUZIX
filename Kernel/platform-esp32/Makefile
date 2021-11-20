@@ -1,12 +1,15 @@
 LIBC=
 
 ESP_INCLUDES = \
-	-I $(HOME)/src/esp-idf/components/esp_common/include \
-	-I $(HOME)/src/esp-idf/components/soc/include \
-	-I $(HOME)/src/esp-idf/components/soc/esp32/include \
-	-I $(HOME)/src/esp-idf/components/hal/include \
-	-I $(HOME)/src/esp-idf/components/hal/esp32/include \
-	-I $(HOME)/src/esp-idf/components/hal/platform_port/include \
+	-I $(IDF_PATH)/components/esp_common/include \
+	-I $(IDF_PATH)/components/soc/include \
+	-I $(IDF_PATH)/components/soc/esp32/include \
+	-I $(IDF_PATH)/components/hal/include \
+	-I $(IDF_PATH)/components/hal/esp32/include \
+	-I $(IDF_PATH)/components/hal/platform_port/include \
+	-I $(IDF_PATH)/components/xtensa/include \
+	-I $(IDF_PATH)/components/xtensa/esp32/include \
+	-I $(IDF_PATH)/components/esp_hw_support/include/soc \
 
 ASOPTS += $(ESP_INCLUDES)
 CROSS_CCOPTS += $(ESP_INCLUDES)
@@ -17,16 +20,17 @@ CSRCS += \
 	../lib/hexdump.c \
 	devices.c \
 	devtty.c \
+	fault.c \
 	interrupt.c \
-	lib.c \
 	main.c \
 	procore.c \
+	startup.c \
 	swapper.c \
 	syscall_exec.c \
+	tricks.c \
 
 ASRCS += \
-	boot.S \
-	tricks.S \
+	startup_asm.S \
 
 AOBJS = $(ASRCS:.S=.o)
 COBJS = $(CSRCS:.c=.o)
@@ -73,7 +77,8 @@ $(COBJS): %.o: %.c
 
 image.elf: kernel.ld addresses.ld $(KOBJS)
 	$(CROSS_CC) -T kernel.ld -T addresses.ld -flto -mlongcalls -nostdlib -o image.elf \
-		$(KOBJS)
+		$(KOBJS) \
+		$(IDF_PATH)/components/xtensa/esp32/libxt_hal.a
 
 image: image.elf Makefile
 	xtensa-esp32-elf-objdump -Sr image.elf >image.src
