@@ -20,7 +20,6 @@ CSRCS += \
 	../lib/hexdump.c \
 	devices.c \
 	devtty.c \
-	fault.c \
 	interrupt.c \
 	main.c \
 	procore.c \

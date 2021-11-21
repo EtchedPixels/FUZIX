@@ -132,3 +132,9 @@ memcpy = 0x4000c2c8;
 memset = 0x4000c44c;
 strlen = 0x400014c0;
 xthal_memcpy = 0x4000c0bc;
+xtos_ints_on = 0x4000bf88;
+xtos_ints_off = 0x4000bfac;
+xtos_set_interrupt_handler_arg = 0x4000bf34;
+xtos_set_intlevel = 0x4000bfdc;
+xtos_restore_intlevel = 0x40000928;
+

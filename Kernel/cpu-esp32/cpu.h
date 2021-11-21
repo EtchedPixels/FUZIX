@@ -51,12 +51,9 @@ typedef union {            /* this structure is endian dependent */
 		state; \
 	}))
 
-#define __hard_di() __rsil(15);
-#define __hard_ei() __rsil(0);
-#define __hard_irqrestore(ps) \
-	__asm__ __volatile__(" \
-		wsr %0, ps; isync" \
-		:: "a" (ps) : "memory")
+#define __hard_di() __rsil(15)
+#define __hard_ei() __rsil(0)
+#define __hard_irqrestore(ps) xtos_set_intlevel(ps)
 	
 #define no_cache_udata()
 

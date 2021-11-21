@@ -5,8 +5,6 @@
 
 void __attribute__((noreturn)) procore_main(void)
 {
-	kprintf("Processor core starting\n");
-
 	for (;;)
 		platform_idle();
 }
