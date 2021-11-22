@@ -115,7 +115,7 @@ $(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
-syscall.l: fuzix$(PLATFORM)/syslib.l
+syscall.l: fuzix$(PLATFORM)/syslib.l ../tools/syscall_$(PLATFORM)
 	../tools/syscall_$(PLATFORM)
 	(cd fuzix$(PLATFORM); make)
 	cat fuzix$(PLATFORM)/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix$(PLATFORM)\//" >syscall.l

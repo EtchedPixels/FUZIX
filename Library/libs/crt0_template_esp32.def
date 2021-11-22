@@ -46,7 +46,7 @@ _entry:
 
 .text
 #
-#	No stub handler is needed or used on ESP8266
+#	No stub handler is needed or used on ESP32
 #
 .global __sighandler
 __sighandler:

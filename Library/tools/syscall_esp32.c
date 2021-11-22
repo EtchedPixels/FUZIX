@@ -26,6 +26,7 @@ static void write_call(int n) {
           "%1$s:\n",
           syscall_name[n]);
 
+  fprintf(fp, "\tentry sp, 32\n");
   fprintf(fp, "\tmovi a6, %d\n", n);
   fprintf(fp, "\tsyscall\n");
 
@@ -33,7 +34,7 @@ static void write_call(int n) {
   fprintf(fp, "\tmovi a4, errno\n");
   fprintf(fp, "\ts32i a3, a4, 0\n");
   fprintf(fp, "_no_error:\n");
-  fprintf(fp, "\tret\n");
+  fprintf(fp, "\tretw.n\n");
 
   fclose(fp);
 }
