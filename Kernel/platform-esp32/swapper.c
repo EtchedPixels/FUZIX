@@ -49,27 +49,6 @@ static void swapinout(int blk, void* u,
                     uaddr_t buf, uint16_t page))
 {
     panic("cannot swap");
-#if 0
-	const uint32_t USER_STACK = 3*1024;
-
-	/* Read/write the udata block. */
-
-	readwrite(SWAPDEV, blk, UDATA_BLKS<<BLKSHIFT, (uaddr_t)u, 1);
-
-	/* Data area */
-
-	/* Write out just 0..break and sp..top */
-	readwrite(SWAPDEV, blk + UDATA_BLKS,
-		(uaddr_t)alignup(udata.u_break - DATABASE, 1<<BLKSHIFT),
-		DATABASE, 1);
-	readwrite(SWAPDEV, blk + UDATA_BLKS + ((DATALEN - USER_STACK) >> BLKSHIFT),
-		USER_STACK, DATABASE + DATALEN - USER_STACK, 1);
-
-	/* Code area */
-
-	readwrite(SWAPDEV, blk + UDATA_BLKS + (DATALEN >> BLKSHIFT),
-		(uaddr_t)alignup(udata.u_texttop - CODEBASE, 1<<BLKSHIFT), CODEBASE, 1);
-#endif
 }
 
 /*
@@ -78,25 +57,7 @@ static void swapinout(int blk, void* u,
  */
 int swapout_new(ptptr p, void *u)
 {
-#ifdef DEBUG
-	kprintf("Swapping out %x (%d)\n", p, p->p_pid);
-#endif
-	uint16_t page = p->p_page;
-	if (!page)
-		panic(PANIC_ALREADYSWAP);
-	/* Are we out of swap ? */
-	int map = swapmap_alloc();
-	if (map == -1)
-		return ENOMEM;
-	int blk = map * SWAP_SIZE;
-
-	swapinout(blk, u, swapwrite);
-
-	p->p_page = 0;
-	p->p_page2 = map;
-#ifdef DEBUG
-	kprintf("%x: swapout done %d\n", p, p->p_page2);
-#endif
+    panic("cannot swap");
 	return 0;
 }
 
@@ -110,23 +71,7 @@ int swapout(ptptr p)
  */
 void swapin(ptptr p, uint16_t map)
 {
-	/* Does the current process need swapping out? */
-
-	int blk = map * SWAP_SIZE;
-
-#ifdef DEBUG
-	kprintf("Swapin %x (%d, %d)\n", p, p->p_page2, p->p_pid);
-#endif
-	if (!p->p_page) {
-		kprintf("%x: nopage!\n", p);
-		return;
-	}
-
-	swapinout(blk, (uint8_t*)&udata, swapread);
-
-#ifdef DEBUG
-	kprintf("%x: swapin done %d\n", p, p->p_page2);
-#endif
+    panic("cannot swap");
 }
 
 /* vim: sw=4 ts=4 et: */

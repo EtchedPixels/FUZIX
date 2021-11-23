@@ -86,53 +86,9 @@ unsigned int exception_handler(struct exception_frame *ef, uint32_t cause)
 	return s;
 }
 
-/*
- *	We use timer 1 as a self reloading 23bit counter. This avoids drift problems.
- */
-static void timer_isr(void)
-{
-	#if 0
-	T1I = 0;		/* Clear interrupt */
-	timer_interrupt();
-#ifdef DO_MEM_CHECK
-	pattern_check();
-#endif
-#ifdef CONFIG_NET_WIZNET
-	/* Poll the W5500 if the bus is clear */
-	if (sd_spi_try_release() == 0)
-		w5x00_poll();
-#endif
-	#endif
-}
-
 void timer_init(void)
 {
-	#if 0
-	/* 3.2us a tick at 256 scaling */
-	T1L = (PERIPHERAL_CLOCK * 1000000 / 256) / TICKSPERSEC;
-	/* Auto reload, edge triggered interrupt, interrupt on */
-	T1C = (1 << TCAR) | (3 << TCPD) | ( 1 << TCTE);
-	/* Edge trigger on the timer interrupt */
-	TEIE |= TEIE1;
-	T1I = 0;
-	irq_enable(ETS_FRC_TIMER1_INUM);
-	#endif
 }
-
-/*
- *	Interrupts
- *	0: WDEV FIQ
- *	1: SLC
- *	2: SPI
- *	3: RTC
- *	4: GPIO
- *	5: UART			(used for TX interrupt only)
- *	6: TICK			(used for our clock)
- *	7: SOFT
- *	8: WDT
- *	9: FRC1			(needs different handling as it is edge triggered)
- *	10: FRC2		(ditto)
- */
 
 static uint32_t irqmask;	/* A set bit is an enable */
 
@@ -155,12 +111,4 @@ void irq_disable(uint32_t irq)
 
 void interrupt_handler(uint32_t interrupt)
 {
-	if (interrupt & (1 << 9)) {
-		timer_isr();
-		irq_clear(1 << 9);
-	}
-	if (interrupt & (1 << 5)) {
-		tty_interrupt();
-		irq_clear(1 << 5);
-	}
 }
