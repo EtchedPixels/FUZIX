@@ -19,12 +19,13 @@ jobs:
     strategy:
       fail-fast: false # keep on building even if one target fails
       matrix:
-        target: [dragon-nx32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, rc2014-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
+        target: [dragon-nx32, esp32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, rc2014-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
     - name: install build deps
       run: |
+        echo "setup_sh=true" >> $GITHUB_ENV
         case ${{ matrix.target }} in
           armm0-libc)
           PKGS="cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib"
@@ -34,6 +35,13 @@ jobs:
           dragon-nx32|multicomp09)
           sudo add-apt-repository -n -y ppa:p-pisati/fuzix
           PKGS="lwtools gcc6809"
+          echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          ;;
+          esp32)
+          PKGS="esptool"
+          (cd ~ && git clone --depth=1 --recursive https://github.com/espressif/esp-idf.git)
+          (cd ~/esp-idf && ./install.sh esp32)
+          echo "setup_sh=. ~/esp-idf/export.sh" >> $GITHUB_ENV
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           ;;
           esp8266)
@@ -70,4 +78,4 @@ jobs:
         sudo apt-get install -y byacc automake ${PKGS}
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: make ${{ env.cross_cc }} ${{ env.target }} ${{ env.sub_target }} -j`nproc`
+      run: ${{ env.setup_sh }} && make ${{ env.cross_cc }} ${{ env.target }} ${{ env.sub_target }} -j`nproc`

@@ -11,6 +11,7 @@ uaddr_t ramtop = DATATOP;
 uint8_t need_resched;
 uint16_t swap_dev = 0xFFFF;
 
+
 bufptr bufpool_end;
 
 /* End of RAM we can use for buffers */

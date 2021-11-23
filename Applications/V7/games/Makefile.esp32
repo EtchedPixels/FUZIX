@@ -1,0 +1,24 @@
+include $(FUZIX_ROOT)/Applications/rules.esp32
+
+SRCS  = arithmetic.c  backgammon.c  fish.c  wump.c
+
+OBJS = $(SRCS:.c=.o)
+
+APPS = $(OBJS:.o=)
+
+all: $(APPS) size.report
+
+$(APPS): $(CRT0)
+
+$(APPS) $(APPSNS): %: %.o
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT)
+	$(ELF2FUZIX) -o $@ $@.bin
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.data *.text *.debug size.report
+
+rmbak:
+	rm -f *~ core
