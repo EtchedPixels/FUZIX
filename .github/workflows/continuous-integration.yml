@@ -25,6 +25,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: install build deps
       run: |
+        echo "setup_sh=true" >> $GITHUB_ENV
         case ${{ matrix.target }} in
           armm0-libc)
           PKGS="cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib"
@@ -39,7 +40,7 @@ jobs:
           esp32)
           PKGS="esptool"
           (cd ~ && git clone --depth=1 --recursive https://github.com/espressif/esp-idf.git)
-          (cd ~/esp-idf && ./install esp32)
+          (cd ~/esp-idf && ./install.sh esp32)
           echo "setup_sh=. ~/esp-idf/export.sh" >> $GITHUB_ENV
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           ;;
