@@ -1,0 +1,56 @@
+.section ".header"
+.globl _start
+_start:
+    j _entry
+
+.text
+.globl _entry
+_entry:
+    # Wipe BSS.
+
+    movi a2, __bss_start
+    movi a3, __bss_end
+    movi a4, 0
+.1:
+    bgeu a2, a3, .2
+    s32i a4, a2, 0
+    addi a2, a2, 4
+    j .1
+.2:
+
+#if defined WITH_STDIO
+    # Initialise stdio.
+
+    call8 __stdio_init_vars
+#endif
+
+    # Fetch argc and argv from the stack and set up the environment
+    # pointer.
+
+    l32i a2, sp, 0 # argc
+    l32i a3, sp, 4 # argv
+    l32i a4, sp, 8 # envp
+    
+    # Store envp.
+
+    movi a5, environ
+    s32i a4, a5, 0
+
+    # Call main, returning directly to exit.
+
+    movi a0, exit
+    j main
+    
+.globl environ
+.comm environ, 4
+
+.text
+#
+#	No stub handler is needed or used on ESP32
+#
+.global __sighandler
+__sighandler:
+    break 0, 0
+
+# vim: sw=4 ts=4 et
+

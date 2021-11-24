@@ -40,6 +40,7 @@ struct exec {
 #define A_NS32K		10		/* NS32K 32bit */
 #define A_LX106		11		/* lx106 32bit */
 #define A_ARM		12		/* ARM 32bit */
+#define A_LX6  		13		/* lx6 32bit */
 	uint8_t a_cpufeat;
 #define AF_8080_8085	1		/* Uses 8085 instructions */
 #define AF_8080_Z80	2		/* Uses legal Z80 instructions */
@@ -62,6 +63,8 @@ struct exec {
 #define AF_RABBIT_R3K	1		/* Uses Rabbit 3000 additions */
 
 #define AF_LX106_ESP8266 1      	/* ESP8266 module */
+
+#define AF_LX6_ESP32     1      	/* ESP32 module */
 
 #define AF_CORTEX_M0    1       	/* Cortex M0 ARM */
 

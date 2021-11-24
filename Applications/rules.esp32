@@ -1,0 +1,15 @@
+PLATFORM = esp32
+CC = xtensa-esp32-elf-gcc
+ASM = xtensa-esp32-elf-as
+AR = xtensa-esp32-elf-ar
+LINKER = xtensa-esp32-elf-ld
+CFLAGS = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -isystem $(FUZIX_ROOT)/Library/include -isystem $(FUZIX_ROOT)/Library/include/esp32
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs -lcesp32
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += --gc-sections --emit-relocs -L$(LIBGCCDIR) -lgcc -T $(FUZIX_ROOT)/Library/elf2esp32.ld
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_esp32.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_esp32.o
+ELF2FUZIX = $(FUZIX_ROOT)/Library/tools/elf2bin -p xtensa-esp32-elf
+.SUFFIXES: .c .o
+HOSTCC = cc
+

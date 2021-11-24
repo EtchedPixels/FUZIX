@@ -1,16 +1,16 @@
-CC = xtensa-lx106-elf-gcc
-AR = xtensa-lx106-elf-ar
-PLATFORM = esp8266
+CC = xtensa-esp32-elf-gcc
+AR = xtensa-esp32-elf-ar
+PLATFORM = esp32
 export PLATFORM
-CC_OPT = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/esp8266
+CC_OPT = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/esp32
 ASM_OPT = -g
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
-SRC_CRT0 = crt0_esp8266.S crt0nostdio_esp8266.S
+SRC_CRT0 = crt0_esp32.S crt0nostdio_esp32.S
 OBJ_CRT0 = $(SRC_CRT0:.S=.o)
-SRC_ASM = setjmp_esp8266.S longjmp_esp8266.S helpers_esp8266.S
+SRC_ASM = helpers_esp32.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
 SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
 SRC_C += bcmp.c bcopy.c bind.c bsearch.c bzero.c calloc.c cfree.c clock.c closedir.c
@@ -115,7 +115,7 @@ $(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
 libc.l:%.l:$(OBJ_ALL)
 	ls $(OBJ_ALL) > libc.l
 
-syscall.l: fuzix$(PLATFORM)/syslib.l
+syscall.l: fuzix$(PLATFORM)/syslib.l ../tools/syscall_$(PLATFORM)
 	../tools/syscall_$(PLATFORM)
 	(cd fuzix$(PLATFORM); make)
 	cat fuzix$(PLATFORM)/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix$(PLATFORM)\//" >syscall.l
