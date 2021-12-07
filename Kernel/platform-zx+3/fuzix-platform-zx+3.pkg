@@ -1,0 +1,7 @@
+package platform-zx+3
+
+disable-pkg platform-zx+3
+
+l /etc/inittab /etc/inittab.orig
+r /etc/inittab
+f 0644 /etc/inittab userspace/inittab
