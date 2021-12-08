@@ -54,6 +54,9 @@ struct sockmsg {
 #define NE_RESET        8
 #define NE_UNHOOK	9
 
+#define NE_SETADDR_SRC	0
+#define NE_SETADDR_DST	1
+
 struct netevent {
 	uint8_t socket;
 	uint8_t event;
@@ -61,7 +64,7 @@ struct netevent {
 	uint16_t data;
 	union {
 		uint16_t rlen[NSOCKBUF];
-		struct sockaddrs addr;
+		struct ksockaddr addr;
 	} info;
 };
 
@@ -71,6 +74,11 @@ int netdev_write(uint8_t flag);
 int netdev_read(uint8_t flag);
 int netdev_ioctl(uarg_t request, char *data);
 int netdev_close(uint8_t minor);
+
+uint16_t netn_copyout(struct socket *s);
+uint16_t netn_queuebytes(struct socket *s);
+uint16_t netn_putbuf(struct socket *s);
+uint16_t netn_getbuf(struct socket *s);
 
 #endif
 #endif

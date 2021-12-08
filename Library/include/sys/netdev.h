@@ -14,29 +14,29 @@
 
 #include <netinet/in.h>
 
-
-/* This one is used internally to deal with many argumented net
-   functions */
-struct sockio {
-  uint16_t sio_flags;		/* Keep the order so we can use partial */
-  uint16_t sio_addr_len;	/* structs for simple cases */
-  struct sockaddr_in sio_addr;
+struct sockaddr_hw {
+  uint16_t shw_family;
+  uint8_t shw_addr[14];
 };
 
-#define INADDR_ANY		0L
-#define INADDR_BROADCAST	0xFFFFFFFFUL
-#define INADDR_LOOPBACK		0x7F000001UL
-#define IN_LOOPBACK(a)		(((a) >> 24) == 0x7F)
-
+struct ksockaddr {
+	union {
+		struct sockaddr_in sin;
+		struct sockaddr_hw hw;
+		uint16_t family;
+	} sa;
+};
 
 #ifndef NSOCKET
 #define NSOCKET 8
 #endif
 
+typedef struct cinode *inoptr;
 
-struct sockaddrs {
-	uint32_t addr;
-	uint16_t port;
+struct sockproto
+{
+	/* Dummy for now */
+	uint8_t slot;
 };
 
 struct socket
@@ -55,25 +55,30 @@ struct socket
 #define SS_CLOSEWAIT		9	/* Remote has closed */
 #define SS_CLOSING		10	/* Protocol close in progress */
 #define SS_CLOSED		11	/* Protocol layers done, not close()d */
-#define SS_DEAD			12
-	/* FIXME: need state for shutdown handling */
-	uint8_t s_data;			/* Socket we are an accept() for */
-	uint8_t s_error;
-	uint8_t s_num;			/* To save expensive maths */
-	struct sockaddrs s_addr[3];
-#define SADDR_SRC	0
-#define SADDR_DST	1
-#define SADDR_TMP	2
-	uint8_t s_flag;
-#define SFLAG_ATMP	1		/* Use SADDR_TMP */
-	uint8_t s_iflag;		/* Flags touched in IRQ handlers */
+#define SS_DEAD			12	/* Closed byuser space but not yet
+					   free of any stack resources */
+	uint8_t s_iflags;
 #define SI_SHUTR	1
 #define SI_SHUTW	2
 #define SI_DATA		4		/* Data is ready */
 #define SI_EOF		8		/* At EOF */
 #define SI_THROTTLE	16		/* Transmit is throttled */
-	void *s_priv;			/* Private pointer for lower layers */
-	void *s_ino;
+#define SI_WAIT		32		/* Wait helper */
+
+	uint8_t s_wake;		/* REVIEW */
+
+	/* FIXME: need state for shutdown handling */
+	uint8_t s_error;
+	uint8_t s_num;			/* To save expensive maths */
+	uint8_t s_parent;		/* For accept */
+	uint8_t s_class;		/* Class of socket (stream etc) */
+	uint16_t s_protocol;		/* Protocol given in socket() */
+	struct ksockaddr src_addr;
+	uint8_t src_len;
+	struct ksockaddr dst_addr;
+	uint8_t dst_len;
+	inoptr s_ino;			/* Inode back pointer */
+	struct sockproto proto;
 };
 
 #define NSOCKTYPE 3

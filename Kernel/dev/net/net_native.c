@@ -1,10 +1,10 @@
-#ifdef CONFIG_NET_NATIVE
-
 #include <kernel.h>
 #include <kdata.h>
 #include <netdev.h>
 #include <net_native.h>
 #include <printf.h>
+
+#ifdef CONFIG_NET_NATIVE
 
 /*
  *	TODO: support using a malloc pool of out of bank (or flat space)
@@ -21,8 +21,7 @@ static inoptr net_ino;
 static void wakeup_all(struct socket *s)
 {
 	wakeup(s);
-	wakeup(&s->s_data);
-	wakeup(&s->s_iflag);
+	wakeup(&s->s_iflags);
 	selwake_dev(4, 65, SELECT_IN);
 }
 
@@ -50,7 +49,7 @@ int netdev_write(uint8_t flags)
 	}
 
 	s = sockets + ne.socket;
-	sd = s->s_priv;
+	sd = sockdata + s->s_num;
 	switch (ne.event) {
 		/* Initialize a new socket */
 	case NE_INIT:
@@ -75,30 +74,39 @@ int netdev_write(uint8_t flags)
 		break;
 		/* Change an address */
 	case NE_SETADDR:
-		if (ne.data < 3)
-			memcpy(&s->s_addr[ne.data], &ne.info,
-			       sizeof(struct sockaddrs));
+		switch (ne.data) {
+		case NE_SETADDR_SRC:
+			memcpy(&s->src_addr, &ne.info,
+				sizeof(struct ksockaddr));
+			break;
+		case NE_SETADDR_DST:
+			memcpy(&s->dst_addr, &ne.info,
+				sizeof(struct ksockaddr));
+			break;
+		default:
+			;
+		}
 		break;
 		/* Indicator of write room from the network agent */
 	case NE_ROOM:
 		sd->tbuf = ne.data;
-		wakeup(&s->s_iflag);
+		wakeup(&s->s_iflags);
 		break;
 		/* Indicator of data from the network agent */
 	case NE_DATA:
 		sd->rnext = ne.data;	/* More data available */
 		memcpy(sd->rlen, &ne.info,
 			       sizeof(uint16_t) * NSOCKBUF);
-		s->s_iflag |= SI_DATA;
-		wakeup(&s->s_iflag);
+		s->s_iflags |= SI_DATA;
+		wakeup(&s->s_iflags);
 		break;
 		/* Remote reset */
 	case NE_RESET:
-		s->s_iflag |= SI_SHUTW;
+		s->s_iflags |= SI_SHUTW;
 		s->s_state = SS_CLOSED;
 		/* Remote closed connection */
 	case NE_SHUTR:
-		s->s_iflag |= SI_SHUTR;
+		s->s_iflags |= SI_SHUTR;
 		if (ne.ret)
 			s->s_error = ne.ret;
 		wakeup_all(s);
@@ -106,7 +114,12 @@ int netdev_write(uint8_t flags)
 	case NE_UNHOOK:
 		if (s->s_state == SS_DEAD){
 			sd->event = 0;
-			sock_closed(s);
+			s->s_state = SS_UNUSED;
+			/* FIXME: You re-use something you pays the price.
+			   Probably should switch to using data 0 as devices do?
+			 */
+			s->s_ino->c_node.i_nlink = 0;
+			s->s_ino->c_flags |= CDIRTY;
 		}
 		else
 			kputs("bad unhook (in use)\n");
@@ -183,7 +196,7 @@ int netdev_ioctl(uarg_t request, char *data)
 			fd = ugetw(data);
 			if ((net_ino = getinode(fd)) == NULLINODE)
 				return -1;
-			i_ref(net_ino);
+			(void)(i_ref(net_ino));
 			return 0;
 #ifdef CONFIG_LEVEL_2
 		case SELECT_BEGIN:
@@ -213,9 +226,8 @@ int netdev_close(uint8_t minor)
 		net_ino = NULL;
 		while (s < sockets + NSOCKET) {
 			if (s->s_state != SS_UNUSED) {
-				struct sockdata *sd = s->s_priv;
 				s->s_state = SS_CLOSED;
-				s->s_iflag |= SI_SHUTR|SI_SHUTW;
+				s->s_iflags |= SI_SHUTR|SI_SHUTW;
 				s->s_error = ENETDOWN;
 				wakeup_all(s);
 			}
@@ -233,7 +245,7 @@ int netdev_close(uint8_t minor)
  */
 static int netn_synchronous_event(struct socket *s, uint8_t state)
 {
-	struct sockdata *sd = s->s_priv;
+	struct sockdata *sd = sockdata + s->s_num;
 
 	sd->event |= NEV_STATE | NEVW_STATE;
 	sd->newstate = state;
@@ -256,7 +268,7 @@ static int netn_synchronous_event(struct socket *s, uint8_t state)
  */
 static void netn_asynchronous_event(struct socket *s, uint8_t event)
 {
-	struct sockdata *sd = s->s_priv;
+	struct sockdata *sd = sockdata + s->s_num;
 	sd->event |= event;
 	wakeup(&ne);
 	selwake_dev(4, 65, SELECT_IN);
@@ -272,7 +284,7 @@ static void netn_asynchronous_event(struct socket *s, uint8_t event)
 
 static uint16_t sptr, eptr, len;
 static uint32_t base;
-static void (*op)(inoptr, uint8_t);
+static void (*op)(inoptr, uint_fast8_t);
 
 static uint16_t ringbop(void)
 {
@@ -326,9 +338,9 @@ static uint16_t ringbop(void)
  * FIXME: we need to attach an address to getbuf/putbuf cases because we
  * may be using sendto/recvfrom
  */
-static uint16_t netn_putbuf(struct socket *s)
+uint16_t netn_putbuf(struct socket *s)
 {
-	struct sockdata *sd = s->s_priv;
+	struct sockdata *sd = sockdata + s->s_num;
 
 	if (udata.u_count > TXPKTSIZ) {
 		udata.u_error = EMSGSIZE;
@@ -358,11 +370,9 @@ static uint16_t netn_putbuf(struct socket *s)
  *	use the ring buffer packing. Once done we poke the daemon so it knows
  *	space is freed.
  */
-static uint16_t netn_getbuf(struct socket *s)
+uint16_t netn_getbuf(struct socket *s)
 {
-	struct sockdata *sd = s->s_priv;
-	arg_t n = udata.u_count;
-	arg_t r = 0;
+	struct sockdata *sd = sockdata + s->s_num;
 
 	if (sd->rbuf == sd->rnext)
 		return 0;
@@ -383,10 +393,10 @@ static uint16_t netn_getbuf(struct socket *s)
  *	available as a ring buffer and write bytes to it. We then update
  *	our pointer and poke the daemon to send stuff.
  */
-static uint16_t netn_queuebytes(struct socket *s)
+uint16_t netn_queuebytes(struct socket *s)
 {
-	struct sockdata *sd = s->s_priv;
-	arg_t r;
+	arg_t r = 0U;
+	struct sockdata *sd = sockdata + s->s_num;
 	uint16_t c;
 
 	len = udata.u_count;
@@ -424,10 +434,10 @@ static uint16_t netn_queuebytes(struct socket *s)
  *	and send an ack frame as appropriate as well as adjusting its
  *	copy of the ring state
  */
-static uint16_t netn_copyout(struct socket *s)
+uint16_t netn_copyout(struct socket *s)
 {
-	struct sockdata *sd = s->s_priv;
-	arg_t r;
+	arg_t r = 0U;
+	struct sockdata *sd = sockdata + s->s_num;
 
 	len = udata.u_count;
 
@@ -442,7 +452,6 @@ static uint16_t netn_copyout(struct socket *s)
 	if (r != 0xFFFF)
 		netn_asynchronous_event(s, NEV_READ);
 	return r;
-	
 }
 
 /*
@@ -463,7 +472,6 @@ int net_init(struct socket *s)
 		udata.u_error = ENETDOWN;
 		return -1;
 	}
-	s->s_priv = sd;
 	sd->socket = s;
 	sd->event = 0;
 	sd->rbuf = sd->rnext = 0;
@@ -503,6 +511,7 @@ int net_connect(struct socket *s)
 	return netn_synchronous_event(s, SS_CONNECTING);
 }
 
+#if 0 // TODO: colides with in-kernel network.c
 /*
  *	A socket is being closed by the user. Move the socket into a
  *	closed state and free the resources used. If the underlying
@@ -514,7 +523,7 @@ int net_connect(struct socket *s)
  */
 void net_close(struct socket *s)
 {
-	struct sockdata *sd = s->s_priv;
+	struct sockdata *sd = sockdata + s->s_num;
 	/* Caution here - the native tcp socket will hang around longer */
 	sd->newstate = SS_DEAD;
 	netn_asynchronous_event(s, NEV_STATE|NEVW_STATE);
@@ -523,7 +532,9 @@ void net_close(struct socket *s)
 	   will send an UNHOOK message which will do the final resource
 	   clean up and allow the socket to be reused */
 }
+#endif
 
+#if 0 // TODO: colides with in-kernel network.c
 /*
  *	Read or recvfrom a socket. We don't yet handle message addresses
  *	sensibly and that needs fixing
@@ -531,7 +542,7 @@ void net_close(struct socket *s)
 arg_t net_read(regptr struct socket *s, uint8_t flag)
 {
 	uint16_t n = 0;
-	struct sockdata *sd = s->s_priv;
+	struct sockdata *sd = sockdata + s->s_num;
 
 	while (1) {
 		/* Partial I/O saves the error for the rext call but
@@ -562,17 +573,19 @@ arg_t net_read(regptr struct socket *s, uint8_t flag)
 		/* If the socket is moved to closed SI_SHUTR must be set. We
 		   don't report an error for a read on a closed socket, we
 		   report 0 (EOF) */
-		if (n || (s->s_iflag & SI_SHUTR))
+		if (n || (s->s_iflags & SI_SHUTR))
 		    return n;
 
-		s->s_iflag &= ~SI_DATA;
+		s->s_iflags &= ~SI_DATA;
 		/* Could do with using timeouts here to be clever for non O_NDELAY so
 		   we aggregate data. For now assume a fifo */
-		if (psleep_flags(&s->s_iflag, flag))
+		if (psleep_flags(&s->s_iflags, flag))
 			return -1;
 	}
 }
+#endif
 
+#if 0 // TODO: colides with in-kernel network.c
 /*
  *	Write or sendto a socket. We don't yet handle message addresses
  *	sensibly and that needs fixing
@@ -581,14 +594,14 @@ arg_t net_write(regptr struct socket * s, uint8_t flag)
 {
 	uint16_t n = 0, t = 0;
 	uint16_t l = udata.u_count;
-	struct sockdata *sd = s->s_priv;
+	struct sockdata *sd = sockdata + s->s_num;
 
 	if (sock_error(s))
 		return -1;
 
 	while (t < l) {
 		udata.u_count = l - t;
-		if (s->s_state == SS_CLOSED || (s->s_iflag & SI_SHUTW)) {
+		if (s->s_state == SS_CLOSED || (s->s_iflags & SI_SHUTW)) {
 			udata.u_error = EPIPE;
 			ssig(udata.u_ptab, SIGPIPE);
 			return -1;
@@ -610,33 +623,29 @@ arg_t net_write(regptr struct socket * s, uint8_t flag)
 		t += n;
 
 		if (n == 0) {	/* Blocked */
-			if (psleep_flags(&s->s_iflag, flag))
+			if (psleep_flags(&s->s_iflags, flag))
 				return -1;
 		}
 	}
 	return l;
 }
+#endif
 
 arg_t net_shutdown(struct socket *s, uint8_t flag)
 {
-	s->s_iflag |= flag;
+	s->s_iflags |= flag;
 	wakeup_all(s);
 	return 0;
 }
 
-/* Gunk we are still making up */
-struct netdevice net_dev = {
-	0,
-	"net0",
-	IFF_POINTOPOINT
-};
-
+#if 0 // TODO: colides with in-kernel network.c
 arg_t net_ioctl(uint8_t op, void *p)
 {
 	used(op);
 	used(p);
 	return -EINVAL;
 }
+#endif
 
 void netdev_init(void)
 {

@@ -553,7 +553,7 @@ int dokernel( void )
 				/* FIXME: probably needs to do something here  */
 				/* fixme: set IP here? */
 				if (sm.s.s_type == SOCKTYPE_TCP)
-					m->port = sm.s.s_addr[SADDR_SRC].port;
+					m->port = sm.s.src_addr.sa.sin.sin_port;
 				ne.data = SS_BOUND;
 				ksend( NE_NEWSTATE );
 				break;
@@ -561,9 +561,9 @@ int dokernel( void )
 				if ( sm.s.s_type == SOCKTYPE_TCP ){
 					struct uip_conn *conptr;
 					uip_ipaddr_t addr;
-					int port = sm.s.s_addr[SADDR_DST].port;
+					int port = sm.s.dst_addr.sa.sin.sin_port;
 					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
-							 &sm.s.s_addr[SADDR_DST].addr );
+						&sm.s.dst_addr.sa.sin.sin_addr.s_addr );
 					conptr = uip_connect( &addr, port, m->port );
 					if ( !conptr ){
 						ne.data = SS_CLOSED;
@@ -582,9 +582,9 @@ int dokernel( void )
 				else if ( sm.s.s_type == SOCKTYPE_UDP ){
 					struct uip_udp_conn *conptr;
 					uip_ipaddr_t addr;
-					int port = sm.s.s_addr[SADDR_DST].port;
+					int port = sm.s.dst_addr.sa.sin.sin_port;
 					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
-							 &sm.s.s_addr[SADDR_DST].addr );
+						&sm.s.dst_addr.sa.sin.sin_addr.s_addr );
 					/* need some HTONS'ing done here? */
 					conptr = uip_udp_new( &addr, port );
 					if ( !conptr ){
@@ -601,9 +601,9 @@ int dokernel( void )
 				else if ( sm.s.s_type == SOCKTYPE_RAW ){
 					struct uip_raw_conn *conptr;
 					uip_ipaddr_t addr;
-					int port = sm.s.s_addr[SADDR_DST].port;
+					int port = sm.s.dst_addr.sa.sin.sin_port;
 					uip_ipaddr_copy( &addr, (uip_ipaddr_t *)
-							 &sm.s.s_addr[SADDR_DST].addr );
+						&sm.s.dst_addr.sa.sin.sin_addr.s_addr );
 					/* need some HTONS'ing done here? */
 					conptr = uip_raw_new( &addr, port );
 					if ( !conptr ){
@@ -642,8 +642,8 @@ int dokernel( void )
 				break;
 			case SS_LISTENING:
 				/* htons here? */
-				uip_listen( sm.s.s_addr[0].port );
-				m->port = sm.s.s_addr[0].port;
+				uip_listen( sm.s.src_addr.sa.sin.sin_port );
+				m->port = sm.s.src_addr.sa.sin.sin_port;
 				ne.data = SS_LISTENING;
 				ksend( NE_NEWSTATE );
 				break;
