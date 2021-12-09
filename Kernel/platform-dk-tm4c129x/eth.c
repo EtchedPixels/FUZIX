@@ -1,12 +1,12 @@
 #include <kernel.h>
 #include <kdata.h>
-#include <netdev.h>
-#include <timer.h>
 #include "cpu.h"
 #include "inline-irq.h"
 #include "interrupt.h"
 #include "tm4c129x.h"
 #include "gpio.h"
+
+#include "eth.h"
 
 #define ETH_PKTSIZE 590U
 #define OPTIMAL_EMAC_BUFSIZE ((ETH_PKTSIZE + 4U + 15U) & (~15U))
@@ -502,9 +502,6 @@
 #define MII_MSR_100BASETXFULL   (1U << 14U)
 #define MII_MSR_100BASET4       (1U << 15U)
 
-/* For now until we work out where this really belongs */
-uint8_t sock_wake[NSOCKET];
-
 struct emac_txdesc_s
 {
   uint32_t tdes0;
@@ -562,123 +559,15 @@ struct eth_hdr_s
 #define ETHTYPE_IP6  0x86ddU
 
 static uint8_t mac_addr[6U] = { 0U, 0U, 0U, 0U, 0U, 0U };
+
+#if 0 // TODO: make a glue code from it
+static uint16_t autoport = htons(5000);
 static uint32_t ipa = 0U;
 static uint32_t iga = 0U;
 static uint32_t igm = 0U;
 static uint16_t ifflags = IFF_BROADCAST | IFF_RUNNING | IFF_UP;
 
-static void netdev_reload(void)
-{
-  // TODO: implement
-}
-
-int netproto_socket(void)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_bind(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_autobind(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_find_local(struct ksockaddr *addr)
-{
-  struct socket *s = sockets;
-  int i = 0U;
-
-  while (i < NSOCKET) {
-    if ((s->s_state < SS_BOUND) || (s->src_addr.sa.family != AF_INET)) {
-      s++;
-      i++;
-      continue;
-    }
-    if (s->src_addr.sa.sin.sin_port == addr->sa.sin.sin_port) {
-      if ((s->src_addr.sa.sin.sin_addr.s_addr ==
-           addr->sa.sin.sin_addr.s_addr) ||
-           (s->src_addr.sa.sin.sin_addr.s_addr == 0U))
-        return i;
-    }
-    s++;
-    i++;
-  }
-  return -1;
-}
-
-int netproto_listen(struct socket *s)
-{
-  // TODO: implement
-  s->s_state = SS_LISTENING;
-  return 0;
-}
-
-int netproto_begin_connect(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_accept_complete(struct socket *s)
-{
-  return 0;
-}
-
-int netproto_read(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-arg_t netproto_write(struct socket *s, struct ksockaddr *addr)
-{
-  // TODO: implement
-  return 0;
-}
-
-struct socket *netproto_sockpending(struct socket *s)
-{
-  int i;
-  struct socket *n = sockets;
-  uint8_t id = s->s_num;
-
-  for (i = 0; i < NSOCKET; i++) {
-    if ((n->s_state != SS_UNUSED) && (n->s_parent == id)) {
-      n->s_parent = 0xffU;
-      return n;
-    }
-    n++;
-  }
-  return NULL;
-}
-
-void netproto_setup(struct socket *s) { }
-
-void netproto_free(struct socket *s)
-{
-  // TODO: implement
-}
-
-int netproto_close(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-arg_t netproto_shutdown(struct socket *s, uint8_t how)
-{
-  // TODO: implement
-  return 0;
-}
-
-arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
+arg_t eth_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 {
   static struct ifreq ifr;
 
@@ -746,13 +635,13 @@ arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
     udata.u_error = EINVAL;
     return -1;
   }
-  netdev_reload();
   return 0;
 copy_addr:
   ifr.ifr_addr.sa.sin.sin_family = AF_INET;
 copyback:
   return uput(&ifr, ifr_u, sizeof ifr);
 }
+#endif
 
 static int eth_phyread(uint16_t phydevaddr,
                        uint16_t phyregaddr, uint16_t *value)
@@ -897,7 +786,7 @@ static bool eth_recvframe(void)
   uint8_t *buffer;
   unsigned u;
 
-  if (!(q.q_count))
+  if (!(q.q_count)) // TODO: should this queue be updated in this function?!
     return false;
   rxdesc = rxhead;
   for (u = 0U;
@@ -1170,7 +1059,37 @@ static void eth_init(void)
                  GPIO_PAD_STD, 0U, 5U, 0U);
 }
 
-void netdev_init(void)
+int eth_open(uint_fast8_t minor, uint16_t flag)
+{
+  // TODO: implement
+  return -1;
+}
+
+int eth_close(uint_fast8_t minor)
+{
+  // TODO: implement
+  return -1;
+}
+
+int eth_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
+{
+  // TODO: implement
+  return -1;
+}
+
+int eth_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
+{
+  // TODO: implement
+  return -1;
+}
+
+int eth_ioctl(uint_fast8_t minor, uarg_t request, char *data)
+{
+  // TODO: implement (see disabled code above)
+  return -1;
+}
+
+void ethdev_init(void)
 {
   uint32_t user0;
   uint32_t user1;

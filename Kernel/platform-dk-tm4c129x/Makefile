@@ -16,12 +16,14 @@ LOBJS = $(LCSRCS:.c=$(BINEXT))
 DSRCS = blkdev.c mbr.c devsd.c devsd_discard.c
 DOBJS = $(DSRCS:.c=$(BINEXT))
 
+NSRCS = net_native.c
+NOBJS = $(NSRCS:.c=$(BINEXT))
+
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.S=.o)
 
-OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS) \
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS) $(NOBJS) \
         $(GCC_AOBJS) $(GCC_COBJS)
-#        $(NUTTX_AOBJS) $(NUTTX_COBJS)
 
 CROSS_CCOPTS += -I../dev
 
@@ -46,6 +48,9 @@ $(DOBJS): %.o: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(LOBJS): %.o: ../lib/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(NOBJS): %.o: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:

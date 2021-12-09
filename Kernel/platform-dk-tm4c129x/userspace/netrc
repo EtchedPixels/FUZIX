@@ -1,0 +1,4 @@
+# netd rc file
+#   do not set MAC for tm4c129x ethernet device
+ipaddr  192.168.1.129
+netmask 255.255.255.0
