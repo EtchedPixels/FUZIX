@@ -27,7 +27,7 @@ package  netd-slip
 if-file  netd-slip
 f 0755 /usr/bin/netd-slip      netd-slip
 
-package  netd-eth0
-if-file  netd-eth0
-f 0755 /usr/bin/netd-eth0  netd-eth0
-n 060666 2048 /dev/eth0
+package  netd-eth
+if-file  netd-eth
+f 0755 /usr/bin/netd-eth  netd-eth
+n 060666 2048 /dev/eth

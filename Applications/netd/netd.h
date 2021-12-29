@@ -1,10 +1,13 @@
-/* dwnet.h interface
+/* netd.h interface
 
 
 
  */
-#ifndef DWNET_H
-#define DWNET_H
+#ifndef NETD_H
+#define NETD_H
+
+#include <sys/netdev.h>
+#include <sys/net_native.h>
 
 struct link{
     uint8_t flags;          /* flags */
@@ -38,6 +41,7 @@ typedef uint8_t uip_udp_appstate_t;
 void netd_appcall( void );
 void netd_udp_appcall( void );
 
+extern int knet;  /* fd of kernel's network inface */
 extern uint8_t has_arp;
 
-#endif
+#endif /* NETD_H */

@@ -6,8 +6,17 @@
 
 #ifdef CONFIG_NET_NATIVE
 
+#define is_datagram(s) ((s)->s_class != SOCK_STREAM && (s)->s_class != SOCK_SEQPACKET)
+
 /* For now until we work out where this really belongs */
-uint8_t sock_wake[NSOCKET]; // TODO: what is the interaction on this?
+uint8_t sock_wake[NSOCKET];
+
+static uint8_t mac_addr[6U] = { 0U, 0U, 0U, 0U, 0U, 0U };
+static int16_t mtu = 0;
+static uint32_t ipa = 0U;
+static uint32_t iga = 0U;
+static uint32_t igm = 0U;
+static uint16_t ifflags = IFF_BROADCAST|IFF_RUNNING|IFF_UP;
 
 /*
  *	TODO: support using a malloc pool of out of bank (or flat space)
@@ -16,13 +25,22 @@ uint8_t sock_wake[NSOCKET]; // TODO: what is the interaction on this?
  */
 
 /* This holds the additional kernel context for the sockets */
-static struct sockdata sockdata[NSOCKET];
+static struct sockdata sockdata[NSOCKET] = {
+	[0 ... (NSOCKET - 1)] = {
+		.socket = NULL
+	}
+};
+
 /* This is the inode of the backing file object */
 static inoptr net_ino;
 
 /* Wake all blockers on a socket - used for error cases */
 static void wakeup_all(struct socket *s)
 {
+	if (s->s_wake) {
+		sock_wake[s->s_num] = 1;
+		wakeup(sock_wake + s->s_num);
+	}
 	wakeup(s);
 	wakeup(&s->s_iflags);
 	selwake_dev(4, 65, SELECT_IN);
@@ -66,6 +84,10 @@ int netdev_write(uint8_t flags)
 		/* A synchronous state change has completed */
 		sd->event &= ~NEVW_STATE;
 		/* Review select impact for this v wakeup_all */
+		if (s->s_wake) {
+			sock_wake[s->s_num] = 1;
+			wakeup(sock_wake + s->s_num);
+		}
 		wakeup(s);
 		break;
 		/* Asynchronous state changing event */
@@ -200,6 +222,25 @@ int netdev_ioctl(uarg_t request, char *data)
 			if ((net_ino = getinode(fd)) == NULLINODE)
 				return -1;
 			(void)(i_ref(net_ino));
+			return 0;
+		case NET_MAC:
+			if (uget(data, mac_addr, 6U))
+				return -1;
+			return 0;
+		case NET_MTU:
+			mtu = ugetw(data);
+			return 0;
+		case NET_IPADDR:
+			if (uget(data, &ipa, sizeof(uint32_t)))
+				return -1;
+			return 0;
+		case NET_MASK:
+			if (uget(data, &igm, sizeof(uint32_t)))
+				return -1;
+			return 0;
+		case NET_GATEWAY:
+			if (uget(data, &iga, sizeof(uint32_t)))
+				return -1;
 			return 0;
 #ifdef CONFIG_LEVEL_2
 		case SELECT_BEGIN:
@@ -461,10 +502,202 @@ uint16_t netn_copyout(struct socket *s)
 	return r;
 }
 
-#if 0 // TODO: remove
+int netproto_socket(void)
+{
+	int i;
+
+	for (i = 0; i < NSOCKET; i++) {
+		if (!(sockdata[i].socket)) {
+			sockdata[i].socket = &sockets[i];
+			sockets[i].s_num = i;
+			sockets[i].s_class = udata.u_net.args[2];
+			sockets[i].s_protocol = udata.u_net.args[3];
+			net_setup(&sockets[i]);
+			udata.u_net.sock = i;
+			return 0;
+		}
+	}
+	udata.u_error = EBADF;
+	return -1;
+}
+
+/* We probably want a generic ipv4 helper layer for some of this */
+int netproto_find_local(struct ksockaddr *ka)
+{
+	struct socket *s = sockets;
+	uint8_t n = 0;
+
+	while (n < NSOCKET) {
+		if (s->s_state < SS_BOUND || s->src_addr.sa.family != AF_INET) {
+			s++;
+			n++;
+			continue;
+		}
+		if (s->src_addr.sa.sin.sin_port == ka->sa.sin.sin_port) {
+			if (s->src_addr.sa.sin.sin_addr.s_addr ==
+				ka->sa.sin.sin_addr.s_addr ||
+			    s->src_addr.sa.sin.sin_addr.s_addr == 0)
+			        return n;
+		}
+		s++;
+		n++;
+	}
+	return -1;
+}
+
+/*
+ *	A bind has occurred. This might be a user triggering a bind but it
+ *	could also be an autobind.
+ *
+ *	FIXME: distinguish bind and autobind so we can push address picking
+ *	into the stack implementation to cover non IP stacks
+ */
+int netproto_autobind(struct socket *s)
+{
+	return netn_synchronous_event(s, SS_BOUND);
+}
+
+/*
+ *	A bind has occurred. This might be a user triggering a bind but it
+ *	could also be an autobind.
+ *
+ *	FIXME: distinguish bind and autobind so we can push address picking
+ *	into the stack implementation to cover non IP stacks
+ */
+int netproto_bind(struct socket *s)
+{
+	return netn_synchronous_event(s, SS_BOUND);
+}
+
+/*
+ *	A listen has been issued by the user. Inform the underlying TCP
+ *	stack that it should accept connections on this socket. A stack that
+ *	lacks incoming connection support can error instead
+ */
+int netproto_listen(struct socket *s)
+{
+	return netn_synchronous_event(s, SS_LISTENING);
+}
+
+/*
+ *	A connect has been issued by the user. This message tells the
+ *	stack to begin connecting. It should put the socket state into
+ *	SS_CONNECTING before returning, or it can error.
+ */
+int netproto_begin_connect(struct socket *s)
+{
+	return netn_synchronous_event(s, SS_CONNECTING);
+}
+
+int netproto_accept_complete(struct socket *s)
+{
+	return 0;
+}
+
+static int sock_error(struct socket *s)
+{
+	udata.u_error = s->s_error;
+	s->s_error = 0;
+	if (udata.u_error)
+		return -1;
+	else
+		return 0;
+}
+
+/*
+ *	Read or recvfrom a socket. We don't yet handle message addresses
+ *	sensibly and that needs fixing
+ */
+int netproto_read(struct socket *s)
+{
+	uint16_t u;
+
+	/* Partial I/O saves the error for the next call but
+	   returns */
+	if (s->s_error)
+		return sock_error(s);
+	/* FIXME: We should be forced into CLOSED state so is this
+	   check actually needed */
+	if (net_ino == NULL) {
+		udata.u_error = EPIPE;
+		ssig(udata.u_ptab, SIGPIPE);
+		return -1;
+	}
+	if (s->s_state < SS_CONNECTED) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+	if (is_datagram(s))
+		u = netn_getbuf(s);
+	else
+		u = netn_copyout(s);
+	if (u == 0xffffU)
+		return -1;
+	udata.u_done = u;
+	/* If the socket is moved to closed SI_SHUTR must be set. We
+	   don't report an error for a read on a closed socket, we
+	   report 0 (EOF) */
+	if (u || (s->s_iflags & SI_SHUTR))
+	    return 0;
+	s->s_iflags &= ~SI_DATA;
+	if (s->s_error)
+		return sock_error(s);
+	return -1;
+}
+
+/*
+ *	Write or sendto a socket. We don't yet handle message addresses
+ *	sensibly and that needs fixing
+ */
+arg_t netproto_write(struct socket *s, struct ksockaddr *addr)
+{
+	uint16_t u = 0U, t = 0U;
+	uint16_t l = udata.u_count;
+
+	if (sock_error(s))
+		return -1;
+	while (t < l) {
+		udata.u_count = l - t;
+		if (s->s_state == SS_CLOSED || (s->s_iflags & SI_SHUTW)) {
+			udata.u_error = EPIPE;
+			ssig(udata.u_ptab, SIGPIPE);
+			return -1;
+		}
+		if (is_datagram(s))
+			u = netn_putbuf(s);
+		else
+			u = netn_queuebytes(s);
+		if (u == 0xffffU)
+			return -1;
+		if (s->s_error)
+			return sock_error(s);
+		t += u;
+		if (!u) /* Blocked */
+			return -1;
+	}
+	udata.u_done = l;
+	return 0;
+}
+
+struct socket *netproto_sockpending(struct socket *s)
+{
+	struct socket *n = sockets;
+	uint8_t id = s->s_num;
+	int i;
+
+	for (i = 0; i < NSOCKET; i++) {
+		if (n->s_state != SS_UNUSED && n->s_parent == id) {
+			n->s_parent = 0xFF;
+			return n;
+		}
+		n++;
+	}
+	return NULL;
+}
+
 /*
  *	Called from the core network layer when a socket is being
- *	allocated. We can either move the socket to SS_UNCONNECTED,
+ *	setup. We can either move the socket to SS_UNCONNECTED,
  *	or error. In our case the daemon will reply with an NE_INIT,
  *	or a state change to set an error.
  *
@@ -473,60 +706,25 @@ uint16_t netn_copyout(struct socket *s)
  *	some of the stacks (this one included) are asynchronous to the
  *	OS.
  */
-int net_init(struct socket *s)
+void netproto_setup(struct socket *s)
 {
 	struct sockdata *sd = sockdata + s->s_num;
-	if (!net_ino) {
-		udata.u_error = ENETDOWN;
-		return -1;
-	}
-	sd->socket = s;
+
 	sd->event = 0;
 	sd->rbuf = sd->rnext = 0;
 	sd->tbuf = sd->tnext = 0;
-	return netn_synchronous_event(s, SS_UNCONNECTED);
+	netn_synchronous_event(s, SS_UNCONNECTED);
 }
-#endif
 
-#if 0 // TODO: remove
-/*
- *	A bind has occurred. This might be a user triggering a bind but it
- *	could also be an autobind.
- *
- *	FIXME: distinguish bind and autobind so we can push address picking
- *	into the stack implementation to cover non IP stacks
- */
-int net_bind(struct socket *s)
+void netproto_free(struct socket *s)
 {
-	return netn_synchronous_event(s, SS_BOUND);
-}
-#endif
+	struct sockdata *sd = sockdata + s->s_num;
 
-#if 0 // TODO: remove
-/*
- *	A listen has been issued by the user. Inform the underlying TCP
- *	stack that it should accept connections on this socket. A stack that
- *	lacks incoming connection support can error instead
- */
-int net_listen(struct socket *s)
-{
-	return netn_synchronous_event(s, SS_LISTENING);
+	s->s_num = -1;
+	s->s_state = SS_UNUSED;
+	sd->socket = NULL;
 }
-#endif
 
-#if 0 // TODO: remove
-/*
- *	A connect has been issued by the user. This message tells the
- *	stack to begin connecting. It should put the socket state into
- *	SS_CONNECTING before returning, or it can error.
- */
-int net_connect(struct socket *s)
-{
-	return netn_synchronous_event(s, SS_CONNECTING);
-}
-#endif
-
-#if 0 // TODO: colides with in-kernel network.c
 /*
  *	A socket is being closed by the user. Move the socket into a
  *	closed state and free the resources used. If the underlying
@@ -536,7 +734,7 @@ int net_connect(struct socket *s)
  *
  *	Fuzix close() methods are not permitted to block.
  */
-void net_close(struct socket *s)
+int netproto_close(struct socket *s)
 {
 	struct sockdata *sd = sockdata + s->s_num;
 	/* Caution here - the native tcp socket will hang around longer */
@@ -546,269 +744,87 @@ void net_close(struct socket *s)
 	   progress to SS_DEAD. When the stack is finished with us it
 	   will send an UNHOOK message which will do the final resource
 	   clean up and allow the socket to be reused */
-}
-#endif
-
-#if 0 // TODO: colides with in-kernel network.c
-/*
- *	Read or recvfrom a socket. We don't yet handle message addresses
- *	sensibly and that needs fixing
- */
-arg_t net_read(regptr struct socket *s, uint8_t flag)
-{
-	uint16_t n = 0;
-	struct sockdata *sd = sockdata + s->s_num;
-
-	while (1) {
-		/* Partial I/O saves the error for the rext call but
-		   returns */
-		if (s->s_error) {
-			if (n == 0)
-				return sock_error(s);
-			else
-				return n;
-		}
-		/* FIXME: We should be forced into CLOSED state so is this
-		   check actually needed */
-	        if (net_ino == NULL) {
-			udata.u_error = EPIPE;
-			ssig(udata.u_ptab, SIGPIPE);
-			return -1;
-		}
-		if (s->s_state < SS_CONNECTED) {
-			udata.u_error = EINVAL;
-			return -1;
-		}
-		if (s->s_type != SOCKTYPE_TCP)
-			n = netn_getbuf(s);
-		else
-			n = netn_copyout(s);
-		if (n == 0xFFFF)
-			return -1;
-		/* If the socket is moved to closed SI_SHUTR must be set. We
-		   don't report an error for a read on a closed socket, we
-		   report 0 (EOF) */
-		if (n || (s->s_iflags & SI_SHUTR))
-		    return n;
-
-		s->s_iflags &= ~SI_DATA;
-		/* Could do with using timeouts here to be clever for non O_NDELAY so
-		   we aggregate data. For now assume a fifo */
-		if (psleep_flags(&s->s_iflags, flag))
-			return -1;
-	}
-}
-#endif
-
-#if 0 // TODO: colides with in-kernel network.c
-/*
- *	Write or sendto a socket. We don't yet handle message addresses
- *	sensibly and that needs fixing
- */
-arg_t net_write(regptr struct socket * s, uint8_t flag)
-{
-	uint16_t n = 0, t = 0;
-	uint16_t l = udata.u_count;
-	struct sockdata *sd = sockdata + s->s_num;
-
-	if (sock_error(s))
-		return -1;
-
-	while (t < l) {
-		udata.u_count = l - t;
-		if (s->s_state == SS_CLOSED || (s->s_iflags & SI_SHUTW)) {
-			udata.u_error = EPIPE;
-			ssig(udata.u_ptab, SIGPIPE);
-			return -1;
-		}
-		if (s->s_type != SOCKTYPE_TCP)
-			n = netn_putbuf(s);
-		else
-			n = netn_queuebytes(s);
-		/* FIXME: buffer the error in this case */
-		if (n == 0xFFFFU)
-			return l ? (arg_t)l : -1;
-
-		if (s->s_error){
-			if (l == 0)
-				return sock_error(s);
-			return l;
-		}
-
-		t += n;
-
-		if (n == 0) {	/* Blocked */
-			if (psleep_flags(&s->s_iflags, flag))
-				return -1;
-		}
-	}
-	return l;
-}
-#endif
-
-#if 0 // TODO: remove
-arg_t net_shutdown(struct socket *s, uint8_t flag)
-{
-	s->s_iflags |= flag;
-	wakeup_all(s);
 	return 0;
-}
-#endif
-
-int netproto_socket(void)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_find_local(struct ksockaddr *addr)
-{
-  // TODO: implement
-  return -1;
-}
-
-int netproto_autobind(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_bind(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_listen(struct socket *s)
-{
-  // TODO: implement
-  s->s_state = SS_LISTENING;
-  return 0;
-}
-
-int netproto_begin_connect(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_accept_complete(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-int netproto_read(struct socket *s)
-{
-  // TODO: implement
-  return 0;
-}
-
-arg_t netproto_write(struct socket *s, struct ksockaddr *addr)
-{
-  // TODO: implement
-  return 0;
-}
-
-struct socket *netproto_sockpending(struct socket *s)
-{
-  // TODO: implement
-  return NULL;
-}
-
-void netproto_setup(struct socket *s)
-{
-  // TODO: implement
-}
-
-void netproto_free(struct socket *s)
-{
-  // TODO: implement
-}
-
-int netproto_close(struct socket *s)
-{
-  // TODO: implement
-  return 0;
 }
 
 arg_t netproto_shutdown(struct socket *s, uint8_t how)
 {
-  // TODO: implement
-  return 0;
+	s->s_iflags |= how;
+	wakeup_all(s);
+	return 0;
 }
 
 arg_t netproto_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
 {
-  static struct ifreq ifr;
+	static struct ifreq ifr;
 
-  if (uget(ifr_u, &ifr, sizeof(struct ifreq)))
-    return -1;
-  if (op != SIOCGIFNAME && memcmp(ifr.ifr_name, "eth0", 5U)) {
-    udata.u_error = ENODEV;
-    return -1;
-  }
-  switch (op) {
-  /* Get side */
-  case SIOCGIFNAME:
-    if (ifr.ifr_ifindex) {
-      udata.u_error = ENODEV;
-      return -1;
-    }
-    memcpy(ifr.ifr_name, "eth0", 5U);
-    goto copyback;
-  case SIOCGIFINDEX:
-    ifr.ifr_ifindex = 0; // TODO: is that so?
-    goto copyback;
-  case SIOCGIFFLAGS:
-    // TODO: implement: ifr.ifr_flags =
-    goto copyback;
-  case SIOCGIFADDR:
-    // TODO: implement: ifr.ifr_addr.sa.sin.sin_addr.s_addr =
-    goto copy_addr;
-  case SIOCGIFBRDADDR:
-    // TODO: implement: ifr.ifr_broadaddr.sa.sin.sin_addr.s_addr =
-    goto copy_addr;
-  case SIOCGIFGWADDR:
-    // TODO: implement: ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr =
-    goto copy_addr;
-  case SIOCGIFNETMASK:
-    // TODO: implement: ifr.ifr_netmask.sa.sin.sin_addr.s_addr =
-    goto copy_addr;
-  case SIOCGIFHWADDR:
-    // TODO: implement: memcpy(ifr.ifr_hwaddr.sa.hw.shw_addr, mac_addr, 6U);
-    ifr.ifr_hwaddr.sa.hw.shw_family = HW_ETH;
-    goto copyback;
-  case SIOCGIFMTU:
-    // TODO: implement: ifr.ifr_mtu = 1500;
-    goto copyback;
-    /* Set side */
-  case SIOCSIFFLAGS:
-    /* Doesn't really do anything ! */
-    // TODO: verify?
-    return 0;
-  case SIOCSIFADDR:
-    // TODO: implement: ipa = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
-    break;
-  case SIOCSIFGWADDR:
-    // TODO: implement: iga = ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr;
-    break;
-  case SIOCSIFNETMASK:
-    // TODO: implement: igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;
-    break;
-  case SIOCSIFHWADDR:
-    // TODO: implement: memcpy(mac_addr, ifr.ifr_hwaddr.sa.hw.shw_addr, 6U);
-    // TODO: propagate it to a driver even if it is doing nothing with it!
-    break;
-  default:
-    udata.u_error = EINVAL;
-    return -1;
-  }
-  return 0;
+	if (uget(ifr_u, &ifr, sizeof(struct ifreq)))
+		return -1;
+	if (op != SIOCGIFNAME && memcmp(ifr.ifr_name, "eth0", 5U)) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	switch (op) {
+	/* Get side */
+	case SIOCGIFNAME:
+	if (ifr.ifr_ifindex) {
+		udata.u_error = ENODEV;
+		return -1;
+	}
+	memcpy(ifr.ifr_name, "eth0", 5U);
+	goto copyback;
+	case SIOCGIFINDEX:
+		ifr.ifr_ifindex = 0;
+		goto copyback;
+	case SIOCGIFFLAGS:
+		ifr.ifr_flags = ifflags;
+		goto copyback;
+	case SIOCGIFADDR:
+		ifr.ifr_addr.sa.sin.sin_addr.s_addr = ipa;
+		goto copy_addr;
+	case SIOCGIFBRDADDR:
+		ifr.ifr_broadaddr.sa.sin.sin_addr.s_addr = (ipa & igm) | ~igm;
+		goto copy_addr;
+	case SIOCGIFGWADDR:
+		ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr = iga;
+		goto copy_addr;
+	case SIOCGIFNETMASK:
+		ifr.ifr_netmask.sa.sin.sin_addr.s_addr = igm;
+		goto copy_addr;
+	case SIOCGIFHWADDR:
+		memcpy(ifr.ifr_hwaddr.sa.hw.shw_addr, mac_addr, 6U);
+		ifr.ifr_hwaddr.sa.hw.shw_family = HW_ETH;
+		goto copyback;
+	case SIOCGIFMTU:
+		ifr.ifr_mtu = mtu;
+		goto copyback;
+		/* Set side */
+	case SIOCSIFFLAGS:
+		/* Doesn't really do anything ! */
+		ifflags &= ~IFF_UP;
+		ifflags |= ifr.ifr_flags & IFF_UP;
+		return 0;
+	case SIOCSIFADDR:
+		ipa = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
+		break;
+	case SIOCSIFGWADDR:
+		iga = ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr;
+		break;
+	case SIOCSIFNETMASK:
+		igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;
+		break;
+	case SIOCSIFHWADDR:
+		memcpy(mac_addr, ifr.ifr_hwaddr.sa.hw.shw_addr, 6U);
+		break;
+	default:
+		udata.u_error = EINVAL;
+		return -1;
+	}
+	return 0;
 copy_addr:
-  ifr.ifr_addr.sa.sin.sin_family = AF_INET;
+	ifr.ifr_addr.sa.sin.sin_family = AF_INET;
 copyback:
-  return uput(&ifr, ifr_u, sizeof ifr);
+	return uput(&ifr, ifr_u, sizeof ifr);
 }
 
 #endif
