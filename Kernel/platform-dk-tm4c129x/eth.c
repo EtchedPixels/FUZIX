@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <kdata.h>
+#include <printf.h>
 #include "cpu.h"
 #include "inline-irq.h"
 #include "interrupt.h"
@@ -75,7 +76,7 @@
 
 #define EMAC_NRXDESC      8U
 #define EMAC_NTXDESC      4U
-#define EMAC_NFREEBUFFERS (EMAC_NTXDESC + 1U)
+#define EMAC_NFREEBUFFERS (EMAC_NRXDESC + 1U)
 
 #define EMAC_CFG          0x400ec000
 #define EMAC_FRAMEFLTR    0x400ec004
@@ -525,12 +526,22 @@ static struct emac_rxdesc_s *rxhead = NULL;
 static struct emac_rxdesc_s *rxcurr = NULL;
 static struct emac_txdesc_s *txhead = NULL;
 static struct emac_txdesc_s *txtail = NULL;
-static unsigned char queue_base[EMAC_NFREEBUFFERS];
+static unsigned char recv_queue_base[EMAC_NFREEBUFFERS];
+static unsigned char send_queue_base[EMAC_NFREEBUFFERS];
 
-static struct s_queue q = {
-  .q_base = queue_base,
-  .q_head = queue_base,
-  .q_tail = queue_base,
+static struct s_queue recv_q = {
+  .q_base = recv_queue_base,
+  .q_head = recv_queue_base,
+  .q_tail = recv_queue_base,
+  .q_size = EMAC_NFREEBUFFERS,
+  .q_count = 0,
+  .q_wakeup = EMAC_NFREEBUFFERS
+};
+
+static struct s_queue send_q = {
+  .q_base = send_queue_base,
+  .q_head = send_queue_base,
+  .q_tail = send_queue_base,
   .q_size = EMAC_NFREEBUFFERS,
   .q_count = 0,
   .q_wakeup = EMAC_NFREEBUFFERS
@@ -538,110 +549,13 @@ static struct s_queue q = {
 
 static struct buff_s {
   uint8_t buff[OPTIMAL_EMAC_BUFSIZE];
+  size_t len;
   uint_fast8_t used;
 } buffers[EMAC_NFREEBUFFERS];
 
 static size_t rxsegments = 0U;
 static size_t txinflight = 0U;
-static uint8_t *d_buf = NULL;
-static size_t d_len = 0U;
-
-struct eth_hdr_s
-{
-  uint8_t dest[6U];
-  uint8_t src[6U];
-  uint16_t type;
-};
-#define ETH_HDR(ptr) ((struct eth_hdr_s *)(ptr))
-
-#define ETHTYPE_ARP  0x0806U
-#define ETHTYPE_IP   0x0800U
-#define ETHTYPE_IP6  0x86ddU
-
 static uint8_t mac_addr[6U] = { 0U, 0U, 0U, 0U, 0U, 0U };
-
-#if 0 // TODO: make a glue code from it
-static uint16_t autoport = htons(5000);
-static uint32_t ipa = 0U;
-static uint32_t iga = 0U;
-static uint32_t igm = 0U;
-static uint16_t ifflags = IFF_BROADCAST | IFF_RUNNING | IFF_UP;
-
-arg_t eth_ioctl(struct socket *s, int op, char *ifr_u /* in user space */)
-{
-  static struct ifreq ifr;
-
-  if (uget(ifr_u, &ifr, sizeof(struct ifreq)))
-    return -1;
-  if (op != SIOCGIFNAME && memcmp(ifr.ifr_name, "eth0", 5U)) {
-    udata.u_error = ENODEV;
-    return -1;
-  }
-  switch (op) {
-  /* Get side */
-  case SIOCGIFNAME:
-    if (ifr.ifr_ifindex) {
-      udata.u_error = ENODEV;
-      return -1;
-    }
-    memcpy(ifr.ifr_name, "eth0", 5U);
-    goto copyback;
-  case SIOCGIFINDEX:
-    ifr.ifr_ifindex = 0;
-    goto copyback;
-  case SIOCGIFFLAGS:
-    ifr.ifr_flags = ifflags;
-    goto copyback;
-  case SIOCGIFADDR:
-    ifr.ifr_addr.sa.sin.sin_addr.s_addr = ipa;
-    goto copy_addr;
-  case SIOCGIFBRDADDR:
-    /* Hardcoded in the engine */
-    ifr.ifr_broadaddr.sa.sin.sin_addr.s_addr = (ipa & igm) | ~igm;
-    goto copy_addr;
-  case SIOCGIFGWADDR:
-    ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr = iga;
-    goto copy_addr;
-  case SIOCGIFNETMASK:
-    ifr.ifr_netmask.sa.sin.sin_addr.s_addr = igm;
-    goto copy_addr;
-  case SIOCGIFHWADDR:
-    memcpy(ifr.ifr_hwaddr.sa.hw.shw_addr, mac_addr, 6U);
-    ifr.ifr_hwaddr.sa.hw.shw_family = HW_ETH;
-    goto copyback;
-  case SIOCGIFMTU:
-    ifr.ifr_mtu = 1500;
-    goto copyback;
-    /* Set side */
-  case SIOCSIFFLAGS:
-    /* Doesn't really do anything ! */
-    ifflags &= ~IFF_UP;
-    ifflags |= ifr.ifr_flags & IFF_UP;
-    return 0;
-  case SIOCSIFADDR:
-    ipa = ifr.ifr_addr.sa.sin.sin_addr.s_addr;
-    break;
-  case SIOCSIFGWADDR:
-    iga = ifr.ifr_gwaddr.sa.sin.sin_addr.s_addr;
-    break;
-  case SIOCSIFNETMASK:
-    igm = ifr.ifr_netmask.sa.sin.sin_addr.s_addr;
-    break;
-  case SIOCSIFHWADDR:
-    memcpy(mac_addr, ifr.ifr_hwaddr.sa.hw.shw_addr, 6U);
-    /* Not setting hwaddr really! */
-    break;
-  default:
-    udata.u_error = EINVAL;
-    return -1;
-  }
-  return 0;
-copy_addr:
-  ifr.ifr_addr.sa.sin.sin_family = AF_INET;
-copyback:
-  return uput(&ifr, ifr_u, sizeof ifr);
-}
-#endif
 
 static int eth_phyread(uint16_t phydevaddr,
                        uint16_t phyregaddr, uint16_t *value)
@@ -684,36 +598,56 @@ static int eth_phywrite(uint16_t phydevaddr,
   return -ETIMEDOUT;
 }
 
-static void eth_initbuffer(void)
+static void eth_initbuffers(void)
 {
-  uint_fast8_t u;
+  unsigned u;
 
-  for (u = 0U; u < EMAC_NFREEBUFFERS; u++) {
+  for (u = 0U; u < EMAC_NFREEBUFFERS; u++)
     buffers[u].used = 0U;
-    insq(&q, u);
-  }
 }
 
-static uint8_t *eth_allocbuffer(void)
+static uint8_t *eth_allocbuffer(size_t len)
 {
-  uint_fast8_t uc = 0U;
+  unsigned u;
 
-  if (!(remq(&q, &uc)))
-    return NULL;
-  if (buffers[uc].used)
-    return NULL;
-  buffers[uc].used = (uc & 0x80U);
-  return buffers[uc].buff;
+  for (u = 0U; u < EMAC_NFREEBUFFERS; u++) {
+    if (!(buffers[u].used)) {
+      buffers[u].len = len;
+      buffers[u].used = (u + 1U);
+      return buffers[u].buff;
+    }
+  }
+  return NULL;
 }
 
 static void eth_freebuffer(uint8_t *buffer)
 {
-  const struct buff_s *buf = ((struct buff_s *)
-                               (buffer - offsetof(struct buff_s, buff)));
-  uint_fast8_t uc = buf->used;
+  struct buff_s *buf = ((struct buff_s *)
+                        (buffer - offsetof(struct buff_s, buff)));
 
-  buffers[uc].used = 0U;
-  insq(&q, uc);
+  buf->len = 0U;
+  buf->used = 0U;
+}
+
+static uint8_t *eth_getbuffer(uint_fast8_t tok)
+{
+  return (tok == (buffers[tok - 1U].used)) ? buffers[tok - 1U].buff : NULL;
+}
+
+static uint_fast8_t eth_usedbuffer(const uint8_t *buffer)
+{
+  struct buff_s *buf = ((struct buff_s *)
+                        (buffer - offsetof(struct buff_s, buff)));
+
+  return buf->used;
+}
+
+static size_t eth_sizebuffer(const uint8_t *buffer)
+{
+  struct buff_s *buf = ((struct buff_s *)
+                        (buffer - offsetof(struct buff_s, buff)));
+
+  return buf->len;
 }
 
 static void eth_freesegment(struct emac_rxdesc_s *rxfirst, size_t segments)
@@ -756,27 +690,51 @@ static void eth_disableint(uint32_t ierbit)
 
 static void eth_transmit(void)
 {
+  irqflags_t fl;
+  const void *buffer;
+  size_t pkt_len;
   struct emac_txdesc_s *txdesc = txhead;
   struct emac_txdesc_s *txfirst = txdesc;
+  uint_fast8_t tok = 0U;
 
-  txdesc->tdes0 |= (EMAC_TDES0_FS | EMAC_TDES0_LS | EMAC_TDES0_IC);
-  txdesc->tdes1 = d_len;
-  txdesc->tdes2 = ((uint32_t)(d_buf));
-  txdesc->tdes0 |= EMAC_TDES0_OWN;
-  txdesc = ((struct emac_txdesc_s *)(txdesc->tdes3));
-  txhead = txdesc;
-  d_buf = NULL;
-  d_len = 0U;
-  if (!txtail)
-    txtail = txfirst;
-  txinflight++;
-  if (txinflight >= EMAC_NTXDESC)
-    eth_disableint(EMAC_DMAINT_RI);
-  if ((inl(EMAC_DMARIS)) & EMAC_DMAINT_TBUI) {
-    outl(EMAC_DMARIS, EMAC_DMAINT_TBUI);
-    outl(EMAC_TXPOLLD, 0U);
+  if (!txdesc) {
+    kprintf("No TX descriptor available!\n");
+    return;
   }
-  eth_enableint(EMAC_DMAINT_TI);
+  fl = __hard_di();
+  if (!(txdesc->tdes2)) {
+    if (remq(&send_q, &tok)) {
+      buffer = eth_getbuffer(tok);
+      if (!buffer) {
+        __hard_irqrestore(fl);
+        kprintf("Transmit buffer not found!\n");
+        return;
+      }
+      pkt_len = eth_sizebuffer(buffer);
+      if (pkt_len > OPTIMAL_EMAC_BUFSIZE) {
+        __hard_irqrestore(fl);
+        kprintf("Invalid transmit buffer size: %d\n", ((int)(pkt_len)));
+        return;
+      }
+      txdesc->tdes0 |= (EMAC_TDES0_FS | EMAC_TDES0_LS | EMAC_TDES0_IC);
+      txdesc->tdes1 = pkt_len;
+      txdesc->tdes2 = ((uint32_t)(buffer));
+      txdesc->tdes0 |= EMAC_TDES0_OWN;
+      txdesc = ((struct emac_txdesc_s *)(txdesc->tdes3));
+      txhead = txdesc;
+      if (!txtail)
+        txtail = txfirst;
+      txinflight++;
+      if (txinflight >= EMAC_NTXDESC)
+        eth_disableint(EMAC_DMAINT_RI);
+      if ((inl(EMAC_DMARIS)) & EMAC_DMAINT_TBUI) {
+        outl(EMAC_DMARIS, EMAC_DMAINT_TBUI);
+        outl(EMAC_TXPOLLD, 0U);
+      }
+      eth_enableint(EMAC_DMAINT_TI);
+    }
+  }
+  __hard_irqrestore(fl);
 }
 
 static bool eth_recvframe(void)
@@ -785,9 +743,8 @@ static bool eth_recvframe(void)
   struct emac_rxdesc_s *rxcur;
   uint8_t *buffer;
   unsigned u;
+  size_t pkt_len;
 
-  if (!(q.q_count)) // TODO: should this queue be updated in this function?!
-    return false;
   rxdesc = rxhead;
   for (u = 0U;
        ((!(rxdesc->rdes0 & EMAC_RDES0_OWN)) &&
@@ -804,15 +761,17 @@ static bool eth_recvframe(void)
       rxsegments++;
       rxcur = (1U == rxsegments) ? rxdesc : rxcurr;
       if (!(rxdesc->rdes0 & EMAC_RDES0_ES)) {
-        d_len = ((rxdesc->rdes0 & EMAC_RDES0_FL_MASK) >> EMAC_RDES0_FL_SHIFT);
-        d_len -= 4U;
-        buffer = eth_allocbuffer();
-        if (!buffer)
-          return false;
-        if (d_buf)
-          return false;
-        d_buf = ((uint8_t *)(rxcur->rdes2));
-        rxcur->rdes2 = ((uint32_t)(buffer));
+        pkt_len = ((rxdesc->rdes0 & EMAC_RDES0_FL_MASK) >> EMAC_RDES0_FL_SHIFT);
+        if (pkt_len <= OPTIMAL_EMAC_BUFSIZE) {
+          buffer = eth_allocbuffer(pkt_len);
+          if (!buffer)
+            return false;
+          if (!insq(&recv_q, eth_usedbuffer(buffer))) {
+            eth_freebuffer(buffer);
+            return false;
+          }
+          memcpy(buffer, ((const void *)(rxcur->rdes2)), pkt_len);
+        }
         rxhead = ((struct emac_rxdesc_s *)(rxdesc->rdes3));
         eth_freesegment(rxcur, rxsegments);
         return true;
@@ -826,30 +785,6 @@ static bool eth_recvframe(void)
   return false;
 }
 
-static void eth_receive_frame(void)
-{
-  while (eth_recvframe()) {
-    if ((!(d_len > ETH_PKTSIZE)) && d_buf) {
-      if (htons(ETHTYPE_IP) == (ETH_HDR(d_buf)->type)) {
-        // TODO: Handle ARP on input then give the IPv4 packet to the net layer
-        if (d_len > 0U) {
-          // TODO: Update the eth header with the correct MAC address, ARP out
-          eth_transmit();
-        }
-      } else if (htons(ETHTYPE_ARP) == (ETH_HDR(d_buf)->type)) {
-        // TODO: ARP in
-        if (d_len > 0)
-          eth_transmit();
-      }
-      if (d_buf) {
-        eth_freebuffer(d_buf);
-        d_buf = NULL;
-        d_len = 0U;
-      }
-    }
-  }
-}
-
 static __attribute__((noinline)) void eth_mdelay(unsigned ms)
 {
   volatile unsigned i, j;
@@ -857,6 +792,30 @@ static __attribute__((noinline)) void eth_mdelay(unsigned ms)
   for (i = 0U; i < ms; i++) {
     for (j = 0U; j < BOARD_LOOPSPERMSEC; j++)
       asm volatile("");
+  }
+}
+
+static void eth_freeframe(struct emac_txdesc_s *txdesc)
+{
+  if (txdesc) {
+    if (!txinflight)
+      kprintf("Nothing in flight!\n");
+    while (!(txdesc->tdes0 & EMAC_TDES0_OWN)) {
+      if (txdesc->tdes0 & EMAC_TDES0_FS)
+        eth_freebuffer((uint8_t *)(txdesc->tdes2));
+      txdesc->tdes2 = 0U;
+      if (txdesc->tdes0 & EMAC_TDES0_LS) {
+        if (txinflight)
+          txinflight--;
+        eth_enableint(EMAC_DMAINT_RI);
+        if (!txinflight) {
+          txtail = NULL;
+          return;
+        }
+      }
+      txdesc = ((struct emac_txdesc_s *)(txdesc->tdes3));
+    }
+    txtail = txdesc;
   }
 }
 
@@ -872,11 +831,13 @@ static irqreturn_t eth_isr(unsigned int irq, void *dev_id, uint32_t *regs)
     if (regval & EMAC_DMAINT_NIS) {
       if (regval & EMAC_DMAINT_RI) {
         outl(EMAC_DMARIS, EMAC_DMAINT_RI);
-        eth_receive_frame();
+        while (eth_recvframe()) { }
       }
       if (regval & EMAC_DMAINT_TI) {
         outl(EMAC_DMARIS, EMAC_DMAINT_TI);
-        // TODO: finish with transmit (txdone)
+        eth_freeframe(txtail);
+        if (!txinflight)
+          eth_disableint(EMAC_DMAINT_TI);
       }
       outl(EMAC_DMARIS, EMAC_DMAINT_NIS);
     }
@@ -988,12 +949,13 @@ static __attribute__((noinline)) void eth_ifup(void)
   regval &= ~DMABUSMOD_CLEAR_MASK;
   regval |= DMABUSMOD_SET_MASK;
   outl(EMAC_DMABUSMOD, regval);
-  eth_initbuffer();
+  eth_initbuffers();
   txhead = txtable;
   txtail = NULL;
   txinflight = 0U;
   for (u = 0U; u < EMAC_NTXDESC; u++) {
     txtable[u].tdes0 = EMAC_TDES0_TCH;
+    txtable[u].tdes1 = 0U;
     txtable[u].tdes2 = 0U;
     txtable[u].tdes3 = ((u < (EMAC_NTXDESC - 1U)) ?
                          ((uint32_t)(&txtable[u + 1U])) :
@@ -1061,32 +1023,126 @@ static void eth_init(void)
 
 int eth_open(uint_fast8_t minor, uint16_t flag)
 {
-  // TODO: implement
-  return -1;
+  if (minor) {
+    udata.u_error = ENXIO;
+    return -1;
+  }
+  return 0;
 }
 
 int eth_close(uint_fast8_t minor)
 {
-  // TODO: implement
-  return -1;
+  if (minor) {
+    udata.u_error = ENXIO;
+    return -1;
+  }
+  return 0;
 }
 
 int eth_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
-  // TODO: implement
-  return -1;
+  irqflags_t fl;
+  const void *buffer;
+  size_t pkt_len;
+  bool anything;
+  uint_fast8_t tok = 0U;
+
+  if (minor) {
+    udata.u_error = ENXIO;
+    return -1;
+  }
+  eth_transmit();
+  if (udata.u_done > udata.u_count) {
+    udata.u_error = EINVAL;
+    return -1;
+  }
+  if ((udata.u_count - udata.u_done) < OPTIMAL_EMAC_BUFSIZE) {
+    udata.u_error = EMSGSIZE;
+    return -1;
+  }
+  fl = __hard_di();
+  anything = remq(&recv_q, &tok);
+  __hard_irqrestore(fl);
+  if (anything) {
+    buffer = eth_getbuffer(tok);
+    if (!buffer) {
+      udata.u_error = EFAULT;
+      return -1;
+    }
+    pkt_len = eth_sizebuffer(buffer);
+    if (pkt_len > (udata.u_count - udata.u_done)) {
+      udata.u_error = ERANGE;
+      return -1;
+    }
+    if (uput(buffer, udata.u_base, udata.u_count)) {
+      udata.u_error = EIO;
+      return -1;
+    }
+    udata.u_done += pkt_len;
+    udata.u_base += pkt_len;
+  }
+  return udata.u_done;
 }
 
 int eth_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
-  // TODO: implement
-  return -1;
+  uint8_t *buffer;
+  size_t pkt_len;
+
+  if (minor) {
+    udata.u_error = ENXIO;
+    return -1;
+  }
+  eth_transmit();
+  if (udata.u_done > udata.u_count) {
+    udata.u_error = EINVAL;
+    return -1;
+  }
+  if ((udata.u_count - udata.u_done) > OPTIMAL_EMAC_BUFSIZE) {
+    udata.u_error = EMSGSIZE;
+    return -1;
+  }
+  pkt_len = (udata.u_count - udata.u_done);
+  buffer = eth_allocbuffer(pkt_len);
+  if (!buffer) {
+    udata.u_error = ENOMEM;
+    return -1;
+  }
+  if (uget(udata.u_base, buffer, pkt_len)) {
+    eth_freebuffer(buffer);
+    udata.u_error = EIO;
+    return -1;
+  }
+  if (!insq(&send_q, eth_usedbuffer(buffer))) {
+    eth_freebuffer(buffer);
+    udata.u_error = EAGAIN;
+    return -1;
+  }
+  udata.u_done += pkt_len;
+  udata.u_base += pkt_len;
+  eth_transmit();
+  return udata.u_done;
 }
 
 int eth_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
-  // TODO: implement (see disabled code above)
-  return -1;
+  char mac[sizeof mac_addr];
+
+  if (minor) {
+    udata.u_error = ENXIO;
+    return -1;
+  }
+  if (uget(data, mac, sizeof mac))
+    return -1;
+  switch (request) {
+  case 0:
+    memcpy(mac, mac_addr, sizeof mac);
+    break;
+  default:
+    udata.u_error = EINVAL;
+    return -1;
+  }
+  return uput(mac, data, sizeof mac);
 }
 
 void ethdev_init(void)
