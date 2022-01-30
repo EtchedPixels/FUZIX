@@ -113,7 +113,6 @@ void con_putc(uint8_t c)
 	}
 	conq(c);
 	screenx++;
-adjust:
 	if (screenx == screen_width) {
 		screenx = 0;
 		screeny++;
@@ -135,7 +134,7 @@ static void con_twrite(char *p, int n)
 void con_puts(const char *s)
 {
 	uint8_t c;
-	while (c = (uint8_t) * s++)
+	while ((c = (uint8_t) * s++) != 0)
 		con_putc(c);
 }
 
@@ -232,6 +231,7 @@ int con_scroll(int n)
 	while (n--)
 		conq('\n');
 	con_force_goto(screeny, screenx);
+	return 0;
 }
 
 /* TODO: cursor key handling */
@@ -263,7 +263,7 @@ static int do_read(int fd, void *p, int len)
 		if (l < 0)
 			perror("read");
 		else
-			write(2, "short read from tchelp.\n", 28);
+			write(2, "short read from tchelp.\n", 25);
 		return -1;
 	}
 	return 0;
@@ -279,7 +279,6 @@ static int tty_init(void)
 	int fd[2];
 	pid_t pid;
 	int ival[3];
-	int n;
 	int status;
 
 	if (pipe(fd) < 0) {
@@ -344,8 +343,10 @@ void con_exit(void)
 
 int con_init(void)
 {
-	int n;
 	static struct winsize w;
+#ifdef VTSIZE	
+	int n;
+#endif	
 	if (tty_init())
 		return -1;
 	if (tcgetattr(0, &con_termios) == -1)
@@ -398,11 +399,16 @@ char *gap;
 char *egap;
 char *filename;
 int modified;
+int rename_needed;
 int status_up;
 
 /* 0 = clean, 1+ = nth char from (1..n) onwards are dirty */
 uint8_t dirty[MAX_HEIGHT + 1];
 uint8_t dirtyn;
+
+/* For now this is needed by save internally, but we will also want a
+   block sized buffer for a few other things later */
+char scratch[512];
 
 /* There are lots of cases we touch n + 1, to avoid having to keep checking
    for last lines make this one bigger */
@@ -648,6 +654,7 @@ keytable_t table[] = {
 int dobeep(void)
 {
 	write(1, "\007", 1);
+	return 0;
 }
 
 char *ptr(int offset)
@@ -1209,33 +1216,50 @@ int open_after(void)
 int save(char *fn)
 {
 	int fd;
-	int i, err = 1;
+	int i;
 	size_t length;
 	char *gptr;
 
-	/* Should we write to temp name and rename ? FIXME */
-	fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, 0666);
-	if (fd != -1) {
-		i = indexp;
-		indexp = 0;
-		movegap();
-		gptr = egap;
-		length = (size_t) (ebuf - egap);
-		err = 0;
-		/* Write out each chunk that is bigger than INT_MAX as
-		   that is our limit per syscall */
-		while(length > INT_MAX) {
-			err |= write(fd, gptr, INT_MAX) != INT_MAX;
-			length -= INT_MAX;
-			gptr += INT_MAX;
-		}
-		/* Write out the tail */
-		err |= write(fd, gptr, length) != length;
-		err |= close(fd);
-		indexp = i;
-		modified = 0;
+	strlcpy(scratch, fn, 511);
+	gptr = scratch + strlen(scratch);
+	*gptr++ = '~';
+	*gptr = 0;
+
+	/* Rename the original but not more working copies */
+	if (rename_needed) {
+		/* Rename the old file - if it exists */
+		unlink(scratch);
+		if (link(fn, scratch) == 0) {
+			if (unlink(fn))
+				return 0;
+		} else if (errno != ENOENT)
+			return 0;
+		rename_needed = 0;
 	}
-	return !err;
+
+	/* Open file */
+	if ((fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, 0666)) < 0)
+		return 0;
+	i = indexp;
+	indexp = 0;
+	movegap();
+	gptr = egap;
+	length = (size_t) (ebuf - egap);
+	/* Write out in chunks so we are ok on 16bit int 32bit long */
+	while(length) {
+		size_t l = length;
+		if (l > 8192)
+			l = 8192;
+		if (write(fd, gptr, l) != l)
+			break;
+		length -= l;
+		gptr += l;
+	}
+	indexp = i;
+	if (close(fd) || length)
+		return 0;
+	modified = 0;
+	return 1;
 }
 
 int save_done(char *path, uint8_t n)
@@ -1299,12 +1323,16 @@ static void colon_process(char *buf)
 		return;
 	}
 	if (*buf == 'w') {
-		if (buf[1] == 'q') {
+		buf++;
+		if (*buf == 'q') {
 			quit = 1;
+			buf++;
 		}
-		if (buf[quit + 1] == ' ')
-			save_done(buf + quit + 2, quit);
-		else if (buf[quit + 1] == 0)
+		if (*buf == ' ') {
+			/* FIXME: this should update filename */
+			rename_needed = 1;
+			save_done(buf + 1, quit);
+		} else if (*buf == 0)
 			save_done(filename, quit);
 		else
 			warning("unknown :w option.");
@@ -1554,7 +1582,7 @@ int main(int argc, char *argv[])
 
 	if (sizeof(void *) == 2) {
 		buf = sbrk(0);
-		ebuf = &mem - 768;
+		ebuf = (char *)&mem - 768;
 		if (ebuf < buf || brk(ebuf))
 			oom();
 	} else {
@@ -1579,17 +1607,22 @@ int main(int argc, char *argv[])
 			int n = 0;
 			size = ebuf - buf;
 			/* We can have 32bit ptr, 16bit int even in theory */
-			if (size > INT_MAX) {
-				while (n = doread(*argv, fd, buf + o, INT_MAX)) {
+			if (size >= 8192) {
+				while ((n = doread(*argv, fd, buf + o, 8192)) > 0) {
 					gap += n;
 					size -= n;
 					o += n;
 				}
 			} else
 				n = doread(*argv, fd, buf + o, size);
+			if (n < 0) {
+				perror(*argv);
+				return 2;
+			}
 			gap += n;
 			close(fd);
 		}
+		rename_needed = 1;
 	}
 
 	if (con_init())
