@@ -59,9 +59,10 @@ arg_t _execve(void)
 
 	himem = ramtop - PROGLOAD;
 
-	#ifdef DEBUG
-		kprintf("_execve(%s)\n", name);
-	#endif
+#ifdef DEBUG
+	kprintf("_execve(%s)\n", name);
+#endif
+
 	if (!(ino = n_open_lock(name, NULLINOPTR))) {
 		#ifdef DEBUG
 			kprintf("failed: file not found\n");
@@ -72,9 +73,9 @@ arg_t _execve(void)
 	if (!((getperm(ino) & OTH_EX) &&
 	      (ino->c_node.i_mode & F_REG) &&
 	      (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
-		#ifdef DEBUG
-			kprintf("failed: not accessible\n");
-		#endif
+#ifdef DEBUG
+		kprintf("failed: not accessible\n");
+#endif
 		goto eacces;
 	}
 
@@ -93,16 +94,16 @@ arg_t _execve(void)
 
 	readi(ino, 0);
 	if (udata.u_done != sizeof(ehdr)) {
-		#ifdef DEBUG
-			kprintf("failed: could not read ELF header\n");
-		#endif
+#ifdef DEBUG
+		kprintf("failed: could not read ELF header\n");
+#endif
 		goto enoexec;
 	}
 
 	if (!IS_ELF(ehdr)) {
-		#ifdef DEBUG
-			kprintf("failed: not an ELF file\n");
-		#endif
+#ifdef DEBUG
+		kprintf("failed: not an ELF file\n");
+#endif
 		goto enoexec;
 	}
 
@@ -112,9 +113,9 @@ arg_t _execve(void)
 		uint32_t psize = sizeof(Elf32_Phdr) * ehdr.e_phnum;
 
 		if ((psize > (1<<BLKSHIFT)) || (ehdr.e_phentsize != sizeof(Elf32_Phdr))) {
-			#ifdef DEBUG
-				kprintf("failed: too many phdrs / invalid phdr size\n");
-			#endif
+#ifdef DEBUG
+			kprintf("failed: too many phdrs / invalid phdr size\n");
+#endif
 			goto enoexec;
 		}
 
@@ -126,9 +127,9 @@ arg_t _execve(void)
 
 		readi(ino, 0);
 		if (udata.u_done != psize) {
-			#ifdef DEBUG
-				kprintf("failed: could not read phdrs\n");
-			#endif
+#ifdef DEBUG
+			kprintf("failed: could not read phdrs\n");
+#endif
 			goto enoexec;
 		}
 	}
@@ -157,18 +158,18 @@ arg_t _execve(void)
 		}
 	}
 	if (dynamic == 0) {
-		#ifdef DEBUG
-			kprintf("failed: no dynamic area\n");
-		#endif
+#ifdef DEBUG
+		kprintf("failed: no dynamic area\n");
+#endif
 		goto enoexec;
 	}
 	/* dynamic points at the load address of the relocation data; this is also
 	 * the top of BSS. */
 	uaddr_t stacktop = (uaddr_t)ALIGNUP(dynamic) + USERSTACK;
 	if ((stacktop > himem) || (lomem > himem)) {
-		#ifdef DEBUG
-			kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
-		#endif
+#ifdef DEBUG
+		kprintf("failed: out of memory (have %p, asked for %p)\n", himem, stacktop);
+#endif
 		goto enoexec;
 	}
 	if (stacktop > lomem)
@@ -180,9 +181,9 @@ arg_t _execve(void)
 	abuf = (struct s_argblk *) tmpbuf();
 	ebuf = (struct s_argblk *) tmpbuf();
 	if (rargs(argv, abuf) || rargs(envp, ebuf)) {
-		#ifdef DEBUG
-			kprintf("failed: failed to read parameters\n");
-		#endif
+#ifdef DEBUG
+		kprintf("failed: failed to read parameters\n");
+#endif
 		goto enomem;
 	}
 	udata.u_ptab->p_status = P_NOSLEEP;
@@ -211,22 +212,22 @@ arg_t _execve(void)
 			udata.u_base = (uint8_t*) base;
 			udata.u_sysio = false;
 
-			#ifdef DEBUG
-				kprintf("loading %p bytes from %p to %p\n", ssize, udata.u_offset, udata.u_base);
-			#endif
+#ifdef DEBUG
+			kprintf("loading %p bytes from %p to %p\n", ssize, udata.u_offset, udata.u_base);
+#endif
 
 			readi(ino, 0);
 			if (udata.u_done < ph->p_filesz) {
-				#ifdef DEBUG
-					kprintf("failed: couldn't read program data\n");
-				#endif
+#ifdef DEBUG
+				kprintf("failed: couldn't read program data\n");
+#endif
 				goto fatal;
 			}
 
 			if (ph->p_filesz != ph->p_memsz) {
-				#ifdef DEBUG
-					kprintf("clearing %p to %p\n", base+ph->p_filesz, base+ph->p_memsz);
-				#endif
+#ifdef DEBUG
+				kprintf("clearing %p to %p\n", base+ph->p_filesz, base+ph->p_memsz);
+#endif
 				uzero((uint8_t*) (PROGLOAD + ph->p_vaddr + ph->p_filesz), ph->p_memsz - ph->p_filesz);
 			}
 		}
@@ -252,9 +253,9 @@ arg_t _execve(void)
 		dyn++;
 	}
 	uint32_t relcount = relsz / sizeof(Elf32_Rel);
-	#ifdef DEBUG
-		kprintf("found %d relocations at %p\n", relcount, rel);
-	#endif
+#ifdef DEBUG
+	kprintf("found %d relocations at %p\n", relcount, rel);
+#endif
 		
 	/* Relocate, if a relocation table was found. */
 
@@ -275,10 +276,10 @@ arg_t _execve(void)
 		rel++;
 	}
 
-	#ifdef DEBUG
-	   kprintf("himem=%p lomem=%p (%p) dynamic=%p stacktop=%p\n",
+#ifdef DEBUG
+	kprintf("himem=%p lomem=%p (%p) dynamic=%p stacktop=%p\n",
 			   himem, lomem, lomem+PROGLOAD, dynamic, stacktop);
-	#endif
+#endif
 	himem += PROGLOAD;
 	lomem += PROGLOAD;
 	dynamic += PROGLOAD;
