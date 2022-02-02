@@ -78,7 +78,7 @@ static uint8_t jobop(uint8_t minor, uint8_t sig, struct tty *t, uint8_t ign)
 	}
 }
 
-/* For input readign with SIGTTIN blocked gets you an EIO */
+/* For input reading with SIGTTIN blocked gets you an EIO */
 uint8_t jobcontrol_in(uint8_t minor, struct tty *t)
 {
 	if (!jobop(minor, SIGTTIN, t, 0))
