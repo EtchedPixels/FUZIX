@@ -139,7 +139,6 @@ void con_putc(uint8_t c)
 	}
 	conq(c);
 	screenx++;
-      adjust:
 	if (screenx == screen_width) {
 		screenx = 0;
 		screeny++;
@@ -304,7 +303,6 @@ int tty_init(void)
 	int fd[2];
 	pid_t pid;
 	int ival[3];
-	int n;
 	int status;
 
 	if (pipe(fd) < 0) {
@@ -1719,7 +1717,8 @@ static void SimpleParser(void)
 	int i;
 	int wn = 0;
 	char wb[5][17];
-	char buf[256];
+	/* Workaround for cc65 limit */
+	static char buf[256];
 
 	OutChar('\n');
 	if (GameVersion > 0) {
@@ -1839,9 +1838,7 @@ void DisplayBases(void)
 
 int main(int argc, char *argv[])
 {
-	unsigned int size;
 	int shift;
-	int i;
 
 	if (argv[1] == NULL) {
 		writes("taylormade <file>.\n");
@@ -1864,7 +1861,7 @@ int main(int argc, char *argv[])
 	/* Guess initially at He-man style */
 	GameVersion = 2;
 
-	if (lseek(GameFile, 0, SEEK_END) > 50000) {
+	if (lseek(GameFile, 0, SEEK_END) > 50000U) {
 		/* Blizzard Pass */
 		GameVersion = 1;
 		Blizzard = 1;
