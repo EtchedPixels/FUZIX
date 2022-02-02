@@ -1,6 +1,6 @@
 include $(FUZIX_ROOT)/Applications/rules.6502
 
-SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cron.c crypt.c dd.c \
+SRCS  = ac.c accton.c at.c atrun.c col.c comm.c cron.c crypt.c dc.c dd.c \
 	deroff.c diff3.c diff.c diffh.c join.c look.c makekey.c mesg.c \
 	newgrp.c pg.c pr.c ptx.c rev.c split.c su.c sum.c test.c time.c tsort.c \
 	tty.c wall.c
@@ -12,7 +12,7 @@ SRCSTC = clear.c
 SRCSBAD =
 
 
-SKIPPED = dc.c
+SKIPPED =
 
 OBJS = $(SRCS:.c=.o)
 OBJSNS = $(SRCSNS:.c=.o)
