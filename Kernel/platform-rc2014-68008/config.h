@@ -54,7 +54,7 @@
 
 #define MAX_BLKDEV	5
 
-/* On-board DS1302, we can read the time of day from it */
+/* RC2014 rtc, we can read the time of day from it */
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_EXTENDED
@@ -85,3 +85,7 @@
 /* Our I/O window is at 64K for 64K. */
 
 #define IOMAP(x)	(0x10000+((uint16_t)(x)))
+
+/* Networking */
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
