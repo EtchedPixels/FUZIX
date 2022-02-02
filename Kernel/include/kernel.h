@@ -204,9 +204,9 @@ typedef struct blkbuf {
 #define blkfromk(kaddr,buf, off,len) \
     memcpy((buf)->__bf_data + (off), (kaddr), (len))
 #define blktou(uaddr,buf,off,len) \
-    uput((buf)->__bf_data + (off), (uaddr), (len))
+    _uput((buf)->__bf_data + (off), (uaddr), (len))
 #define blkfromu(uaddr,buf,off,len) \
-    uget((uaddr),(buf)->__bf_data + (off), (len))
+    _uget((uaddr),(buf)->__bf_data + (off), (len))
 #define blkptr(buf, off, len)	((void *)((buf)->__bf_data + (off)))
 #define blkzero(buf)		memset(buf->__bf_data, 0, BLKSIZE)
 #else

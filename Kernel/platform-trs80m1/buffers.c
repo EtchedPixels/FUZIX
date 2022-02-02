@@ -24,12 +24,12 @@ void blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
  */
 void blktou(void *uaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
 {
-    uput(buf->__bf_data + off, uaddr, len);
+    _uput(buf->__bf_data + off, uaddr, len);
 }
 
 void blkfromu(void *uaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
 {
-    uget(uaddr, buf->__bf_data + off , len);
+    _uget(uaddr, buf->__bf_data + off , len);
 }
 
 static uint8_t scratchbuf[64];
