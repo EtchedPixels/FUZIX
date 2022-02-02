@@ -245,6 +245,7 @@ arg_t _execve(void)
 					sizeof(struct binfmt_flat);
 		udata.u_count = bin_size;
 		udata.u_sysio = false;
+		/* As we allocated this space we know the range is valid */
 		readi(ino, 0);
 		if (udata.u_done != bin_size)
 			goto nogood4;
