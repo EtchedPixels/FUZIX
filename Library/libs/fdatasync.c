@@ -3,4 +3,5 @@
 int fdatasync(int fd)
 {
     sync();
+    return 0;
 }
