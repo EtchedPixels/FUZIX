@@ -16,8 +16,6 @@ static void set_hint_flat(FILE * fp, unsigned char *buf, int argc, char *argv[])
 static void set_hint_fzx2(FILE * fp, unsigned char *buf, int argc, char *argv[])
 {
 	uint32_t v;
-	unsigned short top;
-
 	if (argc == 2) {
 		printf("Fuzix binary hints %02X bytes.\n", buf[5]);
 		return;
