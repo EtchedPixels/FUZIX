@@ -25,7 +25,7 @@ char *strsep(char **pp, const char *delim)
 
   if (!(p = *pp))
     return 0;
-  if (q = strpbrk (p, delim))
+  if ((q = strpbrk (p, delim)) != NULL)
     {
       *pp = q + 1;
       *q = '\0';
