@@ -20,10 +20,10 @@ void *lfind(const void *key, const void *base,
    while (n--)
    {
       if ((*cmp) (base, key) == 0)
-	 return (base);
+	 return (void *)base;
       base = (char *)base + size;
    }
-   return (NULL);
+   return NULL;
 }
 
 void *lsearch(const void *key, void *base,
@@ -37,5 +37,5 @@ void *lsearch(const void *key, void *base,
       p = memcpy(((char *)base + (size * (*num))), key, size);
       ++(*num);
    }
-   return (p);
+   return p;
 }
