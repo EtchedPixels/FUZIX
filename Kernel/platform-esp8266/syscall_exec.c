@@ -142,6 +142,9 @@ arg_t _execve(void)
 	 *  Read in the rest of the program, block by block. We rely upon
 	 *  the optimization path in readi to spot this is a big move to user
 	 *  space and move it directly.
+	 *
+	 * We can skip the use of valaddr() as we use fixed ranges and already
+	 * did the size checks.
 	 */
 
 	/* Program code. */
