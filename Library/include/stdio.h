@@ -49,7 +49,7 @@ struct __stdio_file {
 				   the last malloc()ed byte */
 	int	fd;		/* the file descriptor associated with the stream */
 	int	mode;
-	char	unbuf[8];	/* The buffer for 'unbuffered' streams */
+	uchar	unbuf[8];	/* The buffer for 'unbuffered' streams */
 	struct __stdio_file * next;
 };
 
