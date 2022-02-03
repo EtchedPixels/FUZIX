@@ -26,7 +26,7 @@ static int prtfld(FILE * op, size_t maxlen, size_t ct, unsigned char *buf, int l
 		  char pad, int width, int preci, int buffer_mode)
 {
 	register unsigned char ch;
-	register int cnt = 0, len = strlen(buf);
+	register int cnt = 0, len = strlen((char *)buf);
 
 	if (*buf == '-')
 		sign = *buf++;
