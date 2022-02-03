@@ -26,55 +26,57 @@ Supported Hardware
 	default ROM and RAM boards.
 
 	A serial IO board. Either an RC2014 SIO/2 board or a later narrow
-	decoding 68B50 adapter (eg 'The Missing Module') set to 0xA0, or
-	a 16550A serial board or QUART
+	decoding 68B50 adapter (eg 'The Missing Module') set to 0x80, or
+	a 16550A serial board or QUART. The serial type is autodetected.
 
 	A clock source (CTC, QUART or TMS9918A), or an RTC. A true timer
 	interrupt source is strongly recommended as the RTC cannot provide
-	true timer events and really slows the system down
+	true timer events and really slows the system down. The timer is
+	autodetected.
 
 	Alternatively the Z80 KIO board at 0x80 can be used instead of the
 	serial and CTC cards. It also provides SD card bit bang
 
 	Options:
 
-	Z80DMA at 0x04
+	Z80DMA at 0x04 (autodetected)
 
 	ZXKey keyboard interface (boot option "zxkey"). Works with the TMS9918A
 	videocard to provide a classic 'keyboard/screen' interface.
 
-	PS/2 keyboard interface. Works with the TMS9918A
+	PS/2 bitbang keyboard interface at 0xBB. Works with the TMS9918A
 	videocard to provide a classic 'keyboard/screen' interface.
+	(autodetected)
 
 	16x50 cards at 0xA0/0xC0-0xF8 (the range is scanned).
 
-	DS1302 RTC at 0x0C/0xC0
+	DS1302 RTC at 0x0C/0xC0	(autodetected)
 
-	RC2014 CTC at 0x88	(eg SC102)
+	RC2014 CTC at 0x88	(eg SC102, autodetected)
 
-	QUART at 0xBA
+	QUART at 0xBA		(autodetected)
 
 	Z80PIO, or Gluino at 0x68 providing SD card bitbang or GPIO
+				(assumed present, no harm if not)
 
 	SC129 at 0x00 as GPIO or at 0x69 to drive an SD card
+				(assumed present, no harm if not)
 
 	TMS9918A at 0x98/0x99. Must be jumpered as an interrupt source. For
 	version 3 or earlier note the errata and jumper it with a 1N4148
-	diode or similar.
+	diode or similar. (autodetected)
 
-	The RC2014 CF card interface, or compatible at 0x10.
+	The RC2014 CF card interface, or compatible at 0x10. (autodetected)
 
-	Floppy Drive Interface
+	Floppy Drive Interface	(autodetected)
 
-	RC2014 Joystick
+	RC2014 Joystick		(assumed present, no harm if not)
 
 	PPIDE (currently you need to change the config.h and rebuilld for this)
 
 	Z80-512K CLK2 divider (not yet tested)
 
-	PS/2 Keyboard at 0xBB (mouse/stick are not yet supported)
-
-	Console switch card at 0xFF as GPIO
+	Console switch card at 0xFF as GPIO (assumed present, no harm if not)
 
 
 Pending

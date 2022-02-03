@@ -90,8 +90,8 @@ SIOD_D		.EQU	SIOC_C+3
 KIOA_C		.EQU	0x89
 KIOB_C		.EQU	0x8B
 
-ACIA_C          .EQU     0xA0
-ACIA_D          .EQU     0xA1
+ACIA_C          .EQU     0x80
+ACIA_D          .EQU     0x81
 ACIA_RESET      .EQU     0x03
 ACIA_RTS_HIGH_A      .EQU     0xD6   ; rts high, xmit interrupt disabled
 ACIA_RTS_LOW_A       .EQU     0x96   ; rts low, xmit interrupt disabled
