@@ -36,7 +36,7 @@ double remainder(double x, double p)
 	/* purge off exception values */
 	if ((hp|lp) == 0 ||                                  /* p = 0 */
 	    hx >= 0x7ff00000 ||                              /* x not finite */
-	    (hp >= 0x7ff00000 && (hp-0x7ff00000 | lp) != 0)) /* p is NaN */
+	    (hp >= 0x7ff00000 && ((hp-0x7ff00000) | lp) != 0)) /* p is NaN */
 		return (x*p)/(x*p);
 
 	if (hp <= 0x7fdfffff)

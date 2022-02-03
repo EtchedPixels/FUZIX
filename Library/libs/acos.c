@@ -65,7 +65,7 @@ double acos(double x)
 		uint32_t lx;
 
 		GET_LOW_WORD(lx,x);
-		if ((ix-0x3ff00000 | lx) == 0) {  /* |x|==1 */
+		if (((ix-0x3ff00000) | lx) == 0) {  /* |x|==1 */
 			if (hx > 0) return 0.0;  /* acos(1) = 0  */
 			return pi + 2.0*pio2_lo; /* acos(-1)= pi */
 		}
