@@ -239,6 +239,7 @@ static int8_t calc_is_dst(struct tm *tm, uint32_t secs)
 	uint8_t south = 0;
 	
 	switch(dsmode) {
+	default:
 	case 0:
 		return 0;
 	case 2:
