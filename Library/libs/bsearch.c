@@ -22,7 +22,7 @@ char *bsearch(char *key, char *base, int num, int size,
 	b = num - 1;
 	while (a <= b) {
 		c = (a + b) >> 1;	/* == ((a + b) / 2) */
-		if (dir = (*cmp) ((base + (c * size)), key)) {
+		if ((dir = (*cmp) ((base + (c * size)), key)) != 0) {
 			if (dir > 0)
 				b = c - 1;
 			else	/* (dir < 0) */
