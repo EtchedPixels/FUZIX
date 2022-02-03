@@ -28,12 +28,10 @@ long _pathconf(int name)
 
 long pathconf(const char *p, int name)
 {
-  p;
   return _pathconf(name);
 }
 
 long fpathconf(int fd, int name)
 {
-  fd;
   return _pathconf(name);
 }
