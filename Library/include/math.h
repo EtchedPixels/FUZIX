@@ -67,7 +67,7 @@ extern double trunc(double);
 extern double y0(double);
 extern double y1(double);
 extern double yn(int, double);
-extern unsigned long __double_bits(double);
+extern uint64_t __double_bits(double);
 extern int __fpclassify(double);
 extern int __signbit(double);
 
