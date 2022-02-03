@@ -1,6 +1,6 @@
 #include <math.h>
 
-unsigned long __double_bits(double p)
+uint64_t __double_bits(double p)
 {
   union {
     double d;
