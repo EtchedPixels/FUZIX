@@ -74,13 +74,14 @@ int tgetent(char *bp, const char *name)
 
     if ((file = getenv("TERMCAP")) == (const char *) NULL)
 	file = "/etc/termcap";
-    else if (*file != '/')
+    else if (*file != '/') {
 	if ((term = getenv("TERM")) != (char *) NULL
 	    && strcmp(term, name) == 0) {
 	    strlcpy(bp, file, 1023);
 	    return (1);
 	} else
 	    file = "/etc/termcap";
+    }
 
     if ((fp = fopen(file, "r")) == (FILE *) NULL) {
 	capab = (char *) NULL;	/* no valid termcap  */
