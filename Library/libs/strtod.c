@@ -73,14 +73,14 @@ double strtod(const char *nptr, char **endptr)
 			exponent++;
 			nptr++;
 		}
-	}
 
-	while (exponent) {
-		if (exp_negative)
-			number /= 10;
-		else
-			number *= 10;
-		exponent--;
+		while (exponent) {
+			if (exp_negative)
+				number /= 10;
+			else
+				number *= 10;
+			exponent--;
+		}
 	}
 	*endptr = (char *) nptr;
 	return (negative ? -number : number);
