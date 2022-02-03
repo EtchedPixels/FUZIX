@@ -216,6 +216,13 @@ arg_t _execve(void)
 			kprintf("loading %p bytes from %p to %p\n", ssize, udata.u_offset, udata.u_base);
 #endif
 
+			if (valaddr(udata.u_base, udata.u_count) != udata.u_count) {
+#ifdef DEBUG
+				kprintf("failed: invalid address range\n");
+#endif
+				goto fatal;
+			}
+
 			readi(ino, 0);
 			if (udata.u_done < ph->p_filesz) {
 #ifdef DEBUG
@@ -262,15 +269,15 @@ arg_t _execve(void)
 	while (relcount--)
 	{
 		if (rel->r_offset >= lomem) {
-			#ifdef DEBUG
-				kprintf("failed: relocation not in binary\n");
-			#endif
+#ifdef DEBUG
+			kprintf("failed: relocation not in binary\n");
+#endif
 			goto fatal;
 		}
 		if (platform_relocate_rel(rel, PROGLOAD)) {
-			#ifdef DEBUG
-				kprintf("failed: relocation failed\n");
-			#endif
+#ifdef DEBUG
+			kprintf("failed: relocation failed\n");
+#endif
 			goto fatal;
 		}
 		rel++;
