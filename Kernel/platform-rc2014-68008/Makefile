@@ -17,11 +17,14 @@ LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 RSRCS = ../dev/rc2014/zxkey.c ../dev/rc2014/zxkeyboard.c
 ROBJS = $(patsubst ../dev/rc2014/%.c,%.o, $(RSRCS))
 
+NSRCS = ../dev/net/net_native.c
+NOBJS = $(patsubst ../dev/net/%.c,%.o, $(NSRCS))
+
 COBJS = $(CSRCS:.c=.o)
 AOBJS = $(ASRCS:.S=.o)
-OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS) $(ROBJS)
+OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS) $(NOBJS) $(ROBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/rc2014/
+CROSS_CCOPTS += -I../dev/ -I../dev/rc2014/ -I../dev/net
 
 all:	$(OBJS)
 
@@ -32,6 +35,9 @@ $(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $< -o $*.o
 
 $(DOBJS): %.o: ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+
+$(NOBJS): %.o: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(ROBJS): %.o: ../dev/rc2014/%.c
@@ -59,7 +65,8 @@ image:
 	devsd.o devsd_discard.o spi.o ds1302.o ds1302_discard.o ds1302io.o \
 	devinput.o ../devinput.o devgpio.o tms9918.o \
 	ps2kbd.o ps2bitbang.o ps2bitbang_rc2014.o \
-	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
+	../level2.o ../syscall_level2.o ../select.o \
+	../syscall_net.o ../network.o net_native.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 	$(CROSS_CC) -c loader.S
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
