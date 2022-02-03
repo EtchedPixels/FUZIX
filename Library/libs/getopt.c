@@ -1,4 +1,3 @@
-
 /*
  * From: gwyn@brl-tgr.ARPA (Doug Gwyn <gwyn>) Newsgroups: net.sources
  * Subject: getopt library routine Date: 30 Mar 85 04:45:33 GMT
@@ -51,7 +50,7 @@ int getopt(int argc, char *const argv[], const char *optstring)
 
    optarg = NULL;
 
-   if (sp == 1)			/* fresh argument */
+   if (sp == 1) {		/* fresh argument */
       if (optind >= argc	/* no more arguments */
 	  || argv[optind][0] != '-'	/* no more options */
 	  || argv[optind][1] == '\0'	/* not option; stdin */
@@ -62,6 +61,7 @@ int getopt(int argc, char *const argv[], const char *optstring)
 	 ++optind;		/* skip over "--" */
 	 return EOF;		/* "--" marks end of options */
       }
+   }
 
    c = argv[optind][sp];	/* option letter */
    osp = sp++;			/* get ready for next letter */
