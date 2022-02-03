@@ -80,7 +80,7 @@ static void sweep_relocations(void)
     fprintf(stderr, "Bad relocation at %x (%02X:%02X:%02X v %02X:%02X:%02x)\n", pos,
       base[-1], *base, base[1], base2[-1], *base2, base2[1]);
     fprintf(stderr, "base2 - bufb = %x base-buf = %x\n",
-      base2-bufb, base-buf);
+      (unsigned int)(base2-bufb), (unsigned int)(base-buf));
     exit(1);
   }
   /* End marker */
@@ -125,7 +125,7 @@ static void sweep_relocations(void)
     fprintf(stderr, "Bad relocation at %x (%02X:%02X:%02X v %02X:%02X:%02x)\n", pos,
       base[-1], *base, base[1], base2[-1], *base2, base2[1]);
     fprintf(stderr, "base2 - bufb = %x base-buf = %x\n",
-      base2-bufb, base-buf);
+      (unsigned int)(base2-bufb), (unsigned int)(base-buf));
     exit(1);
   }
   *relptr++ = 0x00;
