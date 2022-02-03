@@ -174,7 +174,7 @@ arg_t _netcall(void)
 	   in some protocols */
 	if (op & N_DATAIO) {
 		udata.u_base = (void *) *ap;
-		udata.u_count = valaddr((void *) *ap, ap[1]);
+		s = valaddr((void *) *ap, ap[1]);
 		if (s == 0 && ap[1])
 			return -1;
 		ap += 2;
