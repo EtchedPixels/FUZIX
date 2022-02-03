@@ -10,16 +10,17 @@
 char *strstr(const char *s1, const char *s2)
 {
    int l = strlen(s2);
-   char * p = (char *) s1;
+   char *p = (char *)s1;
 
-   if( l==0 ) return p;
+   if (l == 0)
+      return p;
 
-   while (p = strchr(p, *s2))
+   while ((p = strchr(p, *s2)) != NULL)
    {
-      if( memcmp(p, s2, l) == 0 )
+      if (memcmp(p, s2, l) == 0)
          return p;
       p++;
    }
-   return (char *) 0;
+   return NULL;
 }
 
