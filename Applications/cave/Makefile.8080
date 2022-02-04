@@ -2,7 +2,7 @@ include $(FUZIX_ROOT)/Applications/rules.8080
 
 
 SRC = advent.c adventdb.c database.c english.c itverb.c lib.c saveadv.c \
-      turn.c verb.c
+      turn.c verb.c global.c
 
 
 OBJ = $(SRC:.c=.o)
