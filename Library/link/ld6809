@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+#
+#	Link at 0x100 DP 0x00
+#
+set -e
+#
+m6809-unknown-ld $ARGS --oformat=raw -o "$TARGET.b1" --script="$FUZIX_ROOT/Library/link/m6809.link"
+m6809-unknown-ld $ARGS --oformat=raw -o "$TARGET.b2" --script="$FUZIX_ROOT/Library/link/m6809.link2"
+$FUZIX_ROOT/Library/tools/relocbin6809 "$TARGET".b1 "$TARGET".b2 "$TARGET"
+rm -f "$TARGET.b1"
+rm -f "$TARGET.b2"
