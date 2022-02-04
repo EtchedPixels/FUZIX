@@ -7,7 +7,8 @@ all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
      tools/syscall_6809 tools/syscall-scc6809 tools/syscall_armm4 \
      tools/ack2fuzix tools/binman \
      tools/liberror tools/relocbin tools/relocbin65 tools/fuzixlib \
-     tools/relocbinhc11 tools/relocbin6303 tools/relocbin8080 tools/shlibgen
+     tools/relocbinhc11 tools/relocbin6303 tools/relocbin8080 tools/shlibgen \
+     tools/relocbin6809
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
@@ -62,6 +63,9 @@ tools/relocbin6303: tools/relocbin6303.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/relocbin65: tools/relocbin65.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/relocbin6809: tools/relocbin6809.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/relocbin8080: tools/relocbin8080.c
