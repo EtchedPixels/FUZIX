@@ -12,6 +12,7 @@ KRN_HEADERS = userstructs.h drivewire.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
+SRC_CRT0 += crt0_$(PLATFORM)_rel.s crt0nostdio_$(PLATFORM)_rel.s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM = setjmp_6809.s ashlsi3_6809.s
 OBJ_ASM = $(SRC_ASM:.s=.o)
