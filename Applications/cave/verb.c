@@ -218,7 +218,7 @@ void vdrop(void)
 				dstroy(BIRD);
 				game.prop[BIRD] = 0;
 				if (game.place[SNAKE] != 0)
-					++tally2;
+					++game.tally2;
 				return;
 			}
 		}
@@ -467,7 +467,7 @@ void vkill(void)
 			dstroy(BIRD);
 			game.prop[BIRD] = 0;
 			if (game.place[SNAKE] == 19)
-				++tally2;
+				++game.tally2;
 			msg = 45;
 		}
 		break;
@@ -840,7 +840,7 @@ void vfeed(void)
 		msg = 101;
 		dstroy(BIRD);
 		game.prop[BIRD] = 0;
-		++tally2;
+		++game.tally2;
 		break;
 	default:
 		msg = 14;

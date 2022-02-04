@@ -233,8 +233,6 @@ CLASS char word2[WORDSIZE];
         Play variables (TO REMOVE)
 */
 
-CLASS short tally INIT(15);	/* item counts        */
-CLASS short tally2 INIT(0);
 CLASS short limit INIT(100);	/* time limit         */
 CLASS short lmwarn INIT(0);	/* lamp warning flag  */
 CLASS uint8_t wzdark INIT(FALSE);

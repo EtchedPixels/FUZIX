@@ -147,7 +147,7 @@ void descitem(void)
 					game.prop[i] = 0;
 					if (i == RUG || i == CHAIN)
 						++game.prop[i];
-					--tally;
+					--game.tally;
 				}
 			}
 			if (i == STEPS && game.loc == game.fixed[STEPS])
@@ -158,7 +158,7 @@ void descitem(void)
 			pspeak(i, state);
 		}
 	}
-	if (tally == tally2 && tally != 0 && limit > 35)
+	if (game.tally == game.tally2 && game.tally != 0 && limit > 35)
 		limit = 35;
 	return;
 }
@@ -393,7 +393,7 @@ void spcmove(short rdest)
 			game.fixed[BEAR] = -1;
 			game.prop[BEAR] = 3;
 			if (game.prop[SPICES] < 0)
-				++tally2;
+				++game.tally2;
 			game.oldloc2 = game.newloc;
 			death();
 		}
@@ -754,7 +754,7 @@ void dopirate(void)
 			if (here(j))
 				++k;
 		}
-	if (tally == tally2 + 1 && k == 0 && game.place[CHEST] == 0 && here(LAMP) && game.prop[LAMP] == 1) {
+	if (game.tally == game.tally2 + 1 && k == 0 && game.place[CHEST] == 0 && here(LAMP) && game.prop[LAMP] == 1) {
 		rspeak(186);
 		move(CHEST, chloc);
 		move(MESSAGE, chloc2);
@@ -793,7 +793,7 @@ uint8_t stimer(void)
 {
 	register short i;
 	game.foobar = game.foobar > 0 ? -game.foobar : 0;
-	if (tally == 0 && game.loc >= 15 && game.loc != 33)
+	if (game.tally == 0 && game.loc >= 15 && game.loc != 33)
 		--clock1;
 	if (clock1 == 0) {
 
