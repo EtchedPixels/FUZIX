@@ -150,7 +150,7 @@ void descitem(void)
 					--tally;
 				}
 			}
-			if (i == STEPS && game.loc == fixed[STEPS])
+			if (i == STEPS && game.loc == game.fixed[STEPS])
 				state = 1;
 
 			else
@@ -390,7 +390,7 @@ void spcmove(short rdest)
 			prop[CHASM] = 1;
 			prop[TROLL] = 2;
 			drop(BEAR, game.newloc);
-			fixed[BEAR] = -1;
+			game.fixed[BEAR] = -1;
 			prop[BEAR] = 3;
 			if (prop[SPICES] < 0)
 				++tally2;
@@ -535,7 +535,7 @@ void doobj(void)
 {
 
 	/* is object here?  if so, transitive */
-	if (fixed[object] == game.loc || here(object))
+	if (game.fixed[object] == game.loc || here(object))
 		trobj();
 
 	/* did he give grate as destination? */
@@ -775,7 +775,7 @@ void dopirate(void)
 	for (j = 50; j <= MAXTRS; ++j) {
 		if (j == PYRAMID && (game.newloc == game.place[PYRAMID] || game.newloc == game.place[EMERALD]))
 			continue;
-		if (at(j) && fixed[j] == 0)
+		if (at(j) && game.fixed[j] == 0)
 			carry(j, game.newloc);
 		if (toting(j))
 			drop(j, chloc);
@@ -810,9 +810,9 @@ uint8_t stimer(void)
 		if (prop[BEAR] != 3)
 			dstroy(BEAR);
 		prop[CHAIN] = 0;
-		fixed[CHAIN] = 0;
+		game.fixed[CHAIN] = 0;
 		prop[AXE] = 0;
-		fixed[AXE] = 0;
+		game.fixed[AXE] = 0;
 		rspeak(129);
 		clock1 = -1;
 		closing = 1;
@@ -839,7 +839,7 @@ uint8_t stimer(void)
 		prop[ROD2] = put(ROD2, 116, 0);
 		prop[PILLOW] = put(PILLOW, 116, 0);
 		prop[MIRROR] = put(MIRROR, 115, 0);
-		fixed[MIRROR] = 116;
+		game.fixed[MIRROR] = 116;
 		for (i = 1; i <= MAXOBJ; ++i)
 			if (toting(i))
 				dstroy(i);

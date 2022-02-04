@@ -126,7 +126,7 @@ void vtake(void)
 		msg = 169;
 	if (object == CHAIN && prop[BEAR] != 0)
 		msg = 170;
-	if (fixed[object]) {
+	if (game.fixed[object]) {
 		rspeak(msg);
 		return;
 	}
@@ -245,7 +245,7 @@ void vdrop(void)
 				prop[VASE] = at(PILLOW) ? 0 : 2;
 				pspeak(VASE, prop[VASE] + 1);
 				if (prop[VASE] != 0)
-					fixed[VASE] = -1;
+					game.fixed[VASE] = -1;
 			}
 		}
 	}
@@ -322,7 +322,7 @@ void vopen(void)
 					prop[CHAIN] = 2;
 					if (toting(CHAIN))
 						drop(CHAIN, game.loc);
-					fixed[CHAIN] = -1;
+					game.fixed[CHAIN] = -1;
 					msg = 172;
 				}
 			}
@@ -337,10 +337,10 @@ void vopen(void)
 
 					else {
 						prop[CHAIN] = 0;
-						fixed[CHAIN] = 0;
+						game.fixed[CHAIN] = 0;
 						if (prop[BEAR] != 3)
 							prop[BEAR] = 2;
-						fixed[BEAR] = 2 - prop[BEAR];
+						game.fixed[BEAR] = 2 - prop[BEAR];
 						msg = 171;
 					}
 				}
@@ -684,7 +684,7 @@ void vthrow(void)
 				if (here(BEAR) && prop[BEAR] == 0) {
 					rspeak(164);
 					drop(AXE, game.loc);
-					fixed[AXE] = -1;
+					game.fixed[AXE] = -1;
 					prop[AXE] = 1;
 					juggle(BEAR);
 					return;
@@ -822,7 +822,7 @@ void vfeed(void)
 		}
 		dstroy(FOOD);
 		prop[BEAR] = 1;
-		fixed[AXE] = 0;
+		game.fixed[AXE] = 0;
 		prop[AXE] = 0;
 		msg = 168;
 		break;
@@ -930,7 +930,7 @@ void vbreak(void)
 			if (toting(VASE))
 				drop(VASE, game.loc);
 			prop[VASE] = 2;
-			fixed[VASE] = -1;
+			game.fixed[VASE] = -1;
 		}
 
 		else {

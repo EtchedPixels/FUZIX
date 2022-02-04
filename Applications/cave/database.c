@@ -272,7 +272,7 @@ uint8_t pct(short x)
 */
 uint8_t at(short item)
 {
-	return (game.place[item] == game.loc || fixed[item] == game.loc);
+	return (game.place[item] == game.loc || game.fixed[item] == game.loc);
 }
 
 
@@ -292,7 +292,7 @@ void dstroy(short obj)
 void move(short obj, short where)
 {
 	auto short from;
-	from = (obj < MAXOBJ) ? game.place[obj] : fixed[obj];
+	from = (obj < MAXOBJ) ? game.place[obj] : game.fixed[obj];
 	if (from > 0 && from <= 300)
 		carry(obj, from);
 	drop(obj, where);
@@ -339,7 +339,7 @@ void drop(short obj, short where)
 	}
 
 	else
-		fixed[obj - MAXOBJ] = where;
+		game.fixed[obj - MAXOBJ] = where;
 	return;
 }
 
