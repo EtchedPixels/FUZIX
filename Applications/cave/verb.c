@@ -196,7 +196,7 @@ void vdrop(void)
 	/* snake and bird */
 	if (object == BIRD && here(SNAKE)) {
 		rspeak(30);
-		if (closed)
+		if (game.closed)
 			dwarfend();
 		dstroy(SNAKE);
 		game.prop[SNAKE] = -1;
@@ -352,9 +352,9 @@ void vopen(void)
 			msg = 31;
 
 		else {
-			if (closing) {
+			if (game.closing) {
 				if (!panic) {
-					clock2 = 15;
+					game.clock2 = 15;
 					++panic;
 				}
 				msg = 130;
@@ -440,7 +440,7 @@ void vwave(void)
 		rspeak(29);
 
 	else {
-		if (object != ROD || !at(FISSURE) || !toting(object) || closing)
+		if (object != ROD || !at(FISSURE) || !toting(object) || game.closing)
 			actspk(verb);
 
 		else {
@@ -460,7 +460,7 @@ void vkill(void)
 	auto short i;
 	switch (object) {
 	case BIRD:
-		if (closed)
+		if (game.closed)
 			msg = 137;
 
 		else {
@@ -482,7 +482,7 @@ void vkill(void)
 		msg = 46;
 		break;
 	case DWARF:
-		if (closed)
+		if (game.closed)
 			dwarfend();
 		msg = 49;
 		break;
@@ -719,7 +719,7 @@ void vfind(void)
 		msg = 24;
 
 	else {
-		if (closed)
+		if (game.closed)
 			msg = 138;
 
 		else {
@@ -833,7 +833,7 @@ void vfeed(void)
 		msg = 182;
 		break;
 	case SNAKE:
-		if (closed || !here(BIRD)) {
+		if (game.closed || !here(BIRD)) {
 			msg = 102;
 			break;
 		}
@@ -873,7 +873,7 @@ void vread(void)
 		msg = 191;
 		break;
 	case OYSTER:
-		if (!toting(OYSTER) || !closed)
+		if (!toting(OYSTER) || !game.closed)
 			break;
 		yes(192, 193, 54);
 		return;
@@ -894,7 +894,7 @@ void vread(void)
 */
 void vblast(void)
 {
-	if (game.prop[ROD2] < 0 || !closed)
+	if (game.prop[ROD2] < 0 || !game.closed)
 		actspk(verb);
 
 	else {
@@ -918,7 +918,7 @@ void vbreak(void)
 	auto short msg;
 	if (object == MIRROR) {
 		msg = 148;
-		if (closed) {
+		if (game.closed) {
 			rspeak(197);
 			dwarfend();
 		}
@@ -948,7 +948,7 @@ void vbreak(void)
 */
 void vwake(void)
 {
-	if (object != DWARF || !closed)
+	if (object != DWARF || !game.closed)
 		actspk(verb);
 
 	else {

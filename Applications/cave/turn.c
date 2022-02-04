@@ -14,11 +14,11 @@ void turn(void)
 	auto short i;
 
 	/* if closing, then he can't leave except via the main office. */
-	if (game.newloc < 9 && game.newloc != 0 && closing) {
+	if (game.newloc < 9 && game.newloc != 0 && game.closing) {
 		rspeak(130);
 		game.newloc = game.loc;
 		if (!panic)
-			clock2 = 15;
+			game.clock2 = 15;
 		panic = 1;
 	}
 
@@ -67,7 +67,7 @@ void turn(void)
 			descitem();
 		}
 	}
-	if (closed) {
+	if (game.closed) {
 		if (game.prop[OYSTER] < 0 && toting(OYSTER))
 			pspeak(OYSTER, 1);
 		for (i = 1; i <= MAXOBJ; ++i) {
@@ -123,7 +123,7 @@ void describe(void)
 		else
 			desclg(game.loc);
 	}
-	if (game.loc == 33 && pct(25) && !closing)
+	if (game.loc == 33 && pct(25) && !game.closing)
 		rspeak(8);
 	return;
 }
@@ -140,7 +140,7 @@ void descitem(void)
 			if (i == STEPS && toting(NUGGET))
 				continue;
 			if (game.prop[i] < 0) {
-				if (closed)
+				if (game.closed)
 					continue;
 
 				else {
@@ -458,13 +458,13 @@ void score(void)
 		writei(t);
 	}
 	s += t;
-	t = closing ? 25 : 0;
+	t = game.closing ? 25 : 0;
 	if (t) {
 		writes("\nMasters section:    ");
 		writei(t);
 	}
 	s += t;
-	if (closed) {
+	if (game.closed) {
 		if (bonus == 0)
 			t = 10;
 
@@ -503,7 +503,7 @@ void score(void)
 void death(void)
 {
 	auto short yea, i, j;
-	if (!closing) {
+	if (!game.closing) {
 		yea = yes(81 + numdie * 2, 82 + numdie * 2, 54);
 		if (++numdie >= MAXDIE || !yea)
 			normend();
@@ -794,8 +794,8 @@ uint8_t stimer(void)
 	register short i;
 	game.foobar = game.foobar > 0 ? -game.foobar : 0;
 	if (game.tally == 0 && game.loc >= 15 && game.loc != 33)
-		--clock1;
-	if (clock1 == 0) {
+		--game.clock1;
+	if (game.clock1 == 0) {
 
 		/* start closing the cave */
 		game.prop[GRATE] = 0;
@@ -814,13 +814,13 @@ uint8_t stimer(void)
 		game.prop[AXE] = 0;
 		game.fixed[AXE] = 0;
 		rspeak(129);
-		clock1 = -1;
-		closing = 1;
+		game.clock1 = -1;
+		game.closing = 1;
 		return (FALSE);
 	}
-	if (clock1 < 0)
-		--clock2;
-	if (clock2 == 0) {
+	if (game.clock1 < 0)
+		--game.clock2;
+	if (game.clock2 == 0) {
 
 		/* set up storage room... and close the cave... */
 		game.prop[BOTTLE] = put(BOTTLE, 115, 1);
@@ -844,7 +844,7 @@ uint8_t stimer(void)
 			if (toting(i))
 				dstroy(i);
 		rspeak(132);
-		closed = 1;
+		game.closed = 1;
 		return (TRUE);
 	}
 	if (game.prop[LAMP] == 1)

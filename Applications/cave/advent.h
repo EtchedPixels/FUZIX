@@ -236,13 +236,9 @@ CLASS char word2[WORDSIZE];
 CLASS short limit INIT(100);	/* time limit         */
 CLASS short lmwarn INIT(0);	/* lamp warning flag  */
 CLASS uint8_t wzdark INIT(FALSE);
-CLASS uint8_t closing INIT(FALSE);
-CLASS uint8_t closed INIT(FALSE);
 CLASS short holding INIT(0);	/* count of held items */
 CLASS short detail INIT(0);	/* LOOK count         */
 CLASS short knfloc INIT(0);	/* knife location     */
-CLASS short clock1 INIT(30);	/* timing variables   */
-CLASS short clock2 INIT(50);
 CLASS short panic INIT(0);
 CLASS short dloc[DWARFMAX]	/* dwarf locations    */
 #ifdef DRIVER
