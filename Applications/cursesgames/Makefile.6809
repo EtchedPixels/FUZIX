@@ -1,17 +1,4 @@
-PLATFORM = 6809
-CC = m6809-unknown-gcc
-ASM = m6809-unknown-as
-AR = m6809-unknown-ar
-LINKER = m6809-unknown-ld
-CFLAGS = -I../../Library/include -I../../Library/include/6809
-LINKER_OPT = --oformat=raw -L../../Library/libs -lcurses6809 -lc6809 -ltermcap6809
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += -L$(LIBGCCDIR) -lgcc
-LINKER_OPT += --script=../util/$(TARGET).link
-ASM_OPT = -o
-CRT0 = ../../Library/libs/crt0_6809.o
-
-.SUFFIXES: .c .o
+include $(FUZIX_ROOT)/Applications/rules.6809
 
 SRCS  = invaders.c
 OBJS = $(SRCS:.c=.o)
@@ -22,7 +9,7 @@ all: $(APPS) size.report
 $(APPS): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $^
+	$(LINKER) -o $@ $(LINKER_OPT) -lcurses6809 -ltermcap6809  $^
 
 size.report: $(APPS)
 	ls -l $^ > $@

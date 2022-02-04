@@ -1,27 +1,13 @@
-PLATFORM = 6809
-CC = m6809-unknown-gcc
-ASM = m6809-unknown-as
-AR = m6809-unknown-ar
-LINKER = m6809-unknown-ld
-CFLAGS =  -I../../../../Library/include -I../../../../Library/include/6809 -Wall -pedantic -fno-strict-aliasing -DTARGET_Z80
-# Workaround for gcc6809 bug - register copy propagation issue
-CFLAGS += -fno-cprop-registers
-COPT = -Os
-LINKER_OPT = --oformat=raw -L../../../../Library/libs -lc6809
-LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
-LINKER_OPT += -L$(LIBGCCDIR) -lgcc -Map=sh.map
-LINKER_OPT += --script=../../../util/$(TARGET).link
-ASM_OPT = -o
-CRT0 = ../../../../Library/libs/crt0_6809.o
-
-.SUFFIXES: .c .o
-
+include $(FUZIX_ROOT)/Applications/rules.6809
 
 SRCS  = as0.c as1.c as2.c as3.c as4.c as6.c
 
 INCS  = as.h obj.h
 
 OBJS = $(SRCS:.c=.o)
+
+# Until we have a 6809 target finished
+CFLAGS += -DTARGET_Z80
 
 all: as nm
 
