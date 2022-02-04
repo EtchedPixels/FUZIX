@@ -233,8 +233,6 @@ CLASS char word2[WORDSIZE];
         Play variables (TO REMOVE)
 */
 
-CLASS short limit INIT(100);	/* time limit         */
-CLASS short lmwarn INIT(0);	/* lamp warning flag  */
 CLASS uint8_t wzdark INIT(FALSE);
 CLASS short holding INIT(0);	/* count of held items */
 CLASS short detail INIT(0);	/* LOOK count         */

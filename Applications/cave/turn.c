@@ -158,8 +158,8 @@ void descitem(void)
 			pspeak(i, state);
 		}
 	}
-	if (game.tally == game.tally2 && game.tally != 0 && limit > 35)
-		limit = 35;
+	if (game.tally == game.tally2 && game.tally != 0 && game.limit > 35)
+		game.limit = 35;
 	return;
 }
 
@@ -848,32 +848,32 @@ uint8_t stimer(void)
 		return (TRUE);
 	}
 	if (game.prop[LAMP] == 1)
-		--limit;
-	if (limit <= 30 && here(BATTERIES) && game.prop[BATTERIES] == 0 && here(LAMP)) {
+		--game.limit;
+	if (game.limit <= 30 && here(BATTERIES) && game.prop[BATTERIES] == 0 && here(LAMP)) {
 		rspeak(188);
 		game.prop[BATTERIES] = 1;
 		if (toting(BATTERIES))
 			drop(BATTERIES, game.loc);
-		limit += 2500;
-		lmwarn = 0;
+		game.limit += 2500;
+		game.lmwarn = 0;
 		return (FALSE);
 	}
-	if (limit == 0) {
-		--limit;
+	if (game.limit == 0) {
+		--game.limit;
 		game.prop[LAMP] = 0;
 		if (here(LAMP))
 			rspeak(184);
 		return (FALSE);
 	}
-	if (limit < 0 && game.loc <= 8) {
+	if (game.limit < 0 && game.loc <= 8) {
 		rspeak(185);
 		gaveup = 1;
 		normend();
 	}
-	if (limit <= 30) {
-		if (lmwarn || !here(LAMP))
+	if (game.limit <= 30) {
+		if (game.lmwarn || !here(LAMP))
 			return (FALSE);
-		lmwarn = 1;
+		game.lmwarn = 1;
 		i = 187;
 		if (game.place[BATTERIES] == 0)
 			i = 183;

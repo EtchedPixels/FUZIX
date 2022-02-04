@@ -117,10 +117,10 @@ static void eadvent(void)
 {
 	srand(511);
 	if (yes(65, 1, 0))
-		limit = 1000;
+		game.limit = 1000;
 
 	else
-		limit = 330;
+		game.limit = 330;
 	while (!saveflg)
 		turn();
 	if (saveflg)

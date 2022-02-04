@@ -398,7 +398,7 @@ void von(void)
 		actspk(verb);
 
 	else {
-		if (limit < 0)
+		if (game.limit < 0)
 			rspeak(184);
 
 		else {
