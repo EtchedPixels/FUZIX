@@ -43,10 +43,10 @@ static void sweep_relocations(void)
   int pos = 0x10;
   int lastrel = 0;
 
-  /* Magic fudge. We will patch the relocation base into 0x12/0x13 which is
+  /* Magic fudge. We will patch the relocation base into 0x10/0x11 which is
      currently zero in both cases. We want to relocate it so our loader is
      cleaner */
-  bufb[0x12] = 0x01;	/* Force a relocation */
+  bufb[0x10] = 0x01;	/* Force a relocation */
 
   /* Relocation table for the code/data references */
   while(len--) {
