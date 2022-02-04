@@ -234,7 +234,6 @@ CLASS char word2[WORDSIZE];
 */
 
 CLASS uint8_t wzdark INIT(FALSE);
-CLASS short holding INIT(0);	/* count of held items */
 CLASS short detail INIT(0);	/* LOOK count         */
 CLASS short knfloc INIT(0);	/* knife location     */
 CLASS short bonus INIT(0);	/* to pass to end     */

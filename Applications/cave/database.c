@@ -321,7 +321,7 @@ void carry(short obj, short where)
 		if (game.place[obj] == -1)
 			return;
 		game.place[obj] = -1;
-		++holding;
+		++game.holding;
 	}
 	return;
 }
@@ -334,7 +334,7 @@ void drop(short obj, short where)
 {
 	if (obj < MAXOBJ) {
 		if (game.place[obj] == -1)
-			--holding;
+			--game.holding;
 		game.place[obj] = where;
 	}
 

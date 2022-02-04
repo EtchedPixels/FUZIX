@@ -359,7 +359,7 @@ void spcmove(short rdest)
 {
 	switch (rdest - 300) {
 	case 1:		/* plover movement via alcove */
-		if (!holding || (holding == 1 && toting(EMERALD)))
+		if (!game.holding || (game.holding == 1 && toting(EMERALD)))
 			game.newloc = (99 + 100) - game.loc;
 
 		else

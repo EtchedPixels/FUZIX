@@ -148,7 +148,7 @@ void vtake(void)
 		}
 		object = BOTTLE;
 	}
-	if (holding >= 7) {
+	if (game.holding >= 7) {
 		rspeak(92);
 		return;
 	}
