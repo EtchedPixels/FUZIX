@@ -225,7 +225,7 @@ short vocab(char *word, short val)
 */
 uint8_t dark(void)
 {
-	return (!(game.cond[game.loc] & LIGHT) && (!prop[LAMP] || !here(LAMP)));
+	return (!(game.cond[game.loc] & LIGHT) && (!game.prop[LAMP] || !here(LAMP)));
 }
 
 
@@ -377,7 +377,7 @@ short dcheck(void)
 short liq(void)
 {
 	auto short i, j;
-	i = prop[BOTTLE];
+	i = game.prop[BOTTLE];
 	j = (-1) - i;
 	return (liq2(i > j ? i : j));
 }

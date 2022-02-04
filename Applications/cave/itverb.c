@@ -164,11 +164,11 @@ void ivkill(void)
 		object = DWARF;
 	if (here(SNAKE))
 		addobj(SNAKE);
-	if (at(DRAGON) && prop[DRAGON] == 0)
+	if (at(DRAGON) && game.prop[DRAGON] == 0)
 		addobj(DRAGON);
 	if (at(TROLL))
 		addobj(TROLL);
-	if (here(BEAR) && prop[BEAR] == 0)
+	if (here(BEAR) && game.prop[BEAR] == 0)
 		addobj(BEAR);
 	if (object1 != 0) {
 		needobj();
@@ -272,8 +272,8 @@ void ivfoo(void)
 		rspeak(msg);
 		return;
 	}
-	if (game.place[EGGS] == 0 && game.place[TROLL] == 0 && prop[TROLL] == 0)
-		prop[TROLL] = 1;
+	if (game.place[EGGS] == 0 && game.place[TROLL] == 0 && game.prop[TROLL] == 0)
+		game.prop[TROLL] = 1;
 	if (here(EGGS))
 		k = 1;
 

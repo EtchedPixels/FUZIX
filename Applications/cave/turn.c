@@ -68,11 +68,11 @@ void turn(void)
 		}
 	}
 	if (closed) {
-		if (prop[OYSTER] < 0 && toting(OYSTER))
+		if (game.prop[OYSTER] < 0 && toting(OYSTER))
 			pspeak(OYSTER, 1);
 		for (i = 1; i <= MAXOBJ; ++i) {
-			if (toting(i) && prop[i] < 0)
-				prop[i] = -1 - prop[i];
+			if (toting(i) && game.prop[i] < 0)
+				game.prop[i] = -1 - game.prop[i];
 		}
 	}
 	wzdark = dark();
@@ -139,14 +139,14 @@ void descitem(void)
 		if (at(i)) {
 			if (i == STEPS && toting(NUGGET))
 				continue;
-			if (prop[i] < 0) {
+			if (game.prop[i] < 0) {
 				if (closed)
 					continue;
 
 				else {
-					prop[i] = 0;
+					game.prop[i] = 0;
 					if (i == RUG || i == CHAIN)
-						++prop[i];
+						++game.prop[i];
 					--tally;
 				}
 			}
@@ -154,7 +154,7 @@ void descitem(void)
 				state = 1;
 
 			else
-				state = prop[i];
+				state = game.prop[i];
 			pspeak(i, state);
 		}
 	}
@@ -300,7 +300,7 @@ void dotrav(void)
 		case 4:
 		case 5:
 		case 7:
-			if (prop[robject] != (rcond / 100) - 3)
+			if (game.prop[robject] != (rcond / 100) - 3)
 				++mvflag;
 			break;
 		default:
@@ -369,9 +369,9 @@ void spcmove(short rdest)
 		drop(EMERALD, game.loc);
 		break;
 	case 3:		/* troll bridge */
-		if (prop[TROLL] == 1) {
+		if (game.prop[TROLL] == 1) {
 			pspeak(TROLL, 1);
-			prop[TROLL] = 0;
+			game.prop[TROLL] = 0;
 			move(TROLL2, 0);
 			move((TROLL2 + MAXOBJ), 0);
 			move(TROLL, 117);
@@ -382,17 +382,17 @@ void spcmove(short rdest)
 
 		else {
 			game.newloc = (game.loc == 117 ? 122 : 117);
-			if (prop[TROLL] == 0)
-				++prop[TROLL];
+			if (game.prop[TROLL] == 0)
+				++game.prop[TROLL];
 			if (!toting(BEAR))
 				return;
 			rspeak(162);
-			prop[CHASM] = 1;
-			prop[TROLL] = 2;
+			game.prop[CHASM] = 1;
+			game.prop[TROLL] = 2;
 			drop(BEAR, game.newloc);
 			game.fixed[BEAR] = -1;
-			prop[BEAR] = 3;
-			if (prop[SPICES] < 0)
+			game.prop[BEAR] = 3;
+			if (game.prop[SPICES] < 0)
 				++tally2;
 			game.oldloc2 = game.newloc;
 			death();
@@ -437,9 +437,9 @@ void score(void)
 
 		else
 			k = i > CHEST ? 16 : 12;
-		if (prop[i] >= 0)
+		if (game.prop[i] >= 0)
 			t += 2;
-		if (game.place[i] == 3 && prop[i] == 0)
+		if (game.place[i] == 3 && game.prop[i] == 0)
 			t += k - 2;
 	}
 	writes("Treasures           ");
@@ -510,7 +510,7 @@ void death(void)
 		game.place[WATER] = 0;
 		game.place[OIL] = 0;
 		if (toting(LAMP))
-			prop[LAMP] = 0;
+			game.prop[LAMP] = 0;
 		for (j = 1; j < 101; ++j) {
 			i = 101 - j;
 			if (toting(i))
@@ -567,7 +567,7 @@ void doobj(void)
 					trobj();
 
 				else {
-					if (object == PLANT && at(PLANT2) && prop[PLANT2] == 0) {
+					if (object == PLANT && at(PLANT2) && game.prop[PLANT2] == 0) {
 						object = PLANT2;
 						trobj();
 					}
@@ -744,7 +744,7 @@ void dwarves(void)
 void dopirate(void)
 {
 	auto short j, k;
-	if (game.newloc == chloc || prop[CHEST] >= 0)
+	if (game.newloc == chloc || game.prop[CHEST] >= 0)
 		return;
 	k = 0;
 	for (j = 50; j <= MAXTRS; ++j)
@@ -754,7 +754,7 @@ void dopirate(void)
 			if (here(j))
 				++k;
 		}
-	if (tally == tally2 + 1 && k == 0 && game.place[CHEST] == 0 && here(LAMP) && prop[LAMP] == 1) {
+	if (tally == tally2 + 1 && k == 0 && game.place[CHEST] == 0 && here(LAMP) && game.prop[LAMP] == 1) {
 		rspeak(186);
 		move(CHEST, chloc);
 		move(MESSAGE, chloc2);
@@ -798,8 +798,8 @@ uint8_t stimer(void)
 	if (clock1 == 0) {
 
 		/* start closing the cave */
-		prop[GRATE] = 0;
-		prop[FISSURE] = 0;
+		game.prop[GRATE] = 0;
+		game.prop[FISSURE] = 0;
 		for (i = 1; i < DWARFMAX; ++i)
 			dseen[i] = 0;
 		move(TROLL, 0);
@@ -807,11 +807,11 @@ uint8_t stimer(void)
 		move(TROLL2, 117);
 		move((TROLL2 + MAXOBJ), 122);
 		juggle(CHASM);
-		if (prop[BEAR] != 3)
+		if (game.prop[BEAR] != 3)
 			dstroy(BEAR);
-		prop[CHAIN] = 0;
+		game.prop[CHAIN] = 0;
 		game.fixed[CHAIN] = 0;
-		prop[AXE] = 0;
+		game.prop[AXE] = 0;
 		game.fixed[AXE] = 0;
 		rspeak(129);
 		clock1 = -1;
@@ -823,22 +823,22 @@ uint8_t stimer(void)
 	if (clock2 == 0) {
 
 		/* set up storage room... and close the cave... */
-		prop[BOTTLE] = put(BOTTLE, 115, 1);
-		prop[PLANT] = put(PLANT, 115, 0);
-		prop[OYSTER] = put(OYSTER, 115, 0);
-		prop[LAMP] = put(LAMP, 115, 0);
-		prop[ROD] = put(ROD, 115, 0);
-		prop[DWARF] = put(DWARF, 115, 0);
+		game.prop[BOTTLE] = put(BOTTLE, 115, 1);
+		game.prop[PLANT] = put(PLANT, 115, 0);
+		game.prop[OYSTER] = put(OYSTER, 115, 0);
+		game.prop[LAMP] = put(LAMP, 115, 0);
+		game.prop[ROD] = put(ROD, 115, 0);
+		game.prop[DWARF] = put(DWARF, 115, 0);
 		game.loc = 115;
 		game.oldloc = 115;
 		game.newloc = 115;
 		put(GRATE, 116, 0);
-		prop[SNAKE] = put(SNAKE, 116, 1);
-		prop[BIRD] = put(BIRD, 116, 1);
-		prop[CAGE] = put(CAGE, 116, 0);
-		prop[ROD2] = put(ROD2, 116, 0);
-		prop[PILLOW] = put(PILLOW, 116, 0);
-		prop[MIRROR] = put(MIRROR, 115, 0);
+		game.prop[SNAKE] = put(SNAKE, 116, 1);
+		game.prop[BIRD] = put(BIRD, 116, 1);
+		game.prop[CAGE] = put(CAGE, 116, 0);
+		game.prop[ROD2] = put(ROD2, 116, 0);
+		game.prop[PILLOW] = put(PILLOW, 116, 0);
+		game.prop[MIRROR] = put(MIRROR, 115, 0);
 		game.fixed[MIRROR] = 116;
 		for (i = 1; i <= MAXOBJ; ++i)
 			if (toting(i))
@@ -847,11 +847,11 @@ uint8_t stimer(void)
 		closed = 1;
 		return (TRUE);
 	}
-	if (prop[LAMP] == 1)
+	if (game.prop[LAMP] == 1)
 		--limit;
-	if (limit <= 30 && here(BATTERIES) && prop[BATTERIES] == 0 && here(LAMP)) {
+	if (limit <= 30 && here(BATTERIES) && game.prop[BATTERIES] == 0 && here(LAMP)) {
 		rspeak(188);
-		prop[BATTERIES] = 1;
+		game.prop[BATTERIES] = 1;
 		if (toting(BATTERIES))
 			drop(BATTERIES, game.loc);
 		limit += 2500;
@@ -860,7 +860,7 @@ uint8_t stimer(void)
 	}
 	if (limit == 0) {
 		--limit;
-		prop[LAMP] = 0;
+		game.prop[LAMP] = 0;
 		if (here(LAMP))
 			rspeak(184);
 		return (FALSE);
@@ -877,7 +877,7 @@ uint8_t stimer(void)
 		i = 187;
 		if (game.place[BATTERIES] == 0)
 			i = 183;
-		if (prop[BATTERIES] == 1)
+		if (game.prop[BATTERIES] == 1)
 			i = 189;
 		rspeak(i);
 	}
