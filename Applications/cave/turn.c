@@ -439,7 +439,7 @@ void score(void)
 			k = i > CHEST ? 16 : 12;
 		if (prop[i] >= 0)
 			t += 2;
-		if (place[i] == 3 && prop[i] == 0)
+		if (game.place[i] == 3 && prop[i] == 0)
 			t += k - 2;
 	}
 	writes("Treasures           ");
@@ -486,7 +486,7 @@ void score(void)
 		writei(t);
 		s += t;
 	}
-	if (place[MAGAZINE] == 108)
+	if (game.place[MAGAZINE] == 108)
 		s += 1;
 	s += 2;
 	writes("\nScore:              ");
@@ -507,8 +507,8 @@ void death(void)
 		yea = yes(81 + numdie * 2, 82 + numdie * 2, 54);
 		if (++numdie >= MAXDIE || !yea)
 			normend();
-		place[WATER] = 0;
-		place[OIL] = 0;
+		game.place[WATER] = 0;
+		game.place[OIL] = 0;
 		if (toting(LAMP))
 			prop[LAMP] = 0;
 		for (j = 1; j < 101; ++j) {
@@ -748,13 +748,13 @@ void dopirate(void)
 		return;
 	k = 0;
 	for (j = 50; j <= MAXTRS; ++j)
-		if (j != PYRAMID || (game.newloc != place[PYRAMID] && game.newloc != place[EMERALD])) {
+		if (j != PYRAMID || (game.newloc != game.place[PYRAMID] && game.newloc != game.place[EMERALD])) {
 			if (toting(j))
 				goto stealit;
 			if (here(j))
 				++k;
 		}
-	if (tally == tally2 + 1 && k == 0 && place[CHEST] == 0 && here(LAMP) && prop[LAMP] == 1) {
+	if (tally == tally2 + 1 && k == 0 && game.place[CHEST] == 0 && here(LAMP) && prop[LAMP] == 1) {
 		rspeak(186);
 		move(CHEST, chloc);
 		move(MESSAGE, chloc2);
@@ -769,11 +769,11 @@ void dopirate(void)
 	}
 	return;
       stealit:rspeak(128);
-	if (place[MESSAGE] == 0)
+	if (game.place[MESSAGE] == 0)
 		move(CHEST, chloc);
 	move(MESSAGE, chloc2);
 	for (j = 50; j <= MAXTRS; ++j) {
-		if (j == PYRAMID && (game.newloc == place[PYRAMID] || game.newloc == place[EMERALD]))
+		if (j == PYRAMID && (game.newloc == game.place[PYRAMID] || game.newloc == game.place[EMERALD]))
 			continue;
 		if (at(j) && fixed[j] == 0)
 			carry(j, game.newloc);
@@ -875,7 +875,7 @@ uint8_t stimer(void)
 			return (FALSE);
 		lmwarn = 1;
 		i = 187;
-		if (place[BATTERIES] == 0)
+		if (game.place[BATTERIES] == 0)
 			i = 183;
 		if (prop[BATTERIES] == 1)
 			i = 189;

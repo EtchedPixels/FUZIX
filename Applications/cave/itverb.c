@@ -107,7 +107,7 @@ void ivtake(void)
 	auto short anobj, item;
 	anobj = 0;
 	for (item = 1; item < MAXOBJ; ++item) {
-		if (place[item] == game.loc) {
+		if (game.place[item] == game.loc) {
 			if (anobj != 0) {
 				needobj();
 				return;
@@ -268,11 +268,11 @@ void ivfoo(void)
 	if (k != 4)
 		return;
 	game.foobar = 0;
-	if (place[EGGS] == 92 || (toting(EGGS) && game.loc == 92)) {
+	if (game.place[EGGS] == 92 || (toting(EGGS) && game.loc == 92)) {
 		rspeak(msg);
 		return;
 	}
-	if (place[EGGS] == 0 && place[TROLL] == 0 && prop[TROLL] == 0)
+	if (game.place[EGGS] == 0 && game.place[TROLL] == 0 && prop[TROLL] == 0)
 		prop[TROLL] = 1;
 	if (here(EGGS))
 		k = 1;

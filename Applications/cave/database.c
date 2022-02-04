@@ -234,7 +234,7 @@ uint8_t dark(void)
 */
 uint8_t here(short item)
 {
-	return (place[item] == game.loc || toting(item));
+	return (game.place[item] == game.loc || toting(item));
 }
 
 
@@ -243,7 +243,7 @@ uint8_t here(short item)
 */
 uint8_t toting(short item)
 {
-	return (place[item] == -1);
+	return (game.place[item] == -1);
 }
 
 
@@ -272,7 +272,7 @@ uint8_t pct(short x)
 */
 uint8_t at(short item)
 {
-	return (place[item] == game.loc || fixed[item] == game.loc);
+	return (game.place[item] == game.loc || fixed[item] == game.loc);
 }
 
 
@@ -292,7 +292,7 @@ void dstroy(short obj)
 void move(short obj, short where)
 {
 	auto short from;
-	from = (obj < MAXOBJ) ? place[obj] : fixed[obj];
+	from = (obj < MAXOBJ) ? game.place[obj] : fixed[obj];
 	if (from > 0 && from <= 300)
 		carry(obj, from);
 	drop(obj, where);
@@ -318,9 +318,9 @@ void carry(short obj, short where)
 {
 	where = where;		/* eliminate compiler warning */
 	if (obj < MAXOBJ) {
-		if (place[obj] == -1)
+		if (game.place[obj] == -1)
 			return;
-		place[obj] = -1;
+		game.place[obj] = -1;
 		++holding;
 	}
 	return;
@@ -333,9 +333,9 @@ void carry(short obj, short where)
 void drop(short obj, short where)
 {
 	if (obj < MAXOBJ) {
-		if (place[obj] == -1)
+		if (game.place[obj] == -1)
 			--holding;
-		place[obj] = where;
+		game.place[obj] = where;
 	}
 
 	else

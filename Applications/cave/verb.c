@@ -172,7 +172,7 @@ void vtake(void)
 	/* handle liquid in bottle */
 	i = liq();
 	if (object == BOTTLE && i != 0)
-		place[i] = -1;
+		game.place[i] = -1;
 	rspeak(54);
 	return;
 }
@@ -217,7 +217,7 @@ void vdrop(void)
 				rspeak(154);
 				dstroy(BIRD);
 				prop[BIRD] = 0;
-				if (place[SNAKE] != 0)
+				if (game.place[SNAKE] != 0)
 					++tally2;
 				return;
 			}
@@ -255,7 +255,7 @@ void vdrop(void)
 	if (i == object)
 		object = BOTTLE;
 	if (object == BOTTLE && i != 0)
-		place[i] = 0;
+		game.place[i] = 0;
 
 	/* handle bird and cage */
 	if (object == CAGE && prop[BIRD] != 0)
@@ -466,7 +466,7 @@ void vkill(void)
 		else {
 			dstroy(BIRD);
 			prop[BIRD] = 0;
-			if (place[SNAKE] == 19)
+			if (game.place[SNAKE] == 19)
 				++tally2;
 			msg = 45;
 		}
@@ -507,7 +507,7 @@ void vkill(void)
 		move(DRAGON, 120);
 		move(RUG, 120);
 		for (i = 1; i < MAXOBJ; ++i)
-			if (place[i] == 119 || place[i] == 121)
+			if (game.place[i] == 119 || game.place[i] == 121)
 				move(i, 120);
 		game.newloc = 120;
 		return;
@@ -539,7 +539,7 @@ void vpour(void)
 		return;
 	}
 	prop[BOTTLE] = 1;
-	place[object] = 0;
+	game.place[object] = 0;
 	if (at(PLANT)) {
 		if (object != WATER)
 			rspeak(112);
@@ -609,7 +609,7 @@ void vdrink(void)
 
 		else {
 			prop[BOTTLE] = 1;
-			place[WATER] = 0;
+			game.place[WATER] = 0;
 			rspeak(74);
 		}
 	}
@@ -762,7 +762,7 @@ void vfill(void)
 				prop[BOTTLE] = game.cond[game.loc] & WATOIL;
 				i = liq();
 				if (toting(BOTTLE))
-					place[i] = -1;
+					game.place[i] = -1;
 				msg = (i == OIL ? 108 : 107);
 			}
 		}
