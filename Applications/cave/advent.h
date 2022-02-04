@@ -291,7 +291,6 @@ CLASS short fixed[MAXOBJ]	/* second object loc  */
 ;
 #endif
 
-CLASS short visited[MAXLOC];	/* >0 if has been here */
 CLASS short prop[MAXOBJ]	/* status of object   */
 #ifdef DRIVER
     = {

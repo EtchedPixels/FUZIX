@@ -63,7 +63,7 @@ void turn(void)
 		describe();
 		if (!dark()) {
 			/* FIXME?? doesn't this mean 65536 visits breaks ?? */
-			++visited[game.loc];
+			++game.visited[game.loc];
 			descitem();
 		}
 	}
@@ -117,7 +117,7 @@ void describe(void)
 		rspeak(16);
 
 	else {
-		if (visited[game.loc] && brief_sw)
+		if (game.visited[game.loc] && brief_sw)
 			descsh(game.loc);
 
 		else
@@ -180,7 +180,7 @@ void domove(void)
 		if (detail++ < 3)
 			rspeak(15);
 		wzdark = 0;
-		visited[game.loc] = 0;
+		game.visited[game.loc] = 0;
 		game.newloc = game.loc;
 		game.loc = 0;
 		break;
