@@ -166,8 +166,8 @@ void vtake(void)
 		prop[BIRD] = 1;
 	}
 	if ((object == BIRD || object == CAGE) && prop[BIRD] != 0)
-		carry((BIRD + CAGE) - object, loc);
-	carry(object, loc);
+		carry((BIRD + CAGE) - object, game.loc);
+	carry(object, game.loc);
 
 	/* handle liquid in bottle */
 	i = liq();
@@ -206,7 +206,7 @@ void vdrop(void)
 
 		if (object == COINS && here(VEND)) {
 			dstroy(COINS);
-			drop(BATTERIES, loc);
+			drop(BATTERIES, game.loc);
 			pspeak(BATTERIES, 0);
 			return;
 		}
@@ -238,7 +238,7 @@ void vdrop(void)
 	else {			/* vase */
 
 		if (object == VASE) {
-			if (loc == 96)
+			if (game.loc == 96)
 				rspeak(54);
 
 			else {
@@ -259,10 +259,10 @@ void vdrop(void)
 
 	/* handle bird and cage */
 	if (object == CAGE && prop[BIRD] != 0)
-		drop(BIRD, loc);
+		drop(BIRD, game.loc);
 	if (object == BIRD)
 		prop[BIRD] = 0;
-	drop(object, loc);
+	drop(object, game.loc);
 	return;
 }
 
@@ -291,7 +291,7 @@ void vopen(void)
 				else {
 					msg = 124 + oyclam;
 					dstroy(CLAM);
-					drop(OYSTER, loc);
+					drop(OYSTER, game.loc);
 					drop(PEARL, 105);
 				}
 			}
@@ -315,13 +315,13 @@ void vopen(void)
 				if (prop[CHAIN] != 0)
 					msg = 34;
 
-				else if (loc != 130)
+				else if (game.loc != 130)
 					msg = 173;
 
 				else {
 					prop[CHAIN] = 2;
 					if (toting(CHAIN))
-						drop(CHAIN, loc);
+						drop(CHAIN, game.loc);
 					fixed[CHAIN] = -1;
 					msg = 172;
 				}
@@ -509,7 +509,7 @@ void vkill(void)
 		for (i = 1; i < MAXOBJ; ++i)
 			if (place[i] == 119 || place[i] == 121)
 				move(i, 120);
-		newloc = 120;
+		game.newloc = 120;
 		return;
 	default:
 		actspk(verb);
@@ -683,7 +683,7 @@ void vthrow(void)
 
 				if (here(BEAR) && prop[BEAR] == 0) {
 					rspeak(164);
-					drop(AXE, loc);
+					drop(AXE, game.loc);
 					fixed[AXE] = -1;
 					prop[AXE] = 1;
 					juggle(BEAR);
@@ -703,7 +703,7 @@ void vthrow(void)
 
 	/* handle the left over axe... */
 	rspeak(msg);
-	drop(AXE, loc);
+	drop(AXE, game.loc);
 	describe();
 	return;
 }
@@ -727,7 +727,7 @@ void vfind(void)
 				msg = 94;
 
 			else {
-				if (at(object) || (liq() == object && here(BOTTLE)) || object == liqloc(loc))
+				if (at(object) || (liq() == object && here(BOTTLE)) || object == liqloc(game.loc))
 					msg = 94;
 
 				else {
@@ -755,11 +755,11 @@ void vfill(void)
 			msg = 105;
 
 		else {
-			if (liqloc(loc) == 0)
+			if (liqloc(game.loc) == 0)
 				msg = 106;
 
 			else {
-				prop[BOTTLE] = cond[loc] & WATOIL;
+				prop[BOTTLE] = cond[game.loc] & WATOIL;
 				i = liq();
 				if (toting(BOTTLE))
 					place[i] = -1;
@@ -768,7 +768,7 @@ void vfill(void)
 		}
 		break;
 	case VASE:
-		if (liqloc(loc) == 0) {
+		if (liqloc(game.loc) == 0) {
 			msg = 144;
 			break;
 		}
@@ -899,7 +899,7 @@ void vblast(void)
 
 	else {
 		bonus = 133;
-		if (loc == 115)
+		if (game.loc == 115)
 			bonus = 134;
 		if (here(ROD2))
 			bonus = 135;
@@ -928,7 +928,7 @@ void vbreak(void)
 		if (object == VASE && prop[VASE] == 0) {
 			msg = 198;
 			if (toting(VASE))
-				drop(VASE, loc);
+				drop(VASE, game.loc);
 			prop[VASE] = 2;
 			fixed[VASE] = -1;
 		}

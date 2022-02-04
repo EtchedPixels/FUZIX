@@ -14,19 +14,19 @@ void turn(void)
 	auto short i;
 
 	/* if closing, then he can't leave except via the main office. */
-	if (newloc < 9 && newloc != 0 && closing) {
+	if (game.newloc < 9 && game.newloc != 0 && closing) {
 		rspeak(130);
-		newloc = loc;
+		game.newloc = game.loc;
 		if (!panic)
 			clock2 = 15;
 		panic = 1;
 	}
 
 	/* see if a dwarf has seen him and has come from where he wants to go. */
-	if (newloc != loc && !forced(loc) && cond[loc] & NOPIRAT == 0) {
+	if (game.newloc != game.loc && !forced(game.loc) && cond[game.loc] & NOPIRAT == 0) {
 		for (i = 1; i < (DWARFMAX - 1); ++i)
-			if (odloc[i] == newloc && dseen[i]) {
-				newloc = loc;
+			if (odloc[i] == game.newloc && dseen[i]) {
+				game.newloc = game.loc;
 				rspeak(2);
 				break;
 			}
@@ -34,18 +34,18 @@ void turn(void)
 	dwarves();
 
 	/* on to the regular move. */
-	if (loc != newloc) {
-		++turns;
-		loc = newloc;
+	if (game.loc != game.newloc) {
+		++game.turns;
+		game.loc = game.newloc;
 
 		/* check for death */
-		if (loc == 0) {
+		if (game.loc == 0) {
 			death();
 			return;
 		}
 
 		/* check for forced move */
-		if (forced(loc)) {
+		if (forced(game.loc)) {
 			describe();
 			domove();
 			return;
@@ -54,7 +54,7 @@ void turn(void)
 		/* check for wandering in dark */
 		if (wzdark && dark() && pct(35)) {
 			rspeak(23);
-			oldloc2 = loc;
+			game.oldloc2 = game.loc;
 			death();
 			return;
 		}
@@ -62,7 +62,8 @@ void turn(void)
 		/* describe his situation */
 		describe();
 		if (!dark()) {
-			++visited[loc];
+			/* FIXME?? doesn't this mean 65536 visits breaks ?? */
+			++visited[game.loc];
 			descitem();
 		}
 	}
@@ -75,7 +76,7 @@ void turn(void)
 		}
 	}
 	wzdark = dark();
-	if (knfloc > 0 && knfloc != loc)
+	if (knfloc > 0 && knfloc != game.loc)
 		knfloc = 0;
 
 	/* run the timer routine */
@@ -86,7 +87,7 @@ void turn(void)
 	/* debug */
 #ifdef DEBUG
 	if (dbgflg)
-		printf("Your current location is %d\n", loc);
+		printf("Your current location is %d\n", game.loc);
 #endif				/*  */
 	while (!english());
 
@@ -116,13 +117,13 @@ void describe(void)
 		rspeak(16);
 
 	else {
-		if (visited[loc] && brief_sw)
-			descsh(loc);
+		if (visited[game.loc] && brief_sw)
+			descsh(game.loc);
 
 		else
-			desclg(loc);
+			desclg(game.loc);
 	}
-	if (loc == 33 && pct(25) && !closing)
+	if (game.loc == 33 && pct(25) && !closing)
 		rspeak(8);
 	return;
 }
@@ -149,7 +150,7 @@ void descitem(void)
 					--tally;
 				}
 			}
-			if (i == STEPS && loc == fixed[STEPS])
+			if (i == STEPS && game.loc == fixed[STEPS])
 				state = 1;
 
 			else
@@ -168,7 +169,7 @@ void descitem(void)
 */
 void domove(void)
 {
-	gettrav(loc);
+	gettrav(game.loc);
 	switch (motion) {
 	case NULLX:
 		break;
@@ -179,22 +180,22 @@ void domove(void)
 		if (detail++ < 3)
 			rspeak(15);
 		wzdark = 0;
-		visited[loc] = 0;
-		newloc = loc;
-		loc = 0;
+		visited[game.loc] = 0;
+		game.newloc = game.loc;
+		game.loc = 0;
 		break;
 	case CAVE:
-		if (loc < 8)
+		if (game.loc < 8)
 			rspeak(57);
 
 		else
 			rspeak(58);
 		break;
 	default:
-		oldloc2 = oldloc;
-		oldloc = loc;
+		game.oldloc2 = game.oldloc;
+		game.oldloc = game.loc;
 		dotrav();
-		loc = 0;	/* Modified BW 09/28/85   */
+		game.loc = 0;	/* Modified BW 09/28/85   */
 	}
 	return;
 }
@@ -209,15 +210,15 @@ void goback(void)
 	auto short kk, k2, want, temp;
 	auto TRAV *pSavTrav;
 	auto short sSavCnt;
-	if (forced(oldloc))
-		want = oldloc2;
+	if (forced(game.oldloc))
+		want = game.oldloc2;
 
 	else
-		want = oldloc;
-	oldloc2 = oldloc;
-	oldloc = loc;
+		want = game.oldloc;
+	game.oldloc2 = game.oldloc;
+	game.oldloc = game.loc;
 	k2 = 0;
-	if (want == loc) {
+	if (want == game.loc) {
 		rspeak(91);
 		return;
 	}
@@ -259,7 +260,7 @@ void dotrav(void)
 	auto short mvflag, hitflag, kk;
 	auto short rdest, rverb, rcond, robject;
 	auto short pctt;
-	newloc = loc;
+	game.newloc = game.loc;
 	mvflag = hitflag = 0;
 	pctt = rand() % 100;
 	for (kk = 0; kk < sTravCnt && !mvflag; ++kk) {
@@ -318,7 +319,7 @@ void dotrav(void)
 				spcmove(rdest);
 
 			else
-				newloc = rdest;
+				game.newloc = rdest;
 		}
 	}
 	return;
@@ -359,13 +360,13 @@ void spcmove(short rdest)
 	switch (rdest - 300) {
 	case 1:		/* plover movement via alcove */
 		if (!holding || (holding == 1 && toting(EMERALD)))
-			newloc = (99 + 100) - loc;
+			game.newloc = (99 + 100) - game.loc;
 
 		else
 			rspeak(117);
 		break;
 	case 2:		/* trying to remove plover, bad route */
-		drop(EMERALD, loc);
+		drop(EMERALD, game.loc);
 		break;
 	case 3:		/* troll bridge */
 		if (prop[TROLL] == 1) {
@@ -376,11 +377,11 @@ void spcmove(short rdest)
 			move(TROLL, 117);
 			move((TROLL + MAXOBJ), 122);
 			juggle(CHASM);
-			newloc = loc;
+			game.newloc = game.loc;
 		}
 
 		else {
-			newloc = (loc == 117 ? 122 : 117);
+			game.newloc = (game.loc == 117 ? 122 : 117);
 			if (prop[TROLL] == 0)
 				++prop[TROLL];
 			if (!toting(BEAR))
@@ -388,12 +389,12 @@ void spcmove(short rdest)
 			rspeak(162);
 			prop[CHASM] = 1;
 			prop[TROLL] = 2;
-			drop(BEAR, newloc);
+			drop(BEAR, game.newloc);
 			fixed[BEAR] = -1;
 			prop[BEAR] = 3;
 			if (prop[SPICES] < 0)
 				++tally2;
-			oldloc2 = newloc;
+			game.oldloc2 = game.newloc;
 			death();
 		}
 		break;
@@ -513,10 +514,10 @@ void death(void)
 		for (j = 1; j < 101; ++j) {
 			i = 101 - j;
 			if (toting(i))
-				drop(i, i == LAMP ? 1 : oldloc2);
+				drop(i, i == LAMP ? 1 : game.oldloc2);
 		}
-		newloc = 3;
-		oldloc = loc;
+		game.newloc = 3;
+		game.oldloc = game.loc;
 		return;
 	}
 
@@ -534,19 +535,19 @@ void doobj(void)
 {
 
 	/* is object here?  if so, transitive */
-	if (fixed[object] == loc || here(object))
+	if (fixed[object] == game.loc || here(object))
 		trobj();
 
 	/* did he give grate as destination? */
 	else {
 		if (object == GRATE) {
-			if (loc == 1 || loc == 4 || loc == 7) {
+			if (game.loc == 1 || game.loc == 4 || game.loc == 7) {
 				motion = DEPRESSION;
 				domove();
 			}
 
 			else {
-				if (loc > 9 && loc < 15) {
+				if (game.loc > 9 && game.loc < 15) {
 					motion = ENTRANCE;
 					domove();
 				}
@@ -562,7 +563,7 @@ void doobj(void)
 
 			/* is he trying to get/use a liquid? */
 			else {
-				if ((liq() == object && here(BOTTLE)) || liqloc(loc) == object)
+				if ((liq() == object && here(BOTTLE)) || liqloc(game.loc) == object)
 					trobj();
 
 				else {
@@ -573,7 +574,7 @@ void doobj(void)
 
 					/* is he trying to grab a knife? */
 					else {
-						if (object == KNIFE && knfloc == loc) {
+						if (object == KNIFE && knfloc == game.loc) {
 							rspeak(116);
 							knfloc = -1;
 						}
@@ -634,19 +635,19 @@ void dwarves(void)
 	auto short i, j, k, try, attack, stick, dtotal;
 
 	/* see if dwarves allowed here */
-	if (newloc == 0 || forced(newloc) || cond[newloc] & NOPIRAT)
+	if (game.newloc == 0 || forced(game.newloc) || cond[game.newloc] & NOPIRAT)
 		return;
 
 	/* see if dwarves are active. */
 	if (!dflag) {
-		if (newloc > 15)
+		if (game.newloc > 15)
 			++dflag;
 		return;
 	}
 
 	/* if first close encounter (of 3rd kind) kill 0, 1 or 2 */
 	if (dflag == 1) {
-		if (newloc < 15 || pct(95))
+		if (game.newloc < 15 || pct(95))
 			return;
 		++dflag;
 		for (i = 1; i < 3; ++i) {
@@ -654,12 +655,12 @@ void dwarves(void)
 				dloc[rand() % 5 + 1] = 0;
 		}
 		for (i = 1; i < (DWARFMAX - 1); ++i) {
-			if (dloc[i] == newloc)
+			if (dloc[i] == game.newloc)
 				dloc[i] = daltloc;
 			odloc[i] = dloc[i];
 		}
 		rspeak(3);
-		drop(AXE, newloc);
+		drop(AXE, game.newloc);
 		return;
 	}
 	dtotal = attack = stick = 0;
@@ -678,14 +679,14 @@ void dwarves(void)
 			j = odloc[i];
 		odloc[i] = dloc[i];
 		dloc[i] = j;
-		if ((dseen[i] && newloc >= 15) || dloc[i] == newloc || odloc[i] == newloc)
+		if ((dseen[i] && game.newloc >= 15) || dloc[i] == game.newloc || odloc[i] == game.newloc)
 			dseen[i] = 1;
 
 		else
 			dseen[i] = 0;
 		if (!dseen[i])
 			continue;
-		dloc[i] = newloc;
+		dloc[i] = game.newloc;
 		if (i == 6)
 			dopirate();
 
@@ -694,7 +695,7 @@ void dwarves(void)
 			if (odloc[i] == dloc[i]) {
 				++attack;
 				if (knfloc >= 0)
-					knfloc = newloc;
+					knfloc = game.newloc;
 				if (rand() % 1000 < 30 * (dflag - 2))
 					++stick;
 			}
@@ -732,7 +733,7 @@ void dwarves(void)
 		writei(stick);
 		writes(" of them get you !!!\n");
 	}
-	oldloc2 = newloc;
+	game.oldloc2 = game.newloc;
 	death();
 	return;
 }
@@ -743,11 +744,11 @@ void dwarves(void)
 void dopirate(void)
 {
 	auto short j, k;
-	if (newloc == chloc || prop[CHEST] >= 0)
+	if (game.newloc == chloc || prop[CHEST] >= 0)
 		return;
 	k = 0;
 	for (j = 50; j <= MAXTRS; ++j)
-		if (j != PYRAMID || (newloc != place[PYRAMID] && newloc != place[EMERALD])) {
+		if (j != PYRAMID || (game.newloc != place[PYRAMID] && game.newloc != place[EMERALD])) {
 			if (toting(j))
 				goto stealit;
 			if (here(j))
@@ -772,10 +773,10 @@ void dopirate(void)
 		move(CHEST, chloc);
 	move(MESSAGE, chloc2);
 	for (j = 50; j <= MAXTRS; ++j) {
-		if (j == PYRAMID && (newloc == place[PYRAMID] || newloc == place[EMERALD]))
+		if (j == PYRAMID && (game.newloc == place[PYRAMID] || game.newloc == place[EMERALD]))
 			continue;
 		if (at(j) && fixed[j] == 0)
-			carry(j, newloc);
+			carry(j, game.newloc);
 		if (toting(j))
 			drop(j, chloc);
 	}
@@ -792,7 +793,7 @@ uint8_t stimer(void)
 {
 	register short i;
 	foobar = foobar > 0 ? -foobar : 0;
-	if (tally == 0 && loc >= 15 && loc != 33)
+	if (tally == 0 && game.loc >= 15 && game.loc != 33)
 		--clock1;
 	if (clock1 == 0) {
 
@@ -828,9 +829,9 @@ uint8_t stimer(void)
 		prop[LAMP] = put(LAMP, 115, 0);
 		prop[ROD] = put(ROD, 115, 0);
 		prop[DWARF] = put(DWARF, 115, 0);
-		loc = 115;
-		oldloc = 115;
-		newloc = 115;
+		game.loc = 115;
+		game.oldloc = 115;
+		game.newloc = 115;
 		put(GRATE, 116, 0);
 		prop[SNAKE] = put(SNAKE, 116, 1);
 		prop[BIRD] = put(BIRD, 116, 1);
@@ -852,7 +853,7 @@ uint8_t stimer(void)
 		rspeak(188);
 		prop[BATTERIES] = 1;
 		if (toting(BATTERIES))
-			drop(BATTERIES, loc);
+			drop(BATTERIES, game.loc);
 		limit += 2500;
 		lmwarn = 0;
 		return (FALSE);
@@ -864,7 +865,7 @@ uint8_t stimer(void)
 			rspeak(184);
 		return (FALSE);
 	}
-	if (limit < 0 && loc <= 8) {
+	if (limit < 0 && game.loc <= 8) {
 		rspeak(185);
 		gaveup = 1;
 		normend();

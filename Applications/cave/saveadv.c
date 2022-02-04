@@ -9,8 +9,8 @@
 #include "advent.h"
 void saveadv(void)
 {
-	auto int savefd;
-	auto char username[64];
+	int savefd;
+	char username[64];
 	writes("What do you want to call the saved game? ");
 	getinp(username, 64);
 	if (*username == 0)
@@ -22,7 +22,7 @@ void saveadv(void)
 		writes("Sorry, I can't open the file...\n");
 		return;
 	}
-	if (write(savefd, (char *) &turns, (char *) &lastglob - (char *) &turns) != (char *) &lastglob - (char *) &turns) {
+	if (write(savefd, &game, sizeof(game)) != sizeof(game)) {
 		writes("write error on save file...\n");
 		return;
 	}

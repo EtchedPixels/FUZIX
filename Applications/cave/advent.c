@@ -103,8 +103,7 @@ void restore(void)
 		exit(1);
 	}
 
-	/* THis is naughty and will want fixing to use a struct! */
-	if (read(restfd, &turns, (char *) &turns - (char *) &lastglob) != (char *) &turns - (char *) &lastglob) {
+	if (read(restfd, &game, sizeof(game)) != sizeof(game)) {
 		writes("Can't read save file...\n");
 		exit(1);
 	}

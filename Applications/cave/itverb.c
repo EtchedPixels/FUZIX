@@ -107,7 +107,7 @@ void ivtake(void)
 	auto short anobj, item;
 	anobj = 0;
 	for (item = 1; item < MAXOBJ; ++item) {
-		if (place[item] == loc) {
+		if (place[item] == game.loc) {
 			if (anobj != 0) {
 				needobj();
 				return;
@@ -212,7 +212,7 @@ void iveat(void)
 */
 void ivdrink(void)
 {
-	if (liqloc(loc) != WATER && (liq() != WATER || !here(BOTTLE)))
+	if (liqloc(game.loc) != WATER && (liq() != WATER || !here(BOTTLE)))
 		needobj();
 
 	else {
@@ -268,7 +268,7 @@ void ivfoo(void)
 	if (k != 4)
 		return;
 	foobar = 0;
-	if (place[EGGS] == 92 || (toting(EGGS) && loc == 92)) {
+	if (place[EGGS] == 92 || (toting(EGGS) && game.loc == 92)) {
 		rspeak(msg);
 		return;
 	}
@@ -278,7 +278,7 @@ void ivfoo(void)
 		k = 1;
 
 	else {
-		if (loc == 92)
+		if (game.loc == 92)
 			k = 0;
 
 		else

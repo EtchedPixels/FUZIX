@@ -230,13 +230,8 @@ CLASS char word1[WORDSIZE];
 CLASS char word2[WORDSIZE];
 
 /*
-        Play variables
+        Play variables (TO REMOVE)
 */
-CLASS short turns INIT(0);
-CLASS short loc INIT(1);
-CLASS short oldloc INIT(1);
-CLASS short oldloc2 INIT(1);
-CLASS short newloc INIT(3);
 CLASS short cond[MAXLOC]	/* location status    */
 #ifdef DRIVER
     = {
@@ -356,6 +351,55 @@ CLASS short dbgflg;		/* game in restart?   */
 CLASS char lastglob;		/* to get space req.  */
 
 /*  endglobal  */
+
+/*
+ *	Game state as a structure so we can save/restore it easily
+ */
+
+/* Game variables that are in the save state */
+
+struct state {
+    short turns;
+    short loc;
+    short oldloc;
+    short oldloc2;
+    short newloc;
+    short cond[MAXLOC];
+    short place[MAXOBJ];
+    short fixed[MAXOBJ];
+    short visited[MAXLOC];
+    short prop[MAXOBJ];
+    short tally;
+    short tally2;
+    short limit;
+    short lmwarn;
+    uint8_t wzdark;
+    uint8_t closing;
+    uint8_t closed;
+    short holding;
+    short detail;
+    short knfloc;
+    short clock1;
+    short clock2;
+    short panic;
+    short dloc[DWARFMAX];
+    short dflag;
+    short dseen[DWARFMAX];
+    short odloc[DWARFMAX];
+    short daltloc;
+    short dkill;
+    short chloc;
+    short chloc2;
+    short bonus;
+    short numdie;
+    short object1;
+    uint8_t gaveup;
+    short foobar;
+    uint8_t saveflg;
+    short dbgflg;
+};
+
+extern struct state game;
 
 /*  function prototypes 						    */
 
