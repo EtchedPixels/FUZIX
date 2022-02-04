@@ -238,8 +238,6 @@ CLASS short holding INIT(0);	/* count of held items */
 CLASS short detail INIT(0);	/* LOOK count         */
 CLASS short knfloc INIT(0);	/* knife location     */
 CLASS short panic INIT(0);
-CLASS short chloc INIT(114);	/* chest locations    */
-CLASS short chloc2 INIT(140);
 CLASS short bonus INIT(0);	/* to pass to end     */
 CLASS short numdie INIT(0);	/* number of deaths   */
 CLASS short object1;		/* to help intrans.   */

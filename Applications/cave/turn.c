@@ -744,7 +744,7 @@ void dwarves(void)
 void dopirate(void)
 {
 	auto short j, k;
-	if (game.newloc == chloc || game.prop[CHEST] >= 0)
+	if (game.newloc == game.chloc || game.prop[CHEST] >= 0)
 		return;
 	k = 0;
 	for (j = 50; j <= MAXTRS; ++j)
@@ -756,10 +756,10 @@ void dopirate(void)
 		}
 	if (game.tally == game.tally2 + 1 && k == 0 && game.place[CHEST] == 0 && here(LAMP) && game.prop[LAMP] == 1) {
 		rspeak(186);
-		move(CHEST, chloc);
-		move(MESSAGE, chloc2);
-		game.dloc[6] = chloc;
-		game.odloc[6] = chloc;
+		move(CHEST, game.chloc);
+		move(MESSAGE, game.chloc2);
+		game.dloc[6] = game.chloc;
+		game.odloc[6] = game.chloc;
 		game.dseen[6] = 0;
 		return;
 	}
@@ -770,18 +770,18 @@ void dopirate(void)
 	return;
       stealit:rspeak(128);
 	if (game.place[MESSAGE] == 0)
-		move(CHEST, chloc);
-	move(MESSAGE, chloc2);
+		move(CHEST, game.chloc);
+	move(MESSAGE, game.chloc2);
 	for (j = 50; j <= MAXTRS; ++j) {
 		if (j == PYRAMID && (game.newloc == game.place[PYRAMID] || game.newloc == game.place[EMERALD]))
 			continue;
 		if (at(j) && game.fixed[j] == 0)
 			carry(j, game.newloc);
 		if (toting(j))
-			drop(j, chloc);
+			drop(j, game.chloc);
 	}
-	game.dloc[6] = chloc;
-	game.odloc[6] = chloc;
+	game.dloc[6] = game.chloc;
+	game.odloc[6] = game.chloc;
 	game.dseen[6] = 0;
 	return;
 }
