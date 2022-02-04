@@ -258,16 +258,16 @@ void ivfoo(void)
 	auto short k, msg;
 	k = vocab(word1, 3000);
 	msg = 42;
-	if (foobar != 1 - k) {
-		if (foobar != 0)
+	if (game.foobar != 1 - k) {
+		if (game.foobar != 0)
 			msg = 151;
 		rspeak(msg);
 		return;
 	}
-	foobar = k;
+	game.foobar = k;
 	if (k != 4)
 		return;
-	foobar = 0;
+	game.foobar = 0;
 	if (place[EGGS] == 92 || (toting(EGGS) && game.loc == 92)) {
 		rspeak(msg);
 		return;

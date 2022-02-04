@@ -343,7 +343,6 @@ CLASS short bonus INIT(0);	/* to pass to end     */
 CLASS short numdie INIT(0);	/* number of deaths   */
 CLASS short object1;		/* to help intrans.   */
 CLASS uint8_t gaveup INIT(FALSE);
-CLASS short foobar INIT(0);	/* fie fie foe foo... */
 CLASS uint8_t saveflg INIT(FALSE);	/* game being saved?  */
 
 /*  endglobal  */

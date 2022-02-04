@@ -792,7 +792,7 @@ void dopirate(void)
 uint8_t stimer(void)
 {
 	register short i;
-	foobar = foobar > 0 ? -foobar : 0;
+	game.foobar = game.foobar > 0 ? -game.foobar : 0;
 	if (tally == 0 && game.loc >= 15 && game.loc != 33)
 		--clock1;
 	if (clock1 == 0) {
