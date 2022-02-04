@@ -225,7 +225,7 @@ short vocab(char *word, short val)
 */
 uint8_t dark(void)
 {
-	return (!(cond[game.loc] & LIGHT) && (!prop[LAMP] || !here(LAMP)));
+	return (!(game.cond[game.loc] & LIGHT) && (!prop[LAMP] || !here(LAMP)));
 }
 
 
@@ -253,7 +253,7 @@ uint8_t toting(short item)
 */
 uint8_t forced(short atloc)
 {
-	return (cond[atloc] == 2);
+	return (game.cond[atloc] == 2);
 }
 
 
@@ -388,8 +388,8 @@ short liq(void)
 */
 short liqloc(short loc)
 {
-	if (cond[loc] & LIQUID)
-		return (liq2(cond[loc] & WATOIL));
+	if (game.cond[loc] & LIQUID)
+		return (liq2(game.cond[loc] & WATOIL));
 	return (liq2(1));
 }
 

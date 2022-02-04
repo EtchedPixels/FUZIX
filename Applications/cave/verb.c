@@ -759,7 +759,7 @@ void vfill(void)
 				msg = 106;
 
 			else {
-				prop[BOTTLE] = cond[game.loc] & WATOIL;
+				prop[BOTTLE] = game.cond[game.loc] & WATOIL;
 				i = liq();
 				if (toting(BOTTLE))
 					place[i] = -1;

@@ -23,7 +23,7 @@ void turn(void)
 	}
 
 	/* see if a dwarf has seen him and has come from where he wants to go. */
-	if (game.newloc != game.loc && !forced(game.loc) && cond[game.loc] & NOPIRAT == 0) {
+	if (game.newloc != game.loc && !forced(game.loc) && game.cond[game.loc] & NOPIRAT == 0) {
 		for (i = 1; i < (DWARFMAX - 1); ++i)
 			if (odloc[i] == game.newloc && dseen[i]) {
 				game.newloc = game.loc;
@@ -635,7 +635,7 @@ void dwarves(void)
 	auto short i, j, k, try, attack, stick, dtotal;
 
 	/* see if dwarves allowed here */
-	if (game.newloc == 0 || forced(game.newloc) || cond[game.newloc] & NOPIRAT)
+	if (game.newloc == 0 || forced(game.newloc) || game.cond[game.newloc] & NOPIRAT)
 		return;
 
 	/* see if dwarves are active. */
@@ -672,7 +672,7 @@ void dwarves(void)
 		 * in the original version... */
 		for (try = 1; try < 20; ++try) {
 			j = rand() % 106 + 15;	/* allowed area */
-			if (j != odloc[i] && j != dloc[i] && !(i == (DWARFMAX - 1) && cond[j] & NOPIRAT == 1))
+			if (j != odloc[i] && j != dloc[i] && !(i == (DWARFMAX - 1) && game.cond[j] & NOPIRAT == 1))
 				break;
 		}
 		if (j == 0)
