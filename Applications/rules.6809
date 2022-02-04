@@ -1,0 +1,18 @@
+PLATFORM = 6809
+CC = m6809-unknown-gcc
+ASM = m6809-unknown-as
+AR = m6809-unknown-ar
+LINKER = m6809-unknown-ld
+CFLAGS = -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/6809
+LINKER_OPT = --oformat=raw -L$(FUZIX_ROOT)/Library/libs -lc6809
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc
+LINKER_OPT += --script=$(FUZIX_ROOT)/Library/link/$(TARGET).link
+ASM_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_6809.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_6809.o
+
+COPT = -Os
+
+.SUFFIXES: .c .o .y
+
