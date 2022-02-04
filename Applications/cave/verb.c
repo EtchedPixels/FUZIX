@@ -404,8 +404,8 @@ void von(void)
 		else {
 			game.prop[LAMP] = 1;
 			rspeak(39);
-			if (wzdark) {
-				wzdark = 0;
+			if (game.wzdark) {
+				game.wzdark = 0;
 				describe();
 				descitem();
 			}
@@ -898,12 +898,12 @@ void vblast(void)
 		actspk(verb);
 
 	else {
-		bonus = 133;
+		game.bonus = 133;
 		if (game.loc == 115)
-			bonus = 134;
+			game.bonus = 134;
 		if (here(ROD2))
-			bonus = 135;
-		rspeak(bonus);
+			game.bonus = 135;
+		rspeak(game.bonus);
 		normend();
 	}
 	return;

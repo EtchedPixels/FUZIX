@@ -230,20 +230,6 @@ CLASS char word1[WORDSIZE];
 CLASS char word2[WORDSIZE];
 
 /*
-        Play variables (TO REMOVE)
-*/
-
-CLASS uint8_t wzdark INIT(FALSE);
-CLASS short detail INIT(0);	/* LOOK count         */
-CLASS short knfloc INIT(0);	/* knife location     */
-CLASS short bonus INIT(0);	/* to pass to end     */
-CLASS short numdie INIT(0);	/* number of deaths   */
-CLASS uint8_t gaveup INIT(FALSE);
-CLASS uint8_t saveflg INIT(FALSE);	/* game being saved?  */
-
-/*  endglobal  */
-
-/*
  *	Game state as a structure so we can save/restore it easily
  */
 

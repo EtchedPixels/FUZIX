@@ -72,7 +72,7 @@ void itverb(void)
 		ivfoo();
 		break;
 	case SUSPEND:
-		saveflg = 1;
+		game.saveflg = 1;
 		break;
 	case INVENTORY:
 		inventory();
@@ -228,7 +228,7 @@ void ivdrink(void)
 */
 void ivquit(void)
 {
-	if (gaveup = yes(22, 54, 54))
+	if (game.gaveup = yes(22, 54, 54))
 		normend();
 	return;
 }

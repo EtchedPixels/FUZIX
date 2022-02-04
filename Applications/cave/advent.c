@@ -110,7 +110,7 @@ void restore(void)
 	if (close(restfd) == -1)
 		writes("warning -- can't close save file...\n");
 	nl();
-	saveflg = 0;
+	game.saveflg = 0;
 }
 
 static void eadvent(void)
@@ -121,9 +121,9 @@ static void eadvent(void)
 
 	else
 		game.limit = 330;
-	while (!saveflg)
+	while (!game.saveflg)
 		turn();
-	if (saveflg)
+	if (game.saveflg)
 		saveadv();
 	return;
 }

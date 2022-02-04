@@ -52,7 +52,7 @@ void turn(void)
 		}
 
 		/* check for wandering in dark */
-		if (wzdark && dark() && pct(35)) {
+		if (game.wzdark && dark() && pct(35)) {
 			rspeak(23);
 			game.oldloc2 = game.loc;
 			death();
@@ -75,9 +75,9 @@ void turn(void)
 				game.prop[i] = -1 - game.prop[i];
 		}
 	}
-	wzdark = dark();
-	if (knfloc > 0 && knfloc != game.loc)
-		knfloc = 0;
+	game.wzdark = dark();
+	if (game.knfloc > 0 && game.knfloc != game.loc)
+		game.knfloc = 0;
 
 	/* run the timer routine */
 	if (stimer())
@@ -177,9 +177,9 @@ void domove(void)
 		goback();
 		break;
 	case LOOK:
-		if (detail++ < 3)
+		if (game.detail++ < 3)
 			rspeak(15);
-		wzdark = 0;
+		game.wzdark = 0;
 		game.visited[game.loc] = 0;
 		game.newloc = game.loc;
 		game.loc = 0;
@@ -444,13 +444,13 @@ void score(void)
 	}
 	writes("Treasures           ");
 	writei(s = t);
-	t = (MAXDIE - numdie) * 10;
+	t = (MAXDIE - game.numdie) * 10;
 	if (t) {
 		writes("\nSurvival            ");
 		writei(t);
 	}
 	s += t;
-	if (!gaveup)
+	if (!game.gaveup)
 		s += 4;
 	t = game.dflag ? 25 : 0;
 	if (t) {
@@ -465,19 +465,19 @@ void score(void)
 	}
 	s += t;
 	if (game.closed) {
-		if (bonus == 0)
+		if (game.bonus == 0)
 			t = 10;
 
 		else {
-			if (bonus == 135)
+			if (game.bonus == 135)
 				t = 25;
 
 			else {
-				if (bonus == 134)
+				if (game.bonus == 134)
 					t = 30;
 
 				else {
-					if (bonus == 133)
+					if (game.bonus == 133)
 						t = 45;
 				}
 			}
@@ -504,8 +504,8 @@ void death(void)
 {
 	auto short yea, i, j;
 	if (!game.closing) {
-		yea = yes(81 + numdie * 2, 82 + numdie * 2, 54);
-		if (++numdie >= MAXDIE || !yea)
+		yea = yes(81 + game.numdie * 2, 82 + game.numdie * 2, 54);
+		if (++game.numdie >= MAXDIE || !yea)
 			normend();
 		game.place[WATER] = 0;
 		game.place[OIL] = 0;
@@ -523,7 +523,7 @@ void death(void)
 
 	/* closing -- no resurrection... */
 	rspeak(131);
-	++numdie;
+	++game.numdie;
 	normend();		/* no return from here */
 }
 
@@ -574,9 +574,9 @@ void doobj(void)
 
 					/* is he trying to grab a knife? */
 					else {
-						if (object == KNIFE && knfloc == game.loc) {
+						if (object == KNIFE && game.knfloc == game.loc) {
 							rspeak(116);
-							knfloc = -1;
+							game.knfloc = -1;
 						}
 
 						/* is he trying to get at dynamite? */
@@ -694,8 +694,8 @@ void dwarves(void)
 			++dtotal;
 			if (game.odloc[i] == game.dloc[i]) {
 				++attack;
-				if (knfloc >= 0)
-					knfloc = game.newloc;
+				if (game.knfloc >= 0)
+					game.knfloc = game.newloc;
 				if (rand() % 1000 < 30 * (game.dflag - 2))
 					++stick;
 			}
@@ -867,7 +867,7 @@ uint8_t stimer(void)
 	}
 	if (game.limit < 0 && game.loc <= 8) {
 		rspeak(185);
-		gaveup = 1;
+		game.gaveup = 1;
 		normend();
 	}
 	if (game.limit <= 30) {
