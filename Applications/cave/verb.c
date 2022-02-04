@@ -353,9 +353,9 @@ void vopen(void)
 
 		else {
 			if (game.closing) {
-				if (!panic) {
+				if (!game.panic) {
 					game.clock2 = 15;
-					++panic;
+					++game.panic;
 				}
 				msg = 130;
 			}

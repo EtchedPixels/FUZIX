@@ -17,9 +17,9 @@ void turn(void)
 	if (game.newloc < 9 && game.newloc != 0 && game.closing) {
 		rspeak(130);
 		game.newloc = game.loc;
-		if (!panic)
+		if (!game.panic)
 			game.clock2 = 15;
-		panic = 1;
+		game.panic = 1;
 	}
 
 	/* see if a dwarf has seen him and has come from where he wants to go. */
