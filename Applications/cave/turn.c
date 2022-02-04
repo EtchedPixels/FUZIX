@@ -86,7 +86,7 @@ void turn(void)
 	/* ask what he wants to do */
 	/* debug */
 #ifdef DEBUG
-	if (dbgflg)
+	if (game.dbgflg)
 		printf("Your current location is %d\n", game.loc);
 #endif				/*  */
 	while (!english());
@@ -278,7 +278,7 @@ void dotrav(void)
 
 			/* debug */
 #ifdef DEBUG
-			if (rcond && dbgflg)
+			if (rcond && game.dbgflg)
 				printf("\% move %d %d\n", pctt, mvflag);
 
 #endif				/*  */

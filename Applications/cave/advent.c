@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 {
 	short rflag;		/* user restore request option */
 	short dflag;		/* user restore request option */
-	brief_sw = dbgflg = rflag = 0;
+	brief_sw = game.dbgflg = rflag = 0;
 	signal(SIGINT, SIG_IGN);
 	while (--argc > 0) {
 		if ((argv[argc])[0] == '-' || (argv[argc])[0] == '/') {
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 				++rflag;
 				continue;
 			case 'd':
-				++dbgflg;
+				++game.dbgflg;
 				writes("Debug enabled.\n");
 				continue;
 			case 'b':
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-	dflag = dbgflg;
+	dflag = game.dbgflg;
 	db_init();
 	init();
 	if (!rflag) {
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 	}
 	if (rflag)
 		restore();
-	dbgflg = dflag;
+	game.dbgflg = dflag;
 	eadvent();
 	return (0);
 }

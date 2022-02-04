@@ -84,7 +84,7 @@ void rspeak(short msg)
 	dbstring(game_db.msg + msg - 1);
 
 #ifdef DEBUG
-	if (dbgflg)
+	if (game.dbgflg)
 		fprintf(stderr, "** rspeak(%d) ** ", msg);
 
 #endif				/*  */
@@ -100,7 +100,7 @@ void pspeak(short item, short state)
 	char *s;
 
 #ifdef DEBUG
-	if (dbgflg)
+	if (game.dbgflg)
 		fprintf(stderr, "** pspeak(%d,%d) ** ", item, state);
 
 #endif				/*  */
@@ -133,7 +133,7 @@ void desclg(short loc)
 	dbstring(game_db.loclong + loc - 1);
 
 #ifdef DEBUG
-	if (dbgflg)
+	if (game.dbgflg)
 		fprintf(stderr, "** desclg(%d) ** ", loc);
 
 #endif				/*  */
@@ -147,7 +147,7 @@ void descsh(short loc)
 {
 	travcache(loc);
 #ifdef DEBUG
-	if (dbgflg)
+	if (game.dbgflg)
 		fprintf(stderr, "** descsh(%d) ** ", loc);
 
 #endif				/*  */
