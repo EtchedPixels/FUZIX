@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 /*  Initialization							*/
 static void init(void)
 {
-	dloc[DWARFMAX - 1] = chloc;
+	game.dloc[DWARFMAX - 1] = chloc;
 	return;
 }
 

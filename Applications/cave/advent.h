@@ -240,20 +240,6 @@ CLASS short holding INIT(0);	/* count of held items */
 CLASS short detail INIT(0);	/* LOOK count         */
 CLASS short knfloc INIT(0);	/* knife location     */
 CLASS short panic INIT(0);
-CLASS short dloc[DWARFMAX]	/* dwarf locations    */
-#ifdef DRIVER
-    = {
-	0, 19, 27, 33, 44, 64, 0	/*  0 - 6  */
-};
-#else
-;
-#endif
-
-CLASS short dflag INIT(0);	/* dwarf flag         */
-CLASS short dseen[DWARFMAX];	/* dwarf seen flag    */
-CLASS short odloc[DWARFMAX];	/* dwarf old locs     */
-CLASS short daltloc INIT(18);	/* alt appearance     */
-CLASS short dkill INIT(0);	/* dwarves killed     */
 CLASS short chloc INIT(114);	/* chest locations    */
 CLASS short chloc2 INIT(140);
 CLASS short bonus INIT(0);	/* to pass to end     */

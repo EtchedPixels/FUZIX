@@ -661,10 +661,10 @@ void vthrow(void)
 	if (i = dcheck()) {
 		msg = 48;
 		if (pct(33)) {
-			dseen[i] = dloc[i] = 0;
+			game.dseen[i] = game.dloc[i] = 0;
 			msg = 47;
-			++dkill;
-			if (dkill == 1)
+			++game.dkill;
+			if (game.dkill == 1)
 				msg = 149;
 		}
 	}
@@ -723,7 +723,7 @@ void vfind(void)
 			msg = 138;
 
 		else {
-			if (dcheck() && dflag >= 2 && object == DWARF)
+			if (dcheck() && game.dflag >= 2 && object == DWARF)
 				msg = 94;
 
 			else {
@@ -801,7 +801,7 @@ void vfeed(void)
 			actspk(verb);
 			return;
 		}
-		++dflag;
+		++game.dflag;
 		msg = 103;
 		break;
 	case BEAR:

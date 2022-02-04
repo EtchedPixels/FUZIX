@@ -25,7 +25,7 @@ void turn(void)
 	/* see if a dwarf has seen him and has come from where he wants to go. */
 	if (game.newloc != game.loc && !forced(game.loc) && game.cond[game.loc] & NOPIRAT == 0) {
 		for (i = 1; i < (DWARFMAX - 1); ++i)
-			if (odloc[i] == game.newloc && dseen[i]) {
+			if (game.odloc[i] == game.newloc && game.dseen[i]) {
 				game.newloc = game.loc;
 				rspeak(2);
 				break;
@@ -452,7 +452,7 @@ void score(void)
 	s += t;
 	if (!gaveup)
 		s += 4;
-	t = dflag ? 25 : 0;
+	t = game.dflag ? 25 : 0;
 	if (t) {
 		writes("\nGetting well in:    ");
 		writei(t);
@@ -556,7 +556,7 @@ void doobj(void)
 
 		/* is it a dwarf he is after? */
 		else {
-			if (dcheck() && dflag >= 2) {
+			if (dcheck() && game.dflag >= 2) {
 				object = DWARF;
 				trobj();
 			}
@@ -639,25 +639,25 @@ void dwarves(void)
 		return;
 
 	/* see if dwarves are active. */
-	if (!dflag) {
+	if (!game.dflag) {
 		if (game.newloc > 15)
-			++dflag;
+			++game.dflag;
 		return;
 	}
 
 	/* if first close encounter (of 3rd kind) kill 0, 1 or 2 */
-	if (dflag == 1) {
+	if (game.dflag == 1) {
 		if (game.newloc < 15 || pct(95))
 			return;
-		++dflag;
+		++game.dflag;
 		for (i = 1; i < 3; ++i) {
 			if (pct(50))
-				dloc[rand() % 5 + 1] = 0;
+				game.dloc[rand() % 5 + 1] = 0;
 		}
 		for (i = 1; i < (DWARFMAX - 1); ++i) {
-			if (dloc[i] == game.newloc)
-				dloc[i] = daltloc;
-			odloc[i] = dloc[i];
+			if (game.dloc[i] == game.newloc)
+				game.dloc[i] = game.daltloc;
+			game.odloc[i] = game.dloc[i];
 		}
 		rspeak(3);
 		drop(AXE, game.newloc);
@@ -665,38 +665,38 @@ void dwarves(void)
 	}
 	dtotal = attack = stick = 0;
 	for (i = 1; i < DWARFMAX; ++i) {
-		if (dloc[i] == 0)
+		if (game.dloc[i] == 0)
 			continue;
 
 		/* move a dwarf at random.  we don't have a matrix around to do it as
 		 * in the original version... */
 		for (try = 1; try < 20; ++try) {
 			j = rand() % 106 + 15;	/* allowed area */
-			if (j != odloc[i] && j != dloc[i] && !(i == (DWARFMAX - 1) && game.cond[j] & NOPIRAT == 1))
+			if (j != game.odloc[i] && j != game.dloc[i] && !(i == (DWARFMAX - 1) && game.cond[j] & NOPIRAT == 1))
 				break;
 		}
 		if (j == 0)
-			j = odloc[i];
-		odloc[i] = dloc[i];
-		dloc[i] = j;
-		if ((dseen[i] && game.newloc >= 15) || dloc[i] == game.newloc || odloc[i] == game.newloc)
-			dseen[i] = 1;
+			j = game.odloc[i];
+		game.odloc[i] = game.dloc[i];
+		game.dloc[i] = j;
+		if ((game.dseen[i] && game.newloc >= 15) || game.dloc[i] == game.newloc || game.odloc[i] == game.newloc)
+			game.dseen[i] = 1;
 
 		else
-			dseen[i] = 0;
-		if (!dseen[i])
+			game.dseen[i] = 0;
+		if (!game.dseen[i])
 			continue;
-		dloc[i] = game.newloc;
+		game.dloc[i] = game.newloc;
 		if (i == 6)
 			dopirate();
 
 		else {
 			++dtotal;
-			if (odloc[i] == dloc[i]) {
+			if (game.odloc[i] == game.dloc[i]) {
 				++attack;
 				if (knfloc >= 0)
 					knfloc = game.newloc;
-				if (rand() % 1000 < 30 * (dflag - 2))
+				if (rand() % 1000 < 30 * (game.dflag - 2))
 					++stick;
 			}
 		}
@@ -711,8 +711,8 @@ void dwarves(void)
 		rspeak(4);
 	if (attack == 0)
 		return;
-	if (dflag == 2)
-		++dflag;
+	if (game.dflag == 2)
+		++game.dflag;
 	if (attack > 1) {
 		writei(attack);
 		writes(" of them throw knives at you!!\n");
@@ -758,12 +758,12 @@ void dopirate(void)
 		rspeak(186);
 		move(CHEST, chloc);
 		move(MESSAGE, chloc2);
-		dloc[6] = chloc;
-		odloc[6] = chloc;
-		dseen[6] = 0;
+		game.dloc[6] = chloc;
+		game.odloc[6] = chloc;
+		game.dseen[6] = 0;
 		return;
 	}
-	if (odloc[6] != dloc[6] && pct(20)) {
+	if (game.odloc[6] != game.dloc[6] && pct(20)) {
 		rspeak(127);
 		return;
 	}
@@ -780,9 +780,9 @@ void dopirate(void)
 		if (toting(j))
 			drop(j, chloc);
 	}
-	dloc[6] = chloc;
-	odloc[6] = chloc;
-	dseen[6] = 0;
+	game.dloc[6] = chloc;
+	game.odloc[6] = chloc;
+	game.dseen[6] = 0;
 	return;
 }
 
@@ -801,7 +801,7 @@ uint8_t stimer(void)
 		game.prop[GRATE] = 0;
 		game.prop[FISSURE] = 0;
 		for (i = 1; i < DWARFMAX; ++i)
-			dseen[i] = 0;
+			game.dseen[i] = 0;
 		move(TROLL, 0);
 		move((TROLL + MAXOBJ), 0);
 		move(TROLL2, 117);

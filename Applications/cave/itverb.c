@@ -115,7 +115,7 @@ void ivtake(void)
 			anobj = item;
 		}
 	}
-	if (anobj == 0 || (dcheck() && dflag >= 2)) {
+	if (anobj == 0 || (dcheck() && game.dflag >= 2)) {
 		needobj();
 		return;
 	}
@@ -160,7 +160,7 @@ void ivopen(void)
 void ivkill(void)
 {
 	object1 = 0;
-	if (dcheck() && dflag >= 2)
+	if (dcheck() && game.dflag >= 2)
 		object = DWARF;
 	if (here(SNAKE))
 		addobj(SNAKE);

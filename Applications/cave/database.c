@@ -364,7 +364,7 @@ short dcheck(void)
 {
 	register short i;
 	for (i = 1; i < (DWARFMAX - 1); ++i) {
-		if (dloc[i] == game.loc)
+		if (game.dloc[i] == game.loc)
 			return (i);
 	}
 	return (0);
