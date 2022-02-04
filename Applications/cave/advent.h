@@ -239,7 +239,6 @@ CLASS short detail INIT(0);	/* LOOK count         */
 CLASS short knfloc INIT(0);	/* knife location     */
 CLASS short bonus INIT(0);	/* to pass to end     */
 CLASS short numdie INIT(0);	/* number of deaths   */
-CLASS short object1;		/* to help intrans.   */
 CLASS uint8_t gaveup INIT(FALSE);
 CLASS uint8_t saveflg INIT(FALSE);	/* game being saved?  */
 

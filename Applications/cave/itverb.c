@@ -159,7 +159,7 @@ void ivopen(void)
 */
 void ivkill(void)
 {
-	object1 = 0;
+	game.object1 = 0;
 	if (dcheck() && game.dflag >= 2)
 		object = DWARF;
 	if (here(SNAKE))
@@ -170,7 +170,7 @@ void ivkill(void)
 		addobj(TROLL);
 	if (here(BEAR) && game.prop[BEAR] == 0)
 		addobj(BEAR);
-	if (object1 != 0) {
+	if (game.object1 != 0) {
 		needobj();
 		return;
 	}
@@ -182,7 +182,7 @@ void ivkill(void)
 		object = BIRD;
 	if (here(CLAM) || here(OYSTER))
 		addobj(CLAM);
-	if (object1 != 0) {
+	if (game.object1 != 0) {
 		needobj();
 		return;
 	}
@@ -340,10 +340,10 @@ void inventory(void)
 */
 void addobj(short obj)
 {
-	if (object1 != 0)
+	if (game.object1 != 0)
 		return;
 	if (object != 0) {
-		object1 = -1;
+		game.object1 = -1;
 		return;
 	}
 	object = obj;
