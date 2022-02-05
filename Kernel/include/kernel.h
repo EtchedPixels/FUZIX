@@ -544,7 +544,7 @@ typedef struct u_data {
     void *      u_isp;          /* Value of initial sp (argv) */
     usize_t	u_top;		/* Top of memory for this task */
     uaddr_t	u_break;	/* Top of data space */
-    uaddr_t	u_codebase;	/* 32bit platform base pointers */
+    uaddr_t	u_codebase;	/* Platform base pointers */
     int     (*u_sigvec[NSIGS])(int);   /* Array of signal vectors */
 
     uint8_t *   u_base;         /* Source or dest for I/O */
