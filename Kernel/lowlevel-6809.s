@@ -181,6 +181,8 @@ _doexec:
 	; preserves x
         jsr map_process_always
 
+	; base address
+	ldy U_DATA__U_CODEBASE
         ; u_data.u_insys = false
         clr U_DATA__U_INSYS
 	; At this point the stack goes invalid
