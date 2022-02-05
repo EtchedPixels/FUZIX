@@ -28,7 +28,7 @@ head:
 	.byte	0		;	No hint bits
 
 	.word   __sighandler	;	signal handler
-	.word	0		;	relocatiosn
+	.word	0		;	relocations
 
 ;
 ;	This function is called when we need to deliver a signal. We can't
