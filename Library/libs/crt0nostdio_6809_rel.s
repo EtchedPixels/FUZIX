@@ -31,11 +31,11 @@ start:
 		ldd 16,x			; Relocation offset from
 						; our header
 		leay d,y			; To relocation base
-		pshs y				; Save for brk fix
 
 		tfr x,d				; Base into D so we can get
 						; the high byte for
 						; relocating into A
+
 		;
 		; A is the relocation amount in pages
 		; B is scratch
@@ -45,7 +45,7 @@ start:
 		;
 relocnext:
 		ldb ,y				; Relocation byte
-		clr ,y				; Turn into BSS
+		clr ,y+				; Turn into BSS
 		tstb				; 0 is end marker
 		beq  relocdone
 		cmpb #255			; 255 is a long skip
@@ -70,7 +70,8 @@ reloc254:	; 255 means move on 254 but do not relocate
 
 relocdone:
 		; Fix up the BSS base
-		puls x				; BSS base
+		; This will be relocated before it is run
+		ldx #__sectionbase_.bss__+__sectionlen_.bss__
 		ldd #30				; brk(x)
 		swi				; and syscall
 		;
