@@ -89,6 +89,8 @@ extern long _pathconf(int __name);
 #define _PC_NO_TRUNC		8
 #define _PC_VDISABLE		9
 
+#define _CS_PATH		1
+
 #define _POSIX_LINK_MAX		_pathconf(_PC_LINK_MAX)
 #define _POSIX_MAX_CANON	_pathconf(_PC_MAX_CANON)
 #define _POSIX_MAX_INPUT	_pathconf(_PC_MAX_INPUT)
