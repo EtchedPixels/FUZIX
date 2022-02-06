@@ -1990,7 +1990,7 @@ static int do_read(int fd, void *p, int len)
 		if (l < 0)
 			perror("read");
 		else
-			write(2, "short read from tchelp.\n", 28);
+			write(2, "short read from tchelp.\n", 25);
 		return -1;
 	}
 	return 0;
@@ -2093,8 +2093,10 @@ int con_init(void)
 	}
 #endif
 	if (ioctl(0, TIOCGWINSZ, &w) == 0) {
-		screen_width = w.ws_col;
-		screen_height = w.ws_row;
+		if (w.ws_col)
+			screen_width = w.ws_col;
+		if (w.ws_row)
+			screen_height = w.ws_row;
 	}
 	return 0;
 }
@@ -2108,7 +2110,6 @@ int con_init(void)
 
 static char wbuf[81];
 static int wbp = 0;
-static int xpos = 0;
 static int upper;
 
 static void display_exit(void)
@@ -2127,15 +2128,16 @@ static void display_init(void)
 
 static void flush_word(void)
 {
+  if (screenx)
+    con_putc(' ');
   wbuf[wbp] = 0;
   con_puts(wbuf);
   wbp = 0;
 }
 
-static void char_out(char c)
+static void move_on(void)
 {
-  if (c == '\n') {
-    flush_word();
+    /* Move on a line in the correct manner */
     if (upper) {
       con_clear_to_eol();
       con_newline();
@@ -2143,27 +2145,22 @@ static void char_out(char c)
       con_scroll(1);
       con_goto(screen_height - 1, 0);
     }
-    xpos = 0;
-    return;
-  }
-  if (c != ' ') {
+}
+
+static void char_out(char c)
+{
+  if (c != ' ' && c != '\n') {
     if (wbp < 80)
       wbuf[wbp++] = c;
     return;
   }
-  if (xpos + wbp >= screen_width) {
-    xpos = 0;
-    if (upper) {
-      con_clear_to_eol();
-      con_newline();
-    } else {
-      con_scroll(1);
-      con_goto(screen_height - 1, 0);
-    }
-  }
+  /* Does the word not fit ? */
+  if (screenx + wbp + 1 >= screen_width)
+    move_on();
+  /* Write out the word */
   flush_word();
-  con_putc(' ');
-  xpos++;
+  if (c == '\n')
+    move_on();
 }
 
 static void strout_lower(const uint8_t *p)
@@ -2216,7 +2213,7 @@ static void line_input(int m)
       continue;
     }
     if (c > 31 && c < 127) {
-      if (p < linebuf + 80 && xpos < screen_width - 1) {
+      if (p < linebuf + 80 && screenx < screen_width - 1) {
         *p++ = c;
         con_putc(c);
       }
