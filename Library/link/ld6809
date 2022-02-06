@@ -26,7 +26,7 @@ done
 #
 set -e
 #
-m6809-unknown-ld $ARGS --oformat=raw -o "$TARGET.b1" --script="$FUZIX_ROOT/Library/link/m6809.link"
+m6809-unknown-ld $ARGS --oformat=raw -o "$TARGET.b1" --script="$FUZIX_ROOT/Library/link/m6809.link" -Map="$TARGET.map"
 m6809-unknown-ld $ARGS --oformat=raw -o "$TARGET.b2" --script="$FUZIX_ROOT/Library/link/m6809.link2"
 $FUZIX_ROOT/Library/tools/relocbin6809 "$TARGET".b1 "$TARGET".b2 "$TARGET"
 rm -f "$TARGET.b1"
