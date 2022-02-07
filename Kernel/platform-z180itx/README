@@ -1,0 +1,47 @@
+This is Fuzix for the Z180ITX RC2014 system booting from ROMWBW.
+
+Based upon the N8VEM Mark IV port by Will Sowerbutts <will@sowerbutts.com>
+
+Required:
+- Z180ITX motherboard
+
+Options:
+ - RC2014 CF adapter at 0x10
+
+Not yet supported but planned:
+ - Video
+ - Keyboard/mouse
+ - RC2014 TMS9918A
+ - Swap
+ - RTC
+
+To set up
+
+make diskimage
+Write the disk.img file to disk
+Boot ROMWBW and at the boot prompt give the number of the device to boot from
+(SD or CF)
+
+The root filesystem device can be specified as either a decimal number, or as a
+a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
+
+TODO:
+- Add "turbo" option for clock doubling
+- Add wait state control option for mem/io/cf wait states
+- More CF testing
+- Can we do CF with DMA1 ? (ought to get us to 3MBytes/second which is about the
+PIO 0 limit with 0 mem 1 ide wait). 36MHz would get us closer to 6 but less
+due to wait stating so probably ok as PIO1.
+- Detect ROMWBW version and set baud rate
+
+Z180MiniITX TODO:
+Floppy: need to debug hang if no disk, need to work out how to support multiple
+addresses for plug in card option.
+SD: Multiple SD possible and different CS lines (scans 0 and 1 for now)
+PS2 keyboard/mouse
+Joystick
+I2C bus
+Different RTC
+Use RTC NVRAM to identify slots etc (DS1307+)
+56 bytes NVRAM
+
