@@ -76,3 +76,8 @@ extern uint16_t swap_dev;
 
 /* Floppy */
 #define CONFIG_FLOPPY
+
+/* Input layer */
+#define CONFIG_INPUT			/* Input device for joystick */
+#define CONFIG_INPUT_GRABMAX	3
+

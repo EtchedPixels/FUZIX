@@ -1,5 +1,5 @@
 ASRCS = crt0.s z180.s commonmem.s z180itx.s monitor.s
-CSRCS += devices.c main.c devtty.c spi.c devi2c.c wiznet.c #devenc28j60.c
+CSRCS += devices.c main.c devinput.c devtty.c spi.c devi2c.c wiznet.c #devenc28j60.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c

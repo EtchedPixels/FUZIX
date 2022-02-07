@@ -34,6 +34,7 @@ tty.rel
 mm.rel
 banksplit.rel
 swap.rel
+devinput.rel
 devsys.rel
 platform-z180itx/discard.rel
 platform-z180itx/devtty.rel
@@ -52,4 +53,5 @@ platform-z180itx/net_w5x00.rel
 platform-z180itx/wiznet.rel
 platform-z180itx/devfd.rel
 platform-z180itx/devfd_hw.rel
+platform-z180itx/devinput.rel
 -e
