@@ -81,3 +81,5 @@ extern uint16_t swap_dev;
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	3
 
+/* Keyboard */
+#define CONFIG_UNIKEY

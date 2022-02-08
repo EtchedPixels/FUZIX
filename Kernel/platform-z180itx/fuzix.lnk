@@ -54,4 +54,8 @@ platform-z180itx/wiznet.rel
 platform-z180itx/devfd.rel
 platform-z180itx/devfd_hw.rel
 platform-z180itx/devinput.rel
+platform-z180itx/ps2kbd.rel
+platform-z180itx/ps2mouse.rel
+platform-z180itx/ps2bitbang-itx-kbd.rel
+platform-z180itx/ps2bitbang-itx-mouse.rel
 -e

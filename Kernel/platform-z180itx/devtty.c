@@ -174,3 +174,11 @@ void kputchar(uint_fast8_t c)
 		tty_putc(TTYDEV & 0xFF, '\r');
 	}
 }
+
+/* We don't yet have a VT interface so add a dummy wrapper for the
+   PS2 keyboard */
+
+void vt_inproc(uint_fast8_t minor, uint_fast8_t ch)
+{
+	tty_inproc(minor, ch);
+}
