@@ -2,14 +2,17 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <ps2kbd.h>
 #include "config.h"
 #include <z180.h>
 #include "z180itx.h"
 
-uint8_t board_type = GENERIC;
 uint16_t ramtop = PROGTOP;
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
+
+uint8_t ps2kbd_present;
+uint8_t ps2mouse_present;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 
@@ -32,7 +35,6 @@ __sfr __at 0x7A ppi_c;
 
 void platform_idle(void)
 {
-	/* TODO - polling on keyboard */
 	__asm halt __endasm;
 }
 
@@ -44,6 +46,8 @@ void z180_timer_interrupt(void)
 	a = TIME_TMDR0L;
 	a = TIME_TCR;
 	timer_interrupt();
+	if (ps2kbd_present)
+		ps2kbd_poll();
 }
 
 void platform_interrupt(void)

@@ -83,3 +83,6 @@ extern uint16_t swap_dev;
 
 /* Keyboard */
 #define CONFIG_UNIKEY
+
+/* We do have a DS1307 RTC but we need to wire up all the I2C first and also
+   implement protection so we don't poll it from an IRQ mid i2c operation */

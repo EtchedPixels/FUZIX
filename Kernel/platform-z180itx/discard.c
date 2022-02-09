@@ -7,8 +7,9 @@
 #include <devsd.h>
 #include "config.h"
 #include <z180.h>
-#include <ds1302.h>
 #include <netdev.h>
+#include <ps2kbd.h>
+#include <ps2mouse.h>
 #include "z180itx.h"
 
 uint16_t romwbw_cpu;	/* Updated by bootstram asm */
@@ -51,6 +52,28 @@ void pagemap_init(void)
 	/* Lower RAM: all usable */
 	for (i = 0x01; i < (512 >> 2); i += 0x10)
 		pagemap_add(i);
+
+	ps2kbd_present = ps2kbd_init();
+	if (ps2kbd_present) {
+		kputs("PS/2 Keyboard at 0x78/0x7A\n");
+#if 0
+		if (tms9918a_present) {
+			/* Add the consoles */
+			uint8_t n = 0;
+			shadowcon = 0;
+			kputs("Switching to video output.\n");
+			do {
+				insert_uart(0x98, &tms_uart);
+				n++;
+			} while(n < 4 && nuart <= NUM_DEV_TTY);
+		}
+#endif
+	}
+	ps2mouse_present = ps2mouse_init();
+	if (ps2mouse_present) {
+		kputs("PS/2 Mouse at 0x78/0x7A\n");
+		/* TODO: wire to input layer and interrupt */
+	}
 }
 
 void map_init(void)
