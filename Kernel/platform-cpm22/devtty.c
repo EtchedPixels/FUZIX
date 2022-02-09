@@ -128,5 +128,6 @@ void platform_interrupt(void)
 	if (tcount == info->tickdivider) {
 		tcount = 0;
 		timer_interrupt();
+		poll_input();
 	}
 }

@@ -153,6 +153,19 @@ sysmod_auxconf
 		passed in HL. HL should be returned giving the actual
 		configuration set.
 
+sysmod_joystick
+		Returns the joystick bits in HL where H is JS0 and L is JS1.
+		Return 0 for absent sticks.
+
+		The bits for button/direction are
+		7:	up
+		6:	down
+		5:	left
+		4:	right
+		0-3:	button 0-3
+
+		Where a 1 bit means pressed/active
+
 Serial properties
 	bits 3-0	:	speed
 		0	Not in use

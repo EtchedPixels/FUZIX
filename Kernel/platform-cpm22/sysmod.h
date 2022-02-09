@@ -30,6 +30,7 @@ extern void sysmod_idle(void);
 extern uint8_t sysmod_rtc_secs(void);
 extern uint16_t sysmod_conconf(uint16_t cflag) __z88dk_fastcall;
 extern uint16_t sysmod_auxconf(uint16_t cflag) __z88dk_fastcall;
+extern uint16_t sysmod_joystick(void);
 
 extern struct sysinfo *info;
 

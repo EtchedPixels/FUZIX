@@ -199,6 +199,7 @@ saved_map:
 		.globl _sysmod_reboot
 		.globl _sysmod_conconf
 		.globl _sysmod_auxconf
+		.globl _sysmod_joystick
 
 		.area _SYSMOD
 _sysmod_base:
@@ -230,6 +231,8 @@ _sysmod_conconf:
 		jp sysmod_conconf
 _sysmod_auxconf:
 		jp sysmod_auxconf
+_sysmod_joystick:
+		jp sysmod_joystick
 
 sysmod_init:
 		im 1
@@ -297,9 +300,12 @@ sysmod_reboot:
 failed:					; shouldn't get here
 		jr failed
 
+sysmod_joystick:
+		ld hl,#0		; No sticks
 sysmod_conconf:				; Not supported
 sysmod_auxconf:
 		ret
+
 		
 sysinfo:
 		.db 8			; mumber of banks

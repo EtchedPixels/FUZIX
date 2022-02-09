@@ -1,5 +1,5 @@
 
-CSRCS += devices.c main.c devfd.c devlpr.c devtty.c
+CSRCS += devices.c main.c devfd.c devinput.c devlpr.c devtty.c
 
 ASRCS = crt0.s cpm.s lowlevel.s
 ASRCS += tricks.s commonmem.s

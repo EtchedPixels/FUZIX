@@ -35,6 +35,8 @@ mm.rel
 bankfixed.rel
 swap.rel
 devsys.rel
+devinput.rel
 platform-cpm22/devlpr.rel
 platform-cpm22/devtty.rel
+platform-cpm22/devinput.rel
 -e
