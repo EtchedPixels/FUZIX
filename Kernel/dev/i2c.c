@@ -21,6 +21,7 @@ int i2c_receive(uint_fast8_t bus, uint_fast8_t dev, uint8_t *buf, unsigned int l
     if (i2c_write(bus, dev | I2C_READ)) {
         /* Nobody home */
         i2c_stop(bus);
+        i2c_release_bus(bus);
         udata.u_error = ENODEV;
         return -1;
     }
@@ -48,6 +49,7 @@ int i2c_send(uint_fast8_t bus, uint_fast8_t dev, uint8_t *buf, unsigned int len)
     if (i2c_write(bus, dev | I2C_WRITE)) {
         /* Nobody home */
         i2c_stop(bus);
+        i2c_release_bus(bus);
         udata.u_error = ENODEV;
         return -1;
     }
