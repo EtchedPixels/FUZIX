@@ -650,12 +650,31 @@ int main(int argc, char *argv[])
 /*
  *	Child process helper logic. Use sbrk space to build the environment
  */
-static char *env[10];
+#define ENVLEN  11
+static char *env[ENVLEN];
 static int envn;
 
 static void envset(const char *a, const char *b)
 {
+        int i, j;
 	int al = strlen(a);
+        for (i = -1; ++i < envn;) {
+                if (!*env[i]) {         /* empty string */
+                        for (j = i; j < envn-1; ++j) {
+                                env[j] = env[j+1];
+                        }
+                        --envn;
+                }
+        }
+        for (i = -1; ++i < envn;) {
+                if (strncmp (a, env[i], al) == 0) {
+                        break;
+                }
+        }
+        if (i >= ENVLEN-1) {
+		putstr("environment full.\n");
+		return;
+        }
 	/* May unalign the memory pool but we don't care by this point */
 	char *tp = sbrk(al + strlen(b) + 2);
 	if (tp == (char *) -1) {
@@ -665,7 +684,12 @@ static void envset(const char *a, const char *b)
 	strcpy(tp, a);
 	tp[al] = '=';
 	strcpy(tp + al + 1, b);
-	env[envn++] = tp;
+	env[i++] = tp;
+        if (i > envn)
+        {
+                envn = i;
+        };
+        env[envn] = NULL;
 }
 
 /*
