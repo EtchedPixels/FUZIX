@@ -1,7 +1,7 @@
 PLATFORM = 68000
 CROSS_COMPILE=m68k-elf-
 CC = $(CROSS_COMPILE)gcc
-ASM = $(CROSS_COMPILE)as
+AS = $(CROSS_COMPILE)as
 AR = $(CROSS_COMPILE)ar
 LINKER = $(CROSS_COMPILE)ld
 CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/68000

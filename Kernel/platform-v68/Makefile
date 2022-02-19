@@ -48,3 +48,23 @@ image:
 	devide.o devide_discard.o mbr.o  \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
+
+loader.bin:
+	$(CROSS_CC) -Wl,-Ttext=0x1000 -nostdlib -o loader.elf loader.S
+	$(CROSS_COMPILE)objcopy loader.elf -O binary --only-section=.text loader.bin
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image loader.bin
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=10485760 conv=sync
+	# Add the loader
+	dd if=loader.bin of=$(IMAGES)/disk.img bs=512 conv=notrunc
+	# Add the file system
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img 256 30720)
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=10240 conv=notrunc
+	# Add the kernel
+	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
+
