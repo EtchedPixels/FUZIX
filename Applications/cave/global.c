@@ -55,7 +55,7 @@ struct state game = {
 	},
 	/* visited[MAXLOC]	>0 if has been here */
 	{ 0, },
-	/* prop[MAXOBJ]	/* status of object   */
+	/* prop[MAXOBJ]		status of object   */
 	{
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/*  0 -  9 */
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,		/* 10 - 19 */
@@ -81,14 +81,14 @@ struct state game = {
 	/* clock1 */ 30,	/* timing variables   */
 	/* clock2 */ 50,
 	/* panic */ 0,
-	/* dloc[DWARFMAX]	/* dwarf locations    */
+	/* dloc[DWARFMAX]	dwarf locations    */
 	{
 		0, 19, 27, 33, 44, 64, 0	/*  0 - 6  */
 	},
 	/* dflag */ 0,		/* dwarf flag         */
-	/* dseen[DWARFMAX];	/* dwarf seen flag    */
+	/* dseen[DWARFMAX];	dwarf seen flag    */
 	{ 0, },
-	/* odloc[DWARFMAX];	/* dwarf old locs     */
+	/* odloc[DWARFMAX];	dwarf old locs     */
 	{ 0, },
 	/* daltloc */ 18,	/* alt appearance     */
 	/* dkill */ 0,		/* dwarves killed     */
