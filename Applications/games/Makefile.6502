@@ -43,7 +43,7 @@ sok.levels: sokmap
 sokmap: sokmap.c sok.h
 	cc sokmap.c -o ./sokmap
 
-sok: sok.levels
+sok: sok.o sok.levels
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) sok.o $(LINKER_TAIL)
 
 
