@@ -61,6 +61,7 @@ clean:
 	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym
 	rm -f *.map *.noi *.lk *.ihx *.tmp *.bin *.rel size.report *.o
 	rm -f fortune.dat fortune-gen
+	rm -f sokmap sok.levels
 
 rmbak:
 	rm -f *~ core

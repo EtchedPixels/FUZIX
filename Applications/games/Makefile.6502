@@ -16,7 +16,7 @@ APPSNS = $(OBJSNS:.o=)
 
 CFLAGS += -DCONFIG_IO_CUSS
 
-all: $(APPS) $(APPSNS) size.report
+all: $(APPS) $(APPSNS) fortune sok size.report
 
 $(APPS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LINKER_TAIL)
@@ -24,23 +24,37 @@ $(APPS): %: %.o
 $(APPSNS): %: %.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) $^ $(LINKER_TAIL)
 
-size.report: $(APPS) $(APPSNS)
-	ls -l $^ > $@
-
-clean:
-	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
-
-rmbak:
-	rm -f *~ core
 
 #
 #	Build the fortune data file
 #
 fortune-gen-linux: fortune-gen.c
-	$(CC) -o fortune-gen-linux $<
+	cc -o fortune-gen-linux $<
 
 fortune.dat: fortune-gen-linux
 	./fortune-gen-linux < fort.db >fortune.dat
 
 fortune: fortune.dat fortune.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) fortune.o $(LINKER_TAIL)
+
+sok.levels: sokmap
+	./sokmap ljh.sok sok.levels >/dev/null
+
+sokmap: sokmap.c sok.h
+	cc sokmap.c -o ./sokmap
+
+sok: sok.levels
+	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0NS) sok.o $(LINKER_TAIL)
+
+
+
+size.report: $(APPS) $(APPSNS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f fortune.dat fortune-gen-linux
+	rm -f sokmap sok.levels
+
+rmbak:
+	rm -f *~ core
