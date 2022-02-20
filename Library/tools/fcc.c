@@ -4,6 +4,19 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+/*
+ *	Limitations
+ *	- We cannot support single pass compile and link because SDCC makes
+ *	  a mess of the link order. If we try and do two passes then SDCC
+ *	  stuffs a load of files into the working directory instead.
+ *	- SDCC for Z80 is really really slow and resource hungry. Nothing we
+ *	  can do
+ *	- SDCC has a bunch of peculiar naming conventions that break the normal
+ *	  .o for object file, and it also litters files over the working
+ *	  directory and target. We try and do some clean up but the object
+ *	  file one needs SDCC changes that were rejected upstream.
+ */
+
 /* To fix:
    reloc: rename __1 map to base.map
    remove target.lk target.noi .lst .sym
