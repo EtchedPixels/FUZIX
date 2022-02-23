@@ -57,7 +57,7 @@ void setup(char *pw)
 		t1[i] = i;
 	for(i=0;i<ROTORSZ;i++) {
 		seed = 5*seed + buf[i%13];
-		random = seed % 65521;
+		random = seed % 65521U;
 		k = ROTORSZ-1 - i;
 		ic = (random&MASK)%(k+1);
 		random >>= 8;
@@ -96,4 +96,5 @@ int main(int argc, char *argv[])
 			if(n2==ROTORSZ) n2 = 0;
 		}
 	}
+	return 0;
 }
