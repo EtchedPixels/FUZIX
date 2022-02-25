@@ -135,6 +135,9 @@ __uget:
 ;
 ;	Write first byte to 0 then DMA it over
 ;
+
+	.ifne 0
+
 __uzero:
 	pop hl	; return
 	pop de	; address
@@ -153,6 +156,38 @@ __uzero:
 zerowipe:
 	ld hl,#0
 	ret
+
+.else
+
+	.area _COMMONMEM
+;
+;	We don't use the DMA for this at the moment. Some debug is needed
+;	there. It's also not clear it is a speed win anyway.
+;
+__uzero:
+	pop de	; return
+	pop hl	; address
+	pop bc	; size
+	push bc
+	push hl
+	push de
+	ld a, b	; check for 0 copy
+	or c
+	ret z
+	call map_process_always
+	ld (hl), #0
+	dec bc
+	ld a, b
+	or c
+	jp z, uputc_out
+	ld e, l
+	ld d, h
+	inc de
+	ldir
+	jp uputc_out
+
+
+.endif
 
 ;
 ;	We need these in common as they bank switch
