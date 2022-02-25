@@ -48,13 +48,13 @@ sok: sok.o sok.levels
 
 
 
-size.report: $(APPS) $(APPSNS)
+size.report: $(APPS) $(APPSNS) fortune sok
 	ls -l $^ > $@
 
 clean:
-	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
-	rm -f fortune.dat fortune-gen-linux
-	rm -f sokmap sok.levels
+	rm -f *.o $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	rm -f fortune fortune.dat fortune-gen-linux
+	rm -f sok sokmap sok.levels
 
 rmbak:
 	rm -f *~ core
