@@ -1042,7 +1042,7 @@ int eth_close(uint_fast8_t minor)
 int eth_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
   irqflags_t fl;
-  const void *buffer;
+  void *buffer;
   size_t pkt_len;
   bool anything;
   uint_fast8_t tok = 0U;
@@ -1054,10 +1054,6 @@ int eth_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
   eth_transmit();
   if (udata.u_done > udata.u_count) {
     udata.u_error = EINVAL;
-    return -1;
-  }
-  if ((udata.u_count - udata.u_done) < OPTIMAL_EMAC_BUFSIZE) {
-    udata.u_error = EMSGSIZE;
     return -1;
   }
   fl = __hard_di();
@@ -1074,10 +1070,12 @@ int eth_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
       udata.u_error = ERANGE;
       return -1;
     }
-    if (uput(buffer, udata.u_base, udata.u_count)) {
+    if (uput(buffer, udata.u_base, pkt_len)) {
+      eth_freebuffer(buffer);
       udata.u_error = EIO;
       return -1;
     }
+    eth_freebuffer(buffer);
     udata.u_done += pkt_len;
     udata.u_base += pkt_len;
   }
