@@ -37,9 +37,9 @@ struct p_tab {
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
     uint16_t    p_page2;        /* It's really four bytes for the platform */
-#if defined(__m68k__)
+#if defined(__m68k__) || defined(__arm__)
     void *	p_udata;
-#endif    
+#endif
     uint16_t    p_priority;     /* Process priority */
     struct __sigbits p_sig[2];
     uint16_t    p_waitno;       /* wait #; for finding longest waiting proc */
