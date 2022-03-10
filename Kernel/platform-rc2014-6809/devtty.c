@@ -20,6 +20,7 @@ struct uart16x50 {
 };
 
 static volatile struct uart16x50 * const uart = (struct uart16x50 *)0xFEC0;
+static volatile uint8_t * const ptm = (uint8_t *)0xFE60;
 
 static unsigned char tbuf1[TTYSIZ];
 static unsigned char tbuf2[TTYSIZ];
@@ -160,7 +161,9 @@ void tty_interrupt(void)
 void platform_interrupt(void)
 {
 	tty_interrupt();
-	/* TODO */
-	timer_interrupt();
+	if (ptm[1] & 0x80) {	/* Timer interrupts present, must be timer 3 */
+		ptm[6];	/* Clear the interrupt */
+		timer_interrupt();
+	}
 	wakeup(&platform_interrupt);
 }

@@ -71,7 +71,23 @@ init_early:
 
 init_hardware:
 	jsr size_ram
-	; Turn on timer TODO
+	ldx #$FE60		; 6840 PTM at I/O 0x60
+	lda #1
+	sta 1,x			; Enable CR1, set CR2 to be
+				; square wave no IRQ, refclk, 16bit
+	lda #0x01
+	sta ,x			; Reset the chip, CR1 config doesn't matter
+				; providing output is disabled
+	ldd #CLKVAL
+	std 6,x			; Timer 3
+	clr 1,x			; CR2 square, no IRQ, no out, no input,
+				; CR3 accessible
+	lda #0x43		; counter mode, count E clocks, prescale
+				; IRQ on
+	sta ,x
+	lda #0x01
+	sta 1,x			; Back to CR1
+	clr ,x			; out of reset
 	rts
 
         .area .common

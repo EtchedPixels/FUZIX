@@ -30,12 +30,8 @@ FF00-FFFF:		vectors etc
 Devices
 
 IDE at 0xFE10
-6522 VIA at 0xFE60
+6840 at 0xFE60
 16x50 UART at 0xFEC0
-
-(It would be nice to support 68xx peripherals too but that needs a suitable
- card designing with an ACIA and PIA)
-
 
 TODO:
 

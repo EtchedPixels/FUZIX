@@ -39,6 +39,7 @@
 #define DP_BASE 0x0000
 #define DP_SIZE 0x0100
 
+#define TTY_INIT_BAUD	B38400
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
                             /* Temp FIXME set to serial port for debug ease */

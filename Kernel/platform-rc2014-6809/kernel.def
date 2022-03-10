@@ -24,3 +24,5 @@ SAM_SAVE macro
 SAM_RESTORE macro
 	endm
 
+; This assumes a 1.8432MHz E clock to get 10Hz system timer.
+CLKVAL			equ	((184320 / 8) - 1)
