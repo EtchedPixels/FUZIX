@@ -31,6 +31,25 @@ static struct sockdata sockdata[NSOCKET] = {
 	}
 };
 
+#define NSOCKTYPE 3
+#define SOCKTYPE_TCP    0
+#define SOCKTYPE_UDP    1
+#define SOCKTYPE_RAW    2
+
+struct socktype {
+	uint8_t family;
+	uint8_t type;
+	uint8_t protocol;
+	uint8_t info;
+};
+
+static struct socktype socktype[] = {
+	{ AF_INET, SOCK_STREAM, IPPROTO_TCP, SOCKTYPE_TCP },
+	{ AF_INET, SOCK_DGRAM,  IPPROTO_UDP, SOCKTYPE_UDP },
+	{ AF_INET, SOCK_DGRAM,  IPPROTO_UDP, SOCKTYPE_RAW },
+	{ 0U, 0U, 0U, 0U }
+};
+
 /* This is the inode of the backing file object */
 static inoptr net_ino;
 
@@ -137,14 +156,15 @@ int netdev_write(uint8_t flags)
 		wakeup_all(s);
 		break;
 	case NE_UNHOOK:
+		s->s_state = ne.data;
 		if (s->s_state == SS_DEAD){
 			sd->event = 0;
-			s->s_state = SS_UNUSED;
 			/* FIXME: You re-use something you pays the price.
 			   Probably should switch to using data 0 as devices do?
 			 */
 			s->s_ino->c_node.i_nlink = 0;
 			s->s_ino->c_flags |= CDIRTY;
+			netproto_free(s);
 		}
 		else
 			kputs("bad unhook (in use)\n");
@@ -504,20 +524,48 @@ uint16_t netn_copyout(struct socket *s)
 
 int netproto_socket(void)
 {
+	irqflags_t irq;
 	int i;
+	uint8_t famok = 0U;
+	struct socktype *st = socktype;
 
+	irq = di();
 	for (i = 0; i < NSOCKET; i++) {
 		if (!(sockdata[i].socket)) {
-			sockdata[i].socket = &sockets[i];
-			sockets[i].s_num = i;
-			sockets[i].s_class = udata.u_net.args[2];
-			sockets[i].s_protocol = udata.u_net.args[3];
-			net_setup(&sockets[i]);
-			udata.u_net.sock = i;
-			return 0;
+			while (st->family) {
+				if ((st->family == udata.u_net.args[1])) {
+					famok = 1U;
+					if ((st->type == udata.u_net.args[2]) &&
+					    ((st->protocol == 0) ||
+					     (udata.u_net.args[3] == 0) ||
+					     (udata.u_net.args[3] ==
+					      st->protocol))) {
+						sockdata[i].socket =
+						  &sockets[i];
+						sockets[i].s_num = i;
+						net_setup(&sockets[i]);
+						sockets[i].s_class =
+						  udata.u_net.args[2];
+						sockets[i].s_state =
+						  SS_UNCONNECTED;
+						sockets[i].s_type =
+						  st->info;
+						sockets[i].s_protocol =
+						  udata.u_net.args[3];
+						udata.u_net.sock =
+						  sockets[i].s_num;
+						irqrestore(irq);
+						return 0;
+					}
+				}
+				st++;
+			}
+			break;
 		}
 	}
-	udata.u_error = EBADF;
+	irqrestore(irq);
+	udata.u_error = (i < NSOCKET) ?
+	                 (famok ? EPROTONOSUPPORT : EAFNOSUPPORT) : EBADF;
 	return -1;
 }
 
@@ -718,11 +766,13 @@ void netproto_setup(struct socket *s)
 
 void netproto_free(struct socket *s)
 {
+	irqflags_t irq = di();
 	struct sockdata *sd = sockdata + s->s_num;
 
 	s->s_num = -1;
 	s->s_state = SS_UNUSED;
 	sd->socket = NULL;
+	irqrestore(irq);
 }
 
 /*

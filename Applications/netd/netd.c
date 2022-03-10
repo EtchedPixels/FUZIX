@@ -115,7 +115,10 @@ void unhook_and_rel_map(int n)
 {
 	struct link *s = & map[n];
 	if (s->flags & LINK_UNBIND) {
-		ksend(NE_UNHOOK);
+		if (s->flags & LINK_DEAD) {
+			ne.data = SS_DEAD;
+			ksend(NE_UNHOOK);
+		}
 		s->flags &= ~LINK_UNBIND;
 	}
 	rel_map(n);
@@ -479,8 +482,8 @@ void netd_raw_appcall(void)
 			ne.data = SS_CLOSED;
 			ksend( NE_NEWSTATE );
 			/* release private link resource */
-			unhook_and_rel_map( uip_raw_conn->appstate );
 			s->flags |= LINK_DEAD;
+			unhook_and_rel_map( uip_raw_conn->appstate );
 			uip_raw_remove( uip_raw_conn );
 			return;
 		}
@@ -622,13 +625,14 @@ int dokernel( void )
 				if ( sm.s.s_type == SOCKTYPE_UDP ){
 					uip_udp_remove(m->conn);
 					rel_map(m->lcn);
-					ne.data = SS_CLOSED;
+					ne.data = SS_DEAD;
 					ksend(NE_UNHOOK);
 					break;
 				}
 				/* If the tcp session died before we ask, then
 				   we respond with an immeidate unhook */
 				if ( m->flags & LINK_DEAD) {
+					ne.data = SS_DEAD;
 					ksend(NE_UNHOOK);
 					break;
 				}
