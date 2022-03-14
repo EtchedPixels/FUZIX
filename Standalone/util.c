@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE 500	/* For swab in unistd.h */
+#define _XOPEN_SOURCE 700	/* For swab in unistd.h, strdup in string.h */
 
 #include <stdio.h>
 #include <stdint.h>

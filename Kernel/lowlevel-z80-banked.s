@@ -1366,7 +1366,7 @@ _sys_cpu:
 _sys_cpu_feat:
 	.db 0
 
-	.area _DISCARD
+	.area _DISCARD2
 
 _set_cpu_type:
 	ld h,#2		; Assume Z80

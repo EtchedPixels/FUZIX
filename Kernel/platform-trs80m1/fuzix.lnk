@@ -29,6 +29,7 @@ platform-trs80m1/devstringy.rel
 platform-trs80m1/stringy.rel
 platform-trs80m1/devices.rel
 platform-trs80m1/buffers.rel
+network.rel
 platform-trs80m1/net_native.rel
 devio.rel
 filesys.rel
