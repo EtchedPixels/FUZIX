@@ -136,7 +136,7 @@ arg_t _netcall(void)
 {
 	uint8_t flags = 0;
 	uint8_t cn;
-	arg_t *ap = udata.u_net.args;
+	arg_t *ap;
 	uint8_t op;
 	usize_t s;
 	int n;
@@ -148,6 +148,7 @@ arg_t _netcall(void)
 		return -1;
 	}
 	uget(argptr, udata.u_net.args, sizeof(udata.u_net.args));
+	ap = udata.u_net.args;
 
 	cn = *ap++;
 	op = ncall_tab[cn];

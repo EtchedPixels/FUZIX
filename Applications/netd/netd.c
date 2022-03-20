@@ -430,7 +430,7 @@ void netd_udp_appcall(void)
 		char *ptr = uip_appdata;
 		uint32_t base = ne.socket * RINGSIZ * 2;
 
-		if ( (s->rend + 1)&(NSOCKBUF-1) == s->rstart )
+		if ( ((s->rend + 1)&(NSOCKBUF-1)) == s->rstart )
 			return; /* full - drop it */
 		s->rsize[s->rend] = len;
 		memcpy( &ne.info, s->rsize, sizeof(uint16_t) * NSOCKBUF );
@@ -495,7 +495,7 @@ void netd_raw_appcall(void)
 		char *ptr = uip_appdata;
 		uint32_t base = ne.socket * RINGSIZ * 2;
 
-		if ( (s->rend + 1)&(NSOCKBUF-1) == s->rstart )
+		if ( ((s->rend + 1)&(NSOCKBUF-1)) == s->rstart )
 			return; /* full - drop it */
 		s->rsize[s->rend] = len;
 		memcpy( &ne.info, s->rsize, sizeof(uint16_t) * NSOCKBUF );
@@ -660,7 +660,7 @@ int dokernel( void )
 			int last;
 			m->tstart = sm.sd.tbuf;
 			m->tend = sm.sd.tnext;
-			last = m->tend-1 & NSOCKBUF-1;
+			last = (m->tend-1) & (NSOCKBUF-1);
 			/* tsize is for udp only, but copy it anyway */
 			m->tsize[last] = sm.sd.tlen[last];
 		}

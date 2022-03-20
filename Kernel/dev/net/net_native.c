@@ -44,9 +44,9 @@ struct socktype {
 };
 
 static struct socktype socktype[] = {
-	{ AF_INET, SOCK_STREAM, IPPROTO_TCP, SOCKTYPE_TCP },
-	{ AF_INET, SOCK_DGRAM,  IPPROTO_UDP, SOCKTYPE_UDP },
-	{ AF_INET, SOCK_DGRAM,  IPPROTO_UDP, SOCKTYPE_RAW },
+	{ AF_INET, SOCK_STREAM, IPPROTO_TCP,  SOCKTYPE_TCP },
+	{ AF_INET, SOCK_DGRAM,  IPPROTO_UDP,  SOCKTYPE_UDP },
+	{ AF_INET, SOCK_RAW,    IPPROTO_ICMP, SOCKTYPE_RAW },
 	{ 0U, 0U, 0U, 0U }
 };
 
@@ -602,6 +602,7 @@ int netproto_find_local(struct ksockaddr *ka)
  */
 int netproto_autobind(struct socket *s)
 {
+	memcpy(&s->dst_addr, &udata.u_net.addrbuf, sizeof(struct ksockaddr));
 	return netn_synchronous_event(s, SS_BOUND);
 }
 
@@ -614,6 +615,7 @@ int netproto_autobind(struct socket *s)
  */
 int netproto_bind(struct socket *s)
 {
+	memcpy(&s->dst_addr, &udata.u_net.addrbuf, sizeof(struct ksockaddr));
 	return netn_synchronous_event(s, SS_BOUND);
 }
 
