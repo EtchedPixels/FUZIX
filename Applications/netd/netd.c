@@ -23,7 +23,7 @@ todo:
 * refactor  RAW with UDP code as they are very similar
 
 */
-#define TRACE
+#undef TRACE
 
 
 #include <stdio.h>
@@ -574,7 +574,9 @@ int dokernel( void )
 #endif
 		m = & map[sm.sd.lcn];
 		c = m->conn - uip_conns;
-		printf("Connection %d\n", c);
+#ifdef TRACE
+		   fprintf(stderr, "Connection %d\n", c);
+#endif
 
 		if ( sm.sd.event & NEV_STATE ){
 			ne.socket = sm.s.s_num;
