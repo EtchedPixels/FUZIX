@@ -649,6 +649,7 @@ int dokernel( void )
 					}
 					m->conn = ( struct uip_conn *)conptr; /* fixme: needed? */
 					conptr->appstate = sm.sd.lcn;
+					conptr->proto = sm.s.s_protocol;
 					/* refactor: same as tcp action from connect event */
 					ne.data = SS_CONNECTED;
 					ksend(NE_NEWSTATE);
