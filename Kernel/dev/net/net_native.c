@@ -9,7 +9,7 @@
 #define is_datagram(s) ((s)->s_class != SOCK_STREAM && (s)->s_class != SOCK_SEQPACKET)
 
 /* For now until we work out where this really belongs */
-uint8_t sock_wake[NSOCKET];
+uint8_t sock_wake[NSOCKET] = { [0 ... (NSOCKET - 1)] = 0U };
 
 static uint8_t mac_addr[6U] = { 0U, 0U, 0U, 0U, 0U, 0U };
 static int16_t mtu = 0;
@@ -50,16 +50,16 @@ static struct socktype socktype[] = {
 	{ 0U, 0U, 0U, 0U }
 };
 
+static uint8_t *bmem = NULL;
+
 /* This is the inode of the backing file object */
-static inoptr net_ino;
+static inoptr net_ino = NULL;
 
 /* Wake all blockers on a socket - used for error cases */
 static void wakeup_all(struct socket *s)
 {
-	if (s->s_wake) {
-		sock_wake[s->s_num] = 1;
-		wakeup(sock_wake + s->s_num);
-	}
+	sock_wake[s->s_num] = 1;
+	wakeup(sock_wake + s->s_num);
 	wakeup(s);
 	wakeup(&s->s_iflags);
 	selwake_dev(4, 65, SELECT_IN);
@@ -81,7 +81,8 @@ int netdev_write(uint8_t flags)
 
 	used(flags);
 	/* Grab a message from the service daemon */
-	if (net_ino == NULL || udata.u_count != sizeof(ne) ||
+	if (((bmem == NULL) && (net_ino == NULL)) ||
+		udata.u_count != sizeof(ne) ||
 		uget(udata.u_base, &ne, sizeof(ne)) == -1 ||
 		ne.socket >= NSOCKET) {
 		udata.u_error = EINVAL;
@@ -103,10 +104,8 @@ int netdev_write(uint8_t flags)
 		/* A synchronous state change has completed */
 		sd->event &= ~NEVW_STATE;
 		/* Review select impact for this v wakeup_all */
-		if (s->s_wake) {
-			sock_wake[s->s_num] = 1;
-			wakeup(sock_wake + s->s_num);
-		}
+		sock_wake[s->s_num] = 1;
+		wakeup(sock_wake + s->s_num);
 		wakeup(s);
 		break;
 		/* Asynchronous state changing event */
@@ -134,6 +133,8 @@ int netdev_write(uint8_t flags)
 		/* Indicator of write room from the network agent */
 	case NE_ROOM:
 		sd->tbuf = ne.data;
+		sock_wake[s->s_num] = 1;
+		wakeup(sock_wake + s->s_num);
 		wakeup(&s->s_iflags);
 		break;
 		/* Indicator of data from the network agent */
@@ -142,6 +143,8 @@ int netdev_write(uint8_t flags)
 		memcpy(sd->rlen, &ne.info,
 			       sizeof(uint16_t) * NSOCKBUF);
 		s->s_iflags |= SI_DATA;
+		sock_wake[s->s_num] = 1;
+		wakeup(sock_wake + s->s_num);
 		wakeup(&s->s_iflags);
 		break;
 		/* Remote reset */
@@ -208,7 +211,8 @@ static struct sockdata *netdev_findevent(void)
 
 int netdev_read(uint8_t flag)
 {
-	if (net_ino == NULL || udata.u_count != sizeof(struct sockmsg)) {
+	if (((bmem == NULL) && (net_ino == NULL)) ||
+		udata.u_count != sizeof(struct sockmsg)) {
 		udata.u_error = EINVAL;
 		return -1;
 	}
@@ -219,7 +223,7 @@ int netdev_read(uint8_t flag)
 		if (psleep_flags(&ne, flag))
 			return -1;
 	}
-}		
+}
 
 /*
  *	The ioctl interface at the moment is simply the initialization
@@ -233,7 +237,7 @@ int netdev_ioctl(uarg_t request, char *data)
 		/* Daemon starting up, passing file handle of cache */
 		/* FIXME: Check sizes etc are valid via some kind of
 		   passed magic hash */
-		case NET_INIT:
+		case NET_INIT_BFD:
 			if (net_ino) {
 				udata.u_error = EBUSY;
 				return -1;
@@ -243,6 +247,17 @@ int netdev_ioctl(uarg_t request, char *data)
 				return -1;
 			(void)(i_ref(net_ino));
 			return 0;
+#ifdef CONFIG_FLAT
+		case NET_INIT_BMEM:
+			if (bmem) {
+				udata.u_error = EBUSY;
+				return -1;
+			}
+			bmem = ((uint8_t *)(ugetp(data)));
+			if (!bmem)
+				return -1;
+			return 0;
+#endif
 		case NET_MAC:
 			if (uget(data, mac_addr, 6U))
 				return -1;
@@ -285,8 +300,9 @@ int netdev_close(uint8_t minor)
 {
 	regptr struct socket *s = sockets;
 	used(minor);
-	if (net_ino) {
-		i_deref(net_ino);
+	if (bmem || net_ino) {
+		if (net_ino)
+			i_deref(net_ino);
 		net_ino = NULL;
 		while (s < sockets + NSOCKET) {
 			if (s->s_state != SS_UNUSED) {
@@ -298,6 +314,7 @@ int netdev_close(uint8_t minor)
 			s++;
 		}
 	}
+	bmem = NULL;
 	return 0;
 }
 
@@ -350,6 +367,30 @@ static void netn_asynchronous_event(struct socket *s, uint8_t event)
 
 */
 
+#ifdef CONFIG_FLAT
+static void ubase_to_bmem(uint8_t *buff, size_t len)
+{
+	buff += udata.u_done;
+	for (; len; len--) {
+		(void)(_uputc(ugetc(udata.u_base), buff));
+		buff++;
+		udata.u_done++;
+		udata.u_base++;
+	}
+}
+
+static void bmem_to_ubase(uint8_t *buff, size_t len)
+{
+	buff += udata.u_done;
+	for (; len; len--) {
+		(void)(uputc(_ugetc(buff), udata.u_base));
+		buff++;
+		udata.u_done++;
+		udata.u_base++;
+	}
+}
+#endif
+
 static uint16_t sptr, eptr, len;
 static uint32_t base;
 static void (*op)(inoptr, uint_fast8_t);
@@ -359,19 +400,31 @@ static uint16_t ringbop(void)
 	uarg_t spc;
 	uarg_t r = 0;
 
-	udata.u_sysio = false;
-	udata.u_error = 0;
 	/* Wrapped part of the ring buffer */
 	if (len && sptr >= eptr) {
 		/* Write into the end space */
 		spc = RINGSIZ - sptr;
 		if (len < spc)
 			spc = len;
-		udata.u_count = spc;
-		udata.u_offset = base + sptr;
-		op(net_ino, 0);
-		if (udata.u_error)
-			return 0xFFFF;
+#ifdef CONFIG_FLAT
+		if (bmem) {
+			if (writei == op)
+				ubase_to_bmem(bmem + (base + sptr), spc);
+			else if (readi == op)
+				bmem_to_ubase(bmem + (base + sptr), spc);
+			else
+				return 0xFFFF;
+		}
+#endif
+		if (net_ino) {
+			udata.u_sysio = false;
+			udata.u_error = 0;
+			udata.u_count = spc;
+			udata.u_offset = base + sptr;
+			op(net_ino, 0);
+			if (udata.u_error)
+				return 0xFFFF;
+		}
 		sptr += spc;
 		len -= spc;
 		r = spc;
@@ -384,11 +437,25 @@ static uint16_t ringbop(void)
 		spc = eptr - sptr;
 		if( len < spc )
 			spc = len;
-		udata.u_count = spc;
-		udata.u_offset = base + sptr;
-		op(net_ino, 0);
-		if (udata.u_error)
-			return 0xFFFF;
+#ifdef CONFIG_FLAT
+		if (bmem) {
+			if (writei == op)
+				ubase_to_bmem(bmem + (base + sptr), spc);
+			else if (readi == op)
+				bmem_to_ubase(bmem + (base + sptr), spc);
+			else
+				return 0xFFFF;
+		}
+#endif
+		if (net_ino) {
+			udata.u_sysio = false;
+			udata.u_error = 0;
+			udata.u_count = spc;
+			udata.u_offset = base + sptr;
+			op(net_ino, 0);
+			if (udata.u_error)
+				return 0xFFFF;
+		}
 		sptr += spc;
 		r += spc;
 	}
@@ -417,12 +484,19 @@ uint16_t netn_putbuf(struct socket *s)
 	/* check for fullness */
 	/*  FIXME: giving up 1 of 4 udp buffers to do this check sucks */
 	if( ((sd->tnext+1) & (NSOCKBUF - 1)) == sd->tbuf )
-	    return 0;
-
-	udata.u_sysio = false;
-	udata.u_offset = s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZ;
-	/* FIXME: check writei returns and readi returns properly */
-	writei(net_ino, 0);
+		return 0;
+#ifdef CONFIG_FLAT
+	if (bmem)
+		ubase_to_bmem(bmem + (s->s_num * SOCKBUFOFF + RXBUFOFF +
+			sd->tbuf * TXPKTSIZ), udata.u_count - udata.u_done);
+#endif
+	if (net_ino) {
+		udata.u_sysio = false;
+		udata.u_offset =
+			s->s_num * SOCKBUFOFF + RXBUFOFF + sd->tbuf * TXPKTSIZ;
+		/* FIXME: check writei returns and readi returns properly */
+		writei(net_ino, 0);
+	}
 	sd->tlen[sd->tnext++] = udata.u_done;
 	if (sd->tnext == NSOCKBUF)
 		sd->tnext = 0;
@@ -444,11 +518,18 @@ uint16_t netn_getbuf(struct socket *s)
 
 	if (sd->rbuf == sd->rnext)
 		return 0;
-	udata.u_sysio = false;
-	udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf * RXPKTSIZ;
-	udata.u_count = min(udata.u_count, sd->rlen[sd->rbuf]);
-	/* FIXME: check writei returns and readi returns properly */
-	readi(net_ino, 0);
+#ifdef CONFIG_FLAT
+	if (bmem)
+		bmem_to_ubase(bmem + (s->s_num * SOCKBUFOFF +
+			sd->rbuf * RXPKTSIZ), udata.u_count - udata.u_done);
+#endif
+	if (net_ino) {
+		udata.u_sysio = false;
+		udata.u_offset = s->s_num * SOCKBUFOFF + sd->rbuf * RXPKTSIZ;
+		udata.u_count = min(udata.u_count, sd->rlen[sd->rbuf]);
+		/* FIXME: check writei returns and readi returns properly */
+		readi(net_ino, 0);
+	}
 	/* FIXME: be smarter when we send this */
 	if (++sd->rbuf == NSOCKBUF)
 		sd->rbuf = 0;
@@ -668,7 +749,7 @@ int netproto_read(struct socket *s)
 		return sock_error(s);
 	/* FIXME: We should be forced into CLOSED state so is this
 	   check actually needed */
-	if (net_ino == NULL) {
+	if ((bmem == NULL) && (net_ino == NULL)) {
 		udata.u_error = EPIPE;
 		ssig(udata.u_ptab, SIGPIPE);
 		return -1;

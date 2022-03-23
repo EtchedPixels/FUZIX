@@ -47,7 +47,13 @@ todo:
 
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
 
+#ifdef NETD_RINGBUF_IN_MEMORY
+#define BMEM_SIZE ((RINGSIZ) * 2U * (NSOCKET))
+static uint8_t ringbuf[BMEM_SIZE];
+static uint8_t *bmem = ringbuf;
+#else
 int bfd;   /* fd of data backing file */
+#endif
 int knet;  /* fd of kernel's network inface */
 int rc;    /* fd of rc file */
 struct sockmsg sm; /* event from kernel iface */
@@ -136,10 +142,15 @@ void init_map( void )
 void send_tcp( struct link *s )
 {
 	uint32_t base = s->socketn * RINGSIZ * 2 + RINGSIZ;
+
 	if ( ! s->len ) return;
+#ifdef NETD_RINGBUF_IN_MEMORY
+	memcpy( uip_appdata, bmem + (base + s->tstart), s->len );
+#else
 	lseek( bfd, base + s->tstart, SEEK_SET );
 	if ( read( bfd, uip_appdata, s->len ) < 0 )
 		exit_err("cannot read from backing file\n");
+#endif
 	uip_send( uip_appdata, s->len );
 }
 
@@ -149,9 +160,14 @@ void send_udp( struct link *s )
 	/* Send packet to net */
 	uint32_t base = s->socketn * RINGSIZ * 2 + RINGSIZ;
 	uint16_t len = s->tsize[s->tstart];
+
+#ifdef NETD_RINGBUF_IN_MEMORY
+	memcpy( uip_appdata, bmem + (base + s->tstart * TXPKTSIZ), len );
+#else
 	lseek( bfd, base + s->tstart * TXPKTSIZ, SEEK_SET );
 	if ( read( bfd, uip_appdata, len ) < 0 )
 		exit_err("cannot read from backing file\n");
+#endif
 	uip_udp_send( len );
 	if ( ++s->tstart == NSOCKBUF )
 		s->tstart = 0;
@@ -167,9 +183,14 @@ void send_raw( struct link *s )
 	/* Send packet to net */
 	uint32_t base = s->socketn * RINGSIZ * 2 + RINGSIZ;
 	uint16_t len = s->tsize[s->tstart];
+
+#ifdef NETD_RINGBUF_IN_MEMORY
+	memcpy( uip_appdata, bmem + (base + s->tstart * TXPKTSIZ), len );
+#else
 	lseek( bfd, base + s->tstart * TXPKTSIZ, SEEK_SET );
 	if ( read( bfd, uip_appdata, len ) < 0 )
 		exit_err("cannot read from backing file\n");
+#endif
 	uip_raw_send( len );
 	if ( ++s->tstart == NSOCKBUF )
 		s->tstart = 0;
@@ -271,9 +292,13 @@ void netd_appcall(void)
 				l = s->rstart - s->rend - 1;
 			if ( l > len )
 				l = len;
+#ifdef NETD_RINGBUF_IN_MEMORY
+			memcpy( bmem + (base + s->rend), ptr, l );
+#else
 			lseek( bfd, base + s->rend, SEEK_SET );
 			if ( write( bfd, ptr, l ) < 0 )
 			    exit_err("cannot write to backing file\n");
+#endif
 			ptr += l;
 			s->rend += l;
 			if ( s->rend == RINGSIZ )
@@ -434,9 +459,13 @@ void netd_udp_appcall(void)
 			return; /* full - drop it */
 		s->rsize[s->rend] = len;
 		memcpy( &ne.info, s->rsize, sizeof(uint16_t) * NSOCKBUF );
+#ifdef NETD_RINGBUF_IN_MEMORY
+		memcpy( bmem + (base + s->rend * RXPKTSIZ), ptr, len );
+#else
 		lseek( bfd, base + s->rend * RXPKTSIZ, SEEK_SET );
 		if ( write( bfd, ptr, len ) < 0 )
 		    exit_err("cannot write to backing file\n");
+#endif
 		if ( ++s->rend == NSOCKBUF )
 			s->rend = 0;
 		/* FIXME: throttle incoming data if there's no room in ring buf */
@@ -447,7 +476,7 @@ void netd_udp_appcall(void)
 	}
 }
 
-/* uIP callbck for UDP event */
+/* uIP callbck for RAW event */
 void netd_raw_appcall(void)
 {
 	struct link *s = & map[uip_raw_conn->appstate];
@@ -499,9 +528,13 @@ void netd_raw_appcall(void)
 			return; /* full - drop it */
 		s->rsize[s->rend] = len;
 		memcpy( &ne.info, s->rsize, sizeof(uint16_t) * NSOCKBUF );
+#ifdef NETD_RINGBUF_IN_MEMORY
+		memcpy( bmem + (base + s->rend * RXPKTSIZ), ptr, len );
+#else
 		lseek( bfd, base + s->rend * RXPKTSIZ, SEEK_SET );
 		if ( write( bfd, ptr, len ) < 0 )
 		    exit_err("cannot write to backing file\n");
+#endif
 		if ( ++s->rend == NSOCKBUF )
 			s->rend = 0;
 		/* FIXME: throttle incoming data if there's no room in ring buf */
@@ -938,12 +971,14 @@ int main( int argc, char *argv[] )
 	int ret;
 	uip_ipaddr_t ipaddr;
 	uip_eth_addr ethaddr;       /* mac address buffer */
-	
+
+#ifndef NETD_RINGBUF_IN_MEMORY
 	/* where should backing file go? /var, /tmp, other?  */
 	bfd = open( "/tmp/net.back", O_RDWR|O_CREAT, 0644 );
 	if ( bfd < 0 ){
 		exit_err( "cannot open backing file\n");
 	}
+#endif
 
 	/*open Kernel's net device */
 	knet = open( "/dev/net", O_RDWR|O_NDELAY, 0 );
@@ -951,11 +986,19 @@ int main( int argc, char *argv[] )
 		exit_err( "cannot open kernel net iface device\n");
 	}
 
+#ifdef NETD_RINGBUF_IN_MEMORY
+	/* Attach our memory buffer to the network device */
+	ret = ioctl( knet, NET_INIT_BMEM, &bmem );
+	if ( ret < 0 ){
+		exit_err( "cannot attach memory buffer\n");
+	}
+#else
 	/* Attach our backing file to the network device */
-	ret = ioctl( knet, NET_INIT, &bfd );
+	ret = ioctl( knet, NET_INIT_BFD, &bfd );
 	if ( ret < 0 ){
 		exit_err( "cannot attach backing file\n");
 	}
+#endif
 
 	/* initialize our map */
 	init_map();
