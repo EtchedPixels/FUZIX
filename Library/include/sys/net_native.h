@@ -68,12 +68,13 @@ struct netevent {
 	} info;
 };
 
-#define NET_INIT	0x4401
-#define NET_MAC		0x4402
-#define NET_MTU		0x4403
-#define NET_IPADDR	0x4404
-#define NET_MASK	0x4405
-#define NET_GATEWAY	0x4406
+#define NET_INIT_BFD	0x4401
+#define NET_INIT_BMEM	0x4402
+#define NET_MAC		0x4403
+#define NET_MTU		0x4404
+#define NET_IPADDR	0x4405
+#define NET_MASK	0x4406
+#define NET_GATEWAY	0x4407
 
 int netdev_write(void);
 int netdev_read(uint8_t flag);
