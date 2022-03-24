@@ -17,6 +17,7 @@ static uint16_t roll(void)
 {
   uint16_t v = sum;
   sum >>= 16;
+  return v;
 }
 
 void __iteration48(void)
