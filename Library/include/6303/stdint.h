@@ -23,4 +23,8 @@ typedef int32_t int_fast32_t;
 #define __SIZE_T_DEFINED
 #define NO_64BIT
 
+#define __ORDER_BIG_ENDIAN__ 4321
+#define __ORDER_LITTLE_ENDIAN__ 1234
+
+#define __BYTE_ORDER__ __ORDER_BIG_ENDIAN__
 #endif
