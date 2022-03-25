@@ -1,0 +1,40 @@
+Fuzix on the TMS9995 RC2014 banked memory platform
+
+This is just some initial work to start compiler testing.
+
+Proposed memory mapping
+
+	0x0000-0x03FF	Loader and traps
+	0x0400-0xEFFF	Kernel
+	0xF000-0xF0FF	Internal CPU use
+	0xF100-0xFDFF	Common data and whatever code fills the rest
+	0xFE00-0xFEFF	I/O
+	0xFF00-0xFFEF
+	0xFFF0-0xFFFF	NMI vector
+
+In user space
+
+	0x0000-0x03FF	Loader and traps
+	0x0400-0xBFFF	User space
+	0xC000-0xEFFF	Kernel upper code
+	0xF000-0xF0FF	Internal CPU use
+	0xF100-0xFDFF	Common data and whatever code fills the rest
+	0xFE00-0xFEFF	I/O
+	0xFF00-0xFFEF
+	0xFFF0-0xFFFF	Vectors
+
+Hardware Arrangement
+
+TMS9995 CPU
+FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
+RC2014 bus
+512K RAM/ROM
+
+Put the loader on sector 0
+Put the kernel on sector 1+
+
+What would cc9995 ld9995 banking support take ?
+
+To run on the emulator
+
+rc2014-tms9995 -b -i /tmp/emu-ide.img
