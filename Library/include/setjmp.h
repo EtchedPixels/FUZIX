@@ -25,7 +25,7 @@
 
 #elif defined(__CC9995__)
 
-	typedef unsigned int jmp_buf[8];
+	typedef unsigned int jmp_buf[13];
 	extern int _setjmp(jmp_buf __env);
 	#define setjmp(x) _setjmp(x)
 
