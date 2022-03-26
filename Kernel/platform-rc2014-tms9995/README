@@ -14,8 +14,9 @@ Proposed memory mapping
 
 In user space
 
-	0x0000-0x03FF	Loader and traps
-	0x0400-0xBFFF	User space
+	0x0000-0x007F	Vectors
+	0x0080-0x00FF	Unused
+	0x0100-0xBFFF	User space
 	0xC000-0xEFFF	Kernel upper code
 	0xF000-0xF0FF	Internal CPU use
 	0xF100-0xFDFF	Common data and whatever code fills the rest

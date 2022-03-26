@@ -22,13 +22,15 @@ static void write_call(int n)
   }
   fprintf(fp, "\t.code\n\n");
   fprintf(fp, "\t.export _%s\n\n", syscall_name[n]);
-  fprintf(fp, "_%s:\n\tli r2, %d\n", syscall_name[n]);
-  fprintf(fp, "\txop r2, 1\n");
-  fprintf(fp, "\tci r1, 0\n");
+  fprintf(fp, "_%s:\n\tli r2, %x\n", syscall_name[n], n << 8);
+  fprintf(fp, "\tdect r13\n");
+  fprintf(fp, "\tmov r11,*r13\n");
+  fprintf(fp, "\tci r0, 0\n");
+  fprintf(fp, "\tblwp @head\n");
   fprintf(fp, "\tjeq @noerror\n");
   fprintf(fp, "\tmov r0,@_errno\n");
   fprintf(fp, "noerror:\n");
-  fprintf(fp, "\trt\n");
+  fprintf(fp, "\tb *r13+\n");
   fclose(fp);
 }
 

@@ -16,6 +16,8 @@
 	.export outstring
 	.export _doexec
 
+	.export interrupt_handler
+	.export trap_handler
 _di:
 	stst	r1
 	limi	IRQ_OFF
@@ -224,16 +226,21 @@ _doexec:
 	bl	@map_process_always
 	mov	@_udata+U_DATA__U_ISP, r13
 	clr	@_udata+U_DATA__U_INSYS
-	b	@0x0100		; FIXME for now
-	
+	b	@0x0100
 
 trap_handler:
-	mov @_udata + U_DATA__U_INSYS,r0
-	jne @trap_illegal
-	mov @_inint,r0
-	jne @trap_illegal
-	; TODO .. make a kill -9 call
-
+	mov	@_udata + U_DATA__U_INSYS,r0
+	jne	@trap_illegal
+	mov	@_inint,r0
+	jne	@trap_illegal
+	; We are in the wrong workspace for a syscall but this is going to
+	; be short and terminal
+	li	r13, kstack_top
+	dect	r13
+	li	r0, 9		; killed signal 9
+	mov	r0, *r13
+	b	@_doexit
+	; Won't come back
 
 trap_illegal:
 	li r2,illegalmsg
@@ -362,8 +369,10 @@ _set_cpu_type:
 	.data
 
 _sys_cpu:
-	.byte 7
+	.byte	7
 _sys_cpu_feat:
-	.byte 1
+	.byte	1
 _sys_stubs:
-	.ds 16	;	TODO
+	.word	kernel_ws
+	.word	unix_syscall_entry
+	.ds	12

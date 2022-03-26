@@ -98,7 +98,52 @@ _program_vectors:
 	; TODO
 	;
 program_vectors_k:
+	li	r0, vectab
+	li	r1, 4
+	; Copy interrupt vectors
+	mov	*r0+,*r1+
+	mov	*r0+,*r1+
+	mov	*r0+,*r1+
+	mov	*r0+,*r1+
+	mov	*r0+,*r1+
+	mov	*r0,*r1
+	li	r0, 0x0040
+	li	r1, xop_ws
+	li	r2, xop_trap
+	li	r3, 16
+xopl:
+	mov	r1, *r0+
+	mov	r2, *r0+
+	dec	r3
+	jne	@xopl
 	rt
+vectab:
+	.word	irq1_ws			; Interrupt
+	.word	irq1_handler
+	.word	irq2_ws			; MID, overflow and decrementer
+	.word	irq23_handler
+	.word	irq4_ws			; Interrupt on extension pin
+	.word	irq4_handler
+
+;
+;	Actual handlers
+;
+irq1_handler:
+irq4_handler:
+overflow_interrupt:
+	rtwp
+irq23_handler:
+	li	r12, 0x1fda
+	tb	0
+	jne	@mid_interrupt		; illegal
+	li	r12, 0x1ee6
+	tb	0
+	jne	@overflow_interrupt
+	b	@interrupt_handler
+mid_interrupt:
+xop_trap:
+	b	@trap_handler
+
 
 ;
 ;	Map the current process, do not change register values except r0
@@ -250,3 +295,27 @@ _hd_map:
 	.byte 0
 
 	.even
+
+		.dp		; 16bit fast memory at 0xF000
+
+		.export kernel_ws
+		.export irq1_ws
+		.export irq2_ws
+		.export irq4_ws
+		.export xop_ws
+		.export nmi_ws
+;
+;	Workspaces
+;
+kernel_ws:
+	.ds	32
+irq1_ws:
+	.ds	32
+irq2_ws:
+	.ds	32
+irq4_ws:
+	.ds	32
+xop_ws:
+	.ds	32
+nmi_ws:
+	.ds	32
