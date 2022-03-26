@@ -25,7 +25,7 @@ _ramtop:
 ; from switchout().
 ;
 _platform_switchout:
-;FIXME	sei
+	limi	IRQ_OFF
 	; Save the link
 	dect	r13
 	mov	r11,*r13
@@ -53,30 +53,30 @@ _platform_switchout:
 	mov	r15,*r13
 	mov	r13,@_udata + U_DATA__U_SP	; Save old SP
 
-	bl @map_process_always
-	bl @stash_udata
-	bl @map_kernel
+	bl	@map_process_always
+	bl	@stash_udata
+	bl	@map_kernel
 
         ; set inint to false
 	clr	@_inint
 
         ; find another process to run (may select this one again) returns it
         ; in d
-        bl @_getproc
-	inct r13
-	mov r1,*r13
-        bl @_switchin
+        bl	 @_getproc
+	dect	r13
+	mov	r1,*r13
+        bl	@_switchin
         ; we should never get here
-        bl @_platform_monitor
+        bl	@_platform_monitor
 
 stash_udata:
-	li r0,_udata
-	li r1, 0xBE00		; Ick FIXME hardcoded
-	li r2, 256		; 256 words of udata
+	li	r0,_udata
+	li	r1, 0xBE00		; Ick FIXME hardcoded
+	li	r2, 256		; 256 words of udata
 stash_loop:
-	mov *r0+,*r1+
-	dec r2
-	jne @stash_loop
+	mov	*r0+,*r1+
+	dec	r2
+	jne	@stash_loop
 	rt
 
 badswitchmsg:
@@ -89,7 +89,7 @@ badswitchmsg:
 ;
 ;
 _switchin:
-;FIXME	sei
+	limi	IRQ_OFF
 	mov	*r13,r3			; proc ptr
 	dect	r13
 	mov	r11,*r13
@@ -154,17 +154,15 @@ nostash:
 	mov	*r13+,r1	; Return code
 	mov	@_inint,r0
         jeq	@swtchdone	; in ISR, leave interrupts off
-;TODO	cli
+	limi	IRQ_ON
 swtchdone:
         rt
 
 switchinfail:
-	li	r0,badswitchmsg
+	li	r0, badswitchmsg
         bl	@outstring
 	; something went wrong and we didn't switch in what we asked for
         b	@_platform_monitor
-
-fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -172,7 +170,7 @@ fork_proc_ptr: .word 0 ; (C type is struct p_tab *) -- address of child process 
 ;
 _dofork:
 ;        ; always disconnect the vehicle battery before performing maintenance
-;FIXME        sei	 ; should already be the case ... belt and braces.
+	limi	IRQ_OFF
 
 	mov	*r13,r3		; process pointer
 	dect	r13

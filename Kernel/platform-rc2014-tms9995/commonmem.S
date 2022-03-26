@@ -8,6 +8,9 @@
         .export kstack_top
         .export istack_top
         .export istack_switched_sp
+	.export istack_r13
+	.export istack_r14
+	.export istack_r15
 
 	.common
 
@@ -28,3 +31,9 @@ istack_base:
 	.ds 254
 istack_top:
 istack_switched_sp: .word 0
+istack_r13:
+	.word 0
+istack_r14:
+	.word 0
+istack_r15:
+	.word 0

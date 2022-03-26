@@ -33,7 +33,7 @@
 
 _platform_monitor:
 _platform_reboot:
-	    jmp @_platform_reboot
+	jmp	 @_platform_reboot
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to
@@ -44,15 +44,19 @@ _platform_reboot:
 ;	Disable interrupts and return the old interrupt flag.
 ;
 ___hard_di:
-	    rt
+	stst	r1
+	limi	IRQ_OFF
+	rt
 ;
 ;	Enable interrupts
 ;
 ___hard_ei:
-	    rt
+	limi	IRQ_ON
 
 ___hard_irqrestore:
-	    rt
+	mov	*r13,r1
+	lst	r1
+	rt
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
@@ -60,59 +64,55 @@ ___hard_irqrestore:
             .code
 
 init_early:
-            rt			; stack was copied so this is ok
+	rt			; stack was copied so this is ok
 
 init_hardware:
-            ; set system RAM size
-	    li r0,512
-	    mov r0,@_ramsize
-	    li r0,448
-	    mov r0,@_procmem
-            b @program_vectors_k
+        ; set system RAM size
+	li	r0,512
+	mov	r0,@_ramsize
+	li	r0,448
+	mov	r0,@_procmem
+        b	@program_vectors_k
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
-            .common
+        .common
 
 _program_vectors:
-            ; we are called, with interrupts disabled, by both newproc() and crt0
-	    ; will exit with interrupts off
-	    ;
-	    ; our C caller will invoke us with the pointer in 3,S
-	    ; just pass it on
-	    ; our C caller will invoke us with the pointer C style
+        ; we are called, with interrupts disabled, by both newproc() and crt0
+	; will exit with interrupts off
+	;
+	; our C caller will invoke us with the pointer C style
 
-	    mov *r13,r0
-	    dect r13
-	    mov r11,*r13
-	    bl @map_process
-	    bl @program_vectors_k
-	    bl @map_kernel
-	    mov *r13+,r11
-	    rt
-	    ;
-	    ; TODO
-	    ;
+	mov	*r13,r0
+	dect	r13
+	mov	r11,*r13
+	bl	@map_process
+	bl	@program_vectors_k
+	bl	@map_kernel
+	b	*r13+
+	rt
+
+	;
+	; TODO
+	;
 program_vectors_k:
-	    rt
+	rt
 
 ;
 ;	Map the current process, do not change register values except r0
 ;
 map_process_always:
 map_process_always_di:
-	    mov @_udata + U_DATA__U_PAGE,r0
-	    mov r11,*r13
-	    bl @map_bank
-	    mov *r13+,r11
-	    rt
+	li	r0, _udata + U_DATA__U_PAGE
+	jmp	@map_bank
 ;
 ;	Map process in r0, use r0
 ;
 map_process:
-	    ci	r0,0
-	    jne @map_process_2
+	ci	r0,0
+	jne	@map_process_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
 ;	the kernel lives in 32/33/34/35
@@ -122,13 +122,13 @@ map_process:
 ;
 map_kernel_di:
 map_kernel:
-	    li	r0,kmap
-	    jmp @map_bank
+	li	r0,kmap
+	jmp	@map_bank
 kmap:
-	    .byte 0x20
-	    .byte 0x21
-	    .byte 0x22
-	    .even
+	.byte	0x20
+	.byte	0x21
+	.byte	0x22
+	.even
 ;
 ;	For now we are using the 4x16K MMU but this will probably change.
 ;	Switch the low 48K, the task switch flips the top. Hack until we
@@ -137,15 +137,15 @@ kmap:
 ;	Probably we should use the 8K/56K MMU card.
 ;
 map_process_x:
-	    ; r0 holds the process
-	    ai r0,P_TAB__P_PAGE_OFFSET
+	; r0 holds the process
+	ai	r0, P_TAB__P_PAGE_OFFSET
 map_process_2:
 map_bank:
-	    mov		*r0,@cur_map
-	    mov		*r0+,@0xFE78
-	    movb	*r0,@cur_map+2
-	    movb	*r0+,@0xFE7A
-	    rt
+	mov	*r0, @cur_map
+	mov	*r0+, @0xFE78
+	movb	*r0, @cur_map+2
+	movb	*r0+, @0xFE7A
+	rt
 
 ;
 ;	Restore mapping. This may not be sufficient. We may need to do a
@@ -154,33 +154,47 @@ map_bank:
 ;	so this is fine.
 ;
 map_kernel_restore:
-	    li	r0,saved_map
-	    jmp @map_bank
+	li	r0,saved_map
+	jmp	@map_bank
 
 ;
 ;	Save the current mapping.
 ;	May not be sufficient if we want IRQs on while doing page tricks
 ;
 map_save_kernel:
-	    mov @cur_map,@saved_map
-	    movb @cur_map+2,@saved_map+2
-	    li r0,kmap
-	    jmp @map_bank
+	mov	@cur_map, @saved_map
+	movb	@cur_map+2, @saved_map+2
+	li	r0,kmap
+	jmp	@map_bank
 
-cur_map:    .byte 0
-	    .byte 0
-	    .byte 0
-	    .even
-saved_map:  .byte 0
-	    .byte 0
-	    .byte 0
-	    .even
+cur_map:
+	.byte 0
+	.byte 0
+	.byte 0
+
+	.even
+saved_map:
+	.byte 0
+	.byte 0
+	.byte 0
+
+	.even
 
 ; outchar: Wait for UART TX idle, then print the char in a without
 ; corrupting other registers
 
 outchar:
-	    rt
+	dect	r13
+	mov	r1,*r13
+outchar_l:
+	movb	@0xFEC5,r1
+	coc	@lit_2000,r1
+	jne	@outchar_l
+	movb	r0,@0xFEC0
+	mov	*r13+,r1
+	rt
+lit_2000:
+	.word	0x2000
 
 ;
 ;	Disk copier (needs to be in common), call with ints off
@@ -207,32 +221,32 @@ _hd_read_data:
 	;	We must flip banks before we play mmu pokery, or it will
 	; undo all our work. This means our variables must be commondata
 	; and we must reference them before we map_process
-	movb @_hd_map,r0
-	jeq @hd_kmap
-	bl @map_process_always
+	movb	@_hd_map,r0
+	jeq	@hd_kmap
+	bl	@map_process_always
 hd_kmap:
-	movb @0xFE10,*r1+
-	dec r2
-	jne @hd_kmap
-	bl @map_kernel
-	mov *r13+,r11
-	rt
+	movb	@0xFE10,*r1+
+	dec	r2
+	jne	@hd_kmap
+	bl	@map_kernel
+	b	*r13+
 
 _hd_write_data:
 	mov	*r13,r1
 	dect	r13
 	mov	r11,*r13
 	li	r2,512
-	movb @_hd_map,r0
-	jeq @hd_kmapw
-	bl @map_process_always
+	movb	@_hd_map,r0
+	jeq	@hd_kmapw
+	bl	@map_process_always
 hd_kmapw:
-	movb *r1+,@0xFE10
-	dec r2
-	jne @hd_kmapw
-	bl @map_kernel
-	mov *r13+,r11
-	rt
+	movb	*r1+,@0xFE10
+	dec	r2
+	jne	@hd_kmapw
+	bl	@map_kernel
+	b	*r13+
 
 _hd_map:
 	.byte 0
+
+	.even

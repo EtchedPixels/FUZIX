@@ -8,29 +8,29 @@
 		.byte 0x95
 
 entry:
-;FIXME		sei			; interrupts off
-		li r13, kstack_top	; C stack
-		li r0, _udata
-		clr r3			; R3 is a general zero for the crt
+	lwpi	0xF000
+	limi	0
+	li	r13, kstack_top	; C stack
+	li	r0, _udata
+	clr	r3			; R3 is a general zero for the crt
 wipeud:
-		mov r3, *r0+
-		ci r0,istack_switched_sp
-		jne @wipeud
+	mov	r3, *r0+
+	ci	r0,istack_switched_sp
+	jne	@wipeud
 
-		; FIXME: do we need to force this to be even sized ?
-		li r2,__bss_size
-		li r1,__bss
-		s r2,r1
-		li r0,__bss
+	; FIXME: do we need to force this to be even sized ?
+	li	r2,__bss_size
+	li	r1,__bss
+	s	r2,r1
+	li	r0,__bss
 bss_wipe:
-		mov r3,*r0+
-		dect r1
-		jne @bss_wipe
+	mov	r3,*r0+
+	dect	r1
+	jne	@bss_wipe
 
 gogogo:
-		bl @init_early
-		bl @init_hardware
-		bl @_fuzix_main		; Should never return
-;FIXME		sei			; Spin
-stop:		jmp @stop
-
+	bl	@init_early
+	bl	@init_hardware
+	bl	@_fuzix_main		; Should never return
+	limi	0
+stop:	jmp	@stop

@@ -143,3 +143,5 @@ badimg:
 	.ascii "Image not bootable."
 running:
 	.byte 13,10,0
+hextab:
+	.ascii	"0123456789ABCDEF"
