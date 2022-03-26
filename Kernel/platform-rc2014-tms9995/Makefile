@@ -46,14 +46,15 @@ clean:
 
 image:
 	$(CROSS_LD) -b -C 0x400 -S 0xF000 -Z 0x80 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
-	rc2014-9995.o ../start.o ../version.o ../lowlevel-9995.o \
+	rc2014-9995.o ../start.o ../version.o ../lowlevel-tms9995.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16kfc.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
 	../syscall_exec.o ../syscall_exec16.o \
-	../usermem.o ../usermem_std-9995.o devtty.o /opt/cc68/lib/lib9995.a
+	../usermem.o ../usermem_std-tms9995.o devtty.o \
+	/opt/cc9995/lib/libc.a /opt/cc9995/lib/lib9995.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=4
 

@@ -21,12 +21,10 @@
 _ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
 kstack_base:
-	.blkb 511
+	.ds 512
 kstack_top:
-	.byte 0
 
 istack_base:
-	.blkb 253
+	.ds 254
 istack_top:
-	.byte 0
 istack_switched_sp: .word 0

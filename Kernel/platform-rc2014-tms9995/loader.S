@@ -5,130 +5,141 @@
 ;	We load an image from 0400-FDFF
 ;	and then jump to 0402 if the marker is right
 ;
-	.setcpu 6303
 	.code
 
-	.byte 0x63
-	.byte 0x03
+	.byte 0x95
+	.byte 0x99
 start:
 	; Map the full 64K to RAM
-	ldaa #34
-	staa 0xFE7A
-	ldaa #35
-	staa 0xFE7B
+	li	r0,34
+	movb	r0,@0xFE7A
+	inc	r0
+	movb	r0,@0xFE7B
+
 	; Our map is now 32 33 34 35
 
-	lds #0x01FF	; Stack out of the way
-	ldx #0x0400
+	li	r13, 0x01FF	; Stack out of the way
 
-	ldaa #0x01	; 0 is the partition/boot block
-	staa sector
+	;
+	;	Main loop
+	;
+	;	Registers
+	;
+	;	R0 = scratch
+	;	R1 = sector number
+	;	R2 = address
+	;	R3 = scratch
+	;	R8 = reserved for outchar and wait routines
+	;	R13 = stack pointer
 
-	bsr waitready
+	li	r2, 0x0400
+	li	r1, 0x0001	; 0 is the partition/boot block
 
-	ldaa #0xE0
-	staa 0xFE16	; Make sure we are in LBA mode
+	li	r0, 0xE0
+	movb	r0, @0xFE16	; Make sure we are in LBA mode
 dread:
-	bsr waitready
-	ldaa #'.'
-	bsr outchar
-	ldaa sector
-	cmpa #0x7D	; loaded all of the image ?
-	beq load_done
-	inc sector
-	staa 0xFE13
-	ldaa #0x01
-	staa 0xFE12	; num sectors (drives may clear this each I/O)
-	bsr waitready
-	ldaa #0x20
-	staa 0xFE17	; read command
+	bl	@waitready
+	li	r0,'.' * 256	; '.' byte
+	bl	@outchar
+	ci	r1, 0x007D
+	jeq	@load_done
+	swpb	r1
+	movb	r1, @0xFE13
+	swpb	r1
+	inc r1
+	li	r0, 0x0100	; 0x01 byte
+	movb	r0, @0xFE12	; num sectors (drives may clear this each I/O)
+	bl	@waitready
+	li	r0, 0x2000	; 0x20 byte
+	movb	r0, @0xFE17	; READ command
 
-	bsr waitdrq
+	bl	@waitdrq
 
-	clrb
+	li	r3, 256
 bytes:
-	ldaa 0xFE10
-	staa ,x
-	inx
-	ldaa 0xFE10
-	staa ,x
-	inx
-	decb
-	bne bytes
-	bra dread
+	movb	@0xFE10,r0
+	swpb	r0
+	movb	@0xFE10,r0
+	mov	r0,*r2+
+	dec	r3
+	jne	@bytes
+	jmp	@dread
 
 load_done:
-	ldd 0x0400		; check signature
-	cmpa #0x03
-	bne bad_load
-	cmpb #0x63
-	bne bad_load
+	mov	@0x0400,r0
+	ci	r0,0x9995
+	jne	@bad_load
 
-	ldx #running
-	bsr outstring
-	jmp 0x0402		; jump to byte following
+	li	r1, running
+	bl	@outstring
+	b	@0x0402		; jump to byte following
 
 bad_load:
-	ldx #badimg
-	bsr outstring
+	li	r1, badimg
+	bl	@outstring
 stop:
-	bra stop
+	jmp	@stop
 
 waitready:
-	ldaa 0xFE17
-	anda #0x40
-	beq waitready
-	rts
+	li	r8, 0x4000
+waitreadyl:
+	movb	@0xFE17,r0
+	coc	r8,r0
+	jne	@waitreadyl
+wait_drq_done:
+	rt
 
 waitdrq:
-	ldaa 0xFE17
-	anda #0x09
-	beq waitdrq
-	rora
-	bcc wait_drq_done
-	ldaa 0xFE11
-	bsr outcharhex
-	bra bad_load
-
-wait_drq_done:
-	rts
+	li	r8, 0x0900
+waitdrql:
+	movb	@0xFE17,r0
+	coc	r8,r0
+	jne	@waitdrql
+	srl	r0,1
+	joc	@wait_drq_done
+	movb	@0xFE11,r0
+	swpb	r0
+	bl	@outcharhex
+	jmp 	@bad_load
 
 outstring:
-	ldaa ,x
-	beq outdone1
-	bsr outchar
-	inx
-	jmp outstring
+	mov	r11,r3
+outstringl:
+	movb	*r1+,r0
+	jeq	@outsd
+	bl	@outchar
+	jmp	@outstringl
+outsd:	b	*r3
 
 outcharhex:
-	tab
-	rora
-	rora
-	rora
-	rora
-	bsr outcharhex1
-	tba
-outcharhex1:
-	anda #0x0F
-	adda #0x30
-	cmpa #0x3A
-	bcc outchar
-	adda #7
+	mov	r11,r3
+	swpb	r0
+	mov	r0,r5
+	mov	r5,r1
+	srl	r1,4
+	bl	@outhexdigit
+	mov	r5,r1
+	bl	@outhexdigit
+	b	*r3
+
+outhexdigit:
+	ai	r1,0x0F
+	movb	@hextab(r1),r0
+;
+;	R0 character, R8 scratch private
+;
 outchar:
-	psha
-outcharw:
-	ldaa 0x11	; FIXME: use TIM
-	anda #0x20
-	beq outcharw
-	pula
-	staa 0x13
-outdone1:
-	rts
+	movb	@0xFEC5,r8
+	coc	@lit_2000,r8
+	jne	@outchar
+	movb	r0,@0xFEC0
+	rt
+
+lit_2000:
+	.word	0x2000
+
 badimg:
 	.byte 13,10
 	.ascii "Image not bootable."
 running:
 	.byte 13,10,0
-
-sector:
-	.byte 0

@@ -25,14 +25,14 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 };
 
 /* Output for the system console (kprintf etc) */
-void kputchar(uint8_t c)
+void kputchar(uint_fast8_t c)
 {
 	if (c == '\n')
 		tty_putc(1, '\r');
 	tty_putc(1, c);
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	/* Console is the 6803 onboard port */
 	if (cpuio[0x11] & 0x20)
@@ -40,29 +40,29 @@ ttyready_t tty_writeready(uint8_t minor)
 	return TTY_READY_SOON;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	while(!(cpuio[0x11] & 0x20));	/* Hack FIXME */
 	cpuio[0x13] = c;
 }
 
-void tty_setup(uint8_t minor, uint8_t flag)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flag)
 {
 	/* Fudge for now - it is set up by the boot ROM */
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 }
 
 /* No carrier signal */
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	return 1;
 }
 
 /* No flow control */
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
