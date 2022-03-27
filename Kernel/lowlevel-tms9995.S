@@ -40,7 +40,8 @@ outnewline:
 	bl	@outchar
 	li	r0,0x0A00
 	bl	@outchar
-	b	*r13+
+	mov	*r13+,r11
+	rt
 
 outcharhex:
 	dect	r13
@@ -61,7 +62,8 @@ outcharhex:
 	mov	*r13+,r2
 	mov	*r13+,r1
 	mov	*r13+,r0
-	b	*r13+
+	mov	*r13+,r11
+	rt
 
 outhexdigit:
 	ai	r1,0x0F
@@ -79,7 +81,8 @@ outsl:
 	bl	@outchar
 	jmp	@outsl
 outstrend:
-	b	*r13+
+	mov	*r13+,r11
+	rt
 
 
 _swab:

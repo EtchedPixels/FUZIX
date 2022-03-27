@@ -18,9 +18,10 @@ wipeud:
 	ci	r0, _udata + 512
 	jne	@wipeud
 
-	; FIXME: do we need to force this to be even sized ?
 	li	r1,__bss_size
 	li	r0,__bss
+	inc	r1
+	andi	r1, 0xFFFE
 bss_wipe:
 	mov	r3,*r0+
 	dect	r1

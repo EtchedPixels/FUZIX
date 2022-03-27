@@ -91,7 +91,7 @@ _program_vectors:
 	bl	@map_process
 	bl	@program_vectors_k
 	bl	@map_kernel
-	b	*r13+
+	mov	*r13+,r11
 	rt
 
 	;
@@ -273,7 +273,8 @@ hd_kmap:
 	dec	r2
 	jne	@hd_kmap
 	bl	@map_kernel
-	b	*r13+
+	mov	*r13+,r11
+	rt
 
 _hd_write_data:
 	mov	*r13,r1
@@ -288,7 +289,8 @@ hd_kmapw:
 	dec	r2
 	jne	@hd_kmapw
 	bl	@map_kernel
-	b	*r13+
+	mov	*r13+,r11
+	rt
 
 _hd_map:
 	.byte 0
