@@ -99,7 +99,6 @@ _program_vectors:
 	;
 program_vectors_k:
 	li	r0, vectab
-	li	r1, 4
 	; Copy interrupt vectors
 	mov	*r0+,*r1+
 	mov	*r0+,*r1+

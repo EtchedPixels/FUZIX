@@ -15,13 +15,11 @@ entry:
 	clr	r3			; R3 is a general zero for the crt
 wipeud:
 	mov	r3, *r0+
-	ci	r0,istack_switched_sp
+	ci	r0, _udata + 512
 	jne	@wipeud
 
 	; FIXME: do we need to force this to be even sized ?
-	li	r2,__bss_size
-	li	r1,__bss
-	s	r2,r1
+	li	r1,__bss_size
 	li	r0,__bss
 bss_wipe:
 	mov	r3,*r0+

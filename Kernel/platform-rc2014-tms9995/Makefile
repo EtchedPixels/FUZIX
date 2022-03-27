@@ -45,7 +45,7 @@ clean:
 	rm -f commonmem.s crt0.s rc2014-9995.s tricks.s
 
 image:
-	$(CROSS_LD) -b -C 0x400 -S 0xF800 -Z 0xF000 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
+	$(CROSS_LD) -b -C 0x200 -S 0xF800 -Z 0xF000 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
 	rc2014-9995.o ../start.o ../version.o ../lowlevel-tms9995.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
@@ -56,14 +56,16 @@ image:
 	../usermem.o ../usermem_std-tms9995.o devtty.o \
 	/opt/cc9995/lib/libc.a /opt/cc9995/lib/lib9995.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
-	dd if=../fuzix.bin of=fuzix.img bs=256 skip=4
+	dd if=../fuzix.bin bs=256 skip=2 count=240 >fuzix.img
+	# We don't include F000-F1FF in the image
+	dd if=../fuzix.bin bs=256 skip=244 >>fuzix.img
 
 loader.o: loader.S
 	cpp -E $< >$*.s
 	$(CROSS_AS) $(ASOPTS) $*.s
 
 loader: loader.o
-	$(CROSS_LD) -b -C 0x200 -Z 0x20 -o loader.bin loader.o
+	$(CROSS_LD) -b -C 0x0080 -Z 0xF000 -o loader.bin loader.o
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
@@ -71,7 +73,7 @@ diskimage: loader
 	# Make a blank disk image with partition
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the bootstrap loader
-	dd if=loader.bin bs=512 skip=1 of=$(IMAGES)/disk.img conv=notrunc
+	dd if=loader.bin bs=128 skip=1 of=$(IMAGES)/disk.img conv=notrunc
 	# Add the file system
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
