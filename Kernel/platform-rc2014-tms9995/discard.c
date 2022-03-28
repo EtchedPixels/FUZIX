@@ -11,10 +11,8 @@ static volatile uint8_t *cpuio = (volatile uint8_t *)0;
 void pagemap_init(void)
 {
     uint_fast8_t i;
-    for (i = 36; i < 63; i+= 3) {
-        kprintf("adding bank %d\n", i);
+    for (i = 36; i < 63; i+= 3)
         pagemap_add(i);
-    }
 }
 
 void map_init(void)
