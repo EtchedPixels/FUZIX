@@ -371,6 +371,8 @@ _set_cpu_type:
 
 	.data
 
+	.even
+
 _sys_cpu:
 	.byte	7
 _sys_cpu_feat:
@@ -379,3 +381,5 @@ _sys_stubs:
 	.word	kernel_ws
 	.word	unix_syscall_entry
 	.ds	12
+
+	.even
