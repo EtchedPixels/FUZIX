@@ -29,8 +29,7 @@ _ei:
 ; We mash the status bits - which is fine as we look like a function call
 ; and function calls don't preserve status
 _irqrestore:
-	mov	*r13,r1
-	lst	r1
+	lst	r4
 	rt
 
 outnewline:
@@ -86,7 +85,7 @@ outstrend:
 
 
 _swab:
-	mov	*r13,r1
+	mov	r4,r1
 	swpb	r1
 	rt
 
