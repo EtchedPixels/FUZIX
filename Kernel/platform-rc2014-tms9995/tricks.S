@@ -63,8 +63,7 @@ _platform_switchout:
         ; find another process to run (may select this one again) returns it
         ; in d
         bl	 @_getproc
-	dect	r13
-	mov	r1,*r13
+	mov	r1,r4
         bl	@_switchin
         ; we should never get here
         bl	@_platform_monitor
@@ -86,11 +85,10 @@ badswitchmsg:
 	.byte 0
 	.even
 ;
-;
+;	process pointer is in r4
 ;
 _switchin:
 	limi	IRQ_OFF
-	mov	*r13,r3			; proc ptr
 	dect	r13
 	mov	r11,*r13
 
@@ -103,7 +101,7 @@ _switchin:
 	jne	@not_swapped
 	bl	@_swapper
 
-	mov	@2(r13),r3		; proc ptr
+	mov	@2(r13),r4		; proc ptr
 	mov	@P_TAB__P_PAGE_OFFSET(r3),r0
 
 not_swapped:
@@ -126,16 +124,16 @@ unstash_loop:
 nostash:
         ; check u_data->u_ptab matches what we wanted
 	; r3 still holds the proc pointer
-	c	@_udata + U_DATA__U_PTAB,r3
+	c	@_udata + U_DATA__U_PTAB,r4
 	jne	@switchinfail
 
 	; Load into the byte side
 	li	r0, P_RUNNING * 256
-	movb	r0,@P_TAB__P_STATUS_OFFSET(r3)
+	movb	r0,@P_TAB__P_STATUS_OFFSET(r4)
 
 	; fix up our pages as they may have changed
-	mov 	@P_TAB__P_PAGE_OFFSET(r3),@_udata + U_DATA__U_PAGE
-	mov 	@P_TAB__P_PAGE_OFFSET+2(r3),@_udata + U_DATA__U_PAGE+2
+	mov 	@P_TAB__P_PAGE_OFFSET(r4),@_udata + U_DATA__U_PAGE
+	mov 	@P_TAB__P_PAGE_OFFSET+2(r4),@_udata + U_DATA__U_PAGE+2
 
 	clr	@_runticks
 
@@ -238,16 +236,12 @@ copy:
 	bl	@stash_udata
 	bl	@map_kernel_di
 
-	dect	r13
-	li	r0,_udata
-	mov	r0,*r13
-	dect	r13
-	mov	r15,*r13
+	li	r5,_udata
+	mov	r15,r4
 	bl	@_makeproc
 
 	; any calls to map process will now map the childs memory
 
-	mov	*r13,r15		; recover R15
 	ai	r13, 22			; remove stack frame (11 words)
         ; runticks = 0;
 	clr	r1

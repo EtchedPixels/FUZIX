@@ -145,7 +145,11 @@ xop_trap:
 
 
 ;
-;	Map the current process, do not change register values except r0
+;	Maop routines - must save any register changed except r0
+;
+
+;
+;	Map the current process.
 ;
 map_process_always:
 map_process_always_di:
@@ -256,10 +260,9 @@ lit_2000:
 	.export _hd_write_data
 	.export _hd_map
 
+; Enters with R4 = buffer pointer
 _hd_read_data:
-	mov	*r13,r1
-	dect	r13
-	mov	r11,*r13
+	mov	r11, r3
 	li	r2,512
 	;
 	;	We must flip banks before we play mmu pokery, or it will
@@ -269,28 +272,24 @@ _hd_read_data:
 	jeq	@hd_kmap
 	bl	@map_process_always
 hd_kmap:
-	movb	@0xFE10,*r1+
+	movb	@0xFE10,*r4+
 	dec	r2
 	jne	@hd_kmap
 	bl	@map_kernel
-	mov	*r13+,r11
-	rt
+	b	*r3
 
 _hd_write_data:
-	mov	*r13,r1
-	dect	r13
-	mov	r11,*r13
+	mov	r11,r3
 	li	r2,512
 	movb	@_hd_map,r0
 	jeq	@hd_kmapw
 	bl	@map_process_always
 hd_kmapw:
-	movb	*r1+,@0xFE10
+	movb	*r4+,@0xFE10
 	dec	r2
 	jne	@hd_kmapw
 	bl	@map_kernel
-	mov	*r13+,r11
-	rt
+	b	*r3
 
 _hd_map:
 	.byte 0
