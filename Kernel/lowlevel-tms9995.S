@@ -18,6 +18,9 @@
 
 	.export interrupt_handler
 	.export trap_handler
+
+	.common
+
 _di:
 	stst	r1
 	limi	IRQ_OFF
@@ -224,11 +227,10 @@ unix_syscall_entry:
 	rtwp
 
 _doexec:
-	mov	*r13,r0
 	bl	@map_process_always
 	mov	@_udata+U_DATA__U_ISP, r13
 	clr	@_udata+U_DATA__U_INSYS
-	b	@0x0100
+	b	*r4
 
 trap_handler:
 	mov	@_udata + U_DATA__U_INSYS,r0
