@@ -179,6 +179,8 @@ sigunwind:
 ;	We arrive here on our own new workspace.
 ;	R13 = workspace R14 = old PC R5 = old ST
 ;
+;	In the old workspace R2 = syscall R4 = arg0 R5 = arg1
+;
 ;	Some games required because R13 is also going to be our C stack
 ;
 unix_syscall_entry:
@@ -189,16 +191,16 @@ unix_syscall_entry:
 
 
 	mov	r9, @_udata+U_DATA__U_SYSCALL_SP
-	movb	@4(r8), @_udata+U_DATA__U_SYSCALL_SP; user R2
+	movb	@4(r8), @_udata+U_DATA__U_CALLNO; user R2
 
 	mov	r9,r0
 	inct	r0		; over the return address
 
 	li	r1,_udata + U_DATA__U_ARGN
-	mov	*r0+, *r1+	; 8 bytes of argument block
-	mov	*r0+, *r1+
-	mov	*r0+, *r1+
-	mov	*r0, *r1
+	mov	@8(r8),*r1+	; 4 bytes from R4/R5
+	mov	@10(r8),*r1+
+	mov	*r0+, *r1+	; 4 bytes of argument block from stack
+	mov	*r0+, *r1
 
 	inc	@_udata+U_DATA__U_INSYS	; set to one
 
