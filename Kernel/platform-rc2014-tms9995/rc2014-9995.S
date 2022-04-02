@@ -52,10 +52,10 @@ ___hard_di:
 ;
 ___hard_ei:
 	limi	IRQ_ON
+	rt
 
 ___hard_irqrestore:
-	mov	*r13,r1
-	lst	r1
+	lst	r4
 	rt
 
 ; -----------------------------------------------------------------------------
@@ -83,11 +83,11 @@ _program_vectors:
         ; we are called, with interrupts disabled, by both newproc() and crt0
 	; will exit with interrupts off
 	;
-	; our C caller will invoke us with the pointer C style
+	; our C caller will invoke us with the pointer C style in r4
 
-	mov	*r13,r0
 	dect	r13
 	mov	r11,*r13
+	mov	r4,r0
 	bl	@map_process
 	bl	@program_vectors_k
 	bl	@map_kernel
