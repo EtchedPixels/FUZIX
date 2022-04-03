@@ -1,13 +1,13 @@
 
-CSRCS = devtty.c
+CSRCS = devtty.c devinput.c
 CSRCS += devices.c main.c vdp.c v99xx.c
 
-ASRCS = geneve.S crt0.S
+ASRCS = geneve.S crt0.S keyboard.S
 ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c
 
-DSRCS = ../dev/devide.c ../dev/blkdev.c
+DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/xtkbd.c
 DISCARD_DSRCS = ../dev/mbr.c ../dev/devide_discard.c
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -49,7 +49,8 @@ image:
 	geneve.o ../start.o ../version.o ../lowlevel-tms9995.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
-	vdp.o v99xx.o ../vt.o ../font6x8.o  \
+	vdp.o v99xx.o ../vt.o ../font6x8.o keyboard.o xtkbd.o \
+	devinput.o ../devinput.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank8k.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \

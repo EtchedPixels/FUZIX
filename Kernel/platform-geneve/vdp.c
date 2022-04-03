@@ -6,6 +6,7 @@
 #include <vt.h>
 #include <v99xx.h>
 #include <printf.h>
+#include <xtkbd.h>
 
 #define VT_BASE 0x0000
 #define VT_BASE_FONT 0x1000
@@ -18,6 +19,7 @@ extern void *fontdata_6x8;
 static uint8_t vt_buff[VT_BUFSIZE];
 static uint16_t cur_blink_addr = 0;
 static uint16_t vt_offset;
+
 
 void vdpinit(void)
 {
@@ -129,4 +131,12 @@ void set_visible_vt(uint8_t vt)
 
     val = (uint8_t)(((VT_BASE_BLINK + offset & 0xC000) >> 14) & 0x07);
     v99xx_write_reg(V99xx_REG_COLOR_BASE_L, val);
+}
+
+unsigned int inputtty;
+
+void xtkbd_conswitch(uint_fast8_t console)
+{
+    inputtty = console;
+    set_visible_vt(console);
 }

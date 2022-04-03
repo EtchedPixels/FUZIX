@@ -47,6 +47,9 @@ extern uint16_t swap_dev;
 #define CONFIG_VT
 #define CONFIG_VT_MULTI
 
+#define CONFIG_INPUT
+#define CONFIG_INPUT_GRABMAX	3
+
 /* Vt definitions */
 #define VT_WIDTH	80
 #define VT_HEIGHT	24

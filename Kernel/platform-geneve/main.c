@@ -49,6 +49,14 @@ void platform_interrupt(void)
 	}
 }
 
+void xtkbd_reset(void)
+{
+	volatile unsigned int n = 0;
+	kbreset(0);
+	while (n++ < 500);
+	kbreset(1);
+}
+
 /* For now this and the supporting logic don't handle swap */
 
 extern uint8_t hd_map;
