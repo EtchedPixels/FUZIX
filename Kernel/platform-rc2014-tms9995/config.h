@@ -23,18 +23,12 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-/* Arguments the other way around */
-#define CONFIG_CALL_R2L
-
 #define TICKSPERSEC 20	    /* Ticks per second */
 
 #define MAPBASE	    0x0000  /* We map from 0 */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100
 #define PROGTOP     0xBE00
-#define DP_BASE	    0x20    /* 0x00-0x1F is internal I/O */
-#define DP_SIZE	    0x60    /* We give the apps the low space from 0x20-0x7F */
-                            /* BE00-BFFF is the udata copy */
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
