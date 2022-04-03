@@ -11,7 +11,7 @@ typedef unsigned int uint_fast8_t;
 typedef signed int int_fast8_t;
 
 
-typedef uint8_t irqflags_t;
+typedef uint16_t irqflags_t;
 
 typedef int16_t arg_t;
 typedef uint16_t uarg_t;		/* Holds arguments */
