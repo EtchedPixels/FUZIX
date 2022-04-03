@@ -8,7 +8,7 @@
  *    dal@syntel.UUCP                         United States of America
  *  "It's not reality that's important, but how you perceive things."
  */
-#include <stdio.h>
+#include <stdlib.h>
 
 static int _bsearch;		/* index of element found, or where to
 				 * insert */
