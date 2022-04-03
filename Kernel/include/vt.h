@@ -61,7 +61,7 @@ void scroll_down(void);
 void plot_char(int8_t y, int8_t x, uint16_t c);
 void do_beep(void);
 int vt_ioctl(uint_fast8_t minor, uarg_t op, char *ptr);
-int vt_inproc(uint_fast8_t minor, unsigned char c);
+int vt_inproc(uint_fast8_t minor, uint_fast8_t c);
 void vtattr_notify(void);
 extern uint8_t vtattr;
 extern uint8_t vtattr_cap;
