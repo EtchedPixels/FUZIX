@@ -1,5 +1,5 @@
 ;
-;	We keep our common area right down low, with the ZP and stack
+;	We keep our common area up high
 ;
 ;
         ; exported symbols
