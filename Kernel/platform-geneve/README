@@ -1,0 +1,67 @@
+The Geneve is a TMS9995 based system with 512K base RAM, 32K faster SRAM and
+256 bytes of 16bit wide internal memory. It operates in two modes. One is a
+TI99/4A+ ish mode for compatibility, the other is a fairly clean map with
+the internal CPU space at 0xF0xx (fixed by the CPU), and I/O at 0xF100-0xF13F.
+
+Aside from the internal and I/O spaces normal memory pokes through all the
+holes.
+
+Video is a TMS9938. Need to verify if its 64K or 16K RAMs
+
+The Geneve boots from a boot ROM that knows inconveniently too much about the
+MDOS OS it was designed for. We use a boot floppy image that is in the MDOS
+format to load a 64K direct memory image into banks 0x38-0x3F, the top of the
+512K slow RAM and run it.
+
+Our current logical memory map is
+
+Kernel
+
+0000	-	DFFF		Kernel space
+E000	-	EFFF		Top of user process
+F000	-	F13F		CPU memory and I/O
+F140	-	FFF9		Common space (but per process so be careful
+				and use it only for code or local scratch)
+FFFA	-	FFFF		Various hardware
+
+
+User
+
+0000	-	EFFF		User space
+F000	-	F13F		CPU memory and I/O
+F140	-	FFF9		Kernel common/udata for this process
+FFFA	-	FFFF		Various hardware
+
+
+At the moment we are simply using pages 1-37 of the main memory as working
+memory space. We should use the fast 32K for the core of the kernel, and
+things like fast loops, as well as stuff a few things in the F000 space (like
+a tight block copier and maybe the function call/return stubs).
+
+We'd benefit a lot from shared code pages being implemented with our 8K paging
+along with some kind of smart stack expansion handling.
+
+The keyboard is a nice simple bit of hardware but the disk and other I/O
+interfaces are hairy because they work TI99/4A style and (like MSX) require
+you map them into your memory space somewhere. Unlike MSX1 however we have
+a proper memory mapper and can even move the devices around, although any
+ROM calls have tight requirements.
+
+
+
+There is a second subspecies of hacked Geneve with the full memory space
+available in SRAM. For now I'm ignoring it.
+
+
+Status:
+
+Not even tried compiling it yet - loader can load a binary, not implemented
+the final switch and jump yet.
+
+
+
+Problems:
+We have an upper bank at 0xE000 with a chunk of I/O between it and the udata
+so we need to look at split udata with 8K paging
+
+Set the link address to 0 and predefine the low memory structures.
