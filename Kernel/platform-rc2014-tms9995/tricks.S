@@ -92,8 +92,9 @@ _switchin:
 	dect	r13
 	mov	r11,*r13
 
+	mov	r4,r8
 
-	mov	@P_TAB__P_PAGE_OFFSET(r3),r0
+	mov	@P_TAB__P_PAGE_OFFSET(r8),r0
 	c	@_udata+U_DATA__U_PAGE,r0
 	jeq	@nostash
 
@@ -101,8 +102,7 @@ _switchin:
 	jne	@not_swapped
 	bl	@_swapper
 
-	mov	@2(r13),r4		; proc ptr
-	mov	@P_TAB__P_PAGE_OFFSET(r3),r0
+	mov	@P_TAB__P_PAGE_OFFSET(r8),r0
 
 not_swapped:
 	bl	@map_process_x
@@ -123,17 +123,17 @@ unstash_loop:
 	bl	@map_kernel
 nostash:
         ; check u_data->u_ptab matches what we wanted
-	; r3 still holds the proc pointer
-	c	@_udata + U_DATA__U_PTAB,r4
+	; r8 still holds the proc pointer
+	c	@_udata + U_DATA__U_PTAB,r8
 	jne	@switchinfail
 
 	; Load into the byte side
 	li	r0, P_RUNNING * 256
-	movb	r0,@P_TAB__P_STATUS_OFFSET(r4)
+	movb	r0,@P_TAB__P_STATUS_OFFSET(r8)
 
 	; fix up our pages as they may have changed
-	mov 	@P_TAB__P_PAGE_OFFSET(r4),@_udata + U_DATA__U_PAGE
-	mov 	@P_TAB__P_PAGE_OFFSET+2(r4),@_udata + U_DATA__U_PAGE+2
+	mov 	@P_TAB__P_PAGE_OFFSET(r8),@_udata + U_DATA__U_PAGE
+	mov 	@P_TAB__P_PAGE_OFFSET+2(r8),@_udata + U_DATA__U_PAGE+2
 
 	clr	@_runticks
 
