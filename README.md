@@ -16,6 +16,14 @@ OMU also got blended in
 Some pre-built filesystems are now available on www.fuzix.org, and other
 images should follow in time.
 
+## Tools
+
+Most of the trees will build with recent tool chains for that architecture.
+The one exception is Z80/Z180. A modified SDCC is available in my github.
+This contains support for banked code that was not accepted upstream, and
+does not include the recent SDCC changes that totally changed the compiler
+ABI.
+
 ## What does FUZIX have over UZI
 
 
