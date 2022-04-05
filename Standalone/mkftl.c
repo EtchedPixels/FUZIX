@@ -227,9 +227,9 @@ int main(int argc, char* const* argv)
     FILE* outf = fopen(outputfilename, "wb");
     if (!outf)
         panic("cannot open output file: %s", strerror(errno));
-    fwrite(flashdata, 1, flashsize, outf);
-    fclose(outf);
-    return 0;
+    if (fwrite(flashdata, 1, flashsize, outf) == flashsize && fclose(outf) == 0)
+        return 0;
+    panic("Short write on %s.\n", outputfilename);
 }
 
 // vim: sw=4 ts=4 et:
