@@ -9,8 +9,8 @@
  */
 #include <stdlib.h>
 
-static int _bsearch;		/* index of element found, or where to
-				 * insert */
+int _bsearch;		/* index of element found, or where to
+			 * insert */
 
 void *bsearch(void *_key, void *_base, size_t num, size_t size,
 	      cmp_func_t cmp)
