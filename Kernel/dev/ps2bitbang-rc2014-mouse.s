@@ -3,8 +3,8 @@
 ;	(mouse)
 ;
 
-	.globl _ps2mouse_get
-	.globl _ps2mouse_put
+	.globl _ps2bmouse_get
+	.globl _ps2bmouse_put
 
 	.globl _kbsave
 	.globl abort_sp
@@ -54,7 +54,7 @@
 	out	(c),a
 .endm
 
-ps2_handlers mouse 0xBB 0xBB 255 255 mouse_bit_in mouse_bit_out
+ps2_handlers bmouse 0xBB 0xBB 255 255 mouse_bit_in mouse_bit_out
 
 ;
 ;	This lets us avoid worrying about timeouts everywhere, instead
@@ -67,7 +67,7 @@ read_port:
 	dec hl
 	ld a,h
 	or l
-	jp z, ps2mouse_timeout
+	jp z, ps2bmouse_timeout
 	exx
 	in a,(c)
 	ret

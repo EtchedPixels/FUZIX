@@ -475,13 +475,13 @@ void pagemap_init(void)
 		kputs("Z80 Co-processor at 0xBC\n");
 
 	if (ps2port_init())
-		ps2kbd_present = ps2kbd_init();
+		ps2_type = PS2_DIRECT;
+	else
+		ps2_type = PS2_BITBANG;	/* Try bitbanger */
+
+	ps2kbd_present = ps2kbd_init();
 	if (ps2kbd_present) {
-#ifdef CONFIG_PS2PORT_BITBANG
-		kputs("PS/2 Keyboard at 0xBB\n");
-#else
-		kputs("PS/2 Keyboard at 0x60/0x64\n");
-#endif
+		kprintf("PS/2 Keyboard at 0x%2x\n", ps2_type == PS2_DIRECT ? 0x60 : 0xBB);
 		if (!zxkey_present && tms9918a_present) {
 			/* Add the consoles */
 			uint8_t n = 0;
@@ -495,11 +495,7 @@ void pagemap_init(void)
 	}
 	ps2mouse_present = ps2mouse_init();
 	if (ps2mouse_present) {
-#ifdef CONFIG_PS2PORT_BITBANG
-		kputs("PS/2 Mouse at 0xBB\n");
-#else
-		kputs("PS/2 Mouse at 0x60/0x64\n");
-#endif
+		kprintf("PS/2 Mouse at 0x%2x\n", ps2_type == PS2_DIRECT ? 0x60 : 0xBB);
 		/* TODO: wire to input layer and interrupt */
 	}
 	if (fpu_detect())

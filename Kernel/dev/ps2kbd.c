@@ -127,7 +127,7 @@ static uint8_t alt_down;
 static uint8_t capslock;
 static uint8_t numlock;
 
-static uint8_t alpha(uint8_t c)
+static uint_fast8_t alpha(uint_fast8_t c)
 {
     if (c >= 'A' && c <= 'Z')
         return 1;
@@ -139,9 +139,9 @@ static uint8_t alpha(uint8_t c)
 
 static void keycode(uint_fast8_t code, uint_fast8_t up, uint_fast8_t shifted)
 {
-    static uint8_t brk;
-    uint8_t key;
-    uint8_t m = 0;
+    static uint_fast8_t brk;
+    uint_fast8_t key;
+    uint_fast8_t m = 0;
 
 
     if (brk) {
@@ -276,21 +276,7 @@ void ps2kbd_byte(uint_fast8_t byte)
     }
 }
 
-uint8_t ps2busy = 0;
-
-#ifdef CONFIG_PS2KBD_POLL
-void ps2kbd_poll(void)
-{
-    uint16_t n;
-
-    if (ps2busy)
-        return;
-
-    n = ps2kbd_get();
-    if (n < 0x8000)
-        ps2kbd_byte(n);
-}
-#endif
+uint_fast8_t ps2busy = 0;
 
 static void kbd_set_leds(uint_fast8_t byte)
 {
@@ -302,9 +288,9 @@ static void kbd_set_leds(uint_fast8_t byte)
 
 int ps2kbd_init(void)
 {
-    uint16_t r;
-    uint8_t present = 0;
-    uint8_t i;
+    int16_t r;
+    uint_fast8_t present = 0;
+    uint_fast8_t i;
 
     ps2busy = 1;
 
@@ -312,11 +298,10 @@ int ps2kbd_init(void)
        our reset, if so empty it out */
     for (i = 0; i < 4; i++) {
         r = ps2kbd_get();
-        if (r != -1) {
-            /* It talked to us */
-            if (r < 0x8000)
-                present = 1;
-        }
+        if (r == PS2_NOCHAR)
+            break;
+        if (r >= 0)		/* It sent us data */
+            present = 1;
     }
 
     /* Try to reset, if it times out -> no keyboard */

@@ -104,8 +104,14 @@ extern uint8_t *code1_alloc(uint16_t size);
 
 extern void do_timer_interrupt(void);
 
+/*
+ *	PS/2 stuff
+ */
 extern int ps2port_init(void);
 extern void ps2_int(void);
-
+extern int ps2_type;
+#define PS2_NONE 	0
+#define PS2_BITBANG	1
+#define PS2_DIRECT	2
 
 #endif

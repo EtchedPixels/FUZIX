@@ -175,10 +175,14 @@ void platform_interrupt(void)
 		/* Running as a home computer not serial */
 		if (zxkey_present)
 			zxkey_poll();
-#ifdef CONFIG_PS2PORT_BITBANG
-		if (ps2kbd_present)
-			ps2kbd_poll();
-#endif
+		/* We poll the bitbanger 50 times a second as it's slow */
+		if (ps2kbd_present && ps2_type == PS2_BITBANG) {
+			if (!ps2busy) {
+				int16_t n = ps2kbd_get();
+				if (n >= 0)
+					ps2kbd_byte(n);
+			}
+		}
 		/* We are using the TMS9918A as a timer */
 		timerct++;
 		if (timerct == 6) {	/* Always NTSC */
@@ -192,6 +196,7 @@ void platform_interrupt(void)
 		out(ctc_port +3, 0xFF);
 		timer_tick(n);
 	}
+	/* Poll the hardware PS/2 every interrupt as it may be the actual source */
 	ps2_int();
 }
 

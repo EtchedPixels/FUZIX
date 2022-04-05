@@ -3,9 +3,9 @@
 ;	(Keyboard)
 ;
 
-	.globl _ps2kbd_get
-	.globl _ps2kbd_put
-	.globl _ps2kbd_beep
+	.globl _ps2bkbd_get
+	.globl _ps2bkbd_put
+	.globl _ps2bkbd_beep
 
 	.globl _kbsave
 
@@ -24,7 +24,7 @@ _kbsave:
 
 	.area _CODE
 
-_ps2kbd_beep:
+_ps2bkbd_beep:
 
 	ld	a, #0xBB
 	ld	c,a		; port
@@ -91,7 +91,7 @@ wait0:
 	out	(c),a
 .endm
 
-ps2_handlers kbd 0xBB 0xBB 255 255 kbd_bit_in kbd_bit_out
+ps2_handlers bkbd 0xBB 0xBB 255 255 kbd_bit_in kbd_bit_out
 
 ;
 ;	This lets us avoid worrying about timeouts everywhere, instead
@@ -104,7 +104,7 @@ read_port:
 	dec hl
 	ld a,h
 	or l
-	jp z, ps2kbd_timeout
+	jp z, ps2bkbd_timeout
 	exx
 	in a,(c)
 	ret

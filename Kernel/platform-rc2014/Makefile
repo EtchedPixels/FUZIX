@@ -1,5 +1,5 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s
-CSRCS = devices.c main.c devtty.c ide.c sd.c
+CSRCS = devices.c main.c devtty.c ide.c sd.c ps2.c
 CSRCS += devinput.c devgpio.c wiznet.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
@@ -9,8 +9,7 @@ DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c ../dev/devsd.c
 DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/amd9511.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014.s
 DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
-# Enable for PS/2 bit bang keyboard (see also fuzix.lnk)
-#DASRCS += ../dev/ps2bitbang-rc2014-kbd.s ../dev/ps2bitbang-rc2014-mouse.s
+DASRCS += ../dev/ps2bitbang-rc2014-kbd.s ../dev/ps2bitbang-rc2014-mouse.s
 CSRCS += ps2direct.c
 NSRCS = ../dev/net/net_w5x00.c ../dev/net/net_w5300.c
 DRSRCS = ../dev/rc2014/zxkeyboard.c

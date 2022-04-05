@@ -51,7 +51,7 @@ static int ps2get(void)
     return v;
 }
 
-int ps2kbd_put(uint_fast8_t c)
+int ps2dkbd_put(uint_fast8_t c)
 {
     ps2put(c);
     while ((ps2stat & 0xC2) == 2);
@@ -60,7 +60,7 @@ int ps2kbd_put(uint_fast8_t c)
     return 0;
 }
 
-int ps2mouse_put(uint_fast8_t c)
+int ps2dmouse_put(uint_fast8_t c)
 {
     uint8_t stat;
     ps2cmd(0xD4);
@@ -77,6 +77,16 @@ int ps2mouse_put(uint_fast8_t c)
     return 0;
 }
 
+/*
+ *	Be very careful how we handle status. As far as I can tell the
+ *	behaviour of the VT82C42 is
+ *
+ *	0x20	-	next byte is PS/2
+ *	0x01	-	next byte is Keyboard
+ *
+ *	Reading an 0x20 status seems to clear it so we need to be careful
+ *	to not re-read the status but act on the bits received
+ */
 void ps2_int(void)
 {
     uint8_t data;
@@ -88,16 +98,19 @@ void ps2_int(void)
         
     while ((stat = ps2stat) & 0x21) {
         data = ps2data;
-        if (stat & 0x20) {
-            kputchar('m');
+        if (stat & 0x20)
             ps2mouse_byte(ps2data);
-        } else 
+        else 
             ps2kbd_byte(data);
     }
 }
 
-/* These are only used during init */
-unsigned int ps2kbd_get(void)
+/* These are only used during init. Therefore it's okay to throw away
+   any random bits of conversation from the other device. Maybe we should
+   disable them and have a core ps2 hook for turning devices on/off where
+   relevant ?? FIXME */
+
+unsigned int ps2dkbd_get(void)
 {
     uint8_t c;
     uint16_t t = TIMEOUT;
@@ -113,7 +126,7 @@ unsigned int ps2kbd_get(void)
     return -1;
 }
 
-unsigned int ps2mouse_get(void)
+unsigned int ps2dmouse_get(void)
 {
     uint8_t c;
     uint16_t t = TIMEOUT;
@@ -127,7 +140,6 @@ unsigned int ps2mouse_get(void)
         /* Random keyboard chatter */
         if (c & 0x01) {
             ps2data;
-            kprintf(".");
         }
     } while (--t);
     return -1;
@@ -143,6 +155,7 @@ int ps2port_init(void)
     if (ps2cmd(0xAD))
         return 0;
     ps2cmd(0xA7);
+    /* Self test */
     ps2cmd(0xAA);
     if ((st = ps2get()) != 0x55) {
         kprintf("PS/2 self test: %2x\n", st);
@@ -152,6 +165,7 @@ int ps2port_init(void)
     kputs("PS/2 port at 0x60 [ ");
     ps2_present = 1;
 
+    /* Check the ports are working */
     ps2cmd(0xAB);
     if (ps2get() == 0)
         kputs("Keyboard ");
@@ -163,6 +177,7 @@ int ps2port_init(void)
         ps2cmd(0xA7);
     kputs("]\n");
 
+    /* Set configuration */
     ps2cmd(0x60);
     ps2put(0x0F);	/* Ports on, interrupts on, translation off, no lock */
 
@@ -174,6 +189,6 @@ int ps2port_init(void)
     return 1;
 }
 
-void ps2kbd_beep(void)
+void ps2dkbd_beep(void)
 {
 }

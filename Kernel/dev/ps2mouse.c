@@ -1,13 +1,12 @@
 #include <kernel.h>
 #include <input.h>
 #include <devinput.h>
+#include <ps2kbd.h>
 #include <ps2mouse.h>
 #include <printf.h>
 
-extern uint8_t ps2busy;
-
-static uint8_t open;
-static uint8_t fivebutton;
+static uint_fast8_t open;
+static uint_fast8_t fivebutton;
 
 /* PS/2 mouse - rather simpler than the keyboardc */
 
@@ -87,7 +86,7 @@ static uint16_t mouse_close[] = {
 };
 
 /* One day we might want to handle FE/FC rules */
-static int mouse_op(uint16_t *op)
+static unsigned mouse_op(uint16_t *op)
 {
     uint8_t r;
     ps2busy = 1;
@@ -111,8 +110,8 @@ static int mouse_op(uint16_t *op)
 }
 
 static uint8_t packet[4];
-static uint8_t packc;
-static uint8_t packsize = 4;
+static uint_fast8_t packc;
+static uint_fast8_t packsize = 4;
 
 /* We received a 3 or 4 byte packet. Now process it
    Fudge the movement slightly as the PS/2 mouse is 9bit */
@@ -139,7 +138,7 @@ static void ps2mouse_event(void)
     platform_ps2mouse_event(event);
 }
 
-void ps2mouse_byte(uint8_t byte)
+void ps2mouse_byte(uint_fast8_t byte)
 {
     packet[packc++] = byte;
     if (packc == packsize) {
@@ -149,22 +148,7 @@ void ps2mouse_byte(uint8_t byte)
     }
 }
 
-#ifdef CONFIG_PS2MOUSE_POLL
-void ps2mouse_poll(void)
-{
-    uint16_t r;
-    
-    if (!open || ps2busy)
-        return;
-    
-    r = ps2mouse_get();
-    if (r > 0xFF)
-        return;
-    ps2mouse_byte(r);
-}
-#endif
-
-uint8_t ps2mouse_open(void)
+uint_fast8_t ps2mouse_open(void)
 {
     open =  mouse_op(mouse_open);
     packc = 0;
@@ -179,15 +163,16 @@ void ps2mouse_close(void)
 
 int ps2mouse_init(void)
 {
-    uint8_t r;
-    uint8_t i;
-    uint8_t buttons = 5;
+    unsigned int r;
+    uint_fast8_t i;
+    uint_fast8_t buttons = 5;
 
     ps2busy = 1;
     /* We may have FF or FF AA or FF AA 00 or other info queued before
        our reset, if so empty it out */
     for (i = 0; i < 4; i++) {
-        ps2mouse_get();
+        if (ps2mouse_get() == PS2_NOCHAR)
+            break;
     }
 
     r = mouse_op(mouse_init);
@@ -204,7 +189,5 @@ int ps2mouse_init(void)
     }
     /* Set up but don't enable reporting yet */
     mouse_op(mouse_setup);
-    mouse_op(mouse_open);	/* Just for testing FIXME */
     return 1;
 }
-

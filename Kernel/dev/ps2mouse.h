@@ -9,8 +9,7 @@ extern int ps2mouse_put(uint8_t c) PS2FASTCALL;
 
 /* Set up a PS/2 mouse */
 extern int ps2mouse_init(void);
-/* Poll the mouse for data */
-extern void ps2mouse_poll(void);
+/* Mouse data received */
 extern void ps2mouse_byte(uint8_t c);
 
 /* Platform provided */
