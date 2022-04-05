@@ -47,11 +47,12 @@ int platform_input_read(uint8_t *slot)
 	return 2;
     }
     if (mousemod) {
-        *slot++ = MOUSE_REL|mousebuttons;
+        *slot++ = MOUSE_REL;
+        *slot++ = mousebuttons;
         *slot++ = clampdec(&mousedx);
         *slot++ = clampdec(&mousedy);
         mousemod = !!(mousedx | mousedy);
-        return 3;
+        return 4;
     }
     return 0;
 }
