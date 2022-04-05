@@ -128,4 +128,15 @@ struct fdcstep {
 #define FDTYPE_NASCPMS	0x63	/* 512bps/10spt/77 track SS DD */
 #define FDTYPE_NASCPMD	0x64	/* 512bps/10spt/77 track SS DD */
 
+/* Geneve - mostly match other people's configurations as an alias */
+#define FDTYPE_GENSD40	0x70	/* 40 track 9 sectors per track */
+#define FDTYPE_GENSD40D	0x71	/* 40 track 9 sectors per track double sided */
+#define FDTYPE_GENDD4016	FDTYPE_BBCADFSS	/* 40 track x 16 */
+#define FDTYPE_GENDD8016	FDTYPE_BBCADFSM	/* 80 track x 16 */
+#define FDTYPE_GENDD8016D	FDTYPE_BBCADFSL /* 80 track x 16 x 2 */
+#define FDTYPE_GENDD4018 0x72	/* 40 x 18 */
+#define FDTYPE_GENDD8018	FDTYPE_NASSS80	/* 80 x 18 */
+#define FDTYPE_GENDD8018D 0x73
+#define FDTYPE_GENHD80D	0x74	/* 80 x 36 x 2 1.44MB media */
+
 #endif
