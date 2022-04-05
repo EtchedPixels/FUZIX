@@ -474,9 +474,14 @@ void pagemap_init(void)
 	if (copro_present)
 		kputs("Z80 Co-processor at 0xBC\n");
 
-	ps2kbd_present = ps2kbd_init();
+	if (ps2port_init())
+		ps2kbd_present = ps2kbd_init();
 	if (ps2kbd_present) {
+#ifdef CONFIG_PS2PORT_BITBANG
 		kputs("PS/2 Keyboard at 0xBB\n");
+#else
+		kputs("PS/2 Keyboard at 0x60/0x64\n");
+#endif
 		if (!zxkey_present && tms9918a_present) {
 			/* Add the consoles */
 			uint8_t n = 0;
@@ -490,10 +495,13 @@ void pagemap_init(void)
 	}
 	ps2mouse_present = ps2mouse_init();
 	if (ps2mouse_present) {
+#ifdef CONFIG_PS2PORT_BITBANG
 		kputs("PS/2 Mouse at 0xBB\n");
+#else
+		kputs("PS/2 Mouse at 0x60/0x64\n");
+#endif
 		/* TODO: wire to input layer and interrupt */
 	}
-
 	if (fpu_detect())
 		kputs("AMD9511 FPU at 0x42\n");
 	/* Devices in the C0-FF range cannot be used with Z180 */

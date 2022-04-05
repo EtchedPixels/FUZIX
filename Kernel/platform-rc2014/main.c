@@ -175,8 +175,10 @@ void platform_interrupt(void)
 		/* Running as a home computer not serial */
 		if (zxkey_present)
 			zxkey_poll();
+#ifdef CONFIG_PS2PORT_BITBANG
 		if (ps2kbd_present)
 			ps2kbd_poll();
+#endif
 		/* We are using the TMS9918A as a timer */
 		timerct++;
 		if (timerct == 6) {	/* Always NTSC */
@@ -190,6 +192,7 @@ void platform_interrupt(void)
 		out(ctc_port +3, 0xFF);
 		timer_tick(n);
 	}
+	ps2_int();
 }
 
 

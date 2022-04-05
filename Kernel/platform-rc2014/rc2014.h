@@ -104,4 +104,8 @@ extern uint8_t *code1_alloc(uint16_t size);
 
 extern void do_timer_interrupt(void);
 
+extern int ps2port_init(void);
+extern void ps2_int(void);
+
+
 #endif

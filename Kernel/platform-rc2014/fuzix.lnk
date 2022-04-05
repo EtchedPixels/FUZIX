@@ -71,7 +71,6 @@ platform-rc2014/zxkeyboard.rel
 platform-rc2014/vdp1.rel
 platform-rc2014/ps2kbd.rel
 platform-rc2014/ps2mouse.rel
-platform-rc2014/ps2bitbang-rc2014-kbd.rel
-platform-rc2014/ps2bitbang-rc2014-mouse.rel
+platform-rc2014/ps2direct.rel
 platform-rc2014/amd9511.rel
 -e
