@@ -118,16 +118,17 @@
 #define CMD_TXOR	    0xB
 #define CMD_TNOT	    0xC
 
-void v99xx_write_reg(uint8_t reg, uint8_t val);
-void v99xx_set_vram_page(uint8_t page);
-void v99xx_write_vram(uint16_t addr, uint8_t val);
-void v99xx_memset_vram(uint16_t addr, uint8_t value, uint16_t size);
+void v99xx_write_reg(uint_fast8_t reg, uint_fast8_t val);
+uint_fast8_t v99xx_read_reg(uint_fast8_t reg);
+void v99xx_set_vram_page(uint_fast8_t page);
+void v99xx_write_vram(uint16_t addr, uint_fast8_t val);
+void v99xx_memset_vram(uint16_t addr, uint_fast8_t value, uint16_t size);
 void v99xx_copy_to_vram(uint16_t vaddr, uint8_t *src, uint16_t size);
 void v99xx_copy_from_vram(uint8_t *dst, uint16_t vaddr, uint16_t size);
-uint8_t v99xx_read_vram(uint16_t addr);
-void v99xx_set_mode(uint8_t mode);
-void v99xx_set_color(uint8_t fg, uint8_t bg);
-void v99xx_set_blink_color(uint8_t fg, uint8_t bg);
-void v99xx_set_blink_period(uint8_t fg, uint8_t bg);
+uint_fast8_t v99xx_read_vram(uint16_t addr);
+void v99xx_set_mode(uint_fast8_t mode);
+void v99xx_set_color(uint_fast8_t fg, uint_fast8_t bg);
+void v99xx_set_blink_color(uint_fast8_t fg, uint_fast8_t bg);
+void v99xx_set_blink_period(uint_fast8_t fg, uint_fast8_t bg);
 
 #endif
