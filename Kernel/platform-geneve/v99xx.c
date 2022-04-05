@@ -15,13 +15,26 @@ static volatile uint16_t dummy;
 
 uint8_t vtattr_cap;
 
-void v99xx_write_reg(uint8_t reg, uint8_t val)
+void v99xx_write_reg(uint_fast8_t reg, uint_fast8_t val)
 {
     *vdpr = val;
     *vdpr = reg | 0x80;
 }
 
-void v99xx_set_vram_page(uint8_t page)
+uint_fast8_t v99xx_read_reg(uint_fast8_t reg)
+{
+    irqflags_t irq = di();
+    uint_fast8_t r;
+
+    v99xx_write_reg(15, reg);
+    r = *vdpr;
+    v99xx_write_reg(15, 0);
+
+    irqrestore(irq);
+    return r;
+}
+
+void v99xx_set_vram_page(uint_fast8_t page)
 {
     v99xx_write_reg(V99xx_SET_VRAM_PAGE, page & 0x07);
 }
@@ -30,7 +43,7 @@ void v99xx_set_vram_page(uint8_t page)
  * write byte in current ram page
  * (only 14 bits of address are used)
  */
-void v99xx_write_vram(uint16_t addr, uint8_t val)
+void v99xx_write_vram(uint16_t addr, uint_fast8_t val)
 {
     *vdpr = addr;
     *vdpr = (addr >> 8) | 0x40;
@@ -41,7 +54,7 @@ void v99xx_write_vram(uint16_t addr, uint8_t val)
  * read byte from current ram page
  * (only 14 bits of address are used)
  */
-uint8_t v99xx_read_vram(uint16_t addr)
+uint_fast8_t v99xx_read_vram(uint16_t addr)
 {
     *vdpr = addr;
     *vdpr = (addr >> 8);
@@ -53,7 +66,7 @@ uint8_t v99xx_read_vram(uint16_t addr)
 /*
  * memset to vram current page (up to 16Kb)
  */
-void v99xx_memset_vram(uint16_t addr, uint8_t value, uint16_t size)
+void v99xx_memset_vram(uint16_t addr, uint_fast8_t value, uint16_t size)
 {
     *vdpr = addr;
     *vdpr = (addr >> 8) | 0x40;
@@ -89,7 +102,7 @@ void v99xx_copy_to_vram(uint16_t vaddr, uint8_t *src, uint16_t size)
     }
 }
 
-void v99xx_set_mode(unsigned char mode)
+void v99xx_set_mode(uint_fast8_t mode)
 {
     switch (mode)
     {
@@ -105,17 +118,17 @@ void v99xx_set_mode(unsigned char mode)
     }
 }
 
-void v99xx_set_color(uint8_t fg, uint8_t bg)
+void v99xx_set_color(uint_fast8_t fg, uint_fast8_t bg)
 {
     v99xx_write_reg(V99xx_REG_COLOR1, (fg << 4) | (bg & 0xf));
 }
 
-void v99xx_set_blink_color(uint8_t fg, uint8_t bg)
+void v99xx_set_blink_color(uint_fast8_t fg, uint_fast8_t bg)
 {
     v99xx_write_reg(V99xx_REG_COLOR2, (fg << 4) | (bg & 0xf));
 }
 
-void v99xx_set_blink_period(uint8_t fg, uint8_t bg)
+void v99xx_set_blink_period(uint_fast8_t fg, uint_fast8_t bg)
 {
     v99xx_write_reg(V99xx_REG_BLINK_PERIOD, (fg << 4) | (bg & 0xf));
 }
