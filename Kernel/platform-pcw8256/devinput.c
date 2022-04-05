@@ -54,22 +54,22 @@ int platform_input_read(uint8_t *slot)
 	return 2;
     }
     if (has_amx) {
-        *slot++ = MOUSE_REL|BUTTON(3);
+        *slot++ = MOUSE_REL;
         r = amx_v;
+        *slot++ = ~amx_button & 7;
         *slot++ = (r >> 4) - (r & 0x0F);
         *slot++ = (r & 0x0F) - (r >> 4);
-        *slot++ = ~amx_button & 7;
         return 4;
     }
     if (has_kemp) {
         uint8_t kx = kemp_x;
         uint8_t ky = kemp_y;            
-        *slot++ = MOUSE_REL|BUTTONS(2);
+        *slot++ = MOUSE_REL;
+        *slot++ = ~kemp_button & 3;
         *slot++ = delta(okx, kx);
         *slot++ = delta(oky, ky);
         /* Need to think about this eg 0xF0 -> 0x0F is a positive move
            of 0x1F while 0x0F->0xF0 is a negative move of 0x1F */
-        *slot++ = ~kemp_button & 3;
         oky = ky;
         okx = kx;
         return 4;
