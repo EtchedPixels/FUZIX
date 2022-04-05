@@ -21,7 +21,9 @@ static uint16_t mouse_init[] = {
     FAIL|0xAA,
     FAIL|0x00,
     SEND|0xF3,
+    FAIL|0xFA,
     STOP
+    /* May bee followed by an FA or FE */
 };
 
 static uint16_t mouse_scrolltest[] = {
@@ -63,7 +65,6 @@ static uint16_t mouse_fivetest[] = {
 };
 
 static uint16_t mouse_setup[] = {
-    FAIL|0xFA,
     SEND|0xE6,			/* Scaling 1:1 */
     FAIL|0xFA,
     SEND|0xF3,			/* 10 samples a second */
@@ -91,12 +92,12 @@ static int mouse_op(uint16_t *op)
     uint8_t r;
     ps2busy = 1;
     while(*op != STOP) {
-        if (*op & SEND)
+        if (*op & SEND) {
             if (ps2mouse_put(*op)) {
                 ps2busy = 0;
                 return 0;
             }
-        else {
+        } else {
             r = ps2mouse_get();
             if ((*op & FAIL) && r != (*op & 0xFF)) {
                 ps2busy = 0;
@@ -138,6 +139,17 @@ static void ps2mouse_event(void)
     platform_ps2mouse_event(event);
 }
 
+void ps2mouse_byte(uint8_t byte)
+{
+    packet[packc++] = byte;
+    if (packc == packsize) {
+        ps2mouse_event();
+        packc = 0;
+        return;
+    }
+}
+
+#ifdef CONFIG_PS2MOUSE_POLL
 void ps2mouse_poll(void)
 {
     uint16_t r;
@@ -148,13 +160,9 @@ void ps2mouse_poll(void)
     r = ps2mouse_get();
     if (r > 0xFF)
         return;
-    packet[packc++] = r;
-    if (packc == packsize) {
-        ps2mouse_event();
-        packc = 0;
-        return;
-    }
+    ps2mouse_byte(r);
 }
+#endif
 
 uint8_t ps2mouse_open(void)
 {
@@ -196,6 +204,7 @@ int ps2mouse_init(void)
     }
     /* Set up but don't enable reporting yet */
     mouse_op(mouse_setup);
+    mouse_op(mouse_open);	/* Just for testing FIXME */
     return 1;
 }
 
