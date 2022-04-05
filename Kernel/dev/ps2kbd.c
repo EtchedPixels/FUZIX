@@ -278,6 +278,7 @@ void ps2kbd_byte(uint_fast8_t byte)
 
 uint8_t ps2busy = 0;
 
+#ifdef CONFIG_PS2KBD_POLL
 void ps2kbd_poll(void)
 {
     uint16_t n;
@@ -289,6 +290,7 @@ void ps2kbd_poll(void)
     if (n < 0x8000)
         ps2kbd_byte(n);
 }
+#endif
 
 static void kbd_set_leds(uint_fast8_t byte)
 {
