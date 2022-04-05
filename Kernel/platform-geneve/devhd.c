@@ -1,125 +1,132 @@
-
-
-/* These are only valid with the controlled space mapped at 0x4000, we need
-   to rethink to avoid bounce buffers and crap */
-
-#define	sm9234_wd	((volatile uint8_t *)0x4FD2
-#define sm9234_wc	((volatile uint8_t *)0x4FD6
-#define sm9234_rd	((volatile uint8_t *)0x4FD0
-#define sm9234_rs	((volatile uint8_t *)0x4FD0
-
 /*
- *	We have an 8K or 32K cache that we should be using better once this
- *	works. It meeans we can keep a pending write array. Whilst we can
- *	add a pending read model here the core OS can't yet really use it.
- *	We can also track what sector pairs are in our cache
- *
- *	Other considerations: no support for physical 256 byte I/O - do we care
+ *	Hard disk interface built over the low level hfdc support
  */
-static void hfdc_sync(unsigned drive)
+
+static void hd_select(unsigned drive, unsigned pcat)
 {
-    if (!hfdc_busy)
-        return;
-    /* TIMEOUT and reset ? */
-    while((sm9234_rs & 0x20) == 0);
-    if (sm9234_rs & 0x0C)
-        hfdc_error(drive);		/* Delayed write error */
-    hfdc_busy = 0;
+    hfdc_sync();
+    if (hd_execute_simple( 0x20 | drive | (pcat ? 0 : 4)))
+        hfdc_error();
 }
 
 /*
- *	Reset the controller
+ *	Native MFM hard disk
  */
-
-static void hfdc_reset(void)
-{
-    *sm9234_wc = 0x00;
-    hfdc_busy = 1;
-    hfdc_sync();
-}
-
-static void hfdc_error(unsigned drive)
-{
-    unsigned int isr, csr, dsr;
-
-    *sm9234_wc = 0x47;
-
-    isr = *sm9234_rd;
-    csr = *sm9234_rd;
-    dsr = *sm9234_rd;
-    kprintf("hfdc %d: error %2x %2x %2x\n",
-        drive, isr, csr, dsr);
-}    
-
-static void hfdc_recover(unsigned drive)
-{
-    *sm9234_wc = 0x03;
-    hfdc_busy = 1;
-    hfdc_sync();
-    if (hfdc_rs & 0x0C)
-        hfdc_error(drive);
-}
-
-/* Hard disk mode - will deal with floppy later */
-void hfdc_transfer_sector(void)
+void hd_transfer_sector256(void)
 {
     uint_fast8_t drive = blk_op.driver_data & HFDC_DRIVE_NR_MASK;
     uint16_t c, h, s;
     unsigned int retry = 0;
+    uint8_t *p;
 
     /* Sync the controller */
-    hfdc_sync(drive);
-    hfdc_hd_select(drive);
+    hd_select(drive. 0);
 
     /* User data to the cache */
     if (blk_op.is_read == 0)
-        hfdc_data_to_cache();
+        hfdc_blkop_to_device();
 
     /* Convert to CHS */
-    s = blk_op.lba % spt[drive];
-    h = s / heads[drive];
-    c = h / cyls[drive];
-    h %= heads[drive];
+    s = (blk_op.lba & 15) << 1;		/* Always 32 spt in 256 byte/sec */
+    c = s >> 4;				/* Pairs of sectors per blk */
+    h = c % heads[drive];
+    c /= heads[drive];
 
-retry:
-    *sm9234_wc = 0x40;			/* DMA pointer */
-    *sm9234_wd = 0x00;			/* DMA low */
-    *sm9234_wd = 0x00;			/* DMA med (for now - will be page) */
-    *sm9234_wd = 0x00;			/* DMA high */
-    *sm9234_wd = s;
-    *sm9234_wd = h | (cyl & 0x700) >> 4);
-    *sm9234_wd = c;
-    *sm9234_wd = 2;			/* Always pairs, assume SPT is even */
+    p = hfdc_block;
+    *p++ = 0x00;			/* For now we only use RAM 0 */
+    *p++ = 0x00;
+    *p++ = 0x00;
+    *p++ = s;
+    *p++ = h | ((c & 0x0700) >> 4);
+    *p++ = c;
+    *p++ = 2;
     if (blk_op.is_read)
-        *sm9234_wd = 0x00;
+        *p++ = 0;
     else
-        *sm9234_wd = 0xF0;
-    *sm9234_wd = 0xE0;	/* FIXME step rate to pick ? */
-    /* Not using IRQ yet */
-    *sm9234_wd = 0x97;	/* Stop on ddm, wp, ready, write fault */
-    *sm9234_wd = 0x10  | ((c >> 8) & 3);
+        *p++ = 0xF0;			/* No retry on write */
+    *p++ = 0xE0;		/* FIXME: correct step rate ? */
+    *p++ = 0x87;		/* Termination causes */
+    *p = 0x10  | ((c >> 8) & 3);
+
     if (blk_op.is_read)
-        *sm9234_wc = 0x5D;
-    else {
-        *sm9234_wd = 0xA0;	/* TODO: write precomp */
-        hfdc_busy = 1;
-        return 1;
-    }
-    /* Read wait for complete */
-    while(!(*sm9234_rs & 0x20));
-    /* Error check */
-    /* TODO: reset/retry twice and also look at ECC scrubbing */
-    /* TODO O_SYNC disk I/O write error paths */
-    if (sm9234_rs & 0x0C) {
+		cmd = CMD_HDREAD;
+    else if (cyl >= dp->precomp)
+	cmd = CMD_HDWRITE_P;
+    else
+	cmd = CMD_HDWRITE;
+
+    if (hfdc_execute(cmd, blk_op.is_read)) {
         hfdc_error();
-        if (retry++ < 3) {
-            hfdc_recover();
-            goto retry;
-        }
+        udata.u_error = EIO;
         return 0;
     }
-    /* Copy any data out to the user */
-    hfdc_cache_to_data();
+    if (blk_op.is_read) {
+        hfdc_sync();
+        hfdc_blkop_from_device();
+    }
+    /* For a write we let it run asynchronously */
+    /* Fixme O_SYNC I/O */
+    return 1;
+}
+
+/*
+ *	IBM PC MFM hard disk
+ */
+void hd_transfer_sector512(void)
+{
+    uint_fast8_t drive = blk_op.driver_data & HFDC_DRIVE_NR_MASK;
+    uint16_t c, h, s;
+    unsigned int retry = 0;
+    uint8_t *p;
+
+    /* Sync the controller */
+    hfdc_sync();
+    hd_select(drive, 1);
+
+    /* User data to the cache */
+    if (blk_op.is_read == 0)
+        hfdc_blkop_to_device();
+
+    /* Convert to CHS */
+    s = blk_op.lba & 15;		/* Always 16 spt in 512 byte/sec */
+    c = s >> 4;
+    h = c % heads[drive];
+    c /= heads[drive];
+
+    p = hfdc_block;
+    *p++ = 0x00;			/* For now we only use RAM 0 */
+    *p++ = 0x00;
+    *p++ = 0x00;
+    *p++ = s;
+    *p++ = h | 0x20;			/* 512 byte sector */
+    *p++ = c;
+    *p++ = 1;
+    if (blk_op.is_read)
+        *p++ = 0;
+    else
+        *p++ = 0xF0;			/* No retry on write */
+    *p++ = 0xE0;		/* FIXME: correct step rate ? */
+    *p++ = 0x87;		/* Termination causes */
+    *p = 0x20  | ((c >> 8) & 3);
+
+    if (blk_op.is_read)
+		cmd = CMD_HDREAD;
+    else if (cyl >= dp->precomp)
+	cmd = CMD_HDWRITE_P;
+    else
+	cmd = CMD_HDWRITE;
+
+    if (hfdc_execute(cmd, blk_op.is_read)) {
+        hfdc_error();
+        udata.u_error = EIO;
+        return 0;
+    }
+    if (blk_op.is_read) {
+        hfdc_sync();
+        hfdc_blkop_from_device();
+    }
+    /* For a write we let it run asynchronously */
+    /* Fixme O_SYNC I/O */
     return 1;
 }
 
