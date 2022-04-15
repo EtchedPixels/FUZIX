@@ -22,16 +22,18 @@ _ramtop:
 
 ;
 ;	The nice thing about branch-link architectures is it makes stack
-;	helpers really clean
+;	helpers really clean. These always run with interrupts off.
 ;
 save_userws:
 	li	r0,user_ws
 	li	r1,16
+	ai	r13,-32		; Frame size
 save_r:
-	dect	r13
-	mov	*r0+,*r13
+	mov	*r0+,*r13+
 	dec	r1
 	jne	@save_r
+
+	ai	r13,-32		; Fix the frame pointer back
 	bl	*r11
 
 restore_userws:
@@ -208,7 +210,7 @@ _dofork:
 	mov	r11,*r13
 
 	dect	r13		; PID for return code
-	mov	@P_TAB__P_PID_OFFSET(r3),*r13
+	mov	@P_TAB__P_PID_OFFSET(r4),*r13
 
 	; Save it as we need it for the other context (32 bytes)
 	bl	@save_userws
