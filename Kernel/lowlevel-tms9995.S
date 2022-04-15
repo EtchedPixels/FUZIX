@@ -108,11 +108,11 @@ stack_workspace:
 	ai	r1,	-36
 	mov	r1, @26(r13)
 save_next:
-	mov	*r13+, *r3+
+	mov	*r13+, *r1+
 	dec	r0
 	jne	@save_next
-	mov	r14, *r3+
-	mov	r15, *r3+
+	mov	r14, *r1+
+	mov	r15, *r1+
 	rt
 ;
 ;	Return to a stacked workspace
@@ -121,11 +121,11 @@ pop_workspace:
 	li	r0,	16
 	mov	@26(r13), r1
 pop_next:
-	mov	*r3+, *r2+
+	mov	*r1+, *r2+
 	dec	r0
 	jne	@pop_next
-	mov	*r3+, r15
-	mov	*r3+, r14
+	mov	*r1+, r15
+	mov	*r1+, r14
 	mov	r1, @26(r13)
 	rtwp
 
