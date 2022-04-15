@@ -23,7 +23,7 @@
 	    .export ___hard_irqrestore
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../kernel-tms9995.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -299,6 +299,7 @@ _hd_map:
 		.dp		; 16bit fast memory at 0xF000
 
 		.export kernel_ws
+		.export user_ws
 		.export irq1_ws
 		.export irq2_ws
 		.export irq4_ws
@@ -308,6 +309,8 @@ _hd_map:
 ;	Workspaces
 ;
 kernel_ws:
+	.ds	32
+user_ws:
 	.ds	32
 irq1_ws:
 	.ds	32
