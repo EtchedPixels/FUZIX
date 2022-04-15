@@ -145,7 +145,7 @@ xop_trap:
 
 
 ;
-;	Maop routines - must save any register changed except r0
+;	Map routines - must save any register changed except r0
 ;
 
 ;
@@ -189,10 +189,20 @@ map_process_x:
 	ai	r0, P_TAB__P_PAGE_OFFSET
 map_process_2:
 map_bank:
-	mov	*r0, @cur_map
-	mov	*r0+, @0xFE78
-	movb	*r0, @cur_map+2
-	movb	*r0+, @0xFE7A
+	; Much subtle magic. The map we are loading might be in non common
+	; space so get both into registers first
+	dect	r13
+	mov	r1,*r13
+	mov	*r0+, r1
+	movb	*r0, r0
+	; From the point we write cur_map we may flip bank because an IRQ
+	; can bank flip for us. FIXME - review this on other platforms.
+	mov	r1,@cur_map
+	movb	r0,@cur_map+2
+	; Now load the MMU
+	mov	r1, @0xFE78
+	movb	r0, @0xFE7A
+	mov	*r13+,r1
 	rt
 
 ;

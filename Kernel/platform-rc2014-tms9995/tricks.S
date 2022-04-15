@@ -133,9 +133,8 @@ _switchin:
 	jne	@not_swapped
 	bl	@_swapper
 
-	mov	@P_TAB__P_PAGE_OFFSET(r8),r0
-
 not_swapped:
+	mov	r8,r0
 	bl	@map_process_x
 
 	; We must do this inline as we will be changing stack under
@@ -156,7 +155,7 @@ nostash:
         ; check u_data->u_ptab matches what we wanted
 	; r8 still holds the proc pointer
 	c	@_udata + U_DATA__U_PTAB,r8
-	jne	@switchinfail
+	jne	@switchinfail;
 
 	; Load into the byte side
 	li	r0, P_RUNNING * 256
@@ -189,7 +188,7 @@ swtchdone:
         rt
 
 switchinfail:
-	li	r0, badswitchmsg
+	li	r1, badswitchmsg
         bl	@outstring
 	; something went wrong and we didn't switch in what we asked for
         b	@_platform_monitor
@@ -236,6 +235,13 @@ _dofork:
 
 	; And save R13 (our SP) into our udata so we can get it all back
 	mov	r13, @_udata + U_DATA__U_SP
+
+	;
+	; Stash the udata for the parent switchin path
+	;
+	bl	@map_process_always
+	bl	@stash_udata
+	bl	@map_kernel
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
