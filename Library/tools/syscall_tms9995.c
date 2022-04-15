@@ -30,7 +30,8 @@ static void write_call(int n)
   fprintf(fp, "\tjeq @noerror\n");
   fprintf(fp, "\tmov r0,@_errno\n");
   fprintf(fp, "noerror:\n");
-  fprintf(fp, "\tb *r13+\n");
+  fprintf(fp, "\tmov *r13+,r11\n");
+  fprintf(fp, "\tb *r11\n");
   fclose(fp);
 }
 
