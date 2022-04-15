@@ -232,6 +232,27 @@ _doexec:
 	bl	@map_process_always
 	mov	@_udata+U_DATA__U_ISP, r13
 	clr	@_udata+U_DATA__U_INSYS
+	;	Write r4 into the user workspace
+	mov	r4,@user_ws+8
+	mov	r13,@user_ws+26
+	lwpi	user_ws
+	clr	r0
+	clr	r1
+	clr	r2
+	clr	r3
+	clr	r5
+	clr	r6
+	clr	r7
+	clr	r8
+	clr	r9
+	clr	r10
+	clr	r11
+	clr	r12
+	clr	r14
+	; Hack for now
+	li	r14,0x0100	; FIXME program base
+	clr	r15
+	limi	IRQ_ON
 	b	*r4
 
 trap_handler:
