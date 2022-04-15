@@ -19,6 +19,31 @@
 _ramtop:
 	.word 0xF000	; FIXME check
 
+
+;
+;	The nice thing about branch-link architectures is it makes stack
+;	helpers really clean
+;
+save_userws:
+	li	r0,user_ws
+	li	r1,16
+save_r:
+	dect	r13
+	mov	*r0+,*r13
+	dec	r1
+	jne	@save_r
+	bl	*r11
+
+restore_userws:
+	li	r0,user_ws
+	li	r1,16
+restore_r:
+	mov	*r13+,*r0+
+	dec	r1
+	jne	@restore_r
+	bl	*r11
+
+
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
@@ -31,6 +56,12 @@ _platform_switchout:
 	mov	r11,*r13
 	dect	r13
 	clr	*r13			; Return code
+	;
+	; Save the user workspace. We have a lot of state on this CPU but
+	; we only take the hit on actual context switching not interrupts
+	; and we don't switch much.
+	;
+	bl	@save_userws
 	; Save the registers we need (r0-r7 are saved elsewhere when
 	; relevant) but for C calling the func expects them to be lost
 	; anyway
@@ -71,7 +102,7 @@ _platform_switchout:
 stash_udata:
 	li	r0,_udata
 	li	r1, 0xBE00		; Ick FIXME hardcoded
-	li	r2, 256		; 256 words of udata
+	li	r2, 256			; 256 words of udata
 stash_loop:
 	mov	*r0+,*r1+
 	dec	r2
@@ -148,8 +179,9 @@ nostash:
 	mov	*r13+,r8
 	mov	*r13+,r7
 	mov	*r13+,r6
-	mov	*r13+,r11
+	bl	@restore_userws
 	mov	*r13+,r1	; Return code
+	mov	*r13+,r11	; return address
 	mov	@_inint,r0
         jeq	@swtchdone	; in ISR, leave interrupts off
 	limi	IRQ_ON
@@ -165,19 +197,23 @@ switchinfail:
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
 ;	parent uarea. The kernel is the mapped object.
+;	r4 is process pointer on entry
 ;
 _dofork:
 ;        ; always disconnect the vehicle battery before performing maintenance
 	limi	IRQ_OFF
 
-	mov	*r13,r3		; process pointer
+	; Stack the return address
+
 	dect	r13
-	mov	*r11,r13
+	mov	r11,*r13
 
 	dect	r13		; PID for return code
 	mov	@P_TAB__P_PID_OFFSET(r3),*r13
 
-	; Save the registers we need (r0-r7 are saved elsewhere when
+	; Save it as we need it for the other context (32 bytes)
+	bl	@save_userws
+	; Save the registers we need (r0-r5 are saved elsewhere when
 	; relevant) but for C calling the func expects them to be lost
 	; anyway. Must match switchout.
 	dect	r13
@@ -198,42 +234,52 @@ _dofork:
 	dect	r13
 	mov	r15,*r13
 
+	; And save R13 (our SP) into our udata so we can get it all back
 	mov	r13, @_udata + U_DATA__U_SP
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	mov	r3,r15		; save proc ptr in reg we can restore easiest
+	mov	r4,r15		; save proc ptr in reg we can restore easiest
 
 	;
-	;	Not smart about unused space. Wants fixing ?
-	;
-	;	On entry r15 is the process pointer and r3 is scratch but
+	;	On entry r15 is the process pointer and r4 is scratch but
 	;	still holds the same
 	;
-	ai	r3, P_TAB__P_PAGE_OFFSET
-	li	r4, _udata+U_DATA__U_PAGE
-	li	r5, 3
+	ai	r4, P_TAB__P_PAGE_OFFSET
+	li	r3, _udata+U_DATA__U_PAGE
 
-copyblock:
-	movb	*r3+,@0xFE79	; Map at 16K (dest)
-	movb	*r4+,@0xFE7A	; Map at 32K (source)
-
-	li	r0, 0x4000
-	li	r1, 0x8000
-	mov	r0, r2		; 16K count too
-
-copy:
-	mov	*r1+,*r0+
-	dect	r2
-	jne	@copy
-
-	dec	r5
-	jne	@copyblock
-
+	;	Copy the first bank
+	;	TODO: if we do this IRQ enabled in future we need to update
+	;	the map pointers too
+	;
+	;	The order here is critical. r4 is pointing into 0x8000-BFFF
+	;	quite probably, so need to set that half first (the other
+	;	is in common so good)
+	;
+	movb	*r4+,@0xFE79
+	movb	*r3+,@0xFE7A
+	bl	@copyblock
+	bl	@map_kernel_di
+	;	If the second bank is not the same copy the second bank
+	cb	@-1(r3),*r3
+	jeq	@copydone
+	movb	*r4+,@0xFE79
+	movb	*r3+,@0xFE7A
+	bl	@copyblock
+	bl	@map_kernel_di
+	;	If the third bank is not the same copy the third bank
+	cb	@-1(r3),*r3
+	jeq	@copydone
+	movb	*r4,@0xFE79
+	movb	*r3,@0xFE7A
+	bl	@copyblock
+copydone:
 	mov	@_udata+U_DATA__U_PTAB,r0
 	bl	@map_process_x
 	bl	@stash_udata
+	;	And this also puts back our memory map from the effects of
+	;	the fork copy
 	bl	@map_kernel_di
 
 	li	r5,_udata
@@ -242,7 +288,8 @@ copy:
 
 	; any calls to map process will now map the childs memory
 
-	ai	r13, 22			; remove stack frame (11 words)
+	mov	*r13, r15		; saved R15 is top
+	ai	r13, 50			; remove stack frame (9 words + 16 user context)
         ; runticks = 0;
 	clr	r1
 	clr	@_runticks
@@ -255,3 +302,17 @@ copy:
 	; if it had done a switchout().
 	mov	*r13+,r11
         rt
+;
+;	Copy the page pair mapped at 0x8000 to the page pair mapped at 0x4000
+;	The caller owns clean up
+;
+copyblock:
+	li	r0, 0x4000
+	li	r1, 0x8000
+	mov	r0, r2		; 16K count too
+copy:
+	mov	*r1+,*r0+
+	dect	r2
+	jne	@copy
+
+	rt
