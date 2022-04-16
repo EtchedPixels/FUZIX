@@ -6,6 +6,7 @@
 	.export __uget
 	.export __uput
 
+	.setcpu	6800
 	.common
 
 __uputc:
@@ -48,19 +49,35 @@ __ugetw:
 
 __uzero:
 	tsx
-	ldab 2,x
-	ldaa 3,x
+	ldaa 2,x
+	ldab 3,x
 	ldx 4,x
 	jsr map_process_always
 	; Optimize, unroll etc ?
+	pshb
+uzeropg:
+	tsta
+	beq	endwipe
+	clrb
+	bsr	uzerolp
+	deca
+	bra	uzeropg
+endwipe:
+	pulb
+	tstb
+	beq	enduz
+	bsr	uzerolp
+enduz:
+	jsr map_kernel
+	jmp ret4
+
+	
 uzerolp:
 	clr 0,x
 	inx
-	subb #1
-	sbca #0
+	decb
 	bne uzerolp
-	jsr map_kernel
-	jmp ret4
+	rts
 
 __uget:
 	; This one is harder as we've got to juggle two pointers
@@ -86,12 +103,10 @@ ugetl:
 	stab ,x
 	inx
 	stx @to
-	ldab @tmp
-	ldaa @tmp+1
-	subb #1
-	sbca #0
-	staa @tmp
-	stab @tmp+1
+	ldx @tmp
+	dex
+	stx @tmp
+	; On 6800 only Z bit is affected by DEX, but that will do us fine
 	bne ugetl
 	clrb
 	clra
@@ -121,12 +136,9 @@ uputl:
 	jsr map_kernel
 	inx
 	stx @to
-	ldaa @tmp
-	ldab @tmp+1
-	subb #1
-	sbca #0
-	staa @tmp
-	stab @tmp+1
+	ldx @tmp
+	dex
+	stx @tmp
 	bne uputl
 	clrb
 	clra

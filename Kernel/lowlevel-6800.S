@@ -221,7 +221,7 @@ via_signal:
 
 _doexec:
 	tsx
-	ldx 3,x
+	ldx 2,x
 	sei
 	jsr map_process_always
 	lds _udata+U_DATA__U_ISP
