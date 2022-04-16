@@ -26,7 +26,7 @@
 ; and its a constant for the others from before init forks so it'll be fine
 ; here
 _ramtop:
-	.word 0xF000
+	.word 0xF000		;???? Check should be 0xBE00 ?? FIXME
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
@@ -81,7 +81,7 @@ badswitchmsg:
 	.byte 0
 
 ;
-;	On entry x,a holds the process to switch in
+;	On entry the stack holds the process to switch in
 ;
 _switchin:
 	sei
@@ -222,7 +222,7 @@ _dofork:
         rts
 
 ;
-;	On entry ptr1 points to the process table of the child, and
+;	On entry fork_proc_ptr points to the process table of the child, and
 ;	the U_DATA is still not fully modified so holds the parents bank
 ;	number. This wants optimising to avoid copying all the unused
 ;	space!
