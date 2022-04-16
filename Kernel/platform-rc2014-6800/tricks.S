@@ -81,12 +81,12 @@ badswitchmsg:
 	.byte 0
 
 ;
-;	On entry x,a holds the process to switch in
+;	On entry the process number is on stack
 ;
 _switchin:
 	sei
 	tsx
-	ldx	3,x
+	ldx	2,x
 	stx	switch_proc_ptr
 
 	ldaa	P_TAB__P_PAGE_OFFSET,x
@@ -159,6 +159,9 @@ nostash:
 swtchdone:
 	pula			; recover return code
 	pulb
+	; We think we were called by switchout(void) so no arg cleanup
+	; however this requires joy in the fork path where there is an
+	; argument
         rts
 
 switchinfail:
@@ -183,7 +186,7 @@ _dofork:
 
 	tsx
 	ldx 2,x
-	; new process in X, get parent pid into y
+	; new process in X, get parent pid into D
 
 	stx fork_proc_ptr
 
@@ -199,15 +202,15 @@ _dofork:
 	tsx
 	ldx ,x		; return value
 	stx 2,x		; overwrite the passed procptr value with return
-	des
-	des		; save the modified stack pointer
+	ins
+	ins		; save the modified stack pointer
 	sts _udata + U_DATA__U_SP
 
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
 	;
-	;	Assumes ptr1 still holds the new process ptr
+	;	Assumes fork_proc_ptr still holds the new process ptr
 	;
 
 	jsr fork_copy
