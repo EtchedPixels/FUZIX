@@ -166,29 +166,29 @@ signal_return:
 ;
 unix_syscall_entry:
 	sts @tmp		; No ABX so we have to do a bit of work
-	ldaa @tmp+1
-	aba
-	staa @tmp+1
+	addb @tmp+1
+	stab @tmp+1
 	bcc noinc
 	inc @tmp
 noinc:
 	ldx @tmp
-	stx _udata+U_DATA__U_SYSCALL_SP
+	inx			; Because we are not using TSX
+	sts _udata+U_DATA__U_SYSCALL_SP
 	staa _udata+U_DATA__U_CALLNO
-	ldaa 8,x
-	ldab 9,x
+	ldaa 7,x
+	ldab 8,x
 	staa _udata+U_DATA__U_ARGN
 	stab _udata+U_DATA__U_ARGN+1
-	ldaa 6,x
-	ldab 7,x
+	ldaa 5,x
+	ldab 6,x
 	staa _udata+U_DATA__U_ARGN+2
 	stab _udata+U_DATA__U_ARGN+3
-	ldaa 4,x
-	ldab 5,x
+	ldaa 3,x
+	ldab 4,x
 	staa _udata+U_DATA__U_ARGN+4
 	stab _udata+U_DATA__U_ARGN+5
-	ldaa 2,x
-	ldab 3,x
+	ldaa ,x
+	ldab 1,x
 	staa _udata+U_DATA__U_ARGN+6
 	stab _udata+U_DATA__U_ARGN+7
 	ldaa #1
@@ -206,12 +206,12 @@ noinc:
 	ldaa _udata+U_DATA__U_RETVAL
 	ldab _udata+U_DATA__U_RETVAL+1
 	tsx
-	stab 2,x			; return in D
-	staa 3,x
+	stab 1,x			; return in D
+	staa 2,x
 	ldaa _udata+U_DATA__U_ERROR
 	ldab _udata+U_DATA__U_ERROR+1
-	staa 4,x				; error in X
-	stab 5,x
+	staa 3,x				; error in X
+	stab 4,x
 	tst _udata+U_DATA__U_CURSIG
 	bne via_signal
 	rti
