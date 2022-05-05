@@ -53,6 +53,9 @@ tools/syscall_pdp11: tools/syscall_pdp11.c ../Kernel/include/syscall_name.h
 tools/syscall_armm4: tools/syscall_armm4.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/syscall_wrx6: tools/syscall_wrx6.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 tools/binman: tools/binman.c
 	$(CC) $(CFLAGS) -o $@ $<
 
