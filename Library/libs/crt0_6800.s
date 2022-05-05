@@ -1,5 +1,5 @@
 ;
-;	Initial 6800 crt0. We need to add self relocation etc to it
+;	Initial 6800 crt0.
 ;
 
 	.code
@@ -10,7 +10,7 @@
 head:
 	.word	$80A8
 	.byte	2		;	6800 series
-	.byte	3		;	Needs 6803 and 6303 features
+	.byte	0		;	Needs only 6800 features
 	.byte   >head		;	Load page
 	.byte	0		;	No hints
 	.word	__code_size
@@ -57,7 +57,7 @@ start:
 	inx
 	stx	_environ
 	; Now call main
-	decb		; In case someone defines it vararg! (4 bytes of arg)
+	ldab	#3	; In case someone defines it vararg! (4 bytes of arg)
 	jsr	_main
 	pshb
 	psha
