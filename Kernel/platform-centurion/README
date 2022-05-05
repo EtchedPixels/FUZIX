@@ -1,0 +1,5 @@
+Some initial test code, mostly so we can test the C compiler
+
+The system is setup with the low 60K as kernel (the top of it being common)
+and the upper kernel space as I/O. In theory user space runs from 0100 up
+but that's getting ahead of things at this stage.
