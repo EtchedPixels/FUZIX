@@ -13,7 +13,7 @@
  *	Lots to figure out here yet
  */
 
-/* 16K reported page size */
+/* 8K reported page size */
 #define CONFIG_PAGE_SIZE	8
 /* We use flexible 8K banks */
 #define CONFIG_BANK8
