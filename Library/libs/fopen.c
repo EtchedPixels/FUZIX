@@ -34,15 +34,15 @@ FILE * __fopen(const char *fname, int fd, FILE * fp, const char *mode)
 		case 'r':
 			fopen_mode |= __MODE_READ;
 			break;
-		case 'w':
+		case 'w':
 			fopen_mode |= __MODE_WRITE;
 			open_mode = (O_CREAT | O_TRUNC);
 			break;
-		case 'a':
+		case 'a':
 			fopen_mode |= __MODE_WRITE;
 			open_mode = (O_CREAT | O_APPEND);
 			break;
-		case '+':
+		case '+':
 			fopen_mode |= __MODE_RDWR;
 			break;
 		}
