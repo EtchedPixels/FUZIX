@@ -9,5 +9,5 @@
 
 void bcopy(const void *src, void *dest, size_t len)
 {
-   (void)memmove(dest, src, len);
+   memmove(dest, src, len);
 }
