@@ -762,8 +762,8 @@ static void do_proc_include(void)
 
 static void *xmalloc(size_t size)
 {
-    p = malloc(size);
-    if(ptr==0)
+    char *p = malloc(size);
+    if (p == 0)
         cfatal("Preprocessor out of memory");
     return p;
 }
