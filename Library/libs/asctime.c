@@ -11,8 +11,8 @@ static void hit(char *buf, int val)
 }
 
 /* Kept out of function to work around SDCC */
-static char days[] = "SunMonTueWedThuFriSat";
-static char mons[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+static char days[21] = "SunMonTueWedThuFriSat";
+static char mons[36] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
 char *asctime_r(struct tm *ptm, char *buffer)
 {

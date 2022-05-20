@@ -19,7 +19,7 @@
 /* Keep these out of the function because SDCC 3.4 generates hideous
    bloated crap for in function static initializers */
 
-static char uniq_ch[] =
+static char uniq_ch[62] =
 	 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 static char ret_val[L_tmpnam];
 static char c1;
