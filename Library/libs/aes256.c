@@ -267,7 +267,7 @@ static void aes_mixColumns(uint8_t *buf)
 } /* aes_mixColumns */
 
 /* -------------------------------------------------------------------------- */
-void aes_mixColumns_inv(uint8_t *buf)
+static void aes_mixColumns_inv(uint8_t *buf)
 {
     register uint8_t i, a, b, c, d, e, x, y, z;
 
@@ -312,7 +312,7 @@ static void aes_expandEncKey(uint8_t *k, uint8_t *rc)
 } /* aes_expandEncKey */
 
 /* -------------------------------------------------------------------------- */
-void aes_expandDecKey(uint8_t *k, uint8_t *rc)
+static void aes_expandDecKey(uint8_t *k, uint8_t *rc)
 {
     uint8_t i;
 
