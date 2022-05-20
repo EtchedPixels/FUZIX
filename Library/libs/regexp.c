@@ -363,7 +363,7 @@ static char *regbranch(int *flagp)
 		chain = latest;
 	}
 	if (chain == NULL)	/* Loop ran zero times. */
-		(void) regnode(NOTHING);
+		regnode(NOTHING);
 
 	return(ret);
 }

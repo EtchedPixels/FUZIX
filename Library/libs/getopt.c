@@ -26,7 +26,7 @@ static int Err(const char *name, const char *mess, int c)
 {
    if (opterr)
    {
-      (void) fprintf(stderr,
+      fprintf(stderr,
 		     "%s: %s -- %c\n",
 		     name, mess, c
 	  );

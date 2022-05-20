@@ -67,7 +67,7 @@ void regsub(regexp *prog, char *source, char *dest)
 			*dst++ = c;
 		} else if (prog->startp[no] != NULL && prog->endp[no] != NULL) {
 			len = prog->endp[no] - prog->startp[no];
-			(void) strncpy(dst, prog->startp[no], len);
+			strncpy(dst, prog->startp[no], len);
 			dst += len;
 			if (len != 0 && *(dst-1) == '\0') {
 							/* strncpy hit NUL. */
