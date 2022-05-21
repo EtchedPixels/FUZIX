@@ -22,7 +22,7 @@ CPU_Z180	.equ	Z80_TYPE-2
         .globl map_kernel_restore
         .globl map_process_always
         .globl _devfd_dtbl
-	.globl _platform_idle
+	.globl _plt_idle
 
         ; exported sybols
         .globl _devfd_init
@@ -517,7 +517,7 @@ MtrSet: ; now B contains the relevant motor bit we need to be set in the FDC DOR
 ;
 MotoLp:	PUSH	DE
 	PUSH	AF
-	CALL	_platform_idle
+	CALL	_plt_idle
 	POP	AF
 	POP	DE
 	LD      A,(mtm)         ;  ..otherwise, loop never times out!

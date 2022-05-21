@@ -18,7 +18,7 @@ CPU_Z180	.equ	Z80_TYPE-2
         .globl map_kernel
         .globl map_process_always
         .globl _devfd_dtbl
-	.globl _platform_idle
+	.globl _plt_idle
 
         ; exported sybols
         .globl _devfd_init
@@ -478,7 +478,7 @@ Motor:  PUSH    AF              ; Save Regs
 ;	using 1/20ths for the IRQ call (See p112)
 ;
 MotoLp:	PUSH	DE
-	CALL	_platform_idle
+	CALL	_plt_idle
 	POP	DE
 	LD      A,(mtm)         ;  ..otherwise, loop never times out!
         OR      A               ; Up to Speed?
