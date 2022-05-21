@@ -15,7 +15,6 @@
 		; from initializer
 		.area _INITIALIZER
 
-		.globl ___stdio_init_vars
 		.globl _main
 		.globl _exit
 		.globl _environ
