@@ -17,7 +17,7 @@ uint8_t tms9918a_present;
 uint8_t uart_present;
 uint8_t rtc_shadow;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_poll();
 
