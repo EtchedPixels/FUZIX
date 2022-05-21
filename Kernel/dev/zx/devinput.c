@@ -117,7 +117,7 @@ static uint8_t flipbits(uint8_t m)
     return r;
 }
 
-int platform_input_read(uint8_t *slot)
+int plt_input_read(uint8_t *slot)
 {
     uint8_t r, k;
     uint8_t x, y, m;
@@ -159,12 +159,12 @@ int platform_input_read(uint8_t *slot)
     return 3;
 }
 
-void platform_input_wait(void)
+void plt_input_wait(void)
 {
     psleep(&kqueue);	/* We wake this on timers so it works for sticks */
 }
 
-int platform_input_write(uint8_t flag)
+int plt_input_write(uint8_t flag)
 {
     flag;
     udata.u_error = EINVAL;

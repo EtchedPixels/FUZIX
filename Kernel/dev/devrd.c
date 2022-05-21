@@ -50,7 +50,7 @@ int rd_transfer(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
            return -1;
         }
     }
-    rd_platform_copy();
+    rd_plt_copy();
     return rd_cpy_count;
 }
 

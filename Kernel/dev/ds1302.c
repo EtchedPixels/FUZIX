@@ -75,7 +75,7 @@ void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
     uint8_t i;
     irqflags_t irq = di();
 
-    platform_ds1302_setup();
+    plt_ds1302_setup();
 
     ds1302_set_pin_ce(true);
     ds1302_send_byte(0x81 | 0x3E); /* burst read all calendar data */
@@ -88,7 +88,7 @@ void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
     ds1302_set_pin_clk(false);
     ds1302_set_pin_ce(false);
 
-    platform_ds1302_restore();
+    plt_ds1302_restore();
 
     irqrestore(irq);
 }
@@ -113,11 +113,11 @@ uint_fast8_t rtc_nvread(uint_fast8_t r)
 
     irq = di();
 
-    platform_ds1302_setup();
+    plt_ds1302_setup();
 
     v = ds1302_read_register(0xC1 + 2 * r);
 
-    platform_ds1302_restore();
+    plt_ds1302_restore();
 
     irqrestore(irq);
     return v;
@@ -130,7 +130,7 @@ void rtc_nvwrite(uint_fast8_t r, uint_fast8_t v)
 
     irq = di();
 
-    platform_ds1302_setup();
+    plt_ds1302_setup();
     
     n = ds1302_read_register(0x8F);
 
@@ -144,12 +144,12 @@ void rtc_nvwrite(uint_fast8_t r, uint_fast8_t v)
     if (n & 0x80)
         ds1302_write_register(0x8E, n);
 
-    platform_ds1302_restore();
+    plt_ds1302_restore();
 
     irqrestore(irq);
 }
 
-int platform_rtc_ioctl(uarg_t request, char *data)
+int plt_rtc_ioctl(uarg_t request, char *data)
 {
     struct cmos_nvram *rtc = (struct cmos_nvram *)data;
     uint16_t r;
@@ -180,7 +180,7 @@ int platform_rtc_ioctl(uarg_t request, char *data)
 #endif
 
 /* define CONFIG_RTC in platform's config.h to hook this into timer.c */
-uint_fast8_t platform_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
     uint8_t buffer;
     /* On some platforms the RTC is accessed via a shared interface, so
@@ -195,7 +195,7 @@ uint_fast8_t platform_rtc_secs(void)
 static uint8_t rtc_buf[8];
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	uint16_t y;
@@ -239,7 +239,7 @@ int platform_rtc_read(void)
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = EOPNOTSUPP;
 	return -1;

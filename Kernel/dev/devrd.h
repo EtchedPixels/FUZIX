@@ -29,7 +29,7 @@ extern uint16_t rd_dst_address;
 extern bool     rd_dst_userspace;
 extern uint16_t rd_cpy_count;
 extern uint8_t  rd_reverse;      /* reverse the copy direction: false=read, true=write */
-void rd_platform_copy(void);     /* platform code provides this function */
+void rd_plt_copy(void);     /* platform code provides this function */
 #endif
 
 #endif /* __DEVRD_DOT_H__ */

@@ -13,5 +13,5 @@ extern int ps2mouse_init(void);
 extern void ps2mouse_byte(uint8_t c);
 
 /* Platform provided */
-extern void platform_ps2mouse_event(uint8_t *event);
+extern void plt_ps2mouse_event(uint8_t *event);
 

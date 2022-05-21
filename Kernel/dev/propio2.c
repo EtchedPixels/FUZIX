@@ -217,9 +217,9 @@ uint8_t prop_sd_transfer_sector(void)
 
     /* Now do the transfer via the platform specific helper */
     if (blk_op.is_read)
-        platform_prop_sd_read();
+        plt_prop_sd_read();
     else {
-        platform_prop_sd_write();
+        plt_prop_sd_write();
         if (prop_send_cmd(CMD_WRITE) < 0)
             return 0;
     }

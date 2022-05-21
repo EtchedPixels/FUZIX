@@ -135,7 +135,7 @@ static void ps2mouse_event(void)
     if (fivebutton)
         event[1] |= (packet[3] & 0x18);
     /* The rest is up to the platform */
-    platform_ps2mouse_event(event);
+    plt_ps2mouse_event(event);
 }
 
 void ps2mouse_byte(uint_fast8_t byte)

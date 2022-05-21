@@ -32,7 +32,7 @@
 	    .globl _vdp_setup
 	    .globl _vdp_set_console
 
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 
 	    .globl _fontdata_6x8
 	    .globl _vtattr_notify

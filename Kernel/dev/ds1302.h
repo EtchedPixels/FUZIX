@@ -3,22 +3,22 @@
 
 /* public interface */
 uint_fast8_t ds1302_init(void);
-uint_fast8_t platform_rtc_secs(void);
+uint_fast8_t plt_rtc_secs(void);
 void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length);
-int platform_rtc_read(void);
-int platform_rtc_write(void);
-int platform_rtc_ioctl(uarg_t request , char *data);
+int plt_rtc_read(void);
+int plt_rtc_write(void);
+int plt_rtc_ioctl(uarg_t request , char *data);
 
 extern uint8_t rtc_defer;		/* Don't poll the RTC right now */
 extern uint8_t rtc_shadow;		/* Shadow for other bits in port */
 extern uint16_t rtc_port;		/* I/O address to use */
 /* Optional helpers */
 #ifdef DS1302_SETUP
-extern void platform_ds1302_setup(void);
-extern void platform_ds1302_restore(void);
+extern void plt_ds1302_setup(void);
+extern void plt_ds1302_restore(void);
 #else
-#define platform_ds1302_setup()		do {} while(0)
-#define platform_ds1302_restore()	do {} while(0)
+#define plt_ds1302_setup()		do {} while(0)
+#define plt_ds1302_restore()	do {} while(0)
 #endif
 extern uint8_t ds1302_present;
 

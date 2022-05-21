@@ -33,7 +33,7 @@ static void rtc_nvwrite(uint_fast8_t r, uint_fast8_t v)
     ds12885_read(nvmap(r), v);
 }
 
-int platform_rtc_ioctl(uarg_t request, char *data)
+int plt_rtc_ioctl(uarg_t request, char *data)
 {
     struct cmos_nvram *rtc = (struct cmos_nvram *)data;
     uint16_t r;
@@ -65,7 +65,7 @@ int platform_rtc_ioctl(uarg_t request, char *data)
 
 /* define CONFIG_RTC in platform's config.h to hook this into timer.c */
 
-uint_fast8_t platform_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
     uint_fast8_t v = ds12885_read_bcd(0x00);
     /* Turn it native */
@@ -82,7 +82,7 @@ int ds12885_battery_good(void)
 }
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	uint_fast8_t y;
@@ -122,7 +122,7 @@ int platform_rtc_read(void)
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	struct cmos_rtc cmos;

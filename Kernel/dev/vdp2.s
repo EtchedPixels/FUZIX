@@ -12,7 +12,7 @@
 	    .globl _vdpport
 
 	    .globl vdpinit
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 
 	    .area _CODE
 ;
