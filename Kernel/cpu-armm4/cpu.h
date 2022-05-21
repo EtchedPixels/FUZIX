@@ -101,6 +101,8 @@ typedef union {            /* this structure is endian dependent */
 void copy_blocks(void *, void *, size_t);
 void swap_blocks(void *, void *, size_t);
 
+#define NORETURN __attribute__((__noreturn__))
+
 #define CPUTYPE CPUTYPE_ARMM4
 
 #endif /* __ARMM4_CPU_H */
