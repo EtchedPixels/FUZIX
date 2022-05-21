@@ -60,7 +60,7 @@ void poscur(int r, int c)
 }
 
 /* Clear the screen */
-void clrscr()
+void clrscr(void)
 {
   tputs(cl, 1, outc);
 }
@@ -213,7 +213,7 @@ int setterm(char *type)
   return OK;
 }
 
-void gettmode()
+void gettmode(void)
 {
   tcgetattr(0, &_orig_tty);
   tcgetattr(0, &_tty);
