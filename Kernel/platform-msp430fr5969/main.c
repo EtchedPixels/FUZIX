@@ -49,7 +49,7 @@ const static char overlay_tab[FUZIX_SYSCALL_COUNT] = {
 
 char current_overlay = 0;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 }
 
@@ -64,7 +64,7 @@ void program_vectors(uint16_t* pageptr)
 	 * reprogram them and this is a nop. Go us. */
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	/* We're done with the start code, and the kernel's about to call
 	 * _execve. So we need to make sure it's in memory. */

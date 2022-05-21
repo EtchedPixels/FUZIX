@@ -70,7 +70,7 @@ int set_irq(int8_t i, irqvector_t handler)
     return 0;
 }
 
-void do_platform_interrupt(int16_t irq)
+void do_plt_interrupt(int16_t irq)
 {
     (irqvec[irq])(irq);
 }

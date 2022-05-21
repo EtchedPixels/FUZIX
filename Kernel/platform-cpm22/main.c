@@ -10,7 +10,7 @@
 uaddr_t ramtop;
 uint8_t cpm_busy = 0;
 uint16_t sys_prog_top;
-uint8_t platform_tick_present;
+uint8_t plt_tick_present;
 uint16_t swap_dev = 0xFFFF;
 uint8_t copybanks;
 
@@ -45,7 +45,7 @@ void init_hardware_c(void)
 	sys_prog_top &= 0xFE00;		/* Align to 512 byte chunks */
 	ramtop = PROGTOP;
 
-	platform_tick_present = !!(info->features & FEATURE_TICK);
+	plt_tick_present = !!(info->features & FEATURE_TICK);
 	
 	cpm_banks = info->nbanks;
 	copybanks = info->common >> 8;
@@ -63,13 +63,13 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	used(p);
 	return 0;
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	irqflags_t irq;
 	sysmod_idle();
@@ -78,7 +78,7 @@ void platform_idle(void)
 	irqrestore(irq);
 }
 
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
 	return sysmod_rtc_secs();
 }
@@ -91,7 +91,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = info->common - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

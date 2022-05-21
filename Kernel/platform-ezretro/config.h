@@ -44,8 +44,8 @@
 #define NBUFS    5	  /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define platform_discard()
-#define platform_copyright()
+#define plt_discard()
+#define plt_copyright()
 
 //#define BOOTDEVICENNAMES "hd#,fd#,,rd#"
 #define BOOTDEVICE (0<<8) /* hda */

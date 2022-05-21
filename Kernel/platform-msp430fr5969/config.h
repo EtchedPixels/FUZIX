@@ -74,5 +74,5 @@ extern int __swap_size_blocks;
 
 #define BOOTDEVICE 0x0001 /* hda1 */
 
-extern void platform_discard(void);
+extern void plt_discard(void);
 

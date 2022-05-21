@@ -8,14 +8,14 @@ uint16_t msxmaps;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     __asm
     halt
     __endasm;
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     used(p);
     return 0;
@@ -43,7 +43,7 @@ void pagemap_init(void)
     pagemap_add(4);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
     kbd_interrupt();
     timer_interrupt();
@@ -53,6 +53,6 @@ void platform_interrupt(void)
  *	Our disk buffer cache is slotted high above user space so we just
  *	reclaim memory back for user use and nothing is needed here.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 }

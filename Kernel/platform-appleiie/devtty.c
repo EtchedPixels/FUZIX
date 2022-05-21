@@ -94,7 +94,7 @@ uint8_t check_timer(void)
 	return 0;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_poll();
 	if (check_timer())

@@ -10,7 +10,7 @@
  */
 extern int main(void);
 
-extern uint32_t *platform_vectors;
+extern uint32_t *plt_vectors;
 
 extern uint32_t _bss_start;
 extern uint32_t _bss_end;
@@ -58,7 +58,7 @@ void _main(void)
 #endif
 	/* Steal the interrupt vectors */
 	asm volatile ("wsr.ps %0" :: "a" (0x2F));
-	asm volatile ("wsr.vecbase %0" :: "a" (&platform_vectors));
+	asm volatile ("wsr.vecbase %0" :: "a" (&plt_vectors));
 	asm volatile ("rsync");
 
 	/* Call the main program. */

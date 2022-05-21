@@ -8,7 +8,7 @@
         .globl init_early
         .globl interrupt_handler
         .globl _program_vectors
-	.globl platform_interrupt_all
+	.globl plt_interrupt_all
 
 	.globl go_fast
 	.globl go_slow
@@ -30,8 +30,8 @@
 	.globl _hd_page
 
         ; exported debugging tools
-        .globl _platform_monitor
-        .globl _platform_reboot
+        .globl _plt_monitor
+        .globl _plt_reboot
         .globl outchar
 
         ; imported symbols
@@ -57,12 +57,12 @@ _int_disabled:
 _need_resched:
 	.db 0
 
-_platform_monitor:
+_plt_monitor:
 monitor_spin:
 	di
 	jr monitor_spin
 
-platform_interrupt_all:
+plt_interrupt_all:
 	ret
 
 
@@ -72,7 +72,7 @@ platform_interrupt_all:
             .area _CODE
 
 
-_platform_reboot:
+_plt_reboot:
 	di
 	ld sp,#0
 	xor a

@@ -13,7 +13,7 @@ uint16_t swap_dev = 0xFFFF;
 /* Onboard I/O */
 static volatile uint8_t *cpuio = (volatile uint8_t *)0;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     irqflags_t flags = di();
     tty_poll();
@@ -30,7 +30,7 @@ void do_beep(void)
 
 static uint8_t tickmod;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t dummy;
 

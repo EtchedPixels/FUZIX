@@ -8,7 +8,7 @@ void map_init(void)
 {
 }
 
-void platform_init(void)
+void plt_init(void)
 {
 	int i;
 

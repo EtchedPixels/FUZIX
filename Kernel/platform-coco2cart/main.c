@@ -12,11 +12,11 @@ uint8_t system_id;
 uint16_t swap_dev;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	return 0;
 }
@@ -25,7 +25,7 @@ void do_beep(void)
 {
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	extern uint8_t discard_size;
 	bufptr bp = bufpool_end;

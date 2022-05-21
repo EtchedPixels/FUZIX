@@ -7,7 +7,7 @@
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	extern uint8_t discard_size;
 	bufptr bp = bufpool_end;
@@ -25,7 +25,7 @@ void platform_discard(void)
 }
 
 
-void platform_idle(void)
+void plt_idle(void)
 {
 }
 
@@ -55,7 +55,7 @@ void map_init(void)
 }
 
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	return 0;
 }

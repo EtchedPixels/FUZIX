@@ -3,7 +3,7 @@
 #include <printf.h>
 #include <elf.h>
 
-int platform_relocate_rel(Elf32_Rel *rel, uaddr_t section_base)
+int plt_relocate_rel(Elf32_Rel *rel, uaddr_t section_base)
 {
   uaddr_t addr;
   uaddr_t value;

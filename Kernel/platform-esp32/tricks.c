@@ -10,7 +10,7 @@ int16_t dofork(ptptr child)
 	panic("dofork");
 }
 
-void platform_switchout(void)
+void plt_switchout(void)
 {
 	panic("switchout");
 }
@@ -22,12 +22,12 @@ void switchin(ptptr process)
 
 void program_vectors(uint16_t* pageptr) {}
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	asm volatile ("waiti 0");
 }
 
-void platform_doexec(void)
+void plt_doexec(void)
 {
 	panic("doexec");
 }

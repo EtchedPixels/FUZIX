@@ -13,7 +13,7 @@ uint8_t prodos_slot;
 uint8_t pascal_slot;
 uint8_t model;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     irqflags_t flags = di();
     tty_poll();
@@ -50,7 +50,7 @@ void map_init(void)
 
 extern int strcmp(const char *, const char *);
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     if (strcmp(p,"40") == 0) {
         cols = 40;

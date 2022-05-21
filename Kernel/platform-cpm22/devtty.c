@@ -121,7 +121,7 @@ int my_tty_open(uint8_t minor, uint16_t flag)
 
 static uint8_t tcount;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_pollirq();
 	tcount++;

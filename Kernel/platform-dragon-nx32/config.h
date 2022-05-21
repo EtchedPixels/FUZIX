@@ -81,8 +81,8 @@
 
 /* Remember to update platform-dragon-nx32/kernel.defs to match */
 
-extern void platform_discard(void);
+extern void plt_discard(void);
 
-#define platform_copyright()		/* for now */
+#define plt_copyright()		/* for now */
 
 #define BOOTDEVICENAMES "hd#,fd#"

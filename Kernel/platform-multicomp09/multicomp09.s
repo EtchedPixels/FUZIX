@@ -79,8 +79,8 @@
 	.globl curr_tr
 
 	; exported debugging tools
-        .globl _platform_monitor
-	.globl _platform_reboot
+        .globl _plt_monitor
+	.globl _plt_reboot
         .globl outchar
 	.globl ___hard_di
 	.globl ___hard_ei
@@ -141,13 +141,13 @@ _usr_mmu_map
 	.db	0,1,2,3,4,5,6,7 ; mmu registers 0-7
 
 
-_platform_monitor:
+_plt_monitor:
 	orcc	#0x10
-	bra	_platform_monitor
+	bra	_plt_monitor
 
-_platform_reboot:
+_plt_reboot:
 	orcc 	#0x10		; turn off interrupts
-        bra     _platform_reboot    ; [NAC HACK 2016May07] endless loop
+        bra     _plt_reboot    ; [NAC HACK 2016May07] endless loop
 
 
         lda	#0x38		; put RAM block in memory

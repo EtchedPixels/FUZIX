@@ -92,4 +92,4 @@ extern uint16_t swap_dev;
 	#define TTYDEV   (512+1)  /* System console (used by kernel, init) */
 #endif
 
-#define platform_copyright()
+#define plt_copyright()

@@ -11,7 +11,7 @@
 	.text
 
 	.globl switchin
-	.globl platform_switchout
+	.globl plt_switchout
 	.globl dofork
 
 
@@ -68,7 +68,7 @@ fork_copy:
 	/* Called to give up processor time. We will pop out of this in
 	   potentially some other process, but we might also come back
 	   directly */
-platform_switchout:
+plt_switchout:
 	cli
 	xorw %ax,%ax
 	pushw %ax
@@ -82,7 +82,7 @@ platform_switchout:
 	call getproc
 	push %ax
 	call switchin
-	jmp platform_monitor
+	jmp plt_monitor
 
 switchin:
 	/* We can trash registers here because we'll restore them
@@ -118,7 +118,7 @@ switchfail:
 	call  outaxhex
 	mov $badswitchmsg,ax
 	calloutstring		
-	jmp _platform_monitor
+	jmp _plt_monitor
 dofork:
 	pushw %bp
 	movw %sp,%bp

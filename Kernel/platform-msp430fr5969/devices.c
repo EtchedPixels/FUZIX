@@ -40,7 +40,7 @@ bool validdev(uint16_t dev)
 }
 
 /* This is called with interrupts off. */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	switch (last_interrupt)
 	{

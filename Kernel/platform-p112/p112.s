@@ -11,8 +11,8 @@
         .globl outchar
         .globl outstring
         .globl outcharhex
-        .globl platform_interrupt_all
-        .globl _platform_reboot
+        .globl plt_interrupt_all
+        .globl _plt_reboot
         .globl _bufpool
 
         ; imported symbols
@@ -111,7 +111,7 @@ inchar:
         in0 a, (ESCC_DATA_A)
         ret
 
-_platform_reboot:
+_plt_reboot:
         in0 a, (Z182_SYSCONFIG)
         res 3, a                    ; re-enable the ROM select line
         out0 (Z182_SYSCONFIG), a
@@ -119,5 +119,5 @@ _platform_reboot:
         out0 (MMU_BBR), a           ; map ROM into the lower 60K
         jp 0                        ; jump to the boot ROM entry vector
 
-platform_interrupt_all:
+plt_interrupt_all:
         ret

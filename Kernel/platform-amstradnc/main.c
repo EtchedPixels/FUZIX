@@ -4,14 +4,14 @@
 #include <printf.h>
 #include <devtty.h>
 
-void platform_idle(void)
+void plt_idle(void)
 {
     __asm
     halt
     __endasm;
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     used(p);
     return 0;

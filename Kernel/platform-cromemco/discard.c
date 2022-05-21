@@ -32,7 +32,7 @@ void map_init(void)
   /* FIXME: request vectors for uart1 and 2 */
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
  used(p);
  return 0;

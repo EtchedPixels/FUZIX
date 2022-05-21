@@ -9,7 +9,7 @@ uint16_t swap_dev = 0xFFFF;
 uint8_t is_joyce;
 uint8_t model;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	__asm
 		halt

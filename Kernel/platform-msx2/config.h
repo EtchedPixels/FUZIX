@@ -61,4 +61,4 @@
 #define CONFIG_RTC_INTERVAL	10
 //#define CONFIG_RTC_RP5C01_NVRAM
 
-#define platform_copyright()
+#define plt_copyright()

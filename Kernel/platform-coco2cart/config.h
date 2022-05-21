@@ -71,6 +71,6 @@ extern uint16_t cocoswap_dev;
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"

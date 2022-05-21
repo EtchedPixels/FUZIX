@@ -52,7 +52,7 @@ void *get_ustack(void)
          + sizeof (udata_blocks[(udata.u_ptab) - ptab]).u_s;
 }
 
-uint_fast8_t platform_udata_set(ptptr p)
+uint_fast8_t plt_udata_set(ptptr p)
 {
   p->p_udata = &((udata_blocks[p - ptab]).u_d);
   return 0U;
@@ -139,31 +139,31 @@ void map_init(void)
 {
 }
 
-uint_fast8_t platform_param(char *p)
+uint_fast8_t plt_param(char *p)
 {
   return 0U;
 }
 
-void platform_copyright(void)
+void plt_copyright(void)
 {
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
   asm("wfe");
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 
-_Noreturn void platform_monitor(void)
+_Noreturn void plt_monitor(void)
 {
   for (;;)
     asm("wfe");
 }
 
-_Noreturn void platform_reboot(void)
+_Noreturn void plt_reboot(void)
 {
   for (;;)
     asm("wfe");

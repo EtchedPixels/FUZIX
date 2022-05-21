@@ -35,7 +35,7 @@ uint8_t read_js(uint8_t *slot, uint8_t n, uint8_t r)
     return 2;
 }
 
-int platform_input_read(uint8_t *slot)
+int plt_input_read(uint8_t *slot)
 {
     if (read_js(slot, 0, js1))
         return 2;
@@ -44,7 +44,7 @@ int platform_input_read(uint8_t *slot)
     return 0;
 }
 
-void platform_input_wait(void)
+void plt_input_wait(void)
 {
     psleep(&js_data);
 }
@@ -56,7 +56,7 @@ void poll_input(void)
         wakeup(&js_data);
 }
 
-int platform_input_write(uint8_t flag)
+int plt_input_write(uint8_t flag)
 {
     flag;
     udata.u_error = EINVAL;

@@ -2,8 +2,8 @@
 
                 .module monitor
                 .include "kernel.def"
-                .globl _platform_monitor
-		.globl _platform_reboot
+                .globl _plt_monitor
+		.globl _plt_reboot
                 .globl map_kernel
 
 ; -----------------------------------------------------------------------------
@@ -12,7 +12,7 @@
                 .include "../lib/monitor-z80.s"
 
                 .area _COMMONMEM ; just a stub goes in common memory
-_platform_monitor:
+_plt_monitor:
                 di
                 call map_kernel
                 jp monitor_entry
@@ -25,7 +25,7 @@ _platform_monitor:
                 .globl outhl
 
                 .area _COMMONMEM
-_platform_monitor:  di
+_plt_monitor:  di
                 call outnewline
                 ; just dump a few words from the stack
                 ld b, #50
@@ -37,5 +37,5 @@ stacknext:      pop hl
                 halt
 .endif
 
-_platform_reboot:	; TODO
-		jr _platform_monitor
+_plt_reboot:	; TODO
+		jr _plt_monitor

@@ -35,8 +35,8 @@
 	.globl ___hard_irqrestore
 
 	; exported debugging tools
-	.globl _platform_monitor
-	.globl _platform_reboot
+	.globl _plt_monitor
+	.globl _plt_reboot
 	.globl outchar
 
 	include "kernel.def"
@@ -93,16 +93,16 @@ init_hardware:
 
         .area .common
 
-_platform_reboot:
+_plt_reboot:
 	orcc #0x10
 	clr 0xFFBE
 	lda #0x7e
 	sta 0x0071		; in case IRQ left it looking valid
 	jmp [0xFFFE]
 
-_platform_monitor:
+_plt_monitor:
 	orcc #0x10
-	bra _platform_monitor
+	bra _plt_monitor
 
 ___hard_di:
 	tfr cc,b		; return the old irq state

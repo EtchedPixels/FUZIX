@@ -12,12 +12,12 @@ uint16_t swapdev = 0;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 DISC
-void platform_copyright(void)
+void plt_copyright(void)
 {
 	kprintf("COCO3 platform Copyright (c) 2015-2018 Brett M. Gordon\n");
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	extern uint8_t discard_size;
 	bufptr bp = bufpool_end;
@@ -35,7 +35,7 @@ void platform_discard(void)
 }
 
 
-void platform_idle(void)
+void plt_idle(void)
 {
 }
 
@@ -98,7 +98,7 @@ void map_init(void)
 }
 
 DISC
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	if (!strcmp(p,"NODW") ){
 	    dwtype = DWTYPE_NOTFOUND;

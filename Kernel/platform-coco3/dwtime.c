@@ -8,7 +8,7 @@
 
 
 /* Called every every decisec from timer.c */
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
 	uint8_t t[6];
 	/* poll dw time and return it */

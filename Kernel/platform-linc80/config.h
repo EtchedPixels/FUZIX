@@ -69,6 +69,6 @@ extern uint16_t swap_dev;
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define SD_SPI_CALLTYPE __z88dk_fastcall

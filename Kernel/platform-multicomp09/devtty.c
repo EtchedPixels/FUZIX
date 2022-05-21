@@ -174,7 +174,7 @@ void tty_data_consumed(uint_fast8_t minor)
 }
 
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t c;
 	/* Check each UART for characters and dispatch if available

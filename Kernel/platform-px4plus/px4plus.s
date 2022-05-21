@@ -20,11 +20,11 @@
 	    .globl _carttype
 	    .globl _need_resched
 
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -67,11 +67,11 @@
             .area _COMMONMEM
 
 ; FIXME: figure out how to reboot into CP/M
-_platform_monitor:
-_platform_reboot:
+_plt_monitor:
+_plt_reboot:
 	    di
 	    halt
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
 ;

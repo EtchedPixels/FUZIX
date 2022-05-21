@@ -8,7 +8,7 @@
             .globl init_early
             .globl init_hardware
             .globl interrupt_handler
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
             .globl _program_vectors
 	    .globl map_kernel
 	    .globl map_kernel_restore
@@ -32,12 +32,12 @@
 	    .globl _vtinit
 
             ; exported debugging tools
-            .globl _platform_monitor
+            .globl _plt_monitor
             .globl outchar
 
             .globl _tty_inproc
             .globl unix_syscall_entry
-            .globl _platform_reboot
+            .globl _plt_reboot
 	    .globl nmi_handler
 	    .globl null_handler
 
@@ -73,12 +73,12 @@ _bufpool:
             .area _COMMONMEM
 
 ; Ideally return to any debugger/monitor
-_platform_monitor:
+_plt_monitor:
 	    di
 	    halt
 
 
-_platform_reboot:
+_plt_reboot:
 ;FIXME: TODO
 	    di
 	    halt
@@ -125,7 +125,7 @@ init_hardware:
 
             .area _COMMONMEM
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    ld bc,(_vdpport)
 	    in a, (c)
 	    ret

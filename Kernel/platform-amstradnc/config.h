@@ -70,5 +70,5 @@
 
 #define CONFIG_LARGE_IO_DIRECT(m)	1
 			/* Definite win as our I/O is as fast as a memcpy! */
-#define platform_discard()
-#define platform_copyright()
+#define plt_discard()
+#define plt_copyright()

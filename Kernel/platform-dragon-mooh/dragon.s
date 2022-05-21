@@ -25,8 +25,8 @@
 	.globl _vtoutput
 
 	; exported debugging tools
-	.globl _platform_monitor
-	.globl _platform_reboot
+	.globl _plt_monitor
+	.globl _plt_reboot
 	.globl outchar
 	.globl ___hard_di
 	.globl ___hard_ei
@@ -99,15 +99,15 @@ init_hardware:
 
             .area .common
 
-_platform_reboot:
+_plt_reboot:
 	    orcc #0x10
 	    clr 0xFF90		; disable MMU on MOOH
 	    clr 0x0071
 	    jmp [0xFFFE]	; BASIC ROM & vectors are back
 
-_platform_monitor:
+_plt_monitor:
 	    orcc #0x10
-	    bra _platform_monitor
+	    bra _plt_monitor
 
 ___hard_di:
 	    tfr cc,b		; return the old irq state

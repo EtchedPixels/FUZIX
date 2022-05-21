@@ -9,7 +9,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded af
 uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0xFFFF;
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));
@@ -24,20 +24,20 @@ void platform_discard(void)
 
 static uint8_t idlect;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	__asm
 		halt
 	__endasm;
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t plt_param(unsigned char *p)
 {
 	used(p);
 	return 0;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_drain_sio();
 	timer_interrupt();

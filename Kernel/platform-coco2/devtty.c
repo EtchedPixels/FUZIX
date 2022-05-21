@@ -239,7 +239,7 @@ static void keydecode(void)
 	tty_inproc(1, c);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t i = *pia_ctrl;
 	if (i & 0x80) {

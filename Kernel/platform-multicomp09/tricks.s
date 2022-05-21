@@ -8,13 +8,13 @@
         .globl _chksigs
         .globl _getproc
 	.globl _udata
-        .globl _platform_monitor
+        .globl _plt_monitor
         .globl _krn_mmu_map
         .globl _usr_mmu_map
 	.globl curr_tr
 
 	;; exported
-        .globl _platform_switchout
+        .globl _plt_switchout
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
@@ -42,7 +42,7 @@ fork_proc_ptr:
 ;;; possibly the same process, and switches it in.  When a process is
 ;;; restarted after calling switchout, it thinks it has just returned
 ;;; from switchout().
-_platform_switchout:
+_plt_switchout:
 	orcc 	#0x10		; irq off
 
         ;; save machine state
@@ -56,7 +56,7 @@ _platform_switchout:
         jsr 	_getproc	; X = next process ptr
         jsr 	_switchin	; and switch it in
         ; we should never get here
-        jsr 	_platform_monitor
+        jsr 	_plt_monitor
 
 
 badswitchmsg:
@@ -125,7 +125,7 @@ switchinfail:
         ldx 	#badswitchmsg
         jsr 	outstring
 	;; something went wrong and we didn't switch in what we asked for
-        jmp 	_platform_monitor
+        jmp 	_plt_monitor
 
 
 ;;;

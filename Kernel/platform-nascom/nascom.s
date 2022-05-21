@@ -9,13 +9,13 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl _nmikey
 	    .globl _int_disabled
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -52,13 +52,13 @@ _bufpool:
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
-_platform_monitor:
-_platform_reboot:
+_plt_monitor:
+_plt_reboot:
 	    di
-	    jr _platform_reboot
+	    jr _plt_reboot
 
 _int_disabled:
 	   .db 1

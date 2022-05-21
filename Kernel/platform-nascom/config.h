@@ -69,7 +69,7 @@
 /* Reclaim the discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL
 
-extern void platform_discard(void);
-#define platform_copyright()
+extern void plt_discard(void);
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#,fd#"

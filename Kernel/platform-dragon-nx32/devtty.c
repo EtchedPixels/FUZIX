@@ -322,7 +322,7 @@ static void keydecode(void)
 	tty_inproc(inputtty + 1, c);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t i = *pia_ctrl;
 	if (i & 0x80) {
@@ -340,7 +340,7 @@ void platform_interrupt(void)
 		}
                 fd_timer_tick();
 		timer_interrupt();
-		wakeup(&platform_interrupt);
+		wakeup(&plt_interrupt);
 		dw_vpoll();
 	}
 }
@@ -517,7 +517,7 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	}
 	case GFXIOC_WAITVB:
-		psleep(&platform_interrupt);
+		psleep(&plt_interrupt);
 		return 0;
 	case GFXIOC_DRAW:
 	case GFXIOC_READ:

@@ -20,8 +20,8 @@ istack_top:
 	.global init_early
 	.global init_hardware
 	.global program_vectors
-	.global platform_monitor
-	.global platform_reboot
+	.global plt_monitor
+	.global plt_reboot
 	.global kernel_ds
 
 	.global bioshd_param
@@ -45,9 +45,9 @@ init_hardware:
 	ret
 program_vectors:
 	ret
-platform_monitor:
-platform_reboot:
-	jmp platform_monitor
+plt_monitor:
+plt_reboot:
+	jmp plt_monitor
 
 /*
  *	Interrupt and trap handlers. The 8086 doesn't have real protection
@@ -150,7 +150,7 @@ do_irq:
 	movb	$1,inint
 	movb	$1,udata + U_DATA__U_ININTERRUPT
 	pushw	%ax
-	call	do_platform_interrupt
+	call	do_plt_interrupt
 	popw	%ax
 
 	/* This little chunk is machine specific so we'll need to work out

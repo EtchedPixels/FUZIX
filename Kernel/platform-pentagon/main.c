@@ -10,7 +10,7 @@ uint16_t swap_dev = 0xFFFF;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
-void platform_idle(void)
+void plt_idle(void)
 {
   /* We don't want an idle poll and IRQ driven tty poll at the same moment */
   __asm
@@ -20,7 +20,7 @@ void platform_idle(void)
 
 uint8_t timer_wait;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
  tty_pollirq();
  timer_interrupt();
@@ -54,7 +54,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *
  *	We don't touch discard. Discard is just turned into user space.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = 0x4000 - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

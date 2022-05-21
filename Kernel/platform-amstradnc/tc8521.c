@@ -59,7 +59,7 @@ l1:     ini		; high bits of field in low bits of (hl)
 }
 
 
-uint_fast8_t platform_rtc_secs(void) __naked
+uint_fast8_t plt_rtc_secs(void) __naked
 {
     __asm
         in a, (CLOCK_PORT)
@@ -69,7 +69,7 @@ uint_fast8_t platform_rtc_secs(void) __naked
 }
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	uint16_t y;
@@ -103,7 +103,7 @@ int platform_rtc_read(void)
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = -EOPNOTSUPP;
 	return -1;

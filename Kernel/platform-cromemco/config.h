@@ -37,6 +37,6 @@
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#,fd"

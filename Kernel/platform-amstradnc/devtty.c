@@ -348,7 +348,7 @@ static void keydecode(void)
 
 #ifdef CONFIG_NC200
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t a = irqmap;
 	uint8_t c;
@@ -404,7 +404,7 @@ void platform_interrupt(void)
 
 #else
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t a = irqmap;
 	uint8_t c;

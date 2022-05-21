@@ -15,7 +15,7 @@ void queue_input(uint8_t c)
 	wakeup(&kqueue);
 }
 
-int platform_input_read(uint8_t * slot)
+int plt_input_read(uint8_t * slot)
 {
 	uint8_t r, k;
 	if (remq(&kqueue, &r)) {
@@ -27,12 +27,12 @@ int platform_input_read(uint8_t * slot)
 	return 0;
 }
 
-void platform_input_wait(void)
+void plt_input_wait(void)
 {
 	psleep(&kqueue);
 }
 
-int platform_input_write(uint8_t flag)
+int plt_input_write(uint8_t flag)
 {
 	flag;
 	udata.u_error = EINVAL;

@@ -12,7 +12,7 @@ uint16_t swap_dev = 0xFFFF;
 /* Onboard I/O */
 static volatile uint8_t *cpuio = (volatile uint8_t *)0;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     irqflags_t flags = di();
     tty_poll();
@@ -20,7 +20,7 @@ void platform_idle(void)
 }
 
 /* TODO once we understand it */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_poll();
 	timer_interrupt();

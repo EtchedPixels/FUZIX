@@ -64,5 +64,5 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 
 #define CONFIG_IDE
 
-#define platform_copyright(x)
+#define plt_copyright(x)
 

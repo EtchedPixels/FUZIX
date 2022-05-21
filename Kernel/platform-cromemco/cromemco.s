@@ -8,7 +8,7 @@
 	.globl init_early
 	.globl init_hardware
 	.globl _program_vectors
-	.globl platform_interrupt_all
+	.globl plt_interrupt_all
 
 	.globl map_kernel_low
 	.globl map_save_low
@@ -16,14 +16,14 @@
 	.globl map_user_low
 	.globl map_page_low
 
-	.globl _platform_reboot
+	.globl _plt_reboot
 
-	.globl _platform_doexec
+	.globl _plt_doexec
 
 	.globl _int_disabled
 
 	; exported debugging tools
-	.globl _platform_monitor
+	.globl _plt_monitor
 	.globl outchar
 
 	; imported symbols
@@ -218,10 +218,10 @@ _irqvec:
 	.byte 0
 
 
-_platform_reboot:
-_platform_monitor:
-	jr _platform_monitor
-platform_interrupt_all:
+_plt_reboot:
+_plt_monitor:
+	jr _plt_monitor
+plt_interrupt_all:
 	ret
 
 _int_disabled:
@@ -629,7 +629,7 @@ delayhl3:
 ; to zero. Instead define where it ends up.
 ;
 
-_platform_doexec	.equ	0x18
+_plt_doexec	.equ	0x18
 
         .area _COMMONMEM
 

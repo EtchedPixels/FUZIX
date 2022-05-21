@@ -37,13 +37,13 @@
 	    ; need the font
 	    .globl _fontdata_6x8
 	    .globl _vtinit
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl _video_cmd
 	    .globl _vtattr_notify
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -74,16 +74,16 @@
 _int_disabled:
 	    .db 1
 
-_platform_monitor:
+_plt_monitor:
 	    di
 	    halt
-	    jr _platform_monitor
+	    jr _plt_monitor
 
-_platform_reboot:
+_plt_reboot:
 	    xor a
 	    out (0x70), a
 
-platform_interrupt_all:
+plt_interrupt_all:
             ret
 
 ; -----------------------------------------------------------------------------

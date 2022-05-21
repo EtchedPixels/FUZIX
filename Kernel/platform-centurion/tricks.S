@@ -8,7 +8,7 @@
 ;
 ;	TODO: all the fun stuff like swap and swap stacks
 ;
-        .export _platform_switchout
+        .export _plt_switchout
         .export _switchin
         .export _dofork
 	.export _ramtop
@@ -33,7 +33,7 @@ _ramtop:
 ; We just need to be careful about the weird way X is our return and
 ; (S) is the caller return.
 ;
-_platform_switchout:
+_plt_switchout:
 	di
 	stx	(-s)
 	cla
@@ -51,7 +51,7 @@ _platform_switchout:
 	sta	(-s)		; stack it as an argument
         jsr	_switchin
         ; we should never get here
-        jmp	_platform_monitor
+        jmp	_plt_monitor
 
 badswitchmsg:
 	.ascii "_switchin: FAIL"
@@ -124,7 +124,7 @@ switchinfail:
 	lda	badswitchmsg
         jsr	outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp	_platform_monitor
+        jmp	_plt_monitor
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the

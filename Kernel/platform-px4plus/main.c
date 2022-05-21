@@ -9,7 +9,7 @@ uint16_t ramtop = PROGTOP;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
-void platform_idle(void)
+void plt_idle(void)
 {
     __asm
     halt
@@ -18,7 +18,7 @@ void platform_idle(void)
 
 __sfr __at 0x04	isr;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
  uint8_t irq = isr;
  /* We need to handle 1 for the 7508, and 2 for GAPNIO (serial in) at least */
@@ -27,7 +27,7 @@ void platform_interrupt(void)
   timer_interrupt();
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     used(p);
     return 0;

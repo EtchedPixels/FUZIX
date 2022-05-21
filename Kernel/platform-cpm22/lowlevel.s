@@ -5,8 +5,8 @@
 		.module lowlevel
 
 		.globl outchar
-		.globl _platform_monitor
-		.globl _platform_reboot
+		.globl _plt_monitor
+		.globl _plt_reboot
 
 		.globl init_early
 		.globl init_hardware
@@ -22,7 +22,7 @@
 		.globl map_restore
 
 		.globl _program_vectors
-		.globl platform_interrupt_all
+		.globl plt_interrupt_all
 
 		.globl _int_disabled
 
@@ -77,9 +77,9 @@ outchar:
 		pop af
 		ret
 
-_platform_monitor:
+_plt_monitor:
 		jp _sysmod_monitor
-_platform_reboot:
+_plt_reboot:
 		jp _sysmod_reboot
 
 init_hardware:
@@ -118,7 +118,7 @@ map_kernel_restore:
 		xor a
 		call map_process_a
 		pop af
-platform_interrupt_all:
+plt_interrupt_all:
 		ret
 
 map_save_kernel:

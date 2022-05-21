@@ -26,8 +26,8 @@
 	    .globl blkdev_unrawflg
 
             ; exported debugging tools
-            .globl _platform_monitor
-	    .globl _platform_reboot
+            .globl _plt_monitor
+	    .globl _plt_reboot
             .globl outchar
 	    .globl ___hard_di
 	    .globl ___hard_ei
@@ -70,11 +70,11 @@ _need_resched
 	.db 0		; scheduler flag
 
 
-_platform_monitor:
+_plt_monitor:
 	    orcc #0x10
-	    bra _platform_monitor
+	    bra _plt_monitor
 
-_platform_reboot:
+_plt_reboot:
 	orcc 	#0x10		; turn off interrupts
 	lda	#0x38		; put RAM block in memory
 	sta	0xffa8		;

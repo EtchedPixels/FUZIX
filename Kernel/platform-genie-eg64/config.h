@@ -75,7 +75,7 @@ extern unsigned char vt_map_char(unsigned char);
 #define NBUFS    4         /* Number of block buffers - keep in sync with asm! */
 #define NMOUNTS	 4	   /* Number of mounts at a time */
 
-extern void platform_discard(void);
-#define platform_copyright()
+extern void plt_discard(void);
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"

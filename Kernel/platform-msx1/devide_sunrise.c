@@ -19,7 +19,7 @@ static void delay(void)
     timeout = set_timer_ms(25);
 
     while(!timer_expired(timeout))
-       platform_idle();
+       plt_idle();
 }
 
 static uint8_t sunrise_transfer_sector(void)
@@ -31,6 +31,7 @@ static uint8_t sunrise_transfer_sector(void)
 
     if (!blk_op.is_read)
         blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
+#if 0        
     /* Shortcut: this range can only occur for a user mode I/O */
     if (addr >= (uint8_t *)0x3E00U && addr < (uint8_t *)0x8000U) {
         /* We can't just use tmpbuf because the buffer might be dirty which would
@@ -52,6 +53,7 @@ static uint8_t sunrise_transfer_sector(void)
         blk_op.is_user = old_user;
         return 1;
     }
+#endif    
 //    kprintf("do_ide_xfer %d %p %x..", blk_op.is_user, addr, mask);
     if (do_ide_xfer(mask) == 0) {
 //        kputs("done.\n");

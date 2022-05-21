@@ -470,7 +470,7 @@ static void keydecode(void)
 	tty_inproc(curminor, c);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	*pia_col;
 	newkey = 0;

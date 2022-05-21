@@ -388,7 +388,7 @@ __sfr __banked __at 0x00fd printer;
 
 /* FIXME: keyboard repeat
           floppy motor, serial etc */
-void platform_interrupt(void) 
+void plt_interrupt(void) 
 {
 	/* The low 4 bits count timer events, 0 means this interrupt
 	   was from something else only */

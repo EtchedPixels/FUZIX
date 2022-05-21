@@ -3,7 +3,7 @@
 #include <kdata.h>
 #include "printf.h"
 
-extern void platform_doexec(uaddr_t pc, void* sp);
+extern void plt_doexec(uaddr_t pc, void* sp);
 
 static void close_on_exec(void)
 {
@@ -197,7 +197,7 @@ arg_t _execve(void)
 	/* Start execution (never returns) */
 	udata.u_ptab->p_status = P_RUNNING;
 
-	platform_doexec(CODEBASE + hdr.a_entry, udata.u_isp);
+	plt_doexec(CODEBASE + hdr.a_entry, udata.u_isp);
 	panic("doexec returned\n");
 
 	/* tidy up in various failure modes */

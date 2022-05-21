@@ -12,7 +12,7 @@ void zrtc_init(void)
 
 static uint8_t rtcBuf [5];
 
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
     uint8_t secsBcd;
 
@@ -28,7 +28,7 @@ uint8_t platform_rtc_secs(void)
     return secsBcd - 6*(secsBcd>>4);
 }
 
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
 #if 0
 	struct cmos_rtc cmos;
@@ -67,7 +67,7 @@ int platform_rtc_read(void)
 	return -EOPNOTSUPP;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = EOPNOTSUPP;
 	return -1;

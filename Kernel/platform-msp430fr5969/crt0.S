@@ -8,13 +8,13 @@
 .globl init_early
 .globl init_hardware
 
-.globl platform_reboot
-.globl platform_monitor
+.globl plt_reboot
+.globl plt_monitor
 proc poweron
 	mov.w #(WDTPW | WDTHOLD), &WDTCTL               ; Disable watchdog
 
-platform_reboot:
-platform_monitor:
+plt_reboot:
+plt_monitor:
 	dint
 
 	; Copy the startup code out of high rom and into its execution address.
@@ -26,9 +26,9 @@ platform_monitor:
 	jnz 1b
 
 	; Go to the real startup code.
-	br #platform_reboot_high
+	br #plt_reboot_high
 
-proc platform_reboot_high
+proc plt_reboot_high
 	mov.b #CSKEY>>8, &CSCTL0_H                      ; Unlock clock registers
 	mov.w #DCOFSEL_3 | DCORSEL, &CSCTL1             ; DCO to 8MHz
 	; ACLK = VLO; SMCLK = MCLK = DCO
@@ -83,7 +83,7 @@ proc platform_reboot_high
 	mov.w #__user_length_kb, &procmem
 	
 	; Call C routines.
-	br #platform_init
+	br #plt_init
 
 proc di
 	; Return the old interrupt status in r12.

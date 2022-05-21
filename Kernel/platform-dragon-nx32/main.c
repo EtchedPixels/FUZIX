@@ -16,7 +16,7 @@ uint8_t bootslot = 0;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 uint16_t swap_dev = 0xFFFF;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 }
 
@@ -29,7 +29,7 @@ void do_beep(void)
  *	and convert it into disk cache. This gets us 7 or so buffers
  *	back which more than doubles our cache size !
  */
-void platform_discard(void)
+void plt_discard(void)
 {
   extern uint8_t discard_size;
   bufptr bp = bufpool_end;

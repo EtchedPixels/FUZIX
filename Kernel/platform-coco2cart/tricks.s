@@ -8,7 +8,7 @@
         .globl _makeproc
         .globl _chksigs
         .globl _getproc
-        .globl _platform_monitor
+        .globl _plt_monitor
         .globl _inint
         .globl map_kernel
         .globl map_process
@@ -17,11 +17,11 @@
         .globl copybank
 	.globl _nready
 	.globl _inswap
-	.globl _platform_idle
+	.globl _plt_idle
 	.globl _udata
 
 	# exported
-        .globl _platform_switchout
+        .globl _plt_switchout
         .globl _switchin
         .globl _dofork
 	.globl _ramtop
@@ -42,7 +42,7 @@ _ramtop:
 ;
 ; 
 ; This function can have no arguments or auto variables.
-_platform_switchout:
+_plt_switchout:
 	orcc #0x10		; irq off
 
         ; save machine state, including Y and U used by our C code
@@ -56,7 +56,7 @@ _platform_switchout:
         jsr _getproc
         jsr _switchin
         ; we should never get here
-        jsr _platform_monitor
+        jsr _plt_monitor
 
 badswitchmsg:
 	.ascii "_switchin: FAIL"
@@ -134,7 +134,7 @@ switchinfail:
         ldx #badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _platform_monitor
+        jmp _plt_monitor
 
 	.area .data
 

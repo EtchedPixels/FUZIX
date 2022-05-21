@@ -15,22 +15,22 @@ uint16_t swap_dev = 0xFFFF;
 uint8_t rtc_shadow;
 uint16_t rtc_port = 0xC0;
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	__asm halt __endasm;
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t plt_param(unsigned char *p)
 {
 	used(p);
 	return 0;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_drain_sio();
 	timer_interrupt();

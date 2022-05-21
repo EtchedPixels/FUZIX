@@ -8,7 +8,7 @@
 		.globl init_hardware
 		.globl program_vectors
 		.globl outchar
-		.globl platform_reboot,platform_monitor
+		.globl plt_reboot,plt_monitor
 		.globl scroll_down,scroll_up,plot_char,clear_lines
 		.globl clear_across,cursor_on,cursor_off
 		.globl cursor_disable, vtattr_notify
@@ -17,10 +17,10 @@
 
 		.globl acia_debug
 .mri 1
-platform_reboot:
-platform_monitor:
+plt_reboot:
+plt_monitor:
 	    or #0700,sr
-	    bra platform_monitor
+	    bra plt_monitor
 init_early:
 	    lea.l uarea_block,a5	; udata ptr
 	    move.l a5,udata_shadow

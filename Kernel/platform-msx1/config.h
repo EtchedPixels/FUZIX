@@ -9,7 +9,7 @@
 /* Swap based one process in RAM */
 #define CONFIG_SWAP_ONLY
 /* Permit large I/O requests to bypass cache and go direct to userspace */
-#define CONFIG_LARGE_IO_DIRECT(x)	1
+#define CONFIG_LARGE_IO_DIRECT(x)	direct_io_range(x)
 /* One memory bank */
 #define CONFIG_BANKS	1
 #define TICKSPERSEC 50      /* Ticks per second */
@@ -71,4 +71,6 @@ extern uint16_t swap_dev;
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define platform_copyright()
+#define plt_copyright()
+
+extern uint8_t direct_io_range(uint16_t dev);

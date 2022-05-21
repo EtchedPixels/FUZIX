@@ -5,7 +5,7 @@
 #include <devtty.h>
 #include <buddy.h>
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* FIXME: disable IRQ, run tty interrupt, re-enable ? */
 }
@@ -25,12 +25,12 @@ void map_init(void)
 uaddr_t ramtop;
 uint8_t need_resched;
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	return 0;
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 

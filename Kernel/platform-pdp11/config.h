@@ -41,4 +41,4 @@
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define platform_copyright()
+#define plt_copyright()

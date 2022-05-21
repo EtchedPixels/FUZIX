@@ -14,11 +14,11 @@
 .align 16
 .comm istack, ISTACK_SIZE
 
-.global platform_switchout
+.global plt_switchout
 .global switchin
 .text
 .align 4
-platform_switchout:
+plt_switchout:
 	/* Save the callee-saved registers onto the stack in the same order
 	 * that dofork does it, so switchin will restore it correctly. */
 
@@ -167,10 +167,10 @@ dofork:
 	addi sp, sp, 8*4
 	ret
 
-.global platform_idle
+.global plt_idle
 .text
 .align 4
-platform_idle:
+plt_idle:
 	waiti 0
 	ret
 

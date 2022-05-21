@@ -42,7 +42,7 @@ void acsi_select(void)
 {
 	/* We are not allowed to issue the next command too soon */
 	while (!timer_expired(acsi_next))
-		platform_idle();
+		plt_idle();
 
 	/* Claim the DMA */
 	dma_lock();
@@ -115,7 +115,7 @@ uint8_t acsi_execute(uint8_t * cmd, uint8_t cmdlen, uint16_t len)
 
 		/* We are not allowed to issue the next command too soon */
 		while (!timer_expired(acsi_next))
-			platform_idle();
+			plt_idle();
 
 		/* Write the command */
 		ACSIDMA->s.control = control;	/* SCSI control */

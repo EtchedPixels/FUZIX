@@ -18,7 +18,7 @@ __sfr __at 0xD8 rtc_month;
 __sfr __at 0xD9 rtc_year;
 __sfr __at 0xDA rtc_rega;
 
-uint_fast8_t platform_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
         static uint8_t last;
         if (rtc_rega & 0x80)
@@ -27,7 +27,7 @@ uint_fast8_t platform_rtc_secs(void)
 }
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	uint16_t y;
@@ -62,7 +62,7 @@ sync:
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = -EOPNOTSUPP;
 	return -1;

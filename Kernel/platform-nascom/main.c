@@ -8,7 +8,7 @@ uint16_t ramtop = PROGTOP;
 uint8_t vtattr_cap;
 uint16_t swap_dev;
 uint8_t clk_irq;		/* Set if the clock can cause interrupts */
-uint8_t platform_tick_present;
+uint8_t plt_tick_present;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
@@ -16,7 +16,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
 extern int strcmp(const char *, const char *);
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
-void platform_idle(void)
+void plt_idle(void)
 {
 	irqflags_t irq = di();
 	tty_poll();
@@ -33,21 +33,21 @@ __sfr __at 0x22 clk_secs;
 __sfr __at 0x23 clk_tsecs;
 __sfr __at 0x2F clk_stat;
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	if (strcmp(p, "clkint") == 0) {
 		clk_irq = 1;
 		/* FIXME: do a reset cycle first */
 		clk_stat = 0x9;	/* Repeating 0.5 sec - really 0.516.6 sec */
 		clk_stat | clk_stat | clk_stat;	/* Enable */
-		platform_tick_present = 1;
+		plt_tick_present = 1;
 		return 1;
 	}
 	used(p);
 	return 0;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	/* We don't have interrupts for the keyboard */
 	kbd_poll();
@@ -68,7 +68,7 @@ void platform_interrupt(void)
 /*
  *	FIXME: reclaim to end of usable memory
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	bufptr bp = bufpool_end;
 	extern uint16_t discard_size;

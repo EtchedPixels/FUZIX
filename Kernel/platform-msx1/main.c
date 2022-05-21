@@ -15,7 +15,7 @@ uint8_t vdptype;
 uint8_t *bouncebuffer;
 uint16_t devtab[4][4][3];
 
-void platform_idle(void)
+void plt_idle(void)
 {
     __asm
     halt
@@ -24,7 +24,7 @@ void platform_idle(void)
 
 /* Some of this is discard stuff */
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     used(p);
     return 0;
@@ -34,7 +34,7 @@ void do_beep(void)
 {
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
         uint8_t r = in((uint8_t)vdpport);
         if (r & 0x80) {
@@ -44,11 +44,13 @@ void platform_interrupt(void)
         }
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
+#if 0
     /* Until we tackle the buffers. When we do we will reserve 512 bytes
        at the end (probably FDFE-FFFE (FFFF being magic)) */
     bouncebuffer = (uint8_t *)0xFD00;	/* Hack for now */
+#endif    
 }
 
 uint8_t device_find(const uint16_t *romtab)
@@ -68,4 +70,21 @@ uint8_t device_find(const uint16_t *romtab)
     romtab++;
   }
   return 0xFF;
+}
+
+/*
+ *	Our I/O is mostly weird and memory mapped at 0x4000-0x7FFF which due
+ *	to the horizontal memory mapper means some ranges cannot be direct
+ *	I/O. We use this function as our I/O direct check and veto anything
+ *	that would be a problem. udata holds the address and the length is
+ *	always 512 bytes
+ */
+
+uint8_t direct_io_range(uint16_t dev)
+{
+        if (udata.u_dptr >= 0x8000)
+          return 1;
+        if (udata.u_dptr <= 0x3E00)
+          return 1;
+        return 0;
 }

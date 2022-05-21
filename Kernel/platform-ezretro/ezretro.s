@@ -16,7 +16,7 @@
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 
 	    .globl map_kernel
 	    .globl map_kernel_di
@@ -32,10 +32,10 @@
 
 	    .globl _int_disabled
 
-	    .globl _platform_reboot
+	    .globl _plt_reboot
 
             ; exported debugging tools
-            .globl _platform_monitor
+            .globl _plt_monitor
             .globl outchar
 
             ; imported symbols
@@ -55,12 +55,12 @@
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-_platform_monitor:
-_platform_reboot: ; FIXME    out (0), a ; exit emulator
+_plt_monitor:
+_plt_reboot: ; FIXME    out (0), a ; exit emulator
 	    di
-            jr _platform_reboot
+            jr _plt_reboot
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
 ; -----------------------------------------------------------------------------

@@ -14,11 +14,11 @@ uint8_t carttype[4];
 uint8_t bootslot = 0;
 uint16_t swap_dev;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     return 0;
 }
@@ -27,7 +27,7 @@ void do_beep(void)
 {
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 

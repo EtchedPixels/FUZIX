@@ -39,7 +39,7 @@ VDP_IRQ		.equ	1
 
 	    .area _COMMONMEM
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
 _vdpport:   .word 0x2899	; port 0x99, 40 byte count in fastest load

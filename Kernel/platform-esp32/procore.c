@@ -6,5 +6,5 @@
 void __attribute__((noreturn)) procore_main(void)
 {
 	for (;;)
-		platform_idle();
+		plt_idle();
 }

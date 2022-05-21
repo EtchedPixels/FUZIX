@@ -2,7 +2,7 @@
 #include <kdata.h>
 #include <cpu_ioctl.h>
 
-int platform_dev_ioctl(uarg_t request, char *data)
+int plt_dev_ioctl(uarg_t request, char *data)
 {
     if (!valaddr((unsigned char *)data, 2))
 	goto bad;

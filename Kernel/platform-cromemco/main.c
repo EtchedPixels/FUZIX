@@ -6,7 +6,7 @@
 
 uaddr_t ramtop = PROGTOP;
 
-void platform_idle(void)
+void plt_idle(void)
 {
  __asm
   halt
@@ -15,7 +15,7 @@ void platform_idle(void)
 
 __sfr __at 0x08 timer4;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
  timer4 = 156;
  tty_drain();
@@ -32,7 +32,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to the start of
  *	common space into buffers.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = PROGTOP - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

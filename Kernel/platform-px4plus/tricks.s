@@ -6,9 +6,9 @@
         .globl _newproc
         .globl _chksigs
         .globl _getproc
-        .globl _platform_monitor
+        .globl _plt_monitor
         .globl _inint
-        .globl _platform_switchout
+        .globl _plt_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
@@ -36,7 +36,7 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-_platform_switchout:
+_plt_switchout:
         di
         ; save machine state
 
@@ -59,7 +59,7 @@ _platform_switchout:
 	pop af
 
         ; we should never get here
-        call _platform_monitor
+        call _plt_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -158,7 +158,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _platform_monitor
+        jp _plt_monitor
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 

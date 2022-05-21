@@ -37,7 +37,7 @@ int dma_wait(uint16_t wait)
 		uint8_t status = *(volatile uint8_t *)0xFFFA01;
 		if (!(status & 0x20))
 			return 0;
-		platform_idle();
+		plt_idle();
 	}
 	return -1;
 }
