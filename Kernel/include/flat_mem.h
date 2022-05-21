@@ -52,7 +52,7 @@ extern void fast_copy_block(void *s, void *d);
    like a blitter that copies faster than the CPU */
 extern void fast_op_complete(void);
 
-extern void platform_mmu_setup(struct mmu_context *m);
+extern void plt_mmu_setup(struct mmu_context *m);
 
 #endif
 

@@ -489,7 +489,7 @@ int pagemap_alloc(ptptr p)
 
 	/* Special case to construct the init bootstrap */
 	if (p->p_pid == 1) {
-		platform_mmu_setup(m);
+		plt_mmu_setup(m);
 		return 0;
 	}
 	if (vmmu_dup(&mmu_context[udata.u_page].mmu, &m->mmu))

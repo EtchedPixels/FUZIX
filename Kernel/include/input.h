@@ -52,9 +52,9 @@ extern uint_fast8_t input_match_meta(uint_fast8_t);
 /*
  *	Platform methods for input device if present
  */
-extern int platform_input_read(uint8_t *);
-extern void platform_input_wait(void);
-extern int platform_input_write(uint_fast8_t);
-extern uint_fast8_t platform_input_init(void);
+extern int plt_input_read(uint8_t *);
+extern void plt_input_wait(void);
+extern int plt_input_write(uint_fast8_t);
+extern uint_fast8_t plt_input_init(void);
 
 #endif
