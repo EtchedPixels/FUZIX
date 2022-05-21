@@ -61,7 +61,7 @@ static const uint8_t fp_do[4][NSTATE] = {
 	 F_NADA,F_QUIT,F_NADA,
 	 F_QUIT,F_QUIT,F_QUIT},	/* see e/E */
 	{F_SIGN,F_QUIT,F_QUIT,F_QUIT,F_QUIT,
-	 F_ESIGN,F_QUIT,F_QUIT},	/* see sign */
+	 F_ESIGN,F_QUIT,F_QUIT}	/* see sign */
 };
 /* given transition,state what is new state? */
 static const uint8_t fp_ns[4][NSTATE] = {
@@ -74,7 +74,7 @@ static const uint8_t fp_ns[4][NSTATE] = {
 	 FS_E,0,FS_E,
 	},	/* see e/E */
 	{FS_SIGNED,0,0,0,0,
-	 FS_ESIGN,0,0},	/* see sign */
+	 FS_ESIGN,0,0}	/* see sign */
 };
 /* which states are valid terminators? */
 static const uint8_t fp_sval[NSTATE] = {
