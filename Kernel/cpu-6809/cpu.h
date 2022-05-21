@@ -49,3 +49,4 @@ typedef union {            /* this structure is endian dependent */
 #define barrier()		asm volatile("":::"memory")
 
 #define __fastcall
+#define NORETURN __attribute__((__noreturn__))

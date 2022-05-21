@@ -73,4 +73,4 @@ inline static void __hard_irqrestore(uint32_t ps)
 extern void copy_blocks(void *, void *, unsigned int);
 extern void swap_blocks(void *, void *, unsigned int);
 
-
+#define NORETURN __attribute__((__noreturn__))

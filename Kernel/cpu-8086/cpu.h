@@ -87,5 +87,6 @@ static inline uint8_t inb(uint16_t port)
 
 #define __packed		__attribute__((packed))
 #define barrier()		asm volatile("":::"memory")
+#define NORETURN		__attribute__((__noreturn__))
 
 #define __fastcall

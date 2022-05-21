@@ -84,3 +84,4 @@ extern int cpu_type(void);
 #define PROGBASE		(udata.u_codebase)
 
 #define __fastcall
+#define NORETURN __attribute__((__noreturn__))
