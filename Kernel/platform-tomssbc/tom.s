@@ -15,12 +15,12 @@
 	.globl map_user_low
 	.globl map_save_low
 	.globl map_restore_low
-	.globl _platform_doexec
-	.globl _platform_reboot
+	.globl _plt_doexec
+	.globl _plt_reboot
 	.globl _int_disabled
 
         ; exported debugging tools
-        .globl _platform_monitor
+        .globl _plt_monitor
         .globl outchar
 
         ; imported symbols
@@ -68,9 +68,9 @@ _bufpool:
 ; -----------------------------------------------------------------------------
         .area _COMMONMEM
 
-_platform_monitor:
+_plt_monitor:
 	    ; Reboot ends up back in the monitor
-_platform_reboot:
+_plt_reboot:
 	xor a
 	out (0x3F), a		; Ensure we have the right ROM bank
 	inc a
@@ -220,7 +220,7 @@ ocloop_sio:
 ; Don't be tempted to put the symbol in the code below ..it's relocated
 ; to zero. Instead define where it ends up.
 
-_platform_doexec	.equ	0x18
+_plt_doexec	.equ	0x18
 
         .area _DISCARD
 

@@ -66,7 +66,7 @@ void tty_interrupt(void)
 	}	
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	timer_interrupt();
 	tty_interrupt();

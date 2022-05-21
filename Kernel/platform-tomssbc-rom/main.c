@@ -8,7 +8,7 @@ uint16_t ramtop = PROGTOP;
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 uint16_t swap_dev = 0xFFFF;
 
-void platform_discard(void)
+void plt_discard(void)
 {
         uint8_t *end = (uint8_t *)0xF000;
         end -= sizeof(struct blkbuf);
@@ -24,14 +24,14 @@ void platform_discard(void)
 }
 
 
-void platform_idle(void)
+void plt_idle(void)
 {
   __asm
    halt
   __endasm;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	/* Will call timer_interrupt as needed */
 	tty_pollirq_sio0();

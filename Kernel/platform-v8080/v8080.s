@@ -7,17 +7,17 @@
 
 .sect .common
 
-.define _platform_monitor
-.define _platform_reboot
+.define _plt_monitor
+.define _plt_reboot
 
-_platform_monitor:
-_platform_reboot:
+_plt_monitor:
+_plt_reboot:
 	mvi a,1
 	out 29
 
-.define platform_interrupt_all
+.define plt_interrupt_all
 
-platform_interrupt_all:
+plt_interrupt_all:
 	ret
 
 .sect .text

@@ -10,7 +10,7 @@ extern unsigned char irqvector;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS; /* minimal for boot -- expanded after we're done with _DISCARD */
 
-void platform_discard(void)
+void plt_discard(void)
 {
     while(bufpool_end < (struct blkbuf*)(KERNTOP - sizeof(struct blkbuf))){
         memset(bufpool_end, 0, sizeof(struct blkbuf));
@@ -32,7 +32,7 @@ void z180_timer_interrupt(void)
     timer_interrupt();
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
     /* Let's go to sleep while we wait for something to interrupt us;
      * Makes the Mark IV's run LED go red, which amuses me greatly. */
@@ -41,7 +41,7 @@ void platform_idle(void)
     __endasm;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
     switch(irqvector){
         case Z180_INT_TIMER0:

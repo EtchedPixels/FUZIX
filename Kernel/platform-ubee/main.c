@@ -12,7 +12,7 @@ uint16_t swap_dev = 0xFFFF;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
-void platform_idle(void)
+void plt_idle(void)
 {
 	if (ubee_model == UBEE_256TC)
 		__asm halt __endasm;
@@ -34,7 +34,7 @@ __sfr __at 0x02 pia0b;
 __sfr __at 0x04 cmos_reg;
 __sfr __at 0x07 cmos_read;
 
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
 	cmos_reg = 0x00;
 	return cmos_read;
@@ -52,7 +52,7 @@ uint8_t platform_rtc_secs(void)
  *	normally on the pia bit. We only care about the RTC because the
  *	machines we support normally don't have a vblank rtc
  */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	static uint8_t icount;
 	uint8_t r = pia0b;
@@ -83,7 +83,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

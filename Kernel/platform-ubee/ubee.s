@@ -21,13 +21,13 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl _kernel_flag
 	    .globl _int_disabled
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -68,12 +68,12 @@ _bufpool:
 _int_disabled:
 	    .db 1
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    in a,(0xef)			; FIXME: remove this line once debugged
 	    ret
 
-_platform_monitor:
-_platform_reboot:
+_plt_monitor:
+_plt_reboot:
 	    di
 	    halt
 ;

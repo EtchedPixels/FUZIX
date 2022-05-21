@@ -6,7 +6,7 @@
 
 uint32_t sysconfig;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* FIXME: disable IRQ, run tty interrupt, re-enable ? */
 }
@@ -31,12 +31,12 @@ uaddr_t pagemap_base(void)
 	return 0x10000UL;
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	return 0;
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 
@@ -68,7 +68,7 @@ void install_vdso(void)
 //	memcpy((void *)udata.u_codebase, &vdso, 0x40);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	if (*(volatile uint8_t *)0xFFF40)
 		timer_interrupt();

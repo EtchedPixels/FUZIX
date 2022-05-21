@@ -22,12 +22,12 @@ void map_init(void)
 uaddr_t ramtop;
 uint8_t need_resched;
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	return 0;
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 
@@ -66,7 +66,7 @@ void install_vdso(void)
 	memcpy((void *)udata.u_codebase, &vdso, 0x40);
 }
 
-uint8_t platform_udata_set(ptptr p)
+uint8_t plt_udata_set(ptptr p)
 {
 	u_block **up = &udata_block[p - ptab];
 	if (*up == NULL) {

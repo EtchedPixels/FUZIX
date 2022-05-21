@@ -5,7 +5,7 @@
         .globl init_early
         .globl init_hardware
         .globl _program_vectors
-        .globl platform_interrupt_all
+        .globl plt_interrupt_all
 	.globl interrupt_handler
 	.globl unix_syscall_entry
 	.globl null_handler
@@ -33,8 +33,8 @@
 	.globl _int_disabled
 
         ; exported debugging tools
-        .globl _platform_monitor
-	.globl _platform_reboot
+        .globl _plt_monitor
+	.globl _plt_reboot
         .globl outchar
 
         ; imported symbols
@@ -98,8 +98,8 @@ SIOB_C		.EQU	0x03
 ; -----------------------------------------------------------------------------
         .area _COMMONMEM
 
-_platform_monitor:
-_platform_reboot:
+_plt_monitor:
+_plt_reboot:
 	di
 	xor a
 	out (0x3F),a
@@ -107,7 +107,7 @@ _platform_reboot:
 	out (0x38),a		; ROM in
 	rst 0
 
-platform_interrupt_all:
+plt_interrupt_all:
         ret
 
 	.area _COMMONDATA

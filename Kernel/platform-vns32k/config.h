@@ -48,6 +48,6 @@
 
 #define CONFIG_IDE
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"

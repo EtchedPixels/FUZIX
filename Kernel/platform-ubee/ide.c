@@ -26,7 +26,7 @@ static void devide_delay(void)
     timeout = set_timer_ms(25);
 
     while(!timer_expired(timeout))
-       platform_idle();
+       plt_idle();
 }
 
 void devide_reset(void)

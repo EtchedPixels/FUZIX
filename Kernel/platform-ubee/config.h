@@ -65,6 +65,6 @@
 
 extern uint16_t swap_dev;
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#,fd#"

@@ -1,7 +1,7 @@
 #include "../kernel-68000.def"
 
 
-.globl platform_switchout,switchin,dofork,udata_shadow
+.globl plt_switchout,switchin,dofork,udata_shadow
 
 .mri 1
 
@@ -9,7 +9,7 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-platform_switchout:
+plt_switchout:
         or #$0700,sr
         ; save machine state
 
@@ -27,7 +27,7 @@ platform_switchout:
         bsr switchin
 
         ; we should never get here
-        bra platform_monitor
+        bra plt_monitor
 
 switchin:
         or #$0700,sr
@@ -102,7 +102,7 @@ switchinfail:
         lea badswitchmsg,a0
         bsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        bra platform_monitor
+        bra plt_monitor
 
 	;
 	; this gets exciting on the 68000 because our udata is not in a

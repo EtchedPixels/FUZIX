@@ -7,8 +7,8 @@
             .export _program_vectors
 
             ; exported debugging tools
-            .export _platform_monitor
-	    .export _platform_reboot
+            .export _plt_monitor
+	    .export _plt_reboot
             .export outchar
 	    .export ___hard_di
 	    .export ___hard_ei
@@ -43,16 +43,16 @@ syscall	=  $FE
 
         .code
 
-_platform_monitor:
-	jmp	_platform_monitor
+_plt_monitor:
+	jmp	_plt_monitor
 
-_platform_reboot:
+_plt_reboot:
 	sep	#$30
 	.a8
 	.i8
 	lda	#$A5
 	sta	$FE40		; Off
-	jmp	_platform_reboot	; FIXME: original ROM map and jmp
+	jmp	_plt_reboot	; FIXME: original ROM map and jmp
 
 ___hard_di:
 	php

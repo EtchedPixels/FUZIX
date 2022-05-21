@@ -7,7 +7,7 @@
 uint8_t kernel_flag = 1;
 uint16_t ramtop = PROGTOP;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     irqflags_t flags = di();
     tty_poll();
@@ -34,7 +34,7 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     return 0;
 }

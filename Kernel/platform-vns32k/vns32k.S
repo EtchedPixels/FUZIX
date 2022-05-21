@@ -4,20 +4,20 @@
  *	Lots left to fill in
  */
 
-		.globl _platform_reboot
+		.globl _plt_reboot
 		.globl init_early
 		.globl init_hardware
 		.globl _program_vectors
 		.globl outchar
-		.globl _platform_monitor
+		.globl _plt_monitor
 		.globl _udata_block
 
-_platform_reboot:
-_platform_monitor:
+_plt_reboot:
+_plt_monitor:
 		sprw psr,r0		# Interrupts back off
 		andw 0xF7FF,r0
 		lprw psr,r0
-		br _platform_monitor
+		br _plt_monitor
 
 init_early:
 		addr _udata_block(pc),_udata_shadow(pc)
@@ -48,7 +48,7 @@ timer_irq:
 		# and we don't use FP registers in kernel
 		movd _udata_shadow(pc),r6	# set up the register global
 		movb 1,U_DATA__U_ININTERRUPT(r6)
-		bsr _platform_interrupt
+		bsr _plt_interrupt
 		movb 0,U_DATA__U_ININTERRUPT(r6)
 
 		# Timer re-enable ?

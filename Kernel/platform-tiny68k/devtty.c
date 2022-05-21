@@ -293,7 +293,7 @@ static void tty_interrupt(uint8_t r)
 		PUTB(UART_CRB, 0x50);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t r = GETB(UART_ISR);
 	static uint8_t c = 0x12;

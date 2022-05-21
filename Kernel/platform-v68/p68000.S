@@ -4,20 +4,20 @@
  *	Lots left to fill in
  */
 
-		.globl platform_reboot
+		.globl plt_reboot
 		.globl init_early
 		.globl init_hardware
 		.globl program_vectors
 		.globl outchar
-		.globl platform_monitor
+		.globl plt_monitor
 		.globl udata_block
 		.globl devide_read_data
 		.globl devide_write_data
 .mri 1
-platform_reboot:
-platform_monitor:
+plt_reboot:
+plt_monitor:
 	    or #0700,sr
-	    bra platform_monitor
+	    bra plt_monitor
 
 init_early:
 	    lea.l udata_block,a5	; udata ptr
@@ -50,7 +50,7 @@ timer_irq:
 	    movem.l a0-a1/a5/d0-d1,-(sp)
 	    move.l udata_shadow,a5	; set up the register global
 	    move.b #1,U_DATA__U_ININTERRUPT(a5)
-	    jsr platform_interrupt
+	    jsr plt_interrupt
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 	    move.b $00F04000,d0		; Re-enable
 

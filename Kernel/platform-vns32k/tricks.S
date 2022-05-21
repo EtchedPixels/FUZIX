@@ -2,7 +2,7 @@
 
 
 	.globl _platform
-	.globl _platform_switchout
+	.globl _plt_switchout
 	.globl _switchin
 	.globl _dofork
 	.globl _udata_shadow
@@ -13,7 +13,7 @@
 # restarted after calling switchout, it thinks it has just returned
 # from switchout().
 #
-_platform_switchout:
+_plt_switchout:
 	sprw psr,r0		# Interrupts off
 	andw 0xF7FF,r0
 	lprw psr,r0
@@ -36,7 +36,7 @@ _platform_switchout:
         bsr _switchin
 
         # We should never get here
-        br _platform_monitor
+        br _plt_monitor
 
 _switchin:
 	sprw psr,r0		# Interrupts off
@@ -119,7 +119,7 @@ switchinfail:
         addr badswitchmsg,r0
         bsr outstring
 	# something went wrong and we didn't switch in what we asked for
-        br _platform_monitor
+        br _plt_monitor
 
 	#
 	# this gets exciting on the NS32K because our udata is not in a

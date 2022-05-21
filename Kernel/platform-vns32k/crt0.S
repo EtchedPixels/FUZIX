@@ -129,7 +129,7 @@ interrupt_handler:
 		enter [r0,r1,r6],0
 		movd _udata_shadow(pc),r6
 		movqb 1,U_DATA__U_ININTERRUPT(r6)
-		bsr _platform_interrupt
+		bsr _plt_interrupt
 		movqb 0,U_DATA__U_ININTERRUPT(r6)
 		cmpqb 0,U_DATA__U_INSYS(r6)
 		bne no_preempt

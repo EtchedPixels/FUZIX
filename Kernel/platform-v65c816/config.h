@@ -56,12 +56,12 @@
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define platform_discard()	/* for now - wants fixing */
+#define plt_discard()	/* for now - wants fixing */
 
 
 #define OFTSIZE		24
 #define ITABSIZE	32
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"

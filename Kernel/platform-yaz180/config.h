@@ -46,4 +46,4 @@
 /* ASCI0 as the console */
 #define TTYDEV   (512+1)  /* System console (used by kernel, init) */
 
-#define platform_copyright()
+#define plt_copyright()

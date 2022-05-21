@@ -73,7 +73,7 @@ void tty_poll(void)
 	}
 }
                 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t t = peek(0x10);
 	tty_poll();

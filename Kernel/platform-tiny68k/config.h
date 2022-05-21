@@ -42,7 +42,7 @@
 
 #define CONFIG_IDE
 
-#define platform_copyright()
+#define plt_copyright()
 
 /* Note: select() in the level 2 code will not work on this configuration
    at the moment as select is limited to 16 processes. FIXME - support a

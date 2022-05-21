@@ -1,13 +1,13 @@
 
 #include "../kernel-68000.def"
 
-		.globl platform_reboot
+		.globl plt_reboot
 		.globl init_early
 		.globl init_hardware
 		.globl program_vectors
-		.globl platform_idle
+		.globl plt_idle
 		.globl outchar
-		.globl platform_monitor
+		.globl plt_monitor
 		.globl udata_block0
 		.globl devide_read_data
 		.globl devide_write_data
@@ -18,20 +18,20 @@
 #define IVR $19
 
 .mri 1
-platform_monitor:
+plt_monitor:
 	; Need to check if top of memory at FE7000, if so
 	; copy vectors from FE7000 to 0 (where we saved them)
 	; them jmp to FE8000
-platform_reboot:
+plt_reboot:
 	    or #$0700,sr
-	    bra platform_monitor
+	    bra plt_monitor
 
 init_early:
 	    lea.l udata_block0,a5	; udata ptr
 	    move.l a5,udata_shadow	; shadow copy for entry/exit
             rts
 
-platform_idle:
+plt_idle:
 	    stop #($2000+EI_MASK)
 	    rts
 ;
@@ -76,7 +76,7 @@ timer_irq:
 	    movem.l a0-a1/a5/d0-d1,-(sp)
 	    move.l udata_shadow,a5	; set up the register global
 	    move.b #1,U_DATA__U_ININTERRUPT(a5)
-	    jsr platform_interrupt
+	    jsr plt_interrupt
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 
 	    tst.b U_DATA__U_INSYS(a5)

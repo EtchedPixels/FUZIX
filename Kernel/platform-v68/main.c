@@ -4,7 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* FIXME: disable IRQ, run tty interrupt, re-enable ? */
 }
@@ -29,12 +29,12 @@ uaddr_t pagemap_base(void)
 	return 0x20000UL;
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	return 0;
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 

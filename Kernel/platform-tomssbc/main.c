@@ -10,7 +10,7 @@ uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0xF000;
 uint8_t need_resched = 0;
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));
@@ -23,18 +23,18 @@ void platform_discard(void)
 	kprintf("Buffers available: %d\n", bufpool_end - bufpool);
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	__asm halt __endasm;
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t plt_param(unsigned char *p)
 {
 	used(p);
 	return 0;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	/* Will call timer_interrupt as needed */
 	tty_pollirq_sio0();

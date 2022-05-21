@@ -9,7 +9,7 @@ uint16_t ramtop = PROGTOP;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
-void platform_idle(void)
+void plt_idle(void)
 {
   /* We don't want an idle poll and IRQ driven tty poll at the same moment */
   __asm
@@ -19,7 +19,7 @@ void platform_idle(void)
 
 uint8_t timer_wait;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
  tty_pollirq();
  tty_polluart();
@@ -41,7 +41,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *
  *	Discard gets turned into buffers or user space
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = 0xE000 - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
