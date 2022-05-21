@@ -12,8 +12,8 @@
         .globl _makeproc
         .globl _chksigs
         .globl _getproc
-        .globl _platform_monitor
-        .globl _platform_switchout
+        .globl _plt_monitor
+        .globl _plt_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
@@ -22,7 +22,7 @@
         .globl interrupt_handler
 	.globl _need_resched
 	.globl _nready
-	.globl _platform_idle
+	.globl _plt_idle
 	.globl _int_disabled
 	.globl _udata
 
@@ -47,7 +47,7 @@
 ; 
 ; This function can have no arguments or auto variables.
 ;
-_platform_switchout:
+_plt_switchout:
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
@@ -71,7 +71,7 @@ _platform_switchout:
         call _switchin
 
         ; we should never get here
-        call _platform_monitor
+        call _plt_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -209,7 +209,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _platform_monitor
+        jp _plt_monitor
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 

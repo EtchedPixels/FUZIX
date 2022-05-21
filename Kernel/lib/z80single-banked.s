@@ -11,8 +11,8 @@
         .globl _makeproc
         .globl _chksigs
         .globl _getproc
-        .globl _platform_monitor
-        .globl _platform_switchout
+        .globl _plt_monitor
+        .globl _plt_switchout
         .globl _switchin
         .globl _doexec
         .globl _dofork
@@ -41,7 +41,7 @@
 ; from switchout().
 ;
 ; This function can have no arguments or auto variables.
-_platform_switchout:
+_plt_switchout:
         di
         ; save machine state
 
@@ -68,7 +68,7 @@ _platform_switchout:
 
         ; we should never get here
 	push af
-        call _platform_monitor
+        call _plt_monitor
 	pop af
 
 badswitchmsg: .ascii "_switchin: FAIL"
@@ -178,7 +178,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _platform_monitor
+        jp _plt_monitor
 
 
 ;
@@ -297,7 +297,7 @@ _dofork:
 ohpoo:
 	ld hl,#nobufs
 	call outstring
-	jp _platform_monitor
+	jp _plt_monitor
 
 nobufs:
 	.asciz 'nobufs'
