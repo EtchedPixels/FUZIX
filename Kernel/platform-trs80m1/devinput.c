@@ -45,7 +45,7 @@ static int chroma_js(uint8_t *slot, uint8_t n, uint8_t v)
     return 2;
 }
      
-int platform_input_read(uint8_t *slot)
+int plt_input_read(uint8_t *slot)
 {
     uint8_t r, k;
     if (remq(&kqueue, &r)) {
@@ -92,12 +92,12 @@ int platform_input_read(uint8_t *slot)
     return 2;
 }
 
-void platform_input_wait(void)
+void plt_input_wait(void)
 {
     psleep(&kqueue);	/* We wake this on timers so it works for sticks */
 }
 
-int platform_input_write(uint8_t flag)
+int plt_input_write(uint8_t flag)
 {
     flag;
     udata.u_error = EINVAL;

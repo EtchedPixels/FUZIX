@@ -15,7 +15,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
-void platform_idle(void)
+void plt_idle(void)
 {
     __asm
     halt
@@ -26,13 +26,13 @@ void do_beep(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     used(p);
     return 0;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
   uint8_t irq = ~irqstat;
   uint8_t dummy;
@@ -50,7 +50,7 @@ void platform_interrupt(void)
  *	and convert it into disk cache. This gets us 7 or so buffer
  *	back which more than doubles our cache size !
  */
-void platform_discard(void)
+void plt_discard(void)
 {
   extern uint16_t discard_size;
   bufptr bp = bufpool_end;
@@ -86,7 +86,7 @@ __sfr __at 0xBB rtc_yearl;
 __sfr __at 0xBC rtc_yearh;
 
 /* FIXME: the RTC is optional so we should test for it first */
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
     uint8_t sl, rv;
     /* BCD encoded */
@@ -102,7 +102,7 @@ uint8_t platform_rtc_secs(void)
 
 /* If the compiler segfaults here you need at least SDCC #10471 */
 
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
     uint16_t len = sizeof(struct cmos_rtc);
     struct cmos_rtc cmos;
@@ -145,7 +145,7 @@ int platform_rtc_read(void)
 /* Yes I'm a slacker .. this wants adding but it's ugly
    because the seconds is always just set to 0 on any change. We
    also need to deal with leap years here */
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = EOPNOTSUPP;
 	return -1;

@@ -8,7 +8,7 @@
             .globl init_early
             .globl interrupt_handler
             .globl _program_vectors
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl map_kernel
 	    .globl map_process
 	    .globl map_process_a
@@ -33,8 +33,8 @@
 	    .globl _hd_page
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -65,7 +65,7 @@ istack_switched_sp: .dw 0
 
 	    .area _COMMONMEM
 
-_platform_monitor:
+_plt_monitor:
 	    push af
 	    call _vtflush		; get any panic onscreen
 	    pop af
@@ -73,10 +73,10 @@ monitor_spin:
 	    di
 	    jr monitor_spin
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
-_platform_reboot:
+_plt_reboot:
 	    di
 	    ld sp,#0xffff
 	    xor a

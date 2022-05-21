@@ -76,7 +76,7 @@
 #define NBUFS    5         /* Number of block buffers - keep in sync with asm! */
 #define NMOUNTS	 3	   /* Number of mounts at a time */
 
-extern void platform_discard(void);
-#define platform_copyright()
+extern void plt_discard(void);
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#,fd#"

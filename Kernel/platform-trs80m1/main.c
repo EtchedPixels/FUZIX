@@ -15,7 +15,7 @@ uint8_t vtattr_cap;
  *	interrupts we poll here so that the normal case of idling while
  *	waiting for input feels ok.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
   irqflags_t irq;
   /* The Model III has a real interrupt driven serial port */
@@ -47,7 +47,7 @@ __sfr __at 0xEC irqack3;
 
 /* We assign these to dummy to deal with an sdcc bug (should be fixed in next
    SDCC) */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
   uint8_t dummy;
   if (trs80_model != TRS80_MODEL3) {
@@ -84,7 +84,7 @@ struct blkbuf bufpool[MAX_BUFS];
 struct blkbuf *bufpool_end = &bufpool[NBUFS];
 
 /* Turn DISCARD into space in bank 2 for buffers */
-void platform_discard(void)
+void plt_discard(void)
 {
 	extern uint8_t *bdnext;
 
@@ -125,7 +125,7 @@ __sfr __at 0xBB rtc_yearl;
 __sfr __at 0xBC rtc_yearh;
 
 /* FIXME: the RTC is optional so we should test for it first */
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
     uint8_t sl, rv;
     /* BCD encoded */
@@ -141,7 +141,7 @@ uint8_t platform_rtc_secs(void)
 
 /* If the compiler segfaults here you need at least SDCC #10471 */
 
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
     uint16_t len = sizeof(struct cmos_rtc);
     struct cmos_rtc cmos;
@@ -184,7 +184,7 @@ int platform_rtc_read(void)
 /* Yes I'm a slacker .. this wants adding but it's ugly
    because the seconds is always just set to 0 on any change. We
    also need to deal with leap years here */
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = EOPNOTSUPP;
 	return -1;

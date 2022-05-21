@@ -66,7 +66,7 @@
 /* Use large I/O */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-extern void platform_discard(void);
-#define platform_copyright()
+extern void plt_discard(void);
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#,fd#"

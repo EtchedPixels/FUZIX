@@ -9,7 +9,7 @@
             .globl init_hardware
             .globl interrupt_handler
             .globl _program_vectors
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 
 	    ; hard disk helpers
 	    .globl _hd_xfer_in
@@ -18,8 +18,8 @@
 	    .globl _hd_page
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -58,11 +58,11 @@ _bufpool:
 _int_disabled:
 	    .db 0
 
-_platform_monitor:
+_plt_monitor:
 	    di
 	    halt
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
 ;
@@ -72,7 +72,7 @@ platform_interrupt_all:
 ;	out (0x9c),a
 ;	.. then resets into ROM (see the technical reference manual)
 ;
-_platform_reboot:
+_plt_reboot:
 	   di
 	   ld hl,#0x84D3		; out (0x84),a
 	   ld (0),hl
