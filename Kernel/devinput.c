@@ -26,7 +26,7 @@ int inputdev_read(uint_fast8_t flag)
 
     while(1)
     {
-        s = platform_input_read(m);
+        s = plt_input_read(m);
         if (s > 0) {
             udata.u_count = min(udata.u_count, s);
             if (uput(m, udata.u_base, udata.u_count))
@@ -43,13 +43,13 @@ int inputdev_read(uint_fast8_t flag)
         }
         if (s < 0)
             return -1;
-        platform_input_wait();
+        plt_input_wait();
     }
 }
 
 int inputdev_write(uint_fast8_t flag)
 {
-    return platform_input_write(flag);
+    return plt_input_write(flag);
 }
 
 int inputdev_ioctl(uarg_t request, char *data)

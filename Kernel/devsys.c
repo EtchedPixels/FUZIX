@@ -64,7 +64,7 @@ int sys_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 #endif
 #ifdef CONFIG_RTC_FULL
 	case 5:
-		return platform_rtc_read();
+		return plt_rtc_read();
 #endif
 #ifdef CONFIG_DEV_I2C
 	case 7:
@@ -107,7 +107,7 @@ int sys_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 #endif
 #ifdef CONFIG_RTC_FULL
 	case 5:
-		return platform_rtc_write();
+		return plt_rtc_write();
 #endif
 #ifdef CONFIG_DEV_I2C
 	case 7:
@@ -134,11 +134,11 @@ int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
 #ifdef CONFIG_RTC_EXTENDED
 	if (minor == 5)
-		return platform_rtc_ioctl(request, data);
+		return plt_rtc_ioctl(request, data);
 #endif
 #ifdef CONFIG_DEV_PLATFORM
 	if (minor == 6)
-		return platform_dev_ioctl(request, data);
+		return plt_dev_ioctl(request, data);
 #endif
 #ifdef CONFIG_DEV_GPIO
 	if (minor == 8)
