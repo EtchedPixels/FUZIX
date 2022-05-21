@@ -407,7 +407,7 @@ uint_fast8_t tty_inproc(uint_fast8_t minor, uint_fast8_t c)
 #endif
 #ifdef CONFIG_MONITOR
 	if (c == 0x01)		/* ^A */
-		platform_monitor();
+		plt_monitor();
 #endif
 
 	if (c == '\r' ){

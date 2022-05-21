@@ -535,13 +535,13 @@ arg_t _uadmin(void)
 	/* Wants moving into machine specific files */
 	if (cmd == A_SHUTDOWN || cmd == A_DUMP) {
 		kputs("Halted.\n");
-		platform_monitor();
+		plt_monitor();
 	}
 	if (cmd == A_REBOOT)
-		platform_reboot();
+		plt_reboot();
 #ifdef CONFIG_PLATFORM_SUSPEND
 	if (cmd == A_SUSPEND) {
-		udata.u_error = platform_suspend();
+		udata.u_error = plt_suspend();
 		if (udata.u_error)
 			return -1;
 		return 0;
@@ -567,7 +567,7 @@ arg_t _uadmin(void)
 				return -1;
 			}
 			dev = ino->c_node.i_addr[0];
-			if (!platform_canswapon(dev)) {
+			if (!plt_canswapon(dev)) {
 				udata.u_error = ENXIO;
 				return -1;
 			}

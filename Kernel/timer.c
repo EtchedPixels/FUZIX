@@ -87,7 +87,7 @@ static void tick_clock(void)
  *	The awkward case here is the no-clock case. In that situation
  *	we are running the clock from the RTC and we therefore don't need
  *	or want to do magic adjustments. A system using NO_CLOCK should
- *	make platform_rtc_secs return 255 if there is no timer interrupt
+ *	make plt_rtc_secs return 255 if there is no timer interrupt
  *	available.
  */
 
@@ -106,7 +106,7 @@ void updatetod(void)
 	if(++rtcsync != CONFIG_RTC_INTERVAL)
 		return;
 	rtcsync = 0;
-	rtcnew = platform_rtc_secs();		/* platform function */
+	rtcnew = plt_rtc_secs();		/* platform function */
 
 	if (rtcnew == 255 || rtcnew == rtcsec)
 		return;
@@ -133,7 +133,7 @@ void updatetod(void)
 
 void inittod(void)
 {
-	rtcsec = platform_rtc_secs();
+	rtcsec = plt_rtc_secs();
 }
 
 #endif				/* NO_RTC */
@@ -154,7 +154,7 @@ static uint8_t oldticks;
 static uint8_t re_enter;
 
 /*
- *	The OS core will invoke this routine when idle (via platform_idle) but
+ *	The OS core will invoke this routine when idle (via plt_idle) but
  *	also after a system call and in certain other spots to ensure the clock
  *	is roughly valid. It may be called from interrupts, without interrupts
  *	or even recursively so it must protect itself using the framework
@@ -170,14 +170,14 @@ static uint8_t re_enter;
  */
 void sync_clock(void)
 {
-	if (!platform_tick_present) {
+	if (!plt_tick_present) {
 		irqflags_t irq = di();
 		int16_t tmp;
 		if (!re_enter++) {
 			/* Get a rolling tick count so we can work out
 			   how much time elapsed */
 			oldticks = newticks;
-			newticks = platform_rtc_secs();
+			newticks = plt_rtc_secs();
 			if (oldticks != 0xFF) {
 				tmp = newticks - oldticks;
 				if (tmp < 0)
