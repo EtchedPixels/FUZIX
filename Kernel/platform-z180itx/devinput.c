@@ -76,7 +76,7 @@ static void merge(uint8_t *a, uint8_t *b)
 
 /* The PS/2 layer sent us a new event. On on 8bit micro we get rather
    too many events so we fuse them together */
-void platform_ps2mouse_event(uint8_t *event)
+void plt_ps2mouse_event(uint8_t *event)
 {
     if (ps2pend == 0)
         memcpy(ps2event, event, 4);
@@ -90,7 +90,7 @@ void platform_ps2mouse_event(uint8_t *event)
     wakeup(&kqueue);
 }
 
-int platform_input_read(uint8_t *slot)
+int plt_input_read(uint8_t *slot)
 {
     uint8_t r, k;
     if (ps2pend) {
@@ -111,7 +111,7 @@ int platform_input_read(uint8_t *slot)
     return 0;
 }
 
-void platform_input_wait(void)
+void plt_input_wait(void)
 {
     psleep(&kqueue);	/* We wake this on timers so it works for sticks */
 }
@@ -122,7 +122,7 @@ void poll_input(void)
         wakeup(&kqueue);
 }
 
-int platform_input_write(uint8_t flag)
+int plt_input_write(uint8_t flag)
 {
     flag;
     udata.u_error = EINVAL;

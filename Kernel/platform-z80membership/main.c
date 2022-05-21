@@ -14,7 +14,7 @@ uint16_t ramtop = PROGTOP;
  *
  *	There are no serial interrupts on this system normally.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* Disable interrupts so we don't accidentally process a polled tty
 	   and interrupt call at once and make a mess */
@@ -33,7 +33,7 @@ void platform_idle(void)
  
 extern uint8_t irq_cause;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	if (irq_cause & 2)
 		tty_poll();
@@ -53,7 +53,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers. This blows away the _DISCARD segment.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

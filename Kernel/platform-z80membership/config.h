@@ -83,4 +83,4 @@
    console should match a firmware set rate */
 #define TTY_INIT_BAUD	B9600	/* Check */
 
-#define platform_copyright()
+#define plt_copyright()

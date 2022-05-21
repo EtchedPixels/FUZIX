@@ -15,7 +15,7 @@ uint8_t has_rtc;
  *	it needs to execute. On a machine with entirely interrupt driven
  *	hardware this could just halt for interrupt.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* Everything we need is interrupt driven */
 	__asm halt __endasm;
@@ -29,7 +29,7 @@ void platform_idle(void)
  *	Most platforms would read something to identify the interrupt source
  *	but in our case the only possible source is the serial uart.
  */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t r;
 	opcode = OP_GET_IRQ;
@@ -50,7 +50,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers. This blows away the _DISCARD segment.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
@@ -72,7 +72,7 @@ void platform_discard(void)
 /*
  *	Always called with interrupts off.
  */
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
 	if (has_rtc) {
 		opcode = OP_GET_RTC;

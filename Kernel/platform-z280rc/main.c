@@ -15,7 +15,7 @@ uint16_t swap_dev = 0xFFFF;
  *	it needs to execute. On a machine with entirely interrupt driven
  *	hardware this could just halt for interrupt.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* Disable interrupts so we don't accidentally process a polled tty
 	   and interrupt call at once and make a mess */
@@ -30,7 +30,7 @@ void platform_idle(void)
  *	interrupts. All of the nasty stuff (register saving, bank switching,
  *	reti instructions) is dealt with for you.
  */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_poll();
 	timer_interrupt();
@@ -46,7 +46,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers. This blows away the _DISCARD segment.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
         /* We start our common block with the vectors as they must be 4K
            aligned */

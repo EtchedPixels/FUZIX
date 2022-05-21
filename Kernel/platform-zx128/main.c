@@ -27,13 +27,13 @@ void platform_idle(void)
   irqrestore(irq);
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     used(p);
     return 0;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
  tty_pollirq();
  mdv_timer();

@@ -66,7 +66,7 @@
 /* All our pages get mapped into the top 16K bank for swapping use */
 #define swap_map(x)		((uint8_t *)(x|0xC000))
 
-#define platform_discard()
+#define plt_discard()
 
 /* Betadisk functions do not work with modern procedures */
 #ifdef CONFIG_BETADISK

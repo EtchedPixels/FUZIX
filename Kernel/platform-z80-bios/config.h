@@ -115,4 +115,4 @@ extern uint8_t rtc_delay;
    console should match a firmware set rate */
 #define TTY_INIT_BAUD B115200
 
-#define platform_copyright()
+#define plt_copyright()

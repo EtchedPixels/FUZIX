@@ -2,7 +2,7 @@
 
         ; imported symbols
         .globl map_kernel, mpgsel_cache, _kernel_pages
-        .globl _rd_platform_copy
+        .globl _rd_plt_copy
 
         ; exported symbols
         .globl _rd_page_copy
@@ -42,7 +42,7 @@ _devmem_go:
         dec l                           ; test for HL=1
         ld a, h
         or l
-        jp nz, _rd_platform_copy        ; > 1 byte, do it the hard way
+        jp nz, _rd_plt_copy        ; > 1 byte, do it the hard way
         call _rd_page_copy              ; transfer single byte
         ld hl, #1                       ; return with HL set appropriately
         ret

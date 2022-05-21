@@ -21,13 +21,13 @@
 	    .globl map_process_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl _kernel_flag
 	    .globl _int_disabled
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -74,7 +74,7 @@ _int_disabled:
 ;	complex handling is done. It's useful on a few platforms but
 ;	generally a ret is all that is needed
 ;
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
 ;
@@ -83,14 +83,14 @@ platform_interrupt_all:
 ;
 ;	Wait for a key as the monitor does a screen clear
 ;
-_platform_monitor:
+_plt_monitor:
 ;
 ;	Reboot the system if possible, halt if not. On a system where the
 ;	ROM promptly wipes the display you may want to delay or wait for
 ;	a keypress here (just remember you may be interrupts off, no kernel
 ;	mapped so hit the hardware).
 ;
-_platform_reboot:
+_plt_reboot:
 	    di
 	    xor a
 	    out (0xC1),a

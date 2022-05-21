@@ -88,4 +88,4 @@
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define platform_copyright()		/* For now */
+#define plt_copyright()		/* For now */

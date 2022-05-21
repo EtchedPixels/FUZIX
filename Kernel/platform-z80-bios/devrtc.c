@@ -5,7 +5,7 @@
 #include <bios.h>
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
         int err;
 	uint16_t len = sizeof(struct cmos_rtc);
@@ -23,7 +23,7 @@ int platform_rtc_read(void)
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	struct cmos_rtc cmos;

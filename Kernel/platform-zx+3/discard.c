@@ -5,7 +5,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	return 0;
 }
@@ -15,6 +15,6 @@ void map_init(void)
 {
 }
 
-void platform_copyright(void)
+void plt_copyright(void)
 {
 }

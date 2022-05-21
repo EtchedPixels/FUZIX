@@ -8,8 +8,8 @@
         .globl _ptab_alloc
         .globl _newproc
         .globl _getproc
-        .globl _platform_monitor
-        .globl _platform_switchout
+        .globl _plt_monitor
+        .globl _plt_switchout
         .globl _switchin
 	.globl _low_bank
 	.globl _dup_low_page
@@ -33,7 +33,7 @@
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-_platform_switchout:
+_plt_switchout:
         di
         ; save machine state
 
@@ -79,7 +79,7 @@ _platform_switchout:
         call _switchin
 
         ; we should never get here
-        call _platform_monitor
+        call _plt_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -246,7 +246,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _platform_monitor
+        jp _plt_monitor
 
 ; Interrupts should be off when this is called
 _dup_low_page:

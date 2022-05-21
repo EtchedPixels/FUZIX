@@ -119,6 +119,6 @@ extern uint16_t swap_dev;
    console should match a firmware set rate */
 #define TTY_INIT_BAUD B38400	/* To match ROMWBW */
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"

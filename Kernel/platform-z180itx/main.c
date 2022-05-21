@@ -16,7 +16,7 @@ uint8_t ps2mouse_present;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	while (bufpool_end <
 	       (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
@@ -33,7 +33,7 @@ void platform_discard(void)
 
 __sfr __at 0x7A ppi_c;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	__asm halt __endasm;
 }
@@ -50,7 +50,7 @@ void z180_timer_interrupt(void)
 		ps2kbd_poll();
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	switch (irqvector) {
 	case Z180_INT_TIMER0:

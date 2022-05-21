@@ -3,7 +3,7 @@
 #include <printf.h>
 #include <devide.h>
 #include <blkdev.h>
-#include <platform_ide.h>
+#include <plt_ide.h>
 #include <devtty.h>
 
 /*

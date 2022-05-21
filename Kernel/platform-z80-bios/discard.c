@@ -26,7 +26,7 @@ void init_hardware_c(void)
 	ramtop = biosinfo->common_base;
 	udata_stash = ramtop - sizeof(u_data);
 	if (biosinfo->features & FEATURE_TIMER)
-		platform_tick_present = 1;
+		plt_tick_present = 1;
 	if (biosinfo->features & FEATURE_RTC_SLOW)
 		rtc_delay = 100;
 	/* Get the tty up */
@@ -44,7 +44,7 @@ void init_hardware_c(void)
  *	we claim it, if not it gets passed to init. It's perfectly acceptable
  *	to act on a match and return to also pass it to init if you need to.
  */
-uint8_t platform_param(unsigned char *p)
+uint8_t plt_param(unsigned char *p)
 {
 	return fuzixbios_param(p);
 }

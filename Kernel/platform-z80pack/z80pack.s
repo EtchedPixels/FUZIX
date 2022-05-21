@@ -12,7 +12,7 @@
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 
 	    .globl map_kernel
 	    .globl map_kernel_di
@@ -28,10 +28,10 @@
 
 	    .globl _int_disabled
 
-	    .globl _platform_reboot
+	    .globl _plt_reboot
 
             ; exported debugging tools
-            .globl _platform_monitor
+            .globl _plt_monitor
             .globl outchar
 
             ; imported symbols
@@ -64,13 +64,13 @@
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-_platform_monitor:
+_plt_monitor:
 	    ld a, #128
 	    out (29), a
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
-_platform_reboot:
+_plt_reboot:
 	    ld a, #1
 	    out (29), a
 

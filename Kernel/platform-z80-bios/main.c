@@ -12,7 +12,7 @@ uint16_t udata_stash;
 uint8_t swap_size;
 uint16_t swap_dev = 0xFFFF;
 
-uint8_t platform_tick_present;
+uint8_t plt_tick_present;
 uint8_t rtc_delay = 1;
 
 struct fuzixbios_info *biosinfo;
@@ -23,7 +23,7 @@ uint8_t *alloc_base;
  *	it needs to execute. On a machine with entirely interrupt driven
  *	hardware this could just halt for interrupt.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
 	fuzixbios_idle();
 }
@@ -37,7 +37,7 @@ void platform_idle(void)
  *	or a 1/10th tick etc
  */
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	timer_interrupt();
 }
@@ -110,7 +110,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers. This blows away the _DISCARD segment.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	fuzixbios_init_done();
 	buffer_init();
@@ -121,7 +121,7 @@ void platform_discard(void)
 /*
  *	Always called with interrupts off.
  */
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
 	return fuzixbios_rtc_secs();
 }

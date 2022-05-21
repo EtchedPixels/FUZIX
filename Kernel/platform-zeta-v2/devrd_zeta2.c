@@ -11,7 +11,7 @@
 
 void rd_page_copy(void); // devrd_zeta2_hw.s
 
-void rd_platform_copy(void)
+void rd_plt_copy(void)
 {
     uint16_t ocount, count, maxcpy;
 

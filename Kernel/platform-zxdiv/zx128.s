@@ -8,7 +8,7 @@
         .globl init_early
         .globl init_hardware
         .globl _program_vectors
-        .globl platform_interrupt_all
+        .globl plt_interrupt_all
 	.globl interrupt_handler
 	.globl unix_syscall_entry
 	.globl null_handler
@@ -30,8 +30,8 @@
 	.globl _int_disabled
 
         ; exported debugging tools
-        .globl _platform_monitor
-	.globl _platform_reboot
+        .globl _plt_monitor
+	.globl _plt_reboot
         .globl outchar
 
         ; imported symbols
@@ -76,16 +76,16 @@
 ; -----------------------------------------------------------------------------
         .area _COMMONMEM
 
-_platform_monitor:
+_plt_monitor:
 	;
 	;	Not so much a monitor as wait for space
 	;
 	ld a, #0x7F
 	in a, (0xFE)
 	rra
-	jr c, _platform_monitor
+	jr c, _plt_monitor
 
-_platform_reboot:
+_plt_reboot:
 	di
 	im 1
 	ld bc, #0x7ffd
@@ -93,7 +93,7 @@ _platform_reboot:
 	out (c), a
         rst 0		; Into the ROM
 
-platform_interrupt_all:
+plt_interrupt_all:
         ret
 
 	.area _COMMONDATA

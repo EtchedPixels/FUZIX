@@ -5,7 +5,7 @@
 #include <mbc2.h>
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
         irqflags_t irq;
 	uint16_t len = sizeof(struct cmos_rtc);
@@ -37,7 +37,7 @@ int platform_rtc_read(void)
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = EOPNOTSUPP;
 	return -1;
