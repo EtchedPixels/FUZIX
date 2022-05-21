@@ -5,23 +5,23 @@
 
 		.area _COMMONMEM
 
-		.globl _platform_reboot
-		.globl _platform_monitor
+		.globl _plt_reboot
+		.globl _plt_monitor
 
 		.include 'kernel.def'
 		.include '../kernel-rabbit.def'
 
-_platform_reboot:
-_platform_monitor:
+_plt_reboot:
+_plt_monitor:
 		; Force a hardware level reset using the watchdog
 		ld a,#0x53
 		ioi
 		ld (WDTCR),a
-		jr _platform_monitor
+		jr _plt_monitor
 
-		.globl platform_interrupt_all
+		.globl plt_interrupt_all
 
-platform_interrupt_all:
+plt_interrupt_all:
 		ret
 
 		.area _COMMONDATA

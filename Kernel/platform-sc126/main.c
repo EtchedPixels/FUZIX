@@ -14,7 +14,7 @@ uint8_t rtc_shadow = 0xAF;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	while (bufpool_end <
 	       (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
@@ -54,14 +54,14 @@ void z180_timer_interrupt(void)
 	led = light;
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* Let's go to sleep while we wait for something to interrupt us */
 	led = 0xFF;
 	__asm halt __endasm;
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	switch (irqvector) {
 	case Z180_INT_TIMER0:
@@ -93,11 +93,11 @@ void gpio_set(uint8_t mask, uint8_t val)
 	gpio = rtc_shadow;
 }
 
-void platform_ds1302_setup(void)
+void plt_ds1302_setup(void)
 {
 }
 
-void platform_ds1302_restore(void)
+void plt_ds1302_restore(void)
 {
 	gpio = rtc_shadow;
 }

@@ -18,12 +18,12 @@
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
-	.globl platform_interrupt_all
+	.globl plt_interrupt_all
 	.globl _copy_common
 	.globl mpgsel_cache
 	.globl top_bank
 	.globl _kernel_pages
-	.globl _platform_reboot
+	.globl _plt_reboot
 	.globl _bufpool
 	.globl _int_disabled
 
@@ -509,7 +509,7 @@ _code1_end:
 ;=========================================================================
         .area _COMMONMEM
 
-_platform_reboot:
+_plt_reboot:
         ; We need to map the ROM back in -- ideally into every page.
         ; This little trick based on a clever suggestion from John Coffman.
         di
@@ -536,7 +536,7 @@ _platform_reboot:
 _int_disabled:
 	.db 1
 
-platform_interrupt_all:
+plt_interrupt_all:
 	ret
 
 ; install interrupt vectors

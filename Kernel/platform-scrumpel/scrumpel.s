@@ -9,7 +9,7 @@
         .globl init_hardware
         .globl inchar
         .globl outchar
-        .globl platform_interrupt_all
+        .globl plt_interrupt_all
         .globl _bufpool
 
         ; imported symbols
@@ -83,7 +83,7 @@ inchar:
         in0 a, (ASCI_RDR0)
         ret
 
-platform_interrupt_all:
+plt_interrupt_all:
         ret
 
 

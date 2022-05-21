@@ -35,7 +35,7 @@
         .globl s__DATA
         .globl l__DATA
         .globl kstack_top
-	.globl _platform_monitor
+	.globl _plt_monitor
 
         ; startup code
         .area _CODE
@@ -67,5 +67,5 @@ init:
     
         ; main shouldn't return, but if it does...
         di
-	jp _platform_monitor
+	jp _plt_monitor
 

@@ -17,7 +17,7 @@ void pagemap_init(void)
 
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
-void platform_idle(void)
+void plt_idle(void)
 {
   /* We don't want an idle poll and IRQ driven tty poll at the same moment */
   irqflags_t irq = di();
@@ -25,7 +25,7 @@ void platform_idle(void)
   irqrestore(irq);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
  tty_pollirq();
  timer_interrupt();
@@ -36,7 +36,7 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
  used(p);
  return 0;

@@ -71,7 +71,7 @@
 
 #define CONFIG_DEV_GPIO
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define PTABSIZE	16
 #define UFTSIZE		16

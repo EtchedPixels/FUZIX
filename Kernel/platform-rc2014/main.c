@@ -33,7 +33,7 @@ uint8_t z512_present = 1;	/* We assume so and turn it off if not */
 uint8_t fpu_present;
 uint8_t kio_present;
 
-uint8_t platform_tick_present;
+uint8_t plt_tick_present;
 uint8_t timer_source = TIMER_NONE;
 
 /* From ROMWBW */
@@ -76,7 +76,7 @@ uint8_t *code1_alloc(uint16_t size)
 	return p;
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)initptr - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
@@ -95,7 +95,7 @@ void platform_discard(void)
 	}
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	if (timer_source != TIMER_NONE)
 		__asm halt __endasm;
@@ -141,7 +141,7 @@ static void timer_tick(uint8_t n)
 __sfr __at (Z180_IO_BASE + 0x10) TIME_TCR;      /* Timer control register                     */
 __sfr __at (Z180_IO_BASE + 0x0C) TIME_TMDR0L;   /* Timer data register,    channel 0L         */
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	/* FIXME: For Z180 we know if the ASCI ports are the source so
 	   should fastpath them (vector 8 and 9) */

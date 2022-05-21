@@ -17,10 +17,10 @@
 	    .globl map_restore_low
 	    .globl map_video
 	    .globl unmap_video
-	    .globl _platform_doexec
-	    .globl _platform_reboot
-	    .globl _platform_copier_l
-	    .globl _platform_copier_h
+	    .globl _plt_doexec
+	    .globl _plt_reboot
+	    .globl _plt_copier_l
+	    .globl _plt_copier_h
 	    .globl _keyscan
 	    .globl _mousescan
 	    .globl _mouse12
@@ -30,7 +30,7 @@
 	    .globl syscall_platform
 
             ; exported debugging tools
-            .globl _platform_monitor
+            .globl _plt_monitor
             .globl outchar
 
             ; imported symbols
@@ -65,10 +65,10 @@ VIDEO_LOW	.equ	4		; 4/5 video and font
 ; -----------------------------------------------------------------------------
             .area _COMMONMEM
 
-_platform_monitor:
+_plt_monitor:
 	    di
 	    halt			; NMI button will cause a reboot..
-_platform_reboot:
+_plt_reboot:
 	    xor a
 	    out (250), a		; ROM appears low
 	    rst 0			; bang
@@ -401,7 +401,7 @@ stub0:	    .word 0		; cp/m emu changes this
 	    .byte 0		; cp/m emu drive and user
 	    jp 0		; cp/m emu bdos entry point
 rst8:
-_platform_copier_l:		; Must be low
+_plt_copier_l:		; Must be low
 	    ld a,(hl)
 	    out (251),a
 	    exx
@@ -414,7 +414,7 @@ _platform_copier_l:		; Must be low
 syscall_stash:
 	    .byte 0		; must be low
 rst18:
-_platform_doexec:
+_plt_doexec:
 	    out (251),a		; caller needs to handle CLUT bits
 	    ei
 	    jp (hl)
@@ -463,7 +463,7 @@ stubs_high:
 ;
 ;	High stubs. Present in each bank in the top 256 bytes
 ;
-_platform_copier_h:
+_plt_copier_h:
 	    ld a,(hl)
 	    out (251),a
 	    exx

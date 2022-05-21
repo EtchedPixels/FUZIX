@@ -16,9 +16,9 @@
 	.globl map_restore
 	.globl map_for_swap
 	.globl map_buffers
-	.globl platform_interrupt_all
-	.globl _platform_reboot
-	.globl _platform_monitor
+	.globl plt_interrupt_all
+	.globl _plt_reboot
+	.globl _plt_monitor
 	.globl _bufpool
 	.globl _int_disabled
 
@@ -264,10 +264,10 @@ sio_setup:
 ;=========================================================================
         .area _CODE
 
-_platform_monitor:
+_plt_monitor:
 	di
 	halt
-_platform_reboot:
+_plt_reboot:
 	call map_kernel
 	rst 0
 
@@ -281,7 +281,7 @@ _platform_reboot:
 _int_disabled:
 	.db 1
 
-platform_interrupt_all:
+plt_interrupt_all:
 	ret
 
 ; install interrupt vectors

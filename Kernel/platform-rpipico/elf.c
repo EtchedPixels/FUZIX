@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <elf.h>
 
-int platform_relocate_rel(Elf32_Rel* rel, uaddr_t section_base)
+int plt_relocate_rel(Elf32_Rel* rel, uaddr_t section_base)
 {
 	switch (ELF32_R_TYPE(rel->r_info))
 	{

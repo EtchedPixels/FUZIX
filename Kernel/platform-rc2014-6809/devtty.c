@@ -158,12 +158,12 @@ void tty_interrupt(void)
 	tty_poll(2, uart + 1);
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_interrupt();
 	if (ptm[1] & 0x80) {	/* Timer interrupts present, must be timer 3 */
 		ptm[6];	/* Clear the interrupt */
 		timer_interrupt();
 	}
-	wakeup(&platform_interrupt);
+	wakeup(&plt_interrupt);
 }

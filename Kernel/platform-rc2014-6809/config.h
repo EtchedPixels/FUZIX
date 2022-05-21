@@ -54,8 +54,8 @@
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
 
-extern void platform_discard(void);
+extern void plt_discard(void);
 
-#define platform_copyright()		/* for now */
+#define plt_copyright()		/* for now */
 
 #define BOOTDEVICENAMES "hd#"

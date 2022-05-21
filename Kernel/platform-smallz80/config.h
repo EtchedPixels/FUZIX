@@ -110,7 +110,7 @@ extern uint16_t swap_dev;
    console should match a firmware set rate */
 #define TTY_INIT_BAUD B9600	/* We need read this back really */
 
-#define platform_copyright()
+#define plt_copyright()
 
 /* We can tune for a bigger system */
 #define PTABSIZE	31

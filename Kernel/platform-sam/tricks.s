@@ -11,10 +11,10 @@
 	.globl _chksigs
 	.globl _getproc
 	.globl _runticks
-	.globl _platform_monitor
+	.globl _plt_monitor
 	.globl _int_disabled
 
-	.globl _platform_switchout
+	.globl _plt_switchout
 	.globl _switchin
 	.globl _dofork
 
@@ -25,8 +25,8 @@
 	.globl outhl
 	.globl outstring
 
-	.globl _platform_copier_l
-	.globl _platform_copier_h
+	.globl _plt_copier_l
+	.globl _plt_copier_h
 
 	.globl _udata
 
@@ -37,7 +37,7 @@
 ;	tricks have been done by switchout, so when we are called we
 ;	really need to switch.
 ;
-_platform_switchout:
+_plt_switchout:
 	di
 	ld hl,#0
 	push hl		; stack a retcode of 0 (see fork)
@@ -59,7 +59,7 @@ _platform_switchout:
 	push hl
 	call _switchin
 	; Should never be hit
-	call _platform_monitor
+	call _plt_monitor
 
 _switchin:
 	di
@@ -124,7 +124,7 @@ switchin_failed:
 	call outhl
 	ld hl, #bad_switch
 	call outstring
-	jp _platform_monitor
+	jp _plt_monitor
 
 fork_proc_ptr:
 	.dw 0
@@ -218,7 +218,7 @@ _dofork:
 ;
 ;	HL is the child ptab, udata is the parent
 ;
-;	The platform needs to provide a platform_copier method for each
+;	The platform needs to provide a plt_copier method for each
 ;	bank that copies low to high of all process, stubs and user data
 ;	in that bank (basically a straight 32K copy)
 ;
@@ -243,9 +243,9 @@ copy_process:
 	add hl,de
 	ld a,(_udata + U_DATA__U_PAGE)
 	call map_page_low
-	call setup_platform_copier
+	call setup_plt_copier
 	ld ix,#cp1ret
-	jp _platform_copier_l
+	jp _plt_copier_l
 cp1ret:
 	; If both banks are the same bank we are done
 	ld a,(hl)
@@ -254,13 +254,13 @@ cp1ret:
 	ret z
 	ld a,(_udata + U_DATA__U_PAGE+1)
 	call map_page_low
-	call setup_platform_copier
+	call setup_plt_copier
 	ld ix,#cp2ret
-	jp _platform_copier_h
+	jp _plt_copier_h
 cp2ret:
 	ret
 
-setup_platform_copier:
+setup_plt_copier:
 	exx
 	ld hl,#0
 	ld de,#0x8000

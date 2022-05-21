@@ -17,7 +17,7 @@ void map_init(void)
 	if (sio1_present)
 		kputs("Z80 SIO detected at 0x84.\n");
 	if (ctc_present) {
-		platform_tick_present = 1;
+		plt_tick_present = 1;
 		kputs("Z80 CTC detected at 0x88.\n");
 	}
 	ds1302_init();

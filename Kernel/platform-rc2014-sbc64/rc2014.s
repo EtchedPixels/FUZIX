@@ -17,10 +17,10 @@
 	.globl map_restore
 	.globl map_for_swap
 	.globl map_buffers
-	.globl platform_interrupt_all
-	.globl _platform_reboot
-	.globl _platform_monitor
-	.globl _platform_suspend
+	.globl plt_interrupt_all
+	.globl _plt_reboot
+	.globl _plt_monitor
+	.globl _plt_suspend
 	.globl _bufpool
 	.globl _int_disabled
 	.globl _cpld_bitbang
@@ -269,13 +269,13 @@ sio_setup:
 
         .area _COMMONMEM
 
-_platform_monitor:
-_platform_reboot:
+_plt_monitor:
+_plt_reboot:
 	ld a,#0x03
 	out (0x1f),a
 	rst 0
 
-_platform_suspend:
+_plt_suspend:
 	; No suspend on ZRCC only on SBC/MBC64
 	ld a,(_mach_zrcc)
 	or a
@@ -298,7 +298,7 @@ pagereg:
 pagesave:
 	.db 0
 
-platform_interrupt_all:
+plt_interrupt_all:
 	ret
 
 ; install interrupt vectors

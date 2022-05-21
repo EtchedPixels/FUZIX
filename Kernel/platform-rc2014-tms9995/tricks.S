@@ -3,7 +3,7 @@
 ;
 ;	Just to get us going
 ;
-        .export _platform_switchout
+        .export _plt_switchout
         .export _switchin
         .export _dofork
 	.export _ramtop
@@ -51,7 +51,7 @@ restore_r:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-_platform_switchout:
+_plt_switchout:
 	limi	IRQ_OFF
 	; Save the link
 	dect	r13
@@ -99,7 +99,7 @@ _platform_switchout:
 	mov	r1,r4
         bl	@_switchin
         ; we should never get here
-        bl	@_platform_monitor
+        bl	@_plt_monitor
 
 stash_udata:
 	li	r0,_udata
@@ -193,7 +193,7 @@ switchinfail:
 	li	r1, badswitchmsg
         bl	@outstring
 	; something went wrong and we didn't switch in what we asked for
-        b	@_platform_monitor
+        b	@_plt_monitor
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the

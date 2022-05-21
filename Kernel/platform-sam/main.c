@@ -7,7 +7,7 @@
 uint16_t ramtop = PROGTOP;
 uint8_t need_resched;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	__asm
 		halt
@@ -20,7 +20,7 @@ void do_beep(void)
 
 __sfr __at 249 status;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t r = status;
 #if 0
@@ -39,7 +39,7 @@ void platform_interrupt(void)
 	tty_interrupt();
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	/* Buffer handling can happen here */
 }

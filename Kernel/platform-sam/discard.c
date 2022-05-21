@@ -26,7 +26,7 @@ void pagemap_init(void)
 		pagemap_add(i);
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
 	if (strcmp(p, "rtc") == 0) {
 		samrtc = 1;
@@ -39,7 +39,7 @@ void device_init(void)
 {
 #ifdef CONFIG_RTC
 	/* Time of day clock */
-	platform_rtc_probe();
+	plt_rtc_probe();
 	inittod();
 #endif
 	if (!mouse_probe())

@@ -10,7 +10,7 @@
 ;	to switch udata objects on task switches. With the 56K/8K MMU we
 ;	could avoid this!
 ;
-        .export _platform_switchout
+        .export _plt_switchout
         .export _switchin
         .export _dofork
 	.export _ramtop
@@ -32,7 +32,7 @@ _ramtop:
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-_platform_switchout:
+_plt_switchout:
 	sei
 	clra
 	psha
@@ -53,7 +53,7 @@ _platform_switchout:
 	psha
         jsr _switchin
         ; we should never get here
-        jsr _platform_monitor
+        jsr _plt_monitor
 
 stash_udata:
 	ldx #_udata
@@ -159,7 +159,7 @@ switchinfail:
 	ldx	#badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _platform_monitor
+        jmp _plt_monitor
 
 ; Must not put this in ZP ?
 ;

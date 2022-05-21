@@ -9,7 +9,7 @@
 uint8_t kernel_flag = 1;
 uint16_t swap_dev = 0xFFFF;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     irqflags_t flags = di();
     tty_poll();
@@ -37,7 +37,7 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     return 0;
 }
@@ -59,7 +59,7 @@ void device_init(void)
 	via[14] = 0xC0;	/* Enable Timer 1 */
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t dummy;
 

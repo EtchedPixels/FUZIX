@@ -16,7 +16,7 @@ uint8_t timermsr = 0;
  *	it needs to execute. On a machine with entirely interrupt driven
  *	hardware this could just halt for interrupt.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
 	__asm halt __endasm;
 }
@@ -30,7 +30,7 @@ void platform_idle(void)
  *	but in our case the only possible source is the serial uart and that
  *	will figure out if this is a timer event.
  */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_poll();
 }
@@ -45,7 +45,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers. This blows away the _DISCARD segment.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

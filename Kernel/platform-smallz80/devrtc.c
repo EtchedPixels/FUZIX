@@ -21,7 +21,7 @@ __sfr __at 0x2E rtcE;
 __sfr __at 0x2F rtcF;
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
         irqflags_t irq;
 	uint16_t len = sizeof(struct cmos_rtc);
@@ -56,13 +56,13 @@ int platform_rtc_read(void)
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = EOPNOTSUPP;
 	return -1;
 }
 
-uint8_t platform_rtc_secs(void)
+uint8_t plt_rtc_secs(void)
 {
         irqflags_t irq;
         uint8_t s;

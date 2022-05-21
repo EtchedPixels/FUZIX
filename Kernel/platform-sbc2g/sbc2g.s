@@ -22,13 +22,13 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl _kernel_flag
 	    .globl _int_disabled
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -80,14 +80,14 @@ _int_disabled:
 ;	complex handling is done. It's useful on a few platforms but
 ;	generally a ret is all that is needed
 ;
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
 ;
 ;	If you have a ROM monitor you can get back to then do so, if not
 ;	fall into reboot.
 ;
-_platform_monitor:
+_plt_monitor:
 ;
 ;	Reboot the system if possible, halt if not. On a system where the
 ;	ROM promptly wipes the display you may want to delay or wait for
@@ -96,9 +96,9 @@ _platform_monitor:
 ;
 ;	ROM is long gone. Could look at reloading boot sector ?
 ;
-_platform_reboot:
+_plt_reboot:
 	    di
-	    jr _platform_reboot
+	    jr _plt_reboot
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (may be below 0x8000, only accessible when the kernel is

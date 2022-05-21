@@ -300,7 +300,7 @@ void clonecurrentprocess(ptptr p)
     #endif
 }
 
-uint_fast8_t platform_canswapon(uint16_t devno)
+uint_fast8_t plt_canswapon(uint16_t devno)
 {
     /* Only allow swapping to hd devices. */
     return (devno >> 8) == 0;

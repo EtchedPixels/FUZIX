@@ -15,9 +15,9 @@ uint16_t swap_dev = 0xffff;
 
 void set_cpu_type(void) {}
 void map_init(void) {}
-void platform_discard(void) {}
-void platform_monitor(void) {}
-void platform_reboot(void) {}
+void plt_discard(void) {}
+void plt_monitor(void) {}
+void plt_reboot(void) {}
 void program_vectors(uint16_t* pageptr) {}
 
 uaddr_t pagemap_base(void)

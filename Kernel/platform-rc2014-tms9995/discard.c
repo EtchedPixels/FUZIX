@@ -19,7 +19,7 @@ void map_init(void)
 {
 }
 
-uint_fast8_t platform_param(char *p)
+uint_fast8_t plt_param(char *p)
 {
     return 0;
 }

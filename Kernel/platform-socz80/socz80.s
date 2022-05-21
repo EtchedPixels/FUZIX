@@ -22,14 +22,14 @@
 	    .globl map_kernel_restore
 	    .globl map_save_kernel
 	    .globl map_restore
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl _need_resched
 	    .globl _irqwork
 	    .globl _int_disabled
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -73,8 +73,8 @@ tm_stack:
 tm_stack_top:
 
 ; For now both hit monitor
-_platform_reboot:
-_platform_monitor:
+_plt_reboot:
+_plt_monitor:
             ; stash SP
             ld (tm_user_sp), sp
             ; switch to temporary stack
@@ -105,7 +105,7 @@ _platform_monitor:
             jp 0x0000
             ; it's never a dull day with ROM around!
 
-platform_interrupt_all:
+plt_interrupt_all:
 	    ld hl,#_irqwork
 	    in a,(TIMER_STATUS)
 	    bit 7, a
@@ -209,7 +209,7 @@ _tty_writeready:
             jr z, uart0wr
             cp #2
             jr z, uart1wr
-            call _platform_monitor
+            call _plt_monitor
             ret ; not a console we recognise
 uart1wr:    in a, (UART1_STATUS)
             jr testready

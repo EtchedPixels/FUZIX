@@ -15,12 +15,12 @@ uint8_t need_resched = 0;
 
 uint8_t ctc_present;
 
-uint8_t platform_tick_present;
+uint8_t plt_tick_present;
 
 uint16_t rtc_port = 0xC0;
 uint8_t rtc_shadow;
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));
@@ -33,7 +33,7 @@ void platform_discard(void)
 	kprintf("Buffers available: %d\n", bufpool_end - bufpool);
 }
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	if (ctc_present)
 		__asm halt __endasm;
@@ -44,7 +44,7 @@ void platform_idle(void)
 	}
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t plt_param(unsigned char *p)
 {
 	used(p);
 	return 0;
@@ -62,7 +62,7 @@ static void timer_tick(uint8_t n)
 	}
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_pollirq();
 	if (ctc_present) {

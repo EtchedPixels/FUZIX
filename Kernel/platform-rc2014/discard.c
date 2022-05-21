@@ -460,7 +460,7 @@ void pagemap_init(void)
 	if (timer_source == TIMER_NONE)
 		kputs("Warning: no timer available.\n");
 	else
-		platform_tick_present = 1;
+		plt_tick_present = 1;
 
 	dma_present = !probe_z80dma();
 	if (dma_present)
@@ -532,7 +532,7 @@ void map_init(void)
 {
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t plt_param(unsigned char *p)
 {
 	/* If we have a keyboard then the TMS9918A becomes a real tty
 	   and we make it the primary console */

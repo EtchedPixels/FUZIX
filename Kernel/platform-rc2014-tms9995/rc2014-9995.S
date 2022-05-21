@@ -15,8 +15,8 @@
 	    .export map_process_x
 
             ; exported debugging tools
-            .export _platform_monitor
-	    .export _platform_reboot
+            .export _plt_monitor
+	    .export _plt_reboot
             .export outchar
 	    .export ___hard_di
 	    .export ___hard_ei
@@ -31,9 +31,9 @@
 
 	    .common
 
-_platform_monitor:
-_platform_reboot:
-	jmp	 @_platform_reboot
+_plt_monitor:
+_plt_reboot:
+	jmp	 @_plt_reboot
 
 ;
 ;	For now do hard interrupt masking. We will want to change this to

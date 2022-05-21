@@ -15,7 +15,7 @@ uint8_t rtc_shadow = 0;
 
 /* Onboard I/O */
 
-void platform_idle(void)
+void plt_idle(void)
 {
     irqflags_t flags = di();
 //    tty_poll();
@@ -42,7 +42,7 @@ uint8_t timer_ticks;
 /* Each timer event we get called after the asm code has set up the timer
    again. ticks will usually be incremented by one each time, but if we
    miss a tick the overflow logic may make ticks larger */
-void platform_event(void)
+void plt_event(void)
 {
 	tty_poll();
 

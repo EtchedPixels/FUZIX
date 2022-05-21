@@ -11,7 +11,7 @@
 static uint8_t rtc_buf[6];
 uint8_t samrtc;
 
-uint_fast8_t platform_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
     uint8_t r, v;
 
@@ -47,7 +47,7 @@ static void read_clock(void)
     } while(samrtc_in(0) != r);
 }
 
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	uint16_t y;
@@ -81,13 +81,13 @@ int platform_rtc_read(void)
 }
 
 /* For now */
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = -EOPNOTSUPP;
 	return -1;
 }
 
-uint8_t platform_rtc_probe(void)
+uint8_t plt_rtc_probe(void)
 {
         uint8_t r;
 

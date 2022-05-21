@@ -22,13 +22,13 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 	    .globl _kernel_flag
 	    .globl _int_disabled
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -73,21 +73,21 @@ _int_disabled:
 ;	complex handling is done. It's useful on a few platforms but
 ;	generally a ret is all that is needed
 ;
-platform_interrupt_all:
+plt_interrupt_all:
 	    ret
 
 ;
 ;	If you have a ROM monitor you can get back to then do so, if not
 ;	fall into reboot.
 ;
-_platform_monitor:
+_plt_monitor:
 ;
 ;	Reboot the system if possible, halt if not. On a system where the
 ;	ROM promptly wipes the display you may want to delay or wait for
 ;	a keypress here (just remember you may be interrupts off, no kernel
 ;	mapped so hit the hardware).
 ;
-_platform_reboot:
+_plt_reboot:
 	    di
 	    xor a
 	    out (0x78),a	; On the RBCv2 this vanishes the RAM low
@@ -331,12 +331,12 @@ BLKPARAM_ADDR_OFFSET		.equ	0
 BLKPARAM_IS_USER_OFFSET		.equ	2
 BLKPARAM_SWAP_PAGE		.equ	3
 
-	    .globl _platform_prop_sd_read
-	    .globl _platform_prop_sd_write
+	    .globl _plt_prop_sd_read
+	    .globl _plt_prop_sd_write
 
 	    .globl _blk_op
 
-_platform_prop_sd_read:
+_plt_prop_sd_read:
 	    ld a,(_blk_op + BLKPARAM_IS_USER_OFFSET)
 	    ld hl, (_blk_op + BLKPARAM_ADDR_OFFSET)
 	    or a
@@ -351,7 +351,7 @@ do_read:    ld bc,#0xAB
 	    inir
 	    jp map_kernel
 
-_platform_prop_sd_write:
+_plt_prop_sd_write:
 	    ld a,(_blk_op + BLKPARAM_IS_USER_OFFSET)
 	    ld hl, (_blk_op + BLKPARAM_ADDR_OFFSET)
 	    or a

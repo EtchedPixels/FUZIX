@@ -9,7 +9,7 @@
 ;	be changed by the called function anyway. The soft register state
 ;	lives in DP so is switched with the task switch and copied by fork
 ;
-        .globl platform_switchout
+        .globl plt_switchout
         .globl switchin
         .globl dofork
 	.globl ramtop
@@ -29,7 +29,7 @@ ramtop:
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
-platform_switchout:
+plt_switchout:
 	sei
 	clra
 	psha
@@ -44,7 +44,7 @@ platform_switchout:
         jsr getproc
         jsr switchin
         ; we should never get here
-        jsr platform_monitor
+        jsr plt_monitor
 
 badswitchmsg:
 	.ascii "_switchin: FAIL"
@@ -145,7 +145,7 @@ switchinfail:
 	ldx #badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp platform_monitor
+        jmp plt_monitor
 
 ; Must not put this in ZP ?
 ;

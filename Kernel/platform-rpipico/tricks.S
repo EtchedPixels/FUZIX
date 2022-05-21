@@ -7,8 +7,8 @@ udata = progbase
 
 .text
 .thumb_func
-.global platform_idle
-platform_idle:
+.global plt_idle
+plt_idle:
     wfi
     bx lr
 
@@ -79,11 +79,11 @@ isr_svcall_user:
 
 .comm svc_pc_stash, 4
 
-.global platform_switchout
+.global plt_switchout
 .global switchin
 .text
 .thumb_func
-platform_switchout:
+plt_switchout:
 	/* Save the callee-saved registers onto the stack in the same order
 	 * that switchout will do it, so switchin will restore it correctly. */
 

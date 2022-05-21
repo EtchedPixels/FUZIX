@@ -15,7 +15,7 @@ uint16_t swap_dev = 0xFFFF;
  *
  *	There are no serial interrupts on this system normally.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* Disable interrupts so we don't accidentally process a polled tty
 	   and interrupt call at once and make a mess */
@@ -39,7 +39,7 @@ static uint8_t irqct;
 __sfr __at 0x2D rtcD;
 __sfr __at 0xF8 gpreg;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	uint8_t n, r;
 	if (rtcD & 0x04) {
@@ -74,7 +74,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers. This blows away the _DISCARD segment.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

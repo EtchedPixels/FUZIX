@@ -11,7 +11,7 @@ uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
 uint8_t timermsr = 0;
 
-uint8_t platform_tick_present;
+uint8_t plt_tick_present;
 
 /* Real time clock support for DS1302 driver - port and other pins */
 uint16_t rtc_port = 0x70;
@@ -27,7 +27,7 @@ uint8_t rtc_shadow;
  *	us a nice interactive feel when the machine is idle, even if a polled
  *	tty can otherwise suck.
  */
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* Disable interrupts so we don't accidentally process a polled tty
 	   and interrupt call at once and make a mess */
@@ -46,7 +46,7 @@ void platform_idle(void)
  *	Most platforms would read something to identify the interrupt source
  *	but in our case the only possible source is the serial uart.
  */
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_poll();
 #ifdef CONFIG_NET_WIZNET
@@ -64,7 +64,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	booting we turn everything from the buffer pool to common into
  *	buffers. This blows away the _DISCARD segment.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;

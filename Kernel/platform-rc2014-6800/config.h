@@ -58,7 +58,7 @@ extern uint16_t swap_dev;
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define platform_discard()
-#define platform_copyright()
+#define plt_discard()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"

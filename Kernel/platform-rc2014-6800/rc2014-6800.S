@@ -18,8 +18,8 @@
 	    .export map_process_x
 
             ; exported debugging tools
-            .export _platform_monitor
-	    .export _platform_reboot
+            .export _plt_monitor
+	    .export _plt_reboot
             .export outchar
 	    .export ___hard_di
 	    .export ___hard_ei
@@ -34,7 +34,7 @@
 
 	    .common
 
-_platform_monitor:
+_plt_monitor:
 	    ldx #ccreg
 	    jsr outstring
 	    tsx
@@ -105,7 +105,7 @@ endrow:	    deca
 	    ldab #10
 	    jsr outchar
 
-_platform_reboot:
+_plt_reboot:
 	    jsr map_kernel
 	    jmp rebootit
 

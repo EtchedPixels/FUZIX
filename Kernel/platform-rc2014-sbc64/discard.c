@@ -26,7 +26,7 @@ void pagemap_init(void)
     kputs("Z80 SIO detected at 0x84.\n");
   if (ctc_present) {
     kputs("Z80 CTC detected at 0x88.\n");
-    platform_tick_present = 1;
+    plt_tick_present = 1;
   }
   if (ds1302_present)
     kputs("DS1302 detected at 0xC0.\n");

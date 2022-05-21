@@ -7,14 +7,14 @@
 
 uint16_t ramtop = PROGTOP;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     __asm
     halt
     __endasm;
 }
 
-uint8_t platform_param(char *p)
+uint8_t plt_param(char *p)
 {
     used(p);
     return 0;
@@ -27,7 +27,7 @@ __sfr __at 0x29 uart1_data;
 
 extern uint8_t irqwork;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
     uint8_t st0 = uart0_status;
     uint8_t st1 = uart1_status;

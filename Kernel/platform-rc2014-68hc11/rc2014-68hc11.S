@@ -15,13 +15,13 @@
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_process_x
-	    .globl platform_interrupt
+	    .globl plt_interrupt
 	    .globl copy_common
 	    .globl cur_map
 
             ; exported debugging tools
-            .globl platform_monitor
-	    .globl platform_reboot
+            .globl plt_monitor
+	    .globl plt_reboot
             .globl outchar
 	    .globl __hard_di
 	    .globl __hard_ei
@@ -37,7 +37,7 @@
 
 	    .section .common
 
-platform_monitor:
+plt_monitor:
 	    ldx #ccreg
 	    jsr outstring
 	    tsx
@@ -115,7 +115,7 @@ endrow:	    deca
 	    ldab #10
 	    jsr outchar
 
-platform_reboot:
+plt_reboot:
 	    jsr map_kernel
 	    jmp rebootit
 
@@ -200,7 +200,7 @@ init_hardware:
 	     ;	The timers require we know 16bit load/stores are generated
 	     ;  so we do this bit in assembler
 	     ;
-platform_interrupt:
+plt_interrupt:
 	    ldx #IOBASE
 	    ldaa #0x55
 	    staa 0x3a,x		; reset watchdog. We shouldn't have it on
@@ -218,7 +218,7 @@ timer_tick_again:
 				; if not then we missed ticks
 	    bmi timer_tick_again
 timer_good:
-	    jmp platform_event
+	    jmp plt_event
 
 timer_tmp:
 	    .word 0

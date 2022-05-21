@@ -41,7 +41,7 @@ void map_init(void)
 uaddr_t ramtop;
 uint8_t need_resched;
 
-uint_fast8_t platform_param(char *p)
+uint_fast8_t plt_param(char *p)
 {
 	/* If we have a keyboard then the TMS9918A becomes a real tty
 	   and we make it the primary console */
@@ -62,7 +62,7 @@ uint_fast8_t platform_param(char *p)
 	return 0;
 }
 
-void platform_discard(void)
+void plt_discard(void)
 {
 }
 
@@ -460,7 +460,7 @@ void install_vdso(void)
 
 /* We allocate these at boot to avoid fragmenting memory. Really we need
    a hook to free them back up on process exit to go dynamic FIXME */
-uint8_t platform_udata_set(ptptr p)
+uint8_t plt_udata_set(ptptr p)
 {
 	u_block **up = &udata_block[p - ptab];
 	p->p_udata = &(*up)->u_d;
@@ -472,7 +472,7 @@ void do_timer_interrupt(void)
 	timer_interrupt();
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	tty_pollirq();
 }

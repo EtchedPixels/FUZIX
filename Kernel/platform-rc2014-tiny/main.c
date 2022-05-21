@@ -17,12 +17,12 @@ uint8_t acia_present;
 uint8_t ctc_present;
 uint8_t sio_present;
 
-uint8_t platform_tick_present;
+uint8_t plt_tick_present;
 
 uint16_t rtc_port;
 uint8_t rtc_shadow;
 
-void platform_discard(void)
+void plt_discard(void)
 {
 	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));
@@ -36,7 +36,7 @@ void platform_discard(void)
 
 static uint8_t idlect;
 
-void platform_idle(void)
+void plt_idle(void)
 {
 	/* Check the clock. We try and reduce the impact of the clock on
 	   latency by not doing it so often. 256 may be too small a divide
@@ -50,7 +50,7 @@ void platform_idle(void)
 	}
 }
 
-uint8_t platform_param(unsigned char *p)
+uint8_t plt_param(unsigned char *p)
 {
 	used(p);
 	return 0;
@@ -68,7 +68,7 @@ static void timer_tick(uint8_t n)
 	}
 }
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
 	if (acia_present)
 		tty_pollirq_acia();

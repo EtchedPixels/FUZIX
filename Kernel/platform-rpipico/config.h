@@ -72,7 +72,7 @@ extern uint8_t progbase[USERMEM];
 
 #define MAX_BLKDEV	4
 
-#define platform_copyright() /* */
+#define plt_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
 
 /* Prevent name clashes wish the Pico SDK */
