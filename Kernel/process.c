@@ -101,7 +101,7 @@ void pwake(ptptr p)
 
 /* This used to be an assembly function in older FUZIX but it turns out we
    have to do a lot of common optimizations so it is now a C helper fronting
-   platform_switchout(). For speed and sanity reasons not every platform goes
+   plt_switchout(). For speed and sanity reasons not every platform goes
    via this path when pre-empting, but instead implements a subset of the checks
    in the platform code.
 
@@ -145,12 +145,12 @@ void switchout(void)
 		   pre-empted by someone else */
 	}
 	/* When we are idle we twiddle our thumbs here until a polled event
-	   in platform_idle or an interrupt wakes someone up */
+	   in plt_idle or an interrupt wakes someone up */
 	while (nready == 0) {
 		ei();
 		/* We are idle, that means we cannot sleep */
 		udata.u_ininterrupt = 1;
-		platform_idle();
+		plt_idle();
 		di();
 		/* We never idle in an interrupt so this is valid */
 		udata.u_ininterrupt = 0;
@@ -167,7 +167,7 @@ void switchout(void)
 		udata.u_ptab->p_status = P_READY;
 	}
 	/* We probably need to run something else */
-	platform_switchout();
+	plt_switchout();
 }
 
 /* Getproc returns the process table pointer of a runnable process.
@@ -224,7 +224,7 @@ ptptr getproc(void)
 				panic(PANIC_EI);
 			/* yes please, interrupts on (WRS: they probably are already on?) */
 			ei();
-			platform_idle();
+			plt_idle();
 		}
 	}
 }
@@ -268,7 +268,7 @@ ptptr getproc(void)
 			/* Wait for an I/O operation to let us run, don't run
 			   other tasks */
 			ei();
-			platform_idle();
+			plt_idle();
 		}
 	}
 }
@@ -591,7 +591,7 @@ void unix_syscall(void)
 		/* We know there will be a switch if we hit this point so
 		   don't look for optimizations. Likewise we know a signal
 		   process will stay running/ready */
-		platform_switchout();
+		plt_switchout();
 		/* We will check the signals before we return to user space
 		   so all is good */
 	}
@@ -994,7 +994,7 @@ void NORETURN panic(char *deathcry)
 {
 	kputs("\r\npanic: ");
 	kputs(deathcry);
-	platform_monitor();
+	plt_monitor();
 
 	for(;;);
 }
@@ -1004,7 +1004,7 @@ void NORETURN panic(char *deathcry)
 void exec_or_die(void)
 {
 	kputs("Starting /init\n");
-	platform_discard();
+	plt_discard();
 	_execve();
 	panic(PANIC_NOINIT);	/* BIG Trouble if we Get Here!! */
 }

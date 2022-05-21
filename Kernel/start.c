@@ -176,7 +176,7 @@ static uint8_t system_param(char *p)
 		}
 	}
 	/* FIXME: Parse init=path ?? */
-	return platform_param(p);
+	return plt_param(p);
 }
 
 /* Parse other arguments */
@@ -360,7 +360,7 @@ void fuzix_main(void)
 	set_cpu_type();
 	sysinfo.cpu[0] = sys_cpu_feat;
 	sysinfo.cputype = sys_cpu;
-	platform_copyright();
+	plt_copyright();
 #ifndef SWAPDEV
 #ifdef PROC_SIZE
 	maxproc = procmem / PROC_SIZE;
