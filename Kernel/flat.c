@@ -166,7 +166,7 @@ int pagemap_alloc(ptptr p)
 	kprintf("%d: pagemap_alloc %p\n", proc, p);
 #endif
 	p->p_page = nproc;
-	if (platform_udata_set(p))
+	if (plt_udata_set(p))
 		return ENOMEM;
 	/* Init is special */
 	if (p->p_pid == 1) {
@@ -474,7 +474,7 @@ usize_t valaddr(const uint8_t *pp, usize_t l)
 
 /* Write out each segment of memory we have. We don't do anything with the flags
    yet - that will comne later */
-void coredump_memory_image(inoptr ino)
+void coredump_image(inoptr ino)
 {
 	unsigned int i = 0;
 	unsigned int proc = udata.u_page;

@@ -37,7 +37,7 @@ void deliver_signals(void)
 __interrupt void interrupt_handler(void)
 {
 	udata.u_ininterrupt = 1;
-	platform_interrupt();
+	plt_interrupt();
 	udata.u_ininterrupt = 0;
 	deliver_signals();
 	/* deliver_signals() leaves interrupts *on*. */
