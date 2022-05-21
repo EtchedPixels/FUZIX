@@ -854,9 +854,7 @@ struct selmap {
 #define SELECT_OUT		2
 #define SELECT_EX		4
 
-#ifdef __GNUC__
-#define NORETURN __attribute__((__noreturn__))
-#else
+#ifndef NORETURN
 #define NORETURN
 #endif
 
@@ -1144,35 +1142,35 @@ struct coremem {
 extern uint8_t write_core_image(void);
 extern void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags);
 /* Provided by the memory manager */
-extern void coredump_memory_image(inoptr ino);
+extern void coredump_image(inoptr ino);
 
 /* Platform interfaces */
 
-#ifndef platform_discard
-extern void platform_discard(void);
+#ifndef plt_discard
+extern void plt_discard(void);
 #endif
-#ifndef platform_copyright
-extern void platform_copyright(void);
+#ifndef plt_copyright
+extern void plt_copyright(void);
 #endif
-extern void platform_idle(void);
-extern uint_fast8_t platform_rtc_secs(void);
-extern int platform_rtc_read(void);
-extern int platform_rtc_write(void);
-extern int platform_rtc_ioctl(uarg_t request, char *data);
-extern void platform_reboot(void);
-extern void platform_monitor(void);
-extern uint_fast8_t platform_param(char *p);
-extern void platform_switchout(void);
-extern void platform_interrupt(void);
-extern uint_fast8_t platform_suspend(void);
-extern uint_fast8_t platform_udata_set(ptptr p);
+extern void plt_idle(void);
+extern uint_fast8_t plt_rtc_secs(void);
+extern int plt_rtc_read(void);
+extern int plt_rtc_write(void);
+extern int plt_rtc_ioctl(uarg_t request, char *data);
+extern void plt_reboot(void);
+extern void plt_monitor(void);
+extern uint_fast8_t plt_param(char *p);
+extern void plt_switchout(void);
+extern void plt_interrupt(void);
+extern uint_fast8_t plt_suspend(void);
+extern uint_fast8_t plt_udata_set(ptptr p);
 
-extern void platform_swap_found(uint_fast8_t part, uint_fast8_t letter);
-extern uint_fast8_t platform_canswapon(uint16_t devno);
+extern void plt_swap_found(uint_fast8_t part, uint_fast8_t letter);
+extern uint_fast8_t plt_canswapon(uint16_t devno);
 
-extern int platform_dev_ioctl(uarg_t request, char *data);
+extern int plt_dev_ioctl(uarg_t request, char *data);
 
-extern uint8_t platform_tick_present;
+extern uint8_t plt_tick_present;
 
 #ifndef CONFIG_INLINE_IRQ
 extern irqflags_t __hard_di(void);
