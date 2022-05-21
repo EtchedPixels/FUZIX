@@ -273,7 +273,7 @@ trap_illegal:
 	li r2,illegalmsg
 trapx:
 	bl @outstring
-	bl @_platform_monitor
+	bl @_plt_monitor
 nmi_handler:
 	bl @map_kernel_di
 	li r2,nmimsg
@@ -305,7 +305,7 @@ interrupt_handler:
 	mov	r0,@_udata+U_DATA__U_ININTERRUPT
 	mov	r0,@_inint
 	; Handle interrupt
-	bl 	@_platform_interrupt
+	bl 	@_plt_interrupt
 	; Restore R13 workspace pointer
 	mov	r8, r13
 	; Simple case - we were in the kernel
@@ -371,7 +371,7 @@ not_running:
 	; kstack of the task and save the needed pointers into the
 	; process. When it returns it will have undone that so we will
 	; be in a valid state
-	bl	@_platform_switchout
+	bl	@_plt_switchout
 
 	; recover the workspace pointer
 	mov	r8, r13

@@ -255,7 +255,7 @@ trap_illegal:
 	ldx #illegalmsg
 trapx:
 	jsr outstring
-	jsr _platform_monitor
+	jsr _plt_monitor
 
 nmi_handler:
 	jsr map_kernel_di
@@ -301,7 +301,7 @@ interrupt_handler:
 	psha
 	ldaa @fp+1
 	psha
-	jsr _platform_interrupt
+	jsr _plt_interrupt
 	; Restore the C direct page
 	pula
 	staa @fp+1
@@ -369,7 +369,7 @@ preemption:
 	orab #PFL_BATCH
 	stab P_TAB__P_FLAGS_OFFSET,x
 not_running:
-	jsr _platform_switchout
+	jsr _plt_switchout
 	clr _udata+U_DATA__U_ININTERRUPT
 	clr _udata+U_DATA__U_INSYS
 	jsr map_process_always

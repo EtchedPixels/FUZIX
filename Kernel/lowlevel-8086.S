@@ -480,7 +480,7 @@ __ashrsi3:
 
 /* FIXME */
 abort:
-	jmp platform_monitor
+	jmp plt_monitor
 
 	.data
 

@@ -187,7 +187,7 @@ interrupt_handler:
 	sta	(_udata+U_DATA__U_ININTERRUPT)
 	sta	(_inint)
 
-	jsr _platform_interrupt
+	jsr _plt_interrupt
 
 	ldab (_udata+U_DATA__U_INSYS)
 	bnz iretk
@@ -248,7 +248,7 @@ preemption:
 	orab #PFL_BATCH
 	stab P_TAB__P_FLAGS_OFFSET,x
 not_running:
-	jsr _platform_switchout
+	jsr _plt_switchout
 	clr _udata+U_DATA__U_ININTERRUPT
 	clr _udata+U_DATA__U_INSYS
 	jsr map_process_always

@@ -293,7 +293,7 @@ trapx:
 	jsr outx
 	ldx #nlmsg
 	jsr outstring
-	jsr platform_monitor
+	jsr plt_monitor
 
 nmi_handler:
 	jsr map_kernel_di
@@ -373,7 +373,7 @@ interrupt_handler:
 	staa inint
 
 	; Call the C code to process the interrupt
-	ldy #platform_interrupt
+	ldy #plt_interrupt
 	jsr call_c_irq
 
 	; Was the interrupt to kernel code ?
@@ -438,7 +438,7 @@ preemption:
 	bset P_TAB__P_FLAGS_OFFSET,x #PFL_BATCH
 not_running:
 	; Task switch
-	jsr platform_switchout
+	jsr plt_switchout
 	; Time will pass, things will run and eventually we will reappear
 	; here when we get rescheduled
 	clr udata+U_DATA__U_ININTERRUPT

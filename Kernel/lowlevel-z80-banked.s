@@ -32,9 +32,9 @@
 	.globl outchar
 	.globl _need_resched
 	.globl _inint
-	.globl _platform_interrupt
-	.globl platform_interrupt_all
-	.globl _platform_switchout
+	.globl _plt_interrupt
+	.globl plt_interrupt_all
+	.globl _plt_switchout
 
         ; exported symbols
 	.globl null_handler
@@ -59,7 +59,7 @@
         ; imported symbols
 	.globl _chksigs
 	.globl _int_disabled
-        .globl _platform_monitor
+        .globl _plt_monitor
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -340,7 +340,7 @@ illegalmsg: .ascii "[trap_illegal]"
 trap_illegal:
         ld hl, #illegalmsg
         call outstring
-        call _platform_monitor
+        call _plt_monitor
 
 dpsmsg: .ascii "[dispsig]"
         .db 13, 10, 0
@@ -353,7 +353,7 @@ nmi_handler:
 	call map_kernel_di
         ld hl, #nmimsg
         call outstring
-        jp _platform_monitor
+        jp _plt_monitor
 
 ;
 ;	Interrupt handler. Not quite the same as syscalls, we need to
@@ -390,7 +390,7 @@ intvec:
 	; Some platforms (MSX for example) have devices we *must*
 	; service irrespective of kernel state in order to shut them
 	; up. This code must be in common and use small amounts of stack
-	call platform_interrupt_all
+	call plt_interrupt_all
 	; FIXME: add profil support here (need to keep profil ptrs
 	; unbanked if so ?)
 .ifeq CPU_Z180
@@ -400,7 +400,7 @@ intvec:
         ; we copy this into _irqvector which is the value the kernel code
         ; examines (and will not change even if reentrant interrupts arrive).
         ; Generally the only place that irqvector_hw should be used is in
-        ; the platform_interrupt_all routine.
+        ; the plt_interrupt_all routine.
         .globl hw_irqvector
         .globl _irqvector
         ld a, (hw_irqvector)
@@ -424,7 +424,7 @@ intvec:
 	ld (_int_disabled),a
 
 	push af
-	call _platform_interrupt
+	call _plt_interrupt
 	pop af
 
 	xor a
@@ -503,7 +503,7 @@ null_pointer_trap:
 	push af
 	call _doexit
 	pop af
-	jp _platform_monitor
+	jp _plt_monitor
 
 ;
 ;	Pre-emption. We need to get off the interrupt stack, switch task
@@ -566,7 +566,7 @@ intret2:di
 	inc hl
 	set PFL_BATCH,(hl)
 not_running:
-	call _platform_switchout
+	call _plt_switchout
 	;
 	; We are no longer in an interrupt or a syscall
 	;

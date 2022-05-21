@@ -12,12 +12,12 @@ set_cpu_type:
 .comm sys_cpu, 1
 .comm sys_cpu_feat, 1
 
-.section .text.platform_doexec
+.section .text.plt_doexec
 .align 4
-.global platform_doexec
+.global plt_doexec
 # a2 = start address
 # a3 = new stack pointer
-platform_doexec:
+plt_doexec:
 	movi a4, 32
 	wsr.ps a4			# set user mode (and enable interrupts)
 	mov.n sp, a3
