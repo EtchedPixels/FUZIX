@@ -405,7 +405,7 @@ int d_flush(uint16_t dev)
 }
 
 /* 128, 256, 512 supported for now */
-static uint16_t masks[] = { 0x7F, 0xFF, 0x1FF };
+static uint16_t masks[3] = { 0x7F, 0xFF, 0x1FF };
 
 /* This is not a commonly used path so can be slower */
 int d_blkoff(uint_fast8_t shift)
