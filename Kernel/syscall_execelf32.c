@@ -274,7 +274,7 @@ arg_t _execve(void)
 #endif
 			goto fatal;
 		}
-		if (platform_relocate_rel(rel, PROGLOAD)) {
+		if (plt_relocate_rel(rel, PROGLOAD)) {
 #ifdef DEBUG
 			kprintf("failed: relocation failed\n");
 #endif

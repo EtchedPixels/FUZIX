@@ -154,7 +154,7 @@ uint8_t write_core_image(void)
 			/* Ask the architecture to dump the user registers */
 //TODO			coredump_user_registers(ino);
 			/* Ask the memory manager to dump the memory map */
-			coredump_memory_image(ino);
+			coredump_image(ino);
 			i_unlock_deref(ino);
 			i_unlock_deref(parent);
 			return W_COREDUMP;
