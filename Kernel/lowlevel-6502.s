@@ -28,11 +28,11 @@
 	.import map_save_kernel
 	.import map_process_always
 	.import map_kernel
-	.import _platform_interrupt_i
-	.import platform_doexec
+	.import _plt_interrupt_i
+	.import plt_doexec
 	.import _inint
 	.import CTemp
-	.import _platform_monitor
+	.import _plt_monitor
 
 	.include "platform/zeropage.inc"
 	.include "platform/kernel.def"
@@ -80,7 +80,7 @@ _doexec:
 	sty _kernel_flag
 	jsr map_process_always
 	sei
-	jmp platform_doexec
+	jmp plt_doexec
 
 ;
 ;	Platform code has saved the registers and ensured we are in the
@@ -103,7 +103,7 @@ interrupt_handler:
 	jsr map_save_kernel
 	lda #1
 	sta _inint
-	jsr _platform_interrupt_i	; call via C int wrapper
+	jsr _plt_interrupt_i	; call via C int wrapper
 	lda #0
 	sta _inint
 	lda _kernel_flag
@@ -136,7 +136,7 @@ nmi_handler:
 	lda #<nmi_trap
 	jsr outstring
 nmi_stop:
-	jmp _platform_monitor
+	jmp _plt_monitor
 nmi_trap:
 	.byte "NMI!", 0
 

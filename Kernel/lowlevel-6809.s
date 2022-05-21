@@ -36,7 +36,7 @@
 	.globl outchar
 	.globl _need_resched
 	.globl _inint
-	.globl _platform_interrupt
+	.globl _plt_interrupt
 
         ; exported symbols
         .globl unix_syscall_entry
@@ -54,7 +54,7 @@
 	.globl _set_cpu_type
 
         ; imported symbols
-        .globl _platform_monitor
+        .globl _plt_monitor
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
@@ -235,7 +235,7 @@ in_kernel:
 	; _need_resched, and will only do so if the caller was in
 	; user space so has a free kernel stack
 
-        jsr _platform_interrupt
+        jsr _plt_interrupt
 
         clr _inint
         ldx istack_switched_sp	; stack back
@@ -263,7 +263,7 @@ in_kernel:
 not_running:
 	; Sleep on the kernel stack, IRQs will get re-enabled if need
 	; be
-	jsr _platform_switchout
+	jsr _plt_switchout
 	;
 	; We will resume here after the pre-emption. Get back onto
 	; the user stack and map ourself in
@@ -325,7 +325,7 @@ illegalmsg: .ascii "[trap_illegal]"
 trap_illegal:
 	ldx #illegalmsg
 	jsr outstring
-	jsr _platform_monitor
+	jsr _plt_monitor
 
 dpsmsg:	.ascii "[dispsig]"
         .db 13,10,0
@@ -339,7 +339,7 @@ nmi_handler:
 	jsr map_kernel
         ldx #nmimsg
 	jsr outstring
-        jsr _platform_monitor
+        jsr _plt_monitor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	CPU type management
@@ -443,7 +443,7 @@ num:    adda #0x30 ; start at '0' (0x30='0')
 div0:
 	ldx	#div0msg
 	jsr	outstring
-	jsr	_platform_monitor
+	jsr	_plt_monitor
 div0msg	.ascii	'Divby0'
 	.db	13,10,0
 ;

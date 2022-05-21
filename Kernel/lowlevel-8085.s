@@ -240,7 +240,7 @@ trap_illegal:
 	lxi h,illegalmsg
 traphl:
 	call outstring
-	call _platform_monitor
+	call _plt_monitor
 
 .define nmi_handler
 
@@ -266,7 +266,7 @@ interrupt_handler:
 	push b
 	push d
 	push h
-	call platform_interrupt_all
+	call plt_interrupt_all
 	! Switch stacks
 	ldsi 0
 	xchg
@@ -299,7 +299,7 @@ interrupt_handler:
 	push h
 	lhld .areg
 	push h
-	call _platform_interrupt
+	call _plt_interrupt
 	pop h
 	mov a,l
 	sta .areg	! FIXME: add a pad byte to .areg instead
@@ -407,7 +407,7 @@ not_running:
 	!	We will disappear into this and reappear somewhere else. In
 	!	time we will reappear here
 	!
-	call _platform_switchout
+	call _plt_switchout
 	!
 	!	We are back in the land of the living so no longer in
 	!	syscall or interrupt state
@@ -638,7 +638,7 @@ eidivz:
 	lxi h,divz
 kerboom:
 	call outstring
-	call _platform_monitor
+	call _plt_monitor
 
 unimp:	.asciz 'rt:unimp'
 ddz:	.asciz 'rt:ddz'

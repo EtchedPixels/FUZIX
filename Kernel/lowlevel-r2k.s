@@ -23,10 +23,10 @@
        		.globl map_restore
 		.globl outchar
 		.globl _inint
-		.globl _platform_interrupt
-		.globl platform_interrupt_all
-	        .globl _platform_monitor
-		.globl _platform_switchout
+		.globl _plt_interrupt
+		.globl plt_interrupt_all
+	        .globl _plt_monitor
+		.globl _plt_switchout
 
         	; exported symbols
 		.globl null_handler
@@ -314,7 +314,7 @@ trap_illegal:
 	        ld hl, #illegalmsg
 traphl:
 	        call outstring
-	        call _platform_monitor
+	        call _plt_monitor
 
 ;
 ;	Interrupt handler. Not quite the same as syscalls, we need to
@@ -367,7 +367,7 @@ no_null_ptr:
 		; So we know that this task should resume with IRQs off
 		ld (_udata + U_DATA__U_ININTERRUPT), a
 
-		call _platform_interrupt
+		call _plt_interrupt
 
 		xor a,a
 		ld (_inint), a
@@ -486,7 +486,7 @@ preemption:
 		inc hl
 		set PFL_BATCH,(hl)
 not_running:
-		call _platform_switchout
+		call _plt_switchout
 		;
 		; We are no longer in an interrupt or a syscall
 		;

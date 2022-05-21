@@ -43,11 +43,11 @@
 	.import outchar
 	.import _kernel_flag
 	.import _unix_syscall
-	.import _platform_interrupt
-	.import platform_doexec
+	.import _plt_interrupt
+	.import plt_doexec
 	.import _inint
-	.import _platform_monitor
-	.import _platform_switchout
+	.import _plt_monitor
+	.import _plt_switchout
 	.import _chksigs
 
 	.import push0
@@ -556,7 +556,7 @@ interrupt_handler:
 
 	lda	#1
 	sta	_inint
-	jsr	_platform_interrupt
+	jsr	_plt_interrupt
 
 	;
 	;	A synchronously delivered signal trap joins the interrupt
@@ -651,7 +651,7 @@ not_running:
 	.i8
 	lda	U_DATA__U_PTAB
 	ldx	U_DATA__U_PTAB+1
-	jsr	_platform_switchout
+	jsr	_plt_switchout
 	;
 	;	We will (one day maybe) pop back out here. It's not
 	;	guaranteed (we might be killed off)
@@ -845,7 +845,7 @@ itrap:
 	ldx	#>itrap_msg
 outfail:
 	jsr	outstring
-	jmp	_platform_monitor
+	jmp	_plt_monitor
 itrap_msg:
 	.byte	"itrap!", 0
 
@@ -921,7 +921,7 @@ nmi_handler:
 	lda #<nmi_trap
 	jsr outstring
 nmi_stop:
-	jmp _platform_monitor
+	jmp _plt_monitor
 nmi_trap:
 	.byte "NMI!", 0
 
@@ -929,7 +929,7 @@ emulation:
 	ldx #>emu_trap
 	lda #<emu_trap
 	jsr outstring
-	jmp _platform_monitor
+	jmp _plt_monitor
 emu_trap:
 	.byte "EM!", 0
 
