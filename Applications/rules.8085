@@ -1,0 +1,12 @@
+CC = cc85
+AS = as85
+LINKER = ld85
+CFLAGS = -X -m8085 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8085
+LINKER_LIB = -L $(FUZIX_ROOT)/Library/libs -lc8085
+ASM_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_8085.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_8085.o
+
+.SUFFIXES: .c .o .y
+
+
