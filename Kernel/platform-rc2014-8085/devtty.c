@@ -79,7 +79,6 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 /* For the moment */
 int tty_carrier(uint_fast8_t minor)
 {
-	minor;
 	return 1;
 }
 
@@ -93,7 +92,6 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 
 void tty_sleeping(uint_fast8_t minor)
 {
-    minor;
 }
 
 void tty_data_consumed(uint_fast8_t minor)
@@ -158,7 +156,7 @@ static const struct display tms_mode = {
     0
 };
 
-int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+int rctty_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
   if (minor < 3 && tms9918a_present) {
  	switch(arg) {

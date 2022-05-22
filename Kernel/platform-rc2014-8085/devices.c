@@ -8,7 +8,7 @@
 #include <devide.h>
 
 
-struct devsw dev_tab[] =  /* The device driver switch table */
+struct devsw dev_tab[5] =  /* The device driver switch table */
 {
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
