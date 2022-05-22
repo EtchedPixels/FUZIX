@@ -33,11 +33,11 @@ void ds1302_send_byte(uint_fast8_t byte);
 uint_fast8_t uint8_from_bcd(uint_fast8_t value);
 
 /* platform code must provide these functions */
-void ds1302_set_pin_clk(bool state) __fastcall;
-void ds1302_set_pin_ce(bool state) __fastcall;
-void ds1302_set_pin_data(bool state) __fastcall;
-bool ds1302_get_pin_data(void);
-void ds1302_set_pin_data_driven(bool state) __fastcall; /* 0=tristate for input, 1=driven for output */
+void ds1302_set_clk(bool state) __fastcall;
+void ds1302_set_ce(bool state) __fastcall;
+void ds1302_set_data(bool state) __fastcall;
+bool ds1302_get_data(void);
+void ds1302_set_driven(bool state) __fastcall; /* 0=tristate for input, 1=driven for output */
 #endif
 
 #endif

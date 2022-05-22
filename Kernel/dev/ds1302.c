@@ -23,15 +23,15 @@ void ds1302_send_byte(uint_fast8_t byte)
     kprintf("ds1302: send byte 0x%x\n", byte);
 #endif
     /* drive the data pin */
-    ds1302_set_pin_data_driven(true);
+    ds1302_set_driven(true);
 
     /* clock out one byte, LSB first */
     for(i=0; i<8; i++){
-        ds1302_set_pin_clk(false);
+        ds1302_set_clk(false);
         /* for data input to the chip the data must be valid on the rising edge of the clock */
-        ds1302_set_pin_data(byte & 1);
+        ds1302_set_data(byte & 1);
         byte >>= 1;
-        ds1302_set_pin_clk(true);
+        ds1302_set_clk(true);
     }
 }
 
@@ -40,18 +40,18 @@ uint_fast8_t ds1302_receive_byte(void)
     uint8_t i, b;
 
     /* tri-state the data pin */
-    ds1302_set_pin_data_driven(false);
+    ds1302_set_driven(false);
 
     /* clock in one byte, LSB first */
     b = 0;
     for(i=0; i<8; i++){
-        ds1302_set_pin_clk(false);
+        ds1302_set_clk(false);
         b >>= 1;
         /* data output from the chip is presented on the falling edge of each clock */
         /* note that output pin goes high-impedance on the rising edge of each clock */
         if(ds1302_get_pin_data())
             b |= 0x80;
-        ds1302_set_pin_clk(true);
+        ds1302_set_clk(true);
     }
 
     return b;
@@ -59,11 +59,11 @@ uint_fast8_t ds1302_receive_byte(void)
 
 void ds1302_write_register(uint_fast8_t reg, uint_fast8_t val)
 {
-    ds1302_set_pin_ce(true);
+    ds1302_set_ce(true);
     ds1302_send_byte(reg);
     ds1302_send_byte(val);
-    ds1302_set_pin_ce(false);
-    ds1302_set_pin_clk(false);
+    ds1302_set_ce(false);
+    ds1302_set_clk(false);
 }
 uint_fast8_t uint8_from_bcd(uint_fast8_t value)
 {
@@ -77,7 +77,7 @@ void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
 
     plt_ds1302_setup();
 
-    ds1302_set_pin_ce(true);
+    ds1302_set_ce(true);
     ds1302_send_byte(0x81 | 0x3E); /* burst read all calendar data */
     for(i=0; i<length; i++){
         buffer[i] = ds1302_receive_byte();
@@ -85,8 +85,8 @@ void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
         kprintf("ds1302: received byte 0x%x index %d\n", buffer[i], i);
 #endif
     }
-    ds1302_set_pin_clk(false);
-    ds1302_set_pin_ce(false);
+    ds1302_set_clk(false);
+    ds1302_set_ce(false);
 
     plt_ds1302_restore();
 
@@ -98,11 +98,11 @@ void ds1302_read_clock(uint8_t *buffer, uint_fast8_t length)
 static uint8_t ds1302_read_register(uint_fast8_t reg)
 {
     uint8_t val;
-    ds1302_set_pin_ce(true);
+    ds1302_set_ce(true);
     ds1302_send_byte(reg);
     val = ds1302_receive_byte();
-    ds1302_set_pin_ce(false);
-    ds1302_set_pin_clk(false);
+    ds1302_set_ce(false);
+    ds1302_set_clk(false);
     return val;
 }
 

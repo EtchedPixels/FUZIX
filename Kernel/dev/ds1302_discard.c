@@ -67,10 +67,10 @@ uint_fast8_t ds1302_check_rtc(void)
 uint_fast8_t ds1302_init(void)
 {
     /* initialise the hardware into a sensible state */
-    ds1302_set_pin_data_driven(true);
-    ds1302_set_pin_data(false);
-    ds1302_set_pin_ce(false);
-    ds1302_set_pin_clk(false);
+    ds1302_set_driven(true);
+    ds1302_set_data(false);
+    ds1302_set_ce(false);
+    ds1302_set_clk(false);
     if (ds1302_check_rtc() == 0)
         return 0;
     ds1302_present = 1;
