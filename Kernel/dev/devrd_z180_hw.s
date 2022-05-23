@@ -4,7 +4,7 @@
         .z180
 
         ; exported symbols
-        .globl _rd_platform_copy
+        .globl _rd_plt_copy
         .globl _rd_cpy_count
         .globl _rd_reverse
         .globl _rd_dst_userspace
@@ -38,14 +38,14 @@ _devmem_go:
         ld (_rd_src_address), hl
         ld hl, (_udata + U_DATA__U_OFFSET+2)
         ld (_rd_src_address+2), hl
-        ; FALL THROUGH INTO _rd_platform_copy
+        ; FALL THROUGH INTO _rd_plt_copy
 
 ;=========================================================================
 ; _rd_page_copy - Copy data from one physical page to another
 ; See notes in devrd.h for input parameters
 ; This code is Z180 specific so can safely use ld a,i
 ;=========================================================================
-_rd_platform_copy:
+_rd_plt_copy:
         ; save interrupt flag on stack then disable interrupts
         ld a, i
         push af
