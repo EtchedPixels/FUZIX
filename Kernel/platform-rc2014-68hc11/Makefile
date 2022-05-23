@@ -52,7 +52,7 @@ $(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
-	rm -f $(OBJS) *.o *.s core *~ fuzix.bin fuzix.tmpmap
+	rm -f $(DOBJS) $(DAOBJS) $(OBJS) *.o *.s core *~ fuzix.bin fuzix.tmpmap
 
 image:
 	$(CROSS_LD) -M -T memory.x -relax -o ../fuzix.elf crt0.o commonmem.o \
