@@ -9,7 +9,7 @@
 
 .sect .common
 
-.define _platform_switchout
+.define _plt_switchout
 
 !
 !	The ABI requires we preserve BC
@@ -18,7 +18,7 @@
 !
 !	Switch a process out and run the next one
 !
-_platform_switchout:
+_plt_switchout:
 	push b
 	lxi h,0
 	push h			! Save a 0 argment
@@ -50,7 +50,7 @@ _platform_switchout:
 	push d
 	call _switchin		! Run it
 	! Should never hit this
-	call _platform_monitor
+	call _plt_monitor
 
 !
 !	Switch a process back in
@@ -188,7 +188,7 @@ switchinfail:
 	call outhl
 	lxi h,badswitchmsg
 	call outstring
-	call _platform_monitor
+	call _plt_monitor
 
 badswitchmsg:
 	.asciz 'badsw'

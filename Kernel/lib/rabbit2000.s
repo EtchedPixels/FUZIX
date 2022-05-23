@@ -2,13 +2,13 @@
 ;	The Rabbit 2000 memory management is sort of common.. at least
 ;	providing your board follows the design rules.
 ;
-	.export _platform_switchout
+	.export _plt_switchout
 	.export _switchin
 	.export _dofork
 
-	.import _platform_monitor
+	.import _plt_monitor
 	.import _chksigs
-	.import _platform_idle
+	.import _plt_idle
 	.import _newproc
 	.import _nready
 	.import _inint
@@ -23,7 +23,7 @@
 
         .area _COMMONMEM
 
-; _platform__switchout switches out the current process, finds another
+; _plt__switchout switches out the current process, finds another
 ; that is READY, possibly the same process, and switches it in.  When
 ; a process is restarted after calling switchout, it thinks it has just
 ; returned from switchout().
@@ -33,7 +33,7 @@
 ; We do not currently save the alt regs. We need to review this if sdcc ever
 ; uses them
 ;
-_platform_switchout:
+_plt_switchout:
         ld hl, #0 ; return code set here is ignored, but _switchin can 
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
@@ -49,7 +49,7 @@ _platform_switchout:
         call _switchin
 
         ; we should never get here
-        call _platform_monitor
+        call _plt_monitor
 
 badswitchmsg: .ascii "_switchin: FAIL"
             .db 13, 10, 0
@@ -158,7 +158,7 @@ switchinfail:
         ld hl, #badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
-        jp _platform_monitor
+        jp _plt_monitor
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 

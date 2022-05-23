@@ -6,13 +6,13 @@
         .include "../kernel816.def"
 	.include "../platform/zeropage.inc"
 
-	.export _platform_switchout
+	.export _plt_switchout
 	.export _switchin
 	.export _dofork
 
 	.importzp ptr1
-	.import _platform_monitor
-	.import _platform_idle
+	.import _plt_monitor
+	.import _plt_idle
 	.import _makeproc
 	.import _nready
 	.import _inint
@@ -30,7 +30,7 @@
 	.i8
 	.a8
 
-_platform_switchout:
+_plt_switchout:
 	sei
 	rep	#$10			; Index to 16bit
 	.i16
@@ -80,7 +80,7 @@ switch_patch_2:
 	stz	_inint
 	jsr	_getproc			; x,a holds process
 	jsr	_switchin			; switch to process
-	jsr	_platform_monitor		; bug out if it fails
+	jsr	_plt_monitor		; bug out if it fails
 
 ;
 ;	FIXME: add swap support
@@ -178,7 +178,7 @@ switchinfail:
 	ldx	#>badswitchmsg
         jsr 	outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp	_platform_monitor
+        jmp	_plt_monitor
 badswitchmsg:
 	.byte	"_switchin: FAIL"
 	.byte	13, 10, 0
