@@ -23,7 +23,7 @@
 ; DS1302 interface
 ; -----------------------------------------------------------------------------
 
-	.export _ds1302_get_pin_data
+	.export _ds1302_get_data
 
 _ds1302_get_data:
 	in RTCREG		; read input register

@@ -5,11 +5,11 @@
         .z180
 
         ; exported symbols
-        .globl _ds1302_set_pin_ce
-        .globl _ds1302_set_pin_clk
-        .globl _ds1302_set_pin_data
-        .globl _ds1302_set_pin_data_driven
-        .globl _ds1302_get_pin_data
+        .globl _ds1302_set_ce
+        .globl _ds1302_set_clk
+        .globl _ds1302_set_data
+        .globl _ds1302_set_driven
+        .globl _ds1302_get_data
 
         .include "kernel.def"
         .include "../cpu-z180/z180.def"
@@ -32,13 +32,13 @@ rtc_shadow:     .db 0           ; we can't read back the latch contents, so we m
 
 .area _CODE
 
-_ds1302_get_pin_data:
+_ds1302_get_data:
         in a, (MARK4_RTC)       ; read input register
         and #PIN_DATA_IN        ; mask off data pin
         ld l, a                 ; return result in L
         ret
 
-_ds1302_set_pin_data_driven:
+_ds1302_set_driven:
         ld b, l                 ; load argument from caller
         ld a, (rtc_shadow)
         and #~PIN_DATA_HIZ      ; 0 - output pin
@@ -47,15 +47,15 @@ _ds1302_set_pin_data_driven:
         or #PIN_DATA_HIZ
         jr writereg
 
-_ds1302_set_pin_data:
+_ds1302_set_data:
         ld bc, #(((~PIN_DATA_OUT) << 8) | PIN_DATA_OUT)
         jr setpin
 
-_ds1302_set_pin_ce:
+_ds1302_set_ce:
         ld bc, #(((~PIN_CE) << 8) | PIN_CE)
         jr setpin
 
-_ds1302_set_pin_clk:
+_ds1302_set_clk:
         ld bc, #(((~PIN_CLK) << 8) | PIN_CLK)
         jr setpin
 
