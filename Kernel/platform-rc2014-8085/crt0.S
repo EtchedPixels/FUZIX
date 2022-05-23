@@ -35,13 +35,7 @@ nextbyte:
 	; The discard follows the common
 
 	lxi b, __discard_size
-
-	dad b
-	dcx h
-	xchg
-	dad b
-	dcx h
-	xchg
+	lxi d, __discard
 
 ;
 ;	We copy discard from the top because it will probably overlap
