@@ -88,11 +88,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
     close(fd);
-    addr = bss + bss_size;
-    memmove(image + addr, image + discard, discard_size);
-    addr += discard_size;
+    addr = bss;
     memmove(image + addr, image + common, common_size);
     addr += common_size;
+    memmove(image + addr, image + discard, discard_size);
+    addr += discard_size;
     fd = open(argv[2], O_WRONLY|O_TRUNC|O_CREAT, 0600);
     if (fd == -1) {
         perror(argv[2]);
