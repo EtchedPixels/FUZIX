@@ -75,12 +75,12 @@ void parse_gpt(uint8_t *buf, uint8_t i_mbr)
 		return;
 	}
 
-	if (gpt_header->table_starting_lba_msb != 0) {
+	if (gpt_header->table_st_lba_msb != 0) {
 		kputs("GPT out of reach\n");
 		return;
 	}
 
-	entry_block = le32_to_cpu(gpt_header->table_starting_lba_lsb);
+	entry_block = le32_to_cpu(gpt_header->table_st_lba_lsb);
 
 	if (le32_to_cpu(gpt_header->size_part_entry) != 128) {
 		kputs("Unsupported GPT entry size\n");
