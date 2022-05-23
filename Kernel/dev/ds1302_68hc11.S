@@ -22,17 +22,17 @@
 ; DS1302 interface
 ; -----------------------------------------------------------------------------
 
-	.globl ds1302_get_pin_data
+	.globl ds1302_get_data
 
-ds1302_get_pin_data:
+ds1302_get_data:
 	ldab RTCREG		; read input register
 	clra
         andb #PIN_DATA_IN        ; mask off data pin
         rts
 
-	.globl ds1302_set_pin_data_driven
+	.globl ds1302_set_data_driven
 
-ds1302_set_pin_data_driven:
+ds1302_set_driven:
         ldaa rtc_shadow
         anda #~PIN_DATA_HIZ	; 0 - output pin
 	andb #1
@@ -43,21 +43,21 @@ writereg:
 	staa rtc_shadow
 	rts
 
-	.globl ds1302_set_pin_data
+	.globl ds1302_set_data
 
-ds1302_set_pin_data:
+ds1302_set_data:
         ldx #PIN_DATA_OUT + PIN_DATA_MASK
         bra setpin
 
-	.globl ds1302_set_pin_ce
+	.globl ds1302_set_ce
 
-ds1302_set_pin_ce:
+ds1302_set_ce:
         ldx #PIN_CE + PIN_CE_MASK
         bra setpin
 
-	.globl ds1302_set_pin_clk
+	.globl ds1302_set_clk
 
-ds1302_set_pin_clk:
+ds1302_set_clk:
         ldx #PIN_CLK + PIN_CLK_MASK
 	; Fall through
 setpin:

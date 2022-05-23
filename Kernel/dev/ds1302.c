@@ -49,7 +49,7 @@ uint_fast8_t ds1302_receive_byte(void)
         b >>= 1;
         /* data output from the chip is presented on the falling edge of each clock */
         /* note that output pin goes high-impedance on the rising edge of each clock */
-        if(ds1302_get_pin_data())
+        if(ds1302_get_data())
             b |= 0x80;
         ds1302_set_clk(true);
     }

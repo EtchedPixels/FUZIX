@@ -25,7 +25,7 @@
 
 	.export _ds1302_get_pin_data
 
-_ds1302_get_pin_data:
+_ds1302_get_data:
 	in RTCREG		; read input register
         ani PIN_DATA_IN        ; mask off data pin
         mov e, a                ; return result in L
