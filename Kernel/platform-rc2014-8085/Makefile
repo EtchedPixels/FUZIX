@@ -47,7 +47,7 @@ $(DISCARD_DOBJS): %.o: ../dev/%.c
 tricks.S: ../lib/8085fixedbank.S ../lib/8085fixedbank-core.S
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin
+	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin loader.tmp
 
 image: 
 	$(CROSS_LD) -b -C 0x0100 -S 0xE800 -X 0xD800 -o fuzix.bin crt0.o devices.o main.o \
@@ -63,13 +63,14 @@ image:
 	../dev/ds1302.o ../dev/ds1302_discard.o ../dev/ds1302_8085.o \
 	../usermem_std-8085.o -m fuzix.tmpmap /opt/cc85/lib/lib8085.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
+	../tools/pack85 <../fuzix.map fuzix.bin ../fuzix.bin
 
-loader.o: loader.s
-	ack -mcpm -c loader.s
+loader.o: loader.S
+	$(CROSS_AS) $(ASOPS) loader.S
 
 loader: loader.o
-	$(ACK_ROOT)/lib/ack/em_led -b0:0xFE00 loader.o -o loader.bin
-	../tools/ack2kernel < loader.bin >loader
+	$(CROSS_LD) -b -C 0xFE00 loader.o -o loader.tmp
+	dd if=loader.tmp of=loader bs=256 skip=254
 
 diskimage: loader
 	# Make a blank disk image with partition
