@@ -30,7 +30,7 @@ ds1302_get_data:
         andb #PIN_DATA_IN        ; mask off data pin
         rts
 
-	.globl ds1302_set_data_driven
+	.globl ds1302_set_driven
 
 ds1302_set_driven:
         ldaa rtc_shadow
