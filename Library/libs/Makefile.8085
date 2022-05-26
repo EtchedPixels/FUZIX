@@ -1,9 +1,9 @@
-CC = cc85 -X
+CC = cc85 -X -m8085 -Os
 ASM = cc85
 AR = ar
 PLATFORM = 8085
 export PLATFORM
-CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8080
+CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8085
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -c -o
 # copied in from kernel tree
@@ -126,6 +126,8 @@ syscall.l: fuzix$(PLATFORM)/syslib.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
+	$(AR) r syslib$(PLATFORM).lib $$(cat syslib.l)
+	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 
 fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
 	$<
@@ -149,6 +151,10 @@ termcap$(PLATFORM).lib: $(OBJ_CT)
 	ln -sf termcap$(PLATFORM).lib libtermcap$(PLATFORM).a
 
 m$(PLATFORM).lib: $(OBJ_LM)
+	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
+	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
+
+c$(PLATFORM).lib: $(OBJ_LM)
 	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
 
