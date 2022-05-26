@@ -375,8 +375,8 @@ _uart_ready:
 _acia_ready:
 	in 0xA0
 	ani 2
-	mvi d,0
-	mov e,a
+	mvi h,0
+	mov l,a
 	ret
 
 .export _uart_poll
@@ -385,21 +385,21 @@ _acia_ready:
 _uart_poll:
 	in 0xC5
 	ani 0x01
-	lxi d,-1
+	lxi h,-1
 	rz
 	in 0xC0
-	mvi d,0
-	mov e,a
+	mvi h,0
+	mov l,a
 	ret
 
 _acia_poll:
 	in 0xA0
 	rar
-	lxi d,-1
+	lxi h,-1
 	rz
 	in 0xA1
-	mvi d,0
-	mov e,a
+	mvi h,0
+	mov l,a
 	ret
 
 .export _uart_setup
@@ -435,7 +435,7 @@ _timer_check:
 	rnc			;	Output is low - so not us
 	mvi a,10
 	out 0x3E		;	Set the count back to 10
-	mov e,a			;	Return nonzero
+	mov l,a			;	Return nonzero
 	ret			;	Was us
 
 ;
@@ -447,7 +447,7 @@ _timer_check:
 _jsin1:
 	mvi d,0
 	in 0x01
-	mov e,a
+	mov l,a
 	ret
 
 .export _jsin2
@@ -455,5 +455,5 @@ _jsin1:
 _jsin2:
 	mvi d,0
 	in 0x02
-	mov e,a
+	mov l,a
 	ret

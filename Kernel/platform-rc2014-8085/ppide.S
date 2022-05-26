@@ -34,10 +34,10 @@ _devide_readb:
 	ori PPIDE_PPI_RD_LINE
 	out 0x22
 	in 0x20
-	mov e,a
+	mov l,a
 	mov a,b
 	out 0x22
-	mvi d,0
+	mvi h,0
 	pop b
 	ret
 
