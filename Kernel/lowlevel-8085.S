@@ -540,7 +540,7 @@ ___hard_irqrestore:
 	ret
 
 ;
-;	Identify 8080 variants. We don't worry about Z80 variants. The 8080
+;	Identify 8080 variants. We don't worry about Z80 variants. The 8085
 ;	kernel doesn't work on a Z80 so we don't care which one we have.
 ;
 .export _cpu_detect
@@ -577,7 +577,7 @@ is808x:
 	;
 	;	TODO: check for KP580M1
 	;
-	lxi d,8080
+	lxi h,8080
 	;
 	;	But wait it might be a 9080
 	;
@@ -588,10 +588,10 @@ is808x:
 	mov a,l
 	ani 0x10	; half carry is zero on AMD
 	rnz
-	mvi d,0x90
+	mvi h,0x90
 	ret
 is8085:
-	lxi d,0x8085
+	lxi h,0x8085
 	ret
 
 
@@ -618,8 +618,8 @@ _in:
 	sta	inpatch+1
 inpatch:
 	in 0
-	mov	e,a
-	mvi	d,0
+	mov	l,a
+	mvi	h,0
 popout:
 	pop	psw
 	ora	a
