@@ -24,7 +24,7 @@
 unsigned int port;
 uint8_t port_opt;
 
-#if defined(__i80)
+#if defined(__i80) || defined(__8085__)
 
 /* You can't currently run 8080 binaries on the Z80 CPU systems because of
    all the compiler/signal support needed in Kernel. If that changes we need
@@ -34,12 +34,12 @@ extern uint8_t cpu_identify(void);
 
 static uint8_t cpu_vendor;
 static uint8_t cpu_id;
-static const char *vendor_name[] = { "Intel", "AMD" };
+static const char *vendor_name[2] = { "Intel", "AMD" };
 static const char *cpu_name[3] = { "8080", "9080A", "8085" };
 static const int8_t cpu_step = -1;
 static const int8_t cpu_MHz = 0;
 static const uint8_t cpu_cache = 0;
-static const char cpu_fpu[]="no";
+static const char cpu_fpu[1]="no";
 static char *cpu_bugs = "";
 static char *cpu_flags = "";
 static const uint8_t cpu_vsize = 16;
