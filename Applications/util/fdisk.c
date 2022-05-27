@@ -345,13 +345,14 @@ void list_partition(char *devname)
 		((unsigned long) partition[13] <<  8uL) + \
 		 (unsigned long) partition[12];
 	if (partition[5])
-	    printf("%s%d  %c     %2d    %3d    %5d     %2d    %3d    %5d    %2x    %10ld\n",
+	    printf("%s%d  %c     %2d    %3d    %5d     %2d",
 		devname==NULL?dev:devname,1+((i-0x1be)/16),
 		partition[0]==0?' ':(partition[0]==0x80?'*':'?'),
 		partition[1],				     /* Start head */
 		partition[2] & 0x3f,			     /* Start sector */
 		partition[3] | ((partition[2] & 0xc0) << 2), /* Start cylinder */
-		partition[5],				     /* End head */
+		partition[5]);				     /* End head */
+	    printf("    %3d    %5d    %2x    %10ld\n",
 		partition[6] & 0x3f,			     /* End sector */
 		partition[7] | ((partition[6] & 0xc0) << 2), /* End cylinder */
 		partition[4],				     /* Partition type */
