@@ -7,7 +7,7 @@
  * Shall detect infinite loops, in resursive mode.
  *
  * changelog:
- *  1016-08-31 DF: added -R (recursive), now working -r (reverse order), cleanup
+ *  2016-08-31 DF: added -R (recursive), now working -r (reverse order), cleanup
  *
  */
 #include <stdio.h>
@@ -23,9 +23,6 @@
 
 #ifndef UIDGID
 #define UIDGID		1 /* set to zero to disable UID/GID */
-#endif
-#ifndef RECURSIVE
-#define RECURSIVE	1 /* set to zero to disable -R option */
 #endif
 
 #define LISTSIZE	256
@@ -341,13 +338,10 @@ static void listfiles(char *name)
 			((flags & LSF_DIR) && S_ISDIR(statbuf.st_mode)) ||
 			((flags & LSF_FILE) && !S_ISDIR(statbuf.st_mode)))
 			lsfile(cp, &statbuf, flags);
-#if	RECURSIVE
 		if (!(flags & LSF_RECUR) || !S_ISDIR(statbuf.st_mode) || !strcmp(cp, ".") || !strcmp(cp, ".."))
-#endif
 freename:
 			{ free(n); list[i] = NULL; }
 	}
-#if	RECURSIVE
 	/* Recursively list directories found. */
 	if (flags & LSF_RECUR) {
 		for (i = 0; i < listused; i++) {
@@ -359,17 +353,12 @@ freename:
 			}
 		}
 	}
-#endif
 	free(list);
 }
 
 static void printusage(FILE *out)
 {
-#if	RECURSIVE
 	fprintf(out, "Usage: ls [-Radfiloru] [file...]\n");
-#else
-	fprintf(out, "Usage: ls [-adfiloru] [file...]\n");
-#endif
 }
 
 int main(int argc, char *argv[])
@@ -407,11 +396,9 @@ int main(int argc, char *argv[])
 			case 'r': /* POSIX reverse sorting order */
 				flags |= LSF_DOWN;
 				break;
-#if	RECURSIVE
 			case 'R': /* POSIX recursive directory listing */
 				flags |= LSF_RECUR;
 				break;
-#endif
 			default:
 				fprintf(stderr, "Unknown option -%c\n", *cp);
 				printusage(stderr);
