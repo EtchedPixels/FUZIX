@@ -1,9 +1,9 @@
 #ifndef __GPT_DOT_H__
 #define __GPT_DOT_H__
 
-#include <sys/compiler.h>
-
 /* Copyright 2018 Tormod Volden */
+
+#include <sys/compiler.h>
 
 #define MBR_GPT_PROTECTED_TYPE 0xEE
 
@@ -21,13 +21,13 @@ typedef struct __packed {
 	uint32_t	current_lba_msb;
 	uint32_t	backup_lba_lsb;
 	uint32_t	backup_lba_msb;
-	uint32_t	first_usable_lba_lsb;
-	uint32_t	first_usable_lba_msb;
-	uint32_t	last_usable_lba_lsb;
-	uint32_t	last_usable_lba_msb;
+	uint32_t	first_usb_lba_lsb;
+	uint32_t	first_usb_lba_msb;
+	uint32_t	last_usb_lba_lsb;
+	uint32_t	last_usb_lba_msb;
 	uint8_t	disk_guid[16];
-	uint32_t	table_starting_lba_lsb;
-	uint32_t	table_starting_lba_msb;
+	uint32_t	table_st_lba_lsb;
+	uint32_t	table_st_lba_msb;
 	uint32_t	num_part_entries;
 	uint32_t	size_part_entry;
 	uint32_t	crc_part_array;

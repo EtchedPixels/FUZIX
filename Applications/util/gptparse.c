@@ -99,12 +99,12 @@ int parse_gpt(uint8_t *buf)
 		return 0;
 	}
 
-	if (gpt_header->table_starting_lba_msb != 0) {
+	if (gpt_header->table_st_lba_msb != 0) {
 		puts("GPT out of reach\n");
 		return 0;
 	}
 
-	entry_block = le32_to_cpu(gpt_header->table_starting_lba_lsb);
+	entry_block = le32_to_cpu(gpt_header->table_st_lba_lsb);
 
 	if (le32_to_cpu(gpt_header->size_part_entry) != 128) {
 		puts("GPT entry size not supported\n");
