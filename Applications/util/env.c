@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 		util= argv[i];
 		args= argv + i;
 		if (aflag) args++;
-		(void) execvp(util, args);
+		execvp(util, args);
 		err= errno;
 		fprintf(stderr, "env: Can't execute %s: %s\n",
 			util, strerror(err));
