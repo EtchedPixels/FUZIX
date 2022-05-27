@@ -11,7 +11,7 @@
 
 #ifdef	NDEBUG
 
-#define assert(expr)		((void) 0)
+#define assert(expr)		(0)
 
 #else /* NDEBUG */
 
