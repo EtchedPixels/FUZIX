@@ -94,7 +94,7 @@ typedef int BOOL;
 #define LABEL	4
 #define ENTRY	5
 #define find_entry(d, e, p)	directory(d, e, FIND, p)
-#define list_dir(d, e, f)	(void) directory(d, e, f, NIL_PTR)
+#define list_dir(d, e, f)	directory(d, e, f, NIL_PTR)
 #define label()			directory(root, root_entries, LABEL, NIL_PTR)
 #define new_entry(d, e)		directory(d, e, ENTRY, NIL_PTR)
 
@@ -485,7 +485,7 @@ int main(int argc, char *argv[])
 		make_file(root, root_entries, argv[idx]);
   }
 
-  (void) close(disk);
+  close(disk);
   fflush (fdo);
   if (fdo != stdout) fclose(fdo);
   return(0);
