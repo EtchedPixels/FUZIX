@@ -150,9 +150,9 @@ Usage: %s [-f] [-i] f1 f2\n\
 	case PERS_LN:
 		{
 #if defined (SUS)
-			const char nstr[] = "";
+			const char *nstr = "";
 #else				/* !SUS */
-			const char nstr[] = "[-n] ";
+			const char *nstr = "[-n] ";
 #endif				/* !SUS */
 			fprintf(stderr, "\
 Usage: %s [-f] %s f1 f2\n\
