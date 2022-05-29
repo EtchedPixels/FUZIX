@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 	return 0;		// not reached
 }
 
-void paintShelters()
+void paintShelters(void)
 {
 	int n, y, x;
 
