@@ -284,12 +284,12 @@ void ffork(void)
   if (j == 0) {			/* this is the child */
 	if (close(1) == -1) die("close(1) error\n");
 	if (dup(pfd[1]) != 1) die("dup(1) error\n");
-	(void) close(pfd[0]);
+	close(pfd[0]);
 	pnum++;
   } else {			/* this is the parent */
 	if (close(0) == -1) die("close(0) error\n");
 	if (dup(pfd[0]) != 0) die("dup(0) error\n");
-	(void) close(pfd[1]);
+	;close(pfd[1]);
   }
 }
 
@@ -323,9 +323,9 @@ int main(int argc, char *argv[])
 		    case 'd':	/* used by news */
 			break;
 		    default:
-			(void) write(1, "Usage: ", 7);
-			(void) write(1, cp, len);
-			(void) write(1, " [-#] [in] [out]\n", 17);
+			write(1, "Usage: ", 7);
+			write(1, cp, len);
+			write(1, " [-#] [in] [out]\n", 17);
 			exit(0);
 			break;
 		}
@@ -345,16 +345,16 @@ int main(int argc, char *argv[])
   /* Try to open specific files and connect them to stdin/stdout */
   if (argc > 1) {
 	if ((fdtmp = open(argv[1], 0)) == -1) die("input open failed");
-	(void) close(0);
+	close(0);
 	if ((fdin = dup(fdtmp)) == -1) die("input dup failed\n");
-	(void) close(fdtmp);
+	close(fdtmp);
   }
   if (argc > 2) {
-	(void) unlink(argv[2]);
+	unlink(argv[2]);
 	if ((fdtmp = creat(argv[2], 0666)) == -1) die("output creat failed");
-	(void) close(1);
+	close(1);
 	if ((fdout = dup(fdtmp)) == -1) die("output dup failed\n");
-	(void) close(fdtmp);
+	close(fdtmp);
   }
 
   /* Sort out type of compression */
