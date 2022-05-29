@@ -383,11 +383,11 @@ static void new_game(void)
 static void initialize(void)
 {
 	int i, j;
-	char plural_2[2] = "";
-	char plural[4] = "is";
+	static char plural_2[2] = "";
+	static char plural[4] = "is";
 	uint8_t yp, xp;
 
-	/* InItialize time */
+	/* Initialize time */
 
 	time_start = FROM_FIXED(stardate);
 	time_up = 25 + get_rand(10);
@@ -553,7 +553,7 @@ static void course_control(void)
 	int16_t z1, z2;
 	int16_t x1, x2;
 	int16_t x, y;
-	char warpmax[4] = "8";
+	static char warpmax[4] = "8";
 
 	fputs("Course (0-9): ", stdout);
 
