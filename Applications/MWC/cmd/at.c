@@ -34,8 +34,8 @@
 
 
 #define	NUL	'\0'
-#define TRUE	(0 == 0)
-#define FALSE	(0 != 0)
+#define TRUE	1
+#define FALSE	0
 #define	STDOUT	1
 #define	WEEK	7
 #define YEAR	365

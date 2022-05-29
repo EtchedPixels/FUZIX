@@ -217,9 +217,12 @@ long dufork(char *ep)
 {
 	int i;
 	int pid;
-	int pfd[2] = {0, 0};
+	int pfd[2];
 	int status;
 	long sz = 0;
+
+	pfd[0] = 0;
+	pfd[1] = 0;
 
 	fflush(stdout);
 	if (pipe(pfd)<0 || (pid = fork())<0) {

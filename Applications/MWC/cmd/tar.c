@@ -108,7 +108,8 @@ void scan_for_next(void);
 
 int main(int argc, char *argv[])
 {
-	char *key, unit = '\0', function = 0, deffunc, prefix[101] = { '\0' };
+	char *key, unit = '\0', function = 0, deffunc;
+	static char prefix[101] = { '\0' };
 	unsigned short arg = 2;
 	dirhd_t *args;
 

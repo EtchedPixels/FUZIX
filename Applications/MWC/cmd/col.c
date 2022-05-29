@@ -33,8 +33,8 @@
 #define	not		!
 #define	or		||
 #define	and		&&
-#define	TRUE		(0==0)
-#define	FALSE		(not TRUE)
+#define	TRUE		1
+#define	FALSE		0
 #define	NOTREACHED	return
 
 typedef uchar bool;
