@@ -11,6 +11,12 @@
 	extern int __setjmp(jmp_buf __env);
 	#define setjmp(x) __setjmp(x)
 
+#elif defined(__8085__)
+
+	typedef unsigned jmp_buf[3];	/*  BC (sp) and sp */
+	extern int _setjmp(jmp_buf __env);
+	#define setjmp(x) _setjmp(x)
+
 #elif defined(__CC65__)
 
 	typedef char jmp_buf[5];
