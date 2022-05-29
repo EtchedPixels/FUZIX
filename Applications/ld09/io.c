@@ -73,7 +73,7 @@ void closein(void)
     infd = ERR;
 }
 
-void closeout()
+void closeout(void)
 {
     flushout();
     if (close(outfd) == ERR)
