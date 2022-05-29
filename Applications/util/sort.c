@@ -520,7 +520,7 @@ void get_file(int fd, off_t size)
 	in_core = FALSE;
 	i = last_line();	/* Get pos. of last line */
 	mem_top[i] = '\0';	/* Truncate */
-	(void) lseek(fd, (off_t) (i - MEMORY_SIZE), SEEK_CUR);	/* Do this next time */
+	lseek(fd, (off_t) (i - MEMORY_SIZE), SEEK_CUR);	/* Do this next time */
 	size = size - rest - i + MEMORY_SIZE;	/* Calculate rest */
 	cur_pos = mem_top;	/* Reset mem */
 	sort();			/* Sort core */
@@ -530,7 +530,7 @@ void get_file(int fd, off_t size)
 	mread(fd, cur_pos, rest);
 	cur_pos = cur_pos + rest;	/* Reassign cur_pos */
 	*cur_pos = '\0';
-	(void) close(fd);	/* File completed */
+	close(fd);	/* File completed */
   }
 }
 
@@ -574,7 +574,7 @@ void print_table(int fd)
 	} while (*ptr++ != '\n');
   }
   mwrite(fd, out_buffer, index);/* Flush buffer */
-  (void) close(fd);		/* Close file */
+  close(fd);		/* Close file */
   nr_of_files++;		/* Increment nr_of_files to merge */
 }
 
@@ -917,7 +917,7 @@ void files_merge(int file_cnt) /* Nr_of_files to merge */
 
 /* Cleanup mess */
   i = (only_merge) ? args_limit - args_offset : 0;
-  while (i < file_cnt) (void) unlink(file_name(i++));
+  while (i < file_cnt) unlink(file_name(i++));
 }
 
 /* Merge () merges the files between start_file and limit_file. */
@@ -947,11 +947,11 @@ void merge(int start_file, int limit_file)
 	smallest->buffer = msbrk(buf_size);
 	smallest->line = msbrk(LINE_SIZE);
 	smallest->cnt = smallest->read_chars = 0;
-	(void) read_line(smallest);	/* Read first line */
+	read_line(smallest);	/* Read first line */
   }
 
   if (disabled == file_cnt) {	/* Couldn't open files */
-	(void) close(out_fd);
+	close(out_fd);
 	return;
   }
 
@@ -996,7 +996,7 @@ void put_line(char *line)
   if (line == NIL_PTR) {	/* Flush and close */
 	mwrite(out_fd, out_buffer, index);
 	index = 0;
-	(void) close(out_fd);
+	close(out_fd);
 	return;
   }
   do {				/* Fill out_buffer with line */
@@ -1046,7 +1046,7 @@ int read_line(MERGE *merg)
 	if (merg->cnt == merg->read_chars) {	/* Read new buffer */
 		if ((merg->read_chars =
 		     read(merg->fd, merg->buffer, buf_size)) <= 0) {
-			(void) close(merg->fd);	/* OOPS */
+			close(merg->fd);	/* OOPS */
 			merg->fd = ERROR;
 			disabled++;
 			return ERROR;
@@ -1183,6 +1183,6 @@ void catch(int dummy) /* to satisfy the prototype */
 
   signal(SIGINT, SIG_IGN);
   only_merge = FALSE;
-  for (i = 0; i < 26; i++) (void) unlink(file_name(i));
+  for (i = 0; i < 26; i++) unlink(file_name(i));
   exit(2);
 }
