@@ -18,7 +18,7 @@ ue.ansi: $(OBJS) term-ansi.o
 	$(LINKER) -o $@ $(CRT0NS) $^ $(LINKER_LIB) 
 
 ue: $(OBJS) term.o
-	$(LINKER) -o $@ $(CRT0) $^ -ltermcap6303 $(LINKER_LIB) 
+	$(LINKER) -o $@ $(CRT0) $^ -ltermcap8085 $(LINKER_LIB)
 
 clean:
 	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel
