@@ -1,4 +1,4 @@
-CC = cc85 -X -m8085 -Os
+CC = cc85 -m8085 -Os
 ASM = cc85
 AR = ar
 PLATFORM = 8085
