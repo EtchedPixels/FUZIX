@@ -1,8 +1,6 @@
 # 0 "ppide.S"
 # 0 "<built-in>"
 # 0 "<command-line>"
-# 1 "/usr/include/stdc-predef.h" 1 3 4
-# 0 "<command-line>" 2
 # 1 "ppide.S"
 # 1 "../kernel-8085.def" 1
 ; Keep these in sync with struct u_data;;
@@ -40,10 +38,10 @@ _devide_readb:
  ori 0x40
  out 0x22
  in 0x20
- mov e,a
+ mov l,a
  mov a,b
  out 0x22
- mvi d,0
+ mvi h,0
  pop b
  ret
 
