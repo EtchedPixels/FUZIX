@@ -107,7 +107,7 @@ effect but without re-entrancy problems.
 
 Mark a variable that is used a lot (more than about 8 times) in a function
 as a pointer. This is used to help the 6502 compiler as the other compilers
-generally either do registerisation their own or don't do it at all.
+generally either do registerisation on their own or don't do it at all.
 
 #### used(x)
 
