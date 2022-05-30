@@ -29,9 +29,9 @@
 ; DS1302 interface
 ; -----------------------------------------------------------------------------
 
- .export _ds1302_get_pin_data
+ .export _ds1302_get_data
 
-_ds1302_get_pin_data:
+_ds1302_get_data:
  in 0x0C ; read input register
         ani 0x01 ; mask off data pin
         mov e, a ; return result in L
