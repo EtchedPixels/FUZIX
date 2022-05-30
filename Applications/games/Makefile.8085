@@ -3,8 +3,6 @@ include $(FUZIX_ROOT)/Applications/rules.8085
 
 SRCSNS = qrun.c fortune.c advint.c z1.c z2.c z3.c z4.c z5.c z8.c
 
-# These need work for the native compiler to cope (it's just too much in
-# one file
 SRCSTC = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
         adv08.c adv09.c adv10.c adv11.c adv12.c adv13.c adv14a.c adv14b.c \
         myst01.c myst02.c myst03.c myst04.c myst05.c myst06.c myst07.c \
@@ -12,7 +10,7 @@ SRCSTC = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
 
 SRCS  = fortune-gen.c startrek.c hamurabi.c cowsay.c
 
-SRCSTC = sok.c
+SRCSTC += sok.c
 
 OBJS = $(SRCS:.c=.o)
 OBJSNS = $(SRCSNS:.c=.o)
