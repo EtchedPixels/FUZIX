@@ -38,7 +38,6 @@ SOFTWARE.
 #include <fcntl.h>
 #include <setjmp.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -1444,19 +1443,19 @@ char *trm_line(char *line)
 	int ch;
 
 	p = line;
-	while ((ch = getchr()) != EOF && ch != '\n')
+	while ((ch = getchr()) != -1 && ch != '\n')
 		if ((p - line) < LINEMAX)
 			*p++ = ch;
 	*p = 0;
-	return (ch == EOF ? NULL : line);
+	return (ch == -1 ? NULL : line);
 }
 
 /* getchr - input a single character */
 int getchr(void)
 {
 	uint8_t c;
-	if (read(0, &c, 1) == 0)
-		exit(1);
+	if (read(0, &c, 1) != 1)
+		return -1;
 	return c;
 }
 

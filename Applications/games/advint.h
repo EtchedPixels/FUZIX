@@ -54,7 +54,6 @@ int parse(void);
 void play(void);
 void pnumber(int n);
 void print(int msg);
-void putch(int ch, FILE * fp);
 void putchr(char ch);
 int putdword(char *p, int w);
 int putofield(int obj, int off, int val);
