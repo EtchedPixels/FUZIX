@@ -45,8 +45,8 @@ __ugetc:
 	ldsi 2
 	lhlx
 	call map_proc_always
-	mov e,m
-	mvi d,0
+	mov l,m
+	mvi h,0
 	jmp map_kernel
 
 .export __ugetw
@@ -57,7 +57,6 @@ __ugetw:
 	call map_proc_always
 	xchg		; address now DE
 	lhlx		; data into HL
-	xchg		; and into DE
 	jmp map_kernel
 
 .export __uget
@@ -98,11 +97,11 @@ ugetcopy:
 	dcx b
 	jnk ugetcopy
 	pop b
-	lxi d,0
+	lxi h,0
 	ret
 nowork:
 	pop b
-	lxi d,0
+	lxi h,0
 	ret
 
 
@@ -141,7 +140,7 @@ uputcopy:
 	dcx b
 	jnk uputcopy
 	pop b
-	lxi d,0
+	lxi h,0
 	ret
 
 
