@@ -203,6 +203,8 @@ static int fd_transfer(bool rwflag, uint_fast8_t minor, uint_fast8_t rawflag)
 
 	if (rawflag)
 		devfd_userbuf = 0xFF;
+	else
+		devfd_userbuf = 0;
 
 	firstblk = udata.u_block;
 	devfd_track = firstblk / devfd_dtbl[minor].spt;
