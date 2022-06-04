@@ -241,8 +241,9 @@ _program_uvectors:
 	lxi h,unix_syscall_entry
 	shld 0x31
 ;
-;	The default behaviour for the supplied board is broken. This assumes
-;	we are using the wiring patch to use RST6.5
+;	We use RST 6.5, this is correct for the EP 80C85 board. The original
+;	8085 design used INT which doesn't work as 8085 INT requires a
+;	vector, so the board needs a wire mod
 ;
 	sta 0x34
 	lxi h,interrupt_handler
