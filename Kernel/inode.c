@@ -80,7 +80,7 @@ void readi(regptr inoptr ino, uint_fast8_t flag)
 	switch (getmode(ino)) {
 	case MODE_R(F_DIR):
 	case MODE_R(F_REG):
-
+		/* FIXME: we end up doing the ino - udata comparison 3 times, fix this */
 		/* See if end of file will limit read */
 		if (ino->c_node.i_size <= udata.u_offset)
 			udata.u_count = 0;
@@ -112,6 +112,8 @@ void readi(regptr inoptr ino, uint_fast8_t flag)
 #if !defined(read_direct)
 			bp = NULL;
 #else
+			/* FIXME: if we ran a bfind then we should hint bread to avoid a
+			   second pointless walk */
 			if (pblk != NULLBLK && (bp = bfind(dev, pblk)) == NULL && !ispipe && amount == BLKSIZE && read_direct(major(dev), flag)) {
 				/* we can transfer direct from disk to the userspace buffer */
 				/* FIXME: allow for async queued I/O here. We want
