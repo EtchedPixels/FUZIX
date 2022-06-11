@@ -19,6 +19,7 @@
 	    .globl plt_interrupt_all
 
 	    .globl map_kernel
+	    .globl map_kernel_restore
 	    .globl map_kernel_di
 	    .globl map_process
 	    .globl map_process_di
@@ -237,6 +238,7 @@ _program_vectors:
 
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	    push af
 	    xor a
 	    call selmem
