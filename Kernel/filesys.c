@@ -203,13 +203,13 @@ inoptr srch_dir(inoptr wd, uint8_t *compname)
 
     i_lock(wd);
 
-    nblocks = (wd->c_node.i_size + BLKMASK) >> BLKSHIFT;
+    nblocks = inode_blocks(wd);
 
     for(curblock=0; curblock < nblocks; ++curblock) {
         buf = bread(wd->c_dev, bmap(wd, curblock, 1), 0);
         if (buf == NULL)
             break;
-        for(curentry = 0; curentry < (512 / DIR_LEN); ++curentry) {
+        for(curentry = 0; curentry < (BLKSIZE / DIR_LEN); ++curentry) {
             d = blkptr(buf, curentry * DIR_LEN, DIR_LEN);
             if(namecomp(compname, d->d_name)) {
                 inum = d->d_ino;
@@ -258,7 +258,6 @@ inoptr srch_mt(inoptr ino)
 
 inoptr i_open(uint16_t dev, uint16_t ino)
 {
-    struct blkbuf *buf;
     regptr inoptr nindex;
     regptr inoptr j;
     struct mount *m;
@@ -279,7 +278,7 @@ inoptr i_open(uint16_t dev, uint16_t ino)
 
     /* Maybe make this DEBUG only eventually - the fs_tab_get cost
        is higher than ideal */
-    if(ino < ROOTINODE || ino >= (m->m_fs.s_isize - 2) * 8) {
+    if(ino < ROOTINODE || ino >= (m->m_fs.s_isize - 2) * INO_PER_BLOCK) {
         kputs("i_open: bad inode number\n");
         return NULLINODE;
     }
@@ -301,12 +300,8 @@ inoptr i_open(uint16_t dev, uint16_t ino)
         return(NULLINODE);
     }
 
-    buf = bread(dev,(ino >> 3) + 2, 0);
-    if (buf == NULL)
+    if (breadi(dev, ino, &nindex->c_node))
         return NULLINODE;
-
-    blktok(&(nindex->c_node), buf, 64 * (ino & 7), 64);
-    brelse(buf);
 
     nindex->c_dev = dev;
     nindex->c_num = ino;
@@ -607,11 +602,11 @@ tryagain:
         buf = bread(devno, blk, 0);
         if (buf == NULL)
             goto corrupt;
-        for(j=0; j < 8; j++) {
+        for(j=0; j < INO_PER_BLOCK; j++) {
             /* Optimisation: add offsetof and use that to reduce blkptr range */
             di = blkptr(buf, sizeof(struct dinode) * j, sizeof(struct dinode));
             if(!(di->i_mode || di->i_nlink))
-                dev->s_inode[k++] = 8 * (blk - 2) + j;
+                dev->s_inode[k++] = INO_PER_BLOCK * (blk - 2) + j;
             if(k == FILESYS_TABSIZE) {
                 brelse(buf);
                 goto done;
@@ -711,7 +706,7 @@ blkno_t blk_alloc(uint16_t devno)
    /*
     * FIXME: When we implement the rest of the bigger block size fs support
     * this routine is responsible for zeroing the entire extent not just the
-    * 512 byte block
+    * BLKSIZE byte block
     */
     /* Zero out the new block */
     buf = bread(devno, newno, 2);
@@ -885,7 +880,7 @@ void i_deref(regptr inoptr ino)
     }
 }
 
-static void corrupt_fs(uint16_t devno)
+void corrupt_fs(uint16_t devno)
 {
     struct mount *mnt = fs_tab_get(devno);
     mnt->m_fs.s_mounted = 1;
@@ -902,15 +897,10 @@ void wr_inode(inoptr ino)
 
     magic(ino);
 
-    blkno =(ino->c_num >> 3) + 2;
-    buf = bread(ino->c_dev, blkno,0);
-    if (buf) {
-        blkfromk(&ino->c_node, buf,
-            sizeof(struct dinode) * (ino->c_num & 0x07), sizeof(struct dinode));
-        bfree(buf, 2);
-        ino->c_flags &= ~CDIRTY;
-    } else
+    if (bwritei(ino))
         corrupt_fs(ino->c_dev);
+    else
+        ino->c_flags &= ~CDIRTY;
 }
 
 
@@ -983,12 +973,15 @@ void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
             corrupt_fs(dev);
             return;
         }
-        for(j=255; j >= 0; --j) {
+        for(j = BLKSIZE / 2 - 1; j >= 0; --j) {
             blktok(&bn, buf, j * sizeof(blkno_t), sizeof(blkno_t));
             freeblk(dev, bn[j], level-1);
         }
         brelse(buf);
     }
+#ifdef CONFIG_TRIM
+    d_ioctl(dev, HDIO_TRIM, (void*)&blk);
+#endif
     blk_free(dev, blk);
 }
 
@@ -1010,162 +1003,14 @@ void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
             return;
         }
         bn = blkptr(buf, 0, BLKSIZE);
-        for(j=255; j >= 0; --j)
+        for(j = BLKSIZE / 2 - 1; j >= 0; --j)
             freeblk(dev, bn[j], level-1);
         brelse(buf);
     }
 #ifdef CONFIG_TRIM
-	(void) d_ioctl(dev, HDIO_TRIM, (void*)&blk);
+    d_ioctl(dev, HDIO_TRIM, (void*)&blk);
 #endif
     blk_free(dev, blk);
-}
-#endif
-
-/* Changes: blk_alloc zeroes block it allocates */
-/*
- * Bmap defines the structure of file system storage by returning
- * the physical block number on a device given the inode and the
- * logical block number in a file.  The block is zeroed if created.
- */
-blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg)
-{
-    int i;
-    bufptr bp;
-    int j;
-    blkno_t nb;
-    int sh;
-    uint16_t dev;
-
-    if(getmode(ip) == MODE_R(F_BDEV))
-        return(bn);
-
-    dev = ip->c_dev;
-
-    /* blocks 0..17 are direct blocks
-    */
-    if(bn < 18) {
-        nb = ip->c_node.i_addr[bn];
-        if(nb == 0) {
-            if(rwflg ||(nb = blk_alloc(dev))==0)
-                return(NULLBLK);
-            ip->c_node.i_addr[bn] = nb;
-            ip->c_flags |= CDIRTY;
-        }
-        return(nb);
-    }
-
-    /* addresses 18 and 19 have single and double indirect blocks.
-     * the first step is to determine how many levels of indirection.
-     */
-    bn -= 18;
-    sh = 0;
-    j = 2;
-    if(bn & 0xff00){       /* bn > 255  so double indirect */
-        sh = 8;
-        bn -= 256;
-        j = 1;
-    }
-
-    /* fetch the address from the inode
-     * Create the first indirect block if needed.
-     */
-    if(!(nb = ip->c_node.i_addr[20-j]))
-    {
-        if(rwflg || !(nb = blk_alloc(dev)))
-            return(NULLBLK);
-        ip->c_node.i_addr[20-j] = nb;
-        ip->c_flags |= CDIRTY;
-    }
-
-    /* fetch through the indirect blocks
-    */
-    for(; j<=2; j++) {
-        bp = bread(dev, nb, 0);
-        if (bp == NULL) {
-            corrupt_fs(ip->c_dev);
-            return 0;
-        }
-        /******
-          if(bp->bf_error) {
-          brelse(bp);
-          return((blkno_t)0);
-          }
-         ******/
-        i = (bn >> sh) & 0xff;
-        nb = *(blkno_t *)blkptr(bp, (sizeof(blkno_t)) * i, sizeof(blkno_t));
-        if (nb)
-            brelse(bp);
-        else
-        {
-            if(rwflg || !(nb = blk_alloc(dev))) {
-                brelse(bp);
-                return(NULLBLK);
-            }
-            blkfromk(&nb, bp, i * sizeof(blkno_t), sizeof(blkno_t));
-            bawrite(bp);
-        }
-        sh -= 8;
-    }
-    return(nb);
-}
-
-#ifdef CONFIG_BIG_FS
-/*
- *	On systems with 32bit blkno_t we support larger block sizes but
- *	keeping the same fundamental layout. That keeps our file system
- *	changes right down. i_shift comes from the superblock. For bigger
- *	systems we should instead consider a fast index into superblock tables
- *
- *	We support shifts of:
- *
- *	0	512 byte blocks		32MB 		classic Fuzix
- *	1	1024			64MB
- *	2	2048			128MB
- *	3	4096			256MB
- *	4	8192			512MB
- *	5	16384			1GB		just to beat cp/m 8)
- *
- *	All our low level I/O is still done in 512 byte chunks, they are just
- *	linear extents so we don't blow our buffer budget or need to handle
- *	alignment and buffer cache size problems. It also means our fsck scales
- *	even on tiny machines
- *
- *	TODO:
- *	fsck and mkfs support
- *	truncate checks
- *	hole allocation	 (the one ugly). When we allocate a new block we must
- *		zero the entire real block (could be 16K).
- *	hinting to the underlying block layer the fs alignment (so it can
- *	try to do bigger I/O requests when it wants to be clever on a big
- *	system).
- *	Split blkno_t into blkno_t and fs_blkno_t or similar so you can have
- *	32bit physical blocks.
- *
- */
-
-static const uint16_t blkmask[] = {
-    0x00,	/* 512 */
-    0x01,	/* 1024 */
-    0x03,	/* 2048 */
-    0x07,	/* 4096 */
-    0x0F,	/* 8192 */
-    0x1F	/* 16384 */
-};
-
-blkno_t bmap(inoptr ip, blkno_t blk, unsigned int rwflg)
-{
-    /* Linear bits */
-    uint_fast8_t shift = fs_tab[ip->c_super].m_fs.s_shift;
-    uint_fast8_t blklo = ((uint8_t)blk) & blkmask[shift];
-    /* Non linear index bits */
-    blk >>= shift;
-    blk = do_bmap(ip, blk, rwflg);
-    /* Holes are full sized of course */
-    if (blk == 0)
-        return 0;
-    blk <<= shift;;
-    blk |= blklo;
-    return blk;
 }
 #endif
 
@@ -1275,14 +1120,12 @@ void setftime(inoptr ino, uint_fast8_t flag)
         rdtime32(&(ino->c_node.i_ctime));
 }
 
-
 uint8_t getmode(inoptr ino)
 {
     /* Shifting by 9 (past permissions) might be more logical but
        8 happens to be cheap */
     return (ino->c_node.i_mode & F_MASK) >> 8;
 }
-
 
 static struct mount *newfstab(void)
 {

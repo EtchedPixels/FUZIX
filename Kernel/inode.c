@@ -61,7 +61,7 @@ uint16_t umove(uint16_t n)
 static uint16_t mapcalc(inoptr ino, usize_t *size, uint_fast8_t m)
 {
 	*size = min(udata.u_count, BLKSIZE - uoff());
-	return bmap(ino, udata.u_offset >> BLKSHIFT, m);
+	return bmap(ino, BLOCK(udata.u_offset), m);
 }
 
 /* Writei (and readi) need more i/o error handling */
@@ -125,7 +125,7 @@ void readi(regptr inoptr ino, uint_fast8_t flag)
 				uostash = udata.u_offset;	            /* stash file offset */
 				ucstash = udata.u_count;		    /* stash byte count */
 				udata.u_count = amount;                     /* transfer one sector */
-				udata.u_offset = ((off_t)pblk) << BLKSHIFT; /* replace with sector offset on device */
+				udata.u_offset = BLOCK((off_t)pblk); 	    /* replace with sector offset on device */
 				((*dev_tab[major(dev)].dev_read) (minor(dev), 1, 0)); /* read */
 				udata.u_offset = uostash;		    /* restore file offset */
 				udata.u_count = ucstash;                    /* restore byte count */
@@ -230,7 +230,7 @@ void writei(regptr inoptr ino, uint_fast8_t flag)
 
 			umove(amount);
 			if (ispipe) {
-				if (LOWORD(udata.u_offset) >= 18 * 512)
+				if (LOWORD(udata.u_offset) >= 18 * BLKSIZE)
 					udata.u_offset = 0;
 				ino->c_node.i_size += amount;
 				/* Wake up any readers */

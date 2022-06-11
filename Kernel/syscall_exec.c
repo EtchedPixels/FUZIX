@@ -10,11 +10,7 @@
 
 /* This is hardcoded as we use disk buffers as scratch for the arguments
    on most platforms */
-#define ARGBUF_SIZE	512
-
-/* SN    TODO      max (1024) 512 bytes for argv
-               and max  512 bytes for environ
-*/
+#define ARGBUF_SIZE	BLKSIZE
 
 bool rargs(uint8_t **userspace_argv, struct s_argblk * argbuf)
 {
