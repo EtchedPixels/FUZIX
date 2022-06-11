@@ -12,3 +12,5 @@
 #define BLKOFF(x)	(((uint16_t)(x)) & BLKMASK)
 
 #define BLK_TO_OFFSET(x)	((x) << BLKSHIFT)
+
+#define SMOUNTED  12742   /* Magic number to specify mounted filesystem */
