@@ -125,7 +125,7 @@ void readi(regptr inoptr ino, uint_fast8_t flag)
 				uostash = udata.u_offset;	            /* stash file offset */
 				ucstash = udata.u_count;		    /* stash byte count */
 				udata.u_count = amount;                     /* transfer one sector */
-				udata.u_offset = BLOCK((off_t)pblk); 	    /* replace with sector offset on device */
+				udata.u_offset = BLK_TO_OFFSET((off_t)pblk);/* replace with sector offset on device */
 				((*dev_tab[major(dev)].dev_read) (minor(dev), 1, 0)); /* read */
 				udata.u_offset = uostash;		    /* restore file offset */
 				udata.u_count = ucstash;                    /* restore byte count */

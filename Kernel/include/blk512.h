@@ -10,3 +10,5 @@
 
 /* Help the 8bit compilers out by preventing any 32bit promotions */
 #define BLKOFF(x)	(((uint16_t)(x)) & BLKMASK)
+
+#define BLK_TO_OFFSET(x)	((x) << BLKSHIFT)
