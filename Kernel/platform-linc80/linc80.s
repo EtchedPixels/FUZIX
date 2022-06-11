@@ -14,6 +14,7 @@
         .globl map_process_always
         .globl map_process
         .globl map_kernel_di
+        .globl map_kernel_restore
         .globl map_process_always_di
         .globl map_save_kernel
         .globl map_restore
@@ -76,6 +77,7 @@ _int_disabled:
 map_buffers:
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	push af
 	ld a,#1
 map_a:
