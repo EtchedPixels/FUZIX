@@ -82,9 +82,9 @@
 #define TICKSPERSEC 50	    /* Ticks per second */
 
 /* Core networking support */
-#define CONFIG_NET
+#undef CONFIG_NET
 /* Or native (eg SLIP) */
-#define CONFIG_NET_NATIVE
+#undef CONFIG_NET_NATIVE
 
 /*
  *	The device (major/minor) for the console and boot up tty attached to
