@@ -1,5 +1,4 @@
-#include "cpu.h"
-
+#include <kernel.h>
 
 void *memset(void *d, int c, size_t sz)
 {
