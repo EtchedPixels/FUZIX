@@ -871,7 +871,6 @@ extern bool validdev(uint16_t dev);
 #define uget(a,b,c)	(memcpy(b,a,c) && 0)
 #define uput(a,b,c)	(memcpy(b,a,c) && 0)
 #define ugetc(a)	(*(uint8_t *)(a))
-#define _ugetc(a)	(*(uint8_t *)(a))
 #define ugetw(a)	(*(uint16_t *)(a))
 #define ugetl(a)	(*(uint32_t *)(a))
 #define uputc(v, p)	((*(uint8_t*)(p) = (v)) && 0)
