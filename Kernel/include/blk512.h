@@ -14,3 +14,9 @@
 #define BLK_TO_OFFSET(x)	((x) << BLKSHIFT)
 
 #define SMOUNTED  12742   /* Magic number to specify mounted filesystem */
+
+/* Size of a directory. They can contain padding internally but a disk block
+   must be divisible exactly into directory entries */
+
+#define FILENAME_LEN	30
+#define DIR_LEN		32

@@ -168,6 +168,10 @@ typedef uint32_t uoff_t;	/* Internal use so we can keep the compiler happy */
 typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
 #define NULLBLK ((blkno_t)-1)
 
+#if (BLKSIZE == 400)
+#include "blk400.h"
+#endif
+
 #ifndef BLKSIZE
 #include "blk512.h"
 #endif
@@ -301,8 +305,6 @@ typedef struct cinode {
 #define NULLINODE ((inoptr)NULL)
 #define NULLINOPTR ((inoptr*)NULL)
 
-#define FILENAME_LEN	30
-#define DIR_LEN		32
 typedef struct direct {
     uint16_t   d_ino;
     uint8_t    d_name[FILENAME_LEN];
