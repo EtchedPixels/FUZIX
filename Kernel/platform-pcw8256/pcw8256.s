@@ -13,6 +13,7 @@
 	    .globl map_process
 	    .globl map_process_always
 	    .globl map_kernel_di
+	    .globl map_kernel_restore
 	    .globl map_process_di
 	    .globl map_process_always_di
 	    .globl _int_disabled
@@ -249,6 +250,7 @@ kmap:	    .db 0x80, 0x81, 0x82
 map_buffers:
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	    push af
 	    push hl
 	    ld hl, #kmap
