@@ -901,6 +901,8 @@ extern int _uzero(uint8_t *user, usize_t count);
 #define _uputc(v, p) ((*(uint8_t*)(p) = (v)), 0)
 #define _uputw(v, p) ((*(uint16_t*)(p) = (v)), 0)
 #define _uputl(v, p) ((*(uint32_t*)(p) = (v)), 0)
+#define _uget(a,b,c) (memcpy(b,a,c) && 0)
+#define _uput(a,b,c) (memcpy(b,a,c) && 0)
 #else
 extern int16_t _ugetc(const uint8_t *user) __fastcall;
 extern uint16_t _ugetw(const uint16_t *user) __fastcall;
