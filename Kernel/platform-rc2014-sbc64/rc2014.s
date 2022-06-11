@@ -11,6 +11,7 @@
 	.globl map_process_always
 	.globl map_process_a
 	.globl map_kernel_di
+	.globl map_kernel_restore
 	.globl map_process_di
 	.globl map_process_always_di
 	.globl map_save_kernel
@@ -372,6 +373,7 @@ map_pop_a:
 map_buffers:
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	push af
 	ld a,#3
 	jr map_pop_a
