@@ -28,6 +28,7 @@ platform-msx1/devide_sunrise.rel
 platform-msx1/sunrise.rel
 devio.rel
 filesys.rel
+blk512.rel
 process.rel
 inode.rel
 syscall_exec.rel

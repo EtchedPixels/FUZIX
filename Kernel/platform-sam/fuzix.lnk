@@ -16,6 +16,7 @@ timer.rel
 kdata.rel
 devio.rel
 filesys.rel
+blk512.rel
 process.rel
 inode.rel
 devinput.rel

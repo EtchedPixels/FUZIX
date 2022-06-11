@@ -24,6 +24,7 @@ usermem.rel
 platform-scorpion/devices.rel
 devio.rel
 filesys.rel
+blk512.rel
 process.rel
 inode.rel
 syscall_exec.rel
