@@ -15,6 +15,7 @@
 	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_kernel_di
+	    .globl map_kernel_restore
 	    .globl map_process
 	    .globl map_process_a
 	    .globl map_process_always
@@ -227,6 +228,7 @@ _program_vectors:
 map_buffers:
 	   ; for us no difference. We could potentially use a low 32K bank
 	   ; for buffers but it's not clear it would gain us much value
+map_kernel_restore:
 map_kernel_di:
 map_kernel:
 	    push af

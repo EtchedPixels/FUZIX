@@ -5,7 +5,6 @@
 #include <devtty.h>
 #include <rtc.h>
 #include <ds1302.h>
-#include <net_w5100.h>
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
