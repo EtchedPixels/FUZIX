@@ -26,9 +26,9 @@
 #define CONFIG_BLKBUF_EXTERNAL
 /* And our buffer pool is dynamically sized */
 #define CONFIG_DYNAMIC_BUFPOOL
-/* And networking */
-#define CONFIG_NET
-#define CONFIG_NET_NATIVE
+/* And networking (to revisit once the new net code is more sorted) */
+#undef CONFIG_NET
+#undef CONFIG_NET_NATIVE
 /* And IDE */
 #define MAX_BLKDEV	2
 #define CONFIG_IDE
