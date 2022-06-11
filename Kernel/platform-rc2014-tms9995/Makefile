@@ -52,7 +52,7 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16kfc.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec.o ../syscall_exec16.o \
+	../syscall_exec.o ../syscall_exec16.o ../blk512.o \
 	../usermem.o ../usermem_std-tms9995.o devtty.o \
 	/opt/cc9995/lib/libc.a /opt/cc9995/lib/lib9995.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map

@@ -30,6 +30,7 @@ OBJS  = $(AOBJS) $(COBJS)
 
 KOBJS = \
 	$(OBJS) \
+	../blk512.o \
 	../devio.o \
 	../devsys.o \
 	../filesys.o \

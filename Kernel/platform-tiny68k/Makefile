@@ -42,7 +42,7 @@ image:
 	tricks.o main.o ../timer.o ../kdata.o 68000exception.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
-	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
+	../blk512.o ../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
 	blkdev.o devide.o devide_discard.o mbr.o \
 	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o ../malloc.o \

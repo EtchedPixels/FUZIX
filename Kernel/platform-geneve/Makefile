@@ -50,7 +50,7 @@ image:
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	vdp.o v99xx.o ../vt.o ../font6x8.o keyboard.o xtkbd.o \
-	devinput.o ../devinput.o \
+	devinput.o ../devinput.o ../blk512.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank8k.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \

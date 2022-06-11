@@ -43,7 +43,7 @@ image:
 	crt0.o commonmem.o mem-rc2014.o \
 	rc2014-6809.o ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o \
-	tricks.o main.o ../timer.o ../kdata.o devices.o \
+	tricks.o main.o ../timer.o ../kdata.o devices.o ../blk512.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_fs3.o \

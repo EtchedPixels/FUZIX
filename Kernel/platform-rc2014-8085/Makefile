@@ -58,7 +58,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec.o ../syscall_exec16.o  \
-	ppide.o devinput.o ../devinput.o \
+	ppide.o devinput.o ../devinput.o ../blk512.o \
 	../dev/blkdev.o ../dev/mbr.o ../dev/devide.o ../dev/devide_discard.o \
 	../dev/ds1302.o ../dev/ds1302_discard.o ../dev/ds1302_8085.o \
 	../usermem_std-8085.o -m fuzix.tmpmap /opt/cc85/lib/lib8085.a

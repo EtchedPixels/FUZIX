@@ -44,7 +44,7 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec16.o ../syscall_exec.o \
+	../syscall_exec16.o ../syscall_exec.o ../blk512.o \
 	../usermem.o ../usermem_std-6502.o devtty.o
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=4 
 

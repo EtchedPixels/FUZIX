@@ -55,7 +55,7 @@ image: bootfuz.bin
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o ../syscall_fs3.o
+	devtty.o libc.o ../vt.o ../syscall_fs3.o ../syscall_exec.o ../blk512.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 	../tools/lw-checkmap ../fuzix.map
 	# Repack the high 5K where the loader wants it

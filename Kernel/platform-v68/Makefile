@@ -45,7 +45,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o 68000exception.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o blkdev.o \
-	devide.o devide_discard.o mbr.o  \
+	devide.o devide_discard.o mbr.o  ../blk512.o \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 

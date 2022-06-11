@@ -52,7 +52,7 @@ FOBJS = crt0.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
-	../syscall_fs3.o ../syscall_exec32.o \
+	../syscall_fs3.o ../syscall_exec.o ../syscall_exec32.o ../blk512.o \
 	../usermem_std-68000.o devlpr.o devtty.o libc.o ../vt.o ../malloc.o \
 	blkdev.o mbr.o devide.o devide_discard.o devacsi.o dma.o \
 	../font8x8.o

@@ -56,7 +56,7 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_exec.o ../syscall_exec16.o ../syscall_fs3.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o \
-	videoll.o
+	videoll.o ../blk512.o
 
 boot.bin: boot/boot.s
 	lwasm -lboot.list --format=raw -oboot.bin boot/boot.s
