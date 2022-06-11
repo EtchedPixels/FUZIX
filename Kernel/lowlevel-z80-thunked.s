@@ -160,7 +160,7 @@ syscall_return:
 	pop de
 	pop bc
 	exx
-	; Return page for caller (may not be the page we can in on if we
+	; Return page for caller (may not be the page we came in on if we
 	; swapped
 	ld a,(_udata + U_DATA__U_PAGE+HIGHPAGE)
 	ret
