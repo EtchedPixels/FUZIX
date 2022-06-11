@@ -1,6 +1,6 @@
 
 CSRCS = devtty.c
-CSRCS += devices.c main.c bank.c
+CSRCS += devices.c main.c bank.c devhawk.c
 
 ASRCS = centurion.S crt0.S loader.S
 ASRCS += tricks.S commonmem.S _memcpy.S _memset.S _strlen.S
@@ -52,7 +52,7 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o bank.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec.o ../syscall_exec16.o \
+	../syscall_exec.o ../syscall_exec16.o ../blk384.o \
 	_memcpy.o _memset.o _strlen.o \
 	../usermem.o ../usermem_std-wrx6.o devtty.o \
 	/opt/aswrx6/lib/libwrx6.a

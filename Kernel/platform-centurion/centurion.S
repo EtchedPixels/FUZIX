@@ -14,6 +14,12 @@
 	    .export map_kernel_restore
 	    .export map_process_x
 
+	    ; DMA
+	    .export _dma_set_length
+	    .export _dma_set_base
+	    .export _dma_set_mode0
+	    .export _dma_enable
+
             ; exported debugging tools
             .export _plt_monitor
 	    .export _plt_reboot
@@ -216,3 +222,24 @@ outchar_l:
 	ld	b,(s+)
 	rsr
 
+;
+;	DMA helpers
+;
+_dma_set_length:
+	lda	2(s)
+	lddmac	a
+	rsr
+
+_dma_set_base:
+	lda	2(s)
+	lddma	a
+	rsr
+
+_dma_set_mode0:
+	ldab	2(s)
+	dmamode 0
+	rsr
+
+_dma_enable:
+	dmaen
+	rsr

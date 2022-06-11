@@ -40,3 +40,5 @@
 #define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"
+
+#define BLKSIZE	400	  /* Physical media has 400 byte blocks */
