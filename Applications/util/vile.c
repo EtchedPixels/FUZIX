@@ -31,6 +31,7 @@
  *	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <stdio.h>
 #include <stdint.h>
 #include <ctype.h>
 #include <stdlib.h>
