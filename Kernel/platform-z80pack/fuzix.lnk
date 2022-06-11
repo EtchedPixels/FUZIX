@@ -20,6 +20,7 @@ platform-z80pack/devfd.rel
 platform-z80pack/devices.rel
 devio.rel
 filesys.rel
+blk512.rel
 process.rel
 inode.rel
 syscall_exec16.rel

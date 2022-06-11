@@ -21,6 +21,7 @@ usermem.rel
 platform-zx+3/devices.rel
 devio.rel
 filesys.rel
+blk512.rel
 process.rel
 inode.rel
 syscall_exec.rel
