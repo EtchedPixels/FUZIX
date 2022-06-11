@@ -71,7 +71,7 @@ static struct fuzixbios_callbacks fcb = {
 	callback_tick,
 	callback_timer,
 	callback_tty,
-	callback_disk
+	callback_disk,
 	callback_kprintf,
 	&int_disabled
 };
