@@ -46,17 +46,13 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     /* 10 sectors per track, two sides, 512 bytes sector double density */
     /* FIXME fd_map support
     fd_map = rawflag;*/
-    if (rawflag == 0) {
-        dptr = (uint16_t)udata.u_buf->bf_data;
-        block = udata.u_buf->bf_blk;
-        nblock = 1;
-    } else {
-        if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
-            goto bad2;
-        dptr = (uint16_t)udata.u_base;
-        block = udata.u_offset >> 9;
-        nblock = udata.u_count >> 9;
-    }
+
+    if (rawflag == 1)
+        if (d_blkoff(BLKSHIFT))
+            return -1;
+
+    block = udata.u_block;
+    dptr = (uint16_t)udata.u_dptr;
 
     fd_cmd[0] = is_read ? FD_READ : FD_WRITE;
     fd_cmd[1] = block / 20;
@@ -71,7 +67,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         fd_reset(driveptr);
 
 
-    while (ct < nblock) {
+    while (ct < udata.u_nblock) {
         if (sec > 10) {
             control = cval | 2;
             fd_cmd[2] = sec - 10;

@@ -70,29 +70,29 @@ ttyready_t tty_writeready(uint8_t minor)
 	return TTY_READY_NOW;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, unsigned char c)
 {
 	minor;
 	vtoutput(&c, 1);
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
 	minor;
 	return 1;
 }
 
-void tty_setup(uint8_t minor)
+void tty_setup(uint_fast8_t minor, uint_fast8_t wait)
 {
 	minor;
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	minor;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 

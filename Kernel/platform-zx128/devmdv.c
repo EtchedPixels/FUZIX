@@ -44,31 +44,28 @@ static int mdv_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	uint16_t block, nblock;
 	uint8_t on = 0;
 
-	if (rawflag == 0) {
-		mdv_buf = udata.u_buf->bf_data;
-		block = udata.u_buf->bf_blk;
-		nblock = 1;
-		mdv_page = 0;
-	} else if (rawflag == 1) {
+	mdv_page = 0;
+
+	if (rawflag == 1) {
+		if (d_blkoff(BLKSHIFT))
+			return -1;
 		/* Direct to user */
 		if (((uint16_t)udata.u_offset|udata.u_count) & BLKMASK)
 			goto bad;
-		mdv_buf = (uint8_t *)udata.u_base;
-		nblock = udata.u_count >> 9;
-		block = udata.u_offset >> 9;
 		mdv_page = udata.u_page;
-	} else {
+	} else if (rawflag == 2) {
 #ifdef SWAPDEV
 		/* Microdrive swap awesomeness */
-		mdv_buf = swapbase;
-		nblock = swapcnt >> 9;
-		block = swapblk;
 		mdv_page = swappage;
 #else
 		/* Attempt to swap when swapping is disabled */
 		goto bad;
 #endif
 	}
+
+	mdv_buf = udata.u_dptr;
+	block = udata.u_block;
+	nblock = udata.u_nblock;
 
 	irq = di();
 	if (mdv_minor != minor) {
