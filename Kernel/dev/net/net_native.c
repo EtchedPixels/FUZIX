@@ -25,11 +25,7 @@ static uint16_t ifflags = IFF_BROADCAST|IFF_RUNNING|IFF_UP;
  */
 
 /* This holds the additional kernel context for the sockets */
-static struct sockdata sockdata[NSOCKET] = {
-	[0 ... (NSOCKET - 1)] = {
-		.socket = NULL
-	}
-};
+static struct sockdata sockdata[NSOCKET];
 
 #define NSOCKTYPE 3
 #define SOCKTYPE_TCP    0
