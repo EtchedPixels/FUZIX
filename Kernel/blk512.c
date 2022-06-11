@@ -1,4 +1,5 @@
 #include "kernel.h"
+#include "printf.h"
 
 #if (BLKSIZE == 512)
 
@@ -18,7 +19,7 @@ uint_fast8_t breadi(uint16_t dev, uint16_t ino, void *ptr)
     struct blkbuf *buf = bread(dev, (ino >> 3) + 2, 0);
     if (buf == NULL)
         return 1;
-    blktok(ptr, buf, 64 * (ino & 7), 64);
+    blktok(ptr, buf, sizeof(struct dinode) * (ino & 7), sizeof(struct dinode));
     brelse(buf);
     return 0;
 }
@@ -58,6 +59,7 @@ blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg)
     /* blocks 0..17 are direct blocks
     */
     if(bn < 18) {
+        nb = ip->c_node.i_addr[bn];
         if(nb == 0) {
             if(rwflg ||(nb = blk_alloc(dev))==0)
                 return(NULLBLK);
@@ -66,8 +68,6 @@ blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg)
         }
         return(nb);
     }
-
-    /* TODO BLKSIZE: this assumes 512 byte blocks */
 
     /* addresses 18 and 19 have single and double indirect blocks.
      * the first step is to determine how many levels of indirection.
@@ -100,12 +100,6 @@ blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg)
             corrupt_fs(ip->c_dev);
             return 0;
         }
-        /******
-          if(bp->bf_error) {
-          brelse(bp);
-          return((blkno_t)0);
-          }
-         ******/
         i = (bn >> sh) & 0xff;
         nb = *(blkno_t *)blkptr(bp, (sizeof(blkno_t)) * i, sizeof(blkno_t));
         if (nb)
