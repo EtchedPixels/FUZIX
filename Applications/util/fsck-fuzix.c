@@ -589,6 +589,7 @@ static void ckdir(uint16_t inum, uint16_t pnum, char *name)
         dirread(&ino, j, &dentry);
         progress();
 
+        /* TODO: optimization - don't write back if we didn't changee it */
         for (i = 0; i < 30; ++i) if (dentry.d_name[i] == '\0') break;
         for (     ; i < 30; ++i) dentry.d_name[i] = '\0';
         dirwrite(&ino, j, &dentry);
@@ -918,6 +919,7 @@ static void dwrite(uint16_t blk, char *addr)
         perror("write");
         exit(1);
     }
+    /* FIXME: why clear this .. it's still valid even if clean */
     lblk = 0;
 }
 
