@@ -12,7 +12,7 @@ extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
  * This file is part of the Linux-8086 C library and is distributed
  * under the GNU Library General Public License.
  */
-static int strcmp(const char *d, const char *s)
+int strcmp(const char *d, const char *s)
 {
 	register char *s1 = (char *) d, *s2 = (char *) s, c1, c2;
 

@@ -104,7 +104,7 @@ _marker:
 
 	.area _STUBS
 stubs:
-	.ds 512
+	.ds	540
 
 	.area _DATA3
 ;
