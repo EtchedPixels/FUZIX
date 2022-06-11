@@ -9,7 +9,7 @@
 #define is_datagram(s) ((s)->s_class != SOCK_STREAM && (s)->s_class != SOCK_SEQPACKET)
 
 /* For now until we work out where this really belongs */
-uint8_t sock_wake[NSOCKET] = { [0 ... (NSOCKET - 1)] = 0U };
+uint8_t sock_wake[NSOCKET];
 
 static uint8_t mac_addr[6U] = { 0U, 0U, 0U, 0U, 0U, 0U };
 static int16_t mtu = 0;
