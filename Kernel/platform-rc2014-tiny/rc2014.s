@@ -10,6 +10,7 @@
 	.globl map_process
 	.globl map_process_always
 	.globl map_kernel_di
+	.globl map_kernel_restore
 	.globl map_process_di
 	.globl map_process_always_di
 	.globl map_save_kernel
@@ -410,6 +411,7 @@ map_process_always_di:
 map_buffers:
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	push af
 	xor a
 	call rom_control
