@@ -11,6 +11,7 @@ section .video load 0xF200
 section .data
 section .videodata
 section .common
+section .commondata
 section .text3
 section .discard load 0xA000
 section .udata load 0xFD00
