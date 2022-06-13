@@ -369,8 +369,8 @@ _ttyout_acia:
 _uart_ready:
 	in 0xC5
 	ani 0x20
-	mvi d,0
-	mov e,a
+	mvi h,0
+	mov l,a
 	ret
 
 _acia_ready:
