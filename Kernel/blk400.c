@@ -1,19 +1,20 @@
 #include "kernel.h"
 #include "printf.h"
 
-#if (BLKSIZE == 384)
+#if (BLKSIZE == 400)
 
 /*
- *	File system routines for 384 byte blocks
+ *	File system routines for 400 byte blocks
  *
- *	We will want some div/mod 384 helpers to keep this usable and some
- *	fast path div/mod 6 routines.
+ *	Inodes are packed 6 per block with trailing space
+ *	Directories are 40 bytes per entry (8 wasted)
+ *	Files are the full 400 bytes.
  */
 
 /* Return the number of blocks an inode occupies assuming all blocks present */
 blkno_t inode_blocks(inoptr i)
 {
-    return (i->c_node.i_size + 383) / 384;
+    return (i->c_node.i_size + 399) / 400;
 }
 
 /* Read an inode */
@@ -78,9 +79,9 @@ blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg)
     bn -= 18;
     div = 0;
     j = 2;
-    if(bn > 192){       /* bn > 192  so double indirect */
-        div = 192;
-        bn -= 192;
+    if(bn >= 200) {       /* bn >= 200 so double indirect */
+        div = 1;
+        bn -= 200;
         j = 1;
     }
 
@@ -104,9 +105,9 @@ blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg)
             return 0;
         }
         if (div)
-            i = bn / div;
+            i = bn / 200;
         else
-            i = bn % div;
+            i = bn % 200;
 
         nb = *(blkno_t *)blkptr(bp, (sizeof(blkno_t)) * i, sizeof(blkno_t));
         if (nb)
