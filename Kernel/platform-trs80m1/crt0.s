@@ -10,6 +10,7 @@
 		; We want the DISCARD2 area last as we eventually want to
 		; expand all over it for buffers
 		.area _BUFFERS2
+		.area _DISCARD
 		.area _DISCARD2
 		.area _UDATA
 		.area _BOOT
