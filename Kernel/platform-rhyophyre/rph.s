@@ -36,7 +36,7 @@ _bufpool:
         .area _DISCARD
 
 init_early:
-	xor a
+	ld a,#0x80
 	out (0x80),a		; ROM off
         jp z180_init_early
 
