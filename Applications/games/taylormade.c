@@ -69,7 +69,7 @@ static unsigned int StatusBase;
 static unsigned int ActionBase;
 static unsigned int FlagBase;
 
-static int NumLowObjects;
+static int NumLowObjs;
 
 static int ActionsDone;
 static int ActionsExecuted;
@@ -1193,7 +1193,7 @@ static void Look(void)
 	}
 	PrintRoom(LOCATION);
         OutChar(' ');
-	for (i = 0; i < NumLowObjects; i++) {
+	for (i = 0; i < NumLowObjs; i++) {
 		if (Object[i] == LOCATION)
 			PrintObject(i);
 	}
@@ -1760,7 +1760,7 @@ static void FindTables(void)
  *	Version 0 is different
  */
 
-static int GuessLowObjectEnd0(void)
+static int GuessLowObjEnd0(void)
 {
 	unsigned char *p = Image + ObjectBase;
 	unsigned char *t = NULL;
@@ -1783,7 +1783,7 @@ static int GuessLowObjectEnd0(void)
 }
 
 
-static int GuessLowObjectEnd(void)
+static int GuessLowObjEnd(void)
 {
 	unsigned char *p = Image + ObjectBase;
 	unsigned char *x;
@@ -1794,7 +1794,7 @@ static int GuessLowObjectEnd(void)
 		return 69;
 
 	if (GameVersion == 0)
-		return GuessLowObjectEnd0();
+		return GuessLowObjEnd0();
 
 	while (n < NUMOBJECTS) {
 		while (*p != 0x7E && *p != 0x5E) {
@@ -1911,7 +1911,7 @@ int main(int argc, char *argv[])
 	/* ObjLoc Flag and Message bases we don't adjust as we work those
 	   relative to disc */
 	NewGame();
-	NumLowObjects = GuessLowObjectEnd();
+	NumLowObjs = GuessLowObjEnd();
 	DisplayInit();
 	RamSave(0);
 	Look();
