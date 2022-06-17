@@ -9,6 +9,7 @@
         .area _CODE
         .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
+	.area _VIDEO
         .area _CONST
         .area _INITIALIZED
         .area _DATA

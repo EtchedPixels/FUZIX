@@ -1,5 +1,5 @@
 ASRCS = crt0.s z180.s commonmem.s rph.s ds1302-rph.s monitor.s
-CSRCS += devices.c main.c devtty.c ps2.c devinput.c
+CSRCS += devices.c main.c devtty.c ps2.c devinput.c 7220.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/ds1302_discard.c ../dev/devide_discard.c
 DSRCS = ../dev/ppide_rbc.c ../dev/mbr.c ../dev/blkdev.c ../dev/devide.c

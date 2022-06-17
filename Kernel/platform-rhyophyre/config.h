@@ -60,6 +60,14 @@ extern uint16_t swap_dev;
 /* For the PS/2 */
 #define CONFIG_INPUT
 
+/* For the 7220 eventually. For the moment assume 8x8 chars */
+#define CONFIG_VT
+#define VT_WIDTH	80
+#define VT_RIGHT	79
+#define VT_HEIGHT	60
+#define VT_BOTTOM	59
+#define CONFIG_FONT8X8
+
 #define NUM_DEV_TTY 2
 /* ASCI0 as the console */
 #define TTYDEV   (512+1)  /* System console (used by kernel, init) */

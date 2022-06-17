@@ -35,6 +35,7 @@ banksplit.rel
 swap.rel
 devsys.rel
 devinput.rel
+vt.rel
 platform-rhyophyre/discard.rel
 platform-rhyophyre/devtty.rel
 platform-rhyophyre/devide.rel
@@ -49,5 +50,6 @@ platform-rhyophyre/ps2.rel
 platform-rhyophyre/ps2kbd.rel
 platform-rhyophyre/ps2mouse.rel
 platform-rhyophyre/devinput.rel
+platform-rhyophyre/7220.rel
 platform-rhyophyre/monitor.rel
 -e

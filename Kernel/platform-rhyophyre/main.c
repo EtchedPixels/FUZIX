@@ -60,13 +60,3 @@ void plt_interrupt(void)
             return;
     }
 }
-
-/*
- *	Temporary stub for the PS/2. We have no VT layer so just route PS/2
- *	keys to the console
- */
-
-void vt_inproc(uint_fast8_t minor, uint_fast8_t ch)
-{
-    tty_inproc(1, ch);
-}

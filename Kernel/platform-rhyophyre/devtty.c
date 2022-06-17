@@ -3,6 +3,7 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <tty.h>
+#include <vt.h>
 #include <devtty.h>
 #include <z180.h>
 
@@ -128,6 +129,8 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
     switch(minor){
         case 1:
+	    /* For now make console 1 serial 1 plus ps/2 and video */
+	    vtoutput(&c, 1);
             while(!(ASCI_STAT0 & 2));
             ASCI_TDR0 = c;
             break;
