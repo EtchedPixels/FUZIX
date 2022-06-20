@@ -74,3 +74,6 @@ extern void copy_blocks(void *, void *, unsigned int);
 extern void swap_blocks(void *, void *, unsigned int);
 
 #define NORETURN __attribute__((__noreturn__))
+#undef __fastcall
+#define __fastcall /* nothing */
+
