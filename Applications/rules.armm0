@@ -11,7 +11,8 @@ LINKER_OPT += -L$(LIBGCCDIR) -lgcc -T $(ROOT)/Library/elfexe32.ld --no-export-dy
 STRIP_OPT =
 CRT0 = $(ROOT)/Library/libs/crt0_$(PLATFORM).o
 CRT0NS = $(ROOT)/Library/libs/crt0nostdio_$(PLATFORM).o
-ELF2FUZIX = $(ROOT)/Library/tools/elf2bin -p arm-none-eabi
+# Currently the armm0 userland is only used by the rpipico port, which expects ELF.
+# ELF2FUZIX = $(ROOT)/Library/tools/elf2bin -p arm-none-eabi
 .SUFFIXES: .c .o
 HOSTCC = cc
 
