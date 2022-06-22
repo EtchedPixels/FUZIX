@@ -50,9 +50,9 @@ void load_banks(void)
 /* Compress the RAM space into a block we expand. The linker fills with 0xFF
    and we get 00 fills for initialized data etc */
 
-static void noroom(void)
+static void noroom(uint16_t left)
 {
-    fprintf(stderr, "Insufficient data space.\n");
+    fprintf(stderr, "Insufficient data space (%d bytes left to compress).\n", left);
     exit(1);
 }
 
@@ -63,13 +63,13 @@ uint16_t compress(uint8_t *in, uint8_t *out, uint16_t ilen, uint16_t omax)
     while(ilen) {
         if (*in != 0xFF && *in != 0x00) {
             if (omax-- == 0)
-                noroom();
+                noroom(ilen);
             *out++ = *in++;
             ilen--;
             continue;
         }
         if (omax < 2)
-                noroom();
+                noroom(ilen);
         c = *in++;
         ilen--;
         n = 0;
@@ -80,7 +80,7 @@ uint16_t compress(uint8_t *in, uint8_t *out, uint16_t ilen, uint16_t omax)
         }
         if (n > 253) {
             if (omax < 4)
-                noroom();
+                noroom(ilen);
             omax -= 4;
             *out++ = c;
             *out++ = 254;
@@ -89,13 +89,13 @@ uint16_t compress(uint8_t *in, uint8_t *out, uint16_t ilen, uint16_t omax)
             continue;
         }
         if (omax < 2)
-            noroom();
+            noroom(ilen);
         omax -= 2;
         *out++ = c;
         *out++ = n;
     }
     if (omax < 2)
-        noroom();
+        noroom(ilen);
     omax -= 2;
     *out++ = 255;
     *out++ = 255;

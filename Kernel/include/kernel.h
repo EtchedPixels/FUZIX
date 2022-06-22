@@ -868,35 +868,37 @@ extern bool validdev(uint16_t dev);
 /* usermem.c */
 
 /* This option can only be used on a CPU without alignment rules */
+/* For very very small machines remove all the address validation checks and thus
+   (with a passable compiler) all the supporting error logic. */
 #ifdef CONFIG_LEVEL_0
+/* Shortcut all the validation */
 #define valaddr(a,b)	(1)
-#define uget(a,b,c)	(memcpy(b,a,c) && 0)
-#define uput(a,b,c)	(memcpy(b,a,c) && 0)
-#define ugetc(a)	(*(uint8_t *)(a))
-#define ugetw(a)	(*(uint16_t *)(a))
-#define ugetl(a)	(*(uint32_t *)(a))
-#define uputc(v, p)	((*(uint8_t*)(p) = (v)) && 0)
-#define uputw(v, p)	((*(uint16_t*)(p) = (v)) && 0)
-#define uputl(v, p)	((*(uint32_t*)(p) = (v)) && 0)
-#define uzero(a,b)	(memset(a,0,b) && 0)
+#define uget(a,b,c)	_uget(a, b, c)
+#define uput(a,b,c)	_uput(a, b, c)
+#define ugetc(a)	_ugetc(a)
+#define ugetw(a)	_ugetw(a)
+#define ugetl(a)	_ugetl(a)
+#define uputc(v, p)	_uputc(v, p)
+#define uputw(v, p)	_uputw(v, p)
+#define uputl(v, p)	_uputl(v, p)
+#define uzero(a,b)	_uzero(a, b)
 #else
 extern usize_t valaddr(const uint8_t *base, usize_t size);
 extern int uget(const void *userspace_source, void *dest, usize_t count);
+extern int uput (const void *source,   void *userspace_dest, usize_t count);
 extern int16_t  ugetc(const void *userspace_source);
 extern uint16_t ugetw(const void *userspace_source);
-extern int uput (const void *source,   void *userspace_dest, usize_t count);
 extern int uputc(uint16_t value,  void *userspace_dest);	/* u16_t so we don't get wacky 8bit stack games */
 extern int uputw(uint16_t value, void *userspace_dest);
+extern int uputl(uint32_t value, void *userspace_dest);
 extern int uzero(void *userspace_dest, usize_t count);
 #endif
 
-/* usermem.c or usermem_std.s */
-extern int _uget(const uint8_t *user, uint8_t *dst, usize_t count);
-extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
-extern int _uzero(uint8_t *user, usize_t count);
 
 /* This option can only be used on a CPU without alignment rules */
-#if defined CONFIG_USERMEM_DIRECT
+/* Set this for a system that can directly access all of user memory without any
+   remapping or risk of traps or errors (or fix them up...) */
+#if defined (CONFIG_USERMEM_DIRECT) || defined(CONFIG_LEVEL_0)
 #define _ugetc(p) (*(uint8_t*)(p))
 #define _ugetw(p) (*(uint16_t*)(p))
 #define _ugetl(p) (*(uint32_t*)(p))
@@ -905,13 +907,18 @@ extern int _uzero(uint8_t *user, usize_t count);
 #define _uputl(v, p) ((*(uint32_t*)(p) = (v)), 0)
 #define _uget(a,b,c) (memcpy(b,a,c) && 0)
 #define _uput(a,b,c) (memcpy(b,a,c) && 0)
+#define _uzero(a,b)  (memset(a,0,b) && 0)
 #else
+/* usermem.c or usermem_std.s */
 extern int16_t _ugetc(const uint8_t *user) __fastcall;
 extern uint16_t _ugetw(const uint16_t *user) __fastcall;
 extern uint32_t _ugetl(const uint32_t *user) __fastcall;
 extern int _uputc(uint16_t value, uint8_t *user);
 extern int _uputw(uint16_t value, uint16_t *user);
 extern int _uputl(uint32_t value, uint32_t *uaddr);
+extern int _uget(const uint8_t *user, uint8_t *dst, usize_t count);
+extern int _uput(const uint8_t *source, uint8_t *user, usize_t count);
+extern int _uzero(uint8_t *user, usize_t count);
 #endif
 
 /* platform/tricks.s */

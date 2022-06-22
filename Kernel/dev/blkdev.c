@@ -191,7 +191,7 @@ int blkdev_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 		uint_fast8_t partition = minor & 0x0F;
 		uint32_t size = (partition == 0) ? blk_op.blkdev->drive_lba_count : blk_op.blkdev->lba_count[partition-1];
 		/* We lack a generic uputl and this at the moment is the only case
-		   it's needed so use uput() */
+		   it's needed so use uput() : FIXME - we have uputl now ? */
 		return uput(&size, data, sizeof(long));
 	}
 	default:

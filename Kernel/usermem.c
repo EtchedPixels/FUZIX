@@ -224,27 +224,4 @@ int _uputl(uint32_t val, void *uaddr)
 #endif
 #endif
 
-#ifdef CONFIG_USERMEM_DIRECT
-
-/* Systems where all memory is always mapped for live processes and kernel */
-
-int _uget(const uint8_t *user, uint8_t *dest, usize_t count)
-{
-	memcpy(dest, user, count);
-	return 0;
-}
-
-int _uput(const uint8_t *source, uint8_t *user, usize_t count)
-{
-	memcpy(user, source, count);
-	return 0;
-}
-
-int _uzero(uint8_t *user, usize_t count)
-{
-	memset(user, 0, count);
-	return 0;
-}
-
-#endif
 #endif
