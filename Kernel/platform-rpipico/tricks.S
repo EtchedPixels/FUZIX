@@ -204,5 +204,21 @@ dofork:
     mov r12, r5
     pop {r5, r6, r7, pc}
 
+.global _ugetc
+_ugetc:
+    b ugetc
+
+.global _uputc
+_uputc:
+    b uputc
+
+.global _uget
+_uget:
+    b uget
+
+.global _uput
+_uput:
+    b uput
+
 // vim: sw=4 ts=4 et:
 

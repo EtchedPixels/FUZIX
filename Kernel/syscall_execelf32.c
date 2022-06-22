@@ -40,8 +40,8 @@ char *argv[];
 char *envp[];
 ********************************************/
 #define name (uint8_t *)udata.u_argn
-#define argv (char **)udata.u_argn1
-#define envp (char **)udata.u_argn2
+#define argv (uint8_t **)udata.u_argn1
+#define envp (uint8_t **)udata.u_argn2
 
 arg_t _execve(void)
 {
@@ -326,8 +326,8 @@ arg_t _execve(void)
 	/* Write back the arguments and environment. */
 
 	int argc;
-	char** nargv = wargs(((char *) stacktop - sizeof(uaddr_t)), abuf, &argc);
-	char** nenvp = wargs((char *) (nargv), ebuf, NULL);
+	uint8_t** nargv = wargs(((char *) stacktop - sizeof(uaddr_t)), abuf, &argc);
+	uint8_t** nenvp = wargs((char *) (nargv), ebuf, NULL);
 
 	/* Fill in udata.u_name with program invocation name. */
 

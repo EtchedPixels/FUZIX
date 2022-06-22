@@ -31,6 +31,7 @@ add_executable(fuzix
 	tricks.S
 	core1.c
 	usbdescriptors.c
+	usermem.c
 	../dev/blkdev.c
 	../dev/mbr.c
 	../dev/devsd_discard.c
@@ -39,6 +40,7 @@ add_executable(fuzix
 	../lib/dhara/journal.c
 	../lib/dhara/map.c
 	../lib/hexdump.c
+	../blk512.c
 	../devio.c
 	../devsys.c
 	../filesys.c

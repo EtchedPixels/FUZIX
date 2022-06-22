@@ -112,7 +112,7 @@ void *kmalloc(size_t size, uint8_t owner)
 	struct block *b;
 
 	used(owner);	/* For now */
-	size = ALIGNUP(size) + sizeof(struct block);
+	size = (size_t)ALIGNUP(size) + sizeof(struct block);
 	b = find_smallest(size);
 	if (!b)
 		return NULL;

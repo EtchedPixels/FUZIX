@@ -483,6 +483,6 @@ struct elf_args {
 #define R_68K_GOT16O	11
 #define R_68K_GOT8O	12
 
-extern int platform_relocate_rel(Elf32_Rel* rel, uaddr_t section_base);
+extern int plt_relocate_rel(Elf32_Rel* rel, uaddr_t section_base);
 
 #endif /* _SYS_ELF_H_ */

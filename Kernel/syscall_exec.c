@@ -36,7 +36,7 @@ bool rargs(uint8_t **userspace_argv, struct s_argblk * argbuf)
 		while (c);
 	}
 	argbuf->a_arglen = bufp - (uint8_t *)argbuf->a_buf;	/* Store total string size. */
-	argbuf->a_arglen = ALIGNUP(argbuf->a_arglen);
+	argbuf->a_arglen = (size_t)ALIGNUP(argbuf->a_arglen);
 	return false;		// success
 }
 
