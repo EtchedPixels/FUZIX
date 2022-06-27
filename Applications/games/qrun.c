@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
 		debugstr("CPC snapshot signature found.");
 	}
 	if (!memcmp(snapid, "VICE Snapshot File\032", 19)) {	/* VICE snapshot */
-		int n;
+		int nv;
 
 		arch = ARCH_C64;
 		memset(header, 0, sizeof(header));
@@ -366,9 +366,9 @@ int main(int argc, char *argv[])
 		mem_base = 0x800;
 		mem_size = 0xA500;
 		mem_offset = -0x74;
-		for (n = 0; n < (int)sizeof(header) - 6; n++) {
-			if (!memcmp(header + n, "C64MEM", 6)) {
-				mem_offset = -(n + 0x1A);
+		for (nv = 0; nv < (int)sizeof(header) - 6; nv++) {
+			if (!memcmp(header + nv, "C64MEM", 6)) {
+				mem_offset = -(nv + 0x1A);
 				break;
 			}
 		}
@@ -1452,12 +1452,12 @@ static void listat(uchr locno)
 		}
 }
 
-uchr ffeq(uchr x, uchr y)
+static uchr ffeq(uchr x, uchr y)
 {				/* Match x with y, 0FFh matches any */
 	return (uchr) (x == 0xFF || y == 0xFF || x == y);
 }
 
-uchr doproc(ushrt table, uchr verb, uchr noun)
+static uchr doproc(ushrt table, uchr verb, uchr noun)
 {
 	ushrt ccond;
 	uchr done = 0;		/* Done returns: 0 for fell off end of table
@@ -1490,7 +1490,7 @@ uchr doproc(ushrt table, uchr verb, uchr noun)
 	return done;
 }
 
-uchr autobj(uchr noun)
+static uchr autobj(uchr noun)
 {				/* Find object number for AUTOx actions */
 	uchr n;
 
@@ -1504,7 +1504,7 @@ uchr autobj(uchr noun)
 	return 0xFF;
 }
 
-char yesno(void)
+static char yesno(void)
 {
 	char n;
 

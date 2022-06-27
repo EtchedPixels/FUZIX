@@ -83,11 +83,11 @@ int execute(TREPTR argt, int execflg, int *pf1, int *pf2)
 
 					case SYSTIMES:
 					{
-						struct tms t;
-						times(&t);
-						prt(t.tms_cutime);
+						struct tms tm;
+						times(&tm);
+						prt(tm.tms_cutime);
 						blank();
-						prt(t.tms_cstime);
+						prt(tm.tms_cstime);
 						newline();
 					}
 					break;

@@ -344,7 +344,7 @@ void handleTimer(void)
 	}
 	// if ma is currently on, display
 	if (ma.x > 0) {
-		int i;
+		int i1;
 
 #ifdef USE_COLORS
 		if (has_colors())
@@ -360,13 +360,13 @@ void handleTimer(void)
 		} else {
 			// ma is grooving across the top of the screen
 			ma.x--;
-			for (i = 0; i < MA_HEIGHT; i++)
-				mvprintw(2 + i, ma.x, "%s ", alienMa[i]);
+			for (i1 = 0; i < MA_HEIGHT; i1++)
+				mvprintw(2 + i1, ma.x, "%s ", alienMa[i1]);
 			refresh();
 			// if we have reach the edge then remove ma
 			if (ma.x == 0) {
-				for (i = 0; i < MA_HEIGHT; i++)
-					mvprintw(2 + i, ma.x, "%s ", alienBlank);
+				for (i1 = 0; i1 < MA_HEIGHT; i1++)
+					mvprintw(2 + i1, ma.x, "%s ", alienBlank);
 			}
 		}
 	}
@@ -518,19 +518,19 @@ void handleTimer(void)
 			else if (gun.missile.x >= aliens.x && gun.missile.x < aliens.x + (ALIEN_WIDTH * aliens.cols)
 				 && gun.missile.y < aliens.y + ALIEN_HEIGHT * aliens.rows && gun.missile.y >= aliens.y) {
 				int alien;
-				int x = gun.missile.x - aliens.x;
-				int y = gun.missile.y - aliens.y;
-				if (x % ALIEN_WIDTH != 0 && x % ALIEN_WIDTH != ALIEN_WIDTH - 1) {
+				int xd = gun.missile.x - aliens.x;
+				int yd = gun.missile.y - aliens.y;
+				if (xd % ALIEN_WIDTH != 0 && xd % ALIEN_WIDTH != ALIEN_WIDTH - 1) {
 					// it didn't sneak between two aliens
-					x /= ALIEN_WIDTH;
-					y /= ALIEN_HEIGHT;
-					alien = aliens.table[(y * aliens.cols) + x];
+					xd /= ALIEN_WIDTH;
+					yd /= ALIEN_HEIGHT;
+					alien = aliens.table[(yd * aliens.cols) + xd];
 					if (alien > ALIEN_EMPTY) {
 						game.score += alien * 10;
-						paintExplodingAlien(y, x);
+						paintExplodingAlien(yd, xd);
 						paintScore();
 						gun.missile.y = 0;	// no more missile
-						aliens.table[(y * aliens.cols) + x] = ALIEN_EXPLODE1;
+						aliens.table[(yd * aliens.cols) + xd] = ALIEN_EXPLODE1;
 						if (--aliens.count == 0) {
 							resetAliens();
 							game.timer = 0;
@@ -546,11 +546,11 @@ void handleTimer(void)
 			else if (ma.x != 0 && gun.missile.y <= 2 + MA_HEIGHT && gun.missile.x >= ma.x && gun.missile.x <= ma.x + ALIEN_WIDTH) {
 				// chose a 'random' number of points, either 50, 100 or 150
 				int points = ((time(0) % 3) + 1) * 50;
-				int i;
+				int i1;
 				game.score += points;
 				// remove ma
-				for (i = 0; i < MA_HEIGHT; i++)
-					mvprintw(2 + i, ma.x, "%s ", alienBlank);
+				for (i1 = 0; i1 < MA_HEIGHT; i1++)
+					mvprintw(2 + i1, ma.x, "%s ", alienBlank);
 				// draw the number of points
 				mvprintw(2, ma.x, "  %d", points);
 				ma.pointsTimer = 1;
