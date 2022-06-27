@@ -21,10 +21,27 @@
 ;	Switch a process out and run the next one
 ;
 _plt_switchout:
-	push b
-	lxi h,0
-	push h			; Save a 0 argment
-	; TODO save temps
+	lxi h,0			; save a 0 return
+	;
+	; We don't have any state to save but the pid and BC
+	; and (alas) a pile of compiler non-reentrant crap
+	;
+	push	b		; old BC
+	push	h		; pid
+	lhld	__tmp
+	push	h
+	lhld	__hireg
+	push	h
+	lhld	__tmp2
+	push	h
+	lhld	__tmp2+2
+	push	h
+	lhld	__tmp3
+	push	h
+	lhld	__tmp3+2
+	push	h
+	lhld	__retaddr
+	push	h
 	lxi h,0
 	dad sp
 	shld U_DATA__U_SP	; Save the sp for a switch in
@@ -154,9 +171,22 @@ skip_copyback:
 	sphl
 	;
 	;	Recover our parent frame pointer and return code
-	;	TODO restore temps
 	;
-	pop d
+	pop	h
+	shld	__retaddr
+	pop	h
+	shld	__tmp3+2
+	pop	h
+	shld	__tmp3
+	pop	h
+	shld	__tmp2+2
+	pop	h
+	shld	__tmp2
+	pop	h
+	shld	__hireg
+	pop	h
+	shld	__tmp
+	pop h
 	pop b
 	lda U_DATA__U_ININTERRUPT
 	sta _int_disabled
@@ -184,73 +214,85 @@ fork_proc_ptr:
 ;	The heart of fork
 ;
 _dofork:
-	ldsi 2
+	ldsi	2
 	lhlx
 
-	shld fork_proc_ptr
+	shld	fork_proc_ptr
 
-	lxi d,P_TAB__P_PID_OFFSET
-	dad d
-	mov a,m
-	inx h
-	mov h,m
-	mov l,a
+	lxi	d,P_TAB__P_PID_OFFSET
+	dad	d
+	mov	a,m
+	inx	h
+	mov	h,m
+	mov	l,a
 	;
-	; We don't have any state to save but the pid and framepointer
+	; We don't have any state to save but the pid and BC
 	; and (alas) a pile of compiler non-reentrant crap
 	;
-	push b
-	push h
-	; TODO temporaries
-	lxi h,0
-	dad sp
-	shld U_DATA__U_SP
+	push	b		; old BC
+	push	h		; pid
+	lhld	__tmp
+	push	h
+	lhld	__hireg
+	push	h
+	lhld	__tmp2
+	push	h
+	lhld	__tmp2+2
+	push	h
+	lhld	__tmp3
+	push	h
+	lhld	__tmp3+2
+	push	h
+	lhld	__retaddr
+	push	h
+	lxi	h,0
+	dad	sp
+	shld	U_DATA__U_SP
 	;
 	; We are now in a safe state to work
 	;
-	lhld fork_proc_ptr
-	ldhi P_TAB__P_PAGE_OFFSET
+	lhld	fork_proc_ptr
+	ldhi	P_TAB__P_PAGE_OFFSET
 	xchg
-	mov c,m
-	lda U_DATA__U_PAGE
+	mov	c,m
+	lda	U_DATA__U_PAGE
 
-	call bankfork
+	call	bankfork
 
-	call map_proc_always
+	call	map_proc_always
 	;
 	;	Copy the parent udata and stack into the parent stash
 	;	The live udata becomes that of the child
 	;
-	lxi h,_udata
-	lxi d,U_DATA_STASH
-	call copy512
+	lxi	h,_udata
+	lxi	d,U_DATA_STASH
+	call	copy512
 
-	call map_kernel
+	call	map_kernel
 
-	pop h		; Get rid of saved pid
-	pop h		; and C runtime state
-	; TODO correct pops to match new temporaries
+	lxi	h,16	; Drop the stack frame
+	dad	sp
+	sphl
 
 	;
 	;	Manufacture the child udata state
 	;
-	lxi h,_udata
-	push h
-	lhld fork_proc_ptr
-	push h
-	call _makeproc
-	pop b
-	pop b
+	lxi	h,_udata
+	push	h
+	lhld	fork_proc_ptr
+	push	h
+	call	_makeproc
+	pop	d
+	pop	d
 	;
 	;	Timer ticks
 	;
-	lxi h,0
-	shld _runticks
+	lxi	h,0
+	shld	_runticks
 	;
-	;	Frame pointer
+	;	Recover B and return HL = 0 (child)
 	;
-	xchg			; return 0 in DE for child
-	pop b
+	pop	b
 	ret
 
 .export bouncebuffer
