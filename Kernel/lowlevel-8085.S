@@ -294,8 +294,39 @@ interrupt_handler:
 	;	What we avoid in register saves over Z80 we make up for in
 	;	runtime stuff
 	;
-	; TODO temporaries
+	; 	C temporaries
+	lhld	__tmp
+	push	h
+	lhld	__hireg
+	push	h
+	lhld	__tmp2
+	push	h
+	lhld	__tmp2+2
+	push	h
+	lhld	__tmp3
+	push	h
+	lhld	__tmp3+2
+	push	h
+	lhld	__retaddr
+	push	h
+
 	call _plt_interrupt
+
+	pop	h
+	shld	__retaddr
+	pop	h
+	shld	__tmp3+2
+	pop	h
+	shld	__tmp3
+	pop	h
+	shld	__tmp2+2
+	pop	h
+	shld	__tmp2
+	pop	h
+	shld	__hireg
+	pop	h
+	shld	__tmp
+
 	;
 	; Undo state
 	;
