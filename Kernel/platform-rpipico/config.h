@@ -28,6 +28,7 @@
 #define CONFIG_PLATFORM_BRK
 
 #define CONFIG_32BIT
+#define CONFIG_USERMEM_DIRECT
 /* Serial TTY, no VT or font */
 #undef CONFIG_VT
 #undef CONFIG_FONT8X8
