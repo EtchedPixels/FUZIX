@@ -1,7 +1,8 @@
 **FuzixOS**: Because Small Is Beautiful
 
-This is the initial public tree for the FuzixOS project. It is not yet useful although you can build and boot it and run
-test application code. A lot of work is needed on the utilities and libraries.
+This is the initial public tree for the FuzixOS project. It is not yet useful
+although you can build and boot it and run test application code. A lot of work
+is needed on the utilities and libraries.
 
 # FUZIX
 
@@ -9,7 +10,8 @@ FUZIX is a fusion of various elements from the assorted UZI forks and
 branches beaten together into some kind of semi-coherent platform and then
 extended from V7 to somewhere in the SYS3 to SYS5.x world with bits of POSIX
 thrown in for good measure. Various learnings and tricks from ELKS and from
-OMU also got blended in
+OMU also got blended in. It also incorporates derivatives of open-sourced code
+from original UNIX.
 
 # Pre-built images
 
@@ -46,8 +48,12 @@ ABI.
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, arm32, esp8266, MSP430 (bitrotted) and eZ80/Z80/Z180
-* Core code can be built for 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, 8086, arm32, esp8266, MSP430, pdp11, rabbit r2k/r3k and eZ80/Z80/Z180 so should be far more portable
+* Kernel boots to userspace on 6303, 6502, 65C816, 68000, 6803, 6809,
+	68HC11, 8080, 8085, arm32, esp8266, MSP430 (bitrotted) and eZ80/Z80/Z180,
+	RP2040
+* Core code can be built for 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11,
+	 8080, 8085, 8086, arm32, esp8266, MSP430, pdp11, rabbit r2k/r3k,
+	 RP2040 and eZ80/Z80/Z180 so should be far more portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
 * Helpers to make many bits of implementation wrappers to core code
