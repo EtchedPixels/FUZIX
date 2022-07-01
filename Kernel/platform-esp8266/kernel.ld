@@ -7,13 +7,15 @@
 MEMORY
 {
   dport0_0_seg : org = 0x3ff00000, len = 0x10
-  userdata_seg : org = 0x3ffe8000, len = 0x10000
+  userdata_seg : org = 0x3ffe8000, len = 0x10000 /* check with config.h */
   dram0_0_seg :  org = 0x3fff8000, len = 0x4000
 /*  dram1_0_seg :  org = 0x3fffc000, len = 0x4000 */
   dram1_0l_seg : org = 0x3fffc040, len = 0x06d4
   dram1_0h_seg : org = 0x3fffc734, len = 0x38cc
-  usercode_seg : org = 0x40100000, len = 0x7e00
+  usercode_seg : org = 0x40100000, len = 0x7e00 /* check with config.h */
   iram1_0_seg :  org = 0x40107e00, len = 0x200
+  iram1_1_seg :  org = 0x40108000, len = 0x4000
+  iram1_2_seg :  org = 0x4010c000, len = 0x4000
   irom0_0_seg :  org = 0x40210000, len = 0x5C000
 }
 
@@ -32,6 +34,7 @@ _data_top = _data_base + LENGTH(userdata_seg);
 _code_base = ORIGIN(usercode_seg);
 _code_top = _code_base + LENGTH(usercode_seg);
 
+PROVIDE(udata = _data_base);
 PROVIDE(bufpool = 0x3fffc734);
 
 /*  Default entry point:  */

@@ -38,6 +38,8 @@
 #define MAXTICKS 200
 /* Enable SD card code. */
 #define CONFIG_SD
+/* Platform manages process brk. */
+#define CONFIG_PLATFORM_BRK
 
 #ifdef CONFIG_ESP_DUAL_SD
 #define SD_DRIVE_COUNT 2
@@ -72,12 +74,15 @@ extern uint8_t _code_top[];
 #define CODEBASE    ((uaddr_t)&_code_base)
 #define DATATOP     ((uaddr_t)&_data_top)
 #define CODETOP     ((uaddr_t)&_code_top)
-#define DATALEN     (DATATOP - DATABASE)
-#define CODELEN     (CODETOP - CODEBASE)
+#define DATALEN     0x10000 /* check with kernel.ld */
+#define CODELEN     0x7e00 /* check with kernel.ld */
 #define SWAP_SIZE   ((64+33)*2) /* 64 + 31.5 + 1.5 */
 #define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
-#define UDATA_SIZE  1536
+#define UDATA_SIZE  1536 /* check with kernel.ld */
 #define UDATA_BLKS  3
+#define USERSTACK   (4*1024) /* 4kB */
+
+#define PROGLOAD (DATABASE + UDATA_SIZE)
 
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -87,7 +92,7 @@ extern uint8_t _code_top[];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0011 /* hdb1 */
+#define BOOTDEVICE 0x0000 /* hda */
 #define SWAPDEV    (swap_dev) /* wherever */
 
 #define CONFIG_DYNAMIC_SWAP
@@ -102,6 +107,9 @@ extern uint8_t _code_top[];
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define MAX_BLKDEV	4
+
+#define FLASH_TOP      (1024*1024)
+#define FLASH_RESERVED 0x20000
 
 #define plt_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))

@@ -48,7 +48,7 @@ Out of the box:
 
   - /dev/hda is the NAND flash. You get about 2.5MB of usable space.
   - /dev/hdb is the SD card. /dev/hdb1 needs to be at least 2MB and is the swap
-	partition, and /dev/hdb2 is the root filesystem.
+        partition, and /dev/hdb2 is the root filesystem.
 
 Connect the SD card to the following pins:
 
@@ -71,43 +71,46 @@ connected on `/dev/ttyUSB0` with this command:
 
 ## Pin Mappings We Use
 
-GPIO1		Serial TX	}	To the USB UART on the NodeMCU kits
-GPIO3		Serial RX	}
+GPIO1           Serial TX       }       To the USB UART on the NodeMCU kits
+GPIO3           Serial RX       }
 
-GPIO4		SDcard CS	}
-GPIO5		Second CS	}
-GPIO12		MISO		}	SD card interface (note Arduino
-GPIO13		MOSI		}	tends to use GPIO15 not 4 but GPIO15
-GPIO14		SCK		}	is also during boot)
+GPIO4           SDcard CS       }
+GPIO5           Second CS       }
+GPIO12          MISO            }       SD card interface (note Arduino
+GPIO13          MOSI            }       tends to use GPIO15 not 4 but GPIO15
+GPIO14          SCK             }       is also during boot)
 
-GPIO6-11	SPI Flash
+GPIO6-11        SPI Flash
 
-GPIO0		Bootloader button
-GPIO2		Usually an on board LED, used for W5500 reset
-GPIO9/10	Used in QIO Flash mode, otherwise not used
-GPIO16		Deep sleep wakeup, not used
+GPIO0           Bootloader button
+GPIO2           Usually an on board LED, used for W5500 reset
+GPIO9/10        Used in QIO Flash mode, otherwise not used
+GPIO16          Deep sleep wakeup, not used
 
-A0		Not used
+A0              Not used
 
 ## Memory Map
 
 ````
 
-3FFE8000-3FFFBFFF	Data RAM
-	3FFE8000-3FFF7FFF	User space
-	3FFF8000-3FFFBFFF	Kernel
-3FFFC000-3FFFFFFF	ETS data RAM
-	3FFFC000-3FFFC713	Unused (move stacks and tmp buffers?)
-	3FFFC714-3FFFC733	Firmware flash structure we need to keep alive
-	3FFFC734-3FFFFFFF	Buffers
-40000000-4000FFFF	Internal ROM (some routines  usable)
-	40100000-40107FFF	Instruction RAM (32K). Fast memory for programs
-	40100000			- Bootstrap (bottom - overwritten)
-	40100000-40107DFF		- Userspace code
-40107E00-40107FFF		- NAND flash lowlevel functions
-40200000-402FFFFF	SPI Flash (cacheable), only accessible as if it was iram
-				- Kernel
-				- NAND flash fs
+3FFE8000-3FFFBFFF       Data RAM
+        3FFE8000-3FFF7FFF       User space
+        3FFF8000-3FFFBFFF       Kernel
+3FFFC000-3FFFFFFF       ETS data RAM
+        3FFFC000-3FFFC713       Unused (move stacks and tmp buffers?)
+        3FFFC714-3FFFC733       Firmware flash structure we need to keep alive
+        3FFFC734-3FFFFFFF       Buffers
+40000000-4000FFFF       Internal ROM (some routines  usable)
+40100000-40107FFF       Instruction RAM (64K). Fast memory for programs
+        40100000                        - Bootstrap (bottom - overwritten)
+        40100000-40107DFF               - Userspace code
+        40107E00-40107FFF               - NAND flash lowlevel functions
+		40108000-4010BFFF               - Cache block #1 (used by us for userspace code)
+		4010C000-4010FFFF               - Cache block #2 (used for SPI flash mapping)
+40200000-402FFFFF       SPI Flash (cacheable), only accessible as if it was iram
+        40200000                - Bootloader
+        40201000                - Kernel
+        40220000                - NAND flash fs
 
 ````
 
@@ -122,7 +125,7 @@ The ESP8266's mask ROM contains many useful routines which can be used instead
 of libgcc, which reduces the binary size. These aren't documented, but you
 might find this ROM disassembly useful:
 
-	http://cholla.mmto.org/esp8266/bootrom/
+        http://cholla.mmto.org/esp8266/bootrom/
 
 ## Issues
 
@@ -172,9 +175,18 @@ You now have an ESP8266 compiler set.
 
 ## TODO
 
-- Use some of the ROM library routines that don't themselves meddle with static data. Make a kernel set and a user set (RBOOT has a good list) Note that we can't use many of them as they are not instruction fault aware.
-- Move to 'parent runs first' - needs some tricky changes in the platform fork code (see the Z80 examples)
-- Clean up the low level asm code - too much duplication, things saved that are not needed. Could do with a clean up by someone who speaks Tensilica LX106 properly.
-- Can we autodetect and manage stuff like peripheral clocks ? (apparently it hides in the phy structures at the end of the flash?)
+- Use some of the ROM library routines that don't themselves meddle with static
+  data. Make a kernel set and a user set (RBOOT has a good list) Note that we
+  can't use many of them as they are not instruction fault aware.
+- Move to 'parent runs first' - needs some tricky changes in the platform fork
+  code (see the Z80 examples)
+- Clean up the low level asm code - too much duplication, things saved that are
+  not needed. Could do with a clean up by someone who speaks Tensilica LX106
+  properly.
+- Can we autodetect and manage stuff like peripheral clocks ? (apparently it
+  hides in the phy structures at the end of the flash?)
 - Shared ROM libc
 - XIP ROM app code ?
+
+vim: set ts=4 sw=4 et
+

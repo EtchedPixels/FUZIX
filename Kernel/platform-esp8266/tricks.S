@@ -1,18 +1,20 @@
 #include "kernel-esp8266.def"
 
-.global udata
-.align 16
-.comm udata, UBLOCK_SIZE
-
-#define SWAPSTACK_SIZE 1536
-.align 16
-.comm swapstack, SWAPSTACK_SIZE
-
-.global istack
-
 #define ISTACK_SIZE 516		/* 512 for the stack 4 for the previous stack save */
-.align 16
-.comm istack, ISTACK_SIZE
+#define SWAPSTACK_SIZE 1536
+
+.global istack_end
+.global swapstack_end
+
+.data
+.bss
+swapstack:
+    .fill SWAPSTACK_SIZE
+swapstack_end:
+
+istack:
+    .fill ISTACK_SIZE
+istack_end:
 
 .global plt_switchout
 .global switchin
@@ -43,38 +45,22 @@ plt_switchout:
 	call0 getproc
 	
 	/* Fall through into switchin */
+.align 4
 switchin:
 	/* Interrupts off */
 	rsil a3, 15
 	rsync
 	/* On entry, a2 is the ptptr of the process to run */
 
-	/* Is the new process actually swapped out or did we run last ? */
-	l16ui a3, a2, P_TAB__P_PAGE_OFFSET
-	bnez a3, not_swapped
+    /* Switch to the swapper stack. */
+    movi sp, swapstack_end
+    mov.n a15, a2               /* save a2 (the new ptab) in callee-saved register */
 
-	/* Switch to the swapper stack and swap in the new process. */
-	movi sp, swapstack + SWAPSTACK_SIZE
-	mov.n a15, a2				/* save a2 in callee-saved register */
+    /* Maybe swap in a process. */
+    call0 contextswitch
+    isync
 
-	/* If the in memory image is a corpse we don't need to write it back out */
-	movi a3, udata
-	l16si a4, a3, U_DATA__U_PAGE		/* sign extend it so we can do a simple -1 test */
-	addi a4, a4, 1
-	beqz a4, hes_dead_jim
-
-	/* Swap out the old process */
-	l32i.n a2, a3, U_DATA__U_PTAB
-	call0 swapout
-
-	mov.n a2, a15
-	/* And swap in the new one */
-hes_dead_jim:
-	call0 swapper
-	isync
-
-not_swapped:
-
+    /* Make the new process runnable. */
 	movi a3, P_RUNNING
 	s8i a3, a15, P_TAB__P_STATUS_OFFSET
 
@@ -135,17 +121,19 @@ dofork:
 	movi a3, udata
 	s32i.n sp, a3, U_DATA__U_SP
 
-	/* Save the current process to disk. */
+    /* Copy the current process to the new parent. */
 
-	s32i.n a2, sp, 6*4
-	l32i.n a2, a3, U_DATA__U_PTAB
-	call0 swapout
-	l32i.n a2, sp, 6*4
+	mov.n a15, a2				/* save a2 in callee-saved register */
+    mov.n a14, sp               /* save old stack pointer in callee-saved register */
+	movi sp, swapstack_end
+    call0 clonecurrentprocess
+    mov.n sp, a14
 
 	/* We are now going to become the child; associate the child's p_tab
 	 * pointer with the current udata. */
 
-	/* a2 is already the child's p_tab pointer */
+	/* a15 is already the child's p_tab pointer */
+    mov.n a2, a15
 	movi a3, udata
 	call0 makeproc
 	

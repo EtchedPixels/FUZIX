@@ -24,9 +24,9 @@ unsigned int exception_handler(struct exception_frame *ef, uint32_t cause)
 	ptptr proc = udata.u_ptab;
 
 	kprintf(" _---,_   FATAL EXCEPTION %d @ %p with %p:\n", cause, ef->epc1, ef->excvaddr);
-	kprintf("|     ||  a0=%p  sp=%p  a2=%p  a3=%p\n", ef->a0, ef + 1, ef->a2, ef->a3);
-	kprintf("| RIP ||  a4=%p  a5=%p  a6=%p  a7=%p\n", ef->a4, ef->a5, ef->a6, ef->a7);
-	kprintf("|     ||  a8=%p  a9=%p a10=%p a11=%p\n", ef->a8, ef->a9, ef->a10, ef->a11);
+	kprintf("|     ||   a0=%p  sp=%p  a2=%p  a3=%p\n", ef->a0, ef + 1, ef->a2, ef->a3);
+	kprintf("| RIP ||   a4=%p  a5=%p  a6=%p  a7=%p\n", ef->a4, ef->a5, ef->a6, ef->a7);
+	kprintf("|     ||   a8=%p  a9=%p a10=%p a11=%p\n", ef->a8, ef->a9, ef->a10, ef->a11);
 	kprintf("|.,~||/|. a12=%p a13=%p a14=%p a15=%p\n", ef->a12, ef->a13, ef->a14, ef->a15);
 
 	if (udata.u_insys)

@@ -73,11 +73,12 @@ int main(void)
 		panic("bad offsets");
 	}
 
-	ramsize = 80;
+	ramsize = 96;
 	procmem = 64;
 	kputs("\n\n\n");
 	sys_cpu_feat = AF_LX106_ESP8266;
 
+    memset(&udata, 0, UDATA_SIZE);
 
 	/* And off we go */
 	fuzix_main();

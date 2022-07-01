@@ -1,7 +1,7 @@
 ENTRY (_start)
 
 MEMORY {
-	data : ORIGIN = 0x3ffe8000, len = 0x10000
+	data : ORIGIN = 0x3ffe8600, len = 0xfa00
 	code : ORIGIN = 0x40100000, len = 0x7e00
 }
 

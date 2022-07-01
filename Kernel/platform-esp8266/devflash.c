@@ -14,7 +14,7 @@ static const struct dhara_nand nand =
 {
 	.log2_page_size = 9,
 	.log2_ppb = 12 - 9,
-	.num_blocks = 896,
+	.num_blocks = (FLASH_TOP - FLASH_RESERVED) >> 12,
 };
 
 /*
