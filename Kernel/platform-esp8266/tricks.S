@@ -7,7 +7,7 @@
 .global swapstack_end
 
 .data
-.bss
+.section .bss
 swapstack:
     .fill SWAPSTACK_SIZE
 swapstack_end:
