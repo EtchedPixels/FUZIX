@@ -4,7 +4,9 @@ set -e
 IMG=filesystem.img
 
 rm -f ${IMG}
-../../Standalone/mkfs ${IMG} 32 1130
+# Second number here should be slightly less that the logical size reported by
+# mkftl, in sectors.
+../../Standalone/mkfs ${IMG} 32 2590
 ../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
@@ -162,7 +164,7 @@ bget ../../Applications/util/uniq
 bget ../../Applications/util/uptime
 bget ../../Applications/util/uud
 bget ../../Applications/util/uue
-#bget ../../Applications/util/vile
+bget ../../Applications/util/vile
 bget ../../Applications/util/wc
 bget ../../Applications/util/which
 bget ../../Applications/util/who
@@ -260,70 +262,70 @@ ln cp ln
 bget ../../Applications/V7/cmd/sh/sh
 chmod 0755 sh
 
-#bget ../../Applications/V7/cmd/ac
-#bget ../../Applications/V7/cmd/accton
-#bget ../../Applications/V7/cmd/at
-#bget ../../Applications/V7/cmd/atrun
-#bget ../../Applications/V7/cmd/col
-#bget ../../Applications/V7/cmd/comm
-#bget ../../Applications/V7/cmd/cron
-#bget ../../Applications/V7/cmd/crypt
-#bget ../../Applications/V7/cmd/dc
-#bget ../../Applications/V7/cmd/dd
-#bget ../../Applications/V7/cmd/deroff
-#bget ../../Applications/V7/cmd/diff
-#bget ../../Applications/V7/cmd/diff3
-#bget ../../Applications/V7/cmd/diffh
-#bget ../../Applications/V7/cmd/ed
-#bget ../../Applications/V7/cmd/join
-#bget ../../Applications/V7/cmd/look
-#bget ../../Applications/V7/cmd/makekey
-#bget ../../Applications/V7/cmd/mesg
-#bget ../../Applications/V7/cmd/newgrp
-#bget ../../Applications/V7/cmd/pg
-#bget ../../Applications/V7/cmd/pr
-#bget ../../Applications/V7/cmd/ptx
-#bget ../../Applications/V7/cmd/rev
-#bget ../../Applications/V7/cmd/split
-#bget ../../Applications/V7/cmd/su
-#bget ../../Applications/V7/cmd/sum
-#bget ../../Applications/V7/cmd/test
-#bget ../../Applications/V7/cmd/time
-#bget ../../Applications/V7/cmd/tsort
-#bget ../../Applications/V7/cmd/tty
-#bget ../../Applications/V7/cmd/wall
-#chmod 0755 ac
-#chmod 0755 accton
-#chmod 0755 at
-#chmod 0755 atrun
-#chmod 0755 col
-#chmod 0755 comm
-#chmod 0755 cron
-#chmod 0755 crypt
-#chmod 0755 dc
-#chmod 0755 dd
-#chmod 0755 deroff
-#chmod 0755 diff
-#chmod 0755 diff3
-#chmod 0755 diffh
-#chmod 0755 ed
-#chmod 0755 join
-#chmod 0755 look
-#chmod 0755 makekey
-#chmod 0755 mesg
-#chmod 0755 newgrp
-#chmod 0755 pg
-#chmod 0755 pr
-#chmod 0755 ptx
-#chmod 0755 rev
-#chmod 0755 split
-#chmod 0755 su
-#chmod 0755 sum
-#chmod 0755 test
-#chmod 0755 time
-#chmod 0755 tsort
-#chmod 0755 tty
-#chmod 0755 wall
+bget ../../Applications/V7/cmd/ac
+bget ../../Applications/V7/cmd/accton
+bget ../../Applications/V7/cmd/at
+bget ../../Applications/V7/cmd/atrun
+bget ../../Applications/V7/cmd/col
+bget ../../Applications/V7/cmd/comm
+bget ../../Applications/V7/cmd/cron
+bget ../../Applications/V7/cmd/crypt
+bget ../../Applications/V7/cmd/dc
+bget ../../Applications/V7/cmd/dd
+bget ../../Applications/V7/cmd/deroff
+bget ../../Applications/V7/cmd/diff
+bget ../../Applications/V7/cmd/diff3
+bget ../../Applications/V7/cmd/diffh
+bget ../../Applications/V7/cmd/ed
+bget ../../Applications/V7/cmd/join
+bget ../../Applications/V7/cmd/look
+bget ../../Applications/V7/cmd/makekey
+bget ../../Applications/V7/cmd/mesg
+bget ../../Applications/V7/cmd/newgrp
+bget ../../Applications/V7/cmd/pg
+bget ../../Applications/V7/cmd/pr
+bget ../../Applications/V7/cmd/ptx
+bget ../../Applications/V7/cmd/rev
+bget ../../Applications/V7/cmd/split
+bget ../../Applications/V7/cmd/su
+bget ../../Applications/V7/cmd/sum
+bget ../../Applications/V7/cmd/test
+bget ../../Applications/V7/cmd/time
+bget ../../Applications/V7/cmd/tsort
+bget ../../Applications/V7/cmd/tty
+bget ../../Applications/V7/cmd/wall
+chmod 0755 ac
+chmod 0755 accton
+chmod 0755 at
+chmod 0755 atrun
+chmod 0755 col
+chmod 0755 comm
+chmod 0755 cron
+chmod 0755 crypt
+chmod 0755 dc
+chmod 0755 dd
+chmod 0755 deroff
+chmod 0755 diff
+chmod 0755 diff3
+chmod 0755 diffh
+chmod 0755 ed
+chmod 0755 join
+chmod 0755 look
+chmod 0755 makekey
+chmod 0755 mesg
+chmod 0755 newgrp
+chmod 0755 pg
+chmod 0755 pr
+chmod 0755 ptx
+chmod 0755 rev
+chmod 0755 split
+chmod 0755 su
+chmod 0755 sum
+chmod 0755 test
+chmod 0755 time
+chmod 0755 tsort
+chmod 0755 tty
+chmod 0755 wall
 
 #bget ../../Applications/levee/levee
 #chmod 0755 levee

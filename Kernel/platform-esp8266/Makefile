@@ -76,14 +76,15 @@ filesystem.img::
 	./update-flash.sh
 
 filesystem.ftl: filesystem.img
-	../../Standalone/mkftl -s 896 -e 0x1000 -p 512 -g 10 filesystem.img -o filesystem.ftl
+	# -s is the flash size in kilobytes; the kernel and boot loader takes the first 64kB.
+	../../Standalone/mkftl -s 1984 -e 0x1000 -p 512 -g 10 filesystem.img -o filesystem.ftl
 
 filesystem.elf: filesystem.ftl
-	xtensa-lx106-elf-objcopy -I binary -O elf32-xtensa-le --change-section-vma .data=0x40221000 filesystem.ftl filesystem.elf
+	xtensa-lx106-elf-objcopy -I binary -O elf32-xtensa-le --change-section-vma .data=0x40220000 filesystem.ftl filesystem.elf
 
 fburn: filesystem.elf
 	esptool elf2image filesystem.elf
-	esptool --port /dev/ttyUSB0 write_flash 0x21000 filesystem.elf-0x21000.bin -fs 4MB -ff 80m -fm dio
+	esptool --port /dev/ttyUSB0 write_flash 0x20000 filesystem.elf-0x20000.bin -fs 4MB -ff 80m -fm dio
 
 image: image.elf
 	xtensa-lx106-elf-objdump -S image.elf >image.src

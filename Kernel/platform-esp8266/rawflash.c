@@ -7,7 +7,7 @@
 
 #undef DEBUG
 
-#define FLASH_OFFSET 33 /* in 4kB blocks; 132kB */
+#define FLASH_OFFSET 32 /* in 4kB blocks; 128kB */
 
 #define FLASH_ADDRESS(page) \
 	((FLASH_OFFSET * 4096) + (page * 512))

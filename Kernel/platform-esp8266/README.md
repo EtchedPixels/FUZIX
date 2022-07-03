@@ -8,7 +8,7 @@ spoke AT protocol via a UART, but it actually turns out to be a rather capable
 microcontroller in its own right.
 
 It's based around a LX106 32-bit CPU (one of the Xtensa LX6 family) with 96kB
-of data RAM, 64 kB of code RAM, and an external 4MB NAND flash connected via SPI.
+of data RAM, 64 kB of code RAM, and an external NAND flash connected via SPI.
 A rather cunning demand-paging system allows the flash to be memory mapped,
 using 32kB of the code RAM for a cache. The ESP8285 is a very similar device
 except that it has an internal SPI flash that runs in a different mode.
@@ -44,8 +44,10 @@ used for NodeMCU require dio).
 
 Out of the box:
 
-  - /dev/hda is the NAND flash. You get about 2.5MB of usable space.
-  - /dev/hdb isthe SD cards.
+  - /dev/hda is the NAND flash. The system is configured for a 2MB flash chip,
+	which gives you a root filesystem of 1279kB.
+  - /dev/hdb is the SD card. This is only probed on startup --- you can't hot
+    swap it.
 
 Connect the SD card to the following pins:
 
@@ -54,7 +56,7 @@ Connect the SD card to the following pins:
             D5             14            SCK
             D6             12            MISO
             D7             13            MOSI
-            D2              4            CS for hdb
+            D2              4            CS
 
 Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
 3.3V. Not 5V, or it won't work (and that's likely to be a permanent change).
@@ -75,9 +77,8 @@ Out of the box, Fuzix runs in swapless mode. This gives enough memory to run
 most normal programs (you can use `free` to see how much you have left). If you
 want more, you can enable swapping to the SD card.
 
-To do this, create a partition of up to 2048kB (4096 blocks) on the SD card.
-Then use the `swapon` command to enable swap. You can see swap usage with
-`free`.
+To do this, create a 2048kB (4096 blocks) partition on the SD card.  Then use
+the `swapon` command to enable swap. You can see swap usage with `free`.
 
 ```
 # fdisk -l
