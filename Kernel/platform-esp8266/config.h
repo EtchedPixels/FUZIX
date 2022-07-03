@@ -7,7 +7,7 @@
 #define PERIPHERAL_CLOCK 52	/* 26MHz crystal (FIXME - this is apparently in a flash block somewhere) */
 
 #undef CONFIG_ESP_DUAL_SD	/* If you want two SD cards */
-#undef CONFIG_ESP_W5500	/* If you want a W5500 instead of the second card */
+#define CONFIG_ESP_W5500	/* If you want a W5500 instead of the second card */
 
 /*
  *	Fuzix definitions for the ESP8266 set up
