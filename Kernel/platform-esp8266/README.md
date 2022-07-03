@@ -13,16 +13,14 @@ A rather cunning demand-paging system allows the flash to be memory mapped,
 using 32kB of the code RAM for a cache. The ESP8285 is a very similar device
 except that it has an internal SPI flash that runs in a different mode.
 
-The Fuzix port runs in single-tasking mode, using an SD card connected via the
-second SPI interface for the root filesystem and swap. The NAND flash is
-usable, and is mapped via a FTL to provide wear levelling, but is too slow to
-produce a useful interactive system.
+The Fuzix port runs in multi-tasking mode with the root filesystem on the
+internal NAND flash. An SD card can be connected to the second SPI interface
+for further file storage and swap.
 
 ## Building
 
 ```
-cd Kernel
-make TARGET=esp8266
+make TARGET=esp866 kernel diskimage
 ```
 
 You need the `xtensa-lx106-elf` gcc toolchain --- install the
@@ -47,8 +45,7 @@ used for NodeMCU require dio).
 Out of the box:
 
   - /dev/hda is the NAND flash. You get about 2.5MB of usable space.
-  - /dev/hdb is the SD card. /dev/hdb1 needs to be at least 2MB and is the swap
-        partition, and /dev/hdb2 is the root filesystem.
+  - /dev/hdb isthe SD cards.
 
 Connect the SD card to the following pins:
 
@@ -57,17 +54,49 @@ Connect the SD card to the following pins:
             D5             14            SCK
             D6             12            MISO
             D7             13            MOSI
-            D2              4            CS
+            D2              4            CS for hdb
 
 Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
 3.3V. Not 5V, or it won't work (and that's likely to be a permanent change).
 
 The console is UART0, and runs at 115200 baud.
 
-Doing `make -C platform-esp8266 burn` will flash the kernel onto the device
+Doing `make -C Kernel/platform-esp8266 burn` will flash the kernel onto the device
 connected on `/dev/ttyUSB0` with this command:
 
     `esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -ff 80m -fm dio'
+
+Doing `make -C Kernel/platform-esp8266 fburn` will flash the filesystem onto
+the device in the same manner.
+
+## Swap
+
+Out of the box, Fuzix runs in swapless mode. This gives enough memory to run
+most normal programs (you can use `free` to see how much you have left). If you
+want more, you can enable swapping to the SD card.
+
+To do this, create a partition of up to 2048kB (4096 blocks) on the SD card.
+Then use the `swapon` command to enable swap. You can see swap usage with
+`free`.
+
+```
+# fdisk -l
+                      START                  END
+Device    Boot  Head Sector Cylinder   Head Sector Cylinder  Type  Sector count
+
+/dev/hdb1        33      3        0     38      6        1    83          4096
+/dev/hdb2        38      7        1     58      8       18    83         65536
+# swapon /dev/hdb1 4096
+# free
+         total         used         free
+Mem:       160           56          104
+Swap:     2048            0         2048
+# 
+```
+
+You can't turn swap off again.
+
+You probably can swap to the NAND flash, but it's a terrible idea.
 
 ## Pin Mappings We Use
 
@@ -78,7 +107,7 @@ GPIO4           SDcard CS       }
 GPIO5           Second CS       }
 GPIO12          MISO            }       SD card interface (note Arduino
 GPIO13          MOSI            }       tends to use GPIO15 not 4 but GPIO15
-GPIO14          SCK             }       is also during boot)
+GPIO14          SCK             }       is also used during boot)
 
 GPIO6-11        SPI Flash
 

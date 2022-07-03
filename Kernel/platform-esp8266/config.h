@@ -7,7 +7,7 @@
 #define PERIPHERAL_CLOCK 52	/* 26MHz crystal (FIXME - this is apparently in a flash block somewhere) */
 
 #undef CONFIG_ESP_DUAL_SD	/* If you want two SD cards */
-#define CONFIG_ESP_W5500	/* If you want a W5500 instead of the second card */
+#undef CONFIG_ESP_W5500	/* If you want a W5500 instead of the second card */
 
 /*
  *	Fuzix definitions for the ESP8266 set up
@@ -20,7 +20,7 @@
 /* Profil syscall support (not yet complete) */
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
-#undef CONFIG_MULTI
+#define CONFIG_MULTI
 /* 32bit with flat memory */
 #undef CONFIG_FLAT
 /* Pure swap */
@@ -76,7 +76,7 @@ extern uint8_t _code_top[];
 #define CODETOP     ((uaddr_t)&_code_top)
 #define DATALEN     0x10000 /* check with kernel.ld */
 #define CODELEN     0x7e00 /* check with kernel.ld */
-#define SWAP_SIZE   ((64+33)*2) /* 64 + 31.5 + 1.5 */
+#define SWAP_SIZE   ((64+32)*2) /* 64 + 31.5 */
 #define MAX_SWAPS   (2048*2 / SWAP_SIZE) /* for a 2MB swap partition */
 #define UDATA_SIZE  1536 /* check with kernel.ld */
 #define UDATA_BLKS  3
@@ -96,6 +96,7 @@ extern uint8_t _code_top[];
 #define SWAPDEV    (swap_dev) /* wherever */
 
 #define CONFIG_DYNAMIC_SWAP
+#define CONFIG_PLATFORM_SWAPCTL
 
 /* Device parameters */
 #define NUM_DEV_TTY 1

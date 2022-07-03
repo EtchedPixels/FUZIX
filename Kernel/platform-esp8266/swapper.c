@@ -15,7 +15,7 @@
  * p->p_page is 0 if swapped out, 1 is swapped in.
  */
 
-#define BLOCKSIZE 512
+#define BLOCKSIZE 1024
 #define NUM_DATA_ALLOCATION_BLOCKS (DATALEN / BLOCKSIZE)
 #define NUM_CODE_ALLOCATION_BLOCKS (CODELEN / BLOCKSIZE)
 #define NUM_EXTRA_ALLOCATION_BLOCKS (16*1024 / BLOCKSIZE)
@@ -32,7 +32,7 @@ static struct mapentry allocation_map[NUM_ALLOCATION_BLOCKS];
 
 static uint8_t get_slot(ptptr p)
 {
-	uint8_t slot = p - ptab;
+    uint8_t slot = p - ptab;
     if (slot >= PTABSIZE)
         panic("bad ptab");
     return slot;
@@ -148,13 +148,13 @@ void pagemap_free(ptptr p)
         }
     }
 
-	p->p_page = 0;
+    p->p_page = 0;
 }
 
 int pagemap_alloc(ptptr p)
 {
-	if (p == udata.u_ptab)
-		return 0;
+    if (p == udata.u_ptab)
+        return 0;
 
     int code_blocks = get_proc_code_size_blocks(p);
     int data_blocks = get_proc_data_size_blocks(p);
@@ -189,12 +189,12 @@ int pagemap_alloc(ptptr p)
         b->block = i;
     }
 
-	p->p_page = 1;
+    p->p_page = 1;
     #ifdef DEBUG
         kprintf("done alloc, new map follows\n");
         debug_blocks();
     #endif
-	return 0;
+    return 0;
 }
 
 static int resize_blocks(
@@ -258,7 +258,7 @@ int pagemap_realloc_code_and_data(usize_t codesize, usize_t datasize)
         debug_blocks();
     #endif
     contextswitch(p);
-	return 0;
+    return 0;
 }
 
 usize_t pagemap_mem_used(void)
@@ -270,7 +270,7 @@ usize_t pagemap_mem_used(void)
         if (b->slot != 0xff)
             count++;
     }
-    return count * (BLOCKSIZE/1024);
+    return (count*BLOCKSIZE)/1024;
 }
 
 void pagemap_init(void)
@@ -283,7 +283,7 @@ void pagemap_init(void)
             NUM_ALLOCATION_BLOCKS);
     #endif
     memset(allocation_map, 0xff, sizeof(allocation_map));
-	udata.u_ptab = NULL;
+    udata.u_ptab = NULL;
     udata.u_texttop = CODEBASE;
 }
 
@@ -390,44 +390,61 @@ uint_fast8_t plt_canswapon(uint16_t devno)
 
 int swapout(ptptr p)
 {
-    panic("swapout");
-    return ENOMEM;
-#if 0
 #ifdef DEBUG
-	kprintf("swapping out %d (%d)\n", get_slot(p), p->p_pid);
+    kprintf("swapping out %d (%d)\n", get_slot(p), p->p_pid);
 #endif
 
-	uint16_t page = p->p_page;
-	if (!page)
-		panic(PANIC_ALREADYSWAP);
+    uint16_t page = p->p_page;
+    if (!page)
+        panic(PANIC_ALREADYSWAP);
     if (SWAPDEV == 0xffff)
         return ENOMEM;
 
-	/* Are we out of swap ? */
-	int16_t map = swapmap_alloc();
-	if (map == -1)
-		return ENOMEM;
+    /* Are we out of swap ? */
+    int16_t map = swapmap_alloc();
+    if (map == -1)
+        return ENOMEM;
 
-	uint16_t swaparea = map * SWAP_SIZE;
+    uint16_t swaparea = map * SWAP_SIZE;
 
     int slot = get_slot(p);
-    int blocks = get_proc_size_blocks(p);
+    int blocks = get_proc_data_size_blocks(p);
     for (int i=0; i<blocks; i++)
     {
         struct mapentry* b = find_block(slot, i);
         int blockindex = b - allocation_map;
-        void* p = (void*)PROGBASE + blockindex*BLOCKSIZE;
 
-        swapwrite(SWAPDEV, swaparea + (i*(BLOCKSIZE>>BLKSHIFT)),
-            BLOCKSIZE, (uaddr_t)p, 1);
+        swapwrite(
+            SWAPDEV,
+            swaparea + i*(BLOCKSIZE>>BLKSHIFT),
+            BLOCKSIZE,
+            get_address(blockindex),
+            1);
 
         b->slot = b->block = 0xff;
     }
 
-	p->p_page = 0;
-	p->p_page2 = map;
-	return 0;
-#endif
+    blocks = get_proc_code_size_blocks(p);
+    for (int i=0; i<blocks; i++)
+    {
+        struct mapentry* b = find_block(slot, i | 0x80);
+        int blockindex = b - allocation_map;
+
+        swapwrite(
+            SWAPDEV,
+            swaparea +
+                NUM_DATA_ALLOCATION_BLOCKS*(BLOCKSIZE>>BLKSHIFT) +
+                i*(BLOCKSIZE>>BLKSHIFT),
+            BLOCKSIZE,
+            get_address(blockindex),
+            1);
+
+        b->slot = b->block = 0xff;
+    }
+
+    p->p_page = 0;
+    p->p_page2 = map;
+    return 0;
 }
 
 /*
@@ -435,33 +452,56 @@ int swapout(ptptr p)
  */
 void swapin(ptptr p, uint16_t map)
 {
-panic("swapin");
-#if 0
+#ifdef DEBUG
+    kprintf("swapping in %d (%d)\n", get_slot(p), p->p_pid);
+#endif
+
     uint16_t swaparea = map * SWAP_SIZE;
 
     int slot = get_slot(p);
-    int blocks = get_proc_size_blocks(p);
+    int blocks = get_proc_data_size_blocks(p);
     for (int i=0; i<blocks; i++)
     {
         struct mapentry* b = find_free_block(p);
         int blockindex = b - allocation_map;
-        void* p = (void*)PROGBASE + blockindex*BLOCKSIZE;
 
-        swapread(SWAPDEV, swaparea + (i*(BLOCKSIZE>>BLKSHIFT)),
-            BLOCKSIZE, (uaddr_t)p, 1);
+        swapread(
+            SWAPDEV,
+            swaparea + i*(BLOCKSIZE>>BLKSHIFT),
+            BLOCKSIZE,
+            get_address(blockindex),
+            1);
 
         b->slot = slot;
         b->block = i;
     }
 
+    blocks = get_proc_code_size_blocks(p);
+    for (int i=0; i<blocks; i++)
+    {
+        struct mapentry* b = find_free_block(p);
+        int blockindex = b - allocation_map;
+
+        swapread(
+            SWAPDEV,
+            swaparea +
+                NUM_DATA_ALLOCATION_BLOCKS*(BLOCKSIZE>>BLKSHIFT) +
+                i*(BLOCKSIZE>>BLKSHIFT),
+            BLOCKSIZE,
+            get_address(blockindex),
+            1);
+
+        b->slot = slot;
+        b->block = i | 0x80;
+    }
+
     p->p_page = 1;
     p->p_page2 = 0;
-#endif
 }
 
 arg_t brk_extend(uaddr_t addr)
 {
-    if (addr < udata.u_isp)
+    if (addr < (uaddr_t)udata.u_isp)
         return EINVAL;
 
     /* Claim more memory for this process. */

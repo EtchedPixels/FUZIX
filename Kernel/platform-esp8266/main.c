@@ -73,8 +73,8 @@ int main(void)
 		panic("bad offsets");
 	}
 
-	ramsize = 96;
-	procmem = 64;
+	ramsize = 128;
+	procmem = 96;
 	kputs("\n\n\n");
 	sys_cpu_feat = AF_LX106_ESP8266;
 

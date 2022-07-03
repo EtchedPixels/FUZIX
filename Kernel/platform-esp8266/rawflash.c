@@ -5,6 +5,8 @@
 #include "rom.h"
 #include "printf.h"
 
+#undef DEBUG
+
 #define FLASH_OFFSET 33 /* in 4kB blocks; 132kB */
 
 #define FLASH_ADDRESS(page) \
@@ -17,6 +19,9 @@
 int dhara_nand_erase(const struct dhara_nand *n, dhara_block_t b,
                      dhara_error_t *err)
 {
+    #if defined DEBUG
+        kprintf("erase block %d\n", b);
+    #endif
 	irqflags_t f = di();
 	Cache_Read_Disable();
 	SpiUnlock();
@@ -33,6 +38,9 @@ int dhara_nand_prog(const struct dhara_nand *n, dhara_page_t p,
                     const uint8_t *data,
                     dhara_error_t *err)
 {
+    #if defined DEBUG
+        kprintf("write page %d\n", p);
+    #endif
 	irqflags_t f = di();
 	Cache_Read_Disable();
 	SpiUnlock();
@@ -50,6 +58,9 @@ int dhara_nand_read(const struct dhara_nand *n, dhara_page_t p,
                     uint8_t *data,
                     dhara_error_t *err)
 {
+    #if defined DEBUG
+        kprintf("read page %d\n", p);
+    #endif
 	irqflags_t f = di();
 	Cache_Read_Disable();
 	SpiUnlock();
