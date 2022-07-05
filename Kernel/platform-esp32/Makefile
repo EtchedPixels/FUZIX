@@ -15,6 +15,8 @@ ASOPTS += $(ESP_INCLUDES)
 CROSS_CCOPTS += $(ESP_INCLUDES)
 
 CSRCS += \
+	$(IDF_PATH)/components/soc/dport_access_common.c \
+	$(IDF_PATH)/components/soc/esp32/dport_access.c \
 	../dev/blkdev.c \
 	../dev/mbr.c \
 	../lib/hexdump.c \
