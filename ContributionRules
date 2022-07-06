@@ -1,0 +1,19 @@
+# Copilot
+
+Microsoft co-pilot laundered code is not accepted in this project
+
+# Licensing
+
+Contributions should be made (and unless otherwise stated) will be assumed to be
+under the same licensing as the project to which they pertain. You must have the
+right to make the relevant licence grant. If there are good reasons to contribute
+under a different license to a component please discuss first.
+
+# Non-Free Dependencies
+
+These are generally only acceptable where they are
+- Redistributable objects of historical interest (eg the BCPL environment)
+- Games or other redistributable creative works where the usual notion of open
+  source does not necessarily make sense
+
+Dependencies on proprietary tool chains or tooling will not be accepted.
