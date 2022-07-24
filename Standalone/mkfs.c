@@ -12,6 +12,7 @@ UZI (Unix Z80 Implementation) Utilities:  mkfs.c
 #include <sys/stat.h>
 #include <time.h>
 #include <fcntl.h>
+#define BLKSIZE 512
 #include "fuzix_fs.h"
 #include "util.h"
 

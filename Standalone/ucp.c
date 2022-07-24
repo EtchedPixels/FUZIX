@@ -18,6 +18,7 @@ HP
 #include <unistd.h>
 #include <libgen.h>
 #define UCP
+#define BLKSIZE 512
 #include "fuzix_fs.h"
 #include "util.h"
 
