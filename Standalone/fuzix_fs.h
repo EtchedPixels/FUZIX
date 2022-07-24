@@ -1,11 +1,21 @@
 #define __UZIFS_DOT_H__
 
 #define FILENAME_LEN 30
-
 #define ROOTDEV 0
 #define ROOTINODE 1
+
+#if (BLKSIZE == 400)
+#define SMOUNTED  12743   /* Magic number to specify mounted filesystem */
+#define SMOUNTED_WRONGENDIAN 50993   /* byteflipped */
+#define DIR_LEN	40
+#define DIR_PAD 8
+#define IPERBLK	6
+#elif (BLKSIZE == 512)
 #define SMOUNTED 12742   /* Magic number to specify mounted filesystem */
 #define SMOUNTED_WRONGENDIAN 50737   /* byteflipped */
+#define DIR_LEN	32
+#define IPERBLK 8
+#endif
 #define CMAGIC   24721
 #define UFTSIZE 10
 #define NSIGS 16
@@ -61,9 +71,12 @@ struct  uzi_stat    /* Really only used by users */
 typedef struct direct {
         uint16_t   d_ino;
         char     d_name[30];
+#ifdef DIR_PAD
+        uint8_t	d_pad[DIR_PAD]
+#endif
 } direct;
 
-typedef uint16_t blkno_t;    /* Can have 65536 512-byte blocks in filesystem */
+typedef uint16_t blkno_t;    /* Can have 65536 blocks in filesystem */
 
 typedef struct blkbuf {
     uint8_t     bf_data[512];    /* This MUST be first ! */
