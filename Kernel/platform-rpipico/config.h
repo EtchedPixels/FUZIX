@@ -19,8 +19,10 @@
 /* Enable single tasking */
 #define CONFIG_SWAP_ONLY
 #define CONFIG_SPLIT_UDATA
-/* Enable SD card code. */
+/* Enable SD card code (defaulting to MISO 12, CS 13, SCK 14, MOSI 15). */
 #define CONFIG_SD
+/* Alternative pin allocation for Cytron Maker Pi Pico (MISO 12, CS 15, SCK 10, MOSI 11). */
+#define CONFIG_SD_ALT
 #define SD_DRIVE_COUNT 1
 /* Enable dynamic swap. */
 #define CONFIG_PLATFORM_SWAPCTL
@@ -60,7 +62,17 @@ extern uint8_t progbase[USERMEM];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0000 /* hda */
+#ifdef HAS_ONBOARD_FLASH_DRIVE
+    #define BOOTDEVICE 0x0012 /* hdb2 */
+#else
+    #define BOOTDEVICE 0x0002 /* hda2 */
+#endif
+
+// THIS SETTING NEEDS TO BE PROPERLY INTEGRATED WITH THE CMAKE BUILDFILE ETC. MarkMLl
+
+#undef BOOTDEVICE
+#define BOOTDEVICE 0x0012
+
 #define SWAPDEV    (swap_dev) /* dynamic swap */
 
 /* Device parameters */

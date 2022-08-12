@@ -5,8 +5,21 @@ include(pico_sdk_import.cmake)
 
 project(fuzix C CXX ASM)
 set(CMAKE_C_STANDARD 11)
+
+# Do not enable this, leave the build type to be Debug, and assume that the
+# conditional below is a placeholder: it is referred to in config.h and
+# devices.c. MarkMLl.
+
+# set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
+
 set(CMAKE_BUILD_TYPE Debug)
-set(PICO_COPY_TO_RAM 1)
+
+# Needs fixing: HAS_ONBOARD_FLASH_DRIVE should be passed to Makefile. MarkMLl
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+    set(PICO_COPY_TO_RAM 1)
+    set(HAS_ONBOARD_FLASH_DRIVE 1)
+endif()
 
 pico_sdk_init()
 

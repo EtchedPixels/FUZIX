@@ -14,12 +14,31 @@
 void sd_rawinit(void)
 {
 
+#ifndef CONFIG_SD_ALT
+
+// This is the standard pinning as per David Given's prototype.
+
     gpio_init_mask(0xf << 12);
-    gpio_set_function(12, GPIO_FUNC_SPI);
-    gpio_set_function(13, GPIO_FUNC_SIO);
-    gpio_set_function(14, GPIO_FUNC_SPI);
-    gpio_set_function(15, GPIO_FUNC_SPI);
-    gpio_set_dir(13, true);
+    gpio_set_function(12, GPIO_FUNC_SPI); // MISO
+    gpio_set_function(13, GPIO_FUNC_SIO); // CS
+    gpio_set_function(14, GPIO_FUNC_SPI); // SCK
+    gpio_set_function(15, GPIO_FUNC_SPI); // MOSI
+  #define SDCARD_CS_GP 13
+    gpio_set_dir(SDCARD_CS_GP, true);
+
+#else
+
+// Alternative pinning as per the Cytron Maker Pi Pico schematic from e.g.
+// https://www.electrokit.com/uploads/productfile/41018/MAKER-PI-PICO%20v1.2.0%20Schematic.pdf
+
+    gpio_init_mask(0x27 << 10);
+    gpio_set_function(10, GPIO_FUNC_SPI); // SCK
+    gpio_set_function(11, GPIO_FUNC_SPI); // MOSI
+    gpio_set_function(12, GPIO_FUNC_SPI); // MISO
+    gpio_set_function(15, GPIO_FUNC_SIO); // CS
+  #define SDCARD_CS_GP 15
+    gpio_set_dir(SDCARD_CS_GP, true);
+#endif
 
     spi_init(spi1, 250000);
     spi_set_format(spi1, 8, 0, 0, SPI_MSB_FIRST);
@@ -32,12 +51,12 @@ void sd_spi_clock(bool go_fast)
 
 void sd_spi_raise_cs(void)
 {
-    gpio_put(1<<13, true);
+    gpio_put(1<<SDCARD_CS_GP, true);
 }
 
 void sd_spi_lower_cs(void)
 {
-    gpio_put(1<<13, false);
+    gpio_put(1<<SDCARD_CS_GP, false);
 }
 
 void sd_spi_transmit_byte(uint_fast8_t b)
