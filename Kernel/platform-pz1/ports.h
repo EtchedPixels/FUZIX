@@ -1,6 +1,11 @@
-#define port_serial_flags           (*(volatile uint8_t *)0xFE10)
-#define port_serial_in              (*(volatile uint8_t *)0xFE11)
-#define port_serial_out             (*(volatile uint8_t *)0xFE12)
+#define port_serial0_flags           (*(volatile uint8_t *)0xFE10)
+#define port_serial0_in              (*(volatile uint8_t *)0xFE11)
+#define port_serial0_out             (*(volatile uint8_t *)0xFE12)
+
+#define port_serial1_flags           (*(volatile uint8_t *)0xFE18)
+#define port_serial1_in              (*(volatile uint8_t *)0xFE19)
+#define port_serial1_out             (*(volatile uint8_t *)0xFE1A)
+
 #define SERIAL_FLAGS_OUT_FULL       128
 #define SERIAL_FLAGS_IN_AVAIL       64
 
