@@ -27,10 +27,10 @@ void do_beep(void)
 void pagemap_init(void)
 {
     int i;
-    /* Add the user banks, taking care to land 36 as the last one as we
-       use that for init  (32-35 are the kernel) */
+    /* Add the user banks, taking care to land 4 as the last one as we
+       use that for init (0/1/2/3 are the kernel) */
     for (i = 6; i >= 0; i--)
-        pagemap_add(36 + i * 4);
+        pagemap_add(4 + i * 4);
 }
 
 void map_init(void)

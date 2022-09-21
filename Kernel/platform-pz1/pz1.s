@@ -70,7 +70,7 @@ _plt_reboot:
 	    jmp _plt_reboot	; We don't restore the data/bss so can't
 				; restart
 
-	    lda #35
+	    lda #3
 	    sta PORT_BANK_3		; top 16K to ROM 0
 	    jmp ($FFFC)
 
@@ -99,10 +99,10 @@ irq_on:
 
 init_early:
 	    ; Hack for now - create a common copy for init. We should then
-	    ; recycle page 32 into a final process but that means awkward
+	    ; recycle page 0 into a final process but that means awkward
 	    ; handling - or does it - we wrap the bit ?? FIXME
 	    jsr _create_init_common
-	    lda #36
+	    lda #4
 	    sta PORT_BANK_0		; set low page to copy
             rts			; stack was copied so this is ok
 
@@ -201,7 +201,7 @@ map_process:
 	    bne map_process_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
-;	the kernel lives in 32/33/34/35
+;	the kernel lives in 0/1/2/3
 ;	Later we'll be clever and stuff _DISCARD and the copy blocks there or
 ;	something (that would also let us put RODATA in
 ;	common area just to balance out memory usages).
@@ -211,7 +211,7 @@ map_kernel:
 	    txa
 	    pha
 				; Common is left untouched as is ZP and S
-	    ldx #$20		; Kernel RAM
+	    ldx #0		; Kernel RAM
 	    jsr map_bank_i
 	    pla
 	    tax
@@ -291,11 +291,11 @@ saved_map:  .byte 0
 outchar:
 	    pha
 outcharw:
-	    lda PORT_SERIAL_FLAGS
+	    lda PORT_SERIAL_0_FLAGS
             and #SERIAL_FLAGS_OUT_FULL
             bne outcharw
             pla
-            sta PORT_SERIAL_OUT
+            sta PORT_SERIAL_0_OUT
             rts
 
 ;

@@ -336,9 +336,9 @@ copy1:
 	rts
 
 _create_init_common:
-	lda #32
+	lda #0
 	sta PORT_BANK_1		;	set the map for 0x4000
-	lda #36
+	lda #4
 	sta PORT_BANK_2		;	and 0x8000
 	jsr bank2bank
 	jmp map_kernel

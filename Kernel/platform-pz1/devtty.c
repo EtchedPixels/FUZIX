@@ -37,12 +37,12 @@ void kputchar(uint8_t c)
 ttyready_t tty_writeready(uint8_t minor)
 {
 	if (minor == 1) {
-		if ((port_serial0_flags & SERIAL_FLAGS_OUT_FULL) == 0)
+		if ((port_serial_0_flags & SERIAL_FLAGS_OUT_FULL) == 0)
 			return TTY_READY_NOW;
 		else
 			return TTY_READY_SOON;
 	} else {
-		if ((port_serial0_flags & SERIAL_FLAGS_OUT_FULL) == 0)
+		if ((port_serial_0_flags & SERIAL_FLAGS_OUT_FULL) == 0)
 			return TTY_READY_NOW;
 		else
 			return TTY_READY_SOON;
@@ -52,13 +52,13 @@ ttyready_t tty_writeready(uint8_t minor)
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	if (minor == 1) {
-		while ((port_serial0_flags & SERIAL_FLAGS_OUT_FULL) != 0);
+		while ((port_serial_0_flags & SERIAL_FLAGS_OUT_FULL) != 0);
 		// do nothing
-		port_serial0_out = c;
+		port_serial_0_out = c;
 	} else {
-		while ((port_serial1_flags & SERIAL_FLAGS_OUT_FULL) != 0);
+		while ((port_serial_1_flags & SERIAL_FLAGS_OUT_FULL) != 0);
 		// do nothing
-		port_serial1_out = c;
+		port_serial_1_out = c;
 	}
 
 
@@ -84,8 +84,8 @@ void tty_data_consumed(uint8_t minor)
 
 void tty_poll(void)
 {
-	while (port_serial0_flags & SERIAL_FLAGS_IN_AVAIL)
-		tty_inproc(1, port_serial0_in);
-	while (port_serial1_flags & SERIAL_FLAGS_IN_AVAIL)
-		tty_inproc(2, port_serial1_in);
+	while (port_serial_0_flags & SERIAL_FLAGS_IN_AVAIL)
+		tty_inproc(1, port_serial_0_in);
+	while (port_serial_1_flags & SERIAL_FLAGS_IN_AVAIL)
+		tty_inproc(2, port_serial_1_in);
 }
