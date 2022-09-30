@@ -109,10 +109,9 @@ message and a set of debug as it loads from CF.
 
 Emulator:
 
-Build the ROM image as before
-Copy emu-ide.img somewhere
+After building the RC2014-ROM/6502 rom, from the RC2014 emulator root dir:
 
-./rc2014-6502 -1 -r 6502.rom -i emu-ide.img
+./rc2014-6502 -i ../FUZIX/Images/rc2014-6502/emu-ide.img -r ../RC2014-ROM/6502/rom
 
 Add -R to enable an emulation of the RC2014 RTC card, add -w for the
 WizNet 830MJ.
