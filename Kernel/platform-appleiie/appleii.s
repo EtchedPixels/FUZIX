@@ -2,9 +2,9 @@
 ;	    Apple IIe platform functions
 ;
 
-            .export init_early
-            .export init_hardware
-            .export _program_vectors
+        .export init_early
+        .export init_hardware
+        .export _program_vectors
 	    .export map_kernel
 	    .export map_process
 	    .export map_process_always
@@ -12,15 +12,15 @@
 	    .export map_restore
 
 	    .export _unix_syscall_i
-	    .export _platform_interrupt_i
-	    .export platform_doexec
+	    .export _plt_interrupt_i
+	    .export plt_doexec
 
 	    .export _hd_map
 
-            ; exported debugging tools
-            .export _platform_monitor
-	    .export _platform_reboot
-            .export outchar
+        ; exported debugging tools
+        .export _plt_monitor
+	    .export _plt_reboot
+        .export outchar
 	    .export ___hard_di
 	    .export ___hard_ei
 	    .export ___hard_irqrestore
@@ -36,7 +36,7 @@
 	    .import istack_switched_sp
 	    .import istack_top
 	    .import _unix_syscall
-	    .import _platform_interrupt
+	    .import _plt_interrupt
 	    .import _kernel_flag
 	    .import stash_zp
 	    .import pushax
@@ -49,8 +49,8 @@
 
 	    .import _create_init_common
 
-            .include "kernel.def"
-            .include "../kernel02.def"
+        .include "kernel.def"
+        .include "../kernel02.def"
 	    .include "zeropage.inc"
 
 ;
@@ -65,11 +65,11 @@ syscall	     =  $FE
 ;
 ;	Fixme - can we get back to the AppleII monitor ?
 ;
-_platform_monitor:
-	    jmp _platform_monitor
+_plt_monitor:
+	    jmp _plt_monitor
 
-_platform_reboot:
-	    jmp _platform_reboot	; FIXME: original ROM map and jmp
+_plt_reboot:
+	    jmp _plt_reboot	; FIXME: original ROM map and jmp
 
 ___hard_di:
 	    php
@@ -498,7 +498,7 @@ syscout:
 ;
 ;	IRQ must be off on entry
 ;
-platform_doexec:
+plt_doexec:
 ;
 ;	Start address of executable
 ;
@@ -554,8 +554,8 @@ platform_doexec:
 ;
 _unix_syscall_i:
 	    jmp _unix_syscall
-_platform_interrupt_i:
-	    jmp _platform_interrupt
+_plt_interrupt_i:
+	    jmp _plt_interrupt
 
 	.segment "COMMONDATA"
 

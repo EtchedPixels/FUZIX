@@ -1,13 +1,13 @@
 ;
 ;	6502 version
 ;
-        .export _platform_switchout
-        .export _switchin
-        .export _dofork
+    .export _plt_switchout
+    .export _switchin
+    .export _dofork
 	.export _ramtop
 
 	.import _chksigs
-	.import _platform_monitor
+	.import _plt_monitor
 
 	.import map_kernel
 	.import _swapper
@@ -23,12 +23,12 @@
 	.import pushax
 	.import _udata
 
-        .include "kernel.def"
-        .include "../kernel02.def"
+    .include "kernel.def"
+    .include "../kernel02.def"
 	.include "zeropage.inc"
 
 ; FIXME: review but all but some of the fork logic looks safe to go in code
-        .segment "COMMONMEM"
+    .segment "COMMONMEM"
 
 ; ramtop must be in common for single process swapping cases
 ; and its a constant for the others from before init forks so it'll be fine
@@ -41,7 +41,7 @@ _ramtop:
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
 ;
-_platform_switchout:
+_plt_switchout:
 	sei
 
 ;
@@ -66,7 +66,7 @@ _platform_switchout:
         jsr _getproc
         jsr _switchin
         ; we should never get here
-        jsr _platform_monitor
+        jsr _plt_monitor
 
 badswitchmsg: .byte "_switchin: FAIL"
 	.byte 13, 10, 0
@@ -200,7 +200,7 @@ switchinfail:
 	ldx	#>badswitchmsg
         jsr outstring
 	; something went wrong and we didn't switch in what we asked for
-        jmp _platform_monitor
+        jmp _plt_monitor
 
 
 ;
