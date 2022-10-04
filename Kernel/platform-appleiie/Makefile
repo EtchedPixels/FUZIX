@@ -31,5 +31,5 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
 	../syscall_exec.o ../usermem.o ../usermem_std-6502.o \
-	../syscall_exec16.o devtty.o firmware.o
+	../syscall_exec16.o devtty.o firmware.o ../blk512.o
 	dd if=../fuzix.bin of=fuzix.img bs=512 skip=1
