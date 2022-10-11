@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false # keep on building even if one target fails
       matrix:
-        target: [dragon-nx32, esp32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, rc2014-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
+        target: [appleiie, dragon-nx32, esp32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, rc2014-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -53,7 +53,7 @@ jobs:
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo "sub_target=kernel" >> $GITHUB_ENV
           ;;
-          rc2014-6502)
+          appleiie|rc2014-6502)
           PKGS="cc65"
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           ;;
