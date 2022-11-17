@@ -52,10 +52,8 @@ extern uint16_t swap_dev;
 
 #define MAX_BLKDEV 2	    /* 2 IDE */
 
-/* Enable one RTC interface */
+/* On-board DS1302, we can read the time of day from it */
 #define CONFIG_RTC_DS1302
-#undef CONFIG_RTC_DS12885
-
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_NO_CLOCK
