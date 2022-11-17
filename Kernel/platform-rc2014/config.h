@@ -9,7 +9,7 @@
 /* Set this if you have the floppy interface */
 #define CONFIG_RC2014_FLOPPY
 /* Set this for SD card support via PIO or SC129 at 0x68 */
-#undef CONFIG_RC2014_SD
+#define CONFIG_RC2014_SD
 
 
 #define OFTSIZE		56

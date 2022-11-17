@@ -223,7 +223,6 @@ static void quart_clock(void)
 	kputs("quart clock enabled\n");
 }
 
-
 __sfr __at 0xA0 sc26c92_mra;
 __sfr __at 0xA2 sc26c92_cra;
 __sfr __at 0xA4 sc26c92_acr;
