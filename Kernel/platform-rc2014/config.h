@@ -9,7 +9,7 @@
 /* Set this if you have the floppy interface */
 #define CONFIG_RC2014_FLOPPY
 /* Set this for SD card support via PIO or SC129 at 0x68 */
-#define CONFIG_RC2014_SD
+#undef CONFIG_RC2014_SD
 
 
 #define OFTSIZE		56
@@ -91,7 +91,10 @@ extern uint16_t swap_dev;
 
 #define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE or SD */
 
-/* On-board DS1302, we can read the time of day from it */
+/* Enable one RTC interface */
+#define CONFIG_RTC_DS1302
+#undef CONFIG_RTC_DS12885
+
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_EXTENDED

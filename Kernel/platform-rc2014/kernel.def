@@ -52,6 +52,10 @@ FDC_CCR		.equ	0x4B
 FDC_TC		.equ	0x4C
 FDC_RESET	.equ	0x4D
 
+; DS12885 RTC ports
+RTC_ADDR	.equ	0xC0	; register address
+RTC_DATA	.equ	0xC1	; register data
+
 ; MMU Ports
 MPGSEL_0	.equ	0x78	; Bank_0 page select register (W/O)
 MPGSEL_1	.equ	0x79	; Bank_1 page select register (W/O)

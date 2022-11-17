@@ -3,6 +3,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <ds1302.h>
+#include <ds12885.h>
 #include <devide.h>
 #include <devsd.h>
 #include <blkdev.h>
@@ -222,6 +223,7 @@ static void quart_clock(void)
 	kputs("quart clock enabled\n");
 }
 
+
 __sfr __at 0xA0 sc26c92_mra;
 __sfr __at 0xA2 sc26c92_cra;
 __sfr __at 0xA4 sc26c92_acr;
@@ -398,12 +400,14 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
+#ifdef CONFIG_RTC_DS1302	
 	/* Could be at 0xC0 or 0x0C */
 	ds1302_init();
 	if (!ds1302_present) {
 		rtc_port = 0x0C;
 		ds1302_init();
 	}
+#endif
 
 	quart_present = probe_quart();
 	/* Further ports we register at this point */
@@ -422,6 +426,20 @@ void pagemap_init(void)
 		register_uart(0x84, &sio_uart);
 		register_uart(0x86, &sio_uartb);
 	}
+
+#ifdef CONFIG_RTC_DS12885
+	ds12885_init();
+	if (ds12885_present) {
+		kprintf("DS12885 detected at 0x%2x.\n", rtc_port);
+		if (timer_source == TIMER_NONE) {
+			ds12885_set_interval();
+			timer_source = TIMER_DS12885;
+			kputs("DS12885 timer enabled\n");
+		} else {
+			ds12885_disable_interval();
+		}
+	}
+#endif
 
 	if (ctc_port) {
 		if (timer_source == TIMER_NONE)
@@ -466,8 +484,10 @@ void pagemap_init(void)
 	if (dma_present)
 		kputs("Z80DMA detected at 0x04.\n");
 
+#ifdef CONFIG_RTC_DS1302
 	if (ds1302_present)
 		kprintf("DS1302 detected at 0x%2x.\n", rtc_port);
+#endif
 
 	/* Boot the coprocessor if present (just one for now) */
 	copro_present = probe_copro();
@@ -504,7 +524,14 @@ void pagemap_init(void)
 	if (!z180_present) {
 		i = 0xC0;
 		while(i) {
-			if (!ds1302_present || rtc_port != i) {
+			if (
+#ifdef CONFIG_RTC_DS1302
+				!ds1302_present ||
+#endif
+#ifdef CONFIG_RTC_DS12885
+				!ds12885_present ||
+#endif
+				rtc_port != i) {
 				if (m = probe_16x50(i)) {
 					register_uart(i, &ns16x50_uart);
 					/* Can't be a Z80-512K if there is a

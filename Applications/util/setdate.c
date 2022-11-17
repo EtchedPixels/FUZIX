@@ -108,6 +108,16 @@ void unbc(uint8_t *p)
     *p = c;
 }
 
+uint8_t bc(uint8_t a)
+{
+    uint8_t u = 0;
+    while (a >= 10) {
+       a -= 10;
+       u += 0x10;
+    }
+    return a + u;
+}
+
 int rtcdate(void)
 {
     struct tm tm;
@@ -156,9 +166,51 @@ int rtcdate(void)
     }
 }
 
+int rtcwrite(void)
+{
+    time_t t;
+    struct tm *tm;
+    struct cmos_rtc rtc;
+    uint8_t *p;
+
+    int fd = open("/dev/rtc", O_RDWR);
+    if (fd == -1)
+        return 0;
+    if (read(fd, &rtc, sizeof(rtc)) != sizeof(rtc)) {
+        close(fd);
+        return 0;
+    }
+    if (rtc.type != CMOS_RTC_BCD) {
+       close (fd);
+       return 0;
+    }
+
+    time(&t);
+    tm = localtime(&t);
+
+    p = rtc.data.bytes;
+    *p++ = bc((tm->tm_year + 1900) / 100);
+    *p++ = bc((tm->tm_year + 1900) % 100);
+    *p++ = bc(tm->tm_mon);
+    *p++ = bc(tm->tm_mday);
+    *p++ = bc(tm->tm_hour);
+    *p++ = bc(tm->tm_min);
+    *p = bc(tm->tm_sec);
+
+    lseek(fd, 0, SEEK_SET);
+    puts("writing\n");
+    if (write(fd, &rtc, sizeof(rtc)) != sizeof(rtc)) {
+        perror("write");
+        close(fd);
+        return 0;
+    }
+    close(fd);
+    return 1;
+}
+
 void usage(void)
 {
-    fprintf(stderr, "Usage: setdate [-a] [-u] [-0]\n");
+    fprintf(stderr, "Usage: setdate [-a] [-u] [-w] [-0]\n");
     exit(1);
 }
 
@@ -173,15 +225,18 @@ int main(int argc, char *argv[])
     int y,m,d,h,s;
     int set = 0;
     int opt;
-    int user = 0, autom = 0;
+    int user = 0, autom = 0, wr = 0;
 
-    while ((opt = getopt(argc, argv, "au0")) != -1) {
+    while ((opt = getopt(argc, argv, "auw0")) != -1) {
         switch(opt) {
         case 'a':
             autom = 1;
             break;
         case 'u':
             user = 1;
+            break;
+        case 'w':
+            wr = 1;
             break;
         case '0':
             utc = 1;
@@ -193,6 +248,12 @@ int main(int argc, char *argv[])
     if (optind != argc)
         usage();
 
+    if (wr)
+       if (rtcwrite())
+           exit(0);
+       else
+           exit(1);
+    
     if (!user && rtcdate())
         exit(0);
 
