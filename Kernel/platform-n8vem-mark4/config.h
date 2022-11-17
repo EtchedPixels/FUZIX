@@ -60,6 +60,7 @@ extern uint16_t swap_dev;
 #define SD_DRIVE_COUNT 1
 
 /* On-board DS1302 on Mark IV, we can read the time of day from it */
+#define CONFIG_RTC_DS1302
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
