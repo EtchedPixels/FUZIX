@@ -193,20 +193,20 @@ void plt_interrupt(void)
 #ifdef CONFIG_RTC_DS12885
 	/* Otherwise use DS12885 RTC if present */
 	} else if (timer_source == TIMER_DS12885) {
-		/* If PF flag is set, interrupt is from 64 Hz signal */
-		/* TODO: check for IRQF and PF */
-		if (ds12885_interrupt() & 0x80) {
+		/* If IRQF and PF flags are set, interrupt is from 64 Hz signal */
+		if (ds12885_interrupt() & (IRQF+PF)) {
 			timerct++;
-			if (timerct == 7 || timerct == 13 || timerct == 19
-				|| timerct == 26) {
-				do_timer_interrupt();
-			} else if (timerct == 32) {
-				do_timer_interrupt();
-				timerct = 0;
-			}
-			/* 7 ticks = 109 ms
-			 * 6 ticks = 93.7 ms
+			/* 7 ticks = 109 ms; 6 ticks = 93.7 ms;
 			 * (7+6+6+7+6) * 64 Hz = 500.0 ms */
+			switch (timerct) {
+				case 7: case 13: case 19: case 26:
+					do_timer_interrupt();
+					break;
+				case 32:
+					do_timer_interrupt();
+					timerct = 0;
+					break;
+			}
 		}
 #endif
 	/* If not and we have no QUART then pray the CTC works */

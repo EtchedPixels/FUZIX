@@ -402,6 +402,7 @@ void pagemap_init(void)
 #ifdef CONFIG_RTC_DS1302	
 	/* Could be at 0xC0 or 0x0C */
 	ds1302_init();
+	inittod();
 	if (!ds1302_present) {
 		rtc_port = 0x0C;
 		ds1302_init();
@@ -428,6 +429,7 @@ void pagemap_init(void)
 
 #ifdef CONFIG_RTC_DS12885
 	ds12885_init();
+	inittod();
 	if (ds12885_present) {
 		kprintf("DS12885 detected at 0x%2x.\n", rtc_port);
 		if (timer_source == TIMER_NONE) {
