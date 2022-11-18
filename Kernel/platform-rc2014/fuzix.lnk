@@ -65,7 +65,7 @@ platform-rc2014/ds1302.rel
 platform-rc2014/ds1302_discard.rel
 platform-rc2014/ds1302_rc2014.rel
 platform-rc2014/ds12885.rel
-platform-rc2014/ds12885_hw.rel
+platform-rc2014/ds12885_z80.rel
 platform-rc2014/z80dma.rel
 platform-rc2014/ide.rel
 platform-rc2014/usermem.rel
