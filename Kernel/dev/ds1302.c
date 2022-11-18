@@ -12,6 +12,8 @@
 #include <rtc.h>
 #include <ds1302.h>
 
+#ifdef CONFIG_RTC_DS1302
+
 uint8_t ds1302_present;
 uint8_t rtc_defer;
 
@@ -244,3 +246,5 @@ int plt_rtc_write(void)
 	udata.u_error = EOPNOTSUPP;
 	return -1;
 }
+
+#endif

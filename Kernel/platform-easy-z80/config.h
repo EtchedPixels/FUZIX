@@ -88,6 +88,7 @@ extern uint16_t swap_dev;
 #define MAX_BLKDEV 2	    /* 2 IDE */
 
 /* On-board DS1302, we can read the time of day from it */
+#define CONFIG_RTC_DS1302
 #define CONFIG_RTC
 /* The DS1302 reading is painfully slow - resync only every 20 seconds */
 #define CONFIG_RTC_INTERVAL	200

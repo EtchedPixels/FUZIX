@@ -55,6 +55,7 @@ extern uint8_t timer_source;
 #define TIMER_QUART		3
 #define TIMER_SC26C92		4
 #define TIMER_Z180		5
+#define TIMER_DS12885		6
 
 
 extern uint16_t probe_z80dma(void);

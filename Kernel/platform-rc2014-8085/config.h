@@ -1,4 +1,5 @@
 /* We have an RTC */
+#define CONFIG_RTC_DS1302
 #define CONFIG_RTC
 /* And we can read ToD from it */
 #define CONFIG_RTC_FULL
