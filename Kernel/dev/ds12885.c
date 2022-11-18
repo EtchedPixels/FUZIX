@@ -28,12 +28,17 @@ static uint_fast8_t nvmap(uint_fast8_t r)
 
 static uint_fast8_t rtc_nvread(uint_fast8_t r)
 {
-    return ds12885_read(nvmap(r));
+    irqflags_t irq = di();
+    uint_fast8_t res = ds12885_read(nvmap(r));
+    irqrestore(irq);
+    return res;
 }
 
 static void rtc_nvwrite(uint_fast8_t r, uint_fast8_t v)
 {
+    irqflags_t irq = di();
     ds12885_write(nvmap(r), v);
+    irqrestore(irq);
 }
 
 int plt_rtc_ioctl(uarg_t request, char *data)

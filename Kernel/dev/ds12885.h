@@ -1,4 +1,5 @@
-/* Caller provided: these must be IRQ safe */
+/* Caller provided: these must be able to run in IRQ context */
+
 extern uint_fast8_t ds12885_read(uint_fast8_t port);
 extern void ds12885_write(uint_fast8_t port, uint_fast8_t val);
 
