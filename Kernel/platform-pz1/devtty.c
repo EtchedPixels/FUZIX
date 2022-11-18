@@ -42,7 +42,7 @@ ttyready_t tty_writeready(uint8_t minor)
 		else
 			return TTY_READY_SOON;
 	} else {
-		if ((port_serial_0_flags & SERIAL_FLAGS_OUT_FULL) == 0)
+		if ((port_serial1_flags & SERIAL_FLAGS_OUT_FULL) == 0)
 			return TTY_READY_NOW;
 		else
 			return TTY_READY_SOON;
