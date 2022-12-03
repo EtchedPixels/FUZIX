@@ -537,6 +537,7 @@ doinstall:
 		;	this range.
 		;
 init_trap_loop:
+#if CPU>68040
 		cmp.w #$f0,a0
 		blt.s sandwich			; with mayo
 		cmp.w #$fc,a0
@@ -544,6 +545,7 @@ init_trap_loop:
 		addq #4,a0
 		bra.s skipvec
 sandwich:
+#endif
 		move.l d1,(a0)+
 skipvec:
 		dbra d0,init_trap_loop
