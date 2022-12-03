@@ -538,9 +538,11 @@ doinstall:
 		;
 init_trap_loop:
 		cmp.w #$f0,a0
-		blt sandwich			; with mayo
+		blt.s sandwich			; with mayo
 		cmp.w #$fc,a0
-		ble skipvec
+		bgt.s skipvec
+		addq #4,a0
+		bra.s skipvec
 sandwich:
 		move.l d1,(a0)+
 skipvec:
