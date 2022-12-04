@@ -10,7 +10,7 @@ typedef uint16_t irqflags_t;
 #define brk_limit() (udata.u_syscall_sp - 512)
 
 typedef uint16_t size_t;
-typedef uint16_t ssize_t;
+typedef int16_t ssize_t;
 extern void *memcpy(void *dest, const void *src, size_t n);
 extern char *strcpy(char *dest, const char *src);
 extern char *strncpy(char *dest, const char *src, size_t n);
