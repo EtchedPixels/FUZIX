@@ -3,6 +3,10 @@
  */
 #include "kernel-68000.def"
 
+#ifdef linux
+#error "Wrong compiler; see README.68000.md"
+#endif
+
 .mri 0
 /* libgcc1 routines for 68000 w/o floating-point hardware.
    Copyright (C) 1994, 1996, 1997, 1998 Free Software Foundation, Inc.
