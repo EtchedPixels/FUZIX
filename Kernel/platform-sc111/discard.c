@@ -20,9 +20,13 @@ void init_hardware_c(void)
     Z180_DCNTL |= 0xF0;		/* Force slow as possible, then mod back */
     Z180_DCNTL &= 0xBF;		/* 2 wait memory, 4 on I/O */
     Z180_RCR &= 0x7F;		/* No DRAM, kill refresh */
-    Z180_CCR &= 0x7F;		/* Clock divider off */
+    Z180_CCR |= 0x80;		/* Clock divider off */
+    Z180_CMR &= 0x7F;		/* Clock doubler off */
+    if (Z180_CMR & 0x80)
+        kputs("no clock doubler, 18.4MHz.\n");
+    else
+        kputs("turbo engaged, 36.8MHz.\n");
     Z180_CMR |= 0x80;		/* Clock doubler on */
-    kputs("turbo engaged, 36.8MHz.\n");
 }
 
 void pagemap_init(void)
