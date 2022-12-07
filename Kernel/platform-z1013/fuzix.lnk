@@ -42,5 +42,6 @@ platform-z1013/mbr.rel
 platform-z1013/blkdev.rel
 platform-z1013/devide.rel
 platform-z1013/devide_discard.rel
+platform-z1013/devrd.rel
 platform-z1013/devrtc.rel
 -e

@@ -9,35 +9,63 @@ Currently assumes
 - 32K switchable EPROM (no option to use 128K RAM modern setup)
 - GIDE
 - RTC (on the GIDE)
+- Keyboard is handled via the monitor to deal with all the variants (you won't
+get too far without a fuller keyboard unless someone wants to write an extended
+32key driver with a control key setting)
+- RAM floppy at 0x58
 
-TODO
-- RAM floppies
+For the -128K blue the jumpers needed are ideally
+	JP8  2-3		Or set it by hand before doing J 8000
+	JP11 1-2		D5 pages in EPROM
+
+(the 128K second bank is not currently used so not relevant)
+
+As configured it uses LBA hard disk and only scans for the first disk. This
+is needed to work around the lack of LBA emulation in JKCEMU and some bugs in
+the JKCEMU GIDE emulation.
+
+make diskimage
+load the generated fuzix.rom as the 32K pageable EPROM
+load the diskimage as the GIDE first disk
+
+Boot and in the monitor set the EPROM paged in if needed and then J 8000
+
+TODO: although the memory space left is tight so this may be limited without
+      doing a thunked 128K build as well as this one
+
 - Optional SD card bitbanged on port A
-- Optional external timer interrupt on
-  port A.
+- Optional external timer interrupt / interruptor on port A.
 - Video mode switching (64 x 16 optional 64 x 32)
 - Floppies
-- Look at what other K1520 bits are relevant
 
-Note that the system does not a standard interval timer interrupt so is somewhat
-limited by this behaviour. They keyboard is also "interesting" depending upon
-the option chosen.
+Note that the system does not have a standard interval timer interrupt so is
+somewhat limited by this behaviour.
 
 Memory map
 
 User mode
 0000-00FF		Monitor space
 0100-5FFF		Common, kernel data, buffers, etc
-6000-EAFF		User space
-E800-EFFF		Video (64 x 32 option)
+6000-DFFF		User space
+E000-EBFF		Unused for now (may extend user)
+EC00-EFFF		Video
 F000-FFFF		Monitor ROM (jump table required)
-
 
 Kernel mode
 0100-5FFF		Common, kernel data, buffers, etc
-8000-E7FF		ROM fuzix code
-E800-EFFF		Video (64 x 32 option)
+8000-EBFF		ROM fuzix code
+EC00-EFFF		Video
 F000-FFFF		Monitor ROM (jump table required)
 
 The system runs with single process in memory for obvious reasons
+
+
+Address 4 bits
+	Peters		128K
+7: set for 64x16	Unused
+6: set for 4MHz		set for 4MHz
+5: alt font		page ROM
+4: OS ROM enabled	OS ROM enabled (also enables video)
+
+without OS ROM enabled EC00-FFFF bleed through to ROM or RAM
 

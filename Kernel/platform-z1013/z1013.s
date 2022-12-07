@@ -108,6 +108,7 @@ rom_out:
 	in a,(4)
 	res 5,a
 	out (4),a
+	xor a
 	ld (rom_state),a
 	ret
 
@@ -201,19 +202,19 @@ map_save_kernel:
 ; Outputs: none
 ;=========================================================================
 outchar:
-out_done:
-	; No useful non video device. FIXME: v24 later
-	out (0xFF),a	; emulator tracing
+	push hl
+	ld hl,(outpt)
+	ld (hl),a
+	inc hl
+	ld (outpt),hl
+	pop hl
 	ret
+outpt:	.word 0xEC00
 
 	.area _COMMONMEM
 ;
 ;	Character pending or 0
 ;
-	.globl _ramdp
-
-_ramdp:
-	.word	0
 
 	.globl _keycheck
 ;
@@ -223,6 +224,13 @@ _keycheck:
 	ld l,a
 	ret
 
+	.globl _rd_dptr
+	.globl _rd_page
+_rd_dptr:
+	.word	0
+_rd_page:
+	.byte	0
+
 ramconf5:
 	sla	l		; Turn HL into 256 byte blocks
 	rl	h
@@ -231,11 +239,15 @@ ramconf5:
 	xor	a
 	out	(0x5f),a	; Clear the counter
 	ld	a,h
-	add	#0x58		; Work out which port to use
-	ld	b,#0		; Set up a and b for the caller
+	add	a, #0x58	; Work out which port to use
+	ld	c,a		; port
+	ld	a,(_rd_page)	; check if we need to page user space in
+	or	a
+	call	nz, map_process_always
+	ld	b,#0		; Set up b for the caller
 	ld	a,l
-	inc	a
-	ld	hl,(_ramdp)	; Set up HL for the caller
+	inc	a		; second port info
+	ld	hl,(_rd_dptr)	; Set up HL for the caller
 	ret
 
 	.globl	_ramread5
@@ -245,7 +257,7 @@ _ramread5:
 	inir
 	out	(0x5e),a
 	inir
-	ret
+	jp	map_kernel
 
 	.globl	_ramwrite5
 
@@ -254,7 +266,7 @@ _ramwrite5:
 	otir
 	out	(0x5e),a
 	otir
-	ret
+	jp	map_kernel
 
 	.area _DISCARD
 

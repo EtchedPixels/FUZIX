@@ -7,14 +7,14 @@
 
 	; Start with the ROM area from C000
         .area _CODE
-        .area _CONST
+        .area _HOME     ; compiler stores __mullong etc in here if you use them
 	; Discard is loaded where process memory wil blow it away
         .area _DISCARD
         .area _INITIALIZER ; binman copies this to the right place for us
 	; Writeable memory segments
         .area _COMMONMEM
         .area _CODE2
-        .area _HOME     ; compiler stores __mullong etc in here if you use them
+        .area _CONST
         .area _INITIALIZED
         .area _DATA
         .area _BSEG
@@ -55,6 +55,10 @@
 init:  
         di
 	ld sp,#0x8000		; safe spot
+
+	in a,(4)		; turn on 4MHz and work around bug? in JKCEMU
+	or a,#0x60		; (wrong in a,(4) if boot with EPROM mapped)
+	out (4),a
 
 	; Clear the screen
 	ld hl,#0xEC00

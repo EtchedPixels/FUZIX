@@ -1,3 +1,9 @@
+/*
+ *	Build options
+ */
+
+#define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE: TO DEBUG */
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -20,17 +26,25 @@
 
 #define PROC_SIZE   32	  /* Memory needed per process */
 
-#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern uint16_t swap_dev;
-#define SWAP_SIZE   0x21 	/* 32.5K in blocks (prog + udata) */
+#define SWAP_SIZE   0x41 	/* 32.5K in blocks (prog + udata) */
 #define SWAPBASE    0x6000	/* start at the base of user mem */
 #define SWAPTOP	    0xE000	/* Swap out program */
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS  1
 #define UDATA_SIZE  0x200	/* One block */
+
+#ifdef CONFIG_RD_SWAP
+#define MAX_SWAPS   	7
+#define PTABSIZE	7
+#define SWAPDEV		0x30
+#else
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
+#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+extern uint16_t swap_dev;
+#endif
+
 #define MAXTICKS    20		/* As we are pure swap */
 #define CONFIG_PARENT_FIRST	/* For pure swap this is far faster */
 
@@ -68,15 +82,16 @@ extern uint16_t swap_dev;
 /* Console */
 #define CONFIG_VT
 #define CONFIG_VT_SIMPLE
-/* Vt definitions: TODO mode setting, 64x16, 64x32, colour options */
+
+/* Vt definition */
 #define VT_WIDTH	32
 #define VT_HEIGHT	32
 #define VT_RIGHT	31
 #define VT_BOTTOM	31
 #define VT_INITIAL_LINE	3
+#define VT_BASE	((volatile uint8_t *)0xEC00)
 #define VT_MAP_CHAR(x)	(x)
 
-#define VT_BASE	((volatile uint8_t *)0xEC00)
 
 /* Video as the console */
 #define BOOT_TTY (512 + 1)
