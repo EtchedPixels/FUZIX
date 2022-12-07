@@ -101,15 +101,30 @@ void devide_init_drive(uint_fast8_t drive)
     blk_op.nblock = 1;
     devide_read_data();
 
+#ifdef CONFIG_IDE_CHS
+    /* TODO: CHS + BSWAP */
+    ide_spt[drive] = buffer[12];
+    ide_heads[drive] = buffer[6];
+    ide_cyls[drive] = buffer[2]|(buffer[3] << 8);
+    kprintf(" C/H/S %u/%u/%u\n", ide_cyls[drive], buffer[6], buffer[12]);
+
+    devide_writeb(ide_reg_devhead, select | (buffer[6] - 1));
+    devide_writeb(ide_reg_sec_count, buffer[12]);
+    devide_writeb(ide_reg_lba_1, buffer[2]);
+    devide_writeb(ide_reg_lba_2, buffer[3]);
+    devide_writeb(ide_reg_command, IDE_CMD_INIT_DEV_PARAM);
+    if (!devide_wait(IDE_STATUS_READY))
+        goto out;
+#else
 #ifdef CONFIG_IDE_BSWAP
     if(!(buffer[98] & 0x02)) {
 #else
     if(!(buffer[99] & 0x02)) {
-#endif    
+#endif
         kputs("LBA unsupported.\n");
         goto failout;
     }
-
+#endif
     blk = blkdev_alloc();
     if(!blk)
 	goto failout;
@@ -127,8 +142,12 @@ void devide_init_drive(uint_fast8_t drive)
 	}
     }
 
+#ifdef CONFIG_IDE_CHS
+    blk->drive_lba_count = ide_heads[drive] * (unsigned int)ide_spt[drive] * (unsigned long)ide_cyls[drive];
+#else
     /* read out the drive's sector count */
     blk->drive_lba_count = le32_to_cpu(*((uint32_t*)&buffer[120]));
+#endif
 
     /* done with our temporary memory */
     tmpfree(buffer);
