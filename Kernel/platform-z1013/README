@@ -1,0 +1,43 @@
+An initial cut at Fuzix for the Z1013 with a 32K switchable EPROM. The OS
+image is mostly in the ROM and paged in and out as needed. The rest of it
+(which must match build) is loaded off the first sectors of the disk which
+expects to have a PC style partition table.
+
+(Figuring out how to nicely play with CP/A is a project for later)
+
+Currently assumes
+- 32K switchable EPROM (no option to use 128K RAM modern setup)
+- GIDE
+- RTC (on the GIDE)
+
+TODO
+- RAM floppies
+- Optional SD card bitbanged on port A
+- Optional external timer interrupt on
+  port A.
+- Video mode switching (64 x 16 optional 64 x 32)
+- Floppies
+- Look at what other K1520 bits are relevant
+
+Note that the system does not a standard interval timer interrupt so is somewhat
+limited by this behaviour. They keyboard is also "interesting" depending upon
+the option chosen.
+
+Memory map
+
+User mode
+0000-00FF		Monitor space
+0100-5FFF		Common, kernel data, buffers, etc
+6000-EAFF		User space
+E800-EFFF		Video (64 x 32 option)
+F000-FFFF		Monitor ROM (jump table required)
+
+
+Kernel mode
+0100-5FFF		Common, kernel data, buffers, etc
+8000-E7FF		ROM fuzix code
+E800-EFFF		Video (64 x 32 option)
+F000-FFFF		Monitor ROM (jump table required)
+
+The system runs with single process in memory for obvious reasons
+
