@@ -36,7 +36,7 @@
 #ifdef CONFIG_RD_SWAP
 #define MAX_SWAPS   	7
 #define PTABSIZE	7
-#define SWAPDEV		0x30
+#define SWAPDEV		0x300
 #else
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */

@@ -219,21 +219,29 @@ outpt:	.word 0xEC00
 	.globl _keycheck
 ;
 _keycheck:
+	push ix
+	push iy
 	rst 0x20
 	.byte 4
+	pop iy
+	pop ix
 	ld l,a
 	ret
 
 	.globl _rd_dptr
 	.globl _rd_page
+	.globl _rd_block
+
 _rd_dptr:
 	.word	0
 _rd_page:
 	.byte	0
+_rd_block:
+	.word	0
 
 ramconf5:
-	sla	l		; Turn HL into 256 byte blocks
-	rl	h
+	ld 	hl,(_rd_block)	; Requested 512 byte block
+	add	hl,hl		; Turn HL into 256 byte blocks
 	ld	a,l
 	out	(0x5e),a	; Set the middle byte
 	xor	a
@@ -257,6 +265,7 @@ _ramread5:
 	inir
 	out	(0x5e),a
 	inir
+	ld	(_rd_dptr),hl
 	jp	map_kernel
 
 	.globl	_ramwrite5
@@ -266,6 +275,7 @@ _ramwrite5:
 	otir
 	out	(0x5e),a
 	otir
+	ld	(_rd_dptr),hl
 	jp	map_kernel
 
 	.area _DISCARD
@@ -274,32 +284,14 @@ _ramwrite5:
 
 _ramdet5:
 	xor	a		;	Point to start of ram disc
-	out	(0x5e),a
-	out	(0x5f),a
-	ld	c,#0x58		;	Read first two bytes
-	in	e,(c)
-	in	d,(c)
-	xor	a
-	out	(0x5f),a	;	Reset pointer
-	ld	a,#0xAA
-	out	(0x58),a	;	Write AA55
-	cpl
-	out	(0x58),a
-	xor	a
-	out	(0x5f),a	;	Reset pointer
-	in	a,(0x58)
-	cp 	#0xAA		;	Should get AA55 back
-	jr	nz, nodisk
-	in	a,(0x58)
-	cp	#0x55
-	jr	nz, nodisk
-	; Success - put back the old bytes
-	xor	a
-	out	(0x5f),a
-	out	(c),e
-	out	(c),d
-	ld	l,#1
-	ret
-nodisk:
-	ld	l,#0
+	ld	l,a		;	Clear return
+	out	(0x5f),a	;	Clear counter
+	in	a, (0x5f)	;	Should read back as 0
+	or	a
+	ret	nz
+	in	a,(0x58)	;	Read a byte
+	in	a,(0x5f)	;	Counter now reads back as 1
+	dec	a
+	ret	nz
+	inc	l
 	ret

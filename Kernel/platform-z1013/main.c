@@ -50,18 +50,6 @@ uint8_t plt_param(unsigned char *p)
 	return 0;
 }
 
-static int16_t timerct;
-
-/* Call timer_interrupt at 10Hz */
-static void timer_tick(uint8_t n)
-{
-	timerct += n;
-	while (timerct >= 20) {
-		timer_interrupt();
-		timerct -= 20;
-	}
-}
-
 /* TODO: PIO timer option */
 void plt_interrupt(void)
 {
