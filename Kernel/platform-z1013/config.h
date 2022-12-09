@@ -2,7 +2,15 @@
  *	Build options
  */
 
-#define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE: TO DEBUG */
+#define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
+#define CONFIG_JKCEMU		/* Work around JKCEMU problems
+                                    - no LBA emulation
+                                    - buggy disk emulation
+                                    - probably a bug in port 4 handling */
+
+/*
+ *	Platform configuration
+ */
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -18,17 +26,17 @@
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* One memory bank */
 #define CONFIG_BANKS	1
-#define TICKSPERSEC 10      /* Ticks per second */
-#define PROGBASE    0x6000  /* also data base */
-#define PROGLOAD    0x6000  /* also data base */
-#define PROGTOP     0xE000  /* Top of program */
-#define KERNTOP	    0x6000  /* Grow buffers up to user space */
+#define TICKSPERSEC 10		/* Ticks per second */
+#define PROGBASE    0x6000	/* also data base */
+#define PROGLOAD    0x6000	/* also data base */
+#define PROGTOP     0xEC00	/* Top of program */
+#define KERNTOP	    0x6000	/* Grow buffers up to user space */
 
-#define PROC_SIZE   32	  /* Memory needed per process */
+#define PROC_SIZE   35		/* Memory needed per process */
 
-#define SWAP_SIZE   0x41 	/* 32.5K in blocks (prog + udata) */
+#define SWAP_SIZE   0x47 	/* 35.5K in blocks (prog + udata) */
 #define SWAPBASE    0x6000	/* start at the base of user mem */
-#define SWAPTOP	    0xE000	/* Swap out program */
+#define SWAPTOP	    0xEC00	/* Swap out program */
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS  1
 #define UDATA_SIZE  0x200	/* One block */
@@ -74,8 +82,13 @@ extern uint16_t swap_dev;
 
 /* IDE/CF support */
 #define CONFIG_IDE
+
+/* JKCEMU has some limits */
+#ifdef CONFIG_JKCEMU
 #define CONFIG_IDE_CHS		/* For testing only */
 #define IDE_DRIVE_COUNT	1	/* Work around buggy emulator */
+#endif
+
 /* Device parameters */
 #define NUM_DEV_TTY 1		/* Only a console */
 

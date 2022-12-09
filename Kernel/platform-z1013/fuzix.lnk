@@ -35,7 +35,6 @@ tty.rel
 vt.rel
 devsys.rel
 usermem.rel
-usermem_std-z80.rel
 platform-z1013/discard.rel
 platform-z1013/devtty.rel
 platform-z1013/mbr.rel

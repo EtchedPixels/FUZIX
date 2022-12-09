@@ -1,28 +1,44 @@
-An initial cut at Fuzix for the Z1013 with a 32K switchable EPROM. The OS
-image is mostly in the ROM and paged in and out as needed. The rest of it
-(which must match build) is loaded off the first sectors of the disk which
-expects to have a PC style partition table.
+Fuzix for the Z1013 with a 32K switchable EPROM.
 
-(Figuring out how to nicely play with CP/A is a project for later)
+The OS image is mostly in the ROM and paged in and out as needed. The rest
+of it (which must match build) is loaded off the first sectors of the disk
+which expects to have a PC style partition table.
 
-Currently assumes
+Configuration
 - 32K switchable EPROM (no option to use 128K RAM modern setup)
 - GIDE
 - RTC (on the GIDE)
 - Keyboard is handled via the monitor to deal with all the variants (you won't
 get too far without a fuller keyboard unless someone wants to write an extended
 32key driver with a control key setting)
+
+Optional
 - RAM floppy at 0x58
 
-For the -128K blue the jumpers needed are ideally
+CONFIG_RD_SWAP		set this to swap to ram floppy not GIDE
+
+For the -128K blue the jumpers needed are I believe
 	JP8  2-3		Or set it by hand before doing J 8000
 	JP11 1-2		D5 pages in EPROM
 
 (the 128K second bank is not currently used so not relevant)
 
-As configured it uses LBA hard disk and only scans for the first disk. This
-is needed to work around the lack of LBA emulation in JKCEMU and some bugs in
-the JKCEMU GIDE emulation.
+Ideally it uses LBA hard disk and only scans for the first disk. There
+is a config option in config.h for JKCemu that deals with the fact it lacks
+LBA and has some bugs.
+
+With JKCEmu set
+System: Z1013
+Model: Z1013.64
+Monitorprogramm: A.2 (others should work)
+GIDE: enabled
+RAM floppies: 0x58-0x5F (0x98-0x9F is not supported)
+ROM-erweiterungen: 32K-ROM, nach RESET eingeblendet
+Graphik-erweiterungen: Nothing set
+Sonstige Erweiterungen: Echtzeituhr (RTC) (floppy can be set but not supported)
+
+Because of the JKC LBA workarounds your disk must have at least 63 sectors
+per track in CHS mode (all modern disks do)
 
 make diskimage
 load the generated fuzix.rom as the 32K pageable EPROM
@@ -35,7 +51,7 @@ TODO: although the memory space left is tight so this may be limited without
 
 - Optional SD card bitbanged on port A
 - Optional external timer interrupt / interruptor on port A.
-- Video mode switching (64 x 16 optional 64 x 32)
+- Video mode switching (64 x 16 optional 64 x 32 etc)
 - Floppies
 
 Note that the system does not have a standard interval timer interrupt so is
@@ -46,26 +62,28 @@ Memory map
 User mode
 0000-00FF		Monitor space
 0100-5FFF		Common, kernel data, buffers, etc
-6000-DFFF		User space
-E000-EBFF		Unused for now (may extend user)
+6000-EBFF		User space
 EC00-EFFF		Video
-F000-FFFF		Monitor ROM (jump table required)
+F000-FFFF		Monitor ROM
 
 Kernel mode
 0100-5FFF		Common, kernel data, buffers, etc
 8000-EBFF		ROM fuzix code
 EC00-EFFF		Video
-F000-FFFF		Monitor ROM (jump table required)
+F000-FFFF		Monitor ROM
 
 The system runs with single process in memory for obvious reasons
 
+In order to get the best performance the memory is packed so that only code is
+in the upper paged ROM space. This ensures any copy to or from user memory
+does not need to bank switch in and out repeatedly.
 
 Address 4 bits
-	Peters		128K
+	Peter's		128K
 7: set for 64x16	Unused
 6: set for 4MHz		set for 4MHz
 5: alt font		page ROM
 4: OS ROM enabled	OS ROM enabled (also enables video)
 
-without OS ROM enabled EC00-FFFF bleed through to ROM or RAM
-
+without OS ROM enabled EC00-FFFF bleed through to ROM or RAM which may be
+useful to get a bigger kernel space at the cost of some video bank switching.
