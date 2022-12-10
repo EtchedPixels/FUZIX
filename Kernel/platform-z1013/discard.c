@@ -22,6 +22,10 @@ void map_init(void)
 }
 
 __sfr __at 0x01 pio_c;
+__sfr __at 0x3C ctc_0;
+__sfr __at 0x3D ctc_1;
+__sfr __at 0x3E ctc_2;
+__sfr __at 0x3F ctc_3;
 
 void device_init(void)
 {
@@ -33,6 +37,15 @@ void device_init(void)
 	pio_c = 0x08;		/* bit 3 has the 10Hz square wave */
 #else
 	pio_c = 0x07;		/* No interrupt, no mask */
+#endif
+#ifdef CONFIG_K1520_SOUND	/* We care about the CTC not the sound */
+	/* The timers run 0->1->2->3 chained and the clock input is 1.79/4 Mhz */
+	ctc_0 = 0x55;		/* counter, falling */
+	ctc_0 = 250;		/* time constant */
+	ctc_1 = 0xD5;		/* int, counter, falling */
+	ctc_1 = 179;		/* time constant */
+	ctc_1 = 0x04;		/* Vector */
+	/* Set up for 10Hz */
 #endif
 	rd_probe();
 	sd_setup();

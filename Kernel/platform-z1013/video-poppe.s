@@ -6,21 +6,38 @@
 
 ;
 ;	Video RAM is E800-EFFF with a separate colour bank we don't yet
-;	bother with except to set a default
-;
-;	Only visible when the ROM (ie kernel) is unmapped
-;
-;	Curiously this means we can actually do dual monitor in theory
-;	because EC00-EFFF is
-;
-;	32K ROM		OS ROM
-;	IN		IN		Main video
-;	IN		OUT		32K ROM
-;	OUT		IN		Both
-;	OUT		OUT		Poppe video
+;	bother with except to set a default. The card memory is not read
+;	but is shadowed by E800-EFFF in the main system when reading. This
+;	means that
+;	1. We need to be careful what is mapped there
+;	2. It's not possible to do attributes nicely because we'd have to
+;	   store an extra copy of the memory somewhere
 ;
 
-	.area _COMMONMEM
+	.area _DISCARD
+	.globl _video_init
+
+_video_init:
+	call	map_process_always
+	ld	a,#1
+	out	(0x12),a
+	ld	hl,#0xE800
+	ld	de,#0xE801
+	ld	bc,#0x800
+	ld	(hl),#0x02
+	ldir
+	xor	a
+	out	(0x12),a
+	ld	hl,#0xE800
+	ld	de,#0xE801
+	ld	bc,#0x0800
+	ld	(hl),#0x20
+	ldir
+	out	(0x12),a
+	out	(0x11),a
+	jp	map_kernel
+
+	.area	_COMMONMEM
 
 vpos:
 	ld	h,#0
@@ -38,29 +55,6 @@ vpos:
 	add	hl,de
 	jp	map_process_always
 
-	.globl _video_init
-
-_video_init:
-	call	map_process_always
-	xor	a
-	out	(0x12),a
-	ld	hl,#0xE800
-	ld	de,#0xE801
-	ld	bc,#0x800
-	ld	(hl),#0x20
-	ldir
-	inc	a
-	out	(0x12),a
-	ld	hl,#0xE800
-	ld	de,#0xE801
-	ld	bc,#0x0800
-	ld	(hl),#0x20
-	ldir
-	dec	a
-	out	(0x12),a
-;	ld	a,#0x02
-	out	(0x11),a
-	jp	map_kernel
 
 	.globl	_plot_char
 
@@ -92,7 +86,11 @@ _clear_lines:
 	ld	d,#0		; X = 0 for finding line start
 	call	vpos
 	ld	a,#0x20		; space
-	ld	de,#0x20	; line width
+;
+;	Clear entire text lines in the current bank. Called twice, once
+;	to wipe the display and once to set the colour memory
+;
+	ld	de,#0x40	; line width
 	jr	nextline
 cl:	push	hl
 	ld	b,e		; line width
@@ -130,8 +128,8 @@ nchar:	djnz	ca
 _scroll_down:
 	call	map_process_always
 	ld	hl,#0xEFFF	; last char
-	ld	de,#0xEFDF	; line above last char
-	ld	bc,#0x7E0	; size to copy
+	ld	de,#0xEF7F	; line above last char
+	ld	bc,#0x7C0	; size to copy
 	lddr
 	jp	map_kernel
 
@@ -139,9 +137,9 @@ _scroll_down:
 
 _scroll_up:
 	call	map_process_always
-	ld	hl,#0xE820	; line 1
+	ld	hl,#0xE840	; line 1
 	ld	de,#0xE800	; top line
-	ld	bc,#0x07E0
+	ld	bc,#0x07C0
 	ldir
 	jp	map_kernel
 
@@ -163,6 +161,7 @@ _cursor_on:
 
 _cursor_disable:
 _cursor_off:
+	call	map_process_always
 	ld	hl,(cursorpos)
 	ld	a,(cursorchar)
 	ld	(hl),a

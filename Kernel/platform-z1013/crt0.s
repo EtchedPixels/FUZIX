@@ -59,6 +59,7 @@ init:
 
 	; Conveient spot for interrupt vectors
 	.word pio0_intr
+	.word interrupt_handler
 
 	; Startup code resumes
 doinit:

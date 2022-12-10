@@ -102,19 +102,26 @@ save_rom:
 ;	Centralize all control of the toggle in one place so we can debug it
 ;
 rom_in:
-	in a,(4)
-	set 5,a
-	out (4),a
-	ld (rom_state),a
+	di
+	in	a,(4)
+	set	5,a
+	out	(4),a
+	ld	(rom_state),a
+irqfix:
+	ld	a,(_int_disabled)
+	or	a
+	ret	nz
+	ei
 	ret
 
 rom_out:
-	in a,(4)
-	res 5,a
-	out (4),a
-	xor a
-	ld (rom_state),a
-	ret
+	di
+	in	a,(4)
+	res	5,a
+	out	(4),a
+	xor	a
+	ld	(rom_state),a
+	jr	irqfix
 
 ;=========================================================================
 ; map_process - map process or kernel pages
@@ -179,7 +186,7 @@ map_restore:
 	push af
 	ld a,(save_rom)
 	or a
-	jr z, was_k
+	jr nz, was_k
 	jr was_u
 
 ;=========================================================================
@@ -354,9 +361,10 @@ __uzero:
 
 	.area _COMMONMEM
 ;
-;	Character pending or 0
+;	Character pending or 0. These routines use the ROM so we need to be
+;	careful they don't re-enter. keycheck is always called with
+;	interrupts off.
 ;
-
 	.globl _keycheck
 ;
 _keycheck:
@@ -374,6 +382,39 @@ _keycheck:
 	or #0x80
 	out (4),a
 	ret
+
+;
+;	Beeper (if there is a jump table)
+;
+	.globl _do_beep
+
+_do_beep:
+	di
+	push	ix
+	push	iy
+	in	a,(4)	;	ROM in
+	and	#0x7f
+	out	(4),a
+	call	do_beep
+	in	a,(4)
+	or	#0x80
+	out	(4),a
+	jp	irqfix
+
+do_beep:
+	ld	hl,#0xFFD6
+	ld	de,#0x03
+	ld	a,#0xC3
+	cp	(hl)
+	ret	nz
+	add	hl,de
+	cp	(hl)
+	ret	nz
+	add	hl,de
+	cp	(hl)
+	ret	nz
+	; Looks like a valid jump table
+	jp	(hl)
 
 	.globl _rd_dptr
 	.globl _rd_page
@@ -491,7 +532,8 @@ _ramdet9:
 	ret
 
 ;
-;	Hooks for PIO provided timer tickery
+;	Hooks for PIO provided timer tickery. We never have both CTC
+;	and PIO enabled.
 ;
 	.area _COMMONMEM
 

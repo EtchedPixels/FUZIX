@@ -16,6 +16,8 @@ vpos:
 	add	hl,de		; + X
 	ld	de,#0xEC00
 	add	hl,de
+video_on:
+	di			; Protect port 4 control
 	in	a,(4)
 	and	a,#0x7F
 	out	(4),a
@@ -41,6 +43,10 @@ vidout:
 	in	a,(4)
 	or	a,#0x80
 	out	(4),a
+	ld	a,(_int_disabled)
+	or	a
+	ret	nz
+	ei
 	; fall through
 
 	.globl	_vtattr_notify
@@ -96,9 +102,7 @@ nchar:	djnz	ca
 	.globl	_scroll_down
 
 _scroll_down:
-	in	a,(4)		; video in
-	and	a,#0x7f
-	out	(4),a
+	call	video_on
 	ld	hl,#0xEFFF	; last char
 	ld	de,#0xEFDF	; line above last char
 	ld	bc,#0x3E0	; size to copy
@@ -108,9 +112,7 @@ _scroll_down:
 	.globl _scroll_up
 
 _scroll_up:
-	in	a,(4)		; video in
-	and	a,#0x7f
-	out	(4),a
+	call	video_on
 	ld	hl,#0xEC20	; line 1
 	ld	de,#0xEC00	; top line
 	ld	bc,#0x03E0
@@ -127,7 +129,7 @@ _cursor_on:
 	ld	(cursorpos),hl
 	ld	a,(hl)
 	ld	(cursorchar),a
-	ld	(hl),#'_'
+	ld	(hl),#0		; solid block
 	jr	vidout
 
 	.globl	_cursor_disable
@@ -135,6 +137,7 @@ _cursor_on:
 
 _cursor_disable:
 _cursor_off:
+	call	video_on
 	ld	hl,(cursorpos)
 	ld	a,(cursorchar)
 	ld	(hl),a
