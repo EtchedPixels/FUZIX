@@ -49,7 +49,6 @@ Boot and in the monitor set the EPROM paged in if needed and then J 8000
 TODO: although the memory space left is tight so this may be limited without
       doing a thunked 128K build as well as this one
 
-- Optional SD card bitbanged on port A
 - Optional external timer interrupt / interruptor on port A.
 - Video mode switching (64 x 16 optional 64 x 32 etc)
 - Floppies
@@ -63,14 +62,14 @@ User mode
 0000-00FF		Monitor space
 0100-5FFF		Common, kernel data, buffers, etc
 6000-EBFF		User space
-EC00-EFFF		Video
-F000-FFFF		Monitor ROM
+EC00-EFFF		Video		}
+F000-FFFF		Monitor ROM	} or ROM Fuzix code if pageable
 
 Kernel mode
 0100-5FFF		Common, kernel data, buffers, etc
-8000-EBFF		ROM fuzix code
-EC00-EFFF		Video
-F000-FFFF		Monitor ROM
+8000-EBFF		ROM Fuzix code
+EC00-EFFF		Video		}
+F000-FFFF		Monitor ROM	} or ROM Fuzix code if pageable
 
 The system runs with single process in memory for obvious reasons
 
@@ -87,3 +86,6 @@ Address 4 bits
 
 without OS ROM enabled EC00-FFFF bleed through to ROM or RAM which may be
 useful to get a bigger kernel space at the cost of some video bank switching.
+
+The video is kept in CODE2 so that we can safely flip the ROM on and off on
+systems that allow it to permit a bigger kernel.

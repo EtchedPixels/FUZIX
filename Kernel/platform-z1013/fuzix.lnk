@@ -41,6 +41,12 @@ platform-z1013/mbr.rel
 platform-z1013/blkdev.rel
 platform-z1013/devide.rel
 platform-z1013/devide_discard.rel
+platform-z1013/devsd.rel
+platform-z1013/devsd_discard.rel
+platform-z1013/sd.rel
+platform-z1013/z80softsd.rel
+platform-z1013/z80softspi.rel
 platform-z1013/devrd.rel
 platform-z1013/devrtc.rel
+platform-z1013/video-poppe.rel
 -e

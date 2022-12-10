@@ -29,6 +29,8 @@
         .globl _procmem
         .globl outhl
         .globl outnewline
+	.globl interrupt_handler
+	.globl _video_init
 
 	; exported debugging tools
 	.globl outchar
@@ -58,9 +60,7 @@ init_hardware:
 	ld (_ramsize), hl
 	ld hl,#35
 	ld (_procmem), hl
-
-	im 2				; set Z80 CPU interrupt mode 2
-	ret
+	jp _video_init
 
 ;=========================================================================
 ; Common Memory (mapped low below ROM)
@@ -68,7 +68,11 @@ init_hardware:
         .area _COMMONMEM
 
 _plt_monitor:
+	in a,(4)			; ensure the monitor is mapped
+	and a,#0x7f
+	out (4),a
 	rst 0x38			; To monitor
+	.word 0x01			; Wait for key
 _plt_reboot:
 	call map_kernel			; ROM in
 	jp init
@@ -356,6 +360,9 @@ __uzero:
 	.globl _keycheck
 ;
 _keycheck:
+	in a,(4)	;	ROM in if paged out
+	and #0x7f
+	out (4),a
 	push ix
 	push iy
 	rst 0x20
@@ -363,6 +370,9 @@ _keycheck:
 	pop iy
 	pop ix
 	ld l,a
+	in a,(4)	;	Reverse the ROM page if supported
+	or #0x80
+	out (4),a
 	ret
 
 	.globl _rd_dptr
@@ -479,3 +489,51 @@ _ramdet9:
 	ret	nz
 	ld	l,#2
 	ret
+
+;
+;	Hooks for PIO provided timer tickery
+;
+	.area _COMMONMEM
+
+	.globl pio0_intr
+
+;
+;	This is level triggered so we need to do a bit of work
+;
+pio_polarity:
+	.byte	0
+;
+;	The PIO interrupts on low or high state. We do a little bit of
+;	stage management to instead use it to spot one of the edges of
+;	the square wave input
+;
+pio0_intr:
+	push	af
+	ld	a,(pio_polarity)
+	or	a
+	; low to high or high to low ?
+	jr	nz, hilo
+	inc	a
+	; low to high edge - timer interrupt
+	ld	(pio_polarity),a
+	; Set the next interrupt to be high so we don't keep firing
+	ld	a,#0xB7
+	out	(0x02),a
+	ld	a,#0x08
+	out	(0x02),a
+	pop	af
+	; We saw a timer tick edge for our 10Hz clock
+	call	interrupt_handler
+	; Clear it down on the PIO
+	reti
+
+hilo:
+	xor	a
+	ld	(pio_polarity),a
+	; Set the next interrupt to be low
+	ld	a,#0x97
+	out	(0x02),a
+	ld	a,#0x08
+	out	(0x02),a
+	pop	af
+	reti

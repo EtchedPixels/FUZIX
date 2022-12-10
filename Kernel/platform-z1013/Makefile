@@ -1,11 +1,11 @@
-ASRCS = crt0.s tricks.s commonmem.s z1013.s
-CSRCS = devices.c main.c devtty.c devrtc.c devrd.c
+ASRCS = crt0.s tricks.s commonmem.s z1013.s video-poppe.s
+CSRCS = devices.c main.c devtty.c devrtc.c devrd.c sd.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c
-DSRCS = ../dev/devide.c
+DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
+DSRCS = ../dev/devide.c ../dev/devsd.c
 DHSRCS = ../dev/blkdev.c
 DSRCS += 
-DASRCS = 
+DASRCS = ../dev/z80softsd.s ../dev/z80softspi.s
 NSRCS = 
 
 AOBJS = $(ASRCS:.s=.rel)

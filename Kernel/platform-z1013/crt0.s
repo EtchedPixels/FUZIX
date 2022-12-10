@@ -46,6 +46,8 @@
 	.globl interrupt_handler
 	.globl nmi_handler
 
+	.globl pio0_intr
+
 	.include "kernel.def"
 
 	; Starts at 0x8000
@@ -53,12 +55,23 @@
 	.area _CODE
 
 init:  
+	jr doinit
+
+	; Conveient spot for interrupt vectors
+	.word pio0_intr
+
+	; Startup code resumes
+doinit:
         di
 	ld sp,#0x8000		; safe spot
 
 	in a,(4)		; turn on 4MHz and work around bug? in JKCEMU
 	or a,#0x60		; (wrong in a,(4) if boot with EPROM mapped)
 	out (4),a
+
+	im 2
+	ld a,#0x80		; start of ROM is an easy spot to use
+	ld i,a
 
 	; Clear the screen
 	ld hl,#0xEC00
@@ -93,6 +106,10 @@ loader:
         ld (hl), #0
         ldir
 
+	in a,(4)		; if possible map out the system ROM
+	or #0x80		; and video memory
+	out (4),a
+
         ; Hardware setup
         call init_hardware
 
@@ -109,7 +126,7 @@ stop:   halt
 ;
 load_sector:
 	ld a,d
-	out (0x4B),a		; LBA
+	out (0x4B),a		; LBA / sector
 	ld a,#1
 	out (0x4A),a		; 1 sector
 	ld a,#0x20
