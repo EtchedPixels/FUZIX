@@ -3,6 +3,28 @@
 #include <printf.h>
 #include <rtc.h>
 
+#ifdef CONFIG_RTC
+
+/* Use the specific RTC card if configured that way, otherwise use the GIDE
+   option */
+#ifdef CONFIG_RTC_70
+__sfr __banked __at 0x70 rtc0;
+__sfr __banked __at 0x71 rtc1;
+__sfr __banked __at 0x72 rtc2;
+__sfr __banked __at 0x73 rtc3;
+__sfr __banked __at 0x74 rtc4;
+__sfr __banked __at 0x75 rtc5;
+__sfr __banked __at 0x76 rtc6;
+__sfr __banked __at 0x77 rtc7;
+__sfr __banked __at 0x78 rtc8;
+__sfr __banked __at 0x79 rtc9;
+__sfr __banked __at 0x7A rtcA;
+__sfr __banked __at 0x7B rtcB;
+__sfr __banked __at 0x7C rtcC;
+__sfr __banked __at 0x7D rtcD;
+__sfr __banked __at 0x7E rtcE;
+__sfr __banked __at 0x7F rtcF;
+#else
 __sfr __banked __at 0x0045 rtc0;
 __sfr __banked __at 0x0145 rtc1;
 __sfr __banked __at 0x0245 rtc2;
@@ -19,6 +41,7 @@ __sfr __banked __at 0x0C45 rtcC;
 __sfr __banked __at 0x0D45 rtcD;
 __sfr __banked __at 0x0E45 rtcE;
 __sfr __banked __at 0x0F45 rtcF;
+#endif
 
 /* Full RTC support (for read - no write yet) */
 int plt_rtc_read(void)
@@ -74,3 +97,5 @@ uint8_t plt_rtc_secs(void)
         irqrestore(irq);
         return s;
 }
+
+#endif
