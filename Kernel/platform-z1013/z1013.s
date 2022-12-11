@@ -421,7 +421,13 @@ _do_beep:
 	in	a,(4)
 	or	#0x10
 	out	(4),a
-	jp	irqfix
+	pop	iy
+	pop	ix
+	ld	a,(_int_disabled)
+	or	a
+	ret	nz
+	ei
+	ret
 
 do_beep:
 	ld	hl,#0xFFD6
