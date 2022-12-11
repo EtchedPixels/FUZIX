@@ -523,7 +523,10 @@ interrupt_pop:
 ;	corrupt we assume the worst and just blow the process away
 ;
 null_pointer_trap:
-	call map_kernel_di
+	ld sp,#kstack_top	; Need to be off the user stack
+				; can't use the interrupt stack as we might
+				; IRQ during this
+	call map_kernel_di	; to deliver the kill
 	ld a, #0xC3		; Repair
 	ld (0), a
 	ld hl, #9		; SIGKILL (take no prisoners here)
