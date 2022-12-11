@@ -17,6 +17,8 @@
 #include <timer.h>
 #include <platform_fdc765.h>
 
+#ifdef CONFIG_FDC765
+
 static timer_t spindown_timer, recal_timer;
 
 static uint8_t lastdrive;
@@ -211,3 +213,4 @@ int devfd_write(uint_fast8_t minor, uint_fast8_t is_raw, uint_fast8_t flag)
     return devfd_transfer(minor, false, is_raw);
 }
 
+#endif
