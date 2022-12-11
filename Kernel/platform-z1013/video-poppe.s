@@ -13,6 +13,9 @@
 ;	2. It's not possible to do attributes nicely because we'd have to
 ;	   store an extra copy of the memory somewhere
 ;
+;	FIXME: do we need to force 0x04 bit 7 in the vpos etc code and juggle
+;	the irq state ?
+;
 
 	.area _DISCARD
 	.globl _video_init

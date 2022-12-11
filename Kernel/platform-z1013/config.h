@@ -5,16 +5,17 @@
  */
 
 #define CONFIG_IDE		/* GIDE */
-#define CONFIG_SD		/* SD card bitbanged on I/O port */
+#undef CONFIG_SD		/* SD card bitbanged on I/O port */
 #define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
 #undef CONFIG_PIO_TICK		/* 10Hz square wave on PIO bit 3 for timer */
-#undef CONFIG_K1520_SOUND	/* We only use the CTC bits for now */
+#define CONFIG_K1520_SOUND	/* We only use the CTC bits for now */
 #define CONFIG_JKCEMU		/* Work around JKCEMU problems
                                     - no LBA emulation
                                     - buggy disk emulation
                                     - probably a bug in port 4 handling */
 #define CONFIG_VIDEO_POPPE	/* 64x32 video */
 #undef CONFIG_RTC_70		/* RTC at 0x70 (not GIDE RTC) */
+#define CONFIG_FDC765		/* Floppy controller */
 
 /*
  *	Platform configuration
@@ -48,7 +49,7 @@
 #define PROGBASE    0x6000	/* also data base */
 #define PROGLOAD    0x6000	/* also data base */
 #define PROGTOP     MEM_TOP	/* Top of program */
-#define KERNTOP	    0x6000	/* Grow buffers up to user space */
+#define KERNTOP	    0x5FF0	/* Grow buffers up to user space (5FFx is vectors) */
 
 #define SWAPBASE    0x6000	/* start at the base of user mem */
 #define SWAPTOP	    MEM_TOP	/* Swap out program */

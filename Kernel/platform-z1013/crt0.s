@@ -41,6 +41,7 @@
         .globl l__DISCARD
         .globl s__DATA
         .globl l__DATA
+	.globl s__VECTORS
         .globl kstack_top
 
 	.globl interrupt_handler
@@ -50,19 +51,19 @@
 
 	.include "kernel.def"
 
+	; Starts at 0x5FF0
+
+	.area _VECTORS
+
+	; Spot for interrupt vectors
+	.word pio0_intr			; pio A
+	.word interrupt_handler		; ctc channel 1
+
 	; Starts at 0x8000
 
 	.area _CODE
 
 init:  
-	jr doinit
-
-	; Conveient spot for interrupt vectors
-	.word pio0_intr
-	.word interrupt_handler
-
-	; Startup code resumes
-doinit:
         di
 	ld sp,#0x8000		; safe spot
 
@@ -71,7 +72,7 @@ doinit:
 	out (4),a
 
 	im 2
-	ld a,#0x80		; start of ROM is an easy spot to use
+	ld a,#(s__VECTORS >> 8)
 	ld i,a
 
 	; Clear the screen
@@ -108,7 +109,7 @@ loader:
         ldir
 
 	in a,(4)		; if possible map out the system ROM
-	or #0x80		; and video memory
+	or #0x10		; and video memory
 	out (4),a
 
         ; Hardware setup

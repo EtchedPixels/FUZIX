@@ -57,9 +57,6 @@ uint8_t plt_param(unsigned char *p)
 
 void plt_interrupt(void)
 {
-	kputchar('<');
 	handle_keys();
-	kputchar('#');
 	timer_interrupt();
-	kputchar('>');
 }

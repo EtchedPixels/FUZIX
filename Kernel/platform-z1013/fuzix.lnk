@@ -3,7 +3,8 @@
 -b _CODE=0x8000
 -b _COMMONMEM=0x0100
 -b _DISCARD=0x6200
--b _INITIALIZER=0xF000
+-b _INITIALIZER=0xFC00
+-b _VECTORS=0x5FF0
 -l z80
 platform-z1013/crt0.rel
 platform-z1013/commonmem.rel
@@ -48,5 +49,6 @@ platform-z1013/z80softsd.rel
 platform-z1013/z80softspi.rel
 platform-z1013/devrd.rel
 platform-z1013/devrtc.rel
+platform-z1013/devfdc765.rel
 platform-z1013/video-poppe.rel
 -e

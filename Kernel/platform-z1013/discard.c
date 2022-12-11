@@ -32,7 +32,7 @@ void device_init(void)
 	pio_c = 0xCF;		/* Mode 3 */
 	pio_c = 0x70;		/* MISO input, unused as input (so high Z) */
 #ifdef CONFIG_PIO_TICK
-	pio_c = 0x02;		/* interrupt vector 2, 0x8002 */
+          pio_c = 0xF0;		/* interrupt vector F2, 0x5FF0 */
 	pio_c = 0x97;		/* interrupt on low, mask to follow */
 	pio_c = 0x08;		/* bit 3 has the 10Hz square wave */
 #else
@@ -44,15 +44,17 @@ void device_init(void)
 	ctc_0 = 250;		/* time constant */
 	ctc_1 = 0xD5;		/* int, counter, falling */
 	ctc_1 = 179;		/* time constant */
-	ctc_1 = 0x04;		/* Vector */
+	ctc_1 = 0xF0;		/* Vector 0x5FF2 (channel 1) */
+	ctc_2 = 0x01;		/* Ensure they are off */
+	ctc_3 = 0x01;
 	/* Set up for 10Hz */
 #endif
 	rd_probe();
-	sd_setup();
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
 #ifdef CONFIG_SD
+	sd_setup();
 	devsd_init();
 #endif
 }

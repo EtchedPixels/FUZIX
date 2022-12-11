@@ -30,6 +30,7 @@
         .globl outhl
         .globl outnewline
 	.globl interrupt_handler
+	.globl null_handler
 	.globl _video_init
 
 	; exported debugging tools
@@ -56,11 +57,15 @@ kernel_endmark:
 ;=========================================================================
         .area _DISCARD
 init_hardware:
-	ld hl,#64
-	ld (_ramsize), hl
-	ld hl,#35
-	ld (_procmem), hl
-	jp _video_init
+	ld	hl,#64
+	ld	(_ramsize), hl
+	ld	hl,#35
+	ld	(_procmem), hl
+	ld	hl,#null_handler
+	ld	(1),hl
+	ld	a,#0xC3
+	ld	(0),a
+	jp	_video_init
 
 ;=========================================================================
 ; Common Memory (mapped low below ROM)
@@ -68,14 +73,14 @@ init_hardware:
         .area _COMMONMEM
 
 _plt_monitor:
-	in a,(4)			; ensure the monitor is mapped
-	and a,#0x7f
-	out (4),a
-	rst 0x38			; To monitor
-	.word 0x01			; Wait for key
+	in	a,(4)			; ensure the monitor is mapped
+	and	a,#0xEF
+	out	(4),a
+	rst	0x38			; To monitor
+	.word	0x01			; Wait for key
 _plt_reboot:
-	call map_kernel			; ROM in
-	jp init
+	call	map_kernel		; ROM in
+	jp	init
 
 ;=========================================================================
 
@@ -93,6 +98,8 @@ plt_interrupt_all:
 ;=========================================================================
 
 ;
+	.globl rom_state	; for debug
+
 rom_state:
 	.byte 1		;	ROM starts mapped
 save_rom:
@@ -102,26 +109,20 @@ save_rom:
 ;	Centralize all control of the toggle in one place so we can debug it
 ;
 rom_in:
-	di
 	in	a,(4)
 	set	5,a
 	out	(4),a
 	ld	(rom_state),a
-irqfix:
-	ld	a,(_int_disabled)
-	or	a
-	ret	nz
-	ei
 	ret
 
 rom_out:
-	di
 	in	a,(4)
 	res	5,a
 	out	(4),a
 	xor	a
 	ld	(rom_state),a
-	jr	irqfix
+	ret
+
 
 ;=========================================================================
 ; map_process - map process or kernel pages
@@ -154,11 +155,27 @@ map_for_swap:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_process_always:
-map_process_always_di:
+	di
 	push af
-was_u:
 	call rom_out
-	pop af
+;
+;	Restore interrupt status based upon the flag (called with interrupts
+;	disabled). AF is currently stacked
+;
+irqfix:
+	ld	a,(_int_disabled)
+	or	a
+	jr	nz, still_di
+	ei
+still_di:
+	pop	af
+	ret
+
+map_process_always_di:
+	push	af
+was_u:
+	call	rom_out
+	pop	af
 	ret
 
 ;=========================================================================
@@ -169,12 +186,17 @@ was_u:
 ;=========================================================================
 map_buffers:
 map_kernel:
-map_kernel_di:
 map_kernel_restore:
 	push af
-was_k:
+	di
 	call rom_in
-	pop af
+	jr   irqfix
+
+map_kernel_di:
+	push	af
+was_k:
+	call	rom_in
+	pop	af
 	ret
 
 ;=========================================================================
@@ -369,7 +391,7 @@ __uzero:
 ;
 _keycheck:
 	in a,(4)	;	ROM in if paged out
-	and #0x7f
+	and #0xEF
 	out (4),a
 	push ix
 	push iy
@@ -379,7 +401,7 @@ _keycheck:
 	pop ix
 	ld l,a
 	in a,(4)	;	Reverse the ROM page if supported
-	or #0x80
+	or #0x10
 	out (4),a
 	ret
 
@@ -393,11 +415,11 @@ _do_beep:
 	push	ix
 	push	iy
 	in	a,(4)	;	ROM in
-	and	#0x7f
+	and	#0xEF
 	out	(4),a
 	call	do_beep
 	in	a,(4)
-	or	#0x80
+	or	#0x10
 	out	(4),a
 	jp	irqfix
 
@@ -564,10 +586,9 @@ pio0_intr:
 	ld	a,#0x08
 	out	(0x02),a
 	pop	af
-	; We saw a timer tick edge for our 10Hz clock
-	call	interrupt_handler
-	; Clear it down on the PIO
-	reti
+	; We saw a timer tick edge for our 10Hz clock (will do the reti for
+	; us)
+	jp	interrupt_handler
 
 hilo:
 	xor	a
