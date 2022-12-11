@@ -5,12 +5,12 @@
 	.globl	map_kernel
 
 ;
-;	Video RAM is E800-EFFF with a separate colour bank we don't yet
+;	Video RAM is E800-EFFF with a separate colour bank we do not yet
 ;	bother with except to set a default. The card memory is not read
 ;	but is shadowed by E800-EFFF in the main system when reading. This
 ;	means that
 ;	1. We need to be careful what is mapped there
-;	2. It's not possible to do attributes nicely because we'd have to
+;	2. It is not possible to do attributes nicely because we would have to
 ;	   store an extra copy of the memory somewhere
 ;
 ;	FIXME: do we need to force 0x04 bit 7 in the vpos etc code and juggle
