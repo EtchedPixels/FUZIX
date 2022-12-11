@@ -1,8 +1,4 @@
-- Sort out map and unmap of monitor ROM and video
-- Avoid having to alter the makefile for the different video options
-- Poppe video ansd ROM unmap interaction
 - Keyboard auto-repeat
-- Floppy controller
 - Poppe video way to set colours (as with other systems like this needs
   a way to set ink/paper/border in the core VT code)
 - Sound (needs core sound code adding)
