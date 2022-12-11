@@ -11,7 +11,7 @@ uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0xE000;
 uint8_t need_resched = 0;
 
-uint8_t plt_tick_present;
+uint8_t fdc765_present;
 
 void plt_discard(void)
 {
