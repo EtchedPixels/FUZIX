@@ -50,5 +50,6 @@ platform-z1013/z80softspi.rel
 platform-z1013/devrd.rel
 platform-z1013/devrtc.rel
 platform-z1013/devfdc765.rel
-platform-z1013/video-poppe.rel
+platform-z1013/fdc.rel
+platform-z1013/video.rel
 -e

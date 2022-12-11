@@ -13,7 +13,7 @@
                                     - no LBA emulation
                                     - buggy disk emulation
                                     - probably a bug in port 4 handling */
-#define CONFIG_VIDEO_POPPE	/* 64x32 video */
+#undef CONFIG_VIDEO_POPPE	/* 64x32 video */
 #undef CONFIG_RTC_70		/* RTC at 0x70 (not GIDE RTC) */
 #undef CONFIG_FDC765		/* Floppy controller (not yet done) */
 

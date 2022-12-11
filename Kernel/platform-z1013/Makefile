@@ -1,5 +1,5 @@
-ASRCS = crt0.s tricks.s commonmem.s z1013.s video-poppe.s
-CSRCS = devices.c main.c devtty.c devrtc.c devrd.c sd.c
+ASRCS = crt0.s tricks.s commonmem.s z1013.s fdc765.s
+CSRCS = devices.c main.c devtty.c devrtc.c devrd.c sd.c video.c fdc.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
 DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/devfdc765.c
