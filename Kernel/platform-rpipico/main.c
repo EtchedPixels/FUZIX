@@ -6,6 +6,10 @@
 #include "printf.h"
 #include "core1.h"
 
+//the led that indicates power
+//The on board one is pin 25
+const uint POWER_LED = 25; 
+
 uint_fast8_t plt_param(char* p)
 {
 	return 0;
@@ -60,7 +64,11 @@ int main(void)
 
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
-
+	//turn on power led
+	gpio_init(POWER_LED);
+	gpio_set_dir(POWER_LED, GPIO_OUT);
+	gpio_put(POWER_LED, 1);
+	
 	di();
 	fuzix_main();
 }
