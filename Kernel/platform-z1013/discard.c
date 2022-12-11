@@ -5,10 +5,13 @@
 #include <blkdev.h>
 #include <devide.h>
 #include <devsd.h>
+#include <devfdc765.h>
 #include "config.h"
 
 extern void rd_probe(void);
 extern void sd_setup(void);
+extern uint8_t fd765_present;
+extern uint8_t *fd765_probe(void);
 
 void map_init(void)
 {
@@ -32,7 +35,7 @@ void device_init(void)
 	pio_c = 0xCF;		/* Mode 3 */
 	pio_c = 0x70;		/* MISO input, unused as input (so high Z) */
 #ifdef CONFIG_PIO_TICK
-          pio_c = 0xF0;		/* interrupt vector F2, 0x5FF0 */
+	pio_c = 0xF0;		/* interrupt vector F2, 0x5FF0 */
 	pio_c = 0x97;		/* interrupt on low, mask to follow */
 	pio_c = 0x08;		/* bit 3 has the 10Hz square wave */
 #else
@@ -56,5 +59,9 @@ void device_init(void)
 #ifdef CONFIG_SD
 	sd_setup();
 	devsd_init();
+#endif
+#ifdef CONFIG_FDC765
+	if (fd765_probe())
+		fdc765_present = 3;
 #endif
 }
