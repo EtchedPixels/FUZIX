@@ -7,6 +7,7 @@
 #include <vt.h>
 #include <blkdev.h>
 #include <devrd.h>
+#include <devfdc765.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -17,8 +18,12 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 #else
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
 #endif
+#ifdef CONFIG_FDC765
+  { devfd_open,     no_close,   devfd_read,     devfd_write,    no_ioctl},
+#else
   /* 1: /dev/fd : Floppy disk block devices */
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
+#endif
   /* 2: /dev/tty : serial ports */
   {  tty_open,    tty_close,	tty_read,	tty_write,	vt_ioctl},
   /* 3: RAM disk :  */
