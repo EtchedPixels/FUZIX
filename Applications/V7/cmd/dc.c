@@ -2039,7 +2039,7 @@ void more(struct blk *hptr)
 	if ((size = (hptr->last - hptr->beg) * 2) == 0)
 		size = 1;
 	nbytes += size / 2;
-	free(hptr->beg);
+
 	p = realloc(hptr->beg, (unsigned) size);
 	if (p == 0) {
 		hptr->beg =
