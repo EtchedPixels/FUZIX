@@ -47,7 +47,7 @@ $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ diskstrap fuzix.rom bootstrap.tmp
+	rm -f $(OBJS) $(JUNK)  core *~ fuzix.rom bootstrap.tmp
 	rm -f mega.rom megarom_shuffle
 
 bootstrap: bootstrap.s megarom_shuffle
@@ -90,8 +90,6 @@ diskimage: image
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the file system
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
-	# Add the kernel extra blocks
-	dd if=diskstrap of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
 	# ROM
