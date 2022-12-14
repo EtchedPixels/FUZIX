@@ -30,7 +30,7 @@
 	FD_DT	.equ	0xe1
 
 ; The Ranger ROM in the NC200 does mysterious things with port 0x20.
-;   bit 0: TC (documenteD)
+;   bit 0: TC (documented)
 ;   bit 1: always set
 ;   bit 2: set on motor power on
 
@@ -129,6 +129,9 @@ _fd765_do_read:
 	or a
 	call nz, map_process_always
 	
+	xor a						; 8: Data length (unused)
+	call fd765_tx
+
 	ld hl, (_fd765_buffer)
 	ld c, #FD_DT
 	ld b, #0
@@ -166,6 +169,9 @@ _fd765_do_write:
 	or a
 	call nz, map_process_always
 	
+	xor a						; 8: Data length (unused)
+	call fd765_tx
+
 	ld hl, (_fd765_buffer)
 	ld c, #FD_DT
 	ld b, #0
@@ -214,8 +220,8 @@ setup_read_or_write:
 	call fd765_tx
 	ld a, #27  					; 7: Gap 3 length (27 is standard for 3.5" drives)
 	call fd765_tx
-	xor a						; 8: Data length (unused)
-	call fd765_tx
+	;	Don't send final 0 byte - caller will do that to avoid
+	;	timing issues
 	ret
 
 _fd765_buffer:

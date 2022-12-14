@@ -1,0 +1,70 @@
+KC85/1 KC87 Z9001 with MegaROM
+
+Memory Map
+Kernel
+0000-3FFF	Writable common space, buffers, etc
+4000-7FFF	Kernel code (one of the two banks here)
+8000-BFFF	User
+C000-E7FF	MegaROM banked
+E800-EFFF	Video etc
+F000-FFFF	ROM
+
+User
+0000-3FFF	Kernel
+4000-7FFF	User code (other bank)
+8000-BFFF	User
+C000-E7FF	User	(or ROM if banking out not supported)
+E800-EFFF	Video etc
+F000-FFFF	ROM
+
+I/O
+
+GIDE at 0x50
+RAMdisk at 0x20/0x24
+
+ROM routines used
+
+F03C	set I/O byte (called early)		TODO
+F006	const	(then fix up return to be 0/FF)
+F009	conin
+F00F	list					TODO
+F02D	listst					TODO
+
+Interrupts tbd - CP/M uses E7xx, IM2
+reti must be above 0x4000 ?	(clarify rule)
+
+CTC 3 0xC7 40
+CTC 0 seems to be beep related and a pio bit
+	CTC 0 96, in PIO1AD set bit 7 out
+		end been wityh res bit 7 CTC 3
+	2 chains into 3
+
+ROM assumptions
+-
+	IM2
+	I = 2
+	PIO	vector 0 (A/B)
+	CTC	vector 0 (ctc 0 is not used for interrupts, 3 is)
+	CTC	inti is 40 96
+
+
+TODO
+-	Sort out banked maths routines for CHS mode
+-	Figure out how to do a timer interrupt
+-	Video colour support
+-	Optimised user copies
+-	Figure out ramdisk detect
+-	Ramdisk debug
+-	Floppies
+-	Support for RAM to C000 or RAM to E7FF (depends on systems having
+	a way to bank out MegaROM)
+-	Setups where 0x8000-0xBFFF also vanishes if you page out the RAM for
+	the ROM
+-	Printer
+-	Joysticks
+-	Sound (eventually)
+-	512K setup (different build altogether but needs a usable emulator)
+-	60-6F RTC option
+-	Bitbang SD
+-	Bitmap graphics
+-	KCnet

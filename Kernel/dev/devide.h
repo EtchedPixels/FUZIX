@@ -88,6 +88,7 @@ void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value);
 /* IDE command codes */
 #define IDE_CMD_READ_SECTOR     0x20
 #define IDE_CMD_WRITE_SECTOR    0x30
+#define IDE_CMD_INIT_DEV_PARAM	0x91	/* Needed for CHS drives */
 #define IDE_CMD_FLUSH_CACHE     0xE7
 #define IDE_CMD_IDENTIFY        0xEC
 #define IDE_CMD_SET_FEATURES    0xEF
@@ -118,6 +119,11 @@ extern int devide_flush_cache(void);
 /* Platform provided, or may be defaults */
 extern void devide_write_data(void);
 extern void devide_read_data(void);
+
+/* Only present in CHS mode */
+extern uint8_t ide_spt[IDE_DRIVE_COUNT];
+extern uint8_t ide_heads[IDE_DRIVE_COUNT];
+extern uint16_t ide_cyls[IDE_DRIVE_COUNT];
 
 #ifndef IDE_REG_INDIRECT
 #ifdef IDE_IS_MMIO

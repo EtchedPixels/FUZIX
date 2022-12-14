@@ -1,0 +1,9 @@
+- Keyboard auto-repeat
+- Poppe video way to set colours (as with other systems like this needs
+  a way to set ink/paper/border in the core VT code)
+- Sound (needs core sound code adding)
+- Printer options (can we hook ROM ?)
+- V.24 printer card
+- Boot LBA (needs JKCEMU fixes ?)
+- Joystick
+

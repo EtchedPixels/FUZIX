@@ -1,3 +1,4 @@
+#
 # Set this to the desired platform to build
 #
 # Useful values for general work
@@ -56,7 +57,13 @@
 # v65c816:	Virtual platform for 65c816 development (flat memory)
 # v68:		Virtual platform for 68000 development
 
-TARGET=cpm22
+TARGET=kc87
+
+#
+#	Fuzix version
+#
+export VERSION = 0.4pre1
+export SUBVERSION = ""
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk

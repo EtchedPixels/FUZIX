@@ -322,7 +322,6 @@ iretk:
 	jsr map_restore
 	lds istack_switched_sp
 	clr _udata+U_DATA__U_ININTERRUPT
-	clr _udata+U_DATA__U_INSYS
 	rti
 
 

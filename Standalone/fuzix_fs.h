@@ -72,7 +72,7 @@ typedef struct direct {
         uint16_t   d_ino;
         char     d_name[30];
 #ifdef DIR_PAD
-        uint8_t	d_pad[DIR_PAD]
+        uint8_t	d_pad[DIR_PAD];
 #endif
 } direct;
 
