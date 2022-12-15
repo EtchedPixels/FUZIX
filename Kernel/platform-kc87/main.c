@@ -47,10 +47,16 @@ uint8_t plt_param(unsigned char *p)
 	return 0;
 }
 
-/* CTC calls in here */
+/* CTC calls in here 8 times a second */
 void plt_interrupt(void)
 {
+	static uint8_t c;
+	++c;
+	c &= 7;
 	poll_keyboard();
+	/* Produce a 10Hz timer */
+	if (c == 4 || c == 7)
+		timer_interrupt();
 	timer_interrupt();
 }
 
@@ -58,3 +64,17 @@ void do_beep(void)
 {
 	/* for now */
 }
+
+/*
+ *	So that we don't suck in a library routine we can't use from
+ *	the runtime
+ */
+
+int strlen(const char *p)
+{
+	int len = 0;
+	while(*p++)
+		len++;
+	return len;
+}
+

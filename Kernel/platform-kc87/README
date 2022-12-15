@@ -19,7 +19,7 @@ F000-FFFF	ROM
 
 I/O
 
-GIDE at 0x50
+GIDE at 0x50	(including RTC)
 RAMdisk at 0x20/0x24
 
 ROM routines used
@@ -30,14 +30,16 @@ F009	conin
 F00F	list					TODO
 F02D	listst					TODO
 
-Interrupts tbd - CP/M uses E7xx, IM2
 reti must be above 0x4000 ?	(clarify rule)
 
-CTC 3 0xC7 40
-CTC 0 seems to be beep related and a pio bit
+2 x PIO: keyboard, userport etc
+CTC 0 beep and a pio bit
 	CTC 0 96, in PIO1AD set bit 7 out
 		end been wityh res bit 7 CTC 3
 	2 chains into 3
+CTC 1	Used for printer ack (counts ack ?)
+CTC 2	Keyboard debounce interrupt
+CTC 3	Timer (0x40 seems to be 1 per sec)
 
 ROM assumptions
 -
@@ -49,15 +51,10 @@ ROM assumptions
 
 
 TODO
--	Sort out banked maths routines for CHS mode
--	Figure out how to do a timer interrupt
--	Video colour support
 -	Optimised user copies
+-	Asm video
 -	Figure out ramdisk detect
--	Ramdisk debug
 -	Floppies
--	Support for RAM to C000 or RAM to E7FF (depends on systems having
-	a way to bank out MegaROM)
 -	Setups where 0x8000-0xBFFF also vanishes if you page out the RAM for
 	the ROM
 -	Printer

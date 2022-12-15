@@ -3,14 +3,23 @@
  */
 
 #define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
-#undef CONFIG_JKCEMU		/* Work around JKCEMU problems
+#define CONFIG_ROM_PAGEOUT	/* MegaROM can be paged out of C000-E7FF */
+#define CONFIG_JKCEMU		/* Work around JKCEMU problems
                                     - no LBA emulation
-                                    - buggy disk emulation
-                                    - probably a bug in port 4 handling */
-
+                                    - buggy disk emulation */
 /*
  *	Platform configuration
  */
+
+#ifdef CONFIG_ROM_PAGEOUT
+#define RAMTOP		0xE800
+#define SWAP_SIZE	0x55
+#define PROC_SIZE   	42
+#else
+#define RAMTOP		0xC000
+#define SWAP_SIZE	0x41
+#define PROC_SIZE	32
+#endif
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -29,14 +38,11 @@
 #define TICKSPERSEC 10		/* Ticks per second */
 #define PROGBASE    0x4000	/* also data base */
 #define PROGLOAD    0x4000	/* also data base */
-#define PROGTOP     0xE800	/* Top of program */
+#define PROGTOP     RAMTOP	/* Top of program */
 #define KERNTOP	    0x4000	/* Grow buffers up to user space */
 
-#define PROC_SIZE   42		/* Memory needed per process */
-
-#define SWAP_SIZE   0x55 	/* 42.5K in blocks (prog + udata) */
 #define SWAPBASE    0x4000	/* start at the base of user mem */
-#define SWAPTOP	    0xE800	/* Swap out program */
+#define SWAPTOP	    RAMTOP	/* Swap out program */
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS  1
 #define UDATA_SIZE  0x200	/* One block */
@@ -93,15 +99,12 @@ extern uint16_t swap_dev;
 
 /* Console */
 #define CONFIG_VT
-#define CONFIG_VT_SIMPLE
 
 /* Vt definition */
 #define VT_WIDTH	40
 #define VT_HEIGHT	24
 #define VT_RIGHT	39
 #define VT_BOTTOM	23
-#define VT_BASE	((volatile uint8_t *)0xEC00)
-#define VT_MAP_CHAR(x)	(x)
 
 /* Video as the console */
 #define BOOT_TTY (512 + 1)

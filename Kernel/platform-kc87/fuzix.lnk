@@ -37,9 +37,9 @@ mm.rel
 swap.rel
 simple.rel
 tty.rel
-vt.rel
 devsys.rel
 usermem.rel
+vt.rel
 usermem_std-z80-banked.rel
 platform-kc87/discard.rel
 platform-kc87/devtty.rel
@@ -50,4 +50,6 @@ platform-kc87/mbr.rel
 platform-kc87/devide.rel
 platform-kc87/devide_discard.rel
 platform-kc87/ide.rel
+platform-kc87/vt.rel
+platform-kc87/maths32.rel
 -e

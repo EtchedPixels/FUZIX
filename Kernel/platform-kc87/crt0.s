@@ -7,9 +7,7 @@
 
 	; Start with the ROM area from C000
         .area _CODE
-        .area _INITIALIZED
 	.area _CODE1
-        .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
         .area _CODE3
 	.area _VIDEO
@@ -19,8 +17,10 @@
 	; Writeable memory segments
         .area _COMMONMEM
 	.area _COMMONDATA
+        .area _HOME     ; compiler stores __mullong etc in here if you use them
 	.area _STUBS
         .area _CONST
+        .area _INITIALIZED
         .area _DATA
         .area _BSEG
         .area _BSS
@@ -67,25 +67,27 @@ init:
 	out	(0xFF),a	; Get into a known state
 
 	; Clear the screen
-	ld hl,#0xE800
-	ld de,#0xE801
-	ld bc,#0x03BF
-	ld (hl),#0x02
+	ld	a,#0x10
+	out	(0x88),a
+	ld	hl,#0xE800
+	ld	de,#0xE801
+	ld	bc,#0x03BF
+	ld	(hl),#0x02
 	ldir
-	ld hl,#0xEC00
-	ld de,#0xEC01
-	ld bc,#0x03BF
-	ld (hl),#' '
+	ld	hl,#0xEC00
+	ld	de,#0xEC01
+	ld	bc,#0x03BF
+	ld	(hl),#' '
 	ldir
 
-	ld a,#0xC7
-	out (0x83),a
-	ld a,#0x40
-	out (0x83),a
-	ld a,#0xFB
-	ld (0xEFF8),a
-	ld hl,#0x4DED
-	ld (0xEFF9),hl
+	ld	a,#0xC7
+	out	(0x83),a
+	ld	a,#0x08		;	8 / second
+	out	(0x83),a
+	ld	a,#0xFB
+	ld	(0xEFF8),a
+	ld	hl,#0x4DED	;	reti
+	ld	(0xEFF9),hl
 
         ; Hardware setup
         call init_hardware

@@ -16,6 +16,7 @@
 	.globl map_process_always_di
 	.globl map_save_kernel
 	.globl map_restore
+
 	.globl map_for_swap
 	.globl map_buffers
 	.globl plt_interrupt_all
@@ -30,6 +31,7 @@
         .globl _procmem
         .globl outhl
         .globl outnewline
+	.globl interrupt_handler
 
 	; exported debugging tools
 	.globl outchar
@@ -80,6 +82,9 @@ _int_disabled:
 
 ; install interrupt vectors
 _program_vectors:
+	; Steal the ROM timer (we should possibly chain this TODO)
+	ld	hl,#interrupt_handler
+	ld	(0x0206),hl
 ; platform fast interrupt hook
 plt_interrupt_all:
 	ret
@@ -135,11 +140,18 @@ was_u:
 
 ;=========================================================================
 ; map_kernel - map kernel pages
-; map_buffers - map kernel and buffers (no difference for us)
+; map_buffers - map buffer pages
 ; Inputs: none
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_buffers:
+	; No work needed but remember for undo correctly
+	push	af
+	ld	a,(_rom_page)
+	ld	(kmaprom),a
+	pop	af
+	ret
+
 map_kernel:
 map_kernel_di:
 map_kernel_restore:
@@ -165,11 +177,11 @@ map_restore:
 	ld	a,(map_save)
 	or	a
 	jr	z, was_u
+	; Not much work to do if we are restoring a kernel context as we
+	; are currently have all but the megarom page right
 	ld	a,(kmaprom)	; Restore the ROM contet
 	ld	(_rom_page),a
 	out	(0xFF),a
-	out	(4),a
-	ld	(0xF800),a
 	pop	af
 	ret
 	
@@ -185,9 +197,24 @@ map_save_kernel:
 	ld	(map_save),a
 	ld	a,(_rom_page)
 	ld	(kmaprom),a	; Save former ROM context
-	out	(4),a
-	ld	(0xFC00),a	; ROM in
+	out	(4),a		; RAM first bank
+	out	(6),a		; RAM off high
+	ld	(0xF800),a	; ROM in
 	pop	af
+	ret
+
+;
+;	Helpers specific to the banked singe task support
+;
+	.globl map_save_kmap
+	.globl map_restore_kmap
+
+map_save_kmap:
+	ld	a,(_rom_page)
+	ret
+map_restore_kmap:
+	ld	(_rom_page),a
+	out	(0xFF),a
 	ret
 
 kmapped:
@@ -197,13 +224,6 @@ kmaprom:
 map_save:
 	.byte 	0
 
-
-; TODO 
-	.globl map_save_kmap
-	.globl map_restore_kmap
-map_save_kmap:
-map_restore_kmap:
-	ret
 
 	.globl __bank_0_1
 	.globl __bank_0_2
@@ -366,10 +386,10 @@ outbank3:
 	ret
 __bank_3_2:
 	ld	a,#2
-	jr	outbank2
+	jr	outbank3
 __bank_3_4:
 	ld	a,#4
-	jr	outbank2
+	jr	outbank3
 
 __bank_4_1:
 	ld	a,#0x01
@@ -390,10 +410,10 @@ outbank4:
 	ret
 __bank_4_2:
 	ld	a,#2
-	jr	outbank2
+	jr	outbank4
 __bank_4_3:
 	ld	a,#3
-	jr	outbank2
+	jr	outbank4
 
 ;
 ;	Stubs. These are used when functions are called via pointers
@@ -409,10 +429,11 @@ __stub_0_3:
 	ld	a, #3
 	jr	__stub_in
 __stub_0_4:
-	ld	a, #3
+	ld	a, #4
 __stub_in:
 	pop	hl
-	ex	(sp),hl			; bank space is now target
+	ex	(sp),hl			; bank space is now return
+	ex	de,hl			; HL is now target
 	ld	bc,(_rom_page)		; old page into C
 	ld	(_rom_page),a		; new page
 	out	(0xFF),a
@@ -467,6 +488,7 @@ outpt:	.word	0xEC00
 
 
 	.area _COMMONMEM
+
 ;
 ;	Character pending or 0
 ;
@@ -497,7 +519,16 @@ _rd_port:
 	.byte	0
 _rd_block:
 	.word	0
-
+;
+;	Output
+;	C	data port for ramdisc
+;	E	4 (ramdisc sectors per Fuzix sector)
+;	HL	data pointer
+;
+;	B'	upper byte of block number on ramdisc (128 byte blocks)
+;	C'	control port for ramdisc
+;	L'	lower byte of block number on ramdisc
+;
 ramconf:
 	ld	a,(_rd_port)	; get the port to use
 	inc	a		; control port
@@ -507,46 +538,49 @@ ramconf:
 	add	hl,hl		; as the disk is sector addressed
 	ld	b,h
 	out	(c),l		; Set the sector number
+	ld	a,c
+	exx			; BC' and L' for the block info
+	ld	c,a
 	dec	c		; Data port
 	ld	hl,(_rd_dptr)	; Set up HL for the caller
+	ld	e,#4
 	ld	a,(_rd_page)	; check if we need to page user space in
 	or	a
-	call	nz, map_process_always
-	ret
+	jr	z, via_k
+	jp	map_process_always
+via_k:				; kernel buffer
+	jp	map_buffers
 
 	.globl	_ramread
 
 _ramread:
 	call	ramconf
-	inir
-	ini
+rrloop:
 	ld	b,#0x7F
 	inir
 	ini
-	ld	b,#0x7F
-	inir
-	ini
-	ld	b,#0x7F
-	inir
-	ini
+	exx
+	inc	l
+	out	(c),l
+	exx
+	dec	e
+	jr	nz,rrloop
 ramout:
 	ld	(_rd_dptr),hl
-	inc	c
-	or	a
-	ret	z
 	jp	map_kernel_restore
 
 	.globl	_ramwrite
 
 _ramwrite:
 	call	ramconf
-	inc	b
-	otir
+rwloop:
 	ld	b,#0x80
 	otir
-	ld	b,#0x80
-	otir
-	ld	b,#0x80
-	otir	
+	exx
+	inc	l
+	out	(c),l
+	exx
+	dec	e
+	jr	nz,rwloop
 	jr	ramout
 

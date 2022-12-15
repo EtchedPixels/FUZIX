@@ -9,3 +9,9 @@ CONFIG_SWAP		.equ 1
 
 PROGBASE		.equ	0x4000
 PROGLOAD		.equ	0x4000
+
+; Force any reti to go via higher memory where it is seen by the CPU
+
+.macro	reti
+	jp 0xEFF9
+.endm

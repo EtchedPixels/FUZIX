@@ -1,5 +1,5 @@
 ASRCS = crt0.s tricks.s commonmem.s kc87.s
-CSRCS = devices.c main.c devtty.c devrtc.c devrd.c ide.c
+CSRCS = devices.c main.c devtty.c devrtc.c devrd.c ide.c vt.c maths32.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c
 DSRCS = ../dev/devide.c
@@ -55,19 +55,24 @@ bootstrap: bootstrap.s megarom_shuffle
 	sdldz80 -i bootstrap.rel
 	# This makes us a binary from physical 0
 	makebin -s 62464 bootstrap.ihx bootstrap.tmp
+	>bootstrap.bin
 	dd if=bootstrap.tmp of=bootstrap.bin bs=512 skip=96 count=1
 	# Bank 0
 	# First 10K bank is the bootstrap plus the relevant common bits
 	dd if=../common.bin of=bootstrap.bin bs=512 skip=2 seek=1 count=19
 	# Now pack the kernel banks
 	# Bank 1
-	dd if=../bank1.bin bs=512 skip=96 count=20 | dd bs=10240 conv=sync count=1 >>bootstrap.bin	
+	dd if=../bank1.bin bs=512 skip=96 count=20 >block.tmp
+	dd if=block.tmp bs=10240 conv=sync count=1 >>bootstrap.bin
 	# Bank 2
-	dd if=../bank2.bin bs=512 skip=96 count=20 | dd bs=10240 conv=sync count=1 >>bootstrap.bin	
+	dd if=../bank2.bin bs=512 skip=96 count=20 >block.tmp
+	dd if=block.tmp bs=10240 conv=sync count=1 >>bootstrap.bin
 	# Bank 3
-	dd if=../bank3.bin bs=512 skip=96 count=20 | dd bs=10240 conv=sync count=1 >>bootstrap.bin	
+	dd if=../bank3.bin bs=512 skip=96 count=20 >block.tmp
+	dd if=block.tmp bs=10240 conv=sync count=1 >>bootstrap.bin
 	# Bank 4
-	dd if=../bank4.bin bs=512 skip=96 count=20 | dd bs=10240 conv=sync count=1 >>bootstrap.bin	
+	dd if=../bank4.bin bs=512 skip=96 count=20 >block.tmp
+	dd if=block.tmp bs=10240 conv=sync count=1 >>bootstrap.bin
 	# Bank 5: Code for 4000
 	dd if=../common.bin bs=512 skip=32 count=16 >>bootstrap.bin
 	dd if=/dev/zero bs=2048 count=1 >>bootstrap.bin
