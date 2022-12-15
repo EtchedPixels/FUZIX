@@ -55,20 +55,44 @@ uint8_t ide_spt[IDE_DRIVE_COUNT];
 uint8_t ide_heads[IDE_DRIVE_COUNT];
 uint16_t ide_cyls[IDE_DRIVE_COUNT];
 
+uint32_t last_lba_b;
+uint8_t last_minor = 0xFF;
+uint8_t last_head;
+uint16_t last_cyl;
+
 static void ide_setup_block(uint_fast8_t drive)
 {
     uint32_t sector = blk_op.lba;
-    uint32_t head = sector / ide_spt[drive];
-    uint16_t cyl = head / ide_heads[drive];
+    uint32_t head;
+    uint16_t cyl;
 
-    sector %= ide_spt[drive];
+    /* Avoid the expensive 32bit maths (on 8bit anyway) by spotting
+       further requests on the same head/cylinder as for those we just
+       need to adjust the sector register */
+    if (drive == last_minor && sector >= last_lba_b &&
+        sector < last_lba_b + ide_spt[drive]) {
+        head = last_head;
+        cyl = last_cyl;
+        sector = blk_op.lba - last_lba_b;
+    } else {
+        head = sector / ide_spt[drive];
+        cyl = head / ide_heads[drive];
+
+        sector %= ide_spt[drive];
+        head %= ide_heads[drive];
+        head |= 0xA0;
+
+        if (drive)
+            head |= 0x10;
+
+        last_minor = drive;
+        last_lba_b = blk_op.lba - sector;	/* LBA of first block of this C/H */
+        last_head = head;
+        last_cyl = cyl;
+    }
+
+    /* Sector is 1 based */
     sector++;
-    head %= ide_heads[drive];
-    head |= 0xA0;
-
-    if (drive)
-        head |= 0x10;
-
     devide_writeb(ide_reg_lba_3, head);
     devide_writeb(ide_reg_lba_2, ((uint16_t)cyl) >> 8);
     devide_writeb(ide_reg_lba_1, cyl);
