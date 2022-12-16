@@ -1,4 +1,4 @@
-ASRCS = crt0.s tricks.s commonmem.s kc87.s
+ASRCS = crt0.s tricks.s commonmem.s kc87.s usermem.s
 CSRCS = devices.c main.c devtty.c devrtc.c devrd.c ide.c vt.c maths32.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c

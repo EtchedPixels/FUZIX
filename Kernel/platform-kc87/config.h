@@ -2,11 +2,14 @@
  *	Build options
  */
 
-#define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
+#undef CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
 #define CONFIG_ROM_PAGEOUT	/* MegaROM can be paged out of C000-E7FF */
 #define CONFIG_JKCEMU		/* Work around JKCEMU problems
                                     - no LBA emulation
                                     - buggy disk emulation */
+
+/* FIXME: RD_SWAP */
+
 /*
  *	Platform configuration
  */

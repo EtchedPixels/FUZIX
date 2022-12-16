@@ -40,7 +40,7 @@ tty.rel
 devsys.rel
 usermem.rel
 vt.rel
-usermem_std-z80-banked.rel
+platform-kc87/usermem.rel
 platform-kc87/discard.rel
 platform-kc87/devtty.rel
 platform-kc87/devrd.rel

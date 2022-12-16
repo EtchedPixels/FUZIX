@@ -30,8 +30,6 @@ F009	conin
 F00F	list					TODO
 F02D	listst					TODO
 
-reti must be above 0x4000 ?	(clarify rule)
-
 2 x PIO: keyboard, userport etc
 CTC 0 beep and a pio bit
 	CTC 0 96, in PIO1AD set bit 7 out
@@ -51,9 +49,9 @@ ROM assumptions
 
 
 TODO
--	Optimised user copies
 -	Asm video
--	Figure out ramdisk detect
+-	Figure out ramdisc detect
+-	Debug ramdisc
 -	Floppies
 -	Setups where 0x8000-0xBFFF also vanishes if you page out the RAM for
 	the ROM
