@@ -112,7 +112,7 @@ void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags)
 
 uint8_t write_core_image(void)
 {
-	inoptr parent = NULLINODE;
+	inoptr parent;
 	inoptr ino;
 
 	udata.u_error = 0;

@@ -370,10 +370,12 @@ arg_t _unlink(void)
 
 	ino = n_open(path, &pino);
 
+	/* Node must exist and have a parent */
 	if (!(pino && ino)) {
-		if (pino)	/* parent exist */
+		if (pino)	/* parent exists */
 			i_deref(pino);
-		udata.u_error = ENOENT;
+		if (udata.u_error == 0)
+			udata.u_error = ENOENT;
 		return (-1);
 	}
 	i_lock(pino);
