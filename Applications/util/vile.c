@@ -45,6 +45,7 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 #ifndef HUP
@@ -64,6 +65,7 @@ uint_fast8_t screenx, screeny, screen_height, screen_width;
 static char *t_go, *t_clreol, *t_clreos;
 static uint8_t conbuf[64];
 static uint8_t *conp = conbuf;
+static mode_t oldperms = 0xFFFF;
 
 extern void con_puts(const char *s);
 
@@ -1219,6 +1221,7 @@ int save(char *fn)
 	int i;
 	size_t length;
 	char *gptr;
+	mode_t mode;
 
 	strlcpy(scratch, fn, 511);
 	gptr = scratch + strlen(scratch);
@@ -1237,9 +1240,16 @@ int save(char *fn)
 		rename_needed = 0;
 	}
 
-	/* Open file */
-	if ((fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, 0666)) < 0)
+	/* Open file: if no permissions to set use rw/rw/rw + umask
+	   if not force it, but take care to start private */
+	if  (oldperms == 0xFFFF)
+		mode = 666;
+	else
+		mode = 600;
+	if ((fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, 0600)) < 0)
 		return 0;
+	if (oldperms != 0xFFFF)
+		fchmod(fd, oldperms & 0777);
 	i = indexp;
 	indexp = 0;
 	movegap();
@@ -1596,6 +1606,7 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 		filename = "";
 	else {
+		struct stat t;
 		fd = open(filename = *++argv, O_RDONLY);
 		if (fd == -1 && errno != ENOENT) {
 			perror(*argv);
@@ -1620,6 +1631,8 @@ int main(int argc, char *argv[])
 				return 2;
 			}
 			gap += n;
+			if (fstat(fd, &t) == 0)
+				oldperms = t.st_mode;
 			close(fd);
 		}
 		rename_needed = 1;
