@@ -137,9 +137,9 @@ char *talloc(size_t n)
 {
 	register char *p;
 	p = malloc(n);
-	if (p != NULL)
-		return (p);
-	noroom();
+	if (p == NULL)
+		noroom();
+	return (p);
 }
 
 char *ralloc(char *p, size_t n)
@@ -167,8 +167,8 @@ void sort(struct line *a, int n)
 				if (aim < ai)
 					break;	/*wraparound */
 				if (aim->value > ai[0].value ||
-				    aim->value == ai[0].value &&
-				    aim->serial > ai[0].serial)
+				   (aim->value == ai[0].value &&
+				    aim->serial > ai[0].serial))
 					break;
 				w.value = ai[0].value;
 				ai[0].value = aim->value;
@@ -210,10 +210,10 @@ void filename(char **pa1, char **pa2)
 	if (stat(a1, &stbuf) != -1
 	    && ((stbuf.st_mode & S_IFMT) == S_IFDIR)) {
 		b1 = *pa1 = talloc(100);
-		while (*b1++ = *a1++);
+		while ((*b1++ = *a1++) != 0);
 		b1[-1] = '/';
 		a1 = b1;
-		while (*a1++ = *a2++)
+		while ((*a1++ = *a2++) != 0)
 			if (*a2 && *a2 != '/' && a2[-1] == '/')
 				a1 = b1;
 	} else if (a1[0] == '-' && a1[1] == 0 && tempfile == 0) {
@@ -287,7 +287,7 @@ void prepare(int i, const char *arg)
 		done();
 	}
 	p = (struct line *) talloc(3 * sizeof(line));
-	for (j = 0; h = readhash(input[i]);) {
+	for (j = 0; (h = readhash(input[i])) != 0;) {
 		p = (struct line *) ralloc((char *) p,
 					   (++j + 3) * sizeof(line));
 		p[j].value = h;
@@ -499,7 +499,7 @@ void range(int a, int b, char *separator)
 	}
 }
 
-int fetch(long *f, int a, int b, FILE * lb, char *s)
+void fetch(long *f, int a, int b, FILE * lb, char *s)
 {
 	register int i, j;
 	register int nc;
