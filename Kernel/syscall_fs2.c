@@ -234,7 +234,7 @@ arg_t _fchmod(void)
 		return (-1);
 
 	ret = chmod_op(ino);
-	i_unlock_deref(ino);
+	i_unlock(ino);
 	return ret;
 }
 
