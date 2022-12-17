@@ -44,6 +44,9 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
     uint8_t *fp;
     usize_t len;
 
+    if (parent)
+        *parent = NULLINODE;
+
     /* Check the user address and length. If it's shorter than 512 bytes this
        is fine, but set nameeend accordingly. This allows us to use _ugetc
        in the hot path which saves us a ton of cycles */
@@ -161,8 +164,10 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
         ninode = srch_dir(wd, lastname);
     }
     /* If we faulted then treat it as invalid */
-    if (n_open_fault)
+    if (n_open_fault) {
+        udata.u_error = n_fault_type;
         goto nodir;
+    }
 
     /* Return the parent node if requested. This is needed by callers that
        do directory manipulation */
