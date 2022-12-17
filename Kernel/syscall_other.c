@@ -222,7 +222,8 @@ arg_t _rmdir(void)
 
 	/* It and its parent must exist */
 	if (!(parent && ino)) {
-		udata.u_error = ENOENT;
+		if (udata.u_error == 0)
+			udata.u_error = ENOENT;
 		goto nogood_early;
 	}
 
