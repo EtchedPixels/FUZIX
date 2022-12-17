@@ -630,7 +630,7 @@ not_running:
 	.ifne Z80_MMU_HOOKS
 	call mmu_user
 	.endif
-	jr interrupt_pop
+	jp interrupt_pop
 
 ;
 ;	Debugging helpers
