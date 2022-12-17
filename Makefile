@@ -57,13 +57,9 @@
 # v65c816:	Virtual platform for 65c816 development (flat memory)
 # v68:		Virtual platform for 68000 development
 
-TARGET=kc87
+TARGET=tiny68k
 
-#
-#	Fuzix version
-#
-export VERSION = 0.4pre1
-export SUBVERSION = ""
+include version.mk
 
 # Get the CPU type
 include Kernel/platform-$(TARGET)/target.mk

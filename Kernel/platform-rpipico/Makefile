@@ -2,6 +2,8 @@
 export PICO_SDK_FETCH_FROM_GIT = yes
 #export PICO_SDK_PATH = /home/dg/src/pico/pico-sdk
 
+include ../../version.mk
+
 build/fuzix.elf: ../version.c build/Makefile
 	$(MAKE) -C build
 
