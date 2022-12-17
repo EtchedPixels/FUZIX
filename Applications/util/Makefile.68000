@@ -112,17 +112,22 @@ SRCTC = tget.c \
 	vile.c \
 	marksman.c
 
+# Until we sort out memory allocation better
+SRCTCBIG = vile.c
+
 SKIPPED =
 
 
 OBJS = $(SRCS:.c=.o)
 OBJSNS = $(SRCSNS:.c=.o)
 OBJTC = $(SRCTC:.c=.o)
+OBJTCBIG = $(SRCTCBIG:.c=.o)
 OBJCURSES = $(SRCCURSES:.c=.o)
 
 APPS = $(OBJS:.o=)
 APPSNS = $(OBJSNS:.o=)
 APPTC = $(OBJTC:.o=)
+APPTCBIG = $(OBJTCBIG:.o=)
 APPCURSES = $(OBJCURSES:.o=)
 
 all: $(APPS) $(APPSNS) $(APPTC) $(APPCURSES) size.report
@@ -130,6 +135,7 @@ all: $(APPS) $(APPSNS) $(APPTC) $(APPCURSES) size.report
 $(APPS): $(CRT0)
 $(APPSNS): $(CRT0NS)
 $(APPTC): $(CRT0)
+$(APPTCBIG): $(CRT0)
 $(APPCURSES): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
@@ -139,6 +145,10 @@ $(APPS) $(APPSNS): %: %.o
 $(APPTC): %: %.o
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
 	$(ELF2FUZIX) -o $@ $@.bin
+
+$(APPTCBIG): %: %.o
+	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
+	$(ELF2FUZIX) -s 66500 -o $@ $@.bin
 
 $(APPCURSES): %: %.o
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -lcurses68000 -ltermcap68000 $(LINKER_TAIL)
