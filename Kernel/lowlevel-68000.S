@@ -609,6 +609,7 @@ probe_memory:
 		moveq #0,d0
 		tst.b (a0)
 probe_out:	move.l d1,8(a1)		; restore the old vector
+		move (sp)+,sr
 		rte
 probe_error:
 		moveq #1,d0
@@ -646,9 +647,11 @@ cpu_type:
 		moveq #60,d0
 		restore
 cpu_type_exit:
+		move.l a1,a7
 		move.l #illegal,16(a0)
 		move.b d0,cpu_has_trapvec
-		rte
+		move (sp)+,sr
+		rts
 ;
 ;	We found the faulting instruction for this CPU type so bail
 ;
