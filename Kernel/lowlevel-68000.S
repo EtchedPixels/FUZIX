@@ -4,7 +4,7 @@
 #include "kernel-68000.def"
 
 #ifdef linux
-#error "Wrong compiler; see README.68000.md"
+#warning "Wrong compiler; see README.68000.md"
 #endif
 
 .mri 0
