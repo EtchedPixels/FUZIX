@@ -39,9 +39,11 @@ void pagemap_init(void)
      * Page size is 4KB. */
     for(i = 0x90; i < (1024 >> 2); i += 0x10)
         pagemap_add(i);
+#ifdef CONFIG_RTC_DS1302
     ds1302_init();
     if (ds1302_present)
         kputs("DS1302 detected at 0xC0.\n");
+#endif
 }
 
 void map_init(void)
