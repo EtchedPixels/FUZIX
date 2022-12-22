@@ -127,17 +127,17 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 
 	args[0] = "/bin/sh";
 	args[1] = "-c";
-	args[2] = dp;
+	args[2] = (char *)dp;
 	/* Set pointers to each string */
 	while (dp < ep) {
 		if (*dp++ == 0 && an < MAX_ARGS)
-			args[an++] = dp;
+			args[an++] = (char *)dp;
 	}
 	args[an] = NULL;
 
 	/* Check for internal processes */
 	if (strcmp(args[2], "getty") == 0) {
-		if ((pid = getty(args + 3, p + 1)) == -1)
+		if ((pid = getty(args + 3, (char *)p + 1)) == -1)
 			return 0;
 	} else {
 		/* External */
@@ -233,10 +233,10 @@ static void clear_zombies(int flags)
 static void bad_line(void)
 {
 	putstr("inittab error: ");
-	snext = strchr(sdata, '\n');
+	snext = (uint8_t *)strchr((char *)sdata, '\n');
 	if (snext)
 		*snext++ = 0;
-	putstr(sdata);
+	putstr((char *)sdata);
 	sdata = snext;
 	idata = ibackup;
 }
@@ -271,7 +271,7 @@ static void parse_initline(void)
 	uint8_t *linelen;
 
 	if (*sdata == '#') {
-		sdata = strchr(sdata, '\n');
+		sdata = (uint8_t *)strchr((char *)sdata, '\n');
 		if (sdata)
 			sdata++;
 		return;
@@ -817,6 +817,11 @@ static pid_t getty(const char **argv, const char *id)
 			if (vtsize != -1) {
 				winsz.ws_col = vtsize & 0xFF;
 				winsz.ws_row = vtsize >> 8;
+				/* Physical consoles are extended VT52 so
+				   set the terminal type if not forced by
+				   the user */
+				if (!argv[1] || !argv[2])
+					envset("TERM", "vt52");
 			}
 
 			if (argv[1]) {
