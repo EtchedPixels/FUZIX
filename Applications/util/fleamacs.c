@@ -240,12 +240,16 @@ void con_clear(void)
 
 void con_reverse(void)
 {
+#ifndef __linux__
 	con_twrite(t_mr, 1);
+#endif
 }
 
 void con_normal(void)
 {
+#ifndef __linux__
 	con_twrite(t_me, 1);
+#endif
 }
 
 int con_scroll(int n)
@@ -600,6 +604,8 @@ int set_mark(void);
 int swap_mark(void);
 int bang_shell(void);
 int run_shell(void);
+int searchf(void);
+int searchr(void);
 
 char *command_prompt(const char *cmd);
 
@@ -709,6 +715,8 @@ keytable_t table[] = {
 	{'\t', 0, insert_tab },
 	{'\n', 0, insert_nl },
 	{'\r', 0, insert_nl },
+	{ CTRL('S'), 0, searchf },
+	{ CTRL('R'), 0, searchr },
 	{0, 0, NULL }
 };
 
@@ -1162,6 +1170,63 @@ int swap_mark(void)
 	size_t tmp = mark;
 	mark = indexp;
 	indexp = tmp;
+	return 0;
+}
+
+/* Naiive but small algorithm */
+static char *memmem_b(const char *buf, const char *ebuf, const char *find, size_t flen)
+{
+	const char *p = ebuf - flen;
+	while(p >= buf) {
+		if (memcmp(p, find, flen) == 0)
+			return (char *)p;
+		p--;
+	}
+	return NULL;
+}
+
+static char *memmem(const char *buf, const char *ep, const char *find, size_t flen)
+{
+	const char *p = buf;
+	ep -= flen;
+	while(p <= ep) {
+		if (memcmp(p, find, flen) == 0)
+			return (char *)p;
+		p++;
+	}
+	return NULL;
+}
+
+int searchf(void)
+{
+	char *p = command_prompt("Search:");
+	if (p == NULL)
+		return 1;
+	movegap();
+	/* The search area is now linear from egap to ebuf */
+	p = memmem(egap, ebuf, p, strlen(p));
+	if (p == NULL) {
+		warning("Not found");
+		return 1;
+	}
+	indexp = pos(p);
+	return 0;
+}
+
+
+int searchr(void)
+{
+	char *p = command_prompt("Search:");
+	if (p == NULL)
+		return 1;
+	movegap();
+	/* The search area is now linear from start to gap */
+	p = memmem_b(buf, gap, p, strlen(p));
+	if (p == NULL) {
+		warning("Not found");
+		return 1;
+	}
+	indexp = pos(p);
 	return 0;
 }
 
