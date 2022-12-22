@@ -379,6 +379,9 @@ ptptr ptab_alloc(void)
 			}
 			if (udata.u_ptab) {
 				newp->p_top = udata.u_top;
+				#if defined CONFIG_UDATA_TEXTTOP
+					newp->p_texttop = udata.u_texttop;
+				#endif
 			    newp->p_pgrp = udata.u_ptab->p_pgrp;
 			    memcpy(newp->p_name, udata.u_ptab->p_name, sizeof(newp->p_name));
 			}

@@ -2,6 +2,7 @@
 #include <version.h>
 #include <kdata.h>
 #include "printf.h"
+#include "globals.h"
 
 extern void plt_doexec(uaddr_t pc, void* sp);
 
@@ -54,16 +55,16 @@ arg_t _execve(void)
 	staticfast inoptr ino;
 	int argc;
 	uint8_t **nargv, **nenvp;
+	struct s_argblk* abuf = NULL;
+	struct s_argblk* ebuf = NULL;
 
 	if (!(ino = n_open_lock(name, NULLINOPTR)))
 		return (-1);
 
 	if (!((getperm(ino) & OTH_EX) &&
 		  (ino->c_node.i_mode & F_REG) &&
-		  (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX)))) {
-		udata.u_error = EACCES;
-		goto nogood;
-	}
+		  (ino->c_node.i_mode & (OWN_EX | OTH_EX | GRP_EX))))
+		goto eacces;
 
 	setftime(ino, A_TIME);
 
@@ -73,28 +74,18 @@ arg_t _execve(void)
 	udata.u_sysio = true;
 
 	readi(ino, 0);
-	if (udata.u_done != sizeof(struct exec)) {
-		udata.u_error = ENOEXEC;
-		goto nogood;
-	}
+	if (udata.u_done != sizeof(struct exec))
+		goto enoexec;
 
-	if (!header_ok(&hdr)) {
-		udata.u_error = ENOEXEC;
-		goto nogood2;
-	}
-
-	uaddr_t datatop = DATATOP;
-	if (hdr.a_size)
-		datatop = DATABASE + (hdr.a_size << 8);
+	if (!header_ok(&hdr))
+		goto enoexec;
 
 	/* Does it fit? */
 
-	uint32_t datasize = hdr.a_data + hdr.a_bss + 1024;
-	if ((hdr.a_text > CODELEN) || (datasize > DATALEN))
-	{
-		udata.u_error = ENOMEM;
-		goto nogood2;
-	}
+	uint32_t codesize = hdr.a_text;
+	uint32_t datasize = (uint32_t)alignup(hdr.a_data + hdr.a_bss + USERSTACK, 16);
+	if ((codesize > CODELEN) || ((PROGLOAD + datasize) > DATATOP))
+		goto enomem;
 
 	udata.u_ptab->p_status = P_NOSLEEP;
 
@@ -104,14 +95,21 @@ arg_t _execve(void)
 	   with new hassle */
 
 	/* Gather the arguments, and put them in temporary buffers. */
-	struct s_argblk* abuf = (struct s_argblk *) tmpbuf();
+	abuf = (struct s_argblk *) tmpbuf();
 	/* Put environment in another buffer. */
-	struct s_argblk* ebuf = (struct s_argblk *) tmpbuf();
+	ebuf = (struct s_argblk *) tmpbuf();
 
 	/* Read args and environment from process memory */
 	if (rargs(argv, abuf) || rargs(envp, ebuf))
-		goto nogood3;	/* SN */
+		goto enomem;
 
+	/* At this point we should call pagemap_realloc(), for this to work on a
+     * variable-sized process system. This must be the last test as it makes
+     * changes if it works. */
+
+    if (pagemap_realloc_code_and_data(codesize, datasize))
+		goto enomem;
+	
 	/* From this point on we are commmited to the exec() completing */
 
 	/* Core dump and ptrace permission logic */
@@ -123,8 +121,6 @@ arg_t _execve(void)
 	else
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
-	udata.u_top = datatop;
-	udata.u_ptab->p_top = datatop;
 
 	/* setuid, setgid if executable requires it */
 	if (ino->c_node.i_mode & SET_UID)
@@ -153,23 +149,22 @@ arg_t _execve(void)
 	udata.u_sysio = false;
 	readi(ino, 0);
 	if (udata.u_count != 0)
-		goto nogood4;
+		goto fatal;
 
 	/* Data. */
-	udata.u_base = (uint8_t*)DATABASE;
+	udata.u_base = (uint8_t*)PROGLOAD;
 	udata.u_count = hdr.a_data;
 	udata.u_sysio = false;
 	readi(ino, 0);
 	if (udata.u_count != 0)
-		goto nogood4;
+		goto fatal;
 
 	/* Wipe the memory in the BSS. We don't wipe the memory above
 	   that on 8bit boxes, but defer it to brk/sbrk() */
-	uzero((uint8_t *)(DATABASE + hdr.a_data), hdr.a_bss);
+	uzero((uint8_t *)(PROGLOAD + hdr.a_data), hdr.a_bss);
 
 	/* Set initial break for program */
-	udata.u_break = (int)ALIGNUP(DATABASE + hdr.a_data + hdr.a_bss);
-	udata.u_texttop = CODEBASE + hdr.a_text;
+	udata.u_break = udata.u_top;
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -177,7 +172,7 @@ arg_t _execve(void)
 	// place the arguments, environment and stack at the top of userspace memory,
 
 	// Write back the arguments and the environment
-	nargv = wargs((uint8_t *) datatop, abuf, &argc);
+	nargv = wargs((uint8_t *) udata.u_top, abuf, &argc);
 	nenvp = wargs((uint8_t *) nargv, ebuf, NULL);
 
 	// Fill in udata.u_name with program invocation name
@@ -201,17 +196,29 @@ arg_t _execve(void)
 	panic("doexec returned\n");
 
 	/* tidy up in various failure modes */
-nogood4:
+fatal:
 	/* Must not run userspace */
 	ssig(udata.u_ptab, SIGKILL);
-nogood3:
 	udata.u_ptab->p_status = P_RUNNING;
-	tmpfree(abuf);
-	tmpfree(ebuf);
-nogood2:
-nogood:
+error:
+	if (abuf)
+		tmpfree(abuf);
+	if (ebuf)
+		tmpfree(ebuf);
 	i_unlock_deref(ino);
 	return (-1);
+
+enomem:
+	udata.u_error = ENOMEM;
+	goto error;
+
+eacces:
+	udata.u_error = EACCES;
+	goto error;
+
+enoexec:
+	udata.u_error = ENOEXEC;
+	goto error;
 }
 
 #undef name
@@ -219,18 +226,18 @@ nogood:
 #undef envp
 
 /*
- *	Stub the 32bit only allocator calls
+ *      Stub the 32bit only allocator calls
  */
 
 arg_t _memalloc(void)
 {
-	udata.u_error = ENOMEM;
-	return -1;
+        udata.u_error = ENOMEM;
+        return -1;
 }
 
 arg_t _memfree(void)
 {
-	udata.u_error = ENOMEM;
-	return -1;
+        udata.u_error = ENOMEM;
+        return -1;
 }
 

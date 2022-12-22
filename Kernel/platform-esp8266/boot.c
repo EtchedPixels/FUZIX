@@ -17,8 +17,7 @@ extern uint32_t _bss_end;
 
 void __main(void)
 {
-	/* FIXME: how to persuade the inline asm to take UBLOCK_SIZE */
-	asm volatile ("movi a1, udata + 512 * 3");
+	asm volatile ("movi a1, swapstack_end");
 	asm volatile ("call0 _main");
 }
 
@@ -30,7 +29,7 @@ void _main(void)
 	CPU2X |= 1;
 
 	uart_div_modify(0, (PERIPHERAL_CLOCK * 1e6) / 115200);
-	Cache_Read_Enable(0, 0, 1);
+	Cache_Read_Enable(0, 0, 0);
 
 	/* Clear BSS. */
 
