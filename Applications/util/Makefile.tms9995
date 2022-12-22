@@ -104,7 +104,8 @@ SRCS  = banner.c \
 	sed.c \
 	decomp16.c
 
-SRCTC = tget.c \
+SRCTC = fleamacs.c \
+	tget.c \
         tchelp.c \
 	marksman.c \
 	vile.c

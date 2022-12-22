@@ -106,7 +106,8 @@ SRCS  = \
 	write.c \
 	xargs.c
 
-SRCTC = tget.c \
+SRCTC = fleamacs.c \
+	tget.c \
         tchelp.c \
 	vile.c \
 	marksman.c
