@@ -54,6 +54,21 @@
 
 #define MAX_HEIGHT	255
 
+#if defined(__linux__)
+
+/* Linux lacks strlcpy */
+
+size_t strlcpy(char *dst, const char *src, size_t dstsize)
+{
+  size_t len = strnlen(src, dstsize);
+  size_t cp = len >= dstsize ? dstsize - 1 : len;
+  memcpy(dst, src, cp);
+  dst[cp] = 0;
+  return len;
+}
+
+#endif
+
 /* ---- */
 
 /* A mini look alike to David Given's libcuss. Actually a bit extended and
@@ -1246,7 +1261,7 @@ int save(char *fn)
 		mode = 666;
 	else
 		mode = 600;
-	if ((fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, 0600)) < 0)
+	if ((fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, mode)) < 0)
 		return 0;
 	if (oldperms != 0xFFFF)
 		fchmod(fd, oldperms & 0777);
