@@ -241,6 +241,9 @@ int con_scroll(int n)
 	/* For now we don't do backscrolls: FIXME */
 	if (n < 0)
 		return 1;
+	/* Redraw anyway */
+	if (n >= screen_height)
+		return 1;
 	/* Scrolling down we can do */
 	con_force_goto(screen_height - 1, 0);
 	while (n--)
@@ -1260,9 +1263,9 @@ int save(char *fn)
 	/* Open file: if no permissions to set use rw/rw/rw + umask
 	   if not force it, but take care to start private */
 	if  (oldperms == 0xFFFF)
-		mode = 666;
+		mode = 0666;
 	else
-		mode = 600;
+		mode = 0600;
 	if ((fd = open(fn, O_WRONLY|O_CREAT|O_TRUNC, mode)) < 0)
 		return 0;
 	if (oldperms != 0xFFFF)
@@ -1358,7 +1361,7 @@ static void colon_process(char *buf)
 		if (*buf == ' ') {
 			rename_needed = 1;
 			save_done(buf + 1, quit);
-			strlcpy(filename, buf + 1, 511);
+			/* FIMXE: should change filename */
 		} else if (*buf == 0)
 			save_done(filename, quit);
 		else
@@ -1384,6 +1387,7 @@ int colon_mode(void)
 	con_goto(screen_height - 1, 0);
 	con_putc(':');
 	con_clear_to_eol();
+	con_goto(screen_height - 1, 0);
 
 	*bp = 0;
 	while (1) {
