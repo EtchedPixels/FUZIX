@@ -55,6 +55,9 @@ struct p_tab {
     uint8_t	p_event;	/* Events */
     /* FIXME: usize_t strictly */
     unsigned int p_top;		/* Copy of u_top : FIXME: usize_t */
+#ifdef __XTENSA_CALL0_ABI__
+    unsigned int p_texttop;  /* Copy of u_texttop */
+#endif
 };
 
 /* Followed by this structure if profiling supported */
