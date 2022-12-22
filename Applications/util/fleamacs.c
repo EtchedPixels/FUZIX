@@ -606,6 +606,7 @@ int bang_shell(void);
 int run_shell(void);
 int searchf(void);
 int searchr(void);
+int wipe(void);
 
 char *command_prompt(const char *cmd);
 
@@ -621,7 +622,7 @@ char *command_prompt(const char *cmd);
  *	More deleting/inserting:
  *		M-^W ^W M-sp M-W ^X^O ^O
  *	Searching:
- *		^S ^R ^XS ^XR
+ *		^XS ^XR
  *	Replacing:
  *		M-R M-^R	(need region support)
  *	Capitalizing/Transposing
@@ -629,7 +630,7 @@ char *command_prompt(const char *cmd);
  *	Regions
  *		Done
  *	Copying and Moving
- *		^W ^Y ESC-W
+ *		^Y ESC-W
  *	Formatting
  *		^XF M-Tab M-Q ^X= M-^C
  *	Reading From Disk
@@ -717,6 +718,7 @@ keytable_t table[] = {
 	{'\r', 0, insert_nl },
 	{ CTRL('S'), 0, searchf },
 	{ CTRL('R'), 0, searchr },
+	{ CTRL('W'), 0, wipe },
 	{0, 0, NULL }
 };
 
@@ -1162,6 +1164,7 @@ int delete_left(void)
 int set_mark(void)
 {
 	mark = indexp;
+	warning("Mark set");
 	return 0;
 }
 
@@ -1230,6 +1233,25 @@ int searchr(void)
 	return 0;
 }
 
+/* Need a shared helper as "M-W is wipe but writing the block to the scratch
+   yank file and insert file and yankback are identical */
+int wipe(void)
+{
+	size_t bias = indexp - mark;
+	modified = 1;
+	/* Wipes from mark to cursor. See if that does anything */
+	if (indexp < mark)
+		return 1;
+	/* New cursor position (at the mark) */
+	indexp = mark;
+	movegap();
+	/* The data to kill is now from egap upwards for bias */
+	egap += bias;
+	dirty[row] = 255;	/* Optimize later */
+	dirty_below();
+	return 0;
+}
+
 int bang_shell(void)
 {
 	char *p = command_prompt("Command");
@@ -1255,18 +1277,21 @@ int run_shell(void)
 int enter_meta(void)
 {
 	keymode = META;
+	warning("M-");
 	return 0;
 }
 
 int enter_ctrlx(void)
 {
 	keymode = MX;
+	warning("^X-");
 	return 0;
 }
 
 int enter_quoted(void)
 {
 	quoted = 1;
+	warning("Quote-");
 	return 0;
 }
 
