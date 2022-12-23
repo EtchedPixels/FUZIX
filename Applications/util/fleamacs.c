@@ -435,7 +435,7 @@ int row, col;
    careful on comparisons */
 size_t indexp, page, epage, mark;
 int input;
-int repeat;
+int repeat = 1;
 int keymode;
 int quoted;
 char *buf;
@@ -582,6 +582,7 @@ int wcaps(void);
 int wlower(void);
 int noop(void);
 int digit(void);
+int digit4(void);
 int open_after(void);
 int open_before(void);
 int delete_left(void);
@@ -642,7 +643,7 @@ char *command_prompt(const char *cmd);
  *	Special Keys
  *		^U M-n M-X (won't do)
  *
- *	Need to do repeats, tmp file for yank buffer
+ *	Need to do tmp file for yank buffer
  *
  *	Try to write ops as far as possible in terms of each other and a few
  *	non-command 'ops. The goal is to make a lot of this macrocode for size
@@ -699,16 +700,17 @@ keytable_t table[] = {
 	{MX|CTRL('X'), 0, swap_mark},
 	{MX|'!', 0, bang_shell},
 	{MX|'C', 0, run_shell},
-	{META | '0', KEEPRPT, digit},
-	{META | '1', KEEPRPT, digit},
-	{META | '2', KEEPRPT, digit},
-	{META | '3', KEEPRPT, digit},
-	{META | '4', KEEPRPT, digit},
-	{META | '5', KEEPRPT, digit},
-	{META | '6', KEEPRPT, digit},
-	{META | '7', KEEPRPT, digit},
-	{META | '8', KEEPRPT, digit},
-	{META | '9', KEEPRPT, digit},
+	{META | '0', KEEPRPT | NORPT, digit},
+	{META | '1', KEEPRPT | NORPT, digit},
+	{META | '2', KEEPRPT | NORPT, digit},
+	{META | '3', KEEPRPT | NORPT, digit},
+	{META | '4', KEEPRPT | NORPT, digit},
+	{META | '5', KEEPRPT | NORPT, digit},
+	{META | '6', KEEPRPT | NORPT, digit},
+	{META | '7', KEEPRPT | NORPT, digit},
+	{META | '8', KEEPRPT | NORPT, digit},
+	{META | '9', KEEPRPT | NORPT, digit},
+	{CTRL('U'), KEEPRPT | NORPT, digit4},
 	{27, NORPT, enter_meta},
 	{CTRL('X'), NORPT, enter_ctrlx },
 	{CTRL('Q'), NORPT, enter_quoted },
@@ -803,9 +805,15 @@ int redraw(void)
 
 int digit(void)
 {
-	if (repeat == -1)
-		repeat = 0;
-	repeat = repeat * 10 + input - '0';
+	repeat = (input & 0xFF) - '0';
+	if (repeat == 0)
+		repeat = 10;
+	return 0;
+}
+
+int digit4(void)
+{
+	repeat = 4;
 	return 0;
 }
 
@@ -1746,7 +1754,7 @@ int main(int argc, char *argv[])
 	top();
 	status_dirty = 1;
 	display(1);
-	repeat = -1;
+
 	while (!done) {
 		display(0);
 		i = 0;
@@ -1773,12 +1781,20 @@ int main(int argc, char *argv[])
 			continue;
 		}
 		keymode = 0;
-		if (table[i].func)
-			(*table[i].func) ();
-		else if (input >= ' ' && input != 127)
-			insertch(input);
-		else
-			dobeep();
+		while(repeat--) {
+			if (table[i].func)
+				(*table[i].func) ();
+			else if (input >= ' ' && input != 127)
+				insertch(input);
+			else {
+				dobeep();
+				break;
+			}
+			if (table[i].flags & NORPT)
+				break;
+		}
+		if (!(table[i].flags & KEEPRPT))
+			repeat = 1;
 	}
 	con_goto(screen_height - 1, 0);
 	con_clear_to_eol();
