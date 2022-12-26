@@ -142,6 +142,9 @@ $(OBJSBAD): %.rel: %.c
 .c.rel:
 	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
 
+fleamacs: fleamacs.rel
+	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -ltermcap
+
 tchelp: tchelp.rel
 	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
@@ -149,7 +152,7 @@ tget: tget.rel
 	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
 vile: vile.rel
-	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -lcurses -ltermcap
+	$(FCC)	$(Z80_PLATFORM) $(OPTS) $< -o $@ -ltermcap
 
 %: %.rel
 	$(FCC) $(Z80_PLATFORM) $(OPTS) $< -o $@
