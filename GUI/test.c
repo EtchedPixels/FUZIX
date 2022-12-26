@@ -1,6 +1,24 @@
 #include <stdio.h>
 #include "utk.h"
 
+struct utk_menu edit = {
+	NULL,
+	"Edit",
+	"Cut/Copy/Paste",
+	5,
+	3,
+	7
+};
+
+struct utk_menu menu = {
+	&edit,
+	"File",
+	"New/Open.../Close/Exit",
+	5,
+	4,
+	8
+};
+
 struct utk_window test = {
 	NULL,
 	NULL,
@@ -13,10 +31,10 @@ struct utk_window test = {
 struct utk_window test2 = {
 	NULL,
 	NULL,
-	{ 5, 5, 20, 12 },
-	"Demo2 ",
+	{ 5, 5, 20, 50 },
+	"Demo 2",
 	NULL,
-	NULL
+	&menu
 };
 
 
@@ -38,6 +56,7 @@ int main(int argc, char *argv[])
 		if (ev->type == EV_CLOSE)
 			ui_win_delete(ev->window);
 	}
+	ui_exit();
 	return 0;
 
 }

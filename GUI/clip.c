@@ -23,6 +23,7 @@ unsigned rect_contains(struct utk_rect *r, coord_t y, coord_t x)
 }
 
 struct utk_rect clip;
+struct utk_rect damage;
 struct utk_rect screen;
 
 /* True if the rectangle passed covers the entire clip area */
@@ -92,4 +93,12 @@ void clip_set(struct utk_rect *r)
 	clip.left = r->left;
 	clip.right = r->right;
 	clip.bottom = r->bottom;
+}
+
+void damage_set(struct utk_rect *r)
+{
+	damage.top = r->top;
+	damage.left = r->left;
+	damage.right = r->right;
+	damage.bottom = r->bottom;
 }

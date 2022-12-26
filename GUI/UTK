@@ -1,0 +1,87 @@
+Basic Concept
+
+An abstract GUI built out of windows and within them a tree of widgets for
+drawing and rendering.
+
+To keep it simple:
+- Assume only the top layer can be drawn on for now
+- Don't assume a mouse
+
+Abstraction
+- Windows containing widgets, no generic drawing API except within widgets
+- Might be text only, or text/colour
+- Might be text using graphic characters for corners, system icons etc
+- Can be a mix (eg MSX we'd probably do character but use the 768 char mode
+  so we can do bitmap if need be), or TRS80 (text/chunky graphics with hires
+  card overlay)
+- Fonts optional - could be as dumb as a text display or multiple formattable
+  fonts and styles
+- What to do about scrolling - don't want to assume a readable backing store ?
+- Some objects like drawing canvases and bitmaps only exist on some displays
+
+Layout
+- Simple gravity
+- Packing by hbox/vbox
+- Automatically scrollbar windows if they won't fit minimum
+- Automatically re-layout on resize
+
+Events
+- As far as possible abstract events, menu behaviour and other stuff to keep
+  consistency betwen devices
+- Some things like pointer tracking and drag/drop simply don't exist in all
+  cases
+- Sometimes display is locked so we need both timer/poll type events and also
+  a way to ask "display locked" for timed stuff
+
+Switching On Small Machines
+- Screen to small for multiple-apps, as is memory
+- Instead all apps have a way to be run with 'reload' instructions
+- All apps keep their state in a struct so they can reload as they were
+- Perhaps keep a file state so we can keep an "App" switcher menu that does
+  context save, exec context load of other app
+- Cheat with "terminal" app maybe - terminal app actually is just exit 0,
+  and command to reload whatever as previous UI app to run from command
+
+Widgets - some ideas
+- Label (1 line text)
+- Button (similar) - on/off, pressable, maybe radio ?
+- hbox - packs horizontally
+- vbox - packs vertically
+- hlist - 1 line texts in columns
+- vlist - 1 line text in rows
+- table - vbox of hlists
+- Text - multi line text with or without edit (attachable gap buffer option ?)
+- SmartText - ditto with some kind of style/formattign
+- Progress bar
+- File selector
+- Icon (with or without text)
+- Toolbar (maybe - tricky without bitmaps or on small display)
+- Bitmap/Pixmap
+- Canvas
+- Scrollbar
+- Sliders
+- Viewport
+
+Dialogue boxes - tbd
+
+Full width windows/max size/normal toggle etc.
+
+Menus
+- Outside of the main widget structure, kind of prototyped but need to sort
+  their own size, need a way to indicate short cuts etc
+
+Renders
+- ASCII		for debug mostly (variants with UDG etc for non direct video
+		text mode). Might be a kernel copyrect helper for speed though.
+- Text		Simple text displays memory mapped (possibly with UDGs for
+		neatness and standard icons)
+- Colour	Ditto with colour
+- Bitmap	Directly mappable bitmap displays
+- TMS9918A	Because it's different (direct I/O), but basically colour with
+		some bitmap trickery
+
+Harder are things like indirect displays and also multiple things at once on
+a big display. Eg PCW512 probably wants a "real" window display setup
+
+Make ui_init take a want and need flag mask. Makes failing cleaner and also
+means we can pick the right mode in some cases (eg MSX if you want bitmaps)

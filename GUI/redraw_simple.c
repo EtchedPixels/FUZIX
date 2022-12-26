@@ -13,14 +13,12 @@ struct utk_window *win_bottom;
 static void ui_render(struct utk_window *w)
 {
 	struct utk_widget *d = w->widget;
-	struct utk_rect tmp;
+
+	clip_set(&damage);
 
 	/* Not in the drawing area */
 	if (clip_outside(&w->rect))
 		return;
-	/* utk_win_base will set a clipping rectangle within the window
-	   body. Save and restore the old one */
-	clip_save(&tmp);
 
 	/* Clear and border the window as needed */
 	utk_win_base(w);
@@ -29,8 +27,6 @@ static void ui_render(struct utk_window *w)
 		utk_render_widget(w, d);
 		d = d->next;
 	}
-
-	clip_set(&tmp);
 }
 
 /*
@@ -42,6 +38,8 @@ static void ui_render(struct utk_window *w)
 void ui_redraw(void)
 {
 	struct utk_window *b = win_top;
+
+	clip_set(&damage);
 
 	while (b) {
 		/* We can work up from here instead */
@@ -62,10 +60,7 @@ void ui_redraw(void)
 
 void ui_redraw_all(void)
 {
-	clip.top = 0;
-	clip.left = 0;
-	clip.right = screen.right;
-	clip.bottom = screen.bottom;
+	damage_set(&screen);
 	ui_redraw();
 }
 
@@ -109,18 +104,18 @@ static void ui_win_link_bottom(struct utk_window *w)
 void ui_win_delete(struct utk_window *w)
 {
 	ui_win_unlink(w);
-	clip_set(&w->rect);
+	damage_set(&w->rect);
 	ui_redraw();
-	/* TODO: menu change */
+	utk_menu();
 }
 
 /* Create a window - always on top */
 void ui_win_create(struct utk_window *w)
 {
 	ui_win_link(w);
-	clip_set(&w->rect);
+	damage_set(&w->rect);
 	ui_render(w);
-	/* TODO: menu bar change */
+	utk_menu();
 }
 
 /*
@@ -129,6 +124,7 @@ void ui_win_create(struct utk_window *w)
  */
 void ui_win_adjust(struct utk_window *w, struct utk_rect *r)
 {
+	damage_set(&w->rect);
 	clip_set(&w->rect);
 	/* If we are top and the new size covers the old entirely we can fastpath it */
 	if (clip_covered(r)) {
@@ -137,11 +133,11 @@ void ui_win_adjust(struct utk_window *w, struct utk_rect *r)
 		if (w != win_top) {
 			ui_win_unlink(w);
 			ui_win_link(w);
-			/* TODO: menu bar change */
 		}
 		/* Draw - this will cover all the damage */
 		rect_copy(&w->rect, r);
 		ui_render(w);
+		utk_menu();
 		return;
 	}
 	/* Slow path, either we are moving to top or we are smaller or both */
@@ -157,20 +153,29 @@ void ui_win_adjust(struct utk_window *w, struct utk_rect *r)
 
 void ui_win_back(struct utk_window *w)
 {
-	clip_set(&w->rect);
+	damage_set(&w->rect);
 	ui_win_unlink(w);
 	ui_win_link_bottom(w);
-	/* TODO menu change */
+	utk_menu();
 	ui_redraw();
 }
 
 void ui_win_top(struct utk_window *w)
 {
 	ui_win_adjust(w, &w->rect);
+	utk_menu();
 }
 
 void ui_init(void)
 {
 	/* Initialize the toolkit below us */
 	utk_init();
+	/* Just so we have a known state */
+	damage_set(&screen);
+	clip_set(&screen);
+}
+
+void ui_exit(void)
+{
+	utk_exit();
 }

@@ -7,8 +7,11 @@
 #include <unistd.h>
 #include "utk.h"
 
+struct utk_window *ev_win;	/* Window for multi-part event handling */
 coord_t cursor_y;
 coord_t cursor_x;
+coord_t save_y;
+coord_t save_x;
 
 static uint8_t *vidmem;
 static uint8_t *dirt_l;
@@ -61,7 +64,7 @@ static void text_putc(uint_fast8_t y, uint_fast8_t x, char c)
 {
 	uint8_t *p = vidmem + y * (screen.right + 1) + x;
 	/* Deal with simple clip cases right and down only */
-	if (x > screen.right || y > screen.bottom)
+	if (x > clip.right || y > clip.bottom)
 		return;
 	if (*p != c) {
 		*p = c;
@@ -75,15 +78,20 @@ static void text_putc(uint_fast8_t y, uint_fast8_t x, char c)
 
 /* For convenience clip left and right, but this is the only clip this internal
    routine does itself */
-static uint_fast8_t text_puts(uint_fast8_t y, uint_fast8_t x, const char *s)
+static uint_fast8_t text_putsn(uint_fast8_t y, uint_fast8_t x, const char *s, const char *e)
 {
-	while (*s && x <= clip.right) {
+	while (s != e && *s && x <= clip.right) {
 		if (x >= clip.left)
 			text_putc(y, x, *s);
 		x++;
 		s++;
 	}
 	return x;
+}
+
+static uint_fast8_t text_puts(uint_fast8_t y, uint_fast8_t x, const char *s)
+{
+	return text_putsn(y, x, s, NULL);
 }
 
 static void hline(uint_fast8_t y, uint_fast8_t l, uint_fast8_t r, char c)
@@ -125,8 +133,11 @@ unsigned utk_puts(unsigned y, unsigned x, const char *p)
 
 void utk_clear_rect(struct utk_rect *r, char c)
 {
+	struct utk_rect tmp;
+	clip_save(&tmp);
 	clip_intersect(r);
 	clear_rect(r, c);
+	clip_set(&tmp);
 }
 
 static void clip_hline(unsigned y, unsigned l, unsigned r, char c)
@@ -149,24 +160,36 @@ static void clip_putc(unsigned y, unsigned x, char c)
 	text_putc(y, x, c);
 }
 
+static void utk_do_menu(void)
+{
+	uint_fast8_t x = 0;
+	if (win_top) {
+		struct utk_menu *m = win_top->menu;
+		while (m) {
+			x = text_puts(0, x, m->title);
+			x = text_puts(0, x, "_");
+			m = m->next;
+		}
+	}
+	hline(0, x, screen.right, '_');
+}
+
+void utk_menu(void)
+{
+	clip_set(&screen);
+	utk_do_menu();
+}
+
 /*
  *	Fill in a rectangle of the background. For speed we work with the
  *	clipping rectange directly
  */
 void utk_fill_background(void)
 {
+	clip_set(&damage);
 	/* Fill the cliprect area */
 	if (clip.top == 0) {
-		uint_fast8_t x = 0;
-		if (win_top) {
-			struct utk_menu *m = win_top->menu;
-			while (m) {
-				x = text_puts(0, x, m->title);
-				x = text_puts(0, x, "_");
-				m = m->next;
-			}
-		}
-		hline(0, x, screen.right, '_');
+		utk_do_menu();
 		clip.top++;
 		clear_rect(&clip, ':');
 		clip.top--;
@@ -207,8 +230,8 @@ void utk_win_base(struct utk_window *w)
 
 	/* Top decoration */
 	clip_set(&w->rect);
-	/* Make sure the working area is on screen */
-	clip_intersect(&screen);
+	/* Make sure the working area is on screen and needs redraw */
+	clip_intersect(&damage);
 
 	/* Set the window body clear. Could optimize this smaller perhaps
 	   but need to take care of clip_intersect of screen effects and the
@@ -225,13 +248,13 @@ void utk_win_base(struct utk_window *w)
 	/* Right hand bar (for now don't worry about value to show */
 	y = w->rect.top + 1;
 	while (y <= yb) {
-		text_putc(y, xr, '#');
+		clip_putc(y, xr, '#');
 		y++;
 	}
 	/* Now the bottom and resize corner - again value to do */
 	x = w->rect.left;
 	clip_hline(yb, x, xr - 1, '#');
-	text_putc(yb, xr, '/');
+	clip_putc(yb, xr, '/');
 
 }
 
@@ -241,6 +264,12 @@ void utk_win_base(struct utk_window *w)
  */
 void utk_render_widget(struct utk_window *w, struct utk_widget *d)
 {
+}
+
+void utk_win_delete(struct utk_window *w)
+{
+	if (ev_win == w)
+		ev_win = NULL;
 }
 
 static struct termios saved_term, term;
@@ -280,6 +309,100 @@ void utk_init(void)
 		tcsetattr(0, TCSADRAIN, &term);
 	}
 	printf("\033[0;0H\033[J");
+	cursor_x = screen.right / 2;
+	cursor_y = screen.bottom / 2;
+	utk_cap.screen_height = h;
+	utk_cap.screen_width = screen.right + 1;
+}
+
+
+void utk_exit(void)
+{
+	printf("\033[0;0H\033[J");
+}
+
+/*
+ *	ASCII mode menu is a bit hackish but will do for nwo
+ */
+
+static uint_fast8_t menu_shown;
+static uint_fast8_t menu_num;
+static uint_fast8_t menu_row;
+static uint_fast8_t menu_xbar;
+static struct utk_menu *menu_ptr;
+static struct utk_rect menu_rect;
+
+/* Assume it fits and we don't have to scroll up and down the screen */
+static void utk_menu_show(void)
+{
+	const char *p = menu_ptr->items;
+	uint_fast8_t y = 1;
+
+	menu_xbar = cursor_x;
+
+	menu_rect.top = 1;
+	menu_rect.bottom = 1 + menu_ptr->dropheight;
+	menu_rect.left = cursor_x;
+	menu_rect.right = menu_rect.left + menu_ptr->dropwidth;
+	/* Slide it across to fit if need be */
+	if (menu_rect.right > screen.right) {
+		menu_rect.left -= menu_rect.right - screen.right;
+		menu_rect.right = screen.right;
+	}
+	clip_set(&menu_rect);
+	clear_rect(&menu_rect, ' ');
+	while(p) {
+		char *np = strchr(p, '/');
+		text_putsn(y++, menu_rect.left + 1, p, np);
+		if (np)
+			np++;
+		p = np;
+	}
+	cursor_y = menu_rect.top;
+	cursor_x = menu_rect.left + 1;
+	menu_shown = 1;
+}
+
+static void utk_menu_hide(void)
+{
+	damage_set(&menu_rect);
+	menu_shown = 0;
+	cursor_y = 0;
+	cursor_x = menu_xbar;
+	ui_redraw();
+}
+
+/* For now assume the menu actually fits. We need to scroll along it if not
+   but that's for later */
+static void utk_menu_right(void)
+{
+	struct utk_menu *p = menu_ptr->next;
+
+	if (menu_shown)
+		utk_menu_hide();
+	if (p == NULL) {
+		menu_ptr = win_top->menu;
+		menu_num = 0;
+		cursor_x = 0;
+	} else {
+		menu_ptr = p;
+		menu_num++;
+		cursor_x += menu_ptr->width;
+	}
+	utk_menu_show();
+}
+
+
+static void utk_menu_up(void)
+{
+	if (cursor_y > 1)
+		cursor_y--;
+}
+
+static void utk_menu_down(void)
+{
+	if (cursor_y < menu_rect.bottom)
+		cursor_y++;
 }
 
 /*
@@ -299,11 +422,34 @@ static struct utk_rect ui_rect;
 #undef CTRL
 #define CTRL(x)		((x) & 31)
 
-/* FIXME handle window delete during resize  - keep a win_ev, and clear it on
-   deletion ? instead of using win_top */
 static uint_fast8_t translate_key(char c)
 {
 	event.type = 0;
+
+	if (ui_mode == UI_MENU) {
+		if (c == '\033') {
+			utk_menu_hide();
+			cursor_y = save_y;
+			cursor_x = save_x;
+			ui_mode = UI_NORMAL;
+			return 1;
+		}
+		if (c == '\t')
+			utk_menu_right();
+		else if (c == '\n' || c == '\r') {
+			utk_menu_hide();
+			cursor_y = save_y;
+			cursor_x = save_x;
+			ui_mode = UI_NORMAL;
+			event.type = EV_MENU;
+			event.code = (menu_num << 8) | menu_row;
+			return 1;
+		} else if (c == CTRL('P'))
+			utk_menu_up();
+		else if (c == CTRL('N'))
+			utk_menu_down();
+		return 1;
+	}
 	/* We will make this change when in a widget so that you have to
 	   leave a text widget for the normal key behaviour return */
 	if (c == CTRL('P')) {
@@ -327,12 +473,25 @@ static uint_fast8_t translate_key(char c)
 		return 1;
 	}
 	if (c == '\033') {
-		ui_mode = 0;
+		if (ui_mode) {
+			ui_mode = 0;
+			return 1;
+		}
+		menu_ptr = win_top->menu;
+		if (menu_ptr == 0)
+			return 1;
+		/* Enter menu mode */
+		save_y = cursor_y;
+		save_x = cursor_x;
+		cursor_y = 0;
+		cursor_x = 0;
+		ui_mode = UI_MENU;
+		utk_menu_show();
 		return 1;
 	}
 	if (c == '\n' || c == '\r') {
 		if (ui_mode == UI_MOVE) {
-			if (cursor_y == 0) {
+			if (cursor_y == 0 || ev_win == NULL) {
 				ui_mode = UI_NORMAL;
 				return 1;
 			}
@@ -341,7 +500,7 @@ static uint_fast8_t translate_key(char c)
 			ui_rect.top += cursor_y;
 			ui_rect.bottom += cursor_y;
 			ui_mode = UI_NORMAL;
-			ui_win_adjust(win_top, &ui_rect);
+			ui_win_adjust(ev_win, &ui_rect);
 			event.type = EV_MOVE;
 			return 1;
 			
@@ -349,12 +508,12 @@ static uint_fast8_t translate_key(char c)
 		if (ui_mode == UI_RESIZE) {
 			ui_rect.bottom = cursor_y;
 			ui_rect.right = cursor_x;
-			if (ui_rect.bottom < ui_rect.top + 2 ||
+			if (ev_win == NULL || ui_rect.bottom < ui_rect.top + 2 ||
 				ui_rect.right < ui_rect.left + 5) {
 				ui_mode = UI_NORMAL;
 				return 1;
 			}
-			ui_win_adjust(win_top, &ui_rect);
+			ui_win_adjust(ev_win, &ui_rect);
 			event.type = EV_RESIZE;
 			ui_mode = UI_NORMAL;
 			return 1;
@@ -368,10 +527,13 @@ static uint_fast8_t translate_key(char c)
 			if (event.window == win_top) {
 				ui_mode = UI_MOVE;
 				/* Set up as a 0 based rectange of the right size */
+				ev_win = win_top;
 				ui_rect.left = 0;
 				ui_rect.top = 0;
 				ui_rect.right = win_top->rect.right - win_top->rect.left;
 				ui_rect.bottom = win_top->rect.bottom - win_top->rect.top;
+				cursor_x = win_top->rect.left;
+				cursor_y = win_top->rect.top;
 				return 1;
 			}
 			event.type = EV_SELECT;
@@ -384,10 +546,11 @@ static uint_fast8_t translate_key(char c)
 			ui_rect.top = event.window->rect.top;
 			ui_rect.left = event.window->rect.left;
 			ui_mode = UI_RESIZE;
-			ui_win_top(event.window);
+			ev_win = event.window;
+			ui_win_top(ev_win);
 			return 1;
 		}
-		if (event.window != win_top)
+		if (event.window && event.window != win_top)
 			ui_win_top(event.window);
 		/* TODO: window scroll bars, window resize, window move */
 		event.type = EV_BUTTON;
@@ -433,6 +596,7 @@ struct utk_event *utk_event(void)
 		}
 		/* Hack for the moment TODO */
 		printf("\033[%d;%dH", cursor_y + 1, cursor_x + 1);
+		utk_refresh();
 		fflush(stdout);
 	}
 	if (n == -1) {
@@ -441,3 +605,11 @@ struct utk_event *utk_event(void)
 	event.type = EV_QUIT;
 	return &event;
 }
+
+struct utk_cap utk_cap = {
+	0,
+	0,
+	1, 1,		/* No snap to boundary */
+	1, 1,		/* Co-ordinates are character sized */
+	0,		/* No capabilies */
+};
