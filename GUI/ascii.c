@@ -81,6 +81,13 @@ static void text_putc(uint_fast8_t y, uint_fast8_t x, char c)
 static uint_fast8_t text_putsn(uint_fast8_t y, uint_fast8_t x, const char *s, const char *e)
 {
 	while (s != e && *s && x <= clip.right) {
+		if (*s == 0xFF) {
+			s++;
+			if (*s != 0xFF) {
+				s ++;
+				continue;
+			}
+		}
 		if (x >= clip.left)
 			text_putc(y, x, *s);
 		x++;
@@ -121,14 +128,14 @@ static void clear_rect(struct utk_rect *r, char c)
  *	Actual higher level routines with clipping
  */
 
-unsigned utk_puts(unsigned y, unsigned x, const char *p)
+coord_t utk_putsn(coord_t y, coord_t x, const char *p, const char *e)
 {
 	if (y < clip.top)
 		return x;
 	if (y > clip.bottom)
 		return x;
 	/* text_puts clips left right itself */
-	return text_puts(y, x, p);
+	return text_putsn(y, x, p, e);
 }
 
 void utk_clear_rect(struct utk_rect *r, char c)
@@ -245,6 +252,7 @@ void utk_win_base(struct utk_window *w)
 	x = text_puts(y, x, "[+]=");
 	x = text_puts(y, x, w->title);
 	clip_hline(y, x, xr, '=');
+
 	/* Right hand bar (for now don't worry about value to show */
 	y = w->rect.top + 1;
 	while (y <= yb) {
@@ -401,7 +409,8 @@ static void utk_menu_up(void)
 
 static void utk_menu_down(void)
 {
-	if (cursor_y < menu_rect.bottom)
+	/* Bottom line is blank so not selectable */
+	if (cursor_y < menu_rect.bottom - 1)
 		cursor_y++;
 }
 

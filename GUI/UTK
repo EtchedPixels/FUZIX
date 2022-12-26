@@ -9,7 +9,7 @@ To keep it simple:
 
 Abstraction
 - Windows containing widgets, no generic drawing API except within widgets
-- Might be text only, or text/colour
+- Might be text only, or text/colour, or bitmap, or pixmap
 - Might be text using graphic characters for corners, system icons etc
 - Can be a mix (eg MSX we'd probably do character but use the 768 char mode
   so we can do bitmap if need be), or TRS80 (text/chunky graphics with hires
@@ -49,7 +49,7 @@ Widgets - some ideas
 - vbox - packs vertically
 - hlist - 1 line texts in columns
 - vlist - 1 line text in rows
-- table - vbox of hlists
+- table - n x m objects
 - Text - multi line text with or without edit (attachable gap buffer option ?)
 - SmartText - ditto with some kind of style/formattign
 - Progress bar
@@ -85,3 +85,66 @@ a big display. Eg PCW512 probably wants a "real" window display setup
 
 Make ui_init take a want and need flag mask. Makes failing cleaner and also
 means we can pick the right mode in some cases (eg MSX if you want bitmaps)
+
+
+
+Bitmaps for custom font mode
+
+1	Title bar across
+2	Title bar close
+3	Title bar max ?
+4	VScroll
+5	VScroll with
+6	HScroll			}	Also progress
+7	HScroll with bar	}
+8	Resize corner
+
+9	Arrow up		}	Scrollbar niceities
+10	Arrow down
+11	Arrow left
+12	Arrow right
+
+13	Background pattern
+14	Cursor for non sprite setups (gets reprogrammed to forms)
+		[arrow, text, wait, drag]
+15	Checkmark
+16	O for checkmark not set
+
+17	Box bar	v		Gives us nice menus and dialogues
+18	Box bar	h		Matches tee and corners if available
+19	Left edge of window with background (to make window borders work nicely)
+
+21-24	HCDS cards
+
+25	Icon bottom left
+26	Icon bottom right
+27,28	Folder top
+29,31	File top
+32,33	Floppy top
+
+
+34	Box ltee
+35	Box rtee
+36	Box l/b corner
+37	Box r/b corner
+38	Box l/t corner
+39	Box r/t corner
+
+DEC specials for VT modes
+
+\033(0	selects special font \033(B ascii mode
+then 0x60-0x7F are line drawing
+
+71	box across
+74	ltee
+75	rtee
+76	box down
+6A 	bottom right
+6B	top right
+6C	top left
+6D	bottom left
+61	background
+60	check box set
+
+no nice scroll bars but could try using slider style - box across box down
+and 6E (the crossing) ?

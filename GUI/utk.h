@@ -85,6 +85,18 @@ struct utk_cap {
 
 extern struct utk_cap utk_cap;
 
+/*
+ *	Fonts (sketch for)
+ */
+
+struct utk_font {
+    const char	*name;
+    unsigned	flags;
+#define FONT_MONO	1
+    coord_t	width;		/* Monospaced only */
+    coord_t	height;
+};
+
 /* Clip functions */
 unsigned clip_covered(struct utk_rect *r);
 unsigned clip_outside(struct utk_rect *r);
@@ -96,6 +108,16 @@ void damage_set(struct utk_rect *r);
 
 void rect_copy(struct utk_rect *to, struct utk_rect *from);
 unsigned rect_contains(struct utk_rect *r, coord_t y, coord_t x);
+
+/* Text functions */
+struct utk_font *utk_font_set(const char *name);
+struct utk_font *utk_font_load(const char *name);
+void utk_font_ref(struct utk_font *font);
+void utk_font_uref(struct utk_font *font);
+coord_t utk_text_width(const char *p);
+coord_t utk_text_height(const char *p);
+coord_t utk_putsn(coord_t y, coord_t x, const char *t, const char *e);
+#define utk_puts(y,x,t)	utk_putsn(y, x, t, NULL)
 
 /* Drawing routines */
 void utk_init(void);
