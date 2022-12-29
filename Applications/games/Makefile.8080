@@ -4,7 +4,7 @@ HOSTCC = gcc
 
 SRCSNS = qrun.c fortune.c fweep.c
 
-SRCS  = fortune-gen.c startrek.c hamurabi.c advint.c cowsay.c
+SRCS  = fortune-gen.c startrek.c hamurabi.c advint.c cowsay.c dopewars.c
 
 #
 #	ack currently seems to blow up with an apparently bogus error

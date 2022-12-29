@@ -16,10 +16,10 @@
  *	- Loan shark
  *	- 31 day timer
  *	- Actually make it random (fixed rand sequence is just handy for debug)
+ *	- Cops
+ *	- Hospital
  *
  *	Things To Finish
- *	- Cops
- *	- Hospital ?
  *	- Save/load ?
  *
  *	Where there are deviations it generally favours the PalmOS version
@@ -128,10 +128,11 @@ const char *locations[] = {
 	"Central Park",
 	"Manhattan",
 	"Coney Island",
-	"Brooklyn"
+	"Brooklyn",
+	"Hospital"
 };
 
-const char *locstr = "123456";
+const char *locstr = "123456";	/* Can't select Hospital */
 
 const char *goodstr = "aclphwmp";
 
@@ -149,6 +150,16 @@ const char *goodstr = "aclphwmp";
 #define NO_LEND_TODAY	"The loan shark already loaned you money today."
 #define NOT_OWED	"You don't owe the loan shark that much."
 #define NOT_LEND_THIS	"The loan shark won't lend you that much."
+#define COP_DOWN	"You shoot and injure a cop, man down."
+#define MISSED_COP	"You shoot and miss."
+#define NO_GUN		"You have no gun."
+#define COPS_KILL	"Officer Hardass guns you down."
+#define COPS_WOUND	"The cops wound you and bring you to heel."
+#define COPS_MISS	"Bullets zing past your ear."
+#define COPS_TAKE_ALL	"Officer Hardass relieves you of all your drugs and money."
+#define COPS_TAKE_HALF	"Officer Hardass relieves you of all your durgs and half your money."
+#define COP_NO_GUN	"Officer Hardass takes your gun away."
+#define ESCAPED		"You escape into a back alley."
 
 #define SHARK_LEVERAGE	400	/* 400 % Classic, up to 3000 in some versions */
 
@@ -158,6 +169,8 @@ unsigned space;
 unsigned coatsize;
 unsigned days = 1;
 unsigned last_borrow;
+unsigned dead = 0;
+unsigned cops = 3;
 money cash;
 money debt;
 money bank;
@@ -323,7 +336,7 @@ void show_inventory(unsigned all)
 	while (g->name) {
 		if ((all && g->owned) || g->price)
 			printf("%c %-25s %-3d %s\n", *p, g->name, g->owned,
-			       g->price ? price(g->price): "");
+			       g->price ? (const char *)price(g->price): "");
 		p++;
 		g++;
 	}
@@ -392,7 +405,6 @@ void sell(void)
 			error(NOT_ENOUGH);
 			continue;
 		}
-		/* Do we want differing buy/sell pricing ? */
 		cash += g->price * n;
 		space += n;
 		g->owned -= n;
@@ -400,20 +412,96 @@ void sell(void)
 	}
 }
 
+/* There are various versions of this including ones you can bribe or flee */
+
 void police(void)
 {
+	char c;
+	unsigned shotat = 0;
+	unsigned caught = 0;
+
+	while(cops && !caught) {
+		printf("Officer Hardass ");
+		if (cops == 2)
+			printf("and his deputy ");
+		else if (cops == 3)
+			printf("and his two deputies ");
+		printf("are on your tail.\n");
+		printf("r)un for it, or f)ight > ");
+		c = getch();
+		if (c == 'f') {
+			if (!gun) {
+				error(NO_GUN);
+				continue;
+			}
+			shotat = 1;
+			if (chance(25)) {
+				cops--;
+				info(COP_DOWN);
+				if (cops == 0)
+					return;
+			} else {
+				info(MISSED_COP);
+				/* Missed */
+			}
+		}
+		if (c == 'r') {
+			if (chance(33)) {
+				if (chance(20))
+					caught = 1;
+				/* Still chasing */
+			} else {
+				info(ESCAPED);
+				return;
+			}
+		}
+		/* If you've shot at them then they shoot back */
+		if (shotat && !caught) {
+			if (chance(20)) {
+				if (chance(20)) {
+					info(COPS_KILL);
+					dead = 1;
+				}
+				info(COPS_WOUND);
+				caught = 1;
+			} else
+				info(COPS_MISS);
+		}
+	}
+	/* Fight over .. */
+	if (caught) {
+		struct good *g = good;
+		if (shotat)
+			info(COPS_TAKE_ALL);
+		else
+			info(COPS_TAKE_HALF);
+		if (gun) { 
+			info(COP_NO_GUN);
+			gun = 0;
+		}
+		while(g->name) {
+			space += g->owned;
+			g->owned = 0;
+			g++;
+		}
+		if (shotat) {
+			cash = 0;
+			location = 6;
+		} else
+			cash /= 2;
+	}
 }
 
 void coat(void)
 {
-	printf("You are offered a trenchcoat wiht bigger pockets.\n");
-	if (cash < 200) {
+	printf("You are offered a trenchcoat wiht bigger pockets for $200.\n");
+	if (cash < 20000) {
 		printf("You can't afford it.\n");
 		return;
 	}
-	if (!yesno(". Buy it ? "))
+	if (!yesno("Buy it ? "))
 		return;
-	cash -= 200;
+	cash -= 20000;
 	coatsize += 40;
 	space += 40;
 }
@@ -423,16 +511,16 @@ void gunsale(void)
 	if (gun == 1)
 		return;
 
-	printf("You are offered a gun");
+	printf("You are offered a gun for $400");
 	/* Q: 400 dollars or 4.00 ? */
-	if (cash < 400) {
+	if (cash < 40000) {
 		printf(" but can't afford it.\n");
 		return;
 	}
 	if (!yesno(". Buy it ? "))
 		return;
 	gun = 1;
-	cash -= 400;
+	cash -= 40000;
 }
 
 money borrow_limit(void)
@@ -537,6 +625,24 @@ void banker(void)
 	}
 }
 
+void day_cycle(void)
+{
+	debt += debt >> 3;
+	bank += bank >> 4;
+	days++;
+	if (chance(13)
+	    && (space != coatsize || gun))
+		police();
+	if (dead)
+		return;
+	if (chance(10))
+		coat();
+	if (!gun && chance(10))
+		gunsale();
+	price_goods(3);
+	do_modifiers();
+}
+
 void move_place(void)
 {
 	unsigned i;
@@ -549,20 +655,10 @@ void move_place(void)
 		c = getch();
 		p = strchr(locstr, c);
 		if (p) {
-			debt += debt >> 3;
-			bank += bank >> 4;
-			days++;
 			location = p - locstr;
-			if (chance(13)
-			    && (space != coatsize || gun))
-				police();
-			if (chance(10))
-				coat();
-			if (!gun && chance(10))
-				gunsale();
-			price_goods(3);
-			do_modifiers();
-			return;
+			day_cycle();
+			if (dead)
+				return;
 		}
 		if (c == '\n' || c == '/')
 			return;
@@ -597,7 +693,8 @@ void init_game(void)
 void status(void)
 {
 	printf("\n\nDay %d, In %s.\n", days, locations[location]);
-	show_inventory(1);
+	if (location != 6)
+		show_inventory(1);
 }
 
 int game_run(void)
@@ -605,7 +702,15 @@ int game_run(void)
 	char c;
 
 	while (1) {
+		if (dead)
+			return 0;
 		status();
+		if (location == 6) {
+			if (days == 31)
+				return 0;
+			move_place();
+			continue;
+		}
 		if (location == 0)
 			printf("l)oan shark b(a)nk ");
 		printf("b)uy s)ell i)nventory m)ove d)one Q)uit > ");
@@ -630,11 +735,14 @@ int game_run(void)
 			break;
 		case 'm':
 			if (days == 31)
-				break;
+				return 0;
 			move_place();
 			/* TODO move on last day lets you then buy sell but ends after */
 			break;
 		case 'd':
+			if (days == 31)
+				return 0;
+			day_cycle();
 			return 1;
 		case 'Q':
 			return 0;
@@ -650,14 +758,18 @@ int main(int argc, char *argv[])
 	price_goods(3);
 	while (game_run());
 	score = value_owned();
-	printf("\nYou ended the game with %s\n", price(score));
-	if (score < 0)
-		printf("The loan shark's thugs broke your legs.\n");
-	else if (score >= 100000000)
-		printf("You retired a millionaire in the Carribbean.\n");
-	else if (score >= 200000)
-		printf("Congratulations! You didn't do half bad.\n");
-	else
-		printf("You didn't make much money. Better luck next time.\n");
+	if (dead)
+		printf("You ended the game in the city morgue.\n");
+	else {
+		printf("\nYou ended the game with %s\n", price(score));
+		if (score < 0)
+			printf("The loan shark's thugs broke your legs.\n");
+		else if (score >= 100000000)
+			printf("You retired a millionaire in the Carribbean.\n");
+		else if (score >= 200000)
+			printf("Congratulations! You didn't do half bad.\n");
+		else
+			printf("You didn't make much money. Better luck next time.\n");
+	} 
 	return 0;
 }
