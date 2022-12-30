@@ -196,6 +196,9 @@ arg_t _execve(void)
 	if ((udata.u_error = pagemap_realloc(NULL, bin_size)) != 0)
 		goto nogood3;
 
+#ifdef CONFIG_PLATFORM_UDMA
+	plt_udma_kill(p);
+#endif
 	/* Core dump and ptrace permission logic */
 #ifdef CONFIG_LEVEL_2
 	/* Q: should uid == 0 mean we always allow core */

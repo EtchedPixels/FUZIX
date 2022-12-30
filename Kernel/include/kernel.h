@@ -1188,6 +1188,9 @@ extern uint_fast8_t plt_canswapon(uint16_t devno);
 
 extern int plt_dev_ioctl(uarg_t request, char *data);
 
+extern void plt_udma_kill(ptptr p);
+extern void plt_udma_sync(ptptr p);
+
 extern uint8_t plt_tick_present;
 
 #ifndef CONFIG_INLINE_IRQ

@@ -168,6 +168,9 @@ ptptr swapneeded(ptptr p, int notself)
 	ptptr n = swapvictim(p, notself);
 	if (n) {
 		inswap = 1;
+#ifdef CONFIG_PLATFORM_UDMA
+		plt_udma_sync(n);
+#endif
 		if (swapout(n))
 			n = NULL;
 		inswap = 0;

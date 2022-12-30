@@ -929,13 +929,15 @@ void doexit(uint16_t val)
 	udata.u_cursig = 0;
 
 	/* Discard our memory before we blow away and reuse the memory */
+#ifdef CONFIG_PLATFORM_UDMA
+	plt_udma_kill(p);
+#endif
 	pagemap_free(udata.u_ptab);
 
 	for (j = 0; j < UFTSIZE; ++j) {
 		if (udata.u_files[j] != NO_FILE)
 			doclose(j);
 	}
-
 
 	udata.u_ptab->p_exitval = val;
 

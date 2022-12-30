@@ -153,6 +153,9 @@ arg_t _execve(void)
 	if (pagemap_realloc(&hdr, top - MAPBASE))
 		goto nogood3;
 
+#ifdef CONFIG_PLATFORM_UDMA
+	plt_udma_kill(udata.u_ptab);
+#endif
 	/* From this point on we are commmited to the exec() completing */
 
 	/* Core dump and ptrace permission logic */
