@@ -306,7 +306,7 @@ _clear_across:
 	    dec c
 l3:	    out (c),a
 	    nop
-            djnz l1
+            djnz l3
 	    jp popret
 
 ;

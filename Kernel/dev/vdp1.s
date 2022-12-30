@@ -501,7 +501,7 @@ clear_across:
 	    dec c
 l3:	    out (c), a
 	    VDP_DELAY
-            djnz l1
+            djnz l3
 	    jp popret
 
 ;
