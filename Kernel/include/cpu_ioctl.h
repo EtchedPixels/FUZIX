@@ -10,4 +10,6 @@
 #define CPUIOC_6809SWI2 0710
 #define CPUIOC_6809SWI3 0711
 
+/* Turn on ZX81 emulation helper mode */
+#define CPUIOC_Z80SOFT81	0712
 #endif
