@@ -7,6 +7,8 @@
 #include <devtty.h>
 #include <rc2014.h>
 #include <vt.h>
+#include <cpu_ioctl.h>
+#include <softzx81.h>
 #include "z180_uart.h"
 
 struct uart *uart[NUM_DEV_TTY + 1];
@@ -1478,10 +1480,25 @@ void tms9918a_reload(void)
 	tms_mode[1].hardware = tms9918a_present;
 }
 
+void tms9918a_set_char(uint_fast8_t c, uint8_t *d)
+{
+	unsigned addr = 0x1000 + 8 * c;
+	uint_fast8_t i;
+	for (i = 0; i < 8; i++)
+		tms_writeb(addr++, *d++);
+}
+
+static struct fontinfo fonti[] = {
+	{ 0, 255, 0, 255, FONT_INFO_6X8 },
+	{ 0, 255, 0, 255, FONT_INFO_8X8 },
+};
+
 /* We can have up to 4 vt consoles or it may be shadowing serial input */
 int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
   uint8_t map[8];
+  unsigned i;
+
   if ((minor == 1 && shadowcon) ||
                  uart[minor] == &tms_uart) {
   	switch(arg) {
@@ -1557,6 +1574,21 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			return -1;
 		return 0;
 	}
+	case VTFONTINFO:
+		return uput(fonti + mode[minor], ptr, sizeof(struct fontinfo));
+	case VTSETFONT:
+		for (i = 0; i < 256; i++) {
+			if (uget(map, ptr, 8) == -1)
+				return -1;
+			ptr += 8;
+			tms9918a_set_char(i, map);
+		}
+		return 0;
+	case CPUIOC_Z80SOFT81:
+		if (arg == 0)
+			return softzx81_off(minor);
+		else
+			return softzx81_on(minor);
 	}
 	/* Only the ZX keyboard has support for the bitmapped matrix ops
 	   and map setting. We need to add different map setting for PS/2

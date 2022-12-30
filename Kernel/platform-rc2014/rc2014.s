@@ -701,6 +701,43 @@ map_for_swap:
 	out (MPGSEL_1),a
 	ret
 
+	.globl	map_soft81
+	.globl	map_soft81_restore
+;
+;	Magic map functions for the ZX81 emulation page flippery. Only plays
+;	with the bottom 32K
+;
+map_soft81:	; HL is the ptptr and it might be swapped out!
+	ld	de,#P_TAB__P_PAGE_OFFSET
+	add	hl,de
+	ld	a,(hl)
+	or	a
+	ret	z		; not mapped
+	ld	bc,(mpgsel_cache)
+	ld	(soft81_0),bc
+	ld	a,(hl)
+	ld	(mpgsel_cache),a
+	out	(MPGSEL_0),a
+	inc	hl
+	ld	a,(hl)
+	ld	(mpgsel_cache + 1),a
+	out	(MPGSEL_1),a
+	ret
+
+map_soft81_restore:
+	ld	hl,(soft81_0)
+	ld	(mpgsel_cache),hl
+	ld	a,l
+	out	(MPGSEL_0),a
+	ld	a,h
+	out	(MPGSEL_1),a
+	ret
+
+soft81_0:
+	.byte	0
+soft81_1:
+	.byte	0
+
 ;
 ;	Bank switch functions
 ;

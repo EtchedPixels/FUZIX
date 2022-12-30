@@ -11,6 +11,7 @@
 #include <rc2014.h>
 #include <ps2kbd.h>
 #include <zxkey.h>
+#include <softzx81.h>
 #include <net_w5x00.h>
 
 extern unsigned char irqvector;
@@ -52,6 +53,7 @@ uint8_t vtattr_cap;
 uint16_t vdpport = 0x99 + (40 << 8);	/* 256 * width + port */
 
 uint8_t shadowcon;
+uint8_t soft81_on;
 
 /* Our pool ends at 0x4000 */
 uint8_t *initptr = (uint8_t *)0x4000;
@@ -218,6 +220,9 @@ void plt_interrupt(void)
 	}
 	/* Poll the hardware PS/2 every interrupt as it may be the actual source */
 	ps2_int();
+	/* Soft ZX81 helper */
+	if (soft81_on)
+		softzx81_int();
 }
 
 
@@ -226,7 +231,7 @@ void plt_interrupt(void)
  *	the runtime
  */
 
-int strlen(const char *p)
+size_t strlen(const char *p)
 {
 	int len = 0;
 	while(*p++)

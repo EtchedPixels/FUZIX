@@ -79,4 +79,6 @@ platform-rc2014/ps2direct.rel
 platform-rc2014/ps2bitbang-rc2014-kbd.rel
 platform-rc2014/ps2bitbang-rc2014-mouse.rel
 platform-rc2014/amd9511.rel
+platform-rc2014/soft81.rel
+platform-rc2014/softzx81.rel
 -e

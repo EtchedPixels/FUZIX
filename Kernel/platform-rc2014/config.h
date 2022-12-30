@@ -123,6 +123,8 @@ extern uint16_t swap_dev;
 #define VT_BOTTOM	23
 #define MAX_VT		4		/* Always come up as lowest minors */
 
+/* We need this for the soft ZX81 support */
+#define CONFIG_PLATFORM_UDMA
 /* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
 /* Font for the TMS9918A */
