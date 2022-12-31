@@ -39,9 +39,17 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader loader.bin loader.tmp
+	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader loader.bin loader.tmp boot-romwbw.bin
 
 z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
+
+boot-romwbw.bin: boot-romwbw.s
+	sdasz80 -o boot-romwbw.s
+	sdldz80 -i boot-romwbw.rel
+	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp                 # binary from physical 0
+	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120 # cut leading 61440 bytes
+
+romwbw: boot-romwbw.bin
 
 loader.bin: loader.s
 	sdasz80 -o loader.s
