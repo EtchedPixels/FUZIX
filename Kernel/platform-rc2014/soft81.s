@@ -21,7 +21,7 @@
 		.globl map_soft81_restore
 
 		.globl _vdpport
-		.globl _outputtty
+		.globl _inputtty
 		.globl _int_disabled
 
 ;
@@ -35,28 +35,23 @@
 ;	We pass in HL holding the process
 ;
 _soft_zx81:
+	ld	bc,(_vdpport)
+	ld	a,(_inputtty)
+	push	af
+	push	bc
 	call	map_soft81
 	ret	z		;	swapped out - can't map
 
-	call	0x0229		;	ZX81 display interrupt loop in the
-				;	ROM. As we didn't do this the way
-				;	expected we do it ourselves.
-				;	02BB will do the key read can be
-				;	adjusted for other keyboard fakery
-				;	it puts out row/col codes in H
-				;	FD/FB/F87/EF/DF for column
-				;	FC FA F6 EE DE if shift down
-				;	and bit low for row
-	; On return HL is the start of the display file
-	
-	ld	bc,(_vdpport)
-	ld	e,#24
-soft_draw:
+	; HL is the start of the display file
+	ld 	hl, (0x400C)
+	inc	hl
+
+	pop	bc
 	;	Set video position to start of frame buffer memory for this
 	;	console
 	xor	a
 	out	(c),a		;	low byte of address
-	ld	a,(_outputtty)
+	pop	af		;	get the input tty back
 	dec	a
 	add	a
 	add	a		;	1K per console
@@ -68,6 +63,8 @@ soft_draw:
 	;	we can just scroll across. All this is safe because in our
 	;	soft81 mode we indicate no console support so no printing
 	;	occurs.
+	ld	e,#24
+soft_draw:
 	ld	b,#32
 line_draw:
 	ld	a,(hl)
@@ -83,6 +80,9 @@ line_end:
 line_end_pad:
 	;	Compressed display
 	xor	a
+	;	May be no padding
+	cp	b
+	jr	z, line_end
 	out	(c),a
 	nop
 	nop

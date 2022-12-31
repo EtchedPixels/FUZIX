@@ -1,3 +1,4 @@
+
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -1578,8 +1579,10 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return uput(fonti + mode[minor], ptr, sizeof(struct fontinfo));
 	case VTSETFONT:
 		for (i = 0; i < 256; i++) {
-			if (uget(map, ptr, 8) == -1)
+			if (uget(ptr, map, 8) == -1) {
+				udata.u_error = EFAULT;
 				return -1;
+			}
 			ptr += 8;
 			tms9918a_set_char(i, map);
 		}

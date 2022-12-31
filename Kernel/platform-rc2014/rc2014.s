@@ -713,13 +713,14 @@ map_soft81:	; HL is the ptptr and it might be swapped out!
 	ld	a,(hl)
 	or	a
 	ret	z		; not mapped
+	inc	hl
+	ld	e,(hl)		; save 2nd byte before we change map
+				; and it vanishes
 	ld	bc,(mpgsel_cache)
 	ld	(soft81_0),bc
-	ld	a,(hl)
 	ld	(mpgsel_cache),a
 	out	(MPGSEL_0),a
-	inc	hl
-	ld	a,(hl)
+	ld	a,e		; second byte
 	ld	(mpgsel_cache + 1),a
 	out	(MPGSEL_1),a
 	ret
