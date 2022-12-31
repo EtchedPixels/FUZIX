@@ -16,10 +16,6 @@ extern struct utk_rect clip;
 extern struct utk_rect damage;
 extern struct utk_rect screen;
 
-struct utk_widget {
-    struct utk_widget *next;
-};
-
 struct utk_menu {
     struct utk_menu *next;
     const char *title;
@@ -29,12 +25,26 @@ struct utk_menu {
     coord_t dropwidth;
 };
 
+struct utk_widget {
+    struct utk_widget *next;
+    struct utk_rect rect;
+    unsigned type;
+#define UTK_WINDOW	1
+#define UTK_VBOX	2
+#define UTK_HBOX	3
+    unsigned short height, width;
+};
+
+struct utk_container {
+    struct utk_widget w;
+    struct utk_widget *children;
+};
+
 struct utk_window {
+    struct utk_container c;
     struct utk_window *over;
     struct utk_window *under;
-    struct utk_rect rect;
     const char *title;
-    struct utk_widget *widget;
     struct utk_menu *menu;
 };
 
@@ -124,7 +134,7 @@ void utk_init(void);
 void utk_exit(void);
 void utk_win_base(struct utk_window *w);
 void utk_menu(void);
-void utk_render_widget(struct utk_window *w, struct utk_widget *d);
+void utk_render_widget(struct utk_widget *w);
 void utk_fill_background(void);
 void utk_refresh(void);
 

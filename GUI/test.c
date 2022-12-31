@@ -20,20 +20,24 @@ struct utk_menu menu = {
 };
 
 struct utk_window test = {
+	{
+		{ NULL, { 2, 2, 10, 10 }, UTK_WINDOW, 8, 8 },
+		NULL,
+	},
 	NULL,
 	NULL,
-	{ 2, 2, 10, 10 },
-	"Demo",
+	"Demo 1",
 	NULL,
-	NULL
 };
 
 struct utk_window test2 = {
+	{
+		{ NULL, { 4, 8, 15, 25 }, UTK_WINDOW, 11, 17 },
+		NULL,
+	},
 	NULL,
 	NULL,
-	{ 5, 5, 20, 50 },
 	"Demo 2",
-	NULL,
 	&menu
 };
 

@@ -236,7 +236,7 @@ void utk_win_base(struct utk_window *w)
 	uint_fast8_t yb;
 
 	/* Top decoration */
-	clip_set(&w->rect);
+	clip_set(&w->c.w.rect);
 	/* Make sure the working area is on screen and needs redraw */
 	clip_intersect(&damage);
 
@@ -245,22 +245,22 @@ void utk_win_base(struct utk_window *w)
 	   like */
 	clear_rect(&clip, ' ');
 
-	y = w->rect.top;
-	x = w->rect.left;
-	xr = w->rect.right;
-	yb = w->rect.bottom;
+	y = w->c.w.rect.top;
+	x = w->c.w.rect.left;
+	xr = w->c.w.rect.right;
+	yb = w->c.w.rect.bottom;
 	x = text_puts(y, x, "[+]=");
 	x = text_puts(y, x, w->title);
 	clip_hline(y, x, xr, '=');
 
 	/* Right hand bar (for now don't worry about value to show */
-	y = w->rect.top + 1;
+	y = w->c.w.rect.top + 1;
 	while (y <= yb) {
 		clip_putc(y, xr, '#');
 		y++;
 	}
 	/* Now the bottom and resize corner - again value to do */
-	x = w->rect.left;
+	x = w->c.w.rect.left;
 	clip_hline(yb, x, xr - 1, '#');
 	clip_putc(yb, xr, '/');
 
@@ -268,9 +268,10 @@ void utk_win_base(struct utk_window *w)
 
 /*
  * Render a widget. The cliprect is the visible window body area and we
- * need to stay within this. TODO: bias with scroll bars etc
+ * need to stay within this. TODO: bias with scroll bars etc. Render any
+ * children as we go.
  */
-void utk_render_widget(struct utk_window *w, struct utk_widget *d)
+void utk_render_widget(struct utk_widget *w)
 {
 }
 
@@ -527,8 +528,8 @@ static uint_fast8_t translate_key(char c)
 			ui_mode = UI_NORMAL;
 			return 1;
 		}
-		if (event.window && cursor_y == event.window->rect.top) {
-			if (cursor_x == event.window->rect.left + 1) {
+		if (event.window && cursor_y == event.window->c.w.rect.top) {
+			if (cursor_x == event.window->c.w.rect.left + 1) {
 				event.type = EV_CLOSE;
 				event.code = 0;
 				return 1;
@@ -539,10 +540,10 @@ static uint_fast8_t translate_key(char c)
 				ev_win = win_top;
 				ui_rect.left = 0;
 				ui_rect.top = 0;
-				ui_rect.right = win_top->rect.right - win_top->rect.left;
-				ui_rect.bottom = win_top->rect.bottom - win_top->rect.top;
-				cursor_x = win_top->rect.left;
-				cursor_y = win_top->rect.top;
+				ui_rect.right = win_top->c.w.rect.right - win_top->c.w.rect.left;
+				ui_rect.bottom = win_top->c.w.rect.bottom - win_top->c.w.rect.top;
+				cursor_x = win_top->c.w.rect.left;
+				cursor_y = win_top->c.w.rect.top;
 				return 1;
 			}
 			event.type = EV_SELECT;
@@ -550,10 +551,10 @@ static uint_fast8_t translate_key(char c)
 			ui_win_top(event.window);
 			return 1;
 		}
-		if (event.window && cursor_y == event.window->rect.bottom &&
-			cursor_x == event.window->rect.right) {
-			ui_rect.top = event.window->rect.top;
-			ui_rect.left = event.window->rect.left;
+		if (event.window && cursor_y == event.window->c.w.rect.bottom &&
+			cursor_x == event.window->c.w.rect.right) {
+			ui_rect.top = event.window->c.w.rect.top;
+			ui_rect.left = event.window->c.w.rect.left;
 			ui_mode = UI_RESIZE;
 			ev_win = event.window;
 			ui_win_top(ev_win);
@@ -572,8 +573,8 @@ static uint_fast8_t translate_key(char c)
 			event.type = EV_SELECT;
 			event.window = win_top;
 			event.code = 0;
-			cursor_y = win_top->rect.top + 1;
-			cursor_x = win_top->rect.left;
+			cursor_y = win_top->c.w.rect.top + 1;
+			cursor_x = win_top->c.w.rect.left;
 			return 1;
 		}
 		return 1;
