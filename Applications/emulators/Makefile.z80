@@ -5,26 +5,24 @@ FCCOPTS = $(FUZIX_CCOPTS)
 
 all:	zx81 zx81.rom
 
-zx81:	zx81.rel zx81bootstrap.rel
-	$(FCC) $(Z80_PLATFORM) $(OPTS) $< -o $@
-
-zx81bootstrap.rel:
-	sdasz80 -o zx81bootstrap.s
+zx81:	zx81.rel
+	$(FCC) $(Z80_PLATFORM) $(OPTS) zx81.rel -o zx81
 
 .c.rel:
 	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
 
-zx81.rom: zx81-orig.rom zx81bootup zx81rompatch
+zx81.rom: zx81-base.rom zx81bootup zx81rompatch
 	./zx81rompatch
 
 zx81rompatch: zx81rompatch.c
 	cc -Wall -pedantic zx81rompatch.c -o zx81rompatch
 
-zx81bootup:
+zx81bootup: zx81bootup.s
 	sdasz80 -o zx81bootup.s
 	sdldz80 -i zx81bootup.rel
 	makebin -s 65535 zx81bootup.ihx zx81bootup
 
 clean:
 	rm -f *.ihx *.rel *.lnk *.map *~
-	rm -f zx81bootup zx81bootstrap zx81.rom zx81rompatch
+	rm -f zx81bootup zx81.rom zx81rompatch
+	rm -f zx81

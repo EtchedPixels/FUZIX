@@ -42,11 +42,16 @@ int main(int argc, char *argv[])
     rom[0] = 0xC3;
     rom[1] = 0x05;
     rom[2] = 0x20;	/* JP 0x2005 (exitfunc) */
-    rom[0x027C] = 0xC9;	/* Ret before the display code */
-    rom[0x02BB] = 0x21;	/* LD HL,(0x2000) (keycode) */
+    rom[0x02BA] = 0xC9;	/* Ret before the display code */
+    rom[0x02BB] = 0x2A;	/* LD HL,(0x2000) (keycode) */
     rom[0x02BC] = 0x00;
     rom[0x02BD] = 0x20;
     rom[0x02BE] = 0xC9;	/* RET */
-    save(rom, "zx81.rom", 9126);
+    save(rom, "zx81.rom", 9216);
     return 0;
 }
+
+/* Need to figure out how to deal with the main display loop ?
+   - force slow mode by patching 0x021C into a nop nop
+   - but then how to deal with the ix returning exit loop stuff ?
+ */

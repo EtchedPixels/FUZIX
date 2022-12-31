@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <sys/graphics.h>
 
-typedef void (*bootstrap)(uint8_t *p);
+typedef void (*bootstrap)(void *);
 
 static void oom(void)
 {
@@ -29,9 +29,12 @@ static uint8_t ident(void) {
     __endasm;
 }
 
+__sfr __at 0xFD debug;
+
 /* TODO: load a .p file into the memory map */
 int main(int argc, char *argv[])
 {
+    struct display m, nm;
     uint8_t *x, *p, *pe;
     int fd;
 
@@ -58,9 +61,15 @@ int main(int argc, char *argv[])
         exit(1);
     }
     close(fd);
+
+    /* Should tidy - TODO - hardcoded for RC2014 setup - also error check more */
+    ioctl(0, GFXIOC_GETMODE, &m);
+    nm.mode = 1;
+    ioctl(0, GFXIOC_SETMODE, &nm);
+
     /* Use some of the working space for the font. We checked there was room
-       higher up */
-    p = (uint8_t *)0x7C00;
+       higher up. We need to borrow 2K for this so use 7800-7FFF */
+    p = (uint8_t *)0x7800;
     memset(p, 0xAA, 2048);		/* Helps debug */
     memcpy(p, x + 0x01E00, 512);	/* Chars 0-63 */
     memcpy(p + 1024, x + 0x1E00, 512); /* Inverted as 128-191 */
@@ -69,13 +78,17 @@ int main(int argc, char *argv[])
     while(p < pe)
         *p++ ^= 0xFF;
     /* Load the font */
-    if (ioctl(0, VTSETFONT, (uint8_t *)0x7C00) != 0) {
+    if (ioctl(0, VTSETFONT, (uint8_t *)0x7800) != 0) {
         perror("vtsetfont");
         exit(1);
     }
     /* Ok font loaded, display no longer sane so hopefully it worked ! */
     /* Jump into the additional boot strapping in the emulated ROM and then
        into the system */
-    ((bootstrap)x + 8192)(x);
+    debug = 0x10;
+    ((bootstrap)(x + 0x2000))(x);
+    /* If we come back here it broke - try and fix the video */
+    ioctl(0, GFXIOC_SETMODE, &m);
+    write(2, "zx81: start up failed.\n", 23);
+    return 1;
 }
-
