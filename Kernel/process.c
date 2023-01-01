@@ -930,7 +930,7 @@ void doexit(uint16_t val)
 
 	/* Discard our memory before we blow away and reuse the memory */
 #ifdef CONFIG_PLATFORM_UDMA
-	plt_udma_kill(p);
+	plt_udma_kill(udata.u_ptab);
 #endif
 	pagemap_free(udata.u_ptab);
 
