@@ -496,12 +496,13 @@ interrupt_pop:
 ;	corrupt we assume the worst and just blow the process away
 ;
 null_pointer_trap:
+	call map_kernel		; So we call doexit()
 	ld sp,#kstack_top	; Need to be off the user stack
 				; can't use the interrupt stack as we might
 				; IRQ during this
 	ld a, #0xC3
 	ld (0), a
-	ld hl, #9		; SIGSEGV
+	ld hl, #9		; SIGKILL
 	push hl
 	push af
 	call _doexit
