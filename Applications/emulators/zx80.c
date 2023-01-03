@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     int fd;
 
     if (ident() == 0xF9) {
-        write(2, "zx81: Z80 CPU required.\n", 24);
+        write(2, "zx80: Z80 CPU required.\n", 24);
         exit(1);
     }
 
@@ -48,22 +48,22 @@ int main(int argc, char *argv[])
         oom();
     /* We need a bit of space for the ROM but this is fine just loaded
        higher up as we've got enough memory */
-    x = sbrk(9216);	/* Modified ROM */
+    x = sbrk(5120);	/* Modified ROM */
     if (x == (void *) -1)
         oom();
-    fd = open("/usr/lib/zx81.rom", O_RDONLY);
+    fd = open("/usr/lib/zx80.rom", O_RDONLY);
     if (fd == -1) {
-        perror("/usr/lib/zx81.rom");
+        perror("/usr/lib/zx80.rom");
         exit(1);
     }
-    if (read(fd, x, 9216) != 9216) {
-        fprintf(stderr, "zx81.rom: short file.\n");
+    if (read(fd, x, 5120) != 5120) {
+        fprintf(stderr, "zx80.rom: short file.\n");
         exit(1);
     }
     close(fd);
 
     if (argc > 2) {
-       write(2, "zx81: invalid arguments.\n",25);
+       write(2, "zx80: invalid arguments.\n",25);
        exit(1);
     }
 
@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
        higher up. We need to borrow 2K for this so use 7800-7FFF */
     p = (uint8_t *)0x7800;
     memset(p, 0xAA, 2048);		/* Helps debug */
-    memcpy(p, x + 0x01E00, 512);	/* Chars 0-63 */
-    memcpy(p + 1024, x + 0x1E00, 512); /* Inverted as 128-191 */
+    memcpy(p, x + 0x00E00, 512);	/* Chars 0-63 */
+    memcpy(p + 1024, x + 0x0E00, 512); /* Inverted as 128-191 */
     p += 1024;
     pe = p + 512;
     while(p < pe)
@@ -99,9 +99,9 @@ int main(int argc, char *argv[])
     /* Jump into the additional boot strapping in the emulated ROM and then
        into the system */
 //    debug = 0x10;
-    ((bootstrap)(x + 0x2000))(x, fd);
+    ((bootstrap)(x + 0x1000))(x, fd);
     /* If we come back here it broke - try and fix the video */
     ioctl(0, GFXIOC_SETMODE, &m);
-    write(2, "zx81: start up failed.\n", 23);
+    write(2, "zx80: start up failed.\n", 23);
     return 1;
 }

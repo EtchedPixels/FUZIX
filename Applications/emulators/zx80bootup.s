@@ -4,11 +4,11 @@
 ;
 		.module soft81boot
 		.area	BOOT	(ABS)
-		.org	0x2000
+		.org	0x1000
 boot:
 kscan:
 	jr	bootgo		; Gets trampled by keyscan codes
-sysvec:	jp	0x0000		; Patched by loader at offset 0x2002
+sysvec:	jp	0x0000		; Patched by loader at offset 0x1002
 	;	Fixed address so it's easy to patch the base ROM accordingly
 	jp	exitfunc
 	
@@ -25,7 +25,7 @@ bootgo:
 	; HL holds the offset we are running from as we've not yet
 	; relocated. We need to be relocatable for this bit
 	ld	bc,(0x0101)	; JP stub vector for syscall
-	ld	de,#0x2003
+	ld	de,#0x1003
 	ex	de,hl
 	add	hl,de		; DE is our base, HL is now the patch spot
 	ld	(hl),c
@@ -50,7 +50,7 @@ bootgo:
 	inc	de
 	inc	de
 	inc	de
-	ld	bc,#0x2400-0x69
+	ld	bc,#0x1400-0x69
 	ldir			; Copy the rest of the modified ROM
 	jp	bootup
 bootup:				; Into the correct mapping
@@ -59,9 +59,9 @@ bootup:				; Into the correct mapping
 	pop	bc
 	ld	(loadfd),bc	; file handle of a .p file */
 	ld	a,#0xC3
-	ld	(0x347),a	; LOAD becomes JP loader */
+	ld	(0x0207),a	; LOAD becomes JP loader */
 	ld	hl,#loader
-	ld	(0x348),hl
+	ld	(0x0208),hl
 	ld	hl,#0x0001
 	push	hl
 	ld	hl,#0x1CA	; ZX81 mode on 0712 ioctl
@@ -77,8 +77,9 @@ cleanboot:
 	;
 	;	All systems go - no need to clean up stack
 	;
-	ld	bc,#0x7FFF	; We patched over this with our exit vector
-	jp	0x03CB		; into ROM memory check
+	ld	hl,#0x7FFF	; We patched over this with our exit vector
+	ld	a,#0x3F		; page before RAM
+	jp	0x0261		; into ROM memory check
 exitfunc:
 	ld	hl,#0x0000
 exit2:
@@ -99,10 +100,10 @@ loader:
 	ld	a,b
 	or	c
 	jr	z, cleanboot
-	;	Loading a .p file at 0x4009
-	ld	hl,#16375	; length
+	;	Loading a .p file at 0x4000
+	ld	hl,#16384	; length
 	push	hl
-	ld	hl,#0x4009	; pointer
+	ld	hl,#0x4000	; pointer
 	push	hl
 	push	bc		; file handle
 	push	af		; dummy
@@ -111,7 +112,7 @@ loader:
 	jr	c,exitfunc1	; failed
 	;	Restore stack, don't bother cleaning up the alt stack
 	ld	sp,(savesp)
-	jp	0x0207
+	jp	0x0283
 
 loadfd:
 	.word	0
@@ -125,8 +126,6 @@ altsp:
 ;	The other mods to the ROM are
 ;
 ;	0x0000	C3 05 20	; so 0 causes an exit
-;	0x027C  C9		; avoid running display bits
-;	0x02BB	21 00 20 C9	; may change to a lookup and char table ?
 ;
 ;	And the system vectors for NMI and IM1 (RST 38h) are not copied over
 ;

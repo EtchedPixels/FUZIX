@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-static uint8_t rom[9216];
+static uint8_t rom[5120];
 
 static void load(uint8_t *p, const char *name, int len)
 {
@@ -37,22 +37,12 @@ static void save(uint8_t *p, const char *name, int len)
 
 int main(int argc, char *argv[])
 {
-    load(rom, "zx81bootup", 9216);
-    load(rom, "zx81-base.rom", 8192);
+    load(rom, "zx80bootup", 5120);
+    load(rom, "zx80-base.rom", 4096);
     rom[0] = 0xC3;
     rom[1] = 0x05;
-    rom[2] = 0x20;	/* JP 0x2005 (exitfunc) */
-    rom[0x02BA] = 0xC9;	/* Ret before the display code */
-#if 0
-    rom[0x02BB] = 0x2A;	/* LD HL,(0x2000) (keycode) */
-    rom[0x02BC] = 0x00;
-    rom[0x02BD] = 0x20;
-    rom[0x02BE] = 0xC9;	/* RET */
-#endif
-    rom[0x1A32] = 0x00;	/* The ROM uses 0x0000 as a dummy target */
-    rom[0x1A33] = 0x3F;	/* Move it to 3F00 so we scribble harmlessly as our */
-                        /* "ROM" is not */
-    save(rom, "zx81.rom", 9216);
+    rom[2] = 0x10;	/* JP 0x1005 (exitfunc) */
+    save(rom, "zx80.rom", 5120);
     return 0;
 }
 
