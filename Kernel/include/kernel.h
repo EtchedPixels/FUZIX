@@ -876,15 +876,15 @@ extern bool validdev(uint16_t dev);
 #ifdef CONFIG_LEVEL_0
 /* Shortcut all the validation */
 #define valaddr(a,b)	(1)
-#define uget(a,b,c)	_uget(a, b, c)
-#define uput(a,b,c)	_uput(a, b, c)
+#define uget(a,b,c)	(_uget(a, b, c) * 0)
+#define uput(a,b,c)	(_uput(a, b, c) * 0)
 #define ugetc(a)	_ugetc(a)
 #define ugetw(a)	_ugetw(a)
 #define ugetl(a)	_ugetl(a)
 #define uputc(v, p)	_uputc(v, p)
 #define uputw(v, p)	_uputw(v, p)
 #define uputl(v, p)	_uputl(v, p)
-#define uzero(a,b)	_uzero(a, b)
+#define uzero(a,b)	(_uzero(a, b) * 0)
 #else
 extern usize_t valaddr(const uint8_t *base, usize_t size);
 extern int uget(const void *userspace_source, void *dest, usize_t count);
