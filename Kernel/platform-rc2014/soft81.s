@@ -109,8 +109,10 @@ line_end_pad:
 _set_kscan:
 	di
 	call	map_soft81
+	jr	z, nokey
 	ld	(0x2000),hl
 	call	map_soft81_restore
+,nokey:
 	ld	a,(_int_disabled)
 	or	a
 	ret	z
