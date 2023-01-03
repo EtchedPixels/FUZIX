@@ -336,7 +336,7 @@ void show_inventory(unsigned all)
 	while (g->name) {
 		if ((all && g->owned) || g->price)
 			printf("%c %-25s %-3d %s\n", *p, g->name, g->owned,
-			       g->price ? (const char *)price(g->price): "");
+			       g->price ? price(g->price): "");
 		p++;
 		g++;
 	}
@@ -513,7 +513,7 @@ void gunsale(void)
 
 	printf("You are offered a gun for $400");
 	/* Q: 400 dollars or 4.00 ? */
-	if (cash < 40000) {
+	if (cash < 40000L) {
 		printf(" but can't afford it.\n");
 		return;
 	}
@@ -528,8 +528,8 @@ money borrow_limit(void)
 	money maxb = cash / 100 * SHARK_LEVERAGE;
 	if (maxb < 5500)
 		maxb = 5500;
-	if (maxb > 20000000)
-		maxb = 20000000;
+	if (maxb > 20000000L)
+		maxb = 20000000L;
 	return maxb;
 }
 
