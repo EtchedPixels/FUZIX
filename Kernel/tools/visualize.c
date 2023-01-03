@@ -191,13 +191,11 @@ static void mark_map(void)
 	struct section *s = head;
 	while (s) {
 		if (s->flags != (KNOW_SIZE | KNOW_START)) {
-			fprintf(stderr, "Incomplete section '%s'.\n",
-				s->name);
+			fprintf(stderr, "Incomplete section '%s'.\n", s->name);
 			exit(1);
 		}
 		if (s->start + s->len > 0x10000) {
-			fprintf(stderr, "Section '%s' overruns memory.\n",
-				s->name);
+			fprintf(stderr, "Section '%s' overruns memory.\n", s->name);
 			exit(1);
 		}
 		if (s->len) {
@@ -219,13 +217,43 @@ static void mark_map(void)
 	}
 }
 
+void load_info(FILE * fp)
+{
+	char name[16];
+	char linebuf[128];
+	unsigned int st, en, b;
+
+	while (fgets(linebuf, 128, fp)) {
+		if (*linebuf == '#')
+			continue;
+		if (sscanf(linebuf, "%15s %d %x-%x", name, &b, &st, &en) != 4) {
+			fprintf(stderr, "Unknown info line '%s'.", linebuf);
+			exit(1);
+		}
+		if (b > 9) {
+			fprintf(stderr, "Too many banks.\n");
+			exit(1);
+		}
+		st >>= 8;
+		en >>= 8;
+		memset(use[b] + st, '-', en - st + 1);
+	}
+}
+
 int main(int argc, char *argv[])
 {
+	FILE *fp;
 	char buf[512];
 	int i;
 	int r, b;
 
 	memset(use, '#', sizeof(use));
+
+	fp = fopen("platform/map.info", "r");
+	if (fp) {
+		load_info(fp);
+		fclose(fp);
+	}
 
 	while (fgets(buf, 511, stdin)) {
 		char *p1 = strtok(buf, " \t\n");
