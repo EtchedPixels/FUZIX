@@ -1,6 +1,6 @@
 #
 APPS = util cmd sh games cave cpm v7games games cursesgames \
-       as09 ld09 netd SmallC MWC asz80 flashrom ue cpmfs plato
+       as09 ld09 netd SmallC MWC asz80 flashrom ue cpmfs plato emulators
 
 .PHONY: $(APPS)
 
@@ -63,6 +63,9 @@ cpmfs:
 plato:
 	+(cd plato; $(MAKE) -f Makefile.$(USERCPU))
 
+emulators:
+	+(cd emulators; $(MAKE) -f Makefile.$(USERCPU))
+
 clean:
 	(cd util; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd V7/cmd; $(MAKE) -f Makefile.$(USERCPU) clean)
@@ -83,3 +86,4 @@ clean:
 	(cd ue; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd cpmfs/src; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd plato; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd emulators; $(MAKE) -f Makefile.$(USERCPU) clean)
