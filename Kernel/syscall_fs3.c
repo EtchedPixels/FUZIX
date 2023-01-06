@@ -18,7 +18,7 @@ arg_t _open(void)
 {
 	int_fast8_t uindex;
 	int_fast8_t oftindex;
-	staticfast inoptr ino;
+	inoptr ino;
 	int16_t perm;
 	staticfast inoptr parent;
 	int r;
@@ -42,27 +42,31 @@ arg_t _open(void)
 
 	ino = n_open_lock(name, &parent);
 	if (ino) {
+		/* We hold a reference to the found inode. but we don't need
+		   one to the parent as we have nothing to create */
 		i_deref(parent);
 		/* O_EXCL test */
 		if ((flag & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL)) {
 			udata.u_error = EEXIST;
+			i_deref(ino);
 			goto idrop;
 		}
 	} else {
+		/* We hold a reference to the parent possibly */
 		/* The n_open failed */
 		if (udata.u_error == EFAULT || parent == NULL)
-			goto cantopen;
+			goto pdrop;
 
 		/* New file */
 		if (!(flag & O_CREAT)) {
 			udata.u_error = ENOENT;
-			goto cantopen;
+			goto pdrop;
 		}
 		/* newfile drops parent for us, ino is now locked */
 		ino = newfile(parent, lastname);
 		if (!ino) {
 			/* on error, newfile sets udata.u_error */
-			goto cantopen;
+			goto ideref;
 		}
 
 		/* new inode, successfully created */
@@ -70,16 +74,25 @@ arg_t _open(void)
 		    (F_REG | (mode & MODE_MASK & ~udata.u_mask));
 		setftime(ino, A_TIME | M_TIME | C_TIME);
 		wr_inode(ino);
+		perm = getperm(ino);
+
+		/* In the Unix world a creat() of a file with no permissions
+		   still produces a file which you can use so we must
+		   do this test entirely on the existig file side */
+		if ((r && !(perm & OTH_RD)) || (w && !(perm & OTH_WR))) {
+			udata.u_error = EACCES;
+			goto ideref;
+		}
 	}
+	/* However we arrived here we hold a reference to the new inode
+	   and we have dropped the parent reference. The object exists
+	   and we will put it into the of table. Once there the oft clean
+	   up will dereference it, so from this point onwards error handling
+	   and reference management is simple */
 
 	/* Book our slot in case we block opening a device */
 	of_tab[oftindex].o_inode = ino;
 
-	perm = getperm(ino);
-	if ((r && !(perm & OTH_RD)) || (w && !(perm & OTH_WR))) {
-		udata.u_error = EACCES;
-		goto idrop;
-	}
 	if (w) {
 		if (getmode(ino) == MODE_R(F_DIR)) {
 			udata.u_error = EISDIR;
@@ -92,13 +105,16 @@ arg_t _open(void)
 			goto idrop;
 		}
 	}
-	/* FIXME: run isdevice once ? */
+	/* Opening a device node is special. We don't really open the thing
+	 * on the disk, instead it's a pointer to some other object that is
+	 * not really in the file system space.
+	 */
 	if (isdevice(ino)) {
 		inoptr *iptr = &of_tab[oftindex].o_inode;
 		/* d_open may block and thus ino may become invalid as may
 		   parent (but we don't need it again). It may also be changed
-		   by the call to dev_openi */
-
+		   by the call to dev_openi. /dev/tty in particular does this
+		   to assign device instances */
 		i_unlock(*iptr);
 		if (dev_openi(iptr, flag) != 0)
 			goto cantopen;
@@ -108,6 +124,8 @@ arg_t _open(void)
 		ino = *iptr;
 		i_lock(ino);
 	} else if (w && (flag & O_TRUNC) && getmode(ino) == MODE_R(F_REG)) {
+		/* O_TRUNC applied to a writeable ordinary file causes the
+		   file to be truncated back to zero size */
 		if (f_trunc(ino))
 			goto idrop;
 		for (j = 0; j < OFTSIZE; ++j)
@@ -115,14 +133,19 @@ arg_t _open(void)
 			if (of_tab[j].o_inode == ino)
 				of_tab[j].o_ptr = 0;
 	}
-
+	/* Link our file descriptor to the of table slot */
 	udata.u_files[uindex] = oftindex;
-
+	/* Set up the other fields in the of table */
 	of_tab[oftindex].o_ptr = 0;
 	of_tab[oftindex].o_access = flag;	/* Save the low bits only */
-	if (flag & O_CLOEXEC)
-		udata.u_cloexec |= (1 << oftindex);
 
+	/* O_CLOEXEC updates the mask of file handles to close on execve()
+	   so that you can handle this atomically */
+	if (flag & O_CLOEXEC)
+		udata.u_cloexec |= (1 << uindex);
+
+	/* Update the number of readers and writers as we need this for
+	   pipe behaviour */
 	if (O_ACCMODE(flag) != O_RDONLY)
 		ino->c_writers++;
 	if (O_ACCMODE(flag) != O_WRONLY)
@@ -133,6 +156,8 @@ arg_t _open(void)
 	/* FIXME: ATIME ? */
 
 	if (getmode(ino) == MODE_R(F_PIPE)) {
+		/* There are special open semantics on named pipes. A read
+		   open of a named pipe that has no writer blocks */
 		if (of_tab[oftindex].o_refs == 1
 			    && !(flag & O_NDELAY)) {
 			psleep(ino);
@@ -141,15 +166,21 @@ arg_t _open(void)
 				goto idrop;
 			}
 		}
+		/* A read open of a named pipe with NDELAY that has no
+		   writers fails with EXNIO */
 		if ((ino->c_writers == 0) && (flag & O_NDELAY)) {
 			udata.u_error = ENXIO;
 			goto idrop;
 		}
 	}
-
-        /* From the moment of the psleep ino is invalid */
-
 	return (uindex);
+
+pdrop:
+	if (parent)
+		i_deref(parent);
+ideref:
+	if (ino)
+		i_deref(ino);
 idrop:
 	i_unlock(ino);
 	/* Falls through and drops the reference count */
