@@ -45,12 +45,19 @@ $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ diskstrap fuzix.rom
+	rm -f $(OBJS) $(JUNK)  core *~ diskstrap fuzix.rom booter.tmp
 
-image:
+image: booter
 	dd if=../fuzix.bin of=fuzix.rom bs=32768 skip=1 count=1
 	# Build the disk bootstrap 
 	dd if=../fuzix.bin of=diskstrap bs=256 skip=1 count=128
+
+booter:
+	sdasz80 -o booter.s
+	sdldz80 -i booter.rel
+	makebin -s 65535 booter.ihx booter.tmp
+	dd if=booter.tmp of=booter.vz bs=1 skip=16360 count=536
+	rm -f booter.tmp
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 

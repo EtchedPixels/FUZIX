@@ -1,7 +1,7 @@
 #ifndef __DEVTTY_DOT_H__
 #define __DEVTTY_DOT_H__
 
-void tty_pollirq(void);
+void tty_pollirq(unsigned irq);
 static void keydecode(void);
 
 #define KEY_ROWS	8

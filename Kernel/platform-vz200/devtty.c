@@ -10,6 +10,9 @@ static uint8_t tbuf1[TTYSIZ];
 
 static uint8_t sleeping;
 
+static uint8_t vtbuf[256];
+static uint8_t *vtptr = vtbuf;
+
 uint8_t vtattr_cap = 0;		/* TODO: colour */
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -30,9 +33,22 @@ int tty_carrier(uint_fast8_t minor)
 	return 1;
 }
 
+static void vtflush(void)
+{
+	if (vtptr != vtbuf) {
+		vtoutput(vtbuf, vtptr-vtbuf);
+		vtptr = vtbuf;
+	}
+}
+
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-	vtoutput(&c, 1);
+	irqflags_t irq = di();
+	/* Q: should we wait in this case or take the snow hit */
+	if (vtptr == vtbuf + sizeof(vtbuf))
+		vtflush();
+	*vtptr++ = c;
+	irqrestore(irq);
 }
 
 void tty_sleeping(uint_fast8_t minor)
@@ -53,9 +69,10 @@ void tty_data_consumed(uint_fast8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(uint_fast8_t c)
 {
+	vtflush();
 	if (c == '\n')
-		tty_putc(TTYDEV - 512, '\r');
-	tty_putc(TTYDEV - 512, c);
+		kputchar('\r');
+	vtoutput(&c, 1);
 }
 
 uint8_t keyboard[8][6] = {
@@ -116,9 +133,13 @@ static void update_keyboard(void)
 	__endasm;
 }
 
-void tty_pollirq(void)
+void tty_pollirq(unsigned irq)
 {
 	int i;
+
+	/* Try and do vt updates on the vblank to reduce snow */
+	if (irq)
+		vtflush();
 
 	update_keyboard();
 

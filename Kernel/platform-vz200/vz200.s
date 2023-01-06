@@ -164,7 +164,7 @@ map_kernel_restore:
 	push	af
 	ld	a,(oldmap)
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	pop	af
 	ret
 
@@ -177,7 +177,7 @@ map_restore:
 	push	af
 	ld	a,(save_map)
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	pop	af
 	ret
 
@@ -190,7 +190,7 @@ map_save_kernel:
 	push	af
 	ld	a,(mapreg)
 	ld	(save_map),a
-	out	(58),a
+	out	(55),a
 	pop	af
 	ret
 
@@ -212,7 +212,7 @@ map_save_kmap:
 	ret
 map_restore_kmap:
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	ret
 
 
@@ -254,20 +254,20 @@ bank0:
 	push	hl
 	ex	de,hl
 	ld	bc,(mapreg)	; old bank into C
-	out	(58),a		; Switch bank
+	out	(55),a		; Switch bank
 	bit	1,c		; Which bank ?
 	jr	z, retbank1
 retbank2:
 	call	callhl
 	ld	a,#3
 	ld	(mapreg),a
-	out	(58),a		; and back
+	out	(55),a		; and back
 	ret
 retbank1:
 	call	callhl
 	ld	a,#1
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	ret
 __bank_1_2:
 	ld	a,#3
@@ -278,12 +278,12 @@ __bank_1_2:
 	inc	hl
 	push	hl
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	ex	de,hl
 	call	callhl
 	ld	a,#1
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	ret
 __bank_2_1:
 	ld	a,#1
@@ -294,12 +294,12 @@ __bank_2_1:
 	inc	hl
 	push	hl
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	ex	de,hl
 	call	callhl
 	ld	a,#3
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	ret
 __stub_0_1:
 	ld	a,#1
@@ -312,14 +312,14 @@ stubin:
 	ex	de,hl
 	ld	bc,(mapreg)
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	bit	1,c
 	jr	z, from_1
 	call	callhl
 	ld	a,#3
 stubout:
 	ld	(mapreg),a
-	out	(58),a
+	out	(55),a
 	pop	bc
 	push	bc
 	push	bc

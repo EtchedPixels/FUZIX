@@ -4,7 +4,9 @@
 ;	FAT32 partition. We can thus build a disk with a FAT32 partition, a
 ;	Fuzix partition and a swap partition.
 ;
-		.area _CODE (ABS)
+;	TODO: 512 v 1 byte sizing
+;
+		.area BOOT (ABS)
 
 		.org 0x3FE8
 ;
@@ -31,22 +33,22 @@ runit:
 		; In the right space
 		; Ensure low bank is in and 0
 		ld	a,#1
-		out	(58),a
+		out	(55),a
 		; Now load it
 		ld	hl,#0x4000
 		ld	b,#20
 		call	sdload
 		ld	a,#(0x40+17)	; READ
-		out	(58),a
+		out	(55),a
 		; Second bank flip
 		ld	a,#3
-		out	(58),a
+		out	(55),a
 		ld	hl,#0x4000
 		ld	b,#20
 		call	sdload
 		; And back
 		ld	a,#1
-		out	(58),a
+		out	(55),a
 		; Kernel core
 		ld	hl,#0x8200	; above the loader
 		ld	b,#63		; load to FFFF
@@ -55,7 +57,7 @@ runit:
 		ld	hl,#0x7200
 		ld	b,#7
 		call	sdload
-		jmp	0x9000		; into the kernel
+		jp	0x9000		; into the kernel
 sdload:
 		; raise cs
 		call	cs_raise
@@ -63,7 +65,7 @@ sdload:
 		in	a,(c)
 		call	cs_lower
 		call	waitff
-		a = cmd;
+		ld	a,#81		; read single block
 		out	(c),a
 		xor	a
 		out	(c),a
@@ -81,13 +83,13 @@ sdload:
 waitok:
 		in	a,(c)
 		or	a
-		ret	m
+		jp	m, next
 		djnz	waitok
 fail:
 		ld	(ix),#('?' & 0x3F)
 		di
 		halt
-waitok:
+next:
 		call	waitnotff
 		cp	#0xFE
 		jr	nz, fail
@@ -120,12 +122,10 @@ waitnotff:
 		ret
 		; TODO preserve bits - check if card is r/w or not
 cs_raise:
-		in	a,(56)
-		or	#3
+		ld	a,#3
 		out	(56),a
 		ret
 cs_lower:
-		in	a,(56)
-		and	#0xFD
+		ld	a,#1
 		out	(56),a
 		ret
