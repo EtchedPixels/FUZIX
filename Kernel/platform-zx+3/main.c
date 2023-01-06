@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <timer.h>
 #include <kdata.h>
+#include <kmod.h>
 #include <printf.h>
 #include <devtty.h>
 #include <devinput.h>
@@ -60,6 +61,8 @@ void plt_discard(void)
 	uint16_t discard_size = ((uint16_t)&udata) - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
 
+	kmod_init(bufpool_end, &udata);
+
 	discard_size /= sizeof(struct blkbuf);
 
 	kprintf("%d buffers added\n", discard_size);
@@ -72,6 +75,19 @@ void plt_discard(void)
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
 	}
+}
+
+unsigned plt_kmod_set(uint8_t *top)
+{
+	/* Make sure all disk buffers are on disk */
+	sync();
+	/* Wind back until bufpool end is below the modules */
+	while(bufpool_end > (void *)top)
+		bufpool_end--;
+	/* Any buffers lost we already wrote to disk, any new lookups will
+	   not find them, and we know there are no other outstanding references
+	   - sometimes having a dumb I/O layer is a win */
+	return 0;
 }
 
 #ifndef SWAPDEV

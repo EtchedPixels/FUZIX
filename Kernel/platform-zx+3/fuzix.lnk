@@ -39,6 +39,7 @@ simple.rel
 swap.rel
 devsys.rel
 devinput.rel
+kmod.rel
 platform-zx+3/devtty.rel
 platform-zx+3/devide.rel
 platform-zx+3/devide_discard.rel

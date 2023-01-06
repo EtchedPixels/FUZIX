@@ -34,6 +34,8 @@
 #define CONFIG_DYNAMIC_SWAP
 #define MAXTICKS	20	/* Has to be high because we are swap only */
 
+#define CONFIG_KMOD
+
 /* Custom banking */
 
 /* Banks as reported to user space */
