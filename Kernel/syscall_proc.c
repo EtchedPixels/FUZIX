@@ -464,6 +464,7 @@ arg_t _pause(void)
 	/* 0 is a traditional "pause", n is a timeout for doing
 	   sleep etc without ugly alarm hacks */
 	if (t) {
+		/* TODO: what if we pass FFFF ? */
 		udata.u_ptab->p_timeout = t + 1;
 		ptimer_insert();
 	}
