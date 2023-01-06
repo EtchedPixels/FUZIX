@@ -426,6 +426,7 @@ arg_t _statfs(void)
 	if (!(ino  = n_open(path, NULLINOPTR)))
 		return -1;
         m = fs_tab_get(ino->c_dev);
+        i_deref(ino);
         uputw(m->m_flags, buf + sizeof(struct filesys));
 	return uput((uint8_t *) &m->m_fs, buf, sizeof(struct filesys));
 }
