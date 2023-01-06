@@ -30,6 +30,14 @@
 
 #define CONFIG_IDE
 
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
+#define CONFIG_RTC_EXTENDED
+#define CONFIG_RTC_INTERVAL	100
+#define CONFIG_RTC_DS1302
+
+#define CONFIG_KMOD
+
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
 #define BOOTDEVICENAMES "hd#"
@@ -64,12 +72,14 @@ extern uint16_t swap_dev;
 #define CONFIG_DYNAMIC_SWAP
 #define swap_map(x)	((uint8_t *)(x))
 
-#define plt_copyright()		// for now
+#define plt_copyright()		/* for now */
 
-/* WizNET based TCP/IP */
+/* WizNET based TCP/IP : currently you'll need to disable other stuff to
+  fit the networking */
 #undef CONFIG_NET
 #undef CONFIG_NET_WIZNET
-#undef CONFIG_NET_W5200
+#undef CONFIG_NET_W5200		/* WizNET 5200 */
+#undef CONFIG_NET_W5500	/* WizNET 5500 */
 
 /* I2C device */
 #define CONFIG_DEV_I2C

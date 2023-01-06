@@ -39,7 +39,7 @@ C1SRCS =  devio.c kdata.c
 C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c bank8k.c bank16k.c bank16k_low.c bank32k.c
-C3SRCS = bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c
+C3SRCS = bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c kmod.c
 C2SRCS += bank8086.c bank16kfc.c banksplit.c
 C4SRCS = filesys.c version.c blk400.c blk512.c
 #

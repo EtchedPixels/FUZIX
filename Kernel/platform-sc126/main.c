@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
+#include <kmod.h>
 #include <devtty.h>
 #include "config.h"
 #include <z180.h>
@@ -16,6 +17,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded af
 
 void plt_discard(void)
 {
+	kmod_init(bufpool_end, (void *)KERNTOP);
 	while (bufpool_end <
 	       (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));
@@ -25,6 +27,19 @@ void plt_discard(void)
 		bufpool_end->bf_dev = NO_DEVICE;
 		bufpool_end++;
 	}
+}
+
+unsigned plt_kmod_set(uint8_t *top)
+{
+	/* Make sure all disk buffers are on disk */
+	sync();
+	/* Wind back until bufpool end is below the modules */
+	while(bufpool_end > (void *)top)
+		bufpool_end--;
+	/* Any buffers lost we already wrote to disk, any new lookups will
+	   not find them, and we know there are no other outstanding references
+	   - sometimes having a dumb I/O layer is a win */
+	return 0;
 }
 
 static uint8_t light = 0xF0;

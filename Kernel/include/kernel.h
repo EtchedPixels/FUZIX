@@ -825,6 +825,7 @@ typedef struct {
  *			0710	Hook SWI2 etc for emulators
  *	0718-1F		680x0
  *
+ *	07Dx		Module loader
  *	07Ex		Platform specific (check 07F0 before using as will
  *			be duplicated per platform)
  *	07Fx		Generic

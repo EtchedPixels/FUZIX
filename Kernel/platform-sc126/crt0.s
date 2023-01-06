@@ -19,11 +19,11 @@
         ; note that areas below here may be overwritten by the heap at runtime, so
         ; put initialisation stuff in here
         .area _BUFFERS     ; _BUFFERS grows to consume all before it (up to KERNTOP)
-        .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
         .area _DISCARD
         .area _COMMONMEM
+        .area _INITIALIZER
 
         ; imported symbols
         .globl _fuzix_main
