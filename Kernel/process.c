@@ -147,9 +147,9 @@ void switchout(void)
 	/* When we are idle we twiddle our thumbs here until a polled event
 	   in plt_idle or an interrupt wakes someone up */
 	while (nready == 0) {
-		ei();
 		/* We are idle, that means we cannot sleep */
 		udata.u_ininterrupt = 1;
+		ei();
 		plt_idle();
 		di();
 		/* We never idle in an interrupt so this is valid */
