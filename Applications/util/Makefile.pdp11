@@ -15,6 +15,7 @@ AOUT2FUZIX = cp  #for now
 
 SRCSNS = \
 	basename.c \
+	border.c \
 	cat.c \
 	chgrp.c \
 	chmod.c \

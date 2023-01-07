@@ -5,6 +5,7 @@ FCCOPTS = $(FUZIX_CCOPTS)
 
 SRCSNS = \
 	basename.c \
+	border.c \
 	cat.c \
 	chgrp.c \
 	chmod.c \

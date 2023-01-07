@@ -2,6 +2,7 @@ include $(FUZIX_ROOT)/Applications/rules.6303
 
 SRCSNS = \
 	basename.c \
+	border.c \
 	cat.c \
 	chgrp.c \
 	chmod.c \
