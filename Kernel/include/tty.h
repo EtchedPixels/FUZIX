@@ -165,6 +165,9 @@ struct termios {
 #define VTGETFONT	0x32
 #define VTSETUDG	0x33
 #define VTGETUDG	0x34
+#define VTBORDER	0x35
+#define VTINK		0x36
+#define VTPAPER		0x37
 
 /* Fuzix systems to level 2 have 256 byte tty buffers as per standards, level 1
    boxes may not */
