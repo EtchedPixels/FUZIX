@@ -55,12 +55,15 @@ static unsigned exported(const char *p)
     return 0;
 }
 
-static void load_exports(const char *p)
+static void load_exports(const char *p, int opt)
 {
     FILE *f = fopen(p, "r");
     if (f == NULL) {
-        perror(p);
-        exit(1);
+        if (!opt) {
+            perror(p);
+            exit(1);
+        }
+        return;
     }
     while(fgets(buf, 511, f) != NULL) {
         if (*buf == '#' || *buf == ';')
@@ -84,8 +87,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
-    load_exports("fuzix.export");
-    load_exports("platform/fuzix.export");
+    load_exports("fuzix.export", 0);
+    load_exports("platform/fuzix.export", 1);
 
     while(fgets(buf, 511, m) != NULL) {
         p1 = strtok(buf, " \t\n");

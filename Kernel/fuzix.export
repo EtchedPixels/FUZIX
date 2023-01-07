@@ -1,0 +1,10 @@
+# Kernel I/O and logging
+_kprintf
+_kputs
+_kputchar
+_panic
+# Blockdev. Note that if mbr is discard as is common then you can't use
+# _scan
+_blkdev_alloc
+_blkdev_scan
+_blk_op
