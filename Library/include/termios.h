@@ -161,6 +161,10 @@ struct termios {
 #define VTSETUDG	0x33
 #define VTGETUDG	0x34
 
+#define VTBORDER	0x35
+#define VTINK		0x36
+#define VTPAPER		0x37
+
 struct winsize {
     unsigned short ws_row;
     unsigned short ws_col;
