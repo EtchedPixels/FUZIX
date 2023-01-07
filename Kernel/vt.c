@@ -45,7 +45,7 @@
  *
  *	- Esc b c	Set ink colour
  *	- Esc c c	Set paper colour
- *	Where c uses the low 4bits to provide IBRG colours
+ *	Where c uses the low 4bits to provide IGRB colours
  *		0 black
  *		1 blue
  *		2 red
