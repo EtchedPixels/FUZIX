@@ -13,7 +13,9 @@ struct kmodaddr kmod_space;
 int kmod_ioctl(uarg_t request, char *data)
 {
     struct kmodinfo m;
+    unsigned n;
     uint8_t *p;
+    int err;
 
     switch(request) {
     case MODIOC_SPACE:
@@ -44,10 +46,18 @@ int kmod_ioctl(uarg_t request, char *data)
            kernel code never overlaps common space. Force ugetc usage so that
            we don't hit that. This makes our loader a shade slower but this
            is hardly a performance path */
-        while(m.size--)
+        n = m.size;
+        while(n--)
             *p++ = ugetc(data++);
         /* Run the module initialization */
-        ((modfunc)(kmod_space.end))(kmod_space.end);
+        err = ((modfunc)(kmod_space.end))(kmod_space.end);
+        if (err) {
+            /* Not worth restoring the buffers but we can reclaim the
+               space as empty for next attempt */
+            udata.u_error = err;
+            kmod_space.end += m.size;
+            return -1;
+        }
         /* And move back up for the discarded start area if any */
         kmod_space.end += m.discard;
         return 0;
