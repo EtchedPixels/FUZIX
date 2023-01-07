@@ -60,6 +60,9 @@ f 0755 /bin/substroot   substroot
 package  util
 
 f 0755 /bin/banner      banner
+f 0755 /bin/border	border
+l /bin/border /bin/ink
+l /bin/border /bin/paper
 f 0755 /bin/bd          bd
 f 0755 /bin/cal         cal
 f 0755 /bin/chgrp       chgrp
