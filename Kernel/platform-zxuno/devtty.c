@@ -101,30 +101,41 @@ static struct videomap specmap = {
  *	Graphics ioctls. Very minimal for this platform. It's a single fixed
  *	mode with direct memory mapping.
  */
+
+__sfr __at 0xFE border;
+
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-	if (minor != 1 || arg >> 8 != 0x03)
-		return vt_ioctl(minor, arg, ptr);
-	switch(arg) {
-	case GFXIOC_GETINFO:
-		return uput(&specdisplay, ptr, sizeof(struct display));
-	case GFXIOC_MAP:
-		return uput(&specmap, ptr, sizeof(struct videomap));
-	case GFXIOC_UNMAP:
-		return 0;
-	case GFXIOC_WAITVB:
-		/* Our system clock is vblank */
-		timer_wait++;
-		psleep(&timer_interrupt);
-		timer_wait--;
-		chksigs();
-		if (udata.u_cursig) {
-			udata.u_error = EINTR;
-			return -1;
+	uint8_t n;
+
+	if (minor == 1) {
+		switch(arg) {
+		case GFXIOC_GETINFO:
+			return uput(&specdisplay, ptr, sizeof(struct display));
+		case GFXIOC_MAP:
+			return uput(&specmap, ptr, sizeof(struct videomap));
+		case GFXIOC_UNMAP:
+			return 0;
+		case GFXIOC_WAITVB:
+			/* Our system clock is vblank */
+			timer_wait++;
+			psleep(&timer_interrupt);
+			timer_wait--;
+			chksigs();
+			if (udata.u_cursig) {
+				udata.u_error = EINTR;
+				return -1;
+			}
+			return 0;
+		case VTBORDER:
+			n = ugetc(ptr);
+			vtborder &= 0xF8;
+			vtborder |= (n & 0x07);
+			border = vtborder;
+			return 0;
 		}
-		return 0;
 	}
-	return -1;
+	return vt_ioctl(minor, arg, ptr);
 }
 
 void vtattr_notify(void)
