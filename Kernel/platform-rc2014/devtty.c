@@ -1,4 +1,3 @@
-
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -34,7 +33,9 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 };
 
 uint8_t vidmode;	/* For live screen */
-static uint8_t mode[4];	/* Per console */
+static uint8_t mode[5];	/* Per console 1-4 */
+static uint8_t tmsinkpaper[5] = {0, 0xF4, 0xF4, 0xF4, 0xF4 };
+static uint8_t tmsborder[5] = { 0, 0x04, 0x04, 0x04, 0x04 };
 static uint8_t vswitch;	/* Track vt switch locking due top graphics maps */
 uint8_t vt_twidth;
 uint8_t vt_tright;
@@ -1204,6 +1205,10 @@ void do_conswitch(uint8_t c)
 	inputtty = c;
 	if (vidmode != mode[c])
 		tms9918a_reload();
+	else {
+		tms9918a_udgload();
+		tms9918a_attributes();
+	}
 	set_console();
 	tms_setoutput(c);
 	vt_cursor_on();
@@ -1349,6 +1354,7 @@ static struct display tms_mode[2] = {
  *
  *	The text mode configuration we use is
  *	Secret font store at 3C00-3FFF (128 base symbols copy)
+ *	Secret UDG stash at 3800-3BFF in future maybe (32 chars x 4 so 1K)
  *	4 screens base 0x0000 + 0x400 per screen
  *	Patterns base 0x1000
  *
@@ -1409,6 +1415,56 @@ void tms9918a_reset(void)
 	tms9918a_config(tmsreset);
 }
 
+void tms9918a_set_char(uint_fast8_t c, uint8_t *d)
+{
+	irqflags_t irq = di();
+	unsigned addr = 0x1000 + 8 * c;
+	uint_fast8_t i;
+	for (i = 0; i < 8; i++)
+		tms_writeb(addr++, *d++);
+	irqrestore(irq);
+}
+
+void tms9918a_udgsave(void)
+{
+	irqflags_t irq = di();
+	unsigned i;
+	unsigned uaddr = 0x1400;	/* Char 128-159 */
+	unsigned addr = 0x3800 + 256 * (inputtty - 1);
+	for (i = 0; i < 256; i++)
+		tms_writeb(addr, tms_readb(uaddr++));
+	irqrestore(irq);
+}
+
+void tms9918a_udgload(void)
+{
+	irqflags_t irq = di();
+	unsigned i;
+	unsigned addr = 0x3800 + 256 * (inputtty - 1);
+	unsigned uaddr = 0x1000;		/* Char 128-159, inverses at 0-31 for cursor */
+	for (i = 0; i < 256; i++) {
+		uint8_t c = tms_readb(uaddr++);
+		tms_writeb(addr, ~c);
+		tms_writeb(addr + 0x400, c);
+	}
+	irqrestore(irq);
+}
+
+/* Restore colour attributes */
+void tms9918a_attributes(void)
+{
+	irqflags_t irq = di();
+	tms9918a_ctrl = 0x87;
+	tms9918a_ctrl = tmsborder[inputtty];
+	if (mode[inputtty]) {
+		unsigned addr;
+		uint8_t c = tmsinkpaper[inputtty];
+		addr = 0x2000;
+		while(addr != 0x2020)
+			tms_writeb(addr++, c);
+	}
+	irqrestore(irq);
+}
 
 struct tmsinfo {
 	uint16_t lastline;
@@ -1455,8 +1511,6 @@ void tms9918a_reload(void)
 		tms_writeb(0x1000 + r, b);
 		tms_writeb(0x1400 + r , ~b);
 	}
-	for (r = 0x2000; r < 0x201F; r++)
-		tms_writeb(r, 0xF4);
 	tms_writeb(0x3B00, 0xD0);
 	tms9918a_config(t->conf);
 	vt_twidth = t->w;
@@ -1474,6 +1528,8 @@ void tms9918a_reload(void)
 		tms9918a_ctrl = t->inton;
 		tms9918a_ctrl = 0x81;
 	}
+	tms9918a_udgload();
+	tms9918a_attributes();
 	vt_cursor_off();
 	tms_setoutput(inputtty);
 	vt_cursor_on();
@@ -1481,24 +1537,46 @@ void tms9918a_reload(void)
 	tms_mode[1].hardware = tms9918a_present;
 }
 
-void tms9918a_set_char(uint_fast8_t c, uint8_t *d)
-{
-	unsigned addr = 0x1000 + 8 * c;
-	uint_fast8_t i;
-	for (i = 0; i < 8; i++)
-		tms_writeb(addr++, *d++);
-}
-
 static struct fontinfo fonti[] = {
-	{ 0, 255, 0, 255, FONT_INFO_6X8 },
-	{ 0, 255, 0, 255, FONT_INFO_8X8 },
+	{ 0, 255, 128, 159, FONT_INFO_6X8 },
+	{ 0, 255, 128, 159, FONT_INFO_8X8 },
 };
+
+static uint8_t igrbmsx[16] = {
+	1,	/* 0000 to Black */
+	4,	/* 000B to 4 dark blue */
+	6,	/* 00R0 to 6 dark red */
+	13,	/* 00RB to magneta */
+	12,	/* 0G00 to dark green */
+	7,	/* 0G0B to cyan */
+	10,	/* 0GR0 to dark yellow */
+	14,	/* 0GRB to grey */
+	14,	/* I000 to grey */
+	5,	/* I00B to light blue */
+	9,	/* 10R0 to light red */
+	8,	/* 10RB to magenta or medium red ? - use mr for now */
+	3,	/* 1G00 to light green */
+	7,	/* 1G0B to cyan - no light cyan */
+	11,	/* 1GR0 to light yellow */
+	15	/* 1GRB to white */
+};
+
+static uint8_t igrb_to_msx(uint8_t c)
+{
+	/* Machine specific colours */
+	if (c & 0x10)
+		return c & 0x0F;
+	/* IGRB colours */
+	return igrbmsx[c & 0x0F];
+}
 
 /* We can have up to 4 vt consoles or it may be shadowing serial input */
 int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
   uint8_t map[8];
-  unsigned i;
+  unsigned i = 0;
+  unsigned topchar = 256;
+  uint8_t c;
 
   if ((minor == 1 && shadowcon) ||
                  uart[minor] == &tms_uart) {
@@ -1577,15 +1655,33 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	}
 	case VTFONTINFO:
 		return uput(fonti + mode[minor], ptr, sizeof(struct fontinfo));
+	case VTSETUDG:
+		topchar = 128 + 32;
+		i = 128;
 	case VTSETFONT:
-		for (i = 0; i < 256; i++) {
+		while(i < topchar) {
 			if (uget(ptr, map, 8) == -1) {
 				udata.u_error = EFAULT;
 				return -1;
 			}
 			ptr += 8;
-			tms9918a_set_char(i, map);
+			tms9918a_set_char(i++, map);
 		}
+		tms9918a_udgsave();
+		tms9918a_udgload();
+		return 0;
+	case VTBORDER:
+		c = ugetc(ptr);
+		tmsborder[inputtty]  = igrb_to_msx(c & 0x1F);
+	case VTINK:
+		c = ugetc(ptr);
+		tmsinkpaper[inputtty] &= 0xF0;
+		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F) >> 4;
+		return 0;
+	case VTPAPER:
+		c = ugetc(ptr);
+		tmsinkpaper[inputtty] &= 0xF0;
+		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F);
 		return 0;
 	case CPUIOC_Z80SOFT81:
 		if (arg == 0)

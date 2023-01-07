@@ -1,3 +1,4 @@
+
 #ifndef __DEVTTY_DOT_H__
 #define __DEVTTY_DOT_H__
 
@@ -13,6 +14,8 @@ extern uint8_t nuart;
 extern void tms9918a_reset(void);
 extern void tms9918a_reload(void);
 extern void tms9918a_set_char(uint_fast8_t c, uint8_t *d);
+extern void tms9918a_udgload(void);
+void tms9918a_attributes(void);
 
 /* Until we move this lot into asm for neatness */
 extern uint16_t scrolld_base, scrolld_mov, scrolld_s1, scrollu_w, scrollu_mov;
