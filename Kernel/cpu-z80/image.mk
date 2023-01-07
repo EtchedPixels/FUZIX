@@ -35,6 +35,8 @@ tools/trdify: tools/trdify.c
 
 tools/makeeprom64: tools/makeeprom64.c
 
+tools/modlib-z80: tools/modlib-z80.c
+
 tools/bankld/sdldz80:
 	+(cd tools/bankld; $(MAKE))
 
@@ -50,7 +52,16 @@ tools/trslabel: tools/trslabel.c
 fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
-fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/bintomdv tools/binmunge tools/bin2sna tools/bin2z80 cpm-loader/cpmload.bin tools/flat2z80 tools/makejv3 tools/trslabel tools/visualize tools/raw2dsk tools/raw2mgt tools/cartman tools/makedck tools/plus3boot tools/maketap tools/trdify tools/doubleup
+modlib.s: tools/modlib-z80 fuzix.export platform-$(TARGET)/fuzix.export
+	tools/modlib-z80 >modlib.s
+
+modlib.rel: modlib.s kmod-z80.rel
+	$(CROSS_AS) $(ASOPTS) modlib.s
+
+kmod-z80.rel: kmod-z80.s
+	$(CROSS_AS) $(ASOPTS) kmod-z80.s
+
+fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/bintomdv tools/binmunge tools/bin2sna tools/bin2z80 cpm-loader/cpmload.bin tools/flat2z80 tools/makejv3 tools/trslabel tools/visualize tools/raw2dsk tools/raw2mgt tools/cartman tools/makedck tools/plus3boot tools/maketap tools/trdify tools/doubleup modlib.rel kmod-z80.rel
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
@@ -58,4 +69,3 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	tools/bihx fuzix.ihx
 	tools/binprep
 	+$(MAKE) -C platform-$(TARGET) image
-
