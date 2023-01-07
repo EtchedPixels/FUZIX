@@ -112,7 +112,7 @@ _set_kscan:
 	jr	z, nokey
 	ld	(0x2000),hl
 	call	map_soft81_restore
-,nokey:
+nokey:
 	ld	a,(_int_disabled)
 	or	a
 	ret	z
