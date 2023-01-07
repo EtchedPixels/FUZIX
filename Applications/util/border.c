@@ -75,7 +75,7 @@ static uint8_t colourmap(const char *p)
     unsigned v;
     if (isdigit(*p)) {
         v = atoi(p);
-        if (v < 0 || v > 15)
+        if (v < 0 || v > 31)
             return -1;
         return v;
     }
@@ -103,7 +103,7 @@ static int colour_or_vtcode(uint8_t colour, int ioc, const char *vt)
 int main(int argc, char *argv[])
 {
     uint8_t n;
-    const char *cmd = basename(argv[0]);
+    cmd = basename(argv[0]);
     if (argc != 2)
         error("colour required");
     if (ioctl(0, VTSIZE, NULL) == -1)
