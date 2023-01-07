@@ -13,7 +13,7 @@ __sfr __at 0x70	rtc_reg;
 __sfr __at 0x71 rtc_data;
 
 /* define CONFIG_RTC in platform's config.h to hook this into timer.c */
-uint_fast8_t platform_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
 	if (has_mtxplus) {
 		irqflags_t irq = di();
@@ -27,7 +27,7 @@ uint_fast8_t platform_rtc_secs(void)
 }
 
 /* Full RTC support (for read - no write yet) */
-int platform_rtc_read(void)
+int plt_rtc_read(void)
 {
 	uint16_t len = sizeof(struct cmos_rtc);
 	irqflags_t irq;
@@ -72,13 +72,13 @@ int platform_rtc_read(void)
 	return len;
 }
 
-int platform_rtc_write(void)
+int plt_rtc_write(void)
 {
 	udata.u_error = EOPNOTSUPP;
 	return -1;
 }
 
-void platform_rtc_init(void)
+void plt_rtc_init(void)
 {
 	if (has_mtxplus) {
 		/* Set 24 hour mode */

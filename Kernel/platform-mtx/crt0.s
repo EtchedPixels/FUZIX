@@ -16,7 +16,6 @@
         .area _HEAP
 	.area _BUFFERS
 	; Buffers will overwrite everything up to commonmem
-        .area _INITIALIZER
         .area _GSINIT
         .area _GSFINAL
 	.area _DISCARD
@@ -24,12 +23,12 @@
 	.area _FONT
 	; and the common memory goes top
         .area _COMMONMEM
+        .area _INITIALIZER
 
         ; imported symbols
         .globl _fuzix_main
         .globl init_early
         .globl init_hardware
-        .globl s__INITIALIZER
         .globl s__DATA
         .globl l__DATA
         .globl s__FONT
@@ -40,6 +39,7 @@
         .globl l__DISCARD
         .globl s__COMMONMEM
         .globl l__COMMONMEM
+        .globl s__INITIALIZER
 
         .globl kstack_top
 

@@ -9,9 +9,10 @@
             .globl init_early
             .globl init_hardware
             .globl _program_vectors
-	    .globl platform_interrupt_all
+	    .globl plt_interrupt_all
 
 	    .globl map_kernel
+	    .globl map_kernel_restore
 	    .globl map_buffers
 	    .globl map_kernel_di
 	    .globl map_process
@@ -31,8 +32,8 @@
 	    .globl _irqvector
 
             ; exported debugging tools
-            .globl _platform_monitor
-            .globl _platform_reboot
+            .globl _plt_monitor
+            .globl _plt_reboot
             .globl outchar
 
             ; imported symbols
@@ -98,15 +99,18 @@ intvectors:
 _int_disabled:
 	    .db 1
 
-_platform_monitor:
+_plt_monitor:
 	    di
 	    halt
 
-_platform_reboot:
+_plt_reboot:
 	    di
 	    xor a
 	    out (0),a		; ROM mode, we are in common so survive
 	    rst 0		; kaboom
+
+plt_interrupt_all:
+	    ret
 
 _irqvector:
 	    .db 0		; used to identify the vector in question
@@ -191,7 +195,7 @@ nope:	    ex af,af
 	    inc a
 	    cp #0x90
 	    jr nz, test_bank
-            jp _platform_reboot
+            jp _plt_reboot
 
 found_self:
 	    ex af,af
@@ -412,6 +416,7 @@ _program_vectors:
 
             ; put the paging back as it was -- we're in kernel mode so this is predictable
 map_kernel:
+map_kernel_restore:
 map_buffers:
 map_kernel_di:
 	    push af

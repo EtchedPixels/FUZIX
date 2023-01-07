@@ -12,7 +12,7 @@ uint8_t has_mtxplus;
 uint8_t membanks;
 uint16_t swap_dev = 0xFFFF;
 
-void platform_idle(void)
+void plt_idle(void)
 {
     __asm
     halt
@@ -23,7 +23,7 @@ void platform_idle(void)
 
 static uint8_t tct, oct;
 
-void platform_interrupt(void)
+void plt_interrupt(void)
 {
   extern uint8_t irqvector;
 
@@ -59,7 +59,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  *	Blow away the boot time discard area and the font we uploaded to the
  *	VDP.
  */
-void platform_discard(void)
+void plt_discard(void)
 {
 	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
@@ -78,7 +78,7 @@ void platform_discard(void)
 	}
 }
 
-uint8_t platform_canswapon(uint16_t dev)
+uint8_t plt_canswapon(uint16_t dev)
 {
 	dev >>= 8;
 	/* Swap to hard disc or silicon disc only */

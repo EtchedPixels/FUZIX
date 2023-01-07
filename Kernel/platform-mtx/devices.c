@@ -52,5 +52,5 @@ void device_init(void)
     devide_init();
     if (has_rememo)
       devsd_init();
-    platform_rtc_init();
+    plt_rtc_init();
 }

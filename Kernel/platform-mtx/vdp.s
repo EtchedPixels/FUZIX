@@ -3,7 +3,6 @@
             .include "kernel.def"
             .include "../kernel-z80.def"
 
-	    .include "../dev/vdp1.s"
 
 	    .globl _outputtty
 	    .globl _scroll_up
@@ -22,8 +21,21 @@
 ;	for our dual monitor setup
 ;
 VDP_DIRECT   .equ	0
+VDP_IRQ	     .equ	0	; leave the vdp irq off
 
+;
+;	On an MSX at 4Mhz our loop worst case is 26 clocks so for
+;	graphics one we need a nop
+;
+.macro VDP_DELAY
+	    nop
+.endm
+.macro VDP_DELAY2
+	    nop
+.endm
 	    .area _COMMONMEM
+
+	    .include "../dev/vdp1.s"
 
 ;
 ;	Turn co-ordinates D,E into offset HL

@@ -12,7 +12,7 @@
 #define CONFIG_VT
 /* Multiple VT support */
 #define CONFIG_VT_MULTI
-#define MAX_VT	2
+#define MAX_VT	5
 /* We need a 6x8 font to upload to the vdp */
 #define CONFIG_FONT6X8
 /* Fixed banking */
@@ -57,7 +57,7 @@ extern uint16_t swap_dev;
 /* We will size the buffer pool to fill the space */
 #define CONFIG_DYNAMIC_BUFPOOL
 #define NBUFS    5        /* Number of block buffers */
-#define NMOUNTS	 4	  /* Number of mounts at a time */
+#define NMOUNTS	 3	  /* Number of mounts at a time */
 
 /* Terminal definitions */
 #define VT_WIDTH	vt_twidth[outputtty + 1]
@@ -83,6 +83,6 @@ extern uint16_t swap_dev;
 
 #define swap_map(x)	((uint8_t *)(x))
 
-#define platform_copyright()
+#define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#,fd"

@@ -12,7 +12,7 @@ DONE	- Figure out the DPB and how to get images onto the CF for ROM CP/M to run
 DONE	- Get more stuff into discard
 DONE	- Dynamic buffer assignment
 DONE	- Support swap via CF adapter
-IP - Add hooks for uadmin to support swapon() so we can handle silicon disk nicely
+DONE	- Add hooks for uadmin to support swapon() so we can handle silicon disk nicely
 DONE	- Report graphics capabilities according to card (inc octel modes on
 	  80 col)
 - UDG support on both VDP and Prop
@@ -25,10 +25,10 @@ IP	- Multiple virtual consoles on VDP only systems
 
 
 The following MTX512 features are supported
-- 6845 based colour text display (no attributes yet) as /dev/tty1
+- 6845 based colour text display (no attributes yet) as /dev/tty5
   (or propellor based 80 column support).
 - VDP based graphics display (equivalent to MSX1 but on ports 1 and 2) as
-  /dev/tty2. TTY usage is supported.
+  /dev/tty1-4. TTY usage is supported.
 - Keyboard including shift-F1-F5 to switch tty
 - SDX WD1791 style floppy controller at 0x10
 - Silicon discs. These are mapped as device 8 not as /dev/hd because their
@@ -94,12 +94,13 @@ Standalone/filesystem-src and do
 A 40 track image will need to be hand built with a few of the less useful
 utilities removed.
 
-
 A CF image can be built the normal way with the cfloader.bin on the first
 block and the kernel following. It will then honour normal partition table
 rules.
 
 TODO
+* Load the font in the cfloader - put it before kernel and load to 3C-3F on
+  card ready for restore (or save the ROM font ?)
 * Find a way to shrink the size of some of it
 * Double check autorepeat
 * Build CF images and floppy images
