@@ -15,10 +15,11 @@ OBJ_CRT0 = $(SRC_CRT0:.s=.o)
 SRC_ASM =
 OBJ_ASM = $(SRC_ASM:.s=.o)
 SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
-SRC_C += bcmp.c bcopy.c bind.c bsearch.c bzero.c
+SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
 SRC_C += calloc.c cfree.c clock.c closedir.c closedir_r.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += connect.c creat.c crypt.c ctermid.c ctime.c cuserid.c
+SRC_C += dirname.c
 SRC_C += err.c errno.c error.c
 SRC_C += execl.c execv.c execvp.c exit.c
 SRC_C += fclose.c fdatasync.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
