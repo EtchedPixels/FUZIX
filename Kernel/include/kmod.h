@@ -12,7 +12,7 @@ struct kmodinfo {
     usize_t discard;	/* Bytes to discard after init run */
 };
 
-typedef unsigned (*modfunc)(void *);
+typedef int (*modfunc)(void *);
 
 #define MODIOC_SPACE	0x47D0
 #define MODIOC_LOAD	0x47D1
