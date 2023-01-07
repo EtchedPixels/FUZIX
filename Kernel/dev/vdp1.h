@@ -16,5 +16,10 @@ extern int16_t vdp_wop(struct vdp_rw *op) __fastcall;
 extern void vdp_setup40(void);
 extern void vdp_setup32(void);
 extern void vdp_set_console(void);
+extern void vdp_out(uint8_t v) __fastcall;
+extern uint8_t vdp_readb(uint16_t addr) __fastcall;
+extern void vdp_set(uint16_t addr) __fastcall;
+extern void vdp_setborder(uint8_t val) __fastcall;
+extern void vdp_setcolour(uint8_t val) __fastcall;
 
 #endif

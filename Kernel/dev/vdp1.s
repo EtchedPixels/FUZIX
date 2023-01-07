@@ -29,8 +29,13 @@
 	    .globl _vdp_text32
 	    .globl _vdp_setup40
 	    .globl _vdp_setup32
+	    .globl _vdp_set
+	    .globl _vdp_readb
+	    .globl _vdp_out
 	    .globl _vdp_setup
 	    .globl _vdp_set_console
+	    .globl _vdp_setborder
+	    .globl _vdp_setcolour
 
 	    .globl plt_interrupt_all
 
@@ -82,6 +87,20 @@ setupl:	    outi
 	    djnz setupl
 	    ret
 ;
+;	Read a VDP byte - C
+;
+_vdp_readb:
+	    call _vdp_set
+	    dec c
+	    in l,(c)
+	    ret
+
+_vdp_out:
+	    ld bc,(_vdpport)
+	    dec c
+	    out (c),l
+	    ret
+;
 ;	vdp_setup40(void)
 ;	vdp_init(void)
 ;	vdp_setup32(void)
@@ -102,7 +121,6 @@ setscroll:
 _vdp_setup32:
 	    ld hl,#_vdp_text32
 	    call _vdp_setup
-	    call _vdp_setcolour
 	    ld hl, #scrollconf32
 	    jr setscroll
 ;
@@ -244,7 +262,7 @@ _vdp_setcolour:
 	    out (c),a
 	    dec c
 	    ld b,#32
-	    ld a,#0xF4			; Hardcoded for now
+	    ld a,l			; Hardcoded for now
 set_cmap:
 	    out (c),a
 	    VDP_DELAY
@@ -253,6 +271,12 @@ set_cmap:
 ;
 ;	Register write value E to register A
 ;
+_vdp_setborder:
+	    ld h,l			; parameter into H
+	    ld l,#0x87			; colour register
+	    ; fall through
+_vdp_set:
+	    ex de, hl
 vdpout:	    ld bc, (_vdpport)
 	    out (c), e			; Write the data
 	    out (c), d			; and then the register | 0x80

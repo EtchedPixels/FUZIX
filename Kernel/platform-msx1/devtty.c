@@ -29,6 +29,9 @@ uint8_t outputtty = 1;		/* Fixed but needed by the VDP layer */
 uint8_t vidmode = 0;		/* Will be needed when we add the mode setting */
 uint8_t vswitch;
 
+static uint8_t tmsinkpaper[2] = {0, 0xF4 };
+static uint8_t tmsborder[2] = { 0, 0x04 };
+
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 
@@ -212,6 +215,60 @@ uint16_t cursorpos;
  *	TTY glue
  */
 
+static void vdp_writeb(uint16_t addr, uint8_t v)
+{
+	vdp_set(addr|0x4000);
+	vdp_out(v);
+}
+
+static void vdp_set_char(uint_fast8_t c, uint8_t *d)
+{
+	irqflags_t irq = di();
+	unsigned addr = 0x1000 + 8 * c;
+	uint_fast8_t i;
+	for (i = 0; i < 8; i++)
+		vdp_writeb(addr++, *d++);
+	irqrestore(irq);
+}
+
+static void vdp_udgsave(void)
+{
+	irqflags_t irq = di();
+	unsigned i;
+	unsigned uaddr = 0x1400;	/* Char 128-159 */
+	unsigned addr = 0x3800 + 256 * (inputtty - 1);
+	for (i = 0; i < 256; i++)
+		vdp_writeb(addr, vdp_readb(uaddr++));
+	irqrestore(irq);
+}
+
+static void vdp_udgload(void)
+{
+	irqflags_t irq = di();
+	unsigned i;
+	unsigned addr = 0x3800 + 256 * (inputtty - 1);
+	unsigned uaddr = 0x1000;		/* Char 128-159, inverses at 0-31 for cursor */
+	for (i = 0; i < 256; i++) {
+		uint8_t c = vdp_readb(uaddr++);
+		vdp_writeb(addr, ~c);
+		vdp_writeb(addr + 0x400, c);
+	}
+	irqrestore(irq);
+}
+
+/* Restore colour attributes */
+void vdp_attributes(void)
+{
+	irqflags_t irq = di();
+	if (vidmode == 1) {
+		vdp_setcolour(tmsinkpaper[inputtty]);
+		vdp_setborder(tmsborder[inputtty]);
+	} else {
+		vdp_setborder(tmsinkpaper[inputtty]);
+	}
+	irqrestore(irq);
+}
+
 void vdp_reload(void)
 {
 	irqflags_t irq = di();
@@ -226,8 +283,10 @@ void vdp_reload(void)
 		vt_tright = 31;
 	}
 	vdp_restore_font();
+	vdp_udgload();
 	vt_cursor_off();
 	vt_cursor_on();
+	vdp_attributes();
 	irqrestore(irq);
 }
 
@@ -276,9 +335,46 @@ static struct display tms_mode[2] = {
 	}
 };
 
+static struct fontinfo fonti[] = {
+	{ 0, 255, 128, 159, FONT_INFO_6X8 },
+	{ 0, 255, 128, 159, FONT_INFO_8X8 },
+};
+
+static uint8_t igrbmsx[16] = {
+	1,	/* 0000 to Black */
+	4,	/* 000B to 4 dark blue */
+	6,	/* 00R0 to 6 dark red */
+	13,	/* 00RB to magneta */
+	12,	/* 0G00 to dark green */
+	7,	/* 0G0B to cyan */
+	10,	/* 0GR0 to dark yellow */
+	14,	/* 0GRB to grey */
+	14,	/* I000 to grey */
+	5,	/* I00B to light blue */
+	9,	/* 10R0 to light red */
+	8,	/* 10RB to magenta or medium red ? - use mr for now */
+	3,	/* 1G00 to light green */
+	7,	/* 1G0B to cyan - no light cyan */
+	11,	/* 1GR0 to light yellow */
+	15	/* 1GRB to white */
+};
+
+static uint8_t igrb_to_msx(uint8_t c)
+{
+	/* Machine specific colours */
+	if (c & 0x10)
+		return c & 0x0F;
+	/* IGRB colours */
+	return igrbmsx[c & 0x0F];
+}
+
+
 int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
   uint8_t map[8];
+  uint8_t c;
+  unsigned i = 0;
+  unsigned topchar = 256;
   if (minor == 1) {
 	switch(arg) {
 	case GFXIOC_GETINFO:
@@ -350,6 +446,40 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			return -1;
 		return 0;
 	}
+	case VTBORDER:
+		c = ugetc(ptr);
+		tmsborder[inputtty]  = igrb_to_msx(c & 0x1F);
+		vdp_attributes();
+		return 0;
+	case VTINK:
+		c = ugetc(ptr);
+		tmsinkpaper[inputtty] &= 0x0F;
+		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F) << 4;
+		vdp_attributes();
+		return 0;
+	case VTPAPER:
+		c = ugetc(ptr);
+		tmsinkpaper[inputtty] &= 0xF0;
+		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F);
+		vdp_attributes();
+		return 0;
+	case VTFONTINFO:
+		return uput(fonti + vidmode, ptr, sizeof(struct fontinfo));
+	case VTSETUDG:
+		topchar = 128 + 32;
+		i = 128;
+	case VTSETFONT:
+		while(i < topchar) {
+			if (uget(ptr, map, 8) == -1) {
+				udata.u_error = EFAULT;
+				return -1;
+			}
+			ptr += 8;
+			vdp_set_char(i++, map);
+		}
+		vdp_udgsave();
+		vdp_udgload();
+		return 0;
 	}
 	return vt_ioctl(minor, arg, ptr);
   }
