@@ -1,4 +1,3 @@
-
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -89,6 +88,8 @@ void vtattr_notify(void)
 		curattr |= 0x40;
 }
 
+__sfr __at 0xFE border;
+
 int zxvt_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 
 {
@@ -97,6 +98,7 @@ int zxvt_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		c = ugetc(ptr);
 		vtborder &= 0xF8;
 		vtborder |= c & 0x07;
+		border = vtborder;
 		return 0;
 	}
 	return vt_ioctl(minor, arg, ptr);
