@@ -1454,14 +1454,17 @@ void tms9918a_udgload(void)
 void tms9918a_attributes(void)
 {
 	irqflags_t irq = di();
-	tms9918a_ctrl = 0x87;
-	tms9918a_ctrl = tmsborder[inputtty];
 	if (mode[inputtty]) {
 		unsigned addr;
 		uint8_t c = tmsinkpaper[inputtty];
 		addr = 0x2000;
 		while(addr != 0x2020)
 			tms_writeb(addr++, c);
+		tms9918a_ctrl = tmsborder[inputtty];
+		tms9918a_ctrl = 0x87;
+	} else {
+		tms9918a_ctrl = tmsinkpaper[inputtty];
+		tms9918a_ctrl = 0x87;
 	}
 	irqrestore(irq);
 }
@@ -1673,15 +1676,19 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	case VTBORDER:
 		c = ugetc(ptr);
 		tmsborder[inputtty]  = igrb_to_msx(c & 0x1F);
+		tms9918a_attributes();
+		return 0;
 	case VTINK:
 		c = ugetc(ptr);
-		tmsinkpaper[inputtty] &= 0xF0;
-		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F) >> 4;
+		tmsinkpaper[inputtty] &= 0x0F;
+		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F) << 4;
+		tms9918a_attributes();
 		return 0;
 	case VTPAPER:
 		c = ugetc(ptr);
 		tmsinkpaper[inputtty] &= 0xF0;
 		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F);
+		tms9918a_attributes();
 		return 0;
 	case CPUIOC_Z80SOFT81:
 		if (arg == 0)
