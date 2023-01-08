@@ -6,9 +6,9 @@
 	        .area _CODE2
 		; We need this to be above 0x8000
 		.area _HOME
-		.area _VIDEO
 		; RAM based or may be copied to/from by the user
 	        .area _COMMONMEM
+		.area _VIDEO
 	        .area _CONST
 	        .area _INITIALIZED
 	        .area _GSINIT
