@@ -43,6 +43,13 @@ start:
 	; because of the FFFE/FFFF thing.
 
 	ld sp, #0xFE00
+
+	; Adjust I/O base. SCM < 1.3 did use 0x40. Later versions
+	; changed to 0xC0.
+	ld a, #Z180_IO_BASE
+	out0 (0x7f), a
+	out0 (0xff), a
+
 	ld hl,#hello
 	call serstr
 
