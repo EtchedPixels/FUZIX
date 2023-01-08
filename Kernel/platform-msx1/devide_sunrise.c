@@ -116,7 +116,6 @@ void sunrise_probe(void)
     /* Generate and cache the needed mapping table */
     memcpy(&sunrise_k, map_slot1_kernel(i), sizeof(sunrise_k));
     memcpy(&sunrise_u, map_slot1_user(i), sizeof(sunrise_u));
-#define DEBUG
 #ifdef DEBUG
     kprintf("sunrise_k: %2x %2x %2x %2x %2x %2x\n",
         sunrise_k.private[0], sunrise_k.private[1], sunrise_k.private[2],

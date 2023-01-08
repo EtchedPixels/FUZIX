@@ -1,11 +1,13 @@
-Idea - Fuzix in ROM
+Fuzix in a 64K ROM cartridge
+
+Currently requires you have 64K of RAM and a Sunrise style IDE cartridge. It
+should work with all memory mappings but some subslotted main memory cases
+might be a bit iffy.
+
+For MSX1 machines with an MSX2 mapper it would be far better to finish
+teaching the MSX2 code about TM9918A video modes.
 
 
-System constraints
-
-4 slots, each maybe 4 subslots
-
-Proposed memory map therefore is
 
 Cartridge
 
@@ -42,43 +44,20 @@ ROM in the same 16K chunk
 
 You can't move blocks up and down address spaces
 
-Done
-Add the tool to stuff the image properly into ROM for unpacking
-Finish the basic catridge logic
-Build the user map from the RAM map
-Finish the ROM and RAM map detection logic
-Disk I/O routines need bounce buffers for 4000-7FFF range due to the
-limited mapping system.
-Speed up all the ei/di mess by just keeping a private variable for irqoff
-state
-Get common and discard and initialized in C000-FFFF of the ROM and copied
-out
-Sunrise IDE support (except probing)
-Swapping
-Fast user copy routines
-Detection logic by ROM hash and find the sunrise etc
-Switch to inverse video cursor and inverse high font
-Copy the RC2014 style font cache and layout for consistency - not needed
-  here, but might be on MSX1/megaram type setups later
-
 To Debug
 
 We blow up with slot expanders early in boot (in find_ram). Seems to be a
 problem if the cartridge is in an expander. (need low and high routines for
-this ?)
-Debug the user space / sunrise fail
+this ?) - may now be fixed ?
 
 In Progress
-
 Move the switch helper into both banks so we can fix the FIXME in map_kernel
 
 To do
-** Fix console size reporting on a change **
-Test the vdp changes
-
+** Fix console size reporting on a change - general VT layer isuse **
 Can we put find_ram etc in discard ?
-We badly need the cached path walk or some other optimizations on user copy
-or the bank switch
+Fast bank switch for machines without subslot madness, or when not doing
+subslottery
 Remember current map for kernel/user so we can fast track map_save/restore
 map_kernel etc by knowing if we are mapping k->k u->u or a transition and
 we can label all other cases with a value meaning 'other' as we don't need

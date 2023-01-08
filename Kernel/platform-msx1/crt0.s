@@ -17,7 +17,7 @@
 	        .area _BSS
 	        .area _HEAP
 	        .area _DATA
-		; Need to do dynamic buffers yet
+		.area _BUFFERS
 		.area _DISCARD
 	        .area _INITIALIZER
 
@@ -57,7 +57,3 @@ do_get_sub_slot_2:			; Get complemented slot bits
 		out (c),e
 		ret
 		; 4A-4F free
-
-; Just so we don't pack the binary
-
-		.area _PAGE0

@@ -14,3 +14,5 @@ PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
 
 Z80_MMU_HOOKS		    .equ 0
+
+NBUFS			    .equ 5

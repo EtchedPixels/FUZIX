@@ -16,6 +16,8 @@ uint8_t vdptype;
 uint8_t *bouncebuffer;
 uint16_t devtab[4][4][3];
 
+struct blkbuf *bufpool_end = bufpool + NBUFS;
+
 void plt_idle(void)
 {
     __asm
@@ -47,9 +49,18 @@ void plt_interrupt(void)
 
 void plt_discard(void)
 {
+    unsigned n = 0;
     /* Until we tackle the buffers. When we do we will reserve 512 bytes
        at the end (probably FDFE-FFFE (FFFF being magic)) */
     bouncebuffer = (uint8_t *)0xFDFE;	/* Hack for now */
+    while(bufpool_end + 1 <= (void *)bouncebuffer) {
+        memset(bufpool_end, 0, sizeof(*bufpool_end));
+        bufpool_end->bf_dev = NO_DEVICE;
+        bufpool_end->bf_busy = BF_FREE;
+        bufpool_end++;
+        n++;
+    }
+    kprintf("%d buffers added\n", n);
 }
 
 uint8_t device_find(const uint16_t *romtab)

@@ -6,7 +6,7 @@
 #include <blkdev.h>
 #include <msx.h>
 
-#define DEBUG
+#undef DEBUG
 
 extern uint8_t ramtab[], kernel_map[], current_map[], user_map[];
 extern uint8_t subslots;

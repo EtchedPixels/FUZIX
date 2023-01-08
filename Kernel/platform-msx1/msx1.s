@@ -60,6 +60,17 @@
             .include "kernel.def"
             .include "../kernel-z80.def"
 
+
+	    .globl _bufpool
+	    .area _BUFFERS
+
+_bufpool:
+	    .ds BUFSIZE * NBUFS
+
+; Just so we don't pack the binary
+
+		.area _PAGE0
+
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
 ; -----------------------------------------------------------------------------
