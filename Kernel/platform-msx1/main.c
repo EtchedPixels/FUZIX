@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <blkdev.h>
 #include <msx.h>
 
 /* These are set by the msx startup asm code */
@@ -46,11 +47,9 @@ void plt_interrupt(void)
 
 void plt_discard(void)
 {
-#if 0
     /* Until we tackle the buffers. When we do we will reserve 512 bytes
        at the end (probably FDFE-FFFE (FFFF being magic)) */
-    bouncebuffer = (uint8_t *)0xFD00;	/* Hack for now */
-#endif    
+    bouncebuffer = (uint8_t *)0xFDFE;	/* Hack for now */
 }
 
 uint8_t device_find(const uint16_t *romtab)
@@ -73,18 +72,47 @@ uint8_t device_find(const uint16_t *romtab)
 }
 
 /*
- *	Our I/O is mostly weird and memory mapped at 0x4000-0x7FFF which due
- *	to the horizontal memory mapper means some ranges cannot be direct
- *	I/O. We use this function as our I/O direct check and veto anything
- *	that would be a problem. udata holds the address and the length is
- *	always 512 bytes
+ *	They joy of MSX - block I/O bounce handling
+ *
+ *	General purpose wrapper for blkdev devices with low level MMIO mapped in
+ *	the 4000-7FFF range. We have to bounce accesses to 4000-7FFF. This differs
+ *	from sane machines with MMIO windows or with I/O space mappings. MSX2 has
+ *	the same disease but we are able to use the MSX2 mapper to move banks to
+ *	other address ranges, something MSX1 cannot handle.
  */
-
-uint8_t direct_io_range(uint16_t dev)
+unsigned blk_xfer_bounced(xferfunc_t xferfunc, uint16_t arg)
 {
-        if (udata.u_dptr >= 0x8000)
-          return 1;
-        if (udata.u_dptr <= 0x3E00)
-          return 1;
-        return 0;
+    uint8_t *addr = blk_op.addr;
+    uint8_t old_user = blk_op.is_user;
+
+    /* Shortcut: this range can only occur for a user mode I/O */
+    if (addr >= (uint8_t *)0x3E00U && addr < (uint8_t *)0x8000U) {
+        /* We can't just use tmpbuf because the buffer might be dirty which would
+           trigger a recursive I/O and then badness happens */
+        blk_op.addr = bouncebuffer;
+        blk_op.is_user = 0;
+//        kprintf("bounced do_xfer %p %x:", addr, mask);
+        if (blk_op.is_read) {
+            if (xferfunc(arg))
+                goto fail;
+            uput(blk_op.addr, addr, 512);
+        } else {
+            uget(addr, blk_op.addr, 512);
+            if (xferfunc(arg))
+                goto fail;
+        }
+//        kprintf("bounced done.\n");
+        blk_op.addr = addr;
+        blk_op.is_user = old_user;
+        return 1;
+    }
+//    kprintf("do_xfer %d %p %x..", blk_op.is_user, addr, mask);
+    if (xferfunc(arg) == 0) {
+//        kputs("done.\n");
+        return 1;
+    }
+fail:
+    blk_op.addr = addr;
+    blk_op.is_user = old_user;
+    return 0;
 }

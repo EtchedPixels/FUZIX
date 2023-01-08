@@ -66,6 +66,7 @@ To Debug
 We blow up with slot expanders early in boot (in find_ram). Seems to be a
 problem if the cartridge is in an expander. (need low and high routines for
 this ?)
+Debug the user space / sunrise fail
 
 In Progress
 
@@ -73,8 +74,9 @@ Move the switch helper into both banks so we can fix the FIXME in map_kernel
 
 To do
 ** Fix console size reporting on a change **
+Test the vdp changes
+
 Can we put find_ram etc in discard ?
-Tune swap logic so we only read/write relevant pages
 We badly need the cached path walk or some other optimizations on user copy
 or the bank switch
 Remember current map for kernel/user so we can fast track map_save/restore

@@ -21,6 +21,8 @@
 	.globl _sunrise_u
 	.globl _sunrise_k
 
+	.globl _int_disabled
+
 	.module sunrise
 
 IDE_REG_ERROR		.equ	1
@@ -105,19 +107,20 @@ wait_timeout:
 map_sunrise_k:
 	push hl
 	ld hl,#_sunrise_k
+map_sunrise:
 	di
 	call _switch_map
+	ld a,(_int_disabled)
+	or a
+	jr nz, keepdi
 	ei
+keepdi:
 	pop hl
 	ret	
 map_sunrise_u:
 	push hl
 	ld hl,#_sunrise_u
-	di
-	call _switch_map
-	ei
-	pop hl
-	ret	
+	jr map_sunrise
 ;
 ;	Caller passes  L = disk, (devide_buf) = a tmpbuf in common space
 ;

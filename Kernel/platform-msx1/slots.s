@@ -127,7 +127,7 @@ _switch_map:
 	and #0x3F			;	Keep the lower selections
 	ld b,a				;	the same
 	ld c,(hl)
-	inc hl
+	inc hl				;	Points to subslot mask for slot 0
 	ld de,#_current_map+1
 
 subslot_next:
@@ -136,15 +136,15 @@ subslot_next:
 	ld a,(de)
 	cp (hl)
 	jr z, subslot_done		;	same subslots
-	ld a,b
+;	ld a,b
 ;	call outcharhex
-	ld a,(hl)
+	ld a,(hl)			;	subslots for this bank
 ;	call outcharhex
 	; Do set
-	call set_sub_slot
+	call set_sub_slot		;	Set the subslot
 	ld (de),a			;	update map
 subslot_done:
-	inc hl
+	inc hl				;	Next map
 	inc de
 	rr c
 	;
@@ -287,9 +287,9 @@ map_save_kernel:
 	ldi
 	ldi
 	ldi
-	pop bc
-	pop de
 	pop hl
+	pop de
+	pop bc
         call map_kernel_di		; FIXME: fast path this later
 	ret
 
@@ -344,7 +344,6 @@ map_kernel_di:
 	pop af
 	ret
 
-
 map_process:
 	ld a,h
 	or l
@@ -387,7 +386,7 @@ _map_slot1_user:
 	push hl
 	ld hl,#_user_map
 map_slot_1:
-	ld de,#_scratch_map
+	ld de,#_scratch_map		; Copy the user or kernel map
 	ldi
 	ldi
 	ldi
@@ -398,24 +397,24 @@ map_slot_1:
 	ld a,l
 	; First step: Update the slot register in the map
 	and #0x03			; slot
-	rla
-	rla
+	rlca				; into the right bit positions
+	rlca				; for 40-7F
 	ld e,a
 	ld a, (_scratch_map + 5)	; slot register
-	and #0xF3
-	or e
+	and #0xF3			; mask out 40-7F
+	or e				; add device bank identifier
 	ld (_scratch_map + 5),a		; slot register with us in bank 1
 	ld e,a				; Save it in E
-	ld a,l
+	ld a,l				; Do we have subslots ?
 	bit 7,a
 	jr z, no_subslot_map
 	; Second step: Update the subslot map for the slot in question
 	; for addresses 0x4000-0x7FFF
 	and #0x0C			; sub slot
 	ld c,a				; save it
-	ld hl,#_scratch_map+1
-	;  already holds the slot we want to use
-	ld d,#0
+	ld de,#_scratch_map+1
+	;  l already holds the slot we want to use
+	ld h,#0
 	add hl,de
 	ld a,(hl)
 	and #0xF3

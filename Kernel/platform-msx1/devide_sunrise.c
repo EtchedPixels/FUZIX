@@ -26,47 +26,17 @@ static uint8_t sunrise_transfer_sector(void)
 {
     uint8_t drive = (blk_op.blkdev->driver_data & IDE_DRIVE_NR_MASK);
     uint8_t mask = drive ? 0xF0 : 0xE0;
-    uint8_t *addr = blk_op.addr;
-    uint8_t old_user = blk_op.is_user;
 
     if (!blk_op.is_read)
         blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
-#if 0        
-    /* Shortcut: this range can only occur for a user mode I/O */
-    if (addr >= (uint8_t *)0x3E00U && addr < (uint8_t *)0x8000U) {
-        /* We can't just use tmpbuf because the buffer might be dirty which would
-           trigger a recursive I/O and then badness happens */
-        blk_op.addr = bouncebuffer;
-        blk_op.is_user = 0;
-//        kprintf("bounced do_ide_xfer %p %x:", addr, mask);
-        if (blk_op.is_read) {
-            if (do_ide_xfer(mask))
-                goto fail;
-            uput(blk_op.addr, addr, 512);
-        } else {
-            uget(addr, blk_op.addr, 512);
-            if (do_ide_xfer(mask))
-                goto fail;
-        }
-//        kprintf("bounced done.\n");
-        blk_op.addr = addr;
-        blk_op.is_user = old_user;
-        return 1;
+    if (blk_xfer_bounced(do_ide_xfer, mask) == 0) {
+        if (ide_error == 0xFF)
+            kprintf("ide%d: timeout.\n", drive);
+        else
+            kprintf("ide%d: status %x\n", drive, ide_error);
+        return 0;
     }
-#endif    
-//    kprintf("do_ide_xfer %d %p %x..", blk_op.is_user, addr, mask);
-    if (do_ide_xfer(mask) == 0) {
-//        kputs("done.\n");
-        return 1;
-    }
-fail:
-    blk_op.addr = addr;
-    blk_op.is_user = old_user;
-    if (ide_error == 0xFF)
-        kprintf("ide%d: timeout.\n", drive);
-    else
-        kprintf("ide%d: status %x\n", drive, ide_error);
-    return 0;
+    return 1;
 }        
     
 static int sunrise_flush_cache(void)
@@ -145,12 +115,15 @@ void sunrise_probe(void)
 
     /* Generate and cache the needed mapping table */
     memcpy(&sunrise_k, map_slot1_kernel(i), sizeof(sunrise_k));
-    memcpy(&sunrise_u, map_slot1_user(i), sizeof(sunrise_k));
-
+    memcpy(&sunrise_u, map_slot1_user(i), sizeof(sunrise_u));
+#define DEBUG
 #ifdef DEBUG
-    kprintf("sunrise_k: %x %x %x %x %x %x\n",
+    kprintf("sunrise_k: %2x %2x %2x %2x %2x %2x\n",
         sunrise_k.private[0], sunrise_k.private[1], sunrise_k.private[2],
         sunrise_k.private[3], sunrise_k.private[4], sunrise_k.private[5]);
+    kprintf("sunrise_u: %2x %2x %2x %2x %2x %2x\n",
+        sunrise_u.private[0], sunrise_u.private[1], sunrise_u.private[2],
+        sunrise_u.private[3], sunrise_u.private[4], sunrise_u.private[5]);
 #endif
 
     do_ide_begin_reset();

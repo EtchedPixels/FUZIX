@@ -6,6 +6,8 @@
 #include <blkdev.h>
 #include <msx.h>
 
+#define DEBUG
+
 extern uint8_t ramtab[], kernel_map[], current_map[], user_map[];
 extern uint8_t subslots;
 extern uint16_t vdpport;
@@ -24,19 +26,19 @@ void map_init(void)
 
   cp = bp[5] & 3;
 
-  kprintf("Subslots %x\n", subslots);
+  kprintf("Subslots %2x\n", subslots);
   kprintf("Cartridge in slot %d", cp);
   if (subslots &  (1 << cp))
     kprintf(".%d", bp[cp] & 3);
-  kprintf("\nKernel map %x %x %x %x %x %x\n",
+  kprintf("\nKernel map %2x %2x %2x %2x %2x %2x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
     
   bp = current_map;
-  kprintf("Current map %x %x %x %x %x %x\n",
+  kprintf("Current map %2x %2x %2x %2x %2x %2x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
 
   bp = ramtab;
-  kprintf("RAM reported at %x:%x %x:%x %x:%x\n",
+  kprintf("RAM reported at %2x:%2x %2x:%2x %2x:%2x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
 #endif
 
@@ -68,20 +70,20 @@ void map_init(void)
   user_map[5] = pp | (kernel_map[5] & 0xC0);
 #ifdef DEBUG
   bp = user_map;
-  kprintf("User map %x %x %x %x %x %x\n",
+  kprintf("User map %2x %2x %2x %2x %2x %2x\n",
     *bp, bp[1], bp[2], bp[3], bp[4], bp[5]);
 #endif
   copy_vectors();
   for (i = 0; i < 4; i++){
     for (pp = 0; pp < 4; pp++) {
       if (devtab[i][pp][1] & 0x8000)
-        kprintf("@0x4000: %d.%d: %x\n", i, pp, devtab[i][pp][1] & 0x7FFF);
+        kprintf("@0x4000: %d.%d: %2x\n", i, pp, devtab[i][pp][1] & 0x7FFF);
     }
   }
   for (i = 0; i < 4; i++){
     for (pp = 0; pp < 4; pp++) {
       if (devtab[i][pp][2] & 0x8000)
-        kprintf("@0x8000: %d.%d: %x\n", i, pp, devtab[i][pp][2] & 0x7FFF);
+        kprintf("@0x8000: %d.%d: %2x\n", i, pp, devtab[i][pp][2] & 0x7FFF);
     }
   }
 }
