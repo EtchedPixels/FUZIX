@@ -15,6 +15,7 @@ struct display {
 #define FMT_TEXT	4	/* Text only mode */
 #define FMT_MONO_WB_TILE8 5	/* White on black 8x8 tiled (Amstrad PCW etc) */
 #define FMT_6PIXEL_128	6	/* 2x3 tiles from 128 (TRS80 style) */
+#define FMT_4PIXEL_128	7	/* 2x2 tiles from 128 (6847 style) */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
