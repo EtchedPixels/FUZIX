@@ -37,7 +37,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-#ifdef CONFIG_FLOPPY_NO
+#ifdef CONFIG_FLOPPY
     devfd_init();
 #endif
 #ifdef CONFIG_SD

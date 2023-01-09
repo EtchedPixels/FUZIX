@@ -6,6 +6,8 @@
 #define CONFIG_IDE
 #define CONFIG_PPIDE	/* PPIDE is present */
 
+#define CONFIG_FLOPPY
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */

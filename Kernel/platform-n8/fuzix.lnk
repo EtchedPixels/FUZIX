@@ -43,6 +43,8 @@ platform-n8/devsd_discard.rel
 platform-n8/devsdspi.rel
 platform-n8/devide.rel
 platform-n8/devide_discard.rel
+platform-n8/devfd.rel
+platform-n8/devfd_hw.rel
 platform-n8/ppide_rbc.rel
 platform-n8/mbr.rel
 platform-n8/blkdev.rel
