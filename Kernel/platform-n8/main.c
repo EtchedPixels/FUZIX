@@ -4,6 +4,7 @@
 #include <devtty.h>
 #include "config.h"
 #include <z180.h>
+#include <ps2kbd.h>
 #include "n8.h"
 
 uint16_t ramtop = PROGTOP;
@@ -50,6 +51,11 @@ void plt_interrupt(void)
     switch(irqvector){
         case Z180_INT_TIMER0:
             z180_timer_interrupt(); 
+            if (!ps2busy) {
+                int16_t n = ps2kbd_get();
+                if (n >= 0)
+                    ps2kbd_byte(n);
+            }
             return;
         case Z180_INT_ASCI0:
             tty_pollirq_asci0();

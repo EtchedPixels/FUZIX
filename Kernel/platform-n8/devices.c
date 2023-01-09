@@ -5,6 +5,7 @@
 #include <devsys.h>
 #include <devtty.h>
 #include <devsd.h>
+#include <devide.h>
 #include <blkdev.h>
 #include <ds1302.h>
 #include "n8.h"
@@ -32,5 +33,6 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
     devsd_init();
+    devide_init();
     ds1302_init();
 }

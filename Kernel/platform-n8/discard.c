@@ -2,6 +2,10 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <vt.h>
+#include <ps2kbd.h>
+#include <ps2mouse.h>
+#include <vdp1.h>
 #include "config.h"
 #include <z180.h>
 
@@ -14,8 +18,6 @@ static uint16_t high_mem = 0;
 
 void init_hardware_c(void)
 {
-    uint8_t i;
-
     /* Bring up the video so we can see what is going on */
     vdp_init();
     vdp_load_font();
@@ -23,6 +25,8 @@ void init_hardware_c(void)
     vdp_restore_font();
     vtinit();
     vdp_reload();
+    ps2kbd_init();
+    ps2mouse_init();
 
     /* Label memory (we are using bank 0 for kernel) */
     far_write(1);

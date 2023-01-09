@@ -43,17 +43,24 @@ extern uint16_t swap_dev;
 /* Hardware parameters */
 #define Z180_IO_BASE       0x40
 
-#define MAX_BLKDEV 3	    /* 1 SD drive for now */
+#define MAX_BLKDEV 3	    /* 1 SD drive and 2 IDE for now */
 
 /* On-board SD on the N8 */
 #define CONFIG_SD
 #define SD_DRIVE_COUNT 1
+
+/* Select IDE disk support, and PPIDE (parallel port IDE) as the interface */
+#define CONFIG_IDE
+#define CONFIG_PPIDE	/* PPIDE is present */
 
 /* On-board DS1302 on Mark IV, we can read the time of day from it */
 #define CONFIG_RTC_DS1302
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
+
+#define CONFIG_INPUT			/* Input device for keyboard */
+#define CONFIG_INPUT_GRABMAX	3
 
 #define NUM_DEV_TTY 6
 

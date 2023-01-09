@@ -2,7 +2,6 @@
 -i fuzix.ihx
 -b _CODE=0x0100
 -b _COMMONMEM=0xF600
--b _DISCARD=0xE000
 -l z180
 platform-n8/crt0.rel
 platform-n8/commonmem.rel
@@ -33,14 +32,19 @@ tty.rel
 mm.rel
 banksplit.rel
 swap.rel
+devinput.rel
 devsys.rel
 vt.rel
 font6x8.rel
 platform-n8/discard.rel
+platform-n8/devinput.rel
 platform-n8/devtty.rel
 platform-n8/devsd.rel
 platform-n8/devsd_discard.rel
 platform-n8/devsdspi.rel
+platform-n8/devide.rel
+platform-n8/devide_discard.rel
+platform-n8/ppide_rbc.rel
 platform-n8/mbr.rel
 platform-n8/blkdev.rel
 platform-n8/ds1302.rel
@@ -48,4 +52,8 @@ platform-n8/ds1302_discard.rel
 platform-n8/ds1302-n8.rel
 platform-n8/monitor.rel
 platform-n8/vdp.rel
+platform-n8/ps2kbd.rel
+platform-n8/ps2mouse.rel
+platform-n8/keyboard.rel
+platform-n8/mouse.rel
 -e

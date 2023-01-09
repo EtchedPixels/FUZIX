@@ -1,15 +1,27 @@
 FUZIX for the N8 Retrobrew Home Computer
 
+Supported
+---------
 Z180 @18.432MHz with 0x40 I/O base
+1MB RAM
+TMS 9918A VDP
 SD card via CSIO
+PPI based IDE
+PPI based keyboard
+PPI based Mouse
+RTC
 
-Keyboard PS/2 setup
+In Progress
+-----------
 
-	Set 82C55 config to 082h	(A out B in C hi out C low out)
+To Do
+-----
+8272 Floppy disk	(NEC765 copy)
+AY-3-8910 sound		(No sound in kernel yet)
+Joystick		(via AY-3-8910 ??)
+Printer (/zip ??)	(PPI)
 
-Port C bit 4 is data out, clock out is bit 5
-Port B bit 1 is clock in, bit 0 is data in
-
+Font pre-loader ?
 
 N8 Hardware layout
 
