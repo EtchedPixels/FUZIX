@@ -385,7 +385,7 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			return -1;
 		}
 		vswitch = minor;
-		return uput(&tms_map, ptr, sizeof(struct display));
+		return uput(&tms_map, ptr, sizeof(struct videomap));
 	case GFXIOC_UNMAP:
 		if (vswitch == minor) {
 			vdp_reload();
