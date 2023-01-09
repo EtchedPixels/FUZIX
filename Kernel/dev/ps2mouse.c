@@ -5,6 +5,9 @@
 #include <ps2mouse.h>
 #include <printf.h>
 
+/* Some platforms polling the mouse is expensive so let them query */
+uint_fast8_t ps2m_open;
+
 static uint_fast8_t open;
 static uint_fast8_t fivebutton;
 
@@ -152,6 +155,7 @@ uint_fast8_t ps2mouse_open(void)
 {
     open =  mouse_op(mouse_open);
     packc = 0;
+    ps2m_open++;
     return open;
 }
 
@@ -159,6 +163,7 @@ void ps2mouse_close(void)
 {
     open = 0;
     mouse_op(mouse_close);
+    ps2m_open--;
 }
 
 int ps2mouse_init(void)
