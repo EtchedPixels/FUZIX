@@ -91,6 +91,34 @@ bootit:
 
 	ld b, #0x13		; ROMWBW disk read request
 	ld c, d			; Device (same as booted off)
+
+	ld hl, #0x8000		; Font
+	ld e, #0x02
+	push bc
+	rst 8
+	or a
+	jr nz,failed
+
+	di
+
+	ld c,#0x99
+	ld hl, #0x7C00
+	out (c),l
+	out (c),h
+	dec c			; Data port
+
+	ld hl,#0x8000
+	ld a,#0x84		; 8000-83FF
+nextfont:
+	outi
+	ex (sp),hl
+	ex (sp),hl
+	ex (sp),hl
+	ex (sp),hl
+	cp h
+	jr nz, nextfont
+
+	pop bc
 	ld hl, #0x8000		; Loading at 0x8000 for the moment
 	ld e, #32		; 32 sectors (16K)
 	push bc

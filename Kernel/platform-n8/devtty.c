@@ -170,10 +170,8 @@ static void tms_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	irqflags_t irq = di();
 
-	if (outputtty != minor) {
-		ASCI_TDR0 = '@';
+	if (outputtty != minor)
 		tms_setoutput(minor);
-	}
 	irqrestore(irq);
 	if (!vswitch)
 		vtoutput(&c, 1);

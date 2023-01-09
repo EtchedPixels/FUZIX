@@ -16,12 +16,14 @@ extern uint8_t far_writable(uint8_t page) __fastcall;
 static uint16_t low_mem = 128;
 static uint16_t high_mem = 0;
 
+uint8_t fontdata_6x8;		/* Dummy for linker */
+
 void init_hardware_c(void)
 {
     /* Bring up the video so we can see what is going on */
     vdp_init();
-    vdp_load_font();
     vdp_wipe_consoles();
+/*    vdp_load_font(); - loaded by boot loader */
     vdp_restore_font();
     vtinit();
     vdp_reload();

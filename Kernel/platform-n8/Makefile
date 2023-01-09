@@ -1,4 +1,5 @@
-ASRCS = crt0.s z180.s commonmem.s n8.s ds1302-n8.s monitor.s vdp.s keyboard.s mouse.s
+ASRCS = crt0.s z180.s commonmem.s n8.s ds1302-n8.s monitor.s vdp.s
+ASRCS += keyboard.s mouse.s
 CSRCS += devices.c main.c devtty.c devsdspi.c devinput.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devsd_discard.c ../dev/devide_discard.c ../dev/ds1302_discard.c
@@ -47,8 +48,9 @@ z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
 #
 #	Compile up the boot block
 #
-image: bootblock
+image: bootblock vdp.font
 	cat boot-romwbw.bin >fuzix.romwbw
+	cat vdp.font >>fuzix.romwbw
 	dd if=/dev/zero bs=256 count=1 >>fuzix.romwbw
 	cat ../fuzix.bin >>fuzix.romwbw
 
@@ -61,6 +63,11 @@ bootblock:
 	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+vdpfont: vdpfont.c
+
+vdp.font: vdpfont
+	./vdpfont > vdp.font
 
 diskimage: image
 	# Make a blank disk image with partition

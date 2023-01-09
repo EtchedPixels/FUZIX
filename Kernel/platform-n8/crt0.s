@@ -55,7 +55,11 @@ init:
 	; and then the font
         ld de, #s__FONT
         ld bc, #l__FONT
+	ld a,b
+	or c
+	jr 	z, nofont
         ldir
+nofont:
         ; and the discard
         ld de, #s__DISCARD
         ld bc, #l__DISCARD

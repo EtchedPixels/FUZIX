@@ -8,7 +8,7 @@ OS_BANK                     .equ 0x00         ; value from include/kernel.h
 FIRST_RAM_BANK              .equ 0x00         ; low 512K of physical memory is ROM/ECB window.
 Z180_IO_BASE                .equ 0x40
 
-; No standard clock speed for the Mark IV board, but this is a common choice.
+; No standard clock speed for the N8 board, but this is a common choice.
 USE_FANCY_MONITOR           .equ 1            ; disabling this saves around approx 0.5KB
 CPU_CLOCK_KHZ               .equ 18432        ; 18.432MHz * 2
 Z180_TIMER_SCALE            .equ 20           ; CPU clocks per timer tick
@@ -18,3 +18,10 @@ PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
 
 CONFIG_SWAP		    .equ 1
+
+; 8272 FDC ports
+FDC_CCR		.equ	0x91	; Configuration Control Register (W/O)
+FDC_MSR		.equ	0x8C	; 8272 Main Status Register (R/O)
+FDC_DATA	.equ	0x8D	; 8272 Data Port (R/W)
+FDC_DOR		.equ	0x92	; Digital Output Register (W/O)
+FDC_TC		.equ	0x93	; Pulse terminal count (R/O)

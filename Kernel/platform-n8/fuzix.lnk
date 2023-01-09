@@ -35,7 +35,6 @@ swap.rel
 devinput.rel
 devsys.rel
 vt.rel
-font6x8.rel
 platform-n8/discard.rel
 platform-n8/devinput.rel
 platform-n8/devtty.rel

@@ -1,3 +1,11 @@
+/* On-board SD on the N8 */
+#define CONFIG_SD
+#define SD_DRIVE_COUNT 1
+
+/* Select IDE disk support, and PPIDE (parallel port IDE) as the interface */
+#define CONFIG_IDE
+#define CONFIG_PPIDE	/* PPIDE is present */
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
