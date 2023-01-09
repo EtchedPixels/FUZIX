@@ -436,6 +436,7 @@ SEEKX:  POP     BC              ; Restore Regs
 
 FdcDn:  PUSH    HL              ; Don't alter regs
 	PUSH	DE
+	LD	DE,#0x2000	; So we time out eventually
 FdcDn0:	CALL    WRdy1
 	DEC	DE
 	LD	A,D
