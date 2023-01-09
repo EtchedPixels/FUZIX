@@ -5,6 +5,8 @@
 #include "config.h"
 #include <z180.h>
 #include <ps2kbd.h>
+#include <ps2mouse.h>
+#include <devfd.h>
 #include "n8.h"
 
 uint16_t ramtop = PROGTOP;
@@ -47,15 +49,29 @@ void plt_idle(void)
 
 void plt_interrupt(void)
 {
+    static uint8_t c;
     uint8_t dummy;
     switch(irqvector){
         case Z180_INT_TIMER0:
             z180_timer_interrupt(); 
             if (!ps2busy) {
-                int16_t n = ps2kbd_get();
-                if (n >= 0)
-                    ps2kbd_byte(n);
+                int16_t n;
+                if (kbd_open) {
+                    n = ps2kbd_get();
+                    if (n >= 0)
+                        ps2kbd_byte(n);
+                }
+                if (ps2m_open) {
+                    n = ps2mouse_get();
+                    if (n >= 0)
+                        ps2mouse_byte(n);
+                }
             }
+#ifdef CONFIG_FLOPPY
+            c ^= 1;
+            if (c)
+                fd_tick();
+#endif
             return;
         case Z180_INT_ASCI0:
             tty_pollirq_asci0();

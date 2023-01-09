@@ -10,18 +10,18 @@ PPI based IDE
 PPI based keyboard
 PPI based Mouse
 RTC
+8272 Floppy disk	(NEC765 copy)
 
 In Progress
 -----------
 
 To Do
 -----
-8272 Floppy disk	(NEC765 copy)
-AY-3-8910 sound		(No sound in kernel yet)
 Joystick		(via AY-3-8910 ??)
 Printer (/zip ??)	(PPI)
 
-Font pre-loader ?
+These are going to need something else to get a diet or to fix the "initializer" area
+thing in SDCC.
 
 N8 Hardware layout
 

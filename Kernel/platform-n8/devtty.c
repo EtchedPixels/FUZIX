@@ -37,6 +37,7 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	_CSYS | CBAUD | PARENB | PARODD | CSIZE | CSTOPB | CRTSCTS
 };
 
+uint_fast8_t kbd_open;	/* Count open keyboard sessions to save poll time */
 uint8_t vidmode;	/* For live screen */
 static uint8_t mode[5];	/* Per console */
 static uint8_t tmsinkpaper[5] = {0, 0xF4, 0xF4, 0xF4, 0xF4 };
@@ -525,11 +526,21 @@ int n8tty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   return tty_ioctl(minor, arg, ptr);
 }
 
+int n8tty_open(uint_fast8_t minor, uint16_t flag)
+{
+	int n = tty_open(minor, flag);
+	if (n == 0 && minor < 5)
+		kbd_open++;
+	return n;
+}
+
 int n8tty_close(uint_fast8_t minor)
 {
 	if (vswitch == minor) {
 		vdp_reload(1);
 		vswitch = 0;
 	}
+	if (minor < 5)
+		kbd_open--;
 	return tty_close(minor);
 }
