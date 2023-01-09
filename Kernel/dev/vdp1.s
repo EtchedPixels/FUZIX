@@ -272,8 +272,7 @@ set_cmap:
 ;	Register write value E to register A
 ;
 _vdp_setborder:
-	    ld h,l			; parameter into H
-	    ld l,#0x87			; colour register
+	    ld h,#0x87			; colour register
 	    ; fall through
 _vdp_set:
 	    ex de, hl
