@@ -391,8 +391,12 @@ void fuzix_main(void)
 	/* runtime configurable, defaults to build time setting */
 	ticks_per_dsecond = TICKSPERSEC / 10;
 
+	/* There are some setups we delay the EI until after we've dumped the
+	   discard */
+#ifndef CONFIG_PLATFORM_LATE_EI
 	kputs("Enabling interrupts ... ");
 	__hard_ei();		/* Physical interrupts on */
+#endif
 	kputs("ok.\n");
 
 	/* initialise hardware devices */
