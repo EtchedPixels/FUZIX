@@ -18,12 +18,14 @@
         .area _GSINIT      ; unused
         .area _GSFINAL     ; unused
 	.area _PAGE0	   ; force the bin packer to leave it alone
-	; Discard at top so we can turn into buffers
         .area _BUFFERS     ; _BUFFERS grows to consume all before it (up to KERNTOP)
-        .area _DISCARD
 
-	; 0x7200 up : mapped always for Kernel but not for user
+	; 0x7200 up - discard. Causes screen flicker but will get dumped
+	; after boot
+	.area _DISCARD
+	; must end up above 0x7800
         .area _COMMONMEM
+	; Stubs for the bank transfers
 	.area _STUBS
 
 	; Banked 0x4000-0x67FF
@@ -53,7 +55,6 @@
         .globl kstack_top
 
 	.globl interrupt_handler
-	.globl nmi_handler
 
 	.include "kernel.def"
 
@@ -74,9 +75,9 @@ init:
 	ldir
 
 	; Clear the screen
-	ld	hl,#0x7800
-	ld	de,#0x7801
-	ld	bc,#0x13FF
+	ld	hl,#0x7000
+	ld	de,#0x7001
+	ld	bc,#0x01FF
 	ld	(hl),#0
 	ldir
 
@@ -92,4 +93,8 @@ stop:   halt
         jr	stop
 
 	.area _STUBS
-	.ds 600
+	.ds 450
+
+	.area _DISCARD
+	; Must start with an 0xFF for the last irq vector
+	.byte	0xFF

@@ -5,15 +5,18 @@ Memory map:
 4000-67FF	Populated by one of two banks from SD card SRAM
 6800-6FFF	I/O latches and keyboard
 7000-77FF	Video RAM (may be paged on modded machines). Only low
-		512 used in normal text mode
+		512 used in normal text mode. Contended access causes display
+		noise.
 7800-8FFF	Onboard memory (not paged)
 9000-FFFF	Two SRAM banks off 128K card
 
 Kernel
 4000-67FF	Kernel low (two banks)
 7000-71FF	Video
-7200-7FFF	Common (overlaps non text video)
-9000-FFFF	Kernel main (ideally 9000-FFFF so can get bigger user space)
+7200-77FF	Video space (starts as part of discard)
+7800-7FFF	Common (overlaps non text video)
+9000-FEFF	Kernel main (ideally 9000-FEFFF so can get bigger user space)
+FF00-FFFF	IM2 hack
 
 User
 8000-FFFF	User space
@@ -23,14 +26,34 @@ TODO: Finish loader, and start debug
 
 Video
 
-The actual machine only has two video modes. Our use of 71FF to 7FFF prevents
-the use of the graphics mode but this is not a great loss. There are a bunch
-of graphics extensions that page an 8K SRAM and allow all the extended video
-modes. This can probably be made to work by switching between the top 2K of
-the 8K RAM for Fuzix use and (carefully) the other banks to do video updates.
-As only 6K is used for video this ought to work out fine.
-
 The floppy interface is not supported. This shouldn't matter as the floppies
 are weird, incredibly slow and the floppy DOS will clash with the SD.
 
+Interrupts:
+The system ROM jumps to 0x787D. This is smack in the middle of our common space
+so we will need to do some magic around the system variables spot.
 
+Memory:
+
+Memory is incredibly tight, especially in the common space. Do not add stuf without
+careful checking.
+
+DISCARD starts at 7200 so we can throw it for video
+COMMON follows it and must start at above 7880
+COMMON must end before 8800 (start of user)
+The two banked code segments must fit between 4000 and 6AFF
+The main code segment must fit between 9000 and FFFF
+
+In order to get interrupts sane we disable interrupts on boot and keep them off
+until user space has started, at which point we blow away discard which leaves
+7800-787F free, along with the rest of video and probably some more above 7800 we
+have no particular use for. We then write our handler into 787D in the usual fashion
+except that we undo the ROM behaviour and jump to our code so we can pre-empt properly
+and so on.
+
+Post boot all the video space is free. So for a normal machine the usual video modes
+are available. If we do a variant for banked video setups then this ought to work too
+as we can do all our boot time games, but we can also use the upper 2K of the 8K video
+RAM to hold a font and maybe some simple renders to use full text mode.
+
+Flicker may be a big problem though.

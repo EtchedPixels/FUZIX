@@ -5,6 +5,7 @@
 #include <tty.h>
 #include <vt.h>
 #include <devtty.h>
+#include <graphics.h>
 
 static uint8_t tbuf1[TTYSIZ];
 
@@ -12,6 +13,37 @@ static uint8_t sleeping;
 
 static uint8_t vtbuf[256];
 static uint8_t *vtptr = vtbuf;
+static uint8_t vidmode;
+
+static const struct display mode[2] = {
+	{
+		0,
+		64, 32,
+		32, 16,
+		255, 255,
+		FMT_4PIXEL_128,
+		HW_UNACCEL,
+		GFX_MAPPABLE|GFX_MULTIMODE|GFX_TEXT
+	}, {
+		0,
+		128, 96,
+		0, 0,
+		255, 255,
+		FMT_COLOUR4,
+		HW_UNACCEL,
+		GFX_MAPPABLE|GFX_MULTIMODE
+	}
+};
+
+struct videomap videomap = {
+	0,
+	0,
+	0x7000,
+	0x0800,
+	0, 0,
+	1,
+	MAP_FBMEM_SIMPLE|MAP_FBMEM
+};
 
 uint8_t vtattr_cap = 0;		/* TODO: colour */
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
@@ -36,7 +68,8 @@ int tty_carrier(uint_fast8_t minor)
 static void vtflush(void)
 {
 	if (vtptr != vtbuf) {
-		vtoutput(vtbuf, vtptr-vtbuf);
+		if (vidmode == 0)
+			vtoutput(vtbuf, vtptr-vtbuf);
 		vtptr = vtbuf;
 	}
 }
@@ -72,7 +105,8 @@ void kputchar(uint_fast8_t c)
 	vtflush();
 	if (c == '\n')
 		kputchar('\r');
-	vtoutput(&c, 1);
+	if (vidmode == 0)
+		vtoutput(&c, 1);
 }
 
 uint8_t keyboard[8][6] = {
@@ -138,8 +172,10 @@ void tty_pollirq(unsigned irq)
 	int i;
 
 	/* Try and do vt updates on the vblank to reduce snow */
-	if (irq)
+	if (irq) {
 		vtflush();
+		wakeup(&vidmode);
+	}
 
 	update_keyboard();
 
@@ -203,4 +239,33 @@ static void keydecode(void)
 	} else if (ss)
 		c = shiftkeyboard[keybyte][keybit];
 	tty_inproc(1, c);
+}
+
+int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	uint8_t m;
+	switch(arg) {
+	case GFXIOC_GETINFO:
+		return uput(&mode[vidmode], ptr, sizeof(struct display));
+	case GFXIOC_MAP:
+		return uput(&videomap, ptr, sizeof(struct videomap));
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE:
+		m = ugetc(ptr);
+		if (m > 1) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(&mode[vidmode], ptr, sizeof(struct display));
+		vidmode = m;
+		vtflush();
+		*((volatile uint8_t *)0x6800) = vidmode << 3;
+		return 0;
+	case GFXIOC_WAITVB:
+		psleep(&vidmode);
+		return 0;
+	/* TODO select orange/buff v green */
+	}
+	return vt_ioctl(minor, arg, ptr);
 }
