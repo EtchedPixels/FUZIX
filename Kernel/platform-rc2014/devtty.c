@@ -1469,6 +1469,13 @@ void tms9918a_attributes(void)
 	irqrestore(irq);
 }
 
+
+void tms9918a_attributes_m(uint8_t minor)
+{
+	if (inputtty == minor)
+		vdp_attributes();
+}
+
 struct tmsinfo {
 	uint16_t lastline;
 	uint16_t dmov;
@@ -1590,7 +1597,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		if (vswitch)
 			return -EBUSY;
 		vswitch = minor;
-		return uput(&tms_map, ptr, sizeof(struct display));
+		return uput(&tms_map, ptr, sizeof(struct videomap));
 	case GFXIOC_UNMAP:
 		if (vswitch == minor) {
 			tms9918a_reset();
@@ -1675,20 +1682,20 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	case VTBORDER:
 		c = ugetc(ptr);
-		tmsborder[inputtty]  = igrb_to_msx(c & 0x1F);
-		tms9918a_attributes();
+		tmsborder[minor]  = igrb_to_msx(c & 0x1F);
+		tms9918a_attributes_m(minor);
 		return 0;
 	case VTINK:
 		c = ugetc(ptr);
-		tmsinkpaper[inputtty] &= 0x0F;
-		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F) << 4;
-		tms9918a_attributes();
+		tmsinkpaper[minor] &= 0x0F;
+		tmsinkpaper[minor] |= igrb_to_msx(c & 0x1F) << 4;
+		tms9918a_attributes_m(minor);
 		return 0;
 	case VTPAPER:
 		c = ugetc(ptr);
-		tmsinkpaper[inputtty] &= 0xF0;
-		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F);
-		tms9918a_attributes();
+		tmsinkpaper[minor] &= 0xF0;
+		tmsinkpaper[minor] |= igrb_to_msx(c & 0x1F);
+		tms9918a_attributes_m(minor);
 		return 0;
 	case CPUIOC_Z80SOFT81:
 		if (arg == 0)
