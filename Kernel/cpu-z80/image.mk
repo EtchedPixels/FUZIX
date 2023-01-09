@@ -70,4 +70,4 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	tools/binprep
 	+$(MAKE) -C platform-$(TARGET) image
 
-fuzix.map: fuzix.bin
+fuzix.map: fuzix.ihx
