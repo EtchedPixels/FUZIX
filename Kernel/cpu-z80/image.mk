@@ -52,7 +52,7 @@ tools/trslabel: tools/trslabel.c
 fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
-modlib.s: tools/modlib-z80 fuzix.export platform-$(TARGET)/fuzix.export
+modlib.s: tools/modlib-z80 fuzix.export platform-$(TARGET)/fuzix.export fuzix.map
 	tools/modlib-z80 >modlib.s
 
 modlib.rel: modlib.s kmod-z80.rel
@@ -69,3 +69,5 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	tools/bihx fuzix.ihx
 	tools/binprep
 	+$(MAKE) -C platform-$(TARGET) image
+
+fuzix.map: fuzix.bin
