@@ -7,23 +7,26 @@ Disk Images
 The image build needs ctools
 https://techtinkering.com/articles/transferring-files-to-and-from-cpm-d71-disk-images-using-ctools/
 
-Done (but not tested)
+Tested
 - Boot up from CP/M
 - Initialise memory
-- Initialise simple 40 column text with our own font
-	- FIXME: need to adjust to match VIC rules on locations (or use ROM font and
-	  map chars) - does the no $1000 $1800 apply to all banks and does it affect
-	  us ?
-- Keyboard
+- Initialise simple 40 column text
 - Video
-- SD card
+
+Done (in debug)
+- Interrupt handling. Needs fleshing out to use the right timers (screw bitbang 300
+  baud serial).
+- Keyboard (seems to scan ok, need shift table setting)
+- SD card (hangs probing here)
 - Basic probing of Georam and REU
 - Sizing of Georam
 
 To Do
-- Sprite pointers and memory
-- 80 column video as tty2 ?
+- Optimize keyboard (spot all rows up on a fast poll - a trick we should do
+ on TRS80 and ZX machines too!). Init keyboard with a scan at boot
 - Sizing of REU
+- Sprite pointers and memory ?
+- 80 column video as tty2 ?
 - REU and GeoRAM swap
 - IEC anything (printer, floppy, different modes)
 - Floppy (can we use the CP/M stuff ?)

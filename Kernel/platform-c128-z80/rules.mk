@@ -12,4 +12,3 @@ export CROSS_CC_SYS3=--codeseg CODE
 export CROSS_CC_SYS4=--codeseg CODE
 export CROSS_CC_SYS5=--codeseg CODE
 export CROSS_CC_SEGDISC=--codeseg DISCARD
-

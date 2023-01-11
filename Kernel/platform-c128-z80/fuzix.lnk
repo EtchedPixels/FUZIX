@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
--b _FONT=0xE800
+-b _DISCARD=0xD800
 -l z80
 platform-c128-z80/crt0.rel
 platform-c128-z80/commonmem.rel
@@ -35,7 +35,6 @@ vt.rel
 devsys.rel
 usermem.rel
 usermem_std-z80.rel
-font8x8.rel
 platform-c128-z80/discard.rel
 platform-c128-z80/devtty.rel
 platform-c128-z80/mbr.rel

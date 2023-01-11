@@ -4,7 +4,6 @@
 	; We use a fairly normal ordering as we've not got any horrible
 	; tricks to pull with our fairly linear memory
 
-	; Start with the ROM area from C000
         .area _CODE
         .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
@@ -17,12 +16,11 @@
         ; note that areas below here may be overwritten by the heap at runtime, so
         ; put initialisation stuff in here
         .area _BUFFERS     ; _BUFFERS grows to consume all before it (up to KERNTOP)
+        .area _INITIALIZER ; binman copies this to the right place for us
 	; These get overwritten and don't matter
         .area _GSINIT      ; unused
         .area _GSFINAL     ; unused
         .area _DISCARD
-        .area _INITIALIZER ; binman copies this to the right place for us
-	.area _FONT	   ; Font buffer
 	;	Common space starts at F000 for now
         .area _COMMONMEM
 
@@ -38,8 +36,6 @@
         .globl l__DISCARD
         .globl s__DATA
         .globl l__DATA
-        .globl s__FONT
-        .globl l__FONT
         .globl kstack_top
 
 	.globl interrupt_handler
@@ -53,29 +49,33 @@
 
 init:  
         di
+	im	1
+	ld	a,#0x7F
+	ld	(0xFF00),a
+	ld	bc,#0xD505
+	in	a,(c)
+	and	#0xBF	;clear bit 6 so we remove the CP/M BIOS ROM
+	out	(c),a
+	;	VIC bank 1, common top, size 4K
+	ld	a,#0x49
+	ld	bc,#0xD506
+	out	(c),a
+	;	TODO - vic raster int ?
+
         ; switch to stack in common memory
         ld sp, #kstack_top
 
-	ld	a,#0x7F
-	ld	(0xFF00),a
-	;	VIC bank 1, common top, size 4K
-	ld	a,#0x49
-	;	test hack (common 8K top E000-FFFF)
-	ld	a,#0x0A
-	ld	bc,#0xD506
-	out	(c),a
 	; Now begin setting up the video as the most important thing
 	; is being able to see wtf is going on
 
 	ld	bc,#0xD018
-	ld	a,#0x96	;A		; TODO use ROM font and remap ?
-	;	VIC font at E800, bank 1
-	;	VIC screen at E400, bank 1
+	ld	a,#0xB6		; ROM font, display at EC00
+
 	out	(c),a
 	;	CIA2A bits 1-0 are A15 and A14 for the 14 bit VIC
 	ld	bc,#0xDD00
 	in	a,(c)
-	or	#0x03		; go top 16K
+	and	#0xFC
 	out	(c),a
 
 	;	Move things into place
@@ -83,11 +83,8 @@ init:
 	ld	de, #s__COMMONMEM
 	ld	bc, #l__COMMONMEM
 	ldir
-	;	font
-	ld	de, #s__FONT
-	ld	bc, #l__FONT
-	ldir
-	;	discard
+
+	;	discard - in code for now
 	ld	de, #s__DISCARD
 	ld	bc, #l__DISCARD
 	ldir
@@ -99,10 +96,10 @@ init:
 	ldir
 
 	;	clear video
-	ld	hl,#0xE400
-	ld	de,#0xE401
+	ld	hl,#0xEC00
+	ld	de,#0xEC01
 	ld	bc,#999
-	ld	(hl),#'Z'
+	ld	(hl),#' '
 	ldir
 
         ; Hardware setup

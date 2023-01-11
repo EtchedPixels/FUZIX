@@ -72,12 +72,14 @@ extern uint16_t swap_dev;
 /* Console: 40 column for simplicity to begin with */
 #define CONFIG_VT
 #define CONFIG_VT_SIMPLE
-#define VT_BASE		((uint8_t *)0xE400)
+#define VT_BASE		((uint8_t *)0xEC00)
 #define VT_WIDTH	40
 #define VT_HEIGHT	25
 #define VT_RIGHT	39
 #define VT_BOTTOM	24
-#define CONFIG_FONT8X8
+#define VT_MAP_CHAR(x)	petscii(x)
+
+extern uint8_t petscii(uint8_t c);
 
 /* Video as the console */
 #define BOOT_TTY (512 + 1)

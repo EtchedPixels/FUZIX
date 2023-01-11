@@ -160,7 +160,7 @@ void handle_keys(void)
 		uint8_t key = keybuf[i] ^ keymap[i];
 		if (key) {
 			uint8_t m = 0x80;
-			for (n = 4; n >= 0; n--) {
+			for (n = 8; n >= 0; n--) {
 				if ((key & m) && (keymap[i] & m))
 					if (!(shiftmask[i] & m))
 						keysdown--;

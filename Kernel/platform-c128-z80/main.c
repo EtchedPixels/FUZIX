@@ -37,12 +37,26 @@ uint8_t plt_param(unsigned char *p)
 	return 0;
 }
 
+/* Tidy up once it's working and we've got our ints set up the way we need */
+__sfr __banked __at 0xD019 intack;
+__sfr __banked __at 0xDC0D intcia;
+
 void plt_interrupt(void)
 {
 	handle_keys();
 	timer_interrupt();
+	intack = 0xFF;
+	intcia;
 }
 
 void do_beep(void)
 {
+}
+
+uint8_t petscii(uint8_t x)
+{
+	x &= 127;
+	if (x > 96)
+		x -= 96;
+	return x;
 }

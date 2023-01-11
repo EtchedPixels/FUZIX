@@ -57,9 +57,9 @@ kernel_endmark:
 ;=========================================================================
         .area _DISCARD
 init_hardware:
-	ld	hl,#64
+	ld	hl,#128
 	ld	(_ramsize), hl
-	ld	hl,#35
+	ld	hl,#60
 	ld	(_procmem), hl
 	ld	hl,#null_handler
 	ld	(1),hl
@@ -98,6 +98,8 @@ plt_interrupt_all:
 ;=========================================================================
 ; Memory management
 ;=========================================================================
+
+; TODO - use preloads for these and save the stacking
 
 ;=========================================================================
 ; map_process - map process or kernel pages
