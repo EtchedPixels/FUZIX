@@ -1,0 +1,47 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _COMMONMEM=0xF000
+-b _FONT=0xE800
+-l z80
+platform-c128-z80/crt0.rel
+platform-c128-z80/commonmem.rel
+platform-c128-z80/c128.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+platform-c128-z80/tricks.rel
+platform-c128-z80/main.rel
+timer.rel
+kdata.rel
+platform-c128-z80/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_proc.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_other.rel
+mm.rel
+swap.rel
+simple.rel
+tty.rel
+vt.rel
+devsys.rel
+usermem.rel
+usermem_std-z80.rel
+font8x8.rel
+platform-c128-z80/discard.rel
+platform-c128-z80/devtty.rel
+platform-c128-z80/mbr.rel
+platform-c128-z80/blkdev.rel
+platform-c128-z80/devsd.rel
+platform-c128-z80/devsd_discard.rel
+platform-c128-z80/sd.rel
+platform-c128-z80/devrd.rel
+-e
