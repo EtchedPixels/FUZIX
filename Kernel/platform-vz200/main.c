@@ -54,11 +54,17 @@ void do_beep(void)
 
 unsigned char vt_mangle_6847(unsigned char c)
 {
-	if (c >= 96) {
+	uint8_t inv = 0;
+	/* Map upper case to inverse */
+	if (c >= 'A' && c <= 'Z')
+		inv = 0x40;
+	/* Missing punctuation to inverse */
+	else if (c == 96 || c > 'z')
+		inv = 0x40;
+	/* Map character */
+	if (c >= 96)
 		c -= 32;
-		c &= 0x3F;
-		c |= 0x40;	/* Invert to show caps etc */
-	} else
-		c &= 0x3F;
+	c &= 0x3F;
+	c |= inv;
 	return c;
 }

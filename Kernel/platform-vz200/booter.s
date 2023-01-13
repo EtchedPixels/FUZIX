@@ -8,17 +8,17 @@
 ;
 		.area BOOT (ABS)
 
-		.org 0x3FE8
+		.org 0x7FE8
 ;
 ;	Nail the VZ header on ourself
 ;
-		.ascii 'VZF1'
+		.ascii 'VZF0'
 		.ascii 'VZ FUZIX LOADER.'
 		.byte 0
-		.word	0xF1
-		.word	0x4000
+		.byte	0xF1
+		.word	0x8000
 
-		.org 0x4000
+		.org 0x8000
 start:	
 		di
 		ld	hl,#0x4000
@@ -67,13 +67,15 @@ sdload:
 		call	waitff
 		ld	a,#81		; read single block
 		out	(c),a
-		xor	a
-		out	(c),a
 		nop
-		out	(c),d	; block number
+		out	(c),d		; Byte high
 		nop
+		out	(c),e		; Byte middle
+		nop
+		xor	a		; Byte low
 		out	(c),e
 		inc	de
+		inc	de		; 2 x 256
 		ld	a,#1
 		out	(c),a
 		nop

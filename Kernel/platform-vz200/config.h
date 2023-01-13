@@ -10,8 +10,8 @@
  */
 
 #define MEM_TOP		0xFFFF
-#define PROC_SIZE	31
-#define SWAP_SIZE	0x3F
+#define PROC_SIZE	30
+#define SWAP_SIZE	0x3F	/* FIXME */
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -28,12 +28,12 @@
 /* One memory bank */
 #define CONFIG_BANKS	1
 #define TICKSPERSEC 50		/* Ticks per second - NTSC 60 ? FIXME */
-#define PROGBASE    0x8400	/* also data base */
-#define PROGLOAD    0x8400	/* also data base */
+#define PROGBASE    0x8800	/* also data base */
+#define PROGLOAD    0x8800	/* also data base */
 #define PROGTOP     0xFFFF	/* Top of program */
 #define KERNTOP	    0xFFFF	/* Grow buffers up to top */
 
-#define SWAPBASE    0x8400	/* start at the base of user mem */
+#define SWAPBASE    0x8800	/* start at the base of user mem */
 #define SWAPTOP	    0xFFFF	/* Swap out program */
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS  1

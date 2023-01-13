@@ -78,7 +78,7 @@ init:
 	ld	hl,#0x7000
 	ld	de,#0x7001
 	ld	bc,#0x01FF
-	ld	(hl),#0
+	ld	(hl),#' '
 	ldir
 
         ; Hardware setup

@@ -14,7 +14,7 @@ Kernel
 4000-67FF	Kernel low (two banks)
 7000-71FF	Video
 7200-77FF	Video space (starts as part of discard)
-7800-7FFF	Common (overlaps non text video)
+7800-87FF	Common (only discard overlaps non text video)
 9000-FEFF	Kernel main (ideally 9000-FEFFF so can get bigger user space)
 FF00-FFFF	IM2 hack
 
