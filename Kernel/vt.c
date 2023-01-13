@@ -440,13 +440,13 @@ void plot_char(int8_t y, int8_t x, uint16_t c)
 void clear_lines(int8_t y, int8_t ct)
 {
 	unsigned char *s = char_addr(y, 0);
-	memset(s, ' ', ct * VT_WIDTH);
+	memset(s, VT_MAP_CHAR(' '), ct * VT_WIDTH);
 }
 
 void clear_across(int8_t y, int8_t x, int16_t l)
 {
 	unsigned char *s = char_addr(y, x);
-	memset(s, ' ', l);
+	memset(s, VT_MAP_CHAR(' '), l);
 }
 
 void vtattr_notify(void)
