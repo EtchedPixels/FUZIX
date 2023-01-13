@@ -152,18 +152,19 @@ static int keysdown = 0;
 
 static void update_keyboard(void)
 {
+	/* TODO: can we check the whole keyboard with a single (6800) !+ 0xFF if
+	   we know it was all up before ? */
 	__asm
 		ld hl,#_keybuf
-		ld bc, #0x68FE
-		ld e, #8        ; 8 keyboard ports, 7FFE, BFFE, DFFE and so on
+		ld de, #0x68FE
+		ld b, #8        ; 8 keyboard ports, 7FFE, BFFE, DFFE and so on
 	read_halfrow:
-		in a, (c)
+		ld a, (de)
 		cpl
 		ld (hl), a
-		rlc b
+		rlc e
 		inc hl
-		dec e
-		jr nz, read_halfrow
+		djnz read_halfrow
 	__endasm;
 }
 
