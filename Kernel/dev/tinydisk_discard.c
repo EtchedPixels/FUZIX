@@ -73,7 +73,7 @@ int td_register(td_xfer rwop, uint_fast8_t parts)
 		return -1;
 	td_op[ntd] = rwop;
 	if (parts) {
-		if (tinydisk_setup(ntd)) {
+		if (!tinydisk_setup(ntd)) {
 			td_op[ntd] = NULL;
 			return -1;
 		}
