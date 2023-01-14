@@ -5,6 +5,7 @@
 -b _CODE1=0x4000
 -b _CODE2=0x4000
 -b _INITIALIZER=0x001
+-b _FONT=0x7000
 -l z80
 platform-vz200/crt0.rel
 platform-vz200/commonmem.rel
@@ -37,6 +38,7 @@ tty.rel
 usermem.rel
 vt.rel
 devsys.rel
+font8x8.rel
 platform-vz200/discard.rel
 platform-vz200/devtty.rel
 platform-vz200/tinydisk.rel

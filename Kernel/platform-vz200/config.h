@@ -88,6 +88,9 @@ extern uint8_t vtrows, vtbottom;
 extern unsigned char vt_mangle_6847(unsigned char c);
 #define VT_MAP_CHAR(x)	vt_mangle_6847(x)
 
+/* For banked bitmap mode if extended */
+#define CONFIG_FONT8X8
+
 /* Video as the console */
 #define BOOT_TTY (512 + 1)
 #define TTY_INIT_BAUD B115200	/* Hardwired generally */

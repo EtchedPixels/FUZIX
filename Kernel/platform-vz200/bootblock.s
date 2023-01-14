@@ -34,7 +34,17 @@ start:
 	inc	hl		; 23 00 Z300 header
 	nop
 	ld	sp,#0x89FF
+	;	Check if the system has banked video
 	ld	iy,#0x7180	; Screen for progress bar
+	ld	(iy),#0xFF
+	ld	a,#1
+	out	(0x20),a
+	ld	(iy),#0x60
+	xor	a
+	out	(0x20),a
+	ld	a,(iy)
+	cp	#0x60
+	push	af
 	ld	(0x89FF),a	; above stack
 	ld	de,#1
 	ld	hl,#0x4000
@@ -58,6 +68,15 @@ start:
 	ld	hl,#0x7200	; 7200-87FF
 	ld	b,#11
 	call	load_sectors
+	pop	af
+	jp	z, 0x9000
+	ld	hl,#0x7000
+	ld	b,#4		; load 2K into video bank 3
+	ld	a,#3
+	out	(0x20),a
+	call	load_sectors
+	xor	a
+	out	(0x20),a
 	jp 	0x9000
 
 load_sectors:

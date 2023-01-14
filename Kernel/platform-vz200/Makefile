@@ -54,10 +54,12 @@ image: booter boot bootblock
 	# Bank 1 0x4000 for 10K
 	# Bank 0 0x9000 for 28K
 	# Common 0x7200 for 5.5K
+	# Font packed on the end for machines with the high res mod
 	dd if=../bank1.bin of=fuzix.boot bs=512 skip=32 count=20
 	dd if=../bank2.bin of=fuzix.boot bs=512 skip=32 seek=20 count=20
 	dd if=../common.bin of=fuzix.boot bs=512 skip=72 seek=40 count=56
 	dd if=../common.bin of=fuzix.boot bs=512 skip=57 seek=96 count=11
+	dd if=../bank3.bin of=fuzix.boot bs=512 skip=112 seek=107 count=4
 
 booter:
 	sdasz80 -o booter.s
