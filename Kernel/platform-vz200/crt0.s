@@ -25,6 +25,7 @@
 	.area _DISCARD
 	; must end up above 0x7800
         .area _COMMONMEM
+	.area _COMMONDATA
 	; Stubs for the bank transfers
 	.area _STUBS
 
@@ -78,7 +79,7 @@ init:
 	ld	hl,#0x7000
 	ld	de,#0x7001
 	ld	bc,#0x01FF
-	ld	(hl),#' '
+	ld	(hl),#0x60	; inverted space
 	ldir
 
         ; Hardware setup
@@ -96,5 +97,5 @@ stop:   halt
 	.ds 450
 
 	.area _DISCARD
-	; Must start with an 0xFF for the last irq vector
+	;	Dummy byte used to check if we have graphics or not
 	.byte	0xFF

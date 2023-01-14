@@ -8,10 +8,13 @@
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 uint16_t swap_dev = 0xFFFF;
-uint16_t ramtop = 0xFFF4;
+uint16_t ramtop = 0xFFF4;	/* TODO */
 uint8_t need_resched = 0;
+uint8_t vtrows = 16;
+uint8_t vtbottom = 15;
 
-uint8_t fdc765_present;
+extern void video_switch(void);
+extern void interrupt_setup(void);
 
 void plt_discard(void)
 {
@@ -25,6 +28,8 @@ void plt_discard(void)
 	}
 	/* Now discard is gone we can finally set up our interrupt handler */
 	interrupt_setup();
+	/* Switch video if the 8K video banking is available */
+//	video_switch();
 }
 
 void plt_idle(void)
@@ -50,21 +55,4 @@ void plt_interrupt(void)
 
 void do_beep(void)
 {
-}
-
-unsigned char vt_mangle_6847(unsigned char c)
-{
-	uint8_t inv = 0;
-	/* Map upper case to inverse */
-	if (c >= 'A' && c <= 'Z')
-		inv = 0x40;
-	/* Missing punctuation to inverse */
-	else if (c == 96 || c > 'z')
-		inv = 0x40;
-	/* Map character */
-	if (c >= 96)
-		c -= 32;
-	c &= 0x3F;
-	c |= inv;
-	return c;
 }

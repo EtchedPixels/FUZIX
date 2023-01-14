@@ -61,7 +61,7 @@ kernel_endmark:
 init_hardware:
 	ld	hl,#90
 	ld	(_ramsize), hl
-	ld	hl,#31
+	ld	hl,#30
 	ld	(_procmem), hl
 	ret
 
@@ -99,13 +99,56 @@ interrupt_stub:
 
 ;=========================================================================
 
+		.globl _postinit
+
 _int_disabled:
 	.db 1
+_postinit:
+	.db 0
 
 ; install interrupt vectors
 _program_vectors:
 ; platform fast interrupt hook
 plt_interrupt_all:
+	ret
+
+;
+;	Custom interrupt handling. We have to keep interrupts off until
+;	after early boot.
+;
+		.globl _di
+		.globl ___hard_di
+
+_di:
+	jp	___hard_di
+
+		.globl _ei
+		.globl ___hard_ei
+
+_ei:
+	ld	a,(_postinit)
+	or	a
+	ret	z
+	jp	___hard_ei
+
+		.globl _irqrestore
+
+_irqrestore:
+	pop	bc
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
+	di
+	ld	a,l
+	ld	(_int_disabled),a
+	or	a
+	ret	nz
+	ld	a,(_postinit)
+	or	a
+	ret	z
+	ei
 	ret
 
 ;=========================================================================
@@ -203,6 +246,8 @@ map_save_kernel:
 	push	af
 	ld	a,(mapreg)
 	ld	(save_map),a
+	ld	a,#3
+	ld	(mapreg),a
 	out	(55),a
 	pop	af
 	ret
@@ -269,6 +314,7 @@ bank0:
 	push	hl
 	ex	de,hl
 	ld	bc,(mapreg)	; old bank into C
+	ld	(mapreg),a
 	out	(55),a		; Switch bank
 	bit	1,c		; Which bank ?
 	jr	z, retbank1

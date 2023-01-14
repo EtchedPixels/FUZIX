@@ -107,6 +107,7 @@ void kputchar(uint_fast8_t c)
 		kputchar('\r');
 	if (vidmode == 0)
 		vtoutput(&c, 1);
+	vtflush();
 }
 
 uint8_t keyboard[8][6] = {
@@ -168,12 +169,39 @@ static void update_keyboard(void)
 	__endasm;
 }
 
+static uint8_t cursor[4] = { KEY_LEFT, KEY_DOWN, KEY_UP, KEY_RIGHT };
+
+static void keydecode(void)
+{
+	uint8_t c;
+
+	uint8_t ss = keymap[1] & 0x08;	/* SHIFT */
+	uint8_t cs = keymap[2] & 0x08;	/* CTRL (we use for caps) */
+
+	c = keyboard[keybyte][keybit];
+	/* ctrl-shift => ctrl */
+	if (cs && ss) {
+		/* Don't map the arrows, but map 'rubout'. The arrows include
+		   symbols like ctrl-m we want to be able to use */
+		if (c == ';')
+			c = KEY_BS;
+		else
+			c &= 31;
+	} else if (cs) {
+		if (c >= 'a' && c <= 'z')
+			c -= 'a' - 'A';
+	} else if (ss)
+		c = shiftkeyboard[keybyte][keybit];
+	tty_inproc(1, c);
+}
+
+
 void tty_pollirq(unsigned irq)
 {
 	int i;
 
 	/* Try and do vt updates on the vblank to reduce snow */
-	if (irq) {
+	if (1 || irq) {
 		vtflush();
 		wakeup(&vidmode);
 	}
@@ -187,7 +215,7 @@ void tty_pollirq(unsigned irq)
 		uint8_t key = keybuf[i] ^ keymap[i];
 		if (key) {
 			uint8_t m = 0x20;
-			for (n = 4; n >= 0; n--) {
+			for (n = 5; n >= 0; n--) {
 				if ((key & m) && (keymap[i] & m))
 					if (!(shiftmask[i] & m))
 						keysdown--;
@@ -214,32 +242,6 @@ void tty_pollirq(unsigned irq)
 			kbd_timer = keyrepeat.continual;
 		}
 	}
-}
-
-static uint8_t cursor[4] = { KEY_LEFT, KEY_DOWN, KEY_UP, KEY_RIGHT };
-
-static void keydecode(void)
-{
-	uint8_t c;
-
-	uint8_t ss = keymap[1] & 0x08;	/* SHIFT */
-	uint8_t cs = keymap[2] & 0x08;	/* CTRL (we use for caps) */
-
-	c = keyboard[keybyte][keybit];
-	/* ctrl-shift => ctrl */
-	if (cs && ss) {
-		/* Don't map the arrows, but map 'rubout'. The arrows include
-		   symbols like ctrl-m we want to be able to use */
-		if (c == ';')
-			c = KEY_BS;
-		else
-			c &= 31;
-	} else if (cs) {
-		if (c >= 'a' && c <= 'z')
-			c -= 'a' - 'A';
-	} else if (ss)
-		c = shiftkeyboard[keybyte][keybit];
-	tty_inproc(1, c);
 }
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)

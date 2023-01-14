@@ -5,6 +5,7 @@
  */
 
 #define CONFIG_SD		/* SD card bitbanged on I/O port */
+
 /*
  *	Platform configuration
  */
@@ -34,7 +35,7 @@
 #define KERNTOP	    0xFFFF	/* Grow buffers up to top */
 
 #define SWAPBASE    0x8800	/* start at the base of user mem */
-#define SWAPTOP	    0xFFFF	/* Swap out program */
+#define SWAPTOP	    0x10000	/* Swap out program */
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS  1
 #define UDATA_SIZE  0x200	/* One block */
@@ -69,7 +70,6 @@ extern uint16_t swap_dev;
 #define MAX_BLKDEV 1	    /* SD */
 
 #define SD_DRIVE_COUNT 1
-#define SD_SPI_CALLTYPE __z88dk_fastcall
 
 /* Device parameters */
 #define NUM_DEV_TTY 1		/* Only a console */
@@ -77,12 +77,13 @@ extern uint16_t swap_dev;
 /* Console */
 #define CONFIG_VT
 
-#define CONFIG_VT_SIMPLE
+/* TODO: 32 x 24 if hires available */
 #define VT_WIDTH	32
-#define VT_HEIGHT	16
+#define VT_HEIGHT	vtrows
 #define VT_RIGHT	31
-#define VT_BOTTOM	15
-#define VT_BASE	((uint8_t *)0x7000)
+#define VT_BOTTOM	vtbottom
+
+extern uint8_t vtrows, vtbottom;
 
 extern unsigned char vt_mangle_6847(unsigned char c);
 #define VT_MAP_CHAR(x)	vt_mangle_6847(x)
@@ -94,3 +95,8 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 #define plt_copyright()
+
+/* Special interrupt handling. We don't have fancy IRQ levels as this
+   implies, instead we need to fiddle with ei during preboot */
+
+#define CONFIG_SOFT_IRQ

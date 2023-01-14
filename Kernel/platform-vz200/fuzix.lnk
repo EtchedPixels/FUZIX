@@ -42,4 +42,5 @@ platform-vz200/devtty.rel
 platform-vz200/tinysd.rel
 platform-vz200/tinysd_discard.rel
 platform-vz200/sd.rel
+platform-vz200/video.rel
 -e
