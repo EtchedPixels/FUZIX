@@ -3,8 +3,6 @@
 #include <tinysd.h>
 #include "printf.h"
 
-#ifdef CONFIG_SD
-
 __sfr __at 56 spiconf;
 __sfr __at 57 spidata;
 
@@ -52,7 +50,7 @@ bool sd_spi_receive_sector(uint8_t *ptr) __naked
     push hl
     push de
     push bc
-    ld a, (_sd_raw)
+    ld a, (_td_raw)
     or a
     jr nz, to_user
     call map_buffers
@@ -84,7 +82,7 @@ bool sd_spi_transmit_sector(uint8_t *ptr) __naked
     push hl
     push de
     push bc
-    ld a, (_sd_raw)
+    ld a, (_td_raw)
     or a
     jr nz, from_user
     call map_buffers
@@ -103,5 +101,3 @@ writel:
     jp map_kernel_restore
   __endasm;
 }
-
-#endif

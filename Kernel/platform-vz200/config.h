@@ -4,7 +4,7 @@
  *	See README.CONFIG
  */
 
-#define CONFIG_SD		/* SD card bitbanged on I/O port */
+#define CONFIG_TD_NUM	1		/* SD card bitbanged on I/O port */
 
 /*
  *	Platform configuration

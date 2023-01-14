@@ -23,6 +23,7 @@ User
 7000-71FF	Video	(7000-77FF after boot)
 
 TODO:
+-	Turn on the full int stuff and test (postint check)
 -	Update tooling to allow for DISCARD1 DISCARD2 and bank discard. Update
 	bootloader to load discard and font space. See if we can get back to 8000
 	base for user and maybe do IRQs earlier
