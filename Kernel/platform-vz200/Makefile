@@ -1,5 +1,5 @@
 ASRCS = crt0.s tricks.s commonmem.s vz200.s video.s
-CSRCS = devices.c main.c devtty.c sd.c
+CSRCS = devices.c main.c devtty.c sd.c devlpr.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/tinydisk_discard.c
 DSRCS = ../dev/tinydisk.c ../dev/tinysd.c

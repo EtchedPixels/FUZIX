@@ -17,7 +17,7 @@
 
 #define MEM_TOP		0xFFFF
 #define PROC_SIZE	30
-#define SWAP_SIZE	0x3F	/* FIXME */
+#define SWAP_SIZE	0x3D
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -86,7 +86,6 @@ extern uint16_t swap_dev;
 /* Console */
 #define CONFIG_VT
 
-/* TODO: 32 x 24 if hires available */
 #define VT_WIDTH	32
 #define VT_HEIGHT	vtrows
 #define VT_RIGHT	31

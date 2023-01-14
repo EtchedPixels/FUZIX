@@ -25,16 +25,10 @@ User
 TODO:
 -	Looks like there is a late reference somewhere into discard/font space we
 	need to find and fix (corrupted "=" in font)
--	Update tooling to allow for DISCARD1 DISCARD2 and bank discard. Update
-	bootloader to load discard and font space. See if we can get back to 8000
-	base for user and maybe do IRQs earlier
 -	Optimise the SD read/write by unrolling by 7 (for 511 iterations) so we
 	can also overlap the djnz with an out/in cycle
--	Tune swap size correctly
--	Debug bitmap video
 -	Tune as best we can for avoiding video flicker
 -	Graphic modes in devgfx
--	Printer
 
 The floppy interface is not supported. This shouldn't matter as the floppies
 are weird, incredibly slow and the floppy DOS will clash with the SD.
@@ -53,6 +47,9 @@ COMMON must end before 8800 (start of user)
 The two banked code segments must fit between 4000 and 6AFF
 The main code segment must fit between 9000 and FFFF
 
+We could switch to a LEVEL_0 build to get a bit more space back but right now it
+just about fits
+
 In order to get interrupts sane we disable interrupts on boot and keep them off
 until user space has started, at which point we blow away discard which leaves
 7800-787F free, along with the rest of video and probably some more above 7800 we
@@ -61,8 +58,7 @@ except that we undo the ROM behaviour and jump to our code so we can pre-empt pr
 and so on.
 
 Post boot all the video space is free. So for a normal machine the usual video modes
-are available. If we do a variant for banked video setups then this ought to work too
-as we can do all our boot time games, but we can also use the upper 2K of the 8K video
-RAM to hold a font and maybe some simple renders to use full text mode.
+are available. For banked video we switch to 256x192 and hide the font in the final
+2K bank the 6847 never sees.
 
 Flicker may be a big problem though.
