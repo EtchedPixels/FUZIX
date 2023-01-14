@@ -87,6 +87,8 @@ _interrupt_setup:
 	ei
 	xor	a
 	ld	(_int_disabled),a
+	inc	a
+	ld	(_postinit),a
 	ret
 
 interrupt_stub:
