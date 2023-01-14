@@ -1,7 +1,12 @@
 /*
  *	Build options
- *
- *	See README.CONFIG
+ */
+
+#define CONFIG_PAL			/* Otherwise NTSC */
+ 
+ 
+/*
+ *	We support the SD card only
  */
 
 #define CONFIG_TD_NUM	1		/* SD card bitbanged on I/O port */
@@ -28,7 +33,11 @@
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* One memory bank */
 #define CONFIG_BANKS	1
-#define TICKSPERSEC 50		/* Ticks per second - NTSC 60 ? FIXME */
+#ifdef CONFIG_PAL
+#define TICKSPERSEC 50		/* Ticks per second - PAL 50  */
+#else
+#define TICKSPERSEC 60		/* Ticks per second - NTSC 60  */
+#endif
 #define PROGBASE    0x8800	/* also data base */
 #define PROGLOAD    0x8800	/* also data base */
 #define PROGTOP     0xFFFF	/* Top of program */

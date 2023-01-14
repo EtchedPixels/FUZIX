@@ -29,7 +29,7 @@ void plt_discard(void)
 	/* Now discard is gone we can finally set up our interrupt handler */
 	interrupt_setup();
 	/* Switch video if the 8K video banking is available */
-//	video_switch();
+	video_switch();
 }
 
 void plt_idle(void)
@@ -53,6 +53,3 @@ void plt_interrupt(void)
 	timer_interrupt();
 }
 
-void do_beep(void)
-{
-}

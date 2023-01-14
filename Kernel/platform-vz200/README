@@ -23,6 +23,8 @@ User
 7000-71FF	Video	(7000-77FF after boot)
 
 TODO:
+-	Looks like there is a late reference somewhere into discard/font space we
+	need to find and fix (corrupted "=" in font)
 -	Update tooling to allow for DISCARD1 DISCARD2 and bank discard. Update
 	bootloader to load discard and font space. See if we can get back to 8000
 	base for user and maybe do IRQs earlier
@@ -32,13 +34,13 @@ TODO:
 -	Debug bitmap video
 -	Tune as best we can for avoiding video flicker
 -	Graphic modes in devgfx
+-	Printer
 
 The floppy interface is not supported. This shouldn't matter as the floppies
 are weird, incredibly slow and the floppy DOS will clash with the SD.
 
 Interrupts:
-The system ROM jumps to 0x787D. This is smack in the middle of our common space
-so we will need to do some magic around the system variables spot.
+The system ROM jumps to 0x787D. We juggle our discard and common space to cope
 
 Memory:
 

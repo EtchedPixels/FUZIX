@@ -201,10 +201,15 @@ void tty_pollirq(unsigned irq)
 	int i;
 
 	/* Try and do vt updates on the vblank to reduce snow */
-	if (1 || irq) {
+	if (irq) {
 		vtflush();
 		wakeup(&vidmode);
 	}
+
+	/* If no key was down and all the keyyboard rows scanned at once
+	   says everything is up then skip doing any work */
+	if (keysdown == 0 && *((volatile uint8_t *)0x6800) == 0xFF)
+		return;
 
 	update_keyboard();
 

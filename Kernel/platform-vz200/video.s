@@ -20,11 +20,12 @@ m6847_cget:
 	rlca
 	rlca
 	ld	l,a
-	and	#3		; bank
+	and	#7		; within page
 	add	#0x70
 	ld	h,a
 	ld	a,l
 	and	#0xF8		; low char bits
+	ld	l,a
 	ld	de,#ctmp
 	;	Copy the symbol into common space
 	ld	a,#0x1F		; char bank 256x192
@@ -46,29 +47,39 @@ ctmp:
 
 m6847_cwrite:
 	;	Write char ctmp into video HL
-	ld	hl,#ctmp
+	;	TODO; optimize
+	ld	de,#ctmp
 	ld	bc,#32
-	ldi
-	add	hl,bc		; ldi moved on a byte, and reduced bc to 31
-	ldi
-	inc	c		; bc back to 31
-	add	hl,bc		; move on
-	ldi
-	inc	c
+	ld	a,(de)
+	ld	(hl),a
+	inc	de
 	add	hl,bc
-	ldi
-	inc	c
+	ld	a,(de)
+	ld	(hl),a
+	inc	de
 	add	hl,bc
-	ldi
-	inc	c
+	ld	a,(de)
+	ld	(hl),a
+	inc	de
 	add	hl,bc
-	ldi
-	inc	c
+	ld	a,(de)
+	ld	(hl),a
+	inc	de
 	add	hl,bc
-	ldi
-	inc	c
+	ld	a,(de)
+	ld	(hl),a
+	inc	de
 	add	hl,bc
-	ldi
+	ld	a,(de)
+	ld	(hl),a
+	inc	de
+	add	hl,bc
+	ld	a,(de)
+	ld	(hl),a
+	inc	de
+	add	hl,bc
+	ld	a,(de)
+	ld	(hl),a
 	ret
 
 ;	Memory for char lines is
@@ -86,7 +97,7 @@ m6847_cpos:		;	turn coords DE into address HL
 	rrca
 	rrca
 	rrca
-	and	#7
+	and	#3
 	or	#0x1C	;	256x192 mode
 	out	(32),a	;	switch video bank
 	ret
@@ -123,8 +134,8 @@ _plot_char:
 	or	a
 	jr	z, plot_text
 	ld	a,c
-	call	m6847_cget
-	call	m6847_cpos
+	call	m6847_cget		; character into ctmp
+	call	m6847_cpos		; position into HL
 	call	m6847_cwrite
 	ret
 plot_text:
@@ -178,8 +189,41 @@ scrollbanku:
 	ldir
 	ret
 bankdown:
+	;	Move 256 bytes between the banks
+	ld	hl,#0x7700	; lowest line of bank
+	ld	de,#0x7000	; top line of bank below
+	ld	b,#0
+bankdown_l:
+	out	(32),a		; bank holding source
+	ld	c,(hl)
+	inc	a		; bank holding destination
+	out	(32),a
+	dec	a		; back to source
+	ex	de,hl
+	ld	(hl),c
+	ex	de,hl
+	inc	hl
+	inc	de
+	djnz	bankdown_l
+	ret
 bankup:
-	; TODO
+	;	Move 256 bytes between the banks
+	ld	hl,#0x7000
+	ld	de,#0x7700
+	ld	b,#0		; 256
+	.globl bankup
+bankup_l:
+	out	(32),a
+	ld	c,(hl)
+	dec	a
+	out	(32),a
+	inc	a
+	ex	de,hl
+	ld	(hl),c
+	ex	de,hl
+	inc	hl
+	inc	de
+	djnz	bankup_l
 	ret
 
 	.globl	_scroll_down
@@ -191,11 +235,13 @@ _scroll_down:
 	ld	a,#0x1E
 	call	scrollbankd
 	ld	a,#0x1D
+	call	bankdown
+	ld	a,#0x1D
 	call	scrollbankd
+	ld	a,#0x1C
 	call	bankdown
 	ld	a,#0x1C
 	call	scrollbankd
-	call	bankdown
 	ret
 scrd_text:
 	ld	hl,#0x71FF
@@ -214,9 +260,11 @@ _scroll_up:
 	call	scrollbanku
 	ld	a,#0x1D
 	call	bankup
+	ld	a,#0x1D
 	call	scrollbanku
 	ld	a,#0x1E
 	call	bankup
+	ld	a,#0x1E
 	call	scrollbanku
 	ret
 scru_text:
@@ -253,11 +301,13 @@ clear_line:
 	push	bc
 	ld	d,h
 	ld	e,l
+	inc	de
 	ld	(hl),#0
 	ld	bc,#255
 	ldir
 	pop	bc
 	pop	de
+	inc	e
 	djnz	clear_line
 	ret
 clines_t:
@@ -291,6 +341,7 @@ _clear_across:
 	ld	a,(_vidc)
 	or	a
 	jr	z, ca_t
+	ret
 	call	m6847_cpos
 	ld	e,#8
 	ld	a,#0
@@ -332,7 +383,7 @@ cursorinv:
 	jr	z, cursorinv_t	
 	call	m6847_cpos
 	ld	de,#32
-	ld	d,#8
+	ld	b,#8
 cursormake:
 	ld	a,(hl)
 	cpl
@@ -365,26 +416,35 @@ _cursor_disable:
 ; We are called once DISCARD is no longer needed. We can now check for video
 ; banks and if so set up 256x192 video
 _video_switch:
-	ld	a,#0x1C		; bank 0 - latch not touched so still text
+	xor	a		; bank 0
 	ld	hl,#0x7200
 	out	(0x20),a
-	ld	(hl),a	; set marker
-	ld	a,#0x1f
+	ld	(hl),a		; set marker
+	inc	a		; set marker in bank 1
+	out	(0x20),a
 	ld	(hl),a
-	ld	a,#0x1C
+	dec	a		; and see if it appeared in bank 0
 	out	(0x20),a
 	cp	(hl)
 	ret	nz		; If our write scribbled over the 1C with 1F
 				; we are not banked
+	ld	a,#0x1c
+	out	(0x20),a
 	ld	a,#0x08		; graphics on
 	ld	(0x6800),a	; graphics latch
 	ld	(_vidc),a
-	ld	a,#0x24
+	ld	a,#24
+	ld	d,a		; clear the lines we have
 	ld	(_vtrows),a
 	dec	a
 	ld	(_vtbottom),a
-	ld	c,a
+	ld	e,#0		; from 0,0
 	jp	clear_lines	; clear display
+
+	.globl	_do_beep
+
+_do_beep:
+	jp	0x3450		; ROM beep will do nicely
 
 	.globl	_vidc
 
