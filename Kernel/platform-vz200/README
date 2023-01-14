@@ -1,12 +1,13 @@
 Lazer VZ200 with 128K + SD card
 
 Memory map:
-0000-3FFF	ROM (fixed)	[there is a mod to use this as RAM]
+0000-3FFF	ROM (fixed)
 4000-67FF	Populated by one of two banks from SD card SRAM
 6800-6FFF	I/O latches and keyboard
 7000-77FF	Video RAM (may be paged on modded machines). Only low
 		512 used in normal text mode. Contended access causes display
-		noise.
+		noise. If the graphics mods are fitted then it's an 8K RAM banked
+		2K x 4 banks
 7800-8FFF	Onboard memory (not paged)
 9000-FFFF	Two SRAM banks off 128K card
 
@@ -15,16 +16,22 @@ Kernel
 7000-71FF	Video
 7200-77FF	Video space (starts as part of discard)
 7800-87FF	Common (only discard overlaps non text video)
-9000-FEFF	Kernel main (ideally 9000-FEFFF so can get bigger user space)
-FF00-FFFF	IM2 hack
+9000-FFFF	Kernel main (ideally 9000-FFFF so can get bigger user space)
 
 User
-8000-FFFF	User space
-7000-71FF	Video
+8800-FFFF	User space
+7000-71FF	Video	(7000-77FF after boot)
 
-TODO: Finish loader, and start debug
-
-Video
+TODO:
+-	Update tooling to allow for DISCARD1 DISCARD2 and bank discard. Update
+	bootloader to load discard and font space. See if we can get back to 8000
+	base for user and maybe do IRQs earlier
+-	Optimise the SD read/write by unrolling by 7 (for 511 iterations) so we
+	can also overlap the djnz with an out/in cycle
+-	Tune swap size correctly
+-	Debug bitmap video
+-	Tune as best we can for avoiding video flicker
+-	Graphic modes in devgfx
 
 The floppy interface is not supported. This shouldn't matter as the floppies
 are weird, incredibly slow and the floppy DOS will clash with the SD.
