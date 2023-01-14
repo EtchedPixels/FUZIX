@@ -307,8 +307,8 @@ nobufs:
 ;	We can keep a stack in common because we will complete our
 ;	use of it before we switch common block. In this case we have
 ;	a true common so it's even easier.
-;
-	.ds 128
+;	We need more space to be safe with banked calls
+	.ds 192
 _swapstack:
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
