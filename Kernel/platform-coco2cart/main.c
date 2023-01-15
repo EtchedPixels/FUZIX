@@ -19,11 +19,6 @@ void plt_idle(void)
 {
 }
 
-uint8_t plt_param(char *p)
-{
-	return 0;
-}
-
 void do_beep(void)
 {
 }
