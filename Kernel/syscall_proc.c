@@ -236,10 +236,10 @@ char *addr;
 
 arg_t brk_extend(uaddr_t addr)
 {
-	#ifdef PROGBASE
-		if (addr < PROGBASE)
-			return EINVAL;
-	#endif
+#ifdef PROGBASE
+    if (addr < PROGBASE)
+	return EINVAL;
+#endif
     if (addr >= brk_limit()) {
 	kprintf("%d: out of memory by %d\n", udata.u_ptab->p_pid,
 	    addr - brk_limit());
