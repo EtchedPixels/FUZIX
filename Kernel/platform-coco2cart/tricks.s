@@ -149,17 +149,17 @@ _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         orcc #0x10	 ; should already be the case ... belt and braces.
 
-	; new process in X, get parent pid into y
+	; new process in X so make sure x is 0 in the child image
 
 	stx fork_proc_ptr
-	ldx P_TAB__P_PID_OFFSET,x
+	ldx #0		; child returns 0
 
         ; Save the stack pointer and critical registers (Y and U used by C).
         ; When this process (the parent) is switched back in, it will be as if
         ; it returns with the value of the child's pid.
         pshs x,y,u ;  x has p->p_pid from above, the return value in the parent
 
-        ; save kernel stack pointer -- when it comes back in the parent we'll be in
+        ; save kernel stack pointer -- when it comes back in for the childt we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
 	; returning) and with X (ie return code) containing the child PID.
         ; Hurray.
@@ -168,47 +168,37 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	ldx U_DATA__U_PTAB
-	;
-	; FIXME: review what is needed for IRQ safety here before we turn
-	; on IRQs during the swapout
-	;
-	inc _inswap
-	lds #$0200		;	Use the swap stack
-	andcc #0xef
-	jsr _swapout
-	orcc #0x10
-	dec _inswap
-	lds U_DATA__U_SP
+	; Copy the parent properties into a temporary udata buffer
+	jsr _tmpbuf
+	tfr x,y
+	ldu #U_DATA
+udsave:
+	ldd ,u++
+	std ,x++
+	cmpu #U_DATA+U_DATA__TOTALSIZE
+	bne udsave
 
-        ; now the copy operation is complete we can get rid of the stuff
-        ; _switchin will be expecting from our copy of the stack.
-	cmpx #0
-	bne forked_up
+	; Buffer is in Y - make a new process using the buffer in Y
+	; not the live updata
+	pshs y
+	ldx fork_proc_ptr
+	jsr _makeproc
 
-	puls x
-	; We are now in the kernel child context
+	; Now set up for the swapout
+	pshs y		; callers can change args in C
+	ldx fork_proc_ptr
+	jsr _swapout_new
 
+	leas 4,s	; clean up from both calls
 
-	ldx #_udata
-	pshs x
-        ldx fork_proc_ptr
-        jsr _makeproc
-	puls x
+	tfr y,x
+	jsr _tmpfree
 
-	; any calls to map process will now map the childs memory
-
-        ; in the child process, fork() returns zero.
-	ldx #0
-        ; runticks = 0;
-	stx _runticks
-	;
-	; And we exit, with the kernel mapped, the child now being deemed
-	; to be the live uarea. The parent is frozen in time and space as
-	; if it had done a switchout().
-	puls y,u,pc
-forked_up:
-	puls x
-	ldx #0
-	puls y,u,pc
-
+	; The child is now on disk, the parent is still running. This is
+	; good, it reduces thrash
+	ldx fork_proc_ptr
+	ldd P_TAB__P_PID_OFFSET,x
+	; Clean up and return
+	puls x,y,u
+	tfr d,x
+	rts

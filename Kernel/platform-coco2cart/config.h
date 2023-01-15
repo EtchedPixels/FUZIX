@@ -48,6 +48,7 @@ extern uint16_t swap_dev;
 
 /* Allow for our swap heavy nature */
 #define MAXTICKS 25
+#define CONFIG_PARENT_FIRST	/* For pure swap this is far faster */
 
 /* Vt definitions */
 #define VT_WIDTH	32
