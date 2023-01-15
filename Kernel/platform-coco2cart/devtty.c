@@ -255,12 +255,15 @@ static void keydecode(void)
 }
 
 uint8_t sys_hz;
+static uint8_t vblank_wait;
 
 void plt_interrupt(void)
 {
 	static uint8_t tick;
 	uint8_t i = *pia_ctrl;
 	if (i & 0x80) {
+		if (vblank_wait)
+			wakeup(&vblank_wait);
 		/* Do a single keyboard scan of all lines first if we have no key down> This makes
 		   the usual case much faster and saves precious interrupt time clocks */
 		if (keysdown || keyany()) {
@@ -399,12 +402,14 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	}
 	case GFXIOC_WAITVB:
-		/* Our system clock is our vblank, use the standard timeout
-		   to pause for one clock */
-		udata.u_ptab->p_timeout = 2;
-		/* FIXME: race */
-		ptimer_insert();
-		psleep(NULL);
+		vblank_wait++;
+		psleep(&vblank_wait);
+		vblank_wait--;
+		chksigs();
+		if (udata.u_cursig) {
+			udata.u_error = EINTR;
+				return -1;
+		}
 		return 0;
 	}
 	return -1;
