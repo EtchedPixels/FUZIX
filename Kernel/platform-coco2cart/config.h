@@ -61,7 +61,7 @@ extern uint8_t vid_h, vid_b;
 
 #define VIDEO_BASE	0x0200
 
-#define TICKSPERSEC 50   /* Ticks per second */
+#define TICKSPERSEC 10   /* Ticks per second (we scale off the HZ ourselves */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
 #define PROGTOP     0xFE00  /* Top of program */

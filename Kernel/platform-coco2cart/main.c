@@ -4,8 +4,6 @@
 #include <printf.h>
 #include <device.h>
 #include <devtty.h>
-#include <carts.h>
-#include <blkdev.h>
 
 uint8_t membanks;
 uint8_t system_id;

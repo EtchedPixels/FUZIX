@@ -170,6 +170,15 @@ static volatile uint8_t *pia_col = (uint8_t *)0xFF02;
 /* Control */
 static volatile uint8_t *pia_ctrl = (uint8_t *)0xFF03;
 
+static uint8_t keyany(void)
+{
+	uint8_t x;
+	*pia_col = 0x00;
+	x = ~*pia_row;
+	*pia_col = 0xFF;
+	return x;
+}
+
 static void keyproc(void)
 {
 	int i;
@@ -245,24 +254,35 @@ static void keydecode(void)
 	tty_inproc(1, c);
 }
 
+uint8_t sys_hz;
+
 void plt_interrupt(void)
 {
+	static uint8_t tick;
 	uint8_t i = *pia_ctrl;
 	if (i & 0x80) {
-		*pia_col;
-		newkey = 0;
-		keyproc();
-		if (keysdown && keysdown < 3) {
-			if (newkey) {
-				keydecode();
-				kbd_timer = keyrepeat.first;
-			} else if (! --kbd_timer) {
-				keydecode();
-				kbd_timer = keyrepeat.continual;
+		/* Do a single keyboard scan of all lines first if we have no key down> This makes
+		   the usual case much faster and saves precious interrupt time clocks */
+		if (keysdown || keyany()) {
+			*pia_col;
+			newkey = 0;
+			keyproc();
+			if (keysdown && keysdown < 3) {
+				if (newkey) {
+					keydecode();
+					kbd_timer = keyrepeat.first;
+				} else if (! --kbd_timer) {
+					keydecode();
+					kbd_timer = keyrepeat.continual;
+				}
 			}
 		}
 //                fd_timer_tick();
-		timer_interrupt();
+		tick++;
+		if (tick == sys_hz) {
+			tick = 0;
+			timer_interrupt();
+		}
 	}
 }
 

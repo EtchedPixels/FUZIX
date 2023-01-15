@@ -1,3 +1,4 @@
+
 	;
 	; COCO2 platform
 	;
@@ -44,8 +45,7 @@
 
 
 
-	; FIXME - can this copy go in discard ?
-	.area .text
+	.area .discard
 
 vectors:
 	;
@@ -60,7 +60,6 @@ vectors:
 	jmp firq_handler			; 0x10F
 vectors_end:
 
-	.area .text
 init_early:
 	ldx #null_handler
 	stx 1
@@ -89,18 +88,36 @@ cpvec:
 	rts
 
 init_hardware:
-	ldd #64
-	std _ramsize
-	ldb #32
-	std _procmem
+	ldd	#64
+	std	_ramsize
+	ldb	#32
+	std	_procmem
 
-	; Turn on PIA  CB1 (50Hz interrupt)
-	lda 0xFF03
-	ora #1
-	sta 0xFF03
-	jsr _vidtxt
-	jsr _vtinit
+	; Turn on PIA  CB1 (50Hz or 60Hz interrupt)
+	lda	0xFF03
+	ora	#1
+	sta	0xFF03
+	jsr	_vidtxt
+	jsr	_vtinit
+
+	; NTSC or PAL/SECAM ?
+	ldx	#0
+	lda	$ff02
+waitvb0
+	lda	$ff03
+	bpl	waitvb0		; wait for vsync
+	lda	$ff02
+waitvb2:
+	leax	1,x		; time until vsync starts
+	lda	$ff03
+	bpl	waitvb2
+	stx	_framedet
 	rts
+
+	.globl _framedet
+
+_framedet:
+	.word	0
 
         .area .common
 

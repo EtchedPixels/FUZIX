@@ -4,16 +4,21 @@
 #include <printf.h>
 #include <device.h>
 #include <devtty.h>
-#include <carts.h>
-#include <blkdev.h>
 
 /* Unlike the bigger ports we don't do cartridge management or MPI handling due to our memory
    tightness */
 static const char *sysname[] = {"Dragon", "COCO", "COCO3", "Unknown"};
 
+extern uint16_t framedet;
+extern uint8_t sys_hz;
+
 void map_init(void)
 {
-	kprintf("%s system.\n", sysname[system_id]);
+	if (framedet >= 0x0500)
+		sys_hz = 5;
+	else
+		sys_hz = 6;
+	kprintf("%d0Hz %s system.\n", sys_hz, sysname[system_id]);
 }
 
 int strcmp(const char *a, const char *b)
@@ -22,7 +27,7 @@ int strcmp(const char *a, const char *b)
 	--b;
 	while(*++a == *++b);
 	if (*a == 0)
-		return;
+		return 0;
 	if (*a > *b)
 		return -1;
 	return 1;
