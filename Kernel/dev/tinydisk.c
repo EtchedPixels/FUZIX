@@ -38,8 +38,12 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		td_page = swappage;
 
 	lba = udata.u_block;
-	if (minor)
-		lba += td_lba[dev][minor];
+	if (minor) {
+		if (minor < MAX_PART && td_lba[dev][minor])
+			lba += td_lba[dev][minor];
+		else
+			goto fail;
+	}
 
 	dptr = udata.u_dptr;
 	nblock = udata.u_nblock;
@@ -54,8 +58,9 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		lba++;
 	}
 	return ct << 9;
-      error:
+error:
 	kprintf("hd: I/O error\n");
+fail:
 	udata.u_error = EIO;
 	return -1;
 }
@@ -73,13 +78,11 @@ int td_open(uint8_t minor, uint16_t flag)
 
 int td_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	flag;
 	return td_transfer(minor, true, rawflag);
 }
 
 int td_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
-	flag;
 	return td_transfer(minor, false, rawflag);
 
 }
