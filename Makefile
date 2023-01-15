@@ -57,7 +57,7 @@
 # v65c816:	Virtual platform for 65c816 development (flat memory)
 # v68:		Virtual platform for 68000 development
 
-TARGET=tiny68k
+TARGET=coco2cart
 
 include version.mk
 
@@ -116,6 +116,7 @@ kernel: ltools
 diskimage: stand ltools libs apps kernel
 	mkdir -p Images/$(TARGET)
 	+(cd Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/filesys.img 256 65535)
+	+(cd Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/filesys8.img 256 16384)
 	+(cd Kernel; $(MAKE) diskimage)
 
 kclean:
