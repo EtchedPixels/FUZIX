@@ -28,8 +28,8 @@ char *argv[];
 char *envp[];
 ********************************************/
 #define name (uint8_t *)udata.u_argn
-#define argv (char **)udata.u_argn1
-#define envp (char **)udata.u_argn2
+#define argv (uint8_t **)udata.u_argn1
+#define envp (uint8_t **)udata.u_argn2
 
 /*
  *	See exec.h
@@ -53,8 +53,8 @@ arg_t _execve(void)
 	/* We aren't re-entrant where this matters */
 	staticfast struct exec hdr;
 	staticfast inoptr ino;
-	char **nargv;		/* In user space */
-	char **nenvp;		/* In user space */
+	uint8_t **nargv;		/* In user space */
+	uint8_t **nenvp;		/* In user space */
 	struct s_argblk *abuf, *ebuf;
 	int argc;
 	uaddr_t progptr;
@@ -232,8 +232,8 @@ arg_t _execve(void)
 	// place the arguments, environment and stack at the top of userspace memory,
 
 	// Write back the arguments and the environment
-	nargv = wargs(((char *) top - 2), abuf, &argc);
-	nenvp = wargs((char *) (nargv), ebuf, NULL);
+	nargv = wargs(((uint8_t *) top - 2), abuf, &argc);
+	nenvp = wargs((uint8_t *) (nargv), ebuf, NULL);
 
 	// Fill in udata.u_name with program invocation name
 	uget((void *) ugetp(nargv), udata.u_name, 8);
