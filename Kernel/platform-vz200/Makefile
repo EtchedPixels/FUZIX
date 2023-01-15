@@ -86,15 +86,15 @@ IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage: image
 	# Make a blank disk image with partition
-	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
 	# Add the file system
-	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel extra blocks
 	dd if=fuzix.boot of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Add the boot block at the start
 	dd if=bootblock.bin bs=1 skip=34816 count=384 of=$(IMAGES)/disk.img conv=notrunc
 	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
 	# Loader
 	cp booter.vz $(IMAGES)/booter.vz
 	cp sdboot.rom $(IMAGES)/sdboot.rom
