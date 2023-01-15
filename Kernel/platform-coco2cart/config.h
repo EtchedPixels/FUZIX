@@ -1,10 +1,12 @@
 /*
- *	Set this according to your system. There isn't room in such a cramped
- *	set up for both and for 6K graphics mode.
+ *	Default to supporting probe for both the IDE and SDC
  */
 
-#undef CONFIG_WITH_IDE
+#define CONFIG_WITH_IDE
 #define CONFIG_WITH_SDC
+
+#define CONFIG_TD_NUM	3		/* 2 HD 1 SD */
+#define CONFIG_TD_IDE
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -22,9 +24,11 @@
 #define CONFIG_BANKS	1
 /* And swapping */
 
-extern uint16_t cocoswap_dev;
+#define CONFIG_DYNAMIC_SWAP
 
-#define SWAPDEV     cocoswap_dev    /* Uses part of IDE slice 0 or SD 0*/
+extern uint16_t swap_dev;
+
+#define SWAPDEV     swap_dev    /* Uses part of IDE slice 0 or SD 0*/
 #define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot */
 #define SWAPTOP     0xFE00	/* so it's a round number of 512 byte sectors */
@@ -47,10 +51,12 @@ extern uint16_t cocoswap_dev;
 
 /* Vt definitions */
 #define VT_WIDTH	32
-#define VT_HEIGHT	24
+#define VT_HEIGHT	vid_h
 #define VT_RIGHT	31
-#define VT_BOTTOM	23
+#define VT_BOTTOM	vid_b
 #define VT_INITIAL_LINE	0
+
+extern uint8_t vid_h, vid_b;
 
 #define VIDEO_BASE	0x0200
 

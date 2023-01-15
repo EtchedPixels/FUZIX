@@ -1,10 +1,11 @@
+
 ;;; The ROM-resident fuzix loader for the CoCoSDC drive.  Mostly copied from
 ;;; Alan's IDE booter.
 
 ;
 ;	Bootstrap for cartridge start up. For now load from block 1 (second
-;	block). We can refine this later. We do 51 block loads from block 1
-;	for 1A00 to 7FFF and then copy 1A00 to 0100 for vectors
+;	block). We can refine this later. We do 62 block loads from block 1
+;	for 0400 to 7FFF
 ;
 ;	Needs some kind of global timeout -> error handling
 ;
@@ -14,11 +15,8 @@
 	.module bootstrap
 
 	.globl load_image
-	.globl _cocoswap_dev
 
 	.area .text
-_cocoswap_dev:
-	.dw $0900		; SD card slice 0 rest of
 
 ;;; Load a sector from SDC
 ;;;   takes: B - sector number, X = dest address
@@ -55,9 +53,18 @@ b@	bitb <$ff48		;
 
 load_image:
 	orcc #$50
-	ldy #$0400		; display at this point
+	; COCO2 defaults to text at 0400-05FF move it to 0200
+	ldx #0xFFC7
+	clr ,x+			; Set F0
+	clr ,x++		; Clear F1-F6
+	clr ,x++
+	clr ,x++
+	clr ,x++
+	clr ,x++
+	clr ,x++
+	ldy #$0200			; display at this point
 	lda #'G'		;
-	sta ,y+			;
+	sta ,y+
 	ldd #$ff43		; set DP to io page
 	tfr a,dp		; good for size + speed
 	stb <$ff40		; turn on SDC's LBA mode 
@@ -65,9 +72,9 @@ load_image:
 	;; with the SDC now, but the code below should
 	;; delay SDC access enough.
 	;; load kernel
-	ldb #0			; start block no (* 2 for 256 byte sectors)
-	lda #102		; number of blocks (* 2 for 256 bytes sectors)
-	ldx #$1A00		; dest address
+	ldb #1			; start block no (* 2 for 256 byte sectors)
+	lda #124		; number of blocks (* 2 for 256 bytes sectors)
+	ldx #$0400		; dest address
 load_loop:
 	pshs a,b
 	bsr load_block
@@ -77,21 +84,7 @@ load_loop:
 	incb
 	deca
 	bne load_loop
-	ldx #$1A00
-	ldu #$0100
-vec_copy:
-	ldd ,x++
-	std ,u++
-	cmpu #$0200
-	bne vec_copy
-
-	ldx #$1A00
-	clra
-	clrb
-ud_wipe:
-	std ,x++
-	cmpx #$1C00
-	bne ud_wipe
+	ldx #0x0400
 	lda ,x+
 	cmpa #$15
 	bne wrong_err

@@ -1,7 +1,7 @@
 ;
 ;	Bootstrap for cartridge start up. For now load from block 1 (second
-;	block). We can refine this later. We do 51 block loads from block 1
-;	for 1A00 to 7FFF and then copy 1A00 to 0100 for vectors
+;	block). We can refine this later. We do 62 block loads from block 1
+;	for 0400 to 7FFF
 ;
 ;	Needs some kind of global timeout -> error handling
 ;
@@ -11,12 +11,8 @@
 	.module bootstrap
 
 	.globl load_image
-	.globl _cocoswap_dev
 
 	.area .text
-
-_cocoswap_dev:
-	.dw 0
 
 load_block:
 	lda #$FF
@@ -37,7 +33,6 @@ load_block_2:
 	lda #1
 	sta <$FF52
 	
-
 	lda #$40
 wait_drdy:
 	bita <$FF57
@@ -67,12 +62,28 @@ wait_bsy:
 
 
 load_image:
-	ldy #$0400			; display at this point
+	orcc #$50
+	; COCO2 defaults to text at 0400-05FF move it to 0200
+	ldx #0xFFC7
+	clr ,x+			; Set F0
+	clr ,x++		; Clear F1-F6
+	clr ,x++
+	clr ,x++
+	clr ,x++
+	clr ,x++
+	clr ,x++
+	ldx #$0200			; display at this point
+	ldd #$6060
+wiper:
+	std ,x++
+	cmpx #$0400
+	bne wiper
+	ldy #$0200
 	lda #'G'
 	sta ,y+
 	ldb #1
-	lda #51
-	ldx #$1A00
+	lda #62				; 31K straight load
+	ldx #0x0400			; directly after video
 load_loop:
 	pshs a,b
 	bsr load_block
@@ -82,21 +93,8 @@ load_loop:
 	incb
 	deca
 	bne load_loop
-	ldx #$1A00
-	ldu #$0100
-vec_copy:
-	ldd ,x++
-	std ,u++
-	cmpu #$0200
-	bne vec_copy
 
-	ldx #$1A00
-	clra
-	clrb
-ud_wipe:
-	std ,x++
-	cmpx #$1C00
-	bne ud_wipe
+	ldx #0x0400			; check signature
 	lda ,x+
 	cmpa #$15
 	bne wrong_err

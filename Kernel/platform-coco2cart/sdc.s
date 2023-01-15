@@ -8,7 +8,7 @@
 ;;; exported
 	.globl _sdc_read_data
 	.globl _sdc_write_data
-	.globl _sdcpage
+	.globl _td_page
 
 
 *********************************************************************
@@ -27,8 +27,6 @@ DATREGB     equ    PREG3          ; second data register
 
 	section	.common
 
-_sdcpage .db 0
-
 	
 ;;; TODO: collasp sdc read/write with self modding code.
 
@@ -39,7 +37,7 @@ _sdc_write_data
 	pshs	y,u
 	ldy	#PREG2		; set Y to point at data reg a
 	ldd 	#64*256+4      	; A = chunk count (64), B = bytes per chunk (4)
-	tst	_sdcpage	; test user/kernel xfer
+	tst	_td_page	; test user/kernel xfer
 	beq	wrChnk		; if zero then stay in kernel space
 	jsr	map_process_always ; else flip in user space
 wrChnk  ldu    	,x             	; get 2 data bytes from source
@@ -59,7 +57,7 @@ _sdc_read_data
 	pshs	y,u
 	ldy	#PREG2	        ; set Y to point to data reg a
 	ldd    	#32*256+8       ; A = chunk count (32), B = bytes per chunk (8)
-	tst	_sdcpage	; test usr/kernel xfer
+	tst	_td_page	; test usr/kernel xfer
 	beq	rdChnk		; if zero then stay in kernel space
 	jsr	map_process_always ; else flip to user space
 rdChnk 	ldu    	,y              ; read 1st pair of bytes for the chunk

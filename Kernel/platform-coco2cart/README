@@ -75,8 +75,7 @@ Build the image and you'll get a fuzix.ide and fuzix.rom
 
 In the xroar directory where you have a hard disc image do
 
-dd if=platform/fuzix.ide of=hd0.img bs=512 seek=3 conv=notrunc
-/opt/xroaride/bin/xroar -default-machine dragon64 -cart ide -cart-rom platform/fuzix.rom
+xroar -default-machine dragon64 -cart ide -cart-rom fuzix.rom -ide -load-hd0 fuzix.img
 
 exec 49152
 

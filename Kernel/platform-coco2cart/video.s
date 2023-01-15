@@ -2,6 +2,7 @@
 
 	; Methods provided
 	.globl _vid256x192
+	.globl _vidtxt
 	.globl _plot_char
 	.globl _scroll_up
 	.globl _scroll_down
@@ -21,12 +22,20 @@
 	;
 	.globl _fontdata_8x8
 	.globl _vidattr
+	.globl _vid_h
+	.globl _vid_b
 
 	include "kernel.def"
 	include "../kernel09.def"
 
+;
+;	TODO: could hide the text video functions and init in discard ?
+;
 	.area .text
 
+_vidtxt:
+	; COCO2 defaults to text at 0400-05FF move it to 0200
+	rts
 ;
 ;	Dragon video drivers
 ;
@@ -41,8 +50,27 @@ _vid256x192:
 	anda #$07
 	ora #$f0
 	sta $ff22
+	sta vidmode	; any non zero value will do
+	ldb #24
+	stb _vid_h
+	decb
+	stb _vid_b
 	rts
 
+;
+;	Video base for text
+;
+txtaddr:
+	ldy #VIDEO_BASE
+	leay a,y		; X value
+	lslb
+	lslb
+	lslb			; x 8 so keep unsigned
+	leay b,y		; and add four times
+	leay b,y
+	leay b,y
+	leay b,y
+	rts
 ;
 ;	Compute the video base address
 ;	A = X, B = Y
@@ -58,6 +86,18 @@ vidaddr:
 _plot_char:
 	pshs y
 	lda 4,s
+	tst vidmode
+	bne plot_cg3
+	bsr txtaddr
+	tfr x,d
+	cmpb #0x60
+	bcs upper
+	subb #0x20
+upper:
+	andb #0x3F
+	stb ,y
+	puls y,pc
+plot_cg3:
 	bsr vidaddr		; preserves X (holding the char)
 	tfr x,d
 	andb #$7F		; no high font bits
@@ -170,6 +210,18 @@ plot_fast:
 _scroll_up:
 	pshs y
 	ldy #VIDEO_BASE
+	tst vidmode
+	bne scroll_up_cg3
+scrup_t:
+	ldx #VIDEO_BASE+0x20
+scrup_tl:
+	ldd ,x++
+	std ,y++
+	cmpx #VIDEO_BASE+512
+	bne scrup_tl
+	puls y,pc
+
+scroll_up_cg3:
 	leax 256,y
 vscrolln:
 	; Unrolled line by line copy
@@ -211,6 +263,8 @@ vscrolln:
 
 ;
 ;	void scroll_down(void)
+;
+;	Never used in text mode
 ;
 _scroll_down:
 	pshs y
@@ -262,9 +316,13 @@ video_endptr:
 ;
 ;	clear_across(int8_t y, int8_t x, uint16_t l)
 ;
+;	Never used in text mode
+;
 _clear_across:
 	pshs y
 	lda 4,s		; x into A, B already has y
+	tst vidmode
+	beq clat
 	jsr vidaddr	; Y now holds the address
 	tfr x,d		; Shuffle so we are writng to X and the counter
 	tfr y,x		; l is in d
@@ -282,11 +340,36 @@ clearnext:
 	decb
 	bne clearnext
 	puls y,pc
+clat:
+	jsr txtaddr
+	ldb #$20
+clatl:
+	stb ,y+
+	dec 4,s
+	bne clatl
+	puls y,pc
 ;
 ;	clear_lines(int8_t y, int8_t ct)
 ;
 _clear_lines:
 	pshs y
+	tst vidmode
+	bne clines_cg3
+	clra
+	jsr txtaddr
+	lsl 4,s
+	lsl 4,s
+	lsl 4,s
+	lsl 4,s			; x 16 cos dword
+	ldd #$2020
+	tfr y,x
+clt:
+	std ,x++
+	dec 4,s		; 32 bytes per line max 16 lines in text
+	bne clt
+	puls y,pc
+
+clines_cg3:
 	clra			; b holds Y pos already
 	jsr vidaddr		; y now holds ptr to line start
 	tfr y,x
@@ -318,16 +401,31 @@ wipel:
 _cursor_on:
 	pshs y
 	lda  4,s
+	tst vidmode
+	bne con_cg3
+	jsr txtaddr
+	sty cursor_save
+	tfr y,x
+	puls y
+coff_txt:
+	lda #0x40
+	eora ,x
+	sta ,x
+	rts
+
+con_cg3:
 	jsr vidaddr
 	tfr y,x
 	puls y
 	stx cursor_save
 	; Fall through
 _cursor_off:
+	ldx cursor_save
+	tst vidmode
+	beq coff_txt
 	ldb _vtattr
 	bitb #0x80
 	bne nocursor
-	ldx cursor_save
 	com ,x
 	com 32,x
 	com 64,x
@@ -423,4 +521,6 @@ endline:
 cursor_save:
 	.dw	0
 _vtrow:
+	.db	0
+vidmode:
 	.db	0

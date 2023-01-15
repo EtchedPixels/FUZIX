@@ -43,7 +43,11 @@
 	include "../kernel09.def"
 
 
-		.area .vectors
+
+	; FIXME - can this copy go in discard ?
+	.area .text
+
+vectors:
 	;
 	;	At 0x100 as required by the COCO ROM
 	;
@@ -54,9 +58,9 @@
 	jmp badswi_handler			; 0x109
 	jmp interrupt_handler			; 0x10C
 	jmp firq_handler			; 0x10F
+vectors_end:
 
 	.area .text
-
 init_early:
 	ldx #null_handler
 	stx 1
@@ -75,6 +79,13 @@ init_early:
 	clr ,x++
 	clr ,x++
 	clr ,x++
+	ldy #0x0100
+	ldx #vectors
+cpvec:
+	ldd ,x++
+	std ,y++
+	cmpx #vectors_end
+	bne cpvec
 	rts
 
 init_hardware:
@@ -87,7 +98,7 @@ init_hardware:
 	lda 0xFF03
 	ora #1
 	sta 0xFF03
-	jsr _vid256x192
+	jsr _vidtxt
 	jsr _vtinit
 	rts
 

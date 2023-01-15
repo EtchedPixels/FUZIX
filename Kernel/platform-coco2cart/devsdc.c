@@ -10,8 +10,7 @@
 
 #include <kernel.h>
 #include <kdata.h>
-#include <blkdev.h>
-#include <mbr.h>
+#include <tinydisk.h>
 #include <devsdc.h>
 #include <printf.h>
 
@@ -42,13 +41,14 @@
 #define sdc_reg_param2 *((volatile uint8_t *)SDC_REG_PARAM2)
 #define sdc_reg_param3 *((volatile uint8_t *)SDC_REG_PARAM3)
 
-static uint8_t sdc_present;
+static uint8_t sd0 = 0xFF;
+static uint8_t sd1 = 0xFF;
+
 
 /* Assembler glue */
 
 extern void sdc_read_data(uint8_t *p);
 extern void sdc_write_data(uint8_t *p);
-extern uint8_t sdcpage;
 
 /* a "simple" internal function pointer to which transfer
    routine to use. The is_read var might be better stored
@@ -58,29 +58,19 @@ typedef void (*sdc_transfer_function_t)( unsigned char *addr);
 
 
 
-/* blkdev method: transfer sectors */
-static uint16_t sdc_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int sdc_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-       	uint8_t nb = 0;
-	uint32_t lba;             /* holds 32 bit lsn */
 	uint8_t *ptr = ((uint8_t *)&lba) + 1;      /* points to 24 bit lba in blk op */
 	uint8_t t;                /* temporarory sdc status holder */
 	uint8_t cmd;              /* holds SDC command value */
 	sdc_transfer_function_t fptr;  /* holds which xfer routine we want */
+	uint8_t n = 2;
+	uint8_t drive = (dev == sd1) ? 1 : 0;
 
-	if (rawflag == 1 && d_blkoff(9))
-		return -1;
+	/* in 256 byte sectors */
+	lba += lba;
 
-	/* pass rawflag to assembler */
-	sdcpage = rawflag;
-
-
-	/* we get 256 bytes per lba in SDC so convert */
-	udata.u_nblock *= 2;
-	lba = udata.u_block * 2;
-	ptr[0] |= (minor & 0x7f) << 1;
-
-	/* setup cmd pointer and command value from blk_op */
+	/* setup cmd pointer and command value */
 	if (is_read) {
 		cmd = 0x80;
 		fptr = sdc_read_data;
@@ -90,10 +80,9 @@ static uint16_t sdc_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	}
 
 	/* apply our drive value 0 or 1 */
-	if (minor & 0x80)
-		cmd++;
+	cmd += drive;
 
-	while (udata.u_nblock--) {
+	while (n--) {
 		/* load up registers */
 		sdc_reg_param1 = ptr[0];
 		sdc_reg_param2 = ptr[1];
@@ -108,7 +97,7 @@ static uint16_t sdc_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 				goto fail;
 		} while(!(t & SDC_READY));
 		/* do our low-level xfer function */
-		fptr(udata.u_dptr);
+		fptr(dptr);
 		/* and wait will ready again, and test for failure */
 		do {
 			t=sdc_reg_stat;
@@ -116,35 +105,12 @@ static uint16_t sdc_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 				goto fail;
 		} while (t & SDC_BUSY);
 		/* increment our blk_op values for next 256 bytes sector */
-		udata.u_dptr += 256;
+		dptr += 256;
 		lba++;
-		nb++;
 	}
-	/*  Huzzah!  success! */
-	return nb << 8;
+	return 1;
 	/* Boo!  failure */
  fail:	sdc_reg_ctl = 0x00;
-	udata.u_error = EIO;
-	return -1;
-}
-
-
-int sdc_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
-{
-    return sdc_transfer(minor, true, rawflag);
-}
-
-int sdc_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
-{
-    return sdc_transfer(minor, false, rawflag);
-}
-
-int sdc_open(uint8_t minor, uint16_t flag)
-{
-	if (!sdc_present) {
-		udata.u_error = ENODEV;
-		return -1;
-	}
 	return 0;
 }
 
@@ -166,14 +132,17 @@ __attribute__((section(".discard")))
 /* Call this to initialize SDC/blkdev interface */
 void devsdc_init(void)
 {
-	kputs("SDC: ");
 	if (devsdc_exist()) {
+		kputs("SDC: ");
 	    	/* turn on uber-secret SDC LBA mode*/
 		sdc_reg_ctl = 0x43; 
-		sdc_present = 1;
-		kputs("Ok.\n");
+		sd0 = td_register(sdc_xfer, 1);
+		sd1 = td_register(sdc_xfer, 1);
+		if (sd0 == 0xFF && sd1 == 0xFF)
+			kputs("Not found.\n");
+		else
+			kputs("Ok.\n");
 	}
-	else kprintf("Not found.\n");
 }
 
 #endif
