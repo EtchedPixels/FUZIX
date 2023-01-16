@@ -466,8 +466,8 @@ V.SCF    equ   0
          use   dw4read.s
          use   dw4write.s
          ELSE
-         use   dwread.s
-         use   dwwrite.s
+         use   ../dev/drivewire/dwread-6809.s
+         use   ../dev/drivewire/dwwrite-6809.s
          ENDC
 
          use   dw.def

@@ -31,11 +31,6 @@ Emulating in XRoar
 XRoar supports Spinx-512 and MOOH boards, including SD card emulation,
 since version 0.35.
 
-TODO
-====
-
-Use hard disk swap partitions as discovered and only fall back to drivewire
-
 Using DriveWire
 ===============
 
@@ -74,41 +69,6 @@ a multiple of 256 bytes! Use for instance Kernel/tools/pad256
 Quick build instructions
 ========================
 
-(save the below in a script file, run it with "clean" as needed)
+make diskimage
 
-# 1. Build the kernel:
-make -C Kernel TARGET=dragon-nx32 $@
-
- # If building for the MOOH boards, append MOOH=1 to above make command.
-
- # If using DriveWire in an emulator (i.e. XRoar), append BECKER=1
-
-# 2. Build the libraries
-make -C Library tools/syscall_6809 $@
-make -C Library/libs -f Makefile.6809 $@
-
-# 3. Build the utils and applications
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/util $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/games $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/V7/games $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/V7/cmd $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/V7/cmd/sh $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/levee $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/cave $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/dw $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/MWC/cmd $@
-make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/ue $@
-#make TARGET=dragon-nx32 -C Applications/cpp  $@
-#make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/as09 $@
-#make -f Makefile.6809 TARGET=dragon-nx32 -C Applications/ld09 $@
-
-# 4. Build disk tools
-make -C Standalone $@
-
-# 5. Build boot disk image 
-[ -f "Applications/util/init" ] &&
-cd Standalone/filesystem-src && { ./build-filesystem-ng -y -v -X -f fuzix.dsk -g 256 16383 -p platform-dragon-nx32 ; cd - ; }
-
-# 6. Write disk image to a partition on the SD card
-
-# 7. Write kernel to sector 64 on the SD card (for SDBOOT)
+xroar -cart nx32 -load-hd0 Images/dragon-nx32/disk.img -load sdboot.bin

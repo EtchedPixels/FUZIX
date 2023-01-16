@@ -7,7 +7,7 @@ MEMSRC = mem-nx32.s
 endif
 MEMOBJ = $(MEMSRC:.s=$(BINEXT))
 
-CSRCS = devlpr.c devtty.c devfd.c ttydw.c
+CSRCS = devlpr.c devtty.c devfd.c ttydw.c devinput.c
 CSRCS += vc.c devices.c main.c libc.c
 
 CDSRCS = discard.c
@@ -56,7 +56,10 @@ $(AOBJS): %$(BINEXT): %.s
 clean:
 	rm -f $(OBJS) $(JUNK)
 
-image:
+dwfuz.bin: dwload.asm
+	lwasm --pragma=condundefzero -r -b -odwfuz.bin dwload.asm -DFUZIX -DRAMORG=0x600 -DBECKER
+
+image: dwfuz.bin
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o usermem_sam.o \
 	dragon.o $(MEMOBJ) ../bankfixed.o \
@@ -67,10 +70,21 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../syscall_fs3.o ../syscall_exec.o ../blk512.o \
-	devlpr.o devtty.o libc.o ../vt.o video.o ../font8x8.o \
+	../syscall_fs3.o ../syscall_exec.o ../blk512.o ../devinput.o \
+	devinput.o devlpr.o devtty.o libc.o ../vt.o video.o ../font8x8.o \
 	devide.o blkdev.o ide.o devide_discard.o mbr.o gpt.o \
 	devsd.o devsd_discard.o spi.o devscsi.o devscsi_discard.o \
 	scsi_tc3.o discard.o
 	../tools/pad256 ../fuzix.bin
 	../tools/lw-checkmap ../fuzix.map
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Write the rest of the images to the disks
+	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=64 conv=notrunc
+	cp dwfuz.bin $(IMAGES)
