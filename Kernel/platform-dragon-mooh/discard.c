@@ -22,11 +22,6 @@ void pagemap_init(void)
 	for (i = 0x3e; i > 7; i--)
 		pagemap_add(i);
 	pagemap_add(3);	/* was used while loading, replaced by 3F */
-
-#ifdef SWAPDEV
-	for (i = 0; i < MAX_SWAPS; i++)
-		swapmap_init(i);
-#endif
 }
 
 uint8_t plt_param(char *p)

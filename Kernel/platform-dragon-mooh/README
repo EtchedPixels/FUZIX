@@ -2,8 +2,7 @@ This port is for the Dragon/CoCo with 32K internal memory and a MOOH
 external memory cartridge. It uses the 8K banks memory model with
 flexible mapping.
 
-It is not compatible with the dragon-nx32 (or its MOOH build variant)
-and needs all applications linked differently (load address).
+It is not compatible with the dragon-nx32 (or its MOOH build variant).
 
 It works fine on the 64K computers (Dragon 64/Tano, CoCo2) as well but
 another port could be made to fully exploit the extra memory.
@@ -55,3 +54,7 @@ We make use of the two MMU tasks so we can efficiently switch between
 kernel (task 0) and user mapping (task 1). The user mapping should in
 principle only need to be rewritten to the MMU on switchout() and after
 page map (re)allocation.
+
+
+make diskimage
+xroar -cart mooh -load-hd0 Images/dragon-mooh/disk.img -cart-rom sdbdos-eprom8-all-v1.rom 

@@ -2,7 +2,7 @@
 vpath %.s ../platform-dragon-nx32
 vpath %.c ../platform-dragon-nx32
 
-CSRCS = devlpr.c devtty.c devfd.c ttydw.c
+CSRCS = devlpr.c devtty.c devfd.c ttydw.c devinput.c
 CSRCS += devices.c main.c libc.c
 
 VSRCS = vc.c
@@ -68,7 +68,7 @@ image: ../tools/decb-mooh
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	../syscall_fs3.o ../syscall_exec.o ../blk512.o \
+	../syscall_fs3.o ../syscall_exec.o ../blk512.o ../devinput.o devinput.o \
 	devlpr.o devtty.o libc.o ../vt.o video.o ../font8x8.o \
 	devide.o blkdev.o ide.o devide_discard.o mbr.o gpt.o \
 	devsd.o devsd_discard.o spi.o \
@@ -77,3 +77,14 @@ image: ../tools/decb-mooh
 	../tools/lw-checkmap ../fuzix.map
 	../tools/decb-mooh < ../fuzix.bin > ../fuzix-mooh.bin
 	mv ../fuzix-mooh.bin ../fuzix.bin
+
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Write the rest of the images to the disks
+	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=64 conv=notrunc
