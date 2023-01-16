@@ -8,6 +8,7 @@
 #include <vt.h>
 #include <tty.h>
 #include <graphics.h>
+#include <input.h>
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
@@ -194,8 +195,13 @@ static void keyproc(void)
 			int m = 1;
 			for (n = 0; n < 7; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(shiftmask[i] & m)) {
+						if (keyboard_grab == 3) {
+							queue_input(KEYPRESS_UP);
+							queue_input(keyboard[i][n]);
+						}
 						keysdown--;
+					}
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -241,17 +247,41 @@ uint8_t shiftkeyboard[8][7] = {
 
 static void keydecode(void)
 {
+	uint8_t m = 0;
 	uint8_t c;
 
-	if (keymap[7] & 64)	/* shift */
+	if (keymap[7] & 64) {	/* shift */
 		c = shiftkeyboard[keybyte][keybit];
-	else
+		m = KEYPRESS_SHIFT;
+	} else
 		c = keyboard[keybyte][keybit];
 	if (keymap[1] & 64) {	/* control */
+		m |= KEYPRESS_CTRL;
 		if (c > 31 && c < 127)
 			c &= 31;
 	}
-	tty_inproc(1, c);
+	if (c) {
+		switch(keyboard_grab) {
+		case 0:
+			tty_inproc(1, c);
+		case 1:
+			if (!input_match_meta(c)) {
+				vt_inproc(1, c);
+				break;
+			}
+			/* Fall through */
+		case 2:
+			queue_input(KEYPRESS_DOWN);
+			queue_input(c);
+			break;
+		case 3:
+			/* Queue an event giving the base key (unshifted)
+			   and the state of shift/ctrl/alt */
+			queue_input(KEYPRESS_DOWN | m);
+			queue_input(keyboard[keybyte][keybit]);
+			break;
+		}
+	}
 }
 
 uint8_t sys_hz;

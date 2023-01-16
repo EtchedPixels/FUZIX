@@ -66,6 +66,9 @@ extern uint8_t vid_h, vid_b;
 #define PROGLOAD    0x8000  /* also data base */
 #define PROGTOP     0xFE00  /* Top of program */
 
+#define CONFIG_INPUT			/* Input device for joystick */
+#define CONFIG_INPUT_GRABMAX	3
+
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 

@@ -1,5 +1,5 @@
 
-CSRCS = devices.c main.c
+CSRCS = devices.c main.c devinput.c
 
 # Code that must be present for the bootstrap
 CISRCS = devsdc.c
@@ -66,7 +66,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
 	../syscall_exec16.o devtty.o libc.o ../vt.o video.o  ../syscall_fs3.o \
-	../blk512.o ../font8x8.o devsdc.o sdc.o
+	../blk512.o ../font8x8.o devsdc.o sdc.o ../devinput.o devinput.o
 	../tools/lw-checkmap ../fuzix.map
 	../tools/decb-image <../fuzix.bin fuzix.img
 	# This has changed with the discard change
@@ -87,7 +87,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
 	../syscall_exec16.o devtty.o libc.o ../vt.o video.o  ../syscall_fs3.o \
-	../blk512.o ../font8x8.o devsdc.o sdc.o
+	../blk512.o ../font8x8.o devsdc.o sdc.o ../devinput.o devinput.o
 	../tools/decb-image <../fuzix-sdc.bin fuzix-sdc.img
 	dd if=fuzix-sdc.img of=fuzixsdc.rom bs=1024 skip=48 count=16
 	dd if=fuzix-sdc.img of=fuzix.sdc bs=1024 skip=1 count=31

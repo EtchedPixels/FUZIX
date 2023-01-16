@@ -184,57 +184,61 @@ map_save:
 	lda romin
 	sta romsave
 	puls a,pc
-;
-;	Helpers for the MPI and Cartridge Detect
-;
 
 ;
-;	oldslot = mpi_set_slot(uint8_t newslot)
+;	Joystick helper
 ;
-_mpi_set_slot:
-	tfr b,a
-	ldb 0xff7f
-	sta 0xff7f
+;	jsread(buffer)
+;
+;	Returns a buffer of words in the format
+;	right left/right, button
+;	right up/down, button
+;	left left/right, button
+;	left up/down, button
+;
+	.globl _jsread
+
+_jsread:
+	; Buffer is in X on entry
+	pshs u
+	lda #$FF
+	sta $FF02		; Keyboard scan lines off
+	lda #$08		; Select right joystick
+	sta $FF23		; Sound off a moment
+	bsr jstwo
+	lda #$09
+	bsr jstwo
+	puls u
 	rts
-;
-;	int8_t mpi_present(void)
-;
-_mpi_present:
-	lda 0xff7f	; Save bits
-	ldb #0xff	; Will get back 33 from an MPI cartridge
-	stb 0xff7f	; if the emulator is right on this
-	ldb 0xff7f
-	cmpb #0x33
-	bne nompi
-	clr 0xff7f	; Switch to slot 0
-	ldb 0xff7f
-	bne nompi
-	incb
-	sta 0xff7f	; Our becker port for debug will be on the default
-			; slot so put it back for now
-	rts		; B = 0
-nompi:	ldb #0
-	sta 0xff7f	; Restore bits just in case
+jstwo:
+	sta $FF03		; P0 CR B - select joystick L or R
+	lda #$04
+	sta $FF01		; X
+	bsr jsfind
+	lda #$0C		; Y
+	sta $FF01
+	; Fall through
+jsfind:
+	ldu #jstmp
+	; Binary search the joystick DAC position
+	lda #$20
+	sta ,u		; start in the middle and binary search
+jssearch:
+	lsr ,u
+	beq jsdone
+	sta $FF20
+	tst $FF20
+	bpl jsover
+	adda ,u
+	bra jssearch
+jsover:
+	suba ,u
+	bra jssearch
+jsdone:
+	ldb $FF20	; save fire button in bit 0
 	rts
-
-	.area .text	; Must be clear of cartridge mapping areas
-;
-;	uint16_t cart_hash(void)
-;
-_cart_hash:
-	pshs cc
-	orcc #0x10
-	ldx #0xC000
-	ldd #0
-	clr $FFBE	; Map cartridge
-hashl:
-	addd ,x++
-	cmpx #0xC200
-	bne hashl
-	tfr d,x
-	clr $FFBF	; Return to normality
-	puls cc,pc
-
+jstmp:
+	.byte 0
 
 	.area .common
 ;
