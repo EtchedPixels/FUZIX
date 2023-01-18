@@ -36,6 +36,7 @@ uint8_t vidmode;	/* For live screen */
 static uint8_t mode[5];	/* Per console 1-4 */
 static uint8_t tmsinkpaper[5] = {0, 0xF4, 0xF4, 0xF4, 0xF4 };
 static uint8_t tmsborder[5] = { 0, 0x04, 0x04, 0x04, 0x04 };
+static uint8_t efinkpaper[5] = { 0, 0x8F, 0x8F, 0x8F, 0x8F };
 static uint8_t vswitch;	/* Track vt switch locking due top graphics maps */
 uint8_t vt_twidth;
 uint8_t vt_tright;
@@ -1200,6 +1201,15 @@ void do_conswitch(uint8_t c)
 	if (vswitch)
 		return;
 
+	/* 80 column card */
+	if (ef9345_present) {
+		inputtty = c;
+		set_console();
+		vt_twidth = 80;
+		vt_tright = 79;
+		return;
+	}
+	/* TMS9918A */
 	tms_setoutput(inputtty);
 	vt_cursor_off();
 	inputtty = c;
@@ -1230,6 +1240,25 @@ struct uart tms_uart = {
 	carrier_unwired,
 	_CSYS,
 	"TMS9918A"
+};
+
+/* The EF9345 is run via the same vt layer */
+
+static void ef_setup(uint8_t minor)
+{
+	used(minor);
+	vt_twidth = 80;
+	vt_tright = 79;
+}
+
+struct uart ef_uart = {
+	tms_intr,			/* TODO */
+	tms_writeready,
+	tms_putc,
+	ef_setup,
+	carrier_unwired,
+	_CSYS,
+	"EF9345"
 };
 
 /* FIXME: could move this routine into discard */
@@ -1309,6 +1338,30 @@ static struct videomap tms_map = {
 	0, 0,
 	1,
 	MAP_PIO
+};
+
+static struct videomap ef_map = {
+	0,
+	0x42,
+	0, 0,
+	0, 0,
+	2,
+	MAP_PIO
+};
+
+static struct display ef_mode[1] = {
+	{
+		0,
+		80, 24,
+		80, 24,
+		255, 255,
+		FMT_TEXT,
+		HW_EF9345,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,	/* TODO: vblank */
+		16,
+		0,
+		80, 24
+	}
 };
 
 /* FIXME: we need a way of reporting CPU speed/TMS delay info as unlike the
@@ -1473,7 +1526,7 @@ void tms9918a_attributes(void)
 void tms9918a_attributes_m(uint8_t minor)
 {
 	if (inputtty == minor)
-		vdp_attributes();
+		tms9918a_attributes();
 }
 
 struct tmsinfo {
@@ -1588,8 +1641,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   unsigned topchar = 256;
   uint8_t c;
 
-  if ((minor == 1 && shadowcon) ||
-                 uart[minor] == &tms_uart) {
+  if (uart[minor] == &tms_uart) {
   	switch(arg) {
   	case GFXIOC_GETINFO:
                 return uput(&tms_mode[mode[minor]], ptr, sizeof(struct display));
@@ -1641,8 +1693,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		struct vdp_rw rw;
 		uint16_t size;
 		uint8_t *addr = (uint8_t *)rw.data;
-		
-		if (vswitch != minor) {
+			if (vswitch != minor) {
 			udata.u_error = EINVAL;
 			return -1;
 		}
@@ -1703,7 +1754,33 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		else
 			return softzx81_on(minor);
 	}
-	/* Only the ZX keyboard has support for the bitmapped matrix ops
+  }
+  if (uart[minor] == &ef_uart) {
+	switch(arg) {
+	case GFXIOC_MAP:
+		return uput(&ef_map, ptr, sizeof(struct videomap));
+	case GFXIOC_UNMAP:
+		return 0;
+	case VTINK:
+		c = ugetc(ptr);
+		efinkpaper[minor] &= 0xF8;
+		efinkpaper[minor] |= c & 0x07;
+		if (minor == inputtty) {
+			kprintf("setink %d\n", c);
+			ef9345_colour(efinkpaper[minor]);
+		}
+		return 0;
+	case VTPAPER:
+		c = ugetc(ptr);
+		efinkpaper[minor] &= 0x8F;
+		efinkpaper[minor] |= (c & 0x07) << 4;
+		if (minor == inputtty)
+			ef9345_colour(efinkpaper[minor]);
+		return 0;
+	}
+  }
+  if (uart[minor] == &ef_uart || uart[minor] == &tms_uart) {
+	  /* Only the ZX keyboard has support for the bitmapped matrix ops
 	   and map setting. We need to add different map setting for PS/2
 	   and different auto repeat if we support setting it */
 	if (!zxkey_present &&

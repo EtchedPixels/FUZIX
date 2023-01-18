@@ -24,6 +24,7 @@ uint8_t sio1_present;
 uint8_t z180_present;
 uint8_t quart_present;
 uint8_t tms9918a_present;
+uint8_t ef9345_present;
 uint8_t dma_present;
 uint8_t zxkey_present;
 uint8_t copro_present;
@@ -144,6 +145,20 @@ static void timer_tick(uint8_t n)
 __sfr __at (Z180_IO_BASE + 0x10) TIME_TCR;      /* Timer control register                     */
 __sfr __at (Z180_IO_BASE + 0x0C) TIME_TMDR0L;   /* Timer data register,    channel 0L         */
 
+static void key_poll(void)
+{
+	/* Running as a home computer not serial */
+	if (zxkey_present)
+		zxkey_poll();
+	if (ps2kbd_present && ps2_type == PS2_BITBANG) {
+		if (!ps2busy) {
+			int16_t n = ps2kbd_get();
+			if (n >= 0)
+				ps2kbd_byte(n);
+		}
+	}
+}
+
 void plt_interrupt(void)
 {
 	/* FIXME: For Z180 we know if the ASCI ports are the source so
@@ -171,21 +186,13 @@ void plt_interrupt(void)
 				do_timer_interrupt();
 				timerct = 0;
 			}
+			/* We poll the bitbanger 40 times a second as it's slow */
+			key_poll();
 		}
 	/* The TMS9918A is our second best choice as the CTC must be wired
 	   right and may not be wired as we need it */
 	} else if (ti_r & 0x80) {
-		/* Running as a home computer not serial */
-		if (zxkey_present)
-			zxkey_poll();
-		/* We poll the bitbanger 50 times a second as it's slow */
-		if (ps2kbd_present && ps2_type == PS2_BITBANG) {
-			if (!ps2busy) {
-				int16_t n = ps2kbd_get();
-				if (n >= 0)
-					ps2kbd_byte(n);
-			}
-		}
+		key_poll();
 		/* We are using the TMS9918A as a timer */
 		timerct++;
 		if (timerct == 6) {	/* Always NTSC */
@@ -217,6 +224,9 @@ void plt_interrupt(void)
 		out(ctc_port + 3, 0x47);
 		out(ctc_port +3, 0xFF);
 		timer_tick(n);
+		/* Bit slow really - if we want to use CTC + ps/2 bit bang we should probably
+		   clock the CTC higher */
+		key_poll();
 	}
 	/* Poll the hardware PS/2 every interrupt as it may be the actual source */
 	ps2_int();

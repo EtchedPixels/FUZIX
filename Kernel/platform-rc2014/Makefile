@@ -1,4 +1,4 @@
-ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s soft81.s
+ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s video-9345.s soft81.s
 CSRCS = devices.c main.c devtty.c ide.c sd.c ps2.c
 CSRCS += devinput.c devgpio.c wiznet.c
 CSRCS += softzx81.c

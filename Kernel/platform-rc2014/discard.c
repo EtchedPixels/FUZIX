@@ -289,8 +289,18 @@ void init_hardware_c(void)
 	ramsize = 512;
 	procmem = 512 - 80;
 
+	ef9345_present = ef9345_probe();
+	if (ef9345_present) {
+		shadowcon = 1;
+		ef9345_init();
+		vt_twidth = 80;
+		vt_tright = 79;
+		vtinit();
+		/* TODO: ef9345 as vblank ?? */
+	}
+
 	/* The TMS9918A and KIO clash */
-	if (!kio_present) {
+	if (!kio_present && !shadowcon) {
 		tms9918a_present = probe_tms9918a();
 		if (tms9918a_present) {
 			shadowcon = 1;
@@ -377,6 +387,22 @@ static uint8_t probe_copro(void)
 	return 1;
 }
 
+void vdu_setup(void)
+{
+	if (shadowcon) {
+		/* Add the consoles */
+		uint8_t n = 0;
+		shadowcon = 0;
+		do {
+			if (ef9345_present)
+				insert_uart(0x44, &ef_uart);
+			else
+				insert_uart(0x98, &tms_uart);
+			n++;
+		} while(n < 4 && nuart <= NUM_DEV_TTY);
+	}
+}
+
 __sfr __at 0xED z512_ctrl;
 
 /*
@@ -453,9 +479,10 @@ void pagemap_init(void)
 		kprintf("Z80 CTC detected at 0x%2x.\n", ctc_port);
 	}
 
-	if (tms9918a_present) {
+	if (tms9918a_present)
 		kprintf("%s detected at 0x98.\n", vdpname);
-	}
+	if (ef9345_present)
+		kputs("EF9345 detected at 0x44.\n");
 
 	if (!acia_present)
 		sc26c92_present = probe_sc26c92();
@@ -503,15 +530,10 @@ void pagemap_init(void)
 	ps2kbd_present = ps2kbd_init();
 	if (ps2kbd_present) {
 		kprintf("PS/2 Keyboard at 0x%2x\n", ps2_type == PS2_DIRECT ? 0x60 : 0xBB);
-		if (!zxkey_present && tms9918a_present) {
+		if (!zxkey_present && shadowcon) {	/* TOOD: || ef9345 - test shadowcon ? */
 			/* Add the consoles */
-			uint8_t n = 0;
-			shadowcon = 0;
 			kputs("Switching to video output.\n");
-			do {
-				insert_uart(0x98, &tms_uart);
-				n++;
-			} while(n < 4 && nuart <= NUM_DEV_TTY);
+			vdu_setup();
 		}
 	}
 	ps2mouse_present = ps2mouse_init();
@@ -562,20 +584,12 @@ void map_init(void)
 
 uint8_t plt_param(unsigned char *p)
 {
-	/* If we have a keyboard then the TMS9918A becomes a real tty
+	/* If we have a keyboard then the TMS9918A or EF9345 becomes a real tty
 	   and we make it the primary console */
 	if (strcmp(p, "zxkey") == 0 && !zxkey_present && !ps2kbd_present) {
 		zxkey_present = 1;
 		zxkey_init();
-		if (tms9918a_present) {
-			/* Add the consoles */
-			uint8_t n = 0;
-			shadowcon = 0;
-			do {
-				insert_uart(0x98, &tms_uart);
-				n++;
-			} while(n < 4 && nuart <= NUM_DEV_TTY);
-		}
+		vdu_setup();
 		return 1;
 	}
 	return 0;
@@ -598,3 +612,9 @@ void device_init(void)
 	sock_init();
 #endif
 }
+
+/* Until we tidy the conditional build of floppy up provide a dummy symbol: FIXME */
+
+#ifndef CONFIG_FLOPPY
+uint8_t devfd_dtbl;
+#endif

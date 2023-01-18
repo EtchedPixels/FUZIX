@@ -20,50 +20,64 @@
 ;	Text RAM access worst case ~26 clocks
 ;	
 
-            .module vdp
+        .module vdp
 
-	    ; video driver
-	    .globl _scroll_up
-	    .globl _scroll_down
-	    .globl _plot_char
-	    .globl _clear_lines
-	    .globl _clear_across
-	    .globl _cursor_on
-	    .globl _cursor_off
-	    .globl _cursor_disable
-	    .globl _set_console
+	; video driver
+	.globl _scroll_up
+	.globl _scroll_down
+	.globl _plot_char
+	.globl _clear_lines
+	.globl _clear_across
+	.globl _cursor_on
+	.globl _cursor_off
+	.globl _cursor_disable
+	.globl _set_console
 
-	    ; graphics API
-	    .globl _vdp_rop
-	    .globl _vdp_wop
+	; graphics API
+	.globl _vdp_rop
+	.globl _vdp_wop
 
-	    .globl cursorpos
+	.globl cursorpos
 
-	    .globl _int_disabled
+	.globl _int_disabled
 
-	    .globl _vdpport
-	    .globl _inputtty
-	    .globl _outputtty
+	.globl _vdpport
+	.globl _inputtty
+	.globl _outputtty
+	.globl _ef9345_present
 
-	    .globl _vtattr_notify
+	.globl _vtattr_notify
 
-	    .globl _vtattr_cap
-	    .globl _vidmode
+	.globl _vtattr_cap
+	.globl _vidmode
 
-	    .globl _vt_twidth
+	.globl _vt_twidth
 
-	    .globl _scrolld_s1
-	    .globl _scrollu_w
-	    .globl _scrollu_mov
-	    .globl _scrolld_base
-	    .globl _scrolld_mov
+	.globl _scrolld_s1
+	.globl _scrollu_w
+	.globl _scrollu_mov
+	.globl _scrolld_base
+	.globl _scrolld_mov
+
+;
+;	EF9345 driver interface for 80 column modes
+;
+	.globl ef_scroll_up
+	.globl ef_scroll_down
+	.globl ef_plot_char
+	.globl ef_clear_lines
+	.globl ef_clear_across
+	.globl ef_cursor_on
+	.globl ef_cursor_off
+	.globl ef_cursor_disable
+	.globl ef_set_console
 
 ;
 ;	Core support
 ;
-	    .globl map_process_always
-	    .globl map_kernel_restore
-	    .area _CODE1
+	.globl map_process_always
+	.globl map_kernel_restore
+	.area _CODE1
 ;
 ;	Register write value E to register A. This is a pure VDP register
 ;	access so we shouldn't need a delay (check if we need a small one
@@ -126,6 +140,9 @@ _plot_char:
 	    push de
 	    push hl
 	    push af
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_plot_char
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -160,6 +177,9 @@ scrollbuf:
 ;	there isn't anything else we can do in text mode
 ;
 _scroll_down:
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_scroll_down
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -208,6 +228,9 @@ down_1:
 	    jp popret
 
 _scroll_up:
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_scroll_up
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -259,6 +282,9 @@ _clear_lines:
 	    push de
 	    push hl
 	    push bc
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_clear_lines
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -292,6 +318,9 @@ _clear_across:
 	    push de
 	    push hl
 	    push af
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_clear_across
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -313,17 +342,20 @@ l3:	    out (c),a
 ;	Turn on the cursor if this is the displayed console
 ;
 _cursor_on:
-	    ld a,(_outputtty)
-	    ld c,a
-	    ld a,(_inputtty)
-	    cp c
-	    ret nz
 	    pop bc
 	    pop hl
 	    pop de
 	    push de
 	    push hl
 	    push bc
+	    ld a,(_outputtty)
+	    ld c,a
+	    ld a,(_inputtty)
+	    cp c
+	    ret nz
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_cursor_on
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -348,6 +380,9 @@ _cursor_off:
 	    ld a,(_inputtty)
 	    cp c
 	    ret nz
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_cursor_off
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -356,11 +391,15 @@ _cursor_off:
 	    ld c,a
 	    jp plotit
 
+; TODO: we may want to hook this for the ef9345
 _vtattr_notify:
 _cursor_disable:
 	    ret
 
 _set_console:
+	    ld a,(_ef9345_present)
+	    or a
+	    jp nz, ef_set_console
 	    ld a,(_inputtty)
 	    ld bc, (_vdpport)
 	    dec a

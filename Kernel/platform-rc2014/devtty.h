@@ -23,6 +23,10 @@ extern uint16_t vdpport;
 extern uint16_t vdp_rop(struct vdp_rw *rw) __fastcall;
 extern uint16_t vdp_wop(struct vdp_rw *rw) __fastcall;
 
+extern uint8_t ef9345_probe(void);
+extern void ef9345_init(void);
+extern void ef9345_colour(uint8_t c);
+
 /* For console */
 extern uint8_t vt_twidth, vt_tright;
 
