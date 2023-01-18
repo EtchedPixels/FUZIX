@@ -37,6 +37,7 @@ struct display {
 #define HW_MICROLABS4	133	/* Microlabs Grafyx for Model 4 */
 #define HW_LOWE_LE18	134	/* Low Electronics LE-18 */
 #define HW_VDP_9958	135	/* VDP9958 MSX2+ etc */
+#define HW_EF9345	136	/* Thomson EF9345 */
   uint16_t features;
 #define GFX_MAPPABLE	1	/* Can map into process memory */
 #define GFX_PALETTE	2	/* Has colour palette */
