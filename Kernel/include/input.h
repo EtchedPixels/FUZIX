@@ -12,7 +12,7 @@
 #define		STICK_DIGITAL_D 0x40
 #define		STICK_DIGITAL_L	0x20
 #define		STICK_DIGITAL_R	0x10
-#define STICK_ANALOG	0x30		/* 16bit signed X / Y, sign */
+#define STICK_ANALOG	0x30		/* 16bit signed X / Y, buttons */
 
 /* No device number - but 3 bits reserved if needed */
 #define KEYPRESS_CODE	0x40		/* Followed by keycode byte. Number
