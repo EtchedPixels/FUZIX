@@ -453,6 +453,18 @@ void pagemap_init(void)
 		register_uart(0x86, &sio_uartb);
 	}
 
+
+	if (ctc_port) {
+		if (timer_source == TIMER_NONE)
+			timer_source = TIMER_CTC;
+		else {
+			/* Turn off our CTC interrupts */
+			out(ctc_port + 2, 0x43);
+			out(ctc_port + 3, 0x43);
+		}
+		kprintf("Z80 CTC detected at 0x%2x.\n", ctc_port);
+	}
+	/* Prefer CTC to DS12885 timer */
 #ifdef CONFIG_RTC_DS12885
 	ds12885_init();
 	inittod();
@@ -467,17 +479,6 @@ void pagemap_init(void)
 		}
 	}
 #endif
-
-	if (ctc_port) {
-		if (timer_source == TIMER_NONE)
-			timer_source = TIMER_CTC;
-		else {
-			/* Turn off our CTC interrupts */
-			out(ctc_port + 2, 0x43);
-			out(ctc_port + 3, 0x43);
-		}
-		kprintf("Z80 CTC detected at 0x%2x.\n", ctc_port);
-	}
 
 	if (tms9918a_present)
 		kprintf("%s detected at 0x98.\n", vdpname);
