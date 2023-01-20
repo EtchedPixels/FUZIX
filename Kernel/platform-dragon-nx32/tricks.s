@@ -55,11 +55,11 @@ _plt_switchout:
 	; Stash the uarea into process memory bank
 	jsr map_process_always
 
-	ldx #U_DATA
+	ldx #_udata
 	ldy #U_DATA_STASH
 stash:	ldd ,x++
 	std ,y++
-	cmpx #U_DATA+U_DATA__TOTALSIZE
+	cmpx #_udata+U_DATA__TOTALSIZE
 	bne stash
 
 	; get process table in
@@ -101,7 +101,7 @@ not_swapped:
 	
 	; fetch uarea from process memory
 	ldx #U_DATA_STASH
-	ldy #U_DATA
+	ldy #_udata
 stashb	ldd ,x++
 	std ,y++
 	cmpx #U_DATA_STASH+U_DATA__TOTALSIZE
@@ -221,11 +221,11 @@ fork_copy:
 
 ; stash parent uarea (including kernel stack)
 	jsr map_process_a
-	ldx #U_DATA
+	ldx #_udata
 	ldu #U_DATA_STASH
 stashf	ldd ,x++
 	std ,u++
-	cmpx #U_DATA+U_DATA__TOTALSIZE
+	cmpx #_udata+U_DATA__TOTALSIZE
 	bne stashf
 	jsr map_kernel
 	; --- we are now on the stack copy, parent stack is locked away ---

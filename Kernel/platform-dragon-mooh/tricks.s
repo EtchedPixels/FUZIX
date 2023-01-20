@@ -55,11 +55,11 @@ _plt_switchout:
 	; FIXME could map in only the bank that holds the stash
 	jsr map_process_always
 
-	ldx #U_DATA
+	ldx #_udata
 	ldy #U_DATA_STASH
 stash:	ldd ,x++
 	std ,y++
-	cmpx #U_DATA+U_DATA__TOTALSIZE
+	cmpx #_udata+U_DATA__TOTALSIZE
 	bne stash
 
 	; get process table in
@@ -101,7 +101,7 @@ not_swapped:
 	
 	; fetch uarea from process memory
 	ldx #U_DATA_STASH
-	ldy #U_DATA
+	ldy #_udata
 stashb	ldd ,x++
 	std ,y++
 	cmpx #U_DATA_STASH+U_DATA__TOTALSIZE
@@ -227,11 +227,11 @@ notlst	ldb ,x+				; dst
 ; stash parent uarea (including kernel stack)
 	ldx U_DATA__U_PAGE		; old bank
 	jsr map_process_a
-	ldx #U_DATA
+	ldx #_udata
 	ldu #U_DATA_STASH
 stashf	ldd ,x++
 	std ,u++
-	cmpx #U_DATA+U_DATA__TOTALSIZE
+	cmpx #_udata+U_DATA__TOTALSIZE
 	bne stashf
 	jsr map_kernel
 	ldx fork_proc_ptr
