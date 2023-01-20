@@ -5,6 +5,7 @@
 - Sound
 - Autodetect PPIDE
 - Mouse connect
+- Finish up EF9345 (test conswitch etc)
 
 
 This is Fuzix for the RC2014
@@ -78,6 +79,7 @@ Supported Hardware
 
 	Console switch card at 0xFF as GPIO (assumed present, no harm if not)
 
+	EF9345 video card for 80 column text
 
 Pending
 	Sound cards (until Fuzix gets proper audio support)
