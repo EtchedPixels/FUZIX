@@ -171,11 +171,11 @@ _dofork:
 	; Copy the parent properties into a temporary udata buffer
 	jsr _tmpbuf
 	tfr x,y
-	ldu #U_DATA
+	ldu #_udata
 udsave:
 	ldd ,u++
 	std ,x++
-	cmpu #U_DATA+U_DATA__TOTALSIZE
+	cmpu #_udata+U_DATA__TOTALSIZE
 	bne udsave
 
 	; Buffer is in Y - make a new process using the buffer in Y
