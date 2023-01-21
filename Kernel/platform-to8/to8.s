@@ -5,9 +5,6 @@
 	.module to8
 
 	; exported
-	.globl _mpi_present
-	.globl _mpi_set_slot
-	.globl _cart_hash
 	.globl map_kernel
 	.globl map_video
 	.globl map_process
@@ -77,7 +74,7 @@ ___hard_irqrestore:		; B holds the data
 ___hard_ei:
 	lda $6019
 	ora #$20
-	sta $5019
+	sta $6019
 	andcc #0xef
 	rts
 ___hard_di:
@@ -85,7 +82,7 @@ ___hard_di:
 hard_di_2
 	lda $6019
 	anda #$D0
-	sta $5019
+	sta $6019
 	orcc #0x10
 	rts
 
@@ -94,19 +91,11 @@ hard_di_2
 ;
 
 	.area .common
-;
-;	Vectors live in the low bits of each bank. We need to be careful to
-;	put the right bank in when doing monitor calls however
-;
-;	Kernel map pages 0, 1, 2
-;
+
 _program_vectors:
 	; TODO set 2064 to JMP to our irq in setup code
 	rts
-;
-;	Kernel runs with DP at E7. Need to make sure of this !
-;	We are in "new" style banking mode
-;
+
 map_kernel:
 	pshs	d
 map_kernel_1:
