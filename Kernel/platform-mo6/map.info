@@ -1,0 +1,4 @@
+reserve F000-FFFF
+reserve A000-AFFF
+reserve 2000-20FF
+user 2400-5FFF
