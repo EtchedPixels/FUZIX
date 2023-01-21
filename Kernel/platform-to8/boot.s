@@ -15,11 +15,13 @@ start:	orcc	#$10		; ints off (FIR off to ?)
 	lda	$E7E7		; force memory mapping TO8 mode
 	ora	#0x10		; will need to rework this for TO9
 	sta	$E7E7
+	ldd	#$0462
+	std	$E7E5		; bank 4 high, bank 2 low
 
 	; Now load the sectors 256 bytes at a time
-	lda	#4
+	ldx	#$A000
 	bsr	load_seg
-	lda	#2
+	ldx	#$0000
 	bsr	load_seg
 	bsr	load_most
 	bsr	load_half
@@ -32,7 +34,7 @@ load_half:
 	; Switch map to the unused colour memory
 	; as we are bootstrapping this setup in page1 mode
 	lda	$E7C3
-	ora	#$01
+	anda	#$FE
 	sta	$E7C3
 	ldx	#$4000
 	ldy	#32			; 8K at 4000
@@ -42,9 +44,6 @@ load_most:
 	ldy	#60
 	bra	loader
 load_seg:
-	; Set A000-DFFF range (assumes 8/9+ FIXME)
-	sta	$E7E5
-	ldx	#$A000
 	ldy	#64
 loader:
 	; Load Y sectors starting at X

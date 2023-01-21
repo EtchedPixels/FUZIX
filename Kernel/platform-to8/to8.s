@@ -26,6 +26,8 @@
 	.globl unix_syscall_entry
 	.globl null_handler
 
+	.globl video_init
+
 	; exported debugging tools
 	.globl _plt_monitor
 	.globl _plt_reboot
@@ -50,10 +52,11 @@ init_early:
 	rts
 
 init_hardware:
-	ldd #480			; for now - need to size properly
-	std _ramsize
-	ldd #32
-	std _procmem
+	ldd	#512			; for now - need to size properly
+	std	_ramsize
+	ldd	#31
+	std	_procmem
+	jsr	video_init
 	rts
 
         .area .common
@@ -109,23 +112,24 @@ map_kernel:
 map_kernel_1:
 	; This is overkill somewhat but we do neeed to set the video bank
 	; for irq cases interrupting video writes, ditto 0000-3FFF ?
-	ldd	#0x0263
+	ldd	#0x0462
 	std	kmap
-	std	<$E5		;	set the A000-DFFF and 0000-3FFF bank
-	lda	<$C3
+	std	$E7E5		;	set the A000-DFFF and 0000-3FFF bank
+	lda	$E7C3		;	to 4 and 2 (writeable) respectively
 	anda	#$FE
 	tfr	a,b
 	anda	#$01
 	sta	kmap+2
-	stb	<$C3		;	Ensure kernel half of bank 0 is mapped
+	stb	$E7C3		;	Ensure kernel half of bank 0 is mapped
 	puls	a,pc
 
 map_video:
 	pshs	a
-	lda	<$C3
-	ora	#$01
+	lda	#1
 	sta	kmap+2
-	sta	<$C3
+	lda	$E7C3		;	Map the bitmap bank
+	ora	#$01
+	sta	$E7C3
 	puls	a,pc
 	
 kmap:
@@ -141,7 +145,7 @@ map_process_always
 	;	is fixed.
 	ldd	U_DATA__U_PAGE
 	std	kmap
-	std	<$E5		;	Set A000-DFFF and video bank. Don't
+	std	$E7E5		;	Set A000-DFFF and video bank. Don't
 				;	touch the video 8K mapping
 	puls	a,pc
 
@@ -157,11 +161,11 @@ map_restore:
 	pshs	d
 	ldd	savemap
 	std	kmap
-	std	<$E5
-	lda	<$C3
+	std	$E7E5
+	lda	$E7C3
 	anda	#$FE
 	ora	kmap+2
-	sta	<$C3
+	sta	$E7C3
 	puls	d,pc
 
 
@@ -201,9 +205,7 @@ irqhandler:
 	.globl _mon_keyboard
 
 _mon_keyboard:
-	pshs	u,y,dp
-	jsr	$E806
-	puls	u,y,dp,pc
+	jmp	$E806
 
 	.area .common
 ;
@@ -217,11 +219,13 @@ _fdbios_flop:
 	; Loading into a current user pages
 	jsr	map_process_always
 via_kernel:
+	stb	<$48
 	; operation is in B from caller
 	jsr	$E82A
-	; TODO return actual error from BIOS not just 1
 	ldb	#0
-	adcb	#0		; B = carry flag for return to C
+	bcc	flop_good
+	ldb	<$4E
+flop_good
 	; ensure map is correct
 	jmp	map_kernel
 ;

@@ -11,10 +11,7 @@
 	.globl _cursor_disable
 	.globl _vtattr_notify
 
-	.globl _video_read
-	.globl _video_write
-	.globl _video_cmd
-
+	.globl video_init
 	;
 	; Imports
 	;
@@ -48,7 +45,6 @@ vidaddr:
 	tfr d,x
 	puls a
 	leax VIDEO_BASE,x
-map_video:
 	jmp map_video
 ;
 ;	plot_char(int8_t y, int8_t x, uint16_t c)
@@ -346,6 +342,16 @@ nocursor:
 _vtattr_notify:
 _cursor_disable:
 	rts
+
+video_init:
+	jsr	map_video
+	ldx	#VIDEO_BASE
+	ldd	#0xAAAA
+vidwipe:
+	std	,x++
+	cmpx	#VIDEO_END
+	bne 	vidwipe
+	jmp	map_kernel
 
 	.area .data
 cursor_save:

@@ -26,7 +26,11 @@ start:
 
 		.area .discard
 
-main:		
+main:
+		lda #$04
+		sta $E7E5		; high bank is 4
+		lda #$62		
+		sta $E7E6		; low bank is 2, from RAM, writeable
 		lds #kstack_top
 		ldx #__sectionbase_.bss__
 		ldy #__sectionlen_.bss__
@@ -34,8 +38,6 @@ main:
 bss_wipe:	sta ,x+
 		leay -1,y
 		bne bss_wipe
-		lda #0xE7
-		tfr a,dp
 		jsr init_early
 		jsr init_hardware
 		jsr _fuzix_main

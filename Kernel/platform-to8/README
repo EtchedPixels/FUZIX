@@ -32,6 +32,9 @@ Bank 0		:	4000-5FFF	Common
 Bank 1		:	6000-9FFF	Fixed user
 Bank n		:	A000-DFFF	User banked
 
+NOTE: for the moment common is below 4000 as we are using the 4000-5FFF bank for video to get going. TO9 if ever
+supported will also need that layout.
+
 Limitations:
 TO7/70		can't share video with kernel so not supported at this point
 TO9		video is limited to single page mode as can't move video. Only 0-3 in low 16K
