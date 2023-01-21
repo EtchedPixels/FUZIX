@@ -22,7 +22,7 @@
 	include "kernel.def"
 	include "../kernel09.def"
 
-	.area .text
+	.area .video
 
 ;
 ;	Compute the video base address
@@ -32,25 +32,40 @@
 ;
 ;	This is a simple bitmap, so chracters are just copied 8x8
 ;
+;	x 320 wants optimizing
+;
 vidaddr:
-	pshs a
-	tfr b,a
+	sta	,-s
+	lslb
+	stb	,-s
+	lslb
+	lslb
+	addb	,s+
+	; b is now 10 x Y and fits in a byte (240 is max)
+	; now shuffle it into D so it ends up another x 32
 	clra
-	pshs d
-	lsra
-	rorb
-	lsra
-	rorb			; x 64
-	addd ,s++		; x 320
-	tfr d,x
-	puls a
-	leax VIDEO_BASE,x
-	jmp map_video
+	lslb
+	rola
+	lslb
+	rola
+	lslb
+	rola
+	lslb
+	rola
+	lslb
+	rola
+	addb	,s+		; add in the X value
+	;	D is now the offset
+	adda	#VIDEO_BASE/256
+	tfr	d,y
+	jmp	map_video
 ;
 ;	plot_char(int8_t y, int8_t x, uint16_t c)
 ;
 _plot_char:
 	pshs y
+	lda _vtattr		; this won't be mapped when we are in video space
+	sta vtattrcp
 	lda 4,s
 	bsr vidaddr		; preserves X (holding the char)
 	tfr x,d
@@ -64,7 +79,7 @@ _plot_char:
 	rola
 	tfr d,x
 	leax _fontdata_8x8,x		; relative to font
-	ldb _vtattr
+	ldb vtattrcp
 	andb #0x3F		; drop the bits that don't affect our video
 	beq plot_fast
 
@@ -75,7 +90,7 @@ _plot_char:
 	clra
 plot_loop:
 	sta _vtrow
-	ldb _vtattr
+	ldb vtattrcp
 	cmpa #7		; Underline only applies on the bottom row
 	beq ul_this
 	andb #0xFD
@@ -110,10 +125,10 @@ notital2:
 	beq notuline
 	lda #0xff		; underline by setting bottom row
 notuline:
-	bitb #0x01		; inverse or not: we are really in inverse
-	bne plot_inv		; by default so we complement except if
+	bitb #0x01		; inverse or not
+	beq plot_ninv		; 
 	coma			; inverted
-plot_inv:
+plot_ninv:
 	bitb #0x20		; overstrike or plot ?
 	bne overstrike
 	sta ,y
@@ -122,43 +137,35 @@ overstrike:
 	anda ,y
 	sta ,y
 plotnext:
-	leay 32,y
+	leay 40,y
 	lda _vtrow
 	inca
 	cmpa #8
 	bne plot_loop
-unmap_video:
-	jsr map_kernel
-	puls y,pc
+	bra unmap_videoc
 ;
 ;	Fast path for normal attributes
 ;
 plot_fast:
 	lda ,x+			; simple 8x8 renderer for now
-	coma
 	sta 0,y
 	lda ,x+
-	coma
-	sta 32,y
+	sta 40,y
 	lda ,x+
-	coma
-	sta 64,y
+	sta 80,y
 	lda ,x+
-	coma
-	sta 96,y
+	sta 120,y
 	lda ,x+
-	coma
-	sta 128,y
-	lda ,x+
-	coma
 	sta 160,y
 	lda ,x+
-	coma
-	sta 192,y
+	sta 200,y
 	lda ,x+
-	coma
-	sta 224,y
-	bra unmap_video
+	sta 240,y
+	lda ,x
+	sta 280,y
+unmap_videoc:
+	jsr map_kernel
+	puls y,pc
 
 ;
 ;	void scroll_up(void)
@@ -204,7 +211,7 @@ vscrolln:
 	std ,y++
 	cmpx video_endptr
 	bne vscrolln
-	jmp unmap_video
+	bra unmap_video
 
 ;
 ;	void scroll_down(void)
@@ -250,7 +257,9 @@ vscrolld:
 	std ,--y
 	cmpx video_startptr
 	bne vscrolld
-	jmp unmap_video
+unmap_video:
+	jsr map_kernel
+	puls y,pc
 
 video_startptr:
 	.dw	VIDEO_BASE
@@ -279,7 +288,7 @@ clearnext:
 	leax 1,x
 	decb
 	bne clearnext
-	puls y,pc
+	bra unmap_video
 ;
 ;	clear_lines(int8_t y, int8_t ct)
 ;
@@ -315,21 +324,15 @@ wipel:
 	std ,x++
 	dec 4,s			; count of lines
 	bne wipel
-	puls y,pc
+	bra unmap_video
 
 _cursor_on:
 	pshs y
 	lda  4,s
 	jsr vidaddr
 	tfr y,x
-	puls y
 	stx cursor_save
-	; Fall through
-_cursor_off:
-	ldb _vtattr
-	bitb #0x80
-	bne nocursor
-	ldx cursor_save
+do_cursor:
 	com ,x
 	com 40,x
 	com 80,x
@@ -338,6 +341,18 @@ _cursor_off:
 	com 200,x
 	com 240,x
 	com 280,x
+	jmp unmap_video
+
+_cursor_off:
+	ldb _vtattr
+	bitb #0x80
+	bne nocursor
+	ldx cursor_save
+	cmpx #0
+	beq nocursor
+	pshs y
+	jsr map_video
+	bra do_cursor
 nocursor:
 _vtattr_notify:
 _cursor_disable:
@@ -346,15 +361,17 @@ _cursor_disable:
 video_init:
 	jsr	map_video
 	ldx	#VIDEO_BASE
-	ldd	#0xAAAA
+	ldd	#0
 vidwipe:
 	std	,x++
 	cmpx	#VIDEO_END
 	bne 	vidwipe
 	jmp	map_kernel
 
-	.area .data
+	.area .video
 cursor_save:
 	.dw	0
 _vtrow:
+	.db	0
+vtattrcp:
 	.db	0

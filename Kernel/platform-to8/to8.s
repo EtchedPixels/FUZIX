@@ -54,8 +54,8 @@ init_early:
 init_hardware:
 	ldd	#512			; for now - need to size properly
 	std	_ramsize
-	ldd	#31
-	std	_procmem
+	ldd	#512-40			; Kernel has 2,4 and half of 0
+	std	_procmem		; will be 2,3,4 eventually
 	jsr	video_init
 	rts
 

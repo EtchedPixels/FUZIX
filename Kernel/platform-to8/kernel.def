@@ -6,4 +6,4 @@ U_DATA__TOTALSIZE           equ 0x0200        ; 256+256
 VIDEO_BASE		    equ 0x4000	     ; 8K mapped in the video window
 VIDEO_END		    equ 0x6000	     ; for now
 
-PROGBASE                    equ 0x2600       ; programs and data start here
+PROGBASE                    equ 0x6400       ; programs and data start here
