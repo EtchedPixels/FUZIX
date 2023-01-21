@@ -1,6 +1,3 @@
-; UZI mnemonics for memory addresses etc
-
-U_DATA                      equ 0x0000       ; (this is struct u_data from kernel.h)
 U_DATA__TOTALSIZE           equ 0x0200        ; 256+256
 
 VIDEO_BASE		    equ 0x4000	     ; 8K mapped in the video window

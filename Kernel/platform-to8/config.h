@@ -10,10 +10,10 @@
 #define CONFIG_MULTI
 /* All our kernel data/common is mapped low and always mapped */
 #define CONFIG_USERMEM_DIRECT
-/* Pure swap */
+
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS	15	/* Probably actually 14 - check */
-#define MAP_SIZE	0x7C00	/* 32K minus udata copy copy lives at DE-DFxx */
+#define MAP_SIZE	0x7C00	/* 32K minus udata */
 
 #define CONFIG_VT
 #define CONFIG_FONT8X8
