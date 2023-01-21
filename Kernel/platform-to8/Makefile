@@ -45,11 +45,12 @@ $(AOBJS): %$(BINEXT): %.s
 	$(CROSS_AS) $(ASOPTS) $< -o $*.o
 
 clean:
-	rm -f *.o *~ boot.bin boot.tmp fuzix.bin fuzix.img fuzix.tmp
+	rm -f *.o *~ boot.bin boot.tmp boot.tmp2 fuzix.bin fuzix.img fuzix.tmp 
 
 boot.bin: boot.s ../tools/bless-to8
 	lwasm -r -b -oboot.tmp boot.s
-	../tools/bless-to8 <boot.tmp >boot.bin
+	../tools/decb-image < boot.tmp boot.tmp2
+	dd bs=256 skip=98 count=1 < boot.tmp2 | ../tools/bless-to8 >boot.bin
 
 image: boot.bin
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
@@ -85,5 +86,5 @@ diskimage:
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
-	# Write a boot flopyy
-	cp fuzix.bin $(IMAGES)/bootfd.img
+	# Write a boot floppy
+	cp fuzix.bin $(IMAGES)/boot.fd

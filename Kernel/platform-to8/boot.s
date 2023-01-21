@@ -4,19 +4,13 @@
 ;
 	org	$6200
 
-start:
-	orcc	#$10		; ints off (FIR off to ?)
+start:	orcc	#$10		; ints off (FIR off to ?)
 	lds	#$61FF
-	ldu	#$6000
-	clr	$49,u		; drive 0
-	clr	$4A,u		; track 0
-	clr	$4B,u		; track 0
+	clr	<$49		; drive 0
+	clr	<$4A		; track 0
+	clr	<$4B		; track 0
 	lda	#2
-	sta	$4C,u		; sector 2
-
-	; Video is still as the ROM expects
-	ldx	#banner
-	bsr	puts
+	sta	<$4C		; sector 2
 
 	lda	$E7E7		; force memory mapping TO8 mode
 	ora	#0x10		; will need to rework this for TO9
@@ -53,39 +47,27 @@ load_seg:
 	ldx	#$A000
 	ldy	#64
 loader:
-	; Load Y sectors startign at X
-	pshs	x,y,u
+	; Load Y sectors starting at X
+	pshs	x,y
+	stx	<$4E
 	ldb	#2
+	stb	<$48
 	jsr	$E82A
-	puls	x,y,u
+	puls	x,y
 	bcs	failure
-	inc	$4E,u		; move on 256 bytes
-	lda	$4C,u
+	inc	<$4E		; move on 256 bytes
+	lda	<$4C
 	cmpa	#16		; sector on
 	bne	track_same
-	inc	$4B,u		; track on, sector back to 1
-	clr	$4C,u		; will drop through and inc to 1
+	inc	<$4B		; track on, sector back to 1
+	clr	<$4C		; will drop through and inc to 1
 track_same:
-	inc	$4C,u
+	inc	<$4C
 	anda	#$0F
 	sta	$E7DD		; flash border to show progress
 	leay	-1,y
 	bne	loader
 and_rts:
 	rts
-
-puts:
-	ldb	,x+
-	beq	and_rts
-	jsr	$E803
-	bra	puts
-
-banner:
-	.byte	$1B
-	.byte	$48		; Page 1 mode (not T7/70)
-	.byte	$0C		; clear screen
-	.ascii  'Booting...'
-	.byte	0		; end
-; For now
 failure:
 	bra	failure
