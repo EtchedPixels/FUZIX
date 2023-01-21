@@ -48,14 +48,13 @@ load_seg:
 	ldy	#64
 loader:
 	; Load Y sectors starting at X
-	pshs	x,y
-	stx	<$4E
+	stx	<$4F
+load_loop:
 	ldb	#2
 	stb	<$48
 	jsr	$E82A
-	puls	x,y
 	bcs	failure
-	inc	<$4E		; move on 256 bytes
+	inc	<$4F		; move on 256 bytes
 	lda	<$4C
 	cmpa	#16		; sector on
 	bne	track_same
@@ -66,7 +65,7 @@ track_same:
 	anda	#$0F
 	sta	$E7DD		; flash border to show progress
 	leay	-1,y
-	bne	loader
+	bne	load_loop
 and_rts:
 	rts
 failure:
