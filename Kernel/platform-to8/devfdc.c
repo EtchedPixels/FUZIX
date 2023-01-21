@@ -9,9 +9,12 @@
  *	Under the base OS the second side is a different disk
  *
  *	Assume DD for now. Density bit is in 6058 0 = double
+ *
+ *	TODO: sort out drive layout. We can have mixed SD and DD
+ *	drives so it could be that 0 is a real drive but 1/2 is a 640 ?
  */
 
-#define MAX_FD	2
+#define MAX_FD	4
 
 uint8_t fd_map;
 
@@ -37,6 +40,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
     }
 
     fdbios_drive = minor << 1;
+    fdbios_op = is_read ? FDOP_READ : FDOP_WRITE;
 
     /* Floppies are 320K or 640K. 640K media acts as if it were two drives */
     while (ct < udata.u_nblock) {
@@ -47,8 +51,7 @@ static int fd_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
         fdbios_track = block >> 4;		/* 604A track: 16bit */
         fdbios_sector = (block & 0x0F) + 1;	/* 16 spt */
         fdbios_addr = udata.u_dptr;
-        fdbios_drive = minor << 1;
-        if (err = fdbios_flop(is_read ? 0x02 : 0x08))	/* Handle fd bios interface and mapping */
+        if (err = fdbios_flop())	/* Handle fd bios interface and mapping */
             goto bad;
         udata.u_dptr += 256;
         udata.u_block++;
@@ -69,7 +72,7 @@ int fd_open(uint8_t minor, uint16_t flag)
         return -1;
     }
     /* No floppy: TODO check properly and check type 'D' v 'S' v 'Q' etc */
-    if (fdbios_floppy != 0xFF)
+    if (fdbios_floppy == 0xFF)
         return 0;
     return -1;
 }

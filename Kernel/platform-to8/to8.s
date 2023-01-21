@@ -219,14 +219,13 @@ _fdbios_flop:
 	; Loading into a current user pages
 	jsr	map_process_always
 via_kernel:
-	stb	<$48
-	; operation is in B from caller
 	jsr	$E82A
 	ldb	#0
 	bcc	flop_good
 	ldb	<$4E
 flop_good
 	; ensure map is correct
+	tfr	d,x
 	jmp	map_kernel
 ;
 ;	SD glue
