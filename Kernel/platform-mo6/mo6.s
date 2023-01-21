@@ -103,7 +103,7 @@ map_kernel_1:
 	; for irq cases interrupting video writes, ditto B000-EFFF ?
 	ldd	#0x0462
 	std	kmap
-	std	$A7E5		;	set the A000-DFFF and 0000-3FFF bank
+	std	$A7E5		;	set the 6000-9FFF and B000-EFFF bank
 	lda	$A7C3		;	to 4 and 2 (writeable) respectively
 	anda	#$FE
 	tfr	a,b
@@ -122,8 +122,8 @@ map_video:
 	puls	a,pc
 	
 kmap:
-	.byte	0		; 	A000-DFFF
-	.byte	0		;	0000-3FFF
+	.byte	0		; 	6000-9FFF
+	.byte	0		;	B000-EFFF
 	.byte	0		;	Video half bank
 savemap:
 	.byte	0
@@ -194,7 +194,14 @@ irqhandler:
 	.globl _mon_keyboard
 
 _mon_keyboard:
-	jmp	$E806
+	swi
+	.byte	0x0A
+	beq	nokey
+	xfer	d,x
+	rts
+nokey:
+	ldx	#0
+	rts
 
 	.area .common
 ;
@@ -208,7 +215,8 @@ _fdbios_flop:
 	; Loading into a current user pages
 	jsr	map_process_always
 via_kernel:
-;	jsr	$E82A		TODO via SWI
+	swi
+	.byte	0x26
 	ldb	#0
 	bcc	flop_good
 	ldb	<$4E

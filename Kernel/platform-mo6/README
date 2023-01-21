@@ -4,6 +4,26 @@ MO5N/6 Experiment
 This is sort of a TO8 but with the memory map messed around and some other adjustments
 for MO5 compatibility. The MO5 doesn't have the needed RAM or mappings.
 
+TODO:
+- How to boot
+- Adapt calls to SWI
+
+Catridge rom appears to have a 32byte end block that contains
+
+EFE0	Name EOTdd-mm-yy\0\0\0\0\0X"\0\0DCMO5\0HL		(HL = execute address)
+
+eg
+xxe0	GEMINI\0418-01-84\0
+xxf0	\0 \0 \0 \0 X " \0 \0 DCMO5\0B000
+
+Question - what is the X" (58A2) could be it be a checksum ?
+
+We will want to boot off cartridge but that makes our common tricky as
+we have no obvious place for common data (as opposed to code) unless
+we can slot all the common data elements into the tiny window at 23xx
+and the 24 spare video bytes per bank. R/O common is fine but we need
+our irq stack etc
+
 Memory Map:
 
 0000-1FFF	Kernel / Video (can move video but this stays bank 0)
