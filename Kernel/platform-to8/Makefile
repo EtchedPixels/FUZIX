@@ -1,4 +1,3 @@
-
 CSRCS = devices.c main.c devtty.c devfdc.o
 
 C3SRCS = libc.c
@@ -8,16 +7,20 @@ CDSRCS = discard.c
 DSRCS =	../dev/tinydisk.o ../dev/tinysd.o
 DDSRCS = ../dev/tinydisk_discard.o
 
-ASRCS = crt0.s to8.s video.s
+ASRCS = crt0.s to8.s
 ASRCS += tricks.s commonmem.s
 
-COBJS = $(CSRCS:.c=$(BINEXT))
-C3OBJS = $(C3SRCS:.c=$(BINEXT))
-CDOBJS = $(CDSRCS:.c=$(BINEXT))
-AOBJS = $(ASRCS:.s=$(BINEXT))
+TASRCS = ../dev/thomson/video.s
+
+COBJS = $(CSRCS:.c=.o)
+C3OBJS = $(C3SRCS:.c=.o)
+CDOBJS = $(CDSRCS:.c=.o)
+AOBJS = $(ASRCS:.s=.o)
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 DDOBJS = $(patsubst ../dev/%.c,%.o, $(DDSRCS))
-OBJS  = $(COBJS) $(C3OBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS)
+TOBJS = $(patsubst ../dev/thomson/%.c,%.o, $(TSRCS))
+TAOBJS = $(patsubst ../dev/thomson/%.s,%.o, $(TASRCS))
+OBJS  = $(COBJS) $(C3OBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(TOBJS) $(TAOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
@@ -26,22 +29,28 @@ all: $(OBJS)
 export CROSS_CC_SEGD=-mcode-section=.text3
 export CROSS_CC_SEGI=-mcode-section=.text
 
-$(COBJS): %$(BINEXT): %.c
+$(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
-$(C3OBJS): %$(BINEXT): %.c
+$(C3OBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGI) -c $<
 
-$(CDOBJS): %$(BINEXT): %.c
+$(CDOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %$(BINEXT): ../dev/%.c
+$(DOBJS): %.o: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGD) -c $<
 
-$(DDOBJS): %$(BINEXT): ../dev/%.c
+$(DDOBJS): %.o: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(AOBJS): %$(BINEXT): %.s
+$(TOBJS): %.o: ../dev/thomson/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+
+$(TAOBJS): %.o: ../dev/thomson/%.s
+	$(CROSS_AS) $(ASOPTS)  $< -o $*.o
+
+$(AOBJS): %.o: %.s
 	$(CROSS_AS) $(ASOPTS) $< -o $*.o
 
 clean:

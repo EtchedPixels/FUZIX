@@ -19,8 +19,8 @@
 	.globl _vidattr
 	.globl map_video
 
-	include "kernel.def"
-	include "../kernel09.def"
+	include "../../platform/kernel.def"
+	include "../../kernel09.def"
 
 	.area .video
 
