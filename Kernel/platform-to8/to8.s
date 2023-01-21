@@ -121,7 +121,7 @@ map_kernel_1:
 	anda	#$01
 	sta	kmap+2
 	stb	$E7C3		;	Ensure kernel half of bank 0 is mapped
-	puls	a,pc
+	puls	d,pc
 
 map_video:
 	pshs	a
