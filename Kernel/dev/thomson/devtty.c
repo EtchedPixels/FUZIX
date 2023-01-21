@@ -7,7 +7,7 @@
 #include <vt.h>
 #include <tty.h>
 #include <graphics.h>
-#include <monitor.h>
+#include <thomtty.h>
 
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
@@ -64,7 +64,8 @@ void tty_data_consumed(uint8_t minor)
 void poll_keyboard(void)
 {
 	uint8_t c;
-	/* E806 wrapped. Returns value from B in monitor */
+	/* Monitor call wrapped. Returns value from B in monitor */
+	/* Needs a bit of work for non trivial cases */
 	if ((c =  mon_keyboard()) != 0)
 		tty_inproc(1, c);
 }

@@ -1,4 +1,4 @@
-CSRCS = devices.c main.c devtty.c devfdc.o
+CSRCS = devices.c main.c
 
 C3SRCS = libc.c
 
@@ -10,6 +10,7 @@ DDSRCS = ../dev/tinydisk_discard.o
 ASRCS = crt0.s to8.s
 ASRCS += tricks.s commonmem.s
 
+TSRCS = ../dev/thomson/devfdc.c ../dev/thomson/devtty.c
 TASRCS = ../dev/thomson/video.s
 
 COBJS = $(CSRCS:.c=.o)
@@ -22,7 +23,7 @@ TOBJS = $(patsubst ../dev/thomson/%.c,%.o, $(TSRCS))
 TAOBJS = $(patsubst ../dev/thomson/%.s,%.o, $(TASRCS))
 OBJS  = $(COBJS) $(C3OBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(TOBJS) $(TAOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../dev/ -I../dev/thomson/
 
 all: $(OBJS)
 
