@@ -3,5 +3,6 @@
 
 /* Wrapper for calling E806 */
 uint8_t mon_keyboard(void);
+void poll_keyboard(void);
 
 #endif

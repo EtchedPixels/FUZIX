@@ -61,12 +61,16 @@ void tty_data_consumed(uint8_t minor)
 {
 }
 
-void plt_interrupt(void)
+void poll_keyboard(void)
 {
 	uint8_t c;
 	/* E806 wrapped. Returns value from B in monitor */
 	if ((c =  mon_keyboard()) != 0)
 		tty_inproc(1, c);
-	timer_interrupt();
 }
 
+void plt_interrupt(void)
+{
+	poll_keyboard();
+	timer_interrupt();
+}

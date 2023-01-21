@@ -275,7 +275,7 @@ _clear_across:
 	jsr vidaddr	; Y now holds the address
 	tfr x,d		; Shuffle so we are writng to X and the counter
 	tfr y,x		; l is in d
-	lda #$ff
+	clra
 clearnext:
 	sta ,x
 	sta 40,x
@@ -297,7 +297,8 @@ _clear_lines:
 	clra			; b holds Y pos already
 	jsr vidaddr		; y now holds ptr to line start
 	tfr y,x
-	ldd #$ffff
+	clra
+	clrb
 	lsl 4,s
 	lsl 4,s
 	lsl 4,s

@@ -11,6 +11,9 @@ uint16_t swap_dev;
 
 void plt_idle(void)
 {
+    irqflags_t irq = di();
+    poll_keyboard();
+    irqrestore(irq);
 }
 
 uint8_t plt_param(char *p)
