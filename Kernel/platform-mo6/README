@@ -24,6 +24,10 @@ we can slot all the common data elements into the tiny window at 23xx
 and the 24 spare video bytes per bank. R/O common is fine but we need
 our irq stack etc
 
+We'd like to map the cartridge ROM into B000-EFFF directly but that means
+we need to fit the istack, commondata into the 256 byte hole at 63xx, so
+for now copy
+
 Memory Map:
 
 0000-1FFF	Kernel / Video (can move video but this stays bank 0)
@@ -41,7 +45,7 @@ User Space
 2100-5FFF	User low (copied from paging bank)
 6000-9FFF	User high (pageable)
 A000-AFFF	I/O
-B000-EFFF	Kernel | Common space
+B000-EFFF	Kernel | Video later ?
 F000-FFFF	Monitor
 
 Kernel Space

@@ -11,25 +11,31 @@
 	        .area .start
 
 ;
-;	At this point the boot loader is in 62xx, our code starts at 6400
-;	and is in the fixed mapping for start and discard. interrupts are
-;	off (TOOD FIR), sp is in 61xx range
+;	We are booted from a ROM bootstrap. It's then our job
+;	to copy ORM bank 1 into memory bank 2, at 0x6000-9FFF
+;	and set B000-EFFF to ROM bank 2
 ;
-;	Video is page1 and the video RAM for display is currently the
-;	unmapped half.
-;
-
 start:
 		orcc #0x10		; interrupts definitely off
+		lda #$02
+		sta $A7E5		; bank 2
+		sta $B001		; switch ROM bank
+		ldx #$B000
+		ldu #$2000
+rom1:
+		ldd ,x++		; bank 2 is now loaded with the stuff
+		std ,u++		; we bank behind the user page
+		cmpu #$E000
+		bne  rom1
+
+		sta $B002		; page the next ROM bank in and
+					; leave it active
+
 		jmp main
 
 		.area .discard
 
 main:
-		lda #$04
-		sta $A7E5		; high bank is 4
-		lda #$62		
-		sta $A7E6		; low bank is 2, from RAM, writeable
 		lds #kstack_top
 		ldx #__sectionbase_.bss__
 		ldy #__sectionlen_.bss__

@@ -12,9 +12,8 @@ void map_init(void)
 
 void pagemap_init(void)
 {
-	/* Assumes 512K for the moment */
-	uint8_t i;
-	uint8_t pmax = ramsize >> 4;
-	for (i = 0x06; i < pmax ; i+= 0x02)
-		pagemap_add(i);
+	/* 128K fixed for now */
+	/* Video and kernel in 0, 1 is pinned user, 2 and 3 kernel */
+	pagemap_add(0x04);
+	pagemap_add(0x06);
 }

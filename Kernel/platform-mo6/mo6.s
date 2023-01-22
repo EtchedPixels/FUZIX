@@ -1,3 +1,4 @@
+
 	;
 	;	MO6 - much like a TO8 with shifted address maps
 	;
@@ -42,10 +43,6 @@
 ;	Get some video up early for debug
 ;
 init_early:
-	lda	#$25			; video from colour plane 40 col mono
-	sta	$A7DC
-	lda	#0
-	sta	$A7DD			; video bank 0, black border
 	rts
 
 init_hardware:
@@ -53,6 +50,9 @@ init_hardware:
 	std	_ramsize
 	ldd	#64			; Kernel has 2,4 and half of 0
 	std	_procmem		; will be 2,3,4 eventually
+	ldd	<$CF			; system font pointer
+	subd	#0x00F8			; back 256 as starts at 32 and back
+	std	_fontbase		; 8 because it is upside down
 	jsr	video_init
 	rts
 
@@ -81,7 +81,7 @@ ___hard_di:
 	tfr cc,b		; return the old irq state
 hard_di_2
 	lda $2019
-	anda #$D0
+	anda #$DF
 	sta $2019
 	orcc #0x10
 	rts
@@ -100,13 +100,14 @@ map_kernel:
 	pshs	d
 map_kernel_1:
 	; This is overkill somewhat but we do neeed to set the video bank
-	; for irq cases interrupting video writes, ditto B000-EFFF ?
-	ldd	#0x0462
+	; for irq cases interrupting video writes.
+	;
+	; TODO: we'll need to flip between cartridge and video once video
+	; is user mapped high
+	;
+	ldd	#0x0200		;	FIXME - what is the right value for memo7 map
 	std	kmap
-	std	$A7E5		;	set the 6000-9FFF and B000-EFFF bank
-	lda	$A7C3		;	to 4 and 2 (writeable) respectively
-	anda	#$FE
-	tfr	a,b
+	std	$A7E5		;	set the 6000-9FFF to 2
 	anda	#$01
 	sta	kmap+2
 	stb	$A7C3		;	Ensure kernel half of bank 0 is mapped
@@ -120,13 +121,18 @@ map_video:
 	ora	#$01
 	sta	$A7C3
 	puls	a,pc
-	
+
+	.area	.commondata
 kmap:
 	.byte	0		; 	6000-9FFF
 	.byte	0		;	B000-EFFF
 	.byte	0		;	Video half bank
 savemap:
 	.byte	0
+	.byte	0
+	.byte	0
+
+	.area	.common
 
 map_process_always
 	pshs	a
@@ -197,7 +203,7 @@ _mon_keyboard:
 	swi
 	.byte	0x0A
 	beq	nokey
-	xfer	d,x
+	tfr	d,x
 	rts
 nokey:
 	ldx	#0

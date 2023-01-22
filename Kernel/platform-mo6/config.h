@@ -16,8 +16,6 @@
 #define MAP_SIZE	0x7C00	/* 32K minus udata */
 
 #define CONFIG_VT
-#define CONFIG_FONT8X8
-#define CONFIG_FONT8X8SMALL
 /* Vt definitions */
 #define VT_WIDTH	40
 #define VT_HEIGHT	24

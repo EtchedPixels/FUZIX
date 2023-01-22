@@ -18,8 +18,10 @@ kstack_top:
 
 	.area .istack
 
-        ; next 256 bytes: 254 byte interrupt stack, then 2 byte saved stack pointer
+;
+;	Be careful this is a bit tight
+;
 istack_base:
-	zmb 254
+	zmb 224
 istack_top:
 istack_switched_sp: .dw 0
