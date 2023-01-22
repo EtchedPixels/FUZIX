@@ -42,7 +42,7 @@
 ;	Get some video up early for debug
 ;
 init_early:
-	lda	#$25			; video from colour plane 40 col mono
+	lda	#$24			; video from colour plane 40 col mono
 	sta	$E7DC
 	lda	#0
 	sta	$E7DD			; video bank 0, black border

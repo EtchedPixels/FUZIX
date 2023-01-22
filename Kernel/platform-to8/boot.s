@@ -12,8 +12,10 @@ start:	orcc	#$10		; ints off (FIR off to ?)
 	lda	#2
 	sta	<$4C		; sector 2
 
-	lda	$E7E7		; force memory mapping TO8 mode
-	ora	#0x10		; will need to rework this for TO9
+	;	Force on new style banking
+	;	This is ugly - we shouldn't be hard coding this but
+	;	presumably finding it somewhere
+	lda	#$54
 	sta	$E7E7
 	ldd	#$0462
 	std	$E7E5		; bank 4 high, bank 2 low
