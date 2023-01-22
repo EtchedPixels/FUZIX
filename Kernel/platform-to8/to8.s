@@ -53,7 +53,10 @@ init_hardware:
 	std	_ramsize
 	ldd	#512-40			; Kernel has 2,4 and half of 0
 	std	_procmem		; will be 2,3,4 eventually
-	jsr	video_init
+	ldd	<$CF			; system font pointer
+	subd	#0x00F8			; back 256 as starts at 32 and back
+	std	_fontbase		; 8 because it is upside down
+	jsr	video_init		; see the video code
 	rts
 
         .area .common
@@ -74,15 +77,15 @@ ___hard_irqrestore:		; B holds the data
 ___hard_ei:
 	lda $6019
 	ora #$20
-	sta $6019
+;	sta $6019
 	andcc #0xef
 	rts
 ___hard_di:
 	tfr cc,b		; return the old irq state
 hard_di_2
 	lda $6019
-	anda #$D0
-	sta $6019
+	anda #$DF
+;	sta $6019
 	orcc #0x10
 	rts
 
@@ -120,14 +123,18 @@ map_video:
 	ora	#$01
 	sta	$E7C3
 	puls	a,pc
-	
+
+	.area .commondata
 kmap:
 	.byte	0		; 	A000-DFFF
 	.byte	0		;	0000-3FFF
 	.byte	0		;	Video half bank
 savemap:
 	.byte	0
+	.byte	0
+	.byte	0
 
+	.area .common
 map_process_always
 	pshs	a
 	;	Set the upper page. The low 16K is kernel, the other chunk

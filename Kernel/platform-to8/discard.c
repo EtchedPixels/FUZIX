@@ -8,11 +8,6 @@
 
 void map_init(void)
 {
-	uint8_t i;
-	/* We put swap on the start of slice 0, but with the first 64K free
-	   so we can keep the OS image linearly there */
-	for (i = 0; i < MAX_SWAPS; i++)
-		swapmap_init(i + 128);
 }
 
 void pagemap_init(void)

@@ -12,6 +12,8 @@
 	.globl _vtattr_notify
 
 	.globl video_init
+	.globl _fontbase
+
 	;
 	; Imports
 	;
@@ -70,15 +72,14 @@ _plot_char:
 	bsr vidaddr		; preserves X (holding the char)
 	tfr x,d
 	andb #$7F		; no high font bits
-	subb #$20		; skip control symbols
 	rolb			; multiply by 8
 	rola
 	rolb
 	rola
 	rolb
 	rola
+	addd _fontbase
 	tfr d,x
-	leax _fontdata_8x8,x		; relative to font
 	ldb vtattrcp
 	andb #0x3F		; drop the bits that don't affect our video
 	beq plot_fast
@@ -107,11 +108,11 @@ ital_1:
 	orb #0x40		; spare bit borrow for bottom of italic
 	andb #0xFB
 maskdone:
-	lda ,x+			; now throw the row away for a bit
+	lda ,-x			; now throw the row away for a bit
 	bitb #0x10
 	bne notbold
 	lsra
-	ora -1,x		; shift and or to make it bold
+	ora 1,x			; shift and or to make it bold
 notbold:
 	bitb #0x04		; italic by shifting top and bottom
 	beq notital1
@@ -145,23 +146,24 @@ plotnext:
 	bra unmap_videoc
 ;
 ;	Fast path for normal attributes
+;	Yes.. the ROM font really is stored upside down!
 ;
 plot_fast:
-	lda ,x+			; simple 8x8 renderer for now
+	lda ,-x			; simple 8x8 renderer for now
 	sta 0,y
-	lda ,x+
+	lda ,-x
 	sta 40,y
-	lda ,x+
+	lda ,-x
 	sta 80,y
-	lda ,x+
+	lda ,-x
 	sta 120,y
-	lda ,x+
+	lda ,-x
 	sta 160,y
-	lda ,x+
+	lda ,-x
 	sta 200,y
-	lda ,x+
+	lda ,-x
 	sta 240,y
-	lda ,x
+	lda ,-x
 	sta 280,y
 unmap_videoc:
 	jsr map_kernel
@@ -369,10 +371,12 @@ vidwipe:
 	bne 	vidwipe
 	jmp	map_kernel
 
-	.area .video
+	.area .commondata
 cursor_save:
 	.dw	0
 _vtrow:
 	.db	0
 vtattrcp:
 	.db	0
+_fontbase
+	.dw	0

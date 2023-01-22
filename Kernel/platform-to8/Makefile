@@ -71,7 +71,7 @@ image: boot.bin
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o video.o ../font8x8.o ../syscall_fs3.o ../syscall_exec.o
+	devtty.o libc.o ../vt.o video.o ../syscall_fs3.o ../syscall_exec.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 	../tools/lw-checkmap ../fuzix.map
 	
