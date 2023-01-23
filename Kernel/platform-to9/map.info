@@ -1,0 +1,2 @@
+reserve E000-FFFF
+reserve 6000-60FF
