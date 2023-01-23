@@ -8,8 +8,6 @@
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
-/* All our kernel data/common is mapped low and always mapped */
-#define CONFIG_USERMEM_DIRECT
 
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS	15	/* Probably actually 14 - check */

@@ -8,7 +8,7 @@ DSRCS =	../dev/tinydisk.o ../dev/tinysd.o
 DDSRCS = ../dev/tinydisk_discard.o ../dev/tinysd_discard.o
 
 ASRCS = crt0.s to8.s
-ASRCS += tricks.s commonmem.s
+ASRCS += tricks.s commonmem.s usermem.s
 
 TSRCS = ../dev/thomson/devfdc.c ../dev/thomson/devtty.c
 TASRCS = ../dev/thomson/video.s ../dev/thomson/sdcard.s
@@ -65,7 +65,7 @@ boot.bin: boot.s ../tools/bless-to8
 image: boot.bin
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
-	to8.o discard.o ../bankfixed.o \
+	to8.o discard.o ../bankfixed.o usermem.o \
 	../start.o ../version.o ../lowlevel-6809.o ../usermem_std-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o \
 	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o \
