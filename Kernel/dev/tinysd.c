@@ -32,7 +32,7 @@ static uint_fast8_t sd_spi_wait(bool want_ff)
 
 static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 {
-	uint8_t *p = &arg;
+	uint8_t *p = (uint8_t *)&arg;
 	uint_fast8_t n, res;
 
 	sd_spi_raise_cs();
@@ -41,11 +41,18 @@ static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 	if (sd_spi_wait(true) != 0xFF)
 		return 0xFF;
 	sd_spi_transmit_byte(cmd);
+#if defined(__SDCC) || defined(SDCC)
 	p = ((uint8_t *) & arg) + 3;
 	sd_spi_transmit_byte(*(p--));	/* Argument[31..24] */
 	sd_spi_transmit_byte(*(p--));	/* Argument[23..16] */
 	sd_spi_transmit_byte(*(p--));	/* Argument[15..8] */
 	sd_spi_transmit_byte(*p);	/* Argument[7..0] */
+#else
+	sd_spi_transmit_byte(arg >> 24);
+	sd_spi_transmit_byte(arg >> 16);
+	sd_spi_transmit_byte(arg >> 8);
+	sd_spi_transmit_byte(arg);
+#endif
 	sd_spi_transmit_byte(0x01);
 	sd_spi_receive_byte();
 	n = 20;
