@@ -1,3 +1,15 @@
+TODO:
+- trace interrupt handling for IRQ handler
+- trace init and syscall startup
+- debug task switch and fork
+- bank 3 video support
+- debug the other sd drivers
+- proper memory sizing
+- video modes (80 col especially)
+- floppy - how to tell SD and handle it (autoswitch or do we
+  own telling it ?)
+- pin down the weird corruption when you try to print some things
+
 TO8/9+ Experiment
 =================
 

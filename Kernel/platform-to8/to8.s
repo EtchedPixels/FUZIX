@@ -58,6 +58,8 @@ init_hardware:
 	subd	#0x00F8			; back 256 as starts at 32 and back
 	std	_fontbase		; 8 because it is upside down
 	jsr	video_init		; see the video code
+	ldd	#unix_syscall_entry	; Hook SWI
+	std	<$2F
 	rts
 
         .area .common
@@ -139,10 +141,10 @@ savemap:
 map_process_always
 	pshs	a
 	;	Set the upper page. The low 16K is kernel, the other chunk
-	;	is fixed.
-	ldd	U_DATA__U_PAGE
-	std	kmap
-	std	$E7E5		;	Set A000-DFFF and video bank. Don't
+	;	is fixed for now until we tackle video.
+	lda	U_DATA__U_PAGE+1
+	sta	kmap
+	sta	$E7E5		;	Set A000-DFFF and video bank. Don't
 				;	touch the video 8K mapping
 	puls	a,pc
 
