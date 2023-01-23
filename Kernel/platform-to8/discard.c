@@ -4,7 +4,9 @@
 #include <printf.h>
 #include <device.h>
 #include <devtty.h>
-#include <blkdev.h>
+#include <tinydisk.h>
+#include <tinysd.h>
+#include <sd.h>
 
 void map_init(void)
 {
@@ -17,4 +19,38 @@ void pagemap_init(void)
 	uint8_t pmax = ramsize >> 4;
 	for (i = 0x06; i < pmax ; i+= 0x02)
 		pagemap_add(i);
+}
+
+static void do_sd_probe(void)
+{
+
+	uint8_t t = sd_init();
+	int n;
+	if (t == 0)
+		return;
+	if (t & CT_BLOCK)
+		sd_shift[n] = 0;
+	else
+		sd_shift[n] = 9;
+
+	n = td_register(sd_xfer, 1);
+	if (n == -1)
+		return;
+}
+
+void sd_probe(void)
+{
+	kputs("Probing SDDrive\n");
+	sd_type = SDIF_SDDRIVE;
+	do_sd_probe();
+#if 0
+	/* Need to debug these and double check their 6846 interactions etc */
+	sdmoto_init();
+	kputs("Probing SDMoto\n");
+	sd_type = SDIF_SDMOTO;
+	do_sd_probe();
+	kputs("Probing SDMo\n");
+	sd_type = SDIF_SDMO;
+	do_sd_probe();
+#endif
 }

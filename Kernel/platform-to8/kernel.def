@@ -4,3 +4,5 @@ VIDEO_BASE		    equ 0x4000	     ; 8K mapped in the video window
 VIDEO_END		    equ 0x6000	     ; for now
 
 PROGBASE                    equ 0x6400       ; programs and data start here
+
+IOPAGE			    equ 0xE7	     ; I/O window

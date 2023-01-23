@@ -1,1 +1,1 @@
-/* Nothing to see */
+extern void poll_keyboard(void);

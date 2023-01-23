@@ -11,6 +11,7 @@
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
+	.globl map_for_swap
         .globl init_early
         .globl init_hardware
         .globl _program_vectors
@@ -164,6 +165,10 @@ map_restore:
 	sta	$E7C3
 	puls	d,pc
 
+map_for_swap:
+	; TODO
+	rts
+
 
 	.area .common
 outchar:
@@ -223,25 +228,3 @@ flop_good
 	; ensure map is correct
 	tfr	d,x
 	jmp	map_kernel
-;
-;	SD glue
-;
-	.globl _sd_spi_raise_cs
-	.globl _sd_spi_lower_cs
-	.globl _sd_spi_transmit_byte
-	.globl _sd_spi_receive_byte
-	.globl _sd_spi_transmit_sector
-	.globl _sd_spi_receive_sector
-
-_sd_spi_raise_cs:
-	rts
-_sd_spi_lower_cs:
-	rts
-_sd_spi_transmit_byte:
-	rts
-_sd_spi_receive_byte:
-	rts
-_sd_spi_transmit_sector:
-	rts
-_sd_spi_receive_sector:
-	rts

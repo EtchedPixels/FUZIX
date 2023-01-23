@@ -5,13 +5,13 @@ C3SRCS = libc.c
 CDSRCS = discard.c
 
 DSRCS =	../dev/tinydisk.o ../dev/tinysd.o
-DDSRCS = ../dev/tinydisk_discard.o
+DDSRCS = ../dev/tinydisk_discard.o ../dev/tinysd_discard.o
 
 ASRCS = crt0.s to8.s
 ASRCS += tricks.s commonmem.s
 
 TSRCS = ../dev/thomson/devfdc.c ../dev/thomson/devtty.c
-TASRCS = ../dev/thomson/video.s
+TASRCS = ../dev/thomson/video.s ../dev/thomson/sdcard.s
 
 COBJS = $(CSRCS:.c=.o)
 C3OBJS = $(C3SRCS:.c=.o)
@@ -67,7 +67,8 @@ image: boot.bin
 	crt0.o commonmem.o \
 	to8.o discard.o ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o ../usermem_std-6809.o \
-	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o devfdc.o \
+	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o \
+	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

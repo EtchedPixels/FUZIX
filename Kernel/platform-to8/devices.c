@@ -8,6 +8,7 @@
 #include <devtty.h>
 #include <device.h>
 #include <tinydisk.h>
+#include <sd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -37,4 +38,5 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+  sd_probe();
 }
