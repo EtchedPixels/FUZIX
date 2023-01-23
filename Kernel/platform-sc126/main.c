@@ -81,7 +81,7 @@ void plt_interrupt(void)
 	switch (irqvector) {
 	case Z180_INT_TIMER0:
 		z180_timer_interrupt();
-#ifdef CONFIG_NET_W5X00		
+#ifdef CONFIG_NET_WIZNET
 		w5x00_poll();
 #endif		
 		return;
