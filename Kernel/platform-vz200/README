@@ -28,6 +28,9 @@ TODO:
 -	Optimise the SD read/write by unrolling by 7 (for 511 iterations) so we
 	can also overlap the djnz with an out/in cycle
 -	Tune as best we can for avoiding video flicker
+	- Move to video in the main execution thread batching ops to the
+	  irq handler - queue up 3 byte sets of addr,byte with codoes
+	  for scrolls and clears to run through
 -	Graphic modes in devgfx
 
 The floppy interface is not supported. This shouldn't matter as the floppies
