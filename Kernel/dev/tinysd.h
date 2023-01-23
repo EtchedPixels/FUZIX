@@ -4,6 +4,7 @@
 extern uint_fast8_t sd_shift[CONFIG_TD_NUM];
 
 int sd_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t * dptr);
+uint8_t sd_init(void);
 
 /* Helpers */
 #ifndef SD_SPI_CALLTYPE
@@ -15,6 +16,8 @@ void sd_spi_raise_cs(void);
 void sd_spi_lower_cs(void);
 void sd_spi_transmit_byte(uint_fast8_t byte) SD_SPI_CALLTYPE;
 uint_fast8_t sd_spi_receive_byte(void);
+void sd_spi_slow(void);
+void sd_spi_fast(void);
 
 bool sd_spi_receive_sector(uint8_t * p) SD_SPI_CALLTYPE;
 bool sd_spi_transmit_sector(uint8_t * p) SD_SPI_CALLTYPE;
@@ -37,5 +40,12 @@ bool sd_spi_transmit_sector(uint8_t * p) SD_SPI_CALLTYPE;
 #define CMD25   (0x40+25)	/* WRITE_MULTIPLE_BLOCK */
 #define CMD55   (0x40+55)	/* APP_CMD */
 #define CMD58   (0x40+58)	/* READ_OCR */
+
+#define CT_NONE  0x00
+#define CT_MMC   0x10
+#define CT_SD1   0x20
+#define CT_SD2   0x40
+#define CT_BLOCK 0x80 /* set if block addressed, unset if byte addressed */
+#define CT_SDC   (CT_SD1|CT_SD2)
 
 #endif
