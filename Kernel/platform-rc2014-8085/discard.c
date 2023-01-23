@@ -8,7 +8,6 @@
 
 void pagemap_init(void)
 {
-	uint_fast8_t i;
 	/* 0x03 is the kernel mapping */
 	pagemap_add(0x83);
 	pagemap_add(0x23);

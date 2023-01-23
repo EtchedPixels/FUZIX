@@ -23,7 +23,8 @@ To Enable
 	ACIA at 0xA0			(in progress)
 	Joystick at 0x01/0x02
 	More serial ports
-	TMS9918A as console maybe ? (what to do for keyboard ?)
+	TMS9918A as console maybe ? (what to do for keyboard ? - PS2)
+	TMS9918A extended features?
 
 Unsupported
 	Z80 support chip based devices (SIO, CTC, PIO, DMA)
