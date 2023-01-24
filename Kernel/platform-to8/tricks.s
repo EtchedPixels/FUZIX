@@ -38,6 +38,9 @@ _ramtop:
 
 newpp   .dw 0
 
+_cur6:
+	.byte 0
+
 	.area .common
 
 ; Switchout switches out the current process, finds another that is READY,
@@ -228,8 +231,8 @@ _dofork:
 
 fork_copy:
 ; Unoptimized - we don't look at U_BREAK and other stuff
-; X is our new process (also in fork_proc_ptr)
 ;
+	ldx fork_proc_ptr
 	ldb P_TAB__P_PAGE_OFFSET+1,x	; child page
 	stb _cur6			; child is now deemed to own cur6
 	ldb U_DATA__U_PAGE+1		; parent low page
@@ -239,13 +242,13 @@ fork_copy:
 	ldy #$A100
 save_low:				; copy the low 16K of user
 	ldd ,x++			; stack etc into the parent
-	std ,x++			; copy
+	std ,y++			; copy
 	cmpx #$A000
 	bne save_low
 
 	; we are in common so we can steal 0000-3FFF *if we are careful* -
 	; review the IRQ handlers! TODO. This won't work on a TO9 as we'll
-	; only be able to land some pages there
+	; only be able to land ROM pages there
 	ldb _cur6
 	incb
 	stb <$E5			; map the child properly into A000-DFFF
@@ -258,11 +261,9 @@ save_low:				; copy the low 16K of user
 	ldy #$A000
 save_hi:				; copy the low 16K of user
 	ldd ,x++			; stack etc into the parent
-	std ,x++			; copy
+	std ,y++			; copy
 	cmpx #$4000
 	bne save_hi
 	
 	jmp map_kernel			; put the memory map back sane
 
-_cur6:
-	.byte 0

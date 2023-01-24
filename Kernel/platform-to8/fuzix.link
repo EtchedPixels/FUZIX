@@ -1,13 +1,13 @@
 define basesympat __sectionbase_%s__
 define lensympat __sectionlen_%s__
 section .page1 load 0x0000
-section .video
-section .common
-section .commondata
 section .text
 section .text3
 section .data
 section .bss
+section .video
+section .common
+section .commondata
 section .istack
 section .udata  load 0x6100
 section .start	load 0x6800

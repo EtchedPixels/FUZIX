@@ -11,7 +11,7 @@ ASRCS = crt0.s to8.s
 ASRCS += tricks.s commonmem.s usermem.s
 
 TSRCS = ../dev/thomson/devfdc.c ../dev/thomson/devtty.c
-TASRCS = ../dev/thomson/video.s ../dev/thomson/sdcard.s
+TASRCS = ../dev/thomson/video-to8.s ../dev/thomson/sdcard.s
 
 COBJS = $(CSRCS:.c=.o)
 C3OBJS = $(C3SRCS:.c=.o)
@@ -72,7 +72,7 @@ image: boot.bin
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o video.o ../syscall_fs3.o ../syscall_exec.o
+	devtty.o libc.o ../vt.o video-to8.o ../syscall_fs3.o ../syscall_exec.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 	../tools/lw-checkmap ../fuzix.map
 	

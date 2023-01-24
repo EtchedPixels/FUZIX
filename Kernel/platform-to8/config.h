@@ -15,9 +15,9 @@
 
 #define CONFIG_VT
 /* Vt definitions */
-#define VT_WIDTH	40
+#define VT_WIDTH	80
 #define VT_HEIGHT	24
-#define VT_RIGHT	39
+#define VT_RIGHT	79
 #define VT_BOTTOM	23
 #define VT_INITIAL_LINE	0
 

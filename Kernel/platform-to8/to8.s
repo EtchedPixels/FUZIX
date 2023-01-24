@@ -43,10 +43,26 @@
 ;	Get some video up early for debug
 ;
 init_early:
-	lda	#$24			; video from colour plane 40 col mono
+	lda	#$03
+	sta	$E7E5			; A000-DFFF is now the new video space
+	clra
+	clrb
+	ldx	#$A000
+wipe80:
+	std	,x++
+	cmpx	#$E000
+	bne	wipe80
+	lda	#$04
+	sta	$E7E5			; put the kernel back
+	lda	#$E0
+	sta	$E7DD			; video bank 3, black border
+	lda	#$2A			; 80 column video
 	sta	$E7DC
-	lda	#0
-	sta	$E7DD			; video bank 0, black border
+	; Do something about the colour
+	lda	#1
+	ldx	#0
+	ldy	#$00F0
+	jsr	$EC00
 	rts
 
 init_hardware:
@@ -110,30 +126,20 @@ map_kernel_1:
 	ldd	#0x0462
 	std	kmap
 	std	$E7E5		;	set the A000-DFFF and 0000-3FFF bank
-	lda	$E7C3		;	to 4 and 2 (writeable) respectively
-	anda	#$FE
-	tfr	a,b
-	anda	#$01
-	sta	kmap+2
-	stb	$E7C3		;	Ensure kernel half of bank 0 is mapped
 	puls	d,pc
 
 map_video:
 	pshs	a
-	lda	#1
-	sta	kmap+2
-	lda	$E7C3		;	Map the bitmap bank
-	ora	#$01
-	sta	$E7C3
+	lda	#0x63
+	sta	kmap+1
+	sta	$E7E6		;	Video in the low 16K bank
 	puls	a,pc
 
 	.area .commondata
 kmap:
 	.byte	0		; 	A000-DFFF
 	.byte	0		;	0000-3FFF
-	.byte	0		;	Video half bank
 savemap:
-	.byte	0
 	.byte	0
 	.byte	0
 
@@ -145,15 +151,14 @@ map_process_always
 	lda	U_DATA__U_PAGE+1
 	sta	kmap
 	sta	$E7E5		;	Set A000-DFFF and video bank. Don't
-				;	touch the video 8K mapping
+				;	touch the 8K bank 0 map
+	; TODO - map video on this switch
 	puls	a,pc
 
 map_save:
 	pshs	d
 	ldd	kmap
 	std	savemap
-	lda	kmap+2
-	sta	savemap+2
 	bra	map_kernel_1
 
 map_restore:
@@ -161,10 +166,6 @@ map_restore:
 	ldd	savemap
 	std	kmap
 	std	$E7E5
-	lda	$E7C3
-	anda	#$FE
-	ora	kmap+2
-	sta	$E7C3
 	puls	d,pc
 
 map_for_swap:
