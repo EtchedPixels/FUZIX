@@ -425,6 +425,10 @@ static void keydecode(void)
 /* Polled 40 times a second */
 void kbd_interrupt(void)
 {
+	/* Fast path. Scan all the matrix lines at once and see if any
+	   key is down in one quick check */
+	if (keysdown == 0 && *((volatile uint8_t *)0x38FF) == 0x00)
+		return;
 	newkey = 0;
 	keyproc();
 	if (keysdown && keysdown < 3) {
