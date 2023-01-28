@@ -70,7 +70,7 @@ static uint8_t ntd;
 int td_register(td_xfer rwop, uint_fast8_t parts)
 {
 	if (ntd == CONFIG_TD_NUM)
-		return -1;
+		return -2;
 	td_op[ntd] = rwop;
 	if (parts) {
 		if (!tinydisk_setup(ntd)) {
