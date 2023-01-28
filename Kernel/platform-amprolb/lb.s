@@ -213,6 +213,7 @@ _set_latch:
 	and	h
 	or	l
 	ld	(_m_latch),a
+	out	(0),a
 	ld	a,(_int_disabled)
 	or	a
 	ret	nz

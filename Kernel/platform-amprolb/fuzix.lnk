@@ -38,6 +38,7 @@ usermem.rel
 platform-amprolb/discard.rel
 platform-amprolb/devtty.rel
 platform-amprolb/dart.rel
+platform-amprolb/devlpr.rel
 platform-amprolb/devfd.rel
 platform-amprolb/floppy.rel
 platform-amprolb/tinydisk.rel

@@ -1,5 +1,5 @@
 ASRCS = crt0.s tricks.s commonmem.s lb.s ncr5380.s dart.s floppy.s
-CSRCS = devices.c main.c devtty.c devfd.c devscsi.c
+CSRCS = devices.c main.c devtty.c devfd.c devscsi.c devlpr.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyscsi_discard.c
 DSRCS = ../dev/tinydisk.c ../dev/tinyscsi.c

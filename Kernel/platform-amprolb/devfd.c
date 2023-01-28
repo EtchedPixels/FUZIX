@@ -20,7 +20,7 @@ static void fd_setup(uint8_t minor, uint8_t head)
     head <<= 4;
     head |= 0x20;		/* DD */
     head |= (1 << minor);
-    set_latch(0x3F00 + head);
+    set_latch(0xC000 + head);	/* Preserve clock and bank bits */
 }
 
 /* For now this assumes DD 10 sector per track with the usual weird

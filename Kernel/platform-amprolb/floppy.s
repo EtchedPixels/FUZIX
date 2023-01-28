@@ -20,9 +20,6 @@ FD_RTRACK	.equ	0xC5
 FD_RSECTOR	.equ	0xC6
 FD_RDATA	.equ	0xC7
 
-; Read the 'don't care' readaddr data into this. For the Ampro just dribble
-; it into ROM space
-scratch		.equ	0x0000
 ;
 ;	Execute a command. HL holds the 
 ;	where next pointer for which
@@ -47,6 +44,7 @@ wd_rx256:
 	ld	bc,#FD_RDATA
 	jr	wait_rdrq2
 wd_rx:
+	ex	de,hl
 	ld	bc,#FD_RDATA
 wait_rdrq:
 	in	a,(FD_STATUS)
@@ -94,7 +92,7 @@ wd_nodata:
 ;	random memory. That should be fine for simple 8bit micros.
 ;
 wd_tx:
-	ld	bc,#FD_RDATA
+	ld	bc,#FD_WDATA
 	ex	de,hl
 wait_wdrq:
 	in	a,(FD_STATUS)
@@ -279,9 +277,16 @@ spin2:
 wait_second:
 	ld	b,#20
 waiter:
+	push	bc
 	call	wait50ms
+	pop	bc
 	djnz	waiter
 	ret
 	
 _wd_map:
 	.byte	0
+
+; Space for the C8 command data and anything else we need
+
+scratch:
+	.ds	16
