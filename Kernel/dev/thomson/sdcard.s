@@ -9,6 +9,13 @@
 	.globl _sddrive_transmit_byte
 	.globl _sddrive_receive_byte
 
+;
+;	SDDrive. The fastest bit bang option. Has hardware generating
+;	the SPI clock pulses. Note this will not work with DCMOTO as
+;	the emulator doesn't emulate SD properly and even if you avoid
+;	commands it doesn't like then doesn't present the actual data but
+;	makes up two sectors in front of it.
+;
 sddrive_readb:
 	cmpb	<$BF
 	rola
@@ -178,6 +185,11 @@ sdd_tx_user:
 	jsr	map_process_always
 	bra	sdd_tx_kernel
 
+;
+;	SDMO - first generation interface that uses the
+;	tape port for communcations (the lightpen port is
+;	only used to take a 5v supplyy)
+;
 	.globl _sdmo_receive_sector
 	.globl _sdmo_transmit_sector
 	.globl _sdmo_transmit_byte
@@ -343,6 +355,11 @@ sdmo_tx_user:
 	jsr	map_process_always
 	bra	sdmo_tx_kernel
 
+;
+;	SDMoto - second generation of the SD reader that works by
+;	bitbanging the PIA controlled joystick having changed
+;	the direction of some bits.
+;
 	.globl _sdmoto_receive_sector
 	.globl _sdmoto_transmit_sector
 	.globl _sdmoto_transmit_byte
