@@ -103,11 +103,13 @@ void mkfs(uint16_t fsize, uint16_t isize)
     if (!fast) {
 	    for (j = 0; j < fsize; ++j) {
 	            putchar('.');
+	            fflush(stdout);
 		    dwrite(j, zeros);
             }
     } else {
 	    for (j = 0; j < isize; ++j) {
 	            putchar('.');
+	            fflush(stdout);
 		    dwrite(j, zeros);
             }
     }
