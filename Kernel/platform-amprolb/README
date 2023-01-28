@@ -1,0 +1,49 @@
+Fuzix for the Ampro Z80 Littleboard
+
+32K EPROM required
+
+Memory Map
+0000-7FFF	Switchable EPROM/RAM
+8000-FFFF	32K fixed RAM
+
+Kernel
+
+0000-04FF	Loader / standard boot ROM image
+0500-7FFF	Monitor/Kernel ROM
+8000-AFFF	User hole
+B000-FFFF	Kernel/Common
+
+User
+
+0000-BFFF	Process
+C000-FFFF	Kernel/Common
+
+Hardware
+-	Z80 DART
+-	Z80 CTC. Channels 0 & 1 drive the DART, 2 & 3 free
+-	1772 Floppy Disk
+-	NCR5380 SCSI
+-	Printer port (output/strobe/busy only)
+
+TODO:
+-	1772 driver
+	- test
+-	Printer
+
+-	In general needs soft interrupts implementing so
+	that our entry for timer is something like
+
+	push	af
+	ld	a,(_irqdisable)
+	or	a
+	jr	nz, holdoff
+	pop	af
+	jp	interrupt_handler
+holdoff:
+	call	plt_clear_timer
+	ld	a,(_irqmiss)
+	inc	a
+	ld	(_irqmiss),a
+	ei
+	ret
+
