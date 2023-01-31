@@ -12,7 +12,7 @@
 #include <tty.h>
 #include <input.h>
 #include <devinput.h>
-#include <rc2014.h>
+#include <rcbus.h>
 #include <zxkey.h>
 
 

@@ -8,14 +8,14 @@ ASRCS += tricks.S spi.S ds1302io.S
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devide_discard.c
 DSRCS += ../dev/devsd.c ../dev/devsd_discard.c
 DSRCS += ../dev/ds1302.c ../dev/ds1302_discard.c
-DSRCS += ../dev/ps2bitbang.c ../dev/ps2bitbang_rc2014.c ../dev/ps2kbd.c
+DSRCS += ../dev/ps2bitbang.c ../dev/ps2bitbang_rcbus.c ../dev/ps2kbd.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
 LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
-RSRCS = ../dev/rc2014/zxkey.c ../dev/rc2014/zxkeyboard.c
-ROBJS = $(patsubst ../dev/rc2014/%.c,%.o, $(RSRCS))
+RSRCS = ../dev/rcbus/zxkey.c ../dev/rcbus/zxkeyboard.c
+ROBJS = $(patsubst ../dev/rcbus/%.c,%.o, $(RSRCS))
 
 NSRCS = ../dev/net/net_native.c
 NOBJS = $(patsubst ../dev/net/%.c,%.o, $(NSRCS))
@@ -24,7 +24,7 @@ COBJS = $(CSRCS:.c=.o)
 AOBJS = $(ASRCS:.S=.o)
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS) $(NOBJS) $(ROBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/rc2014/ -I../dev/net
+CROSS_CCOPTS += -I../dev/ -I../dev/rcbus/ -I../dev/net
 
 all:	$(OBJS)
 
@@ -40,7 +40,7 @@ $(DOBJS): %.o: ../dev/%.c
 $(NOBJS): %.o: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(ROBJS): %.o: ../dev/rc2014/%.c
+$(ROBJS): %.o: ../dev/rcbus/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(LOBJS): %.o: ../lib/%.c
@@ -64,7 +64,7 @@ image:
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o ppide.o \
 	devsd.o devsd_discard.o spi.o ds1302.o ds1302_discard.o ds1302io.o \
 	devinput.o ../devinput.o devgpio.o tms9918.o \
-	ps2kbd.o ps2bitbang.o ps2bitbang_rc2014.o \
+	ps2kbd.o ps2bitbang.o ps2bitbang_rcbus.o \
 	../level2.o ../syscall_level2.o ../select.o \
 	../syscall_net.o ../network.o net_native.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin

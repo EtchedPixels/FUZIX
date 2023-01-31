@@ -1,4 +1,4 @@
-Initial testing build for rc2014-68008
+Initial testing build for rcbus-68008
 
 You need a disk image with the boot loader on LBA 0 and the kernel on LBA 1+
 Block 0 should hold a partition table as well.
@@ -9,7 +9,7 @@ companion card has not yet been tested in the system or emulator.
 Minimum requirement:
 	80pin extended backplane
 	68008 prototype card with wire fixes
-	RC2014 PPIDE card
+	RCBUS PPIDE card
 	512K linear RAM/ROM
 	16x50 serial at 0xC0
 	v0.03 68008 ROM
@@ -96,7 +96,7 @@ dd if=tmp of=68008dos.cf seek=2 conv=notrunc
 
 You can then run it with
 
-./rc2014-68008 -r 68krom -p 68008dos.cf -f -R
+./rcbus-68008 -r 68krom -p 68008dos.cf -f -R
 
 
 Not everything will work correctly as there is no timer wired up yet. Thus

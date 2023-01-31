@@ -54,7 +54,7 @@
 
 #define MAX_BLKDEV	5
 
-/* RC2014 rtc, we can read the time of day from it */
+/* RCBUS rtc, we can read the time of day from it */
 #define CONFIG_RTC_DS1302
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
