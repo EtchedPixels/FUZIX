@@ -43,5 +43,5 @@ platform-rc2014-tiny/devide.rel
 platform-rc2014-tiny/devide_discard.rel
 platform-rc2014-tiny/ds1302.rel
 platform-rc2014-tiny/ds1302_discard.rel
-platform-rc2014-tiny/ds1302_rc2014.rel
+platform-rc2014-tiny/ds1302_rcbus.rel
 -e

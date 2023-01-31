@@ -5,7 +5,7 @@ DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/mbr.c
 DSRCS = ../dev/devide.c
 DHSRCS = ../dev/blkdev.c
 DSRCS +=  ../dev/ds1302.c
-DASRCS = ../dev/ds1302_rc2014.s
+DASRCS = ../dev/ds1302_rcbus.s
 NSRCS = 
 
 AOBJS = $(ASRCS:.s=.rel)
