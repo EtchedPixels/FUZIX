@@ -42,5 +42,5 @@ platform-sc108/ide.rel
 platform-sc108/usermem.rel
 platform-sc108/ds1302.rel
 platform-sc108/ds1302_discard.rel
-platform-sc108/ds1302_rc2014.rel
+platform-sc108/ds1302_rcbus.rel
 -e

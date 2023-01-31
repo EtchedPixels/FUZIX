@@ -1,13 +1,13 @@
-#ifndef __RC2014_SIO_DOT_H__
-#define __RC2014_SIO_DOT_H__
+#ifndef __RCBUS_SIO_DOT_H__
+#define __RCBUS_SIO_DOT_H__
 
-/* Needs generalizing and tidying up across the RC2014 systems */
+/* Needs generalizing and tidying up across the RCBUS systems */
 
 #include "config.h"
 
 #define SIO0_IVT 8
 
-/* Standard RC2014 */
+/* Standard RCBUS */
 #define SIO0_BASE 0x80
 __sfr __at (SIO0_BASE + 0) SIOA_C;
 __sfr __at (SIO0_BASE + 1) SIOA_D;
