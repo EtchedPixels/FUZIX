@@ -6,8 +6,8 @@ DSRCS = ../dev/blkdev.c ../dev/devide.c
 
 DDSRCS = ../dev/devide_discard.c ../dev/mbr.c
 
-ASRCS = crt0.s rc2014-6809.s ide.s
-ASRCS += tricks.s commonmem.s mem-rc2014.s 
+ASRCS = crt0.s rcbus-6809.s ide.s
+ASRCS += tricks.s commonmem.s mem-rcbus.s 
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
@@ -40,8 +40,8 @@ clean:
 
 image:
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
-	crt0.o commonmem.o mem-rc2014.o \
-	rc2014-6809.o ../bankfixed.o \
+	crt0.o commonmem.o mem-rcbus.o \
+	rcbus-6809.o ../bankfixed.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o ../blk512.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \

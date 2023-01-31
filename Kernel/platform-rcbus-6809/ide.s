@@ -1,5 +1,5 @@
 ;
-;	RC2014 CF Adapter IDE
+;	RCBUS CF Adapter IDE
 ;
 
 	.module ide

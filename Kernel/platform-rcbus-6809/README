@@ -1,8 +1,8 @@
-Fuzix for the RC2014 system with 6809 processor card
+Fuzix for the RCBUS system with 6809 processor card
 
 (This is an initial sketch for the port, it does not yet work)
 
-This uses the standard RC2014 cards and mappings. The 6809 card maps the I/O
+This uses the standard RCBUS cards and mappings. The 6809 card maps the I/O
 space on the bus to MMIO $FExx on the 6809 CPU.
 
 The standard 512K RAM card is used with 4x16K bank control. The I/O window

@@ -2,7 +2,7 @@
 	; common RC2014 6809 code
 	;
 
-	.module rc2014_6809
+	.module rcbus_6809
 
         ; exported symbols
         .globl init_early

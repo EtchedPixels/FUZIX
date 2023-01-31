@@ -2,7 +2,7 @@
 ; memory banking for RC2104
 ;
 
-	.module mem_rc2014
+	.module mem_rcbus
 
 	; exported
 	.globl size_ram
