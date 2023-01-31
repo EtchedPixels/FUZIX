@@ -5,7 +5,7 @@
 #include <kernel.h>
 #include <ps2mouse.h>
 #include <ps2kbd.h>
-#include "rc2014.h"
+#include "rcbus.h"
 
 int ps2_type = PS2_NONE;
 

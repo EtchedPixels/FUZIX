@@ -1,5 +1,5 @@
-#ifndef __RC2014_SIO_DOT_H__
-#define __RC2014_SIO_DOT_H__
+#ifndef __RCBUS_DOT_H__
+#define __RCBUS_DOT_H__
 
 /* Standard RC2014 */
 #define SIO0_BASE 0x80

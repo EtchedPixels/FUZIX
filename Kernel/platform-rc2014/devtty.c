@@ -5,7 +5,7 @@
 #include <tty.h>
 #include <graphics.h>
 #include <devtty.h>
-#include <rc2014.h>
+#include <rcbus.h>
 #include <vt.h>
 #include <cpu_ioctl.h>
 #include <softzx81.h>

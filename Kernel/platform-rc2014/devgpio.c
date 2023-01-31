@@ -6,7 +6,7 @@
 #include <kdata.h>
 #include <gpio.h>
 
-#include "rc2014.h"
+#include "rcbus.h"
 
 #define NUM_GPIO	9
 

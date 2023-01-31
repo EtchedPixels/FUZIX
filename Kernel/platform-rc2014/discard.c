@@ -8,7 +8,7 @@
 #include <devsd.h>
 #include <blkdev.h>
 #include <ppide.h>
-#include <rc2014.h>
+#include <rcbus.h>
 #include <vt.h>
 #include <netdev.h>
 #include <zxkey.h>

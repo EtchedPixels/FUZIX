@@ -8,7 +8,7 @@
 #include <rtc.h>
 #include <ds1302.h>
 #include <ds12885.h>
-#include <rc2014.h>
+#include <rcbus.h>
 #include <ps2kbd.h>
 #include <zxkey.h>
 #include <softzx81.h>

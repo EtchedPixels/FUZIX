@@ -3,7 +3,7 @@
 #include <devsd.h>
 #include <z80softspi.h>
 
-#include "rc2014.h"
+#include "rcbus.h"
 
 #ifdef CONFIG_SD
 
