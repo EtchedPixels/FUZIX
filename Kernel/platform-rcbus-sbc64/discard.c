@@ -5,7 +5,7 @@
 #include <ds1302.h>
 #include <devide.h>
 #include <blkdev.h>
-#include <rc2014.h>
+#include <rcbus.h>
 #include "config.h"
 
 void map_init(void)

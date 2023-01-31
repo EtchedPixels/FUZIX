@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <tty.h>
 #include <devtty.h>
-#include <rc2014.h>
+#include <rcbus.h>
 
 __sfr __at 0xf8 cpld_status;
 __sfr __at 0xf9 cpld_data;

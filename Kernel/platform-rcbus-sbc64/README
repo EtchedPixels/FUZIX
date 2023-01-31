@@ -2,7 +2,7 @@ Fuzix for the Z80SBC64 and in theory Z80MB64 platforms
 
 Supported Hardware
 
-	RC2014 SBC64 mainboard or MB64 (see notes)
+	RCBUS SBC64 mainboard or MB64 (see notes)
 	DS1302 RTC card (need RTC or CTC or both)
 	CTC card at 0x88 for SIO timing and for system clock. The CTC card
 	must be jumpered for CTC 1 to drive CLK2 and CTC2 zero crossing into
@@ -10,13 +10,13 @@ Supported Hardware
 
 	Options
 	
-	RC2014 Joystick
+	RCBUS Joystick
 
 In Progress
 
-	RC2014 SIO/2 board (or compatible). ACIA is not supported.
+	RCBUS SIO/2 board (or compatible). ACIA is not supported.
 
-	Most other RC2014 cards supported by other platforms should also be
+	Most other RCBUS cards supported by other platforms should also be
 	possible to add	if anyone needs them.
 
 	Suspend to RAM/Resume (basics should work)
@@ -67,7 +67,7 @@ dd on windows but I'm not clear why.
 
 To get back to the CP/M image put the jumper back into serial mode and
 follow the download instructions. You will need a different CF card for CP/M as
-unfortunately like RC2014 CP/M in general the supplied CP/M does not honour
+unfortunately like RCBUS CP/M in general the supplied CP/M does not honour
 partition tables.
 
 Emulation
