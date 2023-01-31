@@ -2,7 +2,7 @@
 CSRCS = devtty.c
 CSRCS += devices.c main.c
 
-ASRCS = rc2014-6303.S crt0.S
+ASRCS = rcbus-6303.S crt0.S
 ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c
@@ -42,11 +42,11 @@ $(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
 
 clean:
 	rm -f $(OBJS) *.o core *~ fuzix.bin fuzix.tmpmap
-	rm -f commonmem.s crt0.s rc2014-6303.s tricks.s
+	rm -f commonmem.s crt0.s rcbus-6303.s tricks.s
 
 image:
 	$(CROSS_LD) -b -C 0x400 -S 0xF000 -Z 0x80 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
-	rc2014-6303.o ../start.o ../version.o ../lowlevel-6303.o \
+	rcbus-6303.o ../start.o ../version.o ../lowlevel-6303.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
