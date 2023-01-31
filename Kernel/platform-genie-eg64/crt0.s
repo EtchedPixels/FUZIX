@@ -1,9 +1,13 @@
-		; Order the code into the high 32K
-		; Keep data and const below 32K so we can direct access
-		; from user space
+		; Low 16K
+		.area _BOOT
+	        .area _INITIALIZED
+	        .area _CODE2
+		.area _VIDEO
+	        .area _CONST
+		.area _BUFFERS
+		; 16 - 32K
 	        .area _CODE
 	        .area _DATA
-	        .area _CODE1
 	        .area _BSEG
 	        .area _BSS
 	        .area _HEAP
@@ -11,23 +15,19 @@
 	        ; put initialisation stuff in here
 	        .area _GSINIT
 	        .area _GSFINAL
-		; Low 16K
-		.area _BOOT
-	        .area _INITIALIZED
-	        .area _COMMONMEM
-	        .area _CODE2
-		.area _VIDEO
-	        .area _CONST
-		.area _BUFFERS
-		; We want the DISCARD area last as we eventually want to
-		; expand all over it for buffers
-		.area _DISCARD
-	        .area _INITIALIZER
 		; Buffers must be directly before discard as they will
 		; expand over it
+		; We want the DISCARD area last as we eventually want to
+		; expand all over it for buffers
+	        .area _COMMONMEM
+		.area _DISCARD
+
+		; 32K-64K kernel only map
+		.area _CODE1
 
 		; Tell binman to leave the image alone
 		.area _PAGE0
+	        .area _INITIALIZER
 
         	; imported symbols
         	.globl _fuzix_main

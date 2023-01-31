@@ -22,7 +22,7 @@ This port supports the following configurations currently
 		Tandy style RTC at 0xB0 (only usable for time locking)
 		Anything on the model I list that works with a Genie/System-80
 		to TRS80 expansion convertor (*)
-		IDE CF at 0x40
+TODO		IDE CF at 0x40
 
 	Planned:
 		Lowe Electronics FRED
@@ -50,13 +50,12 @@ This port supports the following configurations currently
 		Alpha Products Joystick
 		ChromaTRS (as joystick and a graphics device only - need a VDP
 			emulation in xtrs to do console support)
-		Lo-tech or similar IDE CF at 0x40
+TODO		Lo-tech or similar IDE CF at 0x40
 		Tandy HRG (user defined graphics 26-9800) [boot opt micro]
 		Orcim PCG80 [boot opt pcg80]
 		Progamma  Intl. 80 Grafix [boot opt 80gfx]
 
 	Planned:
-		Orchestra 80 sound card
 		Tandy Model I Double Density Kit (26-1143)
 		Support for the FreHD extra features (clock, volume switches)
 
@@ -76,29 +75,22 @@ Would Be Nice To Do Better
 
 User Space:
 	The TRS80 Model I/III have ROM in the low 16K. The EG 64 allows this
-	space to be mapped out and the upper 32K to be bank switched. Because
-	the switching is in the upper 32K binaries must be linked at 0x8000
-	as with the TRS80 model 1 port. This limit should go away when binaries
-	become relocatable
+	space to be mapped out and the upper 32K to be bank switched.
 
 To Do:
-	Faster user copiers once it works
-	Fast block copy routines for uget/uput
-	Hint based pre-fetching uget
-	When we have > 512K or so RAM use the rest as a ramdisc
-	Orchestra
 	M3SE video at least
+	Add tinyide
+	Look at using the I/O paging option to get a clean low 32K at the
+	cost of some small asm helpers and some paging for the floppy ?
 
 Memory Map:
-	0000-3BFF	Kernel data and boot area
+	0000-37BF	Kernel data and boot area
 	37C0-3FFF	I/O and ROM
-	4000-7FFF	Kernel code
+	4000-4FFF	Kernel code 
+	5000-7FFF	Discard and then user
 	8000-FFFF	Kernel code and some data/bss areas
 
-	8000-FFFF	User space
-
-	Note that the current build is an over featured one. Turning off
-	the  IDE support will shrink it loads.
+	7000-FFFF	User space
 
 	Unfortunately right now some core changes are needed to get to the
 	point we can have configurable options done properly.
