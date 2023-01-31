@@ -9,13 +9,13 @@ DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c ../dev/devsd.c
 DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/amd9511.c
 DSRCS += ../dev/ds12885.c ../dev/ds12885_z80.c
-DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rc2014.s
+DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rcbus.s
 DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
-DASRCS += ../dev/ps2bitbang-rc2014-kbd.s ../dev/ps2bitbang-rc2014-mouse.s
+DASRCS += ../dev/ps2bitbang-rcbus-kbd.s ../dev/ps2bitbang-rcbus-mouse.s
 CSRCS += ps2direct.c
 NSRCS = ../dev/net/net_w5x00.c ../dev/net/net_w5300.c
-DRSRCS = ../dev/rc2014/zxkeyboard.c
-DRASRCS = ../dev/rc2014/zxkey.s
+DRSRCS = ../dev/rcbus/zxkeyboard.c
+DRASRCS = ../dev/rcbus/zxkey.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
@@ -24,13 +24,13 @@ DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
 DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
 NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
-DROBJS = $(patsubst ../dev/rc2014/%.c,%.rel, $(DRSRCS))
-DRAOBJS = $(patsubst ../dev/rc2014/%.s,%.rel, $(DRASRCS))
+DROBJS = $(patsubst ../dev/rcbus/%.c,%.rel, $(DRSRCS))
+DRAOBJS = $(patsubst ../dev/rcbus/%.s,%.rel, $(DRASRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS)
 OBJS += $(DISCARD_COBJS) $(NOBJS) $(DROBJS) $(DRAOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/net/ -I../dev/rc2014/
+CROSS_CCOPTS += -I../dev/ -I../dev/net/ -I../dev/rcbus/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -57,10 +57,10 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_NETWORK) -c $<
 
-$(DROBJS): %.rel: ../dev/rc2014/%.c
+$(DROBJS): %.rel: ../dev/rcbus/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
-$(DRAOBJS): %.rel: ../dev/rc2014/%.s
+$(DRAOBJS): %.rel: ../dev/rcbus/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 
