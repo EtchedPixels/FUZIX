@@ -1,4 +1,4 @@
-Initial code  for a 6303 RC2014 banked memory platform
+Initial code  for a 6303 RCBUS banked memory platform
 
 Proposed memory mapping
 
@@ -33,7 +33,7 @@ Hardware Arrangement
 
 6303 CPU
 FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
-RC2014 bus
+RCBUS bus
 512K RAM/ROM
 Internal UART
 
@@ -47,7 +47,7 @@ Things to address
 - Proper two level interrupt handling so that the timer drives Fuzix and
   the other stuff is queued
 - Don't disable all interrupts in the Fuzix paths
-- Add device support for some of the RC2014 external devices
+- Add device support for some of the RCBUS external devices
 
 Put the loader on sector 0
 Put the kernel on sector 1+

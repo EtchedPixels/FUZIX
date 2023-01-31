@@ -2,7 +2,7 @@
 CSRCS = devtty.c
 CSRCS += devices.c main.c
 
-ASRCS = rc2014-6800.S crt0.S
+ASRCS = rcbus-6800.S crt0.S
 ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c
@@ -45,7 +45,7 @@ clean:
 
 image: loader
 	$(CROSS_LD) -b -C 0x100 -S 0xF400 -Z 0x20 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
-	rc2014-6800.o ../start.o ../version.o ../lowlevel-6800.o \
+	rcbus-6800.o ../start.o ../version.o ../lowlevel-6800.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
