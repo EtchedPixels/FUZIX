@@ -5,7 +5,7 @@
 #include <tty.h>
 #include <devtty.h>
 #include <graphics.h>
-#include <rc2014.h>
+#include <rcbus.h>
 
 static unsigned char tbuf1[TTYSIZ];
 
@@ -143,7 +143,7 @@ static const struct videomap tms_map = {
 };
 
 /* FIXME: we need a way of reporting CPU speed/TMS delay info as unlike the
-   ports so far we need delays on the RC2014 */
+   ports so far we need delays on the RCBUS */
 static const struct display tms_mode = {
     1,
     256, 192,

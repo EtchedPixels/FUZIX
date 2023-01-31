@@ -1,7 +1,7 @@
-RC2014 8085
+RCBUS 8085
 
 Initial support for the 8085 CPU/MMU + 16550A UART card setup
-using RC2014
+using RCBUS
 
 Supported Hardware
 
@@ -17,7 +17,7 @@ Supported Hardware
 	board note the erratum and use a diode not a jumper for the IRQ
 
 Options
-	RC2014 DS1302 card at 0x0C
+	RCBUS DS1302 card at 0x0C
 
 To Enable
 	ACIA at 0xA0			(in progress)
@@ -29,10 +29,10 @@ To Enable
 Unsupported
 	Z80 support chip based devices (SIO, CTC, PIO, DMA)
 	IDE CF adapter (unreliable especially with higher CPU speed)
-	RC2014 Banked 512K RAM/ROM card
+	RCBUS Banked 512K RAM/ROM card
 	Hardware that uses the full 16bit I/O address space
 
-	For hardware requiring the standard RC2014 clock it is possible to
+	For hardware requiring the standard RCBUS clock it is possible to
 	run with an 8MHz Tundra 80C85-8 part and a crystal at double the
 	classic speed.
 
@@ -63,7 +63,7 @@ file system and PC partition tables as normal.
 
 The emulator image can be run with
 
-rc2014-8085 -1 -r 512-8085.rom -B -I emu-ide.img -R
+rcbus-8085 -1 -r 512-8085.rom -B -I emu-ide.img -R
 
 but note that there is currently no timer emulation so there will be no
 timer interrupts and some behaviour will be very odd under emulation.

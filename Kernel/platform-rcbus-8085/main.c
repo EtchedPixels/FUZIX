@@ -5,7 +5,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devfdc765.h>
-#include <rc2014.h>
+#include <rcbus.h>
 
 uaddr_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;

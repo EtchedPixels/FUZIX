@@ -9,7 +9,7 @@ DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/ds1302.c
 
 CROSS_CCOPTS += -I../dev/
 
-ASRCS = crt0.S commonmem.S ppide.S rc2014-8085.S tricks.S vdp1.S
+ASRCS = crt0.S commonmem.S ppide.S rcbus-8085.S tricks.S vdp1.S
 DASRCS = ../dev/ds1302_8085.S
 
 AOBJS = $(ASRCS:.S=.o)
@@ -51,7 +51,7 @@ clean:
 
 image: 
 	$(CROSS_LD) -b -C 0x0100 -S 0xE800 -X 0xD800 -o fuzix.bin crt0.o devices.o main.o \
-	discard.o commonmem.o tricks.o rc2014-8085.o devtty.o \
+	discard.o commonmem.o tricks.o rcbus-8085.o devtty.o \
 	../start.o ../version.o ../lowlevel-8085.o \
 	../bankfixed.o ../timer.o ../kdata.o  \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
