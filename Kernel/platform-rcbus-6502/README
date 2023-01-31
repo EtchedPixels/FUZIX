@@ -1,12 +1,12 @@
-Basic support for a 6502 RC2014 banked memory platform
+Basic support for a 6502 RCBUS banked memory platform
 
 Use a modern cc65 from https://github.com/cc65/cc65 (2.18 as shipped in
 many Linux distributions is just fine).
 
-The boot ROM image lives in my RC2014 ROM github at
-https://github.com/EtchedPixels/RC2014-ROM/tree/master/6502.
+The boot ROM image lives in my RCBUS ROM github at
+https://github.com/EtchedPixels/RCBUS-ROM/tree/master/6502.
 
-This kernel is designed to support the following combination of RC2014
+This kernel is designed to support the following combination of RCBUS
 cards
 
 6502 CPU (or 65C816 CPU) with I/O window at 0xFExx
@@ -89,11 +89,11 @@ need addressing
 
 TODO:
 Swap support
-Look at other RC2014 device support
+Look at other RCBUS device support
 
 Real System:
 
-Burn the ROM from the RC2014 ROM archive into a 512K flash if you don't already
+Burn the ROM from the RCBUS ROM archive into a 512K flash if you don't already
 have it on the system
 
 make diskimage
@@ -112,7 +112,7 @@ Emulator:
 Build the ROM image as before
 Copy emu-ide.img somewhere
 
-./rc2014-6502 -1 -r 6502.rom -i emu-ide.img
+./rcbus-6502 -1 -r 6502.rom -i emu-ide.img
 
-Add -R to enable an emulation of the RC2014 RTC card, add -w for the
+Add -R to enable an emulation of the RCBUS RTC card, add -w for the
 WizNet 830MJ.

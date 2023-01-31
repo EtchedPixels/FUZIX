@@ -2,7 +2,7 @@
 CSRCS = devtty.c
 CSRCS += devices.c main.c
 
-ASRCS = rc2014-6502.s crt0.s
+ASRCS = rcbus-6502.s crt0.s
 ASRCS += tricks.s commonmem.s
 
 DSRCS = ../dev/devide.c ../dev/blkdev.c
@@ -38,7 +38,7 @@ clean:
 
 image:
 	$(CROSS_LD) -o ../fuzix.bin --mapfile ../fuzix.map -C ld65.cfg crt0.o commonmem.o \
-	rc2014-6502.o ../start.o ../version.o ../lowlevel-6502.o \
+	rcbus-6502.o ../start.o ../version.o ../lowlevel-6502.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
