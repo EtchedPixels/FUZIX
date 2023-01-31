@@ -53,6 +53,6 @@ platform-easy-z80/monitor.rel
 platform-easy-z80/devinput.rel
 platform-easy-z80/ds1302.rel
 platform-easy-z80/ds1302_discard.rel
-platform-easy-z80/ds1302_rc2014.rel
+platform-easy-z80/ds1302_rcbus.rel
 platform-easy-z80/net_native.rel
 -e
