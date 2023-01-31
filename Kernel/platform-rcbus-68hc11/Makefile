@@ -2,7 +2,7 @@
 CSRCS = devtty.c
 CSRCS += devices.c main.c
 
-ASRCS = rc2014-68hc11.S crt0.S
+ASRCS = rcbus-68hc11.S crt0.S
 ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c
@@ -56,7 +56,7 @@ clean:
 
 image:
 	$(CROSS_LD) -M -T memory.x -relax -o ../fuzix.elf crt0.o commonmem.o \
-	rc2014-68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
+	rcbus-68hc11.o ../start.o ../version.o ../lowlevel-68hc11.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o devsd.o \
 	devsd_discard.o sci.o ds1302_discard.o ds1302.o ds1302_68hc11.o \

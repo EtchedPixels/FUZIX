@@ -1,4 +1,4 @@
-Fuzix for RC2014 with the following configuration
+Fuzix for RCBUS with the following configuration
 	68HC11 CPU card:
 		CPU configuration: 68HC11 with ROM, EEPROM, COP disabled.
 	512K RAM/ROM card:
@@ -37,7 +37,7 @@ Hardware Arrangement
 
 68HC11 CPU
 FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
-RC2014 bus
+RCBUS bus
 512K RAM/ROM (eventually should be able to also switch to the flat model)
 Internal UART
 
@@ -46,11 +46,11 @@ Things to address
 - Proper two level interrupt handling so that the timer drives Fuzix and
   the other stuff is queued
 - Don't disable all interrupts in the Fuzix paths
-- Add device support for some of the RC2014 external devices
+- Add device support for some of the RCBUS external devices
 
 Emulation:
 
-ROM is in the RC2014 ROM package
+ROM is in the RCBUS ROM package
 make diskimage
 
-rc2014-68hc11 -b -r romsd512 -S sdcard.img -R
+rcbus-68hc11 -b -r romsd512 -S sdcard.img -R

@@ -1,5 +1,5 @@
 ;
-;	    rc2014 68HC11 platform functions
+;	    RCBUS 68HC11 platform functions
 ;
 ;	The 68HC11 is a very clean processor so there isn't a lot required here
 ;
@@ -252,7 +252,7 @@ program_vectors_k:
 	    ldd #nmi_handler
 	    std 0xFFF4		; NMI vector
 	    ldd #interrupt_handler
-	    std 0xFFF2		; Interrupt from RC2014
+	    std 0xFFF2		; Interrupt from rcbus
 	    std 0xFFE6		; TOC2
 	    ldd #sci_intr
 	    std 0xFFD6		; Interrupt from SCI serial
