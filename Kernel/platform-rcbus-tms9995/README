@@ -1,4 +1,4 @@
-Fuzix on the TMS9995 RC2014 banked memory platform
+Fuzix on the TMS9995 RCBUS banked memory platform
 
 This is just some initial work to start compiler testing.
 
@@ -28,7 +28,7 @@ Hardware Arrangement
 
 TMS9995 CPU
 FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
-RC2014 bus
+RCBUS bus
 512K RAM/ROM
 
 Put the loader on sector 0
@@ -38,4 +38,4 @@ What would cc9995 ld9995 banking support take ?
 
 To run on the emulator
 
-rc2014-tms9995 -b -i /tmp/emu-ide.img
+rcbus-tms9995 -b -i /tmp/emu-ide.img
