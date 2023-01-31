@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false # keep on building even if one target fails
       matrix:
-        target: [appleiie, dragon-nx32, esp32, esp8266, multicomp09, n8vem-mark4, rc2014-6502, rc2014-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
+        target: [appleiie, dragon-nx32, esp32, esp8266, multicomp09, n8vem-mark4, rcbus-6502, rcbus-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -53,11 +53,11 @@ jobs:
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo "sub_target=kernel" >> $GITHUB_ENV
           ;;
-          appleiie|rc2014-6502)
+          appleiie|rcbus-6502)
           PKGS="cc65"
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           ;;
-          rc2014-68008|tiny68k)
+          rcbus-68008|tiny68k)
           wget -O - "${M68K_CROSS_URL}" | sudo tar zxvf - -C /usr/local
           echo "/usr/local/${M68K_CROSS_DIR}/m68k-linux/bin" >> $GITHUB_PATH
           echo "cross_cc=CROSS_COMPILE=m68k-linux-" >> $GITHUB_ENV
