@@ -1,5 +1,5 @@
-#ifndef __RC2014_SIO_DOT_H__
-#define __RC2014_SIO_DOT_H__
+#ifndef __RCBUS_SIO_DOT_H__
+#define __RCBUS_SIO_DOT_H__
 
 /* Simple80 has somewhat differing addressing */
 

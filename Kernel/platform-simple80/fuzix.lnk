@@ -42,5 +42,5 @@ platform-simple80/ide.rel
 platform-simple80/usermem.rel
 platform-simple80/ds1302.rel
 platform-simple80/ds1302_discard.rel
-platform-simple80/ds1302_rc2014.rel
+platform-simple80/ds1302_rcbus.rel
 -e

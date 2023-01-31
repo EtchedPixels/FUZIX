@@ -5,7 +5,7 @@
 #include <devtty.h>
 #include <rtc.h>
 #include <ds1302.h>
-#include <rc2014.h>
+#include <rcbus.h>
 
 extern unsigned char irqvector;
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */

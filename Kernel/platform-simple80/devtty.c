@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <tty.h>
 #include <devtty.h>
-#include <rc2014.h>
+#include <rcbus.h>
 
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
