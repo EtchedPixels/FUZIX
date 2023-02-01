@@ -43,5 +43,5 @@ platform-sc111/blkdev.rel
 platform-sc111/monitor.rel
 platform-sc111/ds1302.rel
 platform-sc111/ds1302_discard.rel
-platform-sc111/ds1302_rc2014.rel
+platform-sc111/ds1302_rcbus.rel
 -e
