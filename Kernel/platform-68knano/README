@@ -1,0 +1,33 @@
+68K Nano
+
+A ROM based build for the 68K nano system. We build in ROM because memory is
+quite small, vectors are in ROM space and we'd need to rewrite the monitor
+anyway to make things work.
+
+Memory Map:
+
+000000-0FFFFF	64K ROM repeating
+900000-9XXXXF	CF adapter
+A00000-AXXXXF	UART (16x50)
+C00000-CFFFFF	RAM
+
+All other addresses are unusable or empoty (8xxxxxxx is empty)
+
+Because the system lacks a timer tick we inject one with the good old timer
+board just like the Z80 systems. There is an SQW pin on the RC but it's only
+useful rate is 1Hz which isn't helpful. Fortunately the SPI clock is only
+one option to wire there and we can wire it to DSR
+
+(As an aside it's possible to wire an SD card to it and the clock signal)
+
+The 16x50 is also used as the interrupt controller and GPIO. It interrupts
+on autovector 1
+
+TODO:
+- Support the RTC and NVRAM
+- Define some other clocks and serial tables (12MHz 10MHz 8MHz as well as the
+  rather saner 7.37MHz).
+- SPI SD card on the bitbang pins option
+- Look if there is any way we can make it kind of work with SQW. It'll suck
+  for task switching somewhat but we have a real serial int and in theory
+  we do get 2HZ as we will see both edges
