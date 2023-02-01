@@ -1,5 +1,5 @@
 
-CSRCS = devtty.c
+CSRCS = devtty.c ds3234.c
 CSRCS += devices.c main.c libc.c
 
 ASRCS = 68knano.S crt0.S
@@ -45,7 +45,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
 	../blk512.o ../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
-	blkdev.o devide.o devide_discard.o mbr.o \
+	ds3234.o blkdev.o devide.o devide_discard.o mbr.o \
 	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o ../malloc.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin

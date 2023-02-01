@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
+#include <ds3234.h>
 
 uint16_t swap_dev = 0xFFFF;
 
@@ -38,6 +39,7 @@ void memzero(void *p, usize_t len)
 
 void pagemap_init(void)
 {
+	uint8_t r;
 	/* Linker provided end of kernel */
 	/* TODO: create a discard area at the end of the image and start
 	   there */
@@ -49,6 +51,16 @@ void pagemap_init(void)
 	kprintf("Motorola 680%s%d processor detected.\n",
 		sysinfo.cpu[1]?"":"0",sysinfo.cpu[1]);
 	enable_icache();
+
+	/* Make sure the RTC is sane */
+	r = ds3234_reg_read(0x0F);
+	if (r & 0x80)
+		kputs("RTC was not initialized.\n");
+	/* SQW to 1Hz */
+	r = ds3234_reg_read(0x0E);
+	/* SQW at 1Hz, no alarm interrupts */
+	r &= 0xE0;
+	ds3234_reg_write(0x0E, r);
 }
 
 /* Udata and kernel stacks */

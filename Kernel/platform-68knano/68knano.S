@@ -9,9 +9,14 @@
 		.globl plt_idle
 		.globl outchar
 		.globl plt_monitor
-		.globl udata_block0
+
 		.globl devide_read_data
 		.globl devide_write_data
+
+		.globl uartspi_rx
+		.globl uartspi_tx
+		.globl uartspi_rx_sector
+		.globl uartspi_tx_sector
 
 .mri 1
 plt_monitor:
@@ -102,6 +107,42 @@ map_restore:
 map_save:
 	rts
 
+;	IDE:
+;
+devide_read_data:
+	move.l	d2,-(sp)
+	move.l	blk_op,a0
+	move.l	#$900000,a1
+	move.w	#255,d0
+	moveq	#8,d2
+devide_read_l:
+	move.w	(a1),d1
+	rol.w	d2,d1
+	move.w	d1,(a0)+
+	dbra	d0,devide_read_l
+	move.l	(sp)+,d2
+	rts
+
+devide_write_data:
+	move.l	d2,-(sp)
+	move.l	blk_op,a0
+	move.l	#$900000,a1
+	move.w	#255,d0
+	moveq	#8,d2
+devide_write_l:
+	move.w	(a0)+,d1
+	rol.w	d2,d1
+	move.w	d1,(a1)
+	dbra	d0,devide_write_l
+	move.l	(sp)+,d2
+	rts
+
+;
+;	Bitbangers for the SPI bus
+;
+
+
+
 ; outchar: Wait for UART TX idle, then print the char in d0
 
 outchar:
@@ -109,33 +150,139 @@ outcharw:
 	; TODO
 	rts
 ;
-;	IDE:
+
+
 ;
-devide_read_data:
-	move.l d2,-(sp)
-	move.l blk_op,a0
-	move.l #$900000,a1
-	move.w #255,d0
-	moveq #8,d2
-devide_read_l:
-	move.w (a1),d1
-	rol.w d2,d1
-	move.w d1,(a0)+
-	dbra d0,devide_read_l
-	move.l (sp)+,d2
+;	Receive a byte not caring about what we send (FF)
+;
+uartspi_rx_byte:
+	movea.l	#$A00008,a0		; MCR
+	lea.l	4(a0),a1		; MSR
+	move.b	(a0),d1
+	andb	#$FA,d1		; Clear inverted clock, data
+	move.b	d1,d2
+	addq.b	#$04,d2		; with CLK
+	; Entry point if already have the precalc values
+uartspi_rx_next:
+	; Unrolled for speed for SD card use
+	; Send 1 bits
+	; Bit 0
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	; Bus should now hold our bit to sample
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 1
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 2
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 3
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 4
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 5
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 6
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 7
+	move.b	d2,(a0)			; With CLK low
+	move.b	d1,(a0)			; With CLK high
+	move.b	(a1),d3
+	lsl.b	#1,d3
+	roxl.b	#1,d0
+	not.b	d0
 	rts
 
-devide_write_data:
-	move.l d2,-(sp)
-	move.l blk_op,a0
-	move.l #$900000,a1
-	move.w #255,d0
-	movq #8,d2
-devide_write_l:
-	move.w (a0)+,d1
-	rol.w d2,d1
-	move.w d1,(a1)
-	dbra d0,devide_write_l
-	move.l (sp)+,d2
+uartspi_tx_byte:
+	not.b	d0
+	move.l	#$A00008,a0		; MCR
+	lea.l	4(a0),a1		; MSR
+uartspi_tx_next:
+	move.b	(a0),d1
+	and.b	#$FA,d1			; Clear inverted clock, data
+	moveq	#7,d2
+spi_tx_bit:
+	lsr.b	#1,d1			; MCR right
+	roxl.b	#1,d0			; Data bit
+	roxl.b	#1,d1			; Into the MCR
+	addq	#$04,d1			; Plus clock
+	move.b	d1,(a0)
+	subq	#$04,d1			; Minus clock
+	move.b	d1,(a0)
+	dbra.w	d2,spi_tx_bit
 	rts
 
+;
+;	Wrappers for C calling
+;
+uartspi_rx:
+	movem.l	d2-d3,-(sp)
+	bsr	uartspi_rx_byte
+	movem.l	(sp)+,d2-d3
+	rts
+
+uartspi_tx:
+	movem.l	d2-d3,-(sp)
+	move.w	12(sp),d0
+	bsr	uartspi_tx_byte
+	movem.l	(sp)+,d2-d3
+	rts
+
+;
+;	For an SD card this is the most critical path
+;
+uartspi_rx_sector:
+	movem.l	a2/d2-d4,-(sp)
+	; Get the argument - address of buffer
+	; As we are a flat system we don't have to worry about
+	; kernel v user etc
+	move.l	20(sp),a2
+	move.w	#510,d4
+	; This first call primes all the register setup
+	bsr	uartspi_rx_byte
+	move.b	d0,(a2)+
+rx_block:
+	bsr	uartspi_rx_next
+	move.b	d0,(a2)+
+	dbra.w	d4,rx_block
+	movem.l	(sp)+,a2/d2-d4
+	rts
+
+uartspi_tx_sector:
+	movem.l	a2/d2-d4,-(sp)
+	move.l	20(sp),a2
+	move.w	#510,d4
+	; This first call primes all the register setup
+	bsr	uartspi_tx_byte
+	move.b	d0,(a2)+
+tx_block:
+	bsr	uartspi_tx_next
+	move.b	d0,(a2)+
+	dbra.w	d4,tx_block
+	movem.l	(sp)+,a2/d2-d4
+	rts
