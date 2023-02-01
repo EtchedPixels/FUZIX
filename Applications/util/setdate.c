@@ -195,7 +195,8 @@ int rtcwrite(void)
     *p++ = bc(tm->tm_mday);
     *p++ = bc(tm->tm_hour);
     *p++ = bc(tm->tm_min);
-    *p = bc(tm->tm_sec);
+    *p++ = bc(tm->tm_sec);
+    *p = bc(tm->tm_wday);
 
     lseek(fd, 0, SEEK_SET);
     puts("writing\n");
