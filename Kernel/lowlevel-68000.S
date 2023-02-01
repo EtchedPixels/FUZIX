@@ -385,11 +385,13 @@ SYM (__umodsi3):
 		.globl enable_icache
 		.globl get_usp, set_usp
 		.globl outstring,outstringhex,outcharhex,outa0hex
-		.globl bus_error,addr_error,illegal,divzero,chk,trapv,priv
-		.globl trace,unimpa,unimpf,sysc_err
-		.globl trap0,trap1,trap2,trap3,trap4,trap5,trap6,trap7
-		.globl trap8,trap9,trap10,trap11,trap12,trap13,trap14,trap15
-		.globl spurious,unexpected,uninit
+		.globl e_bus_error,e_addr_error,e_illegal,e_divzero
+		.globl e_chk,e_trapv,e_priv
+		.globl e_trace,e_unimpa,e_unimpf,e_sysc_err
+		.globl e_trap0,e_trap1,e_trap2,e_trap3,e_trap4
+		.globl e_trap5,e_trap6,e_trap7,e_trap8,e_trap9
+		.globl e_trap10,e_trap11,e_trap12,e_trap13,e_trap14,e_trap15
+		.globl e_spurious,e_unexpected,e_uninit
 		.globl cpu_type,probe_memory,cpu_has_trapvec,cpu_has_icache
 		.globl udata_shadow
 		.globl dump_registers
@@ -517,6 +519,7 @@ threeword:
 		move.l d0,a6
 		rte		; hit user space (and will enable interrupts)
 
+#ifndef CONFIG_PLT_VECTORS
 ;
 ;	Standard 680x0 vector install in low memory, leaving the low 8
 ;	bytes untouched (reset is often magic), and skipping the extra
@@ -534,7 +537,7 @@ install_vectors_at:
 doinstall:
 		move.l a0,a1
 		move.w #253,d0
-		move.l #unexpected,d1
+		move.l #e_unexpected,d1
 		;
 		;	The 683xx devices use F0-FF for magic such as
 		;	hardware base addresses and control registers. Skip
@@ -557,39 +560,39 @@ skipvec:
 		; Now set the vectors we care about
 		;
 		move.l a1,a0		; vector addresses
-		move.l #bus_error,(a0)+
-		move.l #addr_error,(a0)+
-		move.l #illegal,(a0)+
-		move.l #divzero,(a0)+
-		move.l #chk,(a0)+
-		move.l #trapv,(a0)+
-		move.l #priv,(a0)+
-		move.l #trace,(a0)+
-		move.l #unimpa,(a0)+	; A and F line traps
-		move.l #unimpf,(a0)+
+		move.l #e_bus_error,(a0)+
+		move.l #e_addr_error,(a0)+
+		move.l #e_illegal,(a0)+
+		move.l #e_divzero,(a0)+
+		move.l #e_chk,(a0)+
+		move.l #e_trapv,(a0)+
+		move.l #e_priv,(a0)+
+		move.l #e_trace,(a0)+
+		move.l #e_unimpa,(a0)+	; A and F line traps
+		move.l #e_unimpf,(a0)+
 		move.l a1,a0
 		add.w  #$78,a0		; gives us vector + $80
-		move.l #trap0,(a0)+
-		move.l #trap1,(a0)+
-		move.l #trap2,(a0)+
-		move.l #trap3,(a0)+
-		move.l #trap4,(a0)+
-		move.l #trap5,(a0)+
-		move.l #trap6,(a0)+
-		move.l #trap7,(a0)+
-		move.l #trap8,(a0)+
-		move.l #trap9,(a0)+
-		move.l #trap10,(a0)+
-		move.l #trap11,(a0)+
-		move.l #trap12,(a0)+
-		move.l #trap13,(a0)+
-		move.l #trap14,(a0)+
-		move.l #trap15,(a0)
+		move.l #e_trap0,(a0)+
+		move.l #e_trap1,(a0)+
+		move.l #e_trap2,(a0)+
+		move.l #e_trap3,(a0)+
+		move.l #e_trap4,(a0)+
+		move.l #e_trap5,(a0)+
+		move.l #e_trap6,(a0)+
+		move.l #e_trap7,(a0)+
+		move.l #e_trap8,(a0)+
+		move.l #e_trap9,(a0)+
+		move.l #e_trap10,(a0)+
+		move.l #e_trap11,(a0)+
+		move.l #e_trap12,(a0)+
+		move.l #e_trap13,(a0)+
+		move.l #e_trap14,(a0)+
+		move.l #e_trap15,(a0)
 		move.l a1,a0
-		move.l #uninit,$3c(a0)
-		move.l #spurious,$60(a0)
+		move.l #e_uninit,$3c(a0)
+		move.l #e_spurious,$60(a0)
 		rts
-
+#endif
 ;
 ;	Interrupts assumed to be off for these trap tricks
 ;
@@ -615,6 +618,8 @@ probe_error:
 		moveq #1,d0
 		move.l a1,a7
 		bra probe_out
+
+#ifndef CONFIG_PLT_CPUTYPE
 ;
 ;	Check the cpu type and return 0,10,etc.
 ;
@@ -648,90 +653,93 @@ cpu_type:
 		restore
 cpu_type_exit:
 		move.l a1,a7
-		move.l #illegal,16(a0)
+		move.l #e_illegal,16(a0)
 		move.b d0,cpu_has_trapvec
 		move (sp)+,sr
 		rts
+
+
 ;
 ;	We found the faulting instruction for this CPU type so bail
 ;
 cpu_ill_error:
 		move.l a1,a7
 		bra cpu_type_exit
+#endif
 
-bus_error:	move.w sr,-(sp)
+e_bus_error:	move.w sr,-(sp)
 		move.w #2,-(sp)
 		bra synchronous_exception
-addr_error:	move.w sr,-(sp)
+e_addr_error:	move.w sr,-(sp)
 		move.w #3,-(sp)
 		bra synchronous_exception
-illegal:	move.w sr,-(sp)
+e_illegal:	move.w sr,-(sp)
 		move.w #4,-(sp)
 		bra synchronous_exception
-divzero:	move.w sr,-(sp)
+e_divzero:	move.w sr,-(sp)
 		move.w #5,-(sp)
 		bra synchronous_exception
-chk:		move.w sr,-(sp)
+e_chk:		move.w sr,-(sp)
 		move.w #6,-(sp)
 		bra synchronous_exception
-trapv:		move.w sr,-(sp)
+e_trapv:	move.w sr,-(sp)
 		move.w #7,-(sp)
 		bra synchronous_exception
-priv:		move.w sr,-(sp)
+e_priv:		move.w sr,-(sp)
 		move.w #8,-(sp)
 		bra synchronous_exception
-trace:		move.w sr,-(sp)
+e_trace:	move.w sr,-(sp)
 		move.w #9,-(sp)
 		bra synchronous_exception
-unimpa:		move.w sr,-(sp)
+e_unimpa:	move.w sr,-(sp)
 		move.w #10,-(sp)
 		bra synchronous_exception
-unimpf:		move.w sr,-(sp)
+e_unimpf:	move.w sr,-(sp)
 		move.w #11,-(sp)
 		bra synchronous_exception
-trap0:		move.w sr,-(sp)
+e_trap0:	move.w sr,-(sp)
 		move.w #32,-(sp)
 		bra synchronous_exception
-trap1:		move.w sr,-(sp)
+e_trap1:	move.w sr,-(sp)
 		move.w #33,-(sp)
 		bra synchronous_exception
-trap2:		move.w sr,-(sp)
+e_trap2:	move.w sr,-(sp)
 		move.w #34,-(sp)
 		bra synchronous_exception
-trap3:		move.w sr,-(sp)
+e_trap3:	move.w sr,-(sp)
 		move.w #35,-(sp)
 		bra synchronous_exception
-trap4:		move.w sr,-(sp)
+e_trap4:	move.w sr,-(sp)
 		move.w #36,-(sp)
 		bra synchronous_exception
-trap5:		move.w sr,-(sp)
+e_trap5:	move.w sr,-(sp)
 		move.w #37,-(sp)
 		bra synchronous_exception
-trap6:		move.w sr,-(sp)
+e_trap6:	move.w sr,-(sp)
 		move.w #38,-(sp)
 		bra synchronous_exception
-trap7:		move.w sr,-(sp)
+e_trap7:	move.w sr,-(sp)
 		move.w #39,-(sp)
 		bra synchronous_exception
-trap8:		move.w sr,-(sp)
+e_trap8:	move.w sr,-(sp)
 		move.w #40,-(sp)
 		bra synchronous_exception
-trap9:		move.w sr,-(sp)
+e_trap9:	move.w sr,-(sp)
 		move.w #41,-(sp)
 		bra synchronous_exception
-trap10:		move.w sr,-(sp)
+e_trap10:	move.w sr,-(sp)
 		move.w #42,-(sp)
 		bra synchronous_exception
-trap11:		move.w sr,-(sp)
+e_trap11:	move.w sr,-(sp)
 		move.w #43,-(sp)
 		bra synchronous_exception
-trap13:		move.w sr,-(sp)
+e_trap13:	move.w sr,-(sp)
 		move.w #45,-(sp)
 		bra synchronous_exception
-trap14:		move.w sr,-(sp)
+e_trap14:	move.w sr,-(sp)
 		move.w #46,-(sp)
 		bra synchronous_exception
-trap15:		move.w sr,-(sp)
+e_trap15:	move.w sr,-(sp)
 		move.w #47,-(sp)
 
 ;
@@ -761,7 +769,7 @@ synchronous_exception:
 ;
 ;		fork is special see the fork code.
 ;
-trap12:
+e_trap12:
 		move.l a5,-(sp)		; must be first to match fork
 		move.l udata_shadow,a5
 		move.b d0,U_DATA__U_CALLNO(a5)
@@ -821,13 +829,13 @@ return_via_signal:
 		addq #4,sp
 		rte				; into modified handler
 
-spurious:	movem.l a0-a6/d0-d7,-(sp)
+e_spurious:	movem.l a0-a6/d0-d7,-(sp)
 		move.l #strspurious,a0
 		bsr outstring
 		movem.l (sp)+,a0-a6/d0-d7
 		rte
 
-unexpected:	movem.l a0-a6/d0-d7,-(sp)
+e_unexpected:	movem.l a0-a6/d0-d7,-(sp)
 		move.l #strunexpected,a0
 		bsr outstring
 		move.w 6(sp),d0
@@ -835,7 +843,7 @@ unexpected:	movem.l a0-a6/d0-d7,-(sp)
 		bsr outa0hex
 unexpectedl:	bra unexpectedl
 
-uninit:		movem.l a0-a6/d0-d7,-(sp)
+e_uninit:	movem.l a0-a6/d0-d7,-(sp)
 		move.l #struninitialized,a0
 		bsr outstring
 		movem.l (sp)+,a0-a6/d0-d7
