@@ -1,0 +1,6 @@
+#define DI_MASK		$700		/* or bits for DI */
+#define EI_MASK		$000		/* or bits for EI */
+
+#define MINI68K_TRAP_BIOSCALL ((32+8)*4)
+#define MINI_M68K_VSAVE 0		/* save BIOS fault vectors 2..11 */
+
