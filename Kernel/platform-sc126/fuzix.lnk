@@ -48,7 +48,7 @@ platform-sc126/blkdev.rel
 platform-sc126/monitor.rel
 platform-sc126/ds1302.rel
 platform-sc126/ds1302_discard.rel
-platform-sc126/ds1302_rc2014_z180.rel
+platform-sc126/ds1302_rcbus_z180.rel
 platform-sc126/i2c.rel
 platform-sc126/i2c_bitbang.rel
 platform-sc126/devi2c.rel
