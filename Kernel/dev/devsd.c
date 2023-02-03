@@ -161,7 +161,6 @@ uint_fast8_t sd_spi_wait(bool want_ff)
 
 int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 {
-    unsigned char *p;
     uint_fast8_t n, res;
 
     /* Ensure that any deferred writes have finished. */
@@ -188,12 +187,15 @@ int sd_send_command(uint_fast8_t cmd, uint32_t arg)
     sd_spi_transmit_byte((unsigned char)(arg >> 8));  /* Argument[15..8] */
     sd_spi_transmit_byte((unsigned char)arg);         /* Argument[7..0] */
 #else
-    /* sdcc sadly unable to figure this out for itself yet */
-    p = ((unsigned char *)&arg)+3;
-    sd_spi_transmit_byte(*(p--));                     /* Argument[31..24] */
-    sd_spi_transmit_byte(*(p--));                     /* Argument[23..16] */
-    sd_spi_transmit_byte(*(p--));                     /* Argument[15..8] */
-    sd_spi_transmit_byte(*p);                         /* Argument[7..0] */
+    {
+        unsigned char *p;
+        /* sdcc sadly unable to figure this out for itself yet */
+        p = ((unsigned char *)&arg)+3;
+        sd_spi_transmit_byte(*(p--));                     /* Argument[31..24] */
+        sd_spi_transmit_byte(*(p--));                     /* Argument[23..16] */
+        sd_spi_transmit_byte(*(p--));                     /* Argument[15..8] */
+        sd_spi_transmit_byte(*p);                         /* Argument[7..0] */
+    }
 #endif
     /* there's only a few commands (in native mode) that need correct CRCs */
     n = 0x01;                                                /* Dummy CRC + Stop */
