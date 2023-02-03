@@ -1,27 +1,24 @@
-/* devtty.h		includes for 'devtty.c'		*/
 #ifndef	__DEVTTY_H
 #define	__DEVTTY_H
-#include <kernel.h>
-#include <config.h>
-#include <tty.h>
 
-void tty_putc(uint_fast8_t minor, uint_fast8_t c);
+extern const char *uart_name[];
 
-ttyready_t tty_writeready(uint_fast8_t minor);
+struct uart {
+    uint8_t (*intr)(uint_fast8_t minor);
+    ttyready_t (*writeready)(uint_fast8_t minor);
+    void (*putc)(uint_fast8_t minor, uint_fast8_t c);
+    void (*setup)(uint_fast8_t minor, uint_fast8_t wait);
+    uint8_t (*carrier)(uint_fast8_t minor);
+    void (*data_consumed)(uint_fast8_t minor);
+    uint16_t cmask;
+    const char *name;
+};
 
-void tty_sleeping(uint_fast8_t minor);
+extern const struct uart *uart[NUM_DEV_TTY + 1];
+extern void *ttybase[NUM_DEV_TTY + 1];
+extern uint8_t register_uart( void *base, const struct uart *);
+extern void display_uarts(void);
 
-int tty_carrier(uint_fast8_t minor);
-
-void tty_setup(uint_fast8_t minor, uint_fast8_t flags);
-
-extern void tty_data_consumed(uint_fast8_t minor);
-
-void tty1_uart_interrupt(void);		/* DO,D1,A0,A1 saved before entry */
-
-
-void kputchar(uint_fast8_t c);
-
-
+extern const struct uart ns16x50_uart;
 
 #endif	/* __DEVTTY2_H	*/	

@@ -36,7 +36,7 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 1
+#define NUM_DEV_TTY 8
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 /* Could be bigger but we need to add hashing first and it's not clearly
@@ -68,24 +68,22 @@
 
 #define BOOTDEVICENAMES "hd#"
 
-/* FIXME: this doesn't work out - need to read the BIOS baudrate and
-   set accordingly somewhere, otherwise apps see B0 */
-#define TTY_INIT_BAUD	B0		/* use BIOS baud rate */
+/* TODO: read back the actual current baud in the UART in c_init_hardware
+ * and set this accordingly */
+#define TTY_INIT_BAUD	B9600
 
 /* NEW below this point */
 
 #define MINI_M68K_VSAVE 0		/* don't fool with exceptions */
-#define IOBASE 0xFFFF8000		/* allow 14 bit I/O addresses */
-#define IOMAP(x) (IOBASE|(uint16_t)(x))
+#define IOBASE		0xFFFF8000	/* allow 14 bit I/O addresses */
+#define IOMAP(x)	(IOBASE|(uint16_t)(x))
 #define CONFIG_16x50			/* enable 16x50 UARTs */
 #define INT_TIMER	8		/* H-timer uses interrypt 8	  */
 #define INT_TTY1	12		/* Console UART interrupt MF/PIC  */
 #define CONFIG_16x50			/* common UART in 8250..16C750 class */
-#define TICKSPERSECL 8	  /* NEW  Ticks per second on low counter (Mini-M68k only) */
+#define TICKSPERSECL	8		/* NEW  Ticks per second on low counter (Mini-M68k only) */
 /* #define INT_TIMERL */		/* DON'T enable the low timer */
 
 #define DS1302_DEBUG 1
 
 #endif /* __CONFIG_H */
-
-

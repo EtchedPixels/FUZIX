@@ -140,7 +140,7 @@ break_here:
 #if DEBUG|1
 	move.b	#$AA,(-1)	/* to the lites */
 #endif
-            rts
+	jmp    c_init_hardware	/* to C init code */
 
 
 /* define the RETI instruction to signal end-of-interrupt to the ns32202 */

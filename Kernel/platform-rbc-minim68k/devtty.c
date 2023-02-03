@@ -1,433 +1,343 @@
 #include <kernel.h>
 #include <kdata.h>
+#include <printf.h>
 #include <stdbool.h>
 #include <tty.h>
-#include "devtty.h"
-#include "uart.h"
+#include <devtty.h>
 
-/*
-	Excerpts from .../Kernel/../TTY.txt
-*/
+void *ttyport[NUM_DEV_TTY + 1];
+const struct uart *uart[NUM_DEV_TTY + 1];
+uint8_t nuart = 1;
 
-/*****************************************************************************
-Kernel Interface
-----------------
+unsigned tty_asleep;
 
-**int tty_open(uint_fast8_t minor, uint16_t flag)**
+static uint8_t console_buf[TTYSIZ];
 
-This method handles the opening of a tty device. On success it will call
-into tty_setup as provided by the platform and then wait for the carrier
-if appropriate. tty_setup can be used to handle things like power
-management of level shifters.
-
-**int tty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)**
-
-This method implements the normal read behaviour for a terminal device
-and is generally called directly as the device driver method. It will
-call into the platform code in order to implement the low level
-behaviour.
-
-**int tty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)**
-
-This method implements the normal write behaviour for a terminal device
-and is generally called directly as the device driver method. It will
-call into the platform code in order to implement the low level
-behaviour.
-
-**int tty_ioctl(uint_fast8_t minor, uarg_t request, char \*data)**
-
-Implements the standard tty and line discipline ioctls. This can be
-wrapped by platform specific code to provide additional ioctl
-interfaces, or by other higher layers (see Virtual Terminal) for the
-same purpose.
-
-**tty_close(uint_fast8_t minor)**
-
-Called on the last close of the open tty file handle. This can be
-wrapped by drivers that need to reverse some action taken in tty_setup.
-*/
-
-/*****************************************************************************
-Driver Helper Functions
------------------------
-
-**int tty_inproc(uint_fast8_t minor, unsigned char c)**
-
-Queue a character to the tty interface indicated. This method is
-interrupt safe. This may call back into the platform tty output code in
-order to implement echoing of characters.
-
-**void tty_outproc(uint_fast8_t minor)**
-
-When implementing asynchronous output indicates that more data may be
-queued to the hardware interface. May be called from an interrupt
-handler. Any output restarted will restart fom a non interrupt context
-after the IRQ completes.
-
-**tty_putc_wait(uint_fast8_t minor, unsigned char c)**
-
-Write a character to the output device, waiting if necessary. Not
-interrupt safe.
-
-**tty_carrier_drop(uint_fast8_t minor)**
-
-Indicate that the carrier line on this port has been dropped. Can be
-called from an interrupt.
-
-**tty_carrier_raise(uint_fast8_t minor)**
-
-Indicate that the carrier line on this port has been raised. Can be
-called from an interrupt.
-*/
-
-/*****************************************************************************
-Defines Provided By The Platform
-------------------------------------
-
-**NUM_DEV_TTY:** The number of actual tty device ports (one based not zero based)
-
-**TTYDEV:** The device used for the initial init process and for boot prompts
-
-Structures Provided By The Platform
------------------------------------
-
-**unsigned char [TTYSIZ]**
-
-One buffer per tty instance.
-
-**struct s_queue[NUM_DEV_TTY+1]**
-
-One queue per tty plus queue 0 which is not used. The structure is set
-up as
-
-{ buffer, buffer, buffer, TTYSIZ, 0, TTYSIZ / 2 }
-*/
-
-
-
-typedef uint8_t tty_buf_t[TTYSIZ];
-
-
-static tty_buf_t buffer[NUM_DEV_TTY];
-
-struct s_queue	ttyinq[NUM_DEV_TTY+1] = {
-	{NULL, NULL, NULL, TTYSIZ, 0, TTYSIZ/2 },
-/* minor==1  uses buffer[0]; i.e., buffer[minor-1]	*/
-	{buffer[0], buffer[0], buffer[0], TTYSIZ, 0, TTYSIZ/2},   /* tty1 */
-#if NUM_DEV_TTY > 1
-	{buffer[1], buffer[1], buffer[1], TTYSIZ, 0, TTYSIZ/2},   /* tty2 */
-#endif
-#if NUM_DEV_TTY > 2
-	{buffer[2], buffer[2], buffer[2], TTYSIZ, 0, TTYSIZ/2},   /* tty3 */
-#endif
-#if NUM_DEV_TTY > 3
-	{buffer[3], buffer[3], buffer[3], TTYSIZ, 0, TTYSIZ/2},   /* tty4 */
-#endif
-#if NUM_DEV_TTY > 4
-	{buffer[4], buffer[4], buffer[4], TTYSIZ, 0, TTYSIZ/2},   /* tty5 */
-#endif
-#if NUM_DEV_TTY > 5
-	{buffer[5], buffer[5], buffer[5], TTYSIZ, 0, TTYSIZ/2},   /* tty6 */
-#endif
-#if NUM_DEV_TTY > 6
-	{buffer[6], buffer[6], buffer[6], TTYSIZ, 0, TTYSIZ/2},   /* tty7 */
-#endif
-#if NUM_DEV_TTY > 7
-	{buffer[7], buffer[7], buffer[7], TTYSIZ, 0, TTYSIZ/2},   /* tty8 */
-#endif
-#if NUM_DEV_TTY > 8
-# error "Too many TTY devices (NUM_DEV_TTY>8)"
-#endif
+struct s_queue ttyinq[NUM_DEV_TTY + 1] = {
+	{ },
+	/* Must preallocate the console */
+	{ console_buf, console_buf, console_buf, TTYSIZ, 0, TTYSIZ / 2 },
+	/* Other ports dynamically allocated */
 };
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#if NUM_DEV_TTY > 1
-#endif
-#if NUM_DEV_TTY > 2
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#endif
-#if NUM_DEV_TTY > 3
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#endif
-#if NUM_DEV_TTY > 4
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#endif
-#if NUM_DEV_TTY > 5
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#endif
-#if NUM_DEV_TTY > 6
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#endif
-#if NUM_DEV_TTY > 7
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#endif
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS,
+	_CSYS
 };
 
 
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
+{
+	uart[minor]->setup(minor, flags);
+}
 
+int tty_carrier(uint_fast8_t minor)
+{
+	return uart[minor]->carrier(minor);
+}
 
-/*****************************************************************************
-Methods Provided By The Platform
-------------------------------------
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	uart[minor]->putc(minor, c);
+}
 
-**void tty_putc(uint_fast8_t minor, unsigned char c)**
+void tty_sleeping(uint_fast8_t minor)
+{
+	tty_asleep |= (1 << minor);
+}
 
-Write a character to the tty device. Non-blocking. If the device is busy
-drop the byte. When handling echo on a particularly primitive port it
-may be advantageous to implement a one byte buffer in the driver code.
+ttyready_t tty_writeready(uint_fast8_t minor)
+{
+	return uart[minor]->writeready(minor);
+}
 
-**ttyready_t tty_writeready(uint_fast8_t minor)**
+void tty_data_consumed(uint_fast8_t minor)
+{
+	uart[minor]->data_consumed(minor);
+}
 
-Report whether the device can accept a byte of data. This should return
-either TTY_READY_NOW (you may write), TTY_READY_SOON (polling may be
-used) or TTY_READY_LATER (there is no point polling). The use of
-TTY_READY_SOON allows slow platforms to avoid the continuous overhead of
-terminal interrupts, or deferring writes until the next timer tick. The
-kernel will poll until the process would naturally be pre-empted. On
-fast devices it may be worth always returning TTY_READY_LATER. When the
-port is blocked due to a long standing condition such as flow control
-TTY_READY_LATER should be returned.
+void kputchar(uint_fast8_t c)
+{
+	if (c == '\n')
+		kputchar('\r');
+	while (tty_writeready(TTYDEV & 0xFF) != TTY_READY_NOW);
+	tty_putc(TTYDEV & 0xFF, c);
+}
 
-**void tty_sleeping(uint_fast8_t minor)**
+int mtty_open(uint_fast8_t minor, uint16_t flag)
+{
+	if (minor > NUM_DEV_TTY || ttyport[minor] == NULL) {
+		udata.u_error = ENXIO;
+		return -1;
+	}
+	return tty_open(minor, flag);
+}
 
-This method is called just before the kernel exits polling of a tty
-port. This allows the driver to selectively enable transmit complete
-interrupts in order to reduce CPU loading. For other platforms this may
-be a null function.
+uint8_t register_uart(void *port, const struct uart *ops)
+{
+	queue_t *q = ttyinq + nuart;
+	uint8_t *buf;
+	if (nuart > NUM_DEV_TTY)
+		return 0;
 
-**int tty_carrier(uint_fast8_t minor)**
+	ttyport[nuart] = port;
+	uart[nuart] = ops;
+	termios_mask[nuart] = ops->cmask;
 
-Report the carrier status of the port. If the port has no carrier
-control then simply return 1 (carrier present).
+	/* Check for preallocated buffers. We have to allocate the
+	   console buffer in advance, because we need the console
+	   before we have malloc up and running */
 
-void tty_setup(uint_fast8_t minor)
+	if (q->q_base != NULL)
+		return nuart++;
 
-Perform any hardware set up necessary to open this port. If none is
-required then this can be a blank function.
+	/* Not preallocated - grab a buffer */
+	buf = kmalloc(TTYSIZ, 0);
+	if (buf == NULL) {
+		kputs("out of memory for UART buffer.\n");
+		return 0;
+	}
+	q->q_base = q->q_head = q->q_tail = buf;
+	q->q_size = TTYSIZ;
+	q->q_count = 0;
+	q->q_wakeup = TTYSIZ / 2;
+	return nuart++;
+}
 
-**void kputchar(char c)**
+void display_uarts(void)
+{
+	const struct uart **t = &uart[1];
+	void **p = ttyport + 1;
+	uint8_t n = 1;
 
-Writes a character from the kernel to a suitable console or debug port.
-This is usually implemented in terms of tty_putc. As it may be called
-from an interrupt it cannot use tty_putc_wait(). On platforms with queued
-interrupt driven output this routine should ideally not return until the
-character is visible to the user.
-*/
+	while (n < nuart) {
+		kprintf("tty%d: %s at 0x%p.\n", n, (*t)->name, *p);
+		p++;
+		t++;
+		n++;
+	}
+}
 
-#ifdef	CONFIG_16x50
+/*
+ *	UART implementations: could move to their own files ?
+ */
 
-#define CTS (1<<B_CTS)
-#define DCD (1<<B_DCD)
-#define DSR (1<<B_DSR)
-#define THRE (1<<B_THRE)
+/*
+ *	National Semiconductor 16x50 series devices.
+ *	TODO
+ *	- Full RTS/CTS (needs a core change as the FIFO otherwise
+ *	  makes us too late on the flow control assert)
+ *	- Look at interrupt driven transmit and see if it is worth while
+ */
+struct uart16x50 {
+	uint8_t data;		/* ls, rx, tx */
+	uint8_t msier;		/* ms or ier */
+	uint8_t fcr;		/* Also iir */
+#define iir fcr
+	uint8_t lcr;
+	uint8_t mcr;
+	uint8_t lsr;
+	uint8_t msr;
+	uint8_t scr;
+};
 
+#define U16X50(x) 	((volatile struct uart16x50 *)(ttyport[x]))
+
+/* MSR */
+
+#define CTS_D	0x01
+#define DCD_D	0x08
+#define CTS	0x10
+#define DCD	0x80
+
+/* LSR */
+#define	BREAK	0x08
+#define ERROR	0x71		/* OE PE FE or FIFO */
+
+/* MCR */
+#define DTR	0x01
+#define RTS	0x02
+
+/* IRR bits
+ * 3 2 1 0
+ * -------
+ * x x x 1     no interrupt pending
+ * 0 1 1 0  6  LSR changed -- read the LSR
+ * 0 1 0 0  4  receive FIFO >= threshold
+ * 1 1 0 0  C  received data sat in FIFO for a while
+ * 0 0 1 0  2  transmit holding register empty
+ * 0 0 0 0  0  MSR changed -- read the MSR
+ */
+
+static uint8_t ns16x50_intr(uint_fast8_t minor)
+{
+	volatile struct uart16x50 *uart = U16X50(minor);
+	uint_fast8_t msr;
+	uint_fast8_t iir;
+	uint_fast8_t lsr;
+	uint_fast8_t bad = 0;
+
+	/* While there is an interrupt pending */
+	while (((iir = uart->iir) & 1) == 0) {
+		lsr = uart->lsr;
+		switch (iir & 0x0E) {
+		case 0x06:	/* LSR change */
+			if (lsr & BREAK)
+				tty_break_event(minor);
+			if (lsr & ERROR)
+				bad = 1;
+			break;
+		case 0x04:
+		case 0x12:	/* Data */
+			if (bad) {
+				tty_inproc_bad(minor, uart->data);
+				bad = 0;
+			} else
+				tty_inproc_full(minor, uart->data);
+			break;
+		case 0x02:	/* THR empty - don't care */
+			break;
+		case 0x00:	/* MSR change */
+			msr = uart->msr;
+			if (msr & DCD_D) {
+				if (msr & DCD)
+					tty_carrier_raise(minor);
+				else
+					tty_carrier_drop(minor);
+			}
+			/* Wake up any sleeping process */
+			if ((msr & (CTS_D | CTS)) == (CTS_D | CTS))
+				tty_outproc(minor);
+			break;
+		default:
+		}
+	}
+	/* If we have room to receive then keep RTS on */
+	/* TODO: this has too much latency on a FIFO */
+	if (fullq(ttyinq + minor))
+		uart->mcr &= ~RTS;
+	return 1;
+}
+
+/* The core ate enough data that we can unthrottle the flow control */
+static void ns16x50_data_consumed(uint_fast8_t minor)
+{
+	volatile struct uart16x50 *uart = U16X50(minor);
+	uart->mcr = RTS;
+}
+
+static ttyready_t ns16x50_writeready(uint_fast8_t minor)
+{
+	volatile struct uart16x50 *uart = U16X50(minor);
+
+	if (ttydata[minor].termios.c_cflag & CRTSCTS) {
+		if ((uart->msr & CTS) == 0)
+			return TTY_READY_LATER;
+	}
+	return uart->lsr & 0x20 ? TTY_READY_NOW : TTY_READY_SOON;
+}
+
+static void ns16x50_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	volatile struct uart16x50 *uart = U16X50(minor);
+	uart->data = c;
+}
 
 /*
  *	16x50 conversion betwen a Bxxxx speed rate (see tty.h) and the values
  *	to stuff into the chip.
  */
-#define OSCILLATOR 1843200	/* 1.8432Mhz */
-#define	UCLOCK (OSCILLATOR/16)
+
+/*	This assumes the same clocking on all ports */
+#define BAUDCLOCK	(1843200/16)
+/*	Nearest timing to the desired bit rate */
+#define BAUD_16X(x)	((BAUDCLOCK + ((x)/2)) / (x))
+
 static uint16_t clocks[] = {
-	0,		/* Use the BIOS setup rate */
-	UCLOCK/50,	/* 2304 */
-	UCLOCK/75,	/* 1536 */
-	UCLOCK/110,	/* 1047 */
-	858,		/* nearly 134.246 bps (actually 134.2657)*/
-	UCLOCK/150,	/* 768 */
-	UCLOCK/300,	/* 384 */
-	UCLOCK/600,	/* 192 */
-	UCLOCK/1200,	/* 96 */
-	UCLOCK/2400,	/* 48 */
-	UCLOCK/4800,	/* 24 */
-	UCLOCK/9600,	/* 12 */
-	UCLOCK/19200,	/* 6 */
-	UCLOCK/38400,	/* 3 */
-	UCLOCK/57600,	/* 2 */
-	UCLOCK/115200	/* 1 */
+	BAUD_16X(38400),
+	BAUD_16X(50),
+	BAUD_16X(75),
+	BAUD_16X(110),
+	BAUD_16X(134),
+	BAUD_16X(150),
+	BAUD_16X(300),
+	BAUD_16X(600),
+	BAUD_16X(1200),
+	BAUD_16X(2400),
+	BAUD_16X(4800),
+	BAUD_16X(9600),
+	BAUD_16X(19200),
+	BAUD_16X(38400),
+	BAUD_16X(57600),
+	BAUD_16X(115200)
 };
 
+static void ns16x50_setup(uint_fast8_t minor, uint_fast8_t wait)
+{
+	volatile struct uart16x50 *uart = U16X50(minor);
+	struct termios *t = &ttydata[minor].termios;
+	uint8_t d;
+	uint16_t w;
 
+	d = 0x80;		/* DLAB (so we can write the speed) */
+	d |= (t->c_cflag & CSIZE) >> 4;
+	if (t->c_cflag & CSTOPB)
+		d |= 0x04;	/* Two stop bits */
+	if (t->c_cflag & PARENB)
+		d |= 0x08;	/* Turn on parity */
+	if (!(t->c_cflag & PARODD))
+		d |= 0x10;	/* Odd parity */
+	uart->lcr = d;		/* LCR */
+	w = clocks[t->c_cflag & CBAUD];
+	uart->data = w;		/* Actually the shadow clock registers */
+	uart->msier = w >> 8;
+	/* Switch to the data map */
+	uart->lcr = d & 0x7F;
+	/* TODO proper FIFO control */
+	/* TODO wait for FIFO drain if wait set */
+	if (w >> 8)		/* Low speeds interrupt every byte for latency */
+		uart->fcr = 0x00;
+	else			/* High speeds set our interrupt quite early
+				   as our latency is poor, turn on 64 byte if
+				   we have a 16C750 */
+		uart->fcr = 0x51;
+	uart->mcr = DTR | RTS;
+	/*
+	 *      On a 12MHz 68008 we might want to do real TX ints. Needs
+	 *      further consideration.
+	 */
+	uart->msier = 0x0D;	/* No TX interrupts */
+}
 
+static uint8_t ns16x50_carrier(uint_fast8_t minor)
+{
+	volatile struct uart16x50 *uart = U16X50(minor);
+	return (uart->msr & DCD) ? 1 : 0;
+}
 
-struct tty_connect_s {
-	uint8_t ioport;			/* used as IOMEM(port) */
-	U16x50_t flavor;		/* 8250A, 16550A, &c.	     */
-	uint8_t interrupt;		/* interrupt channel */
-} tty_connect[NUM_DEV_TTY+1] = {
-	{0xFF, Unone, 0xFF},		/* no minor 0 */
-#ifdef INT_TTY1
-	{0x48, U16550A, INT_TTY1},	/* console better be at 0x48, chip flavor
-					   will likely be updated */
-#else
-	{0x48, U16550A, 0xFF},
-#endif
-#if 0
-/*** device search will have to fill in the rest of this array on the fly ***/
-	{0xFF, Unone, 0xFF},		/* no minor 2 */
-	{0xFF, Unone, 0xFF},		/* no minor 3 */
-	{0xFF, Unone, 0xFF},		/* no minor 4 */
-	{0xFF, Unone, 0xFF},		/* no minor 5 */
-	{0xFF, Unone, 0xFF},		/* no minor 6 */
-	{0xFF, Unone, 0xFF},		/* no minor 7 */
-	{0xFF, Unone, 0xFF},		/* no minor 8 */
-#endif	
+const struct uart ns16x50_uart = {
+	ns16x50_intr,
+	ns16x50_writeready,
+	ns16x50_putc,
+	ns16x50_setup,
+	ns16x50_carrier,
+	ns16x50_data_consumed,
+	/* TOOD: CRTSCTS : can we do mark/space ? */
+	CSIZE | CBAUD | CSTOPB | PARENB | PARODD | _CSYS,
+	"16x50"
 };
 
-void tty_putc(uint_fast8_t minor, uint_fast8_t c)
+/* Vectored interrupt for first 16x50 port */
+void tty1_uart_interrupt(void)
 {
-	volatile uint8_t *port = IOMEM(tty_connect[minor].ioport);
-
-	while ( (port[UART_LSR] & THRE) == 0 ) /* SPIN */ ;
-
-	/* Transmitter Holding Register is now empty */
-	port[UART_THR] = c;
+	/* TODO: when we get multiple device combos we might need this
+	   to map dynamically */
+	uart[1]->intr(1);
 }
-
-ttyready_t tty_writeready(uint_fast8_t minor)
-{
-	volatile uint8_t *port = IOMEM(tty_connect[minor].ioport);
-
-	uint8_t msr = port[UART_MSR];
-
-	if (ttydata[minor].termios.c_cflag & CRTSCTS) {
-		if ((msr & CTS) == 0 )  /* The modem says don't send at the moment */
-			return TTY_READY_LATER;
-	}
-	if (port[UART_LSR] & THRE) /* THR is empty */
-			return TTY_READY_NOW;
-	return TTY_READY_SOON;		/* No serious hold up to sending */
-}
-
-void tty_sleeping(uint_fast8_t minor)
-{
-}
-
-int tty_carrier(uint_fast8_t minor)
-{
-	volatile uint8_t *port = IOMEM(tty_connect[minor].ioport);
-	uint8_t msr = port[UART_MSR];
-	if ((msr & DCD) == DCD) 
-		return 1;	/* carrier present */
-	return 0;
-}
-
-void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
-{
-	volatile uint8_t *port;
-	tcflag_t mask;
-	uint8_t iport, lcr;
-	uint8_t uchar;	/* character out composed here */
-	uint16_t baud;
-	
-	if ( minor > NUM_DEV_TTY 
-		|| (iport = tty_connect[minor].ioport) == 0xFF) return;
-	port = IOMEM(iport);
-	mask = termios_mask[minor];
-
-	port[UART_MCR] = 0x3;		/* DTR & RTS */
-	uchar = 0;
-	if (tty_connect[minor].interrupt < 16) {   /* 0xFF used to disable */
-		uchar = (1<<B_ERBI);		
-	}
-	port[UART_IER] = uchar;
-#if (CSIZE|CSTOPB) == 0x70	
-	uchar = (mask & (CSIZE|CSTOPB))>>4;
-#else
-# error CSIZE CSTOPB alignment problem
-#endif
-	/* set DLAB and do baud rate and FIFO setup */
-	lcr = port[UART_LCR];
-	port[UART_LCR] = lcr | (1<<B_DLAB);
-	baud = clocks[mask & CBAUD];
-	/* baud is the divisor needed */
-	if (baud != 0) {	/* if == 0, then use BIOS setup rate */
-		port[UART_DLL] = (uint8_t)baud;		/* low order */
-		port[UART_DLH] = (uint8_t)(baud >> 8);	/* high order */
-	}
-	if (tty_connect[minor].flavor >= U16550A) {	/* has FIFO */
-		port[UART_FCR] = 0x87;	/* reset FIFO's, enable 16 char, threshold 8 */
-	}
-	else if (tty_connect[minor].flavor == U16550) {
-		port[UART_FCR] = 0;			/* disable broken FIFO */
-	}  /* lower UARTs don't even have a FIFO */
-	port[UART_LCR] = lcr;		/* reset DLAB */
-}
-
-/* void tty_putc_wait(uint_fast8_t minor, uint_fast8_t c) */
-void tty1_uart_interrupt(void)		/* DO,D1,A0,A1 saved before entry */
-{
-	volatile uint8_t *port = IOMEM(tty_connect[1].ioport);
-	uint8_t lsr, data;
-	uint_fast8_t bad = 0;
-#ifdef INT_TTY1
-	uint8_t iir, msr;
-
-		/* IRR bits
-		 * 3 2 1 0
-		 * -------
-		 * x x x 1     no interrupt pending
-		 * 0 1 1 0  6  LSR changed -- read the LSR
-		 * 0 1 0 0  4  receive FIFO >= threshold
-		 * 1 1 0 0  C  received data sat in FIFO for a while
-		 * 0 0 1 0  2  transmit holding register empty
-		 * 0 0 0 0  0  MSR changed -- read the MSR
-		 */
-	
-	while (((iir = port[UART_IIR]) & 1) == 0) {
-		lsr = port[UART_LSR];
-		switch (iir & 0xE) {
-		   case 6: /* LSR changed */
-			if (lsr & ((1<<B_OE)|(1<<B_PE)|(1<<B_FE)|(1<<B_BRE)))
-				bad = 1;
-			break;
-		   case 4:
-	           case 12:  /* data available */
-#endif
-	           	while ((lsr = port[UART_LSR]) & (1<<B_DR)) {
-				data = port[UART_RBR];
-// Need to add to core 		if (bad) {
-//					tty_inproc_bad(1, data);
-//					bad = 0;
-//				}
-//				else
-					tty_inproc(1, data);
-			}
-#ifdef INT_TTY1
-			break;
-		   case 2:   /* THR Empty */
-			break;
-		   case 0:   /* MSR changed */
-			msr = port[UART_MSR];
-			if (msr & 0x08) {
-				if (msr & 0x80)
-					tty_carrier_raise(1);
-				else
-					tty_carrier_drop(1);
-			}
-			if ((msr & 0x11) == 0x11)
-				tty_outproc(1);
-			
-			break;
-		   default:  /* do nothing */
-			break; 	
-		}  /* switch */
-		
-	}  /* while */
-#endif
-}
-
-/* TODO: CTS/RTS handling */
-
-void tty_data_consumed(uint_fast8_t minor)
-{
-}
-
-void kputchar(uint_fast8_t c)
-{
-	if (c == '\n') tty_putc(1, '\r');
-	tty_putc(1, c);
-}
-#endif

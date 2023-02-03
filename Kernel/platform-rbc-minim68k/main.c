@@ -2,8 +2,8 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
+#include <tty.h>
 #include <devtty.h>
-#include <blkdev.h>
 
 uint16_t swap_dev = 0xFFFF;
 
@@ -50,6 +50,7 @@ void pagemap_init(void)
 	kprintf("Motorola 680%s%d processor detected.\n",
 		sysinfo.cpu[1]>9?"":"0",sysinfo.cpu[1]);
 	enable_icache();
+	display_uarts();
 }
 
 /* Udata and kernel stacks */
@@ -66,7 +67,7 @@ void install_vdso(void)
 
 uint8_t plt_udata_set(ptptr p)
 {
-	p->p_udata = &udata_block[p - ptab];
+	p->p_udata = &udata_block[p - ptab].u_d;
 	return 0;
 }
 
@@ -88,6 +89,13 @@ void plt_interrupt(void)
 
 	timer_interrupt();
 
+}
+
+/* Early initialization C hook */
+void c_init_hardware(void)
+{
+	/* Register the MF/PIC UART to use as our console */
+	register_uart((void *)0xFFFF0048, &ns16x50_uart);
 }
 
 unsigned long long plt_arith(uint32_t days, uint32_t sec)
