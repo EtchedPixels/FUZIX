@@ -478,6 +478,8 @@ sigout:
 	}
 	return wr;
 
+	/* TODO: we need to find a way to batch queue the erases
+	   so we don't stress the uart queues off interrupts */
 eraseout:
 	while (uninsq(q, &oc)) {
 		if (oc == '\n' || oc == t->termios.c_cc[VEOL]) {
@@ -718,4 +720,114 @@ void pty_putc_wait(uint_fast8_t minor, char c)
 	/* FIXME: select */
 	wakeup(q);
 }
+#endif
+
+/* Additional functionality for bigger systems
+
+	tty_inproc_bad allows the queueing of bytes detected as damaged
+	by the UART hardware (except parity)
+
+	tty_inproc_full should be used for normal error free queueing if
+	using the full UART feature set
+
+	tty_inproc_softparity should be used to queue bytes when doing
+	7E1/7O1/7M1/7S1 in software or for a byte with parity hardware
+	detected as wrong
+
+	tty_break_event should be called when an input break condition
+	is detected.
+
+	This adds handling of PARMRK, PAREN, PARODD, CMSPAR, BRKINT
+	and IGNBRK over the base feature set.
+ */
+
+#ifdef CONFIG_LEVEL_2
+
+/* (0x96 >> !! (0x9669 & (1 << (ch >> 4)))) & (1 << (ch & 0x07)); */
+
+static uint8_t paritytab[16] = {
+	0x96, 0x69, 0x69, 0x96,
+	0x69, 0x96, 0x96, 0x69,
+	0x69, 0x96, 0x96, 0x69,
+	0x96, 0x69, 0x69, 0x96
+};
+
+uint_fast8_t parity(uint8_t ch)
+{
+	ch &= 0x7F;	/* Strip parity bit */
+	return paritytab[ch >> 4] & (1 << (ch & 7));
+}
+
+/* Do 7X1 7X2 parity */
+uint8_t tty_add_parity(uint_fast8_t minor, uint8_t ch)
+{
+	struct termios *t = &ttydata[minor].termios;
+	if (t->c_cflag & PARENB) {
+		ch &= 0x7F;
+		if (t->c_cflag & CMSPAR) {
+			if (t->c_cflag & PARODD)
+				ch |= 0x80;
+		} else {
+			ch |= parity(ch) ? 0x00 : 0x80;
+		}
+	}
+	return ch;
+}
+
+int tty_inproc_bad(uint_fast8_t minor, uint_fast8_t ch)
+{
+	struct s_queue *q = ttyinq + minor;
+	return insq(q, '\377') & insq(q, '\0') &
+		tty_inproc(minor, ch);
+}
+
+int tty_inproc_full(uint_fast8_t minor, uint_fast8_t ch)
+{
+	if (ch == '\377' && (ttydata[minor].termios.c_iflag & (PARMRK|ISTRIP)) != PARMRK)
+		insq(ttyinq + minor, ch);
+	return tty_inproc(minor, ch);
+}
+
+int tty_inproc_softparity(uint_fast8_t minor, uint_fast8_t ch)
+{
+	uint_fast8_t p = 0x00;
+	struct termios *t = &ttydata[minor].termios;
+
+	if (!(t->c_cflag & PARENB))
+		return tty_inproc_full(minor, ch);
+
+	if (!(t->c_cflag & CMSPAR))
+		p = parity(ch) ? 0x00 : 0x80;
+	if (t->c_cflag & PARODD)
+		p ^= 0x80;
+
+	/* We only handle 7 bit not weird stuff like 6bit parity */
+	if (p ^ ch ^ 0x80) {
+		/* Bad parity */
+		if (t->c_cflag & IGNPAR)
+			return 0;
+		return tty_inproc_bad(minor,ch);
+	}
+	return tty_inproc_full(minor, ch);
+}
+
+void tty_break_event(uint_fast8_t minor)
+{
+	struct tty *tty = ttydata + minor;
+	struct s_queue *q = ttyinq + minor;
+
+	if (tty->termios.c_iflag & IGNBRK)
+		return;
+	if (tty->termios.c_iflag & BRKINT) {
+		sgrpsig(tty->pgrp, SIGINT);
+		clrq(ttyinq + minor);
+		return;
+	}
+	if (tty->termios.c_iflag & PARMRK) {
+		insq(q, '\377');
+		insq(q, 0);
+	}
+	tty_inproc(minor, 0);
+}
+
 #endif

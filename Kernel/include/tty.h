@@ -16,7 +16,7 @@ struct termios {
 
 #define VMIN		0	/* Supported */
 #define VEOF		0	/* Supported */
-#define VTIME		1
+#define VTIME		1	/* Supported */
 #define VEOL		1	/* partial - FIXME, EOF in input */
 #define VERASE		2	/* Supported */
 #define VINTR		3	/* Supported */
@@ -29,28 +29,28 @@ struct termios {
 #define VLNEXT		10
 #define VDISCARD	11	/* Supported */
 
-#define BRKINT	0x0001
+#define BRKINT	0x0001	/* Supported on level 2 */
 #define ICRNL	0x0002	/* Supported */
-#define IGNBRK	0x0004
+#define IGNBRK	0x0004	/* Supported on level 2 */
 #define IGNCR	0x0008  /* Supported */
-#define IGNPAR	0x0010
+#define IGNPAR	0x0010	/* Supported on level 2 */
 #define INLCR	0x0020	/* Supported */
-#define INPCK	0x0040
+#define INPCK	0x0040	/* Supported on level 2 */
 #define ISTRIP	0x0080	/* Supported */
-#define IUCLC	0x0100
+#define IUCLC	0x0100	/* Not POSIX */
 #define IXANY	0x0200
 #define IXOFF	0x0400
-#define PARMRK	0x0800
+#define PARMRK	0x0800	/* Supported on level 2 */
 #define IXON	0x1000
 
 #define _ISYS	(IGNCR|ICRNL|INLCR|ISTRIP)	/* Flags supported by core */
 
 #define OPOST	0x0001	/* Supported */
-#define OLCUC	0x0002
+#define OLCUC	0x0002	/* Not POSIX */
 #define ONLCR	0x0004	/* Supported */
-#define OCRNL	0x0008
+#define OCRNL	0x0008	/* Supported */
 #define ONLRET	0x0010
-#define OFILL	0x0020
+#define OFILL	0x0020	/* Delays are not supported */
 #define NLDLY	0x0040
 #define NL0	0x0000
 #define NL1	0x0040
@@ -93,19 +93,20 @@ struct termios {
 #define B57600	0x000E
 #define B115200	0x000F
 
-#define CSIZE	0x0030
+#define CSIZE	0x0030	/* Supported */
 #define CS5	0x0000
 #define CS6	0x0010
 #define CS7	0x0020
 #define CS8	0x0030
-#define CSTOPB	0x0040
+#define CSTOPB	0x0040	/* Supported */
 #define CREAD	0x0080
-#define PARENB	0x0100
-#define PARODD	0x0200
-#define HUPCL	0x0400
-#define CLOCAL	0x0800
-#define CRTSCTS 0x1000
-#define CBAUD	0x000F
+#define PARENB	0x0100	/* Supported for level 2 input */
+#define PARODD	0x0200	/* Supported */
+#define HUPCL	0x0400	/* Supported */
+#define CLOCAL	0x0800	/* Supported */
+#define CRTSCTS 0x1000	/* Supported (only a few uart drivers) */
+#define CMSPAR	0x2000	/* Supported for level 2 input */
+#define CBAUD	0x000F	/* Supported */
 
 #define _CSYS	(CREAD|HUPCL|CLOCAL)
 
@@ -260,6 +261,13 @@ extern void tty_echo(uint_fast8_t minor, uint_fast8_t c);
 extern void tty_erase(uint_fast8_t minor);
 extern uint_fast8_t tty_putc_maywait(uint_fast8_t minor, uint_fast8_t, uint_fast8_t flags);
 extern void tty_putc_wait(uint_fast8_t minor, uint_fast8_t c);
+
+/* Level 2 helpers */
+extern int tty_inproc_bad(uint_fast8_t minor, uint_fast8_t ch);
+extern int tty_inproc_full(uint_fast8_t minor, uint_fast8_t ch);
+extern int tty_inproc_softparity(uint_fast8_t minor, uint_fast8_t ch);
+extern void tty_break_event(uint_fast8_t minor);
+extern uint8_t tty_add_parity(uint_fast8_t minor, uint8_t ch);
 
 typedef enum {
     TTY_READY_NOW=1,    /* port is ready immediately */
