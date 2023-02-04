@@ -35,7 +35,7 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 /* Hardware parameters : internal hardware at 0x40-0x7F */
-#define Z180_IO_BASE       0x40
+#define Z180_IO_BASE       0xC0
 
 #define MAX_BLKDEV 2	    /* 2 IDE drives */
 
