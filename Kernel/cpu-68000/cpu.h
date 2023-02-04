@@ -62,6 +62,8 @@ extern void *memcpy32(void *to, const void *from, size_t bytes);
 extern int probe_memory(void *p);
 extern int cpu_type(void);
 
+extern void enable_icache(void);
+
 /* Optional mapping helpers for I/O memory windows when we have portable
    driver code. The platform defines IOMAP(x) to return the value of the
    memory location for that I/O port */
