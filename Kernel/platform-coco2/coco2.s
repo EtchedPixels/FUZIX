@@ -77,7 +77,7 @@ init_early:
 init_hardware:
 	ldd #64
 	std _ramsize
-	ldd #32
+	ldd #28
 	std _procmem
 
 	; Turn on PIA  CB1 (50Hz interrupt)
@@ -87,7 +87,8 @@ init_hardware:
 	jsr _vtinit
 	rts
 
-        .area .common
+        .area .page1
+; Borrow a tiny bit of page1 to get this low so it can turn the ROM back on
 
 _plt_reboot:
 	orcc #0x10
@@ -96,6 +97,7 @@ _plt_reboot:
 	sta 0x0071		; in case IRQ left it looking valid
 	jmp [0xFFFE]
 
+	.area .common
 _plt_monitor:
 	orcc #0x10
 	bra _plt_monitor

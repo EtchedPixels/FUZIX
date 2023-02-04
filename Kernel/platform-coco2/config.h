@@ -16,10 +16,14 @@
 
 #define CONFIG_BANKS	1
 /* And swapping */
-#define SWAPDEV     0x0		/* Uses part of IDE slice 0 */
+#define CONFIG_DYNAMIC_SWAP
+
+extern uint16_t swap_dev;
+
+#define SWAPDEV     swap_dev    /* From partiton */
 #define SWAP_SIZE   0x39	/* 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot, including stashed uarea */
-#define SWAPTOP     0xF200	/* so it's a round number of 512 byte sectors */
+#define SWAPTOP     0xF000	/* so it's a round number of 512 byte sectors */
 #define UDATA_SIZE  0x0200	/* one block */
 #define MAX_SWAPS   32
 
@@ -27,6 +31,10 @@
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
+
+/* Allow for our swap heavy nature */
+#define MAXTICKS 25
+#define CONFIG_PARENT_FIRST	/* For pure swap this is far faster */
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
@@ -37,9 +45,9 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 
 /* Vt definitions */
 #define VT_WIDTH	32
-#define VT_HEIGHT	24
+#define VT_HEIGHT	16
 #define VT_RIGHT	31
-#define VT_BOTTOM	23
+#define VT_BOTTOM	15
 #define VT_INITIAL_LINE	0
 
 #define VT_BASE	((uint8_t *)0x0200)
@@ -50,7 +58,7 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
-#define PROGTOP     0xF200  /* Top of program */
+#define PROGTOP     0xF000  /* Top of program */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
@@ -62,7 +70,8 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 #define swap_map(x)	((uint8_t *)(x))
 
-#define CONFIG_IDE
+#define CONFIG_TD_NUM	2
+#define CONFIG_TD_IDE
 
 #define plt_copyright(x)
 

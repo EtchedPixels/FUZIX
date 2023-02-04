@@ -1,20 +1,20 @@
 COCO2
 =====
 
-COCO or Dragon 64 with an IDE port 64K of RAM
+COCO or Dragon 64 with an IDE port and 64K of RAM
 
 Supported hardware:
 	IDE (Glenside or compatible)
 
 Memory Map
 ==========
-0000-00FF	Interrupt stack
-0100-01FF	Vectors and then libc
+0000-00FF	Interrupt stack (borrowed as swap stack)
+0100-01FF	Vectors and then a few helpers
 0200-03FF	Display
 0400-7FFF	Code/Data for kernel (take care to keep this below 8000 and
 		shuffle stuff if needed to make it fit)
-8000-F1FF	User space (28.5K)
-F200-FBFF	More kernel bits
+8000-EFFF	User space (28K)
+F000-FCFF	More kernel bits
 FD00-FEFF	udata
 FF00-FFFF	I/O etc
 
@@ -22,20 +22,8 @@ FF00-FFFF	I/O etc
 Emulating in XRoar
 ==================
 
-Needs the IDE patches
+xroar -default-machine coco2 -cart ide -load-hd0 emu-ide.img  -load bootfuz.bin 
 
-TODO
-====
-
-Loader code
-Set the display up correctly
-Support for a real time clock and clock locking
-Review irq disabling. We shouldn't need much of this at all as we don't have
-floppy hell to contend with, but the switchin/switchout logic needs to be
-reviewed for interrupt safety and the IRQs re-enabled during swap in and
-out. We should also be totally clean now on FIR blocking, so audio might
-actually be doable!
-
-MPI switching
-
-See platform-coco2cart for the actual resulting cartridge based implementation
+See the coco2cart build for a rather saner setup using the cartridge ROM to allow a lot
+more features. This is really more of a demonstration of minimal build possibilities than
+a useful port.

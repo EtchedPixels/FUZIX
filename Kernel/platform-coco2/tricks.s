@@ -16,7 +16,9 @@
         .globl map_process_always
         .globl copybank
 	.globl _nready
+	.globl _inswap
 	.globl _plt_idle
+	.globl _udata
 
 	# exported
         .globl _plt_switchout
@@ -37,6 +39,9 @@ _ramtop:
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
+;
+; 
+; This function can have no arguments or auto variables.
 _plt_switchout:
 	orcc #0x10		; irq off
 
@@ -66,16 +71,34 @@ _switchin:
         orcc #0x10		; irq off
 
 	stx newpp
+	inc _inswap
 	; get process table
 	lda P_TAB__P_PAGE_OFFSET+1,x		; LSB of 16-bit page no
 
 	cmpa #0
 	bne not_swapped
-	jsr _swapper		; void swapper(ptptr p)
-	ldx newpp
-	lda P_TAB__P_PAGE_OFFSET+1,x
 
+	; Steal the interrupt stack. This means we have to keep interrupts
+	; off whilst swapping but it's not clear we've got enough other
+	; room!
+	lds #$0100
+
+	ldx U_DATA__U_PTAB
+	ldx P_TAB__P_PAGE_OFFSET+1,x
+	beq not_swapout		;	it's dead don't swap it out
+	ldx U_DATA__U_PTAB
+;;	andcc #0xef
+	jsr _swapout		;	swapout(pptr)
+not_swapout:
+	ldx newpp
+;;	andcc #0xef
+	jsr _swapper		; 	fetch our process
+	ldx newpp
+	lda #1
+	sta P_TAB__P_PAGE_OFFSET+1,x	; marked paged in
 not_swapped:
+;;	orcc #0x10
+	dec _inswap
 	; we have now new stacks so get new stack pointer before any jsr
 	lds U_DATA__U_SP
 
@@ -129,17 +152,17 @@ _dofork:
         ; always disconnect the vehicle battery before performing maintenance
         orcc #0x10	 ; should already be the case ... belt and braces.
 
-	; new process in X, get parent pid into y
+	; new process in X so make sure x is 0 in the child image
 
 	stx fork_proc_ptr
-	ldx P_TAB__P_PID_OFFSET,x
+	ldx #0		; child returns 0
 
         ; Save the stack pointer and critical registers (Y and U used by C).
         ; When this process (the parent) is switched back in, it will be as if
         ; it returns with the value of the child's pid.
         pshs x,y,u ;  x has p->p_pid from above, the return value in the parent
 
-        ; save kernel stack pointer -- when it comes back in the parent we'll be in
+        ; save kernel stack pointer -- when it comes back in for the childt we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
 	; returning) and with X (ie return code) containing the child PID.
         ; Hurray.
@@ -148,35 +171,37 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	ldx U_DATA__U_PTAB
-	jsr _swapout
-	cmpd #0
-	bne forked_up
+	; Copy the parent properties into a temporary udata buffer
+	jsr _tmpbuf
+	tfr x,y
+	ldu #_udata
+udsave:
+	ldd ,u++
+	std ,x++
+	cmpu #_udata+U_DATA__TOTALSIZE
+	bne udsave
 
-	; We are now in the kernel child context
+	; Buffer is in Y - make a new process using the buffer in Y
+	; not the live updata
+	pshs y
+	ldx fork_proc_ptr
+	jsr _makeproc
 
-        ; now the copy operation is complete we can get rid of the stuff
-        ; _switchin will be expecting from our copy of the stack.
-	puls x
+	; Now set up for the swapout
+	pshs y		; callers can change args in C
+	ldx fork_proc_ptr
+	jsr _swapout_new
 
-	ldx #_udata
-	pshs x
-        ldx fork_proc_ptr
-        jsr _makeproc
-	puls x
+	leas 4,s	; clean up from both calls
 
-	; any calls to map process will now map the childs memory
+	tfr y,x
+	jsr _tmpfree
 
-        ; in the child process, fork() returns zero.
-	ldx #0
-        ; runticks = 0;
-	stx _runticks
-	;
-	; And we exit, with the kernel mapped, the child now being deemed
-	; to be the live uarea. The parent is frozen in time and space as
-	; if it had done a switchout().
-	puls y,u,pc
-
-forked_up:	; d is already -1
-	puls y,u,pc
+	; The child is now on disk, the parent is still running. This is
+	; good, it reduces thrash
+	ldx fork_proc_ptr
+	ldd P_TAB__P_PID_OFFSET,x
+	; Clean up and return
+	puls x,y,u
+	tfr d,x
 	rts
