@@ -21,6 +21,3 @@ All other addresses are unusable or empty (8xxxxxxx is empty)
 The 16x50 is also used as the interrupt controller and as GPIO lines which
 run an SPI interface to an RTC. It interrupts on autovector 1
 
-TODO:
-- NVRAM
-- RTC date setting and init.
