@@ -876,7 +876,7 @@ extern bool validdev(uint16_t dev);
    (with a passable compiler) all the supporting error logic. */
 #ifdef CONFIG_LEVEL_0
 /* Shortcut all the validation */
-#define valaddr(a,b)	(1)
+#define valaddr(a,b)	(b)
 #define uget(a,b,c)	(_uget(a, b, c) * 0)
 #define uput(a,b,c)	(_uput(a, b, c) * 0)
 #define ugetc(a)	_ugetc(a)
