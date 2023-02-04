@@ -94,10 +94,8 @@ void create_init(void)
 		*j = NO_FILE;
 
 	makeproc(init_process, &udata);
-	init_process->p_status = P_RUNNING;
 
 	udata.u_insys = 1;
-
 	init_process->p_status = P_RUNNING;
 
 	/* Poke the execve arguments into user data space so _execve() can read them back */
