@@ -51,8 +51,9 @@ address 0xFF, easily addressed as 0xFFFFFFFF == (-1).
 - [DONE]Rework the serial driver to be modular to plug in devices
 - [PART]Sort out RTS/CTS in the 16x50 driver (and core to some extent)
 - [DONE]Add tty_inproc_bad for level 2 systems to honour PARMRK etc
-- Add the RTC back in and remove the date trickery (start.c etc)
+- [DONE]Add the RTC back in and remove the date trickery (start.c etc)
 - Switch to 64 vectors ?
-- Check the PPIDE code versus Will's lasted optimizations
-- DualSD support ? What other cards are relevant
+- Check the PPIDE code versus Will's latest optimizations
+- [DONEish]DualSD support ? What other cards are relevant
+	- Need to update core code to support not present bit capability
 - Pick up BIOS baudrate

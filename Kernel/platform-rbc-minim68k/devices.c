@@ -38,7 +38,5 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
   devide_init();
-  kputs("SD");
   devsd_init();
-  kputs("probe done");
 }
