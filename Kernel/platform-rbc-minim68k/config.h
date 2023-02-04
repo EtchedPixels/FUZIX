@@ -44,16 +44,17 @@
 #define NBUFS    16       /* Number of block buffers */
 #define NMOUNTS	 8	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 2
+#define MAX_BLKDEV 4
 
 #define CONFIG_IDE
-#define CONFIG_PPIDE		/* NEW */
+#define CONFIG_PPIDE		/* MFPIC PPIDE */
+#define CONFIG_SD
+#define SD_DRIVE_COUNT	2
 
 /* On-board DS1302 on MF-PIC board, we can read the time of day from it */
-//#define CONFIG_RTC
-//#define CONFIG_RTC_FULL
-//#define CONFIG_RTC_INTERVAL 30 /* deciseconds between reading RTC seconds counter */
-
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
+#define CONFIG_RTC_DS1302
 
 #define plt_copyright()
 
@@ -83,7 +84,5 @@
 #define CONFIG_16x50			/* common UART in 8250..16C750 class */
 #define TICKSPERSECL	8		/* NEW  Ticks per second on low counter (Mini-M68k only) */
 /* #define INT_TIMERL */		/* DON'T enable the low timer */
-
-#define DS1302_DEBUG 1
 
 #endif /* __CONFIG_H */

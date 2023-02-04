@@ -1,11 +1,13 @@
 
-CSRCS = devtty.c ppide.c start.c
-CSRCS += devices.c main.c libc.c ns202.c
+CSRCS = devtty.c ppide.c
+CSRCS += devices.c main.c libc.c ns202.c ds1302_ops.c
 
 ASRCS = p68000.S crt0.S
 ASRCS += tricks.S
 
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devide_discard.c
+DSRCS += ../dev/ds1302.c ../dev/ds1302_discard.c
+DSRCS += ../dev/devsd.c ../dev/devsd_discard.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
 LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c
@@ -18,11 +20,8 @@ OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(LOBJS)
 CROSS_CCOPTS += -I../dev/ -Wa,-l -DCPU=68000
 ASOPTS += -Wa,-alhs=$*.lst -I..
 
-all:	start.c $(OBJS)
+all:	$(OBJS)
 
-start.c:	../start.c
-	sed /tod./d ../start.c >start.c
-	
 $(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
@@ -49,14 +48,15 @@ tidy:
 
 image:
 	$(CROSS_LD) -M -o fuzix.elf -T fuzix.ld \
-	ns202.o start.o ../version.o \
+	ns202.o ../start.o ../version.o \
 	../lowlevel-68000.o 68000exception.o devtty.o \
+	ds1302.o ds1302_discard.o ds1302_ops.o \
 	tricks.o p68000.o main.o ../timer.o ../kdata.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o blkdev.o mbr.o ../syscall_other.o ../mm.o ../flat.o \
 	../blk512.o ../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
-	ppide.o devide.o devide_discard.o \
+	ppide.o devide.o devide_discard.o devsd.o devsd_discard.o \
 	68000usercopy.o ../usermem_std-68000.o \
 	libc.o ../malloc.o ../level2.o ../syscall_level2.o ../select.o \
 	>../fuzix.map

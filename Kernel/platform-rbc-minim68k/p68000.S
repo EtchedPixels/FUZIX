@@ -16,8 +16,15 @@
 	.globl outchar
 	.globl OUTCHAR		/* C-callable */
 	.globl plt_monitor
-	.globl plt_daytime_setup
 	.globl udata_block
+
+	.globl sd_spi_transmit_byte
+	.globl sd_spi_receive_byte
+	.globl sd_spi_receive_sector
+	.globl sd_spi_transmit_sector
+	.globl sd_spi_clock
+	.globl sd_spi_raise_cs
+	.globl sd_spi_lower_cs
 	.globl irq0,irq1,irq2,irq3,irq4,irq5,irq6,irq7
 	.globl irq8,irq9,irq10,irq11,irq12,irq13,irq14,irq15
 	.globl timer_irq	/* same as 'irq8' */
@@ -37,6 +44,9 @@ LSR = IOBASE+mf_sio+5			/* 0x48 + 5 */
 THRE = 5				/* bit 5 */
 THR = IOBASE+mf_sio+0			/* 0x48 + 0 */
 RBR = IOBASE+mf_sio+0			/* 0x48 + 0 */
+
+spi_op = 0xFFFF8008
+spi_sel = 0xFFFF8009
 
 .mri 1
 plt_monitor:
@@ -58,6 +68,141 @@ init_early:
 plt_idle:
 	stop #($2000+EI_MASK)
 	rts
+
+sd_spi_clock:
+	rts
+sd_spi_raise_cs
+	move.b	sd_drive,d0
+	move.b	d0,spi_sel
+	move.b	#3,spi_op
+	rts
+sd_spi_lower_cs
+	move.b	sd_drive,d0
+	move.b	d0,spi_sel
+	move.b	#7,spi_op
+	rts
+
+spi_rx_byte:
+	movea.l	#spi_op,a0
+	move.b	(a0),d1
+	and.b	#4,d1	; Extract CS
+	addq	#1,d1	; Add in data
+	move.b	d1,d2	; Make a copy
+	addq	#2,d2	; Add in clock high
+spi_rx_next:
+	; Sadly the board designer didn't make the decode duplicated
+	; so you could speed clock with move.w
+	; Bit 0
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 1
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 2
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 3
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 4
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 5
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 6
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	; Bit 7
+	move.b	d1,(a0)
+	move.b	d2,(a0)
+	move.b	(a0),d3
+	lsr.b	#1,d3
+	roxl.b	#1,d0
+	rts
+
+spi_tx_byte:
+	movea.l	#spi_op,a0
+	move.b	(a0),d1
+	and.b	#$4,d1	/* CS line */
+spi_tx_next:
+	move.b	#7,d2
+spi_tx_bit:
+	lsr.b	#1,d1
+	roxl.b	#1,d0
+	roxl.b	#1,d1
+	move.b	d1,(a0)
+	addq	#$2,d1
+	move.b	d1,(a0)
+	subq	#$2,d1
+	dbra.w	d2,spi_tx_bit
+	rts
+
+
+sd_spi_transmit_byte:
+	movem.l	d2-d3,-(sp)
+	move.l	12(sp),d0
+	bsr	spi_tx_byte
+	movem.l	(sp)+,d2-d3
+	rts
+sd_spi_receive_byte
+	movem.l	d2-d3,-(sp)
+	bsr	spi_rx_byte
+	movem.l	(sp)+,d2-d3
+	rts
+
+sd_spi_receive_sector:
+	movem.l	a2/d2-d4,-(sp)
+	; Get the argument - address of buffer
+	; As we are a flat system we don't have to worry about
+	; kernel v user etc
+	move.l	blk_op,a2
+	move.w	#510,d4
+	; This first call primes all the register setup
+	bsr	spi_rx_byte
+	move.b	d0,(a2)+
+rx_block:
+	bsr	spi_rx_next
+	move.b	d0,(a2)+
+	dbra.w	d4,rx_block
+	movem.l	(sp)+,a2/d2-d4
+	rts
+
+sd_spi_transmit_sector:
+	movem.l	a2/d2-d4,-(sp)
+	move.l	blk_op,a2
+	move.w	#510,d4
+	; This first call primes all the register setup
+	bsr	spi_tx_byte
+	move.b	d0,(a2)+
+tx_block:
+	bsr	spi_tx_next
+	move.b	d0,(a2)+
+	dbra.w	d4,tx_block
+	movem.l	(sp)+,a2/d2-d4
+	rts
+
 ;
 ;	FIXME: could be in discard if we wanted
 ;
@@ -74,11 +219,6 @@ init_hardware:
 	lsr.l #2,d1
 	sub.w  d1,d0			; Top of memory minus kernel 
 	move.w d0,procmem		; Save for report
-
-	lea	tod,a0
-	move.l	a0,-(sp)
-	jsr	plt_daytime_setup	; get time from dead BIOS clock
-	lea	4(sp),sp
 
 #define TRAP8 40*4		/* (32+8)*4 */
 #define FMT14 14*4		/* Format vector on 68010 */

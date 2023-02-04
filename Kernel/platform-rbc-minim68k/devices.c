@@ -1,11 +1,11 @@
 #include <kernel.h>
 #include <version.h>
 #include <kdata.h>
-#include <devide.h>
 #include <blkdev.h>
+#include <devide.h>
+#include <devsd.h>
 #include <devsys.h>
 #include <tty.h>
-#include <vt.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -38,4 +38,7 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
   devide_init();
+  kputs("SD");
+  devsd_init();
+  kputs("probe done");
 }
