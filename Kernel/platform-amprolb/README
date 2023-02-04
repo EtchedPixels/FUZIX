@@ -1,6 +1,8 @@
 Fuzix for the Ampro Z80 Littleboard
 
-32K EPROM required
+The system builds as a ROM image for a 32K EPROM (or with a converter board
+EEPROM). The first 0500 bytes of the ROM are a simple Fuzix bootstrap which
+can be replaced with the standard SCSI or floppy loader and the CP/M bootstrap.
 
 Memory Map
 0000-7FFF	Switchable EPROM/RAM
@@ -25,10 +27,8 @@ Hardware
 -	NCR5380 SCSI
 -	Printer port (output/strobe/busy only)
 
-TODO:
--	1772 driver
-	- test
--	Printer
+TODO
+-	SCSI pseudo DMA mode
 
 -	In general needs soft interrupts implementing so
 	that our entry for timer is something like
