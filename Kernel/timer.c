@@ -100,7 +100,7 @@ void updatetod(void)
 
 	tick_clock();
 
-#ifdef CONFIG_RTC
+#if defined(CONFIG_RTC) && defined(CONFIG_RTC_INTERVAL)
 	/* on some platforms reading the RTC is expensive so we don't do it
 	   every decisecond. */
 	if(++rtcsync != CONFIG_RTC_INTERVAL)
@@ -129,7 +129,7 @@ void updatetod(void)
 #endif
 }
 
-#ifdef CONFIG_RTC
+#ifdef CONFIG_RTC_INTERVAL
 
 void inittod(void)
 {
