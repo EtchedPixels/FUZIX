@@ -491,6 +491,12 @@ void plt_interrupt(void)
 	dw_vpoll();
 }
 
+/* At this point the COCO2 doesn't use interrupt nesting */
+void plt_reinterrupt(void)
+{
+	panic("reint");
+}
+
 void vtattr_notify(void)
 {
 	curattr = ((vtink&7)<<3) + (vtpaper&7);
