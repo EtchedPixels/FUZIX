@@ -121,6 +121,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	/* FIXME: CTS/RTS support */
 	d = 0x03;	/* DTR RTS */
 	u->mcr = d;
+	/* FIXME: we set lsr ints but never use lsr */
 	u->msier = 0x0D;	/* We don't use tx ints */
 }
 
@@ -158,12 +159,26 @@ void tty_interrupt(void)
 	tty_poll(2, uart + 1);
 }
 
+static uint8_t tick;
+
 void plt_interrupt(void)
 {
 	tty_interrupt();
 	if (ptm[1] & 0x80) {	/* Timer interrupts present, must be timer 3 */
 		ptm[6];	/* Clear the interrupt */
-		timer_interrupt();
+		tick++;
+		while(tick--)
+			timer_interrupt();
+	}
+	wakeup(&plt_interrupt);
+}
+
+void plt_reinterrupt(void)
+{
+	tty_interrupt();
+	if (ptm[1] & 0x80) {
+		ptm[6];
+		tick++;
 	}
 	wakeup(&plt_interrupt);
 }

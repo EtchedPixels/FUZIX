@@ -1,15 +1,11 @@
 Fuzix for the RCBUS system with 6809 processor card
 
-(This is an initial sketch for the port, it does not yet work)
-
 This uses the standard RCBUS cards and mappings. The 6809 card maps the I/O
 space on the bus to MMIO $FExx on the 6809 CPU.
 
-The standard 512K RAM card is used with 4x16K bank control. The I/O window
-has priority over the memory banking.
-
-For now we use simple banking not 16K paging, this wants fixing once we are
-up and running. The map however is arranged roughly as it should end up
+The standard 512K RAM card is used with 4x16K bank control.  The I/O window
+has priority over the memory banking.  A 6840/6821 card is used to providing
+timing.
 
 Memory map:
 
@@ -34,10 +30,15 @@ IDE at 0xFE10
 16x50 UART at 0xFEC0
 
 TODO:
-
-DONE	Rework the boot ROM bootstrap checks before starting CUBIX from ROM
-	Align crt0 and bootstrap
-	Pack and unpack the high space
-	Ensure constants end up 0xC000 and higher (.link)
-	Timer/VIA set up
 	Move istack to FF00-FF??
+	Import the additional mini68k uart work back
+	Switch to full 4x16K banking for speed
+
+Devices To Add
+-	RTC
+-	Joystick
+-	PS/2 card
+-	80 column card
+-	TMS9918A	(and int source ?)
+-	SD bitbang on the 6821 GPIO
+-	W5100 carrier card if it'll work with the 6809 ?
