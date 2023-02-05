@@ -42,6 +42,7 @@ extern uint16_t swap_dev;
 
 extern unsigned char vt_mangle_6847(unsigned char c);
 #define VT_MAP_CHAR(x)	vt_mangle_6847(x)
+#define VT_CURSOR_CHAR	0xA0
 
 /* Vt definitions */
 #define VT_WIDTH	32
@@ -55,7 +56,7 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 /* RS/Tandy Color Computer keyboard */
 #undef CONFIG_COCO_KBD
 
-#define TICKSPERSEC 50   /* Ticks per second */
+#define TICKSPERSEC 10   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
 #define PROGTOP     0xF000  /* Top of program */
