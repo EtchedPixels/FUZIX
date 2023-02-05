@@ -28,8 +28,18 @@ void plt_discard(void)
 
 unsigned char vt_mangle_6847(unsigned char c)
 {
-	if (c >= 96)
-		c -= 32;
-	c &= 0x3F;
-	return c;
+	/* We use 0xA0 as a cursor code */
+	if (c == 0xA0)
+		return 0x20;
+	/* Upper case letters invert */
+	if (c >= 'A' && c <= 'Z')
+		return c & 0x3F;
+	/* Lower case letters normal */
+	if (c >= 'a' && c <= 'z')
+		return (c & 0x1F) | 0x40;
+	/* Upper punctuation invert */
+	if (c >= 0x60)
+		return (c & 0x1F) | 0x20;
+	/* Otherwise normal */
+	return (c & 0x3F) | 0x40;
 }
