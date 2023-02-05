@@ -20,7 +20,7 @@
 /* All this is discarded after boot on a small machine so we can be
    a bit more helpful */
 static const uint8_t cmd_inquiry[6] = { 0x1F, 0x00, 0x00, 0x00, 36, 0x00};
-static const uint8_t cmd_tur[6] = { 0x03, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t cmd_tur[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /* Trim the trailing spaces and print out the various identity strings
    if they are present */
