@@ -38,7 +38,6 @@
 	.globl my_nmi_handler
 	.globl interrupt_handler
 	.globl _doexit
-	.globl _inint
 	.globl kstack_top
 	.globl istack_top
 	.globl istack_switched_sp
