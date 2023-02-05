@@ -44,6 +44,12 @@ void pagemap_init(void)
 	extern uint8_t _end;
 	uint32_t e = (uint32_t)&_end;
 
+	/* If you made a very small build (eg wiht few drivers)
+	   ensure we start user after 64K in case the protection
+	   jumpers are set */
+	if (e < 0x10000)
+		e = 0x10000;
+
 	/* Allocate the rest of memory to the userspace */
 	kmemaddblk((void *)e, (ramsize << 10) - e);
 
