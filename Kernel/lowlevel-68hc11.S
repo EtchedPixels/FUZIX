@@ -122,40 +122,6 @@ outd:
 	pula
 	rts
 
-
-deliver_signals:
-	ldaa udata+U_DATA__U_CURSIG
-	bne deliver_signals_2
-signal_raced:
-	rts
-deliver_signals_2:
-	clr udata+U_DATA__U_CURSIG
-	tab
-	ldx #udata+U_DATA__U_SIGVEC
-	abx
-	abx
-	ldy 0,x
-	beq signal_raced
-	clr 0,x
-	clr 1,x
-	tab
-	clra
-	ldx PROGLOAD+16		; FIXME assumes binary at base address
-	; Stack the vector as well, needed for running 680x binaries
-	pshy
-	jsr ,x
-	pulx			; discard vector
-signal_return:
-	sei
-	sts udata+U_DATA__U_SYSCALL_SP
-	lds #kstack_top
-	jsr map_kernel_di
-	jsr chksigs
-	jsr map_process_always_di
-	lds udata+U_DATA__U_SYSCALL_SP
-	bra deliver_signals
-	
-
 ;
 ;	We are called from SWI. The stack holds 7 bytes of return
 ;	information, A holds the syscall number on entry, B the arg count
@@ -236,11 +202,30 @@ syscall_main:
 	staa 2,x
 	ldd udata+U_DATA__U_ERROR
 	std 3,x				; error in X
-	ldaa udata+U_DATA__U_CURSIG
-	bne via_signal
-	rti
-via_signal:
-	jsr deliver_signals_2
+rti_return:
+	ldab udata+U_DATA__U_CURSIG
+	beq no_signal
+	ldx #udata+U_DATA__U_SIGVEC
+	abx
+	abx
+	ldy 0,x
+	beq no_signal
+	clr 0,x
+	clr 1,x
+	; Arguments to signal handler
+	clra
+	pshy
+	ldx PROGLOAD+16	; Helper vector FIXME: assumes loaded at base
+	; We are off the kernel stack at this point so we can
+	; enable interrupts and leap into userspace
+	cli
+	jsr ,x
+signal_return:
+	ins	; Drop the signal number argument
+	ins
+	ins	; And the vector
+	ins
+no_signal:
 	rti
 
 doexec:
@@ -262,7 +247,7 @@ trap_handler:
 	; Were we in kernel - if so die horribly
 	tst udata + U_DATA__U_INSYS
 	bne trap_illegal
-	tst inint
+	tst udata + U_DATA__U_ININTERRUPT
 	bne trap_illegal
 	; Kick the user up the backside with a SIGILL. If the return from
 	; it and didn't reset the handler then it will kill so it usually
@@ -370,7 +355,6 @@ interrupt_handler:
 
 	ldaa #1
 	staa udata+U_DATA__U_ININTERRUPT
-	staa inint
 
 	; Call the C code to process the interrupt
 	ldy #plt_interrupt
@@ -381,7 +365,6 @@ interrupt_handler:
 	bne iretk
 
 	; Interrupts from user code may pre-empt
-	clr inint
 	tst need_resched
 	bne preemption
 
@@ -393,8 +376,7 @@ interrupt_handler:
 	clr udata+U_DATA__U_ININTERRUPT
 	tst udata+U_DATA__U_INSYS
 	bne no_signals
-	; Signals are delivered off interrupts too
-	jsr deliver_signals
+	jmp rti_return
 no_signals:
 	rti
 	;
@@ -450,9 +432,7 @@ not_running:
 	; Check for signals
 	ldaa udata+U_DATA__U_CURSIG
 	beq no_signals
-	jsr deliver_signals_2
-	; The RTI frame is top of our user stack
-	rti
+	jmp rti_return
 
 	.section .text
 

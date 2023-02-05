@@ -24,8 +24,6 @@
 
 	.export preemption
 
-	.export deliver_signals
-
 	.setcpu 6803
 
 #include "platform/kernel.def"
@@ -118,51 +116,6 @@ outd:
 	pula
 	rts
 
-deliver_signals:
-	ldaa _udata+U_DATA__U_CURSIG
-	bne deliver_signals_2
-signal_raced:
-	rts
-deliver_signals_2:
-	tab
-	ldx #_udata+U_DATA__U_SIGVEC
-	abx
-	abx
-	ldd 0,x
-	beq signal_raced
-	clr 0,x
-	clr 1,x
-	clr _udata+U_DATA__U_CURSIG
-#ifdef WITH_6303
-	.setcpu 6303
-	xgdx
-	.setcpu 6803
-#else
-	std @tmp
-	ldx @tmp
-#endif
-	clrb
-	; The value we need is in A so push AB not BA and we get the
-	; right 16bit result
-	psha
-	pshb
-	; stack the vector
-	pshx
-	ldx PROGLOAD+16
-	jsr ,x
-	; discard the vector
-	pulx
-	pulx
-	sei
-	sts _udata+U_DATA__U_SYSCALL_SP
-	lds #kstack_top
-	jsr map_kernel_di
-	jsr _chksigs
-	jsr map_process_always_di
-	lds _udata+U_DATA__U_SYSCALL_SP
-	bra deliver_signals
-	
-
 ;
 ;	We are called from SWI. The stack holds 7 bytes of return
 ;	information, A holds the syscall number on entry, B the arg count
@@ -212,11 +165,33 @@ unix_syscall_entry:
 	staa 2,x
 	ldd _udata+U_DATA__U_ERROR
 	std 3,x				; error in X
-	tst _udata+U_DATA__U_CURSIG
-	bne via_signal
-	rti
-via_signal:
-	jsr deliver_signals_2
+rti_return:
+	ldab _udata+U_DATA__U_CURSIG
+	beq no_signal
+	ldx #_udata+U_DATA__U_SIGVEC
+	abx
+	abx
+	ldd 0,x
+	beq no_signal
+	clr 0,x
+	clr 1,x
+	std @tmp
+	ldx @tmp
+	ldab _udata+U_DATA__U_CURSIG
+	clr _udata+U_DATA__U_CURSIG
+	
+	; Arguments to signal handler
+	clra
+	pshx
+	; Unwind for signal handlers
+	ldx PROGLOAD+16	; Helper vector FIXME: assumes loaded at base
+	; We are off the kernel stack at this point so we can
+	; enable interrupts and leap into userspace
+	cli
+	jsr ,x
+	ins	; Drop vector
+	ins
+no_signal:
 	rti
 
 _doexec:
@@ -237,7 +212,7 @@ _doexec:
 trap_handler:
 	tst _udata + U_DATA__U_INSYS
 	bne trap_illegal
-	tst _inint
+	tst _udata + U_DATA__U_ININTERRUPT
 	bne trap_illegal
 	; We should fix the trap address of the stack and see if it is > 31
 	; if so then it was an illegal instruction on 6303 TODO
@@ -276,7 +251,6 @@ interrupt_handler:
 
 	ldaa #1
 	staa _udata+U_DATA__U_ININTERRUPT
-	staa _inint
 	; Save the C direct page values so we can re-enter
 	; If we turn on register variables we will need to save them too
 	ldx @tmp
@@ -301,17 +275,23 @@ interrupt_handler:
 	stx @tmp1
 	pulx
 	stx @tmp
+	; If we interrupted kernel mode then we just put the map back and
+	; return
 	tst _udata+U_DATA__U_INSYS
 	bne iretk
-	clr _inint
+	; If we had to reschedule it's more complicated
 	tst _need_resched
 	bne preemption
+	; Put the process memory map back
 	jsr map_process_always
+	; Put the process stack back
 	lds istack_switched_sp
+	; We are no longer on the istack or in an interrupt
 	clr _udata+U_DATA__U_ININTERRUPT
+	; Don't deliver signals if we were in a system call
 	tst _udata+U_DATA__U_INSYS
 	bne no_signals
-	jsr deliver_signals
+	jmp rti_return
 no_signals:
 	rti
 	;
@@ -325,38 +305,57 @@ iretk:
 	rti
 
 
+;
+;	Task switch due to an interrupt.
+;
 preemption:
+	; Acknowledge the request
 	clr _need_resched
-	; Save the stack pointer across
+	; Copy the user stack save to the syscall save
 	ldd istack_switched_sp
 	std _udata+U_DATA__U_SYSCALL_SP
+	; Move onto our process kernel stack
+	; We can't stay on the istack as it'll be gone when
+	; we return.
 	lds #kstack_top
+	; Make it look like we are in a syscall
 	ldab #1
 	stab _udata+U_DATA__U_INSYS
+	; Update our signals
 	jsr _chksigs
+	; Correct our process state
 	ldx _udata+U_DATA__U_PTAB
 	ldab P_TAB__P_STATUS_OFFSET,x
 	cmpb #P_RUNNING
 	bne not_running
+	; Set the punishment flag if we used our time up
 	ldab #P_READY
 	stab P_TAB__P_STATUS_OFFSET,x
 	ldaa P_TAB__P_FLAGS_OFFSET,x
 	orab #PFL_BATCH
 	stab P_TAB__P_FLAGS_OFFSET,x
+	;
+	; At this point we are on the kernel stack and it all
+	; looks like a syscall. We can now switch out. The
+	; interrupt is effectively over and the new task will
+	; set the flags accordingly. In time we will pop out of
+	; plt_switchout again as if we had finished a syscall
+	;
 not_running:
 	jsr _plt_switchout
+	; We no longer want interrupts off when we run
 	clr _udata+U_DATA__U_ININTERRUPT
+	; We are not in a syscall
 	clr _udata+U_DATA__U_INSYS
+	; We are mapoped in memory
 	jsr map_process_always
+	; Move to user stack before interrupt exit
 	lds _udata+U_DATA__U_SYSCALL_SP
 	ldaa _udata+U_DATA__U_CURSIG
 	beq no_signals
-	jsr deliver_signals_2
-	rti
+	jmp rti_return
 
 	.code
-
-;
 
 	.setcpu 6303
 

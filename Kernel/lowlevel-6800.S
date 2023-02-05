@@ -59,7 +59,6 @@ outnewline:
 	ldab #0x0a
 	bra outchar_call
 
-
 outcharhex:
 	pshb
 	lsrb
@@ -110,40 +109,6 @@ outd:
 	pula
 	rts
 
-deliver_signals:
-	ldaa _udata+U_DATA__U_CURSIG
-	bne deliver_signals_2
-signal_raced:
-	rts
-deliver_signals_2:
-	lsla
-	tab
-	ldaa #<_udata+U_DATA__U_SIGVEC
-	aba
-	ldaa #>_udata+U_DATA__U_SIGVEC
-	adca #0
-	stab @tmp+1
-	staa @tmp
-	ldx @tmp
-	ldx 0,x
-	beq signal_raced
-	clrb
-	pshb
-	psha
-	ldab #<signal_return
-	ldaa #>signal_return
-	psha
-	pshb
-	jmp ,x
-signal_return:
-	sei
-	sts _udata+U_DATA__U_SYSCALL_SP
-	lds #kstack_top
-	jsr map_kernel_di
-	jsr _chksigs
-	jsr map_process_always_di
-	lds _udata+U_DATA__U_SYSCALL_SP
-	bra deliver_signals
 	
 
 ;
@@ -162,7 +127,6 @@ signal_return:
 ;	2	B
 ;	1	CC
 ;
-;	We do TSX, ABX so that our arguments are the same X offset
 ;
 unix_syscall_entry:
 	sts @tmp		; No ABX so we have to do a bit of work
@@ -210,14 +174,52 @@ noinc:
 	staa 2,x
 	ldaa _udata+U_DATA__U_ERROR
 	ldab _udata+U_DATA__U_ERROR+1
-	staa 3,x				; error in X
+	staa 3,x			; error in X
 	stab 4,x
-	tst _udata+U_DATA__U_CURSIG
-	bne via_signal
-	rti
-via_signal:
-	jsr deliver_signals_2
-	rti
+rti_return:
+	ldab _udata+U_DATA__U_CURSIG
+	beq no_signal
+	clr _udata+U_DATA__U_CURSIG
+	pshb
+	lslb
+	ldaa #<_udata+U_DATA__U_SIGVEC
+	aba
+	ldaa #>_udata+U_DATA__U_SIGVEC
+	adca #0
+	stab @tmp+1
+	staa @tmp
+	ldx @tmp
+	ldaa 0,x
+	ldab 1,x
+	beq no_signal_pop
+	clr 0,x
+	clr 1,x
+	; Save the vector
+	staa @tmp
+	stab @tmp+1
+	; Argument to signal handler
+	; First half is already on the stack
+	; Push a 0 byte to size it for C
+	pulb		; Get signal back into B
+	; Now push the vector
+	ldaa @tmp+1
+	psha
+	ldaa @tmp
+	psha
+	ldx  PROGLOAD+16	; Helper vector (FIXME: assumes binary relocatd here)
+	; We are off the kernel stack at this point so we can
+	; enable interrupts and leap into userspace
+	cli
+	; Signal as 16 bit value
+	clra
+	; Into helper
+	jsr ,x
+	ins	; Drop the vector
+no_signal_pop:
+	ins
+no_signal:
+	rti	; Unwind the original frame (containg the
+		; errno and return values ready)
 
 _doexec:
 	tsx
@@ -236,7 +238,7 @@ _doexec:
 trap_handler:
 	tst _udata + U_DATA__U_INSYS
 	bne trap_illegal
-	tst _inint
+	tst _udata + U_DATA__U_ININTERRUPT
 	bne trap_illegal
 	clra
 	ldab #9
@@ -278,7 +280,6 @@ interrupt_handler:
 
 	ldaa #1
 	staa _udata+U_DATA__U_ININTERRUPT
-	staa _inint
 	; Save the C direct page values so we can re-enter
 	; If we turn on register variables we will need to save them too
 	ldaa @tmp
@@ -323,17 +324,26 @@ interrupt_handler:
 	staa @tmp+1
 	pula
 	staa @tmp
+	; If we interrupted kernel mode then we just put the map back and
+	; return
 	tst _udata+U_DATA__U_INSYS
 	bne iretk
-	clr _inint
+	; If we had to reschedule it's more complicated
 	tst _need_resched
 	bne preemption
+	; Put the process memory map back
 	jsr map_process_always
+	; Put the process stack back
 	lds istack_switched_sp
+	; We are no longer on the istack or in an interrupt
 	clr _udata+U_DATA__U_ININTERRUPT
+	; Don't deliver signals if we were in a system call
 	tst _udata+U_DATA__U_INSYS
 	bne no_signals
-	jsr deliver_signals
+	; We may have a signal to deliver.so exit via that path
+	jmp rti_return
+	; Nothing special happened so just rti to get the CPU state
+	; back and continue life
 no_signals:
 	rti
 	;
@@ -344,40 +354,60 @@ iretk:
 	jsr map_restore
 	lds istack_switched_sp
 	clr _udata+U_DATA__U_ININTERRUPT
-	tst _udata+U_DATA__U_INSYS
 	rti
 
-
+;
+;	Task switch due to an interrupt. Tricky in places on a 6800
+;
 preemption:
+	; Acknowledge the request
 	clr _need_resched
-	; Save the stack pointer across
+	; Copy the user stack save to the syscall save
 	ldaa istack_switched_sp
 	staa _udata+U_DATA__U_SYSCALL_SP
 	ldaa istack_switched_sp+1
 	staa _udata+U_DATA__U_SYSCALL_SP+1
+	; Move onto our process kernel stack
+	; We can't stay on the istack as it'll be gone when
+	; we return.
 	lds #kstack_top
+	; Make it look like we are in a syscall
 	ldab #1
 	stab _udata+U_DATA__U_INSYS
+	; Update our signals
 	jsr _chksigs
+	; Correct our process state
 	ldx _udata+U_DATA__U_PTAB
 	ldab P_TAB__P_STATUS_OFFSET,x
 	cmpb #P_RUNNING
 	bne not_running
+	; Set the punishment flag if we used our time up
 	ldab #P_READY
 	stab P_TAB__P_STATUS_OFFSET,x
 	ldaa P_TAB__P_FLAGS_OFFSET,x
 	orab #PFL_BATCH
 	stab P_TAB__P_FLAGS_OFFSET,x
+	;
+	; At this point we are on the kernel stack and it all
+	; looks like a syscall. We can now switch out. The
+	; interrupt is effectively over and the new task will
+	; set the flags accordingly. In time we will pop out of
+	; plt_switchout again as if we had finished a syscall
+	;
 not_running:
 	jsr _plt_switchout
+	; We no longer want interrupts off when we run
 	clr _udata+U_DATA__U_ININTERRUPT
+	; We are not in a syscall
 	clr _udata+U_DATA__U_INSYS
+	; We are mapoped in memory
 	jsr map_process_always
+	; Move to user stack before interrupt
 	lds _udata+U_DATA__U_SYSCALL_SP
 	ldaa _udata+U_DATA__U_CURSIG
 	beq no_signals
-	jsr deliver_signals_2
-	rti
+	; Do the signal return path
+	jmp rti_return
 
 	.code
 
@@ -388,18 +418,29 @@ not_running:
 
 	.setcpu 6303
 
+;
+;	This a 6800 spec
+;
 _set_cpu_type:
-	rts
-	; TODO 6800 v 6803
+	ldx #0
+	sec
+	cpx #0		; on 6800 does not change carry
+			; on 6803 it does
+	bcc is_6800
 	clrb
 	ldx #1
 	xgdx		; appears to do nothing on the 6803
 	tstb
 	beq is_6803
 	ldab #3		; 6303 feature set also present
-	stab _sys_cpu_feat
+	bra setfeat
 is_6803:
+	ldab #1
+setfeat:
+	stab _sys_cpu_feat
+is_6800:
 	rts
+
 
 	.setcpu 6800
 
