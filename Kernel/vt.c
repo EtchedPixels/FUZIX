@@ -404,7 +404,6 @@ void vt_load(struct vt_switch *vt)
 
 #ifdef CONFIG_VT_SIMPLE
 
-
 static unsigned char *cpos;
 static unsigned char csave;
 
@@ -429,7 +428,7 @@ void cursor_on(int8_t y, int8_t x)
 {
 	cpos = char_addr(y, x);
 	csave = *cpos;
-	*cpos = VT_MAP_CHAR('_');
+	*cpos = VT_MAP_CHAR(VT_CURSOR_CHAR);
 }
 
 void plot_char(int8_t y, int8_t x, uint16_t c)

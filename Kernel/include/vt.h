@@ -13,6 +13,10 @@
 #define VT_MAP_CHAR(x) 	(x)
 #endif
 
+#ifndef VT_CURSOR_CHAR
+#define VT_CURSOR_CHAR	'_'
+#endif
+
 #ifndef VT_INITIAL_LINE
 #define VT_INITIAL_LINE 0
 #endif
