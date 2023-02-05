@@ -22,7 +22,6 @@
 	        .globl map_save_kernel
        		.globl map_restore
 		.globl outchar
-		.globl _inint
 		.globl _plt_interrupt
 		.globl plt_interrupt_all
 	        .globl _plt_monitor
@@ -291,7 +290,7 @@ null_handler:
 		ld a, (_udata + U_DATA__U_INSYS)
 		or a,a
 		jp nz, trap_illegal
-		ld a, (_inint)
+		ld a, (_udata + U_DATA__U_ININTERRUPT)
 		jp nz, trap_illegal
 		; user is merely not good
 		ld hl, #7
@@ -360,17 +359,10 @@ interrupt_handler:
 		jr z, no_null_ptr
 		call null_pointer_trap
 no_null_ptr:
-		; So the kernel can check rapidly for interrupt status
-		; FIXME: move to the C code
-		ld a, #1
-		ld (_inint), a
 		; So we know that this task should resume with IRQs off
 		ld (_udata + U_DATA__U_ININTERRUPT), a
 
 		call _plt_interrupt
-
-		xor a,a
-		ld (_inint), a
 
 		ld a, (_need_resched)
 		or a,a

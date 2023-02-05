@@ -185,14 +185,12 @@ interrupt_handler:
 
 	lda 	1
 	sta	(_udata+U_DATA__U_ININTERRUPT)
-	sta	(_inint)
 
 	jsr _plt_interrupt
 
 	ldab (_udata+U_DATA__U_INSYS)
 	bnz iretk
 	clab
-	stab	(_inint)
 	ldab	(_need_resched)
 	bnz	preemption
 	jsr	map_process_always

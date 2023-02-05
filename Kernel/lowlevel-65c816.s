@@ -45,7 +45,6 @@
 	.import _unix_syscall
 	.import _plt_interrupt
 	.import plt_doexec
-	.import _inint
 	.import _plt_monitor
 	.import _plt_switchout
 	.import _chksigs
@@ -503,8 +502,6 @@ shoot_myself:
 	.a8
 	.i8
 	jsr	push0
-	lda	#1
-	sta	_inint
 	pla			; top of stack is the saved signal number
 	ldx	#0
 	jsr 	_ssig
@@ -554,8 +551,6 @@ interrupt_handler:
 	sep	#$10
 	.i8
 
-	lda	#1
-	sta	_inint
 	jsr	_plt_interrupt
 
 	;
@@ -564,7 +559,6 @@ interrupt_handler:
 	;
 
 join_interrupt_path:
-	stz	_inint
 
 	; Restore the stack we arrived on
 
@@ -836,7 +830,7 @@ sync_sig:
 	pha
 	lda	_kernel_flag
 	bne	ktrap
-	lda	_inint
+	lda	U_DATA_U__ININTERRUPT
 	bne	itrap
 	jmp	shoot_myself
 

@@ -35,7 +35,6 @@
         .globl map_restore
 	.globl outchar
 	.globl _need_resched
-	.globl _inint
 	.globl _plt_interrupt
 
         ; exported symbols
@@ -210,18 +209,18 @@ reinterrupt:
 	rti
 
 interrupt_handler:
+	; If the platofmr interrupt code re-enabled interrupts then
+	; we are on the interrupt stack already and platform author
+	; is assumed to know what they are doing 8)
+	tst U_DATA__U_ININTERRUPT
+	bne reinterrupt
+
 	; Do not use the stack before the switch...
 	; FIXME: add profil support here (need to keep profil ptrs
 	; unbanked if so ?)
 
 	lda #1
         sta U_DATA__U_ININTERRUPT
-
-	; If the platofmr interrupt code re-enabled interrupts then
-	; we are on the interrupt stack already and platform author
-	; is assumed to know what they are doing 8)
-	tst _inint
-	bne reinterrupt
 
         ; switch stacks
         sts istack_switched_sp
@@ -246,9 +245,6 @@ interrupt_handler:
 nofault:
 in_kernel:
         jsr map_kernel
-        ; set inint to true
-        lda #1
-        sta _inint
 
 	;
 	; If the kernel decides to task switch it will set
@@ -257,7 +253,6 @@ in_kernel:
 
         jsr _plt_interrupt
 
-        clr _inint
         ldx istack_switched_sp	; stack back
         clr U_DATA__U_ININTERRUPT
         lda U_DATA__U_INSYS

@@ -28,7 +28,6 @@
         .globl map_save_kernel
         .globl map_restore
 	.globl outchar
-	.globl _inint
 	.globl _plt_interrupt
 	.globl plt_interrupt_all
 	.globl _need_resched
@@ -338,7 +337,7 @@ null_handler:
 	ld a, (_udata + U_DATA__U_INSYS)
 	or a
 	jp nz, trap_illegal
-	ld a, (_inint)
+	ld a, (_udata + U_DATA__U_ININTERRUPT)
 	or a
 	jp nz, trap_illegal
 	; user is merely not good - handle it synchronously
@@ -435,10 +434,6 @@ mmu_irq_ret:
 
 	call map_save_kernel
 
-	; So the kernel can check rapidly for interrupt status
-	; FIXME: move to the C code
-	ld a, #1
-	ld (_inint), a
 	; So we know that this task should resume with IRQs off
 	ld (_udata + U_DATA__U_ININTERRUPT), a
 	; Load the interrupt flag properly. It got an implicit di from
@@ -446,9 +441,6 @@ mmu_irq_ret:
 	ld (_int_disabled),a
 
 	call _plt_interrupt
-
-	xor a
-	ld (_inint), a
 
 	ld a, (_need_resched)
 	or a

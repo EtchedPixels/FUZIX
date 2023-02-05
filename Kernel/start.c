@@ -334,7 +334,7 @@ void fuzix_main(void)
 {
 	struct mount *m;
 	/* setup state */
-	inint = false;
+	udata.u_ininterrupt = 0;
 	udata.u_insys = true;
 
 #ifdef PROGTOP		/* FIXME */

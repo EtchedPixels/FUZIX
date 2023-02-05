@@ -31,7 +31,6 @@
         .globl map_restore
 	.globl outchar
 	.globl _need_resched
-	.globl _inint
 	.globl _plt_interrupt
 	.globl plt_interrupt_all
 	.globl _plt_switchout
@@ -413,10 +412,6 @@ intvec:
 
 	call map_save_kernel
 
-	; So the kernel can check rapidly for interrupt status
-	; FIXME: move to the C code
-	ld a, #1
-	ld (_inint), a
 	; So we know that this task should resume with IRQs off
 	ld (_udata + U_DATA__U_ININTERRUPT), a
 	; Load the interrupt flag properly. It got an implicit di from
@@ -427,16 +422,12 @@ intvec:
 	call _plt_interrupt
 	pop af
 
-	xor a
-	ld (_inint), a
-
 	ld a, (_need_resched)
 	or a
 	jr nz, preemption
 
 	; Back to the old memory map
 	call map_restore
-
 	;
 	; Back on user stack
 	;

@@ -30,7 +30,6 @@
 	.import map_kernel
 	.import _plt_interrupt_i
 	.import plt_doexec
-	.import _inint
 	.import CTemp
 	.import _plt_monitor
 
@@ -101,11 +100,7 @@ _doexec:
 interrupt_handler:
 ; Our caller will deal with ZP via stash_sp and any platform magic
 	jsr map_save_kernel
-	lda #1
-	sta _inint
 	jsr _plt_interrupt_i	; call via C int wrapper
-	lda #0
-	sta _inint
 	lda _kernel_flag
 	bne interrupt_k
 	jmp map_process_always		; may have switched task

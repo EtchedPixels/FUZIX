@@ -31,7 +31,6 @@
         .globl map_save_low
         .globl map_restore_low
 	.globl outchar
-	.globl _inint
 	.globl _plt_interrupt
 	.globl _need_resched
 	.globl _plt_switchout
@@ -207,12 +206,9 @@ traphl:
 interrupt_handler:
 	call map_save_low	; save old and map kernel
 	ld a,#1
-	ld (_inint),a
 	ld (_udata + U_DATA__U_ININTERRUPT),a
 	ld (_int_disabled),a
 	call _plt_interrupt
-	xor a
-	ld (_inint),a
 	ld a,(_need_resched)
 	or a
 	jr nz, preemption

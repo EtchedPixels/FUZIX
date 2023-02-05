@@ -219,7 +219,7 @@ null_handler:
 	lda U_DATA__U_INSYS
 	ora a
 	jnz trap_illegal
-	lda _inint
+	lda U_DATA__U_ININTERRUPT
 	ora a
 	jnz trap_illegal
 	lxi h,7
@@ -289,7 +289,6 @@ interrupt_handler:
 	! Set up state and enter kernel
 	!
 	mvi a,1
-	sta _inint
 	sta U_DATA__U_ININTERRUPT
 	sta _int_disabled
 	!
@@ -314,11 +313,6 @@ interrupt_handler:
 	shld .bcreg
 	pop h
 	shld .retadr
-	!
-	! Undo state
-	!
-	xra a
-	sta _inint
 	!
 	! Do we need to task switch ?
 	!

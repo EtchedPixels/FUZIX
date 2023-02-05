@@ -258,7 +258,7 @@ _doexec:
 trap_handler:
 	mov	@_udata + U_DATA__U_INSYS,r0
 	jne	@trap_illegal
-	mov	@_inint,r0
+	mov	@_udata + U_DATA__U_ININTERRUPT,r0
 	jne	@trap_illegal
 	; We are in the wrong workspace for a syscall but this is going to
 	; be short and terminal
@@ -303,7 +303,6 @@ interrupt_handler:
 	; Flag interrupt status
 	li	r0,1
 	mov	r0,@_udata+U_DATA__U_ININTERRUPT
-	mov	r0,@_inint
 	; Handle interrupt
 	bl 	@_plt_interrupt
 	; Restore R13 workspace pointer
@@ -311,17 +310,17 @@ interrupt_handler:
 	; Simple case - we were in the kernel
 	mov	@_udata+U_DATA__U_INSYS,r0
 	jne	@iretk
-	; Returning to user space
-	clr	@_inint
 	; Pre-emption - the nasty case - handle it out of line
 	movb	@_need_resched,r0
 	jne	@preemption
 	; No pre-emption, but may be signals pending. Map the user process
+	clrb	@_udata+U_DATA__U_ININTERRUPT
 	bl	@map_process_always
 	b	@deliver_signal
 	; Kernel fast path - restore the MMU instead of setting it for
 	; the process. Again all the work is done by the work space flip
 iretk:
+	clrb	@_udata+U_DATA__U_ININTERRUPT
 	bl	@map_kernel_restore
 	rtwp
 
