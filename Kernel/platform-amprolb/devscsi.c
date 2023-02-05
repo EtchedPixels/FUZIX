@@ -13,6 +13,11 @@ int scsi_cmd(uint_fast8_t dev, uint8_t *cmd, uint8_t *data, uint16_t len)
     uint8_t r;
     scsi_target = 1 << dev;
     memcpy(scsicmd, cmd, 16);
+    /* Quick way to optimize the usual block transfer sizes */
+    if (len & 0xFF)
+        scsi_burst = 1;
+    else
+        scsi_burst = 0;	/* 256 */
     scsi_dbuf = data;
     r = ncr5380_command();
     return r;

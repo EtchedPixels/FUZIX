@@ -32,7 +32,7 @@
 	.globl	_scsi_idbits
 	.globl	_scsi_target
 	.globl	_scsi_status
-
+	.globl  _scsi_burst
 
 	.include "kernel.def"
 
@@ -122,14 +122,16 @@ ncr5380_phase:
 	; the phase by supplying or reciving data.
 	;
 
+	ld	e,#1		; Default to non block burst
 	ld	hl,#_scsimsg	; Message buffer is used for phase 7
 	cp	#7		; Message in
+	jr	z, ncr5380_hdin
 	ld	hl,(_scsi_dbuf)	; Data buffer is used in data states
 	jr	z, ncr5380_hdin
 	or	a		; Data out
-	jr	z, ncr5380_hdout
+	jr	z, ncr5380_hdout_block
 	dec	a
-	jr	z, ncr5380_hdin	; Data in
+	jr	z, ncr5380_hdin_block	; Data in
 	ld	hl,#_scsicmd	; SCSI cmd block
 	dec	a
 	jr	z, ncr5380_hdout ; Command out
@@ -158,23 +160,32 @@ ncr5380_exit:
 	; Things are coming off the bus for us to store
 	; We try and keep this loop as tight as we can
 
+ncr5380_hdin_block:
+	ld	a,(_scsi_burst)
+	; Burst size for transfer. The available buffer must divide by this
+	ld	e,a
 ncr5380_hdin:
-	out	(ncr_dma_r),a
+	out	(ncr_dma_r),a	; Value is irrelevant
 	ld	d,#0x40
 ncr5380_hdin1:
 	in	a,(ncr_st)
-	ld	e,a
+	ld	b,a
 	and	d		; Wait for REQ
 	jr	z, ncr5380_hdin2
-	ini
-	jp	ncr5380_hdin1
+	ld	b,e
+	inir
+	jp	ncr5380_hdin
 ncr5380_hdin2:
-	bit	4,e
+	bit	4,b
 	jr	z, ncr5380_hdin1
 	jp	ncr5380_phase
 
 	; Same idea other way around
 
+ncr5380_hdout_block:
+	ld	a,(_scsi_burst)
+	; Burst size for transfer. The available buffer must divide by this
+	ld	e,a
 ncr5380_hdout:
 	ld	a,#B_ABUS
 	out	(ncr_cmd),a
@@ -182,13 +193,14 @@ ncr5380_hdout:
 	ld	d,#0x40
 ncr5380_hdout1:
 	in	a,(ncr_st)
-	ld	e,a
+	ld	b,a
 	and	d		; Wait for REQ
 	jr	z, ncr5380_hdout2
-	outi
+	ld	b,e
+	otir
 	jp	ncr5380_hdout1
 ncr5380_hdout2:
-	bit	4,e
+	bit	4,b
 	jr	z, ncr5380_hdout1
 	jp	ncr5380_phase
 
@@ -200,6 +212,7 @@ ncr5380_hdout2:
 
 	; Things are coming off the bus for us to store
 
+ncr5380_hdin_block:
 ncr5380_hdin:
 	in	a,(ncr_bus)
 	bit	5,a		; Wait for REQ
@@ -227,6 +240,7 @@ ncr5380_hdin1:
 	out	(ncr_cmd),a
 	jr	ncr5380_hdin
 
+ncr5380_hdout_block:
 ncr5380_hdout:
 	ld	a,#B_ABUS
 	out	(ncr_cmd),a
@@ -293,6 +307,8 @@ _scsi_idbits:		; shifted
 _scsi_target:		; shifted
 	.byte	0
 _scsimsg:
+	.byte	0
+_scsi_burst:
 	.byte	0
 _scsicmd:
 	.ds	16
