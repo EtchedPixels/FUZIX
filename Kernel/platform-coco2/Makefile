@@ -83,5 +83,5 @@ diskimage:
 	# Write the rest of the images to the disks
 	dd if=fuzix.img of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Loader
-	cp bootfuz.bin bootfuz.decb $(IMAGES)
+	cp bootfuz.bin $(IMAGES)
 
