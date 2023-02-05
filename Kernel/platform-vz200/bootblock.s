@@ -70,6 +70,7 @@ start:
 	call	load_sectors
 	pop	af
 	jp	z, 0x9000
+	ld	iy,#0		; So we don't scribble on the loading data
 	ld	hl,#0x7000
 	ld	b,#4		; load 2K into video bank 3
 	ld	a,#3
