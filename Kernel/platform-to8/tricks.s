@@ -103,7 +103,7 @@ not_swapped:
 	beq bankclear		; image in the space may be dead
 
 bankout:
-	stb <$E5		; set bank for A000-DFFF (assumes TO8 mapping)
+	stb $E7E5		; set bank for A000-DFFF (assumes TO8 mapping)
 	pshs x,y
 	ldx #$6100		; copy all but the monitor vars (includes udata)
 	ldy #$A100
@@ -119,7 +119,7 @@ bankclear:
 bankin:
 	lda P_TAB__P_PAGE_OFFSET+1,x
 	sta _cur6		; remember the page that is actually now resident
-	sta <$E5		; map it at A000-DFFF for copying
+	sta $E7E5		; map it at A000-DFFF for copying
 	ldx #$A100
 	ldy #$6100
 	ldd ,x++
@@ -236,7 +236,7 @@ fork_copy:
 	ldb P_TAB__P_PAGE_OFFSET+1,x	; child page
 	stb _cur6			; child is now deemed to own cur6
 	ldb U_DATA__U_PAGE+1		; parent low page
-	stb <$E5			; make it appear at A000
+	stb $E7E5			; make it appear at A000
 
 	ldx #$6100
 	ldy #$A100
@@ -251,11 +251,11 @@ save_low:				; copy the low 16K of user
 	; only be able to land ROM pages there
 	ldb _cur6
 	incb
-	stb <$E5			; map the child properly into A000-DFFF
+	stb $E7E5			; map the child properly into A000-DFFF
 	ldb U_DATA__U_PAGE+1
 	incb
 	orb #$60			; RAM in wndow, writeable
-	stb <$E6			; map the low 16K to the parent upper block
+	stb $E7E6			; map the low 16K to the parent upper block
 
 	ldx #$0000
 	ldy #$A000

@@ -145,10 +145,10 @@ fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_
 ;	Called from _fork. We are in a syscall, the uarea is live as the
 ;	parent uarea. The kernel is the mapped object.
 ;
+;	With the re-interrupt changes we can now do a lot of this safely
+;	with interrupts enabled. 
+;
 _dofork:
-        ; always disconnect the vehicle battery before performing maintenance
-        orcc #0x10	 ; should already be the case ... belt and braces.
-
 	; new process in X so make sure x is 0 in the child image
 
 	stx fork_proc_ptr
@@ -168,6 +168,11 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
+	; Re-enable interrupts as the buffer fetch onwards could do I/O and
+	; we want it to feel smooth. makeproc will turn ints off/on as
+	; needed
+
+	andcc #0xEF
 	; Copy the parent properties into a temporary udata buffer
 	jsr _tmpbuf
 	tfr x,y
@@ -201,4 +206,7 @@ udsave:
 	; Clean up and return
 	puls x,y,u
 	tfr d,x
+	; TODO - for now return with ints off as we were called. This should
+	; eventually go away
+	orcc #$10
 	rts

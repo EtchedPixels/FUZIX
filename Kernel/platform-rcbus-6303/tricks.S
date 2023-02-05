@@ -43,9 +43,6 @@ _plt_switchout:
 	jsr stash_udata
 	jsr map_kernel
 
-        ; set inint to false
-	clr _inint
-
         ; find another process to run (may select this one again) returns it
         ; in d
         jsr _getproc
@@ -147,7 +144,7 @@ nostash:
         ; restore machine state -- note we may be returning from either
         ; _switchout or _dofork
         lds _udata + U_DATA__U_SP
-	ldaa _inint
+	ldaa _udata + U_DATA__U_ININTERRUPT
         beq swtchdone		; in ISR, leave interrupts off
 	cli
 swtchdone:

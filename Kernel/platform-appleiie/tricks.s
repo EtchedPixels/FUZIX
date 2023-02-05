@@ -16,7 +16,6 @@
 	.import	_makeproc
 	.import _getproc
 	.import _runticks
-	.import _inint
 	.import outstring
 	.import outxa
 	.import outcharhex
@@ -56,10 +55,6 @@ _plt_switchout:
 	pha
 	tsx
 	stx _udata + U_DATA__U_SP	; Save it
-
-        ; set inint to false
-	lda #0
-	sta _inint
 
         ; find another process to run (may select this one again) returns it
         ; in x,a
@@ -182,7 +177,7 @@ not_swapped:
 	sta sp+1
 	pla
 	sta sp
-	lda _inint
+	lda _udata + U_DATA__U_ININTERRUPT
         beq swtchdone		; in ISR, leave interrupts off
 	cli
 swtchdone:

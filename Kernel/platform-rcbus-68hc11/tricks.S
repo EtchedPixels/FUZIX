@@ -36,9 +36,6 @@ plt_switchout:
 	psha				; Return code
 	sts udata + U_DATA__U_SP	; Save old SP
 
-        ; set inint to false
-	clr inint
-
         ; find another process to run (may select this one again) returns it
         ; in d
         jsr getproc
@@ -133,7 +130,7 @@ not_swapped:
         ; restore machine state -- note we may be returning from either
         ; switchout or dofork
         lds udata + U_DATA__U_SP	; not needed ?
-	ldaa inint
+	ldaa udata + U_DATA__U_ININTERRUPT
         beq swtchdone		; in ISR, leave interrupts off
 	cli
 swtchdone:
