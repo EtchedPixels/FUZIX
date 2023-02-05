@@ -147,13 +147,10 @@ void switchout(void)
 	/* When we are idle we twiddle our thumbs here until a polled event
 	   in plt_idle or an interrupt wakes someone up */
 	while (nready == 0) {
-		/* We are idle, that means we cannot sleep */
-		udata.u_ininterrupt = 1;
+		/* We are idle, we cannot sleep by calling psleep */
 		ei();
 		plt_idle();
 		di();
-		/* We never idle in an interrupt so this is valid */
-		udata.u_ininterrupt = 0;
 	}
 	/* If only one process is ready to run and it's us then just
 	   return. This is the normal path in most Fuzix use cases as we
@@ -503,8 +500,7 @@ void timer_interrupt(void)
 	/* Check run time of current process. We don't charge time while
 	   swapping as the last thing we want to do is to swap a process in
 	   and decide it took time to swap in so needs to go away again! */
-	if (!inswap && (++runticks >= udata.u_ptab->p_priority)
-	    && !udata.u_insys && inint) {
+	if (!inswap && ++runticks >= udata.u_ptab->p_priority && !udata.u_insys) {
 		/* It might appear to make the best sense to just leave
 		   runticks ticking upwards if nobody else needs to run but
 		   this has two problems. The obvious one is that it may wrap
