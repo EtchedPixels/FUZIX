@@ -28,8 +28,6 @@ Hardware
 -	Printer port (output/strobe/busy only)
 
 TODO
--	SCSI pseudo DMA mode
-
 -	In general needs soft interrupts implementing so
 	that our entry for timer is something like
 

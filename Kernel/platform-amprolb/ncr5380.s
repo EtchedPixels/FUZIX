@@ -36,6 +36,7 @@
 
 	.include "kernel.def"
 
+PDMA		.equ	1
 ;	FIXME: tune this
 TIMEOUT		.equ	0x8000
 
@@ -85,18 +86,34 @@ ncr5380_sel_wait:
 	in	a,(ncr_bus)
 	and	#B_BUSY
 	jr	z, ncr5380_sel_wait
-; Grab the bus ourselves.
-;	ld	a,#B_BUSY
-;	out	(ncr_cmd),a
+	; Drop SEL so we get to see a valid bus request
+	; from the target
+	xor	a
+	out	(ncr_cmd),a
 
 ncr5380_phase:
+	in	a,(ncr_bus)
+	and	#B_BUSY
+	jr	z, ncr5380_exit
+	; Clear mode register
+	xor	a
+	out	(ncr_mod),a
+	; Clear interrupt
+	in	a,(ncr_int)
+.ifne PDMA
+	; DMA on
+	ld	a,#6
+	out	(ncr_mod),a
+	ld	c,#ncr_dack
+.else
+	ld	c,#ncr_data
+.endif
 	in	a,(ncr_bus)
 	and	#B_MSG|B_CD|B_IO
 	rra
 	rra	; We now have the phase in bits 0-2 for testing
 	out	(ncr_tgt),a	; check for match
 
-	ld	c,#ncr_data
 
 	; Phase dispatcher
 	;
@@ -125,10 +142,64 @@ ncr5380_timeout:
 	ld	l,#1
 	ret
 
+.ifne PDMA
 ;
-;	TODO: we need PDMA versions of these
+;	PDMA mode
 ;
+	; Busy dropped
+
+ncr5380_exit:
+	xor	a
+	out	(ncr_cmd),a
+	out	(ncr_tgt),a
+	ld	l,a
+	ret
+
 	; Things are coming off the bus for us to store
+	; We try and keep this loop as tight as we can
+
+ncr5380_hdin:
+	out	(ncr_dma_r),a
+	ld	d,#0x40
+ncr5380_hdin1:
+	in	a,(ncr_st)
+	ld	e,a
+	and	d		; Wait for REQ
+	jr	z, ncr5380_hdin2
+	ini
+	jp	ncr5380_hdin1
+ncr5380_hdin2:
+	bit	4,e
+	jr	z, ncr5380_hdin1
+	jp	ncr5380_phase
+
+	; Same idea other way around
+
+ncr5380_hdout:
+	ld	a,#B_ABUS
+	out	(ncr_cmd),a
+	out	(ncr_dma_w),a
+	ld	d,#0x40
+ncr5380_hdout1:
+	in	a,(ncr_st)
+	ld	e,a
+	and	d		; Wait for REQ
+	jr	z, ncr5380_hdout2
+	outi
+	jp	ncr5380_hdout1
+ncr5380_hdout2:
+	bit	4,e
+	jr	z, ncr5380_hdout1
+	jp	ncr5380_phase
+
+
+.else
+;
+;	PIO mode
+;
+
+	; Things are coming off the bus for us to store
+
 ncr5380_hdin:
 	in	a,(ncr_bus)
 	bit	5,a		; Wait for REQ
@@ -176,6 +247,8 @@ ncr5380_hdout1:
 	xor	a
 	out	(ncr_cmd),a
 	jr	ncr5380_hdout
+
+.endif
 
 ;
 ;	Perform a SCSI command. The caller loaded the command block

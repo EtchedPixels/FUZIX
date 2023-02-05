@@ -35,9 +35,10 @@ ncr_mod		.equ	ncr_base + 2
 ncr_tgt		.equ	ncr_base + 3
 ncr_bus		.equ	ncr_base + 4
 ncr_st		.equ	ncr_base + 5
+ncr_dma_w	.equ	ncr_base + 5
 ncr_int		.equ	ncr_base + 7
-ncr_dmack	.equ	ncr_base + 8
-
+ncr_dma_r	.equ	ncr_base + 7
+ncr_dack	.equ	ncr_base + 8
 DARTA_D		.equ	0x80
 DARTA_C		.equ	0x84
 DARTB_D		.equ	0x88
