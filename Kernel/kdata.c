@@ -9,7 +9,6 @@ uint16_t ramsize, procmem, maxproc, nproc;
 uint8_t nready;
 uint8_t inswap;
 uint16_t runticks;
-bool inint;
 uint16_t root_dev;
 uint8_t ticks_this_dsecond;
 uint8_t ticks_per_dsecond;

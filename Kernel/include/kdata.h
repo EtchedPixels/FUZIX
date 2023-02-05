@@ -37,7 +37,6 @@ extern struct cinode i_tab[ITABSIZE];    /* In-core inode table */
 extern struct mount fs_tab[NMOUNTS];	 /* Mount table */
 
 extern ptptr init_process;  /* The process table address of the first process. */
-extern bool inint;     /* flag is set whenever interrupts are being serviced */
 
 extern uint8_t ticks_this_dsecond;       /* Tick counter for counting off one decisecond */
 extern uint8_t ticks_per_dsecond;	 /* Ticks per decisecond at machine interrupt rate rate */
