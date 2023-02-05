@@ -1,0 +1,3 @@
+reserve 0200-03FF
+reserve 8000-80FF
+reserve FF00-FFFF

@@ -38,11 +38,6 @@ extern uint16_t swap_dev;
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
-#define CONFIG_VT_SIMPLE
-
-extern unsigned char vt_mangle_6847(unsigned char c);
-#define VT_MAP_CHAR(x)	vt_mangle_6847(x)
-#define VT_CURSOR_CHAR	0xA0
 
 /* Vt definitions */
 #define VT_WIDTH	32
@@ -50,11 +45,6 @@ extern unsigned char vt_mangle_6847(unsigned char c);
 #define VT_RIGHT	31
 #define VT_BOTTOM	15
 #define VT_INITIAL_LINE	0
-
-#define VT_BASE	((uint8_t *)0x0200)
-
-/* RS/Tandy Color Computer keyboard */
-#undef CONFIG_COCO_KBD
 
 #define TICKSPERSEC 10   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
