@@ -210,6 +210,11 @@ void plt_interrupt(void)
 	dw_vpoll();
 }
 
+void plt_reinterrupt(void)
+{
+	panic("reint");
+}
+
 
 /* Initial Setup stuff down here. */
 
