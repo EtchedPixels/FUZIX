@@ -105,7 +105,7 @@ void kputchar(char c)
 
 int rctty_open(uint_fast8_t minor, uint16_t flag)
 {
-	if (ttyport[minor])
+	if (minor <= NUM_DEV_TTY && ttyport[minor])
 		return tty_open(minor, flag);
 	udata.u_error = ENXIO;
 	return -1;
