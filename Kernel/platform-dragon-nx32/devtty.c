@@ -365,7 +365,7 @@ static void keydecode(void)
 uint8_t sys_hz;
 static uint8_t vblank_wait;
 
-void plt_interrupt(void)
+void do_plt_interrupt(uint_fast8_t re)
 {
 	static uint8_t tick;
 	uint8_t i = *pia_ctrl;
@@ -389,14 +389,27 @@ void plt_interrupt(void)
 			}
 	                fd_timer_tick();
 			tick++;
-			if (tick == sys_hz) {
-				tick = 0;
-				timer_interrupt();
+			if (re == 0) {
+				while (tick >= sys_hz) {
+					tick -= sys_hz;
+					timer_interrupt();
+				}
 			}
 			wakeup(&plt_interrupt);
 			dw_vpoll();
 		}
 	}
+}
+
+void plt_interrupt(void)
+{
+	do_plt_interrupt(0);
+}
+
+/* We don't currently make use of this but we could improve fork and swap this way */
+void plt_reinterrupt(void)
+{
+	do_plt_interrupt(1);
 }
 
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
