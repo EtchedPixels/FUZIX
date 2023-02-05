@@ -238,6 +238,11 @@ void plt_interrupt(void)
 	}
 }
 
+void plt_reinterrupt(void)
+{
+	panic("reint");
+}
+
 /* This is used by the vt asm code, but needs to live at the top of the kernel */
 uint16_t cursorpos;
 

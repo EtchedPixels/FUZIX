@@ -195,6 +195,20 @@ _doexec:
 ;	poll ttys from it. The more logic we could move to common here the
 ;	better.
 ;
+
+
+;
+;	Called when interrupts have been re-enabled within the timer
+;	interrupt. We hand it to the platform re-interrupt handler. If
+;	none is expected then it can panic, or if the platform is clever
+;	it can do the needed work.
+;
+reinterrupt:
+	jsr _plt_reinterrupt
+	; Signals and other magic will happen when the first level of
+	; interrupt handling returns
+	rti
+
 interrupt_handler:
 	; Do not use the stack before the switch...
 	; FIXME: add profil support here (need to keep profil ptrs
@@ -202,6 +216,12 @@ interrupt_handler:
 
 	lda #1
         sta U_DATA__U_ININTERRUPT
+
+	; If the platofmr interrupt code re-enabled interrupts then
+	; we are on the interrupt stack already and platform author
+	; is assumed to know what they are doing 8)
+	tst _inint
+	bne reinterrupt
 
         ; switch stacks
         sts istack_switched_sp
