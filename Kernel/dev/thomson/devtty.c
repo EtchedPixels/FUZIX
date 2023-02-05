@@ -75,3 +75,9 @@ void plt_interrupt(void)
 	poll_keyboard();
 	timer_interrupt();
 }
+
+/* Not used for yet */
+void plt_reinterrupt(void)
+{
+	panic("reint");
+}
