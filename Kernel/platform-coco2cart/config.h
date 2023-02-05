@@ -20,6 +20,7 @@
 #define CONFIG_SWAP_ONLY
 #define CONFIG_SPLIT_UDATA
 #define UDATA_BLKS 1
+//#define CONFIG_USERMEM_DIRECT
 
 #define CONFIG_BANKS	1
 /* And swapping */
@@ -28,7 +29,7 @@
 
 extern uint16_t swap_dev;
 
-#define SWAPDEV     swap_dev    /* Uses part of IDE slice 0 or SD 0*/
+#define SWAPDEV     swap_dev    /* From partition */
 #define SWAP_SIZE   0x40	/* 32K in 512 byte blocks */
 #define SWAPBASE    0x8000	/* We swap the lot */
 #define SWAPTOP     0xFE00	/* so it's a round number of 512 byte sectors */

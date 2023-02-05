@@ -264,6 +264,7 @@ static void keydecode(void)
 		switch(keyboard_grab) {
 		case 0:
 			tty_inproc(1, c);
+			break;
 		case 1:
 			if (!input_match_meta(c)) {
 				vt_inproc(1, c);
@@ -287,7 +288,7 @@ static void keydecode(void)
 uint8_t sys_hz;
 static uint8_t vblank_wait;
 
-void plt_interrupt(void)
+static void do_plt_interrupt(unsigned reenter)
 {
 	static uint8_t tick;
 	uint8_t i = *pia_ctrl;
@@ -312,11 +313,28 @@ void plt_interrupt(void)
 		}
 //                fd_timer_tick();
 		tick++;
-		if (tick == sys_hz) {
-			tick = 0;
-			timer_interrupt();
+		/* If we are re-entering the IRQ handler then we must not run the
+		   timer interrupt code - but we can remember the work to do. */
+		/* FIXME: look at interaction between delayed timer ticks and swapping
+		   in of a task. We don't want to count against its time wrongly */
+		if (reenter == 0) {
+			while (tick >= sys_hz) {
+				tick -= sys_hz;
+				timer_interrupt();
+			}
 		}
 	}
+}
+
+void plt_interrupt(void)
+{
+	do_plt_interrupt(0);
+}
+
+/* We allow interrupt re-entry on swapping cases */
+void plt_reinterrupt(void)
+{
+	do_plt_interrupt(1);
 }
 
 static struct display display[4] = {

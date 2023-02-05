@@ -66,12 +66,11 @@ actually be doable if not doing drivewire.
 See if given an extra loader a 64K machine with Tormod's 32K RAM cart would
 work.
 
-Switch the 6809 single process in memory code to parent first for speed.
-
 To Test
 =======
 
-Build the image and you'll get a fuzix.ide and fuzix.rom
+make diskimage
+This will produce a disk.img and a pair of ROM files in Images/coco2cart
 
 In the xroar directory where you have a hard disc image do
 
