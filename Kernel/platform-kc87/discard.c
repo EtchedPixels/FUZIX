@@ -13,6 +13,8 @@ void map_init(void)
 	for (i = 0; i < MAX_SWAPS; i++)
 		swapmap_init(i);
 #endif
+	/* Update according to build size */
+	procmem = PROC_SIZE;
 }
 
 void device_init(void)

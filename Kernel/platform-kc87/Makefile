@@ -96,6 +96,6 @@ diskimage: image
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.2M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
 	# ROM
 	cp mega.rom $(IMAGES)/mega.rom
