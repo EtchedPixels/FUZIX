@@ -24,7 +24,6 @@
 	.globl _udata
         .globl _runticks
         .globl _chksigs
-        .globl _inint
         .globl _getproc
         .globl _plt_monitor
         .globl _switchin
