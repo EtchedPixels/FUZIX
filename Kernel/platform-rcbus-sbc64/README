@@ -34,6 +34,10 @@ Notes
 	
 Setting It Up
 
+make diskimage
+
+Thi swill produce a bootable disk image and the loader.
+
 Put the jumpers into serial download mode and send Z80SBCLD.BIN as per normal
 
 When it prompts 'Z80BC64 Loader 0.2'
@@ -76,5 +80,5 @@ Apart from remembering the emulated hard disk has a 1K header all is the same
 
 	./rc2014 -m z80sbc64 -r sbc64.ram -i sbc64.ide -R -c
 
-(and to bootstrap initially copy Z80SBCLD.BIN to sbc64.ram)
+(and to bootstrap initially copy Z80SBCLD.BIN to sbc64.ram to cheat copy boot to sbc64.ram)
 
