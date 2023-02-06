@@ -1,7 +1,6 @@
 Fuzix for the Z80SBC64 and in theory Z80MB64 platforms
 
 Supported Hardware
-
 	RCBUS SBC64 mainboard or MB64 (see notes)
 	DS1302 RTC card (need RTC or CTC or both)
 	CTC card at 0x88 for SIO timing and for system clock. The CTC card
@@ -13,7 +12,6 @@ Supported Hardware
 	RCBUS Joystick
 
 In Progress
-
 	RCBUS SIO/2 board (or compatible). ACIA is not supported.
 
 	Most other RCBUS cards supported by other platforms should also be
@@ -26,17 +24,19 @@ Unsupported
 	proper timer use without IM2)
 
 Things That Don't Work (yet)
-
 	SIO/2 flow control
 
 Notes
-	The Z80MB64 is 22MHz which means there are not yet RTC or CTC for it!
+	The Z80MB64 is 22MHz which means there are not yet a CTC for it!
 	
 Setting It Up
 
 make diskimage
 
 Thi swill produce a bootable disk image and the loader.
+
+
+Z80SBC64/MB64
 
 Put the jumpers into serial download mode and send Z80SBCLD.BIN as per normal
 
@@ -74,11 +74,16 @@ follow the download instructions. You will need a different CF card for CP/M as
 unfortunately like RCBUS CP/M in general the supplied CP/M does not honour
 partition tables.
 
+ZRCC
+
+Insert the disk, boot.
+
 Emulation
 
 Apart from remembering the emulated hard disk has a 1K header all is the same
 
 	./rc2014 -m z80sbc64 -r sbc64.ram -i sbc64.ide -R -c
+	./rc2014 -m zrcc -i sbc64.ide -R -c
 
-(and to bootstrap initially copy Z80SBCLD.BIN to sbc64.ram to cheat copy boot to sbc64.ram)
+(and to bootstrap initially copy Z80SBCLD.BIN to sbc64.ram)
 

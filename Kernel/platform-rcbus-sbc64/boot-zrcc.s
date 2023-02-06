@@ -5,8 +5,6 @@
 start:
 	di
 	ld sp,#0x0000		; safe spot
-	ld hl,#signon
-	call outstr
 	ld a,#0x11
 	out (0x1f),a
 	ld hl,#0xB000
@@ -53,27 +51,11 @@ loader:
 	sbc hl,de
 	jr nz, badimage
 
-	ld hl,#gogogo
-	call outstr
 	ld a,#1			; ZRCC
 	jp 0x1000
-
-signon:
-	.ascii 'ZRCC Boot Loader'
-	.db 13,10,0
-gogogo:
-	.ascii 'done'
-	.db 13,10,0
-
 badimage:
-	ld hl,#badbadbad
-	call outstr
+	di
 	halt
-
-badbadbad:
-	.ascii 'Invalid'
-	.db 13,10,0
-
 ;
 ;	Load sector d from disk into HL and advance HL accordingly
 ;
@@ -98,49 +80,3 @@ wait_ready:
 	bit 6,a
 	jr z,wait_ready
 	ret
-
-outstr:
-	ld a,(hl)
-	or a
-	ret z
-	call outchar
-	inc hl
-	jr outstr
-	
-;
-; Based on the ROM code but slightly tighter
-; - use ld a,#0 so 0 and 1 bits are same length
-; - don't duplicate excess code in the hi/lo bit paths
-; - use conditional calls to keep 0/1 timing identical
-;
-; FIXME: my math says it's still slightly off timing.
-;
-outchar:
-	push bc
-	ld c,a
-	ld b,#8
-	call lobit
-	ld a,c
-txbit:
-	rrca
-	call c, hibit
-	call nc, lobit
-	djnz txbit
-	pop bc
-hibit:
-	push af
-	ld a,#0xff
-	out (0xf9),a
-	ld a,#7
-bitwait:
-	dec a
-	jp nz,bitwait
-	pop af
-	ret
-lobit:
-	push af
-	ld a,#0
-	out (0xf9),a
-	ld a,#7
-	dec a
-	jp bitwait

@@ -79,7 +79,7 @@ diskimage: image
 	# Add the kernel
 	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
 	# Add the zrcc bootstrap
-	dd if=boot-zrcc of=disk.img bs=384 count=1 conv=notrunc
+	dd if=boot-zrcc of=$(IMAGES)/disk.img bs=446 count=1 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
 	cp boot $(IMAGES)

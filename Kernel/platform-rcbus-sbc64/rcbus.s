@@ -25,6 +25,7 @@
 	.globl _bufpool
 	.globl _int_disabled
 	.globl _cpld_bitbang
+	.globl _kbank
 
         ; imported symbols
         .globl _ramsize
@@ -95,6 +96,38 @@ init_hardware:
 	ld hl,#64
 	ld (_procmem), hl
 
+	; We are in the upper bank so we can do an aliasing check to figure
+	; out the board
+
+	; On the Z80SBC64 this makes our low 32K match our top 32K. On the
+	; ZRCC it makes our low 32K point into the kernel
+	ld a,#0x01
+	out (0x1f),a
+	ld hl,#_kbank
+	ld de,#_kbank-0x8000
+	ld a,(de)
+	cp (hl)
+	jr nz, is_zrcc			; not aliased
+	; Is it a false aliasing ?
+	inc (hl)
+	ld a,(de)
+	cp (hl)				; if not aliased match will break
+	jr nz, is_zrcc_fix
+	; Restore the kbank
+	dec (hl)
+	; We are on a Z80SBC64
+	ld a,#3
+	ld (_kbank),a
+	; Put the kernel back
+	out (0x1f),a
+	jr vectors
+is_zrcc_fix:
+	dec (hl)			; undo the byte we beat up
+is_zrcc:
+	ld a,#1
+	ld (_kbank),a			; Change kernel bank to 1
+	; Fall through into the setup
+vectors:
 	call program_kvectors
 
 	; Look for an SIO using the ROMWBW algorithm
@@ -292,6 +325,8 @@ _plt_suspend:
 	call _ide_resume
 	ret
 
+_kbank:
+	.db 3				; for Z80SBC64, will be on for ZRCC
 _int_disabled:
 	.db 1
 pagereg:
@@ -375,7 +410,7 @@ map_kernel:
 map_kernel_di:
 map_kernel_restore:
 	push af
-	ld a,#3
+	ld a,(_kbank)
 	jr map_pop_a
 
 map_restore:
@@ -387,7 +422,7 @@ map_save_kernel:
 	push af
 	ld a,(pagereg)
 	ld (pagesave),a
-	ld a,#3
+	ld a,(_kbank)
 	jr map_pop_a
 
 ;

@@ -8,15 +8,23 @@
 #include <rcbus.h>
 #include "config.h"
 
+extern uint8_t kbank;
+
 void map_init(void)
 {
 }
 
 void pagemap_init(void)
 {
+  if (kbank == 3)
+    kputs("Detected: Z80MB/SB64\n");
+  else
+    kputs("Detected: ZRCC\n");
   /* The high bits do nothing but it's a cheap way to avoid 0x00 */
   pagemap_add(0x12);
   pagemap_add(0x10);
+  /* On the ZRCC our kernel is 1 and the common is 3, on the
+     SBC64 our kernel is 3 and the common is 1 */
 
   ds1302_init();
 
