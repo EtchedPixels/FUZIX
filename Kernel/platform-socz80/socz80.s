@@ -35,7 +35,6 @@
             ; imported symbols
             .globl _ramsize
             .globl _procmem
-            .globl _inint
             .globl _tty_inproc
             .globl istack_top
             .globl istack_switched_sp

@@ -9,7 +9,6 @@
         .globl _chksigs
         .globl _getproc
         .globl _plt_monitor
-        .globl _inint
         .globl _plt_switchout
         .globl _switchin
         .globl _dofork
