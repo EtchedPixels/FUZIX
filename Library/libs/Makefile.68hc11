@@ -124,7 +124,7 @@ SRC_LM += sqrtf.c tgammaf.c
 SRC_LMHARD += vfscanf_m.c
 SRC_LM += vfprintf_m.c
 SRC_LM += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
-
+SRC_LM += __sin.c __cos.c __tan.c
 #
 #	Double maths support
 #
@@ -140,6 +140,7 @@ SRC_LM += scalbn.c
 SRC_LM += sin.c sincos.c sinh.c
 SRC_LM += sqrt.c tgamma.c
 SRC_LM += __expo2.c __double_bits.c __fpclassify.c __log1p.c
+SRC_LM += __sindf.c __cosdf.c __tandf.c
 
 
 OBJ_C = $(SRC_C:.c=.o)

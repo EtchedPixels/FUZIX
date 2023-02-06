@@ -88,6 +88,7 @@ SRC_LM += sinf.c sincosf.c sinhf.c
 SRC_LM += sqrtf.c tgammaf.c
 SRC_LM += vfscanf_m.c vfprintf_m.c
 SRC_LM += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
+SRC_LM += __sin.c __cos.c __tan.c
 SRC_LM += mathhelper.c
 
 
