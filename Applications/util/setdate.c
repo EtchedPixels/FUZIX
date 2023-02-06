@@ -286,7 +286,7 @@ redate:
         set = 1;
     }
     if (tm != &notime) {
-        printf("Current time is %2d:%02d:%02d\n",
+        printf("Current time is %02d:%02d:%02d\n",
             tm->tm_hour,
             tm->tm_min,
             tm->tm_sec);
