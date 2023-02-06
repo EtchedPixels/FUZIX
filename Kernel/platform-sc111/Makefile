@@ -98,3 +98,5 @@ diskimage: image romwbw
 	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=24 conv=notrunc
 	# Filesystem starting at 1M/0x0010:0000
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
