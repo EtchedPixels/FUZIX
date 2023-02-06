@@ -48,38 +48,13 @@ Build a suitably high CP/M emuation and test it
 Faster interbank copying
 Swap only needed blocks for speed up
 
-Plan B (unmodified board)
-
-Add the SIO timer as before
-Rebuild the kernel banked and place it entirely in a 64K ROM
-
-Run with
-0000-3FFF	3-4 banks of kernel plus loader etc in ROM
-0000-EFFF	(or so) Application (RAM)
-F000-FFFF	Common
-
-(The ideal case of 128K RAM + banked ROM kernel would need a banked thunked
- Z80 setup which we don't yet support and would be a little bit too interesting)
-
-
-
 Emulation
 
-Write the bootloader once to block 0 (repair the parition tables afterwards)
-Write kernel images to block 24
-Make it into a disk image
-
-searle -r scm.rom -T -i fuzix.ide -B -t
+make diskimage
+searle -r scm.rom -T -i emu-ide.img -B -t
 
 Real Hardware
 
-Add the bootloader to block 0 of a CF card
-Partition the CF card with a standard partitioning tool so it has the normal
-sector 2048 start for the file systems.
-Set up a partition (type 7E) for Fuzix and put a Fuzix root file system on it
-using dd or similar raw tools
-Set up a second partition (type 7F) as swap.
-
-You can partition the rest of the card however you want.
+make diskimage
 
 Boot the machine and in the monitor run the CPM command.
