@@ -41,17 +41,13 @@ Swap only needed blocks for speed up
 
 Emulation
 
-searle -r fuzix.rom -T -i fuzix.ide -t
+make diskimage
+
+searle -r fuzix.rom -T -i emu-ide.img -t
 
 Real Hardware
 
-Partition the CF card with a standard partitioning tool so it has the normal
-sector 2048 start for the file systems.
-Set up a partition (type 7E) for Fuzix and put a Fuzix root file system on it
-using dd or similar raw tools
-Set up a second partition (type 7F) as swap.
+Burn the 64K ROM image and fit the EEPROM or Flash
+make diskimage
 
-You can partition the rest of the card however you want.
-
-Boot the machine and Fuzix will run.
-
+Write the disk image to CF
