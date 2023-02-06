@@ -46,8 +46,11 @@ void z180_timer_interrupt(void)
 	a = TIME_TMDR0L;
 	a = TIME_TCR;
 	timer_interrupt();
-	if (ps2kbd_present)
-		ps2kbd_poll();
+	if (ps2kbd_present) {
+		int16_t n = ps2kbd_get();
+		if (n >= 0)
+			ps2kbd_byte(n);
+	}
 }
 
 void plt_interrupt(void)
