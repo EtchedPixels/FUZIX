@@ -412,6 +412,7 @@ intvec:
 
 	call map_save_kernel
 
+	ld a,#1
 	; So we know that this task should resume with IRQs off
 	ld (_udata + U_DATA__U_ININTERRUPT), a
 	; Load the interrupt flag properly. It got an implicit di from
