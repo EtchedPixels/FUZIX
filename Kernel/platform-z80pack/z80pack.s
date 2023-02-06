@@ -44,7 +44,6 @@
 	    .globl nmi_handler
             .globl interrupt_handler
 	    .globl _doexit
-	    .globl _inint
 	    .globl kstack_top
 	    .globl _panic
 	    .globl mmu_irq_ret
@@ -267,7 +266,7 @@ badstack:
 	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, badbadstack
-	    ld a, (_inint)
+	    ld a, (_udata + U_DATA__U_ININTERRUPT)
 	    or a
 	    jr nz, badbadstack
 	    ;
@@ -299,7 +298,7 @@ badstackifu:
 	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, do_mmu_kernel
-	    ld a, (_inint)
+	    ld a, (_udata + U_DATA__U_ININTERRUPT)
 	    or a
 	    jr nz, do_mmu_kernel
 	    jr badstack_do
@@ -331,13 +330,13 @@ do_mmu_kernel_irq:
 
 	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
-	    ld a, (_inint)
+	    ld a, (_udata + U_DATA__U_ININTERRUPT)
 	    or a
 badstackirq:
 	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, badbadstack_irq
-	    ld a, (_inint)
+	    ld a, (_udata + U_DATA__U_ININTERRUPT)
 	    or a
 	    jr nz, badbadstack_irq
 badstack_doirq:
@@ -379,7 +378,7 @@ badstackirqifu:
 	    ld a, (_udata + U_DATA__U_INSYS)
 	    or a
 	    jr nz, do_mmu_kernel_irq
-	    ld a, (_inint)
+	    ld a, (_udata + U_DATA__U_ININTERRUPT)
 	    or a
 	    jr nz, do_mmu_kernel_irq
 	    jr badstack_doirq
