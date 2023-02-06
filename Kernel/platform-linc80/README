@@ -61,7 +61,9 @@ Core code IM2 enabling
 
 Set Up
 
-Place the loader on the boot block onwards along with partition table
-Place the Kernel (fuzix.com) from block 24 onwards
-Enjoy
+make diskimage
+boot with CPM command
 
+Emulation
+
+./linc80 -b 2 -i emu-ide.img
