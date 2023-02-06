@@ -13,6 +13,8 @@ uint8_t need_resched = 0;
 uint8_t vtrows = 16;
 uint8_t vtbottom = 15;
 
+extern uint8_t postinit;
+
 extern void video_switch(void);
 extern void interrupt_setup(void);
 
@@ -35,7 +37,7 @@ void plt_discard(void)
 void plt_idle(void)
 {
 	irqflags_t irq = di();
-	tty_pollirq(0);
+	tty_pollirq(!postinit);
 	irqrestore(irq);
 }
 
