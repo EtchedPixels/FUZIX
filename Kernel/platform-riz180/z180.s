@@ -110,37 +110,29 @@ _copy_and_map_process:
         push de     ; put stack back as it was
         push bc
 
-        ld bc, #0x0240
+        ld b, #0x02
         out0 (DMA_DMODE), b     ; 0x02 - memory to memory, burst mode
 
-        ; load destination page number into HL
+        ; load destination page number
         ld a, (de)
 	cp #0x44
-	; Process 1: 44:000 to 51:FFF */
-	ld bc,#0x0405
-	ld hl,#0x4000
-	ld de,#0x2000
+	; to process 1: 52:000 to 5F:FFF */
+	ld bc,#0x0405	; From 05:2000 to  04:400
+	ld de,#0x2000	; Souce
+	ld hl,#0x4000	; Dest
 	jr z, camp
-	; Process 2: 52:000 to 5F:FFF */
-	ld bc,#0x0504
+	; to process 2: 44:000 to 51:FFF
+	ld bc,#0x0504	; 04:400 to 05:200
 	ex de,hl	; Copying the other direction
 
 camp:
 	ld e,a		; Save the MMU value
 
-        ; now bottom four bits of H holds the top four bits of physical address,
-        ; while the top four bits of L hold the next four bits.
-        out0 (DMA_DAR0B), b
+	; Copy from BDL to CHL
 
-        ; source bank -- kernel is always 64K aligned
-        ld a, #(OS_BANK >> 4)
-        out0 (DMA_SAR0B), a
-
-	; Copy the user space
         out0 (DMA_DAR0L), l		; 0
         out0 (DMA_DAR0H), h
 	out0 (DMA_DAR0B), b
-        ; compute source address from current process 
         out0 (DMA_SAR0L), l		; 0
         out0 (DMA_SAR0H), d
         out0 (DMA_SAR0B), c

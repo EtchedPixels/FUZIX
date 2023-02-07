@@ -11,7 +11,6 @@ platform-riz180/main.rel
 start.rel
 version.rel
 lowlevel-z180.rel
-usermem_std-z180.rel
 timer.rel
 kdata.rel
 usermem.rel
@@ -51,4 +50,5 @@ platform-riz180/ds1302_discard.rel
 platform-riz180/ds1302_rcbus_z180.rel
 platform-riz180/net_w5x00.rel
 platform-riz180/wiznet.rel
+platform-riz180/usermem.rel
 -e
