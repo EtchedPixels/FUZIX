@@ -1,0 +1,62 @@
+RIZ180
+
+A smaller Z180 setup than usual with only 128K ROM and 128K RAM. Fuzix lives
+in ROM on this port.
+
+The ROM is set up with the kernel in most of the low space, and the system
+monitor/boot support at the top. We need to do it this way as we need the
+kernel code in the direct mapped space so we have enough bank registers to
+go around (at least for now). Anything else can still run ROM high or ROM
+low.
+
+Required:
+- RIZ180
+
+Options:
+TODO - SD card on SPI
+TODO - Wiznet 5500 on SPI
+
+To set up
+
+make diskimage
+Write the disk.img file to disk
+Burn the ROM to the flash
+
+The root filesystem device can be specified as either a decimal number, or as a
+a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
+
+TODO:
+- Redo serial tables for slower clock
+- Can we do CF with DMA1 ?
+- Debug user space accesses to get to the point of loading init
+
+Notes:
+
+Our memory layout for the moment is
+
+00:000	Kernel: low 56K ROM bank 0
+0E:000	System ROM space: upper 8K bank 0
+10:000	Free 56K
+1E:000	Kernel data initialization
+
+RAM low 16K is kernel
+40:000
+Then 2 x 56K process windows including a 4K common
+	(we end up with one 8K repeated chunk)
+44:000
+51:000	Common
+52:000
+6F:000	Common
+
+We run with
+Low 52K switched, high 4K common copies
+In kernel we run
+Low 48K direct map 12K paged, 4K common
+
+User
+1	CBAR	F0	BBR	44	CBR	42
+2	CBAR	F0	BBR	52	CBR	50
+
+Kernel
+0	CBAR	FD	BBR	33	CBR	42/50
+
