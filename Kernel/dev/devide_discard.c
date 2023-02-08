@@ -67,6 +67,14 @@ void devide_init_drive(uint_fast8_t drive)
     devide_writeb(ide_reg_devhead, select);
     kprintf("IDE drive %d: ", drive);
 
+    /* Cleaner way to probe */
+    devide_writeb(ide_reg_lba_0, 0xAA);
+    if (devide_readb(ide_reg_lba_0) != 0xAA)
+        goto out;
+    devide_writeb(ide_reg_lba_0, 0x55);
+    if (devide_readb(ide_reg_lba_0) != 0x55)
+        goto out;
+
 #ifdef IDE_8BIT_ONLY
     if (IDE_IS_8BIT(drive)) {
     /* set 8-bit mode -- mostly only supported by CF cards */
@@ -106,7 +114,7 @@ void devide_init_drive(uint_fast8_t drive)
     ide_spt[drive] = buffer[12];
     ide_heads[drive] = buffer[6];
     ide_cyls[drive] = buffer[2]|(buffer[3] << 8);
-    kprintf(" C/H/S %u/%u/%u\n", ide_cyls[drive], buffer[6], buffer[12]);
+    kprintf(" C/H/S %u/%u/%u", ide_cyls[drive], buffer[6], buffer[12]);
 
     devide_writeb(ide_reg_devhead, select | (buffer[6] - 1));
     devide_writeb(ide_reg_sec_count, buffer[12]);
@@ -121,7 +129,7 @@ void devide_init_drive(uint_fast8_t drive)
 #else
     if(!(buffer[99] & 0x02)) {
 #endif
-        kputs("LBA unsupported.\n");
+        kputs("LBA unsupported.");
         goto failout;
     }
 #endif
@@ -158,11 +166,11 @@ void devide_init_drive(uint_fast8_t drive)
 
     /* scan partitions */
     blkdev_scan(blk, SWAPSCAN);
-
     return;
 failout:
     tmpfree(buffer);
 out:
+    kputchar('\n');
     ide_deselect();
     return;
 }
