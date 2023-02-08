@@ -1,0 +1,13 @@
+Fuzix for the Dyno platform
+
+Supported hardware:
+- PPIDE
+- Serial
+- Floppy
+- RTC
+
+To build
+
+make diskimage
+
+The resulting disk image is bootable under ROMWBW
