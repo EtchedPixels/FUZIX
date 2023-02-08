@@ -27,6 +27,9 @@ void pio_setup(void)
     if (kio_present) {
       pio_c = 0x83;
       spi_port = 0x82;
+    } else if (eipc_present) {
+      pio_c = 0x1C;
+      spi_port = 0x1D;
     } else {
       pio_c = 0x6B;
       spi_port = 0x69;

@@ -496,6 +496,81 @@ struct uart kio_uartb = {
 	"Z80 KIO"
 };
 
+/* We are clocking at 1.8432MHz and x16 or x64 for the low speeds */
+static uint16_t eipc_siobaud[] = {
+	0xC0,	/* 0 */
+	0,	/* 50 */
+	0,	/* 75 */
+	0,	/* 110 */
+	0xD6,	/* 134 */
+	0xC0,	/* 150 */
+	0x60,	/* 300 */
+	0xC0,	/* 600 */
+	0x60,	/* 1200 */
+	0x30,	/* 2400 */
+	0x18,	/* 4800 */
+	0x0C,	/* 9600 */
+	0x06,	/* 19200 */
+	0x03,	/* 38400 */
+	0x02,	/* 57600 */
+	0x01	/* 115200 */
+};
+
+static void eipc_setup(uint8_t minor)
+{
+	struct termios *t = &ttydata[minor].termios;
+	uint8_t r;
+	uint8_t baud;
+
+	baud = t->c_cflag & CBAUD;
+	if (baud < B134)
+		baud = B134;
+
+	/* Set bits per character */
+	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
+
+	r = 0xC4;
+
+	out(ctc_port + minor, 0x55);
+	out(ctc_port + minor,  siobaud[baud]);
+
+	if (baud >= B600)	/* Use x16 clock and CTC divider */
+		r = 0x44;
+
+	t->c_cflag &= ~CBAUD;
+	t->c_cflag |= baud;
+
+	if (t->c_cflag & CSTOPB)
+		r |= 0x08;
+	if (t->c_cflag & PARENB)
+		r |= 0x01;
+	if (t->c_cflag & PARODD)
+		r |= 0x02;
+	sio_r[3] = r;
+	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
+	sio2_otir(ttyport[minor]);
+}
+
+struct uart eipc_uart = {
+	kio_intr,
+	kio_writeready,
+	kio_putc,
+	kio_setup,
+	kio_carrier,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"Z80 EIPC"
+};
+
+struct uart eipc_uartb = {
+	kio_intrb,
+	kio_writeready,
+	kio_putc,
+	eipc_setup,
+	kio_carrier,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"Z80 EIPC"
+};
+
 
 static uint8_t ns16x50_intr(uint_fast8_t minor)
 {

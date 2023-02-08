@@ -50,6 +50,7 @@
 	.globl _sio1_present
 	.globl _u16x50_present
 	.globl _z180_present
+	.globl _eipc_present
 	.globl _udata
 
 	; exported debugging tools
@@ -90,6 +91,9 @@ SIOD_D		.EQU	SIOC_C+3
 KIOA_C		.EQU	0x89
 KIOB_C		.EQU	0x8B
 
+EIPCSA_C	.EQU	0x19
+EIPCSB_C	.EQU	0x1B
+
 ACIA_C          .EQU     0x80
 ACIA_D          .EQU     0x81
 ACIA_RESET      .EQU     0x03
@@ -120,7 +124,32 @@ init_hardware:
 	ld a,#0xFF
 	out (0xBB),a
 
-	; Check for a KIO first of all
+	; Check for an EIPC
+
+	in  a,(0xF0)
+	and #7
+	cp #3
+	jr nz, not_eipc
+	ld c,#0x10
+	call check_ctc
+
+	jr nz, not_eipc
+
+	ld a,#1
+	ld (_eipc_present),a
+
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + EIPCSA_C		; 10 bytes to SIOA_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + EIPCSB_C		; and to SIOB_C
+	otir
+
+	jp probe_cpu
+
+
+not_eipc:
+	; Check for a KIO
 
 	ld c,#0x84
 	call check_ctc

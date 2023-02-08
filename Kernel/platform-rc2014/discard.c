@@ -319,6 +319,10 @@ void init_hardware_c(void)
 		rtc_shadow = 0x0C;
 		timer_source = TIMER_Z180;
 	}
+	if (eipc_present) {
+		register_uart(0x18, &eipc_uart);
+		register_uart(0x1A, &eipc_uart);
+	}
 	if (kio_present) {
 		register_uart(0x88, &kio_uart);
 		register_uart(0x8C, &kio_uart);
@@ -599,6 +603,8 @@ uint8_t plt_param(unsigned char *p)
 
 void device_init(void)
 {
+	if (eipc_present)
+		ide_port = 0x0090;
 #ifdef CONFIG_IDE
 	devide_init();
 #ifdef CONFIG_PPIDE

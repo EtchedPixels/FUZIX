@@ -1,18 +1,14 @@
-#define ide_select(x)
+extern void ide_select(uint_fast8_t dev);
 #define ide_deselect()
 
-#ifndef CONFIG_PPIDE
+extern uint16_t ide_port;
 
-/* CF card: 8bit, no altstatus/control */
+#define IDE_DRIVE_COUNT		4
+
 #define IDE_8BIT_ONLY
-#define IDE_REG_CS1_BASE   0x10
+#define IDE_IS_8BIT(x)		((x) < 2)
 
-/* We use the Z80DMA engine if we can */
-#define IDE_NONSTANDARD_XFER
-
-#else
-
-/* PPIDE */
+#define CONFIG_MULTI_IDE
 
 #define PPIDE_BASE 0x20         /* Base address of 8255A */
 #define IDE_REG_INDIRECT        /* IDE registers are not directly connected to the CPU bus */
@@ -47,5 +43,3 @@
 #define ide_reg_status    (PPIDE_CS0_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
 #define ide_reg_altstatus (PPIDE_CS1_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE)
 #define ide_reg_control   (PPIDE_CS1_LINE | PPIDE_A2_LINE | PPIDE_A1_LINE | PPIDE_A0_LINE)
-
-#endif /* CONFIG_PPIDE */

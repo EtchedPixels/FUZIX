@@ -4,8 +4,8 @@
 #define CONFIG_RC2014_CF
 /* Set this to be able to do networking (not currently working) */
 #undef CONFIG_RC2014_NET
-/* Set this if you have the 8255 IDE adapter (mutually exclusive of RC2014_CF) */
-#undef CONFIG_RC2014_PPIDE
+/* Set this if you have the 8255 IDE adapter */
+#define CONFIG_RC2014_PPIDE
 /* Set this if you have the floppy interface */
 #define CONFIG_RC2014_FLOPPY
 /* Set this for SD card support via PIO or SC129 at 0x68 */

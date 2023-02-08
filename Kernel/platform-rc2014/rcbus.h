@@ -46,6 +46,7 @@ extern uint8_t sc26c92_present;
 extern uint8_t u16x50_present;
 extern uint8_t z512_present;
 extern uint8_t kio_present;
+extern uint8_t eipc_present;
 
 extern uint8_t ctc_port;
 
@@ -93,6 +94,8 @@ extern struct uart sio_uart;
 extern struct uart sio_uartb;
 extern struct uart kio_uart;
 extern struct uart kio_uartb;
+extern struct uart eipc_uart;
+extern struct uart eipc_uartb;
 extern struct uart ns16x50_uart;
 extern struct uart z180_uart0;
 extern struct uart z180_uart1;

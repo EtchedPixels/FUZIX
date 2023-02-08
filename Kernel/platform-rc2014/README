@@ -3,9 +3,11 @@
 - 82C54 ?
 - TMS9918A - stop console flipping when in gfx mode
 - Sound
-- Autodetect PPIDE
 - Mouse connect
 - Finish up EF9345 (test conswitch etc)
+- EIPC and devgpio
+- EIPC and timers - we have the ctc chain on board, can also run ctc from 1.8MHz not just
+  CPU clock (16Mhz). Channels 0 1 drive uart a/b but from the 1.8432MHz
 
 
 This is Fuzix for the RC2014
@@ -73,7 +75,7 @@ Supported Hardware
 
 	RC2014 Joystick		(assumed present, no harm if not)
 
-	PPIDE (currently you need to change the config.h and rebuilld for this)
+	PPIDE at 0x20
 
 	Z80-512K CLK2 divider (not yet tested)
 
@@ -113,7 +115,7 @@ Things that don't work
 
 Stuff To Do
 
-  * Swap (it's there but it's most certainly not debugged or wired up fully)
+  * Swap (it's there but could do with more debug)
 
   * Sound support once we have the core sound layer
 
@@ -166,8 +168,16 @@ of the emulated CF card. (use 1048576 for a real CF)
 
 Then you can run
 
-./rc2014 -b -r RCZ80_std.rom  -i emu-ide.cf  -s -w -R -c 
+rc2014 -b -r RCZ80_std.rom  -i emu-ide.cf  -s -w -R -c
 
 or for a KIO system
 
-/rc2014 -b -k -r RCZ80_kio.rom -i emu-ide.cf -R
+rc2014 -b -k -r RCZ80_kio.rom -i emu-ide.cf -R
+
+or for a PPIDE setup
+
+rc2014 -b -k -r RCZ80_std.rom -I emu-ide.cf -R
+
+or for a TinyZ80
+
+rc2014 -m tinyz80 -r /tmp/EZZ80_tz80.rom -i emu-ide.img
