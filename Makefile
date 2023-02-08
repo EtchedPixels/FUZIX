@@ -23,11 +23,11 @@
 # pentagon1024: Pentagon 1MB
 # p112:		DX Designs P112
 # rc2014:	RC2014 with 512K RAM/ROM and RTC
-# rc2014-6502:	RC2014 with 65C02 or 65C816, VIA and 512K RAM/ROM
-# rc2014-68008: RC2014 with 68008 CPU, PPIDE and flat 512/512K memory card
-# rc2014-68hc11:RC2014 with a 68HC11 CPU card, SD and 512K RAM/ROM
-# rc2014-8085:  RC2014 with an 80C85 CPU card, IDE and 512K RAM/ROM
-# rc2014-sbc64: RC2014 Z80SBC64 128K system and RTC
+# rcbus-6502:	RCBUS with 65C02 or 65C816, VIA and 512K RAM/ROM
+# rcbus-68008:  RCBUS with 68008 CPU, PPIDE and flat 512/512K memory card
+# rcbus-68hc11: RCBUS with a 68HC11 CPU card, SD and 512K RAM/ROM
+# rcbus-8085:   RCBUS with an 80C85 CPU card, IDE and 512K RAM/ROM
+# rcbus-sbc64:  RCBUS Z80SBC64 128K system and RTC
 # rc2014-tiny:	RC2014 with 64K RAM, banked ROM and RTC
 # sam:		Sam Coupe
 # sbcv2:	RBC/N8VEM SBC v2
@@ -57,7 +57,7 @@
 # v65c816:	Virtual platform for 65c816 development (flat memory)
 # v68:		Virtual platform for 68000 development
 
-TARGET=coco2cart
+TARGET=rc2014
 
 include version.mk
 
