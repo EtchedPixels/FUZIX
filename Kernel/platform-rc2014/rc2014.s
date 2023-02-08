@@ -477,14 +477,8 @@ ctc_check:
 	sub a,#2
 	ld (_ctc_port),a
 
-	;
-	; Set up timer for 200Hz
-	;
-
-	ld a,#0xB5
+	ld a,#0x43	; Turn the CTC off
 	out (c),a
-	ld a,#144
-	out (c),a	; 200 Hz
 
 	;
 	; Set up counter CH3 for SC102 or similar SIO (the SC110 sadly can't be

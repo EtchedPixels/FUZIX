@@ -49,6 +49,7 @@ extern uint8_t kio_present;
 extern uint8_t eipc_present;
 
 extern uint8_t ctc_port;
+extern uint8_t ticksperclk;	/* CTC scaling from CTC3 counts to 10Hz */
 
 extern uint8_t timer_source;
 #define TIMER_NONE		0
@@ -68,6 +69,7 @@ extern void pio_setup(void);
 extern uint16_t syscpu;
 extern uint16_t syskhz;
 extern uint8_t systype;
+extern uint8_t romver;
 
 extern const char *uart_name[];
 
@@ -96,6 +98,8 @@ extern struct uart kio_uart;
 extern struct uart kio_uartb;
 extern struct uart eipc_uart;
 extern struct uart eipc_uartb;
+extern struct uart easy_uart;
+extern struct uart easy_uartb;
 extern struct uart ns16x50_uart;
 extern struct uart z180_uart0;
 extern struct uart z180_uart1;

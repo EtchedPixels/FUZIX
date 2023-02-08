@@ -40,6 +40,8 @@ uint8_t eipc_present;
 uint8_t plt_tick_present;
 uint8_t timer_source = TIMER_NONE;
 
+uint8_t ticksperclk;
+
 /* From ROMWBW */
 uint16_t syscpu;
 uint16_t syskhz;
@@ -137,9 +139,9 @@ static int16_t timerct;
 static void timer_tick(uint8_t n)
 {
 	timerct += n;
-	while (timerct >= 20) {
+	while (timerct >= ticksperclk) {
 		do_timer_interrupt();
-		timerct -= 20;
+		timerct -= ticksperclk;
 	}
 }
 
@@ -225,8 +227,6 @@ void plt_interrupt(void)
 		out(ctc_port + 3, 0x47);
 		out(ctc_port +3, 0xFF);
 		timer_tick(n);
-		/* Bit slow really - if we want to use CTC + ps/2 bit bang we should probably
-		   clock the CTC higher */
 		key_poll();
 	}
 	/* Poll the hardware PS/2 every interrupt as it may be the actual source */

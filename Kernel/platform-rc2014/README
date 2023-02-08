@@ -6,9 +6,8 @@
 - Mouse connect
 - Finish up EF9345 (test conswitch etc)
 - EIPC and devgpio
-- EIPC and timers - we have the ctc chain on board, can also run ctc from 1.8MHz not just
-  CPU clock (16Mhz). Channels 0 1 drive uart a/b but from the 1.8432MHz
-
+- EasyZ80 and TinyZ80 double check CTC timings and speed (easyz80 should be
+  right)
 
 This is Fuzix for the RC2014
 

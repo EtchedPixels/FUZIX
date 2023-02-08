@@ -284,8 +284,6 @@ static void sc26c92_timer(void)
 
 void init_hardware_c(void)
 {
-	extern struct termios ttydflt;
-
 	ramsize = 512;
 	procmem = 512 - 80;
 
@@ -318,6 +316,10 @@ void init_hardware_c(void)
 		rtc_port = 0x0C;
 		rtc_shadow = 0x0C;
 		timer_source = TIMER_Z180;
+	}
+	if (systype == 9) {	/* Easy Z80 is different */
+		register_uart(0x80, &easy_uart);
+		register_uart(0x82, &easy_uartb);
 	}
 	if (eipc_present) {
 		register_uart(0x18, &eipc_uart);
@@ -409,6 +411,19 @@ void vdu_setup(void)
 
 __sfr __at 0xED z512_ctrl;
 
+static char *sysname(void)
+{
+	if (systype == 7)
+		return "n RC2014";
+	if (systype == 8)
+		return "n RCBUS Z180";
+	if (systype == 9) {
+		if (eipc_present)
+			return " TinyZ80";
+		return "n EasyZ80";
+	}
+	return "n unknown device";
+}
 /*
  *	Do the main memory bank and device set up
  */
@@ -429,6 +444,9 @@ void pagemap_init(void)
 	/* finally add the common area */
 	pagemap_add(32 + 3);
 
+	kprintf("RomWBW %d.%d on a%s@%dMHz.\n",
+		romver >> 4, romver & 0x0F,
+		sysname(), syscpu & 0xFF);
 #ifdef CONFIG_RTC_DS1302	
 	/* Could be at 0xC0 or 0x0C */
 	ds1302_init();
@@ -457,14 +475,21 @@ void pagemap_init(void)
 		register_uart(0x86, &sio_uartb);
 	}
 
-
+	/* TODO : we assume normal RC2014 speeds, or 16MHz for the EIPC
+	   based machine. Possibly we should ask ROMWBW and pick from
+	   a table for other speeds */
 	if (ctc_port) {
-		if (timer_source == TIMER_NONE)
+		if (timer_source == TIMER_NONE) {
 			timer_source = TIMER_CTC;
-		else {
-			/* Turn off our CTC interrupts */
-			out(ctc_port + 2, 0x43);
-			out(ctc_port + 3, 0x43);
+			if (eipc_present) {
+				ticksperclk = 25;
+				out(ctc_port + 2, 0xB5);
+				out(ctc_port + 2, 250);
+			} else {
+				ticksperclk = 20;
+				out(ctc_port + 2, 0xB5);
+				out(ctc_port + 2, 144);
+			}
 		}
 		kprintf("Z80 CTC detected at 0x%2x.\n", ctc_port);
 	}

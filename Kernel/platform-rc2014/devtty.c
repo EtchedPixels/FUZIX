@@ -571,6 +571,28 @@ struct uart eipc_uartb = {
 	"Z80 EIPC"
 };
 
+/* Discrete SIO mapped and clocked the same way
+   as on the EIPC */
+struct uart easy_uart = {
+	kio_intr,
+	kio_writeready,
+	kio_putc,
+	kio_setup,
+	kio_carrier,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"SIO"
+};
+
+struct uart easy_uartb = {
+	kio_intrb,
+	kio_writeready,
+	kio_putc,
+	eipc_setup,
+	kio_carrier,
+	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	"SIO"
+};
+
 
 static uint8_t ns16x50_intr(uint_fast8_t minor)
 {
