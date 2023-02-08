@@ -1,10 +1,10 @@
-This is a prototype of Fuzix for the Easy-Z80 RC2014 compatible board
+Fuzix for the Easy-Z80 RC2014 compatible board
 
-TODO
-	Test and debug
+This is a more minimal build aimed at an EasyZ80 without much extra hardware.
+For a full featured but bigger and slower build you can also boot the RC2014
+target.
 
 Supported Hardware
-
 	Easy-Z80 card or compatible
 	The RC2014 CF card interface, or compatible at 0x10.
 
@@ -17,66 +17,24 @@ Supported Hardware
 Things To Note When Modifying
 
   * Space is very tight. The kernel must finish below C000 and the rest goes
-    above the common line. Until we have banked networking sorted networking
-    won't fit, especially if we add VDP graphics support.
-  * We could move to banked kernel to allow for more flexibility with all
-    this add in hardware.
+    above the common line.
   * Do not move discard below C300 on a 16K banking setup. There is stuff in
     start.c that requires that C000-C2FF space is free for starting init from
     the kernel.
+  * Only IM2 capable hardware is supported and no interrupting non IM2 hardware
+    can be in the system when used this way.
 
 Things that don't work
 
   * Flow control isn't yet enabled for the serial port.
-
   * Swap (it's there but it's most certainly not debugged or wired up fully)
-
-  * TMS9918A support now there is a suitable card
-
-  * Sound support once we have the core sound layer
-
-  * Some kind of way to allow selection of what support is wanted. We are
-    very tight on space with everything enabled and it won't be possible to
-    do some of the combinations we have today with the TMS9918A as well unless
-    we go to banked syscall (Which is doable)
-
-  * Go the soft IRQ route with fast SIO serial handling for rx interrupts and
-    flip buffers.
 
 Setting It Up
 
-Fuzix on the Easy-Z80 expects a normal PC style compact flash card. Fdisk up the
-card leaving the low space free as fdisk tries to do. Place a file system on
-it (type 0x7F). Do not at this point place a swap partition on it (0x7E)
-although you can certainly reserve on with a different type code.
+make diskimage
+Boot the resulting disk
 
-The loader and attached kernel image needs to be written to blocks 2+.
+For emulation
 
-You can manipulate the filesystem with ucp.
-
-If you are doing this with the emulator then the easiest way is to use makedisk
-to create a disk of suitable size and then
-
-	dd if=foo.cf of=foo.raw skip=2
-	fdisk foo.raw
-
-	add the file systems etc onto it (either by loopback mounting or
-	using dd remembering the start sector given can be used with
-		dd bs=512 seek=startsector conv=notrunc ...
-
-	dd if=foo.raw of=foo.cf seek=2 conv=notrunc
-
-When working on a real CF card or the raw file add the bootable image with
-
-	dd if=fuzix.romwbw of=/dev/sdxx seek=2 conv=notrunc
-
-to place the bootable image on sectors 2 and above in the hole the fdisk tool
-leaves for a bootable image.
-
-As ucp and fsck.fuzix support offsets in the format path:offset you can access
-the first file system with ucp foo.cf:1049600 if it starts at block 2048 of the
-CF card as normal.
-
-Then you can run
-./rc2014 -b -r ez512.rom -m easyz80 -i foo.cf   (-R for RTC)
+rc2014 -b -r EZ80_std.rom -m easyz80 -i emu-ide.img   (-R for RTC)
 
