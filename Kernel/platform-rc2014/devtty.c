@@ -1250,6 +1250,8 @@ struct uart xr88c681_uart = {
 
 /*
  *	Console driver for the TMS9918A
+ *	EF9345 is hooked into the TMS driver so this really
+ *	needs renamign as vt driver..
  */
 
 static uint8_t tms_intr(uint8_t minor)
@@ -1277,6 +1279,9 @@ static void tms_setoutput(uint_fast8_t minor)
 {
 	vt_save(&ttysave[outputtty - 1]);
 	outputtty = minor;
+	/* The 9345 needs to cache the output bank */
+	if (ef9345_present)
+		ef9345_set_output();
 	vt_load(&ttysave[outputtty - 1]);
 }
 
@@ -1300,8 +1305,12 @@ void do_conswitch(uint8_t c)
 
 	/* 80 column card */
 	if (ef9345_present) {
+		/* Calls into the EF9345 code. FIXME clean path */
+		tms_setoutput(inputtty);
+		vt_cursor_off();
 		inputtty = c;
 		set_console();
+		vt_cursor_on();
 		vt_twidth = 80;
 		vt_tright = 79;
 		return;

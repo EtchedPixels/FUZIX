@@ -4,7 +4,7 @@
 - TMS9918A - stop console flipping when in gfx mode
 - Sound
 - Mouse connect
-- Finish up EF9345 (test conswitch etc)
+- Debug EF9345 console switch
 - EIPC and devgpio
 - EasyZ80 and TinyZ80 double check CTC timings and speed (easyz80 should be
   right)
@@ -76,6 +76,8 @@ Supported Hardware
 
 	PPIDE at 0x20
 
+	KIO at 0x80
+
 	Z80-512K CLK2 divider (not yet tested)
 
 	Console switch card at 0xFF as GPIO (assumed present, no harm if not)
@@ -121,8 +123,6 @@ Stuff To Do
   * Go the soft IRQ route with fast SIO serial handling for rx interrupts and
     flip buffers. Also raises space issues as we'll need 256 bytes per SIO
     plus the other costs
-
-  * See if we can merge some similar ports using the ROMWBW machine info ?
 
   * New networking layuer
 

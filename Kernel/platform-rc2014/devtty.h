@@ -26,6 +26,7 @@ extern uint16_t vdp_wop(struct vdp_rw *rw) __fastcall;
 extern uint8_t ef9345_probe(void);
 extern void ef9345_init(void);
 extern void ef9345_colour(uint8_t c);
+extern void ef9345_set_output(void);
 
 /* For console */
 extern uint8_t vt_twidth, vt_tright;

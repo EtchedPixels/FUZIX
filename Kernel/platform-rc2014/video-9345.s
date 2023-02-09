@@ -85,7 +85,9 @@
 	.globl _ef9345_init
 	.globl _ef9345_probe
 	.globl _ef9345_colour
+	.globl _ef9345_set_output
 	.globl _inputtty
+	.globl _outputtty
 ;
 ;	Set up
 ;
@@ -94,7 +96,7 @@
 ;						I = 1 interlace
 ;						N = 1 NTSC
 ;
-;	ROR	block origin << 5 | Y origin
+;	ROR	block origin << 5 | Y origin	bits in weird order for origin
 ;	PAT	0 ? (check bulk enables)
 ;	MAT 	0C00?BGR			set border and cursor on off
 ;		
@@ -158,7 +160,7 @@ noskip:
 	ret
 
 mtab40:
-	.byte	0x01		; PAL, combined sync
+	.byte	0x10		; PAL, combined sync
 	.byte	0x4C		; Fixed cursor and enabled I high during margin 
 				; margin is blue, no zoom
 	.byte	0x7E		; service row off, upper/lower bulk on, conceal on
@@ -169,7 +171,7 @@ mtab40:
 	.byte	0x28		; origin row 8, display block 0 ; 28 08 ?
 
 mtab80:
-	.byte	0xC1		; 80 char pal combined sync
+	.byte	0xD0		; 80 char PAL combined sync
 	.byte	0x48		; Fixed cursor and enabled I high during
 				; margin. Margin is blue, no zoom
 	.byte	0x7E		; Turn it all on except status bar
@@ -177,21 +179,6 @@ mtab80:
 	.byte	0x08		; origin row 8 block 0 for display
 
 
-;
-;	Prepare a KRL command with incrementing
-;
-krl80:
-	ld	hl,(curpos)
-	call	waitrdy
-	ld	de,#0x2051	; KRL with increment, but do not execute
-	call	outreg
-	ld	de,#0x2628	; Set R6 (Y)
-	call	outreg
-	ld	de,#0x2700	; Set R7 (X)
-	call	outreg
-	ld	de,#0x2300	; Set attributes (fixed for now)
-	call	outreg
-	ret
 
 ;
 ;	Simple probe - try and write/read back AA and 55 patterns then check
@@ -227,16 +214,50 @@ _ef9345_probe:
 	ret	nz
 	inc	l
 	ret
-	
+
 _ef9345_init:
 	ld	de,#0x2091
 	call	outreg		; force a nop
 	call	waitrdy		; wait for it to go ready
 	ld	hl,#mtab80
 	call	load_mode
+	ld	hl,#scroll
+	ld	(scrollptr),hl
+	ld	a,#0x20
+	call	wiper
+	ld	a,#0x80
+	call	wiper
+	ld	a,#0xA0
+	call	wiper
+	xor	a		; current screen
+wiper:
+	ld	(con_banky),a
 	ld	hl,#0		; cursor top left
-	call	krl80		; load up a KRL command for 80 column
-	ret
+	call	krl80
+	ld	bc,#1920
+	xor	a
+wipeone:
+	call	waitrdy
+	ld	de,#0x2920
+	call	outreg
+	dec	bc
+	ld	a,b
+	or	c
+	jr	nz, wipeone
+
+	; Fall into krl80
+;
+;	Prepare a KRL command with incrementing
+;
+krl80:
+	ld	hl,(curpos)
+	call	waitrdy
+	ld	de,#0x2051	; KRL with increment, but do not execute
+	call	outreg
+	ld	de,#0x2300	; Set attributes (fixed for now)
+	call	outreg
+
+	;	Fall into loadxy to set up the cursor
 
 loadxy:
 	call	waitrdy
@@ -249,15 +270,22 @@ loadxy:
 	; scroll we need to adjust our Y accordingly. 
 	;
 	; 
-	ld	a,(scroll)
+	; This needs to be the scroll of the screen we are outputting
+	; to
+	push	hl
+	ld	hl,(scrollptr)
+	ld	a,(hl)
+	pop	hl
 	add	l
 	add	#0x08
 	cp	#0x20
 	jr	c, yok
 	sub	#0x18		; Wrapped on hardware scroll
 yok:
-;	ld	a,(con_banky)	; console bank info
-;	add	h
+	; TODO: add in the Z3/Z2 bits from the console code
+	ld	h,a
+	ld	a,(con_banky)	; console bank info
+	add	h
 	ld	e,a
 	call	outreg
 	ret
@@ -282,14 +310,24 @@ ef_plot_char:
 
 _scroll_down:
 ef_scroll_down:
-	ld	a,(scroll)
+	ld	hl, (scrollptr)
+	ld	a,(hl)
 	dec	a
 	cp	#255
 	jr	nz, updscroll
 	ld	a,#23
 updscroll:
-	; FIXME: console number also affects ROR upper bits)
-	ld	(scroll),a
+	; Needs to be scroll of this tty
+	ld	(hl),a
+	;	Now check if we are visible
+	ld	a,(_inputtty)
+	ld	b,a
+	ld	a,(_outputtty)
+	cp	b
+	ret	nz
+	; We are visible so update the register
+	ld	a,(ror_bank)
+	add	(hl)
 	ld	d,#7
 	add	#8		;  weird offsetting in chip
 	ld	e,a
@@ -299,7 +337,8 @@ updscroll:
 
 _scroll_up:
 ef_scroll_up:
-	ld	a,(scroll)
+	ld	hl, (scrollptr)
+	ld	a,(hl)
 	inc	a
 	cp	#24
 	jr	nz, updscroll
@@ -406,14 +445,68 @@ direct_res:
 	call	krl80
 	ret
 
+permute_con:
+	rrca				; tty is now in the top 2 bits of A
+	rrca
+	and	#0xC0
+	; Deal with the bonkers ordering in ROR
+	; 0-3 but we have a 0 bit in the middle!
+	rla
+	rl	d			; Z3 into E
+	rla				; Z2 is now top bit
+	rl	d			; Z2 into E
+	rla				; throw out Z1 (0)
+	rr	d			; load Z2 back in
+	rra
+	srl	a			; set Z1 to 0
+	rr	d			; load Z3 back in
+	rra
+	ret
+
+;
+;	Sets the console we are writing on
+;
+_ef9345_set_output:
+	;	Set the screen we write to based on outputtty
+	ld	a,(_outputtty)
+	dec	a
+	ld	e,a
+	call	permute_con
+	;	Save the permuted output console bits
+	;	These get merged back in by loadxy
+	and	#0xE0
+	ld	(con_banky),a
+	;	Set the scroll value pointer for this console
+	ld	d,#0
+	ld	hl,#scroll
+	add	hl,de
+	ld	(scrollptr),hl
+	ret
+
+;
+;	Sets the visible console
+;
 ef_set_console:
 	ld	a,(_inputtty)
 	dec	a			; 1 based to 0 based
-	rrca				; tty is now in the top 3 bits of Y
-	rrca
-	rrca
-	and	#0xE0
-	ld	(con_banky),a
+	call	permute_con
+	ld	(ror_bank),a		; Save the permuted bank bits
+	ld	e,a			; Save to use in scrolling ROR
+	ld	a,(_inputtty)		; Get the scroll bits
+	dec	a
+	ld	hl,#scroll
+	add	l
+	ld	l,a
+	ld	a,h
+	adc	#0
+	ld	h,a
+	ld	a,(hl)			; Scroll value
+	add	#8			; Offset
+	or	e			; Merge with bank
+	ld	e,a
+	ld	d,#7
+	call	load_indirect
+	call	krl80
 	ret
 
 _ef9345_colour:
@@ -452,8 +545,12 @@ cursor:
 con_banky:
 	.byte	0
 scroll:
-	.byte	0
+	.byte	0, 0, 0, 0		; one per console
+scrollptr:
+	.word	0
 efmargin:
 	.byte	0
 curpos:
 	.word	0
+ror_bank:
+	.byte	0
