@@ -1,9 +1,5 @@
 /*
- *	Need to wipe BSS etc once we figure out our preferred boot method
- *
- *	On entry we are loaded at $0400 with the loader and the loaders
- *	supervisor stack a mystery. We are in supervisor mode and the rest
- *	is our problem.
+ *	ROM booted Fuzix
  */
 		#include "../kernel-68000.def"
 
