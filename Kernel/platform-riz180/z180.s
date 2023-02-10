@@ -515,6 +515,8 @@ _swapout:
 	add hl,sp		; get the current SP into a register pair
 	ld sp,#swapinstack
 	in0 e,(MMU_CBR)		; save the old mapping
+	dec a			; allow for the 56K
+	dec a
 	out0 (MMU_CBR),a	; Swap the common to the victim
 	push hl			; Save old stack frame
 	push de			; Save old mapping
