@@ -314,13 +314,13 @@ interrupt_handler:
 	movb	@_need_resched,r0
 	jne	@preemption
 	; No pre-emption, but may be signals pending. Map the user process
-	clrb	@_udata+U_DATA__U_ININTERRUPT
+	clr	@_udata+U_DATA__U_ININTERRUPT
 	bl	@map_process_always
 	b	@deliver_signal
 	; Kernel fast path - restore the MMU instead of setting it for
 	; the process. Again all the work is done by the work space flip
 iretk:
-	clrb	@_udata+U_DATA__U_ININTERRUPT
+	clr	@_udata+U_DATA__U_ININTERRUPT
 	bl	@map_kernel_restore
 	rtwp
 
