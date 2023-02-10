@@ -91,7 +91,7 @@ _plt_switchout:
 	bl	@map_kernel
 
         ; set inint to false
-	clr	@_inint
+	clr	@_udata + U_DATA__U_ININTERRUPT
 
         ; find another process to run (may select this one again) returns it
         ; in d
@@ -183,7 +183,7 @@ nostash:
 	bl	@restore_userws
 	mov	*r13+,r1	; Return code
 	mov	*r13+,r11	; return address
-	mov	@_inint,r0
+	mov	@_udata + U_DATA__U_ININTERRUPT,r0
         jeq	@swtchdone	; in ISR, leave interrupts off
 	limi	IRQ_ON
 swtchdone:
