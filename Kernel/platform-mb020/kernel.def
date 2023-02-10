@@ -1,0 +1,6 @@
+#define DI_MASK		$700		/* or bits for DI */
+#define EI_MASK		$000		/* or bits for EI */
+
+/* We have our own handlers because we flip into address 0 */
+#define CONFIG_PLT_VECTORS
+#define CONFIG_PLT_CPUTYPE
