@@ -127,8 +127,10 @@ _copy_and_map_process:
 
 camp:
 	ld e,a		; Save the MMU value
+	dec e 		;  E000 to F000 shift
+	dec e
 
-	; Copy from BDL to CHL
+	; Copy from CDL to BHL
 
         out0 (DMA_DAR0L), l		; 0
         out0 (DMA_DAR0H), h
@@ -148,6 +150,7 @@ camp:
 
         ; finally reprogram the MMU to bring the new process common memory into context
         ; note this replaces the stack, but we just copied it over.
+
         out0 (MMU_CBR), e
         ret ; was jp map_kernel but we never change MMU_BBR
 
@@ -603,6 +606,8 @@ is_resident:
 	;
 	ld a, (hl)
         ; out0 (MMU_BBR), a -- WRS: leave the kernel mapped in
+	dec a		; Allow for the fact it's not a full 64K
+	dec a
         out0 (MMU_CBR), a
 
         ; sanity check: u_data->u_ptab matches what we wanted?
@@ -662,7 +667,7 @@ map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
 .endif
 	ld a,#0xFD		; Split at D000 and F000
 	out0 (MMU_CBAR),a
-	ld a,#0x33		; Low 8KK of RAM appears at D000
+	ld a,#0x33		; Low 8K of RAM appears at D000
 	out0 (MMU_BBR),a
         pop af
         ret

@@ -130,6 +130,7 @@ startup:
 
 	; We've identity copied the D000-EFFF space from ROM
 
+	; Set the common to be 51:000 to 51:FFF
 	ld	a,#0x42
 	out0	(MMU_CBR),a		; common back
 

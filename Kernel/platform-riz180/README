@@ -28,16 +28,13 @@ a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
 TODO:
 - Redo serial tables for slower clock
 - Can we do CF with DMA1 ?
-- Debug user space accesses to get to the point of loading init
+- Debug crash on second fork (swapout ?)
 
-Notes:
-
-Our memory layout for the moment is
+Our memory layout:
 
 00:000	Kernel: low 56K ROM bank 0
-0E:000	System ROM space: upper 8K bank 0
-10:000	Free 56K
-1E:000	Kernel data initialization
+0E:000	Kernel: initial image of kernel data and common
+10:000	Free 64K
 
 RAM low 16K is kernel
 40:000
@@ -46,7 +43,7 @@ Then 2 x 56K process windows including a 4K common
 44:000
 51:000	Common
 52:000
-6F:000	Common
+5F:000	Common
 
 We run with
 Low 52K switched, high 4K common copies

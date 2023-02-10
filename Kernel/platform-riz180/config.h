@@ -21,9 +21,12 @@
 #define CONFIG_BANKS	1
 
 #define TICKSPERSEC 40U     /* Ticks per second */
+
+/* Each application has a bank from 00000-CFFF (52K)
+   D000-EFFF is a mirror of the common space at F000-FFFF */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xF000  /* Top of program, base of U_DATA */
+#define PROGTOP     0xD000  /* Top of program, base of U_DATA */
 #define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   64      /* Memory needed per process */
 
@@ -61,9 +64,9 @@
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
-#define SWAP_SIZE   0x7D 	/* 62.5K in blocks (prog + udata) */
+#define SWAP_SIZE   0x69 	/* 52.5K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xF200	/* Swap out udata and program */
+#define SWAPTOP	    0xD200	/* Swap out udata and program Dxxx alias Fxxx udata */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
@@ -76,5 +79,5 @@ extern uint16_t swap_dev;
 #undef CONFIG_NET
 #undef CONFIG_NET_WIZNET
 #undef CONFIG_NET_W5200		/* WizNET 5200 */
-#undef CONFIG_NET_W5500	/* WizNET 5500 */
+#undef CONFIG_NET_W5500		/* WizNET 5500 */
 
