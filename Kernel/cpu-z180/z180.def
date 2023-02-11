@@ -57,6 +57,9 @@ TIME_FRC                    .equ (Z180_IO_BASE+0x18)    ; Timer Free running cou
 INT_IL                      .equ (Z180_IO_BASE+0x33)    ; Interrupt vector low register
 INT_ITC                     .equ (Z180_IO_BASE+0x34)    ; Interrupt vector low register
 
+; Refresh control
+MEM_RCR			    .equ (Z180_IO_BASE+0x36)	; Refresh control
+
 ; ESCC serial ports (Z80182)
 ESCC_CTRL_A                 .equ 0xE0                   ; ESCC Channel A control register
 ESCC_DATA_A                 .equ 0xE1                   ; ESCC Channel A data register
