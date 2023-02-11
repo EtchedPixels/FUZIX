@@ -44,6 +44,7 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 #define CONFIG_TD_NUM	2
+#define CONFIG_TD_SD
 
 /* Device parameters */
 #define NUM_DEV_TTY 1
