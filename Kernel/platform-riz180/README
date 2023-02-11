@@ -3,11 +3,10 @@ RIZ180
 A smaller Z180 setup than usual with only 128K ROM and 128K RAM. Fuzix lives
 in ROM on this port.
 
-The ROM is set up with the kernel in most of the low space, and the system
-monitor/boot support at the top. We need to do it this way as we need the
-kernel code in the direct mapped space so we have enough bank registers to
-go around (at least for now). Anything else can still run ROM high or ROM
-low.
+At the moment the port just boots into Fuzix but it would be easy to add some
+code to flip to the upper 64K of the ROM and run a monitor or other tools
+such as a ROM based CP/M environment. Fuzix however has to live in the low 64K
+so the CBAR can be set up to 1:1 map low memory as the ROM image.
 
 Required:
 - RIZ180
@@ -15,6 +14,9 @@ Required:
 Options:
 TODO - SD card on SPI
 TODO - Wiznet 5500 on SPI
+
+This needs a bit of thought as the RIZ180 doesn't have any GPIO ports for the
+CS line and the Z180 has no other way to recover bitsync on CSIO.
 
 To set up
 
@@ -26,9 +28,8 @@ The root filesystem device can be specified as either a decimal number, or as a
 a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
 
 TODO:
-- Redo serial tables for slower clock
+- Recheck serial tables for slower clock
 - Can we do CF with DMA1 ?
-- Debug crash on second fork (swapout ?)
 
 Our memory layout:
 

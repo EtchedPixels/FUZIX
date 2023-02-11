@@ -1,3 +1,9 @@
+/*
+ *	If your CPU clock is not 9.216MHz as is the default (eg using an older 6Mhz
+ *	part) edit kernel.def and change the clock rate
+ */
+
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
