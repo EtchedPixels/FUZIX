@@ -42,7 +42,7 @@ void pagemap_init(void)
 #ifdef CONFIG_RTC_DS1302
     ds1302_init();
     if (ds1302_present)
-        kputs("DS1302 detected at 0xC0.\n");
+        kprintf("DS1302 detected at 0x%2x.\n", rtc_port);
 #endif
 }
 
