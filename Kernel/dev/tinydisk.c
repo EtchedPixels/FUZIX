@@ -86,3 +86,10 @@ int td_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 	return td_transfer(minor, false, rawflag);
 
 }
+
+/* TODO */
+int td_ioctl(uint_fast8_t minor, uarg_t request, char *data)
+{
+	udata.u_error = ENOTTY;
+	return -1;
+}
