@@ -1,9 +1,10 @@
 ASRCS = crt0.s z180.s commonmem.s riz180.s monitor.s usermem.s
 CSRCS += devices.c main.c devtty.c spi.c wiznet.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c ../dev/devsd_discard.c
-DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
-DSRCS += ../dev/devsd.c
+DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/ds1302_discard.c ../dev/tinysd_discard.c
+DISCARD_DSRCS += ../dev/tinydisk_discard.c
+DSRCS = ../dev/tinydisk.c ../dev/tinyide.c ../dev/ds1302.c
+DSRCS += ../dev/tinysd.c
 DASRCS = ../dev/ds1302_rcbus_z180.s
 NSRCS = ../dev/net/net_w5x00.c
 

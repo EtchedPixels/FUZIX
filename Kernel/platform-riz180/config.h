@@ -3,6 +3,10 @@
  *	part) edit kernel.def and change the clock rate
  */
 
+#define CONFIG_CPU_CLK	6144000
+
+/* Define this to select SD card rather than networkign on the SPI port */
+#undef CONFIG_WITH_SD
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -20,8 +24,6 @@
 /* 8 60K banks, 1 is kernel */
 #define MAX_MAPS	16
 #define MAP_SPLIT	PROGTOP
-#define MAP_TRANS_8TO16(M)	(((M) & (unsigned char)0xFE) | 0x8000)
-#define MAP_TRANS_16TO8(M)	((unsigned char)(M) | (unsigned char)0x01)
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
@@ -36,13 +38,26 @@
 #define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   56      /* Memory needed per process */
 
-#define CONFIG_IDE
+#define CONFIG_TD_NUM	4
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
+#ifdef CONFIG_WITH_SD
+#define CONFIG_TD_SD
+#define SD_SPI_CALLTYPE	__z88dk_fastcall
+#endif
 
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_EXTENDED
 #define CONFIG_RTC_INTERVAL	100
 #define CONFIG_RTC_DS1302
+
+#ifndef CONFIG_WITH_SD
+#define CONFIG_NET
+#define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5500
+#endif
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
@@ -55,16 +70,10 @@
 /* Hardware parameters : internal hardware at 0xC0-0xFF */
 #define Z180_IO_BASE       0xC0
 
-#define MAX_BLKDEV 4	    /* 2 IDE drives, 2 SD drives */
-
-/* SD via CSIO : Needs an additional GPIO pin */
-#define CONFIG_SD
-#define SD_DRIVE_COUNT 1	/* Need to figure out how we deal with this */
-
 #define NUM_DEV_TTY	2
 /* UART0 as the console */
 #define BOOT_TTY (512 + 1)
-#define TTY_INIT_BAUD B115200	/* Matches ROMWBW 3 and later */
+#define TTY_INIT_BAUD	B38400
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
@@ -79,11 +88,4 @@ extern uint16_t swap_dev;
 #define swap_map(x)	((uint8_t *)(x))
 
 #define plt_copyright()		/* for now */
-
-/* WizNET based TCP/IP : currently you'll need to disable other stuff to
-  fit the networking */
-#undef CONFIG_NET
-#undef CONFIG_NET_WIZNET
-#undef CONFIG_NET_W5200		/* WizNET 5200 */
-#undef CONFIG_NET_W5500		/* WizNET 5500 */
 

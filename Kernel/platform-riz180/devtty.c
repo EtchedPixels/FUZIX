@@ -27,10 +27,12 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 static const uint8_t baudtable[] = {
 	/* Dividers for our clock. Table is smaller than the maths by far */
 	0,
-	0,			/* 50 */
-	0,			/* 75 */
-	0,			/* 110 */
-	0,			/* 134.5 */
+#if CONFIG_CPU_CLK == 18432000
+	0xFF,			/* 50 */
+	0xFF,			/* 75 */
+	0xFF,			/* 110 */
+	0xFF,			/* 134.5 */
+	/* Divide by 30 and 64 */
 	0x2E,			/* 150 */
 	0x2D,			/* 300 */
 	0x2C,			/* 600 */
@@ -38,24 +40,77 @@ static const uint8_t baudtable[] = {
 	0x2A,			/* 2400 */
 	0x29,			/* 4800 */
 	0x28,			/* 9600 */
-	/* Now switch to 16x clock */
+	/* Divide by 30 and 16 */
 	0x21,			/* 19200 */
 	0x20,			/* 38400 */
-	/* And 10x scaler */
+	/* Divide by 10 and 16 */
 	0x01,			/* 57600 */
 	0x00,			/* 115200 */
+#elif CONFIG_CPU_CLK == 9216000
+	0xFF,			/* 50 */
+	/* Divide by 30 and 64 */
+	0x2E,			/* 75 */
+	0xFF,			/* 110 */
+	0xFF,			/* 134.5 */
+	0x2D,			/* 150 */
+	0x2C,			/* 300 */
+	0x2B,			/* 600 */
+	0x2A,			/* 1200 */
+	0x29,			/* 2400 */
+	0x28,			/* 4800 */
+	/* Divide by 30 and 16 */
+	0x21,			/* 9600 */
+	0x20,			/* 19200 */
+	0xFF,			/* 38400 */
+	/* And 10x scaler */
+	0x00,			/* 57600 */
+	0xFF,			/* 115200 */
+#elif CONFIG_CPU_CLK == 6144000
+	0x2E,			/* 50 */
+	0xFF,			/* 75 */
+	0xFF,			/* 110 */
+	0xFF,			/* 134.5 */
+	/* Divide by 10 and 64 */
+	0x0E,			/* 150 */
+	0x0D,			/* 300 */
+	0x0C,			/* 600 */
+	0x0B,			/* 1200 */
+	0x0A,			/* 2400 */
+	0x09,			/* 4800 */
+	0x08,			/* 9600 */
+	/* Divide by 10 and 16 */
+	0x01,			/* 19200 */
+	0x00,			/* 38400 */
+	0xFF,			/* 57600 */
+	0xFF,			/* 115200 */
+#else
+#error "Need baud table"
+#endif
 };
 
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t cntla = 0x60;
-	uint8_t cntlb = 0;
+	uint8_t cntlb;
 	uint16_t cflag = t->c_cflag;
 	uint8_t baud;
 	uint8_t ecr = 0;
 
 	used(flags);
+
+	/* Handle the baud table. Right now this is hardcoded for our clock */
+	baud = cflag & CBAUD;
+	cntlb = baudtable[baud];
+
+	/* Unachieveable rates we turn to 9600 as we can do that
+	   on all our clocks */
+	if (cntlb == 0xFF) {
+		baud = B9600;
+		cntlb = baudtable[B9600];
+		t->c_cflag &= ~CBAUD;
+		t->c_cflag |= B9600;
+	}
 
 	/* Calculate the control bits */
 	if (cflag & PARENB) {
@@ -72,17 +127,6 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	if (cflag & CSTOPB)
 		cntla |= 1;
 
-	/* Handle the baud table. Right now this is hardcoded for our clock */
-
-	baud = cflag & CBAUD;
-	/* We can't get below 150 easily. We might be able to do this with the
-	   BRG on one channel - need to check FIXME */
-	if (baud && baud < B150) {
-		baud = B150;
-		cflag &= ~CBAUD;
-		cflag |= B150;
-	}
-	cntlb |= baudtable[baud];
 
 	if (minor == 1) {
 		if (cflag & CRTSCTS)

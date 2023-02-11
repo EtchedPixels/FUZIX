@@ -63,23 +63,10 @@ void plt_interrupt(void)
 	}
 }
 
-/* The RTC and GPIO share the same port so manage them together using
-   the rtc shadow byte */
-
-__sfr __at 0x0C gpio;
-
-void gpio_set(uint8_t mask, uint8_t val)
-{
-	rtc_shadow &= ~mask;
-	rtc_shadow |= val;
-	gpio = rtc_shadow;
-}
-
 void plt_ds1302_setup(void)
 {
 }
 
 void plt_ds1302_restore(void)
 {
-	gpio = rtc_shadow;
 }

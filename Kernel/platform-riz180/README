@@ -1,7 +1,11 @@
 RIZ180
 
 A smaller Z180 setup than usual with only 128K ROM and 128K RAM. Fuzix lives
-in ROM on this port.
+in ROM on this port. The RIZ180 has the DREQ lines unconnected and the external
+interrupt lines pulled high so there is no I/O DMA and only the Z80 style
+interrupt is available externally. The SPI port carries TX/RX/CLK vcc and ground,
+but is not connected to any chip select, instead the other pin is just a resistor
+pulling high.
 
 At the moment the port just boots into Fuzix but it would be easy to add some
 code to flip to the upper 64K of the ROM and run a monitor or other tools
@@ -12,11 +16,8 @@ Required:
 - RIZ180
 
 Options:
-TODO - SD card on SPI
-TODO - Wiznet 5500 on SPI
-
-This needs a bit of thought as the RIZ180 doesn't have any GPIO ports for the
-CS line and the Z180 has no other way to recover bitsync on CSIO.
+- SD card or Wiznet 5500 on the CSIO SPI using RTS0 for the missing CS line
+  (available on point T2 on the left of the board)
 
 To set up
 
@@ -29,7 +30,6 @@ a device name (without the /dev prefix); hda, hdb, hda1, hda2, etc.
 
 TODO:
 - Recheck serial tables for slower clock
-- Can we do CF with DMA1 ?
 
 Our memory layout:
 

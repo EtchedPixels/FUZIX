@@ -14,7 +14,7 @@
 #include "config.h"
 #include <z180.h>
 #include <blkdev.h>
-#include <devsd.h>
+#include <tinysd.h>
 #include <riz180.h>
 
 #define CSIO_CNTR_TE           (1<<4)   /* transmit enable */
@@ -51,13 +51,17 @@ reverse_byte_a:
     byte; /* squelch compiler warning */
 }
 
-void sd_spi_clock(bool go_fast)
+void sd_spi_fast(void)
+{
+    CSIO_CNTR &= 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
+}
+
+void sd_spi_slow(void)
 {
     unsigned char c;
 
     c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
-    if(!go_fast)
-        c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
+    c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
     CSIO_CNTR = c;
 }
 
@@ -67,8 +71,7 @@ void sd_spi_lower_cs(void)
 {
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
-    /* Raise the bit we don't want - active low */
-    gpio_set(0x0C, 0x08 >> sd_drive);
+    ASCI_CNTLA0 &= ~0x10;		/* RTS is borrowed for SPI CS */
 }
 
 void sd_spi_raise_cs(void)
@@ -76,13 +79,13 @@ void sd_spi_raise_cs(void)
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     /* Set both CS bits back */
-    gpio_set(0x0C, 0x0C);
+    ASCI_CNTLA0 |= 0x10;		/* RTS back up */
 }
 
+/* We have two independent selects but one is  used for networking */
 void spi_select_port(uint8_t port)
 {
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
-    gpio_set(0x0C, (~port & 3) << 2);
 }
 
 void sd_spi_transmit_byte(unsigned char byte)
@@ -124,6 +127,8 @@ uint8_t sd_spi_receive_byte(void)
     return c;
 }
 
+#ifdef CONFIG_TD_SD
+
 /****************************************************************************/
 /* The innermost part of the transfer routines has to live in common memory */
 /* since it must be able to bank switch to the user memory bank.            */
@@ -133,9 +138,11 @@ COMMON_MEMORY
 /* WRS: measured byte transfer time as approx 5.66us with Z180 @ 36.864MHz,
    three times faster. Main change is to start the next receive operation 
    as soon as possible and overlap the loop housekeeping with the receive. */
-bool sd_spi_receive_sector(void) __naked
+bool sd_spi_receive_sector(uint8_t *ptr) __naked __z88dk_fastcall
 {
+    /* On entry HL is the data pointer */
     __asm
+        ex de,hl		; pointer into DE for now
 waitrx: 
         in0 a, (_CSIO_CNTR)     ; wait for any current transmit or receive operation to complete
         tst a, #0x30
@@ -145,13 +152,12 @@ waitrx:
         ld h, a                 ; stash value for reuse later
 
         ; load parameters
-        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-        ld bc, #512                             ; sector size
+        ld a, (_td_raw)		; user kernel or swap
+        ld bc, #512             ; sector size
 #ifdef SWAPDEV
         cp #2
         jr nz, not_swapin
-        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        ld a,(_td_page)
         call map_for_swap
         jr rxnextbyte
 not_swapin:
@@ -200,17 +206,18 @@ waitrx3:
     __endasm;
 }
 
-bool sd_spi_transmit_sector(void) __naked
+bool sd_spi_transmit_sector(uint8_t *ptr) __naked __z88dk_fastcall
 {
     __asm
+        ; On entry HL is the buffer
+        ex de,hl
         ; load parameters
-        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-        ld hl, #512                             ; sector size
+        ld a, (_td_raw) 	; blkparam.is_user
+        ld hl, #512             ; sector size
 #ifdef SWAPDEV
         cp #2
         jr nz, not_swapout
-        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        ld a,(_td_page)
         call map_for_swap
         jr gotransmit
 not_swapout:
@@ -259,3 +266,4 @@ transferdone:                   ; note this code is shared with sd_spi_receive_b
         jp map_kernel_restore   ; map kernel and return
     __endasm;
 }
+#endif
