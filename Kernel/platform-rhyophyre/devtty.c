@@ -62,7 +62,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	if (cflag & PARENB) {
 		cntla |= 2;
 		if (cflag & PARODD)
-			cntlb |= 4;
+			cntlb |= 0x10;
 	}
 	if ((cflag & CSIZE) == CS8)
 		cntla |= 4;
