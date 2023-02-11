@@ -107,10 +107,12 @@ int pagemap_prepare(struct exec *hdr)
 	return 0;
 }
 
-/* We are switching both top and bottom chunks for a process so it's simply 64K a task */
+/* We switch top and bottom so this is usually 64K but there are systems
+   with interesting layours (eg riz180) where the 64K virtual map is not
+   a 64K physical map. Therefore we must use PROC_SIZE */
 usize_t pagemap_mem_used(void)
 {
-	return (pfmax - pfptr) * 64;
+	return (pfmax - pfptr) * PROC_SIZE;
 }
 
 #ifdef SWAPDEV

@@ -16,7 +16,7 @@ static uint8_t has_1mb;	/* additional 512K RAM located in U2 socket */
 void init_hardware_c(void)
 {
 	ramsize = 128;
-	procmem = 64;
+	procmem = 112;
 	/* zero out the initial bufpool */
 	memset(bufpool, 0, (char *) bufpool_end - (char *) bufpool);
 }
