@@ -817,8 +817,8 @@ is_resident:
         ; memory and/or support swapping to disk?
         ;; ; Fix the moved page pointers
         ;; ; Just do one byte as that is all we use on this platform
-        ;; ld a, P_TAB__P_PAGE_OFFSET(ix)
-        ;; ld (U_DATA__U_PAGE), a
+        ld a, P_TAB__P_PAGE_OFFSET(ix)
+        ld (_udata + U_DATA__U_PAGE), a
 
         ; runticks = 0
         ld hl, #0
