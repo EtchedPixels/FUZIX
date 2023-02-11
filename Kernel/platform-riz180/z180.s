@@ -626,7 +626,7 @@ is_resident:
         ;; ; Fix the moved page pointers
         ;; ; Just do one byte as that is all we use on this platform
         ld a, P_TAB__P_PAGE_OFFSET(ix)
-        ld (U_DATA__U_PAGE), a
+        ld (_udata + U_DATA__U_PAGE), a
 
         ; runticks = 0
         ld hl, #0
@@ -700,11 +700,9 @@ map_for_swap:
         ld a, #'s'
         call outchar
 .endif
+	out0 (MMU_BBR),a	; the page is passed in A, so we just do an out0
 	ld a,#0xF0
 	out0 (MMU_CBAR),a
-	pop af
-	push af
-	out0 (MMU_BBR),a	; the page is passed in A, so we just do an out0
 .if DEBUGBANK
         call outcharhex
 	pop af
