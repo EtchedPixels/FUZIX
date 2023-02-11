@@ -8,6 +8,8 @@
 #include <tinydisk.h>
 #include <tinysd.h>
 
+#ifdef CONFIG_TD_SD
+
 static uint8_t cmd0[6]	= { 0x40, 0x00, 0x00, 0x00, 0x00, 0x95 };
 static uint8_t cmd1[6]	= { 0x41, 0x00, 0x00, 0x00, 0x00, 0x01 };
 static uint8_t cmd8[6]	= { 0x48, 0x00, 0x00, 0x01, 0xAA, 0x87 };
@@ -125,3 +127,4 @@ uint8_t sd_init(void)
     } while(r == 0 && ++n < 8);
     return r;
 }
+#endif

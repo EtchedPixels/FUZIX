@@ -12,6 +12,8 @@
 #include <tinydisk.h>
 #include <tinysd.h>
 
+#ifdef CONFIG_TD_SD
+
 uint_fast8_t sd_shift[CONFIG_TD_NUM];
 
 static uint_fast8_t sd_spi_wait(bool want_ff)
@@ -86,3 +88,4 @@ int sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 	sd_spi_receive_byte();
 	return 1;
 }
+#endif
