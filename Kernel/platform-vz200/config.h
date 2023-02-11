@@ -10,6 +10,7 @@
  */
 
 #define CONFIG_TD_NUM	1		/* SD card bitbanged on I/O port */
+#define CONFIG_TD_SD			/* SD card support */
 
 /*
  *	Platform configuration
