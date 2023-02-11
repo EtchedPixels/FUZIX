@@ -2,6 +2,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <timer.h>
+#include <tinydisk.h>
 #include <tinyide.h>
 #include <plt_ide.h>
 
@@ -12,7 +13,7 @@ static uint8_t ide_present;
 
 static int ide_wait_op(uint8_t mask, uint8_t val)
 {
-	while((*status & mask) != val) {
+	while((ide_read(status) & mask) != val) {
 		if (timer_expired(giveup)) {
 			kputs(" - no response\n");
 			return -1;
@@ -47,21 +48,27 @@ static void ide_identify(int dev, uint8_t *buf)
 
 	if (ide_wait_nbusy() == -1)
 		return;
-	*devh = dev << 4;	/* Select */
+	ide_write(devh, dev << 4);	/* Select */
 	if (ide_wait_nbusy() == -1)
 		return;
+#ifdef CONFIG_TINYIDE_8BIT
 	if (ide_wait_drdy() == -1)
 		return;
-	*cmd = 0xEC;	/* Identify */
+	ide_write(error, 0x01);		/* 8bit mode */
+	ide_write(cmd, 0xEF);
+#endif
+	if (ide_wait_drdy() == -1)
+		return;
+	ide_write(cmd, 0xEC);	/* Identify */
 	if (ide_wait_drq() == -1)
 		return;
-        for (i = 0; i < 256; i++) {
-		*dptr++ = *data;
-		*dptr++ = *datal;
-	}
+	/* Do a raw transfer with the disk helpers, set it up
+	   to go to kernel */
+	td_raw = td_page = 0;
+	devide_read_data(buf);
 	if (ide_wait_nbusy() == -1)
 		return;
-	if (*status & 1)
+	if (ide_read(status) & 1)
 		return;
 	if (ide_wait_drdy() == -1)
 		return;
