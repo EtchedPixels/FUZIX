@@ -713,6 +713,8 @@ map_save_kernel:   ; save the current process/kernel mapping
         push af
         in0 a, (MMU_BBR)
         ld (map_store), a
+        in0 a, (MMU_CBAR)
+        ld (map_store + 1), a
 .if DEBUGBANK
         ld a, #'S'
         call outchar
@@ -730,12 +732,7 @@ map_restore: ; restore the saved process/kernel mapping
         ld a, #'-'
         call outchar
 .endif
-        ld a, (map_store)
-	cp #0x33
-	ld a,#0xFD
-	jr z, resreg
-	ld a, #0xF0
-resreg:
+        ld a, (map_store + 1)
 	out0 (MMU_CBAR),a
 	ld a, (map_store)
         out0 (MMU_BBR), a
@@ -746,7 +743,8 @@ resreg:
         ret
 
 map_store:  ; storage for map_save/map_restore
-        .db 0
+        .db 0	; BBR
+	.db 0	; CBAR
 
 .ifne CONFIG_SWAP
 	.area _COMMONMEM
