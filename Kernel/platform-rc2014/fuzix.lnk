@@ -58,6 +58,7 @@ platform-rc2014/devsd_discard.rel
 platform-rc2014/sd.rel
 platform-rc2014/z80softsd.rel
 platform-rc2014/z80softspi.rel
+platform-rc2014/devppa.rel
 platform-rc2014/monitor.rel
 platform-rc2014/devgpio.rel
 platform-rc2014/devinput.rel
@@ -80,6 +81,7 @@ platform-rc2014/ps2direct.rel
 platform-rc2014/ps2bitbang-rcbus-kbd.rel
 platform-rc2014/ps2bitbang-rcbus-mouse.rel
 platform-rc2014/amd9511.rel
+platform-rc2014/devlpr.rel
 platform-rc2014/soft81.rel
 platform-rc2014/softzx81.rel
 -e

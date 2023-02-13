@@ -15,6 +15,7 @@
 #include <ps2kbd.h>
 #include <ps2mouse.h>
 #include <graphics.h>
+#include <devlpr.h>
 #include "z180_uart.h"
 
 /* Everything in here is discarded after init starts */
@@ -640,6 +641,7 @@ void device_init(void)
 	pio_setup();
 	devsd_init();
 #endif
+	lpr_init();
 #ifdef CONFIG_NET
 	sock_init();
 #endif

@@ -7,8 +7,7 @@
 #include <devrd.h>
 #include <devtty.h>
 #include <blkdev.h>
-#include <ds1302.h>
-#include <ds12885.h>
+#include <devlpr.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -23,8 +22,8 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 #endif
   /* 2: /dev/tty -- serial ports */
   {  rctty_open,    rctty_close,tty_read,	tty_write,	rctty_ioctl},
-  /* 3: RAM disk */
-  {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
+    /* 3: /dev/lpr	Printer devices */
+  {  lpr_open,      lpr_close,  no_rdwr,        lpr_write,      no_ioctl},
   /* 4: /dev/mem etc      System devices (one offs) */
   {  no_open,	    no_close,	sys_read,	sys_write,	sys_ioctl},
 };

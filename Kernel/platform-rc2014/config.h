@@ -89,7 +89,9 @@ extern uint16_t swap_dev;
 #define NBUFS    5        /* Number of block buffers - must match kernel.def */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE or SD */
+#define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE or SD and maybe a ZIP */
+
+#define CONFIG_BLK_PPA
 
 /* Enable one RTC interface */
 #define CONFIG_RTC_DS1302	/* Standard RC2014 bitbang clock card
