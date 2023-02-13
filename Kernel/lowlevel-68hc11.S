@@ -205,6 +205,7 @@ syscall_main:
 rti_return:
 	ldab udata+U_DATA__U_CURSIG
 	beq no_signal
+	clr udata+U_DATA__U_CURSIG
 	ldx #udata+U_DATA__U_SIGVEC
 	abx
 	abx
