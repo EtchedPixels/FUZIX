@@ -300,7 +300,7 @@ commoncp:
 map_process_always:
 map_process_always_di:
 	    pshx
-	    ldx #udata + U_DATA__U_PAGE+1
+	    ldx #udata + U_DATA__U_PAGE
 	    jsr map_bank
 	    pulx
 	    rts
@@ -340,7 +340,7 @@ kmap:
 ;
 map_process_x:
 	    pshb
-	    ldab #P_TAB__P_PAGE_OFFSET+1
+	    ldab #P_TAB__P_PAGE_OFFSET
 	    abx
 	    bra map_in
 map_process_2:
