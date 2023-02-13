@@ -121,10 +121,15 @@ uint8_t sd_init(void)
 {
     uint_fast8_t n = 0;
     uint8_t r;
+
+    tinysd_busy = 1;
     sd_spi_slow();
+
     do {
         r = sd_try_init();
     } while(r == 0 && ++n < 8);
+
+    tinysd_busy = 0;
     return r;
 }
 #endif

@@ -15,6 +15,7 @@
 #ifdef CONFIG_TD_SD
 
 uint_fast8_t sd_shift[CONFIG_TD_NUM];
+uint8_t tinysd_busy;
 
 static uint_fast8_t sd_spi_wait(bool want_ff)
 {
@@ -65,27 +66,32 @@ static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 	return res;		/* Return with the response value */
 }
 
-int sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
+int do_sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
+	tinysd_busy = 1;
 	if (sd_send_command(is_read ? CMD17 : CMD24, lba << sd_shift[dev]))
-		return 0;
+		goto error;
 	if (is_read) {
 		if (sd_spi_wait(false) != 0xFE)
-			return 0;
+			goto error;
 		sd_spi_receive_sector(dptr);
 	} else {
 		if (sd_spi_wait(true) != 0xFF)
-			return 0;
+			goto error;
 		sd_spi_transmit_byte(0xFE);
 		sd_spi_transmit_sector(dptr);
 		sd_spi_transmit_byte(0xFF);
 		sd_spi_transmit_byte(0xFF);
 		if ((sd_spi_wait(false) & 0x1F) != 0x05)
-			return 0;
+			goto error;
 		while (sd_spi_receive_byte() == 0x00);
 	}
 	sd_spi_raise_cs();
 	sd_spi_receive_byte();
+	tinysd_busy = 0;
 	return 1;
+error:
+	tinysd_busy = 0;
+	return 0;
 }
 #endif
