@@ -110,6 +110,8 @@ void tty_pollirq_asci0(void)
     while(ASCI_STAT0 & 0x80){
         tty_inproc(3, ASCI_RDR0);
     }
+    if (ASCI_STAT0 & 0x70)
+        ASCI_CNTLA0 &= ~0x08;
 }
 
 void tty_pollirq_asci1(void)
@@ -117,6 +119,8 @@ void tty_pollirq_asci1(void)
     while(ASCI_STAT1 & 0x80){
         tty_inproc(4, ASCI_RDR1);
     }
+    if (ASCI_STAT1 & 0x70)
+        ASCI_CNTLA1 &= ~0x08;
 }
 
 void tty_pollirq_com1(void)
