@@ -49,26 +49,21 @@ void plt_interrupt(void)
 	}
 }
 
-/* For now this and the supporting logic don't handle swap */
-
 extern uint8_t hd_map;
+extern uint8_t hd_page;
 extern void hd_read_data(uint8_t *p);
 extern void hd_write_data(uint8_t *p);
 
 void devide_read_data(void)
 {
-	if (blk_op.is_user)
-		hd_map = 1;
-	else
-		hd_map = 0;
+	hd_map = blk_op.is_user;
+	hd_page = blk_op.swap_page;
 	hd_read_data(blk_op.addr);	
 }
 
 void devide_write_data(void)
 {
-	if (blk_op.is_user)
-		hd_map = 1;
-	else
-		hd_map = 0;
+	hd_map = blk_op.is_user;
+	hd_page = blk_op.swap_page;
 	hd_write_data(blk_op.addr);	
 }

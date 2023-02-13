@@ -92,7 +92,9 @@ _switchin:
 
 	subd	@zero		;compare with 0
 	bne	not_swapped
+	pshx
 	jsr	_swapper
+	pulx
 	ldx	switch_proc_ptr
 	ldab	P_TAB__P_PAGE_OFFSET+1,x
 
