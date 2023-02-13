@@ -35,10 +35,10 @@ static void write_call(int n)
   fprintf(fp, "\tstx _errno\n");
   fprintf(fp, "noerror:\n");
   /* Non varargs functions do their own tail clean up */
-  /* OPTIMIZE: we could use the lib helpers for the rail if n > 2 ?? */
-  for (i = 0; i < syscall_args[n]; i++)
-    fprintf(fp, "\tins\n\tins\n");
-  fprintf(fp, "\trts\n");
+  if (syscall_args[n])
+    fprintf(fp, "\tjmp ret%d\n", syscall_args[n] * 2);
+  else
+    fprintf(fp, "\trts\n");
   fclose(fp);
 }
 
