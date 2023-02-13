@@ -61,7 +61,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	if (cflag & PARENB) {
 		cntla |= 2;
 		if (cflag & PARODD)
-			cntlb |= 4;
+			cntlb |= 0x10;
 	}
 	if ((cflag & CSIZE) == CS8)
 		cntla |= 4;
@@ -117,12 +117,16 @@ void tty_pollirq_asci0(void)
 {
 	while (ASCI_STAT0 & 0x80)
 		tty_inproc(1, ASCI_RDR0);
+	if (ASCI_STAT0 & 0x70)
+		ASCI_CNTLA0 &= ~0x08;
 }
 
 void tty_pollirq_asci1(void)
 {
 	while (ASCI_STAT1 & 0x80)
 		tty_inproc(2, ASCI_RDR1);
+	if (ASCI_STAT1 & 0x70)
+        	ASCI_CNTLA1 &= ~0x08;
 }
 
 /* FIXME: we should have a proper tty buffer output queue really */
