@@ -34,8 +34,11 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		if (d_blkoff(BLKSHIFT))
 			return -1;
 		td_page = udata.u_page;	/* User space */
-	} else if (rawflag == 2)
+	}
+#ifdef SWAPDEV
+	else if (rawflag == 2)
 		td_page = swappage;
+#endif
 
 	lba = udata.u_block;
 	if (minor) {
