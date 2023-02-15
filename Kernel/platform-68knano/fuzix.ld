@@ -10,7 +10,7 @@ MEMORY
 }
 
 /*
- * stick everything in ram (of course)
+ * System in ROM, data/bss in RAM
  */
 SECTIONS
 {

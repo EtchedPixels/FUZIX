@@ -302,7 +302,7 @@ void tty_poll(uint8_t minor, struct uart16x50 volatile *u)
 	   pending. IRQs are off here so this is safe */
 	if (uart->lsr & 0x01)
 		tty_inproc(minor, uart->data);
-	if (uart->msr & 0x04)
+	if (uart->msr & 0x02)
 		timer_event();
 }
 
@@ -314,7 +314,6 @@ void tty_interrupt(void)
 void plt_interrupt(void)
 {
 	tty_interrupt();
-	wakeup(&plt_interrupt);
 }
 
 /*

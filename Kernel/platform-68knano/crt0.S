@@ -65,7 +65,6 @@ vectors:
 
 start:
 		or #$0700,sr
-		; TODO copy data from ROM backup
 		move.l #_etext,a0
 		move.l #_data,a1
 		move.l #_edata,d0
