@@ -35,6 +35,8 @@
 #undef DEBUG
 
 #define MAX_BLOCKS	14	/* Packs to a power of two */
+#define COPY_BASE	1	/* First block we dup the memory for */
+#define MALLOC_BASE	2	/* First block for malloc use */
 
 struct memblk {
 	void *start;
@@ -53,7 +55,10 @@ static struct mem memblock[PTABSIZE];
 
 extern struct u_data *udata_shadow;
 
-static void mem_free(struct mem *m)
+/* We are called with an indidcator of whether this is the last user
+   of the page sets. If it is we can free the shared code, if it isn't
+   we can't */
+static void mem_free(struct mem *m, unsigned base)
 {
 	struct memblk *p = &m->memblk[0];
 	int i;
@@ -61,7 +66,7 @@ static void mem_free(struct mem *m)
 		panic("mref");
 	m->users--;
 	if (m->users == 0) {
-		for (i = 0; i < MAX_BLOCKS; i++) {
+		for (i = base; i < MAX_BLOCKS; i++) {
 			kfree_s(p->start, p->end - p->start);
 			p->start = NULL;
 			p++;
@@ -100,11 +105,15 @@ static struct mem *mem_clone(struct mem *m, uint8_t owner)
 	struct memblk *t = &n->memblk[0];
 	int i;
 	/* FIXME: need a per block 'RO' flag for non-copied blocks */
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = 0; i < COPY_BASE; i++) {
+		t->start = p->start;
+		t->end = p->end;
+	}
+	for (i = COPY_BASE; i < MAX_BLOCKS; i++) {
 		if (p->start) {
 			t->start = kdup(p->start, p->end, owner);
 			if (t->start == NULL) {
-				mem_free(n);
+				mem_free(n, COPY_BASE);
 				return NULL;
 			}
 			t->end = t->start + (p->end - p->start);
@@ -123,7 +132,7 @@ static void mem_switch(struct mem *a, struct mem *b)
 	struct memblk *t2 = &b->memblk[0];
 	unsigned int i;
 
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = COPY_BASE; i < MAX_BLOCKS; i++) {
 		if (t1->start)
 			swap_blocks(t1->start, t2->start,
 				    (t1->end - t1->start) >> 9);
@@ -138,7 +147,7 @@ static void mem_copy(struct mem *to, struct mem *from)
 	struct memblk *t2 = &to->memblk[0];
 	unsigned int i;
 
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = COPY_BASE; i < MAX_BLOCKS; i++) {
 		if (t1->start)
 			copy_blocks(t2->start, t1->start,
 				(t1->end - t1->start) >> 9);
@@ -299,13 +308,13 @@ void pagemap_free(ptptr p)
 			pagemap_switch(&ptab[n], 1);
 			/* We gave our copy away, so free the store copy
 			   we just got donated */
-			mem_free(store[proc]);
+			mem_free(store[proc], COPY_BASE);
 		}
 #ifdef DEBUG
 		kprintf("%d: pagemap_free: own live copy.\n", proc);
 #endif
 		/* Drop the reference count on the mem */
-		mem_free(m);
+		mem_free(m, 0);
 		mem[proc] = NULL;
 		store[proc] = NULL;
 		return;
@@ -316,7 +325,8 @@ void pagemap_free(ptptr p)
 #ifdef DEBUG
 	kprintf("%d:pagemap_free:freeing our copy.\n", proc);
 #endif
-	mem_free(m);
+	/* If it was not a live copy then it wasn't the only copy */
+	mem_free(m, COPY_BASE);
 	store[proc] = NULL;
 	mem[proc] = NULL;
 }
@@ -349,7 +359,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	csize = (hdr->data_start + 511) & ~511;
 	mb->start = kmalloc(csize, proc);
 	if (mb->start == NULL) {
-		mem_free(m);
+		mem_free(m, 0);
 		return ENOMEM;
 	}
 	mb->end = mb->start + hdr->data_start;
@@ -362,7 +372,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 
 	mb->start = kmalloc(size, proc);
 	if (mb->start == NULL) {
-		mem_free(m);
+		mem_free(m, 0);
 		return ENOMEM;
 	}
 	mb->end = mb->start + size;
@@ -402,8 +412,8 @@ arg_t _memalloc(void)
 	struct memblk *m = &mem[proc]->memblk[0];
 	int i;
 
-	/* Map 0 is the image, the user doesn't get to play with that one */
-	for (i = 1; i < MAX_BLOCKS; i++) {
+	/* Map 0 and 1 are the image, the user doesn't get to play with that one */
+	for (i = MALLOC_BASE; i < MAX_BLOCKS; i++) {
 		if (m->start == NULL) {
 			m->start = kmalloc(size, proc);
 			if (m->start == NULL) {
@@ -435,7 +445,7 @@ arg_t _memfree(void)
 	struct memblk *m = &mem[proc]->memblk[0];
 	int i;
 
-	for (i = 1; i < MAX_BLOCKS; i++) {
+	for (i = MALLOC_BASE; i < MAX_BLOCKS; i++) {
 		if (m->start == base) {
 			kfree_s(m->start, m->end - m->start);
 			m->start = NULL;
