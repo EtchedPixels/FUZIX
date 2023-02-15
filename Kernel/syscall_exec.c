@@ -82,7 +82,8 @@ uint8_t **wargs(uint8_t *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in us
 #ifdef CONFIG_LEVEL_2
 
 /*
- *	Core dump
+ *	Core dump: FIXME write a proper core header and usable image. Right now this
+ *	is basically a dummy
  */
 
 static struct coredump corehdr = {
@@ -134,7 +135,7 @@ uint8_t write_core_image(void)
 			wr_inode(ino);
 			f_trunc(ino);
 			/* Write the header */
-			corehdr.ch_base = (uptr_t)pagemap_base;
+			corehdr.ch_base = (uptr_t)udata.u_codebase;
 			corehdr.ch_break = udata.u_break;
 			corehdr.ch_sp = udata.u_syscall_sp;
 #ifdef PROGTOP

@@ -29,4 +29,3 @@ struct exec {
 #define FLAT_FLAG_KTRACE 0x0010 /* output useful kernel trace for debugging */
 
 #endif
-

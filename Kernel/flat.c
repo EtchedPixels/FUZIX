@@ -183,6 +183,7 @@ int pagemap_alloc(ptptr p)
 		mb->end = mb->start + 8192;
 		if (mb->start == 0)
 			panic("alloc");
+		udata.u_codebase = (uaddr_t)mb->start;
 #ifdef DEBUG
 		kprintf("init at %p\n", mb->start);
 #endif
@@ -327,15 +328,14 @@ void pagemap_free(ptptr p)
    TODO: support multiple blocks and allocate code/data separately allowing
    for the alignment. We should probably trim the alignment to 64 bytes as
    well
+*/
 
-   Supporting re-entrant binaries will need the binaries to have the data
-   aligned so maybe force it in the link ? */
 int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	unsigned int proc = udata.u_page;
 	struct memblk *mb;
 	struct mem *m;
-
+	usize_t csize;
 
 	m = mem_alloc();
 
@@ -345,31 +345,45 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 
 	mb = &m->memblk[0];
 
-	/* Snap to a block boundary for a fast memcpy/swap */
+	/* Pad to our block size */
+	csize = (hdr->data_start + 511) & ~511;
+	mb->start = kmalloc(csize, proc);
+	if (mb->start == NULL) {
+		mem_free(m);
+		return ENOMEM;
+	}
+	mb->end = mb->start + hdr->data_start;
+
+	/* Again pad to our block size */
+	size -= hdr->data_start;
 	size = (size + 511) & ~511;
 
+	mb++;
+
 	mb->start = kmalloc(size, proc);
+	if (mb->start == NULL) {
+		mem_free(m);
+		return ENOMEM;
+	}
 	mb->end = mb->start + size;
 
-	if (mb->start == NULL)
-		return ENOMEM;
 	/* Free the old map */
 	pagemap_free(udata.u_ptab);
+
+	/* Set up the new map and pointers */
+	udata.u_database = (uaddr_t)mb->start;
+	mb--;
+	udata.u_codebase = (uaddr_t)mb->start;
 	store[proc] = mem[proc] = m;
+#ifdef DEBUG
+	kprintf("code %p - %p, data %p - %p\n", udata.u_codebase, udata.u_codebase + csize - 1, udata.u_database, udata.u_database + size - 1);
+#endif	
 	return 0;
 }
 
 usize_t pagemap_mem_used(void)
 {
 	return kmemused() >> 10;	/* In kBytes */
-}
-
-/* Extra helper for exec32 */
-
-uaddr_t pagemap_base(void)
-{
-	unsigned int proc = udata.u_page;
-	return (uaddr_t)mem[proc]->memblk[0].start;
 }
 
 /* The extra syscalls for the pool allocator */
@@ -463,6 +477,9 @@ usize_t valaddr(const uint8_t *pp, usize_t l)
 			/* Return the size we can copy */
 			return e - p;
 		}
+/*		if (m->start)
+			kprintf("%p not in %p to %p\n",
+				pp, m->start, m->end); */
 		m++;
 		n++;
 	}

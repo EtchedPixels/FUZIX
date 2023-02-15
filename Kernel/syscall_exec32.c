@@ -59,9 +59,10 @@ static int valid_hdr(inoptr ino, struct exec *bf)
 	if (UNALIGNED(bf->reloc_start | bf->stack_size | bf->data_start | bf->data_end | bf->bss_end | bf->entry))
 		return 0;
 	/* Fix up the BSS so that it's big enough to hold the relocations
-	   FIXME: this is a) ugly and b) overcautious as we should factor
-	   in the stack space too */
-	if (bf->bss_end - bf->data_end < 4 * bf->reloc_count)
+	   Factor in the stack as well. Generally the stack space is enough
+	   to avoid any expansion. When we switch to compact relocations
+	   the problem should go away entirely */
+	if (bf->bss_end - bf->data_end + bf->stack_size < 4 * bf->reloc_count)
 		bf->bss_end = bf->data_end + 4 * bf->reloc_count;
 	if (bf->reloc_start + bf->reloc_count * 4 > ino->c_node.i_size ||
 		bf->reloc_start + bf->reloc_count * 4 < bf->reloc_start)
@@ -71,26 +72,44 @@ static int valid_hdr(inoptr ino, struct exec *bf)
 	return 1;
 }
 
-/* For now we load the binary in one block, including code/data/bss. We can
-   look at better formats, split binaries etc later maybe */
-static void relocate(struct exec *bf, uaddr_t progbase, uint32_t size)
+/*
+ *	We have two blocks. block 0 is the code, block 1 is the data.
+ *	We need to relocate accordingly. It's possible that the underlying
+ *	memory manager used one map but if so the addresses will be
+ *	contiguous and it'll just work treating it as two banks
+ */
+static unsigned relocate(struct exec *bf)
 {
-	uint32_t *rp = (uint32_t *)(progbase + bf->reloc_start);
+	uint32_t *rp = (uint32_t *)(udata.u_database + bf->reloc_start - bf->data_start);
 	uint32_t n = bf->reloc_count;
-
-	/* TODO: check should this be -0x43 */
-	size -= 3;		/* We work in 32bit chunks */
-	progbase += 0x40;	/* Offset is relative the header end */
+	uint32_t codebase = udata.u_codebase;
+	uint32_t database = udata.u_database;
 
 	/* We can use _uput/_uget as we set up the memory map so we know
 	   it is valid */
 	while (n--) {
+		uint32_t *mp;
+		uint32_t mv;
 		uint32_t v = ntohl(_ugetl(rp++));
-		if (v < size) {
-			uint32_t *mp = (uint32_t *)(progbase + v);
-			_uputl(_ugetl(mp) + progbase, mp);
-		}
+		if (v > bf->data_end - 3)	/* Bad relocation - should we fail ? */
+			return 1;
+		/* Which block holds the offset ? */
+		if (v <= bf->data_start - 3)
+			mp = (uint32_t *)(codebase + v);
+		else if (v >= bf->data_start)
+			mp = (uint32_t *)(database + v - bf->data_start);
+		else	/* Bad */
+			return 1;
+		/* Now what are we relocating against */
+		mv = _ugetl(mp);
+		if (mv >= bf->data_start)
+			mv += database - bf->data_start;
+		else
+			mv += codebase;
+		/* Write the updated value */
+		_uputl(mv, mp);
 	}
+	return 0;
 }
 
 
@@ -115,7 +134,7 @@ arg_t _execve(void)
 	struct s_argblk *abuf, *ebuf;
 	int argc;
 	uint32_t bin_size;	/* Will need to be bigger on some cpus */
-	uaddr_t progbase, top;
+	uaddr_t top;
 	uaddr_t go;
 	uint32_t true_brk;
 	uint_fast8_t mflags;
@@ -209,10 +228,9 @@ arg_t _execve(void)
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
 
-	udata.u_codebase = progbase = pagemap_base();
 	/* From this point on we are commmited to the exec() completing
 	   so we can start writing over the old program */
-	uput(&binflat, (uint8_t *)progbase, sizeof(struct exec));
+	uput(&binflat, (uint8_t *)udata.u_codebase, sizeof(struct exec));
 
 	if (!(mflags & MS_NOSUID)) {
 		/* setuid, setgid if executable requires it */
@@ -222,7 +240,7 @@ arg_t _execve(void)
 			udata.u_egid = ino->c_node.i_gid;
 	}
 
-	top = progbase + bin_size;
+	top = udata.u_database + bin_size - binflat.data_start;
 
 	udata.u_top = top;
 	udata.u_ptab->p_top = top;
@@ -231,7 +249,7 @@ arg_t _execve(void)
 //	kprintf("top at %p\n", progbase + bin_size);
 
 	bin_size = binflat.reloc_start + 4 * binflat.reloc_count;
-	go = (uint32_t)progbase + binflat.entry;
+	go = (uint32_t)udata.u_codebase + binflat.entry;
 
 	close_on_exec();
 
@@ -241,29 +259,36 @@ arg_t _execve(void)
 	 *  space and move it directly.
 	 */
 
-	 if (bin_size > sizeof(struct exec)) {
+	if (bin_size > sizeof(struct exec)) {
 		/* We copied the header already */
-		bin_size -= sizeof(struct exec);
-		udata.u_base = (uint8_t *)progbase +
+		udata.u_base = (uint8_t *)udata.u_codebase +
 					sizeof(struct exec);
-		udata.u_count = bin_size;
+		udata.u_count = binflat.data_start - sizeof(struct exec);
 		udata.u_sysio = false;
 		/* As we allocated this space we know the range is valid */
 		readi(ino, 0);
-		if (udata.u_done != bin_size)
+		if (udata.u_done != binflat.data_start - sizeof(struct exec))
+			goto nogood4;
+		/* Now the data */
+		udata.u_base = (uint8_t *) udata.u_database;
+		udata.u_count = bin_size - binflat.data_start;
+		udata.u_sysio = false;
+		readi(ino, 0);
+		if (udata.u_done != bin_size - binflat.data_start)
 			goto nogood4;
 	}
-
 	/* Header isn't counted in relocations */
-	relocate(&binflat, progbase, bin_size);
+	if (relocate(&binflat))
+		goto nogood4;
+
 	/* This may wipe the relocations */	
-	uzero((uint8_t *)progbase + binflat.data_end,
+	uzero((uint8_t *)udata.u_database + binflat.data_end - binflat.data_start,
 		binflat.bss_end - binflat.data_end + binflat.stack_size);
 
 	/* Use of brk eats into the stack allocation */
 
 	/* Use the temporary we saved (hack) as we mangled bss_end */
-	udata.u_break = udata.u_codebase + true_brk;
+	udata.u_break = udata.u_database + true_brk - binflat.data_start;
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));

@@ -582,7 +582,11 @@ typedef struct u_data {
     usize_t	u_done;		/* Counter for driver methods */
 
 #ifdef CONFIG_UDATA_TEXTTOP
-    uaddr_t u_texttop;  /* Top of binary text (used for I/D systems) */
+    uaddr_t u_texttop;		/* Top of binary text (used for I/D systems) */
+#endif
+#ifdef CONFIG_SPLIT_ID
+    uaddr_t u_database;		/* data base for systems with separate code/data
+				   blocks. FIXME - sort this out in the usermode hdr */
 #endif
 #ifdef CONFIG_NET
     struct udata_net u_net;
