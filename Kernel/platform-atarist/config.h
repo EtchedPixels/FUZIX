@@ -8,6 +8,7 @@
 #define CONFIG_MULTI
 /* 32bit with flat memory */
 #define CONFIG_FLAT
+#define CONFIG_SPLIT_ID
 #define CONFIG_32BIT
 #define CONFIG_BANKS	(65536/512)
 #define CONFIG_USERMEM_DIRECT
