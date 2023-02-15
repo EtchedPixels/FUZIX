@@ -1,0 +1,16 @@
+pico68k
+
+A small 68000 board with a 6522, 6850 and 68000 plus a small ROM and a
+whopping 64 or 128K of RAM. An SD card is wired onto the 6522 VIA A
+port as 7 MISO 2 CS 1 CLK 0 MOSI.
+
+TODO
+- Memory model. With flat we can load init and die out of memory.
+  Going one process will hurt because the SD is slow
+- Plug a CF into the 6522 instead, but that uses all the lines
+
+
+Not a terribly useful Fuzix machine but handy as an exercise in figuring out 
+a viable swap/flat model.
+
+
