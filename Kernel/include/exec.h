@@ -5,6 +5,13 @@
 #ifndef _SYS_EXEC_H
 #define _SYS_EXEC_H
 
+#if defined(__mc68000__)
+#include "flat.h"
+/* Feature bits for 32bit to go with the 32bit exec header once done */
+
+#define AF_68000_020	1		/* Has 68020 features */
+#else
+
 /* 16 byte header for current old style binary */
 struct old_exec {
 	uint8_t a_bra[3];		/* 3 bytes of op code */
@@ -86,8 +93,7 @@ struct exec {
 	/* uint16_t a_sigvec; */
 };
 
-/* Feature bits for 32bit to go with the 32bit exec header once done */
-
-#define AF_68000_020	1		/* Has 68020 features */
 
 #endif
+#endif
+

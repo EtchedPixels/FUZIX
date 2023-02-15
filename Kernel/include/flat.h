@@ -7,7 +7,8 @@
 
 #define FLAT_VERSION 4
 
-struct binfmt_flat {
+/* For now just use binfmt_flat as our exec struct. This will change */
+struct exec {
 	uint8_t magic[4];
 	uint32_t rev;
 	uint32_t entry;

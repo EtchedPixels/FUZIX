@@ -57,7 +57,7 @@ SECTIONS {
 	} > flatmem
 	__exidx_end = .;
 
-	. = ALIGN(0x20) ;
+	. = ALIGN(0x200) ;
 	_etext = . ;
 
 	.data : {

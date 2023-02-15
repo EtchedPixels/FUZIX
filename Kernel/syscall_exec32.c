@@ -39,7 +39,7 @@ static void close_on_exec(void)
 	udata.u_cloexec = 0;
 }
 
-static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
+static int valid_hdr(inoptr ino, struct exec *bf)
 {
 	if (bf->stack_size < 4096)
 		bf->stack_size = 4096;
@@ -73,7 +73,7 @@ static int valid_hdr(inoptr ino, struct binfmt_flat *bf)
 
 /* For now we load the binary in one block, including code/data/bss. We can
    look at better formats, split binaries etc later maybe */
-static void relocate(struct binfmt_flat *bf, uaddr_t progbase, uint32_t size)
+static void relocate(struct exec *bf, uaddr_t progbase, uint32_t size)
 {
 	uint32_t *rp = (uint32_t *)(progbase + bf->reloc_start);
 	uint32_t n = bf->reloc_count;
@@ -108,7 +108,7 @@ char *envp[];
 arg_t _execve(void)
 {
 	/* Not ideal on stack */
-	struct binfmt_flat binflat;
+	struct exec binflat;
 	inoptr ino;
 	uint8_t **nargv;	/* In user space */
 	uint8_t **nenvp;	/* In user space */
@@ -139,12 +139,12 @@ arg_t _execve(void)
 	setftime(ino, A_TIME);
 
 	udata.u_offset = 0;
-	udata.u_count = sizeof(struct binfmt_flat);
+	udata.u_count = sizeof(struct exec);
 	udata.u_base = (void *)&binflat;
 	udata.u_sysio = true;
 
 	readi(ino, 0);
-	if (udata.u_done != sizeof(struct binfmt_flat)) {
+	if (udata.u_done != sizeof(struct exec)) {
 		udata.u_error = ENOEXEC;
 		goto nogood;
 	}
@@ -191,9 +191,9 @@ arg_t _execve(void)
 	/* FIXME: need to update this to support split code/data and to fix
 	   stack handling nicely */
 	/* FIXME: ENOMEM fix needs to go to 16bit ? */
-	/* NULL for exec is a hack - we need the binfmt_flat to be
-	   our exec structure in this case I think */
-	if ((udata.u_error = pagemap_realloc(NULL, bin_size)) != 0)
+	/* Fudge for now - use binflat as our exec struct until we finish
+	   getting where we need to be */
+	if ((udata.u_error = pagemap_realloc(&binflat, bin_size)) != 0)
 		goto nogood3;
 
 #ifdef CONFIG_PLATFORM_UDMA
@@ -212,7 +212,7 @@ arg_t _execve(void)
 	udata.u_codebase = progbase = pagemap_base();
 	/* From this point on we are commmited to the exec() completing
 	   so we can start writing over the old program */
-	uput(&binflat, (uint8_t *)progbase, sizeof(struct binfmt_flat));
+	uput(&binflat, (uint8_t *)progbase, sizeof(struct exec));
 
 	if (!(mflags & MS_NOSUID)) {
 		/* setuid, setgid if executable requires it */
@@ -241,11 +241,11 @@ arg_t _execve(void)
 	 *  space and move it directly.
 	 */
 
-	 if (bin_size > sizeof(struct binfmt_flat)) {
+	 if (bin_size > sizeof(struct exec)) {
 		/* We copied the header already */
-		bin_size -= sizeof(struct binfmt_flat);
+		bin_size -= sizeof(struct exec);
 		udata.u_base = (uint8_t *)progbase +
-					sizeof(struct binfmt_flat);
+					sizeof(struct exec);
 		udata.u_count = bin_size;
 		udata.u_sysio = false;
 		/* As we allocated this space we know the range is valid */
