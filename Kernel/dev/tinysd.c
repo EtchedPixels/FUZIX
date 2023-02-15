@@ -66,7 +66,7 @@ static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 	return res;		/* Return with the response value */
 }
 
-int do_sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
+int sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
 	tinysd_busy = 1;
 	if (sd_send_command(is_read ? CMD17 : CMD24, lba << sd_shift[dev]))
