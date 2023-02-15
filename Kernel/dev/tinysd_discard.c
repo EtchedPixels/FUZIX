@@ -70,12 +70,12 @@ static uint8_t sdhc_init(void)
     uint8_t n = 0;
     sd_get4();
     if (sdbuf[2] != 0x01 || sdbuf[3] != 0xAA)
-        return 0;
+        return CT_NONE;
     while(++n && sendacmd(acmd41));
     if (n == 0)
-        return 0;
+        return CT_NONE;
     if (sendcmd(cmd58))
-        return 0;
+        return CT_NONE;
     sd_get4();
     sd_spi_fast();
     if (sdbuf[0] & 0x40)
@@ -88,9 +88,9 @@ static uint8_t mmc_init(void)
     uint8_t n = 0;
     while(++n && sendcmd(cmd1));
     if (n == 0)
-        return 0;
+        return CT_NONE;
     if (sendcmd(cmd16))
-        return 0;
+        return CT_NONE;
     sd_spi_fast();
     return CT_MMC;
 }
@@ -103,7 +103,7 @@ static uint8_t sd_try_init(void)
     while(++n <= 8)
         sd_spi_receive_byte();
     if (sendcmd(cmd0) != 1)
-        return 0;
+        return CT_NONE;
     if (sendcmd(cmd8) == 1)
         return sdhc_init();
     if (sendacmd(acmd41_0) > 1)
@@ -112,7 +112,7 @@ static uint8_t sd_try_init(void)
     while(++n && sendacmd(acmd41_0));
     /* Timed out */
     if (n == 0)
-        return 0;
+        return CT_NONE;
     sendcmd(cmd16);
     return CT_SD1;
 }
@@ -127,7 +127,7 @@ uint8_t sd_init(void)
 
     do {
         r = sd_try_init();
-    } while(r == 0 && ++n < 8);
+    } while(r == CT_NONE && ++n < 8);
 
     tinysd_busy = 0;
     return r;
