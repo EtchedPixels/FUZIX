@@ -25,11 +25,11 @@ $(FOBJS): fshbuild/%.o: %.c
 
 sh: $(CRT0) $(OBJS)
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(ELF2FUZIXBRK) -o $@ $@.bin
 
 fsh: $(CRT0) $(FOBJS)
 	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -lreadline68000 $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(ELF2FUZIXBRK) -o $@ $@.bin
 
 size.report: $(APPS)
 	ls -l $^ > $@

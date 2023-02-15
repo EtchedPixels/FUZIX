@@ -13,6 +13,8 @@ CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_68000.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_68000.o
 # For now while we get going. Really we want to use some kind of elf2zmagic
 # with relocs.
-ELF2FUZIX = $(FUZIX_ROOT)/Standalone/elf2flt -s 16384
+ELF2FUZIX = $(FUZIX_ROOT)/Standalone/elf2flt -s 4096
+# A few olde worlde  things use brk heavily (eg /bin/sh)
+ELF2FUZIXBRK = $(FUZIX_ROOT)/Standalone/elf2flt -s 8192
 .SUFFIXES: .c .o
 HOSTCC = gcc
