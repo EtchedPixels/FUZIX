@@ -15,6 +15,7 @@
 
 #define CONFIG_MULTI
 #define CONFIG_FLAT
+#define CONFIG_SPLIT_ID
 #define CONFIG_PARENT_FIRST
 
 /* It's not that meaningful but we currently chunk to 512 bytes */

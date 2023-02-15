@@ -51,12 +51,12 @@ image:
 	ns202.o ../start.o ../version.o \
 	../lowlevel-68000.o 68000exception.o devtty.o \
 	ds1302.o ds1302_discard.o ds1302_ops.o \
+	ppide.o devide.o devide_discard.o devsd.o devsd_discard.o \
 	tricks.o p68000.o main.o ../timer.o ../kdata.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o blkdev.o mbr.o ../syscall_other.o ../mm.o ../flat.o \
 	../blk512.o ../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
-	ppide.o devide.o devide_discard.o devsd.o devsd_discard.o \
 	68000usercopy.o ../usermem_std-68000.o \
 	libc.o ../malloc.o ../level2.o ../syscall_level2.o ../select.o \
 	>../fuzix.map
