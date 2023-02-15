@@ -263,7 +263,7 @@ static void relocate_rela_68k(Elf32_Rela *rel, unsigned int relcount)
 				if (verbose)
 					printf("relocateGOT @%06x\n", endian32(rel->r_offset));
 				addr = endian32(rel->r_offset);
-				add32(addr, datalo + sizeof(struct binfmt_flat));
+				add32(addr, datalo + sizeof(struct exec));
 				break;
 			case R_68K_GOT16O:
 			case R_68K_GOT8O:
@@ -564,16 +564,16 @@ int main(int argc, char* const* argv)
 
 	if (verbose)
 		printf("Writing %d relocations.\n", next_reloc);
-	struct binfmt_flat flatheader =
+	struct exec flatheader =
 	{
 		.magic = FLAT_FUZIX_MAGIC,
 		.rev = htonl(FLAT_VERSION),
 		.flags = htonl(FLAT_FLAG_RAM),
-		.entry = htonl(endian32(elffile->e_entry) + sizeof(flatheader)),
-		.data_start = htonl(datalo + sizeof(flatheader)),
-		.data_end = htonl(datahi + sizeof(flatheader)),
-		.bss_end = htonl(bsshi + sizeof(flatheader)),
-		.reloc_start = htonl(datahi + sizeof(flatheader)),
+		.entry = htonl(endian32(elffile->e_entry)),
+		.data_start = htonl(datalo),
+		.data_end = htonl(datahi),
+		.bss_end = htonl(bsshi),
+		.reloc_start = htonl(datahi),
 		.reloc_count = htonl(next_reloc),
 		.stack_size = htonl(stacksize),
 	};
