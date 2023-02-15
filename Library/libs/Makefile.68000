@@ -5,7 +5,7 @@ AR = $(CROSS_COMPILE)ar
 LINKER = $(CROSS_COMPILE)ld
 PLATFORM = 68000
 export PLATFORM
-CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -c -I../include -I../include/68000 -I../include/68000/fixed
+CC_OPT = -DUSE_SYSMALLOC -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -c -I../include -I../include/68000 -I../include/68000/fixed
 ASM_OPT = -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h

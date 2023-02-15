@@ -17,10 +17,36 @@ struct memh __mroot = { &__mroot, 0 };
 
 struct memh *__mfreeptr = &__mroot;
 
+static size_t blksz = 8192;
+
 static struct memh *brkmore(size_t nb)
 {
 	struct memh *p;
 
+#ifdef USE_SYSMALLOC
+	extern void *memalloc(size_t sz);
+
+	size_t sz = nb * sizeof(struct memh);
+	/* Start by trying to do a malloc syscall */
+	if (sz < blksz)
+		sz = blksz;
+	/* Chunk it up. This is us knowing more than we should about the
+	   kernel allocator */
+	do {
+		sz = (sz + 511) & ~511;
+		p = memalloc(sz);
+		if (p != NULL) {
+			p->size = sz / sizeof(struct memh);
+			free(p + 1);
+			/* We only get so many blocks in our table so allocate
+			   progressively bigger chunks */
+			blksz += blksz - (blksz >> 2);
+			blksz &= ~511;
+			return __mfreeptr;
+		}
+		sz /= 2;
+	} while(p == NULL && sz >= (nb * sizeof(struct memh)) && sz >= 1024);
+#endif
 	if (nb < BRKSIZE)
 		nb = BRKSIZE;
 
