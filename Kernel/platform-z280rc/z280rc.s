@@ -14,6 +14,7 @@
 	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_kernel_di
+	    .globl map_kernel_restore
 	    .globl map_process
 	    .globl map_process_di
 	    .globl map_process_a
@@ -42,7 +43,6 @@
 	    .globl outhl
 	    .globl null_handler
 	    .globl nmi_handler
-	    .globl _inint
 	    .globl kstack_top
 
 	    .globl s__COMMONMEM
@@ -250,6 +250,7 @@ _program_vectors:
 map_buffers:
 map_kernel:
 map_kernel_di:
+map_kernel_restore:
 	    push af
 	    xor a
 	    call map_process_a	; do all the logic in one place with
@@ -687,7 +688,7 @@ sig_or_die:
 	; Once we have proper supervisor/user we can just check the pushed
 	; status to see what to do. For now fudge it roughly.
 	push af
-	ld a,(_inint)
+	ld a,(_udata + U_DATA__U_ININTERRUPT)
 	or a
 	jr nz, diediedie
 	ld a,(_udata + U_DATA__U_INSYS)

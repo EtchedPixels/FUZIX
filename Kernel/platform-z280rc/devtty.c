@@ -24,8 +24,8 @@ __sfr __at 0x18 uart_tdr;
  */
 static unsigned char tbuf1[TTYSIZ];
 
-tcflag_t *termios_mask[NUM_DEV_TTY + 1] = {
-	NULL,
+tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
+	0,
 	_CSYS
 };
 
