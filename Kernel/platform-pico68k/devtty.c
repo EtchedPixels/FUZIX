@@ -88,7 +88,6 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 		break;
 	}
 	acia->ctrl = r;
-	kprintf("ACIA to %2x\n", r);
 }
 
 int tty_carrier(uint_fast8_t minor)

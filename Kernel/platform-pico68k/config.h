@@ -6,7 +6,7 @@
 #undef CONFIG_PROFIL
 
 #define CONFIG_32BIT
-#define CONFIG_LEVEL_2
+//#define CONFIG_LEVEL_2
 
 #define CONFIG_MULTI
 #define CONFIG_FLAT
@@ -36,8 +36,9 @@
 
 /* Could be bigger but we need to add hashing first and it's not clearly
    a win with a CF card anyway */
-#define NBUFS    16		/* Number of block buffers */
-#define NMOUNTS	 4		/* Number of mounts at a time */
+#define PTABSIZE 	8
+#define NBUFS    	5	/* Number of block buffers */
+#define NMOUNTS	 	2	/* Number of mounts at a time */
 
 #define CONFIG_TD_NUM	1
 #define CONFIG_TD_SD
