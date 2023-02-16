@@ -329,8 +329,66 @@ cslower:
 		rts
 csraise:
 		move.b	#7,2(a6)	; CS CLK DATA high
+
+;
+;	Optimised send ff read back
+;
 sendff:
-		move.b	#$ff,d0
+		lea	2(a6),a5
+		move.b	(a5),d2
+		or.b	#3,d2		; clock high
+		move.b	d2,d3
+		and.b	#5,d3		; clock low
+		moveq	#1,d4
+		; bit 0
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		; bit 1
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		; bit 2
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		; bit 3
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		; bit 4
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		; bit 5
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		; bit 6
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		; bit 7
+		move.b	d3,(a5)
+		move.b	d2,(a5)
+		move.b	(a5),d5
+		roxl.b	d4,d5
+		roxl.b	d4,d0
+		rts
 
 		; D0 input , preserve D1/7, return value in D0
 		; uses most of the D regs
