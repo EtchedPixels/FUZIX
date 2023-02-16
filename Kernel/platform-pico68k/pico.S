@@ -36,7 +36,7 @@ init_hardware:
 	    move.w #128,d0
 	    move.w d0,ramsize
 	    move.l #_end+512,d1
-	    sub.l #_data,d1
+	    sub.l #$10000,d1		; Base of RAM
 	    lsr.l #8,d1
 	    lsr.l #2,d1
 	    sub.w  d1,d0		; Guess for kernel
