@@ -47,8 +47,8 @@ start:
 	; Now running where we expect to be (FCxx)
 go:
 	call outstr
-	.asciz 'FILO Z280 0.01...'
-	jr go
+	.ascii 'FILO Z280 0.01...'
+	.byte 13,10,0
 	ld c,#0x08
 	ld l,#0
 ;	ldctl (c),hl
@@ -103,9 +103,10 @@ outl:
 	jp (hl)
 printon:
 	ex af,af'
+printw:
 	in a,(0x12)
 	rra
-	jr nc, printon
+	jr nc, printw
 	ex af,af'
 	out (0x18),a
 	nop

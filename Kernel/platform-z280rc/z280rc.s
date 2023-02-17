@@ -145,7 +145,8 @@ init_hardware:
 	    ld l,#0xFF
 	    call _io_bank_set
 	    push hl
-	    ld hl,#0xBBE0	; MMU on S and U, no split I/D
+	    ld hl,#0xBBFF	; TODO: revise as we get going
+				; MMU on S and U, no split I/D
 				; We may want to consider MMU off in
 				; supervisor later on - is there a perf
 				; gain versus MMU on ??
@@ -292,9 +293,10 @@ map_process_a:			; used by bankfork
 	    add hl,hl
 	    add hl,hl
 	    ld de,#frames	; Lazy - look it up it's only a hack for now
+	    add hl,de
 	    ld a,#0x10
-	    out (0x44),a	; pointer to 0x10 (system pages)
-	    ld bc,#0x0FF4
+	    out (0xF1),a	; PDR pointer to 0x10 (system pages)
+	    ld bc,#0x10F4	; 16 words to F4
 ;;	    otirw
             .db 0xED, 0x93
 	    pop hl

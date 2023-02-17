@@ -38,14 +38,8 @@
 	        .area _CODE
 
 		; Load at 0x0100
-		; We are executed as a CP/M task identity mapped into the
-		; low 64K. Nice and simple. We just expand ourselves all
-		; over CP/M and take over.
-		;
-		; If we also want to support ZZ80RC we need to rework
-		; stuff a bit because it has page 0 borrowed for the
-		; firmware and reboot so we can't use it. Also it starts
-		; with the MMU already on and us mapped differently.
+		; Loader is at FC00-FEFF stack is at FFxx
+		; Serial is sort of set up
 start:
 		di
 		ld sp, #kstack_top
