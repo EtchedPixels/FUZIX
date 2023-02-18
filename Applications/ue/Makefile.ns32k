@@ -1,0 +1,24 @@
+include $(FUZIX_ROOT)/Applications/rules.ns32k
+
+APPS = ue.fuzix ue.ansi ue
+
+SRCS  = ue.c term-fuzix.c term-ansi.c term.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(APPS) size.report
+
+ue.fuzix: $(CRT0NS) ue.o term-fuzix.o
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+ue.ansi: $(CRT0NS) ue.o term-ansi.o
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+ue: $(CRT0) ue.o term.o
+	$(LINKER) $^ -o $@ -ltermcapns32k $(LINKER_OPT) $(LINKER_TAIL)
+
+size.report: $(APPS)
+	ls -l $< > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) *.lst *.map size.report *.o *.rel
