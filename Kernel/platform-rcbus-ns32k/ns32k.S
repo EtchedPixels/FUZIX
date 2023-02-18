@@ -146,9 +146,9 @@ interrupt_handler:
 		cmpqb 0,U_DATA__U_INSYS(r6)
 		bne no_preempt
 		cmpqb 0,_need_resched(pc)
-		bne no_preempt
+		beq no_preempt
 
-		# Pre-emption
+		# Pre-emption - TODO stack switches etc
 
 		movd U_DATA__U_PTAB(r6),r0
 		cmpqb P_RUNNING,P_TAB__P_STATUS_OFFSET(r0)
@@ -162,7 +162,7 @@ no_preempt:
 		# FIXME concoct new stack frames
 no_signal:
 		exit [r0,r1,r6]
-		reti
+		rett 0
 
 _plt_reboot:
 _plt_monitor:

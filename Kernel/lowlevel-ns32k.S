@@ -86,8 +86,9 @@ ___hard_irqrestore:
 		enter [],0
 		sprw psr,r0
 		andw 0xF7FF,r0
-		orw 4(fp),r0
+		orw 8(fp),r0
 		lprw psr,r0
+		exit []
 		ret 0
 
 outstring:
