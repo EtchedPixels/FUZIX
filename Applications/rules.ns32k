@@ -1,0 +1,16 @@
+PLATFORM = ns32k
+CROSS_COMPILE=ns32k-pc532-netbsd-
+CC = ns32k-pc532-netbsd-gcc
+ASM = ns32k-pc532-netbsd-as
+AR = ns32k-pc532-netbsd-ar
+LINKER = $(CROSS_COMPILE)ld
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -m32032 -O2 -c
+CFLAGS += -nostdinc -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/ns32k/
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs 
+LINKER_TAIL = -lcns32k
+LIBGCCDIR = $(dir $(shell $(CC) -m68000 -print-libgcc-file-name))
+LINKER_TAIL += -L$(LIBGCCDIR) -lgcc -N --emit-relocs -T $(FUZIX_ROOT)/Library/ns32k.ld
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_ns32k.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_ns32k.o
+.SUFFIXES: .c .o
+HOSTCC = gcc
