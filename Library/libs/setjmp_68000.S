@@ -1,7 +1,7 @@
 /* setjmp for 68000 and gcc.
 
    The called function is expected to save registers it damages so we need
-   to do a full save here expect for a0/a1 d0/d1 which are scratch */
+   to do a full save here except for a0/a1 d0/d1 which are scratch */
 
 	.text
 	.globl setjmp
