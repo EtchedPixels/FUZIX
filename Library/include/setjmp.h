@@ -94,7 +94,13 @@
 #elif defined(__ARM_EABI__)
 
 	typedef uint32_t jmp_buf[10];
-    extern int setjmp(jmp_buf __env);
+	extern int setjmp(jmp_buf __env);
+	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
+
+#elif defined(__ns32k__)
+
+	typedef uint32_t jmp_buf[13];
+	extern int setjmp(jmp_buf __env);
 	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
 
 #else
