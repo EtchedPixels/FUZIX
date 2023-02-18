@@ -1,4 +1,4 @@
-	.globl _start
+	.globl __start
 	.globl ___argv
 	.globl _environ
 
@@ -9,11 +9,11 @@ _environ:
 
 	.text
 
-_start:
+__start:
 	enter [],0
 	addr 8(fp),_environ(pc)
-	movw 4(fp),___argv(pc)
+	movd 4(fp),___argv(pc)
 	jsr _main
-	movw r0,tos
+	movd r0,tos
 	exit []
 	jsr _exit
