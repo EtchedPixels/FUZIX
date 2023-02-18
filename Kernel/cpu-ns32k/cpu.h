@@ -1,5 +1,5 @@
 #define uputp  uputl			/* Copy user pointer type */
-#define ugetp  ugetl			/* between user and kernel */
+#define ugetp(x)  ugetl(x, NULL)	/* between user and kernel */
 #define uputi  uputl			/* Copy user int type */
 #define ugeti(x)  ugetl(x,NULL)		/* between user and kernel */
 
