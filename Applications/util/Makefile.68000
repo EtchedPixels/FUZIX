@@ -108,14 +108,12 @@ SRCS  = \
 	write.c \
 	xargs.c
 
-SRCTC = fleamacs.c \
-	tget.c \
+SRCTC = tget.c \
         tchelp.c \
-	vile.c \
 	marksman.c
 
 # Until we sort out memory allocation better
-SRCTCBIG = vile.c
+SRCTCBIG = vile.c fleamacs.c
 
 SKIPPED =
 
