@@ -5,7 +5,7 @@
 #ifndef _SYS_EXEC_H
 #define _SYS_EXEC_H
 
-#if defined(__mc68000__)
+#if defined(__mc68000__) || defined(__ns32k__)
 #include "flat.h"
 /* Feature bits for 32bit to go with the 32bit exec header once done */
 
