@@ -34,7 +34,7 @@ int shutdown(int __fd, int __how);
 int socket(int __domain, int __type, int __protocol);
 
 /* LP32 */
-#if defined(__mc68000__) || defined(__XTENSA_CALL0_ABI__) || defined(__ARM_EABI__)
+#if defined(__mc68000__) || defined(__XTENSA_CALL0_ABI__) || defined(__ARM_EABI__) || defined(__ns32k__)
 typedef uint32_t	__uarg_t;
 #else
 /* LP16 */
