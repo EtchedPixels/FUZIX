@@ -111,7 +111,6 @@ loop:
 	move.l P_TAB__P_UDATA_OFFSET(a0),-(sp)
 	;
 	; Configure the child udata now we copied it
-	; BUG: child udata is NULL ????
 
 	move.l P_TAB__P_UDATA_OFFSET(a0),-(sp)
 	move.l a0,-(sp)
