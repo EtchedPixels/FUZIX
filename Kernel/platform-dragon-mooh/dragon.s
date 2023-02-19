@@ -15,6 +15,7 @@
 	.globl _hdb_timeout
 	.globl _bufpool
 	.globl _discard_size
+	.globl _framedet
 
 	; imported
 	.globl unix_syscall_entry
