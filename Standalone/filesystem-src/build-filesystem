@@ -15,4 +15,4 @@ fi
 
 VERSION=`cat ../../version.mk|grep \ VERSION| rev | cut -d ' ' -f 1 | rev`
 sed -e "s/XXX/$VERSION/" <templates/issue >etc-files/issue
-./build-filesystem-ng $endian -f $1 -g $2 $3
+./build-filesystem-ng $endian -f $1 -g $2 $3 -p platform-$TARGET
