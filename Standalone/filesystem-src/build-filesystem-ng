@@ -292,7 +292,7 @@ sub gen_ucp {
                     my $node = $2;
                     if (exists($paths{$base}) or ($base eq '')) {
                         # all good
-                        $paths{"$base/$node"} = 'd';
+                        $paths{"$base/$node"} = 'n';
                         if ($cur_path ne $base) {
                             $base = $base eq '' ? '/' : $base;
                             print OUT "cd $base\n";
@@ -348,8 +348,9 @@ sub gen_ucp {
                     }
                 }
                 elsif ($cmd eq 'r') { # rm arg1: file
+	            print "DEBUG $arg1 is $paths{$arg1}\n";
                     if (exists $paths{$arg1}) {
-                        if ($paths{$arg1} eq 'f') {
+                        if ($paths{$arg1} ne 'd') {
                             delete $paths{$arg1};
                             print OUT "rm $arg1\n";
                         }
