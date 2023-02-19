@@ -22,7 +22,7 @@ SPICS			    equ 0x01	     ; hardcode SEL0 for now
 
 PROGBASE                    equ 0x8000       ; programs and data start here
 
-NBUFS			    equ 5
+NBUFS			    equ 4
 
 ; Have these defined so that lowlevel-6809.s can be used as-is
 SAM_USER macro
