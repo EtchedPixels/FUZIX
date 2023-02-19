@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+#	Unfortunately the ns32k GNU binutils seems to thin that keeping
+#	relocations isn't needed even if explictly told to.
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+#
+#	Link at 0x100 and 0x200
+#
+set -e
+#
+ns32k-pc532-netbsd-ld $ARGS -o "$TARGET.b0" -T "$FUZIX_ROOT/Library/link/ns32k.link"
+ns32k-pc532-netbsd-ld $ARGS -o "$TARGET.b1" -T "$FUZIX_ROOT/Library/link/ns32k.link2"
+ns32k-pc532-netbsd-nm -n "$TARGET.0" >"$TARGET".map
+$FUZIX_ROOT/Library/tools/ns32ktoflat "$TARGET".b0 "$TARGET".b1 "$TARGET"
+rm -f "$TARGET.b0"
+rm -f "$TARGET.b1"
