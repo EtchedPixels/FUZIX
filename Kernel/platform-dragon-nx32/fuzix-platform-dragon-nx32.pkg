@@ -2,6 +2,8 @@ package platform-dragon-nx32
 
 disable-pkg platform-dragon-nx32
 
+# dw0 is also in fuzix-netd.pkg
+r /dev/dw0
 n 60660 2048 /dev/dw0
 n 60660 2049 /dev/dw1
 n 60660 2050 /dev/dw2
