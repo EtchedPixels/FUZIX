@@ -134,9 +134,11 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	switch (minor) {
 	case 1:
+		while(!(ASCI_STAT0 & 2));
 		ASCI_TDR0 = c;
 		break;
 	case 2:
+		while(!(ASCI_STAT1 & 2));
 		ASCI_TDR1 = c;
 		break;
 	}

@@ -731,12 +731,14 @@ ttyready_t asci_writeready1(uint_fast8_t minor)
 static void asci_putc0(uint_fast8_t minor, uint_fast8_t c)
 {
 	used(minor);
+	while(!(ASCI_STAT0 & 2));
 	ASCI_TDR0 = c;
 }
 
 static void asci_putc1(uint_fast8_t minor, uint_fast8_t c)
 {
 	used(minor);
+	while(!(ASCI_STAT1 & 2));
 	ASCI_TDR1 = c;
 }
 
