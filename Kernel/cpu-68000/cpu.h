@@ -1,3 +1,5 @@
+#define CPU_MID MID_FUZIX68000
+
 #define uputp  uputl			/* Copy user pointer type */
 #define ugetp(x)  ugetl(x,NULL)		/* between user and kernel */
 #define uputi  uputl			/* Copy user int type */
