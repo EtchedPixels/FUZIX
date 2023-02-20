@@ -18,9 +18,8 @@ PHDRS {
 SECTIONS {
 
 	.text : {
-		__stubs = . - 0x20;
-		. = ALIGN(0x4) ;
 		_stext = . ;
+		__stubs = . - 0x20;
 		*(.literal .text)
 		*(.literal.* .text.*)
 		*(.gnu.warning)
@@ -50,7 +49,7 @@ SECTIONS {
 		PROVIDE(__ctbp = .);
 		*(.call_table_data)
 		*(.call_table_text)
-	} > flatmem :text
+	} > flatmem
 
 	/* .ARM.exidx name sections containing index entries for section unwinding */
 	/* .ARM.exidx is sorted, so has to go in its own output section.  */

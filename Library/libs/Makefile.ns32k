@@ -3,7 +3,7 @@ ASM = ns32k-pc532-netbsd-as
 AR = ns32k-pc532-netbsd-ar
 PLATFORM = ns32k
 export PLATFORM
-CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -m32032 -O2 -c -I../include -I../include/ns32k -I../include/ns32k/fixed
+CC_OPT = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -c -I../include -I../include/ns32k -I../include/ns32k/fixed
 ASM_OPT = -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h
