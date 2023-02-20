@@ -26,7 +26,7 @@
 #
 _doexec:
 		enter [],0
-		movd 4(fp),r0
+		movd 8(fp),r0
 		# Put the supervisor stack back where we want it
 		addr 1024(r6),r1
 		lprd sp,r1
@@ -37,8 +37,9 @@ _doexec:
 		movqd 0,r5
 		movqd 0,r6
 		movqd 0,r7
-		movd 0xB00,tos		# PSR and if we do DE mode module
 		# We want U S I set (user mode, user stack, interrupt on
+		movw 0x0B00,tos	# PSR and if we do DE mode module
+		sprw mod,tos
 		movd r0,tos
 		rett 0			# To user space
 
