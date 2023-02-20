@@ -3,7 +3,7 @@ CC=gcc
 #CCOPTS=-O2 -DLIBDSK -ldsk -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
 CCOPTS=-O2 -g -Wall -pedantic -Wno-char-subscripts -Wno-deprecated-declarations
 
-TARGETS=mkfs fsck ucp chmem size elf2flt mkftl sethint mkfs400 fsck400
+TARGETS=mkfs fsck ucp chmem size elf2aout mkftl sethint mkfs400 fsck400
 
 all:	$(TARGETS)
 
@@ -34,7 +34,7 @@ sethint: sethint.o
 size:	size.o
 	$(CC) $(CCOPTS) -o $@ $<
 
-elf2flt:	elf2flt.o
+elf2aout:	elf2aout.o
 	$(CC) $(CCOPTS) -o $@ $<
 
 mkftl: mkftl.o ../Kernel/lib/dhara/journal.c ../Kernel/lib/dhara/error.c ../Kernel/lib/dhara/map.c

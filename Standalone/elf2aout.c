@@ -16,7 +16,7 @@
 
 typedef uint32_t uaddr_t;
 #include "../Kernel/include/elf.h"
-#include "../Kernel/include/flat.h"
+#include "../Kernel/include/a.out.h"
 
 #define perror_exit(msg) \
 	do { perror(msg); exit(1); } while (0)
@@ -147,7 +147,7 @@ static void add_reloc(unsigned int reloc)
 			next_reloc);
 		exit(1);
 	}
-	relocs[next_reloc++] = reloc;
+	relocs[next_reloc++] = endian32(reloc);
 }
 
 static void add32(uint32_t offset, uint32_t val)
@@ -184,8 +184,6 @@ static void relocate_rel_arm(Elf32_Rel *rel, int relcount)
 				fprintf(stderr, "Unknown ELF relocation type %d\n", type);
 				exit(1);
 		}
-
-		addr = htonl(addr);
 		add_reloc(addr);
 		rel++;
 	}
@@ -205,8 +203,6 @@ static void relocate_rela_arm(Elf32_Rela *rel, unsigned int relcount)
 				fprintf(stderr, "Unknown ELF relocation type %d\n", type);
 				exit(1);
 		}
-
-		addr = htonl(addr);
 		add_reloc(addr);
 		rel++;
 	}
@@ -225,8 +221,6 @@ static void relocate_rel_68k(Elf32_Rel *rel, int relcount)
 				fprintf(stderr, "Unknown ELF relocation type %d\n", type);
 				exit(1);
 		}
-
-		addr = htonl(addr);
 		add_reloc(addr);
 		rel++;
 	}
@@ -271,7 +265,6 @@ static void relocate_rela_68k(Elf32_Rela *rel, unsigned int relcount)
 				fprintf(stderr, "Unknown ELF relocation type %d\n", type);
 				exit(1);
 		}
-		addr = htonl(addr);
 		add_reloc(addr);
 		rel++;
 	}
@@ -346,10 +339,12 @@ int main(int argc, char* const* argv)
 	Elf32_Ehdr *elffile;
 	uint32_t reloff = 0xffffffff;
 	uint32_t relcount = 0;
+	unsigned int cpuinfo;
 	unsigned int seentext = 0;
 	unsigned int seendata = 0;
 	unsigned int seenbss = 0;
 	unsigned int i;
+	struct exec ah;
 
 	for (;;)
 	{
@@ -394,7 +389,15 @@ int main(int argc, char* const* argv)
 		crossendian = 1;
 
 	arch = endian16(elffile->e_machine);
-	if (arch != EM_68K && arch != EM_ARM) {
+	switch(arch) {
+	/* TODO sub arch types - armm0, 68010/020 etc */
+	case EM_68K:
+		cpuinfo = MID_FUZIX68000;
+		break;
+	case EM_ARM:
+		cpuinfo = MID_ARMM4;
+		break;
+	default:
 		fprintf(stderr, "elf2flt: unsupported machine type %d.\n", arch);
 		exit(1);
 	}
@@ -560,27 +563,28 @@ int main(int argc, char* const* argv)
 			relocate_rel(rel, relcount);
 	}
 
-	/* Assemble the bFLT header. */
+	/* Assemble the a.out header. */
 
 	if (verbose)
 		printf("Writing %d relocations.\n", next_reloc);
-	struct exec flatheader =
-	{
-		.magic = FLAT_FUZIX_MAGIC,
-		.rev = htonl(FLAT_VERSION),
-		.flags = htonl(FLAT_FLAG_RAM),
-		.entry = htonl(endian32(elffile->e_entry)),
-		.data_start = htonl(datalo),
-		.data_end = htonl(datahi),
-		.bss_end = htonl(bsshi),
-		.reloc_start = htonl(datahi),
-		.reloc_count = htonl(next_reloc),
-		.stack_size = htonl(stacksize),
-	};
 
-	if (fwrite(&flatheader, sizeof(flatheader), 1, outfp) != 1)
+	memset(&ah, 0, sizeof(ah));
+	ah.a_midmag = htonl((cpuinfo << 16) | NMAGIC);
+	ah.a_entry = endian32(ntohl(elffile->e_entry));
+	ah.a_text = endian32(datalo);
+	ah.a_data = endian32(datahi - datalo);
+	ah.a_bss = endian32(bsshi - bsslo);
+	ah.a_syms = 0;
+	ah.a_trsize = endian32(next_reloc * 4);
+	ah.a_drsize = 0;
+	ah.stacksize = endian32(stacksize);
+
+	/* Write the 32 byte a.out header and the info/stub space (another 32) */
+	if (fwrite(&ah, sizeof(ah), 1, outfp) != 1)
 		write_error();
 
+	/* Don't copy the dso shared overlay space, we included it
+	   in the header */
 	if (fwrite(memory, memory_size, 1, outfp) != 1)
 		write_error();
 
