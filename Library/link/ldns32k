@@ -3,6 +3,9 @@
 #	Unfortunately the ns32k GNU binutils seems to thin that keeping
 #	relocations isn't needed even if explictly told to.
 #
+#	Some uglies here as it seems the toolchain isn't able to handle
+#	extra sections so we need to force the link order by hand
+#
 TARGET=a.out
 
 ARGS=""
@@ -32,6 +35,6 @@ set -e
 ns32k-pc532-netbsd-ld $ARGS -o "$TARGET.b0" -T "$FUZIX_ROOT/Library/link/ns32k.link"
 ns32k-pc532-netbsd-ld $ARGS -o "$TARGET.b1" -T "$FUZIX_ROOT/Library/link/ns32k.link2"
 ns32k-pc532-netbsd-nm -n "$TARGET.0" >"$TARGET".map
-$FUZIX_ROOT/Library/tools/ns32ktoflat "$TARGET".b0 "$TARGET".b1 "$TARGET"
+$FUZIX_ROOT/Library/tools/ns32ktoaout "$TARGET".b0 "$TARGET".b1 "$TARGET"
 rm -f "$TARGET.b0"
 rm -f "$TARGET.b1"

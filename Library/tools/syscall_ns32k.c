@@ -21,18 +21,18 @@ static void write_call(int n)
   }
   /*
    *	We define _fork() as trashing all the registers except the return
-   *	values a5 and a7. The userspace ick here allows us to avoid saving
+   *	values *TBD*. The userspace ick here allows us to avoid saving
    *	all the registers on syscall entry just in case we are doing a fork and
-   *	have multiple udata blocks.
+   *	have multiple udata blocks. TODO FORK
    *
-   *	Note: this does mean if you want a register global you need to use a5
+   *	Note: this does mean if you want a register global you need to use TODO
    *	or ensure you never take a signal in the fork() area - doable but ugly.
    */
   fprintf(fp, "\t.text\n\n"
-	      "\t.globl %1$s\n"
+	      "\t.globl _%1$s\n"
 	      "\t.type %1$s, @function\n"
 	      "\t.align 2\n\n"
-	      "%1$s:\n", syscall_name[n]);
+	      "_%1$s:\n", syscall_name[n]);
   fprintf(fp, "\tmovw %d,r0\n", n);
   fprintf(fp, "\tsvc\n");
   fprintf(fp, "\tmovd r1,_errno(pc)\n");

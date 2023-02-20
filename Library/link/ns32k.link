@@ -1,10 +1,13 @@
 
 ENTRY (__start)
 
-/* TODO: sort this out for a proper a.out binary */
+/* We link at 0x20 because the toolchain doesn't seem to be able
+   to do proper sections and section ordering. We'll clean the resulting
+   turds up when we redo the header for relocations (which the toolchain
+   also can't do itself being meant for pc532). */
+
 MEMORY {
-	/* 0x40 so we allow for the header */
-	flatmem : ORIGIN = 0x40, LENGTH = 0xfffffff
+	flatmem : ORIGIN = 0x20, LENGTH = 0xfffffff
 }
 
 PHDRS {
@@ -15,8 +18,7 @@ PHDRS {
 SECTIONS {
 
 	.text : {
-		__stubs = . - 0x40;
-		. = . + 4;
+		__stubs = . - 0x20;
 		. = ALIGN(0x4) ;
 		_stext = . ;
 		*(.literal .text)

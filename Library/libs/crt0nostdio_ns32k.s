@@ -2,11 +2,6 @@
 	.globl ___argv
 	.globl _environ
 
-	.data
-
-_environ:
-	.long 0
-
 	.text
 
 __start:
@@ -17,3 +12,7 @@ __start:
 	movd r0,tos
 	exit []
 	jsr _exit
+
+	.data
+_environ:
+	.long 0

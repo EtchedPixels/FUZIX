@@ -16,19 +16,11 @@ struct exec_aout {
     uint32_t	a_syms;			/* Size in *bytes* of symbol table */
     uint32_t	a_entry;		/* Address of entry point */
     uint32_t	a_trsize;		/* Size in bytes of text relocation table */
-    uint32_t	a_drsize;		/* Sizew in bytes of data relocation table */
+    uint32_t	a_drsize;		/* Size in bytes of data relocation table */
 };
 
-/* Depends on direction of bitfield packing */
-
-#define	R_ADDRESS(x)	((x) >> 8)
-#define R_PCREL		0x80
-#define R_LENGTH	((x) & 0x60)		/* 0 = 1 1 = 2 2 = 4 3 = 8 */
-#define R_EXTERN	0x10
-#define R_BASEREL	0x08
-#define R_JMPTABLE	0x04
-#define R_RELATIVE	0x02
-#define	R_COPY		0x01
+#define MID_FUZIXNS32	0x03C0
+#define NMAGIC		0410
 
 static struct exec_aout hdr;
 static uint8_t *b0, *b1;
@@ -36,7 +28,7 @@ static uint8_t *b0, *b1;
 
 static uint8_t *load_block(FILE *fp, off_t base, size_t len)
 {
-	uint8_t *m = malloc(len);
+	uint8_t *m = malloc(len + 0x20);
 	if (m == NULL) {
 	    fprintf(stderr, "Out of memory.\n");
 	    exit(1);
@@ -46,10 +38,14 @@ static uint8_t *load_block(FILE *fp, off_t base, size_t len)
             fprintf(stderr, "Seek error.\n");
             exit(1);
         }
-        if (fread(m, len, 1, fp) != 1) {
+        if (fread(m + 0x20, len, 1, fp) != 1) {
             fprintf(stderr, "Read error loading binary block.\n");
             exit(1);
         }
+        /* Add the header words. We can't do this in crt0 as the toolchain doesn't
+           seem able to do link orders and customs ections */
+        memset(m, 0, 0x20);
+        *(uint32_t *)m = 4096;		/* Stack size */
         return m;
 }
 
@@ -119,7 +115,9 @@ int main(int argc, char *argv[])
 
     /* We assume -N (so no magic padding). Change this into two if we decide
        to do alignment in the file. As we've no MMU and fancy map paging we
-       don't need alignment features */
+       don't need alignment features. Note that the first 0x20 bytes of the
+       block are cleared as the input binary is 0x20 offset to allow for the
+       stub block. */
     b0 = load_block(i0, sizeof(struct exec_aout), hdr.a_text + hdr.a_data);
     b1 = load_block(i1, sizeof(struct exec_aout), hdr.a_text + hdr.a_data);
 
@@ -141,6 +139,7 @@ int main(int argc, char *argv[])
     fclose(i0);
     fclose(i1);
     rewind(o);
+    hdr.a_midmag = htonl(NMAGIC | (MID_FUZIXNS32 << 16));
     if (fwrite(&hdr, sizeof(hdr), 1, o) != 1) {
         fprintf(stderr, "%s: write error on final header.\n", argv[3]);
         exit(1);
