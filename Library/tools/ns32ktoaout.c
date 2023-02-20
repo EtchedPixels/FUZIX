@@ -1,5 +1,16 @@
 /*
  *	Convert an NS32K a.out binary into something more digestable
+ *
+ *	We linked it at 0x0000 and 0x00000102
+ *
+ *	We need to do this double shifting because extension fields are big endian
+ *	but everything else is little endian.
+ *
+ *	A difference pattern of 2 1 0 0 is a little endian shift at the start
+ *	A difference pattern of 0 0 1 2 is a big endian one. We store little endian
+ *	with the top bit set and handle it with extra magic in the loader (ick)
+ *
+ *	TODO: stack size argument
  */
 
 #include <stdio.h>
@@ -33,7 +44,6 @@ static uint8_t *load_block(FILE *fp, off_t base, size_t len)
 	    fprintf(stderr, "Out of memory.\n");
 	    exit(1);
         }
-        fprintf(stderr, "Loading %X bytes from %X\n", len, base);
         if (fseek(fp, base, SEEK_SET)) {
             fprintf(stderr, "Seek error.\n");
             exit(1);
@@ -56,27 +66,49 @@ static void relocate_binary(FILE *o)
     uint8_t *p0 = b0, *p1 = b1;
     int i;
     unsigned r;
+    unsigned skip;
+    unsigned endian;
 
     while(n--) {
-        if (*p0 != *p1) {
-            if (*p0 != *p1 - 1) {
-                fprintf(stderr, "Reloc mismatch @ %06X %d %d\n", p0 - b0, *p0, *p1);
+        uint8_t diff = *p1 - *p0;
+        if (diff) {
+            /* Byte 2 of a big endian relocation */
+            if (diff == 0x02) {
+                endian = 1;
+                skip = 2;
+            } else if (diff == 0x01) {
+                /* Byte 2 of a little endian relocation */
+                endian = 0;
+                skip = 2;
+            } else {
+                fprintf(stderr, "Reloc mismatch %d @ %06X %d %d\n", diff, p0 - b0, *p0, *p1);
                 for (i = -8; i < 8; i++)
                     fprintf(stderr, "%02X|%02X\n", p0[i], p1[i]);
                 exit(1);
             }
-            /* For now write 32bit addresses of relocations big endian. We'll compact
-               them once this works and we can make a similar 68K arrangement for a.out
-               binaries proper not flt */
+                
             r = p0 - b0;
-            /* 32bit addresses LE: this means we see the mismatch on the second byte
-               so adjust accordingly */
-            r--;
-            fputc(r >> 24, o);
-            fputc(r >> 16, o);
-            fputc(r >> 8, o);
+            r--;	/* Get correct byte start */
+
+#ifdef DEBUG
+            if (endian == 0)
+                fprintf(stderr, "%08X: %08X\n",
+                    r, *((uint32_t *)(b0 + r)));
+            else {
+                   fprintf(stderr, "%08X: %08X\n",
+                    r, ntohl(*((uint32_t *)(b0 + r))));
+            }
+#endif            
+            if (endian == 1)
+                r |= 0x80000000;
             fputc(r, o);
+            fputc(r >> 8, o);
+            fputc(r >> 16, o);
+            fputc(r >> 24, o);
             hdr.a_trsize += 4;
+            p0 += skip;
+            p1 += skip;
+            n -= skip;
         }
         p0++;
         p1++;
@@ -110,8 +142,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "%s: not a valid binary.\n", argv[1]);
         exit(1);
     }
-    printf("Text size %x, Data %x, BSS %x, Run from %x\n",
-        hdr.a_text, hdr.a_data, hdr.a_bss, hdr.a_entry);
+/*    printf("Text size %x, Data %x, BSS %x, Run from %x\n",
+        hdr.a_text, hdr.a_data, hdr.a_bss, hdr.a_entry); */
 
     /* We assume -N (so no magic padding). Change this into two if we decide
        to do alignment in the file. As we've no MMU and fancy map paging we
@@ -123,6 +155,9 @@ int main(int argc, char *argv[])
 
     hdr.a_trsize = hdr.a_drsize = 0;
     hdr.a_syms = 0;
+
+    /* Stubs */
+    hdr.a_text += 0x20;
 
     /* Copy the 0 based binary into the output up to the data end. We will redo the
        header at the end */
@@ -144,7 +179,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "%s: write error on final header.\n", argv[3]);
         exit(1);
     }
-    printf("%d bytes of relocations added.\n", hdr.a_trsize + hdr.a_drsize);
+/*    printf("%d bytes of relocations added.\n", hdr.a_trsize + hdr.a_drsize); */
     fclose(o);
     return 0;
 }

@@ -30,7 +30,7 @@ static void write_call(int n)
    */
   fprintf(fp, "\t.text\n\n"
 	      "\t.globl _%1$s\n"
-	      "\t.type %1$s, @function\n"
+	      "\t.type _%1$s, @function\n"
 	      "\t.align 2\n\n"
 	      "_%1$s:\n", syscall_name[n]);
   fprintf(fp, "\tmovw %d,r0\n", n);
