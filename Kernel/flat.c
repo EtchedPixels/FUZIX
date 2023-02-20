@@ -340,12 +340,12 @@ void pagemap_free(ptptr p)
    well
 */
 
-int pagemap_realloc(struct exec *hdr, usize_t size)
+int pagemap_realloc(struct exec *a, usize_t unused)
 {
 	unsigned int proc = udata.u_page;
 	struct memblk *mb;
 	struct mem *m;
-	usize_t csize;
+	usize_t csize, size;
 
 	m = mem_alloc();
 
@@ -356,16 +356,17 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	mb = &m->memblk[0];
 
 	/* Pad to our block size */
-	csize = (hdr->data_start + 511) & ~511;
+	csize = (a->a_text + 511) & ~511;
 	mb->start = kmalloc(csize, proc);
 	if (mb->start == NULL) {
 		mem_free(m, 0);
 		return ENOMEM;
 	}
-	mb->end = mb->start + hdr->data_start;
+	mb->end = mb->start + a->a_text;
+	kprintf("Code for %x bytes at %p\n", csize, mb->start);
 
 	/* Again pad to our block size */
-	size -= hdr->data_start;
+	size = a->a_data + a->a_bss + a->stacksize;
 	size = (size + 511) & ~511;
 
 	mb++;
@@ -376,6 +377,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 		return ENOMEM;
 	}
 	mb->end = mb->start + size;
+	kprintf("Data for %x bytes at %p\n", size, mb->start);
 
 	/* Free the old map */
 	pagemap_free(udata.u_ptab);
