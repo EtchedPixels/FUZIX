@@ -1,4 +1,4 @@
-#include <kernel.h>
+
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
@@ -63,7 +63,7 @@ void install_vdso(void)
 {
 	extern uint8_t vdso[];
 	/* Should be uput etc */
-	memcpy((void *)udata.u_codebase, &vdso, 0x40);
+	memcpy((void *)udata.u_codebase, &vdso, 0x20);
 }
 
 uint8_t plt_udata_set(ptptr p)

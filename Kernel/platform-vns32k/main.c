@@ -65,7 +65,7 @@ void install_vdso(void)
 {
 //	extern uint8_t vdso[];
 	/* Should be uput etc */
-//	memcpy((void *)udata.u_codebase, &vdso, 0x40);
+//	memcpy((void *)udata.u_codebase, &vdso, 0x20);
 }
 
 void plt_interrupt(void)
