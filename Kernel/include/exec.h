@@ -6,9 +6,10 @@
 #define _SYS_EXEC_H
 
 #if defined(__mc68000__) || defined(__ns32k__)
-#include "flat.h"
-/* Feature bits for 32bit to go with the 32bit exec header once done */
 
+#include "a.out.h"
+
+/* Feature bits for 32bit to go with the 32bit exec header once done */
 #define AF_68000_020	1		/* Has 68020 features */
 #else
 
