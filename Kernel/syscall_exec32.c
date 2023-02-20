@@ -1,25 +1,11 @@
 /*
- *	Implement binary loading for 32bit platforms. We use the ucLinux binflat
- *	format with a simple magic number tweak to avoid confusion with ucLinux
+ *	Implement binary loading for 32bit platforms. We use a variant of
+ *	a.out with a custom relocation format. The reloc format could be
+ *	compacted and this may be worth doing evnetually.
  *
- *	TODO: Right now we do a classic bss/stack layout and dont' support
- *	fixed stack/expanding BSS, multiple segment loaders for flat binaries
- *	etc. We really ought to pick a saner format. There's much to be said
- *	for a.out with relocs over flat, or relocs packed into BSS and letting
- *	user space do the relocs (so anything that overflows or gets it wrong
- *	goes bang the right side of the kernel/user boundary). The a.out
- *	standard relocs are 8bytes each so a packed reloc from user space
- *	would be far better. That might also be the best way to handle
- *	shared code segment designs (aka 'resident' in Amiga speak)
- *
- *	Note: bFLT is actually broken by design for the corner case of
- *	splitting the code and data segment into two loads, when a binary
- *	computes an address that is a negative offset from the data segment
- *	(eg when biasing the start of an array)
- *
- *	FIXME: we should set the stack to the top of the available space
- *	we get allocated not just rely on the stack allocation given. For
- *	that we need a way to query the space available.
+ *	Binaries are assumed to have a separate shareable text segment but
+ *	whether this feature is used depends upon the memroy banking model
+ *	that is being used.
  */
 
 #include <kernel.h>
@@ -27,7 +13,7 @@
 #include <version.h>
 #include <kdata.h>
 #include <printf.h>
-#include <flat.h>
+#include <exec.h>
 
 static void close_on_exec(void)
 {
@@ -41,34 +27,49 @@ static void close_on_exec(void)
 
 static int valid_hdr(inoptr ino, struct exec *bf)
 {
-	if (bf->stack_size < 4096)
-		bf->stack_size = 4096;
-	if (bf->rev != FLAT_VERSION)
+	uint32_t n = ntohl(bf->a_midmag);
+	uint32_t feat = (n >> 16) & 0x3F0;
+	uint32_t sub = (n >> 16) & 0xF;
+
+	/* Wrong architecture */
+	if (feat != CPU_MID)
 		return 0;
-	if (bf->entry >= bf->data_start)
+	/* Sufficiently featured ? */
+	if (sys_cpu_feat < sub)
 		return 0;
-	if (bf->data_start > bf->data_end)
+
+	/* We only permit NMAGIC files */
+	if ((n & 0xFFFF) != NMAGIC)
 		return 0;
-	if (bf->data_end > bf->bss_end)
+	if (bf->stacksize < 4096)
+		bf->stacksize = 4096;
+	/* Emtry must be within text */
+	if (bf->a_entry >= bf->a_text)
 		return 0;
-	if (bf->bss_end + bf->stack_size < bf->bss_end)
+	/* Wrapped */
+	if (bf->a_text + bf->a_data < bf->a_text)
 		return 0;
-	if (bf->data_end > ino->c_node.i_size)
+	if (bf->a_text + bf->a_data + bf->a_bss < bf->a_text)
+		return 0;
+	if (bf->a_data + bf->a_bss + bf->stacksize < bf->a_data)
+		return 0;
+	if (bf->a_data + bf->a_bss + bf->stacksize + bf->a_trsize < bf->a_data)
+		return 0;
+	/* Not enough file content. Only the first 0x20 bytes of the header are
+	   not part of the binary */
+	if (bf->a_text + bf->a_data + bf->a_trsize + 0x20 > ino->c_node.i_size)
 		return 0;
 	/* Revisit this for other ports. Avoid alignment traps */
-	if (UNALIGNED(bf->reloc_start | bf->stack_size | bf->data_start | bf->data_end | bf->bss_end | bf->entry))
+	if (UNALIGNED(bf->a_text | bf->a_data | bf->a_entry | bf->a_bss | bf->a_trsize))
 		return 0;
 	/* Fix up the BSS so that it's big enough to hold the relocations
 	   Factor in the stack as well. Generally the stack space is enough
 	   to avoid any expansion. When we switch to compact relocations
 	   the problem should go away entirely */
-	if (bf->bss_end - bf->data_end + bf->stack_size < 4 * bf->reloc_count)
-		bf->bss_end = bf->data_end + 4 * bf->reloc_count;
-	if (bf->reloc_start + bf->reloc_count * 4 > ino->c_node.i_size ||
-		bf->reloc_start + bf->reloc_count * 4 < bf->reloc_start)
-		return 0;
-	if (bf->flags != 1)
-		return 0;
+	/* TODO ? max sane number of relocs to stop wrap or silly expansion */
+	if (bf->a_bss + bf->stacksize < bf->a_trsize)
+		bf->a_bss = bf->a_trsize - bf->stacksize;
+
 	return 1;
 }
 
@@ -77,36 +78,66 @@ static int valid_hdr(inoptr ino, struct exec *bf)
  *	We need to relocate accordingly. It's possible that the underlying
  *	memory manager used one map but if so the addresses will be
  *	contiguous and it'll just work treating it as two banks
+ *
+ *	NS32K needs some special handling as it can have fixups that
+ *	are wrong endian and fixups that are right endian.
  */
 static unsigned relocate(struct exec *bf)
 {
-	uint32_t *rp = (uint32_t *)(udata.u_database + bf->reloc_start - bf->data_start);
-	uint32_t n = bf->reloc_count;
+#if defined(__ns32k__)
+	unsigned arseendian;
+#endif
+	/* Relocations lie over the BSS as loaded */
+	uint32_t *rp = (uint32_t *)(udata.u_database + bf->a_data);
+	uint32_t n = bf->a_trsize / sizeof(uint32_t);
 	uint32_t codebase = udata.u_codebase;
 	uint32_t database = udata.u_database;
+
+	uint32_t relend = bf->a_text + bf->a_data;
 
 	/* We can use _uput/_uget as we set up the memory map so we know
 	   it is valid */
 	while (n--) {
 		uint32_t *mp;
 		uint32_t mv;
-		uint32_t v = ntohl(_ugetl(rp++));
-		if (v > bf->data_end - 3)	/* Bad relocation - should we fail ? */
+		uint32_t v = _ugetl(rp++);
+#if defined(__ns32k__)
+		if (v & 0x80000000)
+			arseendian = 1;
+		else
+			arseendian = 0;
+		v &= 0x7FFFFFFF;
+#endif
+		if (v > relend - 3) {	/* Bad relocation - should we fail ? */
+/*			kprintf("R0 %d left, %p relendd %p", n, v, relend - 3 ); */
 			return 1;
+		}
 		/* Which block holds the offset ? */
-		if (v <= bf->data_start - 3)
+		if (v <= bf->a_text - 3)
 			mp = (uint32_t *)(codebase + v);
-		else if (v >= bf->data_start)
-			mp = (uint32_t *)(database + v - bf->data_start);
-		else	/* Bad */
+		else if (v >= bf->a_text)
+			mp = (uint32_t *)(database + v - bf->a_text);
+		else {	/* Bad */
+/*			kprintf("R1 %d left, %p a_data %p", n, v, bf->a_data); */
 			return 1;
+		}
 		/* Now what are we relocating against */
 		mv = _ugetl(mp);
-		if (mv >= bf->data_start)
-			mv += database - bf->data_start;
+#if defined(__ns32k__)
+		if (arseendian)
+			mv = ntohl(mv);
+#endif
+/*		kprintf("Reloc %x:%p (%p) to ", v, mp, mv); */
+		if (mv >= bf->a_text)
+			mv += database - bf->a_text;
 		else
 			mv += codebase;
 		/* Write the updated value */
+/*		kprintf("%p\n", mv); */
+#if defined(__ns32k__)
+		if (arseendian)
+			mv = ntohl(mv);
+#endif
 		_uputl(mv, mp);
 	}
 	return 0;
@@ -127,13 +158,12 @@ char *envp[];
 arg_t _execve(void)
 {
 	/* Not ideal on stack */
-	struct exec binflat;
+	struct exec aout;
 	inoptr ino;
 	uint8_t **nargv;	/* In user space */
 	uint8_t **nenvp;	/* In user space */
 	struct s_argblk *abuf, *ebuf;
 	int argc;
-	uint32_t bin_size;	/* Will need to be bigger on some cpus */
 	uaddr_t top;
 	uaddr_t go;
 	uint32_t true_brk;
@@ -159,7 +189,7 @@ arg_t _execve(void)
 
 	udata.u_offset = 0;
 	udata.u_count = sizeof(struct exec);
-	udata.u_base = (void *)&binflat;
+	udata.u_base = (void *)&aout;
 	udata.u_sysio = true;
 
 	readi(ino, 0);
@@ -168,35 +198,14 @@ arg_t _execve(void)
 		goto nogood;
 	}
 
-	binflat.rev = ntohl(binflat.rev);
-	binflat.entry = ntohl(binflat.entry);
-	binflat.data_start = ntohl(binflat.data_start);
-	binflat.data_end = ntohl(binflat.data_end);
-	binflat.bss_end = ntohl(binflat.bss_end);
-	binflat.stack_size = ntohl(binflat.stack_size);
-	binflat.reloc_start = ntohl(binflat.reloc_start);
-	binflat.reloc_count = ntohl(binflat.reloc_count);
-	binflat.flags = ntohl(binflat.flags);
-
 	/* FIXME: ugly - save this as valid_hdr modifies it */
-	true_brk = binflat.bss_end;
+	true_brk = aout.a_data + aout.a_bss;
 
-	/* Hard coded for our 68K format. We don't quite use the ucLinux
-	   names, we don't want to load a ucLinux binary in error! */
-	if (memcmp(binflat.magic, FLAT_FUZIX_MAGIC, 4) || !valid_hdr(ino, &binflat)) {
+	if (!valid_hdr(ino, &aout)) {
 		udata.u_error = ENOEXEC;
 		goto nogood2;
 	}
 
-	/* Memory needed */
-	bin_size = binflat.bss_end + binflat.stack_size;
-
-	/* Overflow ? */
-	if (bin_size < binflat.bss_end) {
-		udata.u_error = ENOEXEC;
-		goto nogood2;
-	}
-	
 	/* Gather the arguments, and put them in temporary buffers. */
 	abuf = (struct s_argblk *) tmpbuf();
 	/* Put environment in another buffer. */
@@ -207,12 +216,8 @@ arg_t _execve(void)
 		goto nogood3;
 
 	/* This must be the last test as it makes changes if it works */
-	/* FIXME: need to update this to support split code/data and to fix
-	   stack handling nicely */
 	/* FIXME: ENOMEM fix needs to go to 16bit ? */
-	/* Fudge for now - use binflat as our exec struct until we finish
-	   getting where we need to be */
-	if ((udata.u_error = pagemap_realloc(&binflat, bin_size)) != 0)
+	if ((udata.u_error = pagemap_realloc(&aout, 0 /* unused */)) != 0)
 		goto nogood3;
 
 #ifdef CONFIG_PLATFORM_UDMA
@@ -228,10 +233,6 @@ arg_t _execve(void)
 		udata.u_flags &= ~U_FLAG_NOCORE;
 #endif
 
-	/* From this point on we are commmited to the exec() completing
-	   so we can start writing over the old program */
-	uput(&binflat, (uint8_t *)udata.u_codebase, sizeof(struct exec));
-
 	if (!(mflags & MS_NOSUID)) {
 		/* setuid, setgid if executable requires it */
 		if (ino->c_node.i_mode & SET_UID)
@@ -240,7 +241,7 @@ arg_t _execve(void)
 			udata.u_egid = ino->c_node.i_gid;
 	}
 
-	top = udata.u_database + bin_size - binflat.data_start;
+	top = udata.u_database + aout.a_data + aout.a_bss + aout.stacksize;
 
 	udata.u_top = top;
 	udata.u_ptab->p_top = top;
@@ -248,8 +249,7 @@ arg_t _execve(void)
 //	kprintf("user space at %p\n", progbase);
 //	kprintf("top at %p\n", progbase + bin_size);
 
-	bin_size = binflat.reloc_start + 4 * binflat.reloc_count;
-	go = (uint32_t)udata.u_codebase + binflat.entry;
+	go = (uint32_t)udata.u_codebase + aout.a_entry;
 
 	close_on_exec();
 
@@ -257,38 +257,42 @@ arg_t _execve(void)
 	 *  Read in the rest of the program, block by block. We rely upon
 	 *  the optimization path in readi to spot this is a big move to user
 	 *  space and move it directly.
+	 *
+	 *  There is some magic here as the binary contains a 32 byte header
+	 *  in the crt0 that is replaced with the kernel vdso but can contain
+	 *  header info a.out is lacking. Right now it contains the stack size
+	 *  which we already loaded. We don't need to put the stack into the
+	 *  user map. The user will never see it as the vdso arrives before they
+	 *  can look.
 	 */
 
-	if (bin_size > sizeof(struct exec)) {
-		/* We copied the header already */
-		udata.u_base = (uint8_t *)udata.u_codebase +
-					sizeof(struct exec);
-		udata.u_count = binflat.data_start - sizeof(struct exec);
-		udata.u_sysio = false;
-		/* As we allocated this space we know the range is valid */
-		readi(ino, 0);
-		if (udata.u_done != binflat.data_start - sizeof(struct exec))
-			goto nogood4;
-		/* Now the data */
-		udata.u_base = (uint8_t *) udata.u_database;
-		udata.u_count = bin_size - binflat.data_start;
-		udata.u_sysio = false;
-		readi(ino, 0);
-		if (udata.u_done != bin_size - binflat.data_start)
-			goto nogood4;
-	}
-	/* Header isn't counted in relocations */
-	if (relocate(&binflat))
+	udata.u_base = (uint8_t *)udata.u_codebase + 0x20;
+	udata.u_count = aout.a_text - 0x20;
+	udata.u_sysio = false;
+	/* As we allocated this space we know the range is valid */
+	readi(ino, 0);
+	if (udata.u_done != aout.a_text - 0x20)
+		goto nogood4;
+
+	/* Now the data (and relocations) */
+	udata.u_base = (uint8_t *) udata.u_database;
+	udata.u_count = aout.a_data + aout.a_trsize;
+	udata.u_sysio = false;
+	readi(ino, 0);
+	if (udata.u_done != aout.a_data + aout.a_trsize)
+		goto nogood4;
+
+	if (relocate(&aout))
 		goto nogood4;
 
 	/* This may wipe the relocations */	
-	uzero((uint8_t *)udata.u_database + binflat.data_end - binflat.data_start,
-		binflat.bss_end - binflat.data_end + binflat.stack_size);
+	uzero((uint8_t *)udata.u_database + aout.a_data,
+		aout.a_bss + aout.stacksize);
 
 	/* Use of brk eats into the stack allocation */
 
 	/* Use the temporary we saved (hack) as we mangled bss_end */
-	udata.u_break = udata.u_database + true_brk - binflat.data_start;
+	udata.u_break = udata.u_database + true_brk;
 
 	/* Turn off caught signals */
 	memset(udata.u_sigvec, 0, sizeof(udata.u_sigvec));
@@ -321,7 +325,9 @@ arg_t _execve(void)
 	 */
 	install_vdso();
 
-//	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
+	kprintf("Code at %p , Data at %p\n",
+		udata.u_codebase, udata.u_database);
+	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
 
 	doexec(go);
 
