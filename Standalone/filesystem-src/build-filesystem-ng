@@ -360,8 +360,7 @@ sub gen_ucp {
                         }
                     }
                     else {
-                        $error = $error + 1;
-                        print "ERROR $file:$line file not found $arg1\n";
+                        print "WARNING $file:$line file not found $arg1\n";
                     }
                 }
                 else {
