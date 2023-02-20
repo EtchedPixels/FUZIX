@@ -2,8 +2,8 @@
 ENTRY (_start)
 
 MEMORY {
-	/* 0x40 so we allow for the header */
-	flatmem : ORIGIN = 0x40, LENGTH = 0xfffffff
+	/* 0x20 so we allow for the stubs */
+	flatmem : ORIGIN = 0x20, LENGTH = 0xfffffff
 }
 
 PHDRS {
@@ -14,7 +14,7 @@ PHDRS {
 SECTIONS {
 
 	.text : {
-		__stubs = . - 0x40;
+		__stubs = . - 0x20;
 		. = . + 4;
 		. = ALIGN(0x4) ;
 		_stext = . ;
