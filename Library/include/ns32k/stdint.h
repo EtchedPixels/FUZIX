@@ -12,8 +12,8 @@ typedef unsigned char uint8_t;
 typedef signed char int8_t;
 
 /* C99 */
-typedef int16_t intptr_t;
-typedef uint16_t uintptr_t;
+typedef int32_t intptr_t;
+typedef uint32_t uintptr_t;
 
 typedef uint8_t uint_fast8_t;
 typedef int8_t int_fast8_t;
