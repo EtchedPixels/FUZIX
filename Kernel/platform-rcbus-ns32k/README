@@ -18,8 +18,9 @@ tick source.
 Status
 - We have a boot ROM of sorts to test ideas
 - A basic image compiles
-- We get to the bootdev prompt run the first serial int and cras
-- User space builds but is not yet loadable
+- We get to the bootdev prompt
+- You can load init and it begins running and runs a few
+  system calls before exploding
 
 Things To Do
 
@@ -29,15 +30,19 @@ DONE - IDE flat driver code
 - Wire up an emulated timer
 DONE - Write the setup code
 DONE - Write the initial module code
-DEBUG - Write the interrupt code
+DONE - Write the interrupt code
 DEBUG - Write the trap handlers
 - Check how we should handle trace/trap bits and interrupts
-- Should we use the stack or register based calling convention ?
+STACK - Should we use the stack or register based calling convention ?
 - Understand what FPU would involve
+- Chip features - usp v sp loading
 
 User Side
 DONE - Setjmp/Longjmp
-- Make syscall match kernel version ?
-- What is needed for binary relocations ?
-- Try and build and bootstrap some userspace
+DONE - What is needed for binary relocations ?
+DONE - Try and build and bootstrap some userspace
+DONE - Make syscall match kernel version ?
+DONE - Debug syscall paths
 
+Crashes after loading the inittab trying to brk to a nonsense
+value as if idata was mangled somehow

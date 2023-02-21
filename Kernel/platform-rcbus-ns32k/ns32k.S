@@ -104,13 +104,15 @@ syscall_handler:
 		lprw psr,r1
 		enter [r6],0
 		movd _udata_shadow(pc),r6
+		sprd usp,r1
+		movd r1,U_DATA__U_SYSCALL_SP(r6)	# For brk checking
 		movb r0,U_DATA__U_CALLNO(r6)
 		movqb 1,U_DATA__U_INSYS(r6);
 		sprd usp,r0
-		movd 8(ro),U_DATA__U_ARGN(r6)
-		movd 12(ro),U_DATA__U_ARGN1(r6)
-		movd 16(ro),U_DATA__U_ARGN2(r6)
-		movd 20(ro),U_DATA__U_ARGN3(r6)
+		movd 4(r0),U_DATA__U_ARGN(r6)
+		movd 8(r0),U_DATA__U_ARGN1(r6)
+		movd 12(r0),U_DATA__U_ARGN2(r6)
+		movd 16(r0),U_DATA__U_ARGN3(r6)
 		movqb 1,_kernel_flag(pc)
 		sprw psr,r0
 		orw 0x0800,r0		# Allow interrupts
@@ -129,6 +131,7 @@ sysc_sig:
 		cmpqb 0,U_DATA__U_CURSIG(r6)
 		bne return_via_signal
 		exit [r6]
+		addqd 1,0(sp)		# Move past the SVC
 		rett 0
 sysc_err:
 		movqd -1,r0
