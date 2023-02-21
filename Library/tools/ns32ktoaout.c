@@ -1,13 +1,13 @@
 /*
  *	Convert an NS32K a.out binary into something more digestable
  *
- *	We linked it at 0x0000 and 0x00000102
+ *	We linked it at 0x00000000 and 0x00010200
  *
  *	We need to do this double shifting because extension fields are big endian
  *	but everything else is little endian.
  *
- *	A difference pattern of 2 1 0 0 is a little endian shift at the start
- *	A difference pattern of 0 0 1 2 is a big endian one. We store little endian
+ *	A difference pattern of 0 2 1 0 is a little endian shift at the start
+ *	A difference pattern of 0 1 2 0 is a big endian one. We store little endian
  *	with the top bit set and handle it with extra magic in the loader (ick)
  *
  *	TODO: stack size argument
@@ -53,7 +53,7 @@ static uint8_t *load_block(FILE *fp, off_t base, size_t len)
             exit(1);
         }
         /* Add the header words. We can't do this in crt0 as the toolchain doesn't
-           seem able to do link orders and customs ections */
+           seem able to do link orders and custom sections */
         memset(m, 0, 0x20);
         *(uint32_t *)m = 4096;		/* Stack size */
         return m;
