@@ -58,7 +58,7 @@ _plt_switchout:
 	; Back to kernel
 	call map_kernel_di
 	call _getproc		; Who goes next
-	push d
+	push h
 	call _switchin		; Run it
 	; Should never hit this
 	call _plt_monitor
