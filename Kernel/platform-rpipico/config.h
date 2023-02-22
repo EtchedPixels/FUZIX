@@ -1,3 +1,12 @@
+/*
+ *	Set this according to your SD card pins (default
+ *	is the David Given arrangement).
+ */
+
+#undef CONFIG_RC2040
+
+
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
