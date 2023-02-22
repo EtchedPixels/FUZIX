@@ -1,7 +1,14 @@
 RCBUS 8085
 
 Initial support for the 8085 CPU/MMU + 16550A UART card setup
-using RCBUS
+using RCBUS.
+
+TODO: from compiler change
+- PS crashes
+- signals work if they kill but caught signals seem wonky (test case shutdown)
+- df shows nothing but mtab seems right
+- dc prints nothing
+- startrek hangs a bit after startup
 
 Supported Hardware
 
@@ -51,8 +58,7 @@ At this point:
 
 To Build
 
-You need the ACK C compiler chain installed. Install the Build/fuzix file in
-the ACK compiler install tree as described in the file.
+Use cc85 from the Fuzix compiler kit
 
 make diskimage will produce an IDE disk image (40MB mostly empty) and a matching
 emulator disk image (emu-ide.img).
