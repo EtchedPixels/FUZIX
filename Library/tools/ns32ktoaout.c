@@ -81,7 +81,7 @@ static void relocate_binary(FILE *o)
                 endian = 0;
                 skip = 2;
             } else {
-                fprintf(stderr, "Reloc mismatch %d @ %06X %d %d\n", diff, p0 - b0, *p0, *p1);
+                fprintf(stderr, "Reloc mismatch %d @ %06X %d %d\n", diff, (unsigned)(p0 - b0), *p0, *p1);
                 for (i = -8; i < 8; i++)
                     fprintf(stderr, "%02X|%02X\n", p0[i], p1[i]);
                 exit(1);
