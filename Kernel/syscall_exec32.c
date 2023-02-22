@@ -86,6 +86,7 @@ static unsigned relocate(struct exec *bf)
 {
 #if defined(__ns32k__)
 	unsigned arseendian;
+	uint32_t sizebits;
 #endif
 	/* Relocations lie over the BSS as loaded */
 	uint32_t *rp = (uint32_t *)(udata.u_database + bf->a_data);
@@ -126,6 +127,12 @@ static unsigned relocate(struct exec *bf)
 #if defined(__ns32k__)
 		if (arseendian)
 			mv = ntohl(mv);
+		sizebits = 0;
+		if ((mv & 0xC0000000) == 0xC0000000)
+			sizebits = 1;
+		/* We don't deal with underflows on the sized 30 bit signed relocs
+		   We should never ever get one ; TODO review */
+		mv &= 0x3FFFFFFF;
 #endif
 /*		kprintf("Reloc %x:%p (%p) to ", v, mp, mv); */
 		if (mv >= bf->a_text)
@@ -135,6 +142,9 @@ static unsigned relocate(struct exec *bf)
 		/* Write the updated value */
 /*		kprintf("%p\n", mv); */
 #if defined(__ns32k__)
+		/* Put back the field size info */
+		if (sizebits)
+			mv |= 0xC0000000;
 		if (arseendian)
 			mv = ntohl(mv);
 #endif
