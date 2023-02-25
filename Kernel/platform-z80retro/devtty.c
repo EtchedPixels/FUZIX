@@ -160,9 +160,3 @@ void kputchar(char c)
 
 	irqrestore(irq);
 }
-
-int rctty_open(uint8_t minor, uint16_t flag)
-{
-	/* Will need extending if we are support for plug in serial */
-	return tty_open(minor, flag);
-}
