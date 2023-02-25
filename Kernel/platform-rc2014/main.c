@@ -182,8 +182,8 @@ void plt_interrupt(void)
 	if (timer_source == TIMER_Z180) {
 		if (irqvector == 3) {	/* Timer 0 */
 			uint8_t r;
-			r = TIME_TMDR0L;
 			r = TIME_TCR;
+			r = TIME_TMDR0L;
 			timerct++;
 			if (timerct == 4) {
 				do_timer_interrupt();

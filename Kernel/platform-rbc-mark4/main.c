@@ -28,8 +28,8 @@ void z180_timer_interrupt(void)
     unsigned char a;
 
     /* we have to read both of these registers in order to reset the timer */
-    a = TIME_TMDR0L;
     a = TIME_TCR;
+    a = TIME_TMDR0L;
 
 #ifdef CONFIG_PROPIO2
     /* The PropIO2 does not have an interrupt on keypress. */

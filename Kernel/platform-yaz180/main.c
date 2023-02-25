@@ -27,8 +27,8 @@ void z180_timer_interrupt(void)
     unsigned char a;
 
     /* we have to read both of these registers in order to reset the timer */
-    a = TIME_TMDR0L;
     a = TIME_TCR;
+    a = TIME_TMDR0L;
     timer_interrupt();
 }
 
