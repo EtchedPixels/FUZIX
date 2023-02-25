@@ -1,0 +1,248 @@
+;
+;	SD card interface
+;
+	.module	sd
+
+	.area	_COMMONMEM
+
+
+	.globl	_sd_spi_slow
+	.globl	_sd_spi_fast
+	.globl	_sd_spi_raise_cs
+	.globl	_sd_spi_lower_cs
+	.globl	_sd_spi_receive_byte
+	.globl	_sd_spi_transmit_byte
+	.globl	_sd_spi_receive_sector
+	.globl	_sd_spi_transmit_sector
+
+	.globl	_gpio
+	.globl	_td_raw
+	.globl	_td_page
+
+	.globl	map_for_swap
+	.globl	map_kernel
+	.globl	map_process_always
+
+_sd_spi_slow:
+_sd_spi_fast:
+	ret
+
+_sd_spi_lower_cs:
+	ld	a,(_gpio)
+	and	#0xFD
+	or	#0x01
+	out	(0x10),a
+	and	#0xFB
+	ld	(_gpio),a
+	out	(0x10),a
+	ret
+_sd_spi_raise_cs:
+	ld	a,(_gpio)
+	and	#0xFD
+	out	(0x10),a
+	or	#0x05
+	ld	(_gpio),a
+	out	(0x10),a
+	; Fall through
+_sd_spi_receive_byte:
+	ld	a,(_gpio)
+	or	#0x01		; data high
+	and	#0xFD		; clock
+	ld	d,a
+	add	#2
+	ld	e,a		; D is clock low E is high
+	ld	c,#0x10
+	; Entry point with registers set up
+sd_rx:
+	;	Clock the bits	(47 clocks a bit) or about 25K/second minus
+	; 	overheads per byte - so nearer 20K which is adequate for our
+	; 	needs
+	;	Bit 0
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	;	Bit 1
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	;	Bit 2
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	;	Bit 3
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	;	Bit 4
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	;	Bit 5
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	;	Bit 6
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	;	Bit 7
+	out	(c),d
+	out	(c),e
+	in	a,(0x00)
+	rla	
+	rl	l
+	ret
+
+;
+;	Slightly less performance critical which
+;	is good as it's annoying on this setup
+;	due to the shared gpio
+;
+;	Byte to send is in L
+;
+_sd_spi_transmit_byte:
+	ld	a,(_gpio)
+	and	#0xFD		; clock high
+	;	Clock the bits out. Ignore reply
+	;	48 clocks a bit
+	;	
+	ld	h,#2	; saves us 6 clocks a bit
+	;
+	;	Bit 0
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	sub	h
+	;	Bit 1
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	sub	h
+	;	Bit 2
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	sub	h
+	;	Bit 3
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	sub	h
+	;	Bit 4
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	sub	h
+	;	Bit 5
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	sub	h
+	;	Bit 6
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	sub	h
+	;	Bit 7
+	rra
+	rl	l
+	rla
+	out	(0x10),a
+	add	h
+	out	(0x10),a
+	ret
+
+_sd_spi_receive_sector:
+	push	ix
+	push	hl
+	pop	ix
+	ld	bc,#0xFF		; 0 for count 255 for reload of A
+	ld	a,(_td_raw)
+	or	a
+	jr	z, rx_byte
+	dec	a
+	jr	z, rx_user
+	ld	a,(_td_page)
+	call	map_for_swap
+	jr	rx_byte
+rx_user:
+	call	map_process_always
+rx_byte:
+	call	_sd_spi_receive_byte
+	ld	(ix),l
+	inc	ix
+	call	sd_rx
+	ld	(ix),l
+	inc	ix
+	ld	b,#0xFF		; 510 bytes
+rx_loop:
+	call	sd_rx
+	ld	(ix),l	
+	inc	ix
+	call	sd_rx
+	ld	(ix),l
+	inc	ix
+	djnz	rx_loop
+	pop	ix
+	jp	map_kernel
+
+_sd_spi_transmit_sector:
+	push	ix
+	push	hl
+	pop	ix
+	ld	b,#0
+	ld	a,(_td_raw)
+	or	a
+	jr	z, tx_byte
+	dec	a
+	jr	z, tx_user
+	ld	a,(_td_page)
+	call	map_for_swap
+	jr	tx_byte
+tx_user:
+	call	map_process_always
+tx_byte:
+	ld	l,(ix)
+	inc	ix
+	call	_sd_spi_transmit_byte
+	ld	l,(ix)
+	inc	ix
+	call	_sd_spi_transmit_byte
+	djnz	tx_byte
+	pop	ix
+	jp	map_kernel

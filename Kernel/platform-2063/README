@@ -1,0 +1,22 @@
+Z80 2063
+
+A fairly simple 32/32 banked 512K RAM machine with the usual top bank pinned
+high. Has an SIO and CTC and yet another varianr on bitbang SD that's not
+the same as anyone else's. Slightly odd boot arrangement (it loads 16K
+from the start of partition 1). We subvert it by making the first 512
+bytes of our partition boot block just load the kernel from the proper
+place instead.
+
+Boot loader only supports SDHC/SDXC cards in large block mode as that
+is all the ROM supports.
+
+TODO
+
+SIO - switch to IM2 driver
+CTC - wire up IM2 vectors
+
+More messages in boot.s ?
+Printer port (sadly SEL seems to be wired low so we can't I suspect
+do zip drives)
+Joystick x 2
+TMS9918A
