@@ -5,6 +5,7 @@
 #include <devsys.h>
 #include <devtty.h>
 #include <tinydisk.h>
+#include <devlpr.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -14,9 +15,9 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/fd - Floppy disk block devices */
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
   /* 2: /dev/tty -- serial ports */
-  {  tty_open,    tty_close,	tty_read,	tty_write,	tty_ioctl},
-  /* 3: RAM disk */
-  {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
+  {  tty_open,      tty_close,	tty_read,	tty_write,	tty_ioctl},
+  /* 3: printer */
+  {  lpr_open,      no_close,   no_rdwr,        lpr_write,      lpr_ioctl},
   /* 4: /dev/mem etc      System devices (one offs) */
   {  no_open,	    no_close,	sys_read,	sys_write,	sys_ioctl},
 };

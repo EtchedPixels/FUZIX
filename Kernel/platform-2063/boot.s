@@ -22,9 +22,9 @@ go:
 	ld	sp,#0x0000
 	xor	a
 	out	(0),a		;	Get the low page in low memory
-	ld	ix,#0x0100
-	ld	de,#0x7E01	;	load from the proper boot area
-	jp	run
+	ld	ix,#0x0000
+	ld	de,#0x7F01	;	load from the proper boot area
+	jp	run		;	7F blocks 0000 to FDFF
 
 _gpio:
 	.byte	0
@@ -33,25 +33,37 @@ run:
 next_block:
 	push	de
 	call	load_block	;	D is down count for done
-	call	outdot
+	ld	a,#'.'
+	call	outchar
 	pop	de
 	inc	e
 	dec	d
 	jr	nz, next_block
-	jp	0x0100
-
-
+	call	outnl
+	ld	hl,(0x0103)
+	ld	de,#0x10AE
+	or	a
+	sbc	hl,de
+	jp	z, 0x0100
+	ld	a,#'X'
+	call	outchar
 fail:
 	di
 	halt
 
-outdot:
+outnl:
+	ld	a,#13
+	call	outchar
+	ld	a,#10
+outchar:
+	ex	af,af'
+outcharw:
 	xor	a
 	out	(0x32),a
 	in	a,(0x32)
 	and	#0x04
-	jr	z,outdot
-	ld	a,#'#'
+	jr	z,outcharw
+	ex	af,af'
 	out	(0x30),a
 	ret
 

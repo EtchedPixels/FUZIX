@@ -10,7 +10,7 @@ uint16_t ramtop = 0x7E00;
 
 void plt_discard(void)
 {
-	while (bufpool_end < (struct blkbuf *) ((uint16_t)&udata - sizeof(struct blkbuf))) {
+	while (bufpool_end + 1 < (struct blkbuf *) KERNEL_TOP) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));
 #if BF_FREE != 0
 		bufpool_end->bf_busy = BF_FREE;	/* redundant when BF_FREE == 0 */
@@ -18,6 +18,7 @@ void plt_discard(void)
 		bufpool_end->bf_dev = NO_DEVICE;
 		bufpool_end++;
 	}
+	kprintf("%d disk buffers, ending at %p\n", bufpool_end - bufpool, bufpool_end);
 }
 
 void plt_idle(void)
@@ -54,7 +55,15 @@ static void timer_tick(void)
 
 void plt_interrupt(void)
 {
-	tty_pollirq_sio0();
+	extern uint8_t sd_count;
+	tty_drain_sio();
+	/* Handle ticks lost due to SD / GPIO contention */
+	if (sd_count) {
+		while(sd_count) {
+			timer_tick();
+			sd_count--;
+		}
+	}
 	timer_tick();
 }
 

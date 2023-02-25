@@ -6,8 +6,8 @@
 #include <devtty.h>
 #include <2063.h>
 
-static uint8_t tbuf1[TTYSIZ];
-static uint8_t tbuf2[TTYSIZ];
+static char tbuf1[TTYSIZ];
+static char tbuf2[TTYSIZ];
 
 static uint8_t sleeping;
 
@@ -20,26 +20,37 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
 	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
-	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS
 };
 
-#define SIOC(x)		(SIO0_BASE + 2 + (x) - 1)
-#define SIOD(x)		(SIO0_BASE + (x) - 1)
 uint8_t sio_r[] = {
 	0x03, 0xC1,
-	0x04, 0xC4,
+	0x04, 0x44,
 	0x05, 0xEA
 };
 
-static uint16_t siobaud[] = {
+static const uint8_t sio2_cmap[3] = {
+	0x00,	/* unused */
+	0x32,
+	0x33,
+};
+
+static const uint8_t sio_dmap[3] = {
+	0x00,	/* unused */
+	0x30,
+	0x31,
+};
+
+/* We are clocking at 1.8432MHz and x16 or x64 for the low speeds */
+static const uint16_t siobaud[] = {
 	0xC0,	/* 0 */
 	0,	/* 50 */
 	0,	/* 75 */
 	0,	/* 110 */
-	0,	/* 134 */
+	0xD6,	/* 134 */
 	0xC0,	/* 150 */
 	0x60,	/* 300 */
-	0x30,	/* 600 */
+	0xC0,	/* 600 */
 	0x60,	/* 1200 */
 	0x30,	/* 2400 */
 	0x18,	/* 4800 */
@@ -50,38 +61,33 @@ static uint16_t siobaud[] = {
 	0x01	/* 115200 */
 };
 
-static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
+static void sio2_setup(uint8_t minor, uint8_t flags)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
 	uint8_t baud;
 
-	used(flags);
-
 	baud = t->c_cflag & CBAUD;
-	if (baud < B150)
-		baud = B150;
+	if (baud < B134)
+		baud = B134;
 
+	/* Set bits per character */
 	sio_r[1] = 0x01 | ((t->c_cflag & CSIZE) << 2);
 
-	/* Pick x64 or x16 */
 	r = 0xC4;
-	if (baud >= B600)
-		r = 0x44;
 
 	if (minor == 1) {
-		/* Check SIO/CTC binding */
 		CTC_CH1 = 0x55;
 		CTC_CH1 = siobaud[baud];
 	} else {
-		/* Check SIO/CTC binding */
 		CTC_CH2 = 0x55;
 		CTC_CH2 = siobaud[baud];
 	}
+	if (baud >= B600)	/* Use x16 clock and CTC divider */
+		r = 0x44;
 
 	t->c_cflag &= ~CBAUD;
 	t->c_cflag |= baud;
-
 	if (t->c_cflag & CSTOPB)
 		r |= 0x08;
 	if (t->c_cflag & PARENB)
@@ -92,19 +98,18 @@ static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
 	sio_r[5] = 0x8A | ((t->c_cflag & CSIZE) << 1);
 }
 
-void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
+void tty_setup(uint8_t minor, uint8_t flags)
 {
-	if (minor == 1)
-		return;
 	sio2_setup(minor, flags);
-	sio2_otir(SIOC(minor));
+	sio2_otir(sio2_cmap[minor]);
 }
 
-int tty_carrier(uint_fast8_t minor)
+int tty_carrier(uint8_t minor)
 {
         uint8_t c;
         uint8_t port;
-	port = SIOC(minor);
+
+	port = sio2_cmap[minor];
 	out(port, 0);
 	c = in(port);
 	if (c & 0x08)
@@ -112,111 +117,83 @@ int tty_carrier(uint_fast8_t minor)
 	return 0;
 }
 
-void tty_pollirq_sio0(void)
+void tty_drain_sio(void)
 {
-	static uint8_t old_ca, old_cb;
-	uint8_t ca, cb;
-	uint8_t progress;
+	static uint8_t old_ca[2];
 
-	/* Check for an interrupt */
-	SIOA_C = 0;
-	if (!(SIOA_C & 2))
-		return;
+	while(sio_rxl[0])
+		tty_inproc(1, sioa_rx_get());
+	if (sio_dropdcd[0]) {
+		sio_dropdcd[0] = 0;
+		tty_carrier_drop(1);
+	}
+	if (((old_ca[0] ^ sio_state[0]) & sio_state[0]) & 8)
+		tty_carrier_raise(1);
+	old_ca[0] = sio_state[0];
+	if (sio_txl[0] < 64 && (sleeping & (1 << 1))) {
+		sleeping &= ~(1 << 1);
+		tty_outproc(1);
+	}
 
-	/* FIXME: need to process error/event interrupts as we can get
-	   spurious characters or lines on an unused SIO floating */
-	do {
-		progress = 0;
-		SIOA_C = 0;		// read register 0
-		ca = SIOA_C;
-		/* Input pending */
-		if (ca & 1) {
-			progress = 1;
-			tty_inproc(1, SIOA_D);
-		}
-		/* Break */
-		if (ca & 2)
-			SIOA_C = 2 << 5;
-		/* Output pending */
-		if ((ca & 4) && (sleeping & 4)) {
-			tty_outproc(1);
-			sleeping &= ~2;
-			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
-		}
-		/* Carrier changed */
-		if ((ca ^ old_ca) & 8) {
-			if (ca & 8)
-				tty_carrier_raise(1);
-			else
-				tty_carrier_drop(1);
-		}
-		SIOB_C = 0;		// read register 0
-		cb = SIOB_C;
-		if (cb & 1) {
-			tty_inproc(2, SIOB_D);
-			progress = 1;
-		}
-		if ((cb & 4) && (sleeping & 16)) {
-			tty_outproc(2);
-			sleeping &= ~4;
-			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
-		}
-		if ((cb ^ old_cb) & 8) {
-			if (cb & 8)
-				tty_carrier_raise(2);
-			else
-				tty_carrier_drop(2);
-		}
-	} while(progress);
+	while(sio_rxl[1])
+		tty_inproc(2, siob_rx_get());
+	if (sio_dropdcd[1]) {
+		sio_dropdcd[1] = 0;
+		tty_carrier_drop(2);
+	}
+	if (((old_ca[1] ^ sio_state[1]) & sio_state[1]) & 8)
+		tty_carrier_raise(2);
+	old_ca[1] = sio_state[1];
+	if (sio_txl[1] < 64 && (sleeping & (1 << 2))) {
+		sleeping &= ~(1 << 2);
+		tty_outproc(2);
+	}
 }
 
-void tty_putc(uint_fast8_t minor, uint_fast8_t c)
+void tty_putc(uint8_t minor, unsigned char c)
 {
-	uint8_t port = SIOD(minor);
-	out(port, c);
+	irqflags_t irqflags = di();
+
+	switch(minor) {
+	case 1:
+		sioa_txqueue(c);
+		break;
+	case 2:
+		siob_txqueue(c);
+		break;
+	}
+	irqrestore(irqflags);
 }
 
-/* We will need this for SIO once we implement flow control signals */
-void tty_sleeping(uint_fast8_t minor)
+void tty_sleeping(uint8_t minor)
 {
 	sleeping |= (1 << minor);
 }
 
-/* Be careful here. We need to peek at RR but we must be sure nobody else
-   interrupts as we do this. Really we want to switch to irq driven tx ints
-   on this platform I think. Need to time it and see
-
-   An asm common level tty driver might be a better idea
-
-   Need to review this we should be ok as the IRQ handler always leaves
-   us pointing at RR0 */
-ttyready_t tty_writeready(uint_fast8_t minor)
+ttyready_t tty_writeready(uint8_t minor)
 {
-	irqflags_t irq;
-	uint8_t c;
-	uint8_t port;
-
-	irq = di();
-	port = SIOC(minor);
-	out(port, 0);
-	c = in(port);
-	irqrestore(irq);
-
-	if (c & 0x04)	/* THRE? */
+	if (sio_txl[minor - 1] < 128)
 		return TTY_READY_NOW;
 	return TTY_READY_SOON;
 }
 
-void tty_data_consumed(uint_fast8_t minor)
+void tty_data_consumed(uint8_t minor)
 {
 	used(minor);
 }
 
 /* kernel writes to system console -- never sleep! */
-void kputchar(uint_fast8_t c)
+
+void kputchar(char c)
 {
+	/* Can't use the normal paths as we must survive interrupts off */
+	irqflags_t irq = di();
+
+	while(!(SIOA_C & 0x04));
+	SIOA_D = c;
+
 	if (c == '\n')
 		kputchar('\r');
-	while(tty_writeready(TTYDEV & 0xFF) != TTY_READY_NOW);
-	tty_putc(TTYDEV &0xFF, c);
+
+	irqrestore(irq);
 }

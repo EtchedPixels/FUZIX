@@ -20,7 +20,6 @@ void pagemap_init(void)
 
 void device_init(void)
 {
-	kputs("SD");
 	uint8_t r = sd_init();
 	if (r == 0)
 		return;

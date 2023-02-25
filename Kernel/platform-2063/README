@@ -10,13 +10,30 @@ place instead.
 Boot loader only supports SDHC/SDXC cards in large block mode as that
 is all the ROM supports.
 
+Memory Map
+
+Kernel
+0000-7FFF	Kernel code (must not contain data or const data)
+8000-..		Kernel code end, constants, data, buffers
+F000-F03F	IM2 vectors
+F040-F23F	Udata
+F240-FDFF	Common code
+FE00-FFFF	SIO buffer (must be page aligned)
+
+User
+0000-7DFF	User process
+7E00-7FFF	Udata copy
+
+Strange Stuff To Note
+
+The SD interface and the bank select are on the same I/O bits. This means
+that you have to lock out bank switching whilst bitbanging GPIO to get any
+bearable SD speed. The kernel does this by keeping the serial handlers and
+buffers unbanked and by counting CTC interrupts it can't service during an
+SD bitbang and catching up on them the first CTC interrupt that this isn't
+a problem.
+
 TODO
 
-SIO - switch to IM2 driver
-CTC - wire up IM2 vectors
-
-More messages in boot.s ?
-Printer port (sadly SEL seems to be wired low so we can't I suspect
-do zip drives)
 Joystick x 2
 TMS9918A

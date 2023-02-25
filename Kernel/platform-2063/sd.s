@@ -1,6 +1,15 @@
 ;
 ;	SD card interface
 ;
+;	This is absolutely foul because the design puts the page registers
+;	and the bitbanging on the same port. We can't have interrupt code
+;	doing bank switching during an I/O or we get subtle corruption.
+;
+;	As blocking interrupts would suck for serial we instead keep a
+;	busy flag for the gpio and defer timer activity (which does bank
+;	switch) but not serial which does not.
+;
+
 	.module	sd
 
 	.area	_COMMONMEM
@@ -19,6 +28,8 @@
 	.globl	_td_raw
 	.globl	_td_page
 
+	.globl  _sd_busy
+
 	.globl	map_for_swap
 	.globl	map_kernel
 	.globl	map_process_always
@@ -28,6 +39,8 @@ _sd_spi_fast:
 	ret
 
 _sd_spi_lower_cs:
+	ld	a,#1
+	ld	(_sd_busy),a
 	ld	a,(_gpio)
 	and	#0xFD
 	or	#0x01
@@ -35,8 +48,13 @@ _sd_spi_lower_cs:
 	and	#0xFB
 	ld	(_gpio),a
 	out	(0x10),a
+sd_spi_idle:
+	xor	a
+	ld	(_sd_busy),a
 	ret
 _sd_spi_raise_cs:
+	ld	a,#1
+	ld	(_sd_busy),a
 	ld	a,(_gpio)
 	and	#0xFD
 	out	(0x10),a
@@ -45,6 +63,8 @@ _sd_spi_raise_cs:
 	out	(0x10),a
 	; Fall through
 _sd_spi_receive_byte:
+	ld	a,#1
+	ld	(_sd_busy),a
 	ld	a,(_gpio)
 	or	#0x01		; data high
 	and	#0xFD		; clock
@@ -52,6 +72,9 @@ _sd_spi_receive_byte:
 	add	#2
 	ld	e,a		; D is clock low E is high
 	ld	c,#0x10
+	call	sd_rx
+	jr	sd_spi_idle
+
 	; Entry point with registers set up
 sd_rx:
 	;	Clock the bits	(47 clocks a bit) or about 25K/second minus
@@ -115,6 +138,9 @@ sd_rx:
 ;	Byte to send is in L
 ;
 _sd_spi_transmit_byte:
+	ld	a,#1
+	ld	(_sd_busy),a
+
 	ld	a,(_gpio)
 	and	#0xFD		; clock high
 	;	Clock the bits out. Ignore reply
@@ -185,6 +211,9 @@ _sd_spi_transmit_byte:
 	out	(0x10),a
 	add	h
 	out	(0x10),a
+
+	xor	a
+	ld	(_sd_busy),a
 	ret
 
 _sd_spi_receive_sector:
@@ -204,6 +233,11 @@ rx_user:
 	call	map_process_always
 rx_byte:
 	call	_sd_spi_receive_byte
+	;	Mark the SD busy (sd_spi_receive_byte marked it idle
+	;	and keep it busy while we burst the block. It's a trade
+	;	off versus slower I/O
+	ld	a,#1
+	ld	(_sd_busy),a
 	ld	(ix),l
 	inc	ix
 	call	sd_rx
@@ -219,6 +253,8 @@ rx_loop:
 	inc	ix
 	djnz	rx_loop
 	pop	ix
+	xor	a
+	ld	(_sd_busy),a
 	jp	map_kernel
 
 _sd_spi_transmit_sector:

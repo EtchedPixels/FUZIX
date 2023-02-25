@@ -10,14 +10,15 @@
         .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
         .area _CONST
+	.area _SERIALDATA
         .area _INITIALIZED
         .area _DATA
         .area _BSEG
         .area _BSS
         .area _HEAP
-        .area _GSINIT      ; unused
-        .area _GSFINAL     ; unused
-        .area _BUFFERS     ; _BUFFERS grows to consume all before it (up to KERNTOP)
+        .area _GSINIT      	; unused
+        .area _GSFINAL     	; unused
+        .area _BUFFERS     	; _BUFFERS grows to consume all before it (up to KERNTOP)
 	; Discard is loaded where process memory wil blow it away
         .area _DISCARD
 	; The rest grows upwards from C000 starting with the udata so we can
@@ -25,8 +26,12 @@
         ; note that areas below here may be overwritten by the heap at runtime, so
         ; put initialisation stuff in here
 	; These get overwritten and don't matter
-        .area _INITIALIZER ; binman copies this to the right place for us
-        .area _COMMONMEM
+        .area _INITIALIZER	; binman copies this to the right place for us
+        .area _COMMONMEM	; stuff we always need
+	.area _SERIAL		; must be page aligned - we place it at
+				; FE00-FFFF so it covers the loader space
+
+	.area _PAGE0		; don't binpack
 
         ; imported symbols
         .globl _fuzix_main
@@ -61,15 +66,15 @@ start:
 	ld sp, #kstack_top
 
 	; move the common memory where it belongs    
-	ld hl, #s__DATA
-	ld de, #s__COMMONMEM
-	ld bc, #l__COMMONMEM
-	ldir
+;	ld hl, #s__DATA
+;	ld de, #s__COMMONMEM
+;	ld bc, #l__COMMONMEM
+;	ldir
 	; then the discard
 	; Discard can just be linked in but is next to the buffers
-	ld de, #s__DISCARD
-	ld bc, #l__DISCARD
-	ldir
+;	ld de, #s__DISCARD
+;	ld bc, #l__DISCARD
+;	ldir
 
 	ld hl, #s__DATA
 	ld de, #s__DATA + 1
@@ -90,3 +95,11 @@ start:
 	di
 stop:	halt
 	jr stop
+
+	; Common starts page aligned so put vectors there
+	.area	_COMMONMEM
+
+	.globl	_vectors
+
+_vectors:
+	.ds	64

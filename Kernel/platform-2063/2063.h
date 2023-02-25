@@ -19,4 +19,8 @@ __sfr __at 0x43 CTC_CH3;
 
 extern void sio2_otir(uint8_t port) __z88dk_fastcall;
 
+extern uint8_t sd_busy;
+extern uint8_t sd_count;
+extern uint8_t gpio;
+
 #endif

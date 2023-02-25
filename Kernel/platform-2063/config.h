@@ -19,6 +19,7 @@
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0x7E00  /* Top of program */
+#define KERNEL_TOP  0xF000  /* Expand buffers up to here */
 
 #define PROC_SIZE   32	  /* Memory needed per process */
 

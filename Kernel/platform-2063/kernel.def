@@ -17,8 +17,15 @@ CONSOLE_RATE		.equ	9600
 
 CPU_CLOCK_KHZ		.equ	10000
 
+; Base address of SIO/2 chip 0x30
+
+SIOA_D		.EQU	0x30
+SIOB_D		.EQU	0x31
+SIOA_C		.EQU	0x32
+SIOB_C		.EQU	0x33
+
 ; Z80 CTC ports
 CTC_CH0		.equ	0x40	; CTC channel 0 and interrupt vector
-CTC_CH1		.equ	0x41	; CTC channel 1 (periodic interrupts)
+CTC_CH1		.equ	0x41	; CTC channel 1
 CTC_CH2		.equ	0x42	; CTC channel 2
 CTC_CH3		.equ	0x43	; CTC channel 3
