@@ -1,17 +1,5 @@
-TODO:
-- 80 col switch via $E803 so mouse co-ords are high res
-- trace interrupt handling for IRQ handler
-- trace init and syscall startup
-- debug task switch and fork
-- debug the other sd drivers
-- proper memory sizing
-- video modes (80 col especially)
-- floppy - how to tell SD and handle it (autoswitch or do we
-  own telling it ?)
-- pin down the weird corruption when you try to print some things
-
-TO8/9+ Experiment
-=================
+TO8/9+ Fuzix
+=============
 
 Memory Map:
 
@@ -20,7 +8,8 @@ Memory Map:
 6000-9FFF	Banked RAM
 6000-60FF	Reserved for firmware (in bank mapped only ?)
 6100-9FFF	Fixed RAM	1
-A000-DFFF	Banked RAM	0-31	a page mapped here shows as the upper 8K first then lower
+A000-DFFF	Banked RAM	0-31	a page mapped here shows as the upper
+				        8K first then lower
 E000-E7AF	ROM (disc usually)
 E7B0-E7FF	Devices
 E800-FFFF	ROM		0-1
@@ -33,10 +22,11 @@ Pages
 Memory mapping:
 
 Bank 2		:	0000-3FFF	Kernel low bank (could page but don't)
-Bank 0		:	4000-5FFF	Half kernel, half video for TO9.	Common here ?
-Bank 1		:	6000-9FFF	User fixed (6000-60FF reserved by monitor)
+Bank 0		:	4000-5FFF	Half kernel, half video for TO9
+Bank 1		:	6000-9FFF	User fixed (6000-60FF reserved by
+					monitor)
 Bank 4		:	A000-DFFF	Kernel upper segment
-ROM/Monitor/IO	:	E000-FFFF	Including font eventually with luck
+ROM/Monitor/IO	:	E000-FFFF	Including font
 
 User Mapping
 Bank 3		:	0000-3FFF	Video (except original TO9)
@@ -44,12 +34,10 @@ Bank 0		:	4000-5FFF	Common
 Bank 1		:	6000-9FFF	Fixed user
 Bank n		:	A000-DFFF	User banked
 
-NOTE: for the moment common is below 4000 as we are using the 4000-5FFF bank for video to get going. TO9 if ever
-supported will also need that layout.
-
 Limitations:
 TO7/70		can't share video with kernel so not supported at this point
-TO9		video is limited to single page mode as can't move video. Only 0-3 in low 16K
+TO9		video is limited to single page mode as can't move video.
+		Only 0-3 in low 16K (will be a different port)
 TO8/9+		video must be in 0-3, 0-31 in either bank
 
 User space banks are
@@ -70,26 +58,40 @@ E,F	to 256K		(TO9 max)
 
 5 currently free (except if we do 7/70 later)
 
-Task switching requires we ldir 16K in and out of 6000-9FFF. We could do a swap to get one extra process but
-it doesn't seem worth the cost except maybe on 128K - and TO7/70 is probably a unique port anyway. Could in theory
-also allow bigger processes with a malloc space in the low 16K not video - but do that later.
+Task switching requires we ldir 16K in and out of 6100-9FFF. We could do a swap
+to get one extra process but it doesn't seem worth the cost except maybe on
+128K - and TO7/70 is probably a unique port anyway. Could in theory also allow
+bigger processes with a malloc space in the low 16K not video - but do that
+later.
 
 Requirements:
-Interrupt stacks must be in common space. We rely on the low code being big enough to push them that far up memory
-All common must be above 0x4000
+Interrupt stacks must be in common space. We rely on the low code being big
+enough to push them that far up memory. All common must be above 0x4000
 
 Drivers:
 
 Keyboard	-	via ROM (real interface is complicated)
-Light pen	-	via ROM
-Mouse		-	via ROM
-Video		-	vt (but lie a bit to the ROM early on to get the mouse in 640 pixel wide mode ?)
-Floppy Disk	-	has to be via ROM. boot block is encrypted and weird. Skip drives of type 'S'
-			as they are SDDrive
-Hard disk	-	via SDDrive and friends - slow but will have to do - tinysd plus bitbangers
-Timer int	-	via ROM hook. Push a fake RTI frame and run the full monitor interrupt first
+Light pen	-	via ROM	TODO
+Mouse		-	via ROM	TODO
+Video		-	vt
+Floppy Disk	-	has to be via ROM. boot block is encrypted and weird.
+			TODO: Skip drives of type 'S' as they are SDDrive
+Hard disk	-	via SDDrive and friends - slow but will have to do
+			tinysd plus bitbangers
+Timer int	-	via ROM hook. Push a fake RTI frame and run the full
+			monitor interrupt first. TODO
 Joystick	- 	see https://github.com/wide-dot/thomson-to8-game-engine/tree/main/engine
 			or via ROM
+
+TODO:
+- 80 col switch via $E803 so mouse co-ords are high res ?
+- trace interrupt handling for IRQ handler
+- debug the other sd drivers
+- proper memory sizing
+- video modes (80 col especially)
+- floppy - how to tell SD and handle it (autoswitch or do we
+  own telling it ?)
+
 
 Addresses
 6019	bit 0x20 informs monitor of irq status
@@ -113,10 +115,12 @@ E809	C =1 char is pressed
 E818	light pen returns X 0-319 Y 0-199 cc clear if got a good measurement
 E81B	light pen button CC
 	set 6019 |= 2 then call with B = F8-FF for functions
-E827	read joystick $00 centre $01 N $02 NE $03 E etc, C is set if button pressed
+E827	read joystick $00 centre $01 N $02 NE $03 E etc,
+	C is set if button pressed
 EC00	set palette entry 
 EC08	C left button Z right mouse
-EC06	X/Y for mouse X matches mode (so need to ROM switch mode ? to convince it to report full res ?) mouse
+EC06	X/Y for mouse X matches mode (so need to ROM switch mode ? to convince
+	it to report full res ?) mouse
 
 Mode setting is via putc
 1B 48 etc
