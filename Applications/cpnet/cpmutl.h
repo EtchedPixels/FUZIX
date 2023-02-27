@@ -22,39 +22,37 @@
 #ifndef __cpmutl_h
 #define __cpmutl_h
 
-typedef unsigned short uint16;
-
 #if defined(__SDCC_z80) || defined(__SDCC_z180)
 #define __attribute__(x)
 #endif
 
 struct cpmfcb {
-  uchar drive;        /* drive code */
-  uchar name[8];      /* file name */
-  uchar ext[3];       /* file type */
-  uchar ex;           /* file extent */
-  uchar s1, s2;
-  uchar rc;           /* number of records in present extent */
-  uchar dmap[16];     /* CP/M disk map */
-  uchar cr;           /* next record to read or write */
-  uchar r0, r1, r2;   /* random record number (16-bit value, r2 is ovfl) */
+  uint8_t drive;        /* drive code */
+  uint8_t name[8];      /* file name */
+  uint8_t ext[3];       /* file type */
+  uint8_t ex;           /* file extent */
+  uint8_t s1, s2;
+  uint8_t rc;           /* number of records in present extent */
+  uint8_t dmap[16];     /* CP/M disk map */
+  uint8_t cr;           /* next record to read or write */
+  uint8_t r0, r1, r2;   /* random record number (16-bit value, r2 is ovfl) */
 } __attribute__ ((packed));
 
 struct cpmdpb {
-  uchar  sptl;        /* sectors per track */
-  uchar  spth;	      /* Z80 endian */
-  uchar  bsh;         /* block shift */
-  uchar  blm;         /* block mask */
-  uchar  exm;         /* extent mask */
-  uchar  dsml;        /* disk max (disk size - 1) */
-  uchar  dsmh;
-  uchar  drmh;        /* dir max */
-  uchar  drml;
-  uchar  al0, al1;    /* alloc 0, 1 */
-  uchar  cksl;        /* check size */
-  uchar  cksh;
-  uchar  offh;         /* reserved tracks */
-  uchar  offl;
+  uint8_t  sptl;        /* sectors per track */
+  uint8_t  spth;	      /* Z80 endian */
+  uint8_t  bsh;         /* block shift */
+  uint8_t  blm;         /* block mask */
+  uint8_t  exm;         /* extent mask */
+  uint8_t  dsml;        /* disk max (disk size - 1) */
+  uint8_t  dsmh;
+  uint8_t  drmh;        /* dir max */
+  uint8_t  drml;
+  uint8_t  al0, al1;    /* alloc 0, 1 */
+  uint8_t  cksl;        /* check size */
+  uint8_t  cksh;
+  uint8_t  offh;         /* reserved tracks */
+  uint8_t  offl;
 } __attribute__ ((packed));
 
 

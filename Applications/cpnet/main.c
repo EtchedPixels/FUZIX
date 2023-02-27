@@ -33,6 +33,7 @@
 *************************************************************************/
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -166,8 +167,7 @@ int main(int argc, char *argv[])
 				error("paths must be absolute.\n");
 				exit(1);
 			}
-		}
-		switch (opt) {
+		} else switch (opt) {
 		case 't':
 			_debug = atoi(optarg);
 			break;

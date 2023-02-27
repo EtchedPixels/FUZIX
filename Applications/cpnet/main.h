@@ -42,5 +42,5 @@ extern int _logged_in;
 extern char _passwd[8];
 extern const char *_sdev;
 extern const char *disk_to_dir[16];
-extern uchar allocv[256];
+extern uint8_t allocv[256];
 #endif  /* __main_h */

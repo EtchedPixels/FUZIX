@@ -20,6 +20,7 @@
 *************************************************************************/
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -34,7 +35,7 @@
 #include "main.h"
 #include "cpmutl.h"
 
-uchar allocv[256];
+uint8_t allocv[256];
 
 
 /*----------------------------------------------------------------------*/
