@@ -1,7 +1,6 @@
 define basesympat __sectionbase_%s__
 define lensympat __sectionlen_%s__
-section .page1 load 0x0000
-section .text
+section .text load 0x0004
 section .text3
 section .data
 section .bss
