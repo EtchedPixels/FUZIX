@@ -96,7 +96,7 @@ ___hard_irqrestore:		; B holds the data
 ___hard_ei:
 	lda $6019
 	ora #$20
-;	sta $6019
+	sta $6019
 	andcc #0xef
 	rts
 ___hard_di:
@@ -104,7 +104,7 @@ ___hard_di:
 hard_di_2
 	lda $6019
 	anda #$DF
-;	sta $6019
+	sta $6019
 	orcc #0x10
 	rts
 
@@ -115,7 +115,8 @@ hard_di_2
 	.area .common
 
 _program_vectors:
-	; TODO set 2064 to JMP to our irq in setup code
+	ldx	#irqhandler
+	stx	$6027		; Hook timer
 	rts
 
 map_kernel:
@@ -188,9 +189,8 @@ _need_resched:
 	.area	.common
 
 ;
-;	6021 is the vector for irqpt 6027 for timept - seems it takes one or
-;	the other according to what is going on. May need to dump and trace
-;	monitor to see how to clean up the stack our way
+;	Hook the timer interrupt but frob the stack so that we get
+;	to run last by pushing a fake short rti frame
 ;
 irqhandler:
 	; for a full frame pshs cc,a,b,dp,x,y,u,pc then fix up 10,s 0,s
@@ -208,6 +208,9 @@ irqhandler:
 
 	.globl _mon_keyboard
 
+;
+;	This is interlocked by the IRQ paths
+;
 _mon_keyboard:
 	jmp	$E806
 
@@ -215,9 +218,14 @@ _mon_keyboard:
 ;
 ;	Floppy glue
 ;
+;	Set in_bios so we can avoid re-entry between floppy
+;	and keyboard scan
+;
 	.globl _fdbios_flop
 
 _fdbios_flop:
+	lda	#1
+	sta	_in_bios
 	tst	_fd_map
 	beq	via_kernel
 	; Loading into a current user pages
@@ -230,4 +238,5 @@ via_kernel:
 flop_good
 	; ensure map is correct
 	tfr	d,x
+	clr	_in_bios
 	jmp	map_kernel

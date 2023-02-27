@@ -70,12 +70,6 @@ void poll_keyboard(void)
 		tty_inproc(1, c);
 }
 
-void plt_interrupt(void)
-{
-	poll_keyboard();
-	timer_interrupt();
-}
-
 /* Not used for yet */
 void plt_reinterrupt(void)
 {

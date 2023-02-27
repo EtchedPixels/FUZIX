@@ -35,7 +35,7 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-#define TICKSPERSEC 50   /* Ticks per second */
+#define TICKSPERSEC 10   /* Ticks per second */
 #define PROGBASE    0x6400  /* also data base */
 #define PROGLOAD    0x6400  /* also data base */
 #define PROGTOP     0xE000  /* Top of program */
