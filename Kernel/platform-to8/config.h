@@ -21,6 +21,8 @@
 #define VT_BOTTOM	23
 #define VT_INITIAL_LINE	0
 
+#define CONFIG_INPUT
+
 #define CONFIG_BANKS	1
 /* And swapping */
 #define SWAPDEV     0x0		/* Uses part of IDE slice 0 */

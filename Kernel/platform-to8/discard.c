@@ -7,6 +7,7 @@
 #include <tinydisk.h>
 #include <tinysd.h>
 #include <sd.h>
+#include <devinput.h>
 
 void map_init(void)
 {
@@ -19,6 +20,14 @@ void pagemap_init(void)
 	uint8_t pmax = ramsize >> 4;
 	for (i = 0x06; i < pmax ; i+= 0x02)
 		pagemap_add(i);
+	/* Somewhere to put this */
+	i = *(volatile uint8_t *)0x6074;
+	i &= 0xC0;
+	if (i == 0x40)
+		kputs("Light pen detected.\n");
+	else if (i == 0xC0)
+		kputs("Mouse detected.\n");
+	inputdev = i & 0xC0;
 }
 
 static void do_sd_probe(void)

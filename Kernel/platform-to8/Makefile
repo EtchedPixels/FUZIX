@@ -1,4 +1,4 @@
-CSRCS = devices.c main.c
+CSRCS = devices.c main.c devinput.c
 
 C3SRCS = libc.c
 
@@ -68,11 +68,12 @@ image: boot.bin
 	to8.o discard.o ../bankfixed.o usermem.o \
 	../start.o ../version.o ../lowlevel-6809.o ../usermem_std-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o \
-	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o \
+	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o devinput.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o video-to8.o ../syscall_fs3.o ../syscall_exec.o
+	devtty.o libc.o ../vt.o video-to8.o ../syscall_fs3.o ../syscall_exec.o \
+	../devinput.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 	../tools/lw-checkmap ../fuzix.map
 	

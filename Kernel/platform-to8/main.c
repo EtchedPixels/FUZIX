@@ -4,11 +4,14 @@
 #include <printf.h>
 #include <device.h>
 #include <devtty.h>
+#include <devinput.h>
 #include <sd.h>
 
 uint8_t membanks;
 uint8_t in_bios;
 uint16_t swap_dev;
+uint8_t inputdev;
+uint8_t inputwait;
 
 void plt_idle(void)
 {
@@ -40,6 +43,8 @@ void plt_interrupt(void)
 	if (++intct == 5) {
 	    timer_interrupt();
 	    intct = 0;
+	    if (inputwait)
+	        wakeup(&inputwait);
         }
         /* Clear timer interrupt */
 //        *((volatile uint16_t *)0xE7C6);

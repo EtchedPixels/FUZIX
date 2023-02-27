@@ -207,14 +207,55 @@ irqhandler:
 	.area .text2
 
 	.globl _mon_keyboard
-
+	.globl _mon_mouse
+	.globl _mon_lightpen
 ;
 ;	This is interlocked by the IRQ paths
 ;
 _mon_keyboard:
 	jmp	$E806
 
+;
+;	These require the in_bios flag
+;
+_mon_mouse:
+	pshs	y
+	jsr	$EC08
+	beq	right_up
+	lda	#2
+	bra	left
+right_up:
+	lda	#0		; preserve C
+left:
+	bcc	left_up
+	inca
+left_up:
+	; Now do position
+	sta	_mouse_buttons
+	jsr	$EC06
+	stx	_mouse_x
+	sty	_mouse_y
+	puls	y,pc
+
+_mon_lightpen:
+	pshs	y
+	jsr	$E818
+	bcs	no_read
+	stx	_mouse_x
+	sty	_mouse_y
+	jsr	$E81B
+	lda	#0
+	adca	#0
+	sta	_mouse_buttons
+	ldx	#1
+	puls	y,pc
+no_read:
+	ldx	#0
+	puls	y,pc
+
+
 	.area .common
+
 ;
 ;	Floppy glue
 ;
@@ -240,3 +281,4 @@ flop_good
 	tfr	d,x
 	clr	_in_bios
 	jmp	map_kernel
+

@@ -71,27 +71,32 @@ enough to push them that far up memory. All common must be above 0x4000
 Drivers:
 
 Keyboard	-	via ROM (real interface is complicated)
-Light pen	-	via ROM	TODO
-Mouse		-	via ROM	TODO
+Light pen	-	via ROM
+Mouse		-	via ROM
 Video		-	vt
 Floppy Disk	-	has to be via ROM. boot block is encrypted and weird.
-			TODO: Skip drives of type 'S' as they are SDDrive
 Hard disk	-	via SDDrive and friends - slow but will have to do
 			tinysd plus bitbangers
 Timer int	-	via ROM hook. Push a fake RTI frame and run the full
-			monitor interrupt first. TODO
+			monitor interrupt first.
+
+
+Graphics	-	TODO mode setting, ink, paper, border
+			(why is "paper" not installed on fs?)
+			map reporting
+			ensure video is mapped on user return
+			TODO: Skip drives of type 'S' as they are SDDrive?
 Joystick	- 	see https://github.com/wide-dot/thomson-to8-game-engine/tree/main/engine
-			or via ROM
+			or via ROM TODO (need to sort out other SD detects
+			as SD on that port means no joystick present!)
 
 TODO:
 - 80 col switch via $E803 so mouse co-ords are high res ?
-- trace interrupt handling for IRQ handler
 - debug the other sd drivers
 - proper memory sizing
 - video modes (80 col especially)
 - floppy - how to tell SD and handle it (autoswitch or do we
   own telling it ?)
-
 
 Addresses
 6019	bit 0x20 informs monitor of irq status
