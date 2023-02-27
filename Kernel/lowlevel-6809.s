@@ -209,7 +209,7 @@ reinterrupt:
 	rti
 
 interrupt_handler:
-	; If the platofmr interrupt code re-enabled interrupts then
+	; If the platform interrupt code re-enabled interrupts then
 	; we are on the interrupt stack already and platform author
 	; is assumed to know what they are doing 8)
 	tst U_DATA__U_ININTERRUPT
@@ -304,9 +304,12 @@ intdone:
 
 interrupt_return:
         rti
+	;	From kernel
+	;	Restore the user mapping then
+	;	switch to the user stack ptr
 interrupt_return_x:
+	jsr map_restore
 	tfr x,s
-	jsr	map_restore
 	bra interrupt_return
 
 ;  Enter with X being the signal to send ourself
