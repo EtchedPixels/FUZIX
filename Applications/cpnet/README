@@ -1,0 +1,407 @@
+
+This is a cut down version of the cpnet server for Linux. It's been cleaned up
+and adjusted to fit in 21K instead of 40K+.
+
+Changes
+- Dropped ini file and arguments in favour of unix like getopt
+- Require absolute paths (avoids a load of memory allocation fun)
+- No CP/NET 1.1 support (it's a historical curio)
+- Debug is compiled out by default
+- Dropped lp (no lp in Fuzix yet)
+- Alignment and endian fixes
+
+Options
+
+-t n	trace/debug value
+-d dev	device for I/O
+-s n	speed of device
+-n n	network id
+-p pass	password
+
+
+
+Original Documentation:
+
+               CP/NET 1.1/1.2 server emulator for Unix systems
+               ===============================================
+
+Introduction
+------------
+
+This program is used to communicate with a single CP/M requester connected
+to a PC serial port using the RS232 protocol described in Appendix E of the
+CP/NET documentation.
+
+The program emulates either version 1.1 or 1.2 of CP/NET, and therefore must
+be used with a requester running the same CP/NET version.
+
+CP/NET versions 1.0, 1.1 and 1.2 are NOT compatible with each other.
+Although they use the same physical-layer protocol over a serial line,
+they differ at the network-layer level.
+
+I have included in this package a working SNIOS for the P112 CPU board,
+which uses the second serial port of the P112 at 38400 baud.
+
+
+Installation
+------------
+
+This package contains both a server (master) and a client (requester).
+The server runs under Unix, the requester under CP/M.
+
+For the server, I would recommend using the GNU C compiler to make the
+executable. To compile it, just do a 'make'.
+
+The requester files are in the cpmfiles directory, together with the CP/NET
+utilities from the standard Digital Research distribution. To compile the
+requester NIOS (SNIOS.ASM), use the supplied NIOS.SUB submit file on the
+P112 machine; you will also need DR's RMAC and LINK. You can build it under
+Unix as well, using a package like zxcc. But you can actually skip this
+step, since a ready-to-run SNIOS.SPR file for the P112 is provided.
+
+
+Command line arguments
+----------------------
+
+The server program accepts a number of command line options:
+
+  -ini filename   Specify an alternate initialization file (see below).
+                  By default, the initialization file name is
+                  ${HOME}/.cpnet.ini
+
+  -level level    The CP/NET version level to emulate, 'level' can be
+                  either 1.1 or 1.2 (defaults to 1.2)
+
+  -port device    Sets the serial port to 'device', overriding the
+                  initialization file settings.
+
+  -speed value    Sets the serial baud rate to 'value', overriding the
+                  initialization file settings. The argument must be
+                  an standard serial baud rate, 38400 is assumed if an
+                  invalid value is specified.
+                  
+  -debug value    Sets the debug mask to 'value', overriding the
+                  initialization file settings. The debug mask can be
+                  either zero (no debug information is output), or a
+                  combination of the following bit values:
+
+                    1  Show packet-level data transfer. This displays
+                       the data bytes sent in both directions in 
+                       hexadecimal format and produces an awfully large
+                       amount of output. Useful for debugging the serial
+                       communication protocol.
+
+                    2  Show network-level data transfer. This dumps CP/NET
+                       requests and responses in both hexadecimal and ASCII
+                       format, together with the NDOS function number and
+                       name. This proved to be very useful during the coding
+                       of the server program, especially since I could not
+                       find any CP/NET 1.1 documentation.
+
+                    4  Show other miscellaneous debug information, like
+                       the disk-to-dir mapping table on startup, network
+                       logins and logoffs, etc.
+
+                  For example, a value of 6 will output both network-level
+                  data and miscellaneous information, while a value of 7
+                  will dump just everything.
+
+  -netid id       Sets the server's network ID to 'id', overriding the
+                  initialization file settings.
+
+  -pwd passwd     Sets the network password to 'passwd', overriding the
+                  initialization file settings. Only the first 8 characters
+                  are used, and the string is converted to UPPERCASE letters.
+
+  -version        Shows the program version number, --version is a
+                  synonymous.
+
+  -help           Shows a help screen, --help is a synonymous.
+
+
+The initialization file
+-----------------------
+
+The CP/M-disk-to-Unix-directory mappings, communication device settings and
+a few other options are set through an initialization text file that is read
+by the server program at startup. By default, the program expects the file
+to be located in the user's home directory with the .cpnet.ini name. An
+alternate configuration file may be specified with the -ini command line
+option.
+
+You can use the example cpnet.ini file supplied with this package when
+creating your own one.
+
+The initialization file is structured similarly to MS-Windows .ini files,
+i.e. it is split in several sections, each one containing a number of
+settings, like this:
+
+[section1]
+variable1 = value1
+variable2 = value2
+
+[section2]
+...
+
+Below is a description of the recognized sections followed by the list of
+accepted options, and their default values in case no option is specified or
+the initialization file is missing:
+
+Section [defaults]
+
+level = 1.2            The CP/NET version level to emulate, either 1.1 or
+                       1.2.
+
+debug = 0              Sets the debug mask. See the command-line options
+                       description above for a list of possible values.
+
+netid = 0              Sets the server's network ID. There is no reason to
+                       change this, unless you are running multiple servers
+                       on the same or different PCs, connected to the same
+                       CP/M machine.
+
+password = PASSWORD    Sets the network password. Only the first 8 letters
+                       will be used, and the string converted to UPPERCASE.
+
+
+Section [comm]
+
+device = /dev/ttyS0    Specifies the serial communication device.
+
+speed = 38400          Specifies the serial communication baud rate.
+
+
+Section [drives]
+
+This section is followed by a list of disk to directory mappings in the
+form:
+
+<drive letter> = <unix directory>
+
+where <drive letter> is any valid CP/M drive name (A to P) in UPPERCASE,
+and <unix directory> is the full path specification to the directory to
+which the disk is mapped, for example:
+
+[drives]
+A = /usr/local/cpm/cpmfiles
+B = /usr/local/cpm/adventure
+C = /usr/local/cpm/zsdos
+
+By default, only drive A is defined as
+
+A = <directory where the server was started>/cpmfiles
+
+Section [printers]
+
+This section is followed by a list of virtual printer to file mappings in
+the form:
+
+lst<number> = <filename>
+
+where <number> can be from 0 to 7 (i.e. you can have up to eight virtual
+printers), and <filename> is the full path to the file or device where the
+output should be appended. Note that "lst" is in lowercase letters. The
+special name "-" (single dash) can be used to redirect the output of the
+corresponding virtual printer to the standard output, while "--" can be used
+to redirect the output to the standard error output. For example:
+
+[printers]
+lst0 = /dev/lp
+lst1 = /usr/local/cpm/lst/lst1.prn
+lst2 = -
+
+By default no printers are defined, and any printer output will be ignored.
+
+All settings, except the disk-to-directory and printer-to-file mappings, can
+be overriden by command-line options.
+
+
+Running
+-------
+
+Copy the supplied CP/NET requester files (you can use cpmtools, for example)
+from the cpmfiles directory to a P112-formatted and SYSGENed floppy. Among
+the files there is a compiled, ready-to-use SNIOS module.
+
+Connect the second serial port of the P112 board to a free serial port on
+the PC. Start the server program on the PC side, making sure that the
+correct serial port device is specified in the initialization file.
+Alternatively you can use the -port and -speed command line options to
+override the .ini file settings. I would suggest using some debug output at
+this stage to make sure that the communication between the two machines
+works, -debug 6 should do the job.
+
+Then boot the P112 from the floppy and issue the CPNETLDR command. You
+should get an output like this:
+
+  A>cpnetldr
+
+
+  CP/NET 1.2 Loader
+  =================
+
+  BIOS         EE00H  1200H
+  BDOS         E000H  0E00H
+  SNIOS   SPR  DD00H  0300H
+  NDOS    SPR  D100H  0C00H
+  TPA          0000H  D100H
+
+  CP/NET 1.2 loading complete.
+
+  A>
+
+If the server is not yet running on the PC side, or if there are communication
+problems between the PC and the P112, you will get an additional "Network
+access failed" message. Most common causes include incorrect port device
+and/or speed settings, or the wrong type of cable is used to connect the two
+machines.
+
+If everything went OK, then you can try to login into the server so you can
+start accessing files:
+
+  A>login
+
+The login command does not produce any output on success. If you specified
+in the server configuration a password different than the default "PASSWORD",
+then you'll have to supply it in the login command line as well, otherwise
+the command will fail, e.g.:
+
+  A>login mypasswd
+
+You can now map local drives to remote ones and start accessing the files:
+
+  A>network c:=a:
+
+  A>network d:=b:
+
+  A>dir c:
+  C: DDT      COM : DUMP     COM : ED       COM : T        BAS
+  C: TEST     BAS : PIP      COM : ASSM     COM : DDTZ     COM
+  C: ADV      COM : RAND     LST : LOAD     LST : BITDEMO  FOR
+  C: TEST     PAS : TURBO    COM : TURBO    MSG : TURBO    OVR
+  C: TINST    COM : TINST    DTA : TINST    MSG : CMDLIN   PAS
+  C: TEST     COM : CHAIN    FOR : CONFIG   COM : DUMP     FOR
+  C: ERRORS       : FORT     COM : FRUN     COM : GRAPH    FOR
+  C: LD       ASM : LOAD     FOR : RAND     FOR : READ     ME 
+  C: RUNA     COM : SAMPLE   FOR : SORT     FOR : TRACE    FOR
+  C: RAND     OBJ : LD       PRN : LOAD     OBJ : LD       OBJ
+  C: CMDLIN   COM : GRAPH    LST : ADVENTUR DTB : GRAPH    OBJ
+  C: GAME     CAV : GAME2    CAV : NEWGAME  CAV : DUMP     LST
+  C: DUMP     OBJ
+  A>cpnetsts
+
+  CP/NET 1.2 Status
+  =================
+  Requester ID = 70H
+  Network Status Byte = 00H
+  Disk device status:
+    Drive A: = LOCAL
+    Drive B: = LOCAL
+    Drive C: = Drive A: on Network Server ID = 00H
+    Drive D: = Drive B: on Network Server ID = 00H
+    Drive E: = LOCAL
+    Drive F: = LOCAL
+    Drive G: = LOCAL
+    Drive H: = LOCAL
+    Drive I: = LOCAL
+    Drive J: = LOCAL
+    Drive K: = LOCAL
+    Drive L: = LOCAL
+    Drive M: = LOCAL
+    Drive N: = LOCAL
+    Drive O: = LOCAL
+    Drive P: = LOCAL
+  Console Device = LOCAL
+  List Device = LOCAL
+  A>
+
+If you need to connect to a more than a couple of drives on the remote PC,
+then it would be advantageous to create a submit file to do the job. For
+example, I use the following one:
+
+  A>type connect.sub
+  login
+  network c:=a:
+  network d:=b:
+  network e:=c:
+  network f:=d:
+  network g:=e:
+  network h:=f:
+  network i:=g:
+  network j:=h:
+  network lst:=0
+  cpnetsts
+
+  A>
+
+Note that I did not include the CPNETLDR command at the top of the file,
+since it breaks the execution of the submit file.
+
+For more details, consult the CP/NET User's Manual (the CP/NET 1.2
+documentation is available somewhere on the web).
+
+When you are done, use Ctrl-C on the PC side to end the server program and
+to return to the shell prompt.
+
+
+Known issues
+------------
+
+- Only one requester at a time is supported. This is not really a problem,
+  since under Unix several server processes can be run simultaneously to
+  service several requesters.
+
+- The long filename conversion to CP/M 8.3 format algorithm is not smart
+  enough, and there may be cases when two or more files beginning with the
+  same letters appear under CP/M directory listings as duplicate files. 
+  Opening, deleting or renaming one of these files can cause unpredictable
+  results. To avoid this problem, ensure that the directories to be accessed
+  by the remote machine contain only files with 8.3-style names. Also, only
+  files with lowercase names can be accessed.
+
+- For simplicity, we set the FCB fields r0,r1,r2 = ex,rc,cr during read
+  and write operations. That should not affect normal CP/M applications,
+  and I haven't encountered any probelms so far.
+
+- User numbers are ignored, so mapped drives will seem to contain the same
+  files in each user area.
+
+- The CP/NET 1.1 NDOS has a bug in the search-first and search-next
+  functions: upon return the L register is not set to the same value as
+  the A register, like the standard CP/M BDOS does. Some programs may
+  malfunction (e.g. PROLOGZ enters an endless loop or gives wrong results
+  for the Files menu option). (Update: CP/NET 1.2 has the bug too)
+
+- Mail exchange (CP/NET 1.1 only) is implemented as a test feature, and
+  follows the very simple DR's protocol (see the source code for the
+  SNIOS.ASM example and the SNDMAIL/RCVMAIL utilities). The server sends a
+  single welcome mail message ("Welcome to <hostname>") to the requester
+  immediately after login. The requester can read the message by using the
+  RCVMAIL utility, or by doing a warm boot. A message can be sent to the
+  server with the SNDMAIL utility, for example:
+
+    A>sndmail (0) "hello, world!"
+
+  The number in parenthesis is the destination ID, and is currently ignored
+  by the server. Messages sent to the server are displayed on its standard
+  output.
+
+
+TODO
+----
+
+- Finish all CP/NET 1.1 and 1.2 functions.
+
+- Check for user number in open/search/etc... functions.
+
+- Implement disk-to-dir translations of type du:
+
+- Allow emulated disks to be set R/O.
+
+- Use a file table for open files to make the fd argument passing more
+  system independent, and to give some extra protection in case the server
+  is restarted while the client has open files on it.
+
+- Avoid fd leak cases? Perhaps close all open files on 'free drive'?
+
+- Add support for accessing TCP/IP resources through function codes 66/67?

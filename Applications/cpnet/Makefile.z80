@@ -1,0 +1,21 @@
+FCC = fcc -m$(USERCPU)
+FCCOPTS = -O2
+# We can probably do nostdio easily enough but there's no need
+
+SRC = cpmutl.c cpnet12.c main.c netio.c sio.c
+OBJ = $(SRC:.c=.rel)
+
+.SUFFIXES: .c .rel
+
+all: cpnet
+
+.c.rel:
+	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
+
+cpnet: $(OBJ)
+	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -o $@ $(OBJ)
+
+clean:
+	rm -f cpnet *.rel *.asm *.lst core *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+
+

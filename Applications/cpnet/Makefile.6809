@@ -1,0 +1,17 @@
+include $(FUZIX_ROOT)/Applications/rules.6809
+
+SRC = cpmutl.c cpnet12.c main.c netio.c sio.c
+OBJ = $(SRC:.c=.o)
+
+.SUFFIXES: .c .o
+
+all: cpnet
+
+.c.o:
+	$(CC) $(CFLAGS) $(CCOPTS) -c $<
+
+cpnet: $(OBJ) $(CRT0)
+	$(LINKER) -o $@ $(LINKER_OPT) $^
+
+clean:
+	rm -f cpnet *.rel *.asm *.lst core *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.o
