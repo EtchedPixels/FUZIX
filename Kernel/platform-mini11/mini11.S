@@ -40,44 +40,46 @@ plt_monitor:
 	    ldx #ccreg
 	    jsr outstring
 	    tsx
-	    ldab 2,x
+	    ldaa 2,x
 	    jsr outcharhex
 	    ldx #dreg
 	    jsr outstring
 	    tsx
-            ldab 4,x
+            ldaa 4,x
 	    jsr outcharhex
 	    tsx
-            ldab 3,x
+            ldaa 3,x
 	    jsr outcharhex
 	    ldx #xreg
             jsr outstring
 	    tsx
-            ldab 5,x
+            ldaa 5,x
             jsr outcharhex
 	     tsx
-            ldab 6,x
+            ldaa 6,x
             jsr outcharhex
 	    ldx #yreg
             jsr outstring
 	    tsx
-            ldab 7,x
+            ldaa 7,x
             jsr outcharhex
-	     tsx
-            ldab 8,x
+	    tsx
+            ldaa 8,x
             jsr outcharhex
             ldx #pcreg
             jsr outstring
 	    tsx
-            ldab 9,x
+            ldaa 9,x
             jsr outcharhex
 	    tsx
-            ldab 10,x
+            ldaa 10,x
             jsr outcharhex
             ldx #endtrap
             jsr outstring
 	    tsx
-
+	    xgdx
+	    addd #10		; Stack frame below monitor trap
+	    xgdx
 	    ldaa #8
 stkrow:
 	    ldab #13
@@ -93,7 +95,7 @@ stkrow:
 stkword:
 	    pshb
 	    psha
-	    ldd 10,x
+	    ldd ,x
             jsr outd
 	    pula
 	    pulb
@@ -596,15 +598,15 @@ _uputc:
 	rts
 
 _uputw:
+	xgdy		; data into Y
 	tsx
 	ldx 2,x
 	tpa
 	psha
 	sei
-	psha
 	ldaa udata+U_DATA__U_PAGE+1
 	staa IOBASE
-	pula
+	xgdy		; data back into D
 	std 0,x
 	ldaa #0x08
 	staa IOBASE
@@ -613,9 +615,9 @@ _uputw:
 	rts
 
 _ugetc:
+	xgdx
 	tpa
 	psha
-	xgdx
 	ldaa udata+U_DATA__U_PAGE+1
 	sei
 	staa IOBASE
@@ -650,6 +652,7 @@ _uzero:
 	xgdx			; swap over as we want pointer in X
 	tpa
 	psha
+	sei
 	ldaa udata+U_DATA__U_PAGE+1
 	staa IOBASE
 

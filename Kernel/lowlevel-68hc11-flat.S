@@ -64,23 +64,26 @@ outnewline:
 
 outcharhex:
 	pshb
-	lsrb
-	lsrb
-	lsrb
-	lsrb
+	psha
+	lsra
+	lsra
+	lsra
+	lsra
 	bsr outnibble
-	pulb
-	pshb
+	pula
+	psha
 	bsr outnibble
+	pula
 	pulb
 	rts
 
 outnibble:
-	andb #0x0F
-	cmpb #0x0A
+	anda #0x0F
+	cmpa #0x0A
 	blt outh2
-	addb #0x07
-outh2:	addb #0x30
+	adda #0x07
+outh2:	adda #0x30
+	tab
 outchar_call:
 	jmp outchar
 
@@ -92,31 +95,35 @@ outstring:
 	bra outstring
 
 outx:
+	pshx
 	xgdx
 	pshx		; actually the old D
 	bsr outcharhex
-	tab
+	tba
 	bsr outcharhex
 	pulx
 	xgdx
+	pulx
 outsdone:
 	rts
 
 outy:
+	pshy
 	xgdy
 	pshy		; actually the old D
 	bsr outcharhex
-	tab
+	tba
 	bsr outcharhex
 	puly
 	xgdy
+	puly
 	rts
 
 outd:
 	psha
 	pshb
 	bsr outcharhex
-	tab
+	tba
 	bsr outcharhex
 	pulb
 	pula
@@ -275,8 +282,6 @@ interrupt_handler:
 	; signal handling code wants it
 	pshx
 
-	jsr	map_save_kernel
-
 	ldaa	#1
 	staa	udata+U_DATA__U_ININTERRUPT
 
@@ -395,6 +400,7 @@ sys_stubs:
  *	address and jumps back. We need to then re-establish the stack
  */
 
+	.section .common
 /*
  *	An interrupt occurred. 
  */
@@ -403,7 +409,7 @@ common_intr:
 	;	on the return as needed
 	sts	shared_sp
 	lds	#int_stack	;	common interrupt stack (small be careful)
-	jsr	map_kernel
+	jsr	map_save_kernel
 	jsr	interrupt_handler
 	lds	#int_stack
 	ldaa	shared_preempt
@@ -489,6 +495,7 @@ no_signal:
 doexec:
 	sei
 	ldx	udata+U_DATA__U_ISP
+	lds	#syscall_stack		; Temp stack for the switch
 	jsr	map_process_always
 	txs				; Set the stack up	
 	xgdx				; execute address into x
