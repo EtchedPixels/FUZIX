@@ -249,6 +249,8 @@ nbank:
 	;  The timers require we know 16bit load/stores are generated
 	;  so we do this bit in assembler
 	;
+	; TODO: review here and RCBUS version
+	;
 plt_interrupt:
 	ldx #IOBASE
 	ldaa #0x55
@@ -274,7 +276,7 @@ timer_tmp:
 
 program_vectors:
 	;	We copy the vectors once during setup for
-	;	eachb bank.
+	;	each bank.
 	rts
 
 	;
@@ -480,6 +482,7 @@ sd_spi_fast:
 ;	TODO interrupt save/restore correctly
 ;
 sd_spi_transmit_sector:
+	xgdy			; pointer into Y
 	tpa
 	psha			; Save int flag
 	sei
@@ -512,13 +515,15 @@ txw2:
 	tst	0x2A,x		; Read data
 	deca
 	bne	txloop
-	clr	,x		; Kernel back in , stack now valid
+	ldaa	#0x08
+	staa	,x		; Kernel back in , stack now valid
 	pula
 	tap			; restore int flag
 	rts
 
 ; Same stack care needed
 sd_spi_receive_sector:
+	xgdy			; pointer into Y
 	tpa
 	psha
 	sei
@@ -554,7 +559,8 @@ rxw2:
 
 	deca
 	bne	rxloop
-	clr	,x
+	ldaa	#0x08
+	staa	,x
 	pula	
 	tap
 	rts

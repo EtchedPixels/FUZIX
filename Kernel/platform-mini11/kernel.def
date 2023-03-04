@@ -10,20 +10,3 @@ DPBASE			    = 0x0000
 
 IOBASE			    = 0xF000
 
-
-#define SCI_SWITCH	\
-	tsx		!
-	ldaa	0xF000	!
-	psha		!
-	clr	0xF000	!
-	lds	#sci_stack	!
-	pshx		!
-	psha
-
-#define SCI_SWITCHBACK \
-	pula		!
-	staa	0xF000	!
-	pulx		!
-	txs
-
-	

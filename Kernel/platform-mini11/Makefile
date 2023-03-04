@@ -2,7 +2,7 @@
 CSRCS = devtty.c
 CSRCS += devices.c main.c
 
-ASRCS = mini11.S crt0.S
+ASRCS = mini11.S crt0.S sci.S
 ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c

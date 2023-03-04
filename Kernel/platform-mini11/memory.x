@@ -12,7 +12,7 @@ MEMORY
     /* We need to recover 0x0100-0x01FF one day */
     ram   (rwx) : ORIGIN = 0x0200, LENGTH = 0xEE00
     io		: ORIGIN = 0xF000, LENGTH = 0x40
-    iram	: ORIGIN = 0xF040, LENGTH = 0x1C0
+    iram (rw)	: ORIGIN = 0xF040, LENGTH = 0x1C0
     common(rwx)	: ORIGIN = 0xF200, LENGTH = 0x0C00
     highpage(rwx): ORIGIN = 0xFF00, LENGTH = 0x00E0
     vectors(rwx) : ORIGIN = 0xFFE0, LENGTH = 0x0020
@@ -243,7 +243,8 @@ SECTIONS
   }  > common
   .commondata :
   {
-    *.(.commondata)
+    *(.commondata)
+    *(.commondata.*)
   } > iram
   /* If the 'vectors_addr' symbol is defined, it indicates the start address
      of interrupt vectors.  This depends on the 68HC11 operating mode:
