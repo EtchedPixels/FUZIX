@@ -207,12 +207,12 @@ unix_syscall_entry:
 stub_return:
 	ldab	udata+U_DATA__U_CURSIG
 	stab	shared_signal
-	beq	no_signal
+	beq	to_common
 	ldx	#udata+U_DATA__U_SIGVEC
 	abx
 	abx
 	ldy	0,x
-	beq	no_signal
+	beq	to_common
 	clr	0,x
 	clr	1,x
 	sty	shared_sigvec
@@ -221,6 +221,7 @@ stub_return:
 	; is sufficient for it to do all the dispatching
 	; Get back the lost word for the shared stack and
 	; jump back
+to_common:
 	pulx
 	jmp	0,x
 
@@ -472,9 +473,10 @@ syscall_main:
 
 	; Shared area holds stuff we need
 	; We are on the user stack so have the rti frame to fiddle with
-	; X holds S from above
+	tsx
 	ldd	shared_retval
-	std	1,x
+	stab	1,x
+	staa	2,x
 	ldd	shared_error
 	std	3,x
 signal_out:
