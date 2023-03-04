@@ -1,0 +1,38 @@
+Fuzix for the Mini11 68HC11 SBC
+
+This is a 68HC11, 16K of ROM at C000-FFFF (pageable) and 512K of RAM wired
+directly to the CPU address lines and some port A lines, so a full 64K switch.
+The only things not switched are the internal memory and I/O plus the ROM.
+
+The normal setup is an SD card on the SPI and the onboard serial at 9600 baud
+with an 8MHz clock.
+
+Memory mapping
+
+Kernel (bank 0)
+	0x0000-0x00FF	Direct page (kernel)
+	0x0100-0x01FF	Loader space for now (can be reclaimed later)
+	0x0200-0xEFFF	Kernel
+	0xF000-0xF03F	Internal I/O (only I/O)
+	0xF040-0xF1FF	Internal common RAM (but only 256 bytes on 68HC11Ax)
+	0xF200-0xFDFF	Kernel and common code
+	0xFE00-0xFEFF	SCI serial buffers (set in mini11.S)
+	0xFFE0-0xFFFF	Vectors
+
+In user space
+
+	0x0000-0x00FF	Direct page (user)
+	0x0100-0xEFFF	User space
+	0xF000-0xF03F   Internal I/O
+	0xF040-0xF1FF	Internal RAM (unbankable)
+	0xF200-0xFFDF	Commonm code
+	0xFFE0-0xFFFF	Vectors
+
+This requires a thunked 68HC11 model. We pack helper data in the common
+memory and as we have to so little we copy common code into each bank to
+have the same effect.
+
+TODO
+
+Pretty much everything. At this point it compiles but none of the code
+has been debugged including the new 68HC11 flat mode.
