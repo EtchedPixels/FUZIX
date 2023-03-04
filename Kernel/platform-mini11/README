@@ -40,3 +40,6 @@ has been debugged including the new 68HC11 flat mode.
 Move udata to 0040-023F. Uses the hole and the linker is also smart
 enough to use zp access modes for these bytes so udata will become
 supercheap.
+
+Move udata copy up high if have space and split the swap (gives us more
+bytes of user map)
