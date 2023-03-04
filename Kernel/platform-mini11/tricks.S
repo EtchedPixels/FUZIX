@@ -205,8 +205,8 @@ dofork:
 ;
 fork_copy:
 	ldx	fork_proc_ptr
-	ldaa	P_TAB__P_PAGE_OFFSET,x
-	ldab	udata+U_DATA__U_PAGE
+	ldaa	P_TAB__P_PAGE_OFFSET + 1,x
+	ldab	udata+U_DATA__U_PAGE + 1
 	ldx	#0x0000
 copy_loop:
 	stab	IOBASE
