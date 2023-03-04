@@ -10,12 +10,11 @@ static const volatile uint8_t *iobase = (uint8_t *)IOBASE;
 
 void pagemap_init(void)
 {
-    /* FIXME: page numbering */
-    uint8_t i;
-    for (i = 32 + 4; i < 64; i++)
+    uint8_t i = 0x18;
+    while (i < 0x80) {
         pagemap_add(i);
-    /* The common page must be the first one allocated so last added */
-    pagemap_add(32 + 3);
+        i += 0x10;
+    }
     if (iobase[0x3F] & 3)
         panic("bad CONFIG");
 }

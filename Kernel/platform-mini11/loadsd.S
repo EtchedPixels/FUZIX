@@ -31,7 +31,6 @@ CMD17:
 	FCB 0x51,0,0,0,0,0x01
 
 GO:
-	CLR ,X			; ROM off
 	; Block or byte LBA - set LBAINC accordingly
 	STAA CARDTYPE
 	CMPA #CTSDBLK
@@ -41,6 +40,9 @@ GO:
 BYTEMODE:
 	LDAA #0x50		; SPI on master, faster
 	STAA SPCR,X
+
+	LDAA #0x08
+	STAA ,X			; ROM off bank 0
 
 	; Load from 0x0200
 	LDY #0x0200
@@ -84,7 +86,9 @@ DATALOOP:
 	ADDD LBAINC
 	STD 3,Y
 	PULY
+	XGDY
 	ADDD #0x0200
+	XGDY
 	BRA LOADLOOP
 
 LOADDONE:

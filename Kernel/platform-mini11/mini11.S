@@ -227,8 +227,10 @@ copy_helper:
 	ldx	#IOBASE
 	ldy	#0xF200
 copyall:
+	ldab	#0x08
+	stab	,x
 	ldaa	,y
-	ldab	#0x10
+	ldab	#0x18
 	; Copy ,y into each other bank
 nbank:
 	stab	,x
@@ -239,7 +241,8 @@ nbank:
 	;	Next byte
 	cpy	#0x0000
 	bne	copyall
-	clr	,x		; kernel map
+	ldaa	#0x08
+	staa	,x		; kernel map
 	rts
 
 	;
@@ -284,11 +287,11 @@ program_vectors_k:
 	std	0xFFFA		; watchdog timeout
 	ldd	#trap_handler
 	std	0xFFF8		; illegal instruction trap
-	ldd	#unix_syscall_entry
+	ldd	#common_syscall
 	std	0xFFF6		; SWI vector
 	ldd	#nmi_handler
 	std	0xFFF4		; NMI vector
-	ldd	#interrupt_handler
+	ldd	#common_intr
 	std	0xFFF2		; Interrupt from rcbus
 	std	0xFFE6		; TOC2
 	ldd	#sci_intr
@@ -342,7 +345,10 @@ map_process:
 ;
 map_kernel_di:
 map_kernel:
-	clr	0xFE00		; switch to kernel
+	psha
+	ldaa	#0x08
+	staa	IOBASE		; switch to kernel
+	pula
 	rts
 
 map_process_2:
@@ -366,6 +372,8 @@ map_save_kernel:
 	psha
 	ldaa	IOBASE
 	staa	shared_map
+	ldaa	#0x08
+	staa	IOBASE
 	pula
 	rts
 
@@ -570,66 +578,86 @@ rxw2:
 _uputc:
 	tsx
 	ldx 2,x
-	sei
+	tpa
+	psha
 	ldaa udata+U_DATA__U_PAGE+1
 	staa IOBASE
 	stab 0,x
-	clr IOBASE
-	cli
+	ldaa #0x08
+	staa IOBASE
+	pula
+	tap
 	rts
 
 _uputw:
 	tsx
 	ldx 2,x
+	tpa
+	psha
 	sei
 	psha
 	ldaa udata+U_DATA__U_PAGE+1
 	staa IOBASE
 	pula
 	std 0,x
-	clr IOBASE
-	cli
+	ldaa #0x08
+	staa IOBASE
+	pula
+	tap
 	rts
 
 _ugetc:
+	tpa
+	psha
 	xgdx
 	ldaa udata+U_DATA__U_PAGE+1
 	sei
 	staa IOBASE
 	ldab 0,x
+	ldaa #0x08
+	staa IOBASE
+	pula
+	tap
 	clra
-	clr IOBASE
-	cli
 	rts
 
 _ugetw:
 	xgdx
+	tpa
+	psha
 	ldaa udata+U_DATA__U_PAGE+1
 	sei
 	staa IOBASE
 	ldd 0,x
-	clr IOBASE
-	cli
+	xgdx
+	ldaa #0x08
+	staa IOBASE
+	pula
+	tap
+	xgdx
 	rts
 
 _uzero:
+	; FIXME IRQ save restore
 	tsx
-	ldx 2,x			; size
+	ldy 2,x			; size
 	xgdx			; swap over as we want pointer in X
-	sei
+	tpa
 	psha
 	ldaa udata+U_DATA__U_PAGE+1
 	staa IOBASE
-	pula
 
 	; Optimize, unroll etc ?
 uzerolp:
 	clr 0,x
 	inx
-	subd #1
+	dey
 	bne uzerolp
-	clr IOBASE
-	cli
+	ldaa #0x08
+	staa IOBASE
+	pula
+	tap
+	clra
 	rts
 
 _uget:	
@@ -642,18 +670,22 @@ _uget:
 	addd __end
 	std __end	; stop marker
 	ldx 2,x		; to
+	tpa
+	psha
 	sei
 ugetl:
 	ldab	udata+U_DATA__U_PAGE+1
 	stab	IOBASE
 	ldab	,y
 	iny
-	clr	IOBASE
+	ldaa	#0x08
+	staa	IOBASE
 	stab	,x
 	inx
 	cpy	__end
 	bne	ugetl
-	cli
+	pula
+	tap
 nowork:
 	clrb
 	clra
@@ -669,6 +701,8 @@ _uput:
 	addd	__end
 	std	__end	; stop marker
 	ldx	2,x	; to
+	tpa
+	psha
 	sei
 uputl:
 	ldab	,y
@@ -677,10 +711,12 @@ uputl:
 	staa	IOBASE
 	stab ,x
 	inx
-	clr	IOBASE
+	ldaa	#0x08
+	staa	IOBASE
 	cpy	__end
 	bne	uputl
-	cli
+	pula
+	tap
 	clrb
 	clra
 	rts

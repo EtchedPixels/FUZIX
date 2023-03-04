@@ -39,13 +39,16 @@ plt_switchout:
 	ldx	#0xEE00			; Stash
 	ldy	#udata
 	ldab	udata + U_DATA__U_PAGE + 1
-	; Do this in bytes as it's otherwise hairy with the bank
-	; flips
+	; Patch it as there's not enough registers to hand
+	stab	pstash+1
 stash_loop:
 	ldaa	,y
+pstash:
+	ldab	#0
 	stab	IOBASE
 	staa	,x
-	clr	IOBASE
+	ldab	#0x08
+	stab	IOBASE
 	inx
 	iny
 	cpx	#0xF000
@@ -97,12 +100,11 @@ not_swapped:
 udata_copy:
 	ldaa	#0
 	staa	IOBASE
-	ldd	,x
-	clr	IOBASE
-	std	,y
+	ldab	,x
+	ldaa	#0x08
+	staa	IOBASE
+	stab	,y
 	inx
-	inx
-	iny
 	iny
 	cpx	#0xF000
 	bne	udata_copy
@@ -215,14 +217,16 @@ copy_loop:
 	inx
 	cpx	#0xEE00
 	bne	copy_loop
-	clr	IOBASE
+	ldaa	#0x08
+	staa	IOBASE
 	;	Now copy our live udata into their stash
 	ldy	udata
 fork_udata:
 	ldab	,y
 	staa	IOBASE
 	stab	,x
-	clr	IOBASE
+	ldaa	#0x08
+	staa	IOBASE
 	inx
 	iny
 	cpx	#0xF000
