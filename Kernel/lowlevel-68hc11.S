@@ -64,23 +64,26 @@ outnewline:
 
 outcharhex:
 	pshb
-	lsrb
-	lsrb
-	lsrb
-	lsrb
+	psha
+	lsra
+	lsra
+	lsra
+	lsra
 	bsr outnibble
-	pulb
-	pshb
+	pula
+	psha
 	bsr outnibble
+	pula
 	pulb
 	rts
 
 outnibble:
-	andb #0x0F
-	cmpb #0x0A
+	anda #0x0F
+	cmpa #0x0A
 	blt outh2
-	addb #0x07
-outh2:	addb #0x30
+	adda #0x07
+outh2:	adda #0x30
+	tab
 outchar_call:
 	jmp outchar
 
@@ -92,31 +95,35 @@ outstring:
 	bra outstring
 
 outx:
+	pshx
 	xgdx
 	pshx		; actually the old D
 	bsr outcharhex
-	tab
+	tba
 	bsr outcharhex
 	pulx
 	xgdx
+	pulx
 outsdone:
 	rts
 
 outy:
+	pshy
 	xgdy
 	pshy		; actually the old D
 	bsr outcharhex
-	tab
+	tba
 	bsr outcharhex
 	puly
 	xgdy
+	puly
 	rts
 
 outd:
 	psha
 	pshb
 	bsr outcharhex
-	tab
+	tba
 	bsr outcharhex
 	pulb
 	pula
@@ -223,7 +230,7 @@ rti_return:
 	jsr ,x
 signal_return:
 	ins	; Drop the signal number argument
-	ins
+	ins	; FIXME: shouldn't this be 2 bytes drop only CHECK
 	ins	; And the vector
 	ins
 no_signal:
@@ -232,10 +239,10 @@ no_signal:
 doexec:
 	xgdx				; execute address into x
 	sei
+	clr udata+U_DATA__U_INSYS
 	jsr map_process_always
 	lds udata+U_DATA__U_ISP
 	des				; offset by 1 on the 680X
-	clr udata+U_DATA__U_INSYS
 	cli
 	pshx
 	pula				; high byte is our reloc base

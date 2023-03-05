@@ -300,7 +300,6 @@ interrupt_handler:
 
 	; Clean up
 	clr	udata+U_DATA__U_ININTERRUPT
-	ldaa	udata+U_DATA__U_INSYS
 	clr	shared_preempt
 	; Switch back to the stub stack
 	; and do the signal bits
@@ -310,6 +309,7 @@ iretk:
 	; No signal on this path
 	clr	shared_signal
 	clr	shared_preempt
+	clr	udata+U_DATA__U_ININTERRUPT
 	jmp	,x
 
 ;
@@ -496,12 +496,12 @@ no_signal:
 
 doexec:
 	sei
+	clr	udata+U_DATA__U_INSYS
 	ldx	udata+U_DATA__U_ISP
 	lds	#syscall_stack		; Temp stack for the switch
 	jsr	map_process_always
 	txs				; Set the stack up	
 	xgdx				; execute address into x
-	clr	udata+U_DATA__U_INSYS
 	cli
 	pshx
 	pula				; high byte is our reloc base
