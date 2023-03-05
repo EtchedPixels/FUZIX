@@ -21,9 +21,10 @@ void do_beep(void)
 }
 
 
-/* Our E clock is 2MHz, the prescaler divides it by 8 */
-/* For 50Hz */
-#define CLK_PER_TICK	5000
+/* Our E clock is 2MHz, the prescaler divides it by 16 so the
+   timr counts at 125Khz giving us 2500 pulses per 50th */
+
+#define CLK_PER_TICK	2500
 
 uint16_t timer_step = CLK_PER_TICK;
 
