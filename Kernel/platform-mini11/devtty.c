@@ -45,23 +45,26 @@ void tty_putc(uint8_t minor, unsigned char c)
 	sci_tx_queue(c);
 }
 
+/* 8MHz baud table : upper nybble 00XX lower 0YYY
+   where X is the SCP divider and Y is the SCR */
+
 static uint8_t baudtable[16] = {
 	0,	/* 0 */
 	0xFF,	/* 50 */
-	0xFF,	/* 75 */
+	0x37,	/* 75 */
 	0xFF,	/* 110 */
-	0x36,	/* 134 (by 13 by 64 = 138 baud) */
-	0xFF,	/* 150 */
-	0x17,	/* 300 by 3 by 128 */
-	0x16,	/* 600 by 3 by 64 */
-	0x15,	/* 1200 by 3 by 32 */
-	0x14,	/* 2400 by 3 by 16 */
-	0x13,	/* 4800 by 3 by 8*/
-	0x12,	/* 9600 by 3 by 4*/
-	0x11,	/* 19200 by 3 by 2 */
-	0x10,	/* 38400 by 3 by 1 */
-	0x01,	/* 57600 by 1 by 2 */
-	0x00	/* 115200 by 1 by 1 */
+	0xFF,	/* 134 */
+	0x36,	/* 150 */
+	0x35,	/* 300 */
+	0x34,	/* 600 */
+	0x33,	/* 1200 */
+	0x32,	/* 2400 */
+	0x31,	/* 4800 */
+	0x30,	/* 9600 */
+	0xFF,	/* 19200 */
+	0xFF,	/* 38400 */
+	0xFF,	/* 57600 */
+	0xFF	/* 115200 */
 };
 
 /* The UART is fairly basic. Any modem lines are just down to GPIO usage. We
@@ -71,11 +74,11 @@ void tty_setup(uint8_t minor, uint8_t flag)
 {
 	struct termios *t = &ttydata[minor].termios;
 	uint8_t baud = t->c_cflag & CBAUD;
-	/* Our base rate is 115200 with SCP 0 */
+	/* Do 9600 if we can't mamage the one requested */
 	if ((baud = baudtable[baud]) == 0xFF) {
 		t->c_cflag &= ~CBAUD;
 		t->c_cflag |= B9600;
-		baud = 0x12;
+		baud = 0x30;
 	}
 	cpuio[0x2B] = baud;
 	cpuio[0x2D] = 0xAC;	/* tx/rx interrupt on, tx and rx on */
@@ -100,7 +103,7 @@ void tty_data_consumed(uint8_t minor)
 
 void tty_poll(void)
 {
-	uint16_t c = sci_rx_get();
+	int16_t c = sci_rx_get();
 	if (c < 0)
 		return;
 	tty_inproc(1, (uint8_t)c);

@@ -35,11 +35,11 @@
 sci_intr:
 	tsx
 	ldaa	0xF000
-	psha
-	clr	0xF000
+	ldab	#0x08
+	stab	0xF000		; move to kernel bank
 	lds	#sci_stack
-	pshx
-	psha
+	pshx			; save old stack on new
+	psha			; save old bank on new
 	ldx #IOBASE
 	brclr 0x2E,x 0x20 norx
 	ldaa 0x2F,x		; get the char ASAP
@@ -69,11 +69,11 @@ chktx:
 	ldaa #0x80		; wrapped FF->0 so fix it back
 	staa sci_txp+1
 done:
-	pula
-	staa	0xF000
-	pulx
-	txs
-	rti
+	pula			; get old bank
+	pulx			; and old stack
+	staa	0xF000		; switch to old bank
+	txs			; recover stack
+	rti			; home time
 txdone:
 	bclr 0x2D,x 0x80	; clear TIE as we have nothing to send
 	bra done

@@ -10,8 +10,6 @@ CDSRCS = discard.c
 DSRCS = ../dev/tinydisk.c ../dev/tinysd.c
 DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
 
-A68SRCS = ../dev/68hc11/sci.S
-
 COBJS = $(CSRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.S=$(BINEXT))
@@ -34,10 +32,6 @@ $(CDOBJS): %$(BINEXT): %.c
 
 $(AOBJS): %$(BINEXT): %.S
 	cpp -E $<  >$*.s
-	$(CROSS_AS) $(ASOPTS) $*.s -o $*.o
-
-$(A68OBJS): %$(BINEXT): ../dev/68hc11/%.S
-	cpp -I. -E $<  >$*.s
 	$(CROSS_AS) $(ASOPTS) $*.s -o $*.o
 
 $(DOBJS): %$(BINEXT): ../dev/%.c

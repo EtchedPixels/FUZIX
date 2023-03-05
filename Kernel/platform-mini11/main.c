@@ -37,6 +37,8 @@ void plt_event(void)
 {
 	tty_poll();
 
+	/* Turn the 50Hz counting into a 50Hz tty poll and a 10Hz
+	   timer processing */
 	while(timer_ticks >= 5) {
 		timer_interrupt();
 		timer_ticks -= 5;

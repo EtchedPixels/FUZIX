@@ -42,5 +42,6 @@ void device_init(void)
         sd_shift[0] = 0;
     else
         sd_shift[0] = 9;
+    kputs("sd0: ");
     td_register(sd_xfer, 1);
 }
