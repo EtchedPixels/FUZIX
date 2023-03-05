@@ -41,39 +41,39 @@ plt_monitor:
 	    ldx #ccreg
 	    jsr outstring
 	    tsx
-	    ldab 2,x
+	    ldaa 2,x
 	    jsr outcharhex
 	    ldx #dreg
 	    jsr outstring
 	    tsx
-            ldab 4,x
+            ldaa 4,x
 	    jsr outcharhex
 	    tsx
-            ldab 3,x
+            ldaa 3,x
 	    jsr outcharhex
 	    ldx #xreg
             jsr outstring
 	    tsx
-            ldab 5,x
+            ldaa 5,x
             jsr outcharhex
 	     tsx
-            ldab 6,x
+            ldaa 6,x
             jsr outcharhex
 	    ldx #yreg
             jsr outstring
 	    tsx
-            ldab 7,x
+            ldaa 7,x
             jsr outcharhex
 	     tsx
-            ldab 8,x
+            ldaa 8,x
             jsr outcharhex
             ldx #pcreg
             jsr outstring
 	    tsx
-            ldab 9,x
+            ldaa 9,x
             jsr outcharhex
 	    tsx
-            ldab 10,x
+            ldaa 10,x
             jsr outcharhex
             ldx #endtrap
             jsr outstring
@@ -566,11 +566,11 @@ sd_spi_clock:
 	tstb
 	bne clkfast
 	ldaa #0x52		; Master, mode 0, 125KHz
-	staa 0xFE28
+	staa 0xF028
 	rts
 clkfast:
 	ldaa #0x50		; Master, mode 0, 1MHz
-	staa 0xFE28
+	staa 0xF028
 	rts
 ;
 ;	Sector transfers (for speed)
