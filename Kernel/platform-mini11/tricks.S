@@ -112,6 +112,7 @@ udata_copy:
 	; Now get the stack back sane
 	lds	udata + U_DATA__U_SP
 nostash:
+	ldx	switch_proc_ptr
         ; check u_data->u_ptab matches what we wanted
 	cpx	udata + U_DATA__U_PTAB
 	bne	switchinfail
@@ -217,12 +218,18 @@ copy_loop:
 	inx
 	cpx	#0xEE00
 	bne	copy_loop
+
 	ldaa	#0x08
 	staa	IOBASE
-	;	Now copy our live udata into their stash
-	ldy	udata
+
+	;	Now copy our live udata into parent stash
+	stab	upatch+1
+
+	ldy	#udata
 fork_udata:
 	ldab	,y
+upatch:
+	ldaa	#0
 	staa	IOBASE
 	stab	,x
 	ldaa	#0x08

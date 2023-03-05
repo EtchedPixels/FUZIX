@@ -8,7 +8,8 @@
 /* Linker script for 68HC11 executable (RAM).  */
 MEMORY
 {
-    page0 (rw) : ORIGIN = 0x0000, LENGTH = 0x100
+    /* 0000-000BF are user space DP */
+    page0 (rw) : ORIGIN = 0x00C0, LENGTH = 0x0040
     /* We need to recover 0x0100-0x01FF one day */
     ram   (rwx) : ORIGIN = 0x0200, LENGTH = 0xEE00
     io		: ORIGIN = 0xF000, LENGTH = 0x40
