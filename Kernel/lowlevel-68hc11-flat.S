@@ -208,6 +208,7 @@ stub_return:
 	ldab	udata+U_DATA__U_CURSIG
 	stab	shared_signal
 	beq	to_common
+	clr	udata+U_DATA__U_CURSIG
 	ldx	#udata+U_DATA__U_SIGVEC
 	abx
 	abx
