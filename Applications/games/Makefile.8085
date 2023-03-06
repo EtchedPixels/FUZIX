@@ -8,7 +8,7 @@ SRCSTC = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
         myst01.c myst02.c myst03.c myst04.c myst05.c myst06.c myst07.c \
         myst08.c myst09.c myst10.c myst11.c taylormade.c
 
-SRCS  = fortune-gen.c startrek.c hamurabi.c cowsay.c dopewars.c
+SRCS  = fortune-gen.c startrek.c hamurabi.c cowsay.c dopewars.c ppt.o
 
 SRCSTC += sok.c
 
