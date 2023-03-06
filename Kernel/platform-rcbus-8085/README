@@ -3,12 +3,12 @@ RCBUS 8085
 Initial support for the 8085 CPU/MMU + 16550A UART card setup
 using RCBUS.
 
-TODO: from compiler change
+TODO: from compiler change (checked on other ports)
 - PS crashes
 - signals work if they kill but caught signals seem wonky (test case shutdown)
-- df shows nothing but mtab seems right
 - dc prints nothing
 - startrek hangs a bit after startup
+- remount / ro causes a crash
 
 Supported Hardware
 
