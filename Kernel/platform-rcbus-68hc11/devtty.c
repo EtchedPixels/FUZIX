@@ -100,7 +100,7 @@ void tty_data_consumed(uint8_t minor)
 
 void tty_poll(void)
 {
-	uint16_t c = sci_rx_get();
+	int16_t c = sci_rx_get();
 	if (c < 0)
 		return;
 	tty_inproc(1, (uint8_t)c);
