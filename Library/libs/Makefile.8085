@@ -1,9 +1,9 @@
-CC = cc85 -m8085 -Os
+CC = cc85 -m8085
 ASM = cc85
 AR = ar
 PLATFORM = 8085
 export PLATFORM
-CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8085
+CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8085 -X
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -c -o
 # copied in from kernel tree
