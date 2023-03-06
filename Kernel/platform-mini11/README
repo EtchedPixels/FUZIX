@@ -34,12 +34,14 @@ have the same effect.
 
 TODO
 
-Pretty much everything. At this point it compiles but none of the code
-has been debugged including the new 68HC11 flat mode.
-
-Move udata to 0040-023F. Uses the hole and the linker is also smart
-enough to use zp access modes for these bytes so udata will become
-supercheap.
+Would it make sense to compact the DP usage and overlap the udata at
+0x0080 in the kernel map with kernel DP at 0x00 ? This would turn a lot
+of accesses into DP mode
 
 Move udata copy up high if have space and split the swap (gives us more
 bytes of user map)
+
+Optimize fork and other copiers. Several could be a chunk faster with
+more self modifying code
+
+Add SPI mux support and WizNet 5500 for internet
