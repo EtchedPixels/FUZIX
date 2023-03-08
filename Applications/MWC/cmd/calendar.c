@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
 	FILE *fp[10];
 	int matchdate;
 	int foundfiles;
-	int nfiles;
+	int nfiles = 0;
 	int thismonth, thisday, thisyear;
 	int thisdate;
 	char *atsign;
