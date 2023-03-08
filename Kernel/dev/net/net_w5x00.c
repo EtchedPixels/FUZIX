@@ -1,12 +1,9 @@
 /*
  *	WizNET stack driver
  *
- *	Tested on W5100 and W5200 so far, W5500 to test
- *
  *	TODO
  *	- Test and debug accept and incoming socket paths
  *	- Pull socket_wake out somewhere sensible
- *	- Test W5500
  *	- Look at filtering limitations
  *	- Setsockopt in the core and into drivers for MTU etc
  *	- Test ifconfig interface
