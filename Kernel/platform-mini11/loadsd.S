@@ -41,8 +41,8 @@ BYTEMODE:
 	LDAA #0x50		; SPI on master, faster
 	STAA SPCR,X
 
-	LDAA #0x08
-	STAA ,X			; ROM off bank 0
+	LDAA #0x88
+	STAA ,X			; ROM off bank 0, CS1 high
 
 	; Load from 0x0200
 	LDY #0x0200

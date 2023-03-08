@@ -47,7 +47,7 @@ pstash:
 	ldab	#0
 	stab	IOBASE
 	staa	,x
-	ldab	#0x08
+	ldab	#0x88
 	stab	IOBASE
 	inx
 	iny
@@ -101,7 +101,7 @@ udata_copy:
 	ldaa	#0
 	staa	IOBASE
 	ldab	,x
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	IOBASE
 	stab	,y
 	inx
@@ -219,7 +219,7 @@ copy_loop:
 	cpx	#0xEE00
 	bne	copy_loop
 
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	IOBASE
 
 	;	Now copy our live udata into parent stash
@@ -232,7 +232,7 @@ upatch:
 	ldaa	#0
 	staa	IOBASE
 	stab	,x
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	IOBASE
 	inx
 	iny

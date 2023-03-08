@@ -35,7 +35,7 @@
 sci_intr:
 	tsx
 	ldaa	0xF000
-	ldab	#0x08
+	ldab	#0x88
 	stab	0xF000		; move to kernel bank
 	lds	#sci_stack
 	pshx			; save old stack on new
@@ -82,7 +82,7 @@ fixrxp:
 	bra norx
 rxl_over:
 	dec sci_rxl		; we bumped it before checking
-	ldaa #0x08		; Overflow bit
+	ldaa #0x88		; Overflow bit
 	bra seterr
 
 

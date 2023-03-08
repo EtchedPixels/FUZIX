@@ -12,7 +12,7 @@ void pagemap_init(void)
 {
     uint8_t i = 0x18;
     while (i < 0x80) {
-        pagemap_add(i);
+        pagemap_add(i | 0x80);	/* PA7 is second CS so keep it high */
         i += 0x10;
     }
     if (iobase[0x3F] & 3)
@@ -44,4 +44,5 @@ void device_init(void)
         sd_shift[0] = 9;
     kputs("sd0: ");
     td_register(sd_xfer, 1);
+    netdev_init();
 }

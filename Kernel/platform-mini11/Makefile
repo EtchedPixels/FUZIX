@@ -8,6 +8,7 @@ ASRCS += tricks.S commonmem.S
 CDSRCS = discard.c
 
 DSRCS = ../dev/tinydisk.c ../dev/tinysd.c
+DNSRCS = ../dev/net/net_w5x00.c
 DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -15,12 +16,13 @@ CDOBJS = $(CDSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.S=$(BINEXT))
 A68OBJS = $(patsubst ../dev/68hc11/%.S,%.o, $(A68SRCS))
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
+DNOBJS = $(patsubst ../dev/net/%.c,%.o, $(DNSRCS))
 DAOBJS = $(DASRCS:.S=$(BINEXT))
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.o, $(DISCARD_DSRCS))
 
-OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(A68OBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS)
+OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(A68OBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DNOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/68hc11/
+CROSS_CCOPTS += -I../dev/ -I../dev/68hc11/ -I../dev/net/
 
 all:	$(OBJS)
 
@@ -35,6 +37,9 @@ $(AOBJS): %$(BINEXT): %.S
 	$(CROSS_AS) $(ASOPTS) $*.s -o $*.o
 
 $(DOBJS): %$(BINEXT): ../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
+
+$(DNOBJS): %$(BINEXT): ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 $(DAOBJS): %$(BINEXT): ../dev/%.S
@@ -52,7 +57,7 @@ image: loadsd
 	mini11.o ../start.o ../version.o ../lowlevel-68hc11-flat.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
 	tinydisk.o tinydisk_discard.o tinysd.o tinysd_discard.o \
-	sci.o \
+	sci.o ../syscall_net.o ../network.o net_w5x00.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \

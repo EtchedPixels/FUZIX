@@ -176,7 +176,7 @@ irq_on:
 
 
 rebootit:
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	0xF000		; ROM enable
 	jmp	0
 
@@ -200,6 +200,8 @@ init_hardware:
 	std ramsize
 	ldd #448
 	std procmem
+	; set DDRA7 to A7 is an output (second CS line)
+	bset 0x26,x 0x80
         jsr program_vectors_k
 
 	; copy bank 0 common to all other banks
@@ -229,21 +231,21 @@ copy_helper:
 	ldx	#IOBASE
 	ldy	#0xF200
 copyall:
-	ldab	#0x08
+	ldab	#0x88
 	stab	,x
 	ldaa	,y
-	ldab	#0x18
+	ldab	#0x98
 	; Copy ,y into each other bank
 nbank:
 	stab	,x
 	staa	,y
 	addb	#0x10
-	bpl	nbank		; when we hit 0x80 we are done	
+	bmi	nbank		; when we wrap we are done
 	iny
 	;	Next byte
 	cpy	#0x0000
 	bne	copyall
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	,x		; kernel map
 	rts
 
@@ -350,7 +352,7 @@ map_process:
 map_kernel_di:
 map_kernel:
 	psha
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	IOBASE		; switch to kernel
 	pula
 	rts
@@ -376,7 +378,7 @@ map_save_kernel:
 	psha
 	ldaa	IOBASE
 	staa	shared_map
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	IOBASE
 	pula
 	rts
@@ -425,6 +427,8 @@ sci_txe:
 
 	.section	.common
 
+	.globl spi_select_port
+	.globl spi_select_none
 	.globl sd_spi_transmit_byte
 	.globl sd_spi_receive_byte
 	.globl sd_spi_raise_cs
@@ -434,6 +438,21 @@ sci_txe:
 	.globl sd_spi_transmit_sector
 	.globl sd_spi_receive_sector
 
+;
+;	Select the Wiznet or other device
+;	For now just hardcode for Wiznet TODO if we add an SPI clock
+;	Must happen with interrupts off for now
+
+spi_select_port:
+	ldx #IOBASE
+	bclr 0x00,x 0x80	; Wiznet on
+	rts
+
+spi_select_none:
+	ldx #IOBASE
+	bset 0x08,x 0x20
+	bset 0x00,x 0x80
+	rts
 ;
 ;	Select the SD card
 ;
@@ -447,6 +466,7 @@ sd_spi_lower_cs:
 sd_spi_raise_cs:
 	ldx #IOBASE
 	bset 0x08,x 0x20
+
 ;
 ;	Send 0xFF and receive a byte
 ;
@@ -517,7 +537,7 @@ txw2:
 	tst	0x2A,x		; Read data
 	deca
 	bne	txloop
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	,x		; Kernel back in , stack now valid
 	pula
 	tap			; restore int flag
@@ -561,7 +581,7 @@ rxw2:
 
 	deca
 	bne	rxloop
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	,x
 	pula	
 	tap
@@ -591,7 +611,7 @@ _uputc:
 	ldaa udata+U_DATA__U_PAGE+1
 	staa IOBASE
 	stab 0,x
-	ldaa #0x08
+	ldaa #0x88
 	staa IOBASE
 	pula
 	tap
@@ -608,7 +628,7 @@ _uputw:
 	staa IOBASE
 	xgdy		; data back into D
 	std 0,x
-	ldaa #0x08
+	ldaa #0x88
 	staa IOBASE
 	pula
 	tap
@@ -622,7 +642,7 @@ _ugetc:
 	sei
 	staa IOBASE
 	ldab 0,x
-	ldaa #0x08
+	ldaa #0x88
 	staa IOBASE
 	pula
 	tap
@@ -638,7 +658,7 @@ _ugetw:
 	staa IOBASE
 	ldd 0,x
 	xgdx
-	ldaa #0x08
+	ldaa #0x88
 	staa IOBASE
 	pula
 	tap
@@ -662,7 +682,7 @@ uzerolp:
 	inx
 	dey
 	bne uzerolp
-	ldaa #0x08
+	ldaa #0x88
 	staa IOBASE
 	pula
 	tap
@@ -687,7 +707,7 @@ ugetl:
 	stab	IOBASE
 	ldab	,y
 	iny
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	IOBASE
 	stab	,x
 	inx
@@ -720,7 +740,7 @@ uputl:
 	staa	IOBASE
 	stab ,x
 	inx
-	ldaa	#0x08
+	ldaa	#0x88
 	staa	IOBASE
 	cpy	__end
 	bne	uputl
