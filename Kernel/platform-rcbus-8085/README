@@ -4,11 +4,9 @@ Initial support for the 8085 CPU/MMU + 16550A UART card setup
 using RCBUS.
 
 TODO: from compiler change (checked on other ports)
-- PS crashes
 - signals work if they kill but caught signals seem wonky (test case shutdown)
-- dc prints nothing
-- startrek hangs a bit after startup
-- remount / ro causes a crash
+- remount / ro causes a crash (actually mtab being created with invalid blocks)
+- fprintf of a -1 int seems to produce nonsense - casting bug somewhere ?
 
 Supported Hardware
 

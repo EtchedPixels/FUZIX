@@ -1,5 +1,4 @@
 LIBPATH=../../Library/libs
-LIBC=$(LIBPATH)/libc8080.a $(ACK_ROOT)/share/ack/cpm/libem.a
 
 CSRCS += devices.c main.c devtty.c devinput.c
 DISCARD_CSRCS = discard.c
