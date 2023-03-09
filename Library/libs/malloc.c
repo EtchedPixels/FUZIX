@@ -35,7 +35,7 @@ static struct memh *brkmore(size_t nb)
 	do {
 		sz = (sz + 511) & ~511;
 		p = memalloc(sz);
-		if (p != NULL) {
+		if (p != (void *)-1) {
 			p->size = sz / sizeof(struct memh);
 			free(p + 1);
 			/* We only get so many blocks in our table so allocate
