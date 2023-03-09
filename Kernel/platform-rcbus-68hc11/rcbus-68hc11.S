@@ -189,6 +189,8 @@ init_hardware:
 	    std 0x18,x		; set compare
 	    clr 0x20,x		; disable output pin logic
 	    bset 0x22,x 0x40	; turn on timer 2 interrupt
+	    ldaa #0x3A		; SPI outputs (in case ROM didn't set it up)
+	    staa 0x08,x		;
             ; set system RAM size
 	    ldd #512
 	    std ramsize
