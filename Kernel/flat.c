@@ -35,8 +35,14 @@
 #undef DEBUG
 
 #define MAX_BLOCKS	14	/* Packs to a power of two */
+
+#ifdef CONFIG_SPLIT_ID
 #define COPY_BASE	1	/* First block we dup the memory for */
 #define MALLOC_BASE	2	/* First block for malloc use */
+#else
+#define COPY_BASE	0	/* First block we dup the memory for */
+#define MALLOC_BASE	2	/* First block for malloc use */
+#endif
 
 struct memblk {
 	void *start;
@@ -355,8 +361,18 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 
 	mb = &m->memblk[0];
 
+	/* On a system where we can split code from data the code
+	   ends up shared across fork and we occupy two memory blocks
+	   independently allocated. On a system where we can't we
+	   allocate a single block for everything and the database is
+	   just offset */
+#ifdef CONFIG_SPLIT_ID
 	/* Pad to our block size */
 	csize = (a->a_text + 511) & ~511;
+	/* Again pad to our block size */
+	size = a->a_data + a->a_bss + a->stacksize;
+	size = (size + 511) & ~511;
+
 	mb->start = kmalloc(csize, proc);
 	if (mb->start == NULL) {
 		mem_free(m, 0);
@@ -365,9 +381,6 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 	mb->end = mb->start + a->a_text;
 	kprintf("Code for %x bytes at %p\n", csize, mb->start);
 
-	/* Again pad to our block size */
-	size = a->a_data + a->a_bss + a->stacksize;
-	size = (size + 511) & ~511;
 
 	mb++;
 
@@ -386,10 +399,23 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 	udata.u_database = (uaddr_t)mb->start;
 	mb--;
 	udata.u_codebase = (uaddr_t)mb->start;
+#else
+	size = a->a_text + a->a_data + a->a_bss + a->stacksize;
+	size = (size + 511) & ~511;
+	mb->start = kmalloc(size, proc);
+	if (mb->start == NULL) {
+		mem_free(m, 0);
+		return ENOMEM;
+	}
+	mb->end = mb->start + size;
+	pagemap_free(udata.u_ptab);
+	udata.u_codebase = (uaddr_t)mb->start;
+	udata.u_database = udata.u_codebase + a->a_text;
+#endif
 	store[proc] = mem[proc] = m;
 #ifdef DEBUG
 	kprintf("code %p - %p, data %p - %p\n", udata.u_codebase, udata.u_codebase + csize - 1, udata.u_database, udata.u_database + size - 1);
-#endif	
+#endif
 	return 0;
 }
 
