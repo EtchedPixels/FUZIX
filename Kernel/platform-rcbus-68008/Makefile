@@ -11,7 +11,7 @@ DSRCS += ../dev/ds1302.c ../dev/ds1302_discard.c
 DSRCS += ../dev/ps2bitbang.c ../dev/ps2bitbang_rcbus.c ../dev/ps2kbd.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
-LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c
+LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c ../lib/68000relocate.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
 RSRCS = ../dev/rcbus/zxkey.c ../dev/rcbus/zxkeyboard.c
@@ -59,7 +59,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
 	../tty.o ../vt.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
-	../blk512.o ../font6x8.o 68000usercopy.o \
+	../blk512.o ../font6x8.o 68000usercopy.o 68000relocate.o \
 	blkdev.o devide.o devide_discard.o mbr.o zxkey.o zxkeyboard.o \
 	../usermem_std-68000.o devtty.o libc.o ../malloc.o ppide.o \
 	devsd.o devsd_discard.o spi.o ds1302.o ds1302_discard.o ds1302io.o \

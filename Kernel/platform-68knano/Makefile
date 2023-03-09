@@ -8,7 +8,7 @@ ASRCS += tricks.S
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/devide_discard.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
-LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c
+LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c ../lib/68000relocate.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -47,6 +47,7 @@ image:
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
 	ds3234.o blkdev.o devide.o devide_discard.o mbr.o \
 	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o ../malloc.o \
+	68000relocate.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 	dd if=../fuzix.bin of=fuzix.rom bs=65536 conv=sync

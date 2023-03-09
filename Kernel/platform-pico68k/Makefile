@@ -8,7 +8,7 @@ ASRCS += tricks.S
 DSRCS = ../dev/tinydisk.c ../dev/tinysd.c ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
-LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c
+LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c ../lib/68000relocate.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -42,11 +42,12 @@ image: bootrom
 	pico.o ../start.o ../version.o ../lowlevel-68000.o \
 	tricks.o main.o ../timer.o ../kdata.o 68000exception.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
+	../syscall_proc.o ../syscall_other.o ../mm.o ../flat_small.o \
 	../blk512.o ../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
 	tinydisk.o tinysd.o tinydisk_discard.o tinysd_discard.o \
-	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o ../malloc.o \
+	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o \
+	68000relocate.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 
