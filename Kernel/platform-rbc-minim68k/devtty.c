@@ -216,7 +216,7 @@ static uint8_t ns16x50_intr(uint_fast8_t minor)
 			if ((msr & (CTS_D | CTS)) == (CTS_D | CTS))
 				tty_outproc(minor);
 			break;
-		default:
+		default:;
 		}
 	}
 	/* If we have room to receive then keep RTS on */
