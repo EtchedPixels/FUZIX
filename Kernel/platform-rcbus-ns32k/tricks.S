@@ -41,8 +41,8 @@ _switchin:
 	sprw psr,r0		# Interrupts off
 	andw 0xF7FF,r0
 	lprw psr,r0
-	enter [],0
-	movd 4(fp),r0		# task to switch to
+	enter [r1,r2,r3,r4,r5,r6,r7],0
+	movd 8(fp),r0		# task to switch to
 	movd P_TAB__P_UDATA_OFFSET(r0),r5
 	# Check udata is consistent wiht pointer
 	cmpl U_DATA__U_PTAB(r6),r0
@@ -84,53 +84,74 @@ switchinfail:
 	#
 	# Entry:
 	# r6 = u_data pointer for parent
-	# 4(fp) = child process table entry
+	# stack = child process table entry
 	#
 	# Exit:
 	# Child state is saved, still running as parent
 	#
 _dofork:
 	enter [r1,r2,r3,r4,r5,r6,r7],0
-	movd 4(fp),r0			#	child p_tab
+	movd 8(fp),r0			#	child p_tab
 	movd P_TAB__P_UDATA_OFFSET(r0),r2	# Child udata
 
 	# copy parent udata in r6 to child udata
-	movd r6,r1
-	movd 64,r0
+	movd	r6,r1
+	movd	64,r0
 	movsd
 
-	movd 4(fp),r0			#	child p_tab
-	movw P_TAB__P_PID_OFFSET(r0), tos
-	movd P_TAB__P_UDATA_OFFSET(r0), tos
+	movd	8(fp),r0			#	child p_tab
+	movw	P_TAB__P_PID_OFFSET(r0), r1
+	movw	r1,tos
+	movd	P_TAB__P_UDATA_OFFSET(r0), tos
 
 	# Configure the child udata
-	movd P_TAB__P_UDATA_OFFSET(r0), tos
-	movd r0, tos
-	jsr _makeproc
-	cmpd tos,tos
+	movd	P_TAB__P_UDATA_OFFSET(r0), tos
+	movd	r0, tos
+	jsr	_makeproc
+	adjspd	-8		# Adjsp is subtract based !
 
-	movd tos, r3
-	#	Top of child stack
-	movd r3,r1
-	addd 1024,r1
+	movd	tos, r3
+	#	Top of the child stack to fill in
+	movd	r3,r1
+	addd	1024-16,r1
 
-	#	Stack fake return frame for the child
-	#	TODO
+	#	R6 holds our udata, find the stack top from it
+	movd	r6,r4
+	#	Pointer for copying from the parent to child
+	addd	1024-12,r4
 
-	#	Now push a user frame to match switchin/out
-	#	TODO
+	# Copy the saved r6 over
+	movd	0(r4),4(r1)
+	# Copy the trap frame over
+	movd	4(r4),8(r1)
+	movd	8(r4),12(r1)
+	addqd	2,8(r1)		# Still points at the SVC
+	movd	forkout(pc),0(r1)
 
+	#	The child stack is now a valid switchin frame
+	#	which will return to forkout, and then it will
+	#	rett back to user space
 
 	# Save the built stack base for the child
 	movd	r1,U_DATA__U_SP(r2)
 	movqw	0,_runticks(pc)
-	movd	tos,r0		# Return child pid
+	movzwd	tos,r0		# Return child pid
 	exit	[r1,r2,r3,r4,r5,r6,r7]
 	ret	0
+
+forkout:
+	movqd	0,r0
+	movd	r0,r1
+	movd	r1,r2
+	movd	r2,r3
+	movd	r3,r4
+	movd	r4,r5
+	movd	r5,r7
+	movd	tos,r6
+	rett	0
 
 badswitchmsg:
 	.ascii "_switchin: FAIL"
         .byte 13,10,0
 
 	.align 2
-
