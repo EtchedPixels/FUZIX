@@ -374,9 +374,10 @@ static void parse_inittab(void)
 		parse_initline();
 
 	/* Align the pid table - eww */
-	/* FIXME: align properly to 4 bytes */
 	if (((uint8_t)idata) & 1)
 		idata++;
+	if (((uint8_t)idata) & 2)
+		idata += 2;
 
 	/* Allocate space for the control arrays */
 	initpid = (struct initpid *) idata;
@@ -603,7 +604,7 @@ int main(int argc, char *argv[])
 	dup(fdtty1);
 	dup(fdtty1);
 
-	putstr("init version 0.9.0ac#1\n");
+	putstr("init version 0.9.1\n");
 
 	if (argv[1] && strcmp(argv[1], "s") == 0) {
 		execl("/bin/sh", "-sh", NULL);
