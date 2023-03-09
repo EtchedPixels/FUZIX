@@ -584,7 +584,8 @@ typedef struct u_data {
 #ifdef CONFIG_UDATA_TEXTTOP
     uaddr_t u_texttop;		/* Top of binary text (used for I/D systems) */
 #endif
-#ifdef CONFIG_SPLIT_ID
+   /* TODO: A specific define for "32bit" */
+#if defined(__mc68000__) || defined(__ns32k__)
     uaddr_t u_database;		/* data base for systems with separate code/data
 				   blocks. FIXME - sort this out in the usermode hdr */
 #endif
@@ -1195,6 +1196,8 @@ extern int plt_dev_ioctl(uarg_t request, char *data);
 
 extern void plt_udma_kill(ptptr p);
 extern void plt_udma_sync(ptptr p);
+
+extern unsigned plt_relocate(struct exec *bf);
 
 extern uint8_t plt_tick_present;
 
