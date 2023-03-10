@@ -32,9 +32,9 @@
 #define P_TAB__P_FLAGS_OFFSET	1
 #define P_TAB__P_TTY_OFFSET	2
 #define P_TAB__P_PID_OFFSET	4
-#define P_TAB__P_PAGE_OFFSET	22
-#define P_TAB__P_PAGE_OFFSETB	23
-#define P_TAB__P_UDATA_OFFSET	26
+#define P_TAB__P_PAGE_OFFSET	24
+#define P_TAB__P_PAGE_OFFSETB	25
+#define P_TAB__P_UDATA_OFFSET	28
 
 #define P_RUNNING		1
 #define P_READY			2
