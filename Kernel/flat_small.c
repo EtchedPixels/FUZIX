@@ -18,14 +18,6 @@
  *	-	Review the pathalogical edge cases when we are using
  *		all of the map pages and we have brk and stack into the
  *		same page.
- *	-	Add a reverse map table. Our max page count is 126
- *		so it wouldn't cost much ?
- *	-	With a reverse table we should be able to remove most
- *		excess thrashing by marking the pages of the task we
- *		are switching too as less aged than others before
- *		we do the magic
- *	-	Fix the corner cases (eg realloc) where we page in a
- *		new page we should just instantiate
  *	-	Sort out the swap size reporting in free
  *
  *	Parameters
@@ -98,10 +90,16 @@ static struct meminfo meminfo[PTABSIZE];
    is small */
 static uint8_t pagemap[PTABSIZE][NBANK];
 
-/* Page map: turns out for the max of 126 entries it's cheaper to keep
-   a stack than all the funky bitmap stuff */
-static uint8_t allocation[NPAGE];	/* We mark page 0 always busy */
+/* Reverse mapping table. In theory we could combine this with the allocation
+   map at some point and maybe save space at a small scanning cost. Also our
+   free page table */
+static uint8_t rmap[NPAGE];
 static uint_fast8_t freepages;
+static uint8_t *freeptr = rmap;
+
+#define SWAPPED	0xF0		/* On disk */
+#define EMPTY 0xF8		/* No content */
+#define FREE 0xFF		/* Can be allocated */
 
 #ifdef DEBUG
 
@@ -109,7 +107,6 @@ static uint_fast8_t freepages;
 static void dump_map(const char *p)
 {
 	uint8_t *mp;
-	uint8_t k = NO_SLOT;
 	unsigned i;
 	kprintf("%s: map [ ", p);
 	mp = &pagemap[udata.u_page][0];
@@ -118,15 +115,12 @@ static void dump_map(const char *p)
 	kprintf(" ]\n");
 	kprintf("phys map [ ");
 	for (i = 0; i < top_bank; i++) {
-		if (P_PAGE(mem + i) == 0)
-			k = i; 
 		kprintf("%2x ", mem[i].page);
+		if (mem[i].page != NO_PAGE && rmap[P_PAGE(mem + i)] != i)
+			kprintf("\nRMAP bad %2x\n",
+				rmap[P_PAGE(mem + i)]);
 	}
 	kprintf(" ]\n");
-	if (k != NO_SLOT) {
-		uint16_t *bp = (uint16_t *)PAGE_ADDR(k);
-		kprintf("SL0: %x %x\n", *bp, bp[1]);
-	}
 }
 #else
 #define dump_map(x)	do {} while(0);
@@ -138,7 +132,16 @@ static uint_fast8_t alloc_page(void)
 	sysinfo.swapusedk += PAGE_SIZE >> 10;
 	if (freepages == 0)
 		panic("ap: no pages");
-	return allocation[--freepages];
+	freepages--;
+	/* We checked the free pages count first so this
+	   will terminate */
+	while(*freeptr != FREE) {
+		freeptr++;
+		if (freeptr == rmap + NPAGE)
+			freeptr = rmap;
+	}
+	*freeptr = EMPTY;
+	return freeptr - rmap;
 }
 
 /* We only ever free pages that are mapped in. It
@@ -153,9 +156,11 @@ static void free_page(uint_fast8_t page, uint_fast8_t slot)
 
 	if (P_PAGE(mp) != page)
 		panic("pgfree");
-
+	if (rmap[page] != slot)
+		panic("pgfree2");
 	mp->page = NO_PAGE;
-	allocation[freepages++] = page;
+	rmap[page] = FREE;
+	freepages++;
 }
 
 /* Pages are 1:1 in swap by number. Saves tracking and
@@ -164,6 +169,7 @@ static void swap_in_page(uint_fast8_t slot, unsigned page)
 {
 	/* Mark us present in the map */
 	mem[slot].page = page;
+	rmap[page] = slot;
 	/* Just arrived */
 	mem[slot].age = 0x80;
 	/* Assumes a flat map */
@@ -193,13 +199,11 @@ static uint_fast8_t is_present(uint_fast8_t page, uint_fast8_t slot)
 	uint_fast8_t freep = NO_SLOT;
 	uint_fast8_t i;
 
+	if (rmap[page] < SWAPPED)
+		return rmap[page];
+
 	for (i = 0; i < top_bank; i++) {
-		uint_fast8_t pg = P_PAGE(m);
-		/* Found it */
-		if (pg == page)
-			return i;
-		/* Found a free page */
-		else if (m->page == NO_PAGE) {
+		if (m->page == NO_PAGE) {
 			if (freep != slot || slot == NO_PAGE)
 				freep = i;
 		/* needs to be <= as the first time we'll compared node
@@ -240,6 +244,8 @@ static void exchange_pages(uint_fast8_t p1, uint_fast8_t p2)
 	m1->age = m2->age;
 	m2->page = tmp.page;
 	m2->age = tmp.age;
+	rmap[P_PAGE(m1)] = p1;
+	rmap[P_PAGE(m2)] = p2;
 }
 
 static void move_page(uint_fast8_t to, uint_fast8_t from)
@@ -254,8 +260,11 @@ static void move_page(uint_fast8_t to, uint_fast8_t from)
 
 	copy_blocks((void *)PAGE_ADDR(to), (void *)PAGE_ADDR(from),
 		PAGE_SIZE >> 9);
+	if (m1->page != NO_PAGE)
+		rmap[P_PAGE(m1)] = SWAPPED;
 	m1->age = m2->age;
 	m1->page = m2->page;
+	rmap[P_PAGE(m1)] = to;
 	m2->page = NO_PAGE;
 }
 
@@ -282,11 +291,12 @@ static uint_fast8_t make_present(uint_fast8_t page, uint_fast8_t s, unsigned swa
 #endif
 			return n;
 		}
-		/* In theory if swap is 0 and the page is present we
-		   can just copy one way but it's rare so we don't bother
-		   at this point */
 		/* Now in the right place */
-		exchange_pages(n, s);
+		/* If we are switching an empty page then just copy */
+		if (mem[s].page == NO_PAGE)
+			move_page(s, n);
+		else
+			exchange_pages(n, s);
 #ifdef DEBUG
 		kprintf("page %d exchanged into %d\n", page, s);
 #endif
@@ -298,11 +308,12 @@ static uint_fast8_t make_present(uint_fast8_t page, uint_fast8_t s, unsigned swa
 
 	/* We are not present. See if we've been handed a free page and
 	   can use it */
-	if (m->page != NO_PAGE)
+	if (m->page != NO_PAGE) {
 		/* We've been handed the oldest unlocked page */
 		/* Free the slot by paging out the old user */
 		swap_out_page(n, P_PAGE(m));
-
+		rmap[P_PAGE(m)] = SWAPPED;
+	}
 	if (s != SLOT_ANY && s != n) {
 		/* We have a free page but the wrong one. Swap whatever
 		   was there for our page. We might end up causing several
@@ -316,6 +327,7 @@ static uint_fast8_t make_present(uint_fast8_t page, uint_fast8_t s, unsigned swa
 		swap_in_page(n, page);
 	m->page = page;
 	m->age = 0x80;
+	rmap[page] = n;
 #ifdef DEBUG
 	kprintf("page %d made present at %d\n", page, n);
 #endif
@@ -347,6 +359,17 @@ static void map_pages(ptptr p, unsigned pagein)
 	uint_fast8_t i;
 
 	age_pages();
+
+	/* Mark all of our pages as most recent so that they don't
+	   get thrashed */
+	for (i = 0; i < top_bank; i++) {
+		if (*mp != NO_PAGE && rmap[*mp] < SWAPPED) {
+			mem[rmap[*mp]].age |= 0x80;
+		}
+		mp++;
+	}
+
+	mp = &pagemap[p->p_page][0];
 
 	for (i = 0; i < top_bank; i++) {
 		if (*mp != NO_PAGE)
@@ -386,6 +409,9 @@ static void unlock_pages(void)
  *	we own that held the old binary and are convenietly
  *	in memory in the right places to reuse. Complete the job
  *	by trimming excess pages or adding pages to fill the gaps.
+ *
+ *	Our caller has all our pages in use pinned and present so
+ *	we can safely remap without asking for swapin
  */
 void realloc_map(uint8_t low, uint8_t high)
 {
@@ -421,7 +447,7 @@ void realloc_map(uint8_t low, uint8_t high)
 	}
 
 	dump_map("realloc - before map pages");
-	/* We still need to make the pages in. We've just
+	/* We still need to move the pages in. We've just
 	   allocated any extra no more. No page in needed */
 	map_pages(udata.u_ptab, 0);
 	dump_map("post mp");
@@ -658,7 +684,6 @@ usize_t valaddr(const uint8_t * pp, usize_t l)
 void pagefile_add_blocks(unsigned blocks)
 {
 	unsigned size = blocks >> (PAGE_SHIFT - BLKSHIFT);
-	uint8_t *p;
 
 	if (size > NPAGE)
 		size = NPAGE;
@@ -667,11 +692,7 @@ void pagefile_add_blocks(unsigned blocks)
 
 	/* Fill the allocation stack */
 	freepages = size - 1 ;
-	p = allocation;
-	/* Page 0 was sneakily pre-allocated when we created the init
-	   task earlier */
-	while(--size)
-		*p++ = size;
+	memset(rmap + 1, FREE, freepages);
 }
 
 /*
@@ -694,6 +715,12 @@ void pagemap_setup(uaddr_t base, unsigned len)
 		top_bank, PAGE_SIZE >> 10, base);
 	for (i = 0; i < top_bank; i++)
 		mem[i].page = NO_PAGE;
+	/* Magic for init setup */
+	rmap[0] = 0;
+	/* Mark rest of the map used */
+	memset(rmap + 1, SWAPPED, NPAGE - 1);
+	/* The one page already in use */
+	sysinfo.swapusedk = PAGE_SIZE >> 10;
 }
 
 /*
