@@ -41,7 +41,7 @@ static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 	swap_dev = minor;	/* major is 0 */
 	off = le32_to_cpu(pe->lba_count);
 
-	pagemap_frames(off);
+	pagefile_add_blocks(off);
 }
 #endif
 

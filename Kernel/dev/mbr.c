@@ -35,6 +35,27 @@ static void mbr_swap_found(uint8_t letter, uint8_t m)
 }
 #endif
 
+#ifdef CONFIG_DYNAMIC_PAGE
+/*
+ *	This function is called for partitioned devices if a partition is found
+ *	and marked as swap type. The first one found will be used as swap. We
+ *	only support one swap device.
+ */
+static void mbr_swap_found(uint8_t letter, uint8_t m)
+{
+  blkdev_t *blk = blk_op.blkdev;
+  uint16_t n = 0;
+  uint32_t off;
+  if (swap_dev != 0xFFFF)
+    return;
+  letter -= 'a';
+  kputs("(page) ");
+  swap_dev = letter << 4 | m;
+  off = blk->lba_count[m - 1];
+  pagefile_add_blocks(off);
+}
+#endif
+
 /* FIXME: Needs to be int so we can call multiple and get the right type */
 void mbr_parse(uint_fast8_t letter)
 {
@@ -121,7 +142,7 @@ void mbr_parse(uint_fast8_t letter)
 		    blk_op.blkdev->lba_count[next] = le32_to_cpu(br->partition[i].lba_count);
 		    next++;
 		    kprintf("hd%c%d ", letter, next);
-#ifdef CONFIG_DYNAMIC_SWAP
+#if defined(CONFIG_DYNAMIC_SWAP) || defined(CONFIG_DYNAMIC_PAGE)
 		    if(t == FUZIX_SWAP)
 			mbr_swap_found(letter, next);
 #endif
