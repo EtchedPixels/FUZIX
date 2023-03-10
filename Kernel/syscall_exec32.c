@@ -62,97 +62,14 @@ static int valid_hdr(inoptr ino, struct exec *bf)
 	/* Revisit this for other ports. Avoid alignment traps */
 	if (UNALIGNED(bf->a_text | bf->a_data | bf->a_entry | bf->a_bss | bf->a_trsize))
 		return 0;
-	/* Fix up the BSS so that it's big enough to hold the relocations
-	   Factor in the stack as well. Generally the stack space is enough
-	   to avoid any expansion. When we switch to compact relocations
-	   the problem should go away entirely */
+	/* Fix up the BSS so that it's big enough to hold the relocations */
+	/* We can't factor in the stack for all memory mappers as the
+	   stack and BSS might not be together */
 	/* TODO ? max sane number of relocs to stop wrap or silly expansion */
-	if (bf->a_bss + bf->stacksize < bf->a_trsize)
-		bf->a_bss = bf->a_trsize - bf->stacksize;
-
+	if (bf->a_bss < bf->a_trsize)
+		bf->a_bss = bf->a_trsize;
 	return 1;
 }
-
-/*
- *	We have two blocks. block 0 is the code, block 1 is the data.
- *	We need to relocate accordingly. It's possible that the underlying
- *	memory manager used one map but if so the addresses will be
- *	contiguous and it'll just work treating it as two banks
- *
- *	NS32K needs some special handling as it can have fixups that
- *	are wrong endian and fixups that are right endian.
- */
-static unsigned relocate(struct exec *bf)
-{
-#if defined(__ns32k__)
-	unsigned arseendian;
-	uint32_t sizebits;
-#endif
-	/* Relocations lie over the BSS as loaded */
-	uint32_t *rp = (uint32_t *)(udata.u_database + bf->a_data);
-	uint32_t n = bf->a_trsize / sizeof(uint32_t);
-	uint32_t codebase = udata.u_codebase;
-	uint32_t database = udata.u_database;
-
-	uint32_t relend = bf->a_text + bf->a_data;
-
-	/* We can use _uput/_uget as we set up the memory map so we know
-	   it is valid */
-	while (n--) {
-		uint32_t *mp;
-		uint32_t mv;
-		uint32_t v = _ugetl(rp++);
-#if defined(__ns32k__)
-		if (v & 0x80000000)
-			arseendian = 1;
-		else
-			arseendian = 0;
-		v &= 0x7FFFFFFF;
-#endif
-		if (v > relend - 3) {	/* Bad relocation - should we fail ? */
-/*			kprintf("R0 %d left, %p relendd %p", n, v, relend - 3 ); */
-			return 1;
-		}
-		/* Which block holds the offset ? */
-		if (v <= bf->a_text - 3)
-			mp = (uint32_t *)(codebase + v);
-		else if (v >= bf->a_text)
-			mp = (uint32_t *)(database + v - bf->a_text);
-		else {	/* Bad */
-/*			kprintf("R1 %d left, %p a_data %p", n, v, bf->a_data); */
-			return 1;
-		}
-		/* Now what are we relocating against */
-		mv = _ugetl(mp);
-#if defined(__ns32k__)
-		if (arseendian)
-			mv = ntohl(mv);
-		sizebits = 0;
-		if ((mv & 0xC0000000) == 0xC0000000)
-			sizebits = 1;
-		/* We don't deal with underflows on the sized 30 bit signed relocs
-		   We should never ever get one ; TODO review */
-		mv &= 0x3FFFFFFF;
-#endif
-/*		kprintf("Reloc %x:%p (%p) to ", v, mp, mv); */
-		if (mv >= bf->a_text)
-			mv += database - bf->a_text;
-		else
-			mv += codebase;
-		/* Write the updated value */
-/*		kprintf("%p\n", mv); */
-#if defined(__ns32k__)
-		/* Put back the field size info */
-		if (sizebits)
-			mv |= 0xC0000000;
-		if (arseendian)
-			mv = ntohl(mv);
-#endif
-		_uputl(mv, mp);
-	}
-	return 0;
-}
-
 
 /* User's execve() call. All other flavors are library routines. */
 /*******************************************
@@ -251,13 +168,13 @@ arg_t _execve(void)
 			udata.u_egid = ino->c_node.i_gid;
 	}
 
-	top = udata.u_database + aout.a_data + aout.a_bss + aout.stacksize;
-
-	udata.u_top = top;
+	top = udata.u_top;
 	udata.u_ptab->p_top = top;
 
-//	kprintf("user space at %p\n", progbase);
-//	kprintf("top at %p\n", progbase + bin_size);
+#ifdef DEBUG
+	kprintf("user space at %p\n", progbase);
+	kprintf("top at %p\n", progbase + bin_size);
+#endif
 
 	go = (uint32_t)udata.u_codebase + aout.a_entry;
 
@@ -292,12 +209,12 @@ arg_t _execve(void)
 	if (udata.u_done != aout.a_data + aout.a_trsize)
 		goto nogood4;
 
-	if (relocate(&aout))
+	if (plt_relocate(&aout))
 		goto nogood4;
 
 	/* This may wipe the relocations */	
 	uzero((uint8_t *)udata.u_database + aout.a_data,
-		aout.a_bss + aout.stacksize);
+		aout.a_bss);
 
 	/* Use of brk eats into the stack allocation */
 
@@ -325,7 +242,7 @@ arg_t _execve(void)
 	uputl((uint32_t) nargv, nenvp - 1);
 	uputl((uint32_t) argc, nenvp - 2);
 
-	// Set stack pointer for the program
+	/* Set stack pointer for the program */
 	udata.u_isp = nenvp - 2;
 
 	/*
@@ -335,10 +252,12 @@ arg_t _execve(void)
 	 */
 	install_vdso();
 
-	kprintf("Code at %p , Data at %p\n",
-		udata.u_codebase, udata.u_database);
+#ifdef DEBUG
+	kprintf("Code at %p , Data at %p Stack Size %u)\n",
+		udata.u_codebase, udata.u_database,
+		aout.stacksize);
 	kprintf("Go = %p ISP = %p\n", go, udata.u_isp);
-
+#endif
 	doexec(go);
 
 nogood4:
