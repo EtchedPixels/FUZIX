@@ -17,12 +17,12 @@
 
 .mri 1
 plt_monitor:
-	; Need to check if top of memory at FE7000, if so
-	; copy vectors from FE7000 to 0 (where we saved them)
-	; them jmp to FE8000
 plt_reboot:
 	    or #$0700,sr
-	    jmp start
+	    move.l 0,sp
+	    move.l 4,a0
+	    reset
+	    jmp (a0)
 
 init_early:
 	    lea.l udata_block,a5	; udata ptr
@@ -241,11 +241,11 @@ sd_spi_transmit_sector:
 	move.l	20(sp),a2
 	move.w	#510,d4
 	; This first call primes all the register setup
+	move.b	(a2)+,d0
 	bsr	spi_tx_byte
-	move.b	d0,(a2)+
 tx_block:
+	move.b	(a2)+,d0
 	bsr	spi_tx_next
-	move.b	d0,(a2)+
 	dbra.w	d4,tx_block
 	movem.l	(sp)+,a2/d2-d4
 	rts
