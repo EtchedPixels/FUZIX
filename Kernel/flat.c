@@ -412,6 +412,9 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 	udata.u_codebase = (uaddr_t)mb->start;
 	udata.u_database = udata.u_codebase + a->a_text;
 #endif
+	/* Tell the exec code where the top of the resulting memory (and
+	   thus where to build the stack) is */
+	udata.u_top = udata.u_database + a->a_data + a->a_bss + a->stacksize;
 	store[proc] = mem[proc] = m;
 #ifdef DEBUG
 	kprintf("code %p - %p, data %p - %p\n", udata.u_codebase, udata.u_codebase + csize - 1, udata.u_database, udata.u_database + size - 1);
