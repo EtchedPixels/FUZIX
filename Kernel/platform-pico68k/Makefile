@@ -47,7 +47,7 @@ image: bootrom
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
 	tinydisk.o tinysd.o tinydisk_discard.o tinysd_discard.o \
 	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o \
-	68000relocate.o \
+	68000relocate.o ../page.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../fuzix.bin
 

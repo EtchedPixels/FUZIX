@@ -6,16 +6,26 @@
 #undef CONFIG_PROFIL
 
 #define CONFIG_32BIT
-//#define CONFIG_LEVEL_2
 
 #define CONFIG_MULTI
-#define CONFIG_FLAT
+#define CONFIG_FLAT_SMALL
 #define CONFIG_SPLIT_ID
 #define CONFIG_PARENT_FIRST
-/* It's not that meaningful but we currently chunk to 512 bytes */
-#define CONFIG_BANKS 	(65536/512)
 
 #define CONFIG_LARGE_IO_DIRECT(x)	1
+
+#define PAGEDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+extern uint16_t page_dev;
+#define CONFIG_DYNAMIC_PAGE
+#define swap_map(x)	((uint8_t *)(x))
+#define CONFIG_PLATFORM_BRK
+
+#define PAGE_SIZE	2048	/* More would be more efficient but we want */
+#define PAGE_SHIFT	11	/* to scrap everything together we can */
+#define NBANK		48
+#define NPAGE		126	/* The max will be fine */
+
+#define CONFIG_BANKS 	(65536/PAGE_SIZE)
 
 #define CONFIG_SPLIT_UDATA
 #define UDATA_SIZE	1024
@@ -34,8 +44,8 @@
 #define NUM_DEV_TTY 1
 #define TTYDEV   BOOT_TTY	/* Device used by kernel for messages, panics */
 
-/* Could be bigger but we need to add hashing first and it's not clearly
-   a win with a CF card anyway */
+/* Keep our sizes low as we are very resource constrained so all memory
+   is valuable */
 #define PTABSIZE 	8
 #define NBUFS    	5	/* Number of block buffers */
 #define NMOUNTS	 	2	/* Number of mounts at a time */

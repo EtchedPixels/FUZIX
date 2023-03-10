@@ -3,6 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
+#include <flat_small.h>
 #include <pico68.h>
 
 uint16_t swap_dev = 0xFFFF;
@@ -41,8 +42,11 @@ void pagemap_init(void)
 	extern uint8_t _end;
 	uint32_t e = (uint32_t) & _end;
 	/* Allocate the rest of memory to the userspace */
-	kmemaddblk((void *) e, 0x30000 - e);
-
+	/* Set up the memory range available */
+	pagemap_setup(e, 0x30000 - e);
+	/* The disk scan will have set up the paging space */
+	/* We assume paging space and that all RAM pages have a swap
+	   backing */
 	kprintf("Motorola 680%s%d processor detected.\n", sysinfo.cpu[1] ? "" : "0", sysinfo.cpu[1]);
 	enable_icache();
 	/* Set up the VIA. We just use a few pins for SD right now */
