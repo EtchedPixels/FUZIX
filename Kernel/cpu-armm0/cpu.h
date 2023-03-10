@@ -3,10 +3,10 @@
 #define ALIGNUP(v)   alignup(v, 4)
 #define ALIGNDOWN(v) aligndown(v, 4)
 
-#define uputp    uputl            /* Copy user pointer type */
-#define ugetp(x) ugetl(x, NULL)   /* between user and kernel */
-#define uputi    uputl            /* Copy user int type */
-#define ugeti(x) ugetl(x, NULL)   /* between user and kernel */
+#define uputp    uputl          /* Copy user pointer type */
+#define ugetp(x) ugetl(x)       /* between user and kernel */
+#define uputi    uputl          /* Copy user int type */
+#define ugeti(x) ugetl(x)	/* between user and kernel */
 
 #define brk_limit() (udata.u_ptab->p_top)
 

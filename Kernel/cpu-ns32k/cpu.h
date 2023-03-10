@@ -1,9 +1,9 @@
 #define CPU_MID	MID_FUZIXNS32
 
 #define uputp  uputl			/* Copy user pointer type */
-#define ugetp(x)  ugetl(x, NULL)	/* between user and kernel */
+#define ugetp(x)  ugetl(x)		/* between user and kernel */
 #define uputi  uputl			/* Copy user int type */
-#define ugeti(x)  ugetl(x,NULL)		/* between user and kernel */
+#define ugeti(x)  ugetl(x)		/* between user and kernel */
 
 extern void *memcpy(void *, const void  *, size_t);
 extern void *memset(void *, int, size_t);
