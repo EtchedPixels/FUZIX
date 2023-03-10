@@ -40,7 +40,7 @@ C1SRCS += inode.c tty.c
 C2SRCS =  syscall_proc.c process.c malloc.c
 C2SRCS += simple.c bank8k.c bank16k.c bank16k_low.c bank32k.c
 C3SRCS = bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c kmod.c
-C2SRCS += bank8086.c bank16kfc.c banksplit.c
+C2SRCS += bank8086.c bank16kfc.c banksplit.c flat_small.c
 C4SRCS = filesys.c version.c blk400.c blk512.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
@@ -63,7 +63,8 @@ endif
 #	Drop some bits into CODE3 so the 6502 banks fit nicely. May well
 #	need to do this on Z80 as well
 #
-C3SRCS += devsys.c mm.c swap.c usermem.c timer.c audio.c level2.c devinput.c
+C3SRCS += devsys.c mm.c swap.c page.c usermem.c timer.c audio.c level2.c
+C3SRCS += devinput.c
 CVIDEOSRCS = vt.c
 CFONTSRCS = font4x6.c font6x8.c font8x8.c font8x8_exp2.c font4x8.c
 
