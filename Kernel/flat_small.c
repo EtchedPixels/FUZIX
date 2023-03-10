@@ -45,7 +45,7 @@
 #include <page.h>
 #include <flat_small.h>
 
-#define DEBUG
+#undef DEBUG
 
 extern struct u_data *udata_shadow;
 
@@ -202,7 +202,6 @@ static void free_page(uint_fast8_t page, uint_fast8_t slot)
    allocating and is fine for our small physical map space */
 static void swap_in_page(uint_fast8_t slot, unsigned page)
 {
-	kprintf("swap in %x at %d\n", page, slot);
 	/* Mark us present in the map */
 	mem[slot].page = page;
 	/* Just arrived */
@@ -214,7 +213,6 @@ static void swap_in_page(uint_fast8_t slot, unsigned page)
 
 static void swap_out_page(uint_fast8_t slot, unsigned page)
 {
-	kprintf("swap out %x at %d\n", page, slot);
 	/* Assumes a flat map */
 	pagewrite(PAGEDEV, page << (PAGE_SHIFT - BLKSHIFT),
 		PAGE_SIZE, PAGE_ADDR(slot), 0);
@@ -269,8 +267,10 @@ static void exchange_pages(uint_fast8_t p1, uint_fast8_t p2)
 	struct mem *m2 = mem + p2;
 	struct mem tmp;
 
+#ifdef DEBUG
 	kprintf("swap %d (%x) with %d (%x)\n",
 		p1, m1->page, p2, m2->page);
+#endif
 
 	swap_blocks((void *)PAGE_ADDR(p1),
 		    (void *)PAGE_ADDR(p2), PAGE_SIZE >> 9);
@@ -287,8 +287,10 @@ static void move_page(uint_fast8_t to, uint_fast8_t from)
 	struct mem *m1 = mem + to;
 	struct mem *m2 = mem + from;
 
+#ifdef DEBUG
 	kprintf("move %d (%x) to %d (%x)\n",
 		from, m2->page, to, m1->page);
+#endif
 
 	copy_blocks((void *)PAGE_ADDR(to), (void *)PAGE_ADDR(from),
 		PAGE_SIZE >> 9);
@@ -306,13 +308,18 @@ static uint_fast8_t make_present(uint_fast8_t page, uint_fast8_t s, unsigned swa
 	unsigned n = is_present(page, s);
 	struct mem *m = mem + n;
 
+#ifdef DEBUG
 	kprintf("make_present %x at %d (%d): ", page, s, swap);
+#endif
+
 	/* We are present */
 	if (P_PAGE(m) == page) {
 		m->age |= 0x80;
 		/* Don't care or right place */
 		if (s == SLOT_ANY || s == n) {
+#ifdef DEBUG
 			kprintf("page was present at %d\n", n);
+#endif
 			return n;
 		}
 		/* In theory if swap is 0 and the page is present we
@@ -320,7 +327,9 @@ static uint_fast8_t make_present(uint_fast8_t page, uint_fast8_t s, unsigned swa
 		   at this point */
 		/* Now in the right place */
 		exchange_pages(n, s);
+#ifdef DEBUG
 		kprintf("page %d exchanged into %d\n", page, s);
+#endif
 		return s;
 	}
 	/* All memory is pinned down */
@@ -347,7 +356,9 @@ static uint_fast8_t make_present(uint_fast8_t page, uint_fast8_t s, unsigned swa
 		swap_in_page(n, page);
 	m->page = page;
 	m->age = 0x80;
+#ifdef DEBUG
 	kprintf("page %d made present at %d\n", page, n);
+#endif
 	return n;
 }
 
@@ -423,7 +434,6 @@ void realloc_map(uint8_t low, uint8_t high)
 	/* Then sweep */
 	uint8_t *mp = &pagemap[udata.u_page][0];
 	uint_fast8_t i;
-	uaddr_t buf = PAGE_ADDR(0);
 
 #ifdef DEBUG
 	kprintf("realloc map %d %d (top %d)\n", low, high, top_bank);
@@ -474,9 +484,9 @@ void copy_map(uint_fast8_t from, uint_fast8_t to)
 	uint_fast8_t slot;
 	uint_fast8_t n;
 
-#ifdef DEBUG	
+#ifdef DEBUG
 	kprintf("copy map from %d to %d\n", from, to);
-#endif	
+#endif
 
 	slot = make_present(from, SLOT_ANY, 1);
 	if (slot == NO_SLOT)
@@ -512,8 +522,7 @@ static uint_fast8_t map_copy(ptptr p, ptptr c)
 	   as we fork */
 	unlock_pages();
 	dump_map("pre copy");
-	kprintf("forking %p to %p pmap %d to %d\n",
-		pp, cp, p->p_page, c->p_page);
+
 	for (i = 0; i < top_bank; i++) {
 		if (*pp != NO_PAGE) {
 			*cp = alloc_page();
@@ -656,6 +665,7 @@ usize_t pagemap_mem_used(void)
 	return ct << (PAGE_SHIFT - 10);
 }
 
+#ifndef CONFIG_LEVEL_0
 /*
  *	An address is valid if it lies between the start of the code
  *	and the brk address or between the bottom and top of the stack.
@@ -676,11 +686,10 @@ usize_t valaddr(const uint8_t * pp, usize_t l)
 		n = l;
 	if (n)
 		return n;
-	kprintf("addr %p not valid base %p end %p\n",
-		p, udata.u_codebase, udata.u_break);
 	udata.u_error = EFAULT;
 	return 0;
 }
+#endif
 
 /*
  *	Called by the disk management layers when they find
@@ -704,7 +713,6 @@ void pagefile_add_blocks(unsigned blocks)
 	   as busy */
 	allocation[0] = 0x01;
 	size <<= 3;
-	kprintf("Swap: %d pages.\n", size);
 	freepages = size;
 }
 
@@ -755,7 +763,6 @@ arg_t brk_extend(uaddr_t addr)
 	if (nl - mi->low > freepages)
 		return ENOMEM;
 
-	kprintf("brk_extend %p\n", addr);
 	dump_map("extend");
 	/* Fill in the pages */
 	for (i = mi->low; i < nl; i++) {
