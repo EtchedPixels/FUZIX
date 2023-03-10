@@ -229,8 +229,8 @@ bad_boot:
 stop:		bra	stop
 
 setlba:
-		btst.b	#7,-2(a6)		; SD type in top word of RAM
-						; bit 7 set for block mode
+		btst.b	#6,-2(a6)		; SD type in top word of RAM
+						; bit 6 set for block mode
 		beq	byte_offset
 		move.b	d7,4(a1)
 		rts
@@ -255,12 +255,12 @@ ffclock:
 		cmp.b	#1,d0
 		bne	old_card
 		bsr	get4		; bufptr back in a0
-		cmp.w	#$AA01,2(a0)
+		cmp.w	#$01AA,2(a0)
 		bne	not_sd
 wait41:
 		lea	acmd41(pc),a1
 		bsr	sendacmd
-		beq	wait41
+		bne	wait41
 		lea	cmd58(pc),a1
 		bsr	sendcmd
 		bne	not_sd
@@ -413,11 +413,12 @@ sendbit:
 
 get4:
 		moveq	#3,d1
-getl:
 		lea.l	$10000,a0
+getl:
 		bsr	sendff
 		move.b	d0,(a0)+
 		dbra.w	d1,getl
+		lea.l	$10000,a0
 		rts
 
 outstr:
