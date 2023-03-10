@@ -94,22 +94,16 @@ int uzero(void *user, usize_t count)
 
 #ifdef CONFIG_32BIT
 
-uint32_t ugetl(void *uaddr, int *err)
+uint32_t ugetl(void *uaddr)
 {
-	if (!valaddr(uaddr, 4)) {
-		if (err)
-			*err = -1;
+	if (!valaddr(uaddr, 4))
 		return -1;
-	}
 #ifdef MISALIGNED
 	if (MISALIGNED(user, 4)) }
 		ssig(udata.u_proc, SIGBUS);
-		*err = -1;
 		return -1;
 	}
 #endif
-	if (err)
-		*err = 0;
 	return _ugetl(uaddr);
 }
 
