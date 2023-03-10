@@ -37,11 +37,11 @@
 #define MAPBASE	    0x0800  /* We map from 0x0800 */
 #define PROGBASE    0x0800  /* also data base */
 #define PROGLOAD    0x0800
-#define PROGTOP     0xC000  /* When we hit the data space */
+#define PROGTOP     0xBE00  /* When we hit the data space */
 
-#define SWAP_SIZE   0x60	/* 48K - allow for udata and our magic */
+#define SWAP_SIZE   0x5F	/* 47.5K - allow for udata and our magic */
 #define SWAPBASE    0x0800	/* FIXME: will need to swap ZP and stack too */
-#define SWAPTOP	    0xC000
+#define SWAPTOP	    0xBE00
 #define MAX_SWAPS   PTABSIZE
 #define swap_map(x)	((uint8_t *)(x))
 

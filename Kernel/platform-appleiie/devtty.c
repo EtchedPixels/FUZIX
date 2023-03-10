@@ -136,7 +136,7 @@ static uint8_t *vtmap[24] = {
 };
 
 /* Simple driver for 40 column text */
-
+/* 80 we just need to shift x right 1 and use the low bit as bank self */
 void plot_char(int8_t y, int8_t x, uint16_t c)
 {
 	*(vtmap[y] + x) = ((uint8_t)c) | 128;

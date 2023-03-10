@@ -56,9 +56,6 @@ Later
 - Add a multiple binary kernel to use RAMworks banking
 - Can we do double hires then ?
 
-
-Use a modern cc65 from https://github.com/cc65/cc65
-
 Our planned memory mapping looks like this
 
 	0000-00FF	Zero Page
@@ -130,4 +127,35 @@ TODO
   as it's not yet a supported configuration)
 
 
+If we want to run from ProDOS at least to get going then we need a map
+of
+
+Main:
+0000-07FF	Mostly owned by ProDOS
+		Plus vectors/screen etc
+		(see if we can find 512 bytes to steal for a buffer)
+0800-BEFF	Fuzix user space (0A if can't find a buffer hole)
+BF00-BFFF	ProDOS
+C000-CFFF	Firmware and I/O
+D000-FFFF	ProDOS
+
+Alt
+0000-00FF	Fuzix ZP
+0100-01FF	Fuzix CPU stack
+0200-07FF	Various and screen (check
+		as some bits may be ProDOS)
+0800-BEFF	Kernel
+BF00-BFFF	??? (may be ours)
+D000-FFF9	Fuzix common | maybe bank buffers in alt 4K
+FFFA-FFFF	Vectors
+
+Limitations with ProDOS
+- Can only load directly into 0800-BEFF in main (so put user there)
+- Not clear we can make effective use of its interrupt hooks
+
+Supplies us with raw disk I/O for each device, tables of devices, rtc.
+Doesn't supply keyboard/screen etc.
+
+With 256K+ Ramworks model can change - goes for a multi task model with
+kernel in base (as we can't fast I/O to user easily) and user in 1+
 

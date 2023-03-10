@@ -48,7 +48,7 @@ _dos_op:
 	jmp (ptr1)
 
 ;
-;	The caller loads up to 9 bytes of data intot his buffer
+;	The caller loads up to 9 bytes of data into this buffer
 ;
 	.bss
 _pascal_cmd:	.res 9
