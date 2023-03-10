@@ -24,7 +24,6 @@
  *		excess thrashing by marking the pages of the task we
  *		are switching too as less aged than others before
  *		we do the magic
- *	-	Clean up some of the overcomplex algorithms
  *	-	Fix the corner cases (eg realloc) where we page in a
  *		new page we should just instantiate
  *	-	Sort out the swap size reporting in free
@@ -34,7 +33,6 @@
  *	PAGE_SHIFT -	bytes to pages
  *
  *	NBANK     -	max number of page slots for the address space
- *	NCACHE	  -	number of cache slots
  *	NPAGE	  -	number of pages (max 0x7E)
  *
  */
@@ -100,18 +98,10 @@ static struct meminfo meminfo[PTABSIZE];
    is small */
 static uint8_t pagemap[PTABSIZE][NBANK];
 
-/* Map of pages. Given our limit is 126 this may actually be cheaper
-   as a 126 byte array than the bitwangling code. TODO check this */
-static uint8_t allocation[NPAGE / 8];	/* We mark page 0 always busy */
-static uint8_t freepages;
-
-/* Recent free pages cache, avoids most bitmap traffic. See size note
-   above. Sometimes more data is less code */
-static uint8_t cache[NCACHE];
-static uint8_t cacheptr = 0;
-
-/* So we walk the bitmap circularly */
-static uint8_t *pagen = allocation;
+/* Page map: turns out for the max of 126 entries it's cheaper to keep
+   a stack than all the funky bitmap stuff */
+static uint8_t allocation[NPAGE];	/* We mark page 0 always busy */
+static uint_fast8_t freepages;
 
 #ifdef DEBUG
 
@@ -142,39 +132,13 @@ static void dump_map(const char *p)
 #define dump_map(x)	do {} while(0);
 #endif
 
-/* Allocate a page entry. The caller provided the byte
-   holding a free page */
-static uint8_t pagebits(uint8_t * p)
-{
-	uint8_t n = *p;
-	uint8_t i = 7;
-	/* We never pass in 0xFF */
-	while (n & 0x80) {
-		n <<= 1;
-		i--;
-	}
-	*p |= (1 << i);
-	return ((p - allocation) << 3)| i;
-}
-
-/* Page allocation. We keep a tiny cache and a bitmap. We don't
-   deal with shared pages yet */
+/* Page allocation. We don't deal with shared pages yet */
 static uint_fast8_t alloc_page(void)
 {
-	uint8_t *pb = pagen;
 	sysinfo.swapusedk += PAGE_SIZE >> 10;
-	freepages--;
-	if (cacheptr)
-		return cache[--cacheptr];
-	do {
-		if (*pagen != 0xFF)
-			return pagebits(pagen);
-		pagen++;
-		if (pagen == allocation + sizeof(allocation))
-			pagen = allocation;
-	} while(pagen != pb);
-	/* Should never occur as we page count */
-	panic("ap: none");
+	if (freepages == 0)
+		panic("ap: no pages");
+	return allocation[--freepages];
 }
 
 /* We only ever free pages that are mapped in. It
@@ -185,17 +149,13 @@ static void free_page(uint_fast8_t page, uint_fast8_t slot)
 	/* Handling shared pages would require making this
 	   smarter */
 	struct mem *mp = mem + slot;
-	sysinfo.swapusedk += PAGE_SIZE >> 10;
+	sysinfo.swapusedk -= PAGE_SIZE >> 10;
 
 	if (P_PAGE(mp) != page)
 		panic("pgfree");
 
 	mp->page = NO_PAGE;
-	freepages++;
-	if (cacheptr < NCACHE)
-		cache[cacheptr++] = page;
-	else
-		allocation[page >> 3] &= ~(1 << (page & 7));
+	allocation[freepages++] = page;
 }
 
 /* Pages are 1:1 in swap by number. Saves tracking and
@@ -698,22 +658,20 @@ usize_t valaddr(const uint8_t * pp, usize_t l)
 void pagefile_add_blocks(unsigned blocks)
 {
 	unsigned size = blocks >> (PAGE_SHIFT - BLKSHIFT);
+	uint8_t *p;
 
 	if (size > NPAGE)
 		size = NPAGE;
 
-	/* FIXME: slightly off if not a multiple of 8 pages */
-	sysinfo.swapk += size << (PAGE_SHIFT - 10);
-	
-	/* Into groups of 8 pages */
-	size >>= 3;
-	memset(allocation + size, 0xFF, NPAGE - size);
+	sysinfo.swapk = size << (PAGE_SHIFT - 10);
 
-	/* The first page was pre-emptively borrowed for init so mark it
-	   as busy */
-	allocation[0] = 0x01;
-	size <<= 3;
-	freepages = size;
+	/* Fill the allocation stack */
+	freepages = size - 1 ;
+	p = allocation;
+	/* Page 0 was sneakily pre-allocated when we created the init
+	   task earlier */
+	while(--size)
+		*p++ = size;
 }
 
 /*
