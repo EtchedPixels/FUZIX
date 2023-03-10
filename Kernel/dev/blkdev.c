@@ -107,7 +107,7 @@ static int blkdev_transfer(uint_fast8_t minor, uint_fast8_t rawflag)
             if (d_blkoff(BLKSHIFT))
                 return -1;
             break;
-#ifdef SWAPDEV
+#if defined(SWAPDEV) || defined(PAGEDEV)
         case 2:
             blk_op.swap_page = swappage;
             break;

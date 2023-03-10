@@ -35,9 +35,11 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 			return -1;
 		td_page = udata.u_page;	/* User space */
 	}
-#ifdef SWAPDEV
+#if defined(SWAPDEV) || defined(PAGEDEV)
 	else if (rawflag == 2)
 		td_page = swappage;
+#else
+	else goto error;
 #endif
 
 	lba = udata.u_block;

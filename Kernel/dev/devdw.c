@@ -29,7 +29,7 @@ static int dw_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
             return -1;
         page = udata.u_page;
     } else if (rawflag == 2) {
-#ifdef SWAPDEV
+#if defined(SWAPDEV) || defined(PAGEDEV)
         page = (uint16_t)swappage;
 #else
 	goto bad2;

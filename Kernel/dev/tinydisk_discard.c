@@ -30,6 +30,21 @@ static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 }
 #endif
 
+#ifdef CONFIG_DYNAMIC_PAGE
+static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
+{
+	uint32_t off;
+
+	if (swap_dev != 0xFFFF)
+		return;
+	kputs("(page) ");
+	swap_dev = minor;	/* major is 0 */
+	off = le32_to_cpu(pe->lba_count);
+
+	pagemap_frames(off);
+}
+#endif
+
 static uint_fast8_t tinydisk_setup(uint16_t dev)
 {
 	uint32_t *lba = td_lba[dev];
@@ -52,7 +67,7 @@ static uint_fast8_t tinydisk_setup(uint16_t dev)
 				kprintf("hd%c%d ", 'a' + dev, ++c);
 				*++lba = le32_to_cpu(pe->lba_first);
 			}
-#ifdef CONFIG_DYNAMIC_SWAP
+#if defined(CONFIG_DYNAMIC_SWAP) || defined(CONFIG_DYNAMIC_PAGE)
 			if (pe->type_chs_last[0] == FUZIX_SWAP)
 				swap_found((dev << 4) | c, pe);
 #endif
