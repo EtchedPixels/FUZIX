@@ -21,9 +21,9 @@ extern uint16_t page_dev;
 #define CONFIG_PLATFORM_BRK
 
 #define PAGE_SIZE	2048	/* More would be more efficient but we want */
-#define PAGE_SHIFT	11	/* to scrap everything together we can */
-#define NBANK		48
-#define NPAGE		126	/* The max will be fine */
+#define PAGE_SHIFT	11	/* to scrape everything together we can */
+#define NBANK		40
+#define NPAGE		127	/* The max will be fine */
 
 #define CONFIG_BANKS 	(65536/PAGE_SIZE)
 
