@@ -13,12 +13,13 @@
  *	-	Single address space. Pages exist either on disk or in
  *		the mapped address space. There is no provision for them
  *		to be elsewhere
+ *	-	Platform has a pure a_text. If that isn't the case then
+ *		you'll need to add defines to disable sharing.
  *
  *	TODO:
  *	-	Review the pathalogical edge cases when we are using
  *		all of the map pages and we have brk and stack into the
  *		same page.
- *	-	Sort out the swap size reporting in free
  *
  *	Parameters
  *	PAGE_SIZE -	size of pages (must be at least 1K currently)
@@ -59,8 +60,8 @@ struct mem {
 	uint8_t age;
 };
 
-/* Not clear we can't get rid of this */
 struct meminfo {
+	uint8_t texttop;	/* Shared to this point */
 	uint8_t low;
 	uint8_t high;
 	uaddr_t stackbot;
@@ -92,7 +93,8 @@ static uint8_t pagemap[PTABSIZE][NBANK];
 
 /* Reverse mapping table. In theory we could combine this with the allocation
    map at some point and maybe save space at a small scanning cost. Also our
-   free page table */
+   free page table. This works with shared pages because the page will only
+   ever be in one map location */
 static uint8_t rmap[NPAGE];
 static uint_fast8_t freepages;
 static uint8_t *freeptr = rmap;
@@ -103,6 +105,8 @@ static uint8_t *freeptr = rmap;
 
 #ifdef DEBUG
 
+static unsigned shared_page(uint8_t *pp);
+
 /* Dump the map state */
 static void dump_map(const char *p)
 {
@@ -110,8 +114,13 @@ static void dump_map(const char *p)
 	unsigned i;
 	kprintf("%s: map [ ", p);
 	mp = &pagemap[udata.u_page][0];
-	for (i = 0; i < top_bank; i++)
+	for (i = 0; i < top_bank; i++) {
+		if (shared_page(mp))
+			kputchar('S');
+		else
+			kputchar('P');
 		kprintf("%2x ", *mp++);
+	}
 	kprintf(" ]\n");
 	kprintf("phys map [ ");
 	for (i = 0; i < top_bank; i++) {
@@ -144,22 +153,52 @@ static uint_fast8_t alloc_page(void)
 	return freeptr - rmap;
 }
 
+/* Only triggers on a few cases so whilst this is slow it's ok */
+static unsigned shared_page(uint8_t *pp)
+{
+	uint8_t *p = &pagemap[0][0];
+	uint8_t *e = p + sizeof(pagemap);
+	uint8_t page = *pp;
+
+	while(p < e) {
+		if (*p == page && p != pp)
+			return 1;
+		p++;
+	}
+	return 0;
+}
+
+/* Reuse a page unless it is shared, in which case we allocate ourselves
+   a new one */
+static void unshare_page(uint_fast8_t *pp)
+{
+	if (shared_page(pp))
+		*pp = alloc_page();
+}
+
 /* We only ever free pages that are mapped in. It
    would be easy enough to handle slot 0xFF as a flag
    otherwise but it's not needed */
-static void free_page(uint_fast8_t page, uint_fast8_t slot)
+static void free_page(uint_fast8_t *pp, uint_fast8_t slot, unsigned unshared)
 {
 	/* Handling shared pages would require making this
 	   smarter */
-	struct mem *mp = mem + slot;
-	sysinfo.swapusedk -= PAGE_SIZE >> 10;
 
-	if (P_PAGE(mp) != page)
+	struct mem *mp = mem + slot;
+	if (!unshared && shared_page(pp)) {
+		/* Remove from this map but leave elsewhere */
+		*pp = NO_PAGE;
+		return;
+	}
+
+	sysinfo.swapusedk -= PAGE_SIZE >> 10;
+	if (P_PAGE(mp) != *pp)
 		panic("pgfree");
-	if (rmap[page] != slot)
+	if (rmap[*pp] != slot)
 		panic("pgfree2");
 	mp->page = NO_PAGE;
-	rmap[page] = FREE;
+	rmap[*pp] = FREE;
+	*pp = NO_PAGE;
 	freepages++;
 }
 
@@ -413,7 +452,7 @@ static void unlock_pages(void)
  *	Our caller has all our pages in use pinned and present so
  *	we can safely remap without asking for swapin
  */
-void realloc_map(uint8_t low, uint8_t high)
+void realloc_map(uint8_t low, uint8_t high, uint8_t oldshared)
 {
 	/* Maybe check pages needed to add versus total swap
 	   for oom case */
@@ -428,20 +467,21 @@ void realloc_map(uint8_t low, uint8_t high)
 	for (i = 0; i < low; i++) {
 		if (*mp == NO_PAGE)
 			*mp = alloc_page();
+		else if (i < oldshared)
+			unshare_page(mp);
 		mp++;
 	}
 	while (i < high) {
-		if (*mp != NO_PAGE) {
-			free_page(*mp, i);
-			*mp = NO_PAGE;
-		}
+		if (*mp != NO_PAGE)
+			free_page(mp, i, i >= oldshared);
 		mp++;
 		i++;
 	}
-
 	while (i < top_bank) {
 		if (*mp == NO_PAGE)
 			*mp = alloc_page();
+		else if (i < oldshared)
+			unshare_page(mp);
 		mp++;
 		i++;
 	}
@@ -500,7 +540,7 @@ static uint_fast8_t map_copy(ptptr p, ptptr c)
 	uint8_t *cp = &pagemap[c->p_page][0];
 	struct meminfo *mi = meminfo + p->p_page;
 
-	if (top_bank - mi->high + mi->low > freepages)
+	if (top_bank - mi->high + mi->low - mi->texttop > freepages)
 		return ENOMEM;
 
 	/* To allow all memory to be mapped we need to unlock
@@ -511,9 +551,13 @@ static uint_fast8_t map_copy(ptptr p, ptptr c)
 
 	for (i = 0; i < top_bank; i++) {
 		if (*pp != NO_PAGE) {
-			*cp = alloc_page();
-			/* This will have to handle paging and pinning both pages */
-			copy_map(*pp, *cp);
+			if (i < mi->texttop)
+				*cp = *pp;
+			else {
+				*cp = alloc_page();
+				/* This will have to handle paging and pinning both pages */
+				copy_map(*pp, *cp);
+			}
 		} else
 			*cp = NO_PAGE;
 		pp++;
@@ -551,6 +595,7 @@ int pagemap_alloc(ptptr p)
 		/* Manufacturing init */
 		pt = &pagemap[p->p_page][0];
 		mi->low = 0;
+		mi->texttop = 0;
 		mi->high = top_bank;
 		memset(pt, NO_PAGE, NBANK);
 		/* This is hairy as we don't have any swap backing set
@@ -585,11 +630,12 @@ void pagemap_free(ptptr p)
 {
 	/* Actually always called with p as the current process */
 	uint8_t *mp = &pagemap[udata.u_page][0];
+	uint8_t ttop = meminfo[p->p_page].texttop;
 	uint_fast8_t i;
 
 	for (i = 0; i < top_bank; i++) {
 		if (*mp != NO_PAGE)
-			free_page(*mp, i);
+			free_page(mp, i, i >= ttop);
 		mp++;
 	}
 }
@@ -614,13 +660,21 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	nh += PAGE_SIZE - 1;
 	nh >>= PAGE_SHIFT;
 
-	if (nl + nh - has > freepages)
+	if (nl + nh + m->texttop - has > freepages) {
+		/* This is slightly pessimistic. In the case this fails
+		   we ought to count our shared pages the hard way to make
+		   sure TODO */
 		return ENOMEM;
+	}
 
 	/* This also maps the pages as desired */
-	realloc_map(nl, top_bank - nh);
+	realloc_map(nl, top_bank - nh, m->texttop);
 	m->high = top_bank - nh;
 	m->low = nl;
+	/* A shared page must be totally text so may not have any. Partial
+	   pages are not shared */
+	m->texttop = hdr->a_text / PAGE_SIZE;
+
 	udata.u_codebase = page_base;
 	/* Single mapping for now */
 	udata.u_database = udata.u_codebase + hdr->a_text;
@@ -647,6 +701,7 @@ usize_t pagemap_mem_used(void)
 	for (i = 0; i < top_bank; i++) {
 		if (m->page != NO_PAGE)
 			ct++;
+		m++;
 	}
 	return ct << (PAGE_SHIFT - 10);
 }
@@ -655,6 +710,8 @@ usize_t pagemap_mem_used(void)
 /*
  *	An address is valid if it lies between the start of the code
  *	and the brk address or between the bottom and top of the stack.
+ *
+ *	TODO: extend valaddr to pass write v read info
  */
 usize_t valaddr(const uint8_t * pp, usize_t l)
 {
@@ -734,7 +791,8 @@ arg_t brk_extend(uaddr_t addr)
 	uint_fast8_t nl;
 	int i;
 
-	if (addr < udata.u_codebase)
+	/* Cannot'brk into code */
+	if (addr < udata.u_database)
 		return EINVAL;
 	if (addr >= mi->stackbot - 512)
 		return ENOMEM;
