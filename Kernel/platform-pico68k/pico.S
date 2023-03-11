@@ -128,6 +128,7 @@ spi_rx_byte:
 	move.b	d1,d2
 	or.b	#$02,d1			; Clock high in D1
 	and.b	#$FD,d2			; Clock low in D2
+	moveq	#1,d4
 	; Entry point if already have the precalc values
 spi_rx_next:
 	; Unrolled for speed for SD card use
@@ -137,65 +138,67 @@ spi_rx_next:
 	move.b	d1,(a0)			; With CLK high
 	; Bus should now hold our bit to sample
 	move.b	(a0),d3			; Bit 7
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	; Bit 1
 	move.b	d2,(a0)			; With CLK low
 	move.b	d1,(a0)			; With CLK high
 	move.b	(a0),d3
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	; Bit 2
 	move.b	d2,(a0)			; With CLK low
 	move.b	d1,(a0)			; With CLK high
 	move.b	(a0),d3
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	; Bit 3
 	move.b	d2,(a0)			; With CLK low
 	move.b	d1,(a0)			; With CLK high
 	move.b	(a0),d3
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	; Bit 4
 	move.b	d2,(a0)			; With CLK low
 	move.b	d1,(a0)			; With CLK high
 	move.b	(a0),d3
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	; Bit 5
 	move.b	d2,(a0)			; With CLK low
 	move.b	d1,(a0)			; With CLK high
 	move.b	(a0),d3
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	; Bit 6
 	move.b	d2,(a0)			; With CLK low
 	move.b	d1,(a0)			; With CLK high
 	move.b	(a0),d3
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	; Bit 7
 	move.b	d2,(a0)			; With CLK low
 	move.b	d1,(a0)			; With CLK high
 	move.b	(a0),d3
-	lsl.b	#1,d3
-	roxl.b	#1,d0
+	lsl.b	d4,d3
+	roxl.b	d4,d0
 	rts
 
 spi_tx_byte:
 	move.l	#$30002,a0		; VIA data A
+	moveq	#1,d3
+	moveq	#$02,d4
 spi_tx_next:
 	move.b	(a0),d1
 	or.b	#3,d1			; Set clock, data
 	moveq	#7,d2
 spi_tx_bit:
-	lsr.b	#1,d1			; data right
-	roxl.b	#1,d0			; Data bit
-	roxl.b	#1,d1			; Into the low bit
-	subq	#$02,d1			; Minus clock
+	lsr.b	d3,d1			; data right
+	roxl.b	d3,d0			; Data bit
+	roxl.b	d3,d1			; Into the low bit
+	sub.b	d4,d1			; Minus clock
 	move.b	d1,(a0)
-	addq	#$02,d1			; Plus clock
+	add.b	d4,d1			; Plus clock
 	move.b	d1,(a0)
 	dbra.w	d2,spi_tx_bit
 	rts
@@ -204,48 +207,48 @@ spi_tx_bit:
 ;	Wrappers for C calling
 ;
 sd_spi_receive_byte:
-	movem.l	d2-d3,-(sp)
+	movem.l	d2-d4,-(sp)
 	bsr	spi_rx_byte
-	movem.l	(sp)+,d2-d3
+	movem.l	(sp)+,d2-d4
 	rts
 
 sd_spi_transmit_byte
-	movem.l	d2-d3,-(sp)
-	move.l	12(sp),d0
+	movem.l	d2-d4,-(sp)
+	move.l	16(sp),d0
 	bsr	spi_tx_byte
-	movem.l	(sp)+,d2-d3
+	movem.l	(sp)+,d2-d4
 	rts
 
 ;
 ;	For an SD card this is the most critical path
 ;
 sd_spi_receive_sector:
-	movem.l	a2/d2-d4,-(sp)
+	movem.l	a2/d2-d5,-(sp)
 	; Get the argument - address of buffer
 	; As we are a flat system we don't have to worry about
 	; kernel v user etc
-	move.l	20(sp),a2
-	move.w	#510,d4
+	move.l	24(sp),a2
+	move.w	#510,d5
 	; This first call primes all the register setup
 	bsr	spi_rx_byte
 	move.b	d0,(a2)+
 rx_block:
 	bsr	spi_rx_next
 	move.b	d0,(a2)+
-	dbra.w	d4,rx_block
-	movem.l	(sp)+,a2/d2-d4
+	dbra.w	d5,rx_block
+	movem.l	(sp)+,a2/d2-d5
 	rts
 
 sd_spi_transmit_sector:
-	movem.l	a2/d2-d4,-(sp)
-	move.l	20(sp),a2
-	move.w	#510,d4
+	movem.l	a2/d2-d5,-(sp)
+	move.l	24(sp),a2
+	move.w	#510,d5
 	; This first call primes all the register setup
 	move.b	(a2)+,d0
 	bsr	spi_tx_byte
 tx_block:
 	move.b	(a2)+,d0
 	bsr	spi_tx_next
-	dbra.w	d4,tx_block
-	movem.l	(sp)+,a2/d2-d4
+	dbra.w	d5,tx_block
+	movem.l	(sp)+,a2/d2-d5
 	rts
