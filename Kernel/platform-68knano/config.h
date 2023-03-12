@@ -11,7 +11,7 @@
 #define CONFIG_SYSCLK	12000000	/* 12MHz */
 
 /* Enable to make ^Z dump the inode table for debug */
-#define CONFIG_IDUMP
+#undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
 #undef CONFIG_MONITOR
 /* Profil syscall support (not yet complete) */
