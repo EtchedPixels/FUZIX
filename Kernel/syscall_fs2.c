@@ -341,7 +341,7 @@ arg_t _utime(void)
 	if (buf) {
 	        if (ino->c_node.i_uid != udata.u_euid && esuper())
 			goto out;
-		if (!valaddr(buf, 2 * sizeof(time_t)))
+		if (!valaddr_r(buf, 2 * sizeof(time_t)))
 			goto out2;
 		uget(buf, t, 2 * sizeof(time_t));
 	} else {

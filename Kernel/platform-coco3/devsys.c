@@ -4,7 +4,7 @@
 
 int plt_dev_ioctl(uarg_t request, char *data)
 {
-    if (!valaddr((unsigned char *)data, 2))
+    if (!valaddr_w((unsigned char *)data, 2))
 	goto bad;
     switch (request){
     case CPUIOC_6809SWI2:

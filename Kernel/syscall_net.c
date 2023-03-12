@@ -142,7 +142,7 @@ arg_t _netcall(void)
 	int n;
 	inoptr ino = NULL;
 
-	if (valaddr(argptr, sizeof(udata.u_net.args)) !=
+	if (valaddr_r(argptr, sizeof(udata.u_net.args)) !=
 	    sizeof(udata.u_net.args)) {
 		udata.u_error = EFAULT;
 		return -1;
@@ -175,6 +175,7 @@ arg_t _netcall(void)
 	   in some protocols */
 	if (op & N_DATAIO) {
 		udata.u_base = (void *) *ap;
+		/* FIXME: need to distinguish direction */
 		s = valaddr((void *) *ap, ap[1]);
 		if (s == 0 && ap[1])
 			return -1;

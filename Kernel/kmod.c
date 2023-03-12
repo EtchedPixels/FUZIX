@@ -33,7 +33,7 @@ int kmod_ioctl(uarg_t request, char *data)
         }
         /* It worked, commit the space and load */
         data += sizeof(m);
-        if (valaddr(data, m.size) != m.size) {
+        if (valaddr_r(data, m.size) != m.size) {
             udata.u_error = EFAULT;
             return -1;
         }

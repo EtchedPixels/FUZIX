@@ -313,7 +313,7 @@ arg_t _waitpid(void)
 	int retval;
 	uint8_t found;
 
-	if (statloc && !valaddr((uint8_t *) statloc, sizeof(int))) {
+	if (statloc && !valaddr_w((uint8_t *) statloc, sizeof(int))) {
 		udata.u_error = EFAULT;
 		return (-1);
 	}
@@ -512,7 +512,7 @@ arg_t _signal(void)
 		if (sig != SIGKILL && sig != SIGSTOP)
 			sb->s_ignored |= sigmask(sig);
 	} else {
-		if (func != SIG_DFL && !valaddr((uint8_t *) func, 1)) {
+		if (func != SIG_DFL && !valaddr_r((uint8_t *) func, 1)) {
 			udata.u_error = EFAULT;
 			goto nogood;
 		}

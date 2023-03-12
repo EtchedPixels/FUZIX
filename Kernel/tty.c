@@ -109,7 +109,7 @@ int tty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 	used(rawflag);
 
-	if (!valaddr(udata.u_base, udata.u_count))
+	if (!valaddr_r(udata.u_base, udata.u_count))
 		return -1;
 
 	t = &ttydata[minor];

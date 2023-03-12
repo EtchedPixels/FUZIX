@@ -498,7 +498,7 @@ arg_t _profil(void)
 		return 0;
 	}
 
-	if (!valaddr(samples, size >> (scale - 1)))
+	if (!valaddr_w(samples, size >> (scale - 1)))
 		return -1;
 
 	p->p_profscale = scale;

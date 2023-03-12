@@ -412,6 +412,7 @@ static arg_t readwrite(uint_fast8_t reading)
 	        return -1;
 	}
 
+	/* FIXME: need a valaddr that takes 3 args + _r ?? */
 	if (!valaddr(buf, nbytes))
 	        return -1;
 

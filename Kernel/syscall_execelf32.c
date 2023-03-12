@@ -216,7 +216,7 @@ arg_t _execve(void)
 			kprintf("loading %p bytes from %p to %p\n", ssize, udata.u_offset, udata.u_base);
 #endif
 
-			if (valaddr(udata.u_base, udata.u_count) != udata.u_count) {
+			if (valaddr_r(udata.u_base, udata.u_count) != udata.u_count) {
 #ifdef DEBUG
 				kprintf("failed: invalid address range\n");
 #endif

@@ -178,6 +178,8 @@ int si_ioctl(uint_fast8_t dev, uarg_t req, char *data)
 	memcpy(&si_dcb, &sip.si_dcb, sizeof(si_dcb));
 
 	/* Make sure the address given for the user mode I/O is valid */
+	/* FIXME: needs to depend on the end - and need to tidy up the
+	   ioctl anyway */
 	if (!valaddr((void *)sip.si_data, sip.si_dcb.length))
 		return -1;
 	/* Set it up as a user mode read/write */
