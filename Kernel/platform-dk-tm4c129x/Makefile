@@ -1,8 +1,6 @@
 CSRCS = libc.c tm4c129x.c devtty.c devsdspi.c devices.c systick.c \
         syscall.c ssi.c procman.c eth.c gpio.c interrupt.c clock.c
-ifeq ($(BITS),elf32)
-CSRCS += elf.c
-endif
+
 ASRCS = tricks.S arm_exception.S
 
 GCC_CSRCS = libgcc2.c
@@ -10,7 +8,7 @@ GCC_ASRCS = libgcc.S
 GCC_COBJS = $(GCC_CSRCS:.c=$(BINEXT))
 GCC_AOBJS = $(GCC_ASRCS:.S=.o)
 
-LCSRCS =
+LCSRCS = armrelocate.c
 LOBJS = $(LCSRCS:.c=$(BINEXT))
 
 DSRCS = blkdev.c mbr.c devsd.c devsd_discard.c
@@ -65,7 +63,7 @@ image:
 	../syscall_proc.o ../syscall_net.o ../syscall_other.o \
 	../network.o ../mm.o ../swap.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
-	../syscall_fs3.o ../syscall_exec.o ../syscall_exec$(BITS).o \
+	../syscall_fs3.o ../syscall_exec.o ../syscall_exec32.o \
 	../syscall_level2.o ../level2.o ../select.o ../blk512.o \
-	../usermem_std-armm4.o ../vt.o ../malloc.o \
+	../usermem_std-armm4.o ../vt.o ../malloc.o armrelocate.o \
 	../font8x8.o >../fuzix.map
