@@ -1742,10 +1742,11 @@ static uint8_t igrb_to_msx(uint8_t c)
 /* We can have up to 4 vt consoles or it may be shadowing serial input */
 int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-  uint8_t map[8];
+  uint_fast8_t is_wr = 0;
   unsigned i = 0;
   unsigned topchar = 256;
   uint8_t c;
+  uint8_t map[8];
 
   if (uart[minor] == &tms_uart) {
   	switch(arg) {
@@ -1794,6 +1795,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		tms9918a_config(map);
 		return 0;
 	case VDPIOC_READ:
+		is_wr = 1;
 	case VDPIOC_WRITE:
 	{
 		struct vdp_rw rw;
@@ -1808,7 +1810,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			return -1;
 		}
 		size = rw.lines * rw.cols;
-		if (valaddr(addr, size) != size) {
+		if (valaddr(addr, size, is_wr) != size) {
 			udata.u_error = EFAULT;
 			return -1;
 		}

@@ -207,7 +207,7 @@ arg_t _execve(void)
 	udata.u_sysio = false;
 
 	/* Should not be possible */
-	if (valaddr(udata.u_base, udata.u_count) != udata.u_count)
+	if (valaddr_r(udata.u_base, udata.u_count) != udata.u_count)
 		goto nogood4;
 	readi(ino, 0);
 	if (udata.u_done != bin_size)

@@ -6,7 +6,7 @@
 #undef DEBUG
 
 /* This checks to see if a user-supplied address is legitimate */
-usize_t valaddr(const uint8_t *base, usize_t size)
+usize_t valaddr(const uint8_t *base, usize_t size, uint_fast8_t is_write)
 {
 	if (base + size < base)
 		size = MAXUSIZE - (usize_t)base + 1;
@@ -17,6 +17,16 @@ usize_t valaddr(const uint8_t *base, usize_t size)
 	if (size == 0)
 		udata.u_error = EFAULT;
 	return size;
+}
+
+usize_t valaddr_r(const uint8_t *pp, usize_t l)
+{
+	return valaddr(pp, l, 0);
+}
+
+usize_t valaddr_w(const uint8_t *pp, usize_t l)
+{
+	return valaddr(pp, l, 1);
 }
 
 uaddr_t pagemap_base(void)

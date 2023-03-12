@@ -190,7 +190,6 @@ void update_keyboard(void)
 	}
 }
 
-
 void kbd_interrupt(void)
 {
 	newkey = 0;
@@ -371,10 +370,12 @@ static uint8_t igrb_to_msx(uint8_t c)
 
 int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-  uint8_t map[8];
-  uint8_t c;
   unsigned i = 0;
+  uint_fast8_t is_wr = 0;
   unsigned topchar = 256;
+  uint8_t c;
+  uint8_t map[8];
+
   if (minor == 1) {
 	switch(arg) {
 	case GFXIOC_GETINFO:
@@ -420,6 +421,7 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		vdp_setup(map);
 		return 0;
 	case VDPIOC_READ:
+		is_wr = 1;
 	case VDPIOC_WRITE:
 	{
 		struct vdp_rw rw;
@@ -434,7 +436,7 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			return -1;
 		}
 		size = rw.lines * rw.cols;
-		if (valaddr(addr, size) != size) {
+		if (valaddr(addr, size, is_wr) != size) {
 			udata.u_error = EFAULT;
 			return -1;
 		}

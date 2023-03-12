@@ -14,7 +14,7 @@
 #if !defined(CONFIG_FLAT) && !defined(CONFIG_VMMU) && !defined(CONFIG_CUSTOM_VALADDR) && !defined(CONFIG_FLAT_SMALL)
 
 /* This checks to see if a user-supplied address is legitimate */
-usize_t valaddr(const uint8_t *base, usize_t size)
+usize_t valaddr(const uint8_t *base, usize_t size, uint_fast8_t is_write)
 {
 	if (base + size < base)
 		size = MAXUSIZE - (usize_t)base + 1;
@@ -27,8 +27,18 @@ usize_t valaddr(const uint8_t *base, usize_t size)
 		udata.u_error = EFAULT;
 	return size;
 }
-#endif
 
+usize_t valaddr_r(const uint8_t *base, usize_t size)
+{
+	return valaddr(base, size, 0);
+}
+
+usize_t valaddr_w(const uint8_t *base, usize_t size)
+{
+	return valaddr(base, size, 1);
+}
+
+#endif
 
 int uget(const void *user, void *dst, usize_t count)
 {

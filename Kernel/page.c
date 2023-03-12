@@ -1,8 +1,8 @@
+#ifdef PAGEDEV
+
 #include <kernel.h>
 #include <kdata.h>
 #include <page.h>
-
-#ifdef PAGEDEV
 
 /*
  *	General purpose helpers used by paging based memory mappers as

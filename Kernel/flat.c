@@ -495,10 +495,8 @@ arg_t _memfree(void)
  *	two allocations are adjacent, therefore we don't allow a copy across
  *	what happens to be a join of two banks. We could fix this but it's not
  *	clear it would be wise!
- *
- *	FIXME: need to fix this due to code/data alignment ?
  */
-usize_t valaddr(const uint8_t *pp, usize_t l)
+usize_t valaddr(const uint8_t *pp, usize_t l, uint_fast8_t is_write)
 {
 	const void *p = pp;
 	const void *e = p + l;
@@ -506,6 +504,11 @@ usize_t valaddr(const uint8_t *pp, usize_t l)
 	unsigned int n = 0;
 	struct memblk *m = &mem[proc]->memblk[0];
 
+#ifdef CONFIG_SPLIT_ID
+	/* First block is R/O */
+	if (is_write)
+		n++;
+#endif		
 	while (n < MAX_BLOCKS) {
 		/* Found the right block ? */
 		if (m->start && p >= m->start && p < m->end) {
@@ -526,6 +529,16 @@ usize_t valaddr(const uint8_t *pp, usize_t l)
 	}
 	udata.u_error = EFAULT;
 	return 0;
+}
+
+usize_t valaddr_r(const uint8_t *pp, usize_t l)
+{
+	return valaddr(pp, l, 0);
+}
+
+usize_t valaddr_w(const uint8_t *pp, usize_t l)
+{
+	return valaddr(pp, l, 1);
 }
 
 #ifdef CONFIG_LEVEL_2		/* Coredump support */

@@ -412,8 +412,8 @@ static arg_t readwrite(uint_fast8_t reading)
 	        return -1;
 	}
 
-	/* FIXME: need a valaddr that takes 3 args + _r ?? */
-	if (!valaddr(buf, nbytes))
+	/* Reading from disk is writing to user space and vice versa... */
+	if (!valaddr(buf, nbytes, reading))
 	        return -1;
 
 	/* Set up u_base, u_offset, ino; check permissions, file num. */

@@ -30,6 +30,8 @@
  *
  */
 
+#ifdef CONFIG_FLAT_SMALL
+
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -40,7 +42,6 @@
 
 extern struct u_data *udata_shadow;
 
-#ifdef CONFIG_FLAT_SMALL
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE	1024
@@ -717,25 +718,38 @@ usize_t pagemap_mem_used(void)
  *
  *	TODO: extend valaddr to pass write v read info
  */
-usize_t valaddr(const uint8_t * pp, usize_t l)
+usize_t valaddr(const uint8_t * pp, usize_t l, uint_fast8_t is_write)
 {
 	struct meminfo *m = meminfo + udata.u_page;
 	usize_t n = 0;
 	uaddr_t p = (uaddr_t) pp;
 
 	/* Code/Data/BSS/Break */
-	if (p >= udata.u_codebase && p < udata.u_break)
-		n = udata.u_break - p;
-	/* Stack (high) */
-	else if (p >= m->stackbot && p <= m->stacktop)
-		n = m->stacktop - p;
-	if (n > l)
-		n = l;
-	if (n)
-		return n;
+	if (!is_write || p >= udata.u_database) {
+		if (p >= udata.u_codebase && p < udata.u_break)
+			n = udata.u_break - p;
+		/* Stack (high) */
+		else if (p >= m->stackbot && p <= m->stacktop)
+			n = m->stacktop - p;
+		if (n > l)
+			n = l;
+		if (n)
+			return n;
+	}
 	udata.u_error = EFAULT;
 	return 0;
 }
+
+usize_t valaddr_r(const uint8_t *pp, usize_t l)
+{
+	return valaddr(pp, l, 0);
+}
+
+usize_t valaddr_w(const uint8_t *pp, usize_t l)
+{
+	return valaddr(pp, l, 1);
+}
+
 #endif
 
 /*

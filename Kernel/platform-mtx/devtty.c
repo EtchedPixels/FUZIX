@@ -598,6 +598,7 @@ static int mtx_vt_ioctl80(uint_fast8_t minor, uarg_t request, char *data)
 int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {
 	uint8_t dev = minor;
+	uint8_t is_wr = 0;
 	uint8_t map[8];
 
 	if (minor >= TTY_SERA)
@@ -647,6 +648,7 @@ int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 		vdp_setup(map);
 		return 0;
 	case VDPIOC_READ:
+		is_wr = 1;
 	case VDPIOC_WRITE:
 	{
 		struct vdp_rw rw;
@@ -661,7 +663,7 @@ int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 			return -1;
 		}
 		size = rw.lines * rw.cols;
-		if (valaddr(addr, size) != size) {
+		if (valaddr(addr, size, is_wr) != size) {
 			udata.u_error = EFAULT;
 			return -1;
 		}
