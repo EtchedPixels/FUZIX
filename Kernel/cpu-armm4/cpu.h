@@ -104,5 +104,6 @@ void swap_blocks(void *, void *, size_t);
 #define NORETURN __attribute__((__noreturn__))
 
 #define CPUTYPE CPUTYPE_ARMM4
+#define CPU_MID MID_ARMM0
 
 #endif /* __ARMM4_CPU_H */

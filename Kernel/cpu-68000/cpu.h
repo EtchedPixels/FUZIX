@@ -39,6 +39,9 @@ extern uint16_t swab(uint16_t);
 /* Pointers are 32bit */
 #define POINTER32
 
+typedef	uint32_t	paddr_t;	/* 32bit physical addresses */
+typedef uint16_t	page_t;		/* Page frame numbering */
+
 /* Sane behaviour for unused parameters */
 #define used(x)
 

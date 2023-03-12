@@ -38,6 +38,7 @@ extern uint16_t swab(uint16_t);
 
 /* Pointers are 32bit */
 #define POINTER32
+typedef uint32_t paddr_t;
 
 /* Sane behaviour for unused parameters */
 #define used(x)
