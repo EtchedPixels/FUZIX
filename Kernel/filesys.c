@@ -50,7 +50,7 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
     /* Check the user address and length. If it's shorter than 512 bytes this
        is fine, but set nameeend accordingly. This allows us to use _ugetc
        in the hot path which saves us a ton of cycles */
-    len = valaddr(namep, 512);
+    len = valaddr_r(namep, 512);
     if (len == 0)
         return NULLINODE;
 
