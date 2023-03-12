@@ -1,12 +1,12 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0100
--b _VECTORS=0xF000
+-b _COMMONMEM=0xF000
 -b _INITIALIZER=0xFD00
 -l z80
 platform-z280rc/crt0.rel
-platform-z280rc/commonmem.rel
 platform-z280rc/z280rc.rel
+platform-z280rc/commonmem.rel
 start.rel
 version.rel
 lowlevel-z80.rel

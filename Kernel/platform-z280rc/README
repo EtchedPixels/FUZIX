@@ -4,7 +4,7 @@ This is a port in progress. It doesn't work yet.
 
 
 Z280RC is a Z280 based SBC with limited support for RC2014 peripherals. Only
-8bit I/O port access to the bus is supported and IM2 cannto be used. In
+8bit I/O port access to the bus is supported and IM2 cannot be used. In
 practice this isn't much of a limitation as the Z280RC is self contained for
 all things that matter.
 

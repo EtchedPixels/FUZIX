@@ -51,6 +51,82 @@
             .include "kernel.def"
             .include "../kernel-z80.def"
 
+
+	.area _COMMONMEM
+;
+;	These must be 4K aligned so put them at the start of common
+;	space for now. This will all change when we start running
+;	with the MMU being used properly.
+;
+;	Interrupt vectors. Kernel and identity mapped
+;
+SUPER	.equ	0x0000		; Supervisor, all ints masked
+
+	.globl _vectors
+
+_vectors:
+	.word	#SUPER		; 00	Reserved
+	.word	invalid
+	.word	#SUPER		; 04	NMI
+	.word	nmi_handler
+	.word	#SUPER		; 08	External Line A
+	.word	external
+	.word	#SUPER		; 0C	External Line B
+	.word	external
+	.word	#SUPER		; 10	External Line C
+	.word	external
+	.word	#SUPER		; 14	CTC 0
+	.word	ctc0
+	.word	#SUPER		; 18	CTC 1
+	.word	ctc1
+	.word	#SUPER		; 1C	Reserved
+	.word	invalid		; The broken undocumented CTC
+	.word	#SUPER		; 20	CTC 2
+	.word	invalid
+	.word	#SUPER		; 24	DMA 0
+	.word	invalid
+	.word	#SUPER		; 28	DMA 1
+	.word	invalid
+	.word	#SUPER		; 2C	DMA 2
+	.word	invalid
+	.word	#SUPER		; 30	DMA 3
+	.word	invalid
+	.word	#SUPER		; 34	UART rx
+	.word	ttyint
+	.word	#SUPER		; 38	UART tx
+	.word	invalid
+	.word	#SUPER		; 3C	Single-step
+	.word	sstep
+	.word	#SUPER		; 40	Breakpoint
+	.word	sigtrap
+	.word	#SUPER		; 44	Divison by zero
+	.word	sigfpe
+	.word	#SUPER		; 48	Stack overflow
+	.word	stackover
+	.word	#SUPER		; 4C	Access violation
+	.word	sigsegv
+	.word	#SUPER		; 50	System call
+	.word	invalid
+	.word	#SUPER		; 54	Privileged instruction
+	.word	sigill
+	.word	#SUPER		; 58	EPU
+	.word	sigill
+	.word	#SUPER		; 5C	EPU
+	.word	sigill
+	.word	#SUPER		; 60	EPU
+	.word	sigill
+	.word	#SUPER		; 64	EPU
+	.word	invalid
+	.word	#SUPER		; 68	Reserved
+	.word	invalid
+	.word	#SUPER		; 6C	Reserved
+	.word	invalid
+
+	; What can follow then is 384 word size vectors for INT A B C
+	; for IM2 style external I/O which we don't use
+
+
+
 ;
 ; Buffers (we use asm to set this up as we need them in a special segment
 ; so we can recover the discard memory into the buffer pool
@@ -111,7 +187,7 @@ init_early:
 	    ld c,#0x06
 	    ld hl,#_vectors		; Vectors on 4K boundary
 	    ld l,h			; Work around crappy linker
-	    ld h,#0
+	    ld h,#0			; top 16 bits of 24bit vector
 ;	    ldctl (c),hl		; into int trap/vector ptr
 	    .byte 0xED, 0x6E
 	    ld c,#0x08
@@ -549,76 +625,6 @@ frames:
 	.word 0x00EA		; Common
 	.word 0x00FA		;
 
-
-;
-;	Interrupt vectors. Kernel and identity mapped
-;
-	.area _VECTORS
-
-SUPER	.equ	0x0000		; Supervisor, all ints masked
-
-	.globl _vectors
-
-_vectors:
-	.word	#SUPER		; 00	Reserved
-	.word	invalid
-	.word	#SUPER		; 04	NMI
-	.word	nmi_handler
-	.word	#SUPER		; 08	External Line A
-	.word	external
-	.word	#SUPER		; 0C	External Line B
-	.word	external
-	.word	#SUPER		; 10	External Line C
-	.word	external
-	.word	#SUPER		; 14	CTC 0
-	.word	ctc0
-	.word	#SUPER		; 18	CTC 1
-	.word	ctc1
-	.word	#SUPER		; 1C	Reserved
-	.word	invalid		; The broken undocumented CTC
-	.word	#SUPER		; 20	CTC 2
-	.word	invalid
-	.word	#SUPER		; 24	DMA 0
-	.word	invalid
-	.word	#SUPER		; 28	DMA 1
-	.word	invalid
-	.word	#SUPER		; 2C	DMA 2
-	.word	invalid
-	.word	#SUPER		; 30	DMA 3
- 	.word	invalid
-	.word	#SUPER		; 34	UART rx
-	.word	ttyint
-	.word	#SUPER		; 38	UART tx
-	.word	invalid
-	.word	#SUPER		; 3C	Single-step
-	.word	sstep
-	.word	#SUPER		; 40	Breakpoint
-	.word	sigtrap
-	.word	#SUPER		; 44	Divison by zero
-	.word	sigfpe
-	.word	#SUPER		; 48	Stack overflow
-	.word	stackover
-	.word	#SUPER		; 4C	Access violation
-	.word	sigsegv
-	.word	#SUPER		; 50	System call
-	.word	invalid
-	.word	#SUPER		; 54	Privileged instruction
-	.word	sigill
-	.word	#SUPER		; 58	EPU
-	.word	sigill
-	.word	#SUPER		; 5C	EPU
-	.word	sigill
-	.word	#SUPER		; 60	EPU
-	.word	sigill
-	.word	#SUPER		; 64	EPU
-	.word	invalid
-	.word	#SUPER		; 68	Reserved
-	.word	invalid
-	.word	#SUPER		; 6C	Reserved
-	.word	invalid
-
-	; What can follow then is 384 word size vectors for INT A B C
-	; for IM2 style external I/O which we don't use
 
 	.area _COMMONMEM
 
