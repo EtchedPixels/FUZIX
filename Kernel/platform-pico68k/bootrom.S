@@ -218,6 +218,8 @@ dataloop:
 		; Note that if you go over block 127 you need to modify
 		; setlba too
 		bne	load_one
+		lea	newline(pc),a0
+		bsr	outstr
 		lea	$10000,a0
 		cmp.l	#$AA556800,(a0)+
 		bne	bad_boot
@@ -472,4 +474,5 @@ sdgood:
 	even
 nosd:
 	ascii "No SD card"
+newline:
 	byte 13,10,0
