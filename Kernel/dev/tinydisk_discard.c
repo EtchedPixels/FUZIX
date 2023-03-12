@@ -11,6 +11,7 @@
 #include "mbr.h"
 
 #ifdef CONFIG_DYNAMIC_SWAP
+
 static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 {
 	uint32_t off;
@@ -31,6 +32,8 @@ static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 #endif
 
 #ifdef CONFIG_DYNAMIC_PAGE
+#include <page.h>
+
 static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 {
 	uint32_t off;
