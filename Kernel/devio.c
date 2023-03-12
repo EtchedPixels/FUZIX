@@ -85,6 +85,7 @@ bufptr bread(uint16_t dev, blkno_t blk, bool rewrite)
 {
 	regptr bufptr bp;
 
+	/* TODO speed up the bfind/freebuf into one pass */
 	if ((bp = bfind(dev, blk)) == NULL) {
 		bp = freebuf();
 		bp->bf_dev = dev;
