@@ -105,7 +105,7 @@ static uint8_t *freeptr = rmap;
 
 #ifdef DEBUG
 
-static unsigned shared_page(uint8_t *pp);
+static unsigned shared_page(uint8_t *pp, uint_fast8_t slot);
 
 /* Dump the map state */
 static void dump_map(const char *p)
@@ -115,7 +115,7 @@ static void dump_map(const char *p)
 	kprintf("%s: map [ ", p);
 	mp = &pagemap[udata.u_page][0];
 	for (i = 0; i < top_bank; i++) {
-		if (shared_page(mp))
+		if (shared_page(mp, i))
 			kputchar('S');
 		else
 			kputchar('P');
@@ -153,26 +153,30 @@ static uint_fast8_t alloc_page(void)
 	return freeptr - rmap;
 }
 
-/* Only triggers on a few cases so whilst this is slow it's ok */
-static unsigned shared_page(uint8_t *pp)
+/*
+ *	We share pages by fork() and we have no messy BSD style
+ *	mmap() to worry about. This means that the page can only
+ *	exist in the same slot in the other maps.
+ */
+static unsigned shared_page(uint8_t *pp, uint_fast8_t slot)
 {
-	uint8_t *p = &pagemap[0][0];
+	uint8_t *p = &pagemap[0][slot];
 	uint8_t *e = p + sizeof(pagemap);
 	uint8_t page = *pp;
 
 	while(p < e) {
 		if (*p == page && p != pp)
 			return 1;
-		p++;
+		p += NBANK;
 	}
 	return 0;
 }
 
 /* Reuse a page unless it is shared, in which case we allocate ourselves
    a new one */
-static void unshare_page(uint_fast8_t *pp)
+static void unshare_page(uint_fast8_t *pp, uint_fast8_t slot)
 {
-	if (shared_page(pp))
+	if (shared_page(pp, slot))
 		*pp = alloc_page();
 }
 
@@ -185,7 +189,7 @@ static void free_page(uint_fast8_t *pp, uint_fast8_t slot, unsigned unshared)
 	   smarter */
 
 	struct mem *mp = mem + slot;
-	if (!unshared && shared_page(pp)) {
+	if (!unshared && shared_page(pp, slot)) {
 		/* Remove from this map but leave elsewhere */
 		*pp = NO_PAGE;
 		return;
@@ -468,7 +472,7 @@ void realloc_map(uint8_t low, uint8_t high, uint8_t oldshared)
 		if (*mp == NO_PAGE)
 			*mp = alloc_page();
 		else if (i < oldshared)
-			unshare_page(mp);
+			unshare_page(mp, i);
 		mp++;
 	}
 	while (i < high) {
@@ -481,7 +485,7 @@ void realloc_map(uint8_t low, uint8_t high, uint8_t oldshared)
 		if (*mp == NO_PAGE)
 			*mp = alloc_page();
 		else if (i < oldshared)
-			unshare_page(mp);
+			unshare_page(mp, i);
 		mp++;
 		i++;
 	}
