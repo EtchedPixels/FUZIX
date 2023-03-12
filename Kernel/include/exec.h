@@ -1,11 +1,11 @@
 /*
- *	Load formats (16bit only here for now)
+ *	Load formats: a.out for bigger stuff, our own for little micros
  */
  
 #ifndef _SYS_EXEC_H
 #define _SYS_EXEC_H
 
-#if defined(__mc68000__) || defined(__ns32k__)
+#if defined(__mc68000__) || defined(__ns32k__) || defined(__ARM_ARCH_7EM__)
 
 #include "a.out.h"
 

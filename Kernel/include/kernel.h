@@ -585,7 +585,7 @@ typedef struct u_data {
     uaddr_t u_texttop;		/* Top of binary text (used for I/D systems) */
 #endif
    /* TODO: A specific define for "32bit" */
-#if defined(__mc68000__) || defined(__ns32k__)
+#if defined(__mc68000__) || defined(__ns32k__) || defined(__ARM_ARCH_7EM__)
     uaddr_t u_database;		/* data base for systems with separate code/data
 				   blocks. FIXME - sort this out in the usermode hdr */
 #endif
