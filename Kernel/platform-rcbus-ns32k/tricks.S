@@ -52,8 +52,8 @@ _switchin:
 
 	movqb P_RUNNING,P_TAB__P_STATUS_OFFSET(r0)
 	movd r6,_udata_shadow(pc)	# For IRQ etc use
-        movd U_DATA__U_SP(r6),r0	# Recover kernel stack pointer
-	lprd sp,r0
+        movd U_DATA__U_SP(r6),r1	# Recover kernel stack pointer
+	lprd sp,r1
 
 	movqd 0,tos
 	movd r0,tos
