@@ -98,9 +98,8 @@ static struct mem *mem_alloc(void)
 static void *kdup(void *p, void *e, uint8_t owner)
 {
 	void *n = kmalloc(e - p, owner);
-	if (n) {
+	if (n)
                 copy_blocks(n, p, (e - p) >> 9);
-	}
 	return n;
 }
 
@@ -239,7 +238,7 @@ void pagemap_switch(ptptr p, int death)
 	int lproc;
 
 #ifdef DEBUG
-	kprintf("%d: ps:store %p mem %p\n", proc, store[proc], mem[proc]);
+	kprintf("%d: ps:store %p mem %p death %d\n", proc, store[proc], mem[proc], death);
 #endif
 	/* We have the right map (unique or we ran the forked copy last) */
 	if (store[proc] == mem[proc]) {
@@ -306,8 +305,7 @@ void pagemap_free(ptptr p)
 		if (m->users > 1) {
 			int n = pagemap_sharer(m);
 #ifdef DEBUG
-			kprintf
-			    ("%d: pagemap_free: busy non live - giving away to %d.\n",
+			kprintf("%d: pagemap_free: busy non live - giving away to %d.\n",
 			     proc, n);
 #endif
 
@@ -399,7 +397,11 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 	udata.u_database = (uaddr_t)mb->start;
 	mb--;
 	udata.u_codebase = (uaddr_t)mb->start;
+#ifdef DEBUG
+	kprintf("code %p - %p, data %p - %p\n", udata.u_codebase, udata.u_codebase + csize - 1, udata.u_database, udata.u_database + size - 1);
+#endif
 #else
+	kprintf("stack size %d\n", a->stacksize);
 	size = a->a_text + a->a_data + a->a_bss + a->stacksize;
 	size = (size + 511) & ~511;
 	mb->start = kmalloc(size, proc);
@@ -411,14 +413,15 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 	pagemap_free(udata.u_ptab);
 	udata.u_codebase = (uaddr_t)mb->start;
 	udata.u_database = udata.u_codebase + a->a_text;
+#ifdef DEBUG
+	kprintf("code %p data %p - %p\n", udata.u_codebase, udata.u_database, udata.u_codebase + size - 1);
+#endif
 #endif
 	/* Tell the exec code where the top of the resulting memory (and
 	   thus where to build the stack) is */
 	udata.u_top = udata.u_database + a->a_data + a->a_bss + a->stacksize;
+	kprintf("u_top %p\n", udata.u_top);
 	store[proc] = mem[proc] = m;
-#ifdef DEBUG
-	kprintf("code %p - %p, data %p - %p\n", udata.u_codebase, udata.u_codebase + csize - 1, udata.u_database, udata.u_database + size - 1);
-#endif
 	return 0;
 }
 
