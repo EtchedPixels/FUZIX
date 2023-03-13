@@ -122,7 +122,7 @@ syscall_handler:
 	lprw psr,r1
 	movqb 0,U_DATA__U_INSYS(r6)
 	movqb 0,_kernel_flag(pc)				
-	movw U_DATA__U_ERROR(r6),r1
+	movzwd U_DATA__U_ERROR(r6),r1
 	cmpqw 0,r1
 	bne sysc_err
 	movd U_DATA__U_RETVAL(r6),r0
@@ -242,8 +242,43 @@ _kernel_flag:
 
 # Stuff to tackle - block copiers
 _copy_blocks:
+	enter [r2,r3],0
+	movd 8(fp),r2
+	movd 12(fp),r1
+	movd 16(fp),r3
+copyloop:
+	movd 512/4,r0
+	movsd
+	addqw -1,r3
+	cmpw 0,r3
+	bne copyloop
+	exit [r2,r3]
+	ret 0
 	
 _swap_blocks:
+	# This one is trickier as we've got no handy
+	# block operation for it
+	# Definitely optimization candidate TODO
+	enter [r2,r3,r4],0
+	movd 8(fp),r1
+	movd 12(fp),r2
+	movd 16(fp),r3
+swappitb:
+	movw 512/4,r0
+swappit:
+	movd 0(r1),r4
+	movd 0(r2),0(r1)
+	movd r4,0(r2)
+	addqd 4,r1
+	addqd 4,r2
+	addqw -1,r0
+	cmpw 0,r0
+	bne swappit
+	addqd -1,r3
+	cmpd 0,r3
+	bne swappitb
+	exit [r2,r3,r4]
+	ret 0
 
 # Stuff to tackle CPU setup. Moves to lowlevel ?
 
