@@ -22,9 +22,9 @@ _setjmp:
 	movd	r5,16(r0)	#	Save r5
 	movd	r6,20(r0)	#	Save r6
 	movd	r7,24(r0)	#	Save r7
-	lprd	sp,r1
+	sprd	sp,r1
 	movd	r0,28(r0)	#	SP
-	lprd	fp,r1
+	sprd	fp,r1
 	movd	r0,32(r0)	#	FP
 	# We don't support FPU state here
 	movqd	0,r0
@@ -39,9 +39,9 @@ _longjmp:
 ok:
 	movd	4(sp),r0	#	Buffer
 	movd	32(r0),r1
-	sprd	fp,r1		#	Restore FP
+	lprd	fp,r1		#	Restore FP
 	movd	28(r0),r1
-	sprd	sp,r1		#	Restore SP
+	lprd	sp,r1		#	Restore SP
 	movd	24(r0),r7	#	Registers
 	movd	20(r0),r6
 	movd	16(r0),r5
