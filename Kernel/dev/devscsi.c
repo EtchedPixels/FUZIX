@@ -180,7 +180,8 @@ int si_ioctl(uint_fast8_t dev, uarg_t req, char *data)
 	/* Make sure the address given for the user mode I/O is valid */
 	/* FIXME: needs to depend on the end - and need to tidy up the
 	   ioctl anyway */
-	if (!valaddr((void *)sip.si_data, sip.si_dcb.length))
+	   if (sip.si_dcb.direction != SIDIR_NONE && 
+		!valaddr((void *)sip.si_data, sip.si_dcb.length, sip.si_dcb.direction == SIDIR_READ))
 		return -1;
 	/* Set it up as a user mode read/write */
 	blk_op.addr = sip.si_data;
