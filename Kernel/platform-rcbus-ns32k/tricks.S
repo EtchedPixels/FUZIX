@@ -1,12 +1,11 @@
 #include "../kernel-ns32k.def"
 
 
-	.globl _platform
-	.globl _plt_switchout
-	.globl _switchin
-	.globl _dofork
+	.globl	_plt_switchout
+	.globl	_switchin
+	.globl	_dofork
 
-	.globl forkout		# For debug
+	.globl	forkout		# For debug
 #
 # Switchout switches out the current process, finds another that is READY,
 # possibly the same process, and switches it in.  When a process is
@@ -14,76 +13,76 @@
 # from switchout().
 #
 _plt_switchout:
-	sprw psr,r0		# Interrupts off
-	andw 0xF7FF,r0
-	lprw psr,r0
+	sprw	psr,r0		# Interrupts off
+	andw	0xF7FF,r0
+	lprw	psr,r0
 
         # save machine state
 
         # return from either switchout OR dofork, so they must both write
         # U_DATA__U_SP with the following on the stack:
-	sprd usp,r1
+	sprd	usp,r1
 	# Use enter so we stack fp. We will always exit [] on resume
-	enter [r1,r2,r3,r4,r5,r7],0
-	sprd fp,r0
-	movd r0,tos			# Save fp
-	sprd sp,r0
-	movd r0,U_DATA__U_SP(r6)	# this is where the SP is restored in switchin
+	enter	[r1,r2,r3,r4,r5,r7],0
+	sprd	fp,r0
+	movd	r0,tos			# Save fp
+	sprd	sp,r0
+	movd	r0,U_DATA__U_SP(r6)	# this is where the SP is restored in switchin
 
         # find another process to run (may select this one again)
-        bsr _getproc(pc)
+        bsr	_getproc(pc)
 
 	movd r0,tos
-        bsr _switchin(pc)
+        bsr	_switchin(pc)
 
         # We should never get here
-        br _plt_monitor
+        br	_plt_monitor
 
 _switchin:
-	sprw psr,r0		# Interrupts off
-	andw 0xF7FF,r0
-	lprw psr,r0
-	enter [],0
-	movd 8(fp),r0		# task to switch to
-	movd P_TAB__P_UDATA_OFFSET(r0),r6
+	sprw	psr,r0		# Interrupts off
+	andw	0xF7FF,r0
+	lprw	psr,r0
+	enter	[],0
+	movd	8(fp),r0	# task to switch to
+	movd	P_TAB__P_UDATA_OFFSET(r0),r6
 	# Check udata is consistent with pointer
-	cmpd U_DATA__U_PTAB(r6),r0
-	bne switchinfail
+	cmpd	U_DATA__U_PTAB(r6),r0
+	bne	switchinfail
 
-	movqb P_RUNNING,P_TAB__P_STATUS_OFFSET(r0)
-	movd r6,_udata_shadow(pc)	# For IRQ etc use
-        movd U_DATA__U_SP(r6),r1	# Recover kernel stack pointer
-	lprd sp,r1
+	movqb	P_RUNNING,P_TAB__P_STATUS_OFFSET(r0)
+	movd	r6,_udata_shadow(pc)	# For IRQ etc use
+        movd	U_DATA__U_SP(r6),r1	# Recover kernel stack pointer
+	lprd	sp,r1
 
-	movqd 0,tos
-	movd r0,tos
-	bsr _pagemap_switch(pc)
-	adjspd -8			# Unstack 8 bytes
+	movqd	0,tos
+	movd	r0,tos
+	bsr	_pagemap_switch(pc)
+	adjspb	-8			# Unstack 8 bytes
 
         # runticks = 0
-	movqw 0,_runticks(pc)
+	movqw	0,_runticks(pc)
 
  	# restore machine state from the recovered kstack
-	movd tos,r1			# Top of the stack is the saved fp
-	lprd fp,r1
-	exit [r1,r2,r3,r4,r5,r7]	# That allows us to get the registers
-	lprd usp,r1			# Restore user SP saved in R1
+	movd	tos,r1			# Top of the stack is the saved fp
+	lprd	fp,r1
+	exit	[r1,r2,r3,r4,r5,r7]	# That allows us to get the registers
+	lprd	usp,r1			# Restore user SP saved in R1
 
-        cmpqb 0,U_DATA__U_ININTERRUPT(r6)
-        bne keepoff # in ISR, leave interrupts off
-	sprw psr,r0
-	orw 0x0800,r0
-	lprw psr,r0
+        cmpqb	0,U_DATA__U_ININTERRUPT(r6)
+        bne	keepoff # in ISR, leave interrupts off
+	sprw	psr,r0
+	orw	0x0800,r0
+	lprw	psr,r0
 keepoff:
-	movqw 0,r0			# fork return never comes this route
-        ret 0 # return with interrupts on
+	movqw	0,r0			# fork return never comes this route
+        ret	0			# return with interrupts on
 
 switchinfail:
-	bsr outr0hex
-        addr badswitchmsg,r0
-        bsr outstring
+	bsr	outr0hex
+        addr	badswitchmsg,r0
+        bsr	outstring
 	# something went wrong and we didn't switch in what we asked for
-        br _plt_monitor
+        br	_plt_monitor
 
 	#
 	# Entry:
@@ -94,9 +93,9 @@ switchinfail:
 	# Child state is saved, still running as parent
 	#
 _dofork:
-	enter [r1,r2,r3,r4,r5,r7],0
-	movd 8(fp),r0			#	child p_tab
-	movd P_TAB__P_UDATA_OFFSET(r0),r2	# Child udata
+	enter	[r1,r2,r3,r4,r5,r7],0
+	movd	8(fp),r0			#	child p_tab
+	movd	P_TAB__P_UDATA_OFFSET(r0),r2	# Child udata
 
 	# copy parent udata in r6 to child udata
 	movd	r6,r1
@@ -112,7 +111,7 @@ _dofork:
 	movd	P_TAB__P_UDATA_OFFSET(r0), tos
 	movd	r0, tos
 	bsr	_makeproc(pc)
-	adjspd	-8		# Adjsp is subtract based !
+	adjspb	-8		# Adjsp is subtract based !
 
 	movd	tos, r3
 	#	Top of the child stack to fill in
