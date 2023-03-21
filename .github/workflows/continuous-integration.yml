@@ -10,7 +10,7 @@ env:
   M68K_CROSS_URL: https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/11.1.0/x86_64-gcc-11.1.0-nolibc-m68k-linux.tar.gz
   M68K_CROSS_DIR: gcc-11.1.0-nolibc
 
-concurrency: 
+concurrency:
   group: environment-${{ github.head_ref }}
   cancel-in-progress: true
 
@@ -22,7 +22,7 @@ jobs:
         target: [appleiie, dragon-nx32, esp32, esp8266, multicomp09, rbc-mark4, rcbus-6502, rcbus-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install build deps
       run: |
         echo "setup_sh=true" >> $GITHUB_ENV
