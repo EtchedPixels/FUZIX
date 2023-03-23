@@ -116,55 +116,8 @@ void exception(struct trapdata *frame, uint32_t event)
 			kprintf("%x\n", *++kframe);
 		panic("ktrap");
 	}
-	/* All our traps are in the low 16 signals */
-	m = 1 << sig;
-	if (proc->p_sig[0].s_ignored & m)
-		return;
-	if (proc->p_sig[0].s_held & m) {
-		ssig(proc, sig);
-		return;
-	}
-	recalc_cursig();
-	if (udata.u_sigvec[sig] == SIG_DFL) {
-		/* Check if we need any other default checks here (and ns32k 0exception.c) */
-		doexit(dump_core(sig));
-		panic("exret");
-	}
-	/* At this point the user stack is untouched by the exception and the
-	   kernel stack return address points to the next user instruction
-	   (or continuation of the existing one in some cases
-	   
-	   Our unwinder currently (and we don't save a copy of kernel context)
-
-	   cmpd 0,0		; drop signal argument and spare for context
-	   movd tos,r0
-	   lprb usr,r0
-	   restore [r0,r1]
-	   ret 0
-	   
-	   So we need to push
-		r0,r1
-		saved status reg (off kstack) as word
-		the 32bit return in the kstack
-		context (tbd)
-		signal number
-		unwinder
-	*/
-	usp = get_usp();
-	err = pushd(&usp, frame->reg[0]);
-	err |= pushd(&usp, frame->reg[1]);
-	err |= pushd(&usp, frame->psr);
-	err |= pushd(&usp, frame->ra);
-	err |= pushd(&usp, 0);
-	err |= pushd(&usp, sig);
-	/* TBD FIXME */
-	err |= pushd(&usp, udata.u_codebase + 0x04);
-	frame->ra = (uint32_t)udata.u_sigvec[sig];
-	udata.u_sigvec[sig] = SIG_DFL;
-	set_usp(usp);
-
-	if (err) {
-		doexit(dump_core(SIGSTKFLT));
-		panic("exret2");
-	}
+	/* Signal ourselves. We take care that the return out of
+	   the exception handler always checks */
+	ssig(proc, sig);
+	chksigs();
 }
