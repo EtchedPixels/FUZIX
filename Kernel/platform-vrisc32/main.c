@@ -35,6 +35,15 @@ void plt_discard(void)
 {
 }
 
+void program_vectors(uint16_t *pptr)
+{
+}
+
+/* TODO */
+void deliver_signals(void)
+{
+}
+
 void pagemap_init(void)
 {
 	uint8_t r;

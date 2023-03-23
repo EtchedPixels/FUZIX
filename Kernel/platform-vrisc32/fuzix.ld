@@ -2,7 +2,7 @@ SEARCH_DIR(.)
 
 MEMORY
 {
-  ram (rwx) : ORIGIN = 0x8000, LENGTH = 0x80000
+  ram (rwx) : ORIGIN = 0x80000000, LENGTH = 0x80000
 }
 
 /*
@@ -15,7 +15,7 @@ SECTIONS
     CREATE_OBJECT_SYMBOLS
     *(.text .text.*)
 
-    . = ALIGN(0x4);
+    . = ALIGN(0x10);
 
     *(.rodata .rodata.*)
 
@@ -26,6 +26,9 @@ SECTIONS
 
   .data :
   {
+    . = ALIGN(0x10);
+    PROVIDE(__global_pointer$ = .+ 0x800);
+    
     *(.got.plt) *(.got)
     *(.shdata)
     *(.data .data.*)
@@ -34,12 +37,12 @@ SECTIONS
 
   .bss :
   {
-    . = ALIGN(0x4);
+    . = ALIGN(0x10);
     __bss_start = . ;
     *(.shbss)
     *(.bss .bss.*)
     *(COMMON)
-    _end =  ALIGN (0x8);
+    _end =  ALIGN (0x10);
     __end = _end;
   } > ram
 

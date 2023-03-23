@@ -14,11 +14,14 @@
 
 
 syscall_handler:
-	la	t1,kernel_gp
-	lw	gp,(t1)
+	.option	nopic
+	.option	push
+	.option norelax
+	la	gp,__global_pointer$
+	.option	pop
 	lw	tp,%lo(udata_shadow)(gp)
 	sw	sp,U_DATA__U_SYSCALL_SP(tp)
-	la	sp,kstack_top - 12
+	addi	sp,tp, UBLOCK_SIZE - 12
 	# Top of stack must match what is expected by fork()
 	# see dofork.
 	sw	ra,8(sp)
@@ -90,8 +93,10 @@ interrupt_handler:
 	sw	gp,60(sp)
 	sw	tp,64(sp)
 
-	la	t1,kernel_gp
-	lw	gp,0(t1)
+	.option	push
+	.option norelax
+	la	gp,__global_pointer$
+	.option	pop
 	la	tp,udata_shadow
 	li	t1,1
 	sb	t1,U_DATA__U_ININTERRUPT(tp)
@@ -154,7 +159,7 @@ doexec:
 	# FIXME: who owns clearing insys etc
 	#	TODO clear registers ?
 	#	TODO set user mode
-	jal	ei
+	jal	__hard_ei
 	jalr	a1
 
 outstring:
