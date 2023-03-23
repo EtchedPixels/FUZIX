@@ -56,11 +56,11 @@ unsigned plt_relocate(struct exec *bf)
 		/* We don't deal with underflows on the sized 30 bit signed relocs
 		   We should never ever get one ; TODO review */
 		mv &= 0x3FFFFFFF;
-		kprintf("Reloc %x:%p (%p) to ", v, mp, mv);
+/*		kprintf("Reloc %x:%p (%p) to ", v, mp, mv); */
 
 		mv += codebase;
 		/* Write the updated value */
-		kprintf("%p\n", mv);
+/*		kprintf("%p\n", mv); */
 		/* Put back the field size info */
 		if (sizebits)
 			mv |= 0xC0000000;
