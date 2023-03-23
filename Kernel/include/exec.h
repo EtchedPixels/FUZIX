@@ -5,7 +5,7 @@
 #ifndef _SYS_EXEC_H
 #define _SYS_EXEC_H
 
-#if defined(__mc68000__) || defined(__ns32k__) || defined(__ARM_ARCH_7EM__)
+#if defined(__mc68000__) || defined(__ns32k__) || defined(__ARM_ARCH_7EM__) || defined(__riscv)
 
 #include "a.out.h"
 
