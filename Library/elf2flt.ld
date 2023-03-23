@@ -62,7 +62,6 @@ SECTIONS {
 
 	.data : {
 		. = ALIGN(0x4) ;
-		PROVIDE(__global_pointer$ = .+ 0x800);
 		_sdata = . ;
 		__data_start = . ;
 		data_start = . ;
