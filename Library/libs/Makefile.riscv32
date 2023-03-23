@@ -2,9 +2,9 @@ CC = riscv64-linux-gnu-gcc
 AR = riscv64-linux-gnu-ar
 PLATFORM = riscv32
 export PLATFORM
-CC_OPT = -march=rv32ima -mabi=ilp32 -static -static-libgcc
+CC_OPT = -march=rv32ima -mabi=ilp32 -static -static-libgcc -mstrict-align
 CC_OPT += -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin
-CC_OPT += -Wall -g -Os -c -I../include -I../include/riscv32
+CC_OPT += -fno-pie -Wall -g -Os -c -I../include -I../include/riscv32
 ASM_OPT = -g -xassembler-with-cpp -march=rv32ima -mabi=ilp32
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
