@@ -23,9 +23,9 @@ _setjmp:
 	movd	r6,20(r0)	#	Save r6
 	movd	r7,24(r0)	#	Save r7
 	sprd	sp,r1
-	movd	r0,28(r0)	#	SP
+	movd	r1,28(r0)	#	SP
 	sprd	fp,r1
-	movd	r0,32(r0)	#	FP
+	movd	r1,32(r0)	#	FP
 	# We don't support FPU state here
 	movqd	0,r0
 	ret	0
@@ -34,6 +34,7 @@ _setjmp:
 
 _longjmp:
 	movd	8(sp),r2
+	cmpqd	0,r2
 	bne	ok
 	movqd	1,r2
 ok:
