@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+riscv64-linux-gnu-ld -m elf32lriscv_ilp32 $ARGS -o "$TARGET.bin" --emit-relocs -T $FUZIX_ROOT/Library/elf2flt.ld
+riscv64-linux-gnu-nm -n "$TARGET.bin" > "$TARGET.map"
+$FUZIX_ROOT/Standalone/elf2aout -s 8192 -o "$TARGET" "$TARGET.bin"
+rm -f "$TARGET.bin"
