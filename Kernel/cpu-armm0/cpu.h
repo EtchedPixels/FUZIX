@@ -15,7 +15,7 @@ extern void* memset(void*, int, size_t);
 extern size_t strlen(const char *);
 extern uint16_t swab(uint16_t);
 
-/* LX106 doesn't benefit from making a few key variables in
+/* ARM M0 doesn't benefit from making a few key variables in
    non-reentrant functions static */
 #define staticfast auto
 
