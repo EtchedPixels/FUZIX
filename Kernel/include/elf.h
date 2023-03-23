@@ -152,6 +152,7 @@ typedef struct elfhdr{
 #define EM_SPARCV9	43		/* SPARC version 9 */
 #define EM_ALPHA_EXP	0x9026		/* DEC ALPHA */
 #define EM_VAX		75		/* DEC VAX */
+#define EM_RISCV	243		/* RISCV */
 #define EM_NUM		15		/* number of machine types */
 
 /* Version */
