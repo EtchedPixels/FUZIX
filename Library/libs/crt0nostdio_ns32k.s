@@ -5,12 +5,11 @@
 	.text
 
 __start:
-	enter [],0
-	addr 8(fp),_environ(pc)
-	movd 4(fp),___argv(pc)
+	sprd sp,r0
+	addr 8(r0),_environ(pc)
+	movd 4(r0),___argv(pc)
 	jsr _main
 	movd r0,tos
-	exit []
 	jsr _exit
 
 	.data

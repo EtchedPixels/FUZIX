@@ -5,13 +5,12 @@
 	.text
 
 __start:
-	enter [],0
 	jsr ___stdio_init_vars
-	addr 8(fp),_environ(pc)
-	movd 4(fp),___argv(pc)
+	sprd sp,r0
+	addr 8(r0),_environ(pc)
+	movd 4(r0),___argv(pc)
 	jsr _main
 	movd r0,tos
-	exit []
 	jsr _exit
 
 	.data
