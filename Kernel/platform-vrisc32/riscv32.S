@@ -10,10 +10,37 @@
 	.globl	plt_monitor
 	.globl	udata_block
 	.globl	udata_shadow
+	.globl  __hard_di
+	.globl  __hard_ei
+	.globl	__hard_irqrestore
+
+__hard_di:
+	csrr	a1, mie
+	andi	t0,a1,0x555	# Mask except for our bits
+	csrw	mie,t0
+	csrw	sie,t0
+	csrw	uie,t0
+	jr	ra
+
+__hard_ei:
+	csrr	t0, mie
+	# It's a 12 bit register - call it FFFFFAAA so the assembler
+	# knows the sign extend is ok
+	ori	t0,a1,0xFFFFFAAA	# All the bits we care about
+	csrw	mie,t0
+	csrw	sie,t0
+	csrw	uie,t0
+	jr	ra
+
+__hard_irqrestore:
+	csrw	mie,a1
+	csrw	sie,a1
+	csrw	uie,a1
+	jr	ra
 
 plt_reboot:
 plt_monitor:
-	jal	di
+	jal	__hard_di
 	j	plt_reboot
 
 init_early:

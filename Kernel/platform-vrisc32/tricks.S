@@ -29,7 +29,7 @@ plt_switchout:
 	sw	s10,44(sp)
 	sw	s11,48(sp)
 
-	jal	di
+	jal	__hard_di
 
 	sw	sp,U_DATA__U_SP(tp)	# this is where the SP is restored in switchin
 
@@ -45,7 +45,7 @@ plt_switchout:
 #	we can be a bit happy about bashing saved registers
 #
 switchin:
-	jal	di
+	jal	__hard_di
 
 	# a1 is the task to switch to
 	mv	s0,a1
@@ -55,8 +55,8 @@ switchin:
 	lw	t0,U_DATA__U_PTAB(s1)
 	bne	t0,s1,switchinfail
 
-	li	P_RUNNING,t2
-	sb	p2,P_TAB__P_STATUS_OFFSET(s0)
+	li	t2,P_RUNNING
+	sb	t2,P_TAB__P_STATUS_OFFSET(s0)
 
 	sw	s1, %lo(udata_shadow)(gp)	# For IRQ etc use
         lw	sp,U_DATA__U_SP(s1)		# Recover kernel stack pointer
@@ -66,11 +66,12 @@ switchin:
 	call	pagemap_switch
 
         # runticks = 0
-	sw	0,%lo(runticks)(gp)
+	la	t0,runticks
+	sw	zero,0(t0)
 
         lb	t0,U_DATA__U_ININTERRUPT(tp)
         bne	t0,zero,keepoff # in ISR, leave interrupts off
-	jal	ei
+	jal	__hard_ei
 keepoff:
 	mv	a1,zero
  	# restore machine state from the recovered kstack
@@ -104,7 +105,7 @@ switchinfail:
 	# Exit:
 	# Child state is saved, still running as parent
 	#
-_dofork:
+dofork:
 
 	lw	t0,P_TAB__P_UDATA_OFFSET(a1)
 
@@ -144,7 +145,8 @@ save_ud:
 	sw	t2,-8(t0)
 	lw	t2,-12(t1)		# ra
 	sw	t2,-12(t0)
-	la	forkout,-16(t0)		# and our return
+	la	t2,forkout
+	sw	t2,-16(t0)		# and our return
 
 	# TODO: save register frame here
 
@@ -159,7 +161,7 @@ save_ud:
 	sw	t0,U_DATA__U_SP(a2)
 	sw	zero,%lo(runticks)(gp)
 	# Get child PID
-	lhu	a1.P_TAB__P_PID_OFFSET(a1)
+	lhu	a1,P_TAB__P_PID_OFFSET(a1)
 	jr	ra
 
 forkout:

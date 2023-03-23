@@ -1,5 +1,3 @@
-OUTPUT_ARCH(ns32k)
-
 SEARCH_DIR(.)
 
 MEMORY

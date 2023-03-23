@@ -1,1 +1,9 @@
 Initial virtual machine bring up for RiscV32. Nothing to see here yet
+
+TO FIX
+- Load arg registers in crt0 and set environ properly
+- Support in flat to load our binary 4K not 512byte aligned
+- Install the map on a 4K alignment base in the test platform
+- Add a fake disk and serial driver to the emulation
+- Add disassembly to emulation
+
