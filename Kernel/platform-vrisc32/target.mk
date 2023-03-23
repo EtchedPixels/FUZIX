@@ -1,0 +1,2 @@
+export CPU = riscv32
+
