@@ -1,10 +1,10 @@
 /*
  *	Generate the syscall functions
  *
- *	RISCV passes the arguments in x10-x17 (aka a0-a7) which covers more
+ *	RISCV passes the arguments in a1-a7 which covers more
  *	arguments than we need. Thus all we actually have to generate for
  *	anything (except maybe fork...) is a load of t0 (x5) with the call
- *	number and a trap.
+ *	number and a trap. On return a1 holds the result and t0 errno
  */
 
 #include <stdio.h>
@@ -26,7 +26,7 @@ static void write_call(int n)
   }
   /*
    *	We define _fork() as trashing all the registers except the return
-   *	values and tp/gp. The userspace ick here allows us to avoid saving
+   *	values and tp/gp. The userspace trick here allows us to avoid saving
    *	all the registers on syscall entry just in case we are doing a fork and
    *	have multiple udata blocks.
    */
@@ -38,27 +38,43 @@ static void write_call(int n)
 	      "%1$s:\n", syscall_name[n]);
 
   if (strcmp(syscall_name[n], "_fork") == 0) {
-#if 0  
-    /* Save r2-r7 and fp */
-    fprintf(fp, "\tenter [r2,r3,r4,r5,r7],0\n");
-    /* Fix up argument to _fork() */
-    fprintf(fp, "\tmovd 8(fp),tos\n");
-    fprintf(fp, "\tmovd 0,tos\n");
+    fprintf(fp, "\taddi sp,sp,-48\n");
+    fprintf(fp, "\tsw s0,0(sp)\n");
+    fprintf(fp, "\tsw s1,4(sp)\n");
+    fprintf(fp, "\tsw s2,8(sp)\n");
+    fprintf(fp, "\tsw s3,12(sp)\n");
+    fprintf(fp, "\tsw s4,16(sp)\n");
+    fprintf(fp, "\tsw s5,20(sp)\n");
+    fprintf(fp, "\tsw s6,24(sp)\n");
+    fprintf(fp, "\tsw s7,28(sp)\n");
+    fprintf(fp, "\tsw s8,32(sp)\n");
+    fprintf(fp, "\tsw s9,36(sp)\n");
+    fprintf(fp, "\tsw s10,40(sp)\n");
+    fprintf(fp, "\tsw s11,44(sp)\n");
     saves = 1;
-#endif    
   }
   /*
-   * We must fix gp (x3) in the fork return path as it's used for
-   * short form data referencing. Probably we should also do tp for
-   * the long term future.
+   *	tp,gp and ra are always preserved by the syscall
+   *	s0-s11 are preserved except by fork
    */
   fprintf(fp, "\tli t0, %d\n", n);
   fprintf(fp, "\tecall\n");
-  /* We may need to put errno in crt0 so it's assured of being close */
-  fprintf(fp, "\tsw a1,%%lo(errno)(gp)\n");
+  fprintf(fp, "\tla t1,errno\n");
+  fprintf(fp, "\tsw t0,0(t1)\n");
   if (saves) {
-    fprintf(fp, "\tadjspd -8\n");
-    fprintf(fp, "\texit [r2,r3,r4,r5,r7]\n");
+    fprintf(fp, "\tlw s0,0(sp)\n");
+    fprintf(fp, "\tlw s1,4(sp)\n");
+    fprintf(fp, "\tlw s2,8(sp)\n");
+    fprintf(fp, "\tlw s3,12(sp)\n");
+    fprintf(fp, "\tlw s4,16(sp)\n");
+    fprintf(fp, "\tlw s5,20(sp)\n");
+    fprintf(fp, "\tlw s6,24(sp)\n");
+    fprintf(fp, "\tlw s7,28(sp)\n");
+    fprintf(fp, "\tlw s8,32(sp)\n");
+    fprintf(fp, "\tlw s9,36(sp)\n");
+    fprintf(fp, "\tlw s10,40(sp)\n");
+    fprintf(fp, "\tlw s11,44(sp)\n");
+    fprintf(fp, "\taddi sp,sp,48\n");
   }
   /* a0 holds the return from the call already */
   fprintf(fp, "\tjr 0(ra)\n");

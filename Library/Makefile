@@ -8,7 +8,8 @@ all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
      tools/ack2fuzix tools/binman85 \
      tools/liberror tools/relocbin tools/relocbin65 tools/fuzixlib \
      tools/relocbinhc11 tools/relocbin6303 tools/relocbin8080 tools/shlibgen \
-     tools/relocbin6809 tools/ns32ktoaout tools/syscall_riscv32
+     tools/relocbin6809 tools/ns32ktoaout tools/syscall_riscv32 \
+     tools/riscv32toaout
 
 clean:
 	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
@@ -16,7 +17,7 @@ clean:
 	rm -f tools/syscall-z88dk tools/syscall_6502 tools/syscall_6809 tools/syscall_68000 tools/syscall-scc6809
 	rm -f tools/syscall_pdp11 tools/syscall_8080 tools/syscall_6303 tools/syscall_esp8266
 	rm -f tools/relocbin65 tools/relocbinhc11 tools/relocbin8080 tools/syscall_armm4
-	rm -f tools/ns32ktoaout
+	rm -f tools/ns32ktoaout tools/syscall_riscv32 tools/riscv32toaout
 
 tools/syscall: tools/syscall.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
@@ -85,6 +86,9 @@ tools/relocbinhc11: tools/relocbinhc11.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/ns32ktoaout: tools/ns32ktoaout.c
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/riscv32toaout: tools/riscv32toaout.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/liberror: tools/liberror.c
