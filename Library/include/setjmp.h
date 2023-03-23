@@ -103,6 +103,12 @@
 	extern int setjmp(jmp_buf __env);
 	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
 
+#elif defined(__riscv)
+
+	typedef uint64_t jmp_buf[19];
+	extern int setjmp(jmp_buf __env);
+	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
+
 #else
 	#error jmp_buf definition not set for this architecture
 #endif
