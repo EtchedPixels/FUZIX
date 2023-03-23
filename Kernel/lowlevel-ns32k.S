@@ -37,46 +37,49 @@
 nmi_handler:
 	rett	0
 abort_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	0,tos
 do_exception:
+	movd	_udata_shadow,r6
 	sprw	psr,r0
 	andw	0xF7FF,r0		# Disable interrupts
 	lprw	psr,r0
-	sprd	sp,r0
-	movd	r0,tos
+	sprd	sp,tos
 	bsr	_exception
 	adjspb	-8
-	# Called function may have played with the return stack
-	# It may also kill, switch and never return
-	exit	[r0,r1,r2,r3,r4,r5,r6,r7]
+	movb	U_DATA__U_CURSIG(r6),r0
+	cmpqb	0,r0
+	bne	with_signal
+	exit	[r0,r1,r2,r3,r6]
+	# Retry the instruction
 	rett	0
+
 slave_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	1,tos
 	br	do_exception
 illegal_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	2,tos
 	br	do_exception
 divzero_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	3,tos
 	br	do_exception
 flag_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	4,tos
 	br	do_exception
 breakpoint_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	5,tos
 	br	do_exception
 trace_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	6,tos
 	br	do_exception
 undefined_handler:
-	enter	[r0,r1,r2,r3,r4,r5,r6,r7],0
+	enter	[r0,r1,r2,r3,r6],0
 	movqd	1,tos
 	br	do_exception
 syscall_handler:
@@ -224,6 +227,7 @@ _doexec:
 	movw	0x0B00,tos	# PSR and if we do DE mode module
 	sprw	mod,tos
 	movd	r0,tos
+	; FIXME: who owns clearing insys etc
 	# FIXME: should we clear FP too
 	rett	0			# To user space
 #
