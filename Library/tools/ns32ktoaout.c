@@ -55,7 +55,8 @@ static uint8_t *load_block(FILE *fp, off_t base, size_t len)
         /* Add the header words. We can't do this in crt0 as the toolchain doesn't
            seem able to do link orders and custom sections */
         memset(m, 0, 0x20);
-        *(uint32_t *)m = 4096;		/* Stack size */
+        /* FIXME : configurable */
+        *(uint32_t *)m = 8192;		/* Stack size */
         return m;
 }
 
