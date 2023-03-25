@@ -115,7 +115,7 @@ void df_all(void)
     
     f = setmntent("/etc/mtab", "r");
     if (f) {
-        while (mnt = getmntent(f))
+        while ((mnt = getmntent(f)) != NULL)
                 df_path(mnt->mnt_dir, mnt->mnt_fsname, mnt->mnt_dir);
         endmntent(f);
     } else {
