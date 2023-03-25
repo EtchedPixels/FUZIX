@@ -154,6 +154,8 @@ static void my_chown(void)
 {
 	int x = chown(h.name, b8get(h.uid, 8),
 		      b8get(h.gid, 8));
+	if (x < 0)
+		pname();
 }
 
 
@@ -209,7 +211,7 @@ static uint32_t cksum_calc(void)
 /* Prints information in header to stdout (if applicable) */
 static void printheader(void)
 {
-	char pad[10];
+	char pad[11];
 	int pindex = 10;
 	unsigned int m;
 	int x;
@@ -306,7 +308,7 @@ static void storedir(char *name)
 	DIR *dirstream;
 	struct dirent *dir;
 	char cname[100];
-	uint32_t count;
+	uint32_t count = 0;
 	uint16_t rem;
 
 	/* stat file */
@@ -398,7 +400,7 @@ static void storedir(char *name)
 			}
 			if (ret < 512)
 				bzero(buffer + ret, 512 - ret);
-			ret = blkwrite(buffer);
+			ret = blkwrite((char *)buffer);
 		}
 		close(fd);
 		break;
@@ -408,7 +410,7 @@ static void storedir(char *name)
 			pname();
 			break;
 		}
-		while (dir = readdir(dirstream)) {
+		while ((dir = readdir(dirstream)) != NULL) {
 			/* dont arch .. or . */
 			if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")
 			    )
@@ -670,8 +672,8 @@ static void create(char *argv[])
 	}
 	/* write out 2 zero blocks */
 	bzero(buffer, 512);
-	x = blkwrite(buffer);
-	x += blkwrite(buffer);
+	x = blkwrite((char *)buffer);
+	x += blkwrite((char *)buffer);
 	if (x != 1024)
 		perror("writing end of archive");
 	/* close outfile */
