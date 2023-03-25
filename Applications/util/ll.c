@@ -48,7 +48,7 @@ int ls(char *path)
     }
 
     /* FIXME: use readdir etc */
-    while (d = readdir(&dp)) {
+    while ((d = readdir(&dp)) != NULL) {
         if (d->d_name[0] == '\0')
             continue;
 
