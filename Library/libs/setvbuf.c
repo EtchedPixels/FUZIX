@@ -23,8 +23,8 @@ int setvbuf(FILE *fp, char *buf, int mode, size_t size)
       }
       if( buf )
       {
-         fp->bufstart = buf;
-         fp->bufend = buf+size;
+         fp->bufstart = (unsigned char *)buf;
+         fp->bufend = (unsigned char *)buf+size;
          fp->mode &= ~__MODE_BUF;
          fp->mode |= mode;
       }
