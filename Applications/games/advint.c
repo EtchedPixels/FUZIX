@@ -99,7 +99,6 @@ static int slen;		/* save area length */
 int nouns[20];
 int *adjectives[20];
 static int actor, action, dobject, ndobjects, iobject;
-static int flag;
 
 /* local variables */
 static char *lptr;		/* line pointer */
@@ -179,7 +178,7 @@ void exe_one(void)
 		*--sp = pc;
 		*--sp = (int) (top - fp);
 		fp = sp;
-		if (p2 = fp[fp[2] + 3])
+		if ((p2 = fp[fp[2] + 3]) != 0)
 			p2 = getofield(p2, O_CLASS);
 		else
 			p2 = fp[fp[2] + 2];
@@ -410,7 +409,7 @@ void print(int msg)
 	int ch;
 
 	msg_open(msg);
-	while (ch = msg_byte())
+	while ((ch = msg_byte()) != 0)
 		trm_chr(ch);
 }
 
@@ -526,7 +525,7 @@ int advrestore(char *hdr, int hlen, char *save, int slen)
 }
 
 /* main - the main routine */
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	char *fname, *lname;
 	int rows, cols, i;
@@ -631,7 +630,6 @@ void db_init(char *name)
 {
 	int woff, ooff, aoff, voff, n;
 	char fname[50];
-	long TMPLONG;
 	int TMPINT;
 
 	/* get the data file name */
@@ -672,7 +670,8 @@ void db_init(char *name)
 	saveoff = (long) getword(HDR_DATBLK) * 512L;
 
 	/* read the resident data structure */
-	TMPLONG = lseek(datafd, saveoff, 0);
+	if (lseek(datafd, saveoff, 0) < 0)
+		error("bad data file");
 	TMPINT = read(datafd, data, (int) length);
 	if (TMPINT != (int) length)
 		error("bad data file");
@@ -822,7 +821,7 @@ int getp(int obj, int prop)
 	int p;
 
 	for (; obj; obj = getofield(obj, O_CLASS))
-		if (p = findprop(obj, prop))
+		if ((p = findprop(obj, prop)) != 0)
 			return (getofield(obj, p));
 	return (NIL);
 }
@@ -833,7 +832,7 @@ int setp(int obj, int prop, int val)
 	int p;
 
 	for (; obj; obj = getofield(obj, O_CLASS))
-		if (p = findprop(obj, prop))
+		if ((p = findprop(obj, prop)) != 0)
 			return (putofield(obj, p, val));
 	return (NIL);
 }
@@ -1305,7 +1304,7 @@ int get_word(void)
 		*lptr++ = EOS;
 
 	/* look up the word */
-	if (words[wcnt] = findword(wtext[wcnt]))
+	if ((words[wcnt] = findword(wtext[wcnt])) != 0)
 		return (words[wcnt]);
 	else {
 		trm_str("I don't know the word \"");
