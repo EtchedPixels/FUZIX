@@ -11,7 +11,11 @@
 
 #ifdef	NDEBUG
 
+#ifdef __GNUC__
+#define assert(expr)		((void)(0))
+#else
 #define assert(expr)		(0)
+#endif
 
 #else /* NDEBUG */
 
