@@ -84,7 +84,6 @@ int parse_gpt_part_entry(gpt_partition_entry_t *entry, uint8_t next)
 int parse_gpt(uint8_t *buf)
 {
 	int i;
-	uint32_t entry_block;
 	int num_part;
 	gpt_header_t *gpt_header = (gpt_header_t*) buf;
 	uint8_t next = 0;
@@ -104,7 +103,7 @@ int parse_gpt(uint8_t *buf)
 		return 0;
 	}
 
-	entry_block = le32_to_cpu(gpt_header->table_st_lba_lsb);
+//	entry_block = le32_to_cpu(gpt_header->table_st_lba_lsb);
 
 	if (le32_to_cpu(gpt_header->size_part_entry) != 128) {
 		puts("GPT entry size not supported\n");
