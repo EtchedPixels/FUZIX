@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 		break;
 	case 'p':
 		mode = S_IFIFO|0777;
+		dev = 0;
 		break;
 	default:
 		goto badtype;
