@@ -12,7 +12,7 @@ SRC_CRT0 = crt0_esp32.S crt0nostdio_esp32.S
 OBJ_CRT0 = $(SRC_CRT0:.S=.o)
 SRC_ASM = helpers_esp32.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
-SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
 SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
 SRC_C += calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
@@ -97,6 +97,7 @@ SRC_LM += scalbn.c
 SRC_LM += sin.c sincos.c sinh.c
 SRC_LM += sqrt.c tgamma.c
 SRC_LM += __expo2.c __double_bits.c __fpclassify.c __log1p.c
+SRC_LM += __sin.c __cos.c __tan.c __sindf.c __cosdf.c __tandf.c
 
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_CURS = $(SRC_CURS:.c=.o)

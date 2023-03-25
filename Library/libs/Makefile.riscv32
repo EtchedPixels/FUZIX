@@ -5,6 +5,7 @@ export PLATFORM
 CC_OPT = -march=rv32ima -mabi=ilp32 -static -static-libgcc -mstrict-align
 CC_OPT += -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin
 CC_OPT += -fno-pie -Wall -g -Os -c -I../include -I../include/riscv32
+CC_OPT += -DPREFER_STACK
 ASM_OPT = -g -xassembler-with-cpp -march=rv32ima -mabi=ilp32
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
@@ -14,7 +15,7 @@ SRC_CRT0 = crt0_riscv32.c crt0nostdio_riscv32.c
 OBJ_CRT0 = $(SRC_CRT0:.c=.o)
 SRC_ASM = setjmp_riscv32.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
-SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
 SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
 SRC_C += calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c

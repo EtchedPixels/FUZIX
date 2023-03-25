@@ -13,7 +13,7 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 #
 #	Library routines.
 #
-SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
 SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
 SRC_C += calloc.c cfree.c clock.c closedir.c closedir_r.c
 SRC_C += clock_gettime.c clock_getres.c clock_settime.c

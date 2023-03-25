@@ -31,7 +31,7 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 #	very tightly coded. We want to make use of them eventually
 #
 #
-SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c assert.c atexit.c
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
 SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c
 SRC_C += calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
