@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
         perror("fuzix.map");
         exit(1);
     }
-    
+
     load_exports("fuzix.export", 0);
     load_exports("platform/fuzix.export", 1);
 

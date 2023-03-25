@@ -91,7 +91,6 @@ void vtattr_notify(void)
 __sfr __at 0xFE border;
 
 int zxvt_ioctl(uint8_t minor, uarg_t arg, char *ptr)
-
 {
 	uint8_t c;
 	if (minor == 1 && arg == VTBORDER) {
