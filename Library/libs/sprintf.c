@@ -15,16 +15,24 @@
 #include <stdarg.h>
 #include "printf.h"
 
+#ifndef PREFER_STACK
 /* Moved out of struct to keep SDCC generating what we want */
 static FILE string[1] = {
 	{0, 0, (unsigned char *) -1,
 	 0, (unsigned char *) -1, -1,
 	 _IOFBF | __MODE_WRITE}
 };
-
+#endif
 
 int sprintf(char *sp, const char *fmt, ...)
 {
+#ifdef PREFER_STACK
+	FILE string[1] = {
+	{0, 0, (unsigned char *) -1,
+	 0, (unsigned char *) -1, -1,
+	 _IOFBF | __MODE_WRITE}
+};
+#endif
 	va_list ptr;
 	int rv;
 	unsigned char *p = string->bufpos;
@@ -41,6 +49,13 @@ int sprintf(char *sp, const char *fmt, ...)
 
 int snprintf(char *sp, size_t size, const char *fmt, ...)
 {
+#ifdef PREFER_STACK
+	FILE string[1] = {
+	{0, 0, (unsigned char *) -1,
+	 0, (unsigned char *) -1, -1,
+	 _IOFBF | __MODE_WRITE}
+};
+#endif
 	va_list ptr;
 	int rv;
 	unsigned char *p = string->bufpos;
@@ -57,6 +72,13 @@ int snprintf(char *sp, size_t size, const char *fmt, ...)
 
 int vsnprintf(char *sp, size_t size, const char *fmt, va_list ptr)
 {
+#ifdef PREFER_STACK
+	FILE string[1] = {
+	{0, 0, (unsigned char *) -1,
+	 0, (unsigned char *) -1, -1,
+	 _IOFBF | __MODE_WRITE}
+};
+#endif
 	int rv;
 	unsigned char *p = string->bufpos;
 
@@ -70,6 +92,13 @@ int vsnprintf(char *sp, size_t size, const char *fmt, va_list ptr)
 
 int vsprintf(char *sp, const char *fmt, va_list ptr)
 {
+#ifdef PREFER_STACK
+	FILE string[1] = {
+	{0, 0, (unsigned char *) -1,
+	 0, (unsigned char *) -1, -1,
+	 _IOFBF | __MODE_WRITE}
+};
+#endif
 	int rv;
 	unsigned char *p = string->bufpos;
 
