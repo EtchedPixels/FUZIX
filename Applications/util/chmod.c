@@ -243,13 +243,14 @@ int do_change(char *name)
 	    strcpy(path, name);
 	namp = path + strlen(path);
 	*namp++ = '/';
-	while (entp = readdir(dir))
+	while ((entp = readdir(dir)) != NULL) {
 	    if (entp->d_name[0] != '.' ||
 		(entp->d_name[1] &&
 		 (entp->d_name[1] != '.' || entp->d_name[2]))) {
 		strcpy(namp, entp->d_name);
 		errors |= do_change(path);
 	    }
+	}
 	closedir(dir);
 	*--namp = '\0';
     }
