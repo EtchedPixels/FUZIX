@@ -201,7 +201,7 @@ void tzset(void)
 
 static uint8_t do_find_day(struct tm *tm, uint8_t nth, uint8_t d, uint8_t leap)
 {
-        extern uint8_t __mon_lengths[2][12];
+        extern const uint8_t __mon_lengths[2][12];
         /* Note mday is 1 based wday is 0 based */
         /* Find the day number of the 1st */
         int8_t sday = tm->tm_mday - tm->tm_wday;

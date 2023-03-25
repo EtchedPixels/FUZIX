@@ -1,7 +1,7 @@
 #include <time.h>
 #include <string.h>
 
-unsigned char __mon_lengths[2][12] = {
+const unsigned char __mon_lengths[2][12] = {
     { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
     { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
@@ -13,7 +13,7 @@ unsigned char __mon_lengths[2][12] = {
 void __compute_tm(struct tm *tmbuf, long days, long rem)
 {
 	register unsigned int y;
-	unsigned char *ip;
+	const unsigned char *ip;
 
 	tmbuf->tm_hour = rem / SECS_PER_HOUR;
 	rem %= SECS_PER_HOUR;
