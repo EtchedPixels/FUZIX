@@ -6,7 +6,10 @@
 
 int uname(struct utsname *utsbuf)
 {
-	static struct {
+#ifndef PREFER_STACK
+	static
+#endif
+	struct {
 		struct _uzisysinfoblk i;
 		char buf[128];
 	} uts;
