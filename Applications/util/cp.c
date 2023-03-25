@@ -393,7 +393,6 @@ filecopy(const char *src, const struct stat *ssp,
 {
 	mode_t mode;
 	int sfd, dfd;
-	off_t copied = 0;
 
 	if ((sfd = open(src, O_RDONLY)) < 0) {
 		fprintf(stderr, "%s: cannot open %s\n%s: %s\n",
@@ -412,8 +411,7 @@ filecopy(const char *src, const struct stat *ssp,
 		errcnt |= 01;
 		goto end1;
 	}
-	copied = fdcopy(src, sfd, tgt, dfd);
-      end2:
+	fdcopy(src, sfd, tgt, dfd);
 	if (pflag)
 		permissions(tgt, ssp);
 	if (close(dfd) < 0) {
@@ -423,21 +421,6 @@ filecopy(const char *src, const struct stat *ssp,
 	}
       end1:
 	close(sfd);
-}
-
-static void ignoring(const char *type, const char *path)
-{
-	fprintf(stderr, "%s: %signoring %s %s\n", progname,
-#if defined (SUS)
-		"",
-#else				/* !SUS */
-		"warning: ",
-#endif				/* !SUS */
-		type, path);
-#if defined (SUS)
-	if (pers == PERS_MV)
-		errcnt |= 020;
-#endif				/* SUS */
 }
 
 static enum okay do_unlink(const char *tgt, const struct stat *dsp)
@@ -687,8 +670,7 @@ cpmv(const char *src, const char *tgt, struct stat *dsp, int level)
 #endif				/* !SUS */
 		if (dsp == NULL) {
 			if (mkdir(tgt, check_suid(&sst,
-						  sst.
-						  st_mode & 07777 |
+						  (sst.st_mode & 07777) |
 						  S_IRWXU)) < 0) {
 				fprintf(stderr, "%s: %s: %s\n", progname,
 					tgt, strerror(errno));
