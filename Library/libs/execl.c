@@ -63,7 +63,12 @@ int execl(const char *pathP, const char *arg0, ...)
 
 int execlp(const char *pathP, const char *arg0, ...)
 {
-	return execve(_findPath(pathP), (void *)&arg0, environ);
+#ifdef PREFER_STACK
+	char name[PATHLEN + 1];
+#else
+	static char name[PATHLEN + 1];
+#endif
+	return execve(_findPath(name, pathP), (void *)&arg0, environ);
 }
 #else
 
