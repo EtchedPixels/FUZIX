@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 		struct _uzisysinfoblk i;
 		char buf[128];
 	} uts;
-	int bytes = _uname(&uts.i, sizeof(uts));
+	_uname(&uts.i, sizeof(uts));
 	printf("         total         used         free\n");
 	printf("Mem:     %5d        %5d        %5d\n",
 		uts.i.memk, uts.i.usedk, uts.i.memk - uts.i.usedk);
