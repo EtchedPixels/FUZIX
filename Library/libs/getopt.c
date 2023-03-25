@@ -41,8 +41,8 @@ static int sp = 1;		/* position within argument */
 int getopt(int argc, char *const argv[], const char *optstring)
 				/* returns letter, '?', EOF */
 {
-   register int osp;		/* saved `sp' for param test */
 #ifndef STRICT
+   register int osp;		/* saved `sp' for param test */
    register int oind;		/* saved `optind' for param test */
 #endif
    register int c;		/* option letter */
@@ -64,7 +64,9 @@ int getopt(int argc, char *const argv[], const char *optstring)
    }
 
    c = argv[optind][sp];	/* option letter */
+#ifdef STRICT
    osp = sp++;			/* get ready for next letter */
+#endif
 
 #ifndef STRICT
    oind = optind;		/* save optind for param test */
