@@ -5,7 +5,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	struct passwd * upw = getpwuid(getuid());
 
