@@ -107,7 +107,7 @@ struct nodelist *stringindex(const char *s)
 	i->nextnode->nextnode = NULL;
 	i->nextnode->inedges = NULL;
 	i->nextnode->live = DEAD;
-	while (*n++ = *s++);
+	while ((*n++ = *s++) != 0);
 	return (i);
 }
 
