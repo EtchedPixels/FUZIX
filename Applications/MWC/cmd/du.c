@@ -279,14 +279,12 @@ static int du(char *name)
 	return (0);
 }
 	
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int i;
 	char *ap;
 	int estat;
 	
-	int nfile = sysconf(_SC_OPEN_MAX);
-
 	while (argc>1 && *argv[1]=='-') {
 		for (ap = &argv[1][1]; *ap != '\0'; ap++)
 			switch (*ap) {
