@@ -21,7 +21,7 @@ static int writes(int fd, const char *p)
 
 int main(int argc, char *argv[])
 {
-	int fd, fd2;
+	int fd, fd2 = -1;
 	int r;
 	unsigned long t = 0;
 	static char buf[512];
