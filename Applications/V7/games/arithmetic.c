@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 		case '-':
 		case 'x':
 		case '/':
-			while (types[dif] = argv[1][dif])
+			while ((types[dif] = argv[1][dif]) != 0)
 				dif++;
 			break;
 
