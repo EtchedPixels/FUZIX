@@ -88,7 +88,7 @@ void getpage(int i)
 }
 
 
-int shell(void)
+void shell(void)
 {
 	int rc, status, unixpid;
 	if( (unixpid=fork())==0 ) {
@@ -97,13 +97,13 @@ int shell(void)
 		exit(255);
 	}
 	else if(unixpid == -1)
-		return(0);
+		return;
 	else{	
 		signal(SIGCHLD, SIG_DFL);
 		signal(SIGINT,SIG_IGN); signal(SIGQUIT,SIG_IGN);
 		while( (rc = wait(&status)) != unixpid && rc != -1 ) ;
 		signal(SIGINT,SIG_DFL); signal(SIGQUIT,SIG_DFL);
-		return(1);
+		return;
 	}
 }
 
