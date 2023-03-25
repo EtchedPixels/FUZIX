@@ -94,7 +94,7 @@ int column= 0, max_column=80;		/* Assume 80 character terminals. */
 struct winsize winsize;
 #endif
 
-void main(int argc, char *argv[]);
+int main(int argc, char *argv[]);
 void report(int flags);
 int option(char *opt, char *next);
 int match(const char *s1, const char *s2);
@@ -113,7 +113,7 @@ void set_min_tim(int option, char *value);
 #define print_char(c,d,n,a) (do_print_char((unsigned)(c),(unsigned)(d),(n),(a)))
 #define print_num(m,d,n,a) (do_print_num((unsigned)(m),(unsigned)(d),(n),(a)))
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   int flags, k;
 
@@ -462,7 +462,7 @@ int option(char *opt, char *next)
 
   if (match(opt, "ispeed")) {
 	num= strtol(next, &check, 10);
-	if (check != '\0')
+	if (*check != '\0')
 	{
 		speed= long2speed(num);
 		if (speed == (speed_t)-1)
@@ -484,7 +484,7 @@ int option(char *opt, char *next)
 
   if (match(opt, "ospeed")) {
 	num= strtol(next, &check, 10);
-	if (check != '\0')
+	if (*check != '\0')
 	{
 		speed= long2speed(num);
 		if (speed == (speed_t)-1)
