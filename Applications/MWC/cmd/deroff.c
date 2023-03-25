@@ -226,11 +226,12 @@ void output(char *l)
 		if (wflag) {
 			if (c == '\n')
 				continue;
-			if (!inword)
+			if (!inword) {
 				if (isalpha(c))
 					inword = 1;
 				else
 					continue;
+			}
 			if (c == '-' && !hyphen) {
 				hyphen = 1;
 				continue;
