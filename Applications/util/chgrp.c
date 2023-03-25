@@ -12,7 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 
-int writes(const char *p)
+void writes(const char *p)
 {
     write(2, p, strlen(p));
 }
