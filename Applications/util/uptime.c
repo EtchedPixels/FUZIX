@@ -10,7 +10,7 @@ static int count_users(void)
 	int ct = 0;
 	struct utmp *entry;
 	setutent();
-	while(entry = getutent())
+	while((entry = getutent()) != NULL)
 		if (entry->ut_type == USER_PROCESS)
 			ct++;
 	endutent();
