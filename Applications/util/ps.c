@@ -158,7 +158,6 @@ static uint16_t do_pidmatch(char *arg)
 
 static uint16_t do_uidmatch(char *arg)
 {
-	char *p = arg;
 	unsigned long n;
 	struct passwd *pw;
 
