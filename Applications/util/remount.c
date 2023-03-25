@@ -45,7 +45,7 @@ static char *getdev(char *arg, char *p)
 
 	f = setmntent(p, "r");
 	if (f) {
-		while (mnt = getmntent(f)) {
+		while ((mnt = getmntent(f)) != NULL) {
 			path = mnt_device_path(mnt);
 			if ((strcmp(path, arg) == 0) || (strcmp(mnt->mnt_dir, arg) == 0)) {
 				endmntent(f);
@@ -80,7 +80,7 @@ static void rewrite_mtab(char *name, int flags)
 		exit(1);
 	}
 	/* Correct the options for the remounted entry */
-	while (mnt = getmntent(inpf)) {
+	while ((mnt = getmntent(inpf)) != NULL) {
 		if (strcmp(name, mnt->mnt_fsname) == 0)
 			mnt->mnt_opts = modify_opts(mnt->mnt_opts, flags);
 		addmntent(outf, mnt);
