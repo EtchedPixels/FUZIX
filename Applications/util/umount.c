@@ -16,7 +16,7 @@ static char *getdev(char *arg)
 
 	f = setmntent("/etc/mtab", "r");
 	if (f) {
-		while (mnt = getmntent(f)) {
+		while ((mnt = getmntent(f)) != NULL) {
 			if ((strcmp(mnt->mnt_fsname, arg) == 0) || (strcmp(mnt->mnt_dir, arg) == 0)) {
 				endmntent(f);
 				return strdup(mnt->mnt_fsname);
@@ -62,7 +62,7 @@ static int rewrite_mtab(void)
 		perror("Can't create temporary file");
 		exit(1);
 	}
-	while (mnt = getmntent(inpf)) {
+	while ((mnt = getmntent(inpf)) != NULL) {
 		/* FIXME: should we check device and dir ? */
 		if (deleted(mnt->mnt_fsname))
 			continue;
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 			perror("mtab");
 			exit(1);
 		}
-		while(mnt = getmntent(f)) {
+		while((mnt = getmntent(f)) != NULL) {
 			/* We can't unmount / */
 			if (strcmp(mnt->mnt_dir, "/"))
 				queue_rm_mtab(mnt->mnt_fsname);
