@@ -9,7 +9,11 @@
 
 int getloadavg(unsigned int loadavg[], int nelem)
 {
+#ifdef PREFER_STACK
+	struct _uzisysinfoblk uts;
+#else
 	static struct _uzisysinfoblk uts;
+#endif
 	uint8_t i;
 	int bytes = _uname(&uts, sizeof(uts));
 
