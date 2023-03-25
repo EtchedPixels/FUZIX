@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   }
   if (!*argv)
     head(0, "stdin");
-  else while(p = *argv++) {
+  else while((p = *argv++) != NULL) {
     fd = open(p, O_RDONLY);
     if (fd == -1) {
       fail(p);
