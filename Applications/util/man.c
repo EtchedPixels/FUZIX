@@ -471,7 +471,7 @@ int fetch_word(void)
 		if (ch == '\\') {
 			if ((ch = fgetc(ifd)) == EOF)
 				break;
-			/* if (ch == ' ') ch = ' ' + 0x80;     /* XXX Is this line needed? */
+			/* if (ch == ' ') ch = ' ' + 0x80;   */  /* XXX Is this line needed? */
 			if (p < word + sizeof(word) - 1)
 				*p++ = ch;
 			col++;
