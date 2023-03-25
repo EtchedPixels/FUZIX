@@ -42,7 +42,7 @@ int getword(char *w)
 	return(1);
 }
 
-int canon(const char *old, char *new)
+void canon(const char *old, char *new)
 {
 	register int c;
 	for(;;) {
