@@ -61,7 +61,7 @@ static uint8_t makergbi(const char *p)
     uint8_t g = hexbits(p + 2);
     uint8_t b = hexbits(p + 4);
     uint8_t c;
-    c = (b >> 7) | ((r >> 6) & 2) | (g >> 5) & 4;
+    c = (b >> 7) | ((r >> 6) & 2) | ((g >> 5) & 4);
     if (g & 0x80)
         c |= 0x08;
     if (r & b & 0x80)
