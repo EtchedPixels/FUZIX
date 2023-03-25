@@ -23,7 +23,7 @@ static int lsmtab(void)
     
     f = setmntent("/etc/mtab", "r");
     if (f) {
-        while (mnt = getmntent(f)) {
+        while ((mnt = getmntent(f)) != NULL) {
             if (strcmp(mnt->mnt_type, "swap") == 0)
                 printf("%s is swapspace\n", mnt->mnt_fsname);
             else
@@ -102,7 +102,7 @@ static void automount(char *match)
     const char *p;
     struct mntent *mnt;
 
-    while (mnt = getmntent(f)) {
+    while ((mnt = getmntent(f)) != NULL) {
         p = mnt_device_path(mnt);
         /* Warning - mnt contents go invalid if we do work on mtab so
            be careful here and use getmntent_r in is_mounted */
