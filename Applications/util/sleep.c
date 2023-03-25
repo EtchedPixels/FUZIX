@@ -57,7 +57,7 @@ unsigned int argdecode(char *s)
     return value;
 }
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int i;
     unsigned int seconds = 0;
