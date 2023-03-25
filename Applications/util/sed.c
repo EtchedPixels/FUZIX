@@ -456,7 +456,7 @@ static int cmdcomp(char cchar)
       case ':':			/* label declaration */
 	if (cmdp->addr1) ABORT(AD1NG);	/* no addresses allowed */
 	fp = gettext(lab->name = fp);	/* get the label name */
-	if (lpt = search(lab)) {/* does it have a double? */
+	if ((lpt = search(lab)) != NULL) {/* does it have a double? */
 		if (lpt->address) ABORT(DLABL);	/* yes, abort */
 	} else {		/* check that it doesn't overflow label table */
 		lab->last = NULL;
@@ -472,20 +472,22 @@ static int cmdcomp(char cchar)
 	SKIPWS(cp);
 	if (*cp == '\0') {	/* if branch is to start of cmds... */
 		/* Add current command to end of label last */
-		if (sp1 = lablst->last) {
-			while (sp2 = sp1->u.link) sp1 = sp2;
+		if ((sp1 = lablst->last) != NULL) {
+			while ((sp2 = sp1->u.link) != NULL)
+				sp1 = sp2;
 			sp1->u.link = cmdp;
 		} else		/* lablst->last == NULL */
 			lablst->last = cmdp;
 		break;
 	}
 	fp = gettext(lab->name = fp);	/* else get label into pool */
-	if (lpt = search(lab)) {/* enter branch to it */
+	if ((lpt = search(lab)) != NULL) {/* enter branch to it */
 		if (lpt->address)
 			cmdp->u.link = lpt->address;
 		else {
 			sp1 = lpt->last;
-			while (sp2 = sp1->u.link) sp1 = sp2;
+			while ((sp2 = sp1->u.link) != NULL)
+				sp1 = sp2;
 			sp1->u.link = cmdp;
 		}
 	} else {		/* matching named label not found */
@@ -604,7 +606,7 @@ static char *recomp(char *expbuf, int redelim)	/* uses cp, bcount */
   brnestp = brnest;		/* initialize ptr to brnest array */
   tags = bcount = 0;		/* initialize counters */
 
-  if (*ep++ = (*sp == '^'))	/* check for start-of-line syntax */
+  if ((*ep++ = (*sp == '^')) != 0)	/* check for start-of-line syntax */
 	sp++;
 
   for (;;) {
@@ -677,7 +679,8 @@ static char *recomp(char *expbuf, int redelim)	/* uses cp, bcount */
 	    case '[':		/* begin character set pattern */
 		if (ep + 17 >= expbuf + RELIMIT) ABORT(REITL);
 		*ep++ = CCL;	/* insert class mark */
-		if (negclass = ((c = *sp++) == '^')) c = *sp++;
+		if ((negclass = ((c = *sp++) == '^')) != 0)
+			c = *sp++;
 		svclass = sp;	/* save ptr to class start */
 		do {
 			if (c == '\0') ABORT(CGMSG);
@@ -688,13 +691,14 @@ static char *recomp(char *expbuf, int redelim)	/* uses cp, bcount */
 					ep[c >> 3] |= bits[c & 7];
 
 			/* Handle escape sequences in sets */
-			if (c == '\\')
+			if (c == '\\') {
 				if ((c = *sp++) == 'n')
 					c = '\n';
 				else if (c == 't')
 					c = '\t';
 				else if (c == 'r')
 					c = '\r';
+			}
 
 			/* Enter (possibly translated) char in set */
 			ep[c >> 3] |= bits[c & 7];
@@ -734,7 +738,7 @@ static int cmdline(char *cbuf)	/* uses eflag, eargc, cmdf */
 
 		/* Else transcribe next e argument into cbuf */
 		p = *++eargv;
-		while (*++cbuf = *p++)
+		while ((*++cbuf = *p++) != 0) {
 			if (*cbuf == '\\') {
 				if ((*++cbuf = *p++) == '\0')
 					return(savep = NULL, -1);
@@ -745,13 +749,14 @@ static int cmdline(char *cbuf)	/* uses eflag, eargc, cmdf */
 				return(savep = p, 1);
 				/* We'll be back for the rest... */
 			}
+		}
 
 		/* Found end-of-string; can advance to next argument */
 		return(savep = NULL, 1);
 	}
 	if ((p = savep) == NULL) return(-1);
 
-	while (*++cbuf = *p++)
+	while ((*++cbuf = *p++) != 0) {
 		if (*cbuf == '\\') {
 			if ((*++cbuf = *p++) == '0')
 				return(savep = NULL, -1);
@@ -761,6 +766,7 @@ static int cmdline(char *cbuf)	/* uses eflag, eargc, cmdf */
 			*cbuf = '\0';
 			return(savep = p, 1);
 		}
+	}
 	return(savep = NULL, 1);
   }
 
@@ -851,7 +857,7 @@ static void resolve(void)
 		quit(2);
 	} else if (lptr->last) {/* if last is non-null */
 		rptr = lptr->last;	/* chase it */
-		while (trptr = rptr->u.link) {	/* resolve refs */
+		while ((trptr = rptr->u.link) != NULL) {	/* resolve refs */
 			rptr->u.link = lptr->address;
 			rptr = trptr;
 		}
@@ -1059,7 +1065,7 @@ static int match(char *expbuf, int gf)	/* uses genbuf */
 	if (*expbuf) return(FALSE);
 	p1 = linebuf;
 	p2 = genbuf;
-	while (*p1++ = *p2++);
+	while ((*p1++ = *p2++) != 0);
 	locs = p1 = loc2;
   } else {
 	p1 = linebuf;
@@ -1257,7 +1263,7 @@ static void dosub(char *rhsbuf)	/* uses linebuf, genbuf, spend */
   sp = genbuf;
   while (lp < loc1) *sp++ = *lp++;
 
-  for (rp = rhsbuf; c = *rp++;) {
+  for (rp = rhsbuf; (c = *rp++) != 0;) {
 	if (c == '&') {
 		sp = place(sp, loc1, loc2);
 		continue;
@@ -1270,11 +1276,11 @@ static void dosub(char *rhsbuf)	/* uses linebuf, genbuf, spend */
   }
   lp = loc2;
   loc2 = sp - genbuf + linebuf;
-  while (*sp++ = *lp++)
+  while ((*sp++ = *lp++) != 0)
 	if (sp >= genbuf + MAXBUF) fprintf(stderr, LTLMSG);
   lp = linebuf;
   sp = genbuf;
-  while (*lp++ = *sp++);
+  while ((*lp++ = *sp++) != 0);
   spend = lp - 1;
 }
 
@@ -1366,7 +1372,7 @@ static void command(sedcmd *ipc)
 	while (*p1 != '\n')
 		if (delete = (*p1++ == 0)) return;
 	p1++;
-	while (*p2++ = *p1++) continue;
+	while ((*p2++ = *p1++) != 0) continue;
 	spend = p2 - 1;
 	jump++;
 	break;
@@ -1378,7 +1384,7 @@ static void command(sedcmd *ipc)
       case GCMD:		/* copy hold space to pattern space */
 	p1 = linebuf;
 	p2 = holdsp;
-	while (*p1++ = *p2++);
+	while ((*p1++ = *p2++) != 0);
 	spend = p1 - 1;
 	break;
 
@@ -1392,7 +1398,7 @@ static void command(sedcmd *ipc)
 			p1[-1] = 0;
 			break;
 		}
-	while (*p1++ = *p2++);
+	while ((*p1++ = *p2++) != 0);
 
 	spend = p1 - 1;
 	break;
@@ -1400,7 +1406,7 @@ static void command(sedcmd *ipc)
       case HCMD:		/* copy pattern space to hold space */
 	p1 = holdsp;
 	p2 = linebuf;
-	while (*p1++ = *p2++);
+	while ((*p1++ = *p2++) != 0);
 	hspend = p1 - 1;
 	break;
 
@@ -1414,7 +1420,7 @@ static void command(sedcmd *ipc)
 			p1[-1] = 0;
 			break;
 		}
-	while (*p1++ = *p2++);
+	while ((*p1++ = *p2++) != 0);
 
 	hspend = p1 - 1;
 	break;
@@ -1480,11 +1486,12 @@ cpcom:				/* so s command can jump here */
       case SCMD:		/* substitute RE */
 	didsub = substitute(ipc);
 	if (didsub) anysub = TRUE;
-	if (ipc->flags.print && didsub)
+	if (ipc->flags.print && didsub) {
 		if (ipc->flags.print == TRUE)
 			puts(linebuf);
 		else
 			goto cpcom;
+	}
 	if (didsub && ipc->fout) fprintf(ipc->fout, "%s\n", linebuf);
 	break;
 
@@ -1509,21 +1516,25 @@ cpcom:				/* so s command can jump here */
       case XCMD:		/* exchange pattern and hold spaces */
 	p1 = linebuf;
 	p2 = genbuf;
-	while (*p2++ = *p1++) continue;
+	while ((*p2++ = *p1++) != 0)
+		 continue;
 	p1 = holdsp;
 	p2 = linebuf;
-	while (*p2++ = *p1++) continue;
+	while ((*p2++ = *p1++) != 0)
+		continue;
 	spend = p2 - 1;
 	p1 = genbuf;
 	p2 = holdsp;
-	while (*p2++ = *p1++) continue;
+	while ((*p2++ = *p1++) != 0)
+		continue;
 	hspend = p2 - 1;
 	break;
 
       case YCMD:
 	p1 = linebuf;
 	p2 = ipc->u.lhs;
-	while (*p1 = p2[*p1]) p1++;
+	while ((*p1 = p2[*p1]) != 0)
+		p1++;
 	break;
   }
 }
