@@ -96,9 +96,9 @@ static void relocate_binary(FILE *o)
     }
 }
 
-static void build_header(FILE *m)
+static unsigned build_header(FILE *m)
 {
-    unsigned tsize = 0, dsize = 0, bsize = 0;
+    unsigned tsize = 0, dsize = 0, bsize = 0, dusize = 0;
     char buf[256];
     char sym[256];
     unsigned addr;
@@ -113,6 +113,8 @@ static void build_header(FILE *m)
         if (strcmp(sym, "__data_start") == 0)
             tsize = addr;
         if (strcmp(sym, "_edata_unaligned") == 0)
+            dusize = addr;
+        if (strcmp(sym, "_edata") == 0)
             dsize = addr;
         if (strcmp(sym, "_end") == 0)
             bsize = addr;
@@ -127,11 +129,14 @@ static void build_header(FILE *m)
     hdr.a_data = dsize - tsize;
     hdr.a_bss = bsize - hdr.a_data;
     hdr.a_syms = 0;
+    /* Size to load */
+    return dusize - 0x1000;
 }
 
 int main(int argc, char *argv[])
 {
     FILE *i0, *i1, *o, *m;
+    unsigned size;
 
     if (argc != 5) {
         fprintf(stderr, "%s in0 in1 out map\n", argv[0]);
@@ -159,7 +164,7 @@ int main(int argc, char *argv[])
     }
 
     /* Manufacture the header */
-    build_header(m);
+    size = build_header(m);
     fclose(m);
 
     printf("Text size %x, Data %x, BSS %x, Run from %x\n",
@@ -170,8 +175,8 @@ int main(int argc, char *argv[])
        don't need alignment features. Note that the first 0x20 bytes of the
        block are cleared as the input binary is 0x20 offset to allow for the
        stub block. */
-    b0 = load_block(i0, 0, hdr.a_text + hdr.a_data - 0x20);
-    b1 = load_block(i1, 0, hdr.a_text + hdr.a_data - 0x20);
+    b0 = load_block(i0, 0, size - 0x20);
+    b1 = load_block(i1, 0, size - 0x20);
 
     hdr.a_trsize = hdr.a_drsize = 0;
     hdr.a_syms = 0;
