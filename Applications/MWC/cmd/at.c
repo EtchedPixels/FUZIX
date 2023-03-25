@@ -415,7 +415,7 @@ int mdtoyd(int year, int month, int mday)
 	int res, leap;
 
 	res = mday - 1;
-	if (leap = isleap(year))
+	if ((leap = isleap(year)) != 0)
 		++mlen[LEAPM];
 	while (--month >= 0)
 		res += mlen[month];
@@ -447,12 +447,12 @@ int ydtowd(int year, int yday)
  * Ydtom sets `pmonth' and `pmday' to the month and month-day of the
  * date with year `year' and year-day `yday'.
  */
-int ydtom(int year, int yday, int *pmonth, int *pmday)
+void ydtom(int year, int yday, int *pmonth, int *pmday)
 {
 	int mday, month;
 	int leap;
 
-	if (leap = isleap(year))
+	if ((leap = isleap(year)) != 0)
 		++mlen[LEAPM];
 	mday = yday;
 	for (month=0; mday >= mlen[month]; ++month)
