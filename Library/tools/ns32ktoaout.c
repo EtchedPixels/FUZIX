@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 struct exec_aout {
     uint32_t	a_midmag;		/* Flags and stuff */
