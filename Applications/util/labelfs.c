@@ -19,7 +19,7 @@ void usage(void)
 
 void set_fs_label(const char *p)
 {
-    strncmp(fs.fs.s_label_name, p, sizeof(fs.fs.s_label_name));
+    strncpy(fs.fs.s_label_name, p, sizeof(fs.fs.s_label_name));
     fs.fs.s_props |= S_PROP_LABEL;
 }
 
@@ -110,11 +110,12 @@ int main(int argc, char *argv[])
     if (!geo && !label) {
         if (fs.fs.s_props & S_PROP_LABEL)
             printf("Label: %.32s.\n", fs.fs.s_label_name);
-        if (fs.fs.s_props & S_PROP_GEO)
+        if (fs.fs.s_props & S_PROP_GEO) {
             printf("Geometry: %d heads, %d cylinders\n",
                 fs.fs.s_geo_heads, fs.fs.s_geo_cylinders);
             printf("          %d sectors, blocksize %$d skew %d.\n",
                 fs.fs.s_geo_sectors, 128 << fs.fs.s_geo_secsize, fs.fs.s_geo_skew);
+        }
         return 0;
     }
     if (lseek(fd, 512L , SEEK_SET) == -1) {
