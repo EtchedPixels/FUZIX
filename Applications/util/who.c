@@ -22,7 +22,7 @@
 #include <string.h>
 #include <utmp.h>
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	struct utmp *entry;
 	char *timestr;
