@@ -30,8 +30,8 @@ locale_t duplocale(locale_t locobj)
 	return locobj;
 }
 
-	
-static struct lconv C_lc = {
+/* Overwriting is forbidden by API call just not by the types */
+static const struct lconv C_lc = {
 	".",
 	"",
 	"",
@@ -57,7 +57,7 @@ static struct lconv C_lc = {
 
 struct lconv *localeconv(void)
 {
-	return &C_lc;
+	return (struct lconv *)&C_lc;
 }
 
 /* FIXME: add nl_langinfo() */
