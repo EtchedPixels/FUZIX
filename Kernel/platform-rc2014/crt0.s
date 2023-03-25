@@ -63,7 +63,7 @@
 init:
 	; Get the ROM info off the stack before we flip banks about
 	pop bc			; B = ROMWBW ver C = platform
-	pop de			; DE = CPU seed in KHz
+	pop de			; DE = CPU speed in KHz
 	pop hl			; H - Z80 variant L = CPU speed in MHz
 
 	; setup the memory paging for kernel
