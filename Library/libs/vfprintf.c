@@ -74,6 +74,7 @@ int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 	register char *ptmp, *add;
 	unsigned long val;
 	char tmp[64];
+	char buf[34];
 	int buffer_mode;
 
 	/* This speeds things up a bit for unbuffered */
@@ -149,7 +150,7 @@ int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 
 			case 'd':	/* Signed decimal */
 			case 'i':
-				ptmp = __ltostr((long) ((lval) ?
+				ptmp = __ltostr_r(buf, (long) ((lval) ?
 						    va_arg(ap, long) :
 						    va_arg(ap, int)), 10);
 				goto printit;
@@ -181,7 +182,7 @@ int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 			usproc:
 				val = lval ? va_arg(ap, unsigned long) :
 				    va_arg(ap, unsigned int);
-				ptmp = __ultostr(val, radix < 0 ? -radix : radix);
+				ptmp = __ultostr_r(buf, val, radix < 0 ? -radix : radix);
 				add = "";
 				if (hash) {
 					if (radix == 2)

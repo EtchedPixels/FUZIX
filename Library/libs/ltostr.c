@@ -7,10 +7,9 @@
 
 #include <string.h>
 
-static char buf[34];
 
 
-char * __ultostr(unsigned long val, int radix)
+char * __ultostr_r(char *buf, unsigned long val, int radix)
 {
    register char *p;
    register int c;
@@ -30,12 +29,12 @@ char * __ultostr(unsigned long val, int radix)
    return p;
 }
 
-char * __ltostr(long val, int radix)
+char * __ltostr_r(char *buf, long val, int radix)
 {
    char *p;
    int flg = 0;
    if( val < 0 ) { flg++; val= -val; }
-   p = __ultostr(val, radix);
+   p = __ultostr_r(buf, val, radix);
    if(p && flg) *--p = '-';
    return p;
 }
@@ -45,10 +44,12 @@ char * __ltostr(long val, int radix)
 
 char *ultoa (unsigned long value, char *strP, int radix)
 {
-    return strcpy(strP, __ultostr(value, radix));
+    char buf[34];
+    return strcpy(strP, __ultostr_r(buf, value, radix));
 }
 
 char *ltoa (long value, char *strP, int radix)
 {
-    return strcpy(strP, __ltostr(value, radix));
+    char buf[34];
+    return strcpy(strP, __ltostr_r(buf, value, radix));
 }
