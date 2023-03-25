@@ -1599,7 +1599,7 @@ void display(int redraw)
 	/* If we can't scroll this then redraw the lot */
 	/* TODO: see if its worth doing a scroll and repaint for the lower
 	   lines */
-	if (1 || opage && con_scroll(opage)) {
+	if (1 || (opage && con_scroll(opage))) {
 		redraw = 1;
 		status_dirty = 1;
 	} else {
