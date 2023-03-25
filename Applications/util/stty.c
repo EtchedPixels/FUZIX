@@ -462,7 +462,7 @@ int option(char *opt, char *next)
 
   if (match(opt, "ispeed")) {
 	num= strtol(next, &check, 10);
-	if (*check != '\0')
+	if (check != next)
 	{
 		speed= long2speed(num);
 		if (speed == (speed_t)-1)
@@ -484,7 +484,7 @@ int option(char *opt, char *next)
 
   if (match(opt, "ospeed")) {
 	num= strtol(next, &check, 10);
-	if (*check != '\0')
+	if (check != next)
 	{
 		speed= long2speed(num);
 		if (speed == (speed_t)-1)
