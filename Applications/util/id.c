@@ -35,17 +35,19 @@ int main(int argc, char *argv[])
     else
 	printf("gid=%d(%s) ", gid, grp->gr_name);
 
-    if (uid != euid)
+    if (uid != euid) {
 	if ((pwd = getpwuid(euid)) != NULL)
 	    printf("euid=%d(%s) ", euid, pwd->pw_name);
 	else
 	    printf("euid=%d ", euid);
+    }
 
-    if (gid != egid)
+    if (gid != egid) {
 	if ((grp = getgrgid(egid)) != NULL)
 	    printf("egid=%d(%s) ", egid, grp->gr_name);
 	else
 	    printf("egid=%d ", egid);
+    }
 
     printf("\n");
     return 0;
