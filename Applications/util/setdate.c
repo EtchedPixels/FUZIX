@@ -249,11 +249,12 @@ int main(int argc, char *argv[])
     if (optind != argc)
         usage();
 
-    if (wr)
+    if (wr) {
        if (rtcwrite())
            exit(0);
        else
            exit(1);
+    }
     
     if (!user && rtcdate())
         exit(0);
