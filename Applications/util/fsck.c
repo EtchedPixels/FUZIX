@@ -16,12 +16,6 @@
 static int error;
 static int aflag;
 
-static void panic(char *s)
-{
-	fprintf(stderr, "panic: %s\n", s);
-	exit(1);
-}
-
 const char *mntpoint(const char *mount)
 {
 	FILE *fp;
@@ -30,7 +24,7 @@ const char *mntpoint(const char *mount)
 
 	fp = setmntent("/etc/fstab", "r");
 	if (fp) {
-		while (mnt = getmntent(fp)) {
+		while ((mnt = getmntent(fp)) != NULL) {
 			p = mnt_device_path(mnt);
 			if (strcmp(mnt->mnt_dir, mount) == 0) {
 				endmntent(fp);
@@ -112,6 +106,7 @@ static int perform_fsck(const char *path, uint8_t search, uint8_t only)
 		fprintf(stderr, "child process failed %d.\n", WTERMSIG(st));
 		exit(1);
 	}
+	return 0;
 }
 
 int main(int argc, char *argv[])
