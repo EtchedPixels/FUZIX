@@ -27,7 +27,7 @@ extern int usleep(useconds_t __usecs);
 
 extern char **environ;
 
-extern const char * _findPath(const char *__pathname);
+extern const char * _findPath(char *buf, const char *__pathname);
 extern int execl(const char *__pathname, const char *__arg0, ...);
 extern int execle(const char *__pathname, const char *__arg0, ...);
 extern int execlp(const char *__pathname, const char *__arg0, ...);

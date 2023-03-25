@@ -18,11 +18,10 @@
  * 3. else search in current directory
  * 4. else return NULL (execve() interpretes NULL as non existent file!)
  */
-const char *_findPath(const char *path)
+const char *_findPath(char *name, const char *path)
 {
 	char *p;
 	const char *envp;
-	static char name[PATHLEN + 1];
 	if (*path == '/' || /* qualified name */ *path == '.')
 		return path;
 
@@ -49,13 +48,12 @@ const char *_findPath(const char *path)
 	}
 	if (access(path, 0) == 0)	/* file exist in current dir */
 		return name;
-	return NULL;
+	return path;
 }
 
 /* We can't shortcut this on xtensa because it's all register based. Really we should change this to just do the shortcut on 8bit platforms
    where it matters */
-#if !defined(__CC65__) && !defined(__CC68__) && !defined(__XTENSA_CALL0_ABI__)
-
+#if !defined(__CC65__) && !defined(__CC68__) && !defined(__XTENSA_CALL0_ABI__) && !defined(__riscv)
 
 /* FIXME: review typing of all of these for const stuff and standard */
 int execl(const char *pathP, const char *arg0, ...)
@@ -101,6 +99,11 @@ int execlp(const char *pathP, const char *arg0, ...)
 	va_list ptr;
 	const char *arg[32];
 	const char **p = arg;
+#ifdef PREFER_STACK
+	char name[PATHLEN + 1];
+#else
+	static char name[PATHLEN + 1];
+#endif
 
 	va_start(ptr, arg0);
 
@@ -110,7 +113,7 @@ int execlp(const char *pathP, const char *arg0, ...)
 		*p = va_arg(ptr, const char *);
 		if (*p++ == NULL) {
 			va_end(ptr);
-			return execve(_findPath(pathP), (void *) arg,
+			return execve(_findPath(name, pathP), (void *) arg,
 				      (void *) environ);
 		}
 	}
