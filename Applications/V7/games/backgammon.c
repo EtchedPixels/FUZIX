@@ -211,11 +211,12 @@ void movegen(int *mover, int *movee)
 		count = 0;
 		if (mover[i] == 0)
 			continue;
-		if ((k = 25 - i - die1) > 0 && movee[k] >= 2)
+		if ((k = 25 - i - die1) > 0 && movee[k] >= 2) {
 			if (mover[0] > 0)
 				break;
 			else
 				continue;
+		}
 		if (k <= 0) {
 			if (piececount(mover, 0, 18) != 0)
 				break;
@@ -229,11 +230,12 @@ void movegen(int *mover, int *movee)
 		for (j = 0; j <= 24; j++) {
 			if (mover[j] == 0)
 				continue;
-			if ((k = 25 - j - die2) > 0 && movee[k] >= 2)
+			if ((k = 25 - j - die2) > 0 && movee[k] >= 2) {
 				if (mover[0] > 0)
 					break;
 				else
 					continue;
+			}
 			if (k <= 0) {
 				if (piececount(mover, 0, 18) != 0)
 					break;
@@ -255,11 +257,12 @@ void movegen(int *mover, int *movee)
 				if (mover[l] == 0)
 					continue;
 				if ((k = 25 - l - die1) > 0
-				    && movee[k] >= 2)
+				    && movee[k] >= 2) {
 					if (mover[0] > 0)
 						break;
 					else
 						continue;
+				}
 				if (k <= 0) {
 					if (piececount(mover, 0, 18) != 0)
 						break;
@@ -275,11 +278,12 @@ void movegen(int *mover, int *movee)
 					if (mover[m] == 0)
 						continue;
 					if ((k = 25 - m - die1) >= 0
-					    && movee[k] >= 2)
+					    && movee[k] >= 2) {
 						if (mover[0] > 0)
 							break;
 						else
 							continue;
+					}
 					if (k <= 0) {
 						if (piececount
 						    (mover, 0, 18) != 0)
