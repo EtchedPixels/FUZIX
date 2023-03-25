@@ -17,7 +17,9 @@ struct memh __mroot = { &__mroot, 0 };
 
 struct memh *__mfreeptr = &__mroot;
 
+#ifdef USE_SYSMALLOC
 static size_t blksz = 8192;
+#endif
 
 static struct memh *brkmore(size_t nb)
 {
