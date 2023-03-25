@@ -21,7 +21,7 @@
 static char buf1[512];
 static char buf2[512];
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int		fd1;
 	int		fd2;
