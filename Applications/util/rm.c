@@ -19,7 +19,6 @@ char *basename(char *name)
 int main(int argc, const char *argv[])
 {
     int i /*, recurse = 0, interact =0 */ ;
-    int err = 1;
 
     for (i = 1; i < argc; i++) {
 	if (argv[i][0] != '-') {
