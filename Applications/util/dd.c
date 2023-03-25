@@ -183,8 +183,10 @@ int main(int argc, char *argv[])
 	        free(buf);
 	    return 1;
 	}
-    } else
-    	outfile = 1;
+    } else {
+	outfile = "-";
+	outfd = 1;
+    }
 
     if (skipval) {
 	if (lseek(infd, skipval * blocksize, 0) < 0) {
