@@ -18,11 +18,14 @@
 
 int sscanf(const char * sp, const char * fmt, ...)
 {
-static FILE  string[1] =
-{
-   {0, (char*)(unsigned) -1, 0, 0, (char*) (unsigned) -1, -1,
+#ifndef PREFER_STACK
+static
+#endif
+ FILE  string[1] =
+ {
+   {0, (uchar*)(unsigned) -1, 0, 0, (uchar*) (unsigned) -1, -1,
     _IOFBF | __MODE_READ}
-};
+  };
 
   va_list ptr;
   int rv;
