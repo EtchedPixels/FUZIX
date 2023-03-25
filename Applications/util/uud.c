@@ -252,7 +252,7 @@ void gettable(void)
 	cpt--;
     }
     cpt = buf;
-    while (c = *cpt) {
+    while ((c = *cpt) != 0) {
 	if (chtbl[c] != -1) {
 	    printf("uud: Duplicate char in translation table.\n");
 	    exit(7);
