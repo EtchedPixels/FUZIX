@@ -63,7 +63,7 @@ void run(char *file)
 		exit(1);
 	setgid(stbuf.st_gid);
 	setuid(stbuf.st_uid);
-	if (pid = fork()) {
+	if ((pid = fork()) != 0) {
 		if (pid == -1)
 			exit(1);
 		wait((int *)0);
@@ -95,7 +95,7 @@ int main(int argc, const char *argv[])
 		fprintf(stderr, "Cannot read at directory\n");
 		exit(1);
 	}
-	while (d = readdir(dirf)) {
+	while ((d = readdir(dirf)) != NULL) {
 		strncpy(file, d->d_name, DIRSIZ);
 		if (sscanf(file, "%2d.%3d.%4d.%2d", &year, &day, &tt, &uniq) != 4)
 			continue;
