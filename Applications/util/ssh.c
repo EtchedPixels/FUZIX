@@ -203,7 +203,7 @@ static pid_t pidwait(pid_t want, int f)
 int main(int argc, char *argval[])
 {
     char  *path, *tp, *sp;     /* Pointers for Path Searching */
-    int   login_sh, pid, sig, stat, asis, i;
+    int   login_sh, pid = -1, sig, stat, asis, i;
     const char *cprompt;
     char  *home;
     const char  *argv[MAX_ARGS+2];
