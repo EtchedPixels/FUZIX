@@ -16,7 +16,7 @@ FOBJS = $(FSRCS:.c=.o)
 all:    plato
 
 plato: $(OBJS) $(FOBJS)
-	$(LINKER) -o $@ $(CRT0) $^  $(LINKER_LIB) 
+	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^  $(LINKER_TAIL)
 
 $(OBJS): %.o: %.c
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@
