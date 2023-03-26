@@ -69,6 +69,7 @@ SRCS  = \
 	labelfs.c \
 	ll.c \
 	ls.c \
+	mail.c \
 	man.c \
 	manscan.c \
 	mkfs.c \

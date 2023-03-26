@@ -86,6 +86,7 @@ f 0755 /bin/id          id
 f 0755 /bin/kbdrate     kbdrate
 f 0755 /bin/ll          ll
 f 0755 /bin/logname     logname
+f 0755 /bin/mail	mail
 f 0755 /bin/man         man
 f 0644 /usr/man/man1/man.1    man.1
 f 0755 /bin/mkfifo      mkfifo
