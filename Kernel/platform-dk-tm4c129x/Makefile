@@ -65,5 +65,5 @@ image:
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec.o ../syscall_exec32.o \
 	../syscall_level2.o ../level2.o ../select.o ../blk512.o \
-	../usermem_std-armm4.o ../vt.o ../malloc.o armrelocate.o \
+	../usermem_std-armm4.o ../vt.o ../malloc.o \
 	../font8x8.o >../fuzix.map
