@@ -37,10 +37,9 @@ sccz80: $(OBJS) $(OBJ_Z80)
 	$(LINKER) -o sccz80.bin $(OBJS) $(OBJ_Z80) $(LINKER_OPT)
 	$(AOUT2FUZIX) sccz80.bin sccz80
 
-# Linker breaker
-#scc8080: $(OBJS) $(OBJ_8080)
-#	$(LINKER) -o scc8080.bin $(OBJS) $(OBJ_8080) $(LINKER_OPT)
-#	$(AOUT2FUZIX) scc8080.bin scc8080
+scc8080: $(OBJS) $(OBJ_8080)
+	$(LINKER) -o scc8080.bin $(OBJS) $(OBJ_8080) $(LINKER_OPT)
+	$(AOUT2FUZIX) scc8080.bin scc8080
 
 scc6801: $(OBJS) $(OBJ_6801)
 	$(LINKER) -o scc6801.bin $(OBJS) $(OBJ_6801) $(LINKER_OPT) 
