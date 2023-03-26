@@ -30,6 +30,6 @@ do
 esac
 done
 
-m68k-elf-ld $ARGS -o "$TARGET.bin"
+"$CROSS_COMPILE"ld $ARGS -o "$TARGET.bin"
 $FUZIX_ROOT/Standalone/elf2aout -s "$STACK" -o "$TARGET" "$TARGET.bin"
 rm -f "$TARGET.bin"
