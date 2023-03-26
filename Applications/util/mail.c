@@ -76,7 +76,7 @@ int tempfd;			/* TODO: optimize the various re-opens to use this */
 extern int optind;
 extern char *optarg;
 
-int main(int argc, char **argv);
+int main(int argc, char *argv[]);
 int deliver(int count, char *vec []);
 FILE *makerewindable(void);
 int copy(FILE *fromfp, FILE *tofp);
@@ -291,7 +291,7 @@ trylock:
             }
         }
         if (created) {
-            (void) chown(mailbox, pw->pw_uid, pw->pw_gid);
+            chown(mailbox, pw->pw_uid, pw->pw_gid);
             boxfp = fdopen(dropfd, "a");
         } else
             boxfp = fopen(mailbox, "a");
@@ -314,7 +314,7 @@ nobox:
                     "-------------\n| Mail from %s to %s\n-------------\n",
                     sender, vec[i]);
         } else {
-            (void) time(&now);
+            time(&now);
             fprintf(boxfp, "From %s %24.24s\n", sender, ctime(&now));
         }
 
