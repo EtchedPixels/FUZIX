@@ -35,8 +35,8 @@ image:
 	main.o ../swap.o ../timer.o ../simple.o ../kdata.o devices.o \
 	../tty.o ../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	pdp11.o ../syscall_proc.o ../syscall_other.o ../mm.o \
-	../devsys.o ../usermem.o ../syscall_exec16.o ../syscall_fs2.o \
-	tricks.o ../syscall_fs3.o \
+	../devsys.o ../usermem.o ../syscall_exec.o ../syscall_exec16.o \
+	../syscall_fs2.o tricks.o ../syscall_fs3.o ../blk512.o \
 	../usermem_std-pdp11.o devtty.o libc.o > ../fuzix.map
 	pdp11-aout-objcopy fuzix.aout -O binary ../fuzix.bin
 
