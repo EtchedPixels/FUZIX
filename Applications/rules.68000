@@ -19,3 +19,5 @@ CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_68000.o
 .SUFFIXES: .c .o
 HOSTCC = gcc
 HAS_FP=yes
+
+export CROSS_COMPILE
