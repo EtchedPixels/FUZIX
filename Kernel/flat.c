@@ -377,8 +377,6 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 		return ENOMEM;
 	}
 	mb->end = mb->start + a->a_text;
-	kprintf("Code for %x bytes at %p\n", csize, mb->start);
-
 
 	mb++;
 
@@ -388,7 +386,6 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 		return ENOMEM;
 	}
 	mb->end = mb->start + size;
-	kprintf("Data for %x bytes at %p\n", size, mb->start);
 
 	/* Free the old map */
 	pagemap_free(udata.u_ptab);
