@@ -570,7 +570,8 @@ int main(int argc, char* const* argv)
 
 	memset(&ah, 0, sizeof(ah));
 	ah.a_midmag = htonl((cpuinfo << 16) | NMAGIC);
-	ah.a_entry = endian32(ntohl(elffile->e_entry));
+	/* a_entry is already in native format */
+	ah.a_entry = elffile->e_entry;
 	ah.a_text = endian32(datalo);
 	ah.a_data = endian32(datahi - datalo);
 	ah.a_bss = endian32(bsshi - bsslo);
