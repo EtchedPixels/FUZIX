@@ -7,7 +7,6 @@ CFLAGS = -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/6809
 LINKER_TAIL = -L$(FUZIX_ROOT)/Library/libs -lc6809
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_TAIL += -L$(LIBGCCDIR) -lgcc
-LINKER_TAIL += --script=$(FUZIX_ROOT)/Library/link/$(TARGET).link
 LINKER_OPT =
 ASM_OPT = -o
 CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_6809_rel.o
@@ -15,3 +14,4 @@ CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_6809_rel.o
 COPT = -Os
 .SUFFIXES: .c .o .y
 HAS_FP=yes
+HOSTCC = cc
