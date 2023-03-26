@@ -8,6 +8,8 @@
 #
 TARGET=a.out
 
+# TODO; stack option
+STACK=
 ARGS=""
 #
 #	Find the target and strip out the -o foo option
@@ -17,6 +19,11 @@ do
 	case "$1" in
 	-o)
 	TARGET="$2"
+	shift
+	shift
+	;;
+	-s)
+	STACK="$2"
 	shift
 	shift
 	;;

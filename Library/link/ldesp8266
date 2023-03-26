@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-#	Wrap the ESP32 binutils. Not much is needed, just the final
+#	Wrap the esp8266 binutils. Not much is needed, just the final
 #	binary conversion
 #
 TARGET=a.out
-
+STACK=
 ARGS=""
 #
 #	Find the target and strip out the -o foo option
@@ -17,6 +17,11 @@ do
 	shift
 	shift
 	;;
+	-s)
+	STACK="$2"
+	shift
+	shift
+	;;
 	*)
 	ARGS+=' '"$1"
 	shift
@@ -24,6 +29,6 @@ do
 esac
 done
 
-m68k-elf-ld $ARGS -o "$TARGET.bin"
-$(FUZIX_ROOT)/Library/tools/elf2bin -p xtensa-esp32-elf -o "$TARGET" "$TARGET.bin"
+xtensa-lx106-elf-ld $ARGS -o "$TARGET.bin"
+$FUZIX_ROOT/Library/tools/elf2bin -p xtensa-lx106-elf -o "$TARGET" "$TARGET.bin"
 rm -f "$TARGET.bin"
