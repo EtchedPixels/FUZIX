@@ -1,9 +1,8 @@
 #include "stdio-l.h"
 
-int fputs(const void *str, FILE * fp)
+int fputs(const char *s, FILE * fp)
 {
 	register int n = 0;
-	const char *s = str;
 
 	while (*s) {
 		if (putc(*s++, fp) == EOF)

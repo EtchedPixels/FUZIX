@@ -50,7 +50,7 @@ fail:
 	return NULL;
 }
 
-int puts(const void *str)
+int puts(const char *str)
 {
 	register int n;
 	if (((n = fputs(str, stdout)) == EOF)

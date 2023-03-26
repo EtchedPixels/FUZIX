@@ -106,8 +106,8 @@ extern FILE *__fopen(const char *__path, int __fd, FILE * __stream, const char *
 
 extern FILE *tmpfile(void);
 
-extern int fputs(const void *__s, FILE *__stream);
-extern int puts(const void *__s);
+extern int fputs(const char *__s, FILE *__stream);
+extern int puts(const char *__s);
 
 extern int fread(void *__ptr, size_t __size, size_t, FILE *__stream);
 extern int fwrite(const void *__ptr, size_t __size, size_t __nmemb, FILE *__stream);
