@@ -11,8 +11,7 @@ OBJS= dumps.o io.o ld.o readobj.o table.o typeconv.o linksyms.o writefuzix.o
 all: ld09
 
 ld09: $(CRT0) $(OBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 clean realclean clobber:
 	rm -f *.o ld09 ld09r objchop catimage objdump09 *~

@@ -16,12 +16,10 @@ levee-linux: $(OBJSL)
 	gcc -o levee-linux $(OBJSL) $(LINKER_TAIL)
 
 levee-ansi: $(OBJSA)
-	$(LINKER) -o levee-ansi.bin $(CRT0) $(OBJSA) $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) -o levee-ansi $(CRT0) $(OBJSA) $(LINKER_OPT) $(LINKER_TAIL)
 
 levee-vt52: $(OBJSV) $(CRT0)
-	$(LINKER) -o levee-vt52.bin $(CRT0) $(OBJSV) $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) -o levee-vt52 $(CRT0) $(OBJSV) $(LINKER_OPT) $(LINKER_TAIL)
 
 # Build for Linux - assume appropriate host tools exist with default names
 $(OBJSL): %.o-l: %.c $(HDRS)

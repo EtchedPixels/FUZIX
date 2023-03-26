@@ -10,8 +10,7 @@ APPS = $(OBJS:.o=)
 all: $(APPS) size.report
 
 $(APPS): %: %.o
-	$(LINKER) $(LINKER_OPT) $(CRT0) $^ -o $@.bin $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $(LINKER_OPT) $(CRT0) $^ -o $@ $(LINKER_TAIL)
 
 expr.c: expr.y
 

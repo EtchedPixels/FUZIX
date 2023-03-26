@@ -11,8 +11,7 @@ all: $(APPS) size.report
 $(APPS): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 size.report: $(APPS)
 	ls -l $^ > $@

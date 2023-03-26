@@ -8,8 +8,7 @@ OBJS		=as.o assemble.o errors.o express.o \
 all: as09
 
 as09: $(CRT0) $(OBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 clean:
 	rm -f *.o as09 *~

@@ -20,13 +20,10 @@ $(APPS): $(CRT0)
 $(APPST): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 $(APPST) $(APPSNS): %: %.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
-
+	$(LINKER) $^ -o $@ $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
 
 size.report: $(APPS)
 	ls -l $^ > $@

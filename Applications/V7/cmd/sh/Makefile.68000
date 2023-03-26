@@ -24,12 +24,10 @@ $(FOBJS): fshbuild/%.o: %.c
 	$(CC) -c $(CFLAGS) $(COPT) -DBUILD_FSH $< -o $@
 
 sh: $(CRT0) $(OBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIXBRK) -o $@ $@.bin
+	$(LINKER) $^ -o $@ -s 16384 $(LINKER_OPT) $(LINKER_TAIL)
 
 fsh: $(CRT0) $(FOBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -lreadline68000 $(LINKER_TAIL)
-	$(ELF2FUZIXBRK) -o $@ $@.bin
+	$(LINKER) $^ -o $@ -s 16384 $(LINKER_OPT) -lreadline68000 $(LINKER_TAIL)
 
 size.report: $(APPS)
 	ls -l $^ > $@

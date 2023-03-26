@@ -28,12 +28,10 @@ $(APPSFP): $(CRT0)
 $(APPSNS): $(CRT0NS)
 
 $(APPS) $(APPSNS): %: %.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) -ltermcap68000 $(LINKER_TAIL)
 
 $(APPSFP): %: %.o
-	$(LINKER) $^ -o $@.bin $(LINKER_FP_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_FP_OPT) $(LINKER_TAIL)
 
 fortune-gen-linux: fortune-gen.c
 	$(HOSTCC) -o $@ $<

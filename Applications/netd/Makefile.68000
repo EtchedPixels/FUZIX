@@ -13,45 +13,34 @@ CFLAGS += -DNETD_BIG_ENDIAN
 all: $(APPS)
 
 netd-slip: $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o slip.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 telnet: $(CRT0) telnet.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 echoping: $(CRT0) echoping.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 dig: $(CRT0) dig.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 httpd: $(CRT0) httpd.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 ping: $(CRT0) ping.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 ntpdate: $(CRT0) ntpdate.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 htget:	$(CRT0) htget.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 tinyirc: $(CRT0) tinyirc.o linein.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 ifconfig: $(CRT0) ifconfig.o linein.o gethostbyname.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
-
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 size.report: $(APPS)
 	ls -l $^ > $@

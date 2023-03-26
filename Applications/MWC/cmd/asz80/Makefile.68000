@@ -18,12 +18,10 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 as: $(CRT0) $(OBJS)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 nm: $(CRT0) nm.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 nm.c: obj.h
 	

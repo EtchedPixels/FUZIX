@@ -9,16 +9,13 @@ OBJS = $(SRCS:.c=.o)
 all: $(APPS) size.report
 
 ue.fuzix: $(CRT0NS) ue.o term-fuzix.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 ue.ansi: $(CRT0NS) ue.o term-ansi.o
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 ue: $(CRT0) ue.o term.o
-	$(LINKER) $^ -o $@.bin -ltermcap68000 $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ -ltermcap68000 $(LINKER_OPT) $(LINKER_TAIL)
 
 size.report: $(APPS)
 	ls -l $< > $@

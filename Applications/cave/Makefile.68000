@@ -19,8 +19,7 @@ advgen: advgen.c
 	$(CC) $(CFLAGS) $(CCOPTS) -c $<
 
 advent: $(CRT0) $(OBJ)
-	$(LINKER) $^ -o $@.bin $(LINKER_OPT) $(LINKER_TAIL)
-	$(ELF2FUZIX) -o $@ $@.bin
+	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 clean:
 	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
