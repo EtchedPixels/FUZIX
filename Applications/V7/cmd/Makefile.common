@@ -1,0 +1,36 @@
+include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+
+SRCS  = ac.c col.c dc.c diff.c ed.c makekey.c ptx.c sum.c wall.c
+SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
+SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
+SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
+SRCS += pg.c	  tty.c
+
+SRCST = clear.c
+
+OBJS = $(SRCS:.c=.o)
+APPS = $(OBJS:.o=)
+
+OBJST = $(SRCST:.c=.o)
+APPST = $(OBJST:.o=)
+
+all: $(APPS) $(APPST) size.report
+
+$(APPS): %: %.o
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+$(APPSNS): %: %.o
+	$(LINKER) $(CRT0NS) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+$(APPST): %: %.o
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) -ltermcap$(USERCPU) $(LINKER_TAIL)
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f *.o $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+
+rmbak:
+	rm -f *~ core
+
