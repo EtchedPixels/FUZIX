@@ -60,9 +60,9 @@ typedef void (*sighandler_t)(int);
 
 extern const char *sys_siglist[];
 
-extern void sighold(int __sig);
-extern void sigrelse(int __sig);
-extern void sigignore(int __sig);
+extern int sighold(int __sig);
+extern int sigrelse(int __sig);
+extern int sigignore(int __sig);
 extern sighandler_t sigset(int __sig, sighandler_t __disp);
 extern sighandler_t signal(int signum, sighandler_t sighandler);
 
