@@ -12,5 +12,5 @@ LINKER_TAIL += -lc68hc11 -L$(LIBGCCDIR) -lgcc
 ASM_OPT = -o
 CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_68hc11_rel.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_68hc11_rel.o
-
+HAS_FP=yes
 .SUFFIXES: .c .o .y

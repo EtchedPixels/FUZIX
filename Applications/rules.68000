@@ -18,3 +18,4 @@ CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_68000.o
 #ELF2FUZIXBRK = $(FUZIX_ROOT)/Standalone/elf2aout -s 8192
 .SUFFIXES: .c .o
 HOSTCC = gcc
+HAS_FP=yes

@@ -1,16 +1,1 @@
-include $(FUZIX_ROOT)/Applications/rules.6502
-
-SRC = flashrom.c
-OBJ = $(SRC:.c=.o)
-APPS = $(OBJ:.o=)
-
-all: $(APPS)
-
-$(APPS): %: %.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LINKER_TAIL)
-
-clean:
-	rm -f $(OBJS) $(APPS) core *~ *.o
-
-rmbak:
-	rm -f *~ core
+include Makefile.common

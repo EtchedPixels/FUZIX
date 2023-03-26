@@ -14,3 +14,4 @@ CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_ns32k.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_ns32k.o
 .SUFFIXES: .c .o
 HOSTCC = gcc
+HAS_FP=yes

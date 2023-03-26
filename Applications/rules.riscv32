@@ -16,5 +16,5 @@ CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_riscv32.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_riscv32.o
 .SUFFIXES: .c .o
 HOSTCC = gcc
-
+HAS_FP=yes
 export FUZIX_ROOT

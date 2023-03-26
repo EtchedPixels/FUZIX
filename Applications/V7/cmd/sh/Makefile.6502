@@ -8,7 +8,7 @@ SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
 INCS  = brkincr.h ctype.h defs.h mac.h mode.h name.h stak.h sym.h timeout.h
 
 OBJS = $(SRCS:.c=.o)
-FOBJS = $(patsubst %.c,fshbuild_%.o, $(SRCS))
+FOBJS = $(patsubst %.c,fshbuild/%.o, $(SRCS))
 
 all: sh fsh
 
