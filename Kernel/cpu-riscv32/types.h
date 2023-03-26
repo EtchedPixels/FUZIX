@@ -1,5 +1,5 @@
-#ifndef __ARMM4_TYPES_H
-#define __ARMM4_TYPES_H
+#ifndef __RISCV32_TYPES_H
+#define __RISCV32_TYPES_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -18,4 +18,4 @@ typedef uint32_t clock_t;
 
 #define MAXUSIZE 0xffffffffU
 
-#endif /* __ARMM4_TYPES_H */
+#endif /* __RISCV32_TYPES_H */
