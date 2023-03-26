@@ -17,6 +17,11 @@ do
 	shift
 	shift
 	;;
+	-s)
+	STACK="$2"
+	shift
+	shift
+	;;
 	*)
 	ARGS+=' '"$1"
 	shift
