@@ -107,5 +107,5 @@ badswitchmsg:
 	.ascii "_switchin: FAIL"
 	.byte 13,10,0
 	.even
-swapstack:
 	.= .+256
+swapstack:
