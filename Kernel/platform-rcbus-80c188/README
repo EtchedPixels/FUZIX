@@ -1,0 +1,14 @@
+Initial sketching work for 8086 to test user builds and the like
+
+The kernel is very early days but the platform itself is
+
+80C188
+512K RAM	(low half)
+512K ROM	(high half)
+RCbus CF adapter	(0x10 8bit)
+RCbus 16x50 serial	(0xC0)
+
+(and maybe some other bits as we go like the FDC)
+
+It does not (currently) have any kind of PC BIOS, video or keyboard
+controller, although a PS/2 style keyboard interface card does exist
