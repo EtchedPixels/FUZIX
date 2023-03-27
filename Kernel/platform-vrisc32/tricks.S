@@ -165,9 +165,6 @@ save_ud:
 	jr	ra
 
 forkout:
-	# FIXME: needs to clear in sys etc
-	# Check if similar bug on 68000
-	# Do we need this ???
 	lw	ra,8(sp)
 	lw	gp,4(sp)
 	lw	tp,0(sp)
