@@ -258,6 +258,7 @@ extern float scalbnf(float, int);
 extern float sinf(float);
 extern float sinhf(float);
 extern float sqrtf(float);
+extern float tanf(float);
 extern float tgammaf(float);
 extern float truncf(float);
 extern float y0f(float);
