@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 			_sdev = optarg;
 			break;
 		case 's':
-			set_speed(atoi(optarg));
+			set_speed(atol(optarg));
 			break;
 		case 'p':
 			strncpy(_passwd, optarg, 8);
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
 
 #ifdef DEBUG
 	if (_debug & DEBUG_MISC) {
-		printf("%s open at %d baud\n", _sdev, get_baud(_speed));
+		printf("%s open at %ld baud\n", _sdev, get_baud(_speed));
 		printf("server id is %d\n", _netID);
 		printf("network password is %.8s\n", _passwd);
 		printf("entering server loop...\n");
@@ -311,7 +311,7 @@ int lst_output(int num, char *buf, int len)
 }
 #endif
 
-int set_speed(int baud)
+int set_speed(unsigned long baud)
 {
 	switch (baud) {
 	case 300:
@@ -351,7 +351,7 @@ int set_speed(int baud)
 	return 0;
 }
 
-int get_baud(int speed)
+unsigned long get_baud(speed_t speed)
 {
 	switch (speed) {
 	case B300:

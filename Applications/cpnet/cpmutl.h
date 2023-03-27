@@ -22,7 +22,7 @@
 #ifndef __cpmutl_h
 #define __cpmutl_h
 
-#if defined(__SDCC_z80) || defined(__SDCC_z180)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__CC65__) || defined(__CC68__)
 #define __attribute__(x)
 #endif
 

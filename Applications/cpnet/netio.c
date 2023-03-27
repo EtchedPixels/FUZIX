@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <time.h>
+#include <termios.h>
 
 #include "main.h"
 #include "netio.h"
@@ -71,7 +72,8 @@ void wait_for_packet(void)
 int get_packet(char *data, int *len, int *fnc, int *sid)
 {
 	int i, n, did, siz;
-	unsigned char buf[260], cks;
+	unsigned char cks;
+	static unsigned char buf[260];
 
 	/* receive header */
 	n = sio_receive(buf, 7);
@@ -192,7 +194,8 @@ int get_packet(char *data, int *len, int *fnc, int *sid)
 int send_packet(int to, int fnc, char *data, int len)
 {
 	int i, n;
-	unsigned char buf[260], cks;
+	unsigned char cks;
+	static unsigned char buf[260];
 #ifdef DEBUG
 	if (_debug & DEBUG_DATA) {
 		printf("Replying\n");

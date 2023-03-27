@@ -30,6 +30,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <termios.h>
 
 #include "main.h"
 #include "cpmutl.h"
@@ -38,11 +39,12 @@
 
 extern char *fn_name[];
 
+static unsigned char buf[256];
+
 int cpnet_12(void)
 {
 	int sid, fnc, len;
 	int first_connect;
-	unsigned char buf[256];
 	DIR *dirp = NULL;
 	struct cpmfcb search_fcb, *last_search;
 	struct cpmdpb dpb;

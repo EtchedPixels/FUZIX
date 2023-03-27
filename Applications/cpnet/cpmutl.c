@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <termios.h>
 
 #include "main.h"
 #include "cpmutl.h"

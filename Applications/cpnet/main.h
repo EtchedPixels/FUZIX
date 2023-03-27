@@ -32,8 +32,8 @@ void usage(char *pname);
 void dump_data(unsigned char *buf, int len);
 int goto_drive(int drive);
 /* int lst_output(int num, char *buf, int len); */
-int set_speed(int baud);
-int get_baud(int speed);
+int set_speed(unsigned long baud);
+unsigned long get_baud(speed_t speed);
 void error(const char *p);
 
 extern int _netID;
