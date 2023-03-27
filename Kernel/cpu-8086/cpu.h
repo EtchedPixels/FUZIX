@@ -90,3 +90,7 @@ static inline uint8_t inb(uint16_t port)
 #define NORETURN		__attribute__((__noreturn__))
 
 #define __fastcall
+
+#define	udata		(*udata_ptr)
+
+extern struct u_data *udata_ptr;

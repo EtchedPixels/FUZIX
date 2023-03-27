@@ -19,3 +19,4 @@ typedef int16_t susize_t;
 typedef uint16_t uaddr_t;
 typedef uint16_t uptr_t;		/* User pointer equivalent */
 
+#define MAXUSIZE	0xFFFF

@@ -1,26 +1,28 @@
 	.arch i8086,jumps
-	.arch .287
+	.arch .8087
 	.code16
 	.att_syntax prefix
 
 	.text
 
-	.global unix_syscall_entry
-	.global udata
-	.global doexec
-	.global __hard_di
-	.global __hard_irqrestore
-	.global __hard_ei
-	.global set_irq
-	.global	cpu_detect
+	.globl unix_syscall_entry
+	.globl udata_ptr
+	.globl doexec
+	.globl __hard_di
+	.globl __hard_irqrestore
+	.globl __hard_ei
+	.globl set_irq
+	.globl cpu_detect
+	.globl set_cpu_type
+	.globl outstring
 
-	.global copy_to_far
-	.global copy_from_far
+	.globl copy_to_far
+	.globl copy_from_far
 
 	/* GCC glue */
-	.global __ashrsi3
-	.global	__ashlsi3
-	.global abort
+	.globl __ashrsi3
+	.globl	__ashlsi3
+	.globl abort
 
 #include "kernel-8086.def"
 
@@ -62,23 +64,24 @@ unix_syscall_entry:
 	 * and int, and we'll use the parent stack frame to avoid copies
 	 */
 
-	movw	%ax, udata+U_DATA__U_CALLNO
+	movw	udata_ptr, %bx
+	movw	%ax, U_DATA__U_CALLNO(%bx)
 
 	movw	10(%bp),%ax
-	movw	%ax,udata+U_DATA__U_ARGN
+	movw	%ax,U_DATA__U_ARGN(%bx)
 	movw	12(%bp),%ax
-	movw	%ax,udata+U_DATA__U_ARGN1
+	movw	%ax,U_DATA__U_ARGN1(%bx)
 	movw	14(%bp),%ax
-	movw	%ax,udata+U_DATA__U_ARGN2
+	movw	%ax,U_DATA__U_ARGN2(%bx)
 	movw	16(%bp),%ax
-	movw	%ax,udata+U_DATA__U_ARGN3
+	movw	%ax,U_DATA__U_ARGN3(%bx)
 
 	/*
 	 * Time to stack switch (we need SP for brk() even though the
 	 * entry/exit code has no need of it and can use bp
 	 */
 	movw	%sp,%ax
-	movw	%ax,udata+U_DATA__U_SYSCALL_SP
+	movw	%ax,U_DATA__U_SYSCALL_SP(%bx)
 
 	/*
 	 * Stack switch. Load sp the instruction after ss. Doesn't matter
@@ -86,9 +89,14 @@ unix_syscall_entry:
 	 */
 	movw	%ds,%ax
 	movw	%ax,%ss
-	movw	kstack_top,%sp
+	/*
+	 *	Kstack is at udata + 512
+	 */
+	movw	%bx,%ax
+	addw	$UBLOCK_SIZE,%ax
+	movw	%ax,%sp
 
-	movb	$1,kernel_flag
+	movb	$1,U_DATA__U_INSYS(%bx)
 
 	cld
 
@@ -98,19 +106,20 @@ unix_syscall_entry:
 
 	/* At this point the user cs,ds,ss may have moved */
 
-	movb	$0,kernel_flag
+	movw	udata_ptr, %bx
+	movb	$0,U_DATA__U_INSYS(%bx)
 
 	/*
 	 *	We have a pending signal ?
 	 */
 
-	cmpb	$0,udata+U_DATA__U_CURSIG
+	cmpb	$0,U_DATA__U_CURSIG(%bx)
 	je	no_signal
 
 	xorb	%ah,%ah
-	movb	udata+U_DATA__U_CURSIG,%al
-	movb	$0, udata+U_DATA__U_CURSIG
-	movw	udata+U_DATA__U_SIGVEC,%bx
+	movb	+U_DATA__U_CURSIG(%bx),%al
+	movb	$0, U_DATA__U_CURSIG(%bx)
+	movw	U_DATA__U_SIGVEC(%bx),%bx
 	addw	%ax,%bx
 	addw	%ax,%bx
 	movw	%bx,%cx
@@ -119,8 +128,10 @@ unix_syscall_entry:
 	 *	Build a suitable return frame
 	 */
 
-	movw	udata+U_DATA__U_PAGE+2,%bx
-	movw	%bx,%es
+	pushw	%ax	/* Save signal number */
+
+	movw	U_DATA__U_PAGE+2(%bx),%ax
+	movw	%ax,%es
 	/* ES:BP is now the user stack. We build a new frame below
 	   the existing one that looks like this
 
@@ -137,14 +148,15 @@ unix_syscall_entry:
 	   dumps the stale iret frame segment and does a ret
 	*/
 	   
-	movw	udata+U_DATA__U_RETVAL,%ax
+	movw	U_DATA__U_RETVAL(%bx),%ax
 	movw	%ax,-2(%bp)
-	movb	udata+U_DATA__U_ERROR,%al
+	movb	U_DATA__U_ERROR(%bx),%al
 	xorb	%ah,%ah
 	movw	%ax,-4(%bp)
 	movw	$23,-6(%bp)
+	pop	%ax		/* Signal number */
 	movw	%ax,-8(%bp)
-	movw	udata+U_DATA__U_PAGE,%ax
+	movw	U_DATA__U_PAGE(%bx),%ax
 	movw	%ax,-10(%bp)
 	movw	%cx,-12(%bp)
 	/* FIXME: need to fix MMU logic */
@@ -161,22 +173,22 @@ no_signal:
 	 * We effective return a 32bit ulong to gcc half of which is return
 	 * and error
 	 */
-	xorb %dh,%dh
-	movb udata+U_DATA__U_ERROR,%dl
-	movw udata+U_DATA__U_RETVAL,%ax
+	xorb	%dh,%dh
+	movb	U_DATA__U_ERROR(%bx),%dl
+	movw	U_DATA__U_RETVAL(%bx),%ax
 
 	/* FIXME: need MMU code here to get new correct cs/ds/es */
 
-	movw udata+U_DATA__U_PAGE+2,%bx
-	movw udata+U_DATA__U_PAGE, %cx
+	movw	U_DATA__U_PAGE(%bx), %cx
+	movw	U_DATA__U_PAGE+2(%bx),%bx
 
 	/* We can't reference kernel objects from here */
-	movw %bx, %ss
-	movw %bx, %ds
-	movw %bp, %sp
-	movw %cx,4(%bp)		/* Patch the cs for the iret - we might
+	movw	%bx, %ss
+	movw	%bx, %ds
+	movw	%bp, %sp
+	movw	%cx,4(%bp)	/* Patch the cs for the iret - we might
 				   have been relocated */
-	popw %bp		/* Recover frame pointer */
+	popw	%bp		/* Recover frame pointer */
 	iret
 
 /*
@@ -187,31 +199,32 @@ no_signal:
  *	about the mmu struct glue
  */
 doexec:
-	movw %sp,%bp
-	movw 2(%bp),%ax
+	movw	%sp,%bp
+	movw	2(%bp),%ax
 	cli
-	movb $0,kernel_flag
+	movw	udata_ptr,%bx
+	movb	$0,U_DATA__U_INSYS(%bx)
 
 	/* SS:SP to the user stack segment */
-	movw udata+U_DATA__U_PAGE2,%dx
-	movw %dx, %ss
-	movw udata+U_DATA__U_ISP,%dx
-	movw %dx,%sp
+	movw	U_DATA__U_PAGE2(%bx),%dx
+	movw	%dx, %ss
+	movw	U_DATA__U_ISP(%bx),%dx
+	movw	%dx,%sp
 	/*
 	 * Stack the new CS:IP
 	 */
-	movw udata+U_DATA__U_PAGE,%dx
-	pushw %dx	/* CS: */
-	pushw %ax	/* IP */
+	movw	U_DATA__U_PAGE(%bx),%dx
+	pushw	%dx	/* CS: */
+	pushw	%ax	/* IP */
 	/*
 	 * Load the data segment into ES
 	 */
-	movw udata+U_DATA__U_PAGE2,%dx
-	movw %dx, %es
+	movw	U_DATA__U_PAGE2(%bx),%dx
+	movw	%dx, %es
 	/*
 	 * Just ES and DS left to go
 	 */
-	movb $0,udata+U_DATA__U_INSYS
+	movb	$0,U_DATA__U_INSYS(%bx)
 
 	/*
 	 * And go
@@ -228,7 +241,9 @@ doexec:
 	retf
 
 trap_signal:
-	mov udata+U_DATA__U_PTAB, %ax
+	movw	udata_ptr,%bx
+	movw	U_DATA__U_PTAB(%bx), %ax
+	/* TODO */
 	jmp ssig
 
 outstring:
@@ -239,16 +254,16 @@ outcharhex:
 
 __hard_di:
 	pushf
-	popw %ax
+	popw	%ax
 	cli
 	ret
 
 __hard_irqrestore:
-	popw %bx
-	popw %ax
-	pushw %ax
-	pushw %bx
-	pushw %ax
+	popw	%bx
+	popw	%ax
+	pushw	%ax
+	pushw	%bx
+	pushw	%ax
 	popf
 	ret
 
@@ -387,7 +402,7 @@ test_fputype:
 	jne	no_fpu
 	andw	$0xff7f,%ax	/* clear interrupt bit - FIXME do we need ? */
 	fldcw	scratch
-	fdisi
+	fdisi			/* 8087 only */
 	fstcw	scratch
 	testb	$80,scratch	/* Did the int bit change */
 	jnz	fpu_8087
@@ -410,6 +425,7 @@ no_fpu:
  *	tricky (the PC/AT for example runs at 1 wait state) and we don't
  *	really have a use for that either - so we don't.
  */
+
 cpu_detect:
 	call	test_fputype
 	call	test_cputype
@@ -421,6 +437,9 @@ always_16bit:
 	movb	$16,bus_width
 	ret
 
+/* TODO : wrap cpu_detect */
+set_cpu_type:
+	ret
 /*
  *	Handy routines for block copying to/from far memory. These
  *	are not optimized. We should be smarter about using movsw
@@ -486,3 +505,21 @@ abort:
 
 scratch:
 	.word	0
+fpu_type:
+	.byte	0
+bus_width:
+	.byte	0
+cpu_type:
+	.byte	0
+
+	/* TODO */
+	.globl	sys_cpu
+	.globl	sys_cpu_feat
+	.globl	sys_stubs
+
+sys_cpu:
+	.byte	0
+sys_cpu_feat:
+	.byte	0
+sys_stubs:
+	.ds	32
