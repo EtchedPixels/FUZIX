@@ -217,6 +217,11 @@ _doexec:
 	addr	UBLOCK_SIZE(r6),r1
 	lprd	sp,r1
 	lprd	usp,U_DATA__U_ISP(r6)
+	# Interrupts off for the momentary period while insys is wrong
+	sprw	psr,r2
+	andw	0xF7FF,r2
+	lprw	psr,r2
+	movqb	0,U_DATA__U_INSYS(r6)
 	movqd	0,r2
 	movqd	0,r3
 	movqd	0,r4
@@ -227,8 +232,7 @@ _doexec:
 	movw	0x0B00,tos	# PSR and if we do DE mode module
 	sprw	mod,tos
 	movd	r0,tos
-	; FIXME: who owns clearing insys etc
-	# FIXME: should we clear FP too
+	# TODO: clear fp registers if we do an FPU supporting part
 	rett	0			# To user space
 #
 #	Interrupt control. The CPU can support fancy vectored interrupts
