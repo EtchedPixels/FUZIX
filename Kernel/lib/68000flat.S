@@ -167,7 +167,7 @@ pushret:
 	;
 	movem.l a0/a2-a4/a6/d2-d7,-(a1)
 	move.l a1,U_DATA__U_SP(a2)	; Set the stack pointer
-
+	clr.b U_DATA__U_INSYS(a2)	; set child not in a syscall
 	; And carry on as the parent
 	move.w (sp)+,d0		; child pid
 	move.l (sp)+,a2
@@ -181,6 +181,7 @@ forked_up:
 ;
 forkreturn:
 	; Wipe any stray kernel data
+	; FIXME: clear U_DATA_U_INSYS and kernel_flag
 	moveq #0,d0
 	moveq #0,d1
 	moveq #0,d2
