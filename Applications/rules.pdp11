@@ -1,0 +1,15 @@
+PLATFORM = pdp11
+CC = pdp11-aout-gcc
+ASM = pdp11-aout-as
+AR = pdp11-aout-ar
+LINKER = $(FUZIX_ROOT)/Library/link/ldpdp11
+CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -Os -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/pdp11
+LINKER_TAIL = -L$(FUZIX_ROOT)/Library/libs -lcpdp11 -T$(FUZIX_ROOT)/Library/pdp11.ld
+LINKER_TAIL += -L$(LIBGCCDIR) -lgcc 
+LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
+LINKER_OPT =
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_pdp11.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_pdp11.o
+AOUT2FUZIX = cp  #for now
+HOSTCC = cc
+.SUFFIXES: .c .o

@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	-s)
+	STACK="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+# For now - we may need to do more work but probably nothing more than
+# some header munging
+pdp11-aout-ld $ARGS -o "$TARGET"
+pdp11-aout-nm -n "$TARGET" >"$TARGET".map
