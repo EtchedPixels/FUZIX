@@ -153,10 +153,11 @@ with_signal:
 	j	no_signal
 
 doexec:
+	jal	__hard_di
 	# Put the supervisor stack back where we want it
 	addi	sp, tp, UBLOCK_SIZE
 	lw	sp,U_DATA__U_ISP(tp)
-	# FIXME: who owns clearing insys etc
+	sb	zero, U_DATA__U_INSYS(tp)
 	#	TODO clear registers ?
 	#	TODO set user mode
 	jal	__hard_ei
