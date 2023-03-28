@@ -77,7 +77,7 @@ int send_question( char *name ){
     o += 4;
     
     write( fd, buf, (int)(o - buf) );
-    
+    return 0;
 }
 
 void print_name( char *ptr ){
