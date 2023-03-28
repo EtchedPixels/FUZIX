@@ -93,14 +93,14 @@ static const char *sectype(int i)
 static void valid(void *p, size_t size)
 {
 	if (((uint8_t *)p) + size > map_end) {
-		fprintf(stderr, "elf2flt: input appears corrupt.\n");
+		fprintf(stderr, "elf2aout: input appears corrupt.\n");
 		exit(1);
 	}
 }
 
 static void syntax_error(void)
 {
-	fprintf(stderr, "syntax: elf2flt [-s stacksize] -o outputfile inputfile\n");
+	fprintf(stderr, "syntax: elf2aout [-s stacksize] -o outputfile inputfile\n");
 	exit(1);
 }
 
@@ -121,7 +121,7 @@ void* load_file(const char* filename)
 		perror_exit("cannot stat input file");
 
 	if (st.st_size < 128) {
-		fprintf(stderr, "elf2flt: '%s' is too short.\n", filename);
+		fprintf(stderr, "elf2aout: '%s' is too short.\n", filename);
 		exit(1);
 	}
 	ptr = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -143,7 +143,7 @@ static unsigned int next_reloc = 0;
 static void add_reloc(unsigned int reloc)
 {
 	if (next_reloc == MAX_RELOCS) {
-		fprintf(stderr, "elf2flt: too many locations - %d.\n",
+		fprintf(stderr, "elf2aout: too many locations - %d.\n",
 			next_reloc);
 		exit(1);
 	}
@@ -154,7 +154,7 @@ static void add32(uint32_t offset, uint32_t val)
 {
 	uint32_t v;
 	if (offset > memory_size - 3) {
-		fprintf(stderr, "elf2flt: out of range relocation %d (max is %d)\n",
+		fprintf(stderr, "elf2aout: out of range relocation %d (max is %d)\n",
 			offset, memory_size - 3);
 		exit(1);
 	}
@@ -309,7 +309,7 @@ static unsigned int num_relocs = 0;
 static void add_reloc32(unsigned int offset, unsigned int count)
 {
 	if (num_reloc_sects == MAX_RELOC_SETS) {
-		fprintf(stderr, "elf2flt: too many relocation sections.\n");
+		fprintf(stderr, "elf2aout: too many relocation sections.\n");
 		exit(1);
 	}
 	reloctab[num_reloc_sects].offset = offset;
@@ -321,7 +321,7 @@ static void add_reloc32(unsigned int offset, unsigned int count)
 static void add_reloca32(unsigned int offset, unsigned int count)
 {
 	if (num_reloc_sects == MAX_RELOC_SETS) {
-		fprintf(stderr, "elf2flt: too many relocation sections.\n");
+		fprintf(stderr, "elf2aout: too many relocation sections.\n");
 		exit(1);
 	}
 	reloctab[num_reloc_sects].offset = offset;
@@ -378,11 +378,11 @@ int main(int argc, char* const* argv)
 	elffile = load_file(inputfilename);
 
 	if (memcmp(elffile->e_ident + 1, "ELF", 3)) {
-		fprintf(stderr, "elf2flt: '%s' is not an ELF file.\n", inputfilename);
+		fprintf(stderr, "elf2aout: '%s' is not an ELF file.\n", inputfilename);
 		exit(1);
 	}
 	if (elffile->e_ident[EI_CLASS] != ELFCLASS32) {
-		fprintf(stderr, "elf2flt: only 32bit ELF is supported.\n");
+		fprintf(stderr, "elf2aout: only 32bit ELF is supported.\n");
 		exit(1);
 	}
 	if (elffile->e_ident[EI_DATA] == ELFDATA2MSB)
@@ -398,7 +398,7 @@ int main(int argc, char* const* argv)
 		cpuinfo = MID_ARMM4;
 		break;
 	default:
-		fprintf(stderr, "elf2flt: unsupported machine type %d.\n", arch);
+		fprintf(stderr, "elf2aout: unsupported machine type %d.\n", arch);
 		exit(1);
 	}
 
@@ -410,7 +410,7 @@ int main(int argc, char* const* argv)
 
 	if ((endian16(elffile->e_type) != ET_EXEC) &&
 	    (endian16(elffile->e_type) != ET_DYN)) {
-		fprintf(stderr, "elf2flt: only executable files.\n");
+		fprintf(stderr, "elf2aout: only executable files.\n");
 		exit(1);
 	}
 
@@ -500,7 +500,7 @@ int main(int argc, char* const* argv)
 				break;
 
 			default:
-				fprintf(stderr, "elf2flt: Warning unknown segment type %d (%s)\n",
+				fprintf(stderr, "elf2aout: Warning unknown segment type %d (%s)\n",
 					endian32(sh->sh_type), sectype(endian32(sh->sh_type)));
 				break;
 		}
@@ -520,12 +520,12 @@ int main(int argc, char* const* argv)
 	}
 
 	if (!seentext || !seendata || !seenbss) {
-		fprintf(stderr, "elf2flt: segments missing.\n");
+		fprintf(stderr, "elf2aout: segments missing.\n");
 		exit(1);
 	}
 	if ((bsslo < texthi) || (bsslo < datahi) || (datalo < texthi))
 	{
-		fprintf(stderr, "elf2flt: overlapping segments (ELF file is too complex?)\n");
+		fprintf(stderr, "elf2aout: overlapping segments (ELF file is too complex?)\n");
 		exit(1);
 	}
 
@@ -534,7 +534,7 @@ int main(int argc, char* const* argv)
 	memory_size = datahi - textlo;
 	memory = calloc(1, memory_size);
 	if (memory == NULL) {
-		fprintf(stderr, "elf2flt: out of memory.\n");
+		fprintf(stderr, "elf2aout: out of memory.\n");
 		exit(1);
 	}
 	for (int i=0; i < endian16(elffile->e_shnum); i++)
