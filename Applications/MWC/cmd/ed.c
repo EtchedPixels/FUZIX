@@ -95,7 +95,6 @@ int main(int argc, char *argv[])
 void initialise(void)
 {
 	int i;
-	char *bp;
 
 	tmp = tmpfile();
 	if (tmp == NULL) {
@@ -1022,7 +1021,7 @@ int getfile(char *name)
 	case '\n':
 		p1 = name;
 		p2 = file;
-		while (*p1++ = *p2++)
+		while ((*p1++ = *p2++) != 0)
 			;
 		break;
 	case ' ':
@@ -1049,7 +1048,7 @@ int getfile(char *name)
 		if (file[0] == '\0') {
 			p1 = file;
 			p2 = name;
-			while (*p1++ = *p2++)
+			while ((*p1++ = *p2++) != 0)
 				;
 		}
 		break;
@@ -2096,7 +2095,7 @@ int execute(int a)
 		ep = NULL;
 		lp = linebuf;
 		do {
-			if (ep=match(lp, codebuf))
+			if ((ep = match(lp, codebuf)) != 0)
 				break;
 		} while (*lp++);
 	}
@@ -2218,7 +2217,7 @@ char *match(char *lp, char *cp)
 			cp = lcp + *lcp + 1;
 		star:
 			do {
-				if (lcp=match(lp, cp))
+				if ((lcp = match(lp, cp)) != 0)
 					return (lcp);
 			} while (--lp >= llp);
 			return (NULL);
