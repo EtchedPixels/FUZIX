@@ -360,7 +360,7 @@ void handleTimer(void)
 		} else {
 			// ma is grooving across the top of the screen
 			ma.x--;
-			for (i1 = 0; i < MA_HEIGHT; i1++)
+			for (i1 = 0; i1 < MA_HEIGHT; i1++)
 				mvprintw(2 + i1, ma.x, "%s ", alienMa[i1]);
 			refresh();
 			// if we have reach the edge then remove ma
