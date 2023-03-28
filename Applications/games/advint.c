@@ -416,8 +416,8 @@ void print(int msg)
 /* pnumber - print a number */
 void pnumber(int n)
 {
-	char buf[10];
 #ifdef __linux__
+	char buf[10];
 	sprintf(buf, "%d", n);
 	trm_str(buf);
 #else
