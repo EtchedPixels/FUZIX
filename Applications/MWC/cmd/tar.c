@@ -21,7 +21,7 @@
 #define DIRSIZ 30
 struct direct {
 	uint16_t d_ino;
-	uint8_t d_name[DIRSIZ];
+	char d_name[DIRSIZ];
 };
 
 /* Possible actions for do_checksum_error().  */
