@@ -5,10 +5,9 @@
 /* Profil syscall support (not yet complete) */
 #undef CONFIG_PROFIL
 
-/* THESE ARE ALL WRONG */
 #define CONFIG_MULTI
+/* Will need to set up a proper 8086 segmented model before this is useful */
 #define CONFIG_SWAP_ONLY
-#define CONFIG_USERMEM_DIRECT
 #define CONFIG_BANKS 	1
 #define PROC_SIZE	128			/* 64K, 128 * 512 */
 
@@ -16,7 +15,8 @@
 #define UDATA_SIZE	512
 #define UDATA_BLKS	1
 
-#define PROGBASE	0x8000UL
+/* TODO */
+#define PROGBASE	0x0000UL		/* Starts at cs:0 */
 #define PROGLOAD	PROGBASE
 #define PROGTOP		0xE000UL
 #define SWAP_SIZE	(130 + 2)		/* 2 for the udata */
@@ -40,6 +40,9 @@
 #define NUM_DEV_TTY 1
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5        /* Number of block buffers */
-#define NMOUNTS	 2	  /* Number of mounts at a time */
+#define MAX_BLKDEV 2
+#define NMOUNTS	 4	  /* Number of mounts at a time */
+
+#define CONFIG_IDE
 
 #define plt_copyright()

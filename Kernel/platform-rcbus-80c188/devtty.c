@@ -6,11 +6,6 @@
 #include <device.h>
 #include <tty.h>
 
-volatile uint16_t *uart_rxstatus = (volatile uint16_t *)0177560;
-volatile uint8_t *uart_rxdata = (volatile uint8_t *)0177562;
-volatile uint8_t *uart_txstatus = (volatile uint8_t *)0177564;
-volatile uint8_t *uart_txdata = (volatile uint8_t *)0177566;
-
 static unsigned char tbuf1[TTYSIZ];
 static uint8_t sleeping;
 
@@ -36,14 +31,14 @@ void kputchar(uint_fast8_t c)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	uint8_t c = *uart_txstatus;
-	return (c & 0x80) ? TTY_READY_NOW : TTY_READY_SOON;
+	uint8_t c = inb(0xC5);
+	return (c & 0x20) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	/* Just the console for now */
-	*uart_txdata = c;
+	outb(c, 0xC0);
 }
 
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
@@ -67,18 +62,9 @@ void tty_data_consumed(uint8_t minor)
 /* Currently run off the timer */
 void tty_interrupt(void)
 {
-	uint8_t r = *uart_rxstatus;
-	if (r & 0x80) {
-		r = *uart_rxdata;
-		tty_inproc(1,r);
-	}
-	if (sleeping) {
-		r = *uart_txstatus;
-		if (r & 0x80) {
-			tty_outproc(1);
-			sleeping &= ~2;
-		}
-	}
+	uint8_t r = inb(0xC5);
+	if (r & 0x01)
+		tty_inproc(1, inb(0xC0));
 }
 
 void plt_interrupt(void)

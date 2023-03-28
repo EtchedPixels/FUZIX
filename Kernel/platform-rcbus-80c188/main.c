@@ -39,4 +39,12 @@ void memzero(void *p, usize_t len)
 	memset(p, 0, len);
 }
 
-uint16_t irqstack[128];	/* Used for swapping only */
+void devide_writeb(uint_fast8_t reg, uint_fast8_t value)
+{
+	outb(value, reg);
+}
+
+uint8_t devide_readb(uint_fast8_t reg)
+{
+	return inb(reg);
+}

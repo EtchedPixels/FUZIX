@@ -5,12 +5,14 @@ CSRCS += devices.c main.c libc.c
 ASRCS = 80c188.S crt0.S
 ASRCS += tricks.S
 
-DSRCS = 
+DSRCS = ../dev/devide.c ../dev/devide_discard.c ../dev/blkdev.c ../dev/mbr.c
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
 COBJS = $(CSRCS:.c=.o)
 AOBJS = $(ASRCS:.S=.o)
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS)
+
+CROSS_CCOPTS += -I../dev/
 
 all:	$(OBJS)
 
@@ -34,4 +36,6 @@ image:
 	../syscall_fs.o ../syscall_proc.o ../syscall_other.o ../mm.o \
 	../devsys.o ../usermem.o ../syscall_exec.o ../syscall_exec16.o \
 	../syscall_fs2.o tricks.o ../syscall_fs3.o ../blk512.o \
-	../usermem_std-8086.o 80c188.o devtty.o libc.o > ../fuzix.map
+	../usermem_std-8086.o \
+	devide.o devide_discard.o blkdev.o mbr.o \
+	80c188.o devtty.o libc.o > ../fuzix.map
