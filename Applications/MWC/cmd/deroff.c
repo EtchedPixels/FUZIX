@@ -95,7 +95,7 @@ char *dgets(char *as)
 {
 	register unsigned n = NLINE;
 	register char *s;
-	register int c;
+	register int c = 0;
 
 	s = as;
 	while (--n > 0 && (c = dgetc()) != EOF)
