@@ -19,6 +19,7 @@ static char *ptr;
 int outbuf(int c)
 {
 	*ptr++ = c;
+	return 0;
 }
 
 void tputs_buf(char *p, int n)
@@ -40,7 +41,6 @@ void clrtoeol(void)
 	if (*t_clreol)
 		tputs_buf(t_clreol, 1);
 	else {
-		int i=0;
 		if (COLS-outxy.X > 0) {
 			memset(str, ' ', COLS-outxy.X);
 			write(1, str, COLS - outxy.X);

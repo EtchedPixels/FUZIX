@@ -14,7 +14,7 @@ extern void tty_init(void);
 #define UBUF 768
 #define MODE 0666
 #define TABSZ 4
-#define TABM TABSZ-1
+#define TABM (TABSZ-1)
 
 #define MAXCOLS 132
 #define MAXROWS 32
