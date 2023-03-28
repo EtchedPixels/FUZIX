@@ -65,7 +65,7 @@ void sendq( void ){
     write(fd, buf, 48);
 }
 
-my_open( int argc, char *argv[]){
+void my_open( int argc, char *argv[]){
     struct hostent *h;
 
     h=gethostbyname( argv[optind] );
@@ -96,7 +96,6 @@ int main( int argc, char *argv[] ){
     uint32_t uv = 0;
     int tz = 0;
     struct ntp_t *ptr = (struct ntp_t *)buf;
-    char *p;
 
     while ((rv = getopt( argc, argv, "p:o:ds" )) > 0 ){
 	switch (rv){
