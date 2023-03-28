@@ -43,8 +43,6 @@ static int _fd = -1;
 int sio_open(const char *sdev, int speed)
 {
 	struct termios ts;
-	int off = 0;
-	int modemlines;
 
 	sio_close();
 

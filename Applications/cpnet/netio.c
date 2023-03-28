@@ -50,7 +50,7 @@ void wait_for_packet(void)
 
 	/* wait for ENQ byte... */
 	while (1) {
-		while (sio_receive(buf, 1) < 1) {
+		while (sio_receive((char *)buf, 1) < 1) {
 		}
 #ifdef DEBUG
 		if (_debug & DEBUG_PACKET)
@@ -62,7 +62,7 @@ void wait_for_packet(void)
 
 	/* send ACK back */
 	buf[0] = ACK;
-	sio_send(buf, 1);
+	sio_send((char *)buf, 1);
 #ifdef DEBUG
 	if (_debug & DEBUG_PACKET)
 		printf("\t<< %02X\n", buf[0]);
@@ -76,7 +76,7 @@ int get_packet(unsigned char *data, int *len, int *fnc, int *sid)
 	static unsigned char buf[260];
 
 	/* receive header */
-	n = sio_receive(buf, 7);
+	n = sio_receive((char *)buf, 7);
 	cks = 0;
 	for (i = 0; i < n; ++i) {
 #ifdef DEBUG
@@ -114,12 +114,12 @@ int get_packet(unsigned char *data, int *len, int *fnc, int *sid)
 
 	/* send ACK */
 	buf[0] = ACK;
-	sio_send(buf, 1);
+	sio_send((char *)buf, 1);
 	if (_debug & DEBUG_PACKET)
 		printf("\t<< %02X\n", buf[0]);
 
 	/* receive data part */
-	n = sio_receive(buf, siz + 2);
+	n = sio_receive((char *)buf, siz + 2);
 	cks = 0;
 	for (i = 0; i < n; ++i) {
 #ifdef DEBUG
@@ -147,7 +147,7 @@ int get_packet(unsigned char *data, int *len, int *fnc, int *sid)
 	}
 
 	/* receive checksum field */
-	n = sio_receive(buf, 2);
+	n = sio_receive((char *)buf, 2);
 	for (i = 0; i < n; ++i) {
 #ifdef DEBUG
 		if (_debug & DEBUG_PACKET)
@@ -171,7 +171,7 @@ int get_packet(unsigned char *data, int *len, int *fnc, int *sid)
 	}
 
 	/* receive trailer */
-	n = sio_receive(buf, 1);
+	n = sio_receive((char *)buf, 1);
 	for (i = 0; i < n; ++i) {
 		if (_debug & DEBUG_PACKET)
 			printf(">> %02X\n", buf[i]);
@@ -184,7 +184,7 @@ int get_packet(unsigned char *data, int *len, int *fnc, int *sid)
 
 	/* send ACK */
 	buf[0] = ACK;
-	sio_send(buf, 1);
+	sio_send((char *)buf, 1);
 	if (_debug & DEBUG_PACKET)
 		printf("\t<< %02X\n", buf[0]);
 
@@ -209,13 +209,13 @@ int send_packet(int to, int fnc, unsigned char *data, int len)
 	}
 
 	buf[0] = ENQ;
-	sio_send(buf, 1);
+	sio_send((char *)buf, 1);
 #ifdef DEBUG
 	if (_debug & DEBUG_PACKET)
 		printf("\t<< %02X\n", buf[0]);
 #endif
 	/* wait for ACK */
-	n = sio_receive(buf, 1);
+	n = sio_receive((char *)buf, 1);
 #ifdef DEBUG
 	for (i = 0; i < n; ++i) {
 		if (_debug & DEBUG_PACKET)
@@ -237,9 +237,9 @@ int send_packet(int to, int fnc, unsigned char *data, int len)
 	buf[6] = -cks;		/* HCS */
 	if (_debug & DEBUG_PACKET)
 		printf("\t<< %02X\n", buf[6]);
-	sio_send(buf, 7);
+	sio_send((char *)buf, 7);
 	/* wait for ACK */
-	n = sio_receive(buf, 1);
+	sio_receive((char *)buf, 1);
 #ifdef DEBUG
 	for (i = 0; i < n; ++i) {
 		if (_debug & DEBUG_PACKET)
@@ -268,9 +268,9 @@ int send_packet(int to, int fnc, unsigned char *data, int len)
 		printf("\t<< %02X\n", buf[len + 3]);
 	}
 #endif
-	sio_send(buf, len + 4);
+	sio_send((char *)buf, len + 4);
 	/* wait for ACK */
-	n = sio_receive(buf, 1);
+	n = sio_receive((char *)buf, 1);
 #ifdef DEBUG
 	for (i = 0; i < n; ++i) {
 		if (_debug & DEBUG_PACKET)
@@ -293,5 +293,5 @@ int send_ok(int to, int fnc)
 
 int send_error(int to, int fnc)
 {
-	return send_packet(to, fnc, "\xFF\x0C", 2);
+	return send_packet(to, fnc, (unsigned char *)"\xFF\x0C", 2);
 }

@@ -44,12 +44,12 @@ static unsigned char buf[256];
 int cpnet_12(void)
 {
 	int sid, fnc, len;
-	int first_connect;
+/*	int first_connect; */
 	DIR *dirp = NULL;
 	struct cpmfcb search_fcb, *last_search;
 	struct cpmdpb dpb;
 
-	first_connect = 0;
+/*	first_connect = 0; */
 
 	/* fake DPB for a hypothetical 32M disk */
 	dpb.sptl = 1024 & 0xFF;
@@ -96,7 +96,7 @@ int cpnet_12(void)
 
 		case 3:	/* raw console input */
 			if (_logged_in) {
-				int console = buf[0];
+				/* buf[0] held console number */
 				buf[0] = 0x1a;
 				send_packet(sid, 3, buf, 1);
 			} else {
@@ -106,7 +106,7 @@ int cpnet_12(void)
 
 		case 4:	/* raw console output */
 			if (_logged_in) {
-				int console = buf[0];
+				/* buf[0] held console number */
 				write(1, buf + 1, 1);
 				send_ok(sid, 4);
 			} else {
@@ -140,7 +140,7 @@ int cpnet_12(void)
 
 		case 11:	/* get console status */
 			if (_logged_in) {
-				int console = buf[0];
+				/* buf[0] held console number */
 				buf[0] = 0x00;
 				send_packet(sid, 11, buf, 1);
 			} else {
@@ -170,9 +170,9 @@ int cpnet_12(void)
 		case 15:	/* open file */
 			if (_logged_in) {
 				struct cpmfcb fcb;
-				int fd, dirc, userno;
+				int fd, dirc;
 				dirc = 0;
-				userno = buf[0];
+				/*userno = buf[0]; */
 				/* TODO: validate user number, check password? */
 				memcpy((void *) &fcb, (void *) &buf[1], 13);
 				/* close search */
@@ -211,9 +211,9 @@ int cpnet_12(void)
 
 		case 16:	/* close file */
 			if (_logged_in) {
-				int user, *ip, fd = 0;
+				int *ip, fd = 0;
 				struct cpmfcb fcb;
-				user = buf[0];
+				/*user = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 36);
 				ip = (int *) fcb.dmap;
 				fd = *ip;
@@ -286,7 +286,7 @@ int cpnet_12(void)
 
 		case 19:	/* delete file */
 			if (_logged_in) {
-				int retc, userno = buf[0];
+				int retc;/* userno = buf[0]; */
 				struct cpmfcb fcb;
 				/* buf+1 = first 13 bytes of FCB containing drive fname ext ex */
 				/* The FCB may contain the '?' meta-character */
@@ -307,11 +307,11 @@ int cpnet_12(void)
 
 		case 20:	/* read sequential */
 			if (_logged_in) {
-				int n, user, *ip, fd = 0;
+				int n, *ip, fd = 0;
 				unsigned long fpos;
 				struct cpmfcb fcb;
 
-				user = buf[0];
+				/*user = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 36);
 				ip = (int *) fcb.dmap;
 				fd = *ip;	/* TODO: check for valid fd? */
@@ -344,11 +344,11 @@ int cpnet_12(void)
 
 		case 21:	/* write sequential */
 			if (_logged_in) {
-				int n, user, *ip, fd = 0;
+				int n, *ip, fd = 0;
 				unsigned long fpos;
 				struct cpmfcb fcb;
 
-				user = buf[0];
+				/* user = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 36);
 				ip = (int *) fcb.dmap;
 				fd = *ip;	/* TODO: check for valid fd? */
@@ -376,8 +376,8 @@ int cpnet_12(void)
 		case 22:	/* create file */
 			if (_logged_in) {
 				struct cpmfcb fcb;
-				int fd, dirc, userno;
-				userno = buf[0];
+				int fd, dirc;
+				/* userno = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 13);
 				/* close search */
 				if (dirp) {
@@ -415,7 +415,7 @@ int cpnet_12(void)
 
 		case 23:	/* rename file */
 			if (_logged_in) {
-				int retc, userno = buf[0];
+				int retc; /*, userno = buf[0]; */
 				struct cpmfcb oldfcb, newfcb;
 				/* buf+1  = first 16 bytes of FCB containing drive old-name ext ? ? ? ? */
 				/* buf+17 = first 16 bytes of FCB containing drive new-name ext ? ? ? ? */
@@ -460,8 +460,8 @@ int cpnet_12(void)
 
 		case 27:	/* get allocation vector */
 			if (_logged_in) {
-				int cdisk;
-				cdisk = buf[0];
+/*				int cdisk;
+				cdisk = buf[0]; */
 				/* TODO: check for valid disk */
 				update_allocv();
 				send_packet(sid, 27, allocv, 256);
@@ -489,7 +489,7 @@ int cpnet_12(void)
 			break;
 
 		case 31:{	/* get DPB */
-				int disk = buf[0];	/* A: = 0 ... P: = 15 */
+/*				int disk = buf[0];*/	/* A: = 0 ... P: = 15 */
 				memcpy((void *) &buf, (void *) &dpb, 15);
 				/* there is no possible error return for this (CP/NET 1.1) */
 				send_packet(sid, 31, buf, 15);
@@ -502,11 +502,11 @@ int cpnet_12(void)
 
 		case 33:	/* read random */
 			if (_logged_in) {
-				int n, userno, *ip, fd = 0;
+				int n, *ip, fd = 0;
 				unsigned long fpos;
 				struct cpmfcb fcb;
 
-				userno = buf[0];
+				/*userno = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 36);
 				ip = (int *) fcb.dmap;
 				fd = *ip;	/* TODO: check for valid fd? */
@@ -538,11 +538,11 @@ int cpnet_12(void)
 		case 40:	/* write random with zero fill *//* TODO: check this! */
 		case 34:	/* write random */
 			if (_logged_in) {
-				int n, userno, *ip, fd = 0;
+				int n, *ip, fd = 0;
 				unsigned long fpos;
 				struct cpmfcb fcb;
 
-				userno = buf[0];
+				/* userno = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 36);
 				ip = (int *) fcb.dmap;
 				fd = *ip;	/* TODO: check for valid fd? */
@@ -569,10 +569,9 @@ int cpnet_12(void)
 			if (_logged_in) {
 				struct cpmfcb fcb;
 				int retc;
-				unsigned userno;
 				unsigned long nrec;
 				struct stat stbuf;
-				userno = buf[0];
+				/* userno = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 13);
 				retc = 0;
 				if (fcb.drive > 0) {
@@ -600,12 +599,12 @@ int cpnet_12(void)
 
 		case 36:	/* set random record */
 			if (_logged_in) {
-				int userno, *ip, fd = 0;
+				/* int *ip; */
 				struct cpmfcb fcb;
-				userno = buf[0];
+				/* userno = buf[0]; */
 				memcpy((void *) &fcb, (void *) &buf[1], 36);
-				ip = (int *) fcb.dmap;
-				fd = *ip;
+				/*ip = (int *) fcb.dmap; */
+				/* fd = *ip; */
 				/* TODO: check for a valid open file */
 				fcb.r0 = fcb.cr;
 				fcb.r1 = fcb.ex;
@@ -702,9 +701,9 @@ int cpnet_12(void)
 			break;
 
 		case 64:	/* login */
-			if (strncmp(buf, _passwd, 8) == 0) {
+			if (strncmp((char *)buf, _passwd, 8) == 0) {
 				_logged_in = 1;
-				first_connect = 1;
+/*				first_connect = 1; */
 				send_ok(sid, 64);
 #ifdef DEBUG
 				if (_debug & DEBUG_MISC)

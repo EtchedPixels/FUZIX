@@ -218,7 +218,7 @@ int setname(struct cpmfcb *fcb, char *name)
 	int i;
 	char *p;
 
-	p = fcb->name;
+	p = (char *)fcb->name;
 	for (i = 0; i < 8; ++i) {
 		if (*name && (*name != '.')) {
 			*p++ = toupper(*name & 0x7f);
