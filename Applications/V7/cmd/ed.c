@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 	if (argc>1) {
 		p1 = *argv;
 		p2 = savedfile;
-		while (*p2++ = *p1++)
+		while ((*p2++ = *p1++) != 0)
 			;
 		globp = "r";
 	}
@@ -554,7 +554,7 @@ void filename(char comm)
 		if (*p1==0 && comm!='f')
 			error(Q);
 		p2 = file;
-		while (*p2++ = *p1++)
+		while ((*p2++ = *p1++) != 0)
 			;
 		return;
 	}
@@ -574,7 +574,7 @@ void filename(char comm)
 	if (savedfile[0]==0 || comm=='e' || comm=='f') {
 		p1 = savedfile;
 		p2 = file;
-		while (*p1++ = *p2++)
+		while ((*p1++ = *p2++) != 0)
 			;
 	}
 }
@@ -640,7 +640,7 @@ void error(const char *s)
 int getchr(void)
 {
 	char c;
-	if (lastc=peekc) {
+	if ((lastc = peekc) != 0) {
 		peekc = 0;
 		return(lastc);
 	}
@@ -868,7 +868,7 @@ char *getline(int tl)
 	bp = getblock(tl, READ);
 	nl = nleft;
 	tl &= ~0377;
-	while (*lp++ = *bp++)
+	while ((*lp++ = *bp++) != 0)
 		if (--nl == 0) {
 			bp = getblock(tl+=0400, READ);
 			nl = nleft;
@@ -888,7 +888,7 @@ int putline(void)
 	bp = getblock(tl, WRITE);
 	nl = nleft;
 	tl &= ~0377;
-	while (*bp = *lp++) {
+	while ((*bp = *lp++) != 0) {
 		if (*bp++ == '\n') {
 			*--bp = 0;
 			linebp = lp;
@@ -1033,13 +1033,13 @@ void join(void)
 	gp = genbuf;
 	for (a1=addr1; a1<=addr2; a1++) {
 		lp = getline(*a1);
-		while (*gp = *lp++)
+		while ((*gp = *lp++) != 0)
 			if (gp++ >= &genbuf[LBSIZE-2])
 				error(Q);
 	}
 	lp = linebuf;
 	gp = genbuf;
-	while (*lp++ = *gp++)
+	while ((*lp++ = *gp++) != 0)
 		;
 	*addr1 = putline();
 	if (addr1<addr2)
@@ -1127,7 +1127,7 @@ int getsub(void)
 	p1 = linebuf;
 	if ((p2 = linebp) == 0)
 		return(EOF);
-	while (*p1++ = *p2++)
+	while ((*p1++ = *p2++) != 0)
 		;
 	linebp = 0;
 	return(0);
@@ -1143,7 +1143,7 @@ void dosub(void)
 	rp = rhsbuf;
 	while (lp < loc1)
 		*sp++ = *lp++;
-	while (c = *rp++&0377) {
+	while ((c = *rp++ & 0377) != 0) {
 		if (c=='&') {
 			sp = place(sp, loc1, loc2);
 			continue;
@@ -1157,12 +1157,12 @@ void dosub(void)
 	}
 	lp = loc2;
 	loc2 = sp - genbuf + linebuf;
-	while (*sp++ = *lp++)
+	while ((*sp++ = *lp++) != 0)
 		if (sp >= genbuf + LBSIZE)
 			error(Q);
 	lp = linebuf;
 	sp = genbuf;
-	while (*lp++ = *sp++)
+	while ((*lp++ = *sp++) != 0)
 		;
 }
 
@@ -1382,7 +1382,7 @@ int execute(int gf, int *addr)
 			return(0);
 		p1 = linebuf;
 		p2 = genbuf;
-		while (*p1++ = *p2++)
+		while ((*p1++ = *p2++) != 0)
 			;
 		locs = p1 = loc2;
 	} else {
