@@ -193,7 +193,7 @@ static void dump_interface(void)
 	if (ioctl(sock, SIOCGIFHWADDR, &ifr) == 0)
 		display_hwaddr();
 	ip_print("inet", SIOCGIFADDR, 0);
-	if (flags & IFF_POINTOPOINT, 0)
+	if (flags & IFF_POINTOPOINT)
 		ip_print("destination", SIOCGIFDSTADDR, 0);
 	else
 		ip_print("netmask", SIOCGIFNETMASK, 0);
