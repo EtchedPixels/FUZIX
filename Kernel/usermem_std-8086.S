@@ -17,6 +17,9 @@
 
 	.globl	_uzero
 
+	.globl	_uget_ispace
+	.globl	_uput_ispace
+
 /*
  *	We assume a single segment model for now. p->page is CS p->page2
  *	is DS/ES/SS
@@ -96,6 +99,7 @@ _uget:
 	movw	%sp,%bp
 	movw	udata_ptr,%bx
 	movw	U_DATA__U_PAGE+2(%bx),%ax
+_uget_1:
 	movw	%ax,%ds
 	pushw	%di
 	pushw	%si
@@ -110,11 +114,19 @@ _uget:
 	popw	%bp
 	ret
 
+_uget_ispace:
+	pushw	%bp
+	movw	%sp,%bp
+	movw	udata_ptr,%bx
+	movw	U_DATA__U_PAGE(%bx),%ax
+	jmp	_uget_1
+
 _uput:
 	pushw	%bp
 	movw	%sp,%bp
 	movw	udata_ptr,%bx
 	movw	U_DATA__U_PAGE+2(%bx),%ax
+_uput_1:
 	movw	%ax,%es
 	pushw	%di
 	pushw	%si
@@ -128,3 +140,10 @@ _uput:
 	popw	%di
 	popw	%bp
 	ret
+
+_uput_ispace:
+	pushw	%bp
+	movw	%sp,%bp
+	movw	udata_ptr,%bx
+	movw	U_DATA__U_PAGE(%bx),%ax
+	jmp	_uget_1
