@@ -27,7 +27,11 @@ typedef struct {
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
+#ifdef __GNUC__
+extern void exit(int __status) __attribute__((noreturn));
+#else
 extern void exit(int __status);
+#endif
 extern void abort(void);
 
 
