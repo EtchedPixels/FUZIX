@@ -346,7 +346,7 @@ void quit(int sig)
 /* Add string to input buffer */
 void addstr(char *s)
 {
-	for (; ibuf[opos++] = *s; s++)
+	for (; (ibuf[opos++] = *s) != 0; s++)
 		if (lecho)
 			qbyte(*s);
 	opos--;
@@ -490,6 +490,8 @@ int myread(void)
 			return t;
 		}
 		return 0;
+	default:
+		exit(1);
 	}
 }
 
@@ -522,6 +524,7 @@ int my_open(int argc, char *argv[])
 		exit(1);
 	}
 	fcntl(fddw, F_SETFL, O_NDELAY);
+	return 0;
 }
 
 int main(int argc, char *argv[])
