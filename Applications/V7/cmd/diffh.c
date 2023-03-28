@@ -214,7 +214,7 @@ FILE *dopen(const char *f1, const char *f2)
 	/* FIXME: buffer length is not sanely checked, should
 	   strdup and then modify the copy in situ */
 	if ((statbuf.st_mode & S_IFMT) == S_IFDIR) {
-		for (bptr = b; *bptr = *f1++; bptr++);
+		for (bptr = b; (*bptr = *f1++) != 0; bptr++);
 		*bptr++ = '/';
 		for (eptr = f2; *eptr != 0; eptr++) {
 			if (*eptr == '/' && eptr[1] != 0 && eptr[1] != '/')
