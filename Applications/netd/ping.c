@@ -103,7 +103,7 @@ void sendping( void ){
     seq++;
 }
 
-my_open( int argc, char *argv[]){
+void my_open( int argc, char *argv[]){
     struct hostent *h;
 
     h=gethostbyname( argv[1] );
@@ -129,8 +129,7 @@ my_open( int argc, char *argv[]){
 
 
 int main( int argc, char *argv[] ){
-    uint16_t c = 0;
-    int x,i;
+    int x;
     time_t t;
     struct icmp *icmpbuf;
     struct ip *ipbuf;
