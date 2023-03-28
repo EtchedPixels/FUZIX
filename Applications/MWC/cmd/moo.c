@@ -68,13 +68,16 @@ int main(int argc, char *argv[])
 			else {
 				nbull = 0;
 				ncow = 0;
-				for (i = 0; i != nmoo; i++)
-					for (j = 0; j != nmoo; j++)
-						if (line[i] == moo[j])
+				for (i = 0; i != nmoo; i++) {
+					for (j = 0; j != nmoo; j++) {
+						if (line[i] == moo[j]) {
 							if (i == j)
 								nbull++;
 							else
 								ncow++;
+						}
+					}
+				}
 				if (nbull == nmoo) {
 					printf("Right!\n");
 					break;
