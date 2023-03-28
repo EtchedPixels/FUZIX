@@ -96,7 +96,7 @@ void doerr(const char *s, ...)
 char *mmalloc(size_t n)
 {
 	char *p;
-	if (p = malloc(n))
+	if ((p = malloc(n)) != NULL)
 		return p;
 	doerr(nospace);
 }
@@ -833,7 +833,7 @@ void expand(char *str)
 	register char *p;
 	int endc;
 
-	while (c = *str++) {
+	while ((c = *str++) != 0) {
 		if (c == '$') {
 			c = *str++;
 			switch (c) {
@@ -959,12 +959,13 @@ void doit(char *cmd)
 			printf("%s\n", cmd);
 		fflush(stdout);
 		rstat = system(cmd);
-		if (rstat != 0 && !iflg)
+		if (rstat != 0 && !iflg) {
 			if (sflg)
 				die("%s	exited with status %d",
 					cmd, rstat);
 			else
 				die("	exited with status %d", rstat);
+		}
 		cmd = mark + 1;
 	} while (mark != NULL && *cmd != NUL);
 }
