@@ -129,7 +129,7 @@ static char encoded[513];
 
 static void hexascii(const char *s)
 {
-	uint8_t byte;
+	uint8_t byte = 0;
 	uint8_t k = 0;
 	char *p = encoded;
 
@@ -507,7 +507,7 @@ static int serverinput(void)
 
 static void parseinput(void)
 {
-	int i, j, outcol, c, found = 0;
+	int i, j, outcol = 0, c, found = 0;
 	if (*inbuf == '\0')
 		return;
 	strcpy(input, inbuf);
@@ -689,7 +689,6 @@ static void parsehost(char *p)
 int main(int argc, char *argv[])
 {
 	char *hostname;
-	int i = 0;
 
 	puts(lineout);
 
