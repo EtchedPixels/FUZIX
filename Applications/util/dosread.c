@@ -222,7 +222,7 @@ void determine(void)
   } boot;
   unsigned short boot_magic;	/* last of boot block */
   unsigned bytepers, reservsec, dirents;
-  unsigned secpfat, secptrack, heads, hiddensec;
+  unsigned secpfat, secptrack, /*heads, */hiddensec;
   unsigned long totsec;
   unsigned char fat_info, fat_check;
   unsigned short endiantest = 1;
@@ -242,7 +242,7 @@ void determine(void)
   if (totsec == 0) totsec = c4u4(boot.dos4totsec);
   secpfat = c2u2(boot.csecpfat);
   secptrack = c2u2(boot.csecptrack);
-  heads = c2u2(boot.cheads);
+/*  heads = c2u2(boot.cheads); */
 
   /* The `hidden sectors' are the sectors before the partition.
    * The calculation here is probably wrong (I think the dos4hidd2
@@ -533,7 +533,7 @@ DIRECTORY *directory(DIRECTORY *dir, int entries, int function, char *pathname)
   	dir = (void *)dir_bkp;
   }
   if (function == FIND) {
-  	while (*pathname == '/') *pathname++;
+  	while (*pathname == '/') pathname++;
 	while (*pathname != '/' && *pathname != '.' && *pathname &&
 	       i < 8) {
 		file_name[i++] = *pathname++;
@@ -1049,7 +1049,7 @@ void read_fat (unsigned int cl_no)
 
   /* for FAT 12, round fat_low to a multiple of 2, so, when reading FAT from 
    * disk, we start at this cluster or previous one */
-  if (!fat_16) if (fat_low & 1 != 0) fat_low--;
+  if (!fat_16) if ((fat_low & 1) != 0) fat_low--;
 
   fat_high = fat_low + cache_size - 1;
 
