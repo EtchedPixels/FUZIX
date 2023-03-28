@@ -201,7 +201,7 @@ static uint32_t cksum_calc(void)
 	while (ptr != (unsigned char *) h.cksum)
 		acc += *ptr++;
 	acc += 32 * 8;
-	ptr = &(h.type);
+	ptr = (unsigned char *)&(h.type);
 	while (ptr != (unsigned char *) h.pad)
 		acc += *ptr++;
 	return acc;
@@ -441,7 +441,6 @@ static void storedir(char *name)
 /* list all the files in an archive */
 static void list(void)
 {
-	int x;
 	int zcount = 2;
 
 
