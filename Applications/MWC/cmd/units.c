@@ -9,9 +9,9 @@
  * FIXME: split compiler from units for size/stdio and to remove setuidness
  * 
  */
-static	char	*revision = "$Revision 1.1 $";
+/*static	char	*revision = "$Revision 1.1 $";
 static	char *header =
-	"$Header: /newbits/bin/units.c,v 1.2 89/02/22 05:09:42 bin Exp $";
+	"$Header: /newbits/bin/units.c,v 1.2 89/02/22 05:09:42 bin Exp $"; */
 
 /*
  * units -- do multiplicative unit conversions
@@ -134,7 +134,7 @@ char *getname(void)
 	peekc = c;
 	v = t = alloc(strlen(buf)+1);
 	s = buf;
-	while (*t++ = *s++)
+	while ((*t++ = *s++) != 0)
 		;
 	return (v);
 }
@@ -269,7 +269,7 @@ struct{
  * to the multiplicative factor indicated by
  * the prefix found.
  */
-char *prefix(const char *str, double *factor)
+const char *prefix(const char *str, double *factor)
 {
 	register const char *s, *t;
 	register int i;
