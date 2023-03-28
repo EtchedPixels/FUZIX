@@ -456,8 +456,8 @@ void vwave(void)
 */
 void vkill(void)
 {
-	auto short msg;
-	auto short i;
+	short msg = 0;
+	short i;
 	switch (object) {
 	case BIRD:
 		if (game.closed)
@@ -658,7 +658,7 @@ void vthrow(void)
 
 	/* AXE is THROWN */
 	/* at a dwarf... */
-	if (i = dcheck()) {
+	if ((i = dcheck()) != 0) {
 		msg = 48;
 		if (pct(33)) {
 			game.dseen[i] = game.dloc[i] = 0;

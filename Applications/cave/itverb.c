@@ -228,7 +228,7 @@ void ivdrink(void)
 */
 void ivquit(void)
 {
-	if (game.gaveup = yes(22, 54, 54))
+	if ((game.gaveup = yes(22, 54, 54)) != 0)
 		normend();
 	return;
 }
