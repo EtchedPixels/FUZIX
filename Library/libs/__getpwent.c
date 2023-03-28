@@ -39,8 +39,8 @@ __getpwent(int pwd_fd)
   static struct passwd passwd;
   char * field_begin;
   char * endptr;
-  char * gid_ptr;
-  char * uid_ptr;
+  char * gid_ptr = NULL;
+  char * uid_ptr = NULL;
   int line_len;
   int i;
 
