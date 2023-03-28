@@ -69,7 +69,7 @@ void wait_for_packet(void)
 #endif
 }
 
-int get_packet(char *data, int *len, int *fnc, int *sid)
+int get_packet(unsigned char *data, int *len, int *fnc, int *sid)
 {
 	int i, n, did, siz;
 	unsigned char cks;
@@ -191,7 +191,7 @@ int get_packet(char *data, int *len, int *fnc, int *sid)
 	return 0;
 }
 
-int send_packet(int to, int fnc, char *data, int len)
+int send_packet(int to, int fnc, unsigned char *data, int len)
 {
 	int i, n;
 	unsigned char cks;
