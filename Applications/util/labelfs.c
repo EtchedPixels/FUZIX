@@ -19,7 +19,7 @@ void usage(void)
 
 void set_fs_label(const char *p)
 {
-    strncpy(fs.fs.s_label_name, p, sizeof(fs.fs.s_label_name));
+    strncpy((char *)fs.fs.s_label_name, p, sizeof(fs.fs.s_label_name));
     fs.fs.s_props |= S_PROP_LABEL;
 }
 
