@@ -87,7 +87,7 @@ static int send_question( char *name ){
     o += 4;
     
     write( fd, buf, (int)(o - buf) );
-    
+    return 0;    
 }
 
 
@@ -190,10 +190,10 @@ struct hostent *gethostbyname( char *name ){
 	if( h->id != 42 )  /* correct session ID ? */
 	    goto error;
 
-	if( ! h->cntl & 0x80 )  /* is an answer packet? */
+	if( ! (h->cntl & 0x80) )  /* is an answer packet? */
 	    goto error;
 
-	if( ! h->ret & 0x80 )  /* is a recursive answer? */
+	if( ! (h->ret & 0x80) )  /* is a recursive answer? */
 	    goto error;
 
 	if( ! h->ancount ) /* is there any answers? */
@@ -238,7 +238,8 @@ struct hostent *gethostbyname( char *name ){
 	    if( t->type == 0x01 ){
 		for( j=0; j<t->rdlen; j++ )
 		    addrs[lno][j] = *ptr++;
-		list[lno++] = &addrs[lno][0];
+		list[lno] = &addrs[lno][0];
+		lno++;
 	    }
 	    else{
 		ptr += t->rdlen;
