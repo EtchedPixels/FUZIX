@@ -667,7 +667,7 @@ static uchr runact(ushrt ccond, uchr noun)
 /* WARNING: This procedure contains goto statements - take care! */
 
 	uchr cact, cdone = 0, cobj, nout, n;
-	time_t wait1;
+/*	time_t wait1; */
 	int nv;
 
 	cact = zmem(ccond);	/* Action byte */
@@ -1152,8 +1152,8 @@ static void savegame(void)
 	state.xor = xor;
 	nl();
 	write(1, "Save game to file>", 18);
-	readbuf(header, sizeof(header));
-	l = strlen(header) - 1;
+	readbuf((char *)header, sizeof(header));
+	l = strlen((char *)header) - 1;
 	if ((header[l] == '\r') || (header[l] == '\n'))
 		header[l] = 0;
 
@@ -1161,13 +1161,13 @@ static void savegame(void)
 	savefd = open(header,  O_WRONLY|O_CREAT|O_TRUNC, 0600);
 	if (savefd == -1) {
 		/* FIXME - via game output.. */
-		errstr("Could not create", header);
+		errstr("Could not create", (char *)header);
 		return;
 	}
 	if (write(savefd, &state, sizeof(state)) != sizeof(state) ||
 		close(savefd) == -1) {
 		opstr32("Write error on ");
-		opstr32(header);
+		opstr32((char *)header);
 		nl();
 		/* Doing a double close is harmless */
 		close(savefd);
@@ -1201,22 +1201,22 @@ static void loadgame(void)
 	nl();
 	write(1, "Load game from file>", 14);
 
-	readbuf(header, sizeof(header));
-	l = strlen(header) - 1;
+	readbuf((char *)header, sizeof(header));
+	l = strlen((char *)header) - 1;
 	if ((header[l] == '\r') || (header[l] == '\n'))
 		header[l] = 0;
 
 	loadfd = open(header, O_RDONLY);
 	if (loadfd == -1) {
 		opstr32("Could not open ");
-		opstr32(header);
+		opstr32((char *)header);
 		nl();
 		return;
 	}
 	if (read(loadfd, &load, sizeof(load)) != sizeof(load)) {
 		close(loadfd);
 		opstr32("Read error on ");
-		opstr32(header);
+		opstr32((char *)header);
 		nl();
 		return;
 	}
@@ -1226,7 +1226,7 @@ static void loadgame(void)
 	    || (load.v2 != 2)
 	    || (load.v1 != 1)
 	    || (load.fileid != fileid)) {
-		opstr32(header);
+		opstr32((char *)header);
 		opstr32(" is not a suitable save file\nPress RETURN...");
 		getch();
 		return;
