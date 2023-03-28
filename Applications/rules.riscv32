@@ -8,6 +8,7 @@ CFLAGS = -march=rv32ima -mabi=ilp32 -static -static-libgcc
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin
 CFLAGS += -Wall -g -Os -c -nostdinc -fno-pie -mstrict-align
 CFLAGS += -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/riscv32/
+CFLAGS += -Wno-char-subscripts
 LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs 
 LINKER_TAIL = -lcriscv32
 LIBGCCDIR = $(dir $(shell $(CC) -march=rv32ima -mabi=ilp32 -print-libgcc-file-name))

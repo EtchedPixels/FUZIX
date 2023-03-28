@@ -4,6 +4,7 @@ ASM = xtensa-esp32-elf-as
 AR = xtensa-esp32-elf-ar
 LINKER = xtensa-esp32-elf-ld
 CFLAGS = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -isystem $(FUZIX_ROOT)/Library/include -isystem $(FUZIX_ROOT)/Library/include/esp32
+CFLAGS += -Wno-char-subscripts
 LINKER_TAIL = -L$(FUZIX_ROOT)/Library/libs -lcesp32 -L$(LIBGCCDIR) -lgcc -T $(FUZIX_ROOT)/Library/elf2esp32.ld
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += --gc-sections --emit-relocs

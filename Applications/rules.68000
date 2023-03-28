@@ -5,6 +5,8 @@ ASM = $(CROSS_COMPILE)as
 AR = $(CROSS_COMPILE)ar
 LINKER = $(FUZIX_ROOT)/Library/link/ld68k
 CFLAGS = -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -msoft-float -Wall -m68000 -Os -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/68000
+# We do this deliberately a lot - so turn off the warning
+CFLAGS += -Wno-char-subscripts
 LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs 
 LINKER_TAIL = -lc68000
 LIBGCCDIR = $(dir $(shell $(CC) -m68000 -print-libgcc-file-name))

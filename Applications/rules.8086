@@ -13,3 +13,4 @@ CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_8086.o
 AOUT2FUZIX = cp  #for now
 HOSTCC = cc
 .SUFFIXES: .c .o
+HAS_FP = yes

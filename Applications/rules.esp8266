@@ -4,6 +4,7 @@ ASM = xtensa-lx106-elf-as
 AR = xtensa-lx106-elf-ar
 LINKER = $(FUZIX_ROOT)/Library/link/ldesp8266
 CFLAGS = -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -Os -isystem $(FUZIX_ROOT)/Library/include -isystem $(FUZIX_ROOT)/Library/include/esp8266
+CFLAGS += -Wno-char-subscripts
 LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs
 LIBGCCDIR = $(dir $(shell $(CC) -print-libgcc-file-name))
 LINKER_OPT += --gc-sections --emit-relocs
