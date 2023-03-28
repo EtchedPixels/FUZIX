@@ -556,7 +556,7 @@ char *match(char *lp, char *cp)
 			cp = lcp + *lcp + 1;
 		star:
 			do {
-				if (lcp=match(lp, cp))
+				if ((lcp = match(lp, cp)) != 0)
 					return lcp;
 			} while (--lp >= llp);
 			return NULL;
