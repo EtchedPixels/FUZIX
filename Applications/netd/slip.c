@@ -63,7 +63,7 @@ static void badpacket(void)
     fprintf(stderr, "overlong frame\n");
 }
 
-static char scratch[256];
+static uint8_t scratch[256];
 
 /* returns number of byte in next packet, 0 = nothing waiting */
 static int slip_poll( void )
@@ -129,7 +129,7 @@ static int slip_poll( void )
 }
 
 /* receive packet to a buffer */
-static int slip_recv( unsigned char *b, int len )
+static int slip_recv( uint8_t *b, int len )
 {
     len = iptr - ibuf;
     /* Mark it as IP */
@@ -142,7 +142,7 @@ static int slip_recv( unsigned char *b, int len )
 
 /* send packet to net device
    We should do this asynchronously to receive ideally */
-int device_send( char *sbuf, int len )
+int device_send( uint8_t *sbuf, int len )
 {
     sbuf += 14;	/* Don't send a mac header */
     slip_begin();
@@ -152,7 +152,7 @@ int device_send( char *sbuf, int len )
     return 0;
 }
 
-int device_read( char *buf, int len )
+int device_read( uint8_t *buf, int len )
 {
     if (slip_poll() == 0)
         return -1;

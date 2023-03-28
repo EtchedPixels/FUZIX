@@ -67,7 +67,7 @@ static void drop( void )
 /* send sbuf, size len to the device
    returns 0 on success, -1 on error
  */
-int device_send( char *sbuf, int len )
+int device_send( uint8_t *sbuf, int len )
 {
     int alen;
     uint16_t *ptr = (uint16_t *)sbuf;
@@ -91,7 +91,7 @@ int device_send( char *sbuf, int len )
 /* get sbuf, max size len from the device 
    returns size of recieved packets, 0 if nothing waiting
 */
-int device_read( char *buf, int len )
+int device_read( uint8_t *buf, int len )
 {
     int rlen, alen;
     uint16_t *ptr = (uint16_t *)buf;
