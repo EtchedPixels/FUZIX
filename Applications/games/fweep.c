@@ -677,6 +677,7 @@ void char_print(uint8_t zscii)
 {
 	if (!zscii)
 		return;
+
 	if (stream3ptr != stream3addr - 1) {
 		uint16_t w = read16low(*stream3ptr);
 		write8(*stream3ptr + 2 + w, zscii);
@@ -859,8 +860,6 @@ void storei(uint16_t value)
 {
 	store(pc(), value);
 }
-
-static int depth = 0;
 
 void enter_routine(uint32_t address, boolean stored, int argc)
 {
