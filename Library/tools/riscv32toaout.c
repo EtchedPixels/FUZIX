@@ -20,6 +20,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <arpa/inet.h>
+
 struct exec_aout {
     uint32_t	a_midmag;		/* Flags and stuff */
     uint32_t	a_text;			/* Size of text (base is implicitly 0) */
@@ -48,7 +50,7 @@ static uint8_t *load_block(FILE *fp, off_t base, size_t len)
             fprintf(stderr, "Seek error.\n");
             exit(1);
         }
-        fprintf(stderr, "Loading %d bytes from %d\n", len, base);
+        fprintf(stderr, "Loading %d bytes from %d\n", len, (int)base);
         if (fread(m + 0x20, len, 1, fp) != 1) {
             fprintf(stderr, "Read error loading binary block.\n");
             exit(1);
