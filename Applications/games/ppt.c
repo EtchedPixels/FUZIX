@@ -31,13 +31,13 @@
  * SUCH DAMAGE.
  */
 
-#ifndef lint
+#if 0
 static char copyright[] =
 "@(#) Copyright (c) 1988, 1993\n\
 	The Regents of the University of California.  All rights reserved.\n";
 #endif /* not lint */
 
-#ifndef lint
+#if 0
 static char sccsid[] = "@(#)ppt.c	8.1 (Berkeley) 5/31/93";
 #endif /* not lint */
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 	puts("___________");
 	if (argc > 1)
-		while (p = *++argv)
+		while ((p = *++argv) != NULL)
 			for (; *p; ++p)
 				putppt((int)*p);
 	else while ((c = getchar()) != EOF)
