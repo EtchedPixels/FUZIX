@@ -46,7 +46,7 @@ FILE *xfopen(char *fn, char *mode)
 int main(int argc, char *argv[])
 {
     char *p;
-    int inf = -1, outf;
+    int inf = -1;
 
     setbuf(stdout, buffer);
     for (--argc, ++argv; argc > 0 && (**argv == '-' || **argv == '+');
@@ -86,9 +86,7 @@ int main(int argc, char *argv[])
 	argc--;
     }
 
-    if (argc == 0) {
-	outf = 1;
-    } else {
+    if (argc) {
 	fclose(stdout);
 	xfopen(*argv++, "w");
 	argc--;
