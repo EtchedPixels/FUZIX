@@ -6,6 +6,6 @@ LINKER_LIB = -m6800 -tfuzix -s -L $(FUZIX_ROOT)/Library/libs -lc6800 -M
 AS_OPT = -o
 CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_6800.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_6800.o
-
+HOSTCC = cc
 .SUFFIXES: .c .o
 

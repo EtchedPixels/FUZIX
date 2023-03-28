@@ -8,5 +8,5 @@ LINKER_TAIL = c6502.lib
 AS_OPT = -o
 CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_6502.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_6502.o
-
+HOSTCC = cc
 .SUFFIXES: .c .o .y

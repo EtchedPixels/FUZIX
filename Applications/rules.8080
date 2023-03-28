@@ -9,6 +9,5 @@ CFLAGS = -O2 -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/808
 ASM_OPT = -c -o
 CRT0 = $(LIBPATH)/crt0_8080.o
 CRT0NS = $(LIBPATH)/crt0nostdio_8080.o
-
+HOSTCC = cc
 .SUFFIXES: .c .o .y
-
