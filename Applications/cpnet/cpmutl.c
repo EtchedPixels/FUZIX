@@ -175,7 +175,7 @@ int delete_files(struct cpmfcb *fcb)
 	return retc;
 }
 
-int update_allocv()
+int update_allocv(void)
 {
 	int i;
 
