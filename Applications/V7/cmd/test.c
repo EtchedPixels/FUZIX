@@ -104,11 +104,12 @@ int e3(void)
 	if (EQ(a, "-s"))
 		return (fsizep(nxtarg(0)));
 
-	if (EQ(a, "-t"))
+	if (EQ(a, "-t")) {
 		if (ap >= ac)
 			return (isatty(1));
 		else
 			return (isatty(atoi(nxtarg(0))));
+	}
 
 	if (EQ(a, "-n"))
 		return (!EQ(nxtarg(0), ""));
@@ -145,6 +146,7 @@ int e3(void)
 		return (int1 <= int2);
 
 	synbad("unknown operator ", p2);
+	return -1;
 }
 
 int e2(void)
