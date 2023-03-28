@@ -163,7 +163,7 @@ const char *mntpoint(const char *devname)
     
     f = setmntent("/etc/mtab", "r");
     if (f) {
-        while (mnt = getmntent(f)) {
+        while ((mnt = getmntent(f)) != NULL) {
             if (strcmp(mnt->mnt_fsname, devname) == 0) {
                 endmntent(f);
                 return strdup(mnt->mnt_dir);
