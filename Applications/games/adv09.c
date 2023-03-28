@@ -4,49 +4,49 @@
 #include <stdint.h>
 
 struct location {
-  const uint8_t *text;
+  const char *text;
   uint8_t exit[6];
 };
 
-const uint8_t toomuch[] = { "I am carrying too much. " };
-const uint8_t dead[] = { "I am dead.\n" };
-const uint8_t stored_msg[] = { "I have stored " };
-const uint8_t stored_msg2[] = { " treasures. On a scale of 0 to 100, that rates " };
-const uint8_t dotnewline[] = { ".\n" };
-const uint8_t newline[] = { "\n" };
-const uint8_t carrying[] = { "I am carrying:\n" };
-const uint8_t dashstr[] = { " - " };
-const uint8_t nothing[] = { "nothing" };
-const uint8_t lightout[] = { "My light has run out." };
-const uint8_t lightoutin[] = { "My light runs out in " };
-const uint8_t turns[] = { "turns" };
-const uint8_t turn[] = { "turn" };
-const uint8_t whattodo[] = { "\nTell me what to do ? " };
-const uint8_t prompt[] = { "\n> " };
-const uint8_t dontknow[] = { "You use word(s) I don't know! " };
-const uint8_t givedirn[] = { "Give me a direction too. " };
-const uint8_t darkdanger[] = { "Dangerous to move in the dark! " };
-const uint8_t brokeneck[] = { "I fell down and broke my neck. " };
-const uint8_t cantgo[] = { "I can't go in that direction. " };
-const uint8_t dontunderstand[] = { "I don't understand your command. " };
-const uint8_t notyet[] = { "I can't do that yet. " };
-const uint8_t beyondpower[] = { "It is beyond my power to do that. " };
-const uint8_t okmsg[] = { "O.K. " };
-const uint8_t whatstr[] = { "What ? " };
-const uint8_t itsdark[] = { "I can't see. It is too dark!" };
-const uint8_t youare[] = { "I am in a " };
-const uint8_t nonestr[] = { "none" };
-const uint8_t obexit[] = { "\nObvious exits: " };
-const uint8_t canalsosee[] = { "I can also see: " };
-const uint8_t playagain[] = { "Do you want to play again Y/N: " };
-const uint8_t invcond[] = { "INVCOND" };
-const uint8_t *exitmsgptr[] = {
-  (uint8_t *)"North",
-  (uint8_t *)"South",
-  (uint8_t *)"East",
-  (uint8_t *)"West",
-  (uint8_t *)"Up",
-  (uint8_t *)"Down"
+const char toomuch[] = { "I am carrying too much. " };
+const char dead[] = { "I am dead.\n" };
+const char stored_msg[] = { "I have stored " };
+const char stored_msg2[] = { " treasures. On a scale of 0 to 100, that rates " };
+const char dotnewline[] = { ".\n" };
+const char newline[] = { "\n" };
+const char carrying[] = { "I am carrying:\n" };
+const char dashstr[] = { " - " };
+const char nothing[] = { "nothing" };
+const char lightout[] = { "My light has run out." };
+const char lightoutin[] = { "My light runs out in " };
+const char turns[] = { "turns" };
+const char turn[] = { "turn" };
+const char whattodo[] = { "\nTell me what to do ? " };
+const char prompt[] = { "\n> " };
+const char dontknow[] = { "You use word(s) I don't know! " };
+const char givedirn[] = { "Give me a direction too. " };
+const char darkdanger[] = { "Dangerous to move in the dark! " };
+const char brokeneck[] = { "I fell down and broke my neck. " };
+const char cantgo[] = { "I can't go in that direction. " };
+const char dontunderstand[] = { "I don't understand your command. " };
+const char notyet[] = { "I can't do that yet. " };
+const char beyondpower[] = { "It is beyond my power to do that. " };
+const char okmsg[] = { "O.K. " };
+const char whatstr[] = { "What ? " };
+const char itsdark[] = { "I can't see. It is too dark!" };
+const char youare[] = { "I am in a " };
+const char nonestr[] = { "none" };
+const char obexit[] = { "\nObvious exits: " };
+const char canalsosee[] = { "I can also see: " };
+const char playagain[] = { "Do you want to play again Y/N: " };
+const char invcond[] = { "INVCOND" };
+const char *exitmsgptr[] = {
+  "North",
+  "South",
+  "East",
+  "West",
+  "Up",
+  "Down"
 };
 
 
@@ -230,7 +230,7 @@ const uint8_t objinit[] = {
 };
 
 
-const uint8_t *objtext[] = {
+const char *objtext[] = {
 	"\x57\x6F\x72\x6E\x20\x6F\x75\x74\x20\x66\x69\x64\x64\x6C\x65\x20\x73\x74\x72\x69\x6E\x67\x73",
 	"\x42\x61\x72\x62\x65\x72\x73\x68\x6F\x70",
 	"\x4A\x61\x69\x6C",
@@ -310,7 +310,7 @@ const uint8_t *objtext[] = {
 	"\x2A\x53\x41\x43\x52\x45\x44\x20\x54\x4F\x4D\x20\x54\x4F\x4D\x2A",
 	"\x2A\x54\x55\x52\x51\x55\x4F\x49\x53\x45\x20\x4E\x45\x43\x4B\x4C\x41\x43\x45\x2A",
 };
-const uint8_t *msgptr[] = {
+const char *msgptr[] = {
 	"",
 	"\x4F\x4B",
 	"\x49\x20\x73\x65\x65",
@@ -1462,7 +1462,6 @@ static uint8_t actmatch;
 static uint8_t continuation;
 static uint16_t *param;
 static uint16_t param_buf[5];
-static uint8_t rows, cols;
 static uint8_t redraw;
 
 static struct savearea game;
@@ -1491,6 +1490,7 @@ static void error(const char *p);
 
 static char wbuf[81];
 static int wbp = 0;
+static uint8_t rows, cols;
 static int xpos = 0, ypos = 0;
 static int bottom;
 static WINDOW *topwin, *botwin, *curwin;
@@ -1534,13 +1534,13 @@ static void char_out(char c)
   xpos++;
 }
 
-static void strout_lower(const uint8_t *p)
+static void strout_lower(const char *p)
 {
   while(*p)
     char_out(*p++);
 }
 
-static void strout_lower_spc(const uint8_t *p)
+static void strout_lower_spc(const char *p)
 {
   strout_lower(p);
   char_out(' ');
@@ -1551,13 +1551,13 @@ static void decout_lower(uint16_t v)
 #ifdef __linux__
   char buf[9];
   snprintf(buf, 8, "%d", v);	/* FIXME: avoid expensive snprintf */
-  strout_lower((uint8_t *)buf);
+  strout_lower(buf);
 #else
-  strout_lower((uint8_t *)_itoa(v));
+  strout_lower(_itoa(v));
 #endif
 }
 
-static void strout_upper(const uint8_t *p)
+static void strout_upper(const char *p)
 {
   strout_lower(p);
 }
@@ -1668,8 +1668,8 @@ static void display_exit(void)
 uint_fast8_t screenx, screeny, screen_height, screen_width;
 
 static char *t_go, *t_clreol, *t_clreos;
-static uint8_t conbuf[64];
-static uint8_t *conp = conbuf;
+static char conbuf[64];
+static char *conp = conbuf;
 
 extern void con_puts(const char *s);
 
@@ -1694,7 +1694,7 @@ void con_flush(void)
 static const char hex[] = "0123456789ABCDEF";
 
 /* Put a character to the screen. We handle unprintables and tabs */
-void con_putc(uint8_t c)
+void con_putc(char c)
 {
 	if (c == '\t') {
 		uint8_t n = 8 - (screenx & 7);
@@ -1717,7 +1717,6 @@ void con_putc(uint8_t c)
 	}
 	conq(c);
 	screenx++;
-adjust:
 	if (screenx == screen_width) {
 		screenx = 0;
 		screeny++;
@@ -1738,8 +1737,8 @@ static void con_twrite(char *p, int n)
 /* Write a string of symbols including quoting */
 void con_puts(const char *s)
 {
-	uint8_t c;
-	while (c = (uint8_t) *s++)
+	char c;
+	while ((c =  *s++) != 0)
 		con_putc(c);
 }
 
@@ -1834,6 +1833,7 @@ int con_scroll(int n)
 	while (n--)
 		conq('\n');
 	con_force_goto(screeny, screenx);
+	return 0;
 }
 
 /* TODO: cursor key handling */
@@ -1881,7 +1881,6 @@ static int tty_init(void)
 	int fd[2];
 	pid_t pid;
 	int ival[3];
-	int n;
 	int status;
 
 	if (pipe(fd) < 0) {
@@ -2038,13 +2037,13 @@ static void char_out(char c)
     move_on();
 }
 
-static void strout_lower(const uint8_t *p)
+static void strout_lower(const char *p)
 {
   while(*p)
     char_out(*p++);
 }
 
-static void strout_lower_spc(const uint8_t *p)
+static void strout_lower_spc(const char *p)
 {
   strout_lower(p);
   char_out(' ');
@@ -2055,13 +2054,13 @@ static void decout_lower(uint16_t v)
 #ifdef __linux__
   char buf[9];
   snprintf(buf, 8, "%d", v);	/* FIXME: avoid expensive snprintf */
-  strout_lower((uint8_t *)buf);
+  strout_lower(buf);
 #else
-  strout_lower((uint8_t *)_itoa(v));
+  strout_lower(_itoa(v));
 #endif
 }
 
-static void strout_upper(const uint8_t *p)
+static void strout_upper(const char *p)
 {
   strout_lower(p);
 }
@@ -2204,13 +2203,13 @@ static void char_out(char c)
   xpos++;
 }
 
-static void strout_lower(const uint8_t *p)
+static void strout_lower(const char *p)
 {
   while(*p)
     char_out(*p++);
 }
 
-static void strout_lower_spc(const uint8_t *p)
+static void strout_lower_spc(const char *p)
 {
   strout_lower(p);
   char_out(' ');
@@ -2221,13 +2220,13 @@ static void decout_lower(uint16_t v)
 #ifdef __linux__
   char buf[9];
   snprintf(buf, 8, "%d", v);	/* FIXME: avoid expensive snprintf */
-  strout_lower((uint8_t *)buf);
+  strout_lower(buf);
 #else
-  strout_lower((uint8_t *)_itoa(v));
+  strout_lower(_itoa(v));
 #endif
 }
 
-static void strout_upper(const uint8_t *p)
+static void strout_upper(const char *p)
 {
   strout_lower(p);
 }
@@ -2506,10 +2505,10 @@ uint8_t islight(void)
 static void action_look(void)
 {
   const uint8_t *e;
-  const uint8_t *p;
+  const char *p;
   uint8_t c;
   uint8_t f = 1;
-  const uint8_t **op = objtext;
+  const char **op = objtext;
 
   redraw = 0;
 
@@ -2582,7 +2581,7 @@ static void action_quit(void)
 static void action_score(void)
 {
   uint8_t *p = game.objloc;
-  const uint8_t **m = objtext;
+  const char **m = objtext;
   uint8_t t = 0, s = 0;
 
   while(p < game.objloc + NUM_OBJ) {
@@ -2607,7 +2606,7 @@ static void action_score(void)
 static void action_inventory(void)
 {
   uint8_t *p = game.objloc;
-  const uint8_t **m = objtext;
+  const char **m = objtext;
   uint8_t f = 1;
 
   strout_lower(carrying);
@@ -2810,13 +2809,13 @@ static void run_actions(const uint8_t *p, uint8_t n)
           game.counter = -1;
         break;
       case 84:	/* Print noun, newline */
-        strout_lower((uint8_t *)nounbuf);
+        strout_lower(nounbuf);
         /* Fall through */
       case 86:	/* Print newline */
         strout_lower(newline);
         break;
       case 85:	/* Print noun */ 
-        strout_lower((uint8_t *)nounbuf);
+        strout_lower(nounbuf);
         break;
       case 87: /* Swap player and saveroom array entry */
         tmp16 = *param++;
