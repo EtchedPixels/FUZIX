@@ -241,11 +241,12 @@ FILE *openf(char *file)
 	lno = 0;
 	if (file[0] == '-' && file[1] == '\0')
 		return (stdin);
-	if ((stream = fopen(file, "r")) == NULL)
+	if ((stream = fopen(file, "r")) == NULL) {
 		if (errno == EMFILE)
 			errx(1, "too many files for -m");
 		else
 			err(1, "cannot open \"%s\"", file);
+	}
 	return (stream);
 }
 
@@ -294,7 +295,7 @@ int page2(void (*putline) (char *, int))
 	for (i = 0; i < (ncol - 1) * length; ++i) {
 		if ((i % length) == 0)
 			f[0].f_ff = 0;
-		if (k = getline(&f[0], lbuf)) {
+		if ((k = getline(&f[0], lbuf)) != 0) {
 			if ((lines[i] = malloc(k + 1)) == NULL)
 				errx(1, "out of space");
 			strcpy(lines[i], lbuf);
@@ -342,11 +343,12 @@ char **init(int ac, char *av[])
 	setbuf(stdout, obuf);
 
 	while (++av, --ac) {
-		if (av[0][0] == '+')
+		if (av[0][0] == '+') {
 			if ((nskip = atoi(&av[0][1])) <= 0)
 				errx(1, "bad skip");
 			else
 				continue;
+		}
 		if (av[0][0] != '-')
 			break;
 		switch (av[0][1]) {
@@ -407,12 +409,13 @@ char **init(int ac, char *av[])
 	/*
 	 * check that all options jive
 	 */
-	if (length <= 0)
+	if (length <= 0) {
 		if (length == -mar) {	/* gunja artifice */
 			length = 1;
 			++tflag;
 		} else
 			errx(1, "length too small");
+	}
 	fwidth = width / ncol;
 	if (schar)
 		--fwidth;
