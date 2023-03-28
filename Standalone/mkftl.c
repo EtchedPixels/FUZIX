@@ -206,7 +206,11 @@ int main(int argc, char* const* argv)
     for (int sectorno=0; sectorno<sectors; sectorno++)
     {
         uint8_t buffer[512] = {0};
-        fread(buffer, 512, 1, inf);
+        if (fread(buffer, 512, 1, inf) != 1)
+        {
+            perror("FTL read error");
+            exit(1);
+        }
 
         err = DHARA_E_NONE;
         dhara_map_write(&dhara, sectorno, buffer, &err); 
