@@ -36,12 +36,12 @@ void progerr(const char *s)
 
 void movstr(const char *s, char *t)
 {
-	while (*t++ = *s++)
+	while ((*t++ = *s++) != 0)
 		continue;
 }
 
 
-int range(long a, int b)
+void range(long a, int b)
 {
 	if (b == INF)
 		printf("%ld,$", a);
@@ -52,7 +52,7 @@ int range(long a, int b)
 }
 
 
-int change(long a, int b, long c, int d, char *s)
+void change(long a, int b, long c, int d, char *s)
 {
 	range(a, b);
 	printf("%s", s);
@@ -90,11 +90,12 @@ char *getl(int f, long n)
 	t = text[f][nt];
 	if (t == 0) {
 		t = text[f][nt] = malloc(LEN + 1);
-		if (t == NULL)
+		if (t == NULL) {
 			if (hardsynch())
 				goto again;
 			else
 				progerr("5");
+		}
 	}
 	t = fgets(t, LEN, file[f]);
 	if (t != NULL)
@@ -201,11 +202,12 @@ FILE *dopen(const char *f1, const char *f2)
 	char b[100], *bptr;
 	const char *eptr;
 	struct stat statbuf;
-	if (cmp(f1, "-") == 0)
+	if (cmp(f1, "-") == 0) {
 		if (cmp(f2, "-") == 0)
 			error("can't do - -", "");
 		else
 			return (stdin);
+	}
 	if (stat(f1, &statbuf) == -1)
 		error("can't access ", f1);
 
@@ -214,10 +216,11 @@ FILE *dopen(const char *f1, const char *f2)
 	if ((statbuf.st_mode & S_IFMT) == S_IFDIR) {
 		for (bptr = b; *bptr = *f1++; bptr++);
 		*bptr++ = '/';
-		for (eptr = f2; *eptr; eptr++)
+		for (eptr = f2; *eptr != 0; eptr++) {
 			if (*eptr == '/' && eptr[1] != 0 && eptr[1] != '/')
 				f2 = eptr + 1;
-		while (*bptr++ = *f2++);
+		}
+		while ((*bptr++ = *f2++) != 0);
 		f1 = b;
 	}
 	f = fopen(f1, "r");
