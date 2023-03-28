@@ -20,7 +20,7 @@ struct sockaddr_in laddr;
 int lfd;
 
 
-my_open( int argc, char *argv[]){
+void my_open( int argc, char *argv[]){
     int port = 8080;    /* default port */
 
     addr.sin_port = htons(port);
