@@ -14,6 +14,8 @@ int sigrelse(int sig)
 
 int sigignore(int sig)
 {
-    signal(sig, SIG_IGN);
+    if (signal(sig, SIG_IGN) == SIG_ERR)
+        return -1;
+    return 0;
 }
 
