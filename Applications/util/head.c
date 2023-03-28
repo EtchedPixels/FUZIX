@@ -11,10 +11,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-static uint8_t outbuf[512];
-static uint8_t *outp;
+static char outbuf[512];
+static char *outp;
 
-static uint8_t buffer[512];
+static char buffer[512];
 
 static const char *n;
 static int lines = 10;	/* Default */
