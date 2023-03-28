@@ -99,7 +99,7 @@ static int dwnet_recv_chunk( unsigned char *b, int size )
 }
 
 /* send packet to net device */
-int device_send( char *sbuf, int len )
+int device_send( unsigned char *sbuf, int len )
 {
     int ret;
     struct dw_trans d;
@@ -129,7 +129,7 @@ int device_send( char *sbuf, int len )
 #define CHUNKZ 511
 
 
-int device_read( char *buf, int len )
+int device_read( unsigned char *buf, int len )
 {
     int packetz;
     int l;
