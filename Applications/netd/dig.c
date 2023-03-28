@@ -99,7 +99,7 @@ void print_name( char *ptr ){
 }
 
 
-print_entry( char **pptr, int no ){
+void print_entry( char **pptr, int no ){
     struct RRtail *t;
     int i,j;
     char *ptr = *pptr;
@@ -149,7 +149,6 @@ print_entry( char **pptr, int no ){
 int readrc( void ){
     char *ws = " \f\n\r\t\v";
     char *ptr;
-    int ret = 0;
     int x;
 
     fd = open( "/etc/resolv.conf", O_RDONLY );
@@ -227,19 +226,19 @@ int main( int argc, char *argv[] ){
 	struct header *h = (struct header *)buf;
 
 	char *ptr;
-	int i,j;
+	int i;
 	
 	if( h->id != 42 ){
 	    fprintf( stderr, "bad ID\n");
 	    exit(1);
 	}
 
-	if( ! h->cntl & 0x80 ){
+	if(!(h->cntl & 0x80)){
 	    fprintf( stderr, "not an answer\n");
 	    exit(1);
 	}
 
-	if( ! h->ret & 0x80 ){
+	if(!(h->ret & 0x80)) {
 	    fprintf( stderr, "server doesn't do recursion\n");
 	}
 	/* skip over our question(s) */
