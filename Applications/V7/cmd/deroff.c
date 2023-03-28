@@ -84,13 +84,14 @@ int skeqn(void)
 	while ((c = getc(infile)) != rdelim)
 		if (c == EOF)
 			c = eof();
-		else if (c == '"')
+		else if (c == '"') {
 			while ((c = getc(infile)) != '"')
 				if (c == EOF)
 					c = eof();
 				else if (c == '\\')
 					if ((c = getc(infile)) == EOF)
 						c = eof();
+		}
 	return (c = ' ');
 }
 
@@ -119,7 +120,7 @@ char *copys(char *s)
 	if ((t0 = t = calloc(strlen(s) + 1, sizeof(*t))) == NULL)
 		fatal("Cannot allocate memory", (char *) NULL);
 
-	while (*t++ = *s++);
+	while ((*t++ = *s++) != 0);
 	return (t0);
 }
 
@@ -230,13 +231,14 @@ void regline(int macline)
 
 	*lp = '\0';
 
-	if (line[0] != '\0')
+	if (line[0] != '\0') {
 		if (wordflag)
 			putwords(macline);
 		else if (macline)
 			putmac(line);
 		else
 			puts(line);
+	}
 }
 
 
@@ -248,7 +250,7 @@ void macro(void)
 {
 /*
 do { SKIP; }
-	while(C!='.' || C!='.' || C=='.');	/* look for  .. */
+	while(C!='.' || C!='.' || C=='.');	/ * look for  .. */
 	SKIP;
 	inmacro = YES;
 }
