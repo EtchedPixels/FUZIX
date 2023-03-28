@@ -67,7 +67,7 @@ void onintr(int sig)
 const char *prefix(const char *begin, const char *full)
 {
 	int c;
-	while (c = *begin++) {
+	while ((c = *begin++) != 0) {
 		if (isupper(c))
 			c = tolower(c);
 		if (*full != c)
@@ -78,7 +78,7 @@ const char *prefix(const char *begin, const char *full)
 	return (full);
 }
 
-int makeutime(const char *pp)
+void makeutime(const char *pp)
 {
 	register int val;
 	register const char *p;
