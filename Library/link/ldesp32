@@ -30,5 +30,5 @@ esac
 done
 
 xtensa-esp32-elf-ld $ARGS -o "$TARGET.bin"
-$(FUZIX_ROOT)/Library/tools/elf2bin -p xtensa-esp32-elf -o "$TARGET" "$TARGET.bin"
+$FUZIX_ROOT/Library/tools/elf2bin -p xtensa-esp32-elf -o "$TARGET" "$TARGET.bin"
 rm -f "$TARGET.bin"
