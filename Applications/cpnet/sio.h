@@ -23,7 +23,7 @@
 #define __sio_h
 
 int sio_open(const char *sdev, int speed);
-int sio_close();
+int sio_close(void);
 int sio_set_speed(int speed);
 int sio_send(char *data, int len);
 int sio_receive(char *data, int len);
