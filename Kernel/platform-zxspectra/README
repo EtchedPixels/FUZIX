@@ -1,0 +1,64 @@
+FUZIX for a 128K ZX Spectrum with a Spectranet and some kine of disk
+device (we don't yet support diskless but we could...)
+
+Memory map
+
+0000-0FFF	System ROM | Spectranet ROM	(fixed)
+1000-1100	INT vectors to FF
+1101-2FFF	8K of memory pageable from Spectranet memory
+3000-39FF	System ROM | Spectranet memory (fixed page C0)
+3A00-3FFF	System ROM | Spectranet memory (used by spectranet)
+4000-7FFF	Fixed
+8000-BFFF	Fixed
+C000-FFFF	128K Spectrum banked memory
+
+The memory is allocated as
+
+128K
+0	Kernel CODE4
+1	Kernel CODE1
+2	Fixed at 8000-BFFF
+3	User process high memory
+4	User process high memory
+5	Fixed at 4000-7FFF
+6	Kernel CODE2
+7	kernel CODE3, Video at C000-DAFF
+
+Spectranet
+C0	Fixed at 3xxx, partly used by SpectraNet firmware (A00+)
+C1-3	Spectranet owned
+C4-DF	Holds our lower copies of user memory
+
+
+Kernel Map
+0000-0FFF	Firmware
+1000-1100	Vectors
+1101-39FF	Kernel data and buffers
+3A00-3FFF	Firmware
+4000-5FFF	Kernel common/some data
+6000-BFFF	User space
+C000-FFF3	Banked code/screen
+FFF4-FFFF	IM2 hack
+
+User Map
+6000-BFFF	User space (copied to/from Spectranet pages)
+C000-FFF3	User space (flipped between 128K pages)
+
+Two processes in memory at a time each occupying 2,5 and 3 or 4
+Shadow for 2,5 space (24K per process) stored in spectranet RAM
+
+TODO: is it worth using more spectranet RAM and extra games to get 3
+processes - probably not but we could bank the disk buffers into that
+space if very careful and reclaim more lower memory.
+
+
+TODO:
+-	Debug the new tricks.s code
+-	Write correct asm stubs for W5100 programming in common
+-	Swap the Nemo IDE for something more useful here
+-	Write a loader
+-	Maybe move to tinysd/tinyide
+-	Run parent first for efficiency ?
+-	Figure out how swap map is going to work in this case
+	(may need to work in 4K chunks and fake some of it)
+
