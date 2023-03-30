@@ -55,13 +55,13 @@ image:
 	dd if=../bank1.bin bs=16384 skip=3 seek=3 count=1 \
 		of=../common.bin conv=notrunc
 	# The bootstrap to con Fatware
-	dd if=../common.bin of=BOOT.BIN bs=8192 count=1
+	# dd if=../common.bin of=BOOT.BIN bs=8192 count=1
 	# Rest of the base image, starts at 0x2200, pad it
-	dd if=../common.bin bs=65536 count=1 conv=sync | \
+	# dd if=../common.bin bs=65536 count=1 conv=sync | \
 		dd of=strap.bin bs=512 skip=17
 	# Banked segments 1 and 7
-	dd if=../bank2.bin bs=16384 skip=3 >>strap.bin conv=sync
-	dd if=../bank3.bin bs=16384 skip=3 >>strap.bin conv=sync
+	# dd if=../bank2.bin bs=16384 skip=3 >>strap.bin conv=sync
+	# dd if=../bank3.bin bs=16384 skip=3 >>strap.bin conv=sync
 
 	# Build an esxdos friendly setup
 	sdasz80 -o load-esx.s
@@ -76,3 +76,21 @@ image:
 		dd of=FUZIX.BIN
 	dd if=../bank2.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
 	dd if=../bank3.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+# Adjust to wherever you have ESXDOS unpacked
+ESXDOS = $(FUZIX_ROOT)/../ESXDOS
+
+diskimage:
+	dd if=hdfstart.bin of=$(IMAGES)/disk.hdf
+	# Write a byte at the end to force the size
+	dd if=/dev/zero of=$(IMAGES)/disk.hdf bs=1 seek=134218261 count=1
+	# Sector 67584 (second partition on the hdfstart we used)
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.hdf bs=34603542 seek=1 conv=notrunc
+	dd if=/dev/zero bs=512 count=65536 of=tmp.fat
+	mkfs.fat -F16 tmp.fat
+	# Sector 2048
+	dd if=tmp.fat of=$(IMAGES)/disk.hdf bs=1049110 seek=1 conv=notrunc
+	hdfmonkey put $(IMAGES)/disk.hdf $(ESXDOS)/* /
+	hdfmonkey put $(IMAGES)/disk.hdf FUZIX.BIN FUZIX.BIN
+	hdfmonkey put $(IMAGES)/disk.hdf FUZIX BIN/FUZIX
