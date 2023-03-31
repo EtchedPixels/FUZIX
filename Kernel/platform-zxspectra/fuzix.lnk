@@ -51,7 +51,7 @@ platform-zxspectra/devide.rel
 platform-zxspectra/devide_discard.rel
 platform-zxspectra/devsd.rel
 platform-zxspectra/devsd_discard.rel
-platform-zxspectra/nemoide.rel
+platform-zxspectra/ide_simple.rel
 platform-zxspectra/zxmmc.rel
 platform-zxspectra/mbr.rel
 platform-zxspectra/blkdev.rel

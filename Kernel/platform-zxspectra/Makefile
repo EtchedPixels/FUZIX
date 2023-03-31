@@ -1,8 +1,8 @@
-CSRCS = devices.c main.c wiznet.c bank.c
+CSRCS = devices.c main.c wiznet.c bank.c ide_simple.c
 CDSRCS = discard.c
 DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
 DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
-DZSRCS = ../dev/zx/nemoide.c ../dev/zx/zxmmc.c ../dev/zx/zxkeyboard.c
+DZSRCS = ../dev/zx/zxmmc.c ../dev/zx/zxkeyboard.c
 DZSRCS += ../dev/zx/devinput.c ../dev/zx/zxtty.c
 DDZSRCS =
 ASRCS = crt0.s zx128.s zxvideo.s
@@ -55,39 +55,30 @@ clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
 	rm -f block? loader.bin
 
-loader.bin: loader.s
+image:
 	sdasz80 -o loader.s
 	sdldz80 -i loader.rel
-	makebin -s 32768 loader.ihx loader.tmp
-	dd if=loader.tmp bs=2048 skip=15 count=1 conv=sync of=loader.bin
-
-image: loader.bin
-	# Low 16K (will end up in bank 0 0000-3FFF)
-	dd if=../common.bin bs=16384 conv=sync skip=0 count=1 of=block0
-	# Bank 1 (C000-FFFF)
-	dd if=../bank1.bin bs=16384 conv=sync skip=3 count=1 of=block1
-	# Bank 2 (8000-BFFF)
-	dd if=../common.bin bs=16384 conv=sync skip=2 count=1 of=block2
-	# Bank 6 (C000-FFFF)
-	dd if=../bank2.bin bs=16384 conv=sync skip=3 count=1 of=block3
-	# Bank 7 (C000-FFFF)
-	dd if=../bank3.bin bs=16384 conv=sync skip=3 count=1 of=block4
-
-	cp base-image.trd fuzix.trd
-	# Insert 4K loader
-	../tools/trdify fuzix.trd BOOT0 loader.bin
-	# Kernel image
-	../tools/trdify fuzix.trd BLOCK0 block0
-	../tools/trdify fuzix.trd BLOCK1 block1
-	../tools/trdify fuzix.trd BLOCK2 block2
-	../tools/trdify fuzix.trd BLOCK3 block3
-	../tools/trdify fuzix.trd BLOCK4 block4
+	makebin -s 65536 loader.ihx loader.tmp
+	# Extract the loader itself
+	dd if=loader.tmp bs=512 skip=127 | ../tools/plus3boot >loader.bin
+	# Padding to fill the virtual disk
+	dd if=/dev/zero of=disk.raw bs=512 count=360
+	# Make a disk image to work from
+	dd if=loader.bin of=disk.raw conv=notrunc
+	# One block in the common 31K (BC00-BFFF are the loader hole)
+	dd if=../common.bin of=disk.raw seek=1 conv=notrunc
+	# Followed by 16K blocks for the banks
+	dd if=../bank1.bin of=disk.raw seek=63 conv=notrunc
+	dd if=../bank2.bin of=disk.raw seek=127 conv=notrunc
+	dd if=../bank3.bin of=disk.raw seek=191	conv=notrunc
+	dd if=../bank4.bin of=disk.raw seek=255 conv=notrunc
+	# And generate a 40 track plus3 disk from it
+	../tools/raw2dsk disk.raw fuzix.dsk
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage:
-	cp fuzix.trd $(IMAGES)/
-	# Make a blank disk image with partition
+	# Make a blank disk image with partitionK
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
