@@ -55,7 +55,6 @@ space if very careful and reclaim more lower memory.
 TODO:
 -	Debug the new tricks.s code
 -	Write correct asm stubs for W5100 programming in common
--	Swap the Nemo IDE for something more useful here
 -	Write a loader
 -	Maybe move to tinysd/tinyide
 -	Run parent first for efficiency ?
