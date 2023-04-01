@@ -1,12 +1,8 @@
 -mwxuy
--r
 -i fuzix.ihx
 -b _FONTCOMMON=0x0100
 -b _COMMONDATA=0x2000
--b _CODE1=0xC000
--b _CODE2=0xC000
--b _CODE3=0xC000
--b _DISCARD=0x8400
+-b _CODE=0x4000
 -l z80
 platform-zxuno/crt0.rel
 platform-zxuno/commonmem.rel
@@ -17,8 +13,8 @@ platform-zxuno/discard.rel
 platform-zxuno/zxuno.rel
 start.rel
 version.rel
-lowlevel-z80-banked.rel
-usermem_std-z80-banked.rel
+lowlevel-z80.rel
+usermem_std-z80.rel
 platform-zxuno/tricks.rel
 timer.rel
 kdata.rel

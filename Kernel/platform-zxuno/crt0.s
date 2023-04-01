@@ -1,44 +1,41 @@
         .module crt0
-	;
-	;	Our common lives low
-	;
-	;	We start this bank with FONT so that we have it aligned
-	.area _FONTCOMMON
-        .area _CONST
-        .area _COMMONMEM
-	.area _STUBS
-        .area _VIDEO
-	;
-	;	The writeables cannot start until 0x2000 but for simplicity
-	;	we just start at 0x2000 for now, otherwise we have to fight
-	;	the crappy loaders
-	;
-	.area _COMMONDATA
-        .area _INITIALIZED
+	;	The code part of the setup from 0x4000
+	.area _CODE
+        .area _CODE1
+	.area _CODE2
+	.area _CODE3
 	;
 	;	Beyond this point we just zero.
 	;
-        .area _DATA
-        .area _BSEG
         .area _BSS
         .area _HEAP
         .area _GSINIT
         .area _GSFINAL
-	;
-	;	Finally the buffers so they can expand
-	;
-	.area _BUFFERS
-	;
-	;	All our code is banked at 0xC000
-	;
-        .area _CODE1
-	.area _CODE2
-	.area _CODE3
 
-	; Discard is dumped in at 0x8000 and will be blown away later.
+	.area _BUFFERS
         .area _DISCARD
-	; Somewhere to throw it out of the way
+	.area _PAGE0		; tell tools not to pack us
+
+	;
+	;	Our common lives low
+	;
+	;	We start this bank with FONT so that we have it aligned
+	;
+	;	0x0000-0x1FFF is read only and we can't use 1FF8-1FFF for
+	;	code
+	;
+	.area _FONTCOMMON
+        .area _VIDEO
+        .area _COMMONMEM
+        .area _CONST
         .area _INITIALIZER
+
+	;	0x2000-0x3FFF - avoid code in 3D00-3DFF
+	.area _COMMONDATA
+        .area _INITIALIZED
+        .area _DATA
+        .area _BSEG
+
 
         ; imported symbols
         .globl _fuzix_main
@@ -50,121 +47,111 @@
 	.globl s__DATA
         .globl kstack_top
 
-        .globl unix_syscall_entry
         .globl nmi_handler
+	.globl null_handler
         .globl interrupt_handler
 
 	.include "kernel.def"
 	.include "../kernel-z80.def"
 
-        ; startup code
-	;
-	; This is all a bit weird. In order to stop fatware and friends
-	; screwing life up we load our lowest 8K as the boot.bin on a
-	; FAT volume. It's a horrible hack but will do for the moment.
-	; as it ensures we can get the low 8K correct. Otherwise the
-	; standard firmware locks it and we are screwed.
-	;
-	; On entry therefore the low 8K is correctly valid and has loaded
-	; the kernel image for us from blocks 1+ and all is good.
-	;
 
-	.area BOOT	(ABS)
-
-	.globl null_handler
-	.globl unix_syscall_entry
-	.globl interrupt_handler
-
-	.org 0
-
+;	We are run from 0x0000 (_CODE1)
+;	On entry we have main memory mapped, DIVMMC bank 0 mapped over
+;	the ROM space and the top 16K is an undefined bank. SP is not
+;	valid, interrupts are off.
 ;
-;	We don't have a JP at 0 as we'd like so our low level code needs
-;	to avoid that check
-;
-loader:
-	di
-	ld a,#0x80
-	out (0xE3),a
-	; Page the EEPROM in and control transfers there
-	; not to the jp below
-loader5:
-	; This is where the EEPROM calls us
-	; Not much we can do here until a hard reset
-	jp loader5
-rst_8:
-	.ds 8
-rst_10:
-	.ds 8
-rst_18:
-	.ds 8
-rst_20:
-	.ds 8
-rst_28:
-	.ds 8
-rst_30:
-	jp unix_syscall_entry
-	.ds 5
-rst_38:
-	jp interrupt_handler
-	.ds 0x66-0x3B
-nmi:	ret		; magic...
-	retn
 
-        .area _CODE1
+        .area _BOOT(ABS)
 
-	.globl _go
+	.org	0
 
-_go:
+	.globl go
 
-        di
+	; This first chunk of this gets overwritten by vectors
+
+rst0:
+	jp	null_handler
+	jp	go
+	nop
+	nop
+rst8:	ret
+	.ds	7
+rst10:	ret
+	.ds	7
+rst18:	ret
+	.ds	7
+rst20:	ret
+	.ds	7
+rst28:	ret
+	.ds	7
+rst30:	ret
+	.ds	7
+rst38:	jp	interrupt_handler
+	.ds	5
+	.ds	0x26
+	jp	nmi_handler
+
+go:
+	; Wipe screen with test pattern
+
+	ld	bc,#0x7ffd
+	ld	a,#0x0F
+	out	(c),a
+	ld	hl,#0xC000
+	ld	de,#0xC001
+	ld	bc,#0x3FFF
+	ld	(hl),#0xAA
+	ldir
+
+	; We are living in the DIVMMC mapping and we now need to fix the
+	; top mapping to be 3 with screen in 7
+	ld	bc,#0x7ffd
+	ld	a,#0x0B
+	out	(c),a
+
+	; Hires mode
+	ld	a,#0x3E
+	out	(0xFF),a
 
 	;  We need to wipe the BSS but the rest of the job is done.
 
-	ld hl, #s__DATA
-	ld de, #s__DATA+1
-	ld bc, #l__DATA-1
-	ld (hl), #0
+	ld	hl, #s__DATA
+	ld	de, #s__DATA+1
+	ld	bc, #l__DATA-1
+	ld	(hl), #0
 	ldir
-	ld hl, #s__BUFFERS
-	ld de, #s__BUFFERS+1
-	ld bc, #l__BUFFERS-1
-	ld (hl), #0
+	ld	hl, #s__BUFFERS
+	ld	de, #s__BUFFERS+1
+	ld	bc, #l__BUFFERS-1
+	ld	(hl), #0
 	ldir
 
-        ld sp, #kstack_top
+	jp	boot
+
+	.area	_CODE1
+boot:
+
+        ld	sp, #kstack_top
 
         ; Configure memory map
-	push af
-        call init_early
-	pop af
+	push	af
+        call	init_early
+	pop	af
 
         ; Hardware setup
-	push af
-        call init_hardware
-	pop af
+	push	af
+        call	init_hardware
+	pop	af
 
         ; Call the C main routine
-	push af
-        call _fuzix_main
-	pop af
+	push	af
+        call	_fuzix_main
+	pop	af
     
         ; main shouldn't return, but if it does...
         di
 stop:   halt
-        jr stop
-
-	; Boot marker at 0x2000
-
-	.area _COMMONDATA
-	.globl _marker
-_marker:
-	.byte 'Z'		; marker
-	.byte 'B'
-	.word _go		; boot addresss
-
-	.area _STUBS
-stubs:
-	.ds 512
+        jr	stop
 
 	.area _BUFFERS
 ;
@@ -176,4 +163,4 @@ stubs:
 	.area _BUFFERS
 
 _bufpool:
-	.ds BUFSIZE * NBUFS
+	.ds	BUFSIZE * NBUFS

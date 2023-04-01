@@ -19,27 +19,25 @@ OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS)
 
 CROSS_CCOPTS += -I../dev/ -I../dev/zx/
 
-CROSS_CC_SEG3 = --codeseg CODE3
-
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DDOBJS): %.rel: ../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(DZOBJS): %.rel: ../dev/zx/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DDZOBJS): %.rel: ../dev/zx/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
@@ -51,10 +49,6 @@ clean:
 
 # Re-order the image and snapshop it
 image:
-	# Merge the first code bank into common
-	dd if=../bank1.bin bs=16384 skip=3 seek=3 count=1 \
-		of=../common.bin conv=notrunc
-
 	# Build an esxdos friendly setup
 	sdasz80 -o load-esx.s
 	sdldz80 -i load-esx.rel
@@ -64,7 +58,23 @@ image:
 
 	# Now build a FUZIX.BIN to load
 	# in the order we need it
-	dd if=../common.bin bs=65536 count=1 conv=sync | \
-		dd of=FUZIX.BIN
-	dd if=../bank2.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
-	dd if=../bank3.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
+	cp ../fuzix.bin FUZIX.BIN
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+# Adjust to wherever you have ESXDOS unpacked
+ESXDOS = $(FUZIX_ROOT)/../ESXDOS
+
+diskimage:
+	dd if=hdfstart.bin of=$(IMAGES)/disk.hdf
+	# Write a byte at the end to force the size
+	dd if=/dev/zero of=$(IMAGES)/disk.hdf bs=1 seek=134218261 count=1
+	# Sector 67584 (second partition on the hdfstart we used)
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.hdf bs=34603542 seek=1 conv=notrunc
+	dd if=/dev/zero bs=512 count=65536 of=tmp.fat
+	mkfs.fat -F16 tmp.fat
+	# Sector 2048
+	dd if=tmp.fat of=$(IMAGES)/disk.hdf bs=1049110 seek=1 conv=notrunc
+	hdfmonkey put $(IMAGES)/disk.hdf $(ESXDOS)/* /
+	hdfmonkey put $(IMAGES)/disk.hdf FUZIX.BIN FUZIX.BIN
+	hdfmonkey put $(IMAGES)/disk.hdf FUZIX BIN/FUZIX
+	dd if=$(IMAGES)/disk.hdf of=$(IMAGES)/disk.mmc bs=534 skip=1

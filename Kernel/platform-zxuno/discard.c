@@ -11,18 +11,15 @@ extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
 
 void pagemap_init(void)
 {
-	if (probe_zxuno())
-		configure_zxuno();
-//	else
-//		panic("not zxuno");
+	unsigned i = 1024;
 	/* These are always present */
 	kempston = 1;
 	kmouse = 1;
 	fuller = 1;
-	/* Check what extensions we can assume FIXME */
+
 	pagemap_add(1);
 	pagemap_add(2);
-	pagemap_add(3);
+
 }
 
 /* string.c

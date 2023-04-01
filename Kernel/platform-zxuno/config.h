@@ -1,5 +1,5 @@
 #define CONFIG_SD
-#define SD_DRIVE_COUNT	2
+#define SD_DRIVE_COUNT	1
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -16,12 +16,11 @@
 /* Select a banked memory set up */
 #define CONFIG_BANK_FIXED
 /* This is the number of banks of user memory available (maximum) */
-#define MAX_MAPS	3		/* 512 KByte... minus the high one */
-/* How big is each bank - in our case 32K, 48K is actually more common. This
-   is hardware dependant */
-#define MAP_SIZE	0xA000
+#define MAX_MAPS	2
+/* We have 0000-1FFF common */
+#define MAP_SIZE	0xE000
 /* How many banks do we have in our address space */
-#define CONFIG_BANKS	1	/* 2 x 32K */
+#define CONFIG_BANKS	1	/* 1 x 56K */
 
 /* Input layer support */
 #define CONFIG_INPUT
@@ -39,17 +38,18 @@
 /* Custom banking */
 
 /* Vt definitions */
+/* TODO: 80 column */
 #define VT_WIDTH	64
 #define VT_HEIGHT	24
 #define VT_RIGHT	63
 #define VT_BOTTOM	23
 
-/* We can do better than this but we need to sort out the buffer banking first */
+/* We can't start at 0x2000 due to brokenness in the Uno implementation */
 #define TICKSPERSEC 50   /* Ticks per second */
-#define PROGBASE    0x6000  /* also data base */
-#define PROGLOAD    0x6000  /* also data base */
+#define PROGBASE    0x4000  /* also data base */
+#define PROGLOAD    0x4000  /* also data base */
 #define PROGTOP     0xFE00  /* Top of program, base of U_DATA copy */
-#define PROC_SIZE   40	  /* Memory needed per process */
+#define PROC_SIZE   48	  /* Memory needed per process */
 #define MAXTICKS    10	  /* As our task switch is so expensive */
 
 #define BOOT_TTY (513)  /* Set this to default device for stdio, stderr */
@@ -66,9 +66,9 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 #define MAX_BLKDEV 2	    /* 2 IDE drives, 2 SD drive */
 
-#define SWAPBASE 0x8000
+#define SWAPBASE 0x4000
 #define SWAPTOP  0x10000UL
-#define SWAP_SIZE 0x40
+#define SWAP_SIZE 0x60
 #define MAX_SWAPS	16
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
 

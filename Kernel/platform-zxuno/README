@@ -1,68 +1,56 @@
 Fuzix for the ZX-Uno
 
-For the 128K spectrum we get 8 pages of 16K, all can be stuffed into the top
-16K but some are also wired to other things or hardwired elsewhere.
-
-The ZX-Uno DIVMMC allows us to do
-
-0xE3:	7: conmem 6: mapram 0-5: bank
-	(may only be 4 banks)
-
-	7 set ROM at 0000-1FFF and RAM at 2000-3FFF (banked)
-	and pins it (overrides 6)
-	6 is a one shot and write protects bank 3 and places it at
-	0000-1FFF, 
-	5-0: are the bank at 2000-3FFF
-
 To load we use the ESXDOS extension that is generally found with most
 DivMMC and DivIDE interfaces. Copy FUZIX.BIN into / on the ESXDOS drive and
 copy FUZIX into BIN. Then boot from ESXDOS with .fuzix
 
-We run with the following mapping
+Our memory model is based on the base memory with the Timex MMU enabled. Alas
+due to bugs in the ZXUNO we have to use the DIVMMC space for the low 16K which
+restricts process size and generally messes things up.
 
-0000-1FFF	IRQ vectors and boot loader
-2000-3FFF	RAM (switchable): Common, const, commondata etc
-		(we have 2 spare banks here but it's not clear what use they
-		actually are).
+Kernel
+0000-3FFF	DIVMMC (low 8K RO)
+4000-7FFF	Bank 5
+8000-BFFF	Bank 6
+C000-FFFF	Bank 3 (7 when doing video)
 
-4000-5FFF	A bit more kernel space right now (need to sort out external
-		buffers)
+User
 
-6000-BFFF	User space (DOCK, EXT or main memory)
+0000-3FFF	Common (Bank 4)
+4000-FFFF	From dock or ex-rom (RAM) space
 
-C000-FFFF	Banked
-	0:	Kernel CODE (fairly full)
-	1:	Kernel CODE2 (fairly full)
-	2:	Mapped at 0x8000-0xBFFF
-	3:	Spare
-	4:	Top of user process in main memory
-	5:	Mapped at 0x4000-0x7FFF (some kernel, some user)
-	6:	CODE3, (lots of room) - buffers here ? when banked ?
-	7:	Screen memory, only accessed from common. Need to put
-		the font in the gaps here.
+Graphics apps could end at BFFF and map video C000-FFFF in theory
 
-We can move some stuff down into the low 16K (especially once we move the
-common space) We do need to do sort things out a bit and stuff commonmem etc
-in the low 8K to get more room.
+The ZX Uno memory prioritization works like this as far as I can tell
 
-To Do:
+Low 16K		DIVMMC, Dock/EXROM, +3 mode, ROM
+16-32K		Dock/ExROM, +3, page 5
+32-48K		Dock/ExROM, +3, page 2
+48K-64K		Dock/ExROM, spectrum MMU, +3, page 0
 
--	Why does ls /bin lose the lowest pixel row of the 'yes' command ?
-	(Seems we lose the bottom line of the left most char - off by one bug
-	 in zxvid ?)
--	Hand optimized bank exchange and bank to bank copy routines. These are
-	fairly performance critical due to the limitations of the memory model.
-	Right now we ldir in one case (could be faster abusing stack), and
-	the exchange case could be made much much faster using registers
-	and stack tricks not bounce buffers
--	Enable interrupts during swap
--	6 or 5bit wide fonts (42, 51 column)
--	Optimize zxvid - especially scrolling
--	Move vtborder to common
--	Enable 64 column (512 pixel wide) mode on the Uno
--	Use the Timex MMU DOCK/EXT memory for multiple banks of user code
+Note: Zesarux appears to disable +3 paging when timex mode is enabled but the
+Uno does not seem to.
 
+A lot of the extra RAM is simply not accessible. We can access the following
+unused space so could maybe build a swap ramdisk in future
+- DIVMMC, 8K window, 112K free
+- 128K memory, banks 0,1,3,4,6, 80K free
+- Dock low 16K, EXROM low 16K (both rather hard to get at) 32K
+and if we can use the Pentagon 256K maps then we've got another 128K but
+not clear if we can. If we could it might be worth doing.
 
-Working Notes
-- 	Need to update video code to use bank 7, right now it scribbles over
-	0x4000
+Our mapping is somewhat forced by the bugs in the ZX Uno. DIVMMC and DIVIDE
+should not page in the ROM when the ZX128 ROM is the active one, but it
+does. This basically forces us to run with it mapped, with the low 8K read
+only after boot and the rest of the mess that goes with it. It also prevents
+various other optimizations like keeping common code and the udata in the low
+8K to get sensible task switching speed.
+
+TODO:
+-	debug fork/switch fail
+-	optimize fork if we can
+-	look at using DMA engine
+-	80 column ?
+-	Graphics apps loaded below C000 and with video map ?
+	(need a flag to say a graphics app was loaded - missing from core)
+-	Use DMA engine

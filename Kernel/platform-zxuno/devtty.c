@@ -12,7 +12,7 @@
 
 static char tbuf1[TTYSIZ];
 
-uint8_t vtattr_cap = VTA_INVERSE|VTA_FLASH|VTA_UNDERLINE;
+uint8_t vtattr_cap = VTA_INVERSE | VTA_FLASH | VTA_UNDERLINE;
 uint8_t vtborder;
 
 extern uint8_t curattr;
@@ -24,8 +24,8 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
-	{NULL, NULL, NULL, 0, 0, 0},
-	{tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2},
+	{ NULL, NULL, NULL, 0, 0, 0 },
+	{ tbuf1, tbuf1, tbuf1, TTYSIZ, 0, TTYSIZ / 2 },
 };
 
 /* tty1 is the screen */
@@ -82,7 +82,7 @@ static struct display specdisplay = {
 	0xFF, 0xFF,
 	FMT_SPECTRUM,
 	HW_UNACCEL,
-	GFX_VBLANK|GFX_MAPPABLE|GFX_TEXT,
+	GFX_VBLANK | GFX_MAPPABLE | GFX_TEXT,
 	0
 };
 
@@ -94,7 +94,7 @@ static struct videomap specmap = {
 	0,
 	0,
 	0,
-	MAP_FBMEM|MAP_FBMEM_SIMPLE
+	MAP_FBMEM | MAP_FBMEM_SIMPLE
 };
 
 /*
@@ -109,13 +109,16 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	uint8_t n;
 
 	if (minor == 1) {
-		switch(arg) {
+		switch (arg) {
 		case GFXIOC_GETINFO:
 			return uput(&specdisplay, ptr, sizeof(struct display));
+#if 0
+/* Need to add gfx binary support and other gunge */
 		case GFXIOC_MAP:
 			return uput(&specmap, ptr, sizeof(struct videomap));
 		case GFXIOC_UNMAP:
 			return 0;
+#endif
 		case GFXIOC_WAITVB:
 			/* Our system clock is vblank */
 			timer_wait++;
@@ -143,7 +146,7 @@ void vtattr_notify(void)
 	/* Attribute byte fixups: not hard as the colours map directly
 	   to the spectrum ones */
 	if (vtattr & VTA_INVERSE)
-		curattr =  ((vtink & 7) << 3) | (vtpaper & 7);
+		curattr = ((vtink & 7) << 3) | (vtpaper & 7);
 	else
 		curattr = (vtink & 7) | ((vtpaper & 7) << 3);
 	if (vtattr & VTA_FLASH)

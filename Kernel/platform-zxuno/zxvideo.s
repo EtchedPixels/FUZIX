@@ -1,10 +1,8 @@
 ;
-;	Not obvious how we share this best
-;
-;
 ;        Timex VT primitives
 ;
-;	512 pixel mode
+;	512 pixel mode but on the uno we have it mapped into
+;	bank 7 which is not normally mapped
 ;
 
         .module tmxvideo
@@ -55,14 +53,12 @@ rightside:
 	ret
 
 _plot_char:
-	pop iy
         pop hl
         pop de              ; D = x E = y
         pop bc
         push bc
         push de
         push hl
-	push iy
 
 	ld hl,(_vtattr)	    ; l is vt attributes
 	push hl		    ; save attributes as inaccessible once vid mapped
@@ -137,12 +133,10 @@ last_ul:
 	jr plot_attr
 
 _clear_lines:
-	pop bc
         pop hl
         pop de              ; E = line, D = count
         push de
         push hl
-	push bc
 	; This way we handle 0 correctly
 	inc d
 	jr nextline
@@ -154,9 +148,7 @@ clear_next_line:
         ld c, #64           ; clear 64 cols
         push bc
         push de
-	push af
         call _clear_across
-	pop af
         pop hl              ; clear stack
         pop hl
 
@@ -170,14 +162,12 @@ nextline:
 
 
 _clear_across:
-	pop iy
         pop hl
         pop de              ; DE = coords 
         pop bc              ; C = count
         push bc
         push de
         push hl
-	push iy
 	ld a,c
 	or a
 	ret z		    ; No work to do - bail out
@@ -337,12 +327,10 @@ loop_scroll_up:
 	jp map_kernel_restore
 
 _cursor_on:
-	pop bc
         pop hl
         pop de
         push de
         push hl
-	push bc
         ld (cursorpos), de
 
         call map_videopos
