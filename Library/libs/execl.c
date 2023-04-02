@@ -33,14 +33,14 @@ const char *_findPath(char *name, const char *path)
 	while (*envp) {
 		p = name;
 		while (*envp && (*p = *envp++) != ':') {
-			if ((uint) (p - name) >= sizeof(name))
+			if ((uint) (p - name) > PATHLEN)
 				break;
 			++p;
 		}
 		if (*--p != '/')
 			*++p = '/';
 		++p;
-		if ((p - name) + strlen(path) >= sizeof(name))
+		if ((p - name) + strlen(path) > PATHLEN)
 			break;
 		strcpy(p, path);
 		if (access(name, 0) == 0)
