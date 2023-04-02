@@ -18,8 +18,7 @@
 	.byte	0x2A		; gap length
 	.byte	0x52		; page length
 	.byte	0,0,0,0,0	; reserved
-counter:.byte	0		; checksum (fixed up by tool)
-	; we borrow the checksum space for our counter
+	.byte	0		; checksum (fixed up by tool)
 
 ;
 ;	Entered here in 4/7/6/3 mapping with SP FE00 and the disk motor
@@ -32,8 +31,10 @@ start:
 				; video in bank 7
 	out	(c),a
 	ld	b,#0x1F
-	ld	a,#0x14		; Special paging off, motor on, 48K ROM
+	ld	a,#0x0C		; Special paging off, motor on, 48K ROM
 	out	(c),a
+
+	; Our map is now ROM 5 2 3 screen in 7 
 ;
 ;	The boot loader turns the motor off, so turn it back on but wait
 ;	a bit otherwise some 3.5" disks won't boot right
@@ -58,31 +59,36 @@ remap:
 	xor	a
 	ld	(hl),a
 	ldir
-
 ;
 ;	Ok now we can try and load stuff
 ;	9 sectors per track and we need to start from 0/2
 
 	ld	de,#0x02
-	ld	ix,#counter
 ;
-;	Load the blocks
+;	Load the blocks. We want the kernel as follows
 ;
-	ld	hl,#0x4000
-	call	load_16k	; 4000-7FFF
-	ld	hl,#0x8000
-	ld	(ix),#30
-	call	load_blocks	; 8000-BBFF
+;	CODE1		bank	0
+;	CODE2		bank	1
+;	CODE3		bank	7
+;	CODE4		bank	3
+;	Common/Discard	bank	5 (0x4000-7FFF)
+;
+;	The low 16K that will use memory from the Spectranet is
+;	uninitialized dats, and 8000-BFFF (bank 2) is clear
+;
+;
+	ld	a,#0x18
+	call	load_bank_a	; C000-FFFF CODE1 page 0
 	ld	a,#0x19
-	call	load_bank_a	; C000-FFFF CODE1 page 1
-	ld	a,#0x1E
-	call	load_bank_a	; C000-FFFF CODE2 page 6
+	call	load_bank_a	; C000-FFFF CODE2 page 1
 	ld	a,#0x1F
 	call	load_bank_a	; C000-FFFF CODE3 page 7
-	ld	a,#0x18
-	call	load_bank_a	; C000-FFFF CODE4 page 0
+	ld	a,#0x1B
+	call	load_bank_a	; C000-FFFF CODE4 page 3
+	ld	a,#0x1D
+	call	load_bank_a	; 4000-7FFF Common page 5
 	ld	bc,#0x7FFD
-	ld	a,#0x19
+	ld	a,#0x18
 	out	(c),a		; CODE1 mapped
 	jp	0xC000		; and run
 
@@ -90,9 +96,6 @@ load_bank_a:
 	ld	hl,#0xC000
 	ld	bc,#0x7FFD
 	out	(c),a
-load_16k:
-	ld	(ix),#32
-load_blocks:
 	jr	dosector
 ;
 ;	Main track loading loop
@@ -108,11 +111,12 @@ load_track:
 	call	seek_track
 	pop	de
 dosector:			; Loop through track D loading sector E
+	ld	a,h
+	or	a
+	ret	z
 	push	de
 	call	load_sector	; Load 512 bytes into HL and adjust HL
 	pop	de
-	dec	(ix)		; counter of sectors
-	ret	z
 	inc	e		; Next sector
 	ld	a,#10		; New track ?
 	cp	e
@@ -155,6 +159,9 @@ wait_ms_loop2:
 ;	Look at just doing track loads in one command! FIXME
 ;
 load_sector:
+	ld	a,#0x0C
+	ld	bc,#0x1FFD
+	out	(c),a
 	ld	a,#0x46
 	call	fd765_tx	; read MFM
 	xor	a		; Drive 0 head 0

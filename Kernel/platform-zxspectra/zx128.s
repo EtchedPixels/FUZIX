@@ -117,12 +117,13 @@ _plt_monitor:
 	jr c, _plt_monitor
 
 _plt_reboot:
+	; FIXME: need to turn the Spectranet off
 	di
-	im 1
-	ld bc, #0x7ffd
-	xor a		; 128K ROM, initial banks, low screen
-	out (c), a
-        rst 0		; Into the ROM (SpectraNet will do the rest)
+	im	1
+	ld	bc, #0x7ffd
+	xor	a		; 128K ROM, initial banks, low screen
+	out	(c), a
+        rst	0		; Into the ROM (SpectraNet will do the rest)
 
 plt_interrupt_all:
         ret
@@ -146,7 +147,7 @@ init_early:
 	out (0xFE),a
         ret
 
-	.area _VIDEO
+	.area _COMMONMEM
 
 init_hardware:
         ; set system RAM size
@@ -157,44 +158,52 @@ init_hardware:
 	; We lose the following to the system
 	; 0: first kernel bank at C000
 	; 1: second kernel bank at C000
-	; 2: 4000-7FFF (screen and buffers)
+	; 2: 8000-BFFF (screen and buffers)
 	; 3: fourth kernel bank at C000
-	; 5: 8000-BFFF (working 16K copy)
-	; 6: second kernel bank at C000
+	; 5: 4000-7FFF (working 16K copy)
 	; 7: third kernel bank at C000
 	; TODO: figure out the right value!
         ld	hl, #(256 - 96)
         ld	(_procmem), hl
 
 	;
-	;	No low RAM so need IM2 and custom syscall interface
-	;	(will need to tackle that nicely in libc too)
+	;	No low RAM so need IM2
 	;
-
+	ld	b,#8
+set_vectors:
+	push	bc
+	ld	a,b
+	dec	a
+	call	switch_bank
+	ld	a,#0x18		; JR
+	ld	(0xFFFF),a
 	ld	a,#0xC3
-	ld	(0xFFFD),a
 	ld	(0xFFF4),a
-	ld	hl,#unix_syscall_entry
-	ld	(0xFFFE),hl
 	ld	hl,#interrupt_handler
 	ld	(0xFFF5),hl
+	pop	bc
+	djnz	set_vectors
+
+	ld	a,(current_map)
+	call	switch_bank
+
         ; screen initialization
 	push	af
 	call	_vtinit
 	pop	af
 
 	; interrupt vectors to FFFF
-intvector:
 	ld	hl,#0x1000
 	ld	bc,#0xFF
+intvector:
 	ld	(hl),c
 	inc	hl
 	djnz	intvector
 	ld	(hl),c
 
-	ld a,#0x10
-	ld i,a
-	im 2			; Everything ends up at FFF4
+	ld	a,#0x10
+	ld	i,a
+	im	2		; Everything ends up at FFF4
 
         ret
 
@@ -203,6 +212,7 @@ intvector:
 
         .area _COMMONMEM
 
+	; Done at boot up
 _program_vectors:
 	ret
 
@@ -224,7 +234,7 @@ switch_bank:
         ld (current_map), a
 	push bc
         ld bc, #0x7ffd
-	or #BANK_BITS	   ; Spectrum 48K ROM
+	or #BANK_BITS	   ; Spectrum 48K ROM, high video
         out (c), a
 	pop bc
         ret

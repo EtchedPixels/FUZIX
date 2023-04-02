@@ -10,8 +10,8 @@ extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
 void pagemap_init(void)
 {
 	uint8_t i;
-	pagemap_add(3);
 	pagemap_add(4);
+	pagemap_add(6);
 
 	/* Pentagon uses 7FFD as follows
 		7: 256K

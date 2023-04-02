@@ -40,7 +40,6 @@ void pagemap_free(ptptr p)
 	if (p->p_page == 0)
 		panic(PANIC_FREE0);
 	pfree[pfptr++] = p->p_page;
-	pfree[pfptr++] = p->p_page2;
 	if (p->p_page == switchedbank) {
 		switchedbank = 0;
 		switchedwb = 0;
@@ -59,7 +58,11 @@ int pagemap_alloc(ptptr p)
 	if (pfptr < 2)
 		return ENOMEM;
 	p->p_page = pfree[--pfptr];
-	p->p_page2 = pfree[--pfptr];
+	/* For now just map 4 to spectranet 4, 6 to spectranet 8 */
+	if (p->p_page == 4)
+		p->p_page2 = 4;
+	else
+		p->p_page2 = 8;
 	return 0;
 }
 

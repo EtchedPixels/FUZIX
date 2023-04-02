@@ -59,7 +59,6 @@
         ; startup code. We are entered with page 1 high and the video
 	; in high space
         di
-
 	;
 	;	Force the Spectranet into view and set the mapping
 	;	to ROM | C4 | C5 | C0. Nothing in the spectranet space
@@ -70,7 +69,7 @@
 	and	#0x20
 	or	#0x01
 	out	(c),a
-	ld	bc,#0x00
+	ld	b,#0x00
 	ld	a,#0xC4
 	out	(c),a
 	inc	b

@@ -60,18 +60,18 @@ image:
 	sdldz80 -i loader.rel
 	makebin -s 65536 loader.ihx loader.tmp
 	# Extract the loader itself
-	dd if=loader.tmp bs=512 skip=127 | ../tools/plus3boot >loader.bin
+	dd if=loader.tmp bs=512 skip=95 | ../tools/plus3boot >loader.bin
 	# Padding to fill the virtual disk
 	dd if=/dev/zero of=disk.raw bs=512 count=360
 	# Make a disk image to work from
 	dd if=loader.bin of=disk.raw conv=notrunc
-	# One block in the common 31K (BC00-BFFF are the loader hole)
-	dd if=../common.bin of=disk.raw seek=1 conv=notrunc
-	# Followed by 16K blocks for the banks
-	dd if=../bank1.bin of=disk.raw seek=63 conv=notrunc
-	dd if=../bank2.bin of=disk.raw seek=127 conv=notrunc
-	dd if=../bank3.bin of=disk.raw seek=191	conv=notrunc
-	dd if=../bank4.bin of=disk.raw seek=255 conv=notrunc
+	# CODE1 to CODE4 in order
+	dd if=../bank1.bin of=disk.raw skip=96 seek=1 conv=notrunc
+	dd if=../bank2.bin of=disk.raw skip=96 seek=33 conv=notrunc
+	dd if=../bank3.bin of=disk.raw skip=96 seek=65 conv=notrunc
+	dd if=../bank4.bin of=disk.raw skip=96 seek=97 conv=notrunc
+	# 4000-7FFF from the common block
+	dd if=../common.bin of=disk.raw skip=32 seek=129 conv=notrunc
 	# And generate a 40 track plus3 disk from it
 	../tools/raw2dsk disk.raw fuzix.dsk
 
@@ -84,3 +84,5 @@ diskimage:
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
+	# Boot disk for +2A/+3 (TODO microdrive boot for 128K... ;))
+	cp fuzix.dsk $(IMAGES)

@@ -15,13 +15,13 @@ C000-FFFF	128K Spectrum banked memory
 The memory is allocated as
 
 128K
-0	Kernel CODE4
-1	Kernel CODE1
+0	Kernel CODE1
+1	Kernel CODE2
 2	Fixed at 8000-BFFF
-3	User process high memory
+3	Kernel CODE4
 4	User process high memory
 5	Fixed at 4000-7FFF
-6	Kernel CODE2
+6	Usr process high memoruy
 7	kernel CODE3, Video at C000-DAFF
 
 Spectranet
@@ -50,7 +50,6 @@ Shadow for 2,5 space (24K per process) stored in spectranet RAM
 TODO: is it worth using more spectranet RAM and extra games to get 3
 processes - probably not but we could bank the disk buffers into that
 space if very careful and reclaim more lower memory.
-
 
 TODO:
 -	Debug the new tricks.s code
