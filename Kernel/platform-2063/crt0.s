@@ -28,6 +28,7 @@
 	; These get overwritten and don't matter
         .area _INITIALIZER	; binman copies this to the right place for us
         .area _COMMONMEM	; stuff we always need
+	.area _COMMONDATA
 	.area _SERIAL		; must be page aligned - we place it at
 				; FE00-FFFF so it covers the loader space
 

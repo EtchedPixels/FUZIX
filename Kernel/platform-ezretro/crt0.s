@@ -21,6 +21,7 @@
         .area _GSFINAL
 	.area _DISCARD
         .area _COMMONMEM
+        .area _COMMONDATA
 
         ; imported symbols
         .globl _fuzix_main
@@ -48,6 +49,9 @@ init:
 	ld hl, #s__DATA
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
+	ldir
+	ld de, #s__COMMONDATA
+	ld bc, #l__COMMONDATA
 	ldir
 	; and the discard
 	ld de, #s__DISCARD

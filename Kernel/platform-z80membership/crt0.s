@@ -17,6 +17,7 @@
 
 
 	        .area _COMMONMEM
+	        .area _COMMONDATA
 
         	; imported symbols
         	.globl _fuzix_main
@@ -30,6 +31,8 @@
 	        .globl l__BUFFERS
 	        .globl s__COMMONMEM
 	        .globl l__COMMONMEM
+	        .globl s__COMMONDATA
+	        .globl l__COMMONDATA
 		.globl s__INITIALIZER
 	        .globl kstack_top
 		.globl map_kernel
@@ -46,6 +49,9 @@ start:
 		ld hl, #s__DATA
 		ld de, #s__COMMONMEM
 		ld bc, #l__COMMONMEM
+		ldir
+		ld de, #s__COMMONDATA
+		ld bc, #l__COMMONDATA
 		ldir
 		; then the discard
 		; Discard can just be linked in but is next to the buffers

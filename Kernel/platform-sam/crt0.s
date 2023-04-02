@@ -22,6 +22,7 @@
 		.area _DISCARD
 	        .area _INITIALIZER
 	        .area _COMMONMEM
+	        .area _COMMONDATA
 
 		.area _PAGE0
 		.area _PAGEH

@@ -11,7 +11,7 @@ static unsigned int s__CODE, s__CODE2, s__INITIALIZER, s__DATA,
     l__GSFINAL, l__GSINIT, l__COMMONMEM, s__FONT, l__FONT, s__DISCARD,
     l__DISCARD, l__CODE, l__CODE2, l__VIDEO, l__DATA, s__CONST, l__CONST,
     s__HEAP, l__HEAP, s__BOOT=0xFFFF, l__BOOT, s__PAGE0 = 0xFFFF,
-    s__SYSMOD, l__SYSMOD;
+    s__SYSMOD, l__SYSMOD, s__COMMONDATA, l__COMMONDATA;
 
 
 static void ProcessMap(FILE * fp)
@@ -58,6 +58,8 @@ static void ProcessMap(FILE * fp)
 			sscanf(p1, "%x", &s__INITIALIZER);
 		if (strcmp(p2, "s__COMMONMEM") == 0)
 			sscanf(p1, "%x", &s__COMMONMEM);
+		if (strcmp(p2, "s__COMMONDATA") == 0)
+			sscanf(p1, "%x", &s__COMMONDATA);
 		if (strcmp(p2, "s__FONT") == 0)
 			sscanf(p1, "%x", &s__FONT);
 		if (strcmp(p2, "l__INITIALIZED") == 0)
@@ -68,6 +70,8 @@ static void ProcessMap(FILE * fp)
 			sscanf(p1, "%x", &l__GSINIT);
 		if (strcmp(p2, "l__COMMONMEM") == 0)
 			sscanf(p1, "%x", &l__COMMONMEM);
+		if (strcmp(p2, "l__COMMONDATA") == 0)
+			sscanf(p1, "%x", &l__COMMONDATA);
 		if (strcmp(p2, "l__FONT") == 0)
 			sscanf(p1, "%x", &l__FONT);
 		if (strcmp(p2, "s__HEAP") == 0)
@@ -126,9 +130,9 @@ int main(int argc, char *argv[])
 	ProcessMap(map);
 	fclose(map);
 
-	if (s__COMMONMEM > 0xFFFF || s__COMMONMEM + l__COMMONMEM > 0x10000) {
+	if (s__COMMONMEM > 0xFFFF || s__COMMONMEM + l__COMMONMEM + l__COMMONDATA > 0x10000) {
 		fprintf(stderr, "Move common down by at least %d bytes\n",
-			s__COMMONMEM + l__COMMONMEM - 0x10000);
+			s__COMMONMEM + l__COMMONMEM + l__COMMONDATA - 0x10000);
 		exit(1);
 	}
 
@@ -167,7 +171,8 @@ int main(int argc, char *argv[])
 
 	/* Special case for 32K/32K layouts. We have a high and a low page
 	   and we need to pack the entire binary space. We can revist this
-	   later but for now it's good enough */
+	   later but for now it's good enough. Also used as a flag by
+	   other ports to tell us to leave them alone */
 	if (s__PAGE0 != 0xFFFF) {
 		pack_discard = 0;
 		start = 0;
@@ -232,17 +237,17 @@ int main(int argc, char *argv[])
 				memcpy(out + base, buf + s__SYSMOD, l__SYSMOD);
 				base += l__SYSMOD;
 			}
-			tail += l__COMMONMEM;
+			tail += l__COMMONMEM + l__COMMONDATA;
 			memcpy(out + base, buf + s__COMMONMEM,
-			       l__COMMONMEM);
-			base += l__COMMONMEM;
+			       l__COMMONMEM + l__COMMONDATA);
+			base += l__COMMONMEM + l__COMMONDATA;
 			/* If we have the font packed high then add it to the image */
 			if (l__FONT && s__FONT > s__INITIALIZER) {
 				memcpy(out + base, buf + s__FONT, l__FONT);
 				tail += l__FONT;
 				base += l__FONT;
 			}
-			end = s__COMMONMEM + l__COMMONMEM + l__FONT;
+			end = s__COMMONMEM + l__COMMONMEM + l__COMMONDATA + l__FONT;
 			if (pack_discard) {
 			        memcpy(out + base, buf + s__DISCARD, l__DISCARD);
 			        base += l__DISCARD;
@@ -257,8 +262,8 @@ int main(int argc, char *argv[])
 		printf("Const at 0x%04x (%d bytes)\n", s__CONST, l__CONST);
 		printf("Data at 0x%04x (%d bytes)\n", s__DATA,
 		       l__DATA + l__INITIALIZED);
-		printf("Common at 0x%04x (%d bytes)\n", s__COMMONMEM,
-		       l__COMMONMEM);
+		printf("Common at 0x%04x (%d + %d bytes)\n", s__COMMONMEM,
+		       l__COMMONMEM,  l__COMMONDATA);
 		if (l__FONT)
 			printf("Font at 0x%04x (%d bytes)\n", s__FONT,
 			       l__FONT);
@@ -283,8 +288,8 @@ int main(int argc, char *argv[])
 		if (end < s__INITIALIZED +  l__INITIALIZED)
 		        end = s__INITIALIZED + l__INITIALIZED;
                 /* Common may follow but only if we didn't relocate it */
-		if (reloc == 0 && end < s__COMMONMEM +  l__COMMONMEM)
-		        end = s__COMMONMEM + l__COMMONMEM;
+		if (reloc == 0 && end < s__COMMONMEM +  l__COMMONMEM + l__COMMONDATA)
+		        end = s__COMMONMEM + l__COMMONMEM + l__COMMONDATA;
 
                 /* Packed image with common over data */
 		if (!no_pack && (!s__DISCARD || pack_discard)) {

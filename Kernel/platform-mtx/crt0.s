@@ -23,6 +23,7 @@
 	.area _FONT
 	; and the common memory goes top
         .area _COMMONMEM
+        .area _COMMONDATA
         .area _INITIALIZER
 
         ; imported symbols
@@ -39,6 +40,8 @@
         .globl l__DISCARD
         .globl s__COMMONMEM
         .globl l__COMMONMEM
+        .globl s__COMMONDATA
+        .globl l__COMMONDATA
         .globl s__INITIALIZER
 
         .globl kstack_top
@@ -56,6 +59,9 @@ init:
 	ld hl, #s__DATA
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
+	ldir
+	ld de, #s__COMMONDATA
+	ld bc, #l__COMMONDATA
 	ldir
 	; font
 	ld de, #s__FONT

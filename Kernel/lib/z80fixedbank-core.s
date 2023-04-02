@@ -27,7 +27,6 @@
 	.globl _udata
 
 	.globl map_kernel
-	.globl map_process
 	.globl map_process_a
 	.globl map_process_always
 
@@ -211,7 +210,6 @@ switchinfail:
 	; something went wrong and we didn't switch in what we asked for
         jp _plt_monitor
 
-fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
 
 ;
 ;	Called from _fork. We are in a syscall, the uarea is live as the
@@ -310,6 +308,8 @@ _dofork:
 	; to be the live uarea. The parent is frozen in time and space as
 	; if it had done a switchout().
         ret
+
+	.area _COMMONDATA
 ;
 ;	For the moment
 ;
@@ -324,3 +324,4 @@ bouncebuffer:
 ;
 _swapstack:
 _need_resched:	.db 0
+fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
