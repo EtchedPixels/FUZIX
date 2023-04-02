@@ -24,6 +24,7 @@
 	; Build the video library as the only driver
 
 ZXVID_ONLY	.equ	1
+SCREENBASE	.equ 0x40
 
 .macro VIDEO_MAP
 	call map_video

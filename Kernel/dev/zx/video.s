@@ -26,7 +26,7 @@ videopos:
         ld e,a
         ld a,d
         and #0x18
-        or #0x40	    ; Standard screen
+        or #SCREENBASE	    ; Standard screen
         ld d,a
 	VIDEO_MAP
 	ret
@@ -40,7 +40,7 @@ videoattr:
 				; into the low 2 bits
 	ld l,a
 	and #3			; Extract the low 2 bits for the high
-	add #0x58		; Attributes start 0x5800
+	add #(SCREENBASE+0x18)	; Attributes start 0x5800
 	ld h,a
 	ld a,l
 	and #0xE0		; mask the bits that are valid
