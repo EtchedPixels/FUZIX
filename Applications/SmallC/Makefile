@@ -17,7 +17,9 @@ OBJ_COPT = copt.rel
 INC = data.h defs.h prototype.h
 
 OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
-all:    scc6801 scc6809 scc8080 sccz80 copt
+APPS = scc6801 scc6809 scc8080 sccz80 copt
+
+all: $(APPS)
 
 sccz80: $(OBJS) $(OBJ_Z80)
 	$(CC) -o sccz80 --nostdio $(OBJS) $(OBJ_Z80)
@@ -41,4 +43,4 @@ copt:	$(OBJ_COPT)
 $(OBJS_ALL) : $(INC)
 
 clean:
-	rm -f $(OBJ) scc8080 sccz80 scc6801 scc6809 *~ *.rel *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk
+	rm -f $(OBJ) $(APPS) *~ *.rel *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk

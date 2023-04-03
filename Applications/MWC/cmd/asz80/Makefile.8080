@@ -9,7 +9,9 @@ INCS  = as.h obj.h
 
 OBJS = $(SRCS:.c=.o)
 
-all: as nm
+APPS = as nm
+
+all: $(APPS)
 
 $(OBJS): $(INCS)
 
@@ -25,7 +27,7 @@ nm: nm.o
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
 
 clean:
-	rm -f $(OBJS) as $(SRCS:.c=) core *~ *.o
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.o
 
 rmbak:
 	rm -f *~ core

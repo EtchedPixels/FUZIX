@@ -13,7 +13,7 @@ OPTS = -DNETD_LITTLE_ENDIAN
 all: $(APPS)
 
 netd-slip: $(OBJS)
-	fcc -m$(USERCPU) $(Z80_PLATFORM) -o netd netd.rel uip.rel uiplib.rel timer.rel clock-arch.rel \
+	fcc -m$(USERCPU) $(Z80_PLATFORM) -o netd-slip netd.rel uip.rel uiplib.rel timer.rel clock-arch.rel \
 	       uip_arp.rel slip.rel
 
 $(OBJS): %.rel: %.c

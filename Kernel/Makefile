@@ -195,11 +195,13 @@ clean:
 	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi
 	rm -f fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6
 	rm -f tools/analysemap tools/memhogs tools/binman tools/bihx tools/binmunge tools/bintomdv
+	rm -f tools/cartman tools/doubleup tools/flat2z80 tools/makedck tools/makejv3 tools/maketap
+	rm -f tools/modlib-z80 tools/plus3boot tools/raw2dsk tools/raw2mgt tools/trdify tools/visualize
 	rm -f tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt
 	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion tools/trslabel
 	rm -f tools/atariboot tools/fontexpand font8x8_exp2.c 
 	rm -f *.rel *.lst *.sym *.o *.bin
-	rm -f lowlevel-6303.s lowlevel-6803.s usermem_std-6303.s usermem_std-6803.s
+	rm -f lowlevel-6303.s lowlevel-6803.s usermem_std-6303.s usermem_std-6803.s modlib.s
 	+$(MAKE) -C platform-$(TARGET) clean
 	+$(MAKE) -C tools/bankld clean
 	+$(MAKE) -C cpm-loader clean

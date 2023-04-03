@@ -9,7 +9,9 @@ DEFS	=
 
 OBJS= dumps.o io.o ld.o readobj.o table.o typeconv.o linksyms.o writefuzix.o
 
-all: ld09
+APPS = ld09
+
+all: $(APPS)
 
 ld09: $(CRT0) $(OBJS)
 	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
@@ -21,7 +23,7 @@ else
 endif
 
 clean realclean clobber:
-	rm -f *.o ld09 ld09r objchop catimage objdump09 *~ *.bin *.data *.text *.debug
+	rm -f *.o $(APPS) ld09r objchop catimage objdump09 *~ *.bin *.data *.text *.debug
 
 $(OBJS): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
 	 syshead.h type.h
