@@ -12,20 +12,6 @@ void pagemap_init(void)
 	uint8_t i;
 	pagemap_add(4);
 	pagemap_add(6);
-
-	/* Pentagon uses 7FFD as follows
-		7: 256K
-		6: 128K
-		2: 64K
-		1: 32K
-		0: 16K
-		
-	   The 1MB one uses bit 5 for 512K */
-	/* Add the rest of the first 256K */
-	for (i = 0; i < 8; i++)
-		pagemap_add(0x40|i);
-	/* If we deal with Scorpion and friends then we have to use
-	   1FFD bits 4-7 for the high bits instead */
 }
 
 /* string.c
