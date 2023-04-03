@@ -19,7 +19,9 @@ INC = data.h defs.h prototype.h
 
 OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
 
-all:    lscc6801 lscc6809 lscc8080 lsccgeneric lsccz80 copt cc
+APPS = lscc6801 lscc6809 lscc8080 lsccgeneric lsccz80 copt cc
+
+all: $(APPS)
 
 lsccz80: $(OBJS) $(OBJ_Z80)
 	$(CC) -o lsccz80 $(OBJS) $(OBJ_Z80)
@@ -43,7 +45,7 @@ cc:	$(OBJ_CC)
 	$(CC) -o cc $(OBJ_CC)
 
 clean:
-	rm -f $(OBJ) lscc8080 lsccz80 lscc6801 lscc6809 lsccgeneric *.o *~
+	rm -f $(OBJ) $(APPS) *.o *~
 
 .c.o:
 	$(CC) $(COPT) $(CFLAGS) -c $< -o $@

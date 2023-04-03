@@ -8,7 +8,9 @@ DEFS	=
 OBJS= dumps.rel io.rel ld.rel readobj.rel table.rel typeconv.rel linksyms.rel \
       writefuzix.rel
 
-all: ld09 mkar
+APPS = ld09 mkar
+
+all: $(APPS)
 
 ld09: $(OBJS)
 	$(CC) -o $@ $(OBJS)
@@ -17,7 +19,7 @@ mkar: mkar.rel
 	$(CC) -o $@ $<
 
 clean realclean clobber:
-	rm -f *.rel *.lst *.sym *.asm ld09 ld09r objchop catimage objdump09 *~ *.bin *.lk *.map *.noi
+	rm -f *.rel *.lst *.sym *.asm $(APPS) ld09r objchop catimage objdump09 *~ *.bin *.lk *.map *.noi
 
 $(OBJS): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
 	 syshead.h type.h

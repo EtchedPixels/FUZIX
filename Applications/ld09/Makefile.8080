@@ -11,13 +11,15 @@ DEFS	=
 
 OBJS= dumps.o io.o ld.o readobj.o table.o typeconv.o linksyms.o writefuzix.o
 
-all: ld09
+APPS = ld09
+
+all: $(APPS)
 
 ld09: $(OBJS)
 	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $(OBJS) $(LIBC)
 
 clean realclean clobber:
-	rm -f *.o ld09 ld09r objchop catimage objdump09 *~
+	rm -f *.o $(APPS) ld09r objchop catimage objdump09 *~
 
 $(OBJS): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
 	 syshead.h type.h

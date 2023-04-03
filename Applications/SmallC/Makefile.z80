@@ -20,7 +20,9 @@ OBJ_CC = frontend.rel
 INC = data.h defs.h prototype.h
 
 OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
-all:    scc6801 scc6809 scc8080 sccz80 copt cc
+APPS = scc6801 scc6809 scc8080 sccz80 copt cc
+
+all: $(APPS)
 
 sccz80: $(OBJS) $(OBJ_Z80)
 	$(CC) -o sccz80 --nostdio $(OBJS) $(OBJ_Z80)
@@ -48,4 +50,4 @@ cc:	$(OBJ_CC)
 $(OBJS_ALL) : $(INC)
 
 clean:
-	rm -f scc8080 sccz80 scc6801 scc6809 copt *~ *.rel *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk
+	rm -f $(APPS) *~ *.rel *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk

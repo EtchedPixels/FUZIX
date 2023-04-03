@@ -18,7 +18,9 @@ OBJ_COPT = copt.o
 INC = data.h defs.h prototype.h
 
 OBJS_ALL = $(OBJS) $(OBJ_Z80) $(OBJ_8080)
-all:    scc6801 scc6809 scc8080 sccz80 copt
+APPS = scc6801 scc6809 scc8080 sccz80 copt
+
+all: $(APPS)
 
 sccz80: $(OBJS) $(OBJ_Z80)
 	$(LINKER) $(LINKER_OPT) -o sccz80 $(CRT0) $(OBJS) $(OBJ_Z80) $(LIBC)
@@ -42,5 +44,5 @@ copt:	$(OBJ_COPT)
 $(OBJS_ALL) : $(INC)
 
 clean:
-	rm -f scc8080 sccz80 scc6801 scc6809
+	rm -f $(APPS)
 	rm -f *~ *.o *.asm *.lst *.sym *.o *.map *.noi *.bin *.lk

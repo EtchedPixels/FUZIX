@@ -6,8 +6,9 @@ COPT = $(FUZIX_CCOPTS)
 
 OBJS = ue.rel
 LIBS = term-ansi.c term-fuzix.c term.c
+APPS = ue.fuzix ue.ansi ue
 
-all: ue.fuzix ue.ansi ue
+all: $(APPS)
 
 $(OBJS): ue.h
 $(LIBS): ue.h
@@ -25,5 +26,4 @@ ue: $(OBJS) term.rel
 	$(CC) -o $@ --nostdio $(OBJS) term.rel -ltermcap
 
 clean realclean clobber:
-	rm -f *.rel ue *~ *.lk *.map *.noi *.lsm *.sym *.asm *.lst
-
+	rm -f *.rel $(APPS) *~ *.lk *.map *.noi *.lsm *.sym *.asm *.lst
