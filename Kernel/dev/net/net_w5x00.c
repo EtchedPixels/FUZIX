@@ -11,7 +11,7 @@
 
 #include <kernel.h>
 
-#ifdef CONFIG_NET_WIZNET
+#if defined(CONFIG_NET_WIZNET) && !defined(CONFIG_NET_W5300)
 
 #include <kdata.h>
 #include <printf.h>
