@@ -9,8 +9,8 @@
 
 #include "ds12885.h"
 
-__sfr __at RTC_ADDR addr;
-__sfr __at RTC_DATA data;
+__sfr __banked __at RTC_ADDR addr;
+__sfr __banked __at RTC_DATA data;
 
 uint_fast8_t ds12885_read(uint_fast8_t port)
 {
