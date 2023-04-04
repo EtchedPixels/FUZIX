@@ -78,18 +78,24 @@ _spi_receive_byte:
 ;	do that many writes compared to reads.
 ;	
 spi0_bitbang_tx:
+	exx			; 4
 	ld b,#8			; 7
 spi0_bit_tx:
+	exx			; 4
 	rla			; 4
 	jp nc, spi0_tx0		; 10		For SPI 0
 	out (c),l		; 12		low | 1
 	out (c),h		; 12		high | 1	(sample)
+	exx
 	djnz spi0_bit_tx	; 13/8
+	exx
 	ret			; 10
 spi0_tx0:
 	out (c),e		; 12		low | 0
 	out (c),d		; 12		high | 0	(sample)
+	exx
 	djnz spi0_bit_tx	; 13/8
+	exx
 	ret
 ;
 ;	Send 0xFF and receive a byte.
