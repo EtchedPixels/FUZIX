@@ -173,6 +173,15 @@ int plt_rtc_write(void)
 
 void ds12885_init(void)
 {
+        uint8_t chk = ds12885_read(DS12885_DOW);
+        if (chk & 0xF8)
+            return;
+        chk = ds12885_read(DS12885_REGD);
+        if (chk & 0x7F)
+            return;
+        chk = ds12885_read(DS12885_REGC);
+        if (chk & 0x0F)
+            return;
 	/* Enable counting, preserve rate selector */
 	ds12885_write(DS12885_REGA, DV1 | (ds12885_read(DS12885_REGA)&0x0F));
 	/* Set BCD mode, 24hr, without hardware DSE */
