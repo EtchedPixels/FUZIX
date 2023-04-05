@@ -18,7 +18,7 @@
  *	0: MOSI
  */
 
-uint8_t pio_c;
+uint16_t pio_c;
 
 void pio_setup(void)
 {
@@ -31,26 +31,31 @@ void pio_setup(void)
       pio_c = 0x1C;
       spi_port = 0x1D;
     } else {
+#ifdef CONFIG_RC2014_EXTREME
+      pio_c = 0x6BB8;
+      spi_port = 0x69B8;
+#else
       pio_c = 0x6B;
       spi_port = 0x69;
+#endif
     }
     spi_data = 0x01;
     spi_clock = 0x10;
 
-    out(pio_c, 0xCF);		/* Mode 3 */
-    out(pio_c, 0xE6);		/* MISO input, unused as input (so high Z) */
-    out(pio_c, 0x07);		/* No interrupt, no mask */
+    out16(pio_c, 0xCF);		/* Mode 3 */
+    out16(pio_c, 0xE6);		/* MISO input, unused as input (so high Z) */
+    out16(pio_c, 0x07);		/* No interrupt, no mask */
 }
 
 void sd_spi_raise_cs(void)
 {
-    out(spi_port, spi_piostate |= 0x08);
+    out16(spi_port, spi_piostate |= 0x08);
 }
 
 void sd_spi_lower_cs(void)
 {
     spi_piostate &= ~0x08;
-    out(spi_port, spi_piostate);
+    out16(spi_port, spi_piostate);
 }
 
 void sd_spi_clock(bool go_fast) __z88dk_fastcall
