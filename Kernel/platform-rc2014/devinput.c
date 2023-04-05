@@ -4,8 +4,13 @@
 #include <devinput.h>
 #include <ps2mouse.h>
 
+#ifdef CONFIG_RC2014_EXTREME
+__sfr __banked __at 0x01B8	js1;
+__sfr __banked __at 0x02B8	js2;
+#else
 __sfr __at 0x01 js1;
 __sfr __at 0x02 js2;
+#endif
 
 static uint8_t buf[32];
 
