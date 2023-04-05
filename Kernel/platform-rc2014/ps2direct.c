@@ -10,8 +10,13 @@
 #include <ps2kbd.h>
 #include <ps2mouse.h>
 
+#ifdef CONFIG_RC2014_EXTREME
+__sfr __banked __at 0x64B8 ps2stat;
+__sfr __banked __at 0x60B8 ps2data;
+#else
 __sfr __at 0x64	ps2stat;
 __sfr __at 0x60 ps2data;
+#endif
 
 #define TIMEOUT		0
 #define TIMEOUT_PUT	0
