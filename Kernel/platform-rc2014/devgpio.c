@@ -48,14 +48,21 @@ static struct gpio pioinfo[NUM_GPIO] = {
 
 /* Track the actual data port as it's easier to mix types with that
    approach */
+
+#ifdef CONFIG_RC2014_EXTREME
+static uint16_t portmap[] = {
+    0x68B8, 0x69B8, 0x6CB8, 0x6DB8, 0xFF, 0x00, 0x00, 0x80, 0x82
+};
+#else
 static uint8_t portmap[] = {
     0x68, 0x69, 0x6C, 0x6D, 0xFF, 0x00, 0x00, 0x80, 0x82
 };
+#endif
 
 int gpio_ioctl(uarg_t request, char *data)
 {
     struct gpio *p;
-    uint8_t port;
+    uint16_t port;
     static struct gpioreq gr;
     uint8_t num_pins = NUM_GPIO * 8 ;
 
@@ -88,7 +95,7 @@ int gpio_ioctl(uarg_t request, char *data)
         p->wdata &= ~gr.val;
         break;
     case GPIOC_GETBYTE:
-        return in(port) & ~p->wmask;
+        return in16(port) & ~p->wmask;
     case GPIOC_GETINFO:
         return uput(p, data, sizeof(struct gpio));
     case GPIOC_SETRW:
@@ -96,8 +103,8 @@ int gpio_ioctl(uarg_t request, char *data)
         if (port < 32) {
             p->wmask = gr.val;
             port += 2;
-            out(port, 0xFF);
-            out(port, ~p->wmask);
+            out16(port, 0xFF);
+            out16(port, ~p->wmask);
             return 0;
         }
         /* Fall through */
