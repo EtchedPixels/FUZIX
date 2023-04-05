@@ -19,11 +19,20 @@
  */
 
 static uint8_t have_lp;
- 
-__sfr __at 0x0C	lpdata;		/* Port A - data, out */
+
+#ifdef CONFIG_RC2014_EXTREME
+__sfr __banked __at 0x0CB8 lpdata;	/* Port A - data, out */
+__sfr __banked __at 0x0DB8 lpstatus;	/* Port B - status, in */
+__sfr __banked __at 0x0EB8 lpctrl;	/* Port C control outputs */
+__sfr __banked __at 0x0FB8 setup;	/* 82C55 control */
+#define PPA_PORT 0x0CB8
+#else
+__sfr __at 0x0C lpdata;		/* Port A - data, out */
 __sfr __at 0x0D lpstatus;	/* Port B - status, in */
 __sfr __at 0x0E lpctrl;		/* Port C control outputs */
 __sfr __at 0x0F setup;		/* 82C55 control */
+#define PPA_PORT 0x0C
+#endif
 
 #define MGS_ACK		0x01		/* Acrtive low */
 #define MGS_BUSY	0x02
@@ -49,6 +58,9 @@ ERROR		3		4
 
     The control lines match but on the PC are inverted except for C2 (Init)
 */
+
+/* Location of printer port */
+static uint16_t ppa_port = PPA_PORT;
 
 int lpr_open(uint_fast8_t minor, uint16_t flag)
 {
@@ -168,13 +180,13 @@ void ppa_write_data(uint8_t d)
  */
 void lpr_init(void)
 {
-    /* Not an 82C55A */
-    if (setup != 0x9B)
-        return;
-    setup = 0x82;		/* A out, C low out */
-    kputs("82C55 printer port at 0x0C\n");
-    have_lp = 1;
-    ppa_init();
+	/* Not an 82C55A */
+	if (setup != 0x9B)
+		return;
+	setup = 0x82;		/* A out, C low out */
+	kputs("82C55 printer port at 0x0C\n");
+	have_lp = 1;
+	ppa_init();
 }
 
 COMMON_MEMORY
@@ -203,23 +215,29 @@ doread:
 	    ld b, #0x00				    ; count
 	    exx
 	    ld de, #0x0F0D			    ; clock toggles
-            ld bc, #0x0E	                    ; setup port number
+            ld bc, (_ppa_port)	                    ; setup port number
             ld hl, #lpxlate4			    ; must be page aligned
 	    exx
 read_loop:
 	    exx
 	    out (c),d
-	    in a,(0x0D)				    ; Status
+	    inc c
+	    in a,(c)				    ; Status
+	    dec c
 	    and #0x0f
 	    or #0x10				    ; Upper table for hig bits
 	    ld l,a
-	    ld b,(hl)				    ; Look up table for speed
+	    ld d,(hl)				    ; Look up table for speed
 	    out (c),e
-	    in a,(0x0D)				    ; Same again for lower bits
+	    inc c
+	    in a,(c)				    ; Same again for lower bits
+	    dec c
 	    and #0x0f
 	    ld l,a
 	    ld a,(hl)
-	    or b
+	    or d
+	    ; Put back the clock toggle we have to reuse
+	    ld d,#0x0F
 	    exx
 
 	    ld (hl),a				    ; Write byte to memory
@@ -228,17 +246,23 @@ read_loop:
 	    ; Same again
 	    exx
 	    out (c),d
-	    in a,(0x0D)				    ; Status
+	    inc c
+	    in a,(c)				    ; Status
+	    dec c
 	    and #0x0f
-	    or #0x10				    ; Upper table for hig bits
+	    or #0x10				    ; Upper table for high bits
 	    ld l,a
-	    ld b,(hl)				    ; Look up table for speed
+	    ld d,(hl)				    ; Look up table for speed
 	    out (c),e
-	    in a,(0x0D)				    ; Same again for lower bits
+	    inc c
+	    in a,(c)				    ; Same again for lower bits
+	    dec c
 	    and #0x0f
 	    ld l,a
 	    ld a,(hl)
-	    or b
+	    or d
+	    ; And put the clock toggle back again
+	    ld d,#0x0F
 	    exx
 
 	    ld (hl),a				    ; Write byte to memory
@@ -246,8 +270,11 @@ read_loop:
 
 	    ; Do it until we have 512 bytes
 	    djnz read_loop
+	    ld bc,(_ppa_port)
+	    inc c
+	    inc c
 	    ld a,#0x07
-	    out (0x0E),a
+	    out (c),a
             jp map_kernel_restore                   ; else map kernel then return
     __endasm;
 }
@@ -257,8 +284,7 @@ void ppa_block_write(void) __naked
     __asm
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
             ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-            ld bc, #0x0C	                    ; setup port number
-                                                    ; and count
+            ld bc, (_ppa_port)	                    ; setup port number
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
@@ -274,19 +300,29 @@ not_swapout:
 wr_kernel:
             call map_buffers
 dowrite:
-
+	    ld de,#7
 write_loop:
 	    outi				    ; Data on bus
+	    inc b				    ; Undo outi
 	    ld a,#0x05				    ; STROBE|AUTOFEED
-	    out(0x0E),a
-	    ld a,#0x07				    ; STROBE
-	    out(0x0E),a
-	    inc b				    ; And again
+	    inc c
+	    inc c
+	    out	(c),a
+	    ld a,e				    ; STROBE (E is 7)
+	    out(c),a
+	    dec c
+	    dec c
 	    outi
+	    inc b				    ; Undo outi
+	    inc c
+	    inc c
 	    ld a,#0x05
-	    out(0x0E),a
-	    ld a,#0x07
-	    out(0x0E),a
+	    out(c),a
+	    ld a,e				    ; E is 7
+	    out(c),a
+	    dec c
+	    dec c
+	    dec d
 	    jr nz, write_loop			    ; 512 times
             jp map_kernel_restore                   ; else map kernel then return
     __endasm;
