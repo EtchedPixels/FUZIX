@@ -1,6 +1,11 @@
 #include <kernel.h>
 
 /*
+ *	Driver support for Wiznet 5100 and 5300 carrier modules. The
+ *	5500 on SPI is currently only enabled on the rcbus-z180 platform
+ */
+
+/*
  *	Drive a WizNet 5100 using indirect mode at ports 0x28-0x2B
  */
 
@@ -21,11 +26,17 @@
 #define		MR_INDIRECT	0x01
 
 /* Core helpers: platform supplied */
-
+#ifdef CONFIG_RC2014_EXTREME
+__sfr __banked __at 0x28B8 mr;
+__sfr __banked __at 0x29B8 idm_ar0;
+__sfr __banked __at 0x2AB8 idm_ar1;
+__sfr __banked __at 0x2BB8 idm_dr;
+#else
 __sfr __at 0x28 mr;
 __sfr __at 0x29 idm_ar0;
 __sfr __at 0x2A idm_ar1;
 __sfr __at 0x2B idm_dr;
+#endif
 
 /* We assume indirect, autoinc is always set */
 uint8_t w5x00_readcb(uint16_t off)
@@ -152,12 +163,21 @@ void w5x00_setup(void)
 /* Wiznet 5300 has its own interface */
 #include <net_w5300.h>
 
+#ifdef CONFIG_RC2014_EXTREME
+__sfr __banked __at 0x28B8	mr0;
+__sfr __banked __at 0x29B8	mr1;
+__sfr __banked __at 0x2AB8	idm_arh;
+__sfr __banked __at 0x2BB8 	idm_arl;
+__sfr __banked __at 0x2CB8	idm_drh;
+__sfr __banked __at 0x2DB8	idm_drl;
+#else
 __sfr __at 0x28	mr0;
 __sfr __at 0x29	mr1;
 __sfr __at 0x2A idm_arh;
 __sfr __at 0x2B idm_arl;
 __sfr __at 0x2C idm_drh;
 __sfr __at 0x2D idm_drl;
+#endif
 
 /*
  * Not well documented: the drh/drl pair must always be used high then low,
