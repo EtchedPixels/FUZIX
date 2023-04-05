@@ -2,14 +2,35 @@
 
 /* Set this if you have the RC2014 CF adapter at 0x10/0x90 */
 #define CONFIG_RC2014_CF
-/* Set this to be able to do networking (not currently working) */
-#undef CONFIG_RC2014_NET
+/* Set this to be able to do networking */
+#define CONFIG_RC2014_NET
+/* Set one of these according to the card type you have */
+/*#define CONFIG_RC2014_NET_W5100 */	/* W5100 module carrier */
+#define CONFIG_RC2014_NET_W5300 /* W5300 module carrier */
 /* Set this if you have the 8255 IDE adapter */
 #define CONFIG_RC2014_PPIDE
 /* Set this if you have the floppy interface */
 #define CONFIG_RC2014_FLOPPY
 /* Set this for SD card support via PIO or SC129 at 0x68 */
 #define CONFIG_RC2014_SD
+/* Do not set this unless you have the propellor graphics card installed
+   and with non TMS9918A firmware as it can't be probed so will be assumed */
+#define CONFIG_RC2014_PROPGFX
+/* Below is a work in progress not yet fully merged .. */
+/* Set this if using a bus extender. This then builds a special kernel
+   that expects the following to be on the bus extender instead
+   - RTC	0xC0B8
+   - Joystick	0x01B8, 0x02B8
+   - PS/2	0x60B4, 0x64B8
+   - WIZNET	0x28B8/29/2A/2BB8
+   - DS12885	0xC0B8
+   - I2C	One running
+   - Analog sticks Once running
+   - Sound TBD
+   - SPI	0x68B8-6BB8
+   - TODO: propello graphics to 0x40-42B8
+ */
+#define CONFIG_RC2014_EXTREME
 
 
 #define OFTSIZE		56
@@ -30,8 +51,14 @@
 #ifdef CONFIG_RC2014_NET
 /* Core Networking support */
 #define CONFIG_NET
+#ifdef CONFIG_RC2014_NET_W5100
 #define CONFIG_NET_WIZNET
 #define CONFIG_NET_W5100
+#endif
+#ifdef CONFIG_RC2014_NET_W5300
+#define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5300
+#endif
 #endif
 #ifdef CONFIG_RC2014_FLOPPY
 #define CONFIG_FLOPPY
@@ -93,19 +120,22 @@ extern uint16_t swap_dev;
 
 #define CONFIG_BLK_PPA
 
-/* Enable one RTC interface */
-#define CONFIG_RTC_DS1302	/* Standard RC2014 bitbang clock card
-                                   also used on various single board setups */
-#undef CONFIG_RTC_DS12885	/* EtchedPixels DS12885 and similar */
+#undef CONFIG_RTC_DS12885
 #ifdef CONFIG_RTC_DS12885
-#define RTC_ADDR	0xC0	/* register address */
-#define RTC_DATA	0xC1	/* register data */
+#define RTC_ADDR	0xC0B8	/* register address */
+#define RTC_DATA	0xC1B8	/* register data */
+#define CONFIG_RTC_INTERVAL	10
+#endif
+
+/* Enable one RTC interface */
+#define CONFIG_RTC_DS1302	/* Standard RC2014 bitbang clock card */
+#ifdef CONFIG_RTC_DS1302	/* also used on various single board setups */
+#define CONFIG_RTC_INTERVAL	100
 #endif
 
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_EXTENDED
-#define CONFIG_RTC_INTERVAL	100
 #define CONFIG_NO_CLOCK
 
 #define CONFIG_INPUT			/* Input device for joystick */
@@ -120,9 +150,9 @@ extern uint16_t swap_dev;
 #define CONFIG_VT_MULTI
 /* Vt definitions */
 #define VT_WIDTH	vt_twidth
-#define VT_HEIGHT	24
+#define VT_HEIGHT	vt_theight
 #define VT_RIGHT	vt_tright
-#define VT_BOTTOM	23
+#define VT_BOTTOM	vt_tbottom
 #define MAX_VT		4		/* Always come up as lowest minors */
 
 /* We need this for the soft ZX81 support */

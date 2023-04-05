@@ -10,6 +10,7 @@
 #include <cpu_ioctl.h>
 #include <softzx81.h>
 #include "z180_uart.h"
+#include "multivt.h"
 
 struct uart *uart[NUM_DEV_TTY + 1];
 uint8_t nuart = 1;
@@ -40,6 +41,9 @@ static uint8_t efinkpaper[5] = { 0, 0x8F, 0x8F, 0x8F, 0x8F };
 static uint8_t vswitch;	/* Track vt switch locking due top graphics maps */
 uint8_t vt_twidth;
 uint8_t vt_tright;
+uint8_t vt_theight;
+uint8_t vt_tbottom;
+static uint8_t tms_width;
 
 /* FIXME: CBAUD general handling - may need 0.4 changes to fix */
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
@@ -73,8 +77,10 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
         /* If we have a video display then the first console output will
 	   go to it as well *unless it has a keyboard too* */
-        if (minor == 1 && shadowcon && !vswitch)
+	if (minor == 1 && shadowcon && !vswitch) {
+		curvid = vidcard[1];
 		vtoutput(&c, 1);
+	}
         uart[minor]->putc(minor, c);
 }
 
@@ -596,17 +602,29 @@ struct uart easy_uartb = {
 
 static uint8_t ns16x50_intr(uint_fast8_t minor)
 {
-	uint8_t msr;
+	uint8_t iir, lsr, msr;
 	uint8_t port = ttyport[minor];
 
-	if (in(port + 5) & 1)
-		tty_inproc(minor, in(port));
-	msr = in(port + 6);
-	if (msr & 0x08) {
-		if (msr & 0x80)
-			tty_carrier_raise(minor);
-		else
-			tty_carrier_drop(minor);
+	while(((iir = in(port + 2)) & 1) == 0) {
+		lsr = in(port + 5);
+		switch(iir & 0x0E) {
+		case 0x06:	/* LSR changed - error/break etc */
+			break;
+		case 0x04:	/* Data */
+		case 0x12:
+			tty_inproc(minor, in(port));
+		case 0x02:	/* THR empty */
+			break;
+		case 0x00:	/* MSR change */
+			msr = in(port + 6);
+			if (msr & 0x08) {
+				if (msr & 0x80)
+					tty_carrier_raise(minor);
+				else
+					tty_carrier_drop(minor);
+			}
+			break;
+		}
 	}
 	/* TODO: CTS/RTS */
 	return 1;
@@ -1250,8 +1268,6 @@ struct uart xr88c681_uart = {
 
 /*
  *	Console driver for the TMS9918A
- *	EF9345 is hooked into the TMS driver so this really
- *	needs renamign as vt driver..
  */
 
 static uint8_t tms_intr(uint8_t minor)
@@ -1279,9 +1295,11 @@ static void tms_setoutput(uint_fast8_t minor)
 {
 	vt_save(&ttysave[outputtty - 1]);
 	outputtty = minor;
-	/* The 9345 needs to cache the output bank */
-	if (ef9345_present)
-		ef9345_set_output();
+	curvid = VID_TMS9918A;
+	vt_twidth = tms_width;
+	vt_tright = tms_width - 1;
+	vt_theight = 24;
+	vt_tbottom = 23;
 	vt_load(&ttysave[outputtty - 1]);
 }
 
@@ -1292,42 +1310,119 @@ static void tms_putc(uint_fast8_t minor, uint_fast8_t c)
 	if (outputtty != minor)
 		tms_setoutput(minor);
 	irqrestore(irq);
+	curvid = VID_TMS9918A;
+	if (!vswitch)
+		vtoutput(&c, 1);
+}
+
+static void ef_setoutput(uint_fast8_t minor)
+{
+	vt_save(&ttysave[outputtty - 1]);
+	outputtty = minor;
+	curvid = VID_EF9345;
+	vt_twidth = 80;
+	vt_tright = 79;
+	vt_theight = 24;
+	vt_tbottom = 23;
+	ef9345_set_output();
+	vt_load(&ttysave[outputtty - 1]);
+}
+
+static void ef_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	irqflags_t irq = di();
+
+	if (outputtty != minor)
+		ef_setoutput(minor);
+	irqrestore(irq);
+	curvid = VID_EF9345;
+	if (!vswitch)
+		vtoutput(&c, 1);
+}
+
+static void macca_setoutput(uint_fast8_t minor)
+{
+	vt_save(&ttysave[outputtty - 1]);
+	outputtty = minor;
+	curvid = VID_MACCA;
+	vt_twidth = 40;
+	vt_tright = 39;
+	vt_theight = 30;
+	vt_tbottom = 29;
+	macca_set_output();
+	vt_load(&ttysave[outputtty - 1]);
+}
+
+static void macca_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	irqflags_t irq = di();
+
+/* TODO	if (outputtty != minor)
+		ma_setoutput(minor); */
+	irqrestore(irq);
+	curvid = VID_MACCA;
 	if (!vswitch)
 		vtoutput(&c, 1);
 }
 
 /* Callback from the keyboard driver for a console switch */
+/* TODO: allow multiple console types at once */
 void do_conswitch(uint8_t c)
 {
+	uint8_t v = vidcard[c];
+
 	/* No switch if the console is locked for graphics */
 	if (vswitch)
 		return;
 
-	/* 80 column card */
-	if (ef9345_present) {
-		/* Calls into the EF9345 code. FIXME clean path */
-		tms_setoutput(inputtty);
-		vt_cursor_off();
-		inputtty = c;
-		set_console();
-		vt_cursor_on();
-		vt_twidth = 80;
-		vt_tright = 79;
+	/* No card on this VT port */
+	if (v == VID_NONE)
 		return;
-	}
-	/* TMS9918A */
-	tms_setoutput(inputtty);
+
+	/* Cursor off on whichever display loses focus */
 	vt_cursor_off();
-	inputtty = c;
-	if (vidmode != mode[c])
-		tms9918a_reload();
-	else {
-		tms9918a_udgload();
-		tms9918a_attributes();
+
+	curvid = v;
+
+	switch(curvid) {
+	case VID_TMS9918A:
+		/* TMS9918A */
+		tms_setoutput(inputtty);
+		inputtty = c;
+		if (vidmode != mode[c])
+			tms9918a_reload();
+		else {
+			tms9918a_udgload();
+			tms9918a_attributes();
+		}
+		tms_set_console();
+		tms_setoutput(c);
+		break;
+	case VID_EF9345:
+		inputtty = c;
+		ef_setoutput(inputtty);
+		ef_set_console();
+		break;
+	case VID_MACCA:
+		inputtty = c;
+		macca_setoutput(inputtty);
+/*		macca_set_console(); TODO */
+		break;
 	}
-	set_console();
-	tms_setoutput(c);
 	vt_cursor_on();
+	/* Now restore the output state - this is ugly and needs work */
+	curvid = vidcard[outputtty];
+	switch(curvid) {
+	case VID_TMS9918A:
+		tms_setoutput(outputtty);
+		break;
+	case VID_EF9345:
+		ef_setoutput(outputtty);
+		break;
+	case VID_MACCA:
+		macca_setoutput(outputtty);
+		break;
+	}
 }
 
 /* PS/2 call back for alt-Fx */
@@ -1349,22 +1444,39 @@ struct uart tms_uart = {
 };
 
 /* The EF9345 is run via the same vt layer */
-
 static void ef_setup(uint8_t minor)
 {
 	used(minor);
-	vt_twidth = 80;
-	vt_tright = 79;
 }
 
 struct uart ef_uart = {
 	tms_intr,			/* TODO */
 	tms_writeready,
-	tms_putc,
+	ef_putc,
 	ef_setup,
 	carrier_unwired,
 	_CSYS,
 	"EF9345"
+};
+
+/* The Macca video is run via the same vt layer */
+static void no_intr(void)
+{
+}
+
+static void macca_setup(uint8_t minor)
+{
+	used(minor);
+}
+
+struct uart macca_uart = {
+	tms_intr,			/* TODO */
+	tms_writeready,
+	macca_putc,
+	ef_setup,
+	carrier_unwired,
+	_CSYS,
+	"PropGfx"
 };
 
 /* FIXME: could move this routine into discard */
@@ -1682,8 +1794,7 @@ void tms9918a_reload(void)
 	}
 	tms_writeb(0x3B00, 0xD0);
 	tms9918a_config(t->conf);
-	vt_twidth = t->w;
-	vt_tright = vt_twidth - 1;
+	tms_width = t->w;
 	/* Set up the scrollers in the asm side */
 	scrolld_base = t->lastline;	/* Start of last line */
 	scrolld_mov = t->dmov;		/* How to move up */
@@ -1699,9 +1810,6 @@ void tms9918a_reload(void)
 	}
 	tms9918a_udgload();
 	tms9918a_attributes();
-	vt_cursor_off();
-	tms_setoutput(inputtty);
-	vt_cursor_on();
 	tms_mode[0].hardware = tms9918a_present;
 	tms_mode[1].hardware = tms9918a_present;
 }
@@ -1774,8 +1882,12 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		if (arg == GFXIOC_GETMODE)
 			return uput(&tms_mode[m], ptr, sizeof(struct display));
 		mode[minor] = m;
-		if (minor == inputtty)
+		if (minor == inputtty) {
+			/* Input screen changed mode and size */
 			tms9918a_reload();
+			vt_twidth = tms_width;
+			vt_tright = tms_width - 1;
+		}
 		return 0;
 		}
 	case GFXIOC_WAITVB:
@@ -1873,10 +1985,8 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		c = ugetc(ptr);
 		efinkpaper[minor] &= 0xF8;
 		efinkpaper[minor] |= c & 0x07;
-		if (minor == inputtty) {
-			kprintf("setink %d\n", c);
+		if (minor == inputtty)
 			ef9345_colour(efinkpaper[minor]);
-		}
 		return 0;
 	case VTPAPER:
 		c = ugetc(ptr);
@@ -1887,7 +1997,7 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	}
   }
-  if (uart[minor] == &ef_uart || uart[minor] == &tms_uart) {
+  if (uart[minor] == &ef_uart || uart[minor] == &tms_uart || uart[minor] == &macca_uart) {
 	  /* Only the ZX keyboard has support for the bitmapped matrix ops
 	   and map setting. We need to add different map setting for PS/2
 	   and different auto repeat if we support setting it */

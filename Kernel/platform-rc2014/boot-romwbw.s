@@ -164,11 +164,44 @@ bootit:
 	;
 	ld hl,#0x8000		; Now load 8000 up
 	ld e, #32
+	push bc
 	rst 8
 	ld hl,#0x8000		; Move it into place
 	ld de,#0x4000
 	ld bc,#0x4000
 	ld a,#37
+
+	di
+	out (MPGSEL_1),a
+	ldir
+	pop bc
+	;
+	;	Bank 3 first 16K
+	;
+	ld hl,#0x8000		; Load 4000 up
+	ld e, #32
+	push bc
+	rst 8
+	ld hl,#0x8000		; Move it into place
+	ld de,#0x4000
+	ld bc,#0x4000
+	ld a,#38
+
+	di
+	out (MPGSEL_1),a
+	ldir
+	pop bc
+
+	;
+	;	Bank 2 second 16K
+	;
+	ld hl,#0x8000		; Now load 8000 up
+	ld e, #32
+	rst 8
+	ld hl,#0x8000		; Move it into place
+	ld de,#0x4000
+	ld bc,#0x4000
+	ld a,#39
 
 	di
 	out (MPGSEL_1),a

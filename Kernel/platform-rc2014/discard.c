@@ -17,6 +17,7 @@
 #include <graphics.h>
 #include <devlpr.h>
 #include "z180_uart.h"
+#include "multivt.h"
 
 /* Everything in here is discarded after init starts */
 
@@ -286,29 +287,60 @@ static void sc26c92_timer(void)
 void init_hardware_c(void)
 {
 	ramsize = 512;
-	procmem = 512 - 80;
+	procmem = 512 - 112;
+
+	/* No probe for this one... */
 
 	ef9345_present = ef9345_probe();
 	if (ef9345_present) {
 		shadowcon = 1;
+		/* Need a cleaner setup for the video sizes */
 		ef9345_init();
 		vt_twidth = 80;
 		vt_tright = 79;
+		vt_theight = 24;
+		vt_tbottom = 23;
+		curvid = vidcard[1] = VID_EF9345;
 		vtinit();
 		/* TODO: ef9345 as vblank ?? */
 	}
 
-	/* The TMS9918A and KIO clash */
-	if (!kio_present && !shadowcon) {
-		tms9918a_present = probe_tms9918a();
-		if (tms9918a_present) {
+#ifdef CONFIG_RC2014_PROPGFX
+	macca_present = 1;
+#endif
+	if (macca_present) {
+		macca_init();
+		if (shadowcon == 0) {
 			shadowcon = 1;
-			timer_source = TIMER_TMS9918A;
-			tms9918a_reload();
+			vt_twidth = 40;
+			vt_tright = 39;
+			vt_theight = 24;
+			vt_tbottom = 23;
 			vtinit();
+			vidcard[1] = curvid;
 		}
+		shadowcon = 1;
 	}
 
+	/* The TMS9918A and KIO clash */
+	if (!kio_present) {
+		tms9918a_present = probe_tms9918a();
+		if (tms9918a_present) {
+			tms9918a_reload();
+			curvid = VID_TMS9918A;
+			/* Set up but don't yet turn the interrupt on */
+			timer_source = TIMER_TMS9918A;
+			if (shadowcon == 0) {
+				vt_twidth = 40;
+				vt_tright = 39;
+				vt_theight = 24;
+				vt_tbottom = 23;
+				vtinit();
+				vidcard[1] = curvid;
+			}
+			shadowcon = 1;
+		}
+	}
 	/* Set the right console for kernel messages */
 	if (z180_present) {
 		z180_setup(!ctc_port);
@@ -396,17 +428,37 @@ static uint8_t probe_copro(void)
 
 void vdu_setup(void)
 {
+	/* Work out how many TMS9918A to nail on the end */
+	uint8_t num_tms = NUM_DEV_TTY - nuart + 1;
+	if (num_tms > 4)
+		num_tms = 4;
+	if (ef9345_present)
+		num_tms--;
+	if (macca_present)
+		num_tms--;
+
 	if (shadowcon) {
-		/* Add the consoles */
 		uint8_t n = 0;
 		shadowcon = 0;
-		do {
-			if (ef9345_present)
-				insert_uart(0x44, &ef_uart);
-			else
-				insert_uart(0x98, &tms_uart);
-			n++;
-		} while(n < 4 && nuart <= NUM_DEV_TTY);
+		while (n++ < num_tms)
+			insert_uart(0x98, &tms_uart);
+		if (macca_present)
+			insert_uart(0x40, &macca_uart);
+		if (ef9345_present)
+			insert_uart(0x44, &ef_uart);
+		n = 1;
+		/* Now set the vidcard table up */
+		if (ef9345_present)
+			vidcard[n++] = VID_EF9345;
+		if (macca_present)
+			vidcard[n++] = VID_MACCA;
+		while(num_tms--)
+			vidcard[n++] = VID_TMS9918A;
+		/* Set the video state up. It's a bit scrambled at this
+		   point so we just cycle the consoles to clean up */
+		for (n = 1; n < 5; n++)
+			do_conswitch(n);
+		do_conswitch(1);
 	}
 }
 
@@ -433,22 +485,24 @@ void pagemap_init(void)
 	uint8_t i, m;
 
 	/* RC2014 512/512K has RAM in the top 512 KiB of physical memory
-	 * corresponding pages are 32-63 (page size is 16 KiB)
-	 * Pages 32-34 are used by the kernel
-	 * Page 35 is the common area for init
-	 * Page 36 is the disk cache
-	 * Pages 37 amd 38 are the second kernel bank
+	 * corresponding pages are 0x20-0x3F (page size is 16 KiB)
+	 *
+	 * 0x20: Kernel low 16K
+	 * 0x21/0x22: Kernel banked 32K bank 1
+	 * 0x23: Kernel/init top 16K
+	 * 0x24/25: Kernel banked 32K bank 2
+	 * 0x26/27: Kernel banked 32K bank 3 (only 0x26 used for now)
 	 */
-	for (i = 32 + 7; i < 64; i++)
+	for (i = 0x28; i < 0x40; i++)
 		pagemap_add(i);
 
 	/* finally add the common area */
-	pagemap_add(32 + 3);
+	pagemap_add(0x23);
 
 	kprintf("RomWBW %d.%d on a%s@%dMHz.\n",
 		romver >> 4, romver & 0x0F,
 		sysname(), syscpu & 0xFF);
-#ifdef CONFIG_RTC_DS1302	
+#ifdef CONFIG_RTC_DS1302
 	/* Could be at 0xC0 or 0x0C */
 	ds1302_init();
 	inittod();
@@ -499,7 +553,7 @@ void pagemap_init(void)
 	ds12885_init();
 	inittod();
 	if (ds12885_present) {
-		kprintf("DS12885 detected at 0x%2x.\n", rtc_port);
+		kprintf("DS12885 detected at 0x%x.\n", rtc_port);
 		if (timer_source == TIMER_NONE) {
 			ds12885_set_interval();
 			timer_source = TIMER_DS12885;
@@ -545,7 +599,7 @@ void pagemap_init(void)
 
 #ifdef CONFIG_RTC_DS1302
 	if (ds1302_present)
-		kprintf("DS1302 detected at 0x%2x.\n", rtc_port);
+		kprintf("DS1302 detected at 0x%x.\n", rtc_port);
 #endif
 
 	/* Boot the coprocessor if present (just one for now) */
@@ -607,6 +661,9 @@ void pagemap_init(void)
 		}
 	}
 	display_uarts();
+	/* We can finally turn on the VDP interrupt if we are using it */
+	if (timer_source == TIMER_TMS9918A)
+		tms9918a_reload();
 }
 
 void map_init(void)
@@ -615,7 +672,7 @@ void map_init(void)
 
 uint8_t plt_param(unsigned char *p)
 {
-	/* If we have a keyboard then the TMS9918A or EF9345 becomes a real tty
+	/* If we have a keyboard then the display becomes a real tty
 	   and we make it the primary console */
 	if (strcmp(p, "zxkey") == 0 && !zxkey_present && !ps2kbd_present) {
 		zxkey_present = 1;
@@ -625,7 +682,6 @@ uint8_t plt_param(unsigned char *p)
 	}
 	return 0;
 }
-
 
 void device_init(void)
 {

@@ -1,6 +1,6 @@
-ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s video-9345.s soft81.s
+ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s soft81.s
 CSRCS = devices.c main.c devtty.c ide.c sd.c ps2.c
-CSRCS += devinput.c devgpio.c wiznet.c devlpr.c
+CSRCS += devinput.c devgpio.c wiznet.c devlpr.c video-macca.c video-ef9345.c multivt.c
 CSRCS += softzx81.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
@@ -77,6 +77,7 @@ image: bootblock
 	dd if=../bank1.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
 	dd if=../common.bin bs=16384 skip=3 count=1 conv=sync >>fuzix.romwbw
 	dd if=../bank2.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
+	dd if=../bank3.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
 
 bootblock:
 	sdasz80 -o boot-romwbw.s

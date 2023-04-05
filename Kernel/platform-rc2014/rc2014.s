@@ -105,6 +105,9 @@ MAP_BANK1	.equ	0x2221	; 20 is low, 23 is high
 BANK1		.equ	0x21
 MAP_BANK2	.equ	0x2524	; for now 24 is buffers - FIXME
 BANK2		.equ	0x24
+MAP_BANK3	.equ	0x2726
+BANK3		.equ	0x26
+
 
 ;=========================================================================
 ; Initialization code
@@ -767,14 +770,20 @@ soft81_1:
 ;
 	.globl __bank_0_1
 	.globl __bank_0_2
+	.globl __bank_0_3
 	.globl __bank_1_2
+	.globl __bank_1_3
 	.globl __bank_2_1
+	.globl __bank_2_3
+	.globl __bank_3_1
+	.globl __bank_3_2
 
 	.globl __stub_0_1
 	.globl __stub_0_2
+	.globl __stub_0_3
 	.globl __stub_1_2
 	.globl __stub_2_1
-
+	.globl __stub_2_3
 ;
 ;	We are calling into bank 1 from common. We don't know the current
 ;	bank but we need to restore it as was.
@@ -800,8 +809,10 @@ bank0:
 	ld a,b				; old bank
 	cp #BANK1			; 1 or 2
 	jr z, retbank1
+	cp #BANK2
+	jr z, retbank2
 	call callhl
-	ld bc,#MAP_BANK2
+	ld bc,#MAP_BANK3
 banksetbc:
 	ld (_kernel_pages + 1), bc
 	ld (mpgsel_cache + 1), bc
@@ -814,8 +825,15 @@ retbank1:
 	call callhl
 	ld bc,#MAP_BANK1
 	jr banksetbc
+retbank2:
+	call callhl
+	ld bc,#MAP_BANK2
+	jr banksetbc
 __bank_0_2:
 	ld bc,#MAP_BANK2
+	jr bank0
+__bank_0_3:
+	ld bc,#MAP_BANK3
 	jr bank0
 ;
 ;	These are easier because we have two banks so know the target and
@@ -823,6 +841,7 @@ __bank_0_2:
 ;
 __bank_1_2:
 	ld bc,#MAP_BANK2
+bank_1_x:
 	pop hl				; in linear order
 	ld e,(hl)
 	inc hl
@@ -834,9 +853,13 @@ __bank_1_2:
 	call callhl
 	ld bc,#MAP_BANK1
 	jr banksetbc
+__bank_1_3:
+	ld bc,#MAP_BANK3
+	jr bank_1_x
 
 __bank_2_1:
 	ld bc,#MAP_BANK1
+bank_2_x:
 	pop hl				; in linear order
 	ld e,(hl)
 	inc hl
@@ -848,14 +871,42 @@ __bank_2_1:
 	call callhl
 	ld bc,#MAP_BANK2
 	jr banksetbc
+__bank_2_3:
+	ld bc,#MAP_BANK3
+	jr bank_2_x
+
+__bank_3_1:
+	ld bc,#MAP_BANK1
+bank_3_x:
+	pop hl				; in linear order
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	push hl
+	call banksetbc
+	ex de,hl
+	call callhl
+	ld bc,#MAP_BANK3
+	jr banksetbc
+__bank_3_2:
+	ld bc,#MAP_BANK2
+	jr bank_3_x
 
 __stub_2_1:
+__stub_3_1:
 __stub_0_1:
 	ld bc,#MAP_BANK1
 	jr stub_call
 __stub_0_2:
 __stub_1_2:
+__stub_3_2:
 	ld bc,#MAP_BANK2
+	jr stub_call
+__stub_0_3:
+__stub_1_3:
+__stub_2_3:
+	ld bc,#MAP_BANK3
 stub_call:
 	pop hl				; return address
 	ex (sp),hl			; bank space now target

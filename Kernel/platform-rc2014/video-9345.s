@@ -73,15 +73,15 @@
 	.module ef9345
 
 	; video driver
-	.globl ef_scroll_up
-	.globl ef_scroll_down
-	.globl ef_plot_char
-	.globl ef_clear_lines
-	.globl ef_clear_across
-	.globl ef_cursor_on
-	.globl ef_cursor_off
-	.globl ef_cursor_disable
-	.globl ef_set_console
+	.globl _ef_scroll_up
+	.globl _ef_scroll_down
+	.globl _ef_plot_char
+	.globl _ef_clear_lines
+	.globl _ef_clear_across
+	.globl _ef_cursor_on
+	.globl _ef_cursor_off
+	.globl _ef_cursor_disable
+	.globl _ef_set_console
 	.globl _ef9345_init
 	.globl _ef9345_probe
 	.globl _ef9345_colour
@@ -290,7 +290,7 @@ yok:
 	call	outreg
 	ret
 
-_plot_char:
+_ef_plot_char:
 	pop	af
 	pop	hl
 	pop	de	
@@ -299,7 +299,6 @@ _plot_char:
 	push	de
 	push	hl		; D = X E = Y, C = char
 	push	af
-ef_plot_char:
 	ex	de,hl		; H = X L = Y
 	; Should check if its next on same line optimise
 	call	loadxy
@@ -308,8 +307,7 @@ ef_plot_char:
 	call	outreg
 	ret
 
-_scroll_down:
-ef_scroll_down:
+_ef_scroll_down:
 	ld	hl, (scrollptr)
 	ld	a,(hl)
 	dec	a
@@ -335,8 +333,7 @@ updscroll:
 	call	krl80
 	ret
 
-_scroll_up:
-ef_scroll_up:
+_ef_scroll_up:
 	ld	hl, (scrollptr)
 	ld	a,(hl)
 	inc	a
@@ -345,14 +342,13 @@ ef_scroll_up:
 	xor	a
 	jr	updscroll
 
-_clear_lines:
+_ef_clear_lines:
 	pop	bc
 	pop	hl
 	pop	de
 	push	de
 	push	hl
 	push	bc
-ef_clear_lines:
 	;
 	; We are in KRL mode so we just need to position and do lots of
 	; spaces
@@ -378,7 +374,7 @@ blank_line:
 	jr	nz, blank_next
 	ret
 
-_clear_across:
+_ef_clear_across:
 	pop	af
 	pop	hl
 	pop	de
@@ -387,7 +383,7 @@ _clear_across:
 	push	de	; DE = coords, C = count
 	push	hl
 	push	af
-ef_clear_across:
+
 	ex	de,hl
 	call	loadxy
 	ld	b,c
@@ -403,14 +399,14 @@ nextacross:
 	djnz	spaces
 	ret
 
-_cursor_on:
+_ef_cursor_on:
 	pop	bc
 	pop	de
 	pop	hl
 	push	hl
 	push	de
 	push	bc
-ef_cursor_on:
+
 	ex	de,hl
 	call	waitrdy
 	ld	(curpos),hl
@@ -428,12 +424,10 @@ ef_cursor_on:
 	ld	(cursor),a
 	ret
 
-_cursor_off:
-ef_cursor_off:
+_ef_cursor_off:
 	ret
 
-_cursor_disable:
-ef_cursor_disable:
+_ef_cursor_disable:
 	xor	a
 	ld	(cursor),a
 	ld	a, (efmargin)
@@ -486,7 +480,7 @@ _ef9345_set_output:
 ;
 ;	Sets the visible console
 ;
-ef_set_console:
+_ef_set_console:
 	ld	a,(_inputtty)
 	dec	a			; 1 based to 0 based
 	call	permute_con

@@ -47,6 +47,7 @@ extern uint8_t u16x50_present;
 extern uint8_t z512_present;
 extern uint8_t kio_present;
 extern uint8_t eipc_present;
+extern uint8_t macca_present;
 
 extern uint8_t ctc_port;
 extern uint8_t ticksperclk;	/* CTC scaling from CTC3 counts to 10Hz */
@@ -105,6 +106,7 @@ extern struct uart z180_uart0;
 extern struct uart z180_uart1;
 extern struct uart tms_uart;
 extern struct uart ef_uart;
+extern struct uart macca_uart;
 extern struct uart quart_uart;
 extern struct uart sc26c92_uart;
 extern struct uart xr88c681_uart;

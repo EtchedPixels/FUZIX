@@ -1,15 +1,16 @@
-- Debug reboot
+TODO
+- Switch to tinydisk
 - QUART CTS/RTS
-- 82C54 ?
 - TMS9918A - stop console flipping when in gfx mode
 - Sound
-- Mouse connect
-- Debug EF9345 console switch
+- Mouse connect (more needed ?)
+- Debug EF9345 console switch and cursor handling
 - EIPC and devgpio
 - EasyZ80 and TinyZ80 double check CTC timings and speed (easyz80 should be
   right)
+- Maybe bank buffers in upper half of bank 3
 
-This is Fuzix for the RC2014
+This is Fuzix for the RC2014 and related machines
 
 The starting point was Scott Baker's git tree but this has been seen been
 rather reworked. 
@@ -21,7 +22,9 @@ Sergey Kiselev <skiselev@gmail.com>, and others.
 
 Supported Hardware
 
-	RC2014 Z80 card or compatible
+	RC2014 Z80 card or compatible including Z180 cards with the banked
+	memory card although the native Z180 port and flat 512K/512K is
+	recommended instead.
 
 	512K ROM / RAM board. This board is basically a clone of the memory
 	management subsystem of the Zeta V2. It replaces the RC2014's
@@ -47,8 +50,11 @@ Supported Hardware
 	videocard to provide a classic 'keyboard/screen' interface.
 
 	PS/2 bitbang keyboard interface at 0xBB. Works with the TMS9918A
-	videocard to provide a classic 'keyboard/screen' interface.
+	videocard or EF9345 to provide a classic 'keyboard/screen' interface.
 	(autodetected)
+
+	PS/2 hardware keyboard at 0x60/64 - works the same as the bitbang one
+	but uses vastly less CPU time
 
 	16x50 cards at 0xA0/0xC0-0xF8 (the range is scanned).
 
@@ -70,7 +76,7 @@ Supported Hardware
 
 	The RC2014 CF card interface, or compatible at 0x10. (autodetected)
 
-	Floppy Drive Interface	(autodetected)
+	EP Floppy Drive Interface	(autodetected)
 
 	RC2014 Joystick		(assumed present, no harm if not)
 
@@ -83,6 +89,11 @@ Supported Hardware
 	Console switch card at 0xFF as GPIO (assumed present, no harm if not)
 
 	EF9345 video card for 80 column text
+
+	MG014 Printer at 0x0C for printing and ZIP drive (PPA ZIP)
+
+	WizNET 5100 or 5300 carrier cards (5300 is the standard build,
+	5100 requires changing the command options).
 
 Pending
 	Sound cards (until Fuzix gets proper audio support)
@@ -110,15 +121,16 @@ I/O Port Settings For Fuzix
 0x02		Joystick 1
 0x03		Free
 0x04		Z80DMA
-0x05-0x0B	Free
+0x05-0x0B	Free (move printer to 0x08?)
+[0x08-0x08	Shared memory interface - user only]
 0x0C-0x0F	82C55 Printer Port (MG014)	|	DS1302 (Z180)
 0x10-0x17	IDE CF
 [0x18-0x1F	Second IDE CF (not supported)]
 0x20-0x23	IDE PPA
 [0x24-0x27	Second PPA (not supported)]
-0x28-0x2B	Wiznet module
-[0x2C-0x2F	Shared memory interface - user only]
+0x28-0x2D	Wiznet module
 0x30-0x41	Free
+(provisionally 30-37 SPIMaster)
 0x42-0x43	AMD9511A FPU
 0x44-0x47	EF9345
 0x48-0x4D	Floppy controller (EPFDC)
@@ -148,7 +160,7 @@ I/O Port Settings For Fuzix
 0xBA		QUART serial
 0xBB		PS/2 Bitbang
 0xBC		Z80 Coprocessor
-0xBD-0xBF	Fre
+0xBD-0xBF	Free
 0xC0		DS1302 clock			|	Z180 Internal I/O     |    DS12885
 0xC0-0xFF	Scanned for extra 16x50		|	Z180 Internal I/O
 0xED						|	Also used by Z512
@@ -161,6 +173,20 @@ Alternatives
 0xC0-FF	Z180 internal I/O
 
 (*) FDC uses 48/50/51/58
+
+
+RC2014 Extreme
+
+This build uses the bus extender and moves the following
+
+Joystick 1 and 2		01-02B8
+Wiznet 5300			28-2DB8
+PS/2				60B8,64B8
+I2C will move 			6C-6FB8
+Analog sticks will move		B0-B7B8
+RTC (now a DS12885)		C08B
+Sound (TBD)			A0-A2B8
+MG ZIP/Lpr			0x0C-0x0FB8
 
 Things To Note When Modifying
 
@@ -180,7 +206,8 @@ Stuff To Do
 
   * Go the soft IRQ route with fast SIO serial handling for rx interrupts and
     flip buffers. Also raises space issues as we'll need 256 bytes per SIO
-    plus the other costs
+    plus the other costs (Can we defer all but console and steal from the
+    top of discard)
 
   * New networking layuer
 

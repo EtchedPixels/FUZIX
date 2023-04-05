@@ -3,6 +3,7 @@
 -b _CODE=0x0100
 -b _CODE1=0x4000
 -b _CODE2=0x4000
+-b _CODE3=0x4000
 -b _VECTORS=0xFF00
 -b _COMMONMEM=0xF000
 -b _DISCARD=0xC300
@@ -72,8 +73,10 @@ platform-rc2014/ide.rel
 platform-rc2014/usermem.rel
 platform-rc2014/zxkey.rel
 platform-rc2014/zxkeyboard.rel
+platform-rc2014/multivt.rel
 platform-rc2014/vdp1.rel
-platform-rc2014/video-9345.rel
+platform-rc2014/video-ef9345.rel
+platform-rc2014/video-macca.rel
 platform-rc2014/ps2.rel
 platform-rc2014/ps2kbd.rel
 platform-rc2014/ps2mouse.rel

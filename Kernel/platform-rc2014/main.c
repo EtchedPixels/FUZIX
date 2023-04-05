@@ -36,6 +36,7 @@ uint8_t z512_present = 1;	/* We assume so and turn it off if not */
 uint8_t fpu_present;
 uint8_t kio_present;
 uint8_t eipc_present;
+uint8_t macca_present;
 
 uint8_t plt_tick_present;
 uint8_t timer_source = TIMER_NONE;
@@ -50,7 +51,11 @@ uint8_t romver;
 
 /* For RTC */
 uint8_t rtc_shadow;
+#ifdef CONFIG_RC2014_EXTREME
+uint16_t rtc_port = 0xC0B8;
+#else
 uint16_t rtc_port = 0x00C0;
+#endif
 
 /* TMS9918A */
 uint8_t vtattr_cap;
@@ -109,7 +114,7 @@ void plt_idle(void)
 	else {
 		irqflags_t irq = di();
 		sync_clock();
-#ifdef CONFIG_NET_WIZNET
+#ifdef CONFIG_NET_W5100
 		w5x00_poll();
 #endif
 #ifdef CONFIG_NET_W5300
@@ -125,7 +130,7 @@ void do_timer_interrupt(void)
 	fd_tick();
 	fd_tick();
 	timer_interrupt();
-#ifdef CONFIG_NET_WIZNET
+#ifdef CONFIG_NET_W5100
 	w5x00_poll();
 #endif
 #ifdef CONFIG_NET_W5300
