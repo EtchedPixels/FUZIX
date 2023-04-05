@@ -626,7 +626,9 @@ void pagemap_init(void)
 		kprintf("PS/2 Mouse at 0x%2x\n", ps2_type == PS2_DIRECT ? 0x60 : 0xBB);
 		/* TODO: wire to input layer and interrupt */
 	}
-	if (fpu_detect())
+	/* The PropGfx and FPU clash, or at least the non extreme version.If
+	   we do an extreme propgfx setup on 16bit I/O we can sort this TODO */
+	if (!macca_present && fpu_detect())
 		kputs("AMD9511 FPU at 0x42\n");
 	/* Devices in the C0-FF range cannot be used with Z180 */
 	if (!z180_present) {
