@@ -3,6 +3,12 @@
  */
 
 #include <kernel.h>
+#include <tty.h>
+#include <vt.h>
+#include <devtty.h>
+#include <rcbus.h>
+#include <graphics.h>
+#include "printf.h"
 #include "multivt.h"
 
 __sfr __at 0x44	reg;
@@ -10,6 +16,7 @@ __sfr __at 0x46 data;
 
 static uint8_t scrollpos;
 static uint8_t ef_mode;
+static uint8_t efinkpaper[5] = { 0, 0x8F, 0x8F, 0x8F, 0x8F };
 
 static const uint8_t modetab[2][5] = {
     {
@@ -120,7 +127,6 @@ static void  ef_set_scroll(void)
     
 void ef_plot_char(int8_t y, int8_t x, uint16_t ch)
 {
-    uint8_t d;
     ef_set_pos(y,x);
     waitrdy();
     reg = 0x29;
@@ -184,3 +190,105 @@ void ef_set_console(void)
 void ef9345_colour(uint16_t cpair)
 {
 }
+
+static struct videomap ef_map = {
+	0,
+	0x42,
+	0, 0,
+	0, 0,
+	2,
+	MAP_PIO
+};
+
+static struct display ef_modes[1] = {
+	{
+		0,
+		80, 24,
+		80, 24,
+		255, 255,
+		FMT_TEXT,
+		HW_EF9345,
+		GFX_MULTIMODE|GFX_MAPPABLE|GFX_TEXT,	/* TODO: vblank */
+		16,
+		0,
+		80, 24
+	}
+};
+
+int ef_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+        uint8_t c;
+	switch(arg) {
+	case GFXIOC_GETINFO:
+                return uput(&ef_modes, ptr, sizeof(struct display));
+	case GFXIOC_MAP:
+		return uput(&ef_map, ptr, sizeof(struct videomap));
+	case GFXIOC_UNMAP:
+		return 0;
+	case VTINK:
+		c = ugetc(ptr);
+		efinkpaper[minor] &= 0xF8;
+		efinkpaper[minor] |= c & 0x07;
+		if (minor == inputtty)
+			ef9345_colour(efinkpaper[minor]);
+		return 0;
+	case VTPAPER:
+		c = ugetc(ptr);
+		efinkpaper[minor] &= 0x8F;
+		efinkpaper[minor] |= (c & 0x07) << 4;
+		if (minor == inputtty)
+			ef9345_colour(efinkpaper[minor]);
+		return 0;
+	}
+	return vtzx_ioctl(minor, arg, ptr);
+}
+
+static uint8_t ef_intr(uint8_t minor)
+{
+        return 1;
+}
+
+static ttyready_t ef_writeready(uint8_t minor)
+{
+        return TTY_READY_NOW;
+}
+
+static void ef_setup(uint8_t minor)
+{
+	used(minor);
+}
+
+void ef_setoutput(uint_fast8_t minor)
+{
+	vt_save(&ttysave[outputtty - 1]);
+	outputtty = minor;
+	curvid = VID_EF9345;
+	vt_twidth = 80;
+	vt_tright = 79;
+	vt_theight = 24;
+	vt_tbottom = 23;
+	ef9345_set_output();
+	vt_load(&ttysave[outputtty - 1]);
+}
+
+static void ef_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	irqflags_t irq = di();
+
+	if (outputtty != minor)
+		ef_setoutput(minor);
+	irqrestore(irq);
+	curvid = VID_EF9345;
+	if (!vswitch)
+		vtoutput(&c, 1);
+}
+
+struct uart ef_uart = {
+	ef_intr,			/* TODO */
+	ef_writeready,
+	ef_putc,
+	ef_setup,
+	carrier_unwired,
+	_CSYS,
+	"EF9345"
+};

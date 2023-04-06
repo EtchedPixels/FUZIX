@@ -77,6 +77,7 @@ platform-rc2014/multivt.rel
 platform-rc2014/vdp1.rel
 platform-rc2014/video-ef9345.rel
 platform-rc2014/video-macca.rel
+platform-rc2014/video-tms9918a.rel
 platform-rc2014/ps2.rel
 platform-rc2014/ps2kbd.rel
 platform-rc2014/ps2mouse.rel

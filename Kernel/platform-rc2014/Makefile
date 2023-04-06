@@ -1,5 +1,5 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s soft81.s
-CSRCS = devices.c main.c devtty.c ide.c sd.c ps2.c
+CSRCS = devices.c main.c devtty.c ide.c sd.c ps2.c video-tms9918a.c
 CSRCS += devinput.c devgpio.c wiznet.c devlpr.c video-macca.c video-ef9345.c multivt.c
 CSRCS += softzx81.c
 DISCARD_CSRCS = discard.c

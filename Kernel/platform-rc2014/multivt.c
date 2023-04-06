@@ -15,6 +15,9 @@
 
 uint8_t curvid;
 uint8_t vidcard[5];
+uint8_t outputtty = 1, inputtty = 1;
+
+struct vt_switch ttysave[VT_CON];
 
 void cursor_off(void)
 {
@@ -100,4 +103,66 @@ void scroll_down(void)
             ef_scroll_down();
         else if (curvid == VID_MACCA)
             ma_scroll_down();
+}
+
+/* Callback from the keyboard driver for a console switch */
+/* TODO: allow multiple console types at once */
+void do_conswitch(uint8_t c)
+{
+	uint8_t v = vidcard[c];
+
+	/* No switch if the console is locked for graphics */
+	if (vswitch)
+		return;
+
+	/* No card on this VT port */
+	if (v == VID_NONE)
+		return;
+
+	/* Cursor off on whichever display loses focus */
+	vt_cursor_off();
+
+	curvid = v;
+
+	switch(curvid) {
+	case VID_TMS9918A:
+		/* TMS9918A */
+		tms_setoutput(inputtty);
+		inputtty = c;
+		tms_set_console();
+		tms_setoutput(c);
+		break;
+	case VID_EF9345:
+		inputtty = c;
+		ef_setoutput(inputtty);
+		ef_set_console();
+		break;
+	case VID_MACCA:
+		inputtty = c;
+		ma_setoutput(inputtty);
+/*		macca_set_console(); TODO */
+		break;
+	}
+	vt_cursor_on();
+	/* Now restore the output state - this is ugly and needs work */
+	curvid = vidcard[outputtty];
+	switch(curvid) {
+	case VID_TMS9918A:
+		tms_setoutput(outputtty);
+		break;
+	case VID_EF9345:
+		ef_setoutput(outputtty);
+		break;
+	case VID_MACCA:
+		ma_setoutput(outputtty);
+		break;
+	}
+}
+
+/* PS/2 call back for alt-Fx */
+void ps2kbd_conswitch(uint8_t console)
+{
+	if (console > 4 || console == inputtty || vswitch)
+		return;
+	do_conswitch(console);
 }

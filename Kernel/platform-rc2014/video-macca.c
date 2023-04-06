@@ -14,6 +14,11 @@
  */
 
 #include <kernel.h>
+#include <tty.h>
+#include <vt.h>
+#include <devtty.h>
+#include <rcbus.h>
+#include "printf.h"
 #include "multivt.h"
 
 #define CMD_MODE	0x00
@@ -25,24 +30,44 @@
 
 extern uint8_t fontdata_6x8[];
 
+#ifdef CONFIG_RC2014_EXTREME
+__sfr __banked __at 0x40B8	vid_cmd;
+__sfr __banked __at 0x41B8	vid_data;
+__sfr __banked __at 0x68B8	vid_pio;	/* TODO pick better port */
+
+#define VID_PIO_WAIT		0x40
+
+/* There is no HALT on the bus extender 40 pins so use a GPIO input */
+static void nap(void)
+{
+    while(!(vid_pio & VID_PIO_WAIT));
+}
+
+#else
+#define nap()		do {} while(0)
 __sfr __at 0x40		vid_cmd;
 __sfr __at 0x41		vid_data;
+#endif
 
 static uint8_t scroll_pos;
 static uint8_t con_xbias;
 
-static void tilemap_set(signed char y1, unsigned char x1)
+static void tilemap_set(unsigned char y1, unsigned char x1)
 {
 	uint16_t off;
-	
-	y1 -= scroll_pos;
-	if (y1 < 0)
-	    y1 += 30;
+
+	/* Adjust for hardware scroll */
+        y1 += scroll_pos;
+        if (y1 >= 30)
+            y1 -= 30;
 	
 	off = 80 * y1 + x1 + con_xbias;
 	vid_cmd = CMD_TILEMAP;
+	nap();
 	vid_data = off;
+	nap();
 	vid_data = off >> 8;
+	nap();
 }
 
 void ma_cursor_off(void)
@@ -52,29 +77,41 @@ void ma_cursor_off(void)
 void ma_cursor_disable(void)
 {
         vid_cmd = CMD_SPRITE;
+	nap();
         vid_data = 0x00;	/* Sprite 0 is the cursor */
+	nap();
         vid_data = 0x00;
+	nap();
         vid_data = 0x00;
+	nap();
         vid_data = ' ';
+	nap();
         vid_data = 0x00;
+	nap();
 }
 
 void ma_cursor_on(int8_t y, int8_t x)
 {
         vid_cmd = CMD_SPRITE;
+	nap();
         vid_data = x;
+	nap();
         vid_data = y;
-        vid_data = '_';		/* For testing */
+	nap();
+        vid_data = 0;		/* For testing */
+	nap();
         if (x & 0x80) 
             vid_data = 1; 
         else
             vid_data = 0;
+	nap();
 }
 
 void ma_plot_char(int8_t y, int8_t x, uint16_t c)
 {
         tilemap_set(y, x);
         vid_data = c;
+	nap();
 }
 
 void ma_clear_lines(int8_t y, int8_t ct)
@@ -88,8 +125,10 @@ void ma_clear_lines(int8_t y, int8_t ct)
 void ma_clear_across(int8_t y, int8_t x, int16_t l)
 {
         tilemap_set(y, x);
-        while(l--)
+        while(l--) {
             vid_data = ' ';
+            nap();
+        }
 }
 
 void ma_vtattr_notify(void)
@@ -103,7 +142,9 @@ void ma_scroll_up(void)
         if (scroll_pos == 30)
             scroll_pos = 0;
         vid_cmd = CMD_VSCROLL;
+        nap();
         vid_data = scroll_pos << 3;
+        nap();
         vid_data = 0;
 }
 
@@ -114,15 +155,18 @@ void ma_scroll_down(void)
         else
                 scroll_pos--;
         vid_cmd = CMD_VSCROLL;
+        nap();
         vid_data = scroll_pos << 3;
+        nap();
         vid_data = 0;
+        nap();
 }
 
 /* Console 0 is the left of the expanded tile map
    Console 1 is the right */
 void macca_set_output(void)
 {
-        if (outputtty)
+        if (outputtty == 2)
                 con_xbias = 40;
         else
                 con_xbias = 0;
@@ -132,12 +176,17 @@ void macca_set_output(void)
 void macca_set_shown(void)
 {
         vid_cmd = CMD_HSCROLL;
-        if (outputtty) {
+        nap();
+        if (outputtty == 2) {
             vid_data = 320 & 0xFF;
+            nap();
             vid_data = 320 >> 8;
+            nap();
         } else {
             vid_data = 0;
+            nap();
             vid_data = 0;
+            nap();
         }
 }
 
@@ -148,18 +197,38 @@ void macca_init(void)
 {
         uint8_t *p;
         unsigned n = 0;
+        unsigned i;
 
         vid_cmd = CMD_MODE;
+        nap();
         vid_data = 0x80;	/* 320x240 double tilewidth */
+        nap();
         vid_data = 0x00;
+        nap();
         vid_data = 0x00;
+        nap();
+
+        /* Sanity check */
+        vid_cmd = CMD_TILEBITS;
+        nap();
+        vid_data = 0x00;
+        nap();
+        vid_data = 0x00;
+        nap();
+        for (i = 0; i < 64; i++) {
+            vid_data = 0xAA;
+            nap();
+        }
 
         /* Load the font */
         p = fontdata_6x8;
         vid_cmd = CMD_TILEBITS;
+        nap();
         /* We only load 32 to 127 */
         vid_data = 0x00;
-        vid_data = 0x04;
+        nap();
+        vid_data = 0x08;	/* 2K in */
+        nap();
 
         while(n++ < 768) {
                 uint8_t i;
@@ -170,6 +239,7 @@ void macca_init(void)
                                 vid_data = 0xFF;
                         else
                                 vid_data = 0x00;
+                        nap();
                         b <<= 1;
                 }
         }
@@ -178,3 +248,54 @@ void macca_init(void)
 /* TODO: UDG and font loading ioctl support */
 /* TODO: sprites ioctls */
 /* TODO: mode setting ioctls */
+
+void ma_setoutput(uint_fast8_t minor)
+ {
+	vt_save(&ttysave[outputtty - 1]);
+	outputtty = minor;
+	curvid = VID_MACCA;
+	vt_twidth = 40;
+	vt_tright = 39;
+	vt_theight = 30;
+	vt_tbottom = 29;
+	macca_set_output();
+	vt_load(&ttysave[outputtty - 1]);
+}
+
+static void macca_putc(uint_fast8_t minor, uint_fast8_t c)
+{
+	irqflags_t irq = di();
+
+/* TODO	if (outputtty != minor)
+		ma_setoutput(minor); */
+	irqrestore(irq);
+	curvid = VID_MACCA;
+	if (!vswitch)
+		vtoutput(&c, 1);
+}
+
+static void macca_setup(uint8_t minor)
+{
+	used(minor);
+}
+
+static uint8_t macca_intr(uint8_t minor)
+{
+        return 1;
+}
+
+static ttyready_t macca_writeready(uint8_t minor)
+{
+        return TTY_READY_NOW;
+}
+
+
+struct uart macca_uart = {
+	macca_intr,			/* TODO */
+	macca_writeready,
+	macca_putc,
+	macca_setup,
+	carrier_unwired,
+	_CSYS,
+	"PropGfx"
+};

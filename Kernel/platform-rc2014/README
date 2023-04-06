@@ -1,7 +1,15 @@
 TODO
 - Switch to tinydisk
+- Debug SD card changes
+- Check ZIP with extender
 - QUART CTS/RTS
 - TMS9918A - stop console flipping when in gfx mode
+- Maccasoft video - debug and add video ioctls
+- Split TMS9918A, EF9345 and Macca video entirely out of devtty.c
+- Ioctls on Macca video for modes and access
+- Can we do macca udg by pretending it's a normal 8x8 bitmap ?
+- Sprite ioctls
+- Ioctls to assign consoles to video cards
 - Sound
 - Mouse connect (more needed ?)
 - Debug EF9345 console switch and cursor handling
@@ -182,11 +190,15 @@ This build uses the bus extender and moves the following
 Joystick 1 and 2		01-02B8
 Wiznet 5300			28-2DB8
 PS/2				60B8,64B8
+PIO (SD etc)			68-6BB8		- to debug
 I2C will move 			6C-6FB8
 Analog sticks will move		B0-B7B8
 RTC (now a DS12885)		C08B
 Sound (TBD)			A0-A2B8
 MG ZIP/Lpr			0x0C-0x0FB8
+PropGFX Video			40-43B8
+	(with a GPIO for the halt)
+
 
 Things To Note When Modifying
 
