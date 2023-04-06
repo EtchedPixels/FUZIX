@@ -710,6 +710,8 @@ int main(int argc, char *argv[])
 		strlcpy(ircname, userinfo->pw_name, sizeof(ircname));
 	irclogin = userinfo->pw_name;
 	gecos = userinfo->pw_gecos;
+	if (*gecos == '\0')
+		gecos = "unknown";
 
 	printf("*** trying port %d of %s\n\n", irc_port, hostname);
 	if (makeconnect(hostname) < 0) {
