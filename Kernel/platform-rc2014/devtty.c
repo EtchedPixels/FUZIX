@@ -594,29 +594,17 @@ struct uart easy_uartb = {
 
 static uint8_t ns16x50_intr(uint_fast8_t minor)
 {
-	uint8_t iir, lsr, msr;
+	uint8_t msr;
 	uint8_t port = ttyport[minor];
 
-	while(((iir = in(port + 2)) & 1) == 0) {
-		lsr = in(port + 5);
-		switch(iir & 0x0E) {
-		case 0x06:	/* LSR changed - error/break etc */
-			break;
-		case 0x04:	/* Data */
-		case 0x12:
-			tty_inproc(minor, in(port));
-		case 0x02:	/* THR empty */
-			break;
-		case 0x00:	/* MSR change */
-			msr = in(port + 6);
-			if (msr & 0x08) {
-				if (msr & 0x80)
-					tty_carrier_raise(minor);
-				else
-					tty_carrier_drop(minor);
-			}
-			break;
-		}
+	if (in(port + 5) & 1)
+		tty_inproc(minor, in(port));
+	msr = in(port + 6);
+	if (msr & 0x08) {
+		if (msr & 0x80)
+			tty_carrier_raise(minor);
+		else
+			tty_carrier_drop(minor);
 	}
 	/* TODO: CTS/RTS */
 	return 1;
