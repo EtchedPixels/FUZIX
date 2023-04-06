@@ -33,3 +33,12 @@ If you think you have this problem try running your kernel with a known good
 user space image from fuzix.org or another user. If that works suspect your
 compiler.
 
+Some gcc 11 also blow up with
+
+````
+/tmp/ccjcB3zX.s: Assembler messages:
+/tmp/ccjcB3zX.s:525: Error: value -684 out of range
+/tmp/ccjcB3zX.s:525: Error: value of -684 too large for field of 1 byte at 969
+````
+
+gcc 12 seems to be ok
