@@ -15,7 +15,7 @@
  *	no signals have software invert.
  *
  *	It's also possible to use a Z80 PIO for printing but we don't
- &	currently support that.
+ *	currently support that.
  */
 
 static uint8_t have_lp;
@@ -191,6 +191,8 @@ void lpr_init(void)
 
 COMMON_MEMORY
 
+#ifdef CONFIG_RC2014_EXTREME
+
 void ppa_block_read(void) __naked
 {
     __asm
@@ -216,22 +218,165 @@ doread:
 	    exx
 	    ld de, #0x0F0D			    ; clock toggles
             ld bc, (_ppa_port)	                    ; setup port number
+	    inc b
+	    inc b				    ; 0x0EB8
+            ld hl, #lpxlate4			    ; must be page aligned
+	    exx
+read_loop:
+	    exx
+	    out (c),d				    ; 0x0EB8 control to 0x0F
+	    dec b
+	    in a,(c)				    ; Status 0x0DB8
+	    inc b
+	    and #0x0f
+	    or #0x10				    ; Upper table for hig bits
+	    ld l,a
+	    ld d,(hl)				    ; Look up table for speed
+	    out (c),e				    ; 0x0EB8 control to 0x0D
+	    dec b
+	    in a,(c)				    ; Same again for lower bits
+	    inc b				    ; 0x0DB8
+	    and #0x0f
+	    ld l,a
+	    ld a,(hl)
+	    or d
+	    ; Put back the clock toggle we have to reuse
+	    ld d,#0x0F
+	    exx
+
+	    ld (hl),a				    ; Write byte to memory
+	    inc hl
+	    
+	    ; Same again
+	    exx
+	    out (c),d				    ; 0x0EB8 to 0x0F
+	    dec b
+	    in a,(c)				    ; Status 0x0DB8
+	    inc b
+	    and #0x0f
+	    or #0x10				    ; Upper table for high bits
+	    ld l,a
+	    ld d,(hl)				    ; Look up table for speed
+	    out (c),e				    ; 0x0EB8 to 0x0D
+	    dec b
+	    in a,(c)				    ; Same again for lower bits
+	    inc b				    ; from 0x0DB8 
+	    and #0x0f
+	    ld l,a
+	    ld a,(hl)
+	    or d
+	    ; And put the clock toggle back again
+	    ld d,#0x0F
+	    exx
+
+	    ld (hl),a				    ; Write byte to memory
+	    inc hl
+
+	    ; Do it until we have 512 bytes
+	    djnz read_loop
+	    ld bc,(_ppa_port)
+	    inc b
+	    inc b
+	    ld a,#0x07
+	    out (c),a
+            jp map_kernel_restore                   ; else map kernel then return
+    __endasm;
+}
+
+void ppa_block_write(void) __naked
+{
+    __asm
+            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            ld bc, (_ppa_port)	                    ; setup port number
+#ifdef SWAPDEV
+	    cp #2
+            jr nz, not_swapout
+            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            call map_for_swap
+            jr dowrite
+not_swapout:
+#endif
+            or a                                    ; test is_user
+            jr z, wr_kernel
+            call map_process_always                 ; else map user memory first if required
+            jr dowrite
+wr_kernel:
+            call map_buffers
+dowrite:
+	    ld de,#7
+write_loop:
+	    outi				    ; Data on bus
+	    inc b				    ; Undo outi
+	    ld a,#0x05				    ; STROBE|AUTOFEED
+	    inc b
+	    inc b
+	    out	(c),a
+	    ld a,e				    ; STROBE (E is 7)
+	    out (c),a
+	    dec b
+	    dec b
+	    outi
+	    inc b				    ; Undo outi
+	    inc b
+	    inc b
+	    ld a,#0x05
+	    out (c),a
+	    ld a,e				    ; E is 7
+	    out (c),a
+	    dec b
+	    dec b
+	    dec d
+	    jr nz, write_loop			    ; 512 times
+            jp map_kernel_restore                   ; else map kernel then return
+    __endasm;
+}
+
+#else
+
+void ppa_block_read(void) __naked
+{
+    __asm
+            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
+            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+                                                    ; and count
+#ifdef SWAPDEV
+	    cp #2
+            jr nz, not_swapin
+            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            call map_for_swap
+            jr doread
+not_swapin:
+#endif
+            or a                                    ; test is_user
+            jr z, rd_kernel
+            call map_process_always  	            ; map user memory first if required
+            jr doread
+rd_kernel:
+            call map_buffers
+doread:
+	    ld b, #0x00				    ; count
+	    exx
+	    ld de, #0x0F0D			    ; clock toggles
+            ld bc, (_ppa_port)	                    ; setup port number
+	    inc c
+	    inc c
             ld hl, #lpxlate4			    ; must be page aligned
 	    exx
 read_loop:
 	    exx
 	    out (c),d
-	    inc c
-	    in a,(c)				    ; Status
 	    dec c
+	    in a,(c)				    ; Status
+	    inc c
 	    and #0x0f
 	    or #0x10				    ; Upper table for hig bits
 	    ld l,a
 	    ld d,(hl)				    ; Look up table for speed
 	    out (c),e
-	    inc c
-	    in a,(c)				    ; Same again for lower bits
 	    dec c
+	    in a,(c)				    ; Same again for lower bits
+	    inc c
 	    and #0x0f
 	    ld l,a
 	    ld a,(hl)
@@ -246,17 +391,17 @@ read_loop:
 	    ; Same again
 	    exx
 	    out (c),d
-	    inc c
-	    in a,(c)				    ; Status
 	    dec c
+	    in a,(c)				    ; Status
+	    inc c
 	    and #0x0f
 	    or #0x10				    ; Upper table for high bits
 	    ld l,a
 	    ld d,(hl)				    ; Look up table for speed
 	    out (c),e
-	    inc c
-	    in a,(c)				    ; Same again for lower bits
 	    dec c
+	    in a,(c)				    ; Same again for lower bits
+	    inc c
 	    and #0x0f
 	    ld l,a
 	    ld a,(hl)
@@ -327,3 +472,5 @@ write_loop:
             jp map_kernel_restore                   ; else map kernel then return
     __endasm;
 }
+
+#endif
