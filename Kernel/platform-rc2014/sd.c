@@ -31,13 +31,8 @@ void pio_setup(void)
       pio_c = 0x1C;
       spi_port = 0x1D;
     } else {
-#ifdef CONFIG_RC2014_EXTREME
-      pio_c = 0x6BB8;
-      spi_port = 0x69B8;
-#else
       pio_c = 0x6B;
       spi_port = 0x69;
-#endif
     }
     /* Pin names in brackets are mapping onto Gluino */
     /* Data on PIOB bit 0 (D11 / CIPO */
