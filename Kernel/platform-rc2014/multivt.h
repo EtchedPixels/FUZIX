@@ -58,7 +58,7 @@ extern void ma_scroll_down(void);
 extern void ma_setoutput(uint8_t minor);
 extern int ma_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 
-extern void macca_init(void);
+extern uint8_t macca_init(void);
 
 extern uint8_t inputtty, outputtty;
 extern uint8_t vswitch;

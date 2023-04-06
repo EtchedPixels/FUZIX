@@ -33,8 +33,9 @@ extern uint8_t fontdata_6x8[];
 #ifdef CONFIG_RC2014_EXTREME
 __sfr __banked __at 0x40B8	vid_cmd;
 __sfr __banked __at 0x41B8	vid_data;
-__sfr __banked __at 0x68B8	vid_pio;	/* TODO pick better port */
+__sfr __banked __at 0x69B8	vid_pio;
 
+/* Port B bit 6 (D14) */
 #define VID_PIO_WAIT		0x40
 
 /* There is no HALT on the bus extender 40 pins so use a GPIO input */
@@ -44,6 +45,7 @@ static void nap(void)
 }
 
 #else
+/* Using \HALT signal */
 #define nap()		do {} while(0)
 __sfr __at 0x40		vid_cmd;
 __sfr __at 0x41		vid_data;
@@ -192,14 +194,31 @@ void macca_set_shown(void)
 
 /* Should be in discard... */
 
+__sfr __banked __at 0x6BB8 pio_c;
+
 /* 320 x 240 40 x 30 */
-void macca_init(void)
+uint8_t macca_init(void)
 {
         uint8_t *p;
         unsigned n = 0;
         unsigned i;
 
+#ifdef CONFIG_RC2014_EXTREME
+        /* PropGFX using GPIO for ready signalling so we need to
+           do a quick set up on PIOB before the main setup happens */
+        pio_c = 0xCF;	/* Mode 3 */
+        pio_c = 0xFF;	/* All input at boot */
+        pio_c = 0x07;	/* No interrupt, no mask */
+
+        /* But at least it lets us autodetect a bit */
+        if ((vid_pio & 0x40) == 0)
+            return 0;
         vid_cmd = CMD_MODE;
+        if (vid_pio & 0x40)	/* Should be showing halted now */
+            return 0;
+#else
+        vid_cmd = CMD_MODE;
+#endif
         nap();
         vid_data = 0x80;	/* 320x240 double tilewidth */
         nap();
@@ -243,6 +262,7 @@ void macca_init(void)
                         b <<= 1;
                 }
         }
+        return 1;
 }
 
 /* TODO: UDG and font loading ioctl support */

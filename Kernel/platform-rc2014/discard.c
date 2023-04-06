@@ -306,10 +306,9 @@ void init_hardware_c(void)
 	}
 
 #ifdef CONFIG_RC2014_PROPGFX
-	macca_present = 1;
+	macca_present = macca_init();
 #endif
 	if (macca_present) {
-		macca_init();
 		if (shadowcon == 0) {
 			shadowcon = 1;
 			vt_twidth = 40;
