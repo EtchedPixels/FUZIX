@@ -15,7 +15,7 @@
 #define CONFIG_RC2014_SD
 /* Do not set this unless you have the propellor graphics card installed
    and with non TMS9918A firmware as it can't be probed so will be assumed */
-#define CONFIG_RC2014_PROPGFX
+#undef CONFIG_RC2014_PROPGFX	/* WIP */
 /* Below is a work in progress not yet fully merged .. */
 /* Set this if using a bus extender. This then builds a special kernel
    that expects the following to be on the bus extender instead
@@ -90,13 +90,13 @@
 #define TICKSPERSEC 10      /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xEE00  /* Top of program, base of U_DATA copy */
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
-#define SWAP_SIZE   0x79 	/* 60.5K in blocks (prog + udata) */
+#define SWAP_SIZE   0x78 	/* 60K in blocks (prog + udata) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xF200	/* Swap out udata and program */
+#define SWAPTOP	    0xF000	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
