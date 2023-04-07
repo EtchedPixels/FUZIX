@@ -57,6 +57,13 @@ extern void ma_scroll_up(void);
 extern void ma_scroll_down(void);
 extern void ma_setoutput(uint8_t minor);
 extern int ma_ioctl(uint8_t minor, uarg_t arg, char *ptr);
+extern void ma_set_console(void);
+
+#ifdef CONFIG_RC2014_EXTREME
+#define MACCA_BASE	0x40B8
+#else
+#define MACCA_BASE	0x40
+#endif
 
 extern uint8_t macca_init(void);
 

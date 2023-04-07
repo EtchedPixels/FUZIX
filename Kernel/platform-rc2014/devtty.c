@@ -1329,6 +1329,8 @@ int rctty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return tms_ioctl(minor, arg, ptr);
 	if (uart[minor] == &ef_uart)
 		return ef_ioctl(minor, arg, ptr);
+	if (uart[minor] == &macca_uart)
+		return ma_ioctl(minor, arg, ptr);
 	/* Not a VT port so don't go via generic VT */
 	return tty_ioctl(minor, arg, ptr);
 }

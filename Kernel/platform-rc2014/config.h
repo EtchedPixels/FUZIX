@@ -15,7 +15,7 @@
 #define CONFIG_RC2014_SD
 /* Do not set this unless you have the propellor graphics card installed
    and with non TMS9918A firmware as it can't be probed so will be assumed */
-#undef CONFIG_RC2014_PROPGFX	/* WIP */
+#define CONFIG_RC2014_PROPGFX	/* WIP */
 /* Below is a work in progress not yet fully merged .. */
 /* Set this if using a bus extender. This then builds a special kernel
    that expects the following to be on the bus extender instead

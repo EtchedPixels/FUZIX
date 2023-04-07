@@ -140,7 +140,7 @@ void do_conswitch(uint8_t c)
 	case VID_MACCA:
 		inputtty = c;
 		ma_setoutput(inputtty);
-/*		macca_set_console(); TODO */
+		ma_set_console();
 		break;
 	}
 	vt_cursor_on();

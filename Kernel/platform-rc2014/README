@@ -94,6 +94,10 @@ Supported Hardware
 
 	EF9345 video card for 80 column text
 
+	PropGFX card at 0x40. This will be used to provide two 40 column
+	VGA consoles. Must be configured at compile time as there is no
+	autodetect possible.
+
 	MG014 Printer at 0x0C for printing and ZIP drive (PPA ZIP)
 
 	WizNET 5100 or 5300 carrier cards (5300 is the standard build,
@@ -104,6 +108,8 @@ Pending
 	I2C at 0x6C
 
 Unsupported Hardware
+
+	Z180 in flat mode (see rcbus-z180 target)
 
 	SC108/SC114/Z80SBC64 or other CPU boards with their own banking instead
 	of the 512K ROM/RAM. Please see the relevant port instead.
@@ -125,8 +131,8 @@ I/O Port Settings For Fuzix
 0x02		Joystick 1
 0x03		Free
 0x04		Z80DMA
-0x05-0x0B	Free (move printer to 0x08?)
-[0x08-0x08	Shared memory interface - user only]
+0x05-0x07	Free
+[0x08-0x0B	Shared memory interface - user only]
 0x0C-0x0F	82C55 Printer Port (MG014)	|	DS1302 (Z180)
 0x10-0x17	IDE CF
 [0x18-0x1F	Second IDE CF (not supported)]
@@ -159,7 +165,7 @@ I/O Port Settings For Fuzix
 		Also used sometimes for sound (0xA0-0xA2)
 0xA8-0xAF	Free				|	SC26C92 serial (ctd)
 [0xB0-0xB7	Analog Sticks - TODO]
-[0xB8		Bus extender - TODO]
+0xB8		Bus extender
 0xB9		Free
 0xBA		QUART serial
 0xBB		PS/2 Bitbang
@@ -167,6 +173,8 @@ I/O Port Settings For Fuzix
 0xBD-0xBF	Free
 0xC0		DS1302 clock			|	Z180 Internal I/O     |    DS12885
 0xC0-0xFF	Scanned for extra 16x50		|	Z180 Internal I/O
+0xD0		AY-3-8910 (TODO)		|
+0xD8		AY-3-8910 (TODO)		|
 0xED						|	Also used by Z512
 0xFE		ZXKey shadow
 0xFF		ZXkey (W) Console switches (R)
@@ -189,10 +197,9 @@ PS/2				60B8,64B8
 I2C will move 			6C-6FB8
 Analog sticks will move		B0-B7B8
 RTC				C08B
-Sound (TBD)			A0-A2B8
-MG ZIP/Lpr			0x0C-0x0FB8
-PropGFX Video			40-43B8
-	(with a GPIO for the halt)
+Sound (AY-3-8910, TODO)		D0/D8B8
+MG ZIP/Lpr			0C-0FB8
+PropGFX Video			40-43B8	(with link for halt)
 
 
 Things To Note When Modifying

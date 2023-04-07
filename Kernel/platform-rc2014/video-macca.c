@@ -11,6 +11,15 @@
  *
  *	The big limitation is around colour. The tiles have their own colour
  *	data so you can't do multiple text colours.
+ *
+ *	The documentation is a bit unclear on a few things
+ *	- The offsets for the video are set when you change mode automatially
+ *	- The tile expand does not double the on screen resolution just makes
+ *	  scrolling maps easier. We can use this for dual console
+ *	- The colours are in the upper bits of the tile. Bit 0 is 1 for
+ *	  transparency on sprites and overlays
+ *	- The wait pin can be ignored if you wait long enough on a mode
+ *	  change or a bitmap mode clear screen (we do)
  */
 
 #include <kernel.h>
@@ -18,7 +27,8 @@
 #include <vt.h>
 #include <devtty.h>
 #include <rcbus.h>
-#include "printf.h"
+#include <graphics.h>
+
 #include "multivt.h"
 
 #define CMD_MODE	0x00
@@ -31,24 +41,15 @@
 extern uint8_t fontdata_6x8[];
 
 #ifdef CONFIG_RC2014_EXTREME
-__sfr __banked __at 0x40B8	vid_cmd;
-__sfr __banked __at 0x41B8	vid_data;
-__sfr __banked __at 0x69B8	vid_pio;
-
-/* Port B bit 6 (D14) */
-#define VID_PIO_WAIT		0x40
-
-/* There is no HALT on the bus extender 40 pins so use a GPIO input */
-static void nap(void)
-{
-    while(!(vid_pio & VID_PIO_WAIT));
-}
+__sfr __banked __at 0x40B8 vid_cmd;
+__sfr __banked __at 0x41B8 vid_data;
+__sfr __at 0x68 vid_pio;
 
 #else
-/* Using \HALT signal */
-#define nap()		do {} while(0)
-__sfr __at 0x40		vid_cmd;
-__sfr __at 0x41		vid_data;
+
+__sfr __at 0x40 vid_cmd;
+__sfr __at 0x41 vid_data;
+
 #endif
 
 static uint8_t scroll_pos;
@@ -59,17 +60,14 @@ static void tilemap_set(unsigned char y1, unsigned char x1)
 	uint16_t off;
 
 	/* Adjust for hardware scroll */
-        y1 += scroll_pos;
-        if (y1 >= 30)
-            y1 -= 30;
-	
+	y1 += scroll_pos;
+	if (y1 >= 30)
+		y1 -= 30;
+
 	off = 80 * y1 + x1 + con_xbias;
 	vid_cmd = CMD_TILEMAP;
-	nap();
 	vid_data = off;
-	nap();
 	vid_data = off >> 8;
-	nap();
 }
 
 void ma_cursor_off(void)
@@ -78,59 +76,48 @@ void ma_cursor_off(void)
 
 void ma_cursor_disable(void)
 {
-        vid_cmd = CMD_SPRITE;
-	nap();
-        vid_data = 0x00;	/* Sprite 0 is the cursor */
-	nap();
-        vid_data = 0x00;
-	nap();
-        vid_data = 0x00;
-	nap();
-        vid_data = ' ';
-	nap();
-        vid_data = 0x00;
-	nap();
+	if (inputtty == outputtty) {
+		vid_cmd = CMD_SPRITE;
+		vid_data = 0x00;	/* Sprite 0 is the cursor */
+		vid_data = 0x00;
+		vid_data = 0x00;
+		vid_data = ' ';
+		vid_data = 0x00;
+	}
 }
 
 void ma_cursor_on(int8_t y, int8_t x)
 {
-        vid_cmd = CMD_SPRITE;
-	nap();
-        vid_data = x;
-	nap();
-        vid_data = y;
-	nap();
-        vid_data = 0;		/* For testing */
-	nap();
-        if (x & 0x80) 
-            vid_data = 1; 
-        else
-            vid_data = 0;
-	nap();
+	if (inputtty == outputtty) {
+		vid_cmd = CMD_SPRITE;
+		vid_data = 0;
+		vid_data = x << 3;
+		vid_data = y << 3;
+		vid_data = 1;	/* For testing */
+		if (x & 0x80)
+			vid_data = 1;
+		else
+			vid_data = 0;
+	}
 }
 
 void ma_plot_char(int8_t y, int8_t x, uint16_t c)
 {
-        tilemap_set(y, x);
-        vid_data = c;
-	nap();
+	tilemap_set(y, x);
+	vid_data = c;
 }
 
 void ma_clear_lines(int8_t y, int8_t ct)
 {
-        uint16_t n = (uint8_t)ct * 40;
-        tilemap_set(y, 0);
-        while(n--)
-            vid_data = ' ';
+	while (ct--)
+		ma_clear_across(y++, 0, 40);
 }
 
 void ma_clear_across(int8_t y, int8_t x, int16_t l)
 {
-        tilemap_set(y, x);
-        while(l--) {
-            vid_data = ' ';
-            nap();
-        }
+	tilemap_set(y, x);
+	while (l--)
+		vid_data = ' ';
 }
 
 void ma_vtattr_notify(void)
@@ -140,137 +127,105 @@ void ma_vtattr_notify(void)
 /* No read back so we must hardware scroll - which is faster anyway */
 void ma_scroll_up(void)
 {
-        scroll_pos ++;
-        if (scroll_pos == 30)
-            scroll_pos = 0;
-        vid_cmd = CMD_VSCROLL;
-        nap();
-        vid_data = scroll_pos << 3;
-        nap();
-        vid_data = 0;
+	scroll_pos++;
+	if (scroll_pos == 30)
+		scroll_pos = 0;
+	vid_cmd = CMD_VSCROLL;
+	vid_data = scroll_pos << 3;
+	vid_data = 0;
 }
 
 void ma_scroll_down(void)
 {
-        if (scroll_pos == 0)
-                scroll_pos = 29;
-        else
-                scroll_pos--;
-        vid_cmd = CMD_VSCROLL;
-        nap();
-        vid_data = scroll_pos << 3;
-        nap();
-        vid_data = 0;
-        nap();
+	if (scroll_pos == 0)
+		scroll_pos = 29;
+	else
+		scroll_pos--;
+	vid_cmd = CMD_VSCROLL;
+	vid_data = scroll_pos << 3;
+	vid_data = 0;
 }
 
 /* Console 0 is the left of the expanded tile map
    Console 1 is the right */
 void macca_set_output(void)
 {
-        if (outputtty == 2)
-                con_xbias = 40;
-        else
-                con_xbias = 0;
+	if (outputtty == 2)
+		con_xbias = 40;
+	else
+		con_xbias = 0;
 }
- 
-/* TODO */          
-void macca_set_shown(void)
+
+void ma_set_console(void)
 {
-        vid_cmd = CMD_HSCROLL;
-        nap();
-        if (outputtty == 2) {
-            vid_data = 320 & 0xFF;
-            nap();
-            vid_data = 320 >> 8;
-            nap();
-        } else {
-            vid_data = 0;
-            nap();
-            vid_data = 0;
-            nap();
-        }
+	vid_cmd = CMD_HSCROLL;
+	if (outputtty == 2) {
+		vid_data = 320 & 0xFF;
+		vid_data = 320 >> 8;
+	} else {
+		vid_data = 0;
+		vid_data = 0;
+	}
 }
 
 /* Should be in discard... */
-
-__sfr __banked __at 0x6BB8 pio_c;
+/*__sfr __at 0x6A pioa_c; */
 
 /* 320 x 240 40 x 30 */
 uint8_t macca_init(void)
 {
-        uint8_t *p;
-        unsigned n = 0;
-        unsigned i;
+	uint8_t *p;
+	unsigned n = 0;
+	unsigned i;
 
-#ifdef CONFIG_RC2014_EXTREME
-        /* PropGFX using GPIO for ready signalling so we need to
-           do a quick set up on PIOB before the main setup happens */
-        pio_c = 0xCF;	/* Mode 3 */
-        pio_c = 0xFF;	/* All input at boot */
-        pio_c = 0x07;	/* No interrupt, no mask */
+	vid_cmd = CMD_MODE;
+	vid_data = 0x80;	/* 320x240 double tilewidth */
+	vid_data = 0x00;
+	vid_data = 0x00;
 
-        /* But at least it lets us autodetect a bit */
-        if ((vid_pio & 0x40) == 0)
-            return 0;
-        vid_cmd = CMD_MODE;
-        if (vid_pio & 0x40)	/* Should be showing halted now */
-            return 0;
-#else
-        vid_cmd = CMD_MODE;
-#endif
-        nap();
-        vid_data = 0x80;	/* 320x240 double tilewidth */
-        nap();
-        vid_data = 0x00;
-        nap();
-        vid_data = 0x00;
-        nap();
+	/* Mode change is really slow and the device won't
+	   talk to us until it is back */
+	for (i = 0; i < 50000; i++);
+	for (i = 0; i < 50000; i++);
 
-        /* Sanity check */
-        vid_cmd = CMD_TILEBITS;
-        nap();
-        vid_data = 0x00;
-        nap();
-        vid_data = 0x00;
-        nap();
-        for (i = 0; i < 64; i++) {
-            vid_data = 0xAA;
-            nap();
-        }
+	vid_cmd = CMD_TILEBITS;
+	vid_data = 0x00;
+	vid_data = 0x00;
+	/* Set entry 0 to invisible */
+	for (i = 0; i < 64; i++) {
+		vid_data = 0x01;
+	}
+	/* Set entry 1 to a cursor */
+	for (i = 0; i < 64; i++) {
+		vid_data = 0xFC;
+	}
 
-        /* Load the font */
-        p = fontdata_6x8;
-        vid_cmd = CMD_TILEBITS;
-        nap();
-        /* We only load 32 to 127 */
-        vid_data = 0x00;
-        nap();
-        vid_data = 0x08;	/* 2K in */
-        nap();
+	/* Load the font */
+	p = fontdata_6x8;
+	vid_cmd = CMD_TILEBITS;
+	/* We only load 32 to 127 */
+	vid_data = 0x00;
+	vid_data = 0x08;	/* 2K in */
 
-        while(n++ < 768) {
-                uint8_t i;
-                uint8_t b = *p++;
-                /* Expand each pixel row into a tile row of 8 bytes */
-                for (i = 0; i < 8; i++) {
-                        if (b & 0x80)
-                                vid_data = 0xFF;
-                        else
-                                vid_data = 0x00;
-                        nap();
-                        b <<= 1;
-                }
-        }
-        return 1;
+	while (n++ < 768) {
+		uint8_t i;
+		uint8_t b = *p++;
+		/* Expand each pixel row into a tile row of 8 bytes */
+		for (i = 0; i < 8; i++) {
+			if (b & 0x80)
+				vid_data = 0xFC;
+			else
+				vid_data = 0x08;
+			b <<= 1;
+		}
+	}
+	ma_clear_lines(0, 30);
+	return 1;
 }
 
-/* TODO: UDG and font loading ioctl support */
-/* TODO: sprites ioctls */
-/* TODO: mode setting ioctls */
 
 void ma_setoutput(uint_fast8_t minor)
- {
+{
 	vt_save(&ttysave[outputtty - 1]);
 	outputtty = minor;
 	curvid = VID_MACCA;
@@ -282,16 +237,64 @@ void ma_setoutput(uint_fast8_t minor)
 	vt_load(&ttysave[outputtty - 1]);
 }
 
+static struct videomap ma_map = {
+	0,
+#ifdef CONFIG_RC2014_EXTREME
+	0x40B8,
+#else
+	0x40,
+#endif
+	0, 0,
+	0, 0,
+	2,
+	MAP_PIO
+};
+
+static struct display ma_mode[1] = {
+	{
+	 0,
+	 40, 30,
+	 40, 30,
+	 255, 255,
+	 FMT_TEXT,
+	 HW_PROPGFX,
+	 GFX_MAPPABLE | GFX_TEXT,
+	 0,
+	 0,
+	 40, 30 }
+};
+
+/* TODO: UDG and font loading ioctl support */
+/* TODO: sprites ioctls */
+
+int ma_ioctl(uint8_t minor, uarg_t arg, char *ptr)
+{
+	uint8_t c;
+	switch (arg) {
+	case GFXIOC_GETINFO:
+		return uput(&ma_mode, ptr, sizeof(struct display));
+	case GFXIOC_MAP:
+		return uput(&ma_map, ptr, sizeof(struct videomap));
+	case GFXIOC_UNMAP:
+		return 0;
+	}
+	return vtzx_ioctl(minor, arg, ptr);
+}
+
 static void macca_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	irqflags_t irq = di();
 
-/* TODO	if (outputtty != minor)
-		ma_setoutput(minor); */
-	irqrestore(irq);
+	if (outputtty != minor)
+		ma_setoutput(minor);
+
+	/* We have a single command stream so we need to
+	   send each block uninterrupted. As we are so fast
+	   anyway just keep interrupts off during the I/O */
 	curvid = VID_MACCA;
 	if (!vswitch)
 		vtoutput(&c, 1);
+	irqrestore(irq);
 }
 
 static void macca_setup(uint8_t minor)
@@ -301,17 +304,16 @@ static void macca_setup(uint8_t minor)
 
 static uint8_t macca_intr(uint8_t minor)
 {
-        return 1;
+	return 1;
 }
 
 static ttyready_t macca_writeready(uint8_t minor)
 {
-        return TTY_READY_NOW;
+	return TTY_READY_NOW;
 }
 
-
 struct uart macca_uart = {
-	macca_intr,			/* TODO */
+	macca_intr,		/* TODO */
 	macca_writeready,
 	macca_putc,
 	macca_setup,

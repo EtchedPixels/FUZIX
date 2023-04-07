@@ -1,5 +1,7 @@
 /*
  *	EF9345 Video.
+ *	TODO: cursor on/off
+ *	Maybe multi-con (but it's horrible)
  */
 
 #include <kernel.h>
@@ -193,7 +195,7 @@ void ef9345_colour(uint16_t cpair)
 
 static struct videomap ef_map = {
 	0,
-	0x42,
+	0x44,
 	0, 0,
 	0, 0,
 	2,
