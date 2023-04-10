@@ -94,7 +94,7 @@ void ma_cursor_on(int8_t y, int8_t x)
 		vid_data = x << 3;
 		vid_data = y << 3;
 		vid_data = 1;	/* For testing */
-		if (x & 0x80)
+		if (x > 31)
 			vid_data = 1;
 		else
 			vid_data = 0;
@@ -191,12 +191,12 @@ uint8_t macca_init(void)
 	vid_cmd = CMD_TILEBITS;
 	vid_data = 0x00;
 	vid_data = 0x00;
-	/* Set entry 0 to invisible */
-	for (i = 0; i < 64; i++) {
+	/* Set entry 0 and most of entry 1 to invisible */
+	for (i = 0; i < 112; i++) {
 		vid_data = 0x01;
 	}
-	/* Set entry 1 to a cursor */
-	for (i = 0; i < 64; i++) {
+	/* Set the bottom of entry 1 to a cursor */
+	while(i++ < 128) {
 		vid_data = 0xFC;
 	}
 
