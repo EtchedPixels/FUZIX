@@ -16,7 +16,7 @@ static uint8_t bank4[16384];
 static uint8_t bank6[16384];
 static uint8_t bank7[16384];
 
-static uint8_t header[86];
+static uint8_t header[88];
 static uint8_t blkhdr[3] = { 0xFF, 0xFF, 0x00 };
 
 static void write_buf(char *name, int fd, uint8_t *buf, int len)
