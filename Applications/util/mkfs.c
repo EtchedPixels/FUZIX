@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
     struct stat statbuf;
     int option;
 
-    while( (option=getopt( argc, argv, "f" ))>0 ){
+    while((option = getopt(argc, argv, "f")) != -1) {
 	    switch( option ){
 	    case 'f':
 		    fast=1;
@@ -188,7 +188,8 @@ int main(int argc, char *argv[])
 	    }
     }
 
-    if (argc-optind < 3) printopts();
+    if (argc-optind < 3)
+        printopts();
     
     
     if (stat(argv[optind], &statbuf) != 0) {
