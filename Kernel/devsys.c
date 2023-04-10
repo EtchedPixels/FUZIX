@@ -67,10 +67,6 @@ int sys_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 	case 5:
 		return plt_rtc_read();
 #endif
-#ifdef CONFIG_DEV_I2C
-	case 7:
-		return devi2c_read();
-#endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:
 		return netdev_read(flag);
@@ -110,10 +106,6 @@ int sys_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 	case 5:
 		return plt_rtc_write();
 #endif
-#ifdef CONFIG_DEV_I2C
-	case 7:
-		return devi2c_write();
-#endif
 #ifdef CONFIG_NET_NATIVE
 	case 65:
 		return netdev_write(flag);
@@ -140,6 +132,10 @@ int sys_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 #ifdef CONFIG_DEV_PLATFORM
 	if (minor == 6)
 		return plt_dev_ioctl(request, data);
+#endif
+#ifdef CONFIG_DEV_I2C
+	if (minor == 7)
+		return devi2c_ioctl(request, data);
 #endif
 #ifdef CONFIG_DEV_GPIO
 	if (minor == 8)
