@@ -16,6 +16,7 @@
 #include <ps2mouse.h>
 #include <graphics.h>
 #include <devlpr.h>
+#include <pcf8584.h>
 #include "z180_uart.h"
 #include "multivt.h"
 
@@ -669,6 +670,10 @@ void pagemap_init(void)
 	/* We can finally turn on the VDP interrupt if we are using it */
 	if (timer_source == TIMER_TMS9918A)
 		tms9918a_reload();
+#ifdef CONFIG_DEV_I2C
+	/* Fast systems will have a separate clock on the board */
+	pcf8584_init(PCF_CLK_8MHZ);
+#endif
 }
 
 void map_init(void)

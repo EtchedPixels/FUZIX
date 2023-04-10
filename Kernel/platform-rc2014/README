@@ -131,7 +131,8 @@ I/O Port Settings For Fuzix
 0x02		Joystick 1
 0x03		Free
 0x04		Z80DMA
-0x05-0x07	Free
+0x05		Free
+0x06-0x07	I2C
 [0x08-0x0B	Shared memory interface - user only]
 0x0C-0x0F	82C55 Printer Port (MG014)	|	DS1302 (Z180)
 0x10-0x17	IDE CF
@@ -151,7 +152,7 @@ I/O Port Settings For Fuzix
 0x64		PS/2				|	Z80PIO
 0x65-0x67	Free				|	Z80PIO
 0x68-0x6B	Z80 PIO/Gluino (and SD card)
-0x6C-0x6F	I2C
+0x6C-0x6F	Z80 second PIO			| 	Z80 PIO2 suggested
 0x70-0x7F	MMU
 0x80-0x83	Z80 SIO				|	KIO
 0x84-0x87	Z80 SIO				|	KIO
@@ -200,7 +201,7 @@ RTC				C08B
 Sound (AY-3-8910, TODO)		D0/D8B8
 MG ZIP/Lpr			0C-0FB8
 PropGFX Video			40-43B8	(with link for halt)
-
+I2C				06B8/07B8
 
 Things To Note When Modifying
 

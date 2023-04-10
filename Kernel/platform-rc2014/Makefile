@@ -1,7 +1,7 @@
 ASRCS = crt0.s tricks.s commonmem.s rc2014.s monitor.s usermem.s vdp1.s soft81.s
 CSRCS = devices.c main.c devtty.c ide.c sd.c ps2.c video-tms9918a.c
 CSRCS += devinput.c devgpio.c wiznet.c devlpr.c video-macca.c video-ef9345.c multivt.c
-CSRCS += softzx81.c
+CSRCS += softzx81.c i2c.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
 DISCARD_DSRCS += ../dev/devsd_discard.c
@@ -9,7 +9,7 @@ DSRCS = ../dev/devfd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
 DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c ../dev/devsd.c
 DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/amd9511.c
 DSRCS += ../dev/ds12885.c ../dev/ds12885_z80.c
-DSRCS += ../dev/devppa.c
+DSRCS += ../dev/devppa.c ../dev/devi2c.c ../dev/pcf8584.c
 DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rcbus.s
 DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
 DASRCS += ../dev/ps2bitbang-rcbus-kbd.s ../dev/ps2bitbang-rcbus-mouse.s

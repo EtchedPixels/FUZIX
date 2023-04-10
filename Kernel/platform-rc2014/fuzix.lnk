@@ -88,4 +88,7 @@ platform-rc2014/amd9511.rel
 platform-rc2014/devlpr.rel
 platform-rc2014/soft81.rel
 platform-rc2014/softzx81.rel
+platform-rc2014/devi2c.rel
+platform-rc2014/pcf8584.rel
+platform-rc2014/i2c.rel
 -e
