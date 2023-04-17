@@ -15,6 +15,7 @@
 ;
 ;	Set up the Z180 timers, interrupt table etc
 ;
+	.area	_CODE1
 
 _z180_setup:
 	ld e,l		; save timer flag
