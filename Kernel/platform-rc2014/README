@@ -202,6 +202,8 @@ Sound (AY-3-8910, TODO)		D0/D8B8
 MG ZIP/Lpr			0C-0FB8
 PropGFX Video			40-43B8	(with link for halt)
 I2C				06B8/07B8
+KIO				C0-DF (on main bus clocked by CPU clock)
+EF9345				44B8/46B8
 
 Things To Note When Modifying
 

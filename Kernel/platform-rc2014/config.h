@@ -7,6 +7,7 @@
 /* Set one of these according to the card type you have */
 /*#define CONFIG_RC2014_NET_W5100 */	/* W5100 module carrier */
 #define CONFIG_RC2014_NET_W5300 /* W5300 module carrier */
+/* TODO: bitbang SPI W5x00 */
 /* Set this if you have the 8255 IDE adapter */
 #define CONFIG_RC2014_PPIDE
 /* Set this if you have the floppy interface */
@@ -16,19 +17,10 @@
 /* Do not set this unless you have the propellor graphics card installed
    and with non TMS9918A firmware as it can't be probed so will be assumed */
 #define CONFIG_RC2014_PROPGFX
-/* Below is a work in progress not yet fully merged .. */
+/* Below is a work in progress */
 /* Set this if using a bus extender. This then builds a special kernel
-   that expects the following to be on the bus extender instead
-   - RTC	0xC0B8
-   - Joystick	0x01B8, 0x02B8
-   - PS/2	0x60B4, 0x64B8
-   - WIZNET	0x28B8/29/2A/2BB8
-   - DS12885	0xC0B8
-   - I2C	One running
-   - Analog sticks Once running
-   - Sound TBD
-   - SPI	0x68B8-6BB8
-   - TODO: propello graphics to 0x40-42B8
+   for big systems that has some cards on a bus extender. See README. Do not
+   set for a "normal" RC2014 system.
  */
 #define CONFIG_RC2014_EXTREME
 
@@ -162,7 +154,7 @@ extern uint16_t swap_dev;
 #define CONFIG_PLATFORM_UDMA
 /* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
-/* Font for the TMS9918A */
+/* Font for the TMS9918A and PropGfx */
 #define CONFIG_FONT6X8
 /* Indirect queues so we can have lots of tty devices */
 #define CONFIG_INDIRECT_QUEUES
