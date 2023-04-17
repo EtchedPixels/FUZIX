@@ -52,7 +52,7 @@ image:
 	# Build an esxdos friendly setup
 	sdasz80 -o load-esx.s
 	sdldz80 -i load-esx.rel
-	makebin -s 8704 load-esx.ihx load-esx.tmp
+	makebin -s 16384 load-esx.ihx load-esx.tmp
 	# Generate the image file we need
 	dd if=load-esx.tmp of=FUZIX bs=8192 skip=1
 

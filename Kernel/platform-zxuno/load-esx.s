@@ -3,14 +3,14 @@
 ;	that we don't blow ourselves up.
 ;
 
-	.area _BOOT(ABS)
-	.org 0x2000
+	.area	_BOOT(ABS)
+	.org	0x2000
 
 	; We get run with a valid SP but it's lurking in high space so
 	; move sp for banking.
 
 start:
-	ld (escape),sp
+	ld	(escape),sp
 	;
 	;	48K and 128K ROM differ at this address
 	;
@@ -65,6 +65,7 @@ is_uno:
 
 	ld	bc,#0xfc3b
 
+	; Devcontrol
 	ld	a,#0x0E
 	out	(c),a
 	inc	b
@@ -73,12 +74,16 @@ is_uno:
 	out	(c),a
 	dec	b
 
+	; Devctrl2
 	ld	a,#0x0F
 	out	(c),a
 	inc	b
 	in	a,(c)
-	and	#0xF0
-	out	(c),a
+	and	#0xF0		; Ensure spectrum, adastan, timex,ulapls
+	out	(c),a		; enabled
+
+	jr	skip
+
 
 	dec	b
 	xor	a
@@ -98,6 +103,7 @@ is_uno:
 	or	#0x80
 	out	(c),a
 
+skip:
 	di
 	ld	bc,#0x7FFD
 	xor	a
@@ -126,6 +132,49 @@ paging_ok:
 	out	(c),a
 	ld	(hl),d
 
+	xor	a
+	out	(0xFF),a
+	in	a,(0xFF)
+	or	a
+	jr	nz, dock_bust
+	ld	hl,#0x4000
+	ld	(hl),#1
+	ld	a,#0x04
+	out	(0xF4),a
+	ld	(hl),a
+	xor	a
+	out	(0xF4),a
+	ld	a,(hl)
+	dec	a
+	jr	nz, dock_bust
+
+	ld	a,#0x80
+	out	(0xFF),a
+	in	a,(0xFF)
+	cp	#0x80
+	jr	nz, exrom_bust
+
+	ld	(hl),#1
+	ld	a,#0x04
+	out	(0xF4),a
+	ld	(hl),a
+	xor	a
+	out	(0xF4),a
+	ld	a,(hl)
+	dec	a
+	jr	z, exrom_ok
+exrom_bust:
+	xor	a
+	out	(0xF4),a
+	ld	hl,#badexrom
+	jp	fail
+dock_bust:
+	xor	a
+	out	(0xF4),a
+	ld	hl,#baddock
+	jp	fail
+
+exrom_ok:
 	ld	sp,#0x8000	; bank 5 which isn't going to get stomped yet
 	xor	a
 	rst	8
@@ -149,24 +198,24 @@ paging_ok:
 	; DIVMMC 16K, 5, 2, 3
 
 	; Target for 0-3FFF	- will end up over ESX in a bit
-	ld a,#0x04		; 16K for 0000-3FFF into bank 4
-	call load16k
+	ld	a,#0x04		; 16K for 0000-3FFF into bank 4
+	call	load16k
 
 	; Target for 4000-7FFF	- bounce this into place at the end
-	ld a,#0x07		; 16K for 4000-7FFF into bank 7
-	call load16k
+	ld	a,#0x07		; 16K for 4000-7FFF into bank 7
+	call	load16k
 
 	; Target for 8000-BFFF
-	ld a,#0x02		; 16K for 8000-BFFF into bank 2
-	call load16k
+	ld	a,#0x02		; 16K for 8000-BFFF into bank 2
+	call	load16k
 
 	; Target for C000-FFFF
-	ld a,#0x03		; 16K for C000-FFFF into bank 3
-	call load16k
+	ld	a,#0x03		; 16K for C000-FFFF into bank 3
+	call	load16k
 
-	ld a,(handle)
-	rst 8
-	.db 0x9B
+	ld	a,(handle)
+	rst	8
+	.db	 0x9B
 
 
 	;	Now we play ZX Uno mapping magic games
@@ -243,13 +292,19 @@ notuno:
 	.ascii "Wrong kernel. ZX-Uno required"
 	.db	13,0
 paging:
-	.ascii "Upper paging fail"
+	.ascii	"Upper paging fail"
+	.db	13,0
+badexrom:
+	.ascii	"EXROM not functional"
+	.db	13,0
+baddock:
+	.ascii	"DOCK not functional"
 	.db	13,0
 ohpoo:
 	.ascii	'Unable to load Fuzix image'
 	.db	13,0
 filename:
-	.asciz 'FUZIX.BIN'
+	.asciz	'FUZIX.BIN'
 handle:
 	.db 0
 drive:
