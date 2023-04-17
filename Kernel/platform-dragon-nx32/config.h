@@ -39,6 +39,7 @@
 #define CONFIG_VT
 #define CONFIG_VT_MULTI
 #define CONFIG_FONT8X8
+#define CONFIG_FONT8X8SMALL
 /* Vt definitions */
 #define VT_RIGHT	(vt_tright[curtty])
 #define VT_BOTTOM	(vt_tbottom[curtty])

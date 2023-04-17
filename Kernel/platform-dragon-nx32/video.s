@@ -67,7 +67,8 @@ _m6847_plot_char:
 	rolb
 	rola
 	tfr d,x
-	leax _fontdata_8x8,x		; relative to font
+	leax _fontdata_8x8-256,x
+; relative to font
 	ldb _vtattr
 	andb #0x3F		; drop the bits that don't affect our video
 	beq plot_fast
