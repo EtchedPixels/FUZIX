@@ -806,6 +806,10 @@ typedef struct {
  */
 
 /*
+ *	RTC ioctls 0x050x (see rtc.h)
+ */
+
+/*
  *	Input ioctls 0x052x (see input.h)
  */
 
@@ -813,8 +817,9 @@ typedef struct {
  *	GPIO ioctls 0x053x (see gpio.h)
  */
 
+
 /*
- *	RTC ioctls 0x053x (see rtc.h)
+ *	I2C ioctls 0x054x
  */
 
 /*
