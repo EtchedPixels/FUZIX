@@ -13,8 +13,13 @@
 #include "printf.h"
 #include "multivt.h"
 
+#ifdef CONFIG_RC2014_EXTREME
+__sfr __at 0x44B8 reg;
+__sfr __at 0x46B8 data;
+#else
 __sfr __at 0x44	reg;
 __sfr __at 0x46 data;
+#endif
 
 static uint8_t scrollpos;
 static uint8_t ef_mode;

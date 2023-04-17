@@ -45,11 +45,11 @@ extern uint8_t ps2mouse_present;
 extern uint8_t sc26c92_present;
 extern uint8_t u16x50_present;
 extern uint8_t z512_present;
-extern uint8_t kio_present;
 extern uint8_t eipc_present;
 extern uint8_t macca_present;
 
 extern uint8_t ctc_port;
+extern uint8_t kio_port;
 extern uint8_t ticksperclk;	/* CTC scaling from CTC3 counts to 10Hz */
 
 extern uint8_t timer_source;

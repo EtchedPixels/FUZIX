@@ -45,7 +45,7 @@
 	.globl null_handler
 	.globl _acia_present
 	.globl _ctc_port
-	.globl _kio_present
+	.globl _kio_port
 	.globl _sio_present
 	.globl _sio1_present
 	.globl _u16x50_present
@@ -87,9 +87,11 @@ SIOD_D		.EQU	SIOC_C+3
 
 
 ; SIO arrangement on the KIO chip
-
 KIOA_C		.EQU	0x89
 KIOB_C		.EQU	0x8B
+; SIO arrangement on Extreme build KIO at 0xC0
+EKIOA_C		.EQU	0xC9
+EKIOB_C		.EQU	0xCB
 
 EIPCSA_C	.EQU	0x19
 EIPCSB_C	.EQU	0x1B
@@ -156,10 +158,10 @@ not_eipc:
 
 	ld c,#0x84
 	call check_ctc
-	jr nz, not_kio
+	jr nz, not_kio80
 
-	ld a,#1
-	ld (_kio_present),a
+	ld a,#0x80
+	ld (_kio_port),a
 
 	ld hl,#sio_setup
 	ld bc,#0xA00 + KIOA_C		; 10 bytes to SIOA_C
@@ -170,7 +172,23 @@ not_eipc:
 
 	jp probe_cpu
 
-not_kio:
+not_kio80:
+	ld c,#0xc4
+	call check_ctc
+	jr nz, not_kioc0
+
+	ld a,#0xC0
+	ld (_kio_port),a
+	ld hl,#sio_setup
+	ld bc,#0xA00 + EKIOA_C		; 10 bytes to SIOA_C
+	otir
+	ld hl,#sio_setup
+	ld bc,#0x0A00 + EKIOB_C		; and to SIOB_C
+	otir
+
+	; Fall through as the C0 KIO ports are not seem by ROMWBW
+	; so are not our console device.
+not_kioc0:
 
 	; Play guess the serial port
 

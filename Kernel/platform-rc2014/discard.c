@@ -322,8 +322,8 @@ void init_hardware_c(void)
 		shadowcon = 1;
 	}
 
-	/* The TMS9918A and KIO clash */
-	if (!kio_present) {
+	/* The TMS9918A and KIO at 0x80 clash */
+	if (kio_port != 0x80) {
 		tms9918a_present = probe_tms9918a();
 		if (tms9918a_present) {
 			tms9918a_reload();
@@ -358,7 +358,7 @@ void init_hardware_c(void)
 		register_uart(0x18, &eipc_uart);
 		register_uart(0x1A, &eipc_uart);
 	}
-	if (kio_present) {
+	if (kio_port == 0x80) {
 		register_uart(0x88, &kio_uart);
 		register_uart(0x8C, &kio_uart);
 	}
@@ -632,11 +632,23 @@ void pagemap_init(void)
 	}
 	/* The PropGfx and FPU clash, or at least the non extreme version.If
 	   we do an extreme propgfx setup on 16bit I/O we can sort this TODO */
+#ifndef CONFIG_RC2014_EXTREME
 	if (!macca_present && fpu_detect())
+#else
+	if (fpu_detect())
 		kputs("AMD9511 FPU at 0x42\n");
+#endif
+	/* At 0xC0 the KIO is registered later as it won't be the system
+	   console. This will need to change if RomWBW changes */
+	if (kio_port == 0xC0) {
+		register_uart(0xC8, &kio_uart);
+		register_uart(0xCC, &kio_uart);
+	}
 	/* Devices in the C0-FF range cannot be used with Z180 */
 	if (!z180_present) {
 		i = 0xC0;
+		if (kio_port == 0xC0)
+			i = 0xE0;
 		while(i) {
 			if (
 #ifdef CONFIG_RTC_DS1302

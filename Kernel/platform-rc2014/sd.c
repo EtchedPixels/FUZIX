@@ -16,6 +16,9 @@
  *	4: CLK
  *	3: \CS card 0
  *	0: MOSI
+ *
+ *	TODO: we should allow for SD cards on the 0xC0 KIO if present on
+ *	an extreme build ?
  */
 
 uint16_t pio_c;
@@ -24,7 +27,7 @@ void pio_setup(void)
 {
     spi_piostate = 0xE0;
 
-    if (kio_present) {
+    if (kio_port == 0x80) {
       pio_c = 0x83;
       spi_port = 0x82;
     } else if (eipc_present) {

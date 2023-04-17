@@ -51,7 +51,7 @@ static struct gpio pioinfo[NUM_GPIO] = {
 
 #ifdef CONFIG_RC2014_EXTREME
 static uint16_t portmap[] = {
-    0x68B8, 0x69B8, 0x6CB8, 0x6DB8, 0xFF, 0x00, 0x00, 0x80, 0x82
+    0x68B8, 0x69B8, 0x6CB8, 0x6DB8, 0xFF, 0x00, 0x00, 0xC0, 0xC2
 };
 #else
 static uint8_t portmap[] = {
@@ -66,7 +66,7 @@ int gpio_ioctl(uarg_t request, char *data)
     static struct gpioreq gr;
     uint8_t num_pins = NUM_GPIO * 8 ;
 
-    if (!kio_present)
+    if (!kio_port)
         num_pins -= 16;
 
     /* No autodetect so always report the possible max */

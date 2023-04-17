@@ -18,6 +18,7 @@ extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
 
 uint8_t ctc_port;
+uint8_t kio_port;		/* 0 means none */
 
 uint8_t sio_present;
 uint8_t sio1_present;
@@ -34,7 +35,6 @@ uint8_t sc26c92_present;
 uint8_t u16x50_present;
 uint8_t z512_present = 1;	/* We assume so and turn it off if not */
 uint8_t fpu_present;
-uint8_t kio_present;
 uint8_t eipc_present;
 uint8_t macca_present;
 
