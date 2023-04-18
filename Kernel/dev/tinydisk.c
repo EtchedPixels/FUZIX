@@ -39,7 +39,8 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	else if (rawflag == 2)
 		td_page = swappage;
 #else
-	else goto error;
+	else if (rawflag == 2)
+		goto error;
 #endif
 
 	lba = udata.u_block;
