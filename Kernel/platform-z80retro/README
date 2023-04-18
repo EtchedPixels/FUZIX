@@ -24,8 +24,9 @@ Or banked with Wiznet 5500 on an SD
 Boot
 
 The ROM is a bit peculiar. It ignores PC partitioning type rules and just
-splats its own boot magic there. Might be better to port RomWBW but for
-now we just make ourselves our own ROM image instead.
+splats its own boot magic there. Version 2 keeps the tables clear of the
+partition block itself so can now be handled. We support booting off
+the dev tree RomWBW for this board. The native firmware is not yet supported.
 
 There is no swap - it's doable easily enough but there's enough RAM for a
 single user setup easily and swap would be painful as well as really needing

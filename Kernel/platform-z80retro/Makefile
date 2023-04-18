@@ -48,7 +48,7 @@ image: bootblock
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~
-	rm -f fuzix.rom
+	rm -f fuzix.romwbw boot-romwbw.tmp
 
 #
 #	Compile up the boot block
