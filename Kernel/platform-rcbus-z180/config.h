@@ -83,3 +83,4 @@ extern uint16_t swap_dev;
 
 /* I2C device */
 #define CONFIG_DEV_I2C
+#define CONFIG_I2C_BITBANG

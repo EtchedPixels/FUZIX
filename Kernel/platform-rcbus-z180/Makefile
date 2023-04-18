@@ -1,10 +1,10 @@
 ASRCS = crt0.s z180.s commonmem.s rcbus-z180.s monitor.s
-CSRCS += devices.c main.c devtty.c spi.c devi2c.c wiznet.c #devenc28j60.c
+CSRCS += devices.c main.c devtty.c spi.c i2c.c wiznet.c #devenc28j60.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/ds1302_discard.c ../dev/tinysd_discard.c
 DISCARD_DSRCS += ../dev/tinydisk_discard.c
 DSRCS = ../dev/tinyide.c ../dev/ds1302.c ../dev/tinydisk.c
-DSRCS += ../dev/tinysd.c ../dev/i2c.c ../dev/i2c_bitbang.c
+DSRCS += ../dev/tinysd.c ../dev/devi2c.c ../dev/i2c_bitbang.c
 DASRCS = ../dev/ds1302_rcbus_z180.s #../dev/z80softspi.s
 NSRCS = ../dev/net/net_w5x00.c
 #NSRCS = ../dev/net/enc28j60.c ../dev/net/net_native.c

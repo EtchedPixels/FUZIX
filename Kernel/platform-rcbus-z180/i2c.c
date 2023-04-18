@@ -10,6 +10,7 @@
 #include <rcbus-z180.h>
 #include <ds1302.h>
 #include <i2c.h>
+#include <i2c_bitbang.h>
 
 __sfr __at 0x0C i2c;
 
@@ -60,4 +61,14 @@ void i2c_release_bus(uint_fast8_t bus)
 {
     used(bus);
     rtc_defer = 0;
+}
+
+int plt_i2c_msg(struct i2c_msg *m, uint8_t *kbuf)
+{
+    if (m->bus)
+        return -ENODEV;
+    if (m->addr & 1)
+        i2c_bb_receive(m->bus, m->addr, kbuf, m->len);
+    else
+        i2c_bb_send(m->bus, m->addr, kbuf, m->len);
 }

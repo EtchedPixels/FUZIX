@@ -49,9 +49,9 @@ platform-rcbus-z180/monitor.rel
 platform-rcbus-z180/ds1302.rel
 platform-rcbus-z180/ds1302_discard.rel
 platform-rcbus-z180/ds1302_rcbus_z180.rel
-platform-rcbus-z180/i2c.rel
 platform-rcbus-z180/i2c_bitbang.rel
 platform-rcbus-z180/devi2c.rel
+platform-rcbus-z180/i2c.rel
 platform-rcbus-z180/net_w5x00.rel
 platform-rcbus-z180/wiznet.rel
 -e
