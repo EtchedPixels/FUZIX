@@ -90,7 +90,8 @@ bootit:
 	ld e, #55		; takes us up to F100. If that's not enough
 				; before unpack we have a problem as we
 				; will need to move the loader
+
+	; Enter in the ROM mapping (3C 3D 3E 3F)
 	rst 8
 	jp 0x0100
-
 	

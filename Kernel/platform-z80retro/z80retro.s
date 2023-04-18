@@ -62,11 +62,44 @@ RTS_HIGH	.EQU	0xE8
 RTS_LOW		.EQU	0xEA
 
 ;=========================================================================
+; Vector init table - only needed at boot
+;=========================================================================
+
+	.area _DISCARD
+vectortab:
+; 0xXXE0: Our IM2 table
+	.word	spurious
+	.word	spurious
+	.word	spurious
+	.word	interrupt_handler	; CTC 3 - timer tick
+	.word	0
+	.word	0
+	.word	0
+	.word	0
+; 0xxxF0 SIO
+	.word	siob_txd
+	.word	siob_status
+	.word	siob_rx_ring
+	.word	siob_special
+	.word	sioa_txd
+	.word	sioa_status
+	.word	sioa_rx_ring
+	.word	sioa_special
+
+	.area	_VECTORS
+vectors:
+
+;=========================================================================
 ; Initialization code
 ;=========================================================================
         .area _DISCARD
 init_hardware:
-        ; program vectors for the kernel
+        ;	Install IM2 vector table
+	ld	hl,#vectortab
+	ld	de,#vectors
+	ld	bc,#32
+	ldir
+
         ld hl, #0
         push hl
         call _program_vectors
@@ -109,7 +142,7 @@ init_hardware:
 	;	at either clock or clock / 2 and not linked to the
 	;	CTC ports.CPU clock is 14.74MHz.
 	;
-	ld a,#0x80
+	ld a,#0xE0
 	out (CTC_CH0),a		; set the CTC vector
 
 	ld a,#0xA7		; CPU clock / 256, interrupts on
@@ -124,10 +157,11 @@ init_hardware:
         ; Done CTC Stuff
         ; ---------------------------------------------------------------------
 
-	xor a
-	ld i,a
-	im 2				; set Z80 CPU interrupt mode 2
-        jp _init_hardware_c             ; pass control to C, which returns for us
+	ld	hl,#vectors		; Keep linker mappy
+	ld	a,h
+	ld	i,a
+	im	2			; set Z80 CPU interrupt mode 2
+        jp	_init_hardware_c	; pass control to C, which returns for us
 
 sio_setup:
 	.byte 0x00
@@ -142,7 +176,7 @@ sio_setup:
 	.byte RTS_LOW
 	.byte 0x02
 sio_irqv:
-	.byte 0x90		; IRQ vector (write to port B only)
+	.byte 0xF0		; IRQ vector (write to port B only)
 
 ;=========================================================================
 ; Kernel code
@@ -194,17 +228,10 @@ _program_vectors:
 	ld (hl),#0x00
 	ldir
 
-	; now install the interrupt vector at 0x0038
-
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
 	ld hl,#interrupt_handler
 	ld (0x0039),hl
-
-	; set restart vector for UZI system calls
-	ld (0x0030),a			; rst 30h is unix function call vector
-	ld hl,#unix_syscall_entry
-	ld (0x0031),hl
 
 	ld (0x0000),a
 	ld hl,#null_handler		; to Our Trap Handler
@@ -213,31 +240,6 @@ _program_vectors:
 	ld (0x0066),a			; Set vector for NMI
 	ld hl,#nmi_handler
 	ld (0x0067),hl
-
-	; IM2 vector for the CTC
-	ld hl, #spurious
-	ld (0x80),hl			; CTC vectors
-	ld (0x82),hl
-	ld (0x84),hl
-	ld hl, #interrupt_handler	; Standard tick handler
-	ld (0x86),hl
-
-	ld hl,#siob_txd
-	ld (0x90),hl			; SIO B TX empty
-	ld hl,#siob_status
-	ld (0x92),hl			; SIO B External status
-	ld hl,#siob_rx_ring
-	ld (0x94),hl			; SIO B Receive
-	ld hl,#siob_special
-	ld (0x96),hl			; SIO B Special
-	ld hl,#sioa_txd
-	ld (0x98),hl			; SIO A TX empty
-	ld hl,#sioa_status
-	ld (0x9A),hl			; SIO A External status
-	ld hl,#sioa_rx_ring
-	ld (0x9C),hl			; SIO A Received
-	ld hl,#sioa_special
-	ld (0x9E),hl			; SIO A Special
 
 	jr map_kernel
 
@@ -369,7 +371,7 @@ _copy_common:
 	jr map_kernel
 
 
-; MPGSEL registers are read only, so their content is cached here
+; MPGSEL registers are write only, so their content is cached here
 mpgsel_cache:
 	.db	0,0,0
 top_bank:	; the shared tricks code needs this name for cache+3
@@ -377,7 +379,7 @@ top_bank:	; the shared tricks code needs this name for cache+3
 
 ; kernel page mapping
 _kernel_pages:
-	.db	0,1,32,33
+	.db	0x3C,0x3D,0x3E,0x3F
 
 ; memory page mapping save area for map_save/map_restore
 map_savearea:

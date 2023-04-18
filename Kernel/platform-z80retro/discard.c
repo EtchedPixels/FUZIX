@@ -15,18 +15,16 @@ void init_hardware_c(void)
 	procmem = 512 - 64;
 }
 
+/* Kernel is at 0x3C-0x3F, boot common is at 0x3F */
 void pagemap_init(void)
 {
 	int i;
 
 	/* Add the pages not in use by the kernel */
-	for (i = 36; i < 64; i++)
+	for (i = 0x20; i < 0x3C; i++)
 		pagemap_add(i);
-
 	/* finally add the common area */
-/* 	pagemap_add(32 + 3); */
-	/* Swap this over when we go to all RAM booting from firmware */
-	pagemap_add(33);
+	pagemap_add(0x3F);
 }
 
 void map_init(void)

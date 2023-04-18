@@ -1,7 +1,8 @@
 -mwxuy
 -i fuzix.ihx
--b _CODE=0x0000
+-b _CODE=0x0100
 -b _COMMONMEM=0xF000
+-b _VECTORS=0xFCE0
 -b _SERIAL=0xFD00
 -b _DISCARD=0xC800
 -l z80

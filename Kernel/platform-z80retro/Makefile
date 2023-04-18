@@ -42,18 +42,14 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 $(NOBJS): %.rel: ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-image:
-	dd if=../fuzix.bin of=fuzix.rom bs=524288 conv=sync count=1
+image: bootblock
+	# Attach the kernel to the boot block
+	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~
 	rm -f fuzix.rom
 
-#
-#	Attach the kernel to the boot block
-#
-image:	bootblock
-	cat boot-romwbw.bin ../fuzix.bin >fuzix.romwbw
 #
 #	Compile up the boot block
 #
@@ -76,4 +72,3 @@ diskimage: image
 	dd if=fuzix.romwbw of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
-	cp fuzix.rom $(IMAGES)
