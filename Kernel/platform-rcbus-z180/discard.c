@@ -62,7 +62,12 @@ void map_init(void)
 
 uint8_t plt_param(char *p)
 {
-	used(p);
+#ifdef CONFIG_NET
+	if (strcmp(p, "wiznet") == 0 && systype != 10) {
+		netdev_init();
+		return 1;
+	}
+#endif
 	return 0;
 }
 

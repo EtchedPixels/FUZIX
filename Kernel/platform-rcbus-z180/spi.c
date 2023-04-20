@@ -20,6 +20,8 @@
 #define CSIO_CNTR_RE           (1<<5)   /* receive enable */
 #define CSIO_CNTR_END_FLAG     (1<<7)   /* operation completed flag */
 
+static uint8_t spi_slow[4];
+
 /* the CSI/O and SD card send the bits of each byte in opposite orders, so we need to flip them over */
 static uint8_t reverse_byte(uint8_t byte) __naked
 {
@@ -52,18 +54,13 @@ reverse_byte_a:
 
 void sd_spi_fast(void)
 {
-    CSIO_CNTR &= 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
+    spi_slow[1] = 0;
 }
 
 void sd_spi_slow(void)
 {
-    unsigned char c;
-
-    c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
-    c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
-    CSIO_CNTR = c;
+    spi_slow[1] = 1;
 }
-
 
 void sd_spi_raise_cs(void)
 {
@@ -75,8 +72,18 @@ void sd_spi_raise_cs(void)
 
 void spi_select_port(uint8_t port)
 {
+    uint8_t c;
+
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     gpio_set(0x0C, (~port & 3) << 2);
+
+    if (spi_slow[port]) {
+        c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
+        c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
+        CSIO_CNTR = c;
+    } else {
+        CSIO_CNTR &= 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
+    }
 }
 
 /* SD is on SPI 1 */
@@ -108,9 +115,9 @@ uint8_t sd_spi_receive_byte(void)
     unsigned char c;
 
     /* wait for any current transmit or receive operation to complete */
-    do{
+    do {
         c = CSIO_CNTR;
-    }while(c & (CSIO_CNTR_TE | CSIO_CNTR_RE));
+    } while(c & (CSIO_CNTR_TE | CSIO_CNTR_RE));
 
     /* enable receive operation */
     CSIO_CNTR = c | CSIO_CNTR_RE;
