@@ -31,11 +31,13 @@ mm.rel
 swap.rel
 bankfixed.rel
 tty.rel
+devinput.rel
 devsys.rel
 usermem.rel
 platform-2063/discard.rel
 platform-2063/devtty.rel
 platform-2063/devlpr.rel
+platform-2063/devinput.rel
 platform-2063/tinydisk_discard.rel
 platform-2063/tinydisk.rel
 platform-2063/tinysd_discard.rel

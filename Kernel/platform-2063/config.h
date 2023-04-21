@@ -47,4 +47,8 @@
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
+/* Input device for joysticks */
+
+#define CONFIG_INPUT
+
 #define plt_copyright()

@@ -57,6 +57,7 @@ void plt_interrupt(void)
 {
 	extern uint8_t sd_count;
 	tty_drain_sio();
+	poll_input();
 	/* Handle ticks lost due to SD / GPIO contention */
 	if (sd_count) {
 		while(sd_count) {
