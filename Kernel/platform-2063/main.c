@@ -7,6 +7,7 @@
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 uint16_t ramtop = 0x7E00;
+uint8_t vdptype;
 
 void plt_discard(void)
 {

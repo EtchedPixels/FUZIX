@@ -9,6 +9,7 @@
         .area _CODE
         .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
+	.area _VIDEO
         .area _CONST
 	.area _SERIALDATA
         .area _INITIALIZED
@@ -21,6 +22,7 @@
         .area _BUFFERS     	; _BUFFERS grows to consume all before it (up to KERNTOP)
 	; Discard is loaded where process memory wil blow it away
         .area _DISCARD
+	.area _FONT
 	; The rest grows upwards from C000 starting with the udata so we can
 	; swap in one block, ending with the buffers so they can expand up
         ; note that areas below here may be overwritten by the heap at runtime, so

@@ -29,6 +29,15 @@
 	.globl _sd_busy
 	.globl _sd_count
 
+	; VDP driver
+	.globl _vtinit
+	.globl _vdp_init
+	.globl _vdp_type
+	.globl _vdp_load_font
+	.globl _vdp_restore_font
+	.globl _vdp_wipe_consoles
+	.globl _vdptype;
+
         ; imported symbols
         .globl _ramsize
         .globl _procmem
@@ -68,6 +77,14 @@ init_hardware:
 	ld	(_procmem), hl
 	call	program_kvectors
 	call	sio_install
+
+	call	_vdp_type
+	ld	a,l
+	ld	(_vdptype),a
+	call	_vdp_init
+	call	_vdp_load_font
+	call	_vdp_wipe_consoles
+	call	_vdp_restore_font
 
         ; ---------------------------------------------------------------------
 	; Initialize CTC
@@ -112,6 +129,8 @@ init_hardware:
 	ld	a,h
 	ld	i,a
 	im	2			; set Z80 CPU interrupt mode 1 for now
+
+	call _vtinit			; init the console video
 	ret
 
         .area	_COMMONMEM

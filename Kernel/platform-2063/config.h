@@ -45,6 +45,14 @@
 #define BOOT_TTY (512 + 1)
 #define TTY_INIT_BAUD B9600
 
+#define CONFIG_VT	/* Mirror console onto VDP and provide graphics hooks */
+#define CONFIG_FONT6X8
+/* Vt definitions */
+#define VT_WIDTH	vt_twidth
+#define VT_HEIGHT	24
+#define VT_RIGHT	vt_tright
+#define VT_BOTTOM	23
+
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 /* Input device for joysticks */
@@ -52,3 +60,4 @@
 #define CONFIG_INPUT
 
 #define plt_copyright()
+
