@@ -37,7 +37,7 @@
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
-        .include "../kernel.def"
+        .include "../kernel-rabbit.def"
         .include "kernel.def"
 
         .area _COMMONMEM
@@ -60,7 +60,7 @@ _plt_switchout:
 
 	; Stash the uarea back into process memory
 	call map_process_always
-	ld hl, #U_DATA
+	ld hl, #_udata
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
 l0:
@@ -152,7 +152,7 @@ not_swapped:
 
 	exx			; thank goodness for exx 8)
 	ld hl, #U_DATA_STASH
-	ld de, #U_DATA
+	ld de, #_udata
 	ld bc, #U_DATA__TOTALSIZE
 l1:
 	ldi
@@ -269,7 +269,7 @@ _dofork:
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
 	; changes only affect the child
-	ld hl, #U_DATA		; copy the udata from common into the
+	ld hl, #_udata		; copy the udata from common into the
 	ld de, #U_DATA_STASH	; target process
 	ld bc, #U_DATA__TOTALSIZE
 l2:
