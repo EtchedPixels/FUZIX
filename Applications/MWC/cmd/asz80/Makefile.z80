@@ -36,7 +36,7 @@ $(OBJS): $(INCS)
 	$(FCC) $(Z80_PLATFORM) $< -o $@
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin *.rel
 
 rmbak:
 	rm -f *~ core
