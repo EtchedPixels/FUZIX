@@ -47,6 +47,7 @@
 		.globl _doexit
 		.globl _need_resched
 		.globl _chksigs
+		.globl _udata
 
 	        .include "platform/kernel.def"
 	        .include "kernel-rabbit.def"
@@ -647,3 +648,42 @@ _out:
 		nop
 		ret
 		ld hl,4(sp)
+
+;
+;	CPU info
+;
+	.area _DATA
+
+	.globl	_sys_cpu
+	.globl	_sys_cpu_feat
+	.globl	_set_cpu_type
+	.globl	_sys_stubs
+
+_sys_cpu:
+	.db	0
+_sys_cpu_feat:
+	.db	0
+
+	.area _DISCARD
+
+_set_cpu_type:
+	; TODO
+	ret
+
+		.area _CONST
+_sys_stubs:
+	jp	unix_syscall_entry
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
