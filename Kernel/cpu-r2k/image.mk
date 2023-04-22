@@ -5,12 +5,14 @@ tools/binmunge: tools/binmunge.c
 tools/memhogs: tools/analysemap
 	cp tools/analysemap tools/memhogs
 
+tools/visualize: tools/visualize.c
+
 tools/binman: tools/binman.c
 
 fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk
 	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
 
-fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/binmunge
+fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/binmunge tools/visualize
 	-cp hogs.txt hogs.txt.old
 	tools/memhogs <fuzix.map |sort -nr >hogs.txt
 	head -5 hogs.txt
