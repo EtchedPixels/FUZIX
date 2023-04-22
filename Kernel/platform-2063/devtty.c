@@ -172,7 +172,7 @@ void tty_putc(uint8_t minor, unsigned char c)
 
 	switch(minor) {
 	case 1:
-		if (minor == 1 && !vswitch)
+		if (minor == 1 && !vswitch && vdptype != 0xFF)
 			vtoutput(&c, 1);
 		sioa_txqueue(c);
 		break;
@@ -209,7 +209,8 @@ void kputchar(char c)
 
 	while(!(SIOA_C & 0x04));
 	SIOA_D = c;
-	vtoutput(&c, 1);
+	if (vdptype != 0xFF)
+		vtoutput(&c, 1);
 	if (c == '\n')
 		kputchar('\r');
 
@@ -387,7 +388,7 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   uint8_t c;
   uint8_t map[8];
 
-  if (minor == 1) {
+  if (minor == 1 && vdptype != 0xFF) {
 	switch(arg) {
 	case GFXIOC_GETINFO:
                 return uput(&tms_mode[vidmode], ptr, sizeof(struct display));
