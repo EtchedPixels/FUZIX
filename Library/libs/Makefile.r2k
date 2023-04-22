@@ -1,2 +1,4 @@
+CPUNAME=r2k
+CPUEXT=_r2k
 ASM = sdasrab
 	include Makefile.z80

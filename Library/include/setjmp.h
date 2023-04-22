@@ -4,7 +4,7 @@
 #include <types.h>
 #endif
 
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80)
+#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_r2k)
 
 	/* FIXME: need to add alt registers */
 	typedef int jmp_buf[7];

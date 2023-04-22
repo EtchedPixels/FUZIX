@@ -11,9 +11,9 @@ CC_OPT = $(FUZIX_CCOPTS) -c
 CC_NOOPT = -c
 ASM_OPT = -l -o -s
 LINKER_OPT = -m -i -o
-SRC_CRT0 = crt0$(PLATFORM)$(CPUNAME).s
+SRC_CRT0 = crt0$(PLATFORM)$(CPUEXT).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.rel)
-SRC_CRT0NS = crt0nostdio$(PLATFORM)$(CPUNAME).s
+SRC_CRT0NS = crt0nostdio$(PLATFORM)$(CPUEXT).s
 OBJ_CRT0NS = $(SRC_CRT0NS:.s=.rel)
 SRC_CRT0R = crt0$(PLATFORM)_$(USERCPU)_rel.s
 OBJ_CRT0R = $(SRC_CRT0R:.s=.rel)
@@ -109,7 +109,7 @@ OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD)
 OBJ_RES = $(SRC_RES:.c=.rel)
 OBJ_READLINE = $(SRC_READLINE:.c=.rel)
 
-all: c$(PLATFORM)$(CPUNAME).lib crt0$(PLATFORM)$(CPUNAME).rel crt0nostdio$(PLATFORM)$(CPUNAME).rel \
+all: c$(PLATFORM)$(CPUNAME).lib crt0$(PLATFORM)$(CPUEXT).rel crt0nostdio$(PLATFORM)$(CPUEXT).rel \
      crt0$(PLATFORM)_$(USERCPU)_rel.rel crt0nostdio$(PLATFORM)_$(USERCPU)_rel.rel \
      liberror.txt curses$(PLATFORM)$(CPUNAME).lib termcap$(PLATFORM)$(CPUNAME).lib \
      m$(PLATFORM)$(CPUNAME).lib tinymalloc$(PLATFORM)$(CPUNAME).lib resolv$(PLATFORM)$(CPUNAME).lib \
@@ -212,7 +212,7 @@ clean:
 	-(cd fuzixr2k; $(MAKE) clean; rm -f Makefile)
 
 install:
-	cp crt0$(PLATFORM)$(CPUNAME).rel crt0nostdio$(PLATFORM)$(CPUNAME).rel c$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
+	cp crt0$(PLATFORM)$(CPUEXT).rel crt0nostdio$(PLATFORM)$(CPUEXT).rel c$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
 	cp curses$(PLATFORM)$(CPUNAME).lib termcap$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
 	cp m$(PLATFORM)$(CPUNAME).lib tinymalloc$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
 	cp readline$(PLATFORM)$(CPUNAME).lib /opt/fcc/lib/
