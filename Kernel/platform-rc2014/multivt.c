@@ -81,7 +81,9 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 
 void vtattr_notify(void)
 {
-        if (curvid == VID_MACCA)
+        if (curvid == VID_EF9345)
+            ef_vtattr_notify();
+        else if (curvid == VID_MACCA)
             ma_vtattr_notify();
 }
 
