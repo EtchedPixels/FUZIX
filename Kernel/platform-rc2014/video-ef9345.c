@@ -37,22 +37,22 @@ static uint8_t attr = 0x70;
 
 static const uint8_t modetab[2][5] = {
 	{
-	 0x10,			/* PAL, combined sync */
-	 0x48,			/* Fixed cursor and enabled I high during margin
+		0x10,		/* PAL, combined sync */
+		0x48,		/* Fixed cursor and enabled I high during margin
 				   margin is black, no zoom */
-	 0x7E,			/* service row off, upper/lower bulk on, conceal on
+		0x7E,		/* service row off, upper/lower bulk on, conceal on
 				   i high during displayed area flash on, 40 col long code */
-	 0x13,			/* alpha uds slices in block 3, semi in blocks 2/3
+		 0x13,		/* alpha uds slices in block 3, semi in blocks 2/3
 				   quadrichrome in block 0 */
-	 0x28,			/* origin row 8, display block 0 ; 28 08 ? */
-	  }, {
-	      0xD0,		/* 80 char PAL combined sync */
-	      0x48,		/* Fixed cursor and enabled I high during
+		 0x28,		/* origin row 8, display block 0 ; 28 08 ? */
+	}, {
+		0xD0,		/* 80 char PAL combined sync */
+		0x48,		/* Fixed cursor and enabled I high during
 				   margin. Margin is black, no zoom */
-	      0x7E,		/* Turn it all on except status bar */
-	      0x8F,		/* white on black */
-	      0x08,		/* origin row 8 block 0 for display */
-	       }
+		0x7E,		/* Turn it all on except status bar */
+		0x8F,		/* white on black */
+		0x08,		/* origin row 8 block 0 for display */
+       }
 };
 
 /* FIXME: inline define */
@@ -304,19 +304,19 @@ int ef_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 		return 0;
 	case GFXIOC_GETMODE:
 	case GFXIOC_SETMODE:{
-			uint8_t m = ugetc(ptr);
-			if (m > 1) {
-				udata.u_error = EINVAL;
-				return -1;
-			}
-			if (arg == GFXIOC_GETMODE)
-				return uput(ef_modes + m, ptr, sizeof(struct display));
-			ef_mode = m;
-			ef_load_mode(m);
-			ef9345_colour(efinkpaper[minor]);
-			ef_clear_lines(0, 24);
-			return 0;
+		uint8_t m = ugetc(ptr);
+		if (m > 1) {
+			udata.u_error = EINVAL;
+			return -1;
 		}
+		if (arg == GFXIOC_GETMODE)
+			return uput(ef_modes + m, ptr, sizeof(struct display));
+		ef_mode = m;
+		ef_load_mode(m);
+		ef9345_colour(efinkpaper[minor]);
+		ef_clear_lines(0, 24);
+		return 0;
+	}
 	case VTINK:
 		if (ef_mode == 0)
 			return -1;

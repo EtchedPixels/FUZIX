@@ -84,7 +84,7 @@ struct uart {
     const char *name;
 };
 
-extern struct uart *uart[NUM_DEV_TTY + 1];
+//extern struct uart *uart[NUM_DEV_TTY + 1];
 extern uint16_t ttyport[NUM_DEV_TTY + 1];
 extern uint8_t register_uart( uint16_t port, struct uart *);
 extern void insert_uart(uint16_t port, struct uart *);

@@ -4,7 +4,6 @@ TODO
 - TMS9918A - stop console flipping when in gfx mode
 - Maccasoft video - debug and add video ioctls
 - Ioctls on Macca video for modes and access
-- Can we do macca udg by pretending it's a normal 8x8 bitmap ?
 - Sprite ioctls
 - Ioctls to assign consoles to video cards
 - Sound
@@ -13,6 +12,9 @@ TODO
 - EasyZ80 and TinyZ80 double check CTC timings and speed (easyz80 should be
   right)
 - Maybe bank buffers in upper half of bank 3
+- Fix the bank binary generation so that we handle multiple banks in one source
+  file to avoid fun with struct arrays of pointers and the like. We probably
+  need to do reloc checks on AREA based relocs not just SYM
 
 This is Fuzix for the RC2014 and related machines
 
@@ -193,17 +195,17 @@ RC2014 Extreme
 This build uses the bus extender and moves the following
 
 Joystick 1 and 2		01-02B8
+I2C				06B8/07B8
+MG ZIP/Lpr			0C-0FB8
 Wiznet 5300			28-2DB8
+PropGFX Video			40-43B8
+EF9345				44B8/46B8
 PS/2				60B8,64B8
 I2C will move 			6C-6FB8
 Analog sticks will move		B0-B7B8
 RTC				C08B
 Sound (AY-3-8910, TODO)		D0/D8B8
-MG ZIP/Lpr			0C-0FB8
-PropGFX Video			40-43B8	(with link for halt)
-I2C				06B8/07B8
 KIO				C0-DF (on main bus clocked by CPU clock)
-EF9345				44B8/46B8
 
 Things To Note When Modifying
 

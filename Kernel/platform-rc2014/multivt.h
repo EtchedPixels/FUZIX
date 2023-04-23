@@ -22,6 +22,8 @@ extern int tms_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 extern void tms_set_mode(uint8_t minor);
 extern void tms_set_console(void);
 
+extern uint8_t tms_do_setup(void);
+
 /* FIXME: probably can't use fastcall due to banking */
 extern uint16_t vdp_rop(struct vdp_rw *rw) __fastcall;
 extern uint16_t vdp_wop(struct vdp_rw *rw) __fastcall;

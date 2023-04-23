@@ -32,6 +32,7 @@
 	.globl _tms_cursor_off
 	.globl _tms_cursor_disable
 	.globl _tms_set_console
+	.globl _tms_do_setup
 
 	; graphics API
 	.globl _vdp_rop
@@ -63,7 +64,9 @@
 ;
 	.globl map_process_always
 	.globl map_kernel_restore
-	.area _CODE1
+	.globl _fontdata_6x8
+
+	.area _CODE3
 ;
 ;	Register write value E to register A. This is a pure VDP register
 ;	access so we shouldn't need a delay (check if we need a small one
@@ -495,3 +498,78 @@ _scrollu_w:
 _scrollu_mov:
 	    .dw		0x3FD8		; up 40 bytes in low 12, add 0x4000
 					; carry 11->12
+;
+;	Set up code. Some of this has to be in special places because we
+;	don't want to keep the font in unbanked data space
+;
+	.area _CODE3
+
+_tms_do_setup:
+	ld	c,#1			; C is video type
+	ld	a,#0x02
+	out	(0x99),a
+	ld	a,#0x8F
+	out	(0x99),a
+	in	a,(0x98)
+	and	#0x40
+	jr	z, is_9918a
+	ld	a,#1
+	out	(0x99),a
+	ld	a,#0x8F
+	out	(0x99),a
+	in	a,(0x98)
+	rra
+	and	#0x1F
+	ld	c,#2
+	jr	z, is_9938
+	inc	c
+is_9938:
+	xor	a
+	out	(0x99),a
+	ld	a,#0x8F
+	out	(0x99),a
+is_9918a:
+	xor	a
+	out	(0x99),a
+	ld	a,#0x40
+	out	(0x99),a
+	ld	de,#0x1000
+wipe:
+	ld	a,#' '			; Clear, use slow writes
+	out	(0x98),a
+	dec	de
+	ld	a,d
+	or	e
+	jr	nz, wipe
+
+	; Now the font
+
+font:
+	xor	a
+	out	(0x99),a
+	ld	a,#0x7C			; Write to 3CXX-3FXX
+	out	(0x99),a
+	ld	b,#0
+	ld	hl,#_fontdata_6x8
+font_low:
+	xor	a
+	out	(0x98),a
+	ex	(sp),hl
+	ex	(sp),hl
+	djnz	font_low
+
+	ld	de,#0x0300
+font_bits:
+	ld	a,(hl)
+	inc	hl
+	add	a
+	add	a
+	out	(0x98),a		; We need to keep the data
+	dec	de			; rate down so do it the slow way
+	ld	a,d
+	or	e
+	jr	nz, font_bits
+
+	ld	l,c			; return type
+
+	ret

@@ -438,18 +438,18 @@ void tms_set_mode(uint8_t minor)
  *	Console driver for the TMS9918A
  */
 
-static uint8_t tms_intr(uint8_t minor)
+uint8_t tms_intr(uint8_t minor)
 {
 	used(minor);
 	return 1;
 }
 
-static void tms_setup(uint8_t minor)
+void tms_setup(uint8_t minor)
 {
 	used(minor);
 }
 
-static uint8_t tms_writeready(uint_fast8_t minor)
+uint8_t tms_writeready(uint_fast8_t minor)
 {
 	used(minor);
 	return TTY_READY_NOW;

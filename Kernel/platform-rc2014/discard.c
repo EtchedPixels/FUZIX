@@ -34,7 +34,6 @@ static uint8_t probe_tms9918a(void)
 {
 	uint16_t ct = 0;
 	uint8_t v;
-	uint8_t *fp;
 
 	/* Try turning it on and looking for a vblank */
 	tms9918a_reset();
@@ -60,51 +59,19 @@ static uint8_t probe_tms9918a(void)
 	if (ct == 0)
 		return 0;
 
-	/* On a VDP this selects register 2 for status reads, on a TMS9918A
-	  we just wrote all over register 7 */
-	tms9918a_ctrl = 0x02;
-	tms9918a_ctrl = 0x8F;
-	/* Read either status or S#2 */
-	if (tms9918a_data & 0x40) {
-		/* We have a VDP9938/9958 */
-		tms9918a_ctrl = 1;
-		tms9918a_ctrl = 0x8F;	/* Status register 1 please */
-		v = tms9918a_data;	/* Version bits for the 9958 */
-		tms9918a_ctrl = 0;
-		tms9918a_ctrl = 0x8F;	/* Put the normal status register back */
-		v >>= 1;		/* VDP id bits */
-		/* Strictly speaking 9958 could be something higher.. */
-		if (v & 0x1F)  {
-			vdpname = "VDP9958";
-			v = HW_VDP_9958;
-		} else {
-			vdpname = "VDP9938";
-			v = HW_VDP_9938;
-		}
-	} else
+	v = tms_do_setup();
+	switch(v) {
+	case 1:
 		v = HW_VDP_9918A;
-
-	/* We have a TMS9918A, load up the fonts */
-	ct = 0;
-
-	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x40 | 0x00;	/* Console 0 */
-	while(ct++ < 4096) {
-		tms9918a_data = ' ';
-		nap();
-	}
-
-	/* Load the font into 3C00-3FFF */
-	fp = fontdata_6x8;
-	tms9918a_ctrl = 0x00;
-	tms9918a_ctrl = 0x40 | 0x3C;	/* Base of font stash */
-	for (ct = 0; ct < 256; ct++) {
-		tms9918a_data = 0;
-		nap();
-	}
-	while(ct++ < 1024) {
-		tms9918a_data = *fp++ << 2;
-		nap();
+		break;
+	case 2:
+		vdpname = "VDP938";
+		v = HW_VDP_9938;
+		break;
+	case 3:
+		vdpname = "VDP9958";
+		v = HW_VDP_9958;
+		break;
 	}
 	return v;
 }
@@ -447,7 +414,11 @@ void vdu_setup(void)
 			insert_uart(MACCA_BASE, &macca_uart);
 		}
 		if (ef9345_present)
+#ifdef CONFIG_RC2014_EXTREME
+			insert_uart(0x44B8, &ef_uart);
+#else
 			insert_uart(0x44, &ef_uart);
+#endif
 		n = 1;
 		/* Now set the vidcard table up */
 		if (ef9345_present)
@@ -571,7 +542,11 @@ void pagemap_init(void)
 	if (tms9918a_present)
 		kprintf("%s detected at 0x98.\n", vdpname);
 	if (ef9345_present)
+#ifdef CONFIG_RC2014_EXTREME
+		kputs("EF9345 detected at 0x44B8.\n");
+#else
 		kputs("EF9345 detected at 0x44.\n");
+#endif
 
 	if (!acia_present)
 		sc26c92_present = probe_sc26c92();

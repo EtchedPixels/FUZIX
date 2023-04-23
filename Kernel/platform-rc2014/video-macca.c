@@ -23,6 +23,7 @@
  */
 
 #include <kernel.h>
+#include <kdata.h>
 #include <tty.h>
 #include <vt.h>
 #include <devtty.h>
@@ -81,7 +82,7 @@ void ma_cursor_disable(void)
 		vid_data = 0x00;	/* Sprite 0 is the cursor */
 		vid_data = 0x00;
 		vid_data = 0x00;
-		vid_data = ' ';
+		vid_data = 0x00;
 		vid_data = 0x00;
 	}
 }
@@ -168,8 +169,31 @@ void ma_set_console(void)
 	}
 }
 
-/* Should be in discard... */
-/*__sfr __at 0x6A pioa_c; */
+/* Until we have a proper "set tile" API */
+static void macca_set_char(uint8_t ch, uint8_t *p)
+{
+	irqflags_t i = di();
+	uint8_t n = 0;
+
+	vid_cmd = CMD_TILEBITS;
+	vid_data = ch << 3;	/* Low bits x 8 */
+	vid_data = ch >> 5;	/* High bits */
+
+	while (n++ < 8) {
+		uint8_t i;
+		uint8_t b = *p++;
+		/* Expand each pixel row into a tile row of 8 bytes */
+		for (i = 0; i < 8; i++) {
+			if (b & 0x80)
+				vid_data = 0xFC;
+			else
+				vid_data = 0x08;
+			b <<= 1;
+		}
+	}
+	/* We are good */
+	irqrestore(i);
+}
 
 /* 320 x 240 40 x 30 */
 uint8_t macca_init(void)
@@ -264,18 +288,41 @@ static struct display ma_mode[1] = {
 	 40, 30 }
 };
 
-/* TODO: UDG and font loading ioctl support */
 /* TODO: sprites ioctls */
+
+static struct fontinfo fonti = {
+	0, 255, 128, 255, FONT_INFO_8X8
+};
 
 int ma_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
-	uint8_t c;
+	unsigned topchar = 256;
+	unsigned i = 0;
+	uint8_t map[8];
+
 	switch (arg) {
 	case GFXIOC_GETINFO:
 		return uput(&ma_mode, ptr, sizeof(struct display));
 	case GFXIOC_MAP:
 		return uput(&ma_map, ptr, sizeof(struct videomap));
 	case GFXIOC_UNMAP:
+		return 0;
+	case VTFONTINFO:
+		return uput(&fonti, ptr, sizeof(struct fontinfo));
+	/* Our tiles are complicated because of the colour rules so until
+	   we have some kind of sensible API for such things just report
+	   the normal bitmap stuff and expand */
+	case VTSETUDG:
+		i = 128;
+	case VTSETFONT:
+		while (i < topchar) {
+			if (uget(ptr, map, 8) == -1) {
+				udata.u_error = EFAULT;
+				return -1;
+			}
+			ptr += 8;
+			macca_set_char(i++, map);
+		}
 		return 0;
 	}
 	return vtzx_ioctl(minor, arg, ptr);
