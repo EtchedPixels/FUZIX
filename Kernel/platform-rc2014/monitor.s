@@ -7,15 +7,17 @@
 
 ; -----------------------------------------------------------------------------
 .ifne USE_FANCY_MONITOR ; -----------------------------------------------------
-                .area _CODE2 ; actual monitor lives in kernel bank
+                .area _CODE3 ; actual monitor lives in kernel bank
                 .include "../lib/monitor-z80.s"
 
                 .area _COMMONMEM ; just a stub goes in common memory
 _plt_monitor:
                 di
-                call map_kernel
+		ld a,#0x26
+		out (0x79),a
+		inc a
+		out (0x7A),a
                 jp monitor_entry
-
 
 ; -----------------------------------------------------------------------------
 .else ; MICRO MONITOR ---------------------------------------------------------
