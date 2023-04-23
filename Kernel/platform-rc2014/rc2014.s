@@ -800,6 +800,7 @@ soft81_1:
 	.globl __stub_0_2
 	.globl __stub_0_3
 	.globl __stub_1_2
+	.globl __stub_1_3
 	.globl __stub_2_1
 	.globl __stub_2_3
 ;
