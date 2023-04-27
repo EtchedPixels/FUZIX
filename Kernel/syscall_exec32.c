@@ -193,13 +193,23 @@ arg_t _execve(void)
 	 *  can look.
 	 */
 
+#ifndef CONFIG_NO_INSTALL_VDSO
 	udata.u_base = (uint8_t *)udata.u_codebase + 0x20;
 	udata.u_count = aout.a_text - 0x20;
+#else
+	udata.u_base = (uint8_t *)udata.u_codebase;
+	udata.u_count = aout.a_text;
+#endif
 	udata.u_sysio = false;
 	/* As we allocated this space we know the range is valid */
 	readi(ino, 0);
+#ifndef CONFIG_NO_INSTALL_VDSO
 	if (udata.u_done != aout.a_text - 0x20)
 		goto nogood4;
+#else
+	if (udata.u_done != aout.a_text)
+		goto nogood4;
+#endif
 
 	/* Now the data (and relocations) */
 	udata.u_base = (uint8_t *) udata.u_database;
@@ -245,12 +255,14 @@ arg_t _execve(void)
 	/* Set stack pointer for the program */
 	udata.u_isp = nenvp - 2;
 
+#ifndef CONFIG_NO_INSTALL_VDSO
 	/*
 	 * Sort of - it's a good way to deal with all the stupidity of
 	 * random 68K platforms we will have to handle, and a nice place
 	 * to stuff the signal trampoline 8)
 	 */
 	install_vdso();
+#endif
 
 #ifdef DEBUG
 	kprintf("Code at %p , Data at %p Stack Size %u)\n",
