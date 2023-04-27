@@ -14,9 +14,18 @@
 
 #include "taylormade.h"
 
+/* Machines we can handle the full larhe text on. We can probably fix this
+   on the others by paging the long texts from disk, especially as they
+   are uncompressed format */
+#if defined(__linux__) || defined(__mc68000__) || defined (__ns32k__) || defined(__ARM_EABI__) || defined(__riscv) || defined(__i86)
+#define LOAD_ALL
+#endif
+
 /* Work relative to end of video */
 #define SCANNER_BIAS	0x5B00
-#define DISK_BIAS	((SCANNER_BIAS - 0x4000) + 27L)
+#define DISK_BIAS	27L
+
+#define LOAD_SIZE	0x4D00
 
 /*
  *	Everything is based upon the actual game sizes
@@ -42,20 +51,24 @@
 
 #define MAXOBJ	200
 
-static unsigned char Flag[128];
-static unsigned char InitFlag[6];
-static unsigned char Object[MAXOBJ];
-static unsigned char Word[5];
+static uint8_t Flag[128];
+static uint8_t InitFlag[6];
+static uint8_t Object[MAXOBJ];
+static uint8_t Word[5];
 
 /* OOPS buffer for later games */
-static unsigned char OopsFlag[128];
-static unsigned char OopsObject[MAXOBJ];
+static uint8_t OopsFlag[128];
+static uint8_t OopsObject[MAXOBJ];
 /* RAM save buffer for later games */
-static unsigned char RamFlag[128];
-static unsigned char RamObject[MAXOBJ];
+static uint8_t RamFlag[128];
+static uint8_t RamObject[MAXOBJ];
 
 /* Except for Blizzard Pass long text mode we are good with 4900 */
-static unsigned char Image[0x4900];
+#ifdef LOAD_ALL
+static uint8_t Image[0x4000 + LOAD_SIZE];
+#else
+static uint8_t Image[LOAD_SIZE];
+#endif
 static int ImageLen;
 static int VerbBase;
 static unsigned int TokenBase;
@@ -68,6 +81,7 @@ static unsigned int ObjLocBase;
 static unsigned int StatusBase;
 static unsigned int ActionBase;
 static unsigned int FlagBase;
+static unsigned int TextBlock2;	/* Blizzard long text bank */
 
 static int NumLowObjs;
 
@@ -75,8 +89,9 @@ static int ActionsDone;
 static int ActionsExecuted;
 static int Redraw;
 
-static int GameVersion;
-static int Blizzard;
+static uint_fast8_t GameVersion;
+static uint_fast8_t Blizzard;
+static uint_fast8_t NoCarryLimit;
 
 static int GameFile;
 
@@ -286,7 +301,7 @@ static int do_read(int fd, void *p, int len)
 		if (l < 0)
 			perror("read");
 		else
-			write(2, "short read from tchelp.\n", 28);
+			write(2, "short read from tchelp.\n", 25);
 		return -1;
 	}
 	return 0;
@@ -529,13 +544,13 @@ void LineInput(char *linebuf, int len)
 	con_goto(screen_height - 1, 0);
 }
 
-unsigned char WaitCharacter(void)
+uint_fast8_t WaitCharacter(void)
 {
 	RefreshUpper();
 	return con_getch();
 }
 
-void PrintCharacter(unsigned char c)
+void PrintCharacter(uint_fast8_t c)
 {
 	char_out(c);
 }
@@ -555,7 +570,7 @@ void TopWindow(void)
 
 void BottomWindow(void)
 {
-	unsigned int i;
+	unsigned i;
 
 	if (upper == 0)
 		return;
@@ -570,10 +585,10 @@ void BottomWindow(void)
 }
 
 
-static int FindCode(char *x, int base)
+static int FindCode(char *x, unsigned base)
 {
 	unsigned char *p = Image + base;
-	int len = strlen(x);
+	unsigned len = strlen(x);
 	while (p < Image + ImageLen - len) {
 		if (memcmp(p, x, len) == 0)
 			return p - Image;
@@ -582,7 +597,7 @@ static int FindCode(char *x, int base)
 	return -1;
 }
 
-static int FindFlags(void)
+static unsigned FindFlags(void)
 {
 	/* Look for the flag initial block copy */
 	int pos = FindCode("\x01\x06\x00\xED\xB0\xC9\x00\xFD", 0);
@@ -593,18 +608,18 @@ static int FindFlags(void)
 	return pos + 6;
 }
 
-static int FindObjectLocations(void)
+static unsigned FindObjectLocations(void)
 {
 	int pos = FindCode("\x01\x06\x00\xED\xB0\xC9\x00\xFD", 0);
 	if (pos == -1) {
 		writes("Cannot find initial object data.\n");
 		exit(1);
 	}
-	pos = Image[pos - 16] + (Image[pos - 15] << 8) - SCANNER_BIAS;
+	pos = Image[pos - 16] + (Image[pos - 15] << 8);
 	return pos;
 }
 
-static int FindExits(void)
+static unsigned FindExits(void)
 {
 	int pos = 0;
 
@@ -617,7 +632,7 @@ static int FindExits(void)
 	exit(1);
 }
 
-static int LooksLikeTokens(int pos)
+static uint_fast8_t LooksLikeTokens(unsigned pos)
 {
 	unsigned char *p = Image + pos;
 	int n = 0;
@@ -637,10 +652,10 @@ static int LooksLikeTokens(int pos)
 	return 0;
 }
 
-static void TokenClassify(int pos)
+static void TokenClassify(unsigned pos)
 {
 	unsigned char *p = Image + pos;
-	int n = 0;
+	unsigned n = 0;
 	while (n++ < 256) {
 		do {
 			if (*p == 0x5E || *p == 0x7E)
@@ -658,7 +673,7 @@ static int FindTokens(void)
 		    FindCode("\x47\xB7\x28\x0B\x2B\x23\xCB\x7E", pos + 1);
 		if (pos == -1) {
 			/* Last resort */
-			addr = FindCode("You are in ", 0) - 1;
+			addr = FindCode("You are in", 0);
 			if (addr == -1) {
 				writes("Unable to find token table.\n");
 				exit(1);
@@ -673,8 +688,8 @@ static int FindTokens(void)
 }
 
 static char LastChar = 0;
-static int Upper = 0;
-static int PendSpace = 0;
+static uint_fast8_t Upper = 0;
+static uint_fast8_t PendSpace = 0;
 
 static void OutWrite(char c)
 {
@@ -911,24 +926,37 @@ static int FindRooms(void)
 	exit(1);
 }
 
-
 static void PrintRoom(unsigned char room)
 {
 	unsigned char *p = Image + RoomBase;
-#if 0
-	if (Blizzard && room < 102) {
-		PrintText(room, M2Offset, 0x18000);
-	} else
+#ifdef LOAD_ALL
+	if (Blizzard && room < 102)
+		PrintText(Image + LOAD_SIZE, room);
+	else
 #endif
 		PrintText(p, room);
 }
 
+/* Avoid sucking in stdio */
+
+char *u8toa(uint8_t i)
+{
+	static char buf[4];
+	char *p = buf + sizeof(buf);
+	uint8_t c;
+
+	*--p = '\0';
+	do {
+		c = i % 10;
+		i /= 10;
+		*--p = '0' + c;
+	} while(i);
+	return p;
+}
 
 static void PrintNumber(unsigned char n)
 {
-	char buf[4];
-	char *p = buf;
-	snprintf(buf, 3, "%d", (int) n);
+	char *p = u8toa(n);
 	while (*p)
 		OutChar(*p++);
 }
@@ -941,25 +969,29 @@ static void PrintNumber(unsigned char n)
 
 static int CarryItem(void)
 {
+	if (NoCarryLimit)
+		return 1;
 	if (Flag[5] == Flag[4])
 		return 0;
-	if (Flag[5] < 255)
-		Flag[5]++;
 	return 1;
-}
-
-static void DropItem(void)
-{
-	if (Flag[5] > 0)
-		Flag[5]--;
 }
 
 static void Put(unsigned char obj, unsigned char loc)
 {
+	int mod = 0;
 	/* Will need refresh logics somewhere, maybe here ? */
 	if (Object[obj] == LOCATION || loc == LOCATION)
 		Redraw = 1;
+	if (loc == CARRIED)
+		mod++;
+	if (Object[obj] == CARRIED)
+		mod--;
 	Object[obj] = loc;
+	if (Flag[5] == 0 && mod == -1)
+		return;
+	if (Flag[5] == 255 && mod == 1)
+		return;
+	Flag[5] += mod;
 }
 
 static int Present(unsigned char obj)
@@ -1170,7 +1202,6 @@ static void DropObject(unsigned char obj)
 		Message(23);
 		return;
 	}
-	DropItem();
 	Put(obj, LOCATION);
 }
 
@@ -1256,7 +1287,6 @@ static void Wear(unsigned char obj)
 		Message(23);
 		return;
 	}
-	DropItem();
 	Put(obj, WORN);
 }
 
@@ -1660,9 +1690,9 @@ static void RunOneInput(void)
 	}
 	if (Word[0] < 11) {
 		if (AutoExit(Word[0])) {
+			RunStatusTable();
 			if (Redraw)
 				Look();
-			RunStatusTable();
 			return;
 		}
 	}
@@ -1738,13 +1768,32 @@ static void SimpleParser(void)
 		if (Word[wn])
 			wn++;
 	}
+	/* Blizzard Pass has magic fixups it seems */
+	if (Blizzard) {
+		switch(Word[0]) {
+		case 249:
+			Word[0] = 43;
+			break;
+		case 175:
+			Word[0] = 44;
+			break;
+		case 134:
+			Word[0] = 49;
+			break;
+		}
+	}
 	for (i = wn; i < 5; i++)
 		Word[i] = 0;
 }
 
 static void FindTables(void)
 {
-	TokenBase = FindTokens();
+	/* We would need a bigger working buffer for this game and only
+	   to find the tokens so hard code it */
+	if (Blizzard)
+		TokenBase = 0x56BC;
+	else
+		TokenBase = FindTokens();
 	RoomBase = FindRooms();
 	ObjectBase = FindObjects();
 	StatusBase = FindStatusTable();
@@ -1839,6 +1888,7 @@ void DisplayBases(void)
 int main(int argc, char *argv[])
 {
 	int shift;
+	off_t len;
 
 	if (argv[1] == NULL) {
 		writes("taylormade <file>.\n");
@@ -1850,24 +1900,30 @@ int main(int argc, char *argv[])
 		perror(argv[1]);
 		exit(1);
 	}
-	/* We work relative to the screen end */
-	lseek(GameFile, DISK_BIAS, 0);
-	if (read(GameFile, Image, 16384) != 16384) {
-		writes("Invalid game.\n");
-		exit(1);
-	}
-	ImageLen = 16384;
-
 	/* Guess initially at He-man style */
 	GameVersion = 2;
 
-	if (lseek(GameFile, 0, SEEK_END) > 50000U) {
-		/* Blizzard Pass */
+	len = lseek(GameFile, 0, SEEK_END);
+	if (len == 49179) {
+		/* 48K game */
+	} else if (len == 131103) {
+		/* 128K game so Blizzard Pass */
 		GameVersion = 1;
 		Blizzard = 1;
+		NoCarryLimit = 1;
+	} else {
+		writes("Not a valid /sna.\n");
+		exit(1);
 	}
-	/* The message analyser will look for version 0 games */
+	lseek(GameFile, 0x1B00 + DISK_BIAS, SEEK_SET);
+	/* Load the image starting after the screen end */
+	if (read(GameFile, Image, LOAD_SIZE) != LOAD_SIZE) {
+		writes("Image read failed.\n");
+		exit(1);
+	}
+	ImageLen = LOAD_SIZE;
 
+	/* The message analyser will look for version 0 games */
 	VerbBase = FindCode("NORT\001N", 0);
 	if (VerbBase == -1) {
 		writes("No verb table!\n");
@@ -1875,10 +1931,11 @@ int main(int argc, char *argv[])
 	}
 	FindTables();
 
-	lseek(GameFile, DISK_BIAS + FlagBase, SEEK_SET);
+	lseek(GameFile, DISK_BIAS + 0x1B00 + FlagBase, SEEK_SET);
 	read(GameFile, InitFlag, 6);
 
 	/* The block ordering varies by version */
+	/* Work out where to load the working image from */
 	if (GameVersion == 0)
 		shift = ExitBase;
 	else if (GameVersion == 1)
@@ -1886,17 +1943,35 @@ int main(int argc, char *argv[])
 	else if (GameVersion == 2)
 		shift = ActionBase;
 
-	if (lseek(GameFile, DISK_BIAS + shift, SEEK_SET) == -1 ||
-	    read(GameFile, Image, sizeof(Image)) != sizeof(Image)) {
+	/* Turn the offset into an address relative to the image */
+	shift += 0x1B00;
+
+	/* Seek to the byte we are looking for */
+	if (lseek(GameFile, shift + DISK_BIAS, SEEK_SET) == -1 ||
+	    read(GameFile, Image, LOAD_SIZE) != LOAD_SIZE) {
 		writes("Failed to load game data.\n");
 		exit(1);
 	}
-	/* Now adjust all the base offsets */
 
-	ObjLocBase += DISK_BIAS;
+#ifdef LOAD_ALL
+	if (Blizzard) {
+		if (lseek(GameFile, 0x18000 + DISK_BIAS, SEEK_SET) == -1 ||
+			read(GameFile, Image + LOAD_SIZE, 0x4000) != 0x4000) {
+			writes("Failed to load text block.\n");
+			exit(1);
+		}
+	}
+#endif	
 
+	/* Turn this back into the relative shift */
+	shift -= 0x1B00;
 
-	/* Main block */
+	/* This is a disk offset not a memory image one */
+	ObjLocBase -= 0x4000;		/* Image starts at 0x4000 */
+	ObjLocBase += DISK_BIAS;	/* This is used to load from disk */
+
+	/* Main block: all the tables are shifted down by the amount we
+	   threw away having worked out where to load from */
 	TokenBase -= shift;
 	ExitBase -= shift;
 	StatusBase -= shift;
@@ -1906,7 +1981,6 @@ int main(int argc, char *argv[])
 	ObjectBase -= shift;
 	VerbBase -= shift;
 	ActionBase -= shift;
-
 
 	/* ObjLoc Flag and Message bases we don't adjust as we work those
 	   relative to disc */
