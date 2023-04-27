@@ -81,7 +81,6 @@ static unsigned int ObjLocBase;
 static unsigned int StatusBase;
 static unsigned int ActionBase;
 static unsigned int FlagBase;
-static unsigned int TextBlock2;	/* Blizzard long text bank */
 
 static int NumLowObjs;
 
@@ -175,7 +174,7 @@ static void con_twrite(char *p, int n)
 void con_puts(const char *s)
 {
 	uint8_t c;
-	while (c = (uint8_t) * s++)
+	while ((c = (uint8_t) * s++) != 0)
 		con_putc(c);
 }
 
@@ -270,6 +269,7 @@ int con_scroll(int n)
 	while (n--)
 		conq('\n');
 	con_force_goto(screeny, screenx);
+	return 0;
 }
 
 /* TODO: cursor key handling */
