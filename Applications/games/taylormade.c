@@ -1147,14 +1147,16 @@ static void Remove(unsigned char obj)
 	Put(obj, CARRIED);
 }
 
-static void TakeAll(int start)
+static void TakeAll(uint_fast8_t start)
 {
+    uint_fast8_t found = 0;
+    uint_fast8_t i;
+    
     if (Flag[1]) {
     	Message(25);
         return;
     }
-    int found = 0;
-    for (int i = start; i < NUMOBJECTS; i++) {
+    for (i = start; i < NUMOBJECTS; i++) {
         if (Object[i] == LOCATION) {
             if (found)
                 OutChar('\n');
