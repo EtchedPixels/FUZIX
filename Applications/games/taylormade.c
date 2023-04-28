@@ -14,18 +14,21 @@
 
 #include "taylormade.h"
 
-/* Machines we can handle the full larhe text on. We can probably fix this
+/* Machines we can handle the full largkve text on. We can probably fix this
    on the others by paging the long texts from disk, especially as they
    are uncompressed format */
 #if defined(__linux__) || defined(__mc68000__) || defined (__ns32k__) || defined(__ARM_EABI__) || defined(__riscv) || defined(__i86)
 #define LOAD_ALL
+#define LOAD_SIZE	0x4D00
 #endif
 
 /* Work relative to end of video */
 #define SCANNER_BIAS	0x5B00
 #define DISK_BIAS	27L
 
+#ifndef LOAD_SIZE
 #define LOAD_SIZE	0x4D00
+#endif
 
 /*
  *	Everything is based upon the actual game sizes
@@ -89,8 +92,22 @@ static int ActionsExecuted;
 static int Redraw;
 
 static uint_fast8_t GameVersion;
-static uint_fast8_t Blizzard;
 static uint_fast8_t NoCarryLimit;
+static uint_fast8_t GameNum;
+
+/*
+ *	Whilst the game engine for the Scott Adams games was very consistent
+ *	the later games have per game engine changes to meet the game needs.
+ *
+ *	Temple of Terror also comes with bugs that need to be handled to make
+ *	it properly playable.
+ */
+#define G_UNKNOWN	0
+#define G_REBEL		1	/* Wait timers */
+#define G_KAYLETH	2	/* Wait timers */
+#define G_BLIZZARD	3	/* 128K, no carry limit */
+#define G_TEMPLE	4	/* Work around bug in actual game */
+#define G_HEMAN		5
 
 static int GameFile;
 
@@ -584,109 +601,6 @@ void BottomWindow(void)
 	xpos = lx;
 }
 
-
-static int FindCode(char *x, unsigned base)
-{
-	unsigned char *p = Image + base;
-	unsigned len = strlen(x);
-	while (p < Image + ImageLen - len) {
-		if (memcmp(p, x, len) == 0)
-			return p - Image;
-		p++;
-	}
-	return -1;
-}
-
-static unsigned FindFlags(void)
-{
-	/* Look for the flag initial block copy */
-	int pos = FindCode("\x01\x06\x00\xED\xB0\xC9\x00\xFD", 0);
-	if (pos == -1) {
-		writes("Cannot find initial flag data.\n");
-		exit(1);
-	}
-	return pos + 6;
-}
-
-static unsigned FindObjectLocations(void)
-{
-	int pos = FindCode("\x01\x06\x00\xED\xB0\xC9\x00\xFD", 0);
-	if (pos == -1) {
-		writes("Cannot find initial object data.\n");
-		exit(1);
-	}
-	pos = Image[pos - 16] + (Image[pos - 15] << 8);
-	return pos;
-}
-
-static unsigned FindExits(void)
-{
-	int pos = 0;
-
-	while ((pos = FindCode("\x1A\xBE\x28\x0B\x13", pos + 1)) != -1) {
-		pos = Image[pos - 5] + (Image[pos - 4] << 8);
-		pos -= SCANNER_BIAS;
-		return pos;
-	}
-	writes("Cannot find initial flag data.\n");
-	exit(1);
-}
-
-static uint_fast8_t LooksLikeTokens(unsigned pos)
-{
-	unsigned char *p = Image + pos;
-	int n = 0;
-	int t = 0;
-
-	if (pos < 0 || pos > sizeof(Image) - 512)
-		return 0;
-
-	while (n < 512) {
-		unsigned char c = p[n] & 0x7F;
-		if (c >= 'a' && c <= 'z')
-			t++;
-		n++;
-	}
-	if (t > 300)
-		return 1;
-	return 0;
-}
-
-static void TokenClassify(unsigned pos)
-{
-	unsigned char *p = Image + pos;
-	unsigned n = 0;
-	while (n++ < 256) {
-		do {
-			if (*p == 0x5E || *p == 0x7E)
-				GameVersion = 0;
-		} while (!(*p++ & 0x80));
-	}
-}
-
-static int FindTokens(void)
-{
-	int addr;
-	int pos = 0;
-	do {
-		pos =
-		    FindCode("\x47\xB7\x28\x0B\x2B\x23\xCB\x7E", pos + 1);
-		if (pos == -1) {
-			/* Last resort */
-			addr = FindCode("You are in", 0);
-			if (addr == -1) {
-				writes("Unable to find token table.\n");
-				exit(1);
-			}
-			return addr;
-		}
-		addr =
-		    (Image[pos - 1] << 8 | Image[pos - 2]) - SCANNER_BIAS;
-	} while (LooksLikeTokens(addr) == 0);
-	TokenClassify(addr);
-	return addr;
-}
-
 static char LastChar = 0;
 static uint_fast8_t Upper = 0;
 static uint_fast8_t PendSpace = 0;
@@ -761,6 +675,12 @@ static void OutString(char *p)
 		OutChar(*p++);
 }
 
+#define DESTROYED	252
+#define CARRIED		(Flag[2])
+#define WORN		(Flag[3])
+#define LOCATION	(Flag[0])
+#define NUMOBJECTS	(Flag[6])
+
 static unsigned char *TokenText(unsigned char n)
 {
 	unsigned char *p = Image + TokenBase;
@@ -834,51 +754,6 @@ static void PrintText(unsigned char *p, int n)
 		PrintText1(p, n);
 }
 
-static int FindMessages(void)
-{
-	int pos = 0;
-	/* Newer game format */
-	while ((pos = FindCode("\xF5\xE5\xC5\xD5\x3E\x2E", pos + 1)) != -1) {
-		if (Image[pos + 6] != 0x32)
-			continue;
-		if (Image[pos + 9] != 0x78)
-			continue;
-		if (Image[pos + 10] != 0x32)
-			continue;
-		if (Image[pos + 13] != 0x21)
-			continue;
-		return (Image[pos + 14] + (Image[pos + 15] << 8)) -
-		    SCANNER_BIAS;
-	}
-	/* Try now for older game format */
-	while ((pos = FindCode("\xF5\xE5\xC5\xD5\x78\x32", pos + 1)) != -1) {
-		if (Image[pos + 8] != 0x21)
-			continue;
-		if (Image[pos + 11] != 0xCD)
-			continue;
-		/* End markers in compressed blocks */
-		GameVersion = 0;
-		return (Image[pos + 9] + (Image[pos + 10] << 8)) -
-		    SCANNER_BIAS;
-	}
-	writes("Unable to locate messages.\n");
-	exit(1);
-}
-
-static int FindMessages2(void)
-{
-	int pos = 0;
-	while ((pos = FindCode("\xF5\xE5\xC5\xD5\x78\x32", pos + 1)) != -1) {
-		if (Image[pos + 8] != 0x21)
-			continue;
-		if (Image[pos + 11] != 0xC3)
-			continue;
-		return (Image[pos + 9] + (Image[pos + 10] << 8)) -
-		    SCANNER_BIAS;
-	}
-	return 0;
-}
-
 static void Message(unsigned char m)
 {
 	PrintText(Image + MessageBase, m);
@@ -889,48 +764,22 @@ static void Message2(unsigned int m)
 	PrintText(Image + Message2Base, m);
 }
 
-static int FindObjects(void)
-{
-	int pos = 0;
-	while ((pos = FindCode("\xF5\xE5\xC5\xD5\x32", pos + 1)) != -1) {
-		if (Image[pos + 10] != 0xCD)
-			continue;
-		if (Image[pos + 7] != 0x21)
-			continue;
-		return (Image[pos + 8] + (Image[pos + 9] << 8)) -
-		    SCANNER_BIAS;
-	}
-	writes("Unable to locate objects.\n");
-	exit(1);
-}
-
 static void PrintObject(unsigned char obj)
 {
 	unsigned char *p = Image + ObjectBase;
 	PrintText(p, obj);
 }
 
-/* Standard format */
-static int FindRooms(void)
-{
-	int pos = 0;
-	while ((pos = FindCode("\x3E\x19\xCD", pos + 1)) != -1) {
-		if (Image[pos + 5] != 0xC3)
-			continue;
-		if (Image[pos + 8] != 0x21)
-			continue;
-		return (Image[pos + 9] + (Image[pos + 10] << 8)) -
-		    SCANNER_BIAS;
-	}
-	writes("Unable to locate rooms.\n");
-	exit(1);
-}
-
 static void PrintRoom(unsigned char room)
 {
 	unsigned char *p = Image + RoomBase;
+	/* Rebel Planet inherited the old game engine behaviour of putting the
+	   "You are" in automatically. This made no sense with the tokenisation
+	   text compression so later games dropped it */
+	if (GameNum == G_REBEL && LOCATION)
+		OutString("You are ");
 #ifdef LOAD_ALL
-	if (Blizzard && room < 102)
+	if (GameNum == G_BLIZZARD && room < 102)
 		PrintText(Image + LOAD_SIZE, room);
 	else
 #endif
@@ -961,11 +810,6 @@ static void PrintNumber(unsigned char n)
 		OutChar(*p++);
 }
 
-#define DESTROYED	252
-#define CARRIED		(Flag[2])
-#define WORN		(Flag[3])
-#define LOCATION	(Flag[0])
-#define NUMOBJECTS	(Flag[6])
 
 static int CarryItem(void)
 {
@@ -1047,7 +891,6 @@ static void Checkpoint(void)
 	memcpy(OopsFlag, Flag, 128);
 	memcpy(OopsObject, Object, MAXOBJ);
 }
-
 
 static void LoadGame(void)
 {
@@ -1191,18 +1034,19 @@ static void GetObject(unsigned char obj)
 	Put(obj, CARRIED);
 }
 
-static void DropObject(unsigned char obj)
+static int DropObject(unsigned char obj)
 {
 	/* FIXME: check if this is how the real game behaves */
 	if (Object[obj] == WORN) {
 		Message(29);
-		return;
+		return 0;
 	}
 	if (Object[obj] != CARRIED) {
 		Message(23);
-		return;
+		return 0;
 	}
 	Put(obj, LOCATION);
+	return 1;
 }
 
 static void Look(void)
@@ -1303,6 +1147,36 @@ static void Remove(unsigned char obj)
 	Put(obj, CARRIED);
 }
 
+static void TakeAll(int start)
+{
+    if (Flag[1]) {
+    	Message(25);
+        return;
+    }
+    int found = 0;
+    for (int i = start; i < NUMOBJECTS; i++) {
+        if (Object[i] == LOCATION) {
+            if (found)
+                OutChar('\n');
+            found = 1;
+            PrintObject(i);
+            OutReplace(0);
+            OutString("......");
+            if (CarryItem() == 0) {
+                Message(15);
+                return;
+            }
+            OutKillSpace();
+            OutString("Taken");
+            OutFlush();
+            Put(i, CARRIED);
+        }
+    }
+    if (!found) {
+        Message(31);
+    }
+}
+
 static void Means(unsigned char vb, unsigned char no)
 {
 	Word[0] = vb;
@@ -1313,6 +1187,7 @@ static void ExecuteLineCode(unsigned char *p)
 {
 	unsigned char arg1, arg2;
 	int n;
+	
 	do {
 		unsigned char op = *p;
 
@@ -1387,6 +1262,12 @@ static void ExecuteLineCode(unsigned char *p)
 				continue;
 			break;
 		case 15:
+			/* Work around for Temple of Terror */
+			if (GameNum == G_TEMPLE) {
+				if (arg1 == 28 && Flag[63] == 0 &&
+				    Word[0] == 20 && Word[1] == 162)
+					Flag[28] = 0;
+			}
 			if (Flag[arg1] == 0)
 				continue;
 			break;
@@ -1419,6 +1300,9 @@ static void ExecuteLineCode(unsigned char *p)
 				continue;
 			break;
 		case 23:
+			/* Work around for Temple of Terror */
+			if (arg1 == 12 && arg2 == 4)
+				arg1 = 68;
 			if (Flag[arg1] == arg2)
 				continue;
 			break;
@@ -1469,6 +1353,8 @@ static void ExecuteLineCode(unsigned char *p)
 			SaveGame();
 			break;
 		case 6:
+			/* Some games this prints things others it does not.
+			   We don't atm deal with that detail */
 			DropAll();
 			break;
 		case 7:
@@ -1479,12 +1365,19 @@ static void ExecuteLineCode(unsigned char *p)
 			Message(8);
 			break;
 		case 9:
+			/* TODO: I believe Rebel Planet also has the old
+			   behaviour on GET but it's not clear it matters */
 			GetObject(arg1);
 			break;
 		case 10:
-			DropObject(arg1);
+			/* On the older games GET/DROP completed the action */
+			if (DropObject(arg1) && GameNum == G_REBEL)
+				ActionsDone = 1;
 			break;
 		case 11:
+			/* He Man has custom code here */
+			if (GameNum == G_HEMAN && arg1 == 83)
+				Checkpoint();
 			Goto(arg1);
 			break;
 		case 12:
@@ -1522,9 +1415,19 @@ static void ExecuteLineCode(unsigned char *p)
 			Remove(arg1);
 			break;
 		case 22:
+			/* More workaround bits */
+			if (GameNum == G_TEMPLE) {
+				if (arg1 == 28 && arg2 == 2)
+					Flag[63] = !!(Object[48] == LOCATION);
+			}
 			Flag[arg1] = arg2;
 			break;
 		case 23:
+			/* More workaround bits */
+			if (GameNum == G_TEMPLE) {
+				if (arg1 == 12 && arg2 == 1)
+					arg1 = 60;
+			}
 			n = Flag[arg1] + arg2;
 			if (n > 255)
 				n = 255;
@@ -1558,11 +1461,23 @@ static void ExecuteLineCode(unsigned char *p)
 		case 30:
 			/* Beep */
 			break;
+		case 31:
+			/* Take all operator for early games. Doesn't take
+			   flannel only real objects */
+			/* ?? NumLowObjs ?? */
+			if (GameNum == G_KAYLETH)
+				TakeAll(78);
+			if (GameNum == G_HEMAN)
+				TakeAll(45);
+			Redraw = 1;
+			break;
 		case 32:
 			RamSave(1);
 			break;
 		case 33:
 			RamLoad();
+			break;
+		case 34:
 			break;
 		case 35:
 			Oops();
@@ -1594,23 +1509,6 @@ static unsigned char *NextLine(unsigned char *p)
 	return p;
 }
 
-static int FindStatusTable(void)
-{
-	int pos = 0;
-	while ((pos = FindCode("\x3E\xFF\x32", pos + 1)) != -1) {
-		if (Image[pos + 5] != 0x18)
-			continue;
-		if (Image[pos + 6] != 0x07)
-			continue;
-		if (Image[pos + 7] != 0x21)
-			continue;
-		return (Image[pos - 2] + (Image[pos - 1] << 8)) -
-		    SCANNER_BIAS;
-	}
-	writes("Unable to find automatics.\n");
-	exit(1);
-}
-
 static void RunStatusTable(void)
 {
 	unsigned char *p = Image + StatusBase;
@@ -1624,23 +1522,6 @@ static void RunStatusTable(void)
 			return;
 		p = NextLine(p);
 	}
-}
-
-int FindCommandTable(void)
-{
-	int pos = 0;
-	while ((pos = FindCode("\x3E\xFF\x32", pos + 1)) != -1) {
-		if (Image[pos + 5] != 0x18)
-			continue;
-		if (Image[pos + 6] != 0x07)
-			continue;
-		if (Image[pos + 7] != 0x21)
-			continue;
-		return (Image[pos + 8] + (Image[pos + 9] << 8)) -
-		    SCANNER_BIAS;
-	}
-	writes("Unable to find commands.\n");
-	exit(1);
 }
 
 static void RunCommandTable(void)
@@ -1715,40 +1596,47 @@ static void RunOneInput(void)
 
 static int ParseWord(char *p)
 {
-	char buf[5];
-	int len = strlen(p);
 	unsigned char *words = Image + VerbBase;
 	int i;
 
-	if (len >= 4) {
-		memcpy(buf, p, 4);
-		buf[4] = 0;
-	} else {
-		memcpy(buf, p, len);
-		memset(buf + len, ' ', 4 - len);
-	}
-	for (i = 0; i < 4; i++) {
-		if (buf[i] == 0)
-			break;
-		if (islower(buf[i]))
-			buf[i] = toupper(buf[i]);
-	}
 	while (*words != 126) {
-		if (memcmp(words, buf, 4) == 0)
+		if (memcmp(words, p, 4) == 0)
 			return words[4];
 		words += 5;
 	}
 	return 0;
 }
 
+static unsigned GetWord(char **ptr, char *buf)
+{
+	char *p = *ptr;
+	unsigned n;
+
+	while(*p && isspace(*p))
+		p++;
+	if (*p == 0) {
+		*ptr = p;
+		return 0;
+	}
+	n = 0;
+	memset(buf, ' ', 4);
+	while(*p && !isspace(*p)) {
+		if (n < 4)
+			*buf++ = toupper(*p);
+		p++;
+	}
+	*ptr = p;
+	return 1;
+}
+	
 static void SimpleParser(void)
 {
 	int nw;
 	int i;
 	int wn = 0;
-	char wb[5][17];
-	/* Workaround for cc65 limit */
-	static char buf[256];
+	char wb[5][4];
+	char buf[128];
+	char *p;
 
 	OutChar('\n');
 	if (GameVersion > 0) {
@@ -1758,9 +1646,12 @@ static void SimpleParser(void)
 		OutString("> ");
 	OutFlush();
 	do {
-		LineInput(buf, 255);
-		nw = sscanf(buf, "%16s %16s %16s %16s %16s", wb[0], wb[1],
-			    wb[2], wb[3], wb[4]);
+		LineInput(buf, 127);
+		p = buf;
+		for (nw = 0; nw < 5; nw++) {
+			if (GetWord(&p, wb[nw]) == 0)
+				break;
+		}
 	} while (nw == 0);
 
 	for (i = 0; i < nw; i++) {
@@ -1768,8 +1659,10 @@ static void SimpleParser(void)
 		if (Word[wn])
 			wn++;
 	}
+	while(wn < 5)
+		Word[wn++] = 0;
 	/* Blizzard Pass has magic fixups it seems */
-	if (Blizzard) {
+	if (GameNum == G_BLIZZARD) {
 		switch(Word[0]) {
 		case 249:
 			Word[0] = 43;
@@ -1782,108 +1675,19 @@ static void SimpleParser(void)
 			break;
 		}
 	}
-	for (i = wn; i < 5; i++)
-		Word[i] = 0;
 }
 
-static void FindTables(void)
+static int FindCode(char *x, unsigned base)
 {
-	/* We would need a bigger working buffer for this game and only
-	   to find the tokens so hard code it */
-	if (Blizzard)
-		TokenBase = 0x56BC;
-	else
-		TokenBase = FindTokens();
-	RoomBase = FindRooms();
-	ObjectBase = FindObjects();
-	StatusBase = FindStatusTable();
-	ActionBase = FindCommandTable();
-	ExitBase = FindExits();
-	FlagBase = FindFlags();
-	ObjLocBase = FindObjectLocations();
-	MessageBase = FindMessages();
-	Message2Base = FindMessages2();
-}
-
-/*
- *	Version 0 is different
- */
-
-static int GuessLowObjEnd0(void)
-{
-	unsigned char *p = Image + ObjectBase;
-	unsigned char *t = NULL;
-	unsigned char c = 0, lc;
-	int n = 0;
-
-	while (1) {
-		if (t == NULL)
-			t = TokenText(*p++);
-		lc = c;
-		c = *t & 0x7F;
-		if (c == 0x5E || c == 0x7E) {
-			if (lc == ',' && n > 20)
-				return n;
-			n++;
-		}
-		if (*t++ & 0x80)
-			t = NULL;
-	}
-}
-
-
-static int GuessLowObjEnd(void)
-{
-	unsigned char *p = Image + ObjectBase;
-	unsigned char *x;
-	int n = 0;
-
-	/* Can't automatically guess in this case */
-	if (Blizzard)
-		return 69;
-
-	if (GameVersion == 0)
-		return GuessLowObjEnd0();
-
-	while (n < NUMOBJECTS) {
-		while (*p != 0x7E && *p != 0x5E) {
-			p++;
-		}
-		x = TokenText(p[-1]);
-		while (!(*x & 0x80)) {
-			x++;
-		}
-		if ((*x & 0x7F) == ',')
-			return n;
-		n++;
+	unsigned char *p = Image + base;
+	unsigned len = strlen(x);
+	while (p < Image + ImageLen - len) {
+		if (memcmp(p, x, len) == 0)
+			return p - Image;
 		p++;
 	}
-	writes("Unable to guess the last description object.\n");
-	return 0;
+	return -1;
 }
-
-#if 0
-void DisplayBases(void)
-{
-	printf("In memory:\n");
-	printf("Actions at %04X\n", ActionBase);
-	printf("Status at %04X\n", StatusBase);
-	printf("Verbs at %04X\n", VerbBase);
-	printf("Tokens at %04X\n", TokenBase);
-	printf("Objects at %04X\n", ObjectBase);
-	printf("Exits at %04X\n", ExitBase);
-	printf("Messages at %04X\n", MessageBase);
-	printf("Rooms at %04X\n", RoomBase);
-	printf("Messages Block 2 at %04X\n", Message2Base);
-
-	printf("\nDisk based:\n");
-	printf("Flags at %04X\n", FlagBase);
-	printf("Object Locations at %04X\n", ObjLocBase);
-
-	printf("\n\nGame version %d\n", GameVersion);
-	printf("\n\n");
-}
-#endif
 
 int main(int argc, char *argv[])
 {
@@ -1908,14 +1712,11 @@ int main(int argc, char *argv[])
 		/* 48K game */
 	} else if (len == 131103) {
 		/* 128K game so Blizzard Pass */
-		GameVersion = 1;
-		Blizzard = 1;
-		NoCarryLimit = 1;
 	} else {
-		writes("Not a valid /sna.\n");
+		writes("Not a valid .sna.\n");
 		exit(1);
 	}
-	lseek(GameFile, 0x1B00 + DISK_BIAS, SEEK_SET);
+	lseek(GameFile, 0x2B00 + DISK_BIAS, SEEK_SET);
 	/* Load the image starting after the screen end */
 	if (read(GameFile, Image, LOAD_SIZE) != LOAD_SIZE) {
 		writes("Image read failed.\n");
@@ -1929,19 +1730,109 @@ int main(int argc, char *argv[])
 		writes("No verb table!\n");
 		exit(1);
 	}
-	FindTables();
+
+	/* We hard code these unlike the original interpreter. There are
+	   only a few games and it removes all the bulky scanning code. */
+	switch(VerbBase) {
+	case 0x0A59:
+		/* Has wait timers we don't handle */
+		GameNum = G_REBEL;
+		NumLowObjs = 70;
+		TokenBase = 0x60DA;
+		GameVersion = 0;
+		RoomBase = 0x3b15;
+		ObjectBase = 0x5821;
+		StatusBase = 0x219d;
+		ActionBase = 0x28e0;
+		ExitBase = 0x18a3;
+		FlagBase = 0x4f9;
+		ObjLocBase = 0x731e;
+		MessageBase = 0x4305;
+		Message2Base = 0x5419;
+		/* Load the image offset by 18A3 bytes from 5B00 */
+		shift = 0x18A3;
+		break;
+	case 0x3C20:
+		/* Should work */
+		GameNum = G_BLIZZARD;
+		NumLowObjs = 69;
+		GameVersion = 1;
+		NoCarryLimit = 1;
+		TokenBase = 0x56BC;
+		RoomBase = 0x1ace;
+		ObjectBase = 0x31e6;
+		StatusBase = 0x3bd9;
+		ActionBase = 0x3f54;
+		ExitBase = 0x5067;
+		FlagBase = 0x552;
+		ObjLocBase = 0xb6a8;
+		MessageBase = 0x2326;
+		Message2Base = 0x0;
+		/* Rooms are the first block in v1 games so load from there */
+		shift = 0x1ACE;
+		break;
+	case 0x1D3A:
+		/* Needs more testing */
+		GameNum = G_HEMAN;
+		NumLowObjs = 48;
+		TokenBase = 0x31E0;
+		RoomBase = 0x4036;
+		ObjectBase = 0x3ba2;
+		StatusBase = 0x2abf;
+		ActionBase = 0x1cd8;
+		ExitBase = 0x292f;
+		FlagBase = 0x346;
+		ObjLocBase = 0x83cb;
+		MessageBase = 0x4b65;
+		Message2Base = 0x34ee;
+		/* V2 games start with the actions */
+		shift = 0x1CD8;
+		break;
+	case 0x209D:
+		/* Needs more testing */
+		GameNum = G_TEMPLE;
+		NumLowObjs = 51;
+		TokenBase = 0x35D4;
+        	RoomBase = 0x38b3;
+		ObjectBase = 0x414f;
+		StatusBase = 0x2d04;
+		ActionBase = 0x1da4;
+		ExitBase = 0x2b5c;
+		FlagBase = 0x6c0;
+		ObjLocBase = 0x8594;
+		MessageBase = 0x4b7d;
+		Message2Base = 0x5ad0;
+		/* V2 games start with the actionss */
+		shift = 0x1DA4;
+		break;
+	case 0x2661:
+		/* Currently doesn't work */
+		GameNum = G_KAYLETH;
+		GameVersion = 0;
+		NumLowObjs = 54;
+		TokenBase = 0x6323;
+		RoomBase = 0x53b3;
+		ObjectBase = 0x5d70;
+		StatusBase = 0x344d;
+		ActionBase = 0x1f48;
+		ExitBase = 0x32e0;
+		FlagBase = 0x363;
+		ObjLocBase = 0x8d5f;
+		MessageBase = 0x3f99;
+		Message2Base = 0x5b9d;
+		/* V2 games start with the actions */
+		shift = 0x1F40;
+		break;
+	default:
+		writes("Unknown game image\n");
+		exit(1);
+	}
+
+	/* So it's relative to the 1B00 start of main memory */
+	VerbBase += 0x1000;
 
 	lseek(GameFile, DISK_BIAS + 0x1B00 + FlagBase, SEEK_SET);
 	read(GameFile, InitFlag, 6);
-
-	/* The block ordering varies by version */
-	/* Work out where to load the working image from */
-	if (GameVersion == 0)
-		shift = ExitBase;
-	else if (GameVersion == 1)
-		shift = RoomBase;
-	else if (GameVersion == 2)
-		shift = ActionBase;
 
 	/* Turn the offset into an address relative to the image */
 	shift += 0x1B00;
@@ -1954,7 +1845,7 @@ int main(int argc, char *argv[])
 	}
 
 #ifdef LOAD_ALL
-	if (Blizzard) {
+	if (GameNum == G_BLIZZARD) {
 		if (lseek(GameFile, 0x18000 + DISK_BIAS, SEEK_SET) == -1 ||
 			read(GameFile, Image + LOAD_SIZE, 0x4000) != 0x4000) {
 			writes("Failed to load text block.\n");
@@ -1985,7 +1876,6 @@ int main(int argc, char *argv[])
 	/* ObjLoc Flag and Message bases we don't adjust as we work those
 	   relative to disc */
 	NewGame();
-	NumLowObjs = GuessLowObjEnd();
 	DisplayInit();
 	RamSave(0);
 	Look();
