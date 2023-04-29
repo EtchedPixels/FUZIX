@@ -119,7 +119,9 @@ static int pagemap_alloc2(ptptr p, uint8_t c)
 		ptr[i] = c;
 		i++;
 	}
+#ifdef DEBUG
 	kprintf("map %x%x\n", p->p_page, p->p_page2);
+#endif
 	return 0;
 }
 
