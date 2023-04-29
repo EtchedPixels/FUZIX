@@ -4,7 +4,7 @@
 
 extern void pcf8584_bus_reset(void);
 extern int pcf8584_tx_msg(uint8_t to, const uint8_t *p, unsigned len);
-extern int pcf8485_rx_msg(uint8_t from, uint8_t *p, unsigned len);
+extern int pcf8584_rx_msg(uint8_t from, uint8_t *p, unsigned len);
 extern void pcf8584_init(uint8_t clock);
 
 #define PCF_CLK_3MHZ	0x00
