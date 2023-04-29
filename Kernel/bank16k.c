@@ -173,7 +173,7 @@ retry:
 #ifdef SWAPDEV
 		/* Swap someone out except for us */
 		swapout(udata.u_ptab);
-		goro retry;
+		goto retry;
 #else
 		__hard_irqrestore(irq);
 		return ENOMEM;
