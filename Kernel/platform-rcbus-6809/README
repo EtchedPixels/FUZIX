@@ -24,6 +24,8 @@ FF00-FFFF:		vectors etc
 
 Devices
 
+Joysticks at 0xFE01/FE02
+Banked 512K card 0xFE7X
 IDE at 0xFE10
 6840 at 0xFE60
 16x50 UART at 0xFEC0
@@ -31,11 +33,9 @@ IDE at 0xFE10
 TODO:
 	Move istack to FF00-FF??
 	Import the additional mini68k uart work back
-	Debug swap
+	Sort out timer events on the 6821 v 6522
 
 Devices To Add
--	RTC
--	Joystick
 -	PS/2 card
 -	80 column card
 -	TMS9918A	(and int source ?)

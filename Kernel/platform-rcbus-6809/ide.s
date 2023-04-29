@@ -27,8 +27,15 @@ _devide_read_data:
 	ldx _blk_op
 	leay 512,x
 	sty endp
-	tst _blk_op+2
+	lda _blk_op+2
 	beq readbyte
+	deca
+	beq readuser
+	; Temporarily map the given page at 0x400
+	lda _blk_op+3
+	jsr map_for_swap
+	bra readbyte
+readuser:
 	jsr map_process_always
 readbyte:
 	lda <IDEDATA
@@ -45,8 +52,15 @@ _devide_write_data:
 	ldx _blk_op
 	leay 512,x
 	sty endp
-	tst _blk_op+2
+	lda _blk_op+2
 	beq writebyte
+	deca
+	beq writeuser
+	; Temporarily map the given page at 0x400
+	lda _blk_op+3
+	jsr map_for_swap
+	bra writebyte
+writeuser:
 	jsr map_process_always
 writebyte:
 	lda ,x+

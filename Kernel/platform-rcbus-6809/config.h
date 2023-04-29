@@ -18,11 +18,12 @@
 #define MAX_MAPS	(32-3)
 
 /* And swapping FIXME - needs sorting out yet */
-#define SWAPDEV (swap_dev)	/* Dynamic swap */
-#define SWAP_SIZE   0x78	/* 60K in 512 byte blocks */
-#define SWAPBASE    0x0000	/* We swap the lot, including stashed uarea */
-#define SWAPTOP     0xF000	/* so it's a round number of 256 byte sectors */
-#define MAX_SWAPS   32
+#define SWAPDEV		(swap_dev)	/* Dynamic swap */
+#define SWAP_SIZE	0x79		/* 60K in 512 byte blocks plus the udata */
+#define SWAPBASE	0x0000
+#define SWAPTOP		0xF200		/* User space plus udata block */
+
+#define MAX_SWAPS	32
 #define CONFIG_DYNAMIC_SWAP
 
 #define CONFIG_RTC
@@ -49,31 +50,31 @@
 #define MAX_BLKDEV  	2	/* 2 IDE drives */
 #define CONFIG_IDE              /* enable if IDE interface present */
 
-#define TICKSPERSEC 10   /* Ticks per second */
+#define TICKSPERSEC	10   /* Ticks per second */
 
-#define PROGBASE    0x0000  /* also data base */
-#define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xF000  /* Top of program */
+#define PROGBASE	0x0000  /* also data base */
+#define PROGLOAD	0x0100  /* also data base */
+#define PROGTOP		0xF000  /* Top of program */
 
-#define DP_BASE 0x0000
-#define DP_SIZE 0x0100
+#define DP_BASE		0x0000
+#define DP_SIZE		0x0100
 
 #define TTY_INIT_BAUD	B38400
-#define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
-                          /* In this case, the default is the first TTY device */
-                            /* Temp FIXME set to serial port for debug ease */
+#define BOOT_TTY	(512 + 1)   /* Set this to default device for stdio, stderr */
+                              /* In this case, the default is the first TTY device */
+                              /* Temp FIXME set to serial port for debug ease */
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 2
-#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    5       /* Number of block buffers at boot time */
-#define NMOUNTS	 2	  /* Number of mounts at a time */
+#define NUM_DEV_TTY	2
+#define TTYDEV		BOOT_TTY /* Device used by kernel for messages, panics */
+#define NBUFS		5       /* Number of block buffers at boot time */
+#define NMOUNTS		2	/* Number of mounts at a time */
 
 extern void plt_discard(void);
 
 #define plt_copyright()		/* for now */
 
-#define BOOTDEVICENAMES "hd#"
+#define BOOTDEVICENAMES	"hd#"

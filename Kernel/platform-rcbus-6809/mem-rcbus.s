@@ -11,6 +11,7 @@
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
+	.globl map_for_swap
 
 	.globl __sectionbase_.common__
 
@@ -96,6 +97,11 @@ map_restore:
 	stb	0xFE7A
 	puls	d,pc
 
+map_for_swap:
+	sta	cur_map+1
+	sta	0xFE79
+	rts
+
 _copy_common:
 	;	B holds the page to stuff it in, ints are off, and we will
 	;	clean up all the maps in the caller later. Will need
@@ -110,7 +116,7 @@ commoncp:
 	beq	skipio
 	cmpx	#0		; copy until we did all the vectors
 	bne	commoncp
-	bra	map_kernel
+	jmp	map_kernel
 skipio:
 	leax	0x100,x
 	leay	0x100,y

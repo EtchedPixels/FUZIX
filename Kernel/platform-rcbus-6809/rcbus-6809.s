@@ -18,7 +18,6 @@
 
 	; exported
 	.globl _bufpool
-	.globl _discard_size
 
 	; imported
 	.globl unix_syscall_entry
@@ -63,8 +62,6 @@ _bufpool:
 	;	common.
 	;
 	.area	.discard
-_discard_size:
-	.db	__sectionlen_.discard__/BUFSIZE
 
 init_early:
 	rts

@@ -8,8 +8,8 @@ section .data
 section .bss
 section .buffers
 section .discard
-section .commondata high 0xFB00
+section .udata load 0xF000
+section .commondata
 section .common
-section .udata load 0xFB00
 section .vectors load 0xFFF0
 entry start
