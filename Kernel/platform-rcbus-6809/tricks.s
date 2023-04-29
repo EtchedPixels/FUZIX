@@ -71,7 +71,7 @@ _switchin:
 
 	stx	newpp
 	; get process table
-	ldd	P_TAB__P_PAGE_OFFSET,x		; LSB of 16-bit page no
+	ldd	P_TAB__P_PAGE_OFFSET,x		; Will be 0 in swap cases
 	bne	not_swapped
 
 	jsr	_get_common	; reallocate dead page for new common
@@ -164,6 +164,12 @@ _dofork:
 
 	jsr	fork_copy		; copy process memory to new bank
 					; and save parents uarea
+
+	; On return from the fork copy X points to the byte after the top
+	; bank code
+
+	lda	-1,x			; upper bank
+	sta	$FE7B			; set to child common
 
 	; We are now in the kernel child context
 
