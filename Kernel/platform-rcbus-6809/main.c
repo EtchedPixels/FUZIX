@@ -22,6 +22,8 @@ void do_beep(void)
  *	Once we are about to load init we can throw the boot code away
  *	and convert it into disk cache. This gets us 7 or so buffers
  *	back which more than doubles our cache size !
+ *
+ *	TODO: claim back to C000
  */
 void plt_discard(void)
 {

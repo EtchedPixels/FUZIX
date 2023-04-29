@@ -9,17 +9,28 @@
 /* Pure swap */
 #undef CONFIG_SWAP_ONLY
 
-#define CONFIG_BANK_FIXED
-#define MAX_MAPS 10
-#define MAP_SIZE 0xBE00U
-#define CONFIG_BANKS	1
-/* And swapping */
+/* 16K reported page size */
+#define CONFIG_PAGE_SIZE	48
+/* We use flexible 16K banks with a fixed common */
+#define CONFIG_BANK16
+#define CONFIG_BANKS	4
+
+#define MAX_MAPS	(32-3)
+
+/* And swapping FIXME - needs sorting out yet */
 #define SWAPDEV (swap_dev)	/* Dynamic swap */
-#define SWAP_SIZE   0x60	/* 48K in 512 byte blocks */
+#define SWAP_SIZE   0x78	/* 60K in 512 byte blocks */
 #define SWAPBASE    0x0000	/* We swap the lot, including stashed uarea */
-#define SWAPTOP     0xC000	/* so it's a round number of 256 byte sectors */
+#define SWAPTOP     0xF000	/* so it's a round number of 256 byte sectors */
 #define MAX_SWAPS   32
 #define CONFIG_DYNAMIC_SWAP
+
+/*
+ *	When the kernel swaps something it needs to map the right page into
+ *	memory using map_for_swap and then turn the user address into a
+ *	physical address. We use the second 16K window.
+ */
+#define swap_map(x)	((uint8_t *)((((x) & 0x3FFF)) + 0x4000))
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
@@ -34,7 +45,7 @@
 
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xBE00  /* Top of program */
+#define PROGTOP     0xF000  /* Top of program */
 
 #define DP_BASE 0x0000
 #define DP_SIZE 0x0100
@@ -52,7 +63,6 @@
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5       /* Number of block buffers at boot time */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
-#define swap_map(x)	((uint8_t *)(x))
 
 extern void plt_discard(void);
 

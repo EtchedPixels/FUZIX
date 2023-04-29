@@ -8,11 +8,13 @@
 	.globl size_ram
 	.globl map_kernel
 	.globl map_process
-	.globl map_process_a
 	.globl map_process_always
 	.globl map_save
 	.globl map_restore
-	.globl copybank
+
+	.globl __sectionbase_.common__
+
+	.globl cur_map
 
 	.globl __ugetc
 	.globl __ugetw
@@ -22,7 +24,7 @@
 	.globl __uput
 	.globl __uzero
 
-	.globl copybanks
+	.globl _copy_common
 
 	; imported
 	.globl _ramsize
@@ -34,59 +36,86 @@
 	.area .discard
 
 ; Sets ramsize, procmem, membanks
-size_ram
+size_ram:
 	ldd  #512
 	std _ramsize
-	subd #64	; whatever the kernel occupies (changes when we move
-			; to paged)
+	subd #48	; whatever the kernel occupies (changes when we move
 	std _procmem
 	rts
 
 	.area .common
 
-map_kernel
-	pshs a
-	; FIXME: optimize
-	lda #32
-	bra map_set_a
+map_process:
+	cmpx	#0
+	bne	map_procu
+map_kernel:
+	pshs	d
+	ldd	#0x2021
+	std	cur_map
+	std	0xFE78
+	incb
+	stb	cur_map+2
+	stb	0xFE7A
+	puls	d,pc
 
-map_process
-	tsta
-	beq map_kernel
-map_process_a
-	pshs a
-	bra map_set_a
+map_procu:
+	pshs	d
+	ldd	,x++
+	std	cur_map
+	std	$FE78
+	ldb	,x
+	stb	cur_map+2
+	stb	$FE7A
+	puls	d,pc
 
-map_process_always
-	pshs a
-	lda U_DATA__U_PAGE+1		; LSB of 16-bit page
-map_set_a
-	sta curmap
-	sta $FE78
-	inca
-	sta $FE79
-	inca
-	sta $FE7A
-	puls a,pc
+map_process_always:
+	pshs	d
+	ldd	U_DATA__U_PAGE
+	std	cur_map
+	std	0xFE78
+	ldb	U_DATA__U_PAGE+2
+	stb	cur_map+2
+	stb	0xFE7A
+	puls	d,pc
 	
-map_save
-	pshs a
-	lda curmap
-	sta savedmap
-	puls a,pc
+map_save:
+	pshs	d
+	ldd	cur_map
+	std	saved_map
+	ldb	cur_map+2
+	stb	saved_map+2
+	puls	d,pc
 
-map_restore
-	pshs a
-	lda savedmap
-	bra map_set_a
+map_restore:
+	pshs	d
+	ldd	saved_map
+	std	cur_map
+	std	0xFE78
+	ldb	saved_map+2
+	stb	cur_map+2
+	stb	0xFE7A
+	puls	d,pc
 
-;
-;	If we could split text/const we could optimize this because all our
-;	consts could be above 0xC000 so available directly from the user map
-;	but alas the tool chain can't do it. For now we just do it the slow
-;	way but it might well be worth checking in uput/uget so that 99%+ of
-;	the time we go the fast path.
-;
+_copy_common:
+	;	B holds the page to stuff it in, ints are off, and we will
+	;	clean up all the maps in the caller later. Will need
+	;	review if we allow interrupts during fork copy
+	stb	$FE79
+	ldx	#__sectionbase_.common__	; Start of common space to copy
+	ldy	#__sectionbase_.common__-0x8000	; we are mapping a Cxxx page at 4xxx
+commoncp:
+	ldd	,x++
+	std	,y++
+	cmpx	#$FE00		; I/O window
+	beq	skipio
+	cmpx	#0		; copy until we did all the vectors
+	bne	commoncp
+	bra	map_kernel
+skipio:
+	leax	0x100,x
+	leay	0x100,y
+	bra	commoncp
+
 __ugetc:
 	jsr map_process_always
 	ldb ,x
@@ -167,44 +196,11 @@ zdone:
 	ldx #0
 	puls y,pc
 
-;	copy bank A into bank B, whole bank. Interrupts are off
-;
-;	We do 3 x 16K copies keeping the common mapped.
-;
-copybanks:
-	sta $FE79		; source into 0x4000
-	stb $FE7A		; dest into 0x8000
-	bsr copybank
-	inca
-	incb
-	sta $FE79		; source into 0x4000
-	stb $FE7A		; dest into 0x8000
-	bsr copybank
-	inca
-	incb
-	sta $FE79		; source into 0x4000
-	stb $FE7A		; dest into 0x8000
-	bsr copybank
-	; Restore the memory map we mashed
-	jmp map_kernel
-	
-;
-;	Copy a 16K bank using the MMU paging
-; 	This wants a 6309 version
-;
-copybank:
-	pshs d
-	ldx #0x4000
-	ldu #0x8000
-copier:
-	ldd ,x++
-	std ,u++
-	cmpx #0x8000
-	bne copier
-	puls d,pc
-
-
 	.area .commondata
 
-curmap		.db 0
-savedmap	.db 0
+cur_map:
+	.dw 0
+	.db 0
+saved_map:
+	.dw 0
+	.db 0

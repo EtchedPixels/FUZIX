@@ -3,7 +3,7 @@ define lensympat __sectionlen_%s__
 section .start load 0x0000
 section .text
 section .text2
-section .const load 0xC000
+section .const
 section .data
 section .bss
 section .buffers
