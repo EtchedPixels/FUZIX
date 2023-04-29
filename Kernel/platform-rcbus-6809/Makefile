@@ -2,11 +2,11 @@ CSRCS = devices.c main.c libc.c devtty.c devinput.c
 
 CDSRCS = discard.c
 
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/ds1302.c
+DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/ds1302.c ../dev/devsd.c
 DASRCS = ../dev/ds1302_6809.s
-DDSRCS = ../dev/devide_discard.c ../dev/mbr.c ../dev/ds1302_discard.c
+DDSRCS = ../dev/devide_discard.c ../dev/mbr.c ../dev/ds1302_discard.c ../dev/devsd_discard.c
 
-ASRCS = crt0.s rcbus-6809.s ide.s
+ASRCS = crt0.s rcbus-6809.s ide.s sdcard.s
 ASRCS += tricks.s commonmem.s mem-rcbus.s 
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -52,8 +52,9 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec16.o ../syscall_exec.o devtty.o libc.o devide.o blkdev.o ide.o \
-	devide_discard.o mbr.o discard.o ds1302_discard.o
+	../syscall_exec16.o ../syscall_exec.o devtty.o libc.o \
+	devide.o blkdev.o ide.o devsd.o sdcard.o \
+	devide_discard.o mbr.o discard.o ds1302_discard.o devsd_discard.o
 	../tools/pad256 ../fuzix.bin
 	../tools/lw-checkmap ../fuzix.map
 	../tools/decb-image <../fuzix.bin fuzix.img

@@ -39,5 +39,5 @@ Devices To Add
 -	PS/2 card
 -	80 column card
 -	TMS9918A	(and int source ?)
--	SD bitbang on the 6821 GPIO
+-	SD bitbang on the 6821 GPIO (in progress)
 -	W5100 carrier card if it'll work with the 6809 ?

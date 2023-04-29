@@ -49,6 +49,8 @@
 
 #define MAX_BLKDEV  	2	/* 2 IDE drives */
 #define CONFIG_IDE              /* enable if IDE interface present */
+#define CONFIG_SD
+#define SD_DRIVE_COUNT	1
 
 #define TICKSPERSEC	10   /* Ticks per second */
 
