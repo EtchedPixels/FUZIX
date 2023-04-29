@@ -37,7 +37,7 @@ ds1302_set_driven:
         anda #~PIN_DATA_HIZ	; 0 - output pin
 	andb #1
 	bne writereg
-        orab #PIN_DATA_HIZ
+        oraa #PIN_DATA_HIZ
 writereg:
 	staa RTCREG
 	staa rtc_shadow
