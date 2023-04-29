@@ -167,8 +167,10 @@ void plt_interrupt(void)
 	if (ptm[1] & 0x80) {	/* Timer interrupts present, must be timer 3 */
 		ptm[6];	/* Clear the interrupt */
 		tick++;
-		while(tick--)
+		while(tick) {
 			timer_interrupt();
+			tick--;
+		}
 	}
 	wakeup(&plt_interrupt);
 }
