@@ -192,6 +192,7 @@ _dofork:
 fork_copy:
 ; copy the process memory to the new bank and stash parent uarea to old bank
 	ldx	fork_proc_ptr
+	leax	P_TAB__P_PAGE_OFFSET,x	; pointer to pages
 	ldu	#U_DATA__U_PAGE
 	jsr	copybank		; copy low 16K
 	jsr	copybank		; copy mid 16K
@@ -203,10 +204,11 @@ fork_copy:
 ;	TODO 6309 version ?
 ;
 copybank:
+	jsr	map_kernel		; process map is in kernel space
 	lda	,u+
 	ldb	,x+
 	sta	0xFE79
-	stb	0xFE8A
+	stb	0xFE7A
 	pshs	x,u
 	ldx	#0x4000
 	ldu	#0x8000

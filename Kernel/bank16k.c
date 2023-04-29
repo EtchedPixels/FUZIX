@@ -108,8 +108,10 @@ static int pagemap_alloc2(ptptr p, uint8_t c)
 #endif
 
 	/* Pages in the low then repeat the top one */
+	/* Work around gcc 6809 bug */
+	pfptr -= needed;
 	for (i = 0; i < needed; i++)
-		ptr[i] = pfree[--pfptr];
+		ptr[i] = pfree[pfptr + i];
 
 	if (!c)
 		c = ptr[i - 1];
@@ -117,6 +119,7 @@ static int pagemap_alloc2(ptptr p, uint8_t c)
 		ptr[i] = c;
 		i++;
 	}
+	kprintf("map %x%x\n", p->p_page, p->p_page2);
 	return 0;
 }
 
