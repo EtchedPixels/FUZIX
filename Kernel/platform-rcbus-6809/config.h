@@ -25,6 +25,11 @@
 #define MAX_SWAPS   32
 #define CONFIG_DYNAMIC_SWAP
 
+#define CONFIG_RTC
+#define CONFIG_RTC_FULL
+#define CONFIG_RTC_EXTENDED
+#define CONFIG_RTC_DS1302
+
 /*
  *	When the kernel swaps something it needs to map the right page into
  *	memory using map_for_swap and then turn the user address into a

@@ -7,6 +7,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <ds1302.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -42,6 +43,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+    ds1302_init();
 #ifdef CONFIG_IDE
     devide_init();
 #endif

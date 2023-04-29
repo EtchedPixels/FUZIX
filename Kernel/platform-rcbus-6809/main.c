@@ -6,6 +6,7 @@
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 uint16_t swap_dev = 0xFFFF;
+uint8_t rtc_shadow;
 
 void plt_idle(void)
 {

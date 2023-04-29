@@ -10,29 +10,31 @@
 	        ; startup code
 	        .area .start
 
+		; On entry 0000-BFFF are in situ. Cxxx holds the common for
+		; Fxxx
+
 		fdb 0x6809
 start:
 		orcc #0x10		; interrupts definitely off
 		lds #kstack_top		; note we'll wipe the stack later
 
-		ldx #$E000
-		ldy #$0
+		ldx #$C000
+		ldy #$F000
 copy1:
-		ldd ,--x
-		std ,--y
-		cmpy #$C000
+		ldd ,x++
+		std ,y++
+		cmpy #0000
 		beq move_done
 		; Don't copy into the I/O window
-		cmpy #$FF00
+		cmpy #$FE00
 		bne copy1
-		leax $-100,x
-		leay $-100,y
+		leax $100,x
+		leay $100,y
 		bra copy1
 move_done:	jmp premain
 
 		.area .discard
 
-		; We pack the data 2K down so we fit under the loader
 premain:
 		clra
 		ldx #__sectionbase_.udata__
