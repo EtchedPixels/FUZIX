@@ -30,6 +30,9 @@
 #define CONFIG_RTC_EXTENDED
 #define CONFIG_RTC_DS1302
 
+#define CONFIG_INPUT			/* Input device for joystick */
+/*#define CONFIG_INPUT_GRABMAX	3 */
+
 /*
  *	When the kernel swaps something it needs to map the right page into
  *	memory using map_for_swap and then turn the user address into a
