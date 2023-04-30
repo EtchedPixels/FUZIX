@@ -1387,7 +1387,7 @@ int colon_mode(void)
 	con_goto(screen_height - 1, 0);
 	con_putc(':');
 	con_clear_to_eol();
-	con_goto(screen_height - 1, 0);
+	con_goto(screen_height - 1, 1);
 
 	*bp = 0;
 	while (1) {
@@ -1674,7 +1674,9 @@ int main(int argc, char *argv[])
 		return (3);
 
 	con_goto(0,0);
-
+	con_clear_to_bottom();
+	con_goto(0,0);
+	
 	signal(SIGHUP, hupped);
 	do_goto();
 	display(1);
