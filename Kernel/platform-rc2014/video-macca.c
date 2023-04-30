@@ -20,6 +20,8 @@
  *	  transparency on sprites and overlays
  *	- The wait pin can be ignored if you wait long enough on a mode
  *	  change or a bitmap mode clear screen (we do)
+ *
+ *	Must keep this module in the same bank as the font
  */
 
 #include <kernel.h>
@@ -55,6 +57,7 @@ __sfr __at 0x41 vid_data;
 
 static uint8_t scroll_pos;
 static uint8_t con_xbias;
+static uint8_t ma_mode;
 
 static void tilemap_set(unsigned char y1, unsigned char x1)
 {
@@ -62,10 +65,16 @@ static void tilemap_set(unsigned char y1, unsigned char x1)
 
 	/* Adjust for hardware scroll */
 	y1 += scroll_pos;
-	if (y1 >= 30)
-		y1 -= 30;
+	if (y1 >= vt_theight)
+		y1 -= vt_theight;
 
-	off = 80 * y1 + x1 + con_xbias;
+	if (ma_mode == 0)
+		off = 80 * y1;
+	else
+		off = 64 * y1;
+	off += y1 + x1;
+	if (con_xbias)
+		off += vt_twidth;
 	vid_cmd = CMD_TILEMAP;
 	vid_data = off;
 	vid_data = off >> 8;
@@ -111,7 +120,7 @@ void ma_plot_char(int8_t y, int8_t x, uint16_t c)
 void ma_clear_lines(int8_t y, int8_t ct)
 {
 	while (ct--)
-		ma_clear_across(y++, 0, 40);
+		ma_clear_across(y++, 0, vt_twidth);
 }
 
 void ma_clear_across(int8_t y, int8_t x, int16_t l)
@@ -152,7 +161,7 @@ void ma_scroll_down(void)
 void macca_set_output(void)
 {
 	if (outputtty == 2)
-		con_xbias = 40;
+		con_xbias = 1;
 	else
 		con_xbias = 0;
 }
@@ -195,15 +204,19 @@ static void macca_set_char(uint8_t ch, uint8_t *p)
 	irqrestore(i);
 }
 
-/* 320 x 240 40 x 30 */
-uint8_t macca_init(void)
+static void macca_set_mode(uint8_t mode)
 {
 	uint8_t *p;
 	unsigned n = 0;
 	unsigned i;
+	uint8_t modebits = mode;
+
+	/* Tile mode dual console setup */
+	if (mode < 3)
+		modebits |= 0x80;
 
 	vid_cmd = CMD_MODE;
-	vid_data = 0x80;	/* 320x240 double tilewidth */
+	vid_data = modebits;	/* 320x240 double tilewidth */
 	vid_data = 0x00;
 	vid_data = 0x00;
 
@@ -212,53 +225,89 @@ uint8_t macca_init(void)
 	for (i = 0; i < 50000; i++);
 	for (i = 0; i < 50000; i++);
 
-	vid_cmd = CMD_TILEBITS;
-	vid_data = 0x00;
-	vid_data = 0x00;
-	/* Set entry 0 and most of entry 1 to invisible */
-	for (i = 0; i < 112; i++) {
-		vid_data = 0x01;
-	}
-	/* Set the bottom of entry 1 to a cursor */
-	while(i++ < 128) {
-		vid_data = 0xFC;
-	}
+	if (mode < 3) {
+		vid_cmd = CMD_TILEBITS;
+		vid_data = 0x00;
+		vid_data = 0x00;
+		/* Set entry 0 and most of entry 1 to invisible */
+		for (i = 0; i < 112; i++) {
+			vid_data = 0x01;
+		}
+		/* Set the bottom of entry 1 to a cursor */
+		while(i++ < 128)
+			vid_data = 0xFC;
 
-	/* Load the font */
-	p = fontdata_6x8;
-	vid_cmd = CMD_TILEBITS;
-	/* We only load 32 to 127 */
-	vid_data = 0x00;
-	vid_data = 0x08;	/* 2K in */
+		/* Load the font */
+		p = fontdata_6x8;
+		vid_cmd = CMD_TILEBITS;
+		/* We only load 32 to 127 */
+		vid_data = 0x00;
+		vid_data = 0x08;	/* 2K in */
 
-	while (n++ < 768) {
-		uint8_t i;
-		uint8_t b = *p++;
-		/* Expand each pixel row into a tile row of 8 bytes */
-		for (i = 0; i < 8; i++) {
-			if (b & 0x80)
-				vid_data = 0xFC;
-			else
-				vid_data = 0x08;
-			b <<= 1;
+		while (n++ < 768) {
+			uint8_t i;
+			uint8_t b = *p++;
+			/* Expand each pixel row into a tile row of 8 bytes */
+			for (i = 0; i < 8; i++) {
+				if (b & 0x80)
+					vid_data = 0xFC;
+				else
+					vid_data = 0x08;
+				b <<= 1;
+			}
 		}
 	}
+}
+
+/* 320 x 240 40 x 30 */
+uint8_t macca_init(void)
+{
+	macca_set_mode(0x80);
 	ma_clear_lines(0, 30);
 	return 1;
 }
 
+static uint8_t height[] = { 30, 24, 28, 30, 24, 28 };
 
 void ma_setoutput(uint_fast8_t minor)
 {
 	vt_save(&ttysave[outputtty - 1]);
 	outputtty = minor;
 	curvid = VID_MACCA;
-	vt_twidth = 40;
-	vt_tright = 39;
-	vt_theight = 30;
-	vt_tbottom = 29;
+	if (ma_mode == 0 || ma_mode == 3)
+		vt_twidth = 40;
+	else
+		vt_twidth = 32;
+	vt_theight = height[ma_mode];
+
+	vt_tright = vt_twidth - 1;
+	vt_tbottom = vt_theight - 1;
 	macca_set_output();
 	vt_load(&ttysave[outputtty - 1]);
+}
+
+/* We need to cache this in bitmap modes */
+static uint8_t palette[16] = {
+	0,	/* Black */
+	0x0C,	/* Blue */
+	0xC0,	/* Red */
+	0xCC,	/* Purple */
+	0x30,	/* Green */
+	0x3C,	/* Cyan */
+	0xC0,	/* Yellow */
+	0xFC,	/* White */
+	0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static void macca_set_palette(void)
+{
+	uint8_t *p = palette;
+	irqflags_t irq = di();
+	vid_cmd = 0x0B;
+	vid_data = 0x00;
+	while(p != palette + 16)
+		vid_data = *p++;
+	irqrestore(irq);
 }
 
 static struct videomap ma_map = {
@@ -274,7 +323,7 @@ static struct videomap ma_map = {
 	MAP_PIO
 };
 
-static struct display ma_mode[1] = {
+static struct display ma_modes[6] = {
 	{
 	 0,
 	 40, 30,
@@ -285,7 +334,62 @@ static struct display ma_mode[1] = {
 	 GFX_MAPPABLE | GFX_TEXT,
 	 0,
 	 0,
-	 40, 30 }
+	 40, 30 },
+	{
+	 1,
+	 32, 24,
+	 32, 24,
+	 255, 255,
+	 FMT_TEXT,
+	 HW_PROPGFX,
+	 GFX_MAPPABLE | GFX_TEXT,
+	 0,
+	 0,
+	 32, 24 },
+	{
+	 2,
+	 32, 28,
+	 32, 28,
+	 255, 255,
+	 FMT_TEXT,
+	 HW_PROPGFX,
+	 GFX_MAPPABLE | GFX_TEXT,
+	 0,
+	 0,
+	 32, 28 },
+	{
+	 3,
+	 320, 240,
+	 320, 240,
+	 255, 255,
+	 FMT_3BPP_U16,
+	 HW_PROPGFX,
+	 GFX_MAPPABLE|GFX_PALETTE_SET,
+	 0,
+	 0,
+	 40, 30 },
+	{
+	 4,
+	 256, 192,
+	 256, 192,
+	 255, 255,
+	 FMT_COLOUR16,
+	 HW_PROPGFX,
+	 GFX_MAPPABLE|GFX_PALETTE_SET,
+	 0,
+	 0,
+	 32, 24},
+	{
+	 5,
+	 256, 224,
+	 256, 224,
+	 255, 255,
+	 FMT_COLOUR16,
+	 HW_PROPGFX,
+	 GFX_MAPPABLE|GFX_PALETTE_SET,
+	 0,
+	 0,
+	 32, 28 },
 };
 
 /* TODO: sprites ioctls */
@@ -298,23 +402,67 @@ int ma_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
 	unsigned topchar = 256;
 	unsigned i = 0;
+	uint8_t c;
 	uint8_t map[8];
+	struct palette pal;
 
 	switch (arg) {
 	case GFXIOC_GETINFO:
-		return uput(&ma_mode, ptr, sizeof(struct display));
+		return uput(ma_modes + ma_mode, ptr, sizeof(struct display));
 	case GFXIOC_MAP:
 		return uput(&ma_map, ptr, sizeof(struct videomap));
 	case GFXIOC_UNMAP:
 		return 0;
+	case GFXIOC_GETMODE:
+	case GFXIOC_SETMODE:{
+			uint8_t m = ugetc(ptr);
+			if (m > 5) {
+				udata.u_error = EINVAL;
+				return -1;
+			}
+			if (arg == GFXIOC_GETMODE)
+				return uput(&ma_modes[m], ptr, sizeof(struct display));
+			ma_mode = m;	/* Only one mode across the two consoles possible */
+			macca_set_mode(m);
+			/* Force an output reload so we fix up the width/height */
+			ma_setoutput(outputtty);
+			/* TODO: we could do with a vt layer helper ot say "we had to clear the
+			   screen */
+			return 0;
+		}
 	case VTFONTINFO:
 		return uput(&fonti, ptr, sizeof(struct fontinfo));
+	case GFXIOC_GETPALETTE:
+	case GFXIOC_SETPALETTE:
+		if (ma_mode < 3 || uget(ptr, &pal, sizeof(pal)))
+			return -1;
+		if (pal.n > 15) {
+			udata.u_error = ERANGE;
+			return -1;
+		}
+		if (arg == GFXIOC_SETPALETTE) {
+			palette[pal.n] = (pal.r & 0xC0) | ((pal.g >> 2) & 0x30) | ((pal.b >> 4) & 0x0C);
+			macca_set_palette();
+			return 0;
+		}
+		pal.r = palette[pal.n] & 0xC0;
+		pal.g = (palette[pal.n] << 2) & 0xC0;
+		pal.b = (palette[pal.n] << 4) & 0xC0;
+		return uput(&pal, ptr, sizeof(pal));
 	/* Our tiles are complicated because of the colour rules so until
 	   we have some kind of sensible API for such things just report
 	   the normal bitmap stuff and expand */
 	case VTSETUDG:
+		c = ugetc(ptr);
+		ptr++;
+		if (c > 128)
+			c = 128;
+		topchar = 128 + c;
 		i = 128;
 	case VTSETFONT:
+		/* Not if bitmapped */
+		if (ma_mode > 2)
+			return -1;
 		while (i < topchar) {
 			if (uget(ptr, map, 8) == -1) {
 				udata.u_error = EFAULT;
@@ -339,7 +487,7 @@ static void macca_putc(uint_fast8_t minor, uint_fast8_t c)
 	   send each block uninterrupted. As we are so fast
 	   anyway just keep interrupts off during the I/O */
 	curvid = VID_MACCA;
-	if (!vswitch)
+	if (!vswitch && ma_mode < 3)
 		vtoutput(&c, 1);
 	irqrestore(irq);
 }
