@@ -7,6 +7,7 @@
 #include <devtty.h>
 #include <blkdev.h>
 #include <devide.h>
+#include <devsd.h>
 #include <ds1302.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -41,10 +42,29 @@ bool validdev(uint16_t dev)
 
 /* This can move to discard... */
 
+struct piaregs
+{
+  uint8_t pra;
+  uint8_t ctrla;
+  uint8_t prb;
+  uint8_t ctrlb;
+};
+
+#define pia	((volatile struct piaregs *)0xFE68)
+
 void device_init(void)
 {
+    pia->ctrla |= 4;
+    pia->pra = 0xFE;	/* lines high/low when we set direction */
+    pia->ctrla &= ~4;
+    pia->pra = 0x07;	/* cs, data out, clock as output, data in as input */
+    pia->ctrla |= 4;
+
     ds1302_init();
 #ifdef CONFIG_IDE
     devide_init();
+#endif
+#ifdef CONFIG_SD
+    devsd_init();
 #endif
 }

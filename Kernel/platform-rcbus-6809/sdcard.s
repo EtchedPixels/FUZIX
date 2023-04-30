@@ -97,11 +97,6 @@ readbyte:
 	puls	y,dp,pc
 
 ;
-;	This is horrible. The 6309 has AIM/OIM but the 6809 has neither
-;	thhe 6303/6309 style AIM/OIM or the 68HC11 bit test and branch and
-;	not even the 6502 BIT
-
-
 ;	We pay a small cost here to use bit 0 for the clock
 ;	but it speeds up receive
 ;
@@ -118,12 +113,12 @@ writebit:
 	rolb			; Get the next bit to send into C
 	rola			; Insert data bit into A
 	lsla			; Clock clear (low bit now 0)
-	stb	<PRA		; Clock low
-	incb
-	stb	<PRA		; Clock high
+	sta	<PRA		; Clock low
+	inca
+	sta	<PRA		; Clock high
 	dec	,s
 	bne	writebit
-	puls	b,dp,pc
+	puls	a,dp,pc
 
 _sd_spi_receive_byte:
 	pshs	dp
@@ -141,33 +136,41 @@ _sd_spi_receive_byte:
 	rolb
 	dec	<PRA
 	inc	<PRA
+	lda	<PRA		; Sample
 	rola
 	rolb
 	dec	<PRA
 	inc	<PRA
+	lda	<PRA		; Sample
 	rola
 	rolb
 	dec	<PRA
 	inc	<PRA
+	lda	<PRA		; Sample
 	rola
 	rolb
 	dec	<PRA
 	inc	<PRA
+	lda	<PRA		; Sample
 	rola
 	rolb
 	dec	<PRA
 	inc	<PRA
+	lda	<PRA		; Sample
 	rola
 	rolb
 	dec	<PRA
 	inc	<PRA
+	lda	<PRA		; Sample
 	rola
 	rolb
 	dec	<PRA
 	inc	<PRA
+	lda	<PRA		; Sample
 	rola
 	rolb
 	clra
+	dec	<PRA
 	puls	dp,pc
 
 	.area	.data
