@@ -22,31 +22,31 @@ $(OBJS): %.rel: %.c
 	fcc -m$(USERCPU) $(Z80_PLATFORM) $(OPTS) -c $<
 
 telnet:	telnet.rel gethostbyname.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 echoping: echoping.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 dig: dig.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 httpd: httpd.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 ping: ping.rel gethostbyname.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 ntpdate: ntpdate.rel gethostbyname.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 tinyirc: tinyirc.rel linein.rel gethostbyname.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 htget: htget.rel gethostbyname.rel
-	fcc --nostdio -o $@ $^
+	fcc -m$(USERCPU) --nostdio -o $@ $^
 
 ifconfig: ifconfig.rel
-	fcc -o $@ $^
+	fcc -m$(USERCPU) -o $@ $^
 
 clean:
 	rm -f *.rel *.lst *.asm *.noi *.map *.lk *.sym *~ *.ihx *.bin $(APPS)
