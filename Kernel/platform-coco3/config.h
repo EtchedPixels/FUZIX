@@ -48,17 +48,17 @@ extern uint16_t swapdev;
 #define VT_BOTTOM	curtty->bottom
 #define VT_INITIAL_LINE 0
 
-extern unsigned char vt_map( unsigned char c );
+extern unsigned char vt_map(unsigned char c);
 #define VT_MAP_CHAR(x)  vt_map(x)
 
-#define TICKSPERSEC 60      /* Ticks per second */
-#define PROGBASE    0x0100  /* also data base */
-#define PROGTOP     0xe000  /* Top of program, base of U_DATA */
-#define PROGLOAD    0x0100  /* ??? */
+#define TICKSPERSEC 60		/* Ticks per second */
+#define PROGBASE    0x0100	/* also data base */
+#define PROGTOP     0xe000	/* Top of program, base of U_DATA */
+#define PROGLOAD    0x0100	/* ??? */
 
-#define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
-                          /* In this case, the default is the first TTY device */
-                            /* Temp FIXME set to serial port for debug ease */
+#define BOOT_TTY (512 + 1)	/* Set this to default device for stdio, stderr */
+			  /* In this case, the default is the first TTY device */
+			    /* Temp FIXME set to serial port for debug ease */
 
 /* Boot devices */
 #define BOOTDEVICENAMES "hd#,,,,,,,,dw"
@@ -66,29 +66,29 @@ extern unsigned char vt_map( unsigned char c );
 
 
 /* We need a tidier way to do this from the loader */
-#define CMDLINE	0x88	  /* Location of root dev name */
+#define CMDLINE	0x88		/* Location of root dev name */
 
 /* Device parameters */
 #define NUM_DEV_TTY 10
-#define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    6       /* Number of block buffers */
-#define NMOUNTS	 4	  /* Number of mounts at a time */
+#define TTYDEV   BOOT_TTY	/* Device used by kernel for messages, panics */
+#define NBUFS    6		/* Number of block buffers */
+#define NMOUNTS	 4		/* Number of mounts at a time */
 
-#define CONFIG_COCO_KBD   /* Use CoCo key maps rather than Dragon */
+#define CONFIG_COCO_KBD		/* Use CoCo key maps rather than Dragon */
 
 
 /* Drivewire Defines */
 
-#define DW_VSER_NUM 4     /* No of Virtual Serial Ports */
-#define DW_VWIN_NUM 4     /* No of Virtual Window Ports */
-#define DW_MIN_OFF  3     /* Minor number offset */
+#define DW_VSER_NUM 4		/* No of Virtual Serial Ports */
+#define DW_VWIN_NUM 4		/* No of Virtual Window Ports */
+#define DW_MIN_OFF  3		/* Minor number offset */
 
 /* Block device define */
-#define MAX_BLKDEV  4     /* 2 IDE + 2 SDC */
+#define MAX_BLKDEV  4		/* 2 IDE + 2 SDC */
 #define CONFIG_IDE
 
-#define CONFIG_RTC        /* enable RTC code */
-#define CONFIG_RTC_INTERVAL 100    /* time in deciseconds to atually poll rtc */
+#define CONFIG_RTC		/* enable RTC code */
+#define CONFIG_RTC_INTERVAL 100	/* time in deciseconds to atually poll rtc */
 
 /* Level 2 groups, coredumps, network */
 #undef CONFIG_LEVEL_2
@@ -96,8 +96,8 @@ extern unsigned char vt_map( unsigned char c );
 #undef CONFIG_NET_NATIVE
 
 /* redefine tty queue primitives to use our banking ones */
-void putq( unsigned char *ptr, char c );
-unsigned char getq( unsigned char *ptr );
+void putq(unsigned char *ptr, char c);
+unsigned char getq(unsigned char *ptr);
 #define CONFIG_INDIRECT_QUEUES
 typedef unsigned char *queueptr_t;
 #define GETQ(p) getq(p)

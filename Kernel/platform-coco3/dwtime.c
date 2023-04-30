@@ -12,8 +12,6 @@ uint8_t plt_rtc_secs(void)
 {
 	uint8_t t[6];
 	/* poll dw time and return it */
-      	dw_rtc_read(t);
+	dw_rtc_read(t);
 	return t[5];
 }
-
-

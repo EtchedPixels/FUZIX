@@ -15,7 +15,7 @@
 
 int lpr_open(uint_fast8_t minor, uint16_t flag)
 {
-	if (minor){
+	if (minor) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
@@ -56,6 +56,6 @@ int lpr_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 				return n;
 			dw_lpr(ugetc(p++));
 		}
-	} 
+	}
 	return udata.u_count;
 }

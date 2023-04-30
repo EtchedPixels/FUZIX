@@ -46,12 +46,12 @@
 /* a "simple" internal function pointer to which transfer
    routine to use.
 */
-typedef void (*sdc_transfer_function_t)( unsigned char *addr);
+typedef void (*sdc_transfer_function_t)(unsigned char *addr);
 
 
 
 /* blkdev method: flush drive */
-int devsdc_flush( void )
+int devsdc_flush(void)
 {
 	return 0;
 }
@@ -60,27 +60,26 @@ int devsdc_flush( void )
 /* blkdev method: transfer sectors */
 uint8_t devsdc_transfer(void)
 {
-       	uint8_t ret=0;            /* our return value, preset to failure */
-	uint8_t *ptr;             /* points to 32 bit lba in blk op */
-	int i;                    /* iterator */
-	uint8_t t;                /* temporarory sdc status holder */
-	uint8_t cmd;              /* holds SDC command value */
-	sdc_transfer_function_t fptr;  /* holds which xfer routine we want */
+	uint8_t ret = 0;	/* our return value, preset to failure */
+	uint8_t *ptr;		/* points to 32 bit lba in blk op */
+	int i;			/* iterator */
+	uint8_t t;		/* temporarory sdc status holder */
+	uint8_t cmd;		/* holds SDC command value */
+	sdc_transfer_function_t fptr;	/* holds which xfer routine we want */
 
-	  
 
-	/* turn on uber-secret SDC LBA mode*/
-	sdc_reg_ctl = 0x43; 
+
+	/* turn on uber-secret SDC LBA mode */
+	sdc_reg_ctl = 0x43;
 
 	/* we get 256 bytes per lba in SDC so convert */
-	blk_op.lba*=2;
+	blk_op.lba *= 2;
 
 	/* setup cmd pointer and command value from blk_op */
-	if( blk_op.is_read ){
+	if (blk_op.is_read) {
 		cmd = 0x80;
 		fptr = devsdc_read;
-	}
-	else{
+	} else {
 		cmd = 0xa0;
 		fptr = devsdc_write;
 	}
@@ -89,35 +88,37 @@ uint8_t devsdc_transfer(void)
 	cmd |= blk_op.blkdev->driver_data;
 
 	/* get/send two sectors (512 bytes) of data */
-	for( i=0; i<2; i++){
+	for (i = 0; i < 2; i++) {
 		/* load up registers */
-		ptr=((uint8_t *)(&blk_op.lba))+1;
+		ptr = ((uint8_t *) (&blk_op.lba)) + 1;
 		sdc_reg_param1 = ptr[0];
 		sdc_reg_param2 = ptr[1];
 		sdc_reg_param3 = ptr[2];
-		sdc_reg_cmd= cmd;
-		asm("\texg x,x\n");     /* delay 16us minimum */
+		sdc_reg_cmd = cmd;
+		asm("\texg x,x\n");	/* delay 16us minimum */
 		asm("\texg x,x\n");
 		/* wait till SDC is ready */
-		do{
-			t=sdc_reg_stat;
-			if( t & SDC_FAIL ) goto fail;
-		} while( ! (t & SDC_READY) );
+		do {
+			t = sdc_reg_stat;
+			if (t & SDC_FAIL)
+				goto fail;
+		} while (!(t & SDC_READY));
 		/* do our low-level xfer function */
-		fptr( blk_op.addr );
+		fptr(blk_op.addr);
 		/* and wait will ready again, and test for failure */
-		do{
-			t=sdc_reg_stat;
-			if( t & SDC_FAIL ) goto fail;
-		}while ( t & SDC_BUSY );
+		do {
+			t = sdc_reg_stat;
+			if (t & SDC_FAIL)
+				goto fail;
+		} while (t & SDC_BUSY);
 		/* increment our blk_op values for next 256 bytes sector */
 		blk_op.lba++;
-		blk_op.addr+=256;
+		blk_op.addr += 256;
 	}
 	/*  Huzzah!  success! */
-	ret=1;    
+	ret = 1;
 	/* Boo!  failure */
- fail:	sdc_reg_ctl = 0x00;
+      fail:sdc_reg_ctl = 0x00;
 	return ret;
 }
 
@@ -126,11 +127,13 @@ __attribute__((section(".discard")))
 bool devsdc_exist()
 {
 	uint8_t t;
-	sdc_reg_data=0x64;
-	t=sdc_reg_fctl;
-	sdc_reg_data=0x00;
-	if( (sdc_reg_fctl ^ t) == 0x60 ) return -1;
-	else return 0;
+	sdc_reg_data = 0x64;
+	t = sdc_reg_fctl;
+	sdc_reg_data = 0x00;
+	if ((sdc_reg_fctl ^ t) == 0x60)
+		return -1;
+	else
+		return 0;
 }
 
 __attribute__((section(".discard")))
@@ -140,21 +143,20 @@ void devsdc_init()
 	blkdev_t *blk;
 
 	kputs("SDC: ");
-	if( devsdc_exist() ){
+	if (devsdc_exist()) {
 		/* register first drive */
-		blk=blkdev_alloc();
-		blk->driver_data = 0 ;
+		blk = blkdev_alloc();
+		blk->driver_data = 0;
 		blk->transfer = devsdc_transfer;
 		blk->flush = devsdc_flush;
-		blk->drive_lba_count=-1;
+		blk->drive_lba_count = -1;
 		/* register second drive */
-		blk=blkdev_alloc();
-		blk->driver_data = 1 ;
+		blk = blkdev_alloc();
+		blk->driver_data = 1;
 		blk->transfer = devsdc_transfer;
 		blk->flush = devsdc_flush;
-		blk->drive_lba_count=-1;
+		blk->drive_lba_count = -1;
 		kputs("Ok.\n");
-	}
-	else kprintf("Not Found.\n");
+	} else
+		kprintf("Not Found.\n");
 }
-

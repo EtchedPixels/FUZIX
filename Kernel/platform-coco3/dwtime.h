@@ -4,4 +4,4 @@
    Warning: this funtion is in the discard section, so please call it
    before freeing .discard
 */
-int dwtime_init( void );
+int dwtime_init(void);

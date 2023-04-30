@@ -99,23 +99,23 @@
 uint8_t dwtype = 0;
 
 /* Internal Structure to represent state of DW ports */
-struct dw_in{
-	uint8_t flags;  /* flags for port */
+struct dw_in {
+	uint8_t flags;		/* flags for port */
 	/* outgoing buffer here! */
 };
 
 /* port flags */
-#define DW_FLG_OPEN 1     /* is port open? */
+#define DW_FLG_OPEN 1		/* is port open? */
 
 
 /* and a table of the above structures */
-struct dw_in dwtab[ DW_VSER_NUM + DW_VWIN_NUM ];
+struct dw_in dwtab[DW_VSER_NUM + DW_VWIN_NUM];
 
 /* How many vsync ticks to wait until polling again, if
    DW reports no data is waiting. */
 #define MAX_WAIT     TICKSPERSEC / 4
 
-int wait=MAX_WAIT;
+int wait = MAX_WAIT;
 
 /* How many vsync ticks to wait until polling again after a FastWrite */
 #define FASTWRITE_WAIT     1
@@ -124,165 +124,178 @@ int fastWriteWait = 0;
 
 /* Number of ports open. IF zero then polling routine
    will not poll */
-int open_ports=0;
+int open_ports = 0;
 
 
 /* buffer for receiving multiple bytes from vport channels */
 unsigned char tbuf[256];
 
 
-int mini( int a, int b ){
-	if( a < b ) return a;
+int mini(int a, int b)
+{
+	if (a < b)
+		return a;
 	return b;
 }
 
 
 /* Gets dw_tab entry for given minor */
-struct dw_in *dw_gettab( uint8_t minor ){
-	return &dwtab[ minor - DW_MIN_OFF ] ;
+struct dw_in *dw_gettab(uint8_t minor)
+{
+	return &dwtab[minor - DW_MIN_OFF];
 }
 
 /* Translates a DW port no. to a proper minor no */
-int dw_minor( uint8_t port ){
-	if( port >= 16 ) return port - 16 + DW_NS_OFF  ;
-	int ret = port + DW_MIN_OFF - 1 ;
+int dw_minor(uint8_t port)
+{
+	if (port >= 16)
+		return port - 16 + DW_NS_OFF;
+	int ret = port + DW_MIN_OFF - 1;
 	return ret;
-					
+
 }
 
 
 /* Translates a Minor to a port no */
-int dw_port( uint8_t minor ){
+int dw_port(uint8_t minor)
+{
 	int ret = minor - DW_MIN_OFF + 1;
-	if( minor >= DW_NS_OFF ) 
-		return 	minor + 16 - DW_NS_OFF ;
+	if (minor >= DW_NS_OFF)
+		return minor + 16 - DW_NS_OFF;
 	return ret;
 }
 
 
 
 /* Put a character to the DriveWire port */
-void dw_putc( uint8_t minor, unsigned char c ){
+void dw_putc(uint8_t minor, unsigned char c)
+{
 	unsigned char buf[2];
-	buf[0]=DW_FASTWRITE | dw_port( minor ) ;
-	buf[1]=c;
-	dw_transaction( buf, 2, NULL, 0, 0 );
+	buf[0] = DW_FASTWRITE | dw_port(minor);
+	buf[1] = c;
+	dw_transaction(buf, 2, NULL, 0, 0);
 	/* set wait and fastWriteWait for interactive performance */
-	wait=FASTWRITE_WAIT;
-	fastWriteWait=FASTWRITE_WAIT_COUNT;
+	wait = FASTWRITE_WAIT;
+	fastWriteWait = FASTWRITE_WAIT_COUNT;
 }
 
 
 
 /* Open a DriveWire port */
-void dw_vopen( uint8_t minor ){
-	struct dw_in *p=dw_gettab( minor );
+void dw_vopen(uint8_t minor)
+{
+	struct dw_in *p = dw_gettab(minor);
 	unsigned char buf[3];
-	buf[0]=DW_SETSTAT;
-	buf[1]=dw_port( minor );
-	buf[2]=DW_VOPEN;
-	if( ! ( p->flags & DW_FLG_OPEN ) ){
-		dw_transaction( buf, 3, NULL, 0, 0 );
+	buf[0] = DW_SETSTAT;
+	buf[1] = dw_port(minor);
+	buf[2] = DW_VOPEN;
+	if (!(p->flags & DW_FLG_OPEN)) {
+		dw_transaction(buf, 3, NULL, 0, 0);
 		open_ports++;
 	}
 	p->flags |= DW_FLG_OPEN;
 }
 
 /* Close a DriveWire port */
-void dw_vclose( uint8_t minor){
-	struct dw_in *p=dw_gettab( minor );
+void dw_vclose(uint8_t minor)
+{
+	struct dw_in *p = dw_gettab(minor);
 	unsigned char buf[3];
-	buf[0]=DW_SETSTAT;
-	buf[1]=dw_port( minor );
-	buf[2]=DW_VCLOSE;
-	if( p->flags & DW_FLG_OPEN ){
-		dw_transaction( buf, 3, NULL, 0, 0 );
+	buf[0] = DW_SETSTAT;
+	buf[1] = dw_port(minor);
+	buf[2] = DW_VCLOSE;
+	if (p->flags & DW_FLG_OPEN) {
+		dw_transaction(buf, 3, NULL, 0, 0);
 	}
 }
 
 
 
 /* Return number of byte in tty's input queue */
-int qfree( uint8_t minor ){
+int qfree(uint8_t minor)
+{
 	queue_t *q = &ttyinq[minor];
 	return q->q_size - q->q_count;
 }
 
 /* Sets the wait time to v if not in fast wait */
-static inline void setWait( int v )
+static inline void setWait(int v)
 {
-       if (fastWriteWait) {
-               fastWriteWait--;
-               wait = FASTWRITE_WAIT;
-       } else {
-               wait = v;
-       }
-       return;
+	if (fastWriteWait) {
+		fastWriteWait--;
+		wait = FASTWRITE_WAIT;
+	} else {
+		wait = v;
+	}
+	return;
 }
 
 /* Poll and add chars (if any) to input q
  */
-void dw_vpoll( ){
+void dw_vpoll()
+{
 	unsigned char buf[2];
 	int i;
-	/* don't waste time polling of no ports are open*/
-	if( ! open_ports ) return ;
+	/* don't waste time polling of no ports are open */
+	if (!open_ports)
+		return;
 	/* check ticks - don't poll until our delay is done */
-	if( --wait ) return;
+	if (--wait)
+		return;
 	/* up to four transactions at a poll */
-	for( i=0; i<4; i++){
-		buf[0]=DW_SERREAD;
-		dw_transaction( buf, 1, buf, 2, 0 );
+	for (i = 0; i < 4; i++) {
+		buf[0] = DW_SERREAD;
+		dw_transaction(buf, 1, buf, 2, 0);
 		/* nothing waiting ? */
-		if( ! (buf[0] & 0x7f) ) {
+		if (!(buf[0] & 0x7f)) {
 			setWait(MAX_WAIT);
 			break;
 		}
 		/* VSER Channel single datum */
-		if( buf[0]<16 ){
-			int minor=dw_minor( buf[0] - 1 );
-			tty_inproc( minor, buf[1] );
+		if (buf[0] < 16) {
+			int minor = dw_minor(buf[0] - 1);
+			tty_inproc(minor, buf[1]);
 			fastWriteWait = 0;
 			continue;
 		}
 		/* VSER Channel closed? */
-		if( buf[0] == 16 ){
-			int minor=dw_minor( buf[1] );
-			struct dw_in *p=dw_gettab( minor );
-		       	if( p->flags & DW_FLG_OPEN ){
+		if (buf[0] == 16) {
+			int minor = dw_minor(buf[1]);
+			struct dw_in *p = dw_gettab(minor);
+			if (p->flags & DW_FLG_OPEN) {
 				p->flags &= ~DW_FLG_OPEN;
 				open_ports--;
-				if( ttydata[minor].users )
-					tty_carrier_drop( minor);
+				if (ttydata[minor].users)
+					tty_carrier_drop(minor);
 			}
 			continue;
 		}
 		/* VSER channel multiple data */
-		if( buf[0] < 32 ){
+		if (buf[0] < 32) {
 			int i;
 			unsigned char b[3];
 			int min;
-			int minor=dw_minor( buf[0]-17 );
-			b[0]=DW_SERREADM;
-			b[1]=buf[0]-17;
-			min=mini( buf[1], qfree( minor ) );
-			b[2]=min;
-			if( !min ){
+			int minor = dw_minor(buf[0] - 17);
+			b[0] = DW_SERREADM;
+			b[1] = buf[0] - 17;
+			min = mini(buf[1], qfree(minor));
+			b[2] = min;
+			if (!min) {
 				setWait(MAX_WAIT);
 				break;
 			}
-			dw_transaction( b,3,tbuf, min, 0 );
-			for( i=0; i<min; i++){
-				tty_inproc( minor, tbuf[i] );
+			dw_transaction(b, 3, tbuf, min, 0);
+			for (i = 0; i < min; i++) {
+				tty_inproc(minor, tbuf[i]);
 			}
 			wait = 16 - (min >> 4);
 			fastWriteWait = 0;
 			break;
 		}
 		/* VWIN channel single datum */
-		if( buf[0] < 144 ){
-			int minor=dw_minor( buf[0]-48 );
-			tty_inproc( minor, buf[1] );
+		if (buf[0] < 144) {
+			int minor = dw_minor(buf[0] - 48);
+			tty_inproc(minor, buf[1]);
 			continue;
 		}
 		/* something we don't handle? */
@@ -294,39 +307,39 @@ void dw_vpoll( ){
 
 /* Tests DriveWire port for being open */
 /*   returns: 1 on open, 0 on closed */
-int dw_carrier( uint8_t minor ){
-	struct dw_in *p=dw_gettab( minor );
-	return p->flags & DW_FLG_OPEN ;
+int dw_carrier(uint8_t minor)
+{
+	struct dw_in *p = dw_gettab(minor);
+	return p->flags & DW_FLG_OPEN;
 }
 
 
 /* (re) Initializes DW */
 __attribute__((section(".discard")))
-int dw_init( ){
+int dw_init()
+{
 	unsigned char buf[6];
 	char *s;
-	buf[0]=DW_INIT;
-	buf[1]=0x42;
+	buf[0] = DW_INIT;
+	buf[1] = 0x42;
 	kprintf("DW: ");
-	if ( dwtype == DWTYPE_NOTFOUND ){
+	if (dwtype == DWTYPE_NOTFOUND) {
 		kprintf("disabled\n");
 		return -1;
 	}
-	if ( dw_transaction( buf,2,buf,1,0 ) ){
+	if (dw_transaction(buf, 2, buf, 1, 0)) {
 		buf[0] = DW_TIME;
-		if (dw_transaction( buf,1,buf,6,0 ) ){
+		if (dw_transaction(buf, 1, buf, 6, 0)) {
 			dwtype = DWTYPE_NOTFOUND;
 			kprintf("not found\n");
 			return -1;
-		}
-		else {
+		} else {
 			s = "dw3";
 			dwtype = DWTYPE_DW3;
 		}
-	}
-	else {
-		kprintf(" 0x%x: ", buf[0] );
-		switch ( buf[0] ){
+	} else {
+		kprintf(" 0x%x: ", buf[0]);
+		switch (buf[0]) {
 		case DWTYPE_DW4:
 			s = "dw4";
 			break;
@@ -346,4 +359,3 @@ int dw_init( ){
 	kprintf("%s\n", s);
 	return 0;
 }
-
