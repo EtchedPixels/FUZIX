@@ -1,4 +1,4 @@
-kfPAR#include <kernel.h>
+#include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <stdbool.h>
@@ -125,7 +125,7 @@ void tty_pollirq_asci1(void)
         tty_inproc(2, ASCI_RDR1);
     if (ASCI_STAT1 & 0x70)
         ASCI_CNTLA1 &= ~0x08;
-y}
+}
 
 /* FIXME: we should have a proper tty buffer output queue really */
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
