@@ -364,9 +364,10 @@ static void udg_config(void)
 
 static int8_t udg_ioctl(uarg_t arg, char *ptr)
 {
-  uint8_t base = fonti[trs80_udg].udg_low;
-  uint8_t limit = fonti[trs80_udg].udg_high;
+  uint8_t base = fonti[trs80_udg].font_low;
+  uint8_t limit = fonti[trs80_udg].font_high;
   int i;
+  uint8_t c;
 
   /* Not supported */
   if (trs80_udg == UDG_NONE) {
@@ -380,11 +381,19 @@ static int8_t udg_ioctl(uarg_t arg, char *ptr)
   switch(arg) {
   case VTFONTINFO:
     return uput(fonti + trs80_udg, ptr, sizeof(struct fontinfo));
-  case VTSETFONT:
-    base = fonti[trs80_udg].font_low;
-    limit = fonti[trs80_udg].font_high;
-    /* Fall through */
   case VTSETUDG:
+    base = fonti[trs80_udg].udg_low;
+    limit = fonti[trs80_udg].udg_high;
+    c = ugetc(ptr);
+    ptr++;
+    if (c < base || c > limit) {
+      udata.u_error = EINVAL;
+      return -1;
+    }
+    base = c;
+    limit = c + 1;
+    /* Fall through */
+  case VTSETFONT:
     for (i = base; i <= limit; i++) {
       uint8_t c[16];
       if (uget(c, ptr, 16) == -1)
