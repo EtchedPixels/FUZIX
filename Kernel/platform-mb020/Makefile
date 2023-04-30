@@ -10,7 +10,7 @@ DSRCS += ../dev/ds1302.c ../dev/ds1302_discard.c
 
 DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
 
-LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c
+LSRCS = ../lib/68000exception.c ../lib/68000usercopy.c ../lib/68000relocate.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -47,7 +47,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../flat.o \
 	../blk512.o ../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec32.o ../syscall_exec.o \
-	ds1302.o ds1302_discard.o \
+	ds1302.o ds1302_discard.o 68000relocate.o \
 	blkdev.o devide.o devide_discard.o mbr.o \
 	68000usercopy.o ../usermem_std-68000.o devtty.o libc.o ../malloc.o \
 	../level2.o ../syscall_level2.o ../select.o > ../fuzix.map
