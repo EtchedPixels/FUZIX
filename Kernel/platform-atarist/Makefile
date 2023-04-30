@@ -8,7 +8,7 @@ ASRCS += loader.S
 ASRCS += tricks.S
 ASRCS += cartridge.S
 
-LSRCS = ../lib/68000exception.c
+LSRCS = ../lib/68000exception.c ../lib/68000relocate.c
 LOBJS = $(patsubst ../lib/%.c,%.o, $(LSRCS))
 
 DSRCS = ../dev/mbr.c ../dev/blkdev.c ../dev/devide.c ../dev/devide_discard.c
@@ -48,7 +48,7 @@ $(LOBJS): %.o: ../lib/%.c
 FOBJS = crt0.o \
 	p68000.o ../start.o ../version.o ../lowlevel-68000.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o devices.o \
-	68000exception.o \
+	68000exception.o 68000relocate.o\
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../flat.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
