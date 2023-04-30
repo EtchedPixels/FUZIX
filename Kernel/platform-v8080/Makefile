@@ -30,6 +30,8 @@ bootblock: bootblock.s
 	$(ACK_ROOT)/lib/ack/em_led -btext:0 -o bootblock.bin -s bootblock.o
 	aslod <bootblock.bin >bootblock
 
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
 image: bootblock
 	$(CROSS_LD) -b0:0x0100 -b4:0xE800 -o fuzix.bin crt0.o devices.o main.o \
 	commonmem.o tricks.o v8080.o devtty.o \
@@ -43,3 +45,10 @@ image: bootblock
 	anm fuzix.bin | ../tools/8080map > ../fuzix.map
 	../tools/ack2kernel -v fuzix.bin ../fuzix.bin
 	../tools/check8080 fuzix.bin
+
+diskimage:
+	# Boot floppy
+	dd if=bootblock.bin of=$(IMAGES)/boot.dsk bs=256256 conv=sync
+	dd if=../fuzix.bin of=$(IMAGES)/boot.dsk bs=1 seek=193024 conv=notrunc
+	# Root hard disk
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/hd-fuzix.dsk 128 8160)
