@@ -13,8 +13,6 @@
 /* Multiple VT support */
 #define CONFIG_VT_MULTI
 #define MAX_VT	5
-/* We need a 6x8 font to upload to the vdp */
-#define CONFIG_FONT6X8
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
 /* 16 48K banks, 1 is kernel */

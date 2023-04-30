@@ -36,7 +36,6 @@ syscall_other.rel
 tty.rel
 vt.rel
 platform-mtx/vdp.rel
-font6x8.rel
 mm.rel
 bankfixed.rel
 swap.rel

@@ -40,6 +40,8 @@ __sfr __at 0x61 prop_rb;
 signed char vt_twidth[6] = { 0, 40, 40, 40, 40, 80 };
 signed char vt_tright[6] = { 0, 39, 39, 39, 39, 79 };
 static uint8_t vmode[6];	/* mode of each console */
+static uint8_t tmsinkpaper[5] = { 0, 0xF4 };
+static uint8_t tmsborder[5]  = {0, 0x04 };
 uint8_t vidmode;		/* mode of the moment */
 
 uint8_t inputtty;		/* input side */
@@ -121,13 +123,70 @@ static void set_input(uint_fast8_t minor)
 		vdp_set_console();
 }
 
+static void vdp_writeb(uint16_t addr, uint8_t v)
+{
+	vdp_set(addr|0x4000);
+	vdp_out(v);
+}
+
+static void vdp_set_char(uint_fast8_t c, uint8_t *d)
+{
+	irqflags_t irq = di();
+	unsigned addr = 0x1000 + 8 * c;
+	uint_fast8_t i;
+	for (i = 0; i < 8; i++)
+		vdp_writeb(addr++, *d++);
+	irqrestore(irq);
+}
+
+static void vdp_udgsave(void)
+{
+	irqflags_t irq = di();
+	unsigned i;
+	unsigned uaddr = 0x1400;	/* Char 128-159 */
+	unsigned addr = 0x3800 + 256 * (inputtty - 1);
+	for (i = 0; i < 256; i++)
+		vdp_writeb(addr, vdp_readb(uaddr++));
+	irqrestore(irq);
+}
+
+static void vdp_udgload(void)
+{
+	irqflags_t irq = di();
+	unsigned i;
+	unsigned addr = 0x3800 + 256 * (inputtty - 1);
+	unsigned uaddr = 0x1000;		/* Char 128-159, inverses at 0-31 for cursor */
+	for (i = 0; i < 256; i++) {
+		uint8_t c = vdp_readb(uaddr++);
+		vdp_writeb(addr, ~c);
+		vdp_writeb(addr + 0x400, c);
+	}
+	irqrestore(irq);
+}
+
+/* Restore colour attributes */
+void vdp_attributes(void)
+{
+	irqflags_t irq = di();
+	if (vidmode == 1) {
+		vdp_setcolour(tmsinkpaper[inputtty]);
+		vdp_setborder(tmsborder[inputtty]);
+	} else {
+		vdp_setborder(tmsinkpaper[inputtty]);
+	}
+	irqrestore(irq);
+}
+
+
 /*
  *	VDP mode set up
  */
 
 static void vdp_restore(void)
 {
+	irqflags_t irq = di();
 	uint_fast8_t minor = inputtty + 1;
+
 	vidmode = vmode[minor];
 	if (vidmode) {
 		vt_twidth[minor] = 32;
@@ -139,6 +198,11 @@ static void vdp_restore(void)
 		vdp_setup40();
 	}
 	vdp_restore_font();
+	vdp_udgload();
+	vt_cursor_off();
+	vt_cursor_on();
+	vdp_attributes();
+	irqrestore(irq);
 }
 
 /* Output for the system console (kprintf etc) */
@@ -581,6 +645,39 @@ static uint8_t vmode[6] = {
 __sfr __at 0x38 crtc_reg;
 __sfr __at 0x39 crtc_data;
 
+static struct fontinfo fonti[] = {
+	{ 0, 255, 128, 159, FONT_INFO_6X8 },
+	{ 0, 255, 128, 159, FONT_INFO_8X8 },
+};
+
+static uint8_t igrbmsx[16] = {
+	1,	/* 0000 to Black */
+	4,	/* 000B to 4 dark blue */
+	6,	/* 00R0 to 6 dark red */
+	13,	/* 00RB to magneta */
+	12,	/* 0G00 to dark green */
+	7,	/* 0G0B to cyan */
+	10,	/* 0GR0 to dark yellow */
+	14,	/* 0GRB to grey */
+	14,	/* I000 to grey */
+	5,	/* I00B to light blue */
+	9,	/* 10R0 to light red */
+	8,	/* 10RB to magenta or medium red ? - use mr for now */
+	3,	/* 1G00 to light green */
+	7,	/* 1G0B to cyan - no light cyan */
+	11,	/* 1GR0 to light yellow */
+	15	/* 1GRB to white */
+};
+
+static uint8_t igrb_to_msx(uint8_t c)
+{
+	/* Machine specific colours */
+	if (c & 0x10)
+		return c & 0x0F;
+	/* IGRB colours */
+	return igrbmsx[c & 0x0F];
+}
+
 /*
  *	TODO: VDP font setting and UDG. Also the same is needed for the prop80
  *	with it's 20x8 programmable characters in weird format.
@@ -600,6 +697,9 @@ int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 	uint8_t dev = minor;
 	uint8_t is_wr = 0;
 	uint8_t map[8];
+	uint8_t c;
+	unsigned i = 0;
+	unsigned topchar = 255;
 
 	if (minor >= TTY_SERA)
 		return tty_ioctl(minor, request, data);
@@ -675,6 +775,43 @@ int mtx_vt_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 			return -1;
 		return 0;
 	}
+	case VTBORDER:
+		c = ugetc(data);
+		tmsborder[inputtty]  = igrb_to_msx(c & 0x1F);
+		vdp_attributes();
+		return 0;
+	case VTINK:
+		c = ugetc(data);
+		tmsinkpaper[inputtty] &= 0x0F;
+		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F) << 4;
+		vdp_attributes();
+		return 0;
+	case VTPAPER:
+		c = ugetc(data);
+		tmsinkpaper[inputtty] &= 0xF0;
+		tmsinkpaper[inputtty] |= igrb_to_msx(c & 0x1F);
+		vdp_attributes();
+		return 0;
+	case VTFONTINFO:
+		return uput(fonti + vmode[minor], data, sizeof(struct fontinfo));
+	case VTSETUDG:
+		i = ugetc(data);
+		data++;
+		if (i < 128 || i >= 159) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		topchar = i + 1;
+	case VTSETFONT:
+		while(i < topchar) {
+			if (uget(data, map, 8) == -1)
+				return -1;
+			data += 8;
+			vdp_set_char(i++, map);
+		}
+		vdp_udgsave();
+		vdp_udgload();
+		return 0;
 	case VTSIZE:
 		return (24 << 8) | vt_twidth[minor];
 	}

@@ -14,14 +14,18 @@
 	    .globl _cursor_disable
 	    .globl _plot_char
 	    .globl _vtattr_notify
-
 	    .globl _fontdata_6x8
+	    .globl vdp_save_romfont
 ;
 ;	Don't provide the global vt hooks in vdp1.s, we want to wrap them
 ;	for our dual monitor setup
 ;
 VDP_DIRECT   .equ	0
 VDP_IRQ	     .equ	0	; leave the vdp irq off
+
+;	Dummy for the vdp1.s code. We actually use the ROM font
+
+_fontdata_6x8:
 
 ;
 ;	On an MSX at 4Mhz our loop worst case is 26 clocks so for
@@ -33,6 +37,33 @@ VDP_IRQ	     .equ	0	; leave the vdp irq off
 .macro VDP_DELAY2
 	    nop
 .endm
+
+	    .area _DISCARD
+vdp_copych:
+	    ld b,#8
+copy1:
+	    out (c),l
+	    out (c),h
+	    VDP_DELAY
+	    inc hl
+	    in a,(1)
+	    VDP_DELAY
+	    out (c),e
+	    out (c),d
+	    out (1),a
+	    inc de
+	    djnz copy1
+	    ret
+vdp_save_romfont:
+	    ld hl,#0x1800
+	    ld de,#0x7c00	; 3C00 in write mode
+	    ld bc,#0x8002	; 128 chars, port 2
+vdp_fontcopy:
+	    call vdp_copych
+	    bit 7,d
+	    jr z,vdp_fontcopy	; DE = 0x8000 we are done
+	    ret
+
 	    .area _COMMONMEM
 
 	    .include "../dev/vdp1.s"
