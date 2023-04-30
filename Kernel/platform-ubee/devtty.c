@@ -331,6 +331,7 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
     uint16_t size = 0x400;
     uint8_t *base = (uint8_t *)0x8C00;
+    uint8_t c;
     int r;
     /* Change this if we add multiple console support */
     if (minor != 1)
@@ -338,14 +339,30 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     switch(arg) {
     case VTFONTINFO:
         return uput(&fontinfo, ptr, sizeof(fontinfo));
-    case VTGETFONT:
     case VTGETUDG:
+    	c = ugetc(ptr);
+    	ptr++;
+    	if (c < 128 || c > 255) {
+    		udata.u_error = EINVAL;
+    		return -1;
+	}
+	size = 16;
+	base += 16 * c;
+    case VTGETFONT:
         map_video_font();
         r = uget(base, ptr, size);
         unmap_video_font();
         return r;
-    case VTSETFONT:
     case VTSETUDG:
+    	c = ugetc(ptr);
+    	ptr++;
+    	if (c < 128 || c > 255) {
+    		udata.u_error = EINVAL;
+    		return -1;
+	}
+	size = 16;
+	base += 16 * c;
+    case VTSETFONT:
         map_video_font();
         r = uput(base, ptr, size);
         unmap_video_font();
