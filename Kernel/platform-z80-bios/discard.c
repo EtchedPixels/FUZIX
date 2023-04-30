@@ -92,7 +92,7 @@ void pagemap_init(void)
 void biostty_init(void)
 {
 	int n = biosinfo->num_serial;
-	uint8_t *p;
+	uint8_t *pt;
 	uint8_t i;
 	struct s_queue *q = &ttyinq[1];
 	tcflag_t *m = &termios_mask[1];
@@ -113,11 +113,11 @@ void biostty_init(void)
 		   parameters it know are relevant - eg boot monitor port
 		   configurations */
 		if (p->initial_mode)
-			ttydata[i].termios.t_cflag = p->initial_mode;
-		p = init_alloc(TTYSIZ);
-		if (p == NULL)
+			ttydata[i].termios.c_cflag = p->initial_mode;
+		pt = init_alloc(TTYSIZ);
+		if (pt == NULL)
 			panic("ttybuf");
-		q->q_base = q->q_head = q->q_tail = p;
+		q->q_base = q->q_head = q->q_tail = pt;
 		q->q_size = TTYSIZ;
 		q->q_count = 0;
 		q->q_wakeup = TTYSIZ/2;
