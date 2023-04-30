@@ -1,6 +1,7 @@
+#include <kernel.h>
+
 #ifdef PAGEDEV
 
-#include <kernel.h>
 #include <kdata.h>
 #include <page.h>
 

@@ -30,13 +30,15 @@
  *
  */
 
+#include <kernel.h>
+
 #ifdef CONFIG_FLAT_SMALL
 
-#include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <page.h>
 #include <flat_small.h>
+
 
 #undef DEBUG
 
@@ -715,8 +717,6 @@ usize_t pagemap_mem_used(void)
 /*
  *	An address is valid if it lies between the start of the code
  *	and the brk address or between the bottom and top of the stack.
- *
- *	TODO: extend valaddr to pass write v read info
  */
 usize_t valaddr(const uint8_t * pp, usize_t l, uint_fast8_t is_write)
 {
