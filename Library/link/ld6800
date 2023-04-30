@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	-s)
+	STACK="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+#
+#	Link at 0x100 DP 0x00
+#
+set -e
+#
+# With
+cc68 -m6800 -tfuzix -s $ARGS -o "$TARGET" -M

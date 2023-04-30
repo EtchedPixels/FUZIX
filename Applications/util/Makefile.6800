@@ -2,7 +2,7 @@ APPOTHER = cpuinfo
 include Makefile.common
 
 cpuinfo: cpuinfo.o cpuinfo-6303.o
-	$(LINKER) -o $@ $(CRT0) $^ $(LINKER_LIB) 
+	$(LINKER) -o $@ $(CRT0) $^ $(LINKER_TAIL) 
 
 size.report: $(APPS) $(APPSNS) $(APPTC)
 	ls -l $^ > $@

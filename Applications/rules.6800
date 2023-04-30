@@ -1,8 +1,9 @@
 CC = cc68
 AS = as68
-LINKER = cc68
+LINKER = $(FUZIX_ROOT)/Library/link/ld6800
 CFLAGS = -X -m6800 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/6800
-LINKER_LIB = -m6800 -tfuzix -s -L $(FUZIX_ROOT)/Library/libs -lc6800 -M
+LINKER_OPT =
+LINKER_TAIL = -L $(FUZIX_ROOT)/Library/libs -lc6800 -M
 AS_OPT = -o
 CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_6800.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_6800.o
