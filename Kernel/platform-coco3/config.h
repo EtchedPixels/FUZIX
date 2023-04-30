@@ -74,11 +74,7 @@ extern unsigned char vt_map(unsigned char c);
 #define NBUFS    6		/* Number of block buffers */
 #define NMOUNTS	 4		/* Number of mounts at a time */
 
-#define CONFIG_COCO_KBD		/* Use CoCo key maps rather than Dragon */
-
-
 /* Drivewire Defines */
-
 #define DW_VSER_NUM 4		/* No of Virtual Serial Ports */
 #define DW_VWIN_NUM 4		/* No of Virtual Window Ports */
 #define DW_MIN_OFF  3		/* Minor number offset */
