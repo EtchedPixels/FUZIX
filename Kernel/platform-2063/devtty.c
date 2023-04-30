@@ -480,14 +480,17 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	case VTFONTINFO:
 		return uput(fonti + vidmode, ptr, sizeof(struct fontinfo));
 	case VTSETUDG:
-		topchar = 128 + 32;
-		i = 128;
+		i = ugetc(ptr);
+		ptr++;
+		if (i < 128 || i >= 159) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		topchar = i + 1;
 	case VTSETFONT:
 		while(i < topchar) {
-			if (uget(ptr, map, 8) == -1) {
-				udata.u_error = EFAULT;
+			if (uget(ptr, map, 8) == -1)
 				return -1;
-			}
 			ptr += 8;
 			vdp_set_char(i++, map);
 		}
