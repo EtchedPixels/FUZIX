@@ -472,7 +472,11 @@ int n8tty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	case VTFONTINFO:
 		return uput(fonti + mode[minor], ptr, sizeof(struct fontinfo));
 	case VTSETUDG:
-		topchar = 128 + 32;
+		c = ugetc(ptr);
+		ptr++;
+		if (c > 32)
+			c = 32;
+		topchar = 128 + c;
 		i = 128;
 	case VTSETFONT:
 		while(i < topchar) {
