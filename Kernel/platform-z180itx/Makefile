@@ -1,10 +1,10 @@
 ASRCS = crt0.s z180.s commonmem.s z180itx.s monitor.s
 ASRCS += ps2bitbang-itx-kbd.s ps2bitbang-itx-mouse.s
-CSRCS += devices.c main.c devinput.c devtty.c spi.c devi2c.c wiznet.c #devenc28j60.c
+CSRCS += devices.c main.c devinput.c devtty.c spi.c i2c.c wiznet.c #devenc28j60.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
 DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
-DSRCS += ../dev/devsd.c ../dev/i2c.c ../dev/i2c_bitbang.c ../dev/devfd.c
+DSRCS += ../dev/devsd.c ../dev/devi2c.c ../dev/i2c_bitbang.c ../dev/devfd.c
 DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c
 DASRCS = ../dev/devfd_hw.s
 NSRCS = ../dev/net/net_w5x00.c

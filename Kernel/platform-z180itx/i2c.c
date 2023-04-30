@@ -1,8 +1,5 @@
 /*
- *	SC126 I2C interface support
- *
- *	Conflicts with RTC so RTC reading needs to be deferred when doing
- *	interrupt/rtc syncs
+ *	I2C interface glue (TODO)
  */
 
 #include <kernel.h>
@@ -10,6 +7,7 @@
 #include <z180itx.h>
 #include <ds1302.h>
 #include <i2c.h>
+#include <i2c_bitbang.h>
 
 uint8_t rtc_defer;
 __sfr __at 0x78 ppi_a;
@@ -58,4 +56,14 @@ void i2c_release_bus(uint_fast8_t bus)
 {
 	used(bus);
 	rtc_defer = 0;
+}
+
+int plt_i2c_msg(struct i2c_msg *m, uint8_t *kbuf)
+{
+    if (m->bus)
+        return -ENODEV;
+    if (m->addr & 1)
+        i2c_bb_receive(m->bus, m->addr, kbuf, m->len);
+    else
+        i2c_bb_send(m->bus, m->addr, kbuf, m->len);
 }
