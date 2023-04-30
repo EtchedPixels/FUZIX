@@ -30,6 +30,8 @@
         .globl s__INITIALIZER
         .globl s__COMMONMEM
         .globl l__COMMONMEM
+        .globl s__COMMONDATA
+        .globl l__COMMONDATA
         .globl s__DISCARD
         .globl l__DISCARD
         .globl s__DATA
