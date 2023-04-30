@@ -39,7 +39,7 @@ extern uint16_t swap_dev;
 #define CONFIG_FONT6X8
 /* Vt definitions */
 #define VT_WIDTH	vt_twidth
-#define VT_HEIGHT	224
+#define VT_HEIGHT	24
 #define VT_RIGHT	vt_tright
 #define VT_BOTTOM	23
 
