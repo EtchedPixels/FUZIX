@@ -58,7 +58,7 @@ image:
 	# dd if=../common.bin of=BOOT.BIN bs=8192 count=1
 	# Rest of the base image, starts at 0x2200, pad it
 	# dd if=../common.bin bs=65536 count=1 conv=sync | \
-		dd of=strap.bin bs=512 skip=17
+	#	dd of=strap.bin bs=512 skip=17
 	# Banked segments 1 and 7
 	# dd if=../bank2.bin bs=16384 skip=3 >>strap.bin conv=sync
 	# dd if=../bank3.bin bs=16384 skip=3 >>strap.bin conv=sync
