@@ -14,7 +14,7 @@ DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
 DSRCS += ../dev/ds1302.c
 NSRCS = ../dev/net/net_w5x00.c ../dev/net/net_native.c
 
-DASRCS = ../dev/ds1302_rbc.s
+DASRCS = ../dev/ds1302_rcbus.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)

@@ -42,7 +42,7 @@ platform-zrc/devide.rel
 platform-zrc/devide_discard.rel
 platform-zrc/ds1302.rel
 platform-zrc/ds1302_discard.rel
-platform-rc2014/ds1302_rcbus.rel
+platform-zrc/ds1302_rcbus.rel
 platform-zrc/net_native.rel
 platform-zrc/net_w5x00.rel
 platform-zrc/wiznet.rel
