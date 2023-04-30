@@ -57,7 +57,6 @@
         .globl _unix_syscall
         .globl outstring
         .globl kstack_top
-        .globl dispatch_process_signal
 	.globl istack_switched_sp
 	.globl istack_top
 	.globl _ssig
@@ -139,6 +138,12 @@ dispatch_process_signal:
         ; check if any signal outstanding
         ldb U_DATA__U_CURSIG
         beq dosigrts
+
+	; The signal handler is entitled to make syscalls which will
+	; in turn trash these two
+	ldx U_DATA__U_RETVAL
+	ldy U_DATA__U_ERROR
+	pshs x,y
         ; put number in X as the argument for the signal handler
 	; so extend it to 16bit
 	clra
@@ -147,7 +152,8 @@ dispatch_process_signal:
 	lslb		;	2 bytes per entry
         ; load the address of signal handler function
 	ldy #U_DATA__U_SIGVEC
-	ldu b,y		; now u = udata.u_sigvec[cursig]
+	leay b,y
+	ldu ,y		; now u = udata.u_sigvec[cursig]
 
         ; udata.u_cursig = 0;
 	clr U_DATA__U_CURSIG
@@ -155,18 +161,17 @@ dispatch_process_signal:
         ; restore signal handler to the default.
         ; udata.u_sigvec[cursig] = SIG_DFL;
         ; SIG_DFL = 0
-	leay b,y
 	clr ,y+
 	clr ,y
 
-        ldy #signal_return
-        pshs y      ; push return address
-
         andcc #0xef
-	jmp ,u
+	jsr ,u
 
 signal_return:
         orcc #0x10
+	puls x,y
+	stx U_DATA__U_RETVAL
+	sty U_DATA__U_ERROR
 dosigrts:
         rts
 
@@ -239,7 +244,7 @@ interrupt_handler:
 	lda #0x7E		; put it back
 	sta 0		; write
 	jsr map_kernel
-	ldx #11		; SIGSEGV
+	ldd #11		; SIGSEGV
 	jsr trap_signal	; signal the user with a fault
 
 nofault:
