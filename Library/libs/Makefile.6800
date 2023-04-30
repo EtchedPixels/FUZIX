@@ -13,8 +13,8 @@ OBJ_ASM = $(SRC_ASM:.s=.o)
 #
 #	Library routines.
 #
-SRC_C =  __argv.c abort.c aes256.c asctime.c asctime_r.c assert.c atexit.c
-SRC_C += basename.c bcmp.c bcopy.c bsearch.c bzero.c
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
+SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
 SRC_C += calloc.c cfree.c clock.c closedir.c
 SRC_C += closedir_r.c clock_gettime.c clock_getres.c clock_settime.c
 SRC_C += connect.c creat.c crypt.c ctermid.c ctime.c cuserid.c
@@ -27,8 +27,9 @@ SRC_C += free.c fsetpos.c ftell.c fwrite.c getcwd.c
 SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getopt.c
 SRC_C += getpeername.c getpw.c __getpwent.c getpwnam.c getpwuid.c
 SRC_C += gets.c getsockname.c gettimeofday.c
-SRC_C += getw.c gmtime.c gmtime_r.c grent.c htons.c htonl.c index.c initgroups.c
-SRC_C += isatty.c killpg.c libintl.c
+SRC_C += getw.c gmtime.c gmtime_r.c grent.c htons.c htonl.c index.c
+SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
+SRC_C += initgroups.c isatty.c killpg.c libintl.c
 SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
 SRC_C += malloc.c memmove.c mkfifo.c mkstemps.c mntent.o nanosleep.c
 SRC_C += opendir.c opendir_r.c pause.c perror.c
