@@ -54,7 +54,10 @@ make diskimage will leave you a ready to run disk and emulator image.
 
 The emulator can run it with
 
-	simple80 -i emu-ide.img
+	simple80 -i emu-ide.img -r cpm80.rom
+
+The boot code is designed to boot from the ROM based CP/M option (see my github) not the
+Bill Shen monitor.
 
 Detail:
 
