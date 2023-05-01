@@ -1,77 +1,50 @@
-Just initial sketches. Nothing tested yet.
+The NASCOM machines without CP/M PROM have a memory map of
 
-Memory Map
+0000-07FF		Monitor ROM
+0800-0BFF		Video	(contended, sparklies)
+0C00-0FFF		Work RAM
+C000-CFFF		Optional ROM/RAM
+D000-DFFF		DOS if fitted (and hard to boot Fuzix otherwise)
+E000-FFFF		BASIC ROM
 
-0000 - 00FF		Vectors			}
-0100 - E7FF		User Space		}	Banked Area
-E600 - E7FF		udata stash		}
-E800 - EFFF		Common space		}
-F000 - F7FF		ROM
-F800 - FBFF		Video
-FC00 - FFFF		Udata and common data (unbanked block)
+1000-BFFF can be linked to either the 8bit RAM sockets or external RAM
 
-Once we have a vaguely sensible port and the split banking we need to move
-things around a bit to avoid stacks FC00-FFFF because of video contention.
-However that means switching to the thunked model (as the SC108 uses)
+The 48K RAM card recommended settings plxces it at 1000-CFFF, that can be with ROM
+or RAM then at D000-DFFF (and usually basic at E000-FFFF). Page mode uses port FF to
+select cards. The register resets to 0x11 which enables card 0 for R or W. The upper 4 bits
+are a mask for W the lower for R and R/W can differ. Multiple R is bad, multiple W is ok
 
-Target Hardware
+The third party 64K card occupies the full 64K but the internal RAMDIS logic ensures that
+as with the 48K card the monitor/video/work and ROMS win
 
-Nascom I/II/III or maybe Gemini GM811/813 (is the 813 a variant port ?)
-(likewise MAP80 might be)
+In CP/M mode the machine takes on an incompatible map with
 
-Required:
-Nascom I/II/II
-	192K "page mode" RAM (may be able to do a 128K port as well) eg
-	RAM64/GM802
-	GM816 or compatible 58174 clock at 0x20
+0000-BFFF		RAM B (can be pageable)
+C000-EFFF		Can be off a RAM card or from mainboard ROM/RAM sockets
+F000-F7FF		BOOT ROM
+F800-FFFF		Video RAM
 
-Options:
-	GM833 Ramdisc. Driver written, also steals up to 1MB of it for
-	swap if no other swap partition is found on disk. The full theoretical
-	8MB is supported although 2MB was the most practically possible
+The other sockets are disabled by default
 
-	GM809/29/49/49A Floppy. Initial driver code done
+Not clear we can make anything fit as we only have 0C80-CFFF and no easy way to bank buffers
+etc or the kernel.
 
-	GM829/49/49A SASI/SCSI. Initial driver code done
+Hardware Support
+Keyboard
+Video
+Serial
+Floppy (nascom or gm ? - WIP)
+PIO SD card
+Needs 3 or more 48/64K cards in page mode
+Must be RAM to E000 (and may want F000 eventually for first bank)
+RAM above C000 need not be banked
 
-
-Boot Loaders Needed
--	Nascom Floppy
--	MAP80 VFC
--	Gemini FDC
--	Gemini SASI/SCSI
--	Probably a CP/M boot loader for the other cases
-
-
-
-Options:
-Nascom AVC	(384x256 / 768x256)	(can be jumpered for Vblank port A bit1)
-Nascom Floppy Controller
-Nascom I/O card (PIO, CTC, UART)
-	Mostek 3882 CTC (Z80 CTC)
-	6402 UART
-	MK3881 PIO	(Z80 PIO)
-
-GM805 'Henelec' single density floppy
-GM810 IVC
-GM816 (CTC 3x PIO optional serial GM818 - dual 8250)
-GM822 RTC over PIO ?
-GM832 SVC
-GM837 Climax Colour
-BE847 Maths card
-GM848 quad serial
-GM862 RAM
-MAP80 256K RAM
-MAP80 MPI (serial, CTC, FDC, SASI) ?
-MAP80 VFC
-WT625 Viewdata
-Other RTC options (some RTC have 2Hz or so interrupt - not much use but
-better than nothing - it'll get you out of a stuck process loop)
-
-
-Useful Disk Formats
-
-SS/DD 5.25"
-77 cys 1 side 10x512 sectors per track skew 3
-BSH 4 BLM 15 EXM 1 DSM 186 DRM 127 AL0 0C0H AL1 0 OFS 2
-
+TODO for CP/M mode
+- Finish rewiring nmi key handler
+- Look at nmi and int disable check interrupt handling
+- Normal interrupt handling for timer on PIO bit
+- RTC support with NMI even timing ?
+- Figure out CP/M disk format detail
+- Bootstrap debug
+- Alternative PIO SD bootrom
+- Finsh floppy drivers off

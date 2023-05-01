@@ -1,7 +1,6 @@
 #include <kernel.h>
 #include <devtty.h>
 #include <devscsi.h>
-#include <devgm833.h>
 #include <printf.h>
 #include <blkdev.h>
 #include <tty.h>
@@ -16,10 +15,6 @@ void device_init(void)
 	/* Time of day clock */
 	// FIXME : once we merge both versions of the RTC handling inittod();
 #endif
-	devscsi_init();
-	/* Must come last as we want to allocate this for swap if no other
-	   swap was found */
-	gm833_init();
 }
 
 void map_init(void)

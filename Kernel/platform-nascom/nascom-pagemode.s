@@ -16,6 +16,8 @@
 	    .globl map_process_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
+	    .globl map_for_swap
+	    .globl map_buffers
 
             ; imported symbols
 	    .globl _program_vectors
@@ -125,6 +127,7 @@ pagesave:   .db 0x11		; saved copy
 map_kernel:
 map_kernel_di:
 map_kernel_restore:
+map_buffers:
 	    push af
 	    ld a,#0x11
 	    ld (pagereg),a
@@ -140,6 +143,7 @@ map_process_di:
 	    or l
 	    jr z, map_kernel
 	    ld a, (hl)
+map_for_swap:
 map_process_a:			; used by bankfork
 	    ld (pagereg),a
 	    out (0xFF),a

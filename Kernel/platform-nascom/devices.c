@@ -2,18 +2,16 @@
 #include <tty.h>
 #include <version.h>
 #include <kdata.h>
-#include <devgm833.h>
 #include <devgm8x9.h>
 #include <devsys.h>
 #include <vt.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devscsi.h>
+#include <tinydisk.h>
 
 struct devsw dev_tab[] =	/* The device driver switch table */
 {
 	/* 0: /dev/hd         SCSI/SASI block devices */
-        { blkdev_open, no_close, blkdev_read, blkdev_write, blkdev_ioctl},
+	{td_open, no_close, td_read, td_write, td_ioctl},
 	/* 1: /dev/fd         Floppy disc block devices */
 	{gm8x9_open, no_close, gm8x9_read, gm8x9_write, no_ioctl},
 	/* 2: /dev/tty        TTY devices */
@@ -26,8 +24,6 @@ struct devsw dev_tab[] =	/* The device driver switch table */
 	{nxio_open, no_close, no_rdwr, no_rdwr, no_ioctl},
 	{nxio_open, no_close, no_rdwr, no_rdwr, no_ioctl},
 	{nxio_open, no_close, no_rdwr, no_rdwr, no_ioctl},
-	/* Ram driver */
-	{gm833_open, gm833_close, gm833_read, gm833_write, no_ioctl},
 };
 
 bool validdev(uint16_t dev)

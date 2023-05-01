@@ -15,12 +15,6 @@
 #define CONFIG_VT
 /* Banked memory set up */
 #define CONFIG_BANK_FIXED
-/* Input device support */
-#define CONFIG_INPUT
-/* Full key up/down support */
-#define CONFIG_INPUT_GRABMAX 3
-/* SCSI or SASI */
-#define CONFIG_SCSI
 
 #define MAX_MAPS	16
 #define MAP_SIZE	0xE600
@@ -38,12 +32,12 @@
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
-#define PROGTOP     0xE600  /* Top of program, udata stash follows */
-#define PROC_SIZE   58 	    /* Memory needed per process */
+#define PROGTOP     0xBE00  /* Top of program, udata stash follows */
+#define PROC_SIZE   48 	    /* Memory needed per process */
 
-#define SWAP_SIZE   0x74 	/* 58K in blocks (to get the udata stash) */
+#define SWAP_SIZE   0x60 	/* 48K in blocks (to get the udata stash) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xE600	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0xBE00	/* vectors so its a round number of sectors */
 
 #define MAX_SWAPS	64	/* Should be plenty (2MB!) */
 
@@ -61,13 +55,17 @@
 #define NUM_DEV_TTY 2	  /* Tackle 80bus serial later */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
-#define NBUFS    10       /* Number of block buffers - keep in sync with asm! */
-#define NMOUNTS	 4	  /* Number of mounts at a time */
+#define NBUFS    5       /* Number of block buffers - keep in sync with asm! */
+#define NMOUNTS	 2	  /* Number of mounts at a time */
 
 /* Do I/O direct to user space */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* Reclaim the discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL
+
+#define CONFIG_TD
+#define CONFIG_TD_NUM	1
+#define CONFIG_TD_SD
 
 extern void plt_discard(void);
 #define plt_copyright()

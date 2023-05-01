@@ -5,8 +5,6 @@
 #include <tty.h>
 #include <vt.h>
 #include <devtty.h>
-#include <input.h>
-#include <devinput.h>
 #include <stdarg.h>
 #include <nascom.h>
 
@@ -112,13 +110,8 @@ static void keyproc(void)
 			int m = 1;
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m)) {
-						if (keyboard_grab == 3) {
-							queue_input(KEYPRESS_UP);
-							queue_input(keyboard[i][n]);
-						}
+					if (!(shiftmask[i] & m))
 						keysdown--;
-					}
 				}
 				if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
@@ -183,16 +176,16 @@ static void keydecode(void)
 {
 	uint8_t c;
 	uint8_t m = 0;
+	uint8_t shift = 0;
 
 	if ((keymap[8] & 0x20) || (keymap[0] & 0x10)) {	/* shift */
-		m = KEYPRESS_SHIFT;
 		c = shiftkeyboard[keybyte][keybit];
+		shift = 1;
 	} else
 		c = keyboard[keybyte][keybit];
 
 	if (keymap[8] & 0x10) {	/* control */
-		m |= KEYPRESS_CTRL;
-		if (m & KEYPRESS_SHIFT) {	/* shift */
+		if (shift) {	/* shift */
 			if (c == '(')
 				c = '{';
 			if (c == ')')
@@ -202,38 +195,12 @@ static void keydecode(void)
 		} else if (c > 31 && c < 127)
 			c &= 31;
 	}
-	if (c) {
-		switch (keyboard_grab) {
-		case 0:
-			vt_inproc(1, c);
-			break;
-		case 1:
-			if (!input_match_meta(c)) {
-				vt_inproc(1, c);
-				break;
-			}
-			/* Fall through */
-		case 2:
-			queue_input(KEYPRESS_DOWN);
-			queue_input(c);
-			break;
-		case 3:
-			/* Queue an event giving the base key (unshifted)
-			   and the state of shift/ctrl/alt */
-			queue_input(KEYPRESS_DOWN | m);
-			queue_input(keyboard[keybyte][keybit]);
-			break;
-		}
-	}
+	if (c)
+		vt_inproc(1, c);
 }
 
 void kbd_poll(void)
 {
-	/* Report any press of the NMI button */
-	if (nmikey) {
-		nmikey = 0;
-		vt_inproc(1, KEY_STOP);
-	}
 	newkey = 0;
 	keyproc();
 	if (keysdown && keysdown < 3) {

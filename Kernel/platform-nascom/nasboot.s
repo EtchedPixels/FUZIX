@@ -50,5 +50,3 @@ newtrack:
 	ld (0xfc75),a
 	xor a
 	ret
-
-	
