@@ -13,7 +13,12 @@ get too far without a fuller keyboard unless someone wants to write an extended
 32key driver with a control key setting)
 
 Optional
-- RAM floppy at 0x58
+- RAM floppy at 0x58/0x98
+- timer interrupt on the PIO
+- timer from the CTC of the K1520 sound card
+- 64x32 Poppe video (see also config.h)
+- RTC at 0x70 (if not on GIDE)
+- SD card bitbang (slow!)
 
 CONFIG_RD_SWAP		set this to swap to ram floppy not GIDE
 
@@ -32,7 +37,7 @@ System: Z1013
 Model: Z1013.64
 Monitorprogramm: A.2 (others should work)
 GIDE: enabled
-RAM floppies: 0x58-0x5F (0x98-0x9F is not supported)
+RAM floppies: 0x58-0x5F
 ROM-erweiterungen: 32K-ROM, nach RESET eingeblendet
 Graphik-erweiterungen: Nothing set
 Sonstige Erweiterungen: Echtzeituhr (RTC) (floppy can be set but not supported)
