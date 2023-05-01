@@ -13,3 +13,4 @@ extern uint16_t syscpu;
 extern uint16_t syskhz;
 extern uint8_t systype;
 extern uint8_t romver;
+extern uint8_t turbo;

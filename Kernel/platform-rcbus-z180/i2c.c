@@ -68,7 +68,7 @@ int plt_i2c_msg(struct i2c_msg *m, uint8_t *kbuf)
     if (m->bus)
         return -ENODEV;
     if (m->addr & 1)
-        i2c_bb_receive(m->bus, m->addr, kbuf, m->len);
+        return i2c_bb_receive(m->bus, m->addr, kbuf, m->len);
     else
-        i2c_bb_send(m->bus, m->addr, kbuf, m->len);
+        return i2c_bb_send(m->bus, m->addr, kbuf, m->len);
 }

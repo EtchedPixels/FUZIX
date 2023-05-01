@@ -17,6 +17,8 @@ uint16_t syskhz;
 uint8_t systype;
 uint8_t romver;
 
+uint8_t turbo;
+
 uint16_t rtc_port = 0x0C;
 uint8_t rtc_shadow = 0xAF;
 
@@ -24,7 +26,9 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded af
 
 void plt_discard(void)
 {
+#ifdef CONFIG_KMOD
 	kmod_init(bufpool_end, (void *)KERNTOP);
+#endif
 	while (bufpool_end <
 	       (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));

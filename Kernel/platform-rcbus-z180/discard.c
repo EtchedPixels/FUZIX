@@ -8,6 +8,7 @@
 #include <z180.h>
 #include <ds1302.h>
 #include <netdev.h>
+#include <tty.h>
 #include "rcbus-z180.h"
 
 static uint8_t has_1mb;	/* additional 512K RAM located in U2 socket */
@@ -60,6 +61,26 @@ void map_init(void)
 	/* kernel bank udata (0x300 bytes) is never used again -- could be reused? */
 }
 
+static void turbo_on(void)
+{
+    kputs("Hold onto your hat...");
+    /* Most boards use 55ns SRAM: that needs 2 wait states. 45ns would need
+       1 but is rarer. Use max wait states for I/O for the moment */
+    Z180_DCNTL |= 0xF0;		/* Force slow as possible, then mod back */
+    Z180_DCNTL &= 0xBF;		/* 2 wait memory, 4 on I/O */
+    Z180_RCR &= 0x7F;		/* No DRAM, kill refresh */
+    Z180_CMR &= 0x7F;		/* Clock doubler off */
+    if (Z180_CMR & 0x80)
+        kputs("no clock doubler, 18.4MHz.\n");
+    else {
+        tty_setup(BOOT_TTY, 1);
+        kputs("turbo engaged, 36.8MHz.\n");
+        Z180_CMR |= 0x80;		/* Clock doubler on */
+        Z180_CCR |= 0x80;		/* Clock divider off */
+        turbo = 1;
+    }
+}
+
 uint8_t plt_param(char *p)
 {
 #ifdef CONFIG_NET
@@ -68,6 +89,10 @@ uint8_t plt_param(char *p)
 		return 1;
 	}
 #endif
+	if (strcmp(p, "turbo") == 0) {
+		turbo_on();
+		return 1;
+	}
 	return 0;
 }
 

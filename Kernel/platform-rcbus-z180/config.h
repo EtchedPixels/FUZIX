@@ -42,7 +42,8 @@
 #define CONFIG_RTC_INTERVAL	100
 #define CONFIG_RTC_DS1302
 
-#define CONFIG_KMOD
+/* Module work is just an experiment */
+#undef CONFIG_KMOD
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
