@@ -364,6 +364,18 @@ was_di:	pop hl
 	pop bc
 	ret
 
+rom_control_di:		;	Interrupts known to be off, int_disabled may
+			;	be inaccurate
+	push hl
+	ld hl, #rom_toggle
+	cp (hl)
+	jr z, no_work_di
+	ld (hl),a
+	out (0x38),a
+no_work_di:
+	pop hl
+	ret
+
 ;=========================================================================
 ; map_process - map process or kernel pages
 ; Inputs: page table address in HL, map kernel if HL == 0
@@ -395,10 +407,16 @@ map_for_swap:
 ; Outputs: none; all registers preserved
 ;=========================================================================
 map_process_always:
-map_process_always_di:
 	push af
 	ld a,#1
 	call rom_control
+	pop af
+	ret
+
+map_process_always_di:
+	push af
+	ld a,#1
+	call rom_control_di
 	pop af
 	ret
 
@@ -410,11 +428,17 @@ map_process_always_di:
 ;=========================================================================
 map_buffers:
 map_kernel:
-map_kernel_di:
 map_kernel_restore:
 	push af
 	xor a
 	call rom_control
+	pop af
+	ret
+
+map_kernel_di:
+	push af
+	xor a
+	call rom_control_di
 	pop af
 	ret
 
@@ -437,14 +461,14 @@ map_restore:
 ;=========================================================================
 map_save_kernel:
 	push af
+	; This one has a quirk. Because we may be switching to the kernel
+	; bank the int_disable flag is not reliable.
 	ld a,(rom_toggle)
 	ld (save_rom),a
 	xor a
-	call rom_control
+	call rom_control_di
 	pop af
 	ret
-
-
 ;
 ;	A little SIO helper
 ;

@@ -227,7 +227,7 @@ void tty_pollirq_acia(void)
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	if (acia_present)
-		SIOA_D = c;
+		ACIA_D = c;
 	else {
 		uint8_t port = SIO0_BASE + 1 + 2 * (minor - 1);
 		out(port, c);
@@ -288,11 +288,7 @@ void kputchar(uint_fast8_t c)
 
 int rctty_open(uint_fast8_t minor, uint16_t flag)
 {
-	if (acia_present && minor != 1) {
-		udata.u_error = ENODEV;
-		return -1;
-	}
-	if ((minor == 1 || minor == 2) && !sio_present) {
+	if (minor > 2 || (acia_present && minor != 1)) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
