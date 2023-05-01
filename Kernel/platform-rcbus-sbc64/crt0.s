@@ -82,9 +82,15 @@ start:
 	ldir
 	; then the discard
 	; Discard can just be linked in but is next to the buffers
-	ld de, #s__DISCARD
-	ld bc, #l__DISCARD
-	ldir
+	ex de,hl
+	ld hl, #s__DISCARD
+	ld bc, #l__DISCARD-1
+	add hl,bc
+	ex de,hl
+	add hl,bc
+	; May be overlapping its own destination
+	lddr
+	ldd
 
 	ld hl, #s__DATA
 	ld de, #s__DATA + 1
