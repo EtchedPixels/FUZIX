@@ -72,3 +72,4 @@ Quick build instructions
 make diskimage
 
 xroar -cart nx32 -load-hd0 Images/dragon-nx32/disk.img -load sdboot.bin
+exec 3584
