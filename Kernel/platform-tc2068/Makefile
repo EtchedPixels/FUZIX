@@ -50,3 +50,16 @@ clean:
 image:
 	../tools/makedck ../fuzix.bin fuzix.dck
 	dd if=../fuzix.bin of=fuzix.load bs=32768 count=1
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	cp fuzix.dck $(IMAGES)/
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# And bootstrap
+	dd if=fuzix.load of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

@@ -75,3 +75,14 @@ image: loader.bin
 	../tools/trdify fuzix.trd BLOCK2 block2
 	../tools/trdify fuzix.trd BLOCK3 block3
 	../tools/trdify fuzix.trd BLOCK4 block4
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	cp fuzix.trd $(IMAGES)/
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
