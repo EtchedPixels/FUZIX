@@ -291,9 +291,10 @@ ttyready_t tty_writeready(uint_fast8_t minor)
 	irqflags_t irq;
 	uint8_t c;
 	uint8_t port;
-	/* Bitbanged so trick the kernel into yielding when appropriate */
+
+	/* Bitbang port, if the CPU is ready the port is ready */
 	if (minor == 1)
-		return need_reschedule() ? TTY_READY_SOON: TTY_READY_NOW;
+		return TTY_READY_NOW;
 
 	irq = di();
 	port = SIO0_BASE+ 2 * (minor - 2);
