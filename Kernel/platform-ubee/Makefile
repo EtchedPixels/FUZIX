@@ -57,3 +57,19 @@ image:
 	dd if=/dev/zero of=fuzix.ss80 bs=512 count=800
 	dd if=bootstrap.bin of=fuzix.ss80 conv=notrunc
 	dd if=../fuzix.bin of=fuzix.ss80 bs=512 seek=1 conv=notrunc
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Floppy disks
+	# Boot floppy
+	cp fuzix.ss80 $(IMAGES)
+	# Test root floppy
+	(cd ../../Standalone/filesystem-src; ./build-mini-filesystem $(IMAGES)/root.ds82 64 1600 )
+	# Make a blank disk image with partition
+	# For the moment we make the disk bigger than the partition but it doesn't matter
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=512 count=62720 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Make an emulator image of it
+	cp $(IMAGES)/disk.img $(IMAGES)/disk.hd3
