@@ -75,12 +75,12 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
     baud = cflag & CBAUD;
     /* We can't get below 150 easily. We might be able to do this with the
        BRG on one channel - need to check FIXME */
-    if (baud && baud < B150) {
-        baud = B150;
+    if (baud && baud < B150 + turbo) {
+        baud = B150 + turbo;
         cflag &= ~CBAUD;
-        cflag |= B150;
+        cflag |= baud;
     }
-    cntlb |= baudtable[baud];
+    cntlb |= baudtable[baud - turbo];
 
     if (minor == 1) {
         if (cflag & CRTSCTS)

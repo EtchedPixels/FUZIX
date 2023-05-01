@@ -8,6 +8,7 @@
 uint16_t ramtop = PROGTOP;
 extern unsigned char irqvector;
 uint16_t swap_dev = 0xFFFF;
+uint8_t turbo;
 
 uint16_t rtc_port = 0x0C;
 uint8_t rtc_shadow;

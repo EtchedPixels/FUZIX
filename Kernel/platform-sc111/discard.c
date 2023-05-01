@@ -6,6 +6,7 @@
 #include "config.h"
 #include <z180.h>
 #include <ds1302.h>
+#include <tty.h>
 
 void init_hardware_c(void)
 {
@@ -48,18 +49,23 @@ static void turbo_on(void)
     Z180_DCNTL |= 0xF0;		/* Force slow as possible, then mod back */
     Z180_DCNTL &= 0xBF;		/* 2 wait memory, 4 on I/O */
     Z180_RCR &= 0x7F;		/* No DRAM, kill refresh */
-    Z180_CCR |= 0x80;		/* Clock divider off */
     Z180_CMR &= 0x7F;		/* Clock doubler off */
     if (Z180_CMR & 0x80)
         kputs("no clock doubler, 18.4MHz.\n");
-    else
+    else {
+        tty_setup(BOOT_TTY, 1);
         kputs("turbo engaged, 36.8MHz.\n");
-    Z180_CMR |= 0x80;		/* Clock doubler on */
+        Z180_CMR |= 0x80;		/* Clock doubler on */
+        Z180_CCR |= 0x80;		/* Clock divider off */
+        turbo = 1;
+    }
 }
 
 uint8_t plt_param(char *p)
 {
-    if (strcmp(p, "turbo") == 0)
+    if (strcmp(p, "turbo") == 0) {
         turbo_on();
+        return 1;
+    }
     return 0;
 }
