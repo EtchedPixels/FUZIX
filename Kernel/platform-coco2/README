@@ -23,6 +23,7 @@ Emulating in XRoar
 ==================
 
 xroar -default-machine coco2 -cart ide -load-hd0 emu-ide.img  -load bootfuz.bin 
+EXEC &H600
 
 See the coco2cart build for a rather saner setup using the cartridge ROM to allow a lot
 more features. This is really more of a demonstration of minimal build possibilities than
