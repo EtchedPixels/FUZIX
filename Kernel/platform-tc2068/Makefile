@@ -62,4 +62,4 @@ diskimage:
 	# And bootstrap
 	dd if=fuzix.load of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/hdfheader $(IMAGES)/disk.img > $(IMAGES)/emu-ide.hdf

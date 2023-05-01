@@ -53,3 +53,9 @@ Debugging state:
 Optimizations:
 - Turn on interrupt mode during swapping
 
+Emulator:
+
+fuse -m 2068 --divide --divide-file Images/tc2068/emu-ide.hdf --dock Images/tc2068/fuzix.dck
+
+Make sure the divide write protect is off, and the Disk beta 128 autoboot is off.
+
