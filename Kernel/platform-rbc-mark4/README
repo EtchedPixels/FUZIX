@@ -14,7 +14,7 @@ the base IO port address of the board. If enabled, the PropIO will be used as
 the system console.
 
 To build the kernel, edit the TARGET line in Kernel/Makefile to read:
-    export TARGET=n8vem-mark4
+    export TARGET=rbc-mark4
 Then run "make clean; make all" in the "Kernel" directory.
 
 Fuzix now uses the ROMWBW boot system on the Mark IV. Build using
