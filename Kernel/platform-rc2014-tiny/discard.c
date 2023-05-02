@@ -3,9 +3,8 @@
 #include <printf.h>
 #include <devtty.h>
 #include <ds1302.h>
-#include <devide.h>
-#include <blkdev.h>
 #include <rc2014.h>
+#include <tinyide.h>
 #include "config.h"
 
 void map_init(void)
@@ -26,7 +25,5 @@ void map_init(void)
 
 void device_init(void)
 {
-#ifdef CONFIG_IDE
-	devide_init();
-#endif
+	ide_probe();
 }

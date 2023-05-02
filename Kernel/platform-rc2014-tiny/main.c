@@ -19,7 +19,7 @@ uint8_t sio_present;
 
 uint8_t plt_tick_present;
 
-uint16_t rtc_port;
+uint16_t rtc_port = 0xC0;
 uint8_t rtc_shadow;
 
 void plt_discard(void)

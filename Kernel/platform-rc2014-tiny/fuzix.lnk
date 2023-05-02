@@ -37,10 +37,10 @@ usermem.rel
 usermem_std-z80.rel
 platform-rc2014-tiny/discard.rel
 platform-rc2014-tiny/devtty.rel
-platform-rc2014-tiny/mbr.rel
-platform-rc2014-tiny/blkdev.rel
-platform-rc2014-tiny/devide.rel
-platform-rc2014-tiny/devide_discard.rel
+platform-rc2014-tiny/tinydisk_discard.rel
+platform-rc2014-tiny/tinydisk.rel
+platform-rc2014-tiny/tinyide.rel
+platform-rc2014-tiny/tinyide_discard.rel
 platform-rc2014-tiny/ds1302.rel
 platform-rc2014-tiny/ds1302_discard.rel
 platform-rc2014-tiny/ds1302_rcbus.rel
