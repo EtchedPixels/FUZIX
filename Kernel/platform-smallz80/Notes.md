@@ -1,15 +1,13 @@
-Fuzix for the 'SmallZ80' from stack180.com
+# SmallZ80
 
-Supported Hardware
+## Bugs
 
-SmallZ80
-Optional dual serial card/floppy
-
-Unsupported
+## To Add
 
 Floppy interface
+Set up vectors once at boot only (they are not switched)
 
-Implementation
+## Memory Map
 
 This platform has 32K banked and 32K fixed, but rather oddly the banked area
 is from 0x4000-0xBFFF, with fixed memory above and below. Also it is unusual
@@ -30,23 +28,17 @@ User
 BE00-BFFF	User task state save area
 C000-FFFF	kernel code, data and common
 
-Oddities
+## Notes
 
 The only timer source and interrupt source is the RTC. Fortunately this can
 provide a 64Hz clock.
 
-TODO
+The ROM requires the disk can handle a particular layout for CP/M. Not
+clear how much it matters for Fuzix.
 
-Set up vectors once at boot only (they are not switched)
+## Emulation
 
+- ./smallz80 -i emu-ide.img
 
-
-Emulation Notes
-
-Use a 16x16xn disk image
-Put the loader on sectors 0-2 of the virtual image
-Put the kernel on sectors 3+
-Partition it (taking care to keep or restore the low bits of the loader)
-Add a file system
 Boot
 G, Enter
