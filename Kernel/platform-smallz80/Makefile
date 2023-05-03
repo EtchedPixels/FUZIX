@@ -67,3 +67,18 @@ image: loader.bin
 	# Pack the pieces together
 	cat base.tmp top.tmp >fuzix
 
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	# Make a blank disk image
+	dd if=partition.bin of=$(IMAGES)/disk.img bs=134217728 conv=sync count=1
+	# Add the file system
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Add the kernel
+	dd if=fuzix of=$(IMAGES)/disk.img bs=512 seek=3 conv=notrunc
+	# Add the bootstrap
+	dd if=loader.bin of=$(IMAGES)/disk.img conv=notrunc
+	# Put the partition bits in
+	dd if=partition.bin seek=0 of=$(IMAGES)/disk.img bs=1 seek=446 skip=446 count=66 conv=notrunc
+	# Make an emulator image of it. Geometry matters for this system
+	cat idehdr.bin $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
