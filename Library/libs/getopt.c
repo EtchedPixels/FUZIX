@@ -67,6 +67,8 @@ int getopt(int argc, char *const argv[], const char *optstring)
    c = argv[optind][sp];	/* option letter */
 #ifdef STRICT
    osp = sp++;			/* get ready for next letter */
+#else
+   sp++;
 #endif
 
 #ifndef STRICT
