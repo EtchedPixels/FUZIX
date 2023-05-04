@@ -7,11 +7,16 @@
 /*
  *   Shift loading address of low-address DECB segments
  *
+ *   Since the bootloader runs from internal memory
+ *   in the 0-0x2000 range, we cannot map banks there
+ *   while loading, and some tricks are needed:
+ *
  *   Segments below 0x2000 are shifted up 0x2000 bytes so
  *   that they can be initially loaded into an MMU bank
- *   which will be consecutively mapped at 0x0000.
+ *   at 0x2000 which later will be remapped at 0x0000.
  *
- *   Also map in banks that the bootloader won't.
+ *   Also map in the lower address banks since the
+ *   bootloader only maps banks at 0x8000 and up.
  */
 
 static enum {
