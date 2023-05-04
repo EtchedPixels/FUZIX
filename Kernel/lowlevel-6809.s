@@ -81,7 +81,7 @@ unix_syscall_entry:
 	std ,y++
 	ldd ,x++ 	; fourth
 	std ,y++
-	ldd 1,s		; stacked D register -> syscall number
+	ldd 1,s		; stacked D register -> syscall number in B
 	stb U_DATA__U_CALLNO
         ; save process stack pointer (in user page)
         sts U_DATA__U_SYSCALL_SP
@@ -244,7 +244,7 @@ interrupt_handler:
 	lda #0x7E		; put it back
 	sta 0		; write
 	jsr map_kernel
-	ldd #11		; SIGSEGV
+	ldb #11		; SIGSEGV
 	jsr trap_signal	; signal the user with a fault
 
 nofault:
@@ -317,30 +317,27 @@ interrupt_return_x:
 	tfr x,s
 	bra interrupt_return
 
-;  Enter with X being the signal to send ourself
+;  Enter with B being the signal to send ourself
 trap_signal:
-	pshs x
-	ldx U_DATA__U_PTAB	;  ssig(pid, X)
-        jsr _ssig
-	puls x,pc
+	ldx U_DATA__U_PTAB	;  ssig(pid, B)
+	jmp _ssig
 
 ;  Called from process context (hopefully)
 null_handler:
 	; kernel jump to NULL is bad
 	lda U_DATA__U_INSYS
-	beq trap_illegal
+	bne trap_illegal
 	; user is merely not good
 	; check order of push arguments !!
-        ldx #7
-	ldy U_DATA__U_PTAB
-	ldd #10		;	signal (getpid(), SIGBUS)
-	pshs d,y
-	swi
-	puls d,y
-	ldd #0
-	tfr d,x
-	pshs d,x
-        swi			; exit
+	ldx #7			; SIGBUS
+	pshs d,x		; D only to fill stack (no caller)
+	ldx U_DATA__U_PTAB
+	ldb #39			; Function 39 = kill
+	swi			; kill (getpid(), SIGBUS)
+	leas 4,s
+	ldx #0
+	clrb			; Function 0 = exit
+	swi			; exit (0)
 
 illegalmsg: .ascii "[trap_illegal]"
         .db 13,10,0
