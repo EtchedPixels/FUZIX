@@ -70,6 +70,11 @@ init_early:
 	lda #0x7E
 	sta 0
 	sta 0x0071		; BASIC cold boot flag
+	ldx #ramstub		; copy to internal RAM
+cp2ram	ldu ,x
+	stu ,x++
+	cmpx #stubend
+	blo cp2ram
 	rts
 
 init_hardware:
@@ -112,13 +117,24 @@ _framedet:
             .globl unix_syscall_entry
 	    .globl fd_nmi_handler
 
-            .area .common
+            .area .commondata
+
+; in a place where internal memory is kept alone
 
 _plt_reboot:
+	    ldd #0x3F3F
 	    orcc #0x10
-	    clr 0xFF90		; disable MMU on MOOH
-	    clr 0x0071
+	    sta 0x0071		; cold boot flag for ROM reset handler
+	    std 0xFFA2		; unmap at 0x4000 and 0x6000
+	    std 0xFFA4		; unmap at 0x8000 and 0xA000
+	    std 0xFFA6		; unmap at 0xC000 and 0xE000
+	    clr 0xFF90		; disable MMU
+ramstub:    ; runs from internal RAM
+	    std 0xFFA0		; reset MMU config for 0x0000 and 0x2000
 	    jmp [0xFFFE]	; BASIC ROM & vectors are back
+stubend:
+
+            .area .common
 
 _plt_monitor:
 	    orcc #0x10
