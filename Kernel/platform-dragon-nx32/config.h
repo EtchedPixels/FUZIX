@@ -51,7 +51,7 @@
 
 #define CRT9128_BASE	0xFF7C
 
-#define TICKSPERSEC 50   /* Ticks per second */
+#define TICKSPERSEC 10   /* Ticks per second */
 /* FIXME: This will move once we put the display in the kernel bank and
    sort the banker out */
 #define PROGBASE    0x8000  /* also data base */
