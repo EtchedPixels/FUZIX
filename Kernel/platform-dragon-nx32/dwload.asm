@@ -470,7 +470,7 @@ V.SCF    equ   0
          use   ../dev/drivewire/dwwrite-6809.s
          ENDC
 
-         use   dw.def
+         use   ../dev/drivewire/dw-6809.def
 
 csize    equ   *-Entry
 eom      equ   *-Top
