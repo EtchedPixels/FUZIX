@@ -32,3 +32,7 @@ a useful port.
 TODO
 ====
 - We need to fix a tiny bit of user space for this size on 6809. Notably unfortunately 'ls'
+
+Emulation
+=========
+- xroar -default-machine dragon64 -cart ide -load-hd0 Images/coco2/disk.img -load Images/coco2/bootfuz.bin
