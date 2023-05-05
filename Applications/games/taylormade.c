@@ -1599,7 +1599,6 @@ static void RunOneInput(void)
 static int ParseWord(char *p)
 {
 	unsigned char *words = Image + VerbBase;
-	int i;
 
 	while (*words != 126) {
 		if (memcmp(words, p, 4) == 0)
