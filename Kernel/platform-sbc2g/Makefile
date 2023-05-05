@@ -60,3 +60,17 @@ loader.bin: loader.s
 	sdldz80 -i loader.rel
 	makebin -s 65536 loader.ihx loader.tmp
 	dd if=loader.tmp bs=256 skip=192 of=loader.bin
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	# Make a blank disk image with partition
+	dd if=part.bin of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=16512 conv=notrunc
+	# Add the kernel
+	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	# Add the bootloader
+	dd if=loader.bin of=$(IMAGES)/disk.img seek=16384 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
