@@ -387,17 +387,17 @@ void do_plt_interrupt(uint_fast8_t re)
 					kbd_timer = keyrepeat.continual;
 				}
 			}
-	                fd_timer_tick();
-			tick++;
-			if (re == 0) {
-				while (tick >= sys_hz) {
-					tick -= sys_hz;
-					timer_interrupt();
-				}
-			}
-			wakeup(&plt_interrupt);
-			dw_vpoll();
 		}
+                fd_timer_tick();
+		tick++;
+		if (re == 0) {
+			while (tick >= sys_hz) {
+				tick -= sys_hz;
+				timer_interrupt();
+			}
+		}
+		wakeup(&plt_interrupt);
+		dw_vpoll();
 	}
 }
 
