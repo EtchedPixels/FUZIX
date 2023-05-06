@@ -296,7 +296,6 @@ int main(int argc, char *argv[])
     if (k < argc) {
 	/* Offset present. */
 	off = offset(argc, argv, k);
-	off = (off / 16L) * 16L;
 	lseek(0, off, SEEK_SET);
     }
 
