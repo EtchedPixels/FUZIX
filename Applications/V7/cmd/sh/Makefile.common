@@ -21,7 +21,7 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 $(FOBJS): fshbuild_%.o: %.c
-	# -c and -o is busted if used together in cc65/cc6303
+# -c and -o is busted if used together in cc65/cc6303
 	cp $< fshbuild_$<
 	$(CC) -c $(CFLAGS) $(COPT) -DBUILD_FSH fshbuild_$<
 
