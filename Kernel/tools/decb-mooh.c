@@ -117,7 +117,8 @@ int main(int argc, char *argv[])
         }
         /* write out preamble */
         printf("%c%c%c%c%c", 0, size >> 8, size & 0xFF, base >> 8, c);
-        fprintf(stderr, "preamble %04x (%04x)\n", base, size);
+        fprintf(stderr, "preamble %04x (%04x)%s\n", base, size,
+		shifted ? " (shifted)" : "");
         break;
       case BYTESTREAM:
         printf("%c", c);
