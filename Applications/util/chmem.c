@@ -43,19 +43,19 @@ static void chmem_flat(FILE * fp, unsigned char *buf, int argc, char *argv[])
 
 static void chmem_fzx2(FILE * fp, unsigned char *buf, int argc, char *argv[])
 {
-	uint32_t v;
+	unsigned long int v;
 	unsigned short top;
 
 	if (argc == 2) {
 		top = buf[13] << 8;
 		if (top)
-			printf("Fuzix binary set at %d bytes.\n", top);
+			printf("Fuzix binary set at %u bytes.\n", top);
 		else
 			printf("Fuzix binary, set to allocate all available.\n");
 		return;
 	}
 
-	if (sscanf(argv[2], "%u", &v) != 1 || v > 65536) {
+	if (sscanf(argv[2], "%lu", &v) != 1 || v > 65536) {
 		fprintf(stderr, "%s: invalid chmem value '%s'.\n", argv[0], argv[2]);
 		exit(1);
 	}
