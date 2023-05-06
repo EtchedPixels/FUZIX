@@ -126,6 +126,7 @@ f 0644 /etc/inittab   etc-files/inittab
 f 0644 /etc/termcap   etc-files/termcap
 f 0755 /etc/rc	      etc-files/rc
 f 0755 /etc/rc.halt   etc-files/rc.halt
+f 0755 /etc/rc.reboot etc-files/rc.reboot
 f 0644 /etc/mtab      etc-files/mtab
 f 0644 /etc/fstab     etc-files/fstab 
 

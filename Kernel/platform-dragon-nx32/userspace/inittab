@@ -11,6 +11,8 @@ rc::bootwait:/etc/rc
 02:3:respawn:getty /dev/tty2 9600 vt52
 03:3:respawn:getty /dev/tty3 9600 vt52
 04:3:respawn:getty /dev/tty4 9600 vt52
+# Reboot
+bt:5:wait:/etc/rc.reboot
 # Shutdown
 ht:6:wait:/etc/rc.halt
 #06:3:respawn:dwgetty /dev/tty6 4242

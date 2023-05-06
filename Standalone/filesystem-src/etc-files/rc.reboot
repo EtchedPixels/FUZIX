@@ -1,0 +1,4 @@
+killall
+umount -a
+substroot remount % ro
+reboot
