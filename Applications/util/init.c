@@ -270,6 +270,8 @@ static void parse_initline(void)
 	uint8_t bit = 0;
 	uint8_t *linelen;
 
+	ibackup = idata;
+
 	if (*sdata == '#') {
 		sdata = (uint8_t *)strchr((char *)sdata, '\n');
 		if (sdata)
