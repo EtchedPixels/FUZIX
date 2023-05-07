@@ -261,9 +261,12 @@ arg_t _brk(void)
 		return -1;
 	/* If we have done a break that gives us more room we must zero
 	   the extra as we no longer guarantee it is clear already */
+	if (addr > udata.u_break) {
+		uaddr_t old_break = udata.u_break;
+		udata.u_break = addr; /* for safety checks in uzero */
+		uzero((void *)old_break, addr - old_break);
+	}
 	udata.u_break = addr;
-	if (addr > udata.u_break)
-		uzero((void *)udata.u_break, addr - udata.u_break);
 	return 0;
 }
 
