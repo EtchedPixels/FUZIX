@@ -7,7 +7,6 @@
 #include <devtty.h>
 #include <input.h>
 #include <devinput.h>
-#include <devgfx.h>
 #include <stdarg.h>
 #include <trs80.h>
 

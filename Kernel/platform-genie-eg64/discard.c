@@ -3,8 +3,6 @@
 #include <devtty.h>
 #include <tty.h>
 #include <kdata.h>
-#include "devgfx.h"
-#include <devide.h>
 #include "trs80.h"
 
 void vt_check_lower(void)

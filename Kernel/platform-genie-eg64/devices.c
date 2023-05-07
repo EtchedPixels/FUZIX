@@ -8,7 +8,6 @@
 #include <devlpr.h>
 #include <vt.h>
 #include <devtty.h>
-#include <devgfx.h>
 #include <trs80.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */

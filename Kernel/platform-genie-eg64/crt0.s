@@ -1,12 +1,7 @@
 		; Low 16K
-		.area _BOOT
-	        .area _INITIALIZED
-	        .area _CODE2
-		.area _VIDEO
-	        .area _CONST
-		.area _BUFFERS
-		; 16 - 32K
 	        .area _CODE
+		.area _VIDEO
+	        .area _INITIALIZED
 	        .area _DATA
 	        .area _BSEG
 	        .area _BSS
@@ -19,11 +14,17 @@
 		; expand over it
 		; We want the DISCARD area last as we eventually want to
 		; expand all over it for buffers
+		; 16 to 32K
 	        .area _COMMONMEM
+	        .area _CONST
+		.area _CODE2
+		.area _BUFFERS
 		.area _DISCARD
 
 		; 32K-64K kernel only map
 		.area _CODE1
+
+		.area _BOOT
 
 		; Tell binman to leave the image alone
 		.area _PAGE0

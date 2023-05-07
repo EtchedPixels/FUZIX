@@ -1,7 +1,6 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <input.h>
-#include <devgfx.h>
 #include <devinput.h>
 
 __sfr __at 0x00 stick;
