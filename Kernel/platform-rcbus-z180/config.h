@@ -81,6 +81,7 @@ extern uint16_t swap_dev;
 #define CONFIG_NET_WIZNET
 #undef CONFIG_NET_W5200		/* WizNET 5200 */
 #define CONFIG_NET_W5500	/* WizNET 5500 */
+#undef CONFIG_NET_W5500_FDM	/* Fixed Data Mode - if you can't use VDM because chip select is tied low */
 
 /* I2C device */
 #define CONFIG_DEV_I2C
