@@ -2,8 +2,8 @@
 
 U_DATA__TOTALSIZE           .equ 0x200        ; 256+256
 
-PROGBASE		    .equ 0x7000
-PROGLOAD		    .equ 0x7000
+PROGBASE		    .equ 0x6000
+PROGLOAD		    .equ 0x6000
 
 Z80_TYPE		    .equ 1
 

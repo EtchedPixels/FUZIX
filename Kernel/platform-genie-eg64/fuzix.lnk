@@ -5,6 +5,7 @@
 -b _INITIALIZER=0x37C0
 -b _COMMONMEM=0x4000
 -b _CODE1=0x8000
+-b _DISCARD=0x6800
 -l z80
 platform-genie-eg64/crt0.rel
 platform-genie-eg64/commonmem.rel

@@ -29,7 +29,7 @@
 /* And our buffer pool is dynamically sized */
 #define CONFIG_DYNAMIC_BUFPOOL
 
-#define MAP_SIZE	0x9000
+#define MAP_SIZE	0xA000
 
 #define CONFIG_BANKS	1	/* 32K */
 
@@ -49,13 +49,13 @@ extern unsigned char vt_map_char(unsigned char);
 #define KEY_COLS	8
 
 #define TICKSPERSEC 40	    /* Ticks per second */
-#define PROGBASE    0x5000  /* Base of user  */
-#define PROGLOAD    0x5000  /* Load and run here */
+#define PROGBASE    0x6000  /* Base of user  */
+#define PROGLOAD    0x6000  /* Load and run here */
 #define PROGTOP     0xFFFF  /* Top of program */
-#define PROC_SIZE   44 	    /* Memory needed per process */
+#define PROC_SIZE   40 	    /* Memory needed per process */
 
-#define SWAP_SIZE   0x59 	/* 44.5K in blocks */
-#define SWAPBASE    0x5000	/* We swap the lot in one */
+#define SWAP_SIZE   0x51 	/* 44.5K in blocks */
+#define SWAPBASE    0x6000	/* We swap the lot in one */
 #define SWAPTOP	    0x10000UL
 
 #define MAX_SWAPS	16	/* Should be plenty (512K!) */
@@ -69,7 +69,7 @@ extern unsigned char vt_map_char(unsigned char);
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 3
+#define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
 #define NBUFS    4         /* Number of block buffers - keep in sync with asm! */
