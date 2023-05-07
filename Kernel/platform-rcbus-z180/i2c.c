@@ -53,18 +53,18 @@ int i2c_claim_bus(uint_fast8_t bus)
         return -1;
     }
     /* Don't poll the RTC whilst we are busy with the port */
-    #ifdef CONFIG_RTC_DS1302
+#ifdef CONFIG_RTC_DS1302
     rtc_defer = 1;
-    #endif
+#endif
     return 0;
 }
 
 void i2c_release_bus(uint_fast8_t bus)
 {
     used(bus);
-    #ifdef CONFIG_RTC_DS1302
+#ifdef CONFIG_RTC_DS1302
     rtc_defer = 0;
-    #endif
+#endif
 }
 
 int plt_i2c_msg(struct i2c_msg *m, uint8_t *kbuf)

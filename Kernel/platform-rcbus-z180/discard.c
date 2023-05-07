@@ -48,11 +48,11 @@ void pagemap_init(void)
 	if (has_1mb)
 		for (i = 0x01; i < (512 >> 2); i += 0x10)
 			pagemap_add(i);
-	#ifdef CONFIG_RTC_DS1302
+#ifdef CONFIG_RTC_DS1302
 	ds1302_init();
 	if (ds1302_present)
 		kputs("DS1302 detected at 0x0C.\n");
-	#endif
+#endif
 }
 
 void map_init(void)
