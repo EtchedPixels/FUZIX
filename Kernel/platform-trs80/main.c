@@ -13,8 +13,6 @@ uint8_t vtattr_cap;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
-/* On idle we spin checking for the terminals. Gives us more responsiveness
-   for the polled ports */
 void plt_idle(void)
 {
     __asm
