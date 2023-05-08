@@ -3,6 +3,8 @@
  *
  *	FIXME: - turn the gfx on/off when we switch tty
  *	       - tie gfx to one tty and report EBUSY for the other on enable
+ *
+ *	TODO: 64 column
  */
 
 #include <kernel.h>
