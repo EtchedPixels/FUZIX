@@ -60,16 +60,6 @@ diskimage: image
 	cp boot4p.jv3 $(IMAGES)/boot.jv3
 	cp hdboot4p.jv3 $(IMAGES)/hdboot.jv3
 	# Build a file system to fit
-	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/filesys.img 256 21632)
-	# XTRS / FREHD 12MB disk header
-	cat xtrsheader > $(IMAGES)/hard4p-0
-	# Followed by a kernel padded to 64K (Cylinder 0) including 512 bytes
-	# space at the front for the disk label
-	dd if=/dev/zero of=$(IMAGES)/hard4p-0 bs=256 seek=1 count=256
-	dd if=../fuzix.bin of=$(IMAGES)/hard4p-0 bs=256 seek=3 conv=notrunc
-	# And the disk image (Cylinder 1+)
-	cat $(IMAGES)/filesys.img >> $(IMAGES)/hard4p-0
-	# And swap
-	dd if=/dev/zero bs=256 count=8192 >>$(IMAGES)/hard4p-0
-	# Add a label
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/filesys.img 256 21760)
+	cat xtrsheader $(IMAGES)/filesys.img >$(IMAGES)/hard4p-0
 	../tools/trslabel $(IMAGES)/hard4p-0
