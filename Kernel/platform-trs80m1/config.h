@@ -57,7 +57,7 @@
 
 #define SWAP_SIZE   0x40 	/* 32K in blocks */
 #define SWAPBASE    0x8000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0x8000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0x10000U	/* udata cache at the top */
 
 #define MAX_SWAPS	16	/* Should be plenty (512K!) */
 
