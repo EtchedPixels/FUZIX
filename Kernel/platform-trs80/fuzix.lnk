@@ -1,7 +1,7 @@
 -mwxuy
 -i fuzix.ihx
 -b _CODE=0x0100
--b _COMMONMEM=0xE800
+-b _COMMONMEM=0xE600
 -l z80
 platform-trs80/crt0.rel
 platform-trs80/commonmem.rel

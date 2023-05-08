@@ -40,8 +40,6 @@ Requirements:
 	128K or banked RAM fitted
 	Hard disk drive (will be used for swap), or a suitable memory
 	expander board could be used with a bit of tweaking (or both!)
-	(The hard disk code should work with the Lo-tech IDE adapter but
-	this has yet to be confirmed)
 
 Memory Map:
 	Base memory 0-FFFF (with a fair bit of slack) is used for the kernel
