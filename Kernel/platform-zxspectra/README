@@ -21,7 +21,7 @@ The memory is allocated as
 3	Kernel CODE4
 4	User process high memory
 5	Fixed at 4000-7FFF
-6	Usr process high memoruy
+6	User process high memory
 7	kernel CODE3, Video at C000-DAFF
 
 Spectranet
