@@ -3,17 +3,41 @@
 #include <printf.h>
 
 /*
- *	Must live in CODE2
+ *	Must live in CODE2. Use an asm helper so that we don't change bank
+ *	looking for memcpy or other surprise helpers
  */
+
+static void __copy_inline(uint8_t *to, uint8_t *from, uint16_t len) __naked
+{
+__asm
+    ld hl,#9		; last byte of len argument
+    add hl,sp
+    ld b,(hl)
+    dec hl
+    ld c,(hl)
+    dec hl
+    ld d,(hl)
+    dec hl
+    ld e,(hl)
+    dec hl
+    ld a,(hl)
+    dec hl
+    ld l,(hl)
+    ld h,a
+    ex de,hl
+    ldir
+    ret
+__endasm;
+}
 
 void blktok(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
 {
-    __builtin_memcpy(kaddr, buf->__bf_data + off, len);
+    __copy_inline(kaddr, buf->__bf_data + off, len);
 }
 
 void blkfromk(void *kaddr, struct blkbuf *buf, uint16_t off, uint16_t len)
 {
-    __builtin_memcpy(buf->__bf_data + off, kaddr, len);
+    __copy_inline(buf->__bf_data + off, kaddr, len);
 }
 
 /*
@@ -39,7 +63,7 @@ void *blkptr(struct blkbuf *buf, uint16_t offset, uint16_t len)
 {
     if (len > 64)
         panic("blkptr");
-    __builtin_memcpy(scratchbuf, buf->__bf_data + offset, len);
+    __copy_inline(scratchbuf, buf->__bf_data + offset, len);
     return scratchbuf;
 }
 
