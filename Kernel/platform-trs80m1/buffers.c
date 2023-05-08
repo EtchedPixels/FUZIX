@@ -24,6 +24,9 @@ __asm
     dec hl
     ld l,(hl)
     ld h,a
+    ld a,b
+    or c
+    ret z
     ex de,hl
     ldir
     ret
