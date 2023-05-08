@@ -56,7 +56,7 @@ _bufpool:
             .area _COMMONMEM
 
 _int_disabled:
-	    .db 0
+	    .db 1
 
 _plt_monitor:
 	    di
