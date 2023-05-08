@@ -7,6 +7,7 @@
 #include "devgfx.h"
 #include <devstringy.h>
 #include <devide.h>
+#include <printf.h>
 #include "trs80.h"
 
 void device_init(void)
@@ -18,7 +19,10 @@ void device_init(void)
 #endif
   floppy_setup();
   hd_probe();
-  devide_init();
+  /* The supermem and the IDE controller clash. If we found a supermem then
+     don't look for IDE */
+  if (trs80_mapper != MAP_SUPERMEM)
+    devide_init();
   trstty_probe();
   gfx_init();
   tape_init();
