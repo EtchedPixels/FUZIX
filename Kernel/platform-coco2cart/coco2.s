@@ -185,6 +185,7 @@ map_save:
 	sta romsave
 	puls a,pc
 
+	.area .text
 ;
 ;	Joystick helper
 ;
@@ -236,7 +237,10 @@ jsover:
 	bra jssearch
 jsdone:
 	ldb $FF20	; save fire button in bit 0
+	std ,x++
 	rts
+
+	.area .data
 jstmp:
 	.byte 0
 
