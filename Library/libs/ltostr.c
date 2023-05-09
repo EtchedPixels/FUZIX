@@ -16,7 +16,7 @@ char * __ultostr_r(char *buf, unsigned long val, int radix)
 
    if( radix > 36 || radix < 2 ) return 0;
 
-   p = buf+sizeof(buf);
+   p = buf + 34;
    *--p = '\0';
 
    do
