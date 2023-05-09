@@ -1,17 +1,6 @@
-Initial Port Prototype for the Z80-MBC2
+# Z80-MBC2
 
-This is a simple system with a Z80, 128K of RAM and an Atmega acting as
-the I/O subsystem.
-
-Supported Hardware
-
-Z80-MBC2 with RTC and SD card
-
-Hardware
-
-https://hackaday.io/project/159973-z80-mbc2-4ics-homemade-z80-computer
-
-Implementation
+## Implementation
 
 This platform uses the standard banked memory model. One lower 32K bank is
 assigned to the kernel (Bank 0). The upper memory is fixed, and
@@ -21,7 +10,7 @@ During execution the current per process data and stack (udata) live in the
 upper bank near the top of memory. When a process is switched out they are saved
 into the top of the low 32K space.
 
-Memory Layout
+## Memory Layout
 
 Kernel
 0000-00FF	Interrupt vectors
@@ -38,7 +27,7 @@ F000-FDFF	Kernel common area and stacks
 FE00-FFFF	Reserved for firmware
 
 
-Notes
+## Notes
 
 There are a variety of clever things that could be done to make this platform
 more useful but at a cost. Firstly there is a lot of space free in the top 32K

@@ -52,3 +52,11 @@ clean:
 	rm -f $(JUNK)  core *~
 
 image:
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	(cd ../../Standalone/filesystem-src; ./build-filesystem $(IMAGES)/filesys.img 256 12288 )
+	dd if=parttab of=$(IMAGES)/DS0N01.DSK bs=512 count=16384
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/DS0N01.DSK bs=512 seek=4096 conv=notrunc
+	cp ../fuzix.bin $(IMAGES)
