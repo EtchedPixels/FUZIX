@@ -387,6 +387,7 @@ preemption:
 	!
 	!	Set the flag so we are punished for using all our time
 	!
+	inx h
 	mvi a,PFL_BATCH
 	ora m
 	mov m,a
