@@ -1,8 +1,16 @@
-Virtual 8080 Platform Using Z80Pack
+# Virtual 8080 Platform Using Z80Pack
 
 To deal with
 - The C compiler bombs on the adventure game builds
 - The preprocessor can't handle netd or fforth
+
+Ideally after the 0.4 release replace the C compiler with the Fuzix Compiler
+Kit compiler and get it correctly generating 8080 code as well as 8085.
+
+## Memory
+
+We use the default 48K/16K split. We could move to 56K/8K but there seems to
+be no particular need.
 
 Memory Map (kernel)
 

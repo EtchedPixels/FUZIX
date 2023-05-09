@@ -48,7 +48,7 @@ image: bootblock
 
 diskimage:
 	# Boot floppy
-	dd if=bootblock.bin of=$(IMAGES)/boot.dsk bs=256256 conv=sync
+	dd if=bootblock of=$(IMAGES)/boot.dsk bs=256256 conv=sync
 	dd if=../fuzix.bin of=$(IMAGES)/boot.dsk bs=1 seek=193024 conv=notrunc
 	# Root hard disk
 	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/hd-fuzix.dsk 128 8160)
