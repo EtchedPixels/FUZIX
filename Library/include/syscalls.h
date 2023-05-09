@@ -12,7 +12,6 @@
 #include <sys/userstructs.h>
 
 extern int errno;
-extern int syscall(int callno, ...);
 
 struct _uzisysinfoblk {
   uint8_t infosize;		/* For expandability */
