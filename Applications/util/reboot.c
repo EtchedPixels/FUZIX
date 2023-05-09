@@ -10,7 +10,7 @@
 static int telinit(unsigned char c)
 {
   int fd = open("/var/run/initctl", O_WRONLY|O_TRUNC|O_CREAT, 0600);
-  if (fd < 0 || write(fd, &c, 1) != 1 || close(fd) == -1 || 
+  if (fd < 0 || write(fd, &c, 1) != 1 || close(fd) == -1 ||
       kill(1, SIGUSR1) < 0)
         return 0;
   return 1;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   else if (strcmp(p, "suspend") == 0)
     uadmin(A_SUSPEND, pv, 0);
   else {
-    if (telinit(5))
+    if (pv == 0 && telinit(5))
       exit(0);
     uadmin(A_REBOOT, pv, 0);
   }
