@@ -44,7 +44,9 @@ STATIC void __stdio_close_all(void)
 
 STATIC void __stdio_init_vars(void)
 {
-	if (isatty(1))
+	if (isatty(1)) {
+		stdout->mode &= ~_IOFBF;
 		stdout->mode |= _IOLBF;
+	}
 	atexit((atexit_t) __stdio_close_all);
 }
