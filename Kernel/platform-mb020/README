@@ -1,4 +1,0 @@
-Fuzix for the MB020 - a simple 68020 example platform
-
-TODO:
-auto detect uarts - scan for 16x50 and ACIA ports and add them
