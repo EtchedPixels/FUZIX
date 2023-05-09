@@ -60,10 +60,9 @@ Other targets should not be hard to add.
 
 ### 6502 / 65C02 / 65C816
 
-These are supported by cc65 (v2.18 - avoid the recent updated one in Fedora
-36 at least as it miscompiles stuff). Due to compiler limits floating point
-is not supported. 65C816 is treated as a 65C02 with extras because of the
-lack of an open 65C816 compiler.
+These are supported by cc65 (v2.18 or later). Due to compiler limits floating
+point is not supported. 65C816 is treated as a 65C02 with extras because of
+the lack of an open 65C816 compiler.
 
 Currently this port targets the RCbus 65C02/65C816 cards and the PZ1. Most
 of the "classic" 6502 systems have neither the memory or the I/O, and in
