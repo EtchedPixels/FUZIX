@@ -1,5 +1,5 @@
 ;
-U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @ F800
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @ F600
 Z80_TYPE                    .equ 2
 
 OS_BANK                     .equ 0x00         ; value from include/kernel.h
