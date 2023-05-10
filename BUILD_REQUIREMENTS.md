@@ -33,13 +33,7 @@ was dropped where it still actually works.
 *WARNING*: The Fedora gcc-m68k package appears to be completely broken.
 
 In fact the gcc build environment appears to be a bit of a train-wreck for
-M68K options.
-
-The following saga appears to get it to at least build
-
-````
-../gcc-10.3.0/configure --target=m68k-linux-gnu --prefix=/opt/gcc10-68k --disable-threads --enable-languages=c --disable-shared --without-headers --disable-libquadmath --disable-libssp --disable-libgcj --disable-gold --disable-libmpx --disable-libgomp --disable-libatomic
-````
+M68K options. See [README.68000.md](README.68000.md) for a working example.
 
 ## 8080/8085
 
