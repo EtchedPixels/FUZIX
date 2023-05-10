@@ -73,8 +73,14 @@ init:
         ldir
         ; and the discard
         ld de, #s__DISCARD
-        ld bc, #l__DISCARD
-        ldir
+        ld bc, #l__DISCARD-1
+	add hl,bc
+	ex de,hl
+	add hl,bc
+	ex de,hl
+	inc bc
+        lddr
+
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1
