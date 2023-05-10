@@ -8,7 +8,7 @@ README for version imported from github SmallC-85
 
 Revived version of SmallC based on Chris Lewis' port to UNIX V. I have
 mainly rewritten code to use structures and to make it compile using GCC
-silently without warnigns.
+silently without warnings.
 
 Support for one line comments from C99 specification was added as well
 as capability to handle Windows EOLs.
