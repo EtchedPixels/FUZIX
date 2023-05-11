@@ -374,8 +374,8 @@ ptptr ptab_alloc(void)
 						break;
 					}
 			}
-			if (udata.u_ptab) {
-				newp->p_top = udata.u_top;
+			newp->p_top = udata.u_top;		/* also for init creation */
+			if (udata.u_ptab) {		/* on forking */
 #ifdef CONFIG_UDATA_TEXTTOP
 				newp->p_texttop = udata.u_texttop;
 #endif
