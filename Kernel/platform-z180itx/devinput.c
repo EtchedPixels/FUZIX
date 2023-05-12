@@ -9,7 +9,7 @@
  *	will hook into the rest of it once enabled.
  */
 
-__sfr __at 0x89 ppi_b;
+__sfr __at 0x41 ppi_b;
 
 static uint8_t buf[32];
 

@@ -11,6 +11,8 @@
         .area _HOME     ; compiler stores __mullong etc in here if you use them
         .area _CODE2
         .area _CONST
+        .area _GSINIT
+        .area _GSFINAL
         .area _INITIALIZED
         .area _DATA
         .area _BSEG
@@ -19,11 +21,9 @@
         ; note that areas below here may be overwritten by the heap at runtime, so
         ; put initialisation stuff in here
         .area _BUFFERS     ; _BUFFERS grows to consume all before it (up to KERNTOP)
-        .area _INITIALIZER
-        .area _GSINIT
-        .area _GSFINAL
         .area _DISCARD
         .area _COMMONMEM
+        .area _INITIALIZER
 
         ; imported symbols
         .globl _fuzix_main
@@ -59,59 +59,64 @@ init:
 
 	; The loader stacked ROMWBW info, retrieve it before we reset the
 	; stack
-	pop bc			; C is system type
-	pop de			; DE is speed
-	pop hl			; CPU info
+	pop	bc		; C is system type
+	pop	de		; DE is speed
+	pop	hl		; CPU info
 
 	exx			; And hide them in the alt registers
 				; during set up
 
-	ld a,#0xFE
-	out (0x0D),a
-        ld sp, #kstack_top
+	ld	a,#0xFE
+	out	(0x0D),a
+        ld	sp, #kstack_top
 
         ; move the common memory where it belongs    
-        ld hl, #s__DATA
-        ld de, #s__COMMONMEM
-        ld bc, #l__COMMONMEM
+        ld	hl, #s__DATA
+        ld	de, #s__COMMONMEM
+        ld	bc, #l__COMMONMEM
         ldir
         ; and the discard
-        ld de, #s__DISCARD
-        ld bc, #l__DISCARD
-        ldir
+        ld	de, #s__DISCARD
+        ld	bc, #l__DISCARD-1
+	add	hl,bc
+	ex	de,hl
+	add	hl,bc
+	ex	de,hl
+	inc	bc
+        lddr
         ; then zero the data area
-        ld hl, #s__DATA
-        ld de, #s__DATA + 1
-        ld bc, #l__DATA - 1
-        ld (hl), #0
+        ld	hl, #s__DATA
+        ld	de, #s__DATA + 1
+        ld	bc, #l__DATA - 1
+        ld	(hl), #0
         ldir
 
-	ld a,#0xFC
-	out (0x0D),a
+	ld	a,#0xFC
+	out	(0x0D),a
         ; Configure memory map
-        call init_early
+        call	init_early
 
-	ld a,#0xF8
-	out (0x0D),a
+	ld	a,#0xF8
+	out	(0x0D),a
 
 	; We are now in the right bank and BSS etc
 	; retrieve and store the ROM info
 
 	exx
-	ld (_romwbw_type),bc
-	ld (_romwbw_speed),de
-	ld (_romwbw_cpu),hl
+	ld	(_romwbw_type),bc
+	ld	(_romwbw_speed),de
+	ld	(_romwbw_cpu),hl
 
         ; Hardware setup
-        call init_hardware
+        call	init_hardware
 
-	ld a,#0xF0
-	out (0x0D),a
+	ld	a,#0xF0
+	out	(0x0D),a
 
         ; Call the C main routine
-        call _fuzix_main
+        call	_fuzix_main
     
         ; fuzix_main() shouldn't return, but if it does...
         di
 stop:   halt
-        jr stop
+        jr	stop

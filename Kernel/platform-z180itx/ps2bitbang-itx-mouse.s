@@ -68,7 +68,7 @@
 	inc	c
 .endm
 
-ps2_handlers mouse 0x7A 0x7A 255 255 mouse_bit_in mouse_bit_out
+ps2_handlers mouse 0x42 0x42 255 255 mouse_bit_in mouse_bit_out
 
 ;
 ;	This lets us avoid worrying about timeouts everywhere, instead

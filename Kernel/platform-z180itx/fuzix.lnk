@@ -2,7 +2,6 @@
 -i fuzix.ihx
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
--b _DISCARD=0xDE00
 -l z180
 platform-z180itx/crt0.rel
 platform-z180itx/commonmem.rel

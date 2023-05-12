@@ -10,8 +10,8 @@
 #include <i2c_bitbang.h>
 
 uint8_t rtc_defer;
-__sfr __at 0x78 ppi_a;
-__sfr __at 0x79 ppi_b;
+__sfr __at 0x40 ppi_a;
+__sfr __at 0x41 ppi_b;
 
 /* There isn't a huge point optimizing this, we are not supposed to go over
    100 or 400KHz anyway. The expectations of the caller are that

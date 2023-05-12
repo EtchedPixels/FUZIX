@@ -29,10 +29,6 @@ void plt_discard(void)
 	}
 }
 
-/* ITX 82C55 */
-
-__sfr __at 0x7A ppi_c;
-
 void plt_idle(void)
 {
 	__asm halt __endasm;

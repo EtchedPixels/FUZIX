@@ -18,10 +18,10 @@ uint16_t romwbw_type;
 
 
 /* Mini-ITX 82C55 */
-__sfr __at 0x78 ppi_a;
-__sfr __at 0x79 ppi_b;
-__sfr __at 0x7A ppi_c;
-__sfr __at 0x7B ppi_ctrl;
+__sfr __at 0x40 ppi_a;
+__sfr __at 0x41 ppi_b;
+__sfr __at 0x42 ppi_c;
+__sfr __at 0x43 ppi_ctrl;
 
 void init_hardware_c(void)
 {

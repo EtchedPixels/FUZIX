@@ -51,7 +51,7 @@ reverse_byte_a:
     byte; /* squelch compiler warning */
 }
 
-__sfr __at 0x7A ppi_c;
+__sfr __at 0x42 ppi_c;
 
 void sd_spi_clock(bool go_fast)
 {

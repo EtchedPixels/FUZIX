@@ -79,7 +79,7 @@ _ps2kbd_beep:
 	inc	c
 .endm
 
-ps2_handlers kbd 0x7A 0x7A 255 255 kbd_bit_in kbd_bit_out
+ps2_handlers kbd 0x42 0x42 255 255 kbd_bit_in kbd_bit_out
 
 ;
 ;	This lets us avoid worrying about timeouts everywhere, instead
