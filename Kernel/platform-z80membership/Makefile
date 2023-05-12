@@ -75,7 +75,7 @@ diskimage:
 	# Attach the MSDOS partition to the disk
 	dd if=dos.part of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=12 seek=3 conv=notrunc
+	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=3 conv=notrunc
 	# Clean up
 	rm dos.part
 	rmdir tmpdir
