@@ -94,6 +94,7 @@ f 0755 /bin/mode        mode
 f 0755 /bin/more        more
 f 0755 /bin/nvtool	nvtool
 f 0755 /bin/od          od
+l /bin/od /bin/hd
 f 0755 /bin/pagesize    pagesize
 f 0755 /bin/passwd      passwd
 f 0755 /bin/printenv    printenv

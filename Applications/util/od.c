@@ -6,8 +6,10 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
 
 int  bflag, cflag, dflag, oflag, xflag, hflag, vflag;
+int  hd;
 int  linenr, width, state, ever;
 int  prevwds[8];
 long off;
@@ -124,6 +126,7 @@ void dumpfile(void)
 	if (xflag) wdump(words, k, 16);
 	if (cflag) bdump((char *)words, k, (int)'c');
 	if (bflag) bdump((char *)words, k, (int)'b');
+	if (hd)    bdump((char *)words, k, (int)'h');
 	for (k = 0; k < 8; k++) prevwds[k] = words[k];
 	for (k = 0; k < 8; k++) words[k] = 0;
     }
@@ -156,6 +159,9 @@ void byte(int val, int c)
     if (c == 'b') {
 	printf(" ");
 	outnum(val, 7);
+	return;
+    } else if (c == 'h') {
+	printf(" %02x", val);
 	return;
     }
     if (val == 0)
@@ -275,6 +281,12 @@ int main(int argc, char *argv[])
     int k, flags;
     char *p;
 
+    /* single-byte hex dump */
+    if (!strcmp(argv[0], "hd")) {
+        hd = 1;
+        hflag = 1;
+    }
+
     /* Process flags */
     setbuf(stdout, buffer);
     flags = 0;
@@ -301,6 +313,7 @@ int main(int argc, char *argv[])
     }
 
     if ((bflag | cflag | dflag | oflag | xflag) == 0) oflag = 1;
+    if (hd) oflag = 0;
     k = (flags ? 2 : 1);
     if (bflag | cflag) {
 	width = 8;
