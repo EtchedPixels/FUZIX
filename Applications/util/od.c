@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <limits.h>
 
 int  bflag, cflag, dflag, oflag, xflag, hflag, vflag;
 int  linenr, width, state, ever;
@@ -32,34 +34,64 @@ void usage(void);
 
 long offset(int argc, char *argv[], int k)
 {
-    int dot, radix;
-    char *p, c;
+    int dot = 0, bad = 0;
+    char *p, *endp;
     long val;
+    long mult;
 
-    /* See if the offset is decimal. */
-    dot = 0;
+    /* See if the offset is octal with a dot. */
     p = argv[k];
     while (*p)
-	if (*p++ == '.') dot = 1;
+        if (*p++ == '.') dot = 1;
 
     /* Convert offset to binary. */
-    radix = (dot ? 10 : 8);
-    val = 0;
     p = argv[k];
-    if (*p == '+') p++;
-    while (*p != 0 && *p != '.') {
-	c = *p++;
-	if (c < '0' || c > '9') {
-	    printf("Bad character in offset: %c\n", c);
-	    exit(1);
-	}
-	val = (long) radix * val + (long) (c - '0');
+    if (dot) {
+        val = strtol(p, &endp, 8);
+        if (val < 0 || val == LONG_MAX || endp == p || *endp++ != '.')
+            bad = 1;
+    } else {
+        val = strtol(p, &endp, 0);
+        if (val < 0 || val == LONG_MAX || endp == p)
+            bad = 1;
     }
 
-    p = argv[k + 1];
-    if (k + 1 == argc - 1 && *p == 'b') val = 512L * val;
+    if (bad) {
+        printf("Bad offset: %s\n", p);
+        exit(1);
+    }
 
-    return(val);
+    /* Look for multiplier */
+    p = endp;
+    if (!*p && k + 1 == argc - 1)
+            p = argv[k + 1];
+
+    if (!*p)
+        return val;
+
+    if (*p == 'b')
+        mult = 512L;
+    else if (*p == 'K') {
+        if (p[1] == 'B') {
+            mult = 1000L;
+            p++;
+        } else
+            mult = 1024L;
+    } else if (*p == 'M') {
+        if (p[1] == 'B') {
+            mult = 1000L * 1000L;
+            p++;
+        } else
+            mult = 1024L * 1024L;
+    } else
+        mult = 0;
+
+    if (mult == 0 || p[1] != '\0') {
+        printf("Bad offset multiplier: %s\n", p);
+        exit(1);
+    }
+
+    return mult * val;
 }
 
 
