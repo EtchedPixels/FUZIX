@@ -1,25 +1,10 @@
-Initial testing build for rcbus-68008
+Testing build for rcbus-68008
 
 You need a disk image with the boot loader on LBA 0 and the kernel on LBA 1+
 Block 0 should hold a partition table as well.
 
 At the moment a 16x50 is expected at 0xC0 as support for the 26C92 based
 companion card has not yet been tested in the system or emulator.
-
-Minimum requirement:
-	80pin extended backplane
-	68008 prototype card with wire fixes
-	RCBUS PPIDE card
-	512K linear RAM/ROM
-	16x50 serial at 0xC0
-	v0.03 68008 ROM
-
-Optional:
-	DS1302 RTC at 0x0C
-	Joysticks at 0x01 and 0x02
-	SC129 GPIO at 0x00
-	Console switches at 0xFF
-
 
 Untested but code now present for:
 	QUART
@@ -46,7 +31,6 @@ Memory Map:
 80000 - _end		Kernel image
 _end  - ?????		Memory pool for user space
 ????? - FFFFF		Boot time buffer and memory allocations
-
 
 
 To set up on a real CF/disk /dev/sdX.
