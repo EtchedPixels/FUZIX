@@ -169,7 +169,7 @@ csloop:	call	sendff
 wait41:
 	ld	hl,#acmd41
 	call	sendacmd
-	jr	z,wait41
+	jr	nz,wait41
 	ld	hl,#cmd58
 	call	sendcmd
 	jr	nz,sdfail

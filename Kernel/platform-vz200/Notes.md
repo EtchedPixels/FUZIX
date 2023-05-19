@@ -1,6 +1,6 @@
-Lazer VZ200 with 128K + SD card
+# Lazer VZ200 with 128K + SD card
 
-Memory map:
+## Memory map:
 0000-3FFF	ROM (fixed)
 4000-67FF	Populated by one of two banks from SD card SRAM
 6800-6FFF	I/O latches and keyboard
@@ -11,18 +11,18 @@ Memory map:
 7800-8FFF	Onboard memory (not paged)
 9000-FFFF	Two SRAM banks off 128K card
 
-Kernel
+### Kernel
 4000-67FF	Kernel low (two banks)
 7000-71FF	Video
 7200-77FF	Video space (starts as part of discard)
 7800-87FF	Common (only discard overlaps non text video)
 9000-FFFF	Kernel main (ideally 9000-FFFF so can get bigger user space)
 
-User
+### User
 8800-FFFF	User space
 7000-71FF	Video	(7000-77FF after boot)
 
-TODO:
+## TODO
 -	Looks like there is a late reference somewhere into discard/font space we
 	need to find and fix (corrupted "=" in font)
 -	Optimise the SD read/write by unrolling by 7 (for 511 iterations) so we
@@ -36,10 +36,10 @@ TODO:
 The floppy interface is not supported. This shouldn't matter as the floppies
 are weird, incredibly slow and the floppy DOS will clash with the SD.
 
-Interrupts:
+## Interrupts
 The system ROM jumps to 0x787D. We juggle our discard and common space to cope
 
-Memory:
+## Memory
 
 Memory is incredibly tight, especially in the common space. Do not add stuf without
 careful checking.

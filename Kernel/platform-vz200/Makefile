@@ -61,7 +61,7 @@ image: booter boot bootblock
 	dd if=../common.bin of=fuzix.boot bs=512 skip=57 seek=96 count=11
 	dd if=../bank3.bin of=fuzix.boot bs=512 skip=56 seek=107 count=4
 
-booter:
+booter: booter.s
 	sdasz80 -o booter.s
 	sdldz80 -i booter.rel
 	makebin -s 65535 booter.ihx booter.tmp
@@ -70,14 +70,14 @@ booter:
 #	Alternate Boot ROM image.
 #	TODO: support bootstrapping sanely off the standard boot rom with a .VZ
 #
-boot:
+boot: boot.s
 	sdasz80 -o boot.s
 	sdldz80 -i boot.rel
 	makebin -s 65535 boot.ihx boot.tmp
 	dd if=boot.tmp bs=1 skip=16384 >boot.tmp2
 	dd if=boot.tmp2 bs=6034 count=1 conv=sync >sdboot.rom
 
-bootblock:
+bootblock: bootblock.s
 	sdasz80 -o bootblock.s
 	sdldz80 -i bootblock.rel
 	makebin -s 65535 bootblock.ihx bootblock.bin
