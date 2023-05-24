@@ -48,14 +48,14 @@ void pagemap_free(ptptr p)
 
 int pagemap_alloc(ptptr p)
 {
-        /* We allocate in pairs so the end result is that a swap out makes
-           room for a swap in. If we get clever we'll need a loop here */
+	/* We number our pages by the 128K highh page, and work the rest out
+	   from that */
 #ifdef SWAPDEV
-	if (pfptr < 2) {
+	if (pfptr < 1) {
 		swapneeded(p, 1);
 	}
 #endif
-	if (pfptr < 2)
+	if (pfptr < 1)
 		return ENOMEM;
 	p->p_page = pfree[--pfptr];
 	/* For now just map 4 to spectranet 4, 6 to spectranet 8 */
@@ -91,9 +91,12 @@ int pagemap_prepare(struct exec *hdr)
 
 usize_t pagemap_mem_used(void)
 {
-	return (pfmax - pfptr) * (16384 >> 10);
+	return (pfmax - pfptr) * (32768 >> 10);
 }
 
+/*
+ *	The swap code still needs to be converted TODO
+ */
 #ifdef SWAPDEV
 /*
  *	Swap out the memory of a process to make room
