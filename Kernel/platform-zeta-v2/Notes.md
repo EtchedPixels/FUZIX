@@ -1,24 +1,6 @@
---- README for Zeta SBC V2 ---
-This is Fuzix for the Zeta SBV V2
-Written by Sergey Kiselev <skiselev@gmail.com>
-Heavily based on prior work by Will Sowerbutts <will@sowerbutts.com> and others
+# README for Zeta SBC V2
 
-Supported hardware:
- - RAM disk
- - RS232 serial port (16550 UART, tty1)
- - PPIDE hard disk
- - Real time clock (should be, not tested)
-
-To build the kernel, edit the TARGET line in Kernel/Makefile to read:
-    export TARGET = zeta-v2
-Then run "make clean; make all" in the "Kernel" directory.
-
--- BOOTING FROM CP/M --
-
-Copy "fuzix.com" to your CP/M filesystem. Run it from CP/M, it will boot the
-kernel. Requires a reasonably large TPA.
-
--- BOOTING OFF DISK FROM UNA BIOS --
+## UNA BIOS
 
 The file "Kernel/platform-zeta-v2/diskboot.bin" is an UNA BIOS compatible
 boot sector which will allow the system to be booted directly from a PPIDE 
@@ -46,20 +28,18 @@ To write the kernel image to the disk drive, use dd as follows;
 Load the disk into the machine and boot. At the "Boot UNA unit number or ROM?"
 prompt, type the number of the disk unit to boot from.
 
--- BOOTING FROM ROM --
+## Flash ROM
 
 Currently the system can be booted from the Flash ROM. 
 
 Memory allocation (16 KiB pages):
 - ROM pages:	0 - 31
   - Kernel image:	0 - 3 - copied by bootrom.s to pages 32 - 35
-  - RAM disk image:	4 - 19 - copied by bootrom.s to pages 48 - 63
+  - ROM disk image:	4 - 31
 - RAM pages:	32 - 63
   - Kernel pages:	32 - 34
   - Common page:	35
-  - User space pages:	36 - 47
-  - RAM disk:		48 - 63
-
+  - User space pages:	36 - 63
 
 Use the following steps to build the Flash ROM image:
 
