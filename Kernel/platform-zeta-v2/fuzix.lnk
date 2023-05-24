@@ -2,7 +2,6 @@
 -i fuzix.ihx
 -b _CODE=0x0088
 -b _COMMONMEM=0xF000
--b _DISCARD=0xE000
 -l z80
 platform-zeta-v2/crt0.rel
 platform-zeta-v2/commonmem.rel
@@ -43,7 +42,7 @@ usermem_std-z80.rel
 platform-zeta-v2/discard.rel
 platform-zeta-v2/devtty.rel
 platform-zeta-v2/devtty_discard.rel
-platform-zeta-v2/ppide.rel
+platform-zeta-v2/ppide_rbc.rel
 platform-zeta-v2/devide.rel
 platform-zeta-v2/devide_discard.rel
 platform-zeta-v2/mbr.rel

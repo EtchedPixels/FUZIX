@@ -8,6 +8,7 @@
 #endif
 
 extern unsigned char irqvector;
+extern uint16_t swap_dev = 0xFFFF;
 struct blkbuf *bufpool_end = bufpool + NBUFS; /* minimal for boot -- expanded after we're done with _DISCARD */
 
 void plt_discard(void)
@@ -35,9 +36,6 @@ void plt_interrupt(void)
 {
 	switch(irqvector) {
 		case 1:
-#ifdef CONFIG_PPP
-			tty_poll_ppp()
-#endif
 #ifdef CONFIG_FLOPPY
 			fd_tick();
 #endif

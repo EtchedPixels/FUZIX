@@ -14,7 +14,4 @@ void tty_putc(uint8_t minor, unsigned char c);
 void tty_pollirq_uart0(void);
 void uart0_init(void);
 
-#ifdef CONFIG_PPP
-void tty_poll_ppp(void);
-#endif
 #endif

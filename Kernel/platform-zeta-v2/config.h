@@ -23,14 +23,21 @@
 #define PROGLOAD    0x0100  /* also data base */
 #define PROGTOP     0xF000  /* Top of program, base of U_DATA copy */
 #define KERNTOP     0xC000  /* Top of kernel (first 3 banks), base of shared bank */
-#define PROC_SIZE   64	  /* Memory needed per process */
+#define PROC_SIZE   64	    /* Memory needed per process */
 
-/* WRS: this is probably wrong -- we want to swap the full 64K minus the common code */
-/* For now let's just use something and fix this up later when we have a swap device */
-#define SWAP_SIZE   0x7F 	/* 63.5K in blocks (which is the wrong number) */
+#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+extern uint16_t swap_dev;
+#define SWAP_SIZE   0x79 	/* 63.5K in blocks (which is the wrong number) */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
-#define SWAPTOP	    0xFF00	/* can we stop at the top? not sure how. let's stop short. */
-#define MAX_SWAPS	10	    /* Well, that depends really, hmmmmmm. Pick a number, any number. */
+#define SWAPTOP	    0xF200	/* can we stop at the top? not sure how. let's stop short. */
+#define MAX_SWAPS   10		/* 10 + RAM processes */
+#define CONFIG_DYNAMIC_SWAP	/* Swap device is discovered by partition */
+/*
+ *	When the kernel swaps something it needs to map the right page into
+ *	memory using map_for_swap and then turn the user address into a
+ *	physical address. We use the second 16K window
+ */
+#define swap_map(x)	((uint8_t *)((((x) & 0x3FFF)) + 0x4000))
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL  /* Location of root dev name */
@@ -56,9 +63,6 @@
 #define CONFIG_PPIDE 		/* #define CONFIG_PPIDE to enable IDE on 8255A */
 #define CONFIG_IDE		/* required for CONFIG_PPIDE */
 
-/* Optional ParPortProp board connected to PPI */
-//#define CONFIG_PPP		/* #define CONFIG_PPP to enable as tty3 */
-
 /* Device parameters */
 #define CONFIG_DEV_MEM          /* enable /dev/mem driver */
 
@@ -71,21 +75,11 @@
 #define DEV_RD_ROM_SIZE  ((uint32_t)DEV_RD_ROM_PAGES << 14)             /* size of the ROM disk */
 #define DEV_RD_RAM_SIZE  ((uint32_t)DEV_RD_RAM_PAGES << 14)             /* size of the RAM disk */
 
-#ifdef CONFIG_PPP
-	/* SD card in ParPortProp */
-	#define CONFIG_SD
-        #define SD_DRIVE_COUNT 1
-	#define NUM_DEV_TTY 2
+#define NUM_DEV_TTY 1
 
-	/* ParPortProp as the console */
-	#define BOOT_TTY (512 + 2)
-#else
-	#define NUM_DEV_TTY 1
-
-	/* UART0 as the console */
-	#define BOOT_TTY (512 + 1)
-	#define TTY_INIT_BAUD B38400
-#endif
+/* UART0 as the console */
+#define BOOT_TTY (512 + 1)
+#define TTY_INIT_BAUD B38400
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 

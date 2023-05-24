@@ -8,26 +8,16 @@
 
 static char tbuf1[TTYSIZ];
 
-#ifdef CONFIG_PPP
-static char tbufp[TTYSIZ];
-#endif
-
 unsigned char uart0_type;
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
 	{NULL,	NULL,	NULL,	0,	0,	0},
-	{tbuf1,	tbuf1,	tbuf1,	TTYSIZ,	0,	TTYSIZ/2},
-#ifdef CONFIG_PPP
-	{tbufp,	tbufp,	tbufp,	TTYSIZ,	0,	TTYSIZ/2},
-#endif
+	{tbuf1,	tbuf1,	tbuf1,	TTYSIZ,	0,	TTYSIZ/2}
 };
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
 	CSIZE|CBAUD|CSTOPB|PARENB|PARODD|_CSYS,
-#ifdef CONFIG_PPP
-	_CSYS
-#endif
 };
 
 
@@ -116,23 +106,11 @@ void tty_pollirq_uart0(void)
 	}
 }
 
-#ifdef CONFIG_PPP
-void tty_poll_ppp(void)
-{
-    while(PROPIO2_STAT & 0x20)
-        tty_inproc(3, PROPIO2_TERM);
-}
-#endif
-
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	if (minor == 1) {
-		while(!(UART0_LSR & 0x20));
+		while(!(UART0_LSR & 0x20));	/* FIXME */
 		UART0_THR = c;
-#ifdef CONFIG_PPP
-	} else if (minor = 2) {
-		/* FIXME: implement */
-#endif
 	}
 }
 

@@ -16,8 +16,10 @@
 	.globl map_process_always_di
 	.globl map_save_kernel
 	.globl map_restore
+	.globl map_for_swap
 	.globl _irqvector
 	.globl plt_interrupt_all
+	.globl _copy_common
 	.globl mpgsel_cache
 	.globl top_bank
 	.globl _kernel_pages
@@ -319,6 +321,40 @@ map_save_kernel:
 	ld (map_savearea+2),hl
 	ld hl,#_kernel_pages
 	jr map_process_2_pophl_ret
+
+;=========================================================================
+; map_for_swap - map a page into a bank for swap I/O
+; Inputs: A = page
+; Outputs: none
+;
+; The caller will later map_kernel to restore normality
+;
+; We use 0x4000-0x7FFF so that all the interrupt stuff is mapped.
+;
+;=========================================================================
+map_for_swap:
+	ld (mpgsel_cache + 1),a
+	out (MPGSEL_1),a
+	ret
+
+;
+; When we do swapping we need to grab the common page from somewhere and fix
+; it up before we can get back to normality. Thus this copy has to be in asm
+;
+_copy_common:
+	pop bc
+	pop hl
+	pop de
+	push de
+	push hl
+	push bc
+	ld a,e
+	call map_for_swap
+	ld hl,#0xF200
+	ld de,#0x7200
+	ld bc,#0x0E00
+	ldir
+	jp map_kernel
 
 ; MPGSEL registers are read only, so their content is cached here
 mpgsel_cache:

@@ -35,7 +35,7 @@ See Notes.md for more information
 
 ## Not Supported
 
-- Parport Prop as disk controller (minimal tty support)
+- Parport Prop as disk controller
 - Booting directly from ROMWBW
 
 ## Emulation

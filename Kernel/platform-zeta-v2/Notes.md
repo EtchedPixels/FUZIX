@@ -1,5 +1,12 @@
 # README for Zeta SBC V2
 
+## TODO
+
+- ROMWBW Support
+- ParPortProp full SD/VDU/Serial support
+- Swap
+- Move to tinydisk ?
+
 ## UNA BIOS
 
 The file "Kernel/platform-zeta-v2/diskboot.bin" is an UNA BIOS compatible
@@ -132,4 +139,3 @@ cat fuzix_64k.rom zeta_v2_rootfs.img > fuzix_zeta_v2_bootfs.rom
 EPROM programmer
 
 7. Power on the the system. At bootdev: prompt enter either rd0 or device number 256 to boot from the RAM disk.
-
