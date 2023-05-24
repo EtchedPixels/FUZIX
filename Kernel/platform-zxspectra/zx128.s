@@ -239,17 +239,16 @@ switch_bank:
 	pop bc
         ret
 
-
+;
+;	TODO: if we go beyond the upper 32K we need to set the spectranet
+;	map to (hl + 2)
+;
 map_process:
         ld a, h
         or l
         jr z, map_kernel_nosavea
 	push af
-	inc hl
-	inc hl
         ld a, (hl)
-	dec hl
-	dec hl
 	call switch_bank
 	pop af
 	ret
@@ -264,8 +263,9 @@ map_process_always_di:
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
-        ld a, (_udata + U_DATA__U_PAGE2)
+        ld a, (_udata + U_DATA__U_PAGE)
 	call switch_bank
+	; Will need to also set spectranet banking to U_PAGE2 in future
 	pop af
 	ret
 

@@ -7,8 +7,8 @@ U_DATA_STASH		    .equ 0xFE00	      ; FE00-FFFF
 
 Z80_TYPE		    .equ 1
 
-PROGBASE		    .equ 0x6000
-PROGLOAD		    .equ 0x6000
+PROGBASE		    .equ 0x8000
+PROGLOAD		    .equ 0x8000
 
 NBUFS			    .equ 5
 

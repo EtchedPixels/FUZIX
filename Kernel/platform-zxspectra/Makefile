@@ -78,11 +78,13 @@ image:
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage:
-	# Make a blank disk image with partitionK
-	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
-	# Add the file system
-	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
-	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
-	# Boot disk for +2A/+3 (TODO microdrive boot for 128K... ;))
+	dd if=hdfstart.bin of=$(IMAGES)/disk.hdf
+	# Write a byte at the end to force the size
+	dd if=/dev/zero of=$(IMAGES)/disk.hdf bs=1 seek=134218261 count=1
+	# Sector 67584 (second partition on the hdfstart we used)
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.hdf bs=34603542 seek=1 conv=notrunc
+	dd if=/dev/zero bs=512 count=65536 of=tmp.fat
+	mkfs.fat -F16 tmp.fat
+	# Sector 2048
+	dd if=tmp.fat of=$(IMAGES)/disk.hdf bs=1049110 seek=1 conv=notrunc
 	cp fuzix.dsk $(IMAGES)
