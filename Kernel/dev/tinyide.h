@@ -3,9 +3,12 @@
 
 /* SDCC does I/O space weirdly. An __sfr __at x is a reference to the space
    not a pointer */
-#ifdef CONFIG_TINYIDE_SDCCPIO
+#if defined(CONFIG_TINYIDE_SDCCPIO)
 #define ide_read(x)	(x)
 #define ide_write(x,y)	(x) = (y)
+#elif defined(CONFIG_TINYIDE_INDIRECT)
+extern uint8_t ide_read(uint_fast8_t r);
+extern void ide_write(uint_fast8_t r, uint_fast8_t v); 
 #else
 #define	ide_read(x)	(*(x))
 #define ide_write(x,y)	(*(x) = (y))
