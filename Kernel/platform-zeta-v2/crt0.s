@@ -89,10 +89,15 @@ mappedok:
         ld de, #s__COMMONMEM
         ld bc, #l__COMMONMEM
         ldir
-        ; and the discard
+        ; and the discard (which might overlap)
         ld de, #s__DISCARD
-        ld bc, #l__DISCARD
-        ldir
+        ld bc, #l__DISCARD-1
+	add hl,bc
+	ex de,hl
+	add hl,bc
+	ex de,hl
+        lddr
+	ldd
         ; then zero the data area
         ld hl, #s__DATA
         ld de, #s__DATA + 1

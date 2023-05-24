@@ -12,7 +12,7 @@ TOP_PORT	.equ	MPGSEL_3
 	.globl mpgsel_cache
 
 fork_copy:
-	ld hl, (U_DATA__U_TOP)
+	ld hl, (_udata + U_DATA__U_TOP)
 	ld de, #0x0fff
 	add hl, de		; + 0x1000 (-1 for the rounding to follow)
 	ld a, h

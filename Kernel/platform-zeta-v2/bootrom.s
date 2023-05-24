@@ -26,7 +26,7 @@ kernel_copy:
 		ld bc,#0x4000		; count - 16 KiB
 		ldir			; copy it
 		sub a,#31		; next ROM page = RAM page - 32 + 1
-		cp #4			; are we there yet (RAM page == 4?)
+		cp #4			; are we there yet (ROM page == 4?)
 		jr nz,kernel_copy
 
 ;; 		; copy data to RAM disk

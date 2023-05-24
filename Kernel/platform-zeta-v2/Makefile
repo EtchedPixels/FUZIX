@@ -52,13 +52,17 @@ image:
 	sdasz80 -o bootrom.s
 	sdldz80 -m -i bootrom.rel
 	makebin -s 136 bootrom.ihx > bootrom.bin
-	cat bootrom.bin ../fuzix.bin | dd conv=sync bs=65536 count=1 of=fuzix.rom
+	# Work around bugs in Fedora dd
+	cat bootrom.bin ../fuzix.bin > fuzix.tmp
+	dd if=fuzix.tmp conv=sync bs=524288 count=1 of=fuzix.rom
 	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
 	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage: image
+	# ROM
+	cp fuzix.rom $(IMAGES)
 	# Make a blank disk image with partition
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the boot block into the partition sector

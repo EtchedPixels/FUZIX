@@ -152,7 +152,7 @@ ttyready_t tty_writeready(uint8_t minor)
 	uint8_t c;
 	if (minor == 1) {
 		c = UART0_MSR;
-		if ((c & 0x10) == 0) /* CTS not asserted? */
+		if ((ttydata[1].termios.c_cflag & CRTSCTS) && (c & 0x10) == 0) /* CTS not asserted? */
 			return TTY_READY_LATER;
 		c = UART0_LSR;
 		if (c & 0x20) /* THRE? */
