@@ -6,15 +6,15 @@
 #include <devfd.h>
 #include <devrd.h>
 #include <devtty.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <ds1302.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
 /*   open	    close	read		write		ioctl */
   /* 0: /dev/hd - block device interface */
-#ifdef CONFIG_PPIDE
-  {  blkdev_open,   no_close,   blkdev_read,    blkdev_write,	blkdev_ioctl},
+#ifdef CONFIG_TD_NUM
+  {  td_open,	    no_close,	td_read,	td_write,	td_ioctl},
 #else
   {  no_open,	    no_close,	no_rdwr,	no_rdwr,	no_ioctl},
 #endif

@@ -5,13 +5,9 @@
 #include <ds1302.h>
 #include "config.h"
 #include "devrd.h"
+#include <tinyide.h>
 
 /* Everything in here is discarded after init starts */
-
-#ifdef CONFIG_PPIDE
-#include <devide.h>
-void ppide_init(void);
-#endif
 
 void init_hardware_c(void)
 {
@@ -46,9 +42,8 @@ void device_init(void)
 {
 	ds1302_init();
 	uart0_init();
-#ifdef CONFIG_PPIDE
-	ppide_init();
-	devide_init();
+#ifdef CONFIG_TINYIDE_PPI
+	ide_probe();
 #endif
 }
 

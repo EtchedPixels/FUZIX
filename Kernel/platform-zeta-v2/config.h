@@ -60,8 +60,10 @@ extern uint16_t swap_dev;
 #define CONFIG_FLOPPY		/* #define CONFIG_FLOPPY to enable floppy */
 
 /* PPIDE support */
-#define CONFIG_PPIDE 		/* #define CONFIG_PPIDE to enable IDE on 8255A */
-#define CONFIG_IDE		/* required for CONFIG_PPIDE */
+#define CONFIG_TD_NUM		2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TINYIDE_PPI
 
 /* Device parameters */
 #define CONFIG_DEV_MEM          /* enable /dev/mem driver */
