@@ -108,10 +108,11 @@ _switchin:
         push	bc ; restore stack
 	push	hl ; far padding
 
-	push	de
         ld	hl, #P_TAB__P_PAGE_OFFSET
-	add	hl, de	; process ptr
-	pop	de
+ 	add	hl, de	; process ptr
+
+	;	HL now points to the pages for this process, DE to the
+	;	process
 	;
 	;	Get ourselves a valid private stack ASAP. We are going to
 	;	copy udata around and our main stacks are in udata
@@ -260,14 +261,14 @@ not_swapped:
 	; This means 6000-BFFF is wrong. However it might be wrong for a
 	; reason we don't care about (previous owned popped their clogs)
 	;
-	ld	a,(_switchedbank)
+	ld	a,(_switchedbank)	; current low page
 	inc	hl
-	inc	hl		; low page
+	inc	hl		; new low page
 
 	cp	(hl)		; is the page mapped low ours ?
 	jr	z,no_relocate_w
 
-	or	a
+	or	a		; is it dead ?
 	jr	z, no_copyback
 
 	;
@@ -334,7 +335,7 @@ not_swapped:
 
 no_copyback:
 	ld	a,(hl)		; p->p_page2
-	ld	(_switchedbank),a
+	ld	(_switchedbank),a	; What will be present in the bank
 
 	;
 	; Copy 6 x 4K from the spectranet RAM
@@ -388,10 +389,6 @@ no_copyback:
 	ld	bc,#0x013B
 	out	(c),a
 
-	ld	a,#0xC5		; C4 C5 C0
-	ld	bc,#0x013B
-	out	(c),a
-
 	exx
 	dec	hl
 	dec	hl
@@ -400,13 +397,13 @@ no_copyback:
 	;
 no_relocate:
 	ld	a,#1
-	ld	(_switchedwb),a
+	ld	(_switchedwb),a		; Writeback will be required
 
 	ld	a,(hl)	; p->p_page
 
 	ld	hl,(_udata + U_DATA__U_PTAB)
 	or	a
-	sbc	hl,de
+	sbc	hl,de			; valid udata ?
 	jr z,	skip_copyback
 
 	;	Pages please

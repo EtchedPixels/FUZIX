@@ -62,7 +62,7 @@ int pagemap_alloc(ptptr p)
 	if (p->p_page == 4)
 		p->p_page2 = 4;
 	else
-		p->p_page2 = 8;
+		p->p_page2 = 10;
 	return 0;
 }
 
