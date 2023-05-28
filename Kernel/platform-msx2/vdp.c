@@ -43,6 +43,9 @@ void clear_lines(int8_t y, int8_t ct)
 {
     uint16_t addr;
 
+    if (ct == 0)
+        return;
+
     addr = VT_BASE + vt_offset + y * VT_WIDTH;
     v99xx_set_vram_page(addr / V99xx_VRAM_PAGE_SIZE);
     v99xx_memset_vram(addr, ' ',  ct * VT_WIDTH);
@@ -52,6 +55,8 @@ void clear_across(int8_t y, int8_t x, int16_t l)
 {
     uint16_t addr;
 
+    if (l == 0)
+        return;
     addr = VT_BASE + vt_offset + y * VT_WIDTH + x;
     v99xx_set_vram_page(addr / V99xx_VRAM_PAGE_SIZE);
     v99xx_memset_vram(addr, ' ', l);
