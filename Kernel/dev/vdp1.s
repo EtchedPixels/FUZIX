@@ -473,6 +473,9 @@ clear_lines:
 	    pop de	; E = line, D = count
 	    push de
 	    push hl
+	    xor a
+	    cp d
+	    ret z
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -509,6 +512,9 @@ clear_across:
 	    push bc
 	    push de
 	    push hl
+	    xor a
+	    cp c
+	    ret z
 	    ld a,(_int_disabled)
 	    push af
 	    di

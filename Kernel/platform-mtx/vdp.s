@@ -133,6 +133,9 @@ _clear_across:
 	     push bc
 	     push de
 	     push hl
+	     xor a
+	     cp c
+	     ret z
 	     call videopos6		; HL is now the offset we need
 	     ld b, c
 clearbyte:
@@ -157,6 +160,9 @@ _clear_lines:
 	     pop de
 	     push de		; E = line, D = count
 	     push hl
+	     xor a
+	     cp d
+	     ret z
 	     ld c,d		; Lines to copy
 	     ld d, #0		; E = y, D = X
 	     ld b, #80

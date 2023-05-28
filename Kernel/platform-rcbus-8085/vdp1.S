@@ -205,6 +205,9 @@ _clear_lines:
 		ldsi 2
 		lhlx	; Check do we push 2 x 16bit or 2 x 8bit ? FIXME
 		xchg	; E = line, D = count
+	        xra a
+	        cmp d
+                rz
 		lda _int_disabled
 		push psw
 		di
@@ -240,6 +243,8 @@ _clear_across:
 		xchg			; DE = coords
 		ldsi 2
 		ldax d
+	        ora a
+		rz
 		mov c,a			; C = count
 
 		lda _int_disabled

@@ -262,6 +262,9 @@ _tms_clear_lines:
 	    push de
 	    push hl
 	    push bc
+	    xor a
+	    cp d
+	    ret z
 	    ld a,(_int_disabled)
 	    push af
 	    di
@@ -295,6 +298,9 @@ _tms_clear_across:
 	    push de
 	    push hl
 	    push af
+	    xor a
+	    cp c
+	    ret z
 	    ld a,(_int_disabled)
 	    push af
 	    di
