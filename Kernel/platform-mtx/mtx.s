@@ -41,6 +41,7 @@
             .globl _procmem
 	    .globl _membanks
 	    .globl _udata
+	    .globl ___sdcc_enter_ix
 
 	    .globl unix_syscall_entry
             .globl null_handler
@@ -255,63 +256,76 @@ init6845:
             ret
 
 init_hardware:
-	    ; Task 1. Find my bank
-	    call find_my_ram
-	    ; Count banks
-	    call size_ram
-            ld (_procmem), hl
-	    ld de,#64			; common memory and kernel
-	    add hl,de
-	    ld (_ramsize),hl
+	; Task 1. Find my bank
+	call	find_my_ram
+	; Count banks
+	call	size_ram
+        ld	(_procmem), hl
+	ld	de,#64		; common memory and kernel
+	add	hl,de
+	ld	(_ramsize),hl
 
-	    ; We can now check for a Rememorizer. If we have one then we can
-	    ; do extra games with the memory banking
-	    call find_rememorizer
-            ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
-            ld hl, #0
-            push hl
-            call _program_vectors
-            pop hl
+	; We can now check for a Rememorizer. If we have one then we can
+	; do extra games with the memory banking
+	call	find_rememorizer
+        ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
+        ld	hl, #0
+        push	hl
+        call	_program_vectors
+        pop	hl
 
-	    ; Program the video engine
+	ld	a,#0xC3
+	ld	hl,#___sdcc_enter_ix
+	ld	(0x08),a
+	ld	(0x09),hl
+	ld	hl,#___spixret
+	ld	(0x10),a
+	ld	(0x11),hl
+	ld	hl,#___ixret
+	ld	(0x18),a
+	ld	(0x19),hl
+	ld	hl,#___ldhlhl
+	ld	(0x20),a
+	ld	(0x21),hl
 
-	    call _vdp_type
-	    ld a,l
-	    ld (_vdptype),a
+	; Program the video engine
+	call	_vdp_type
+	ld a,l
+	ld (_vdptype),a
 
 vdp_setup:
-	    call _vdp_init
-	    call vdp_save_romfont
-	    call _vdp_restore_font
-	    call _vdp_wipe_consoles
+	call	_vdp_init
+	call	vdp_save_romfont
+	call	_vdp_restore_font
+	call	_vdp_wipe_consoles
 
-	    ; 08 is channel 0, which is input from VDP
-            ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13
-            ; 0A is channel 2, output for DATA ser 1 }
-	    ; 0B is channel 3, counting CSTTE edges (cpu clocks) at 4MHz
+	; 08 is channel 0, which is input from VDP
+        ; 09 is channel 1, output for DART ser 0 } fed 4MHz/13
+        ; 0A is channel 2, output for DATA ser 1 }
+	; 0B is channel 3, counting CSTTE edges (cpu clocks) at 4MHz
 
-	    ld a,#3
-	    out (0x08),a
-	    out (0x09),a
-	    out (0x0A),a
-	    out (0x0B),a
-	    xor a
-	    out (0x08), a		; vector 0
-	    ld a, #0xA5
-	    out (0x08), a		; CTC 0 as our IRQ source
-	    ld a, #0xFA			; 250 - 62.5Hz
-	    out (0x08), a		; Timer constant
+	ld	a,#3
+	out	(0x08),a
+	out	(0x09),a
+	out	(0x0A),a
+	out	(0x0B),a
+	xor	a
+	out	(0x08), a	; vector 0
+	ld	a, #0xA5
+	out	(0x08), a	; CTC 0 as our IRQ source
+	ld	a, #0xFA	; 250 - 62.5Hz
+	out	(0x08), a	; Timer constant
 
-	    ld hl, #intvectors		; Work around SDCC crappiness
-	    ld a, h
-	    ld i, a
-            im 2 ; set CPU interrupt mode
+	ld	hl, #intvectors	; Work around SDCC crappiness
+	ld	a, h
+	ld	i, a
+        im	2		; set CPU interrupt mode
 
-	    call _probe_6845		; look for 80 column video
-	    call _probe_prop		; see if we have CFII prop video
-	    call _vtinit		; init the console video
+	call	_probe_6845	; look for 80 column video
+	call	_probe_prop	; see if we have CFII prop video
+	call	_vtinit		; init the console video
 
-            ret
+        ret
 
 _sil_memcpy:
 	    push ix
@@ -393,11 +407,6 @@ _program_vectors:
             ld (0x0038), a
             ld hl, #interrupt_handler
             ld (0x0039), hl
-
-            ; set restart vector for UZI system calls
-            ld (0x0030), a   ;  (rst 30h is unix function call vector)
-            ld hl, #unix_syscall_entry
-            ld (0x0031), hl
 
             ; Set vector for jump to NULL
             ld (0x0000), a   
@@ -494,3 +503,30 @@ _probe_6845:
 	    ret nz
 	    ld (_has_6845),a
 	    ret
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _CODE
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+___ixret:
+	pop	af
+	pop	ix
+	ret
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
