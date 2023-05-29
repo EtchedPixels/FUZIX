@@ -1,0 +1,46 @@
+//
+//	Convert the function preamble etc calls into RST calls. This
+//	saves a bunch of memory. For a system that also does CP/M emulation
+//	be careful because the CP/M side will rewrite the RST space so the
+//	kernel needs to ensure they are not in shared space or unmapped
+//	whilst C code is running.
+//
+replace restart	{
+	call	___sdcc_enter_ix
+} by {
+	rst 8
+}
+//
+//	Function tails with ld sp,ix
+//
+replace restart {
+	ld	sp,ix
+	pop	ix
+	ret
+} by {
+	rst 16
+}
+//
+//	Function tails to rst 16
+//
+replace restart {
+	pop	ix
+	ret
+} by {
+	rst 24
+}
+//
+//	Common load pattern
+//
+replace restart {
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+} by {
+	rst 32
+}
+//
+//	Is it worth doing the call __sdcc_enter_ix, push af , push af or
+//	similar ?
+//
