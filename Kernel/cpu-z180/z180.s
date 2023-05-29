@@ -150,24 +150,11 @@ copykernel:
 z180_init_hardware:
         ; setup interrupt vectors for the kernel bank
 
-        ; (this code used to be in _program_vectors but now we do it once and copy)
-        ; write HALT across all vectors
-        ld hl, #0
-        ld de, #1
-        ld bc, #0x007f ; program first 0x80 bytes only
-        ld (hl), #0x76 ; HALT instruction
-        ldir
-
-        ; now install the interrupt vector at 0x0038
+        ; Install the interrupt vector at 0x0038
         ld a, #0xC3 ; JP instruction
         ld (0x0038), a
         ld hl, #z80_irq
         ld (0x0039), hl
-
-        ; set restart vector for UZI system calls
-        ld (0x0030), a   ;  (rst 30h is unix function call vector)
-        ld hl, #unix_syscall_entry
-        ld (0x0031), hl
 
         ; Set vector for jump to NULL
         ld (0x0000), a   
@@ -591,7 +578,7 @@ interrupt_table:
 hw_irqvector:	.db 0
 _irqvector:	.db 0
 _need_resched:	.db 0
-_int_disabled:	.db 0
+_int_disabled:	.db 1
 
 z80_irq:
         push af
