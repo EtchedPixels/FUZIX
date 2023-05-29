@@ -4,7 +4,7 @@ DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
 DSRCS = ../dev/tinydisk.c ../dev/tinysd.c
 DASRCS =
-NSRCS = 
+NSRCS = ../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)

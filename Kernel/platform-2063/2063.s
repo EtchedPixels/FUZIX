@@ -49,6 +49,7 @@
 	.globl _udata
 	.globl sio_install
 	.globl _vectors
+	.globl ___sdcc_enter_ix
 
         .include "kernel.def"
         .include "../kernel-z80.def"
@@ -75,7 +76,25 @@ init_hardware:
 	ld	(_ramsize), hl
 	ld	hl,#512-64
 	ld	(_procmem), hl
+
 	call	program_kvectors
+
+	; Compiler helper vectors - in kernel bank only
+
+	ld	a,#0xC3
+	ld	hl,#___sdcc_enter_ix
+	ld	(0x08),a
+	ld	(0x09),hl
+	ld	hl,#___spixret
+	ld	(0x10),a
+	ld	(0x11),hl
+	ld	hl,#___ixret
+	ld	(0x18),a
+	ld	(0x19),hl
+	ld	hl,#___ldhlhl
+	ld	(0x20),a
+	ld	(0x21),hl
+
 	call	sio_install
 
 	call	_vdp_type
@@ -180,10 +199,6 @@ program_kvectors:
 	ld	hl,#interrupt_hook
 	ld	(0x0039),hl
 
-	ld	(0x0030),a		; rst 30h is old func call
-	ld	hl,#unix_syscall_entry
-	ld	(0x0031),hl
-
 	ld	(0x0066),a		; Set vector for NMI
 	ld	hl,#nmi_handler
 	ld	(0x0067),hl
@@ -270,3 +285,29 @@ map_save_kernel:
 	ld	(pagesave),a
 	jr	map_kernel_a
 
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _CODE
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+___ixret:
+	pop	af
+	pop	ix
+	ret
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret

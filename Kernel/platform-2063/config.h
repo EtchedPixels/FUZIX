@@ -28,10 +28,11 @@
 #define BOOTDEVICENAMES "hd#"
 
 #define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
-#define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
-#define NMOUNTS	 2	  /* Number of mounts at a time */
+#define NBUFS    4        /* Number of block buffers */
+#define NMOUNTS	 3	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 2	    /* 2 IDE */
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
 
 /* IDE/CF support */
 #define CONFIG_TD_NUM	1
