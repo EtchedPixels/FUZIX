@@ -2,7 +2,7 @@
 ;	SC126 support code. Based closely upon the N8VEM mark IV code by
 ;	Will Sowerbutts
 ;
-        .module sc126
+        .module rcbus-z180
         .z180
 
         ; exported symbols
@@ -20,6 +20,7 @@
         .globl outhl
         .globl outnewline
         .globl _rtc_shadow
+	.globl ___sdcc_enter_ix
 
         .include "kernel.def"
         .include "../cpu-z180/z180.def"
@@ -38,6 +39,7 @@ _bufpool:
         .area _DISCARD
 
 init_early:
+	; We have to install the rst helpers ASAP
 	jp z180_init_early
 
 init_hardware:
@@ -55,6 +57,21 @@ init_hardware:
         and #0x7f               ; disable RDRF interrupt inhibit
         out0 (ASCI_ASEXT1), a
 
+	ld a,#0xC3
+	ld hl,#___sdcc_enter_ix
+	ld (0x08),a
+	ld (0x09),hl
+	ld hl,#___spixret
+	ld (0x10),a
+	ld (0x11),hl
+	ld hl,#___ixret
+	ld (0x18),a
+	ld (0x19),hl
+	ld hl,#___ldhlhl
+	ld (0x20),a
+	ld (0x21),hl
+	; This will call C code so the rst vectors must be correct
+	; before hand
         jp z180_init_hardware
 
 
@@ -119,3 +136,30 @@ inchar:
 
 plt_interrupt_all:
         ret
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _CODE
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+___ixret:
+	pop	af
+	pop	ix
+	ret
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
