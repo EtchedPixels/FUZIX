@@ -73,3 +73,27 @@ bootblock-dotmatrix: bootblock-daisy
 	../tools/pcwsum bootblock-dotmatrix dotmatrix
 
 ../tools/pcwsum: ../tools/pcwsum.c
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Boot floppies
+	dsktrans -itype raw -format pcw180 -otype dsk daisy.raw $(IMAGES)/daisy.dsk
+	dsktrans -itype raw -format pcw180 -otype dsk dotmatrix.raw $(IMAGES)/dotmatrix.dsk
+	# Floppy mini root
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Kernel/platform/root.raw 96 1440)
+	dsktrans -itype raw -format pcw720 -otype dsk root.raw $(IMAGES)/root.dsk
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# 10240 at 2048 for the vdisk form
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Kernel/platform/vd.raw 256 10240)
+	# Header 256 byte block and partition
+	cp vdsk.bin $(IMAGES)/drive_c.dsk
+	# Padding
+	dd if=/dev/zero count=2047 >>$(IMAGES)/drive_c.dsk
+	# Add the file system
+	cat vd.raw >>$(IMAGES)/drive_c.dsk
+	# Add the swap area
+	dd if=/dev/zero count=4096 >>$(IMAGES)/drive_c.dsk

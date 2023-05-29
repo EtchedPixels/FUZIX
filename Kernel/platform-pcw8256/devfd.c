@@ -129,8 +129,10 @@ void fd_probe(void)
     uint8_t i;
     uint8_t st;
     uint8_t m;
+
     /* Motor off */
     fd765_motor_off();
+
     /* Wait for not ready status */
     do {
         st = fd_send(0x04, 0);

@@ -50,7 +50,6 @@ __sfr __at 0xFD printstat;
 void device_init(void)
 {
   fd_probe();
-
   if (is_joyce)
     devvd_probe();
   else

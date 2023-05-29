@@ -6,10 +6,10 @@
 ;	TODO:
 ;	Check behaviour and timings with CP/M
 ;
-		.module fdc765
+	.module fdc765
 
-		.include "kernel.def"
-		.include "../kernel-z80.def"
+	.include "kernel.def"
+	.include "../kernel-z80.def"
 
 	.globl  map_process_always
 	.globl	map_kernel
@@ -69,6 +69,8 @@ fd765_tx_loop:
 	ret c				; controller doesn't want it ?
 	ld a,c
 	out (FD_DT), a			; check if need delays
+	ex (sp), hl			; controller time
+	ex (sp), hl
 	ret
 
 ; Reads bytes from the FDC data register until the FDC tells us to stop (by
@@ -112,7 +114,7 @@ _fd765_do_recalibrate:
 _fd765_do_seek:
 	ld a, #0x0f				; SEEK
 	call fd765_tx
-	call send_head				; specified head, drive #0
+	call send_head				; specified head, drive
 	ld a, (_fd765_track)			; specified track
 	call fd765_tx
 	jr wait_for_seek_ending
@@ -130,13 +132,20 @@ _fd765_drive:
 
 ; Waits for a SEEK or RECALIBRATE command to finish by polling SENSE INTERRUPT STATUS.
 wait_for_seek_ending:
-	ld a, #0x08				; SENSE INTERRUPT STATUS
-	call fd765_tx
-	call fd765_read_status
+	; TODO : timeout
+	in	a,(FD_ST)
+	and	#0x1F
+	jr	nz, wait_for_seek_ending
 
-	ld a, (_fd765_status)
-	bit 5, a				; SE, seek end
-	jr z, wait_for_seek_ending
+	call	fd765_read_status
+
+;	ld a, #0x08				; SENSE INTERRUPT STATUS
+;	call fd765_tx
+;	call fd765_read_status
+;
+;	ld a, (_fd765_status)
+;	bit 5, a				; SE, seek end
+;	jr z, wait_for_seek_ending
 
 	; Now settle the head
 	ld a, #30		; 30ms
@@ -155,7 +164,7 @@ wait_ms_loop2:
 _fd765_motor_off:
 	xor a
 	ld (_diskmotor),a
-	ld a,#0x08
+	ld a,#0x0A
 	out (0xF8),a
 	ret
 
@@ -311,16 +320,34 @@ _fd765_do_read_id:
 _fd765_send_cmd:
 	ld a,(hl)
 	call fd765_tx
+	jr c, cmdfail
 	call send_head		; FIXME what should we be sending
 cmdandout:
-	call fd765_read_status
-	;
-	;	FIXME: should we check the int pending bit ?
-	;
+	ld hl,#0
+
+	in a,(FD_ST)
+	bit 5,a
+	jr z, is_rdy
+	
 	ld a, #0x08		; SENSE INTERRUPT STATUS
 	call fd765_tx
+	ret c			; Failed to accept
+	call fd765_read_status
+	ld a,(_fd765_status)
+	rla
+	ret c			; Error
+	rla
+	ret c			; Abnormal
+	; Nap to recover
+	ld a,#30
+	call wait_ms
+
+is_rdy:
 	call fd765_read_status
 	ld hl,#_fd765_status
+	ret
+cmdfail:
+	ld hl,#0
 	ret
 
 ; Used for setup

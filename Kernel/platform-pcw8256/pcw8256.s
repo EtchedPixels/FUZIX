@@ -50,6 +50,7 @@
             .globl unix_syscall_entry
 	    .globl _vtinit
 	    .globl _is_joyce
+	    .globl ___sdcc_enter_ix
 
 	    ; debug symbols
             .globl outcharhex
@@ -98,41 +99,57 @@ init_early:
 
 ; FIXME: can we move init_hardware into discard ?
 init_hardware:
-            ; set system RAM size
-	    ld b, #'Z'
-	    call _bugoutv
-	    ; Returns with A giving the number of 64K banks present
-	    call probe_ram
-	    ld hl,#0
-	    ld de,#64
+        ; set system RAM size
+	ld	b, #'Z'
+	call	_bugoutv
+	; Returns with A giving the number of 64K banks present
+	call	probe_ram
+	ld	hl,#0
+	ld	de,#64
 ramcount:
-	    add hl,de
-	    djnz ramcount
+	add	hl,de
+	djnz	ramcount
 
-            ld (_ramsize), hl
+        ld	(_ramsize), hl
 
-	    or a
-	    ld de,#96		; 64K for kernel, 32K for video/fonts
-	    sbc hl,de
-            ld (_procmem), hl
+	ld	de,#-96		; 64K for kernel, 32K for video/fonts
+	add	hl,de
+	ld	(_procmem), hl
 
-	    call _vtinit
+        ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
+        ld	hl, #0
+        push	hl
+        call	_program_vectors
+        pop	hl
 
-	    ; FIXME 100Hz timer on
+	; Set up the rst helpers
+	ld	a,#0xC3
+	ld	hl,#___sdcc_enter_ix
+	ld	(0x08),a
+	ld	(0x09),hl
+	ld	hl,#___spixret
+	ld	(0x10),a
+	ld	(0x11),hl
+	ld	hl,#___ixret
+	ld	(0x18),a
+	ld	(0x19),hl
+	ld	hl,#___ldhlhl
+	ld	(0x20),a
+	ld	(0x21),hl
 
-            ; set up interrupt vectors for the kernel (also sets up common memory in page 0x000F which is unused)
-            ld hl, #0
-            push hl
-            call _program_vectors
-            pop hl
+	; Now safe to call C code
 
-	    xor a
-	    .dw 0xfeed
-	    ld (_is_joyce),a
-            im 1 ; set CPU interrupt mode
-	    ld b, #'I'
-	    call _bugoutv
-            ret
+	call	_vtinit
+
+	; FIXME 100Hz timer on
+
+	xor	a
+	.dw	0xfeed
+	ld	(_is_joyce),a
+        im	1 ; set CPU interrupt mode
+	ld	b, #'I'
+	call	_bugoutv
+        ret
 
 	    .area _DISCARD
 ;
@@ -219,11 +236,6 @@ _program_vectors:
             ld (0x0038), a
             ld hl, #interrupt_handler
             ld (0x0039), hl
-
-            ; set restart vector for UZI system calls
-            ld (0x0030), a   ;  (rst 30h is unix function call vector)
-            ld hl, #unix_syscall_entry
-            ld (0x0031), hl
 
             ld (0x0000), a   
             ld hl, #null_handler   ;   to Our Trap Handler
@@ -363,7 +375,28 @@ outcharl:
 	    ret
 
 	    .area _CODE
-
+;
+;	RST stub helpers
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+___ixret:
+	pop	af
+	pop	ix
+	ret
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
 ;
 ; Video helpers. Video is in banks 4/5 for now
 ;
