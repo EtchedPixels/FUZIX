@@ -1,5 +1,5 @@
 
-CSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
+DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
 CSRCS += devfd.c devhd.c devlpr.c
 CSRCS += devices.c main.c devtty.c ../dev/rp5c01.c devrtc.c ../dev/v99xx.c vdp.c
 COMMON_CSRCS = devmegasd.c
@@ -12,7 +12,7 @@ CROSS_CCOPTS += -I../dev/
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-DOBJS = $(DSRCS:.c=.rel)
+DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 COMMON_COBJS = $(COMMON_CSRCS:.c=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
 DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
