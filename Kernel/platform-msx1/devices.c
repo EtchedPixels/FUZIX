@@ -115,8 +115,9 @@ void device_init(void)
     kprintf("%s.\n", vdpname);
 
     /* Default key repeat values in 10ths of seconds */
-    keyrepeat.first = 2 * ticks_per_dsecond;
-    keyrepeat.continual = 1 * ticks_per_dsecond;
+    /* These are the keyrepeat values observed for MSX1, irrespective of VDP frequency */
+    keyrepeat.first = 39;
+    keyrepeat.continual = 3;
 
     sunrise_probe();
 }
