@@ -130,8 +130,8 @@ static uint8_t keyin[11];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
-static uint8_t shiftmask[11] = {
-	0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0
+static uint8_t modmask[11] = { /* check for SHIFT, CTRL, GRPH and CODE */
+	0, 0, 0, 0, 0, 0, 0x17, 0, 0, 0, 0
 };
 
 static void keyproc(void)
@@ -139,6 +139,8 @@ static void keyproc(void)
 	int i;
 	uint8_t key;
 
+	if ((keyin[6] ^ keymap[6]) & modmask[6])
+		kbd_timer = keyrepeat.first; /* modifier state change invalidates repeat timer */
 	for (i = 0; i < 11; i++) {
 		key = keyin[i] ^ keymap[i];
 		if (key) {
@@ -146,11 +148,11 @@ static void keyproc(void)
 			int m = 1;
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
-					if (!(shiftmask[i] & m))
+					if (!(modmask[i] & m))
 						keysdown--;
 				}
 				if ((key & m) && !(keymap[i] & m)) {
-					if (!(shiftmask[i] & m)) {
+					if (!(modmask[i] & m)) {
 						keysdown++;
 						newkey = 1;
 						keybyte = i;
@@ -188,6 +190,10 @@ static void keydecode(void)
 	} else
 		c = keyboard[keybyte][keybit];
 
+	/* Until we have true i8n we should make sure the Yen sign is interpreted as backslash */
+	if (c == KEY_YEN)
+		c = '\\';
+
 	if (keymap[6] & 2) {	/* control */
 		if (c > 31 && c < 127)
 			c &= 31;
@@ -221,7 +227,8 @@ void kbd_interrupt(void)
 	update_keyboard();
 	keyproc();
 
-	if (keysdown && keysdown < 3) {
+	/* accept any number of keys down, only retain last one pressed */
+	if (keysdown > 0) {
 		if (newkey) {
 			keydecode();
 			kbd_timer = keyrepeat.first;

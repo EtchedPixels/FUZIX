@@ -53,8 +53,9 @@ void device_init(void)
     kputs("video.\n");
 
     /* Default key repeat values in 10ths of seconds */
-    keyrepeat.first = 2 * ticks_per_dsecond;
-    keyrepeat.continual = 1 * ticks_per_dsecond;
+    /* These are the 50/60 Hz keyrepeat values observed for MSX2 and above */
+    keyrepeat.first = ticks_per_dsecond == 6 ? 40 : 32;
+    keyrepeat.continual = 2;
 
     if (megasd_probe()) {
         /* probe for megaflash rom sd */
