@@ -518,8 +518,7 @@ clear_across:
 	    ld a,(_int_disabled)
 	    push af
 	    di
-	    ld a, (_scrollu_w)
-	    ld b,a
+	    ld b, #0x40
 	    call videopos
 	    ld a, c
 	    ld bc, (_vdpport)
