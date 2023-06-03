@@ -208,7 +208,6 @@ _scroll_up:
 		ret
 
 _scroll_down:
-		ret
 		call vtbase
 		ld de,#1024-64		
 		add hl,de		; points to start of last line
@@ -218,7 +217,7 @@ _scroll_down:
 		add hl,de		; last char
 		pop de
 		ex de,hl
-		ld bc,#1024
+		ld bc,#1024-64
 		lddr
 		ret
 
