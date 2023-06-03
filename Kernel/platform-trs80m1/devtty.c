@@ -58,6 +58,7 @@ static uint8_t trs_flow;		/* RTS/CTS */
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
 	_CSYS,
+	_CSYS,
 	_CSYS|CBAUD|CSIZE|CRTSCTS|CSTOPB,
 	_CSYS|CSIZE|CRTSCTS|CSTOPB,
 	_CSYS|CSIZE|CRTSCTS|CSTOPB

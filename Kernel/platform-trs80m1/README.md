@@ -6,7 +6,7 @@
 - Tandy Model III with Alpha Supermem or compatible
 - EACA Video Genie aka Dick Smith System 80 / TRZ-80 / PMC 80/81 with S100 extender and memory card set up to match the supermem (eg a BG256S can be set up this way)
 - Tandy Model I or EACA Video Genie  with Selector and expansion box
-- LNW80 Model 1 (not graphics modes) with Alpha Supermem or compatible
+- LNW80 Model 1 (not graphics modes) with Alpha Supermem compatible
 
 Some other clones may work providing they can be fitted with a suitable
 memory expansion.
@@ -22,9 +22,19 @@ compatible card, or the Selector on the model 1. The
 
 ### Probably Won't Work
 
-- Genie II/IIs/III/IIIs
+- Genie IIs/III/IIIs/Speedmaster
+
+All TRS80 like systems but with different banking models for their optional
+banked memory cards.
+
 - Le Guepard
+
+TRS80-like but with a 6845 video controller, different serial, sound and
+other hardware. Can have 256K but would need its own port.
+
 - Lobo max
+
+TRS80-ish but not compatible.
 
 ## Supported Hardware
 
@@ -90,8 +100,6 @@ a floppy disk of it.
 The xtrs emulator appears to have a problem with serial handling defaults.
 You may need to specify -serial "" on the command line to avoid the model 3
 hanging at the boot prompt.
-
-Always specify "-emtsafe"
 
 Copy boot.jv3 to disk1-0 and use hard1-0 from the emulator with xtrs or a
 FredHD. Copy boot.jv3 to disk3-0 and hard1-0 to hard3-0 for a model 3
