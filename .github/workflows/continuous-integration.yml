@@ -1,14 +1,10 @@
 name: Continuous integration
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request]
 
 env:
-  M68K_CROSS_URL: https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/11.1.0/x86_64-gcc-11.1.0-nolibc-m68k-linux.tar.gz
-  M68K_CROSS_DIR: gcc-11.1.0-nolibc
+  M68K_CROSS_URL: https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/13.1.0/x86_64-gcc-13.1.0-nolibc-m68k-linux.tar.gz
+  M68K_CROSS_DIR: gcc-13.1.0-nolibc
 
 concurrency:
   group: environment-${{ github.head_ref }}
