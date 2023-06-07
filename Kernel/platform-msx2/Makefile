@@ -40,22 +40,36 @@ $(DISCARD_DOBJS): %.rel: ../dev/%.c
 
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.lk  core *~
-	rm -f fuzix.ascii8.rom
+	rm -f fuzix.ascii8.rom fuzix.com boot.bin
 
 image:
 	dd if=../fuzix.bin of=fuzix.tmp bs=256 skip=1
 	dd if=../fuzix_disk.bin of=fuzix.com bs=256 skip=241
-	cp fuzix.com /tmp/com1
 	cat fuzix.tmp >> fuzix.com
-#	rm -f fuzix.tmp
 	dd if=../fuzix_boot.bin of=fuzix.ascii8.rom skip=1 bs=16384 conv=sync
 	dd if=../fuzix.bin of=fuzix.ascii8.rom seek=1 bs=16384 conv=sync
+	rm -f fuzix.tmp
+
+boot: boot.s
+	sdasz80 -o boot.s
+	sdldz80 -i boot.rel
+	# This makes us a binary from physical 0
+	makebin -p -s 49664 boot.ihx boot.tmp
+	# Chop off the leading 49152 bytes we don't want
+	dd if=boot.tmp of=boot.bin bs=512 count=1 skip=96 conv=sync
+	rm -f boot.ihx boot.tmp
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
-diskimage: image
+diskimage: image boot
 	# Make a blank disk image with partition
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the boot partition
+	env LANG=c echo -en '\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xff\x07\x00\x00' | dd iflag=fullblock of=$(IMAGES)/disk.img bs=478 seek=1 conv=notrunc
+	# Add the bootb sector
+	dd if=boot.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
+	# Add the kernel
+	dd if=fuzix.com of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
 	# Add the file system
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	cp fuzix.ascii8.rom $(IMAGES)
