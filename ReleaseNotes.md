@@ -46,6 +46,19 @@ only use the 'RC2014' nomenclature for official RC2014 products but there
 may be a few that have been missed. Systems that were previously rc2014-xyz
 are now rcbus-xyz.
 
+## Dropped Systems For Now
+
+- Pentagon
+- Pentagon 1024
+- Scorpion
+
+None of the testers for this work are currently available.
+
+## Not Tested (even on emulator)
+
+- P112 (no working emulator, no access to machine)
+- SocZ80 (no emulator, need to fix system)
+
 ## Supported Processors
 
 ### 6303 / 6803
@@ -182,7 +195,7 @@ of the upcoming and recent RiscV micro-controllers with 128K or so of SRAM.
 
 ### TMS9995
 
-At this point being used to slowly debug the C compiler. Not a useable port
+This target is being used to slowly debug the C compiler. Not a useable port
 as the compiler is still a fair way from working correctly.
 
 ### WRX6
