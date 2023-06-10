@@ -85,8 +85,7 @@ switchinfail:
 	; 4(sp) = child process table entry
 	;
 	; Exit:
-	; We are running as the child, A5 = u_data pointer of child, on
-	; child stack
+	; We are running as the parent but the child frame is built
 	;
 dofork:
 	move.l 4(sp),a0			;	child p_tab
@@ -181,7 +180,6 @@ forked_up:
 ;
 forkreturn:
 	; Wipe any stray kernel data
-	; FIXME: clear U_DATA_U_INSYS and kernel_flag
 	moveq #0,d0
 	moveq #0,d1
 	moveq #0,d2
