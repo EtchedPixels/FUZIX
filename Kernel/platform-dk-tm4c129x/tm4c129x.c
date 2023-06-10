@@ -27,7 +27,7 @@ const uint32_t _vectors[] __attribute__((section(".vectors"))) = {
 };
 
 uint8_t sys_cpu = 0U;
-uint8_t sys_cpu_feat = 0U;
+uint8_t sys_cpu_feat = 4U;
 
 uint8_t need_resched = 0U;
 
