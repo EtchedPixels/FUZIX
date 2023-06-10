@@ -330,11 +330,21 @@ void ssi_init(int which)
     /* PF5/SSI3XDAT3 */
     gpio_setup_pin(GPIO_PORT('F'), GPIO_PINFUN_PFIO, 5U,
                    GPIO_PAD_STD, 0U, 14U, 0U);
+#ifdef CONFIG_EK
+    /* PQ3 */
+    gpio_setup_pin(GPIO_PORT('Q'), GPIO_PINFUN_O, 3U,
+                   GPIO_PAD_STD, 0U, 0U, 0U);
+#else
     /* PH4 */
     gpio_setup_pin(GPIO_PORT('H'), GPIO_PINFUN_O, 4U,
                    GPIO_PAD_STD, 0U, 0U, 0U);
+#endif
     gpio_write(GPIO_PORT('Q'), 1U, 1U);
+#ifdef CONFIG_EK
+    gpio_write(GPIO_PORT('Q'), 3U, 1U);
+#else
     gpio_write(GPIO_PORT('H'), 4U, 1U);
+#endif
     break;
   default:
     for (;;)

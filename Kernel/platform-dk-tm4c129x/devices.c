@@ -47,7 +47,9 @@ void device_init(void)
   devsd_init();
 #endif
 #ifdef CONFIG_NET
+#ifndef CONFIG_EK	/* For now TOOD */
   ethdev_init();
+#endif
   sock_init();
 #endif
 }

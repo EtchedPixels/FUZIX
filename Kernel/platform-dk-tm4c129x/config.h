@@ -2,6 +2,10 @@
 
 #include "tm4c129x.h"
 
+/* Set this to build for the EK board with the SPI wired to the breakout,
+   and ethernet for now disabled */
+#define CONFIG_EK
+
 #undef CONFIG_AUDIO
 #define CONFIG_BANKS (65536U / 512U)
 #undef CONFIG_BANK16

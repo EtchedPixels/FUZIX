@@ -17,7 +17,11 @@ void sd_spi_raise_cs(void)
   irqflags_t fl = __hard_di();
 
   gpio_write(GPIO_PORT('Q'), 1, 1);
+#ifdef CONFIG_EK
+  gpio_write(GPIO_PORT('Q'), 3, 1);
+#else
   gpio_write(GPIO_PORT('H'), 4, 1);
+#endif
   __hard_irqrestore(fl);
 }
 
@@ -26,7 +30,11 @@ void sd_spi_lower_cs(void)
   irqflags_t fl = __hard_di();
 
   gpio_write(GPIO_PORT('Q'), 1, 1);
+#ifdef CONFIG_EK
+  gpio_write(GPIO_PORT('Q'), 3 , 0);
+#else
   gpio_write(GPIO_PORT('H'), 4, 0);
+#endif
   __hard_irqrestore(fl);
 }
 

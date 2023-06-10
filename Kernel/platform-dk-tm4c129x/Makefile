@@ -67,3 +67,12 @@ image:
 	../syscall_level2.o ../level2.o ../select.o ../blk512.o \
 	../usermem_std-armm4.o ../vt.o ../malloc.o \
 	../font8x8.o >../fuzix.map
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage:
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	cp fuzix.elf $(IMAGES)
