@@ -4,7 +4,7 @@ PLATFORM = armm4
 _PLATFORM = armm0
 export PLATFORM
 CC_OPT = -mcpu=cortex-m4 -mtune=cortex-m4 -march=armv7e-m+nofp -mthumb -fpie -DPIE -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin -Wall -g -Os -c -I../include -I../include/armm4
-ASM_OPT = -g -xassembler-with-cpp
+ASM_OPT = -g -xassembler-with-cpp -DUSE_AOUT
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
