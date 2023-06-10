@@ -176,6 +176,7 @@ TOR:		__DTOR_END__ = .;
 		_ebss = . ;
 		_end = . ;
 		end = . ;
+		__bss_end = . ;
 	} > flatmem
 
 	.stack : {
