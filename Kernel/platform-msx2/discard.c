@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <devsd.h>
+#include <devide_sunrise.h>
 #include <printf.h>
 #include <vt.h>
 #include <tty.h>
@@ -57,6 +58,7 @@ void device_init(void)
     keyrepeat.first = ticks_per_dsecond == 6 ? 40 : 32;
     keyrepeat.continual = 2;
 
+    sunrise_probe();
     if (megasd_probe()) {
         /* probe for megaflash rom sd */
         devsd_init();
