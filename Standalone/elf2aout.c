@@ -443,6 +443,8 @@ int main(int argc, char* const* argv)
 				break;
 
 			case SHT_PROGBITS: /* Initialised data */
+			case SHT_DYNSYM:
+			case SHT_DYNAMIC:
 				if (verbose)
 					printf("Program bits %x - %x\n",
 						seclo, sechi);
@@ -573,8 +575,11 @@ int main(int argc, char* const* argv)
 	/* a_entry is already in native format */
 	ah.a_entry = elffile->e_entry;
 	ah.a_text = endian32(datalo);
+	/* Allow for the data and bss being pasdded - seems any attempt to not
+	   pad ARM binaries is ignored by the toolchain */
 	ah.a_data = endian32(datahi - datalo);
-	ah.a_bss = endian32(bsshi - bsslo);
+	/* We end up making the BSS bigger if they are not aligned */
+	ah.a_bss = endian32(bsshi - datahi);
 	ah.a_syms = 0;
 	ah.a_trsize = endian32(next_reloc * 4);
 	ah.a_drsize = 0;
