@@ -50,7 +50,11 @@
        mknod /dev/hdb15 60660 31
 */
 
+#ifdef BLKDEV_INIT
 static blkdev_t blkdev_table[MAX_BLKDEV]={{0,},};
+#else
+static blkdev_t blkdev_table[MAX_BLKDEV];
+#endif
 struct blkparam blk_op;
 
 int blkdev_open(uint_fast8_t minor, uint16_t flags)

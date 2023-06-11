@@ -31,7 +31,7 @@ $(COMMON_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) --codeseg CODE1 -c $<
 
 $(DOBJS): %.rel: ../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) --dataseg COMMONMEM -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) -DBLKDEV_INIT --dataseg COMMONMEM -c $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
