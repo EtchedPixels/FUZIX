@@ -54,3 +54,15 @@ image:
 	../cpm-loader/makecpmloader ../cpm-loader/cpmload.bin ../fuzix.bin 0x88 fuzix.com
 	../cpm-loader/makecpmloader ../cpm-loader/fuzixload.bin ../fuzix.bin 0x88 fuzix
 	./flopboot-mkimage flopboot.bin ../fuzix.bin fuzix-boot.fdd
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Boot floppy and CP/M boot
+	cp fuzix-boot.fdd fuzix.com $(IMAGES)
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
