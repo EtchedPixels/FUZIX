@@ -104,6 +104,11 @@ deliver_signals_2:
 	inc hl
 	ld d,(hl)
 
+	ld bc, #signal_return
+	push bc		; bc is passed in as the return vector
+
+	ld c,a		; save signal number for called routioe
+
 	; Indicate processed
 	xor a
 	ld (_udata + U_DATA__U_CURSIG), a
@@ -116,8 +121,6 @@ deliver_signals_2:
 	dec hl
 	ld (hl), a
 
-	ld bc, #signal_return
-	push bc		; bc is passed in as the return vector
 
 	ei
 	ld hl,(PROGLOAD+16)
@@ -1364,7 +1367,10 @@ _sys_cpu:
 _sys_cpu_feat:
 	.db 0
 
-	.area _DISCARD
+	; We'd like this to be discard but for some banked ports that causes
+	; link time problems so for now leave it common as it is tiny :
+	; FIXME
+	.area _COMMONMEM
 
 _set_cpu_type:
 	ld h,#2		; Assume Z80

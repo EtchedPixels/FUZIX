@@ -103,6 +103,11 @@ deliver_signals_2:
 	inc hl
 	ld d,(hl)
 
+	ld bc, #signal_return
+	push bc		; bc is passed in as the return vector
+
+	ld c,a		; Save signal number in C as well for 8080 style
+
 	; Indicate processed
 	xor a
 	ld (_udata + U_DATA__U_CURSIG), a
@@ -115,8 +120,6 @@ deliver_signals_2:
 	dec hl
 	ld (hl), a
 
-	ld bc, #signal_return
-	push bc		; bc is passed in as the return vector
 
 	ei
 	.ifne Z80_MMU_HOOKS
