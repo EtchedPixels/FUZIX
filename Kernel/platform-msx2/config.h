@@ -56,7 +56,7 @@
 
 #define BOOTDEVICENAMES	"hd#,fd"
 
-#define MAX_BLKDEV 1      /* Single SD or IDE drive */
+#define MAX_BLKDEV 2      /* 1 IDE and 1 SD drive */
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL	10
 //#define CONFIG_RTC_RP5C01_NVRAM

@@ -10,12 +10,14 @@
 
 	.globl _ide_error
 	.globl _ide_base
+	.globl _ide_addr
+	.globl _ide_lba
+	.globl _ide_is_read
 
 	.globl _mapslot_bank1
 	.globl _slotram
 	.globl _ide_slot
 
-	.globl _blk_op
 	.globl _ticks
 	.globl _devide_buf
 
@@ -191,7 +193,7 @@ _do_ide_xfer:
 	ld ix,(_ide_base)
 	call map_sunrise_k
 	ld e,l
-	ld hl, (_blk_op + BLK_OP_LBA + 2)
+	ld hl, (_ide_lba + 2)
 	ld a,h
 	and #0x0F			; Merge drive and bits 24-27
 	or e
@@ -202,11 +204,11 @@ _do_ide_xfer:
 	pop hl
 	jr nz, xfer_timeout
 	ld IDE_REG_LBA_2(ix),l
-	ld hl, (_blk_op + BLK_OP_LBA)
+	ld hl, (_ide_lba)
 	ld IDE_REG_LBA_1(ix),h
 	ld IDE_REG_LBA_0(ix),l
 	ld IDE_REG_SEC_COUNT(ix),#1
-	ld a,(_blk_op + BLK_OP_ISREAD)
+	ld a,(_ide_is_read)
 	or a
 	jr z, send_cmd
 	ld IDE_REG_COMMAND(ix),#IDE_CMD_READ_SECTOR
@@ -241,7 +243,7 @@ xfer_timeout:
 ;	deal with it here
 ;
 devide_xfer_r:
-	ld de,(_blk_op + BLK_OP_ADDR)
+	ld de,(_ide_addr)
 	; We don't have to worry about swap being special for this port
 	; Our caller also is responsible for working out when to bounce
 xfer_do:
@@ -252,7 +254,7 @@ xfer_do:
 	ret
 
 devide_xfer_w:
-	ld hl,(_blk_op + BLK_OP_ADDR)
+	ld hl,(_ide_addr)
 	; We don't have to worry about swap being special for this port
 	; Our caller also is responsible for working out when to bounce
 	ld de,#0x7C00

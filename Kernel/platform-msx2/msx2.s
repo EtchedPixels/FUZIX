@@ -60,6 +60,9 @@
 	    .globl _ide_slot
 	    .globl _ide_error
 	    .globl _ide_base
+	    .globl _ide_addr
+	    .globl _ide_lba
+	    .globl _ide_is_read
 
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
@@ -425,6 +428,13 @@ _ide_error:
 	    .dw 0
 _ide_base:
 	    .dw 0
+_ide_addr:
+	    .dw 0
+_ide_lba:
+	    .dw 0
+	    .dw 0
+_ide_is_read:
+	    .db 0
 _vdpport:
 	    .dw 0
 _infobits:

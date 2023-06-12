@@ -9,6 +9,9 @@
 extern uint16_t ide_error;
 extern uint16_t ide_base;
 extern uint8_t ide_slot;
+extern uint16_t ide_addr;
+extern uint32_t ide_lba;
+extern uint8_t ide_is_read;
 uint8_t *devide_buf;
 
 static void delay(void)
@@ -33,30 +36,31 @@ static uint8_t sunrise_transfer_sector(void)
     uint8_t *page, page_offset, *addr = blk_op.addr;
     uint16_t status;
 
-    if (!blk_op.is_read)
+    ide_lba = blk_op.lba;
+    ide_is_read = blk_op.is_read;
+
+    if (!ide_is_read)
         blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
 
     irqflags_t irq = di();
     if (blk_op.is_user) {
-        blk_op.is_user = 0;
-        blk_op.addr = ((uint16_t) addr) % 0x4000 + 0x8000;
+        ide_addr = ((uint16_t) addr) % 0x4000 + 0x8000;
         page_offset = (((uint16_t)addr) / 0x4000);
         page = &udata.u_page;
-        int len = ((uint16_t)blk_op.addr) + BLKSIZE - 0xc000;
-        if (len > 0 && !blk_op.is_read) {
+        int len = ide_addr + BLKSIZE - 0xc000;
+        if (len > 0 && !ide_is_read) {
             RAM_PAGE2 = *(page + page_offset + 1);
             memcpy((uint8_t *)0xc000, (uint8_t *)0x8000, len);
         }
         RAM_PAGE2 = *(page + page_offset);
         status = do_ide_xfer(mask);
-        if (len > 0 && blk_op.is_read) {
+        if (len > 0 && ide_is_read) {
             RAM_PAGE2 = *(page + page_offset + 1);
             memcpy((uint8_t *)0x8000, (uint8_t *)0xc000, len);
         }
         RAM_PAGE2 = 1;
-        blk_op.addr = addr;
-        blk_op.is_user = 1;
     } else {
+        ide_addr = (uint16_t) addr;
         status = do_ide_xfer(mask);
     }
     irqrestore(irq);
