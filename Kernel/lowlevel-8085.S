@@ -40,6 +40,9 @@ _sys_stubs:
 	nop
 	nop
 
+.export deliver_signals_2
+.export deliver_signals
+
 		.common
 
 deliver_signals:
@@ -56,11 +59,12 @@ deliver_signals_2:
 	inx h
 	mov d,m
 
-	mov c,a		; save the signal number to pass into the helper
 
 	; Build the return frame
 	lxi b,signal_return
 	push b
+
+	mov c,a		; save the signal number to pass into the helper
 
 	xra a
 	sta U_DATA__U_CURSIG
@@ -71,7 +75,7 @@ deliver_signals_2:
 	ora e
 	jz signal_return		; raced
 	;
-	;	Off we go. DE = vector B = signal
+	;	Off we go. DE = vector C = signal
 	;
 	;	FIXME: if we ever have 8080 binaries with different load
 	;	addresses we will need to fix this

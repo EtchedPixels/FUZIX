@@ -47,11 +47,12 @@ deliver_signals_2:
 	inx h
 	mov d,m
 
-	mov c,a		! save the signal number to pass into the helper
 
 	! Build the return frame
 	lxi b,signal_return
 	push b
+
+	mov c,a		! save the signal number to pass into the helper
 
 	xra a
 	sta U_DATA__U_CURSIG
@@ -61,6 +62,7 @@ deliver_signals_2:
 	mov a,d
 	ora e
 	jz signal_return		! raced
+
 	!
 	!	Off we go. DE = vector B = signal
 	!
