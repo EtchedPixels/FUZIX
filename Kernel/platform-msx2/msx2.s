@@ -27,6 +27,7 @@
             .globl _bufpool
 	    .globl _int_disabled
             .globl _udata
+            .globl ___sdcc_enter_ix
 
 	    ; video driver
 	    .globl _vtinit
@@ -48,12 +49,20 @@
             .globl outstring
             .globl outstringhex
 
-
+	    ; machine bits
 	    .globl _slotrom
 	    .globl _slotram
 	    .globl _vdpport
 	    .globl _infobits
 	    .globl _machine_type
+
+            ; IDE driver
+	    .globl _ide_slot
+	    .globl _ide_error
+	    .globl _ide_base
+	    .globl _ide_addr
+	    .globl _ide_lba
+	    .globl _ide_is_read
 
 	    ;
 	    ; vdp - we must initialize this bit early for the vt
@@ -168,6 +177,21 @@ _program_vectors:
             ld (0x0066), a  ; Set vector for NMI
             ld hl, #nmi_handler
             ld (0x0067), hl
+
+            ; RST peepholes support
+            ld hl,#___sdcc_enter_ix
+            ld (0x08),a
+            ld (0x09),hl
+            ld hl,#___spixret
+            ld (0x10),a
+            ld (0x11),hl
+            ld hl,#___ixret
+            ld (0x18),a
+            ld (0x19),hl
+            ld hl,#___ldhlhl
+            ld (0x20),a
+            ld (0x21),hl
+
 	    jr map_kernel
 
 ;
@@ -249,6 +273,34 @@ map_save_kernel:
 	    pop hl
 	    ret
 
+		.area _CODE
+
+;
+;       Stub helpers for code compactness.
+;
+;   Note that sdcc_enter_ix is in the standard compiler support already
+;
+;   The first two use an rst as a jump. In the reload sp case we don't
+;   have to care. In the pop ix case for the function end we need to
+;   drop the spare frame first, but we know that af contents don't
+;   matter
+;
+
+___spixret:
+            ld      sp,ix
+            pop     ix
+            ret
+___ixret:
+            pop     af
+            pop     ix
+            ret
+___ldhlhl:
+            ld      a,(hl)
+            inc     hl
+            ld      h,(hl)
+            ld      l,a
+            ret
+
 ;
 ;	Slot mapping functions.
 ;
@@ -260,7 +312,6 @@ map_save_kernel:
 ;   can be in bank1 or 2 because those are the ones usually used to
 ;   map the io ports.
 ;
-		.area _CODE
 
 _mapslot_bank1:
 		ld hl,#0x4000
@@ -370,6 +421,19 @@ map_kernel_data:
 _slotrom:
 	    .db 0
 _slotram:
+	    .db 0
+_ide_slot:
+	    .db 0
+_ide_error:
+	    .dw 0
+_ide_base:
+	    .dw 0
+_ide_addr:
+	    .dw 0
+_ide_lba:
+	    .dw 0
+	    .dw 0
+_ide_is_read:
 	    .db 0
 _vdpport:
 	    .dw 0

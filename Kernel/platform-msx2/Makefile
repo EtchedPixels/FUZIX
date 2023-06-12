@@ -2,11 +2,12 @@
 DSRCS = ../dev/devsd.c ../dev/mbr.c ../dev/blkdev.c
 CSRCS += devfd.c devhd.c devlpr.c
 CSRCS += devices.c main.c devtty.c ../dev/rp5c01.c devrtc.c ../dev/v99xx.c vdp.c
-COMMON_CSRCS = devmegasd.c
+COMMON_CSRCS = devmegasd.c devide_sunrise.c
 DISCARD_CSRCS = discard.c
 DISCARD_DSRCS = ../dev/devsd_discard.c
 ASRCS = msx2.s crt0.s
 ASRCS += tricks.s commonmem.s bootrom.s diskboot.s
+ASRCS += sunrise.s
 
 CROSS_CCOPTS += -I../dev/
 
@@ -66,7 +67,7 @@ diskimage: image boot
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the boot partition
 	env LANG=c echo -en '\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\xff\x07\x00\x00' | dd iflag=fullblock of=$(IMAGES)/disk.img bs=478 seek=1 conv=notrunc
-	# Add the bootb sector
+	# Add the boot sector
 	dd if=boot.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Add the kernel
 	dd if=fuzix.com of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc

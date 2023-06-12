@@ -57,6 +57,7 @@ int megasd_probe(void)
             goto found;
     }
     mapslot_bank1(slotram);
+    irqrestore(irq);
     return 0;
 
 found:

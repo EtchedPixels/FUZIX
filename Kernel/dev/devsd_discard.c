@@ -31,19 +31,17 @@
 void devsd_init(void)
 {
     uint8_t i;
-    for(i = 0; i < SD_DRIVE_COUNT; i++) {
-        sd_drive = i;
-        sd_init_drive();
-    }
-//    sd_drive = SD_DRIVE_NONE;
+    for(i = 0; i < SD_DRIVE_COUNT; i++)
+        sd_init_drive(i);
 }
 
-void sd_init_drive(void)
+void sd_init_drive(uint8_t drive)
 {
     blkdev_t *blk;
     unsigned char csd[16], n;
     uint_fast8_t card_type;
 
+    sd_drive = drive;
     kprintf("SD drive %d: ", sd_drive);
     card_type = sd_spi_init();
 

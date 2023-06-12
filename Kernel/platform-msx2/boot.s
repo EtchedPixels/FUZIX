@@ -33,28 +33,19 @@
         .db	0x00, 0x52, 0x34, 0xd6, 0xf8
         .ascii	'NEXTOR 2.0 FAT12   '
 boot:	ret	nc
-	ld	(#call+1), de
-	ld	(hl), #entry
-	inc	hl
-	ld	(hl), #0xc0
-retry:	ld	sp, #0xf51f
+	ld	hl,#load
+	ld	de,#0xc100
+	ld	bc,#end-#load
+	ldir
+	jp	0xc100
+load:	ld	sp, #0xf51f
 	ENASLT	#0xf342, #0x40	; RAM in slot 1
 	ld	de, #0x100
 	BDOS	#0x1a		; set disk transfer address
 	BDOS	#0x19		; get current drive
 	ld	l, a
 	ld	de, #1		; start of fuzix.com
-	ld	h, #95		; size of fuzix.com
+	ld	h, #96		; size of fuzix.com
 	BDOS	#0x2f		; absolute sector read
-	inc	a
-	jp	nz, 0x100
-	ENASLT	#0xfcc1, #0x40	; ROM in slot 1
-	jr	call
-entry:	.dw	call
-call:	call	0x0000
-	ld	a, c
-	and	#0xfe
-	sub	#2
-or:	or	#0
-	jp	z, 0x4022
-	jr	retry
+	jp	0x100
+end:

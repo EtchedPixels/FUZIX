@@ -11,3 +11,5 @@ export CROSS_CC_SYS3=--codeseg CODE2
 export CROSS_CC_SYS4=--codeseg CODE2
 export CROSS_CC_SYS5=--codeseg CODE2
 export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
+#
+CROSS_CCOPTS += --peep-file $(FUZIX_ROOT)/Kernel/cpu-z80/rst.peep

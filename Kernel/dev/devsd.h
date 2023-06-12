@@ -59,7 +59,7 @@ extern uint_fast8_t sd_drive; /* current card/drive number */
 void sd_spi_release(void);
 int sd_send_command(uint_fast8_t cmd, uint32_t arg);
 uint_fast8_t sd_spi_wait(bool want_ff);
-void sd_init_drive(void);
+void sd_init_drive(uint8_t drive);
 int sd_spi_init(void);
 uint_fast8_t devsd_transfer_sector(void);
 

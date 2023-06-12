@@ -44,6 +44,8 @@ platform-msx2/blkdev.rel
 platform-msx2/devsd.rel
 platform-msx2/devsd_discard.rel
 platform-msx2/devmegasd.rel
+platform-msx2/devide_sunrise.rel
+platform-msx2/sunrise.rel
 platform-msx2/mbr.rel
 platform-msx2/devrtc.rel
 platform-msx2/rp5c01.rel

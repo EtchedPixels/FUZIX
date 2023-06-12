@@ -52,11 +52,11 @@
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define CONFIG_SD
-#define SD_DRIVE_COUNT 1
+#define SD_DRIVE_COUNT 2
 
 #define BOOTDEVICENAMES	"hd#,fd"
 
-#define MAX_BLKDEV 1      /* Single SD drive */
+#define MAX_BLKDEV 4      /* 2 IDE and 2 SD drives */
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL	10
 //#define CONFIG_RTC_RP5C01_NVRAM
