@@ -20,6 +20,8 @@ retok:
 	lhlx			; address of buffer 
 	xchg			; to DE
 	lhlx			; get value for SP restore
+	inx	h		; discard old return address
+	inx	h
 	sphl			; restore SP
 	inx	d
 	inx	d
@@ -28,7 +30,7 @@ retok:
 	inx	d
 	inx	d
 	xchg			; buffer back into HL
-	mov	c,m		; Save BC
+	mov	c,m		; restore BC
 	inx	h
 	mov	b,m
 	lhld	__tmp
