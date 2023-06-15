@@ -1,21 +1,3 @@
-include $(FUZIX_ROOT)/Applications/rules.8080
-
-SRCS = bitmap.c blockio.c cclose.c ccreat.c cfillbuf.c cflsbuf.c cmdhdl.c \
-      copen.c copy.c cpm.c delete.c dirhdl.c extent.c ffc.c gensktab.c \
-      hexdmp.c interact.c physio.c pip.c rename.c
-
-OBJS = $(SRCS:.c=.o)
-
-all: cpmfs size.report
-
-cpmfs: $(OBJS)
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
-
-size.report: $(APPS)
-	ls -l $^ > $@
+all:
 
 clean:
-	rm -f $(OBJS) cpmfs $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
-
-rmbak:
-	rm -f *~ core

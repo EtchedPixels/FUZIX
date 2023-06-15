@@ -1,33 +1,7 @@
-include $(FUZIX_ROOT)/Applications/rules.8080
-
-# Until we add 8080 support
-CFLAGS += -DTARGET_Z80
-
-SRCS  = as0.c as1.c as2.c as3.c as4.c as6.c
-
-INCS  = as.h obj.h
-
-OBJS = $(SRCS:.c=.o)
-
-APPS = as nm
-
-all: $(APPS)
-
-$(OBJS): $(INCS)
-
-$(OBJS): %.o : %.c
-	$(CC) -c $(CFLAGS) $(COPT) $<
-
-as: $(OBJS)
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
-
-nm.c: obj.h
-
-nm: nm.o
-	$(LINKER) -o $@ $(LINKER_OPT) $(CRT0) $^ $(LIBC)
+all:
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.o
 
-rmbak:
-	rm -f *~ core
+#
+#	For now
+#
