@@ -1,6 +1,6 @@
-#include "../kernel-8085.def"
+#include "../kernel-8080.def"
 ;
-;	8085 version of the DS1302 support for RCbus
+;	8080 version of the DS1302 support for RCbus
 ;
 
 #define RTCREG		0x0C
@@ -35,51 +35,51 @@ _ds1302_get_data:
 	.export _ds1302_set_driven
 
 _ds1302_set_driven:
-	ldsi 2
-	lhlx
-        mov a, l		; load argument
-	ani 1
-        lda _rtc_shadow
-	jz setreg
-        ani 0xFF-PIN_DATA_HIZ	; 0 - output pin
-        jmp writereg
+	lxi	h,2
+	dad	sp
+        mov	a, m		; load argument
+	ani	1
+        lda	_rtc_shadow
+	jz	setreg
+        ani	0xFF-PIN_DATA_HIZ	; 0 - output pin
+        jmp	writereg
 setreg:
-        ori PIN_DATA_HIZ
-        jmp writereg
+        ori	PIN_DATA_HIZ
+        jmp	writereg
 
 	.export _ds1302_set_data
 
 _ds1302_set_data:
-	push b
-        lxi b, PIN_DATA_OUT + PIN_DATA_MASK
-        jmp setpin
+	push	b
+        lxi	b, PIN_DATA_OUT + PIN_DATA_MASK
+        jmp	setpin
 
 	.export _ds1302_set_ce
 
 _ds1302_set_ce:
-	push b
-        lxi b, PIN_CE + PIN_CE_MASK
-        jmp setpin
+	push	b
+        lxi	b, PIN_CE + PIN_CE_MASK
+        jmp	setpin
 
 	.export _ds1302_set_clk
 
 _ds1302_set_clk:
-	push b
-        lxi b, PIN_CLK + PIN_CLK_MASK
+	push	b
+        lxi	b, PIN_CLK + PIN_CLK_MASK
 	; Fall through
 setpin:
-	ldsi 4
-	lhlx			; Argument into HL
-	mov a, l		; Are we setting or clearing ?
-	ora a
-	jnz set
-	mov c, a		; A is 0 so set C to 0 so clears pin
+	lxi	h,4
+	dad	sp
+	mov	a,m		; Are we setting or clearing ?
+	ora	a
+	jnz	set
+	mov	c, a		; A is 0 so set C to 0 so clears pin
 set:
-        lda _rtc_shadow		; load current register contents
-        ana b                   ; unset the pin
-        ora c			; set if arg is true
-	pop b
+        lda	_rtc_shadow		; load current register contents
+        ana	b                   ; unset the pin
+        ora	c			; set if arg is true
+	pop	b
 writereg:
-	out RTCREG		; write out new register contents
-        sta _rtc_shadow		; update our shadow copy
+	out	RTCREG		; write out new register contents
+        sta	_rtc_shadow		; update our shadow copy
         ret
