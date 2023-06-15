@@ -1,9 +1,9 @@
-CC = ack
-ASM = ack -mfuzix
-AR = aal
+CC = cc85 -m8080
+ASM = cc85
+AR = ar
 PLATFORM = 8080
 export PLATFORM
-CC_OPT = -mfuzix -c -O4 -I$(shell pwd)/../include -I$(shell pwd)/../include/8080 -i
+CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8080 -X
 CC_NOOPT = $(CC_OPT)
 ASM_OPT = -c -o
 # copied in from kernel tree
@@ -12,7 +12,7 @@ KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
-SRC_ASM =
+SRC_ASM = setjmp_8080.s longjmp_8080.s
 OBJ_ASM = $(SRC_ASM:.s=.o)
 SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
 SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
@@ -127,7 +127,6 @@ syscall.l: fuzix$(PLATFORM)/syslib.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
-	../tools/ack8080-filter syslib$(PLATFORM).lib >/dev/null
 	$(AR) r syslib$(PLATFORM).lib $$(cat syslib.l)
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 
@@ -153,6 +152,10 @@ termcap$(PLATFORM).lib: $(OBJ_CT)
 	ln -sf termcap$(PLATFORM).lib libtermcap$(PLATFORM).a
 
 m$(PLATFORM).lib: $(OBJ_LM)
+	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
+	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
+
+c$(PLATFORM).lib: $(OBJ_LM)
 	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
 

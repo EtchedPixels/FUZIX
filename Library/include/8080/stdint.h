@@ -1,7 +1,3 @@
-/*
- * Extracted from the ACK CP/M headers
- */
-
 #ifndef _STDINT_H
 #define _STDINT_H
 
