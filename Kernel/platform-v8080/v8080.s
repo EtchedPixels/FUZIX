@@ -1,284 +1,299 @@
-#
-!
-!	Low level platform support for v8080
-!
+# 0 "v8080.S"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "v8080.S"
+;
+; Low level platform support for v8080
+;
 
-	#include "../kernel-8080.def"
+# 1 "../kernel-8080.def" 1
+; Keep these in sync with struct u_data;;
 
-.sect .common
+# 1 "../platform/kernel.def" 1
+# 4 "../kernel-8080.def" 2
+# 29 "../kernel-8080.def"
+; Keep these in sync with struct p_tab;;
+# 46 "../kernel-8080.def"
+; Keep in sync with struct blkbuf
 
-.define _plt_monitor
-.define _plt_reboot
+
+; Currently only used for 8085
+# 6 "v8080.S" 2
+
+ .common
+
+ .export _plt_monitor
+ .export _plt_reboot
 
 _plt_monitor:
 _plt_reboot:
-	mvi a,1
-	out 29
+ mvi a,1
+ out 29
 
-.define plt_interrupt_all
+ .export plt_interrupt_all
 
 plt_interrupt_all:
-	ret
+ ret
 
-.sect .text
+ .code
 
-.define init_early
+ .export init_early
 
 init_early:
-	ret
+ ret
 
-.sect .common
+ .common
 
 
-.define init_hardware
+ .export init_hardware
 
 init_hardware:
-	mvi a,8
-	out 20
-	! Hack for now
-	lxi h,400		! 8 * 48K + 16K
-	shld _ramsize
-	lxi h,336
-	shld _procmem
+ mvi a,8
+ out 20
+ ; Hack for now
+ lxi h,400 ; 8 * 48K + 16K
+ shld _ramsize
+ lxi h,336
+ shld _procmem
 
-	mvi a,1
-	out 27			! 100Hz timer on
+ mvi a,1
+ out 27 ; 100Hz timer on
 
-	jmp _program_vectors_k
+ jmp _program_v_k
 
-.define _int_disabled
+ .export _int_disabled
 _int_disabled:
-	.data1 1
+ .byte 1
 
-.define _program_vectors
+ .export _program_vectors
 
 _program_vectors:
-	di
-	pop d
-	pop h
-	push h
-	push d
-	call map_process
-	call _program_vectors_u
-	call map_kernel_di
-	ret
+ di
+ pop d
+ pop h
+ push h
+ push d
+ call map_process
+ call _program_v_u
+ call map_kernel_di
+ ret
 
-_program_vectors_k:
-	push b
-	call .rst_init
-	pop b
-_program_vectors_u:
-	mvi a,0xc3
-	sta 0
-	sta 0x30
-	sta 0x38
-	sta 0x66
-	lxi h,null_handler
-	shld 1
-	lxi h,unix_syscall_entry
-	shld 0x31
-	lxi h,interrupt_handler
-	shld 0x39
-	lxi h,nmi_handler
-	shld 0x67
-	ret
+_program_v_k:
+ push b
+; call .rst_init
+ pop b
+_program_v_u:
+ mvi a,0xc3
+ sta 0
+ sta 0x30
+ sta 0x38
+ sta 0x66
+ lxi h,null_handler
+ shld 1
+ lxi h,unix_syscall_entry
+ shld 0x31
+ lxi h,interrupt_handler
+ shld 0x39
+ lxi h,nmi_handler
+ shld 0x67
+ ret
 
-!
-!	Memory mapping
-!
-.define map_kernel
-.define map_kernel_di
+;
+; Memory mapping
+;
+ .export map_kernel
+ .export map_kernel_di
 
 map_kernel:
 map_kernel_di:
-	push psw
-	xra a
-	out 21
-	pop psw
-	ret
+ push psw
+ xra a
+ out 21
+ pop psw
+ ret
 
-.define map_process
-.define map_process_di
-.define map_process_a
+ .export map_process
+ .export map_process_di
+ .export map_process_a
 
 map_process:
 map_process_di:
-	mov a,h
-	ora l
-	jz map_kernel
-	mov a,m
+ mov a,h
+ ora l
+ jz map_kernel
+ mov a,m
 map_process_a:
-	out 21
-	ret
+ out 21
+ ret
 
-.define map_process_always
-.define map_process_always_di
+ .export map_proc_always_di
+ .export map_proc_always
 
-map_process_always:
-map_process_always_di:
-	push psw
-	lda U_DATA__U_PAGE
-	out 21
-	pop psw
-	ret
+map_proc_always:
+map_proc_always_di:
+ push psw
+ lda _udata+2
+ out 21
+ pop psw
+ ret
 
-.define map_save_kernel
+ .export map_save_kernel
 
 map_save_kernel:
-	push psw
-	in 21
-	sta map_save
-	xra a
-	out 21
-	pop psw
-	ret
+ push psw
+ in 21
+ sta map_save
+ xra a
+ out 21
+ pop psw
+ ret
 
-.define map_restore
+ .export map_restore
 
 map_restore:
-	push psw
-	lda map_save
-	out 21
-	pop psw
-	ret
+ push psw
+ lda map_save
+ out 21
+ pop psw
+ ret
 
 map_save:
-	.data1 0
+ .byte 0
 
-.define outchar
-.define _ttyout
+ .export outchar
+ .export _ttyout
 
-!
-!	Hack for Z80pack for now
-!
+;
+; Hack for Z80pack for now
+;
 _ttyout:
-	pop h
-	pop d
-	push d
-	push h
-	mov a,e
+ pop h
+ pop d
+ push d
+ push h
+ mov a,e
 outchar:
-!	push psw
-!outcharw:
-!	in 0
-!	ani 2
-!	jz outcharw
-!	pop psw
-	out 1
-	ret
+; push psw
+;outcharw:
+; in 0
+; ani 2
+; jz outcharw
+; pop psw
+ out 1
+ ret
 
-.define _ttyout2
+ .export _ttyout2
 
 _ttyout2:
-	pop h
-	pop d
-	push d
-	push h
+ pop h
+ pop d
+ push d
+ push h
 outw2:
-	in 2
-	ani 2
-	jz outw2
-	mov a,e
-	out 3
-	ret
+ in 2
+ ani 2
+ jz outw2
+ mov a,e
+ out 3
+ ret
 
-.define _ttyready
-.define _ttyready2
+ .export _ttyready
+ .export _ttyready2
 
 _ttyready:
-	in 0
-	ani 2
-	mov e,a
-	ret
+ in 0
+ ani 2
+ mov e,a
+ ret
 _ttyready2:
-	in 2
-	ani 2
-	mov e,a
-	ret
+ in 2
+ ani 2
+ mov e,a
+ ret
 
-.define _tty_pollirq
+ .export _tty_pollirq
 
 _tty_pollirq:
-	in 0
-	rar
-	jnc poll2
-	in 1
-	mov e,a
-	mvi d,0
-	push d
-	mvi e,1
-	push d
-	call _tty_inproc
-	pop d
-	pop d
+ in 0
+ rar
+ jnc poll2
+ in 1
+ mov e,a
+ mvi d,0
+ push d
+ mvi e,1
+ push d
+ call _tty_inproc
+ pop d
+ pop d
 poll2:
-	in 40
-	rar
-	rnc
-	in 41
-	mov e,a
-	mvi d,0
-	push d
-	mvi e,2
-	push d
-	call _tty_inproc
-	pop d
-	pop d
-	ret
+ in 40
+ rar
+ rnc
+ in 41
+ mov e,a
+ mvi d,0
+ push d
+ mvi e,2
+ push d
+ call _tty_inproc
+ pop d
+ pop d
+ ret
 
 
-.sect .common
+ .common
 
-.define _fd_op
+ .export _fd_op
 
 _fd_op:
-	lxi h,_fd_drive
-	mov a,m
-	out 10			! drive
-	inx h
-	mov a,m
-	out 11			! track
-	inx h
-	mov a,m
-	out 12			! sector l
-	inx h
-	mov a,m
-	out 17			! sector h
-	inx h
-	mov a,m
-	out 15			! dma l
-	inx h
-	mov a,m
-	out 16			! dma h
-	inx h
-	mov a,m
-	out 21			! mapping
-	inx h
-	mov a,m
-	out 13			! issue
-	xra a
-	out 21			! kernel mapping back
-	in 14			! return status
-	mov e,a
-	mvi d,0
-	ret
+ lxi h,_fd_drive
+ mov a,m
+ out 10 ; drive
+ inx h
+ mov a,m
+ out 11 ; track
+ inx h
+ mov a,m
+ out 12 ; sector l
+ inx h
+ mov a,m
+ out 17 ; sector h
+ inx h
+ mov a,m
+ out 15 ; dma l
+ inx h
+ mov a,m
+ out 16 ; dma h
+ inx h
+ mov a,m
+ out 21 ; mapping
+ inx h
+ mov a,m
+ out 13 ; issue
+ xra a
+ out 21 ; kernel mapping back
+ in 14 ; return status
+ mov e,a
+ mvi d,0
+ ret
 
-.define _fd_drive
-.define _fd_track
-.define _fd_sector
-.define _fd_dma
-.define _fd_page
-.define _fd_cmd
+ .export _fd_drive
+ .export _fd_track
+ .export _fd_sector
+ .export _fd_dma
+ .export _fd_page
+ .export _fd_cmd
 
 _fd_drive:
-	.data1 0
+ .byte 0
 _fd_track:
-	.data1 0
+ .byte 0
 _fd_sector:
-	.data2 0
+ .word 0
 _fd_dma:
-	.data2 0
+ .word 0
 _fd_page:
-	.data1 0
+ .byte 0
 _fd_cmd:
-	.data1 0
+ .byte 0

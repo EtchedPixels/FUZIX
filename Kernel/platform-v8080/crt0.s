@@ -1,69 +1,85 @@
-#include "../kernel-8080.def"
+# 0 "crt0.S"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "crt0.S"
+# 1 "../kernel-8080.def" 1
+; Keep these in sync with struct u_data;;
 
-.sect .text
-.sect .rom
-.sect .data
-datastart:
-.sect .bss
-bssstart:
-.sect .common
-commonstart:
+# 1 "../platform/kernel.def" 1
+# 4 "../kernel-8080.def" 2
+# 29 "../kernel-8080.def"
+; Keep these in sync with struct p_tab;;
+# 46 "../kernel-8080.def"
+; Keep in sync with struct blkbuf
 
-.sect .text
 
-.define init
+; Currently only used for 8085
+# 2 "crt0.S" 2
+
+ .code
+
+ .export init
 
 init:
         di
-	lxi sp,kstack_top
+ lxi sp,kstack_top
 
         call init_early
 
+ ; Common is packed in the BSS space
 
-	lxi h,commonend
-	lxi d,commonstart
-	call calcsize
+ lxi b,__common_size
+ lxi h,__bss
+ lxi d,__common
 
-	lxi h,bssstart
-	lxi d,commonstart
-	
+ ; Copy it high
 nextbyte:
-	mov a,m
-	stax d
-	inx h
-	inx d
-	dcx b
-	mov a,b
-	ora c
-	jnz nextbyte
+ mov a,m
+ stax d
+ inx h
+ inx d
+ dcx b
+ mov a,b
+ ora c
+ jnz nextbyte
 
-!	lxi h,bssend		! We should really do this but bssend
-				! isnt appearing at the end so plan b
-	lxi h,commonstart	! Wipe all the free space
-	lxi d,bssstart
-	call calcsize
+ ; The discard follows the common
 
-	lxi h,bssstart
+ lxi b, __discard_size
+ lxi d, __discard
+ dad b
+ xchg
+ dad b
+ xchg
+ jmp copydown
+;
+; We copy discard from the top because it will probably overlap
+; on an 8080/8085 type system due to the larger code sizes.
+;
+nextbyted:
+ mov a,m
+ stax d
+ dcx b
+copydown:
+ dcx h
+ dcx d
+ mov a,b
+ ora c
+ jnz nextbyted
+
+ lxi b,__bss_size
+ lxi h,__bss
 wipe:
-	mvi m,0
-	inx h
-	dcx b
-	mov a,b
-	ora c
-	jnz wipe
+ mvi m,0
+ inx h
+ dcx b
+ mov a,b
+ ora c
+ jnz wipe
 
         call init_hardware
 
         call _fuzix_main
         di
-stop:   hlt
+stop: hlt
         jmp stop
-
-calcsize:
-	mov a,l
-	sub e
-	mov c,a
-	mov a,h
-	sbb d
-	mov b,a
-	ret
