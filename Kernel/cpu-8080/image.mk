@@ -1,7 +1,7 @@
+tools/visualize6800: tools/visualize6800.c
 
-tools/8080map: tools/8080map.c
+tools/pack85: tools/pack85.c
 
-tools/ack2kernel: tools/ack2kernel.c
-
-fuzix.bin: target $(OBJS) tools/8080map tools/ack2kernel
+fuzix.bin: target $(OBJS) tools/pack85 tools/visualize6800
 	+$(MAKE) -C platform-$(TARGET) image
+	tools/visualize6800 <fuzix.map
