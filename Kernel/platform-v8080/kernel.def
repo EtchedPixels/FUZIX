@@ -1,11 +1,16 @@
-! UZI mnemonics for memory addresses etc
+#define U_DATA__TOTALSIZE 0x200 /* 256+256 bytes */
 
-U_DATA                      = 0xE800       ! (this is struct u_data from kernel.h)
-U_DATA__TOTALSIZE           = 0x200        ! 256+256 bytes.
+#define U_DATA_STASH	0xBE00	/* BE00-BFFF */
 
-U_DATA_STASH		    = 0xBE00	   ! BE00-BFFF
+#define PROGBASE	0x0000
+#define PROGLOAD	0x0100
 
-PROGBASE		    = 0x0000
-PROGLOAD		    = 0x0100
+#define CONFIG_SWAP	1
 
-CONFIG_SWAP		    = 1
+#define INT_ENTER
+#define INT_EXIT
+#define DI		di
+
+#define EI		ei
+
+#define FAKE_IRET
