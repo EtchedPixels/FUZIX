@@ -1,6 +1,3 @@
-;
-;	Segment order matters
-;
 		.code
 
 .export __text		; We will need this for the syscall changes
