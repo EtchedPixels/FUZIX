@@ -16,15 +16,14 @@ __setjmp:
 	lxi	h,0
 	dad	sp		; get SP
 	xchg
-	mov	e,m
+	mov	m,e
 	inx	h
-	mov	d,m
+	mov	m,d
 	inx	h		; now points after saved SP
-	xchg
 	pop	d		; get return address
-	mov	e,m
+	mov	m,e
 	inx	h
-	mov	d,m
+	mov	m,d
 	inx	h		; now points after saved return
 	push	d		; put return back
 	mov	m,c		; Save BC
