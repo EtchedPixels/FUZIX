@@ -2,10 +2,13 @@
 #define TINYSD_H
 
 extern uint_fast8_t sd_shift[CONFIG_TD_NUM];
+extern uint_fast8_t sd_dev[CONFIG_TD_NUM];
 extern uint8_t tinysd_busy;
+extern uint8_t tinysd_unit;
 
 int sd_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t * dptr);
-uint8_t sd_init(void);
+uint8_t sd_init(uint_fast8_t unit);
+void sd_probe(void);
 
 /* Helpers */
 #ifndef SD_SPI_CALLTYPE
