@@ -52,6 +52,7 @@ extern uint16_t page_dev;
 
 #define CONFIG_TD_NUM	1
 #define CONFIG_TD_SD
+#define TD_SD_NUM	1
 
 #define plt_copyright()
 

@@ -35,14 +35,6 @@ uint8_t plt_param(char *p)
 
 void device_init(void)
 {
-    uint8_t t = sd_init();
-    if (t == 0)
-        return;
-    if (t & CT_BLOCK)
-        sd_shift[0] = 0;
-    else
-        sd_shift[0] = 9;
-    kputs("sd0: ");
-    td_register(sd_xfer, 1);
+    sd_probe();
     netdev_init();
 }

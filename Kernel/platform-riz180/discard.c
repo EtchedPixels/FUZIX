@@ -41,7 +41,7 @@ void device_init(void)
 {
 	ide_probe();
 #ifdef CONFIG_TD_SD
-	sd_init();
+	sd_probe();
 #endif
 #ifdef CONFIG_NET
 	netdev_init();

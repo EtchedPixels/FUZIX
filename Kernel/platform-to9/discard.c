@@ -29,28 +29,11 @@ void pagemap_init(void)
 #endif	
 }
 
-static void do_sd_probe(void)
-{
-
-	uint8_t t = sd_init();
-	int n;
-	if (t == 0)
-		return;
-	if (t & CT_BLOCK)
-		sd_shift[n] = 0;
-	else
-		sd_shift[n] = 9;
-
-	n = td_register(sd_xfer, 1);
-	if (n == -1)
-		return;
-}
-
-void sd_probe(void)
+void to_sd_probe(void)
 {
 	kputs("Probing SDDrive\n");
 	sd_type = SDIF_SDDRIVE;
-	do_sd_probe();
+	sd_probe();
 #if 0
 	/* Need to debug these and double check their 6846 interactions etc */
 	sdmoto_init();

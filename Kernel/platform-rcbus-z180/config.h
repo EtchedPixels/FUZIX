@@ -35,6 +35,7 @@
 #define CONFIG_TINYIDE_8BIT
 /* SD via CSIO : Needs an additional GPIO pin so not on all boards. */
 #define CONFIG_TD_SD
+#define TD_SD_NUM		1
 
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL

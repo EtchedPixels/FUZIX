@@ -47,6 +47,7 @@ extern uint16_t swap_dev;
 
 #define CONFIG_TD_NUM	1
 #define CONFIG_TD_SD
+#define TD_SD_NUM	1
 
 #define BOOT_TTY 513        /* Set this to default device for stdio, stderr */
 

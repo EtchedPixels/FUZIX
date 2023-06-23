@@ -33,9 +33,5 @@ void map_init(void)
 
 void device_init(void)
 {
-	uint8_t r = sd_init();
-	if (r == 0)
-		return;
-	sd_shift[0] = (r & CT_BLOCK) ? 0 : 9;
-	td_register(sd_xfer, 1);
+	sd_probe();
 }

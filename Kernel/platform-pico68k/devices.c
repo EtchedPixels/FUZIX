@@ -36,13 +36,5 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-	uint8_t t = sd_init();
-	if (t == 0)
-		return;
-	kputs("sd: ");
-	if (t & CT_BLOCK)
-		sd_shift[0] = 0;
-	else
-		sd_shift[0] = 9;
-	td_register(sd_xfer, 1);
+	sd_probe();
 }

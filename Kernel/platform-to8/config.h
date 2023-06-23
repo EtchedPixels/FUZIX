@@ -47,6 +47,7 @@
 
 #define CONFIG_TD_NUM	2
 #define CONFIG_TD_SD
+#define TD_SD_NUM	1
 
 /* Device parameters */
 #define NUM_DEV_TTY 1

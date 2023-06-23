@@ -54,6 +54,7 @@ extern uint16_t swap_dev;
 
 #define CONFIG_TD_NUM	2
 #define CONFIG_TD_SD
+#define TD_SD_NUM	1
 #define SD_SPI_CALLTYPE	__z88dk_fastcall
 
 /* UART0 as the console */

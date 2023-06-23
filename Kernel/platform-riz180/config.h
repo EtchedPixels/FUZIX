@@ -44,6 +44,7 @@
 #define CONFIG_TINYIDE_8BIT
 #ifdef CONFIG_WITH_SD
 #define CONFIG_TD_SD
+#define TD_SD_NUM	1
 #define SD_SPI_CALLTYPE	__z88dk_fastcall
 #endif
 

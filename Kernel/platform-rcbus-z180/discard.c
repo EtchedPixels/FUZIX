@@ -102,7 +102,7 @@ void device_init(void)
 {
 	ide_probe();
 	if (systype == 10) {	/* Has SD glue */
-		sd_init();
+		sd_probe();
 #ifdef CONFIG_NET
 		netdev_init();
 #endif
