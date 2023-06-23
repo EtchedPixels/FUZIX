@@ -106,10 +106,8 @@ void scsi_probe(uint_fast8_t my_id)
             if (scsi_probe_unit(n)) {
                 /* Attach the disk we found */
                 r = td_register(scsi_xfer, 1);
-                if (r == -2) {
-                    kprintf(": no more device slots.\n");
-                    break;
-                }
+                if (r < 0)
+                    continue;
                 /* If it was the first one remember it as it will
                    be our table base */
                 if (scsi_first == 0xFF)

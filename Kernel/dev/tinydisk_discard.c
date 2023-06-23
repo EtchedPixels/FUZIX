@@ -1,6 +1,9 @@
 /*
  *	A minimal implementation of MBR parsing for small systems. Only looks
  *	for primary partitions but does deal with swap finding.
+ *
+ *	TODO: way to call so that tinydisk_setup is told "but not swap")
+ *	TODO: allow module to be compiled in not discard and handle media change
  */
 
 #include <kernel.h>
@@ -48,7 +51,8 @@ static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 }
 #endif
 
-static uint_fast8_t tinydisk_setup(uint16_t dev)
+/* Take care as we want this routine to be callable post boot in some confgs in future */
+uint_fast8_t tinydisk_setup(uint16_t dev)
 {
 	uint32_t *lba = td_lba[dev];
 	uint_fast8_t n = 0;
@@ -84,11 +88,15 @@ static uint_fast8_t tinydisk_setup(uint16_t dev)
 }
 
 static uint8_t ntd;
+static uint8_t warned;
 
 int td_register(td_xfer rwop, uint_fast8_t parts)
 {
-	if (ntd == CONFIG_TD_NUM)
+	if (ntd == CONFIG_TD_NUM) {
+		if (!warned++)
+                    kprintf(": no more device slots.\n");
 		return -2;
+	}
 	td_op[ntd] = rwop;
 	if (parts) {
 		if (!tinydisk_setup(ntd)) {
