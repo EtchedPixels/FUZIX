@@ -19,7 +19,9 @@
 - Microlabs Grafyx reporting for graphics use only
 - Alpha technology supermem
 - Anitek MegaMem as a ramdisk/swap
+- Anitek Hypermem
 - FreHD specific features
+- Split base 128K kernel from a thunked kernel for the memory bank cards
 
 ## Unsupported
 
@@ -34,8 +36,6 @@ Put the relevant boot.jv3 disk on the FreHD and use the FredHD apps to make
 a floppy disk of it.
 
 ## Emulator Notes
-
-Always specify "-emtsafe"
 
 Copy boot.jv3 to disk4p-0 or disk4-0 and use hard4p-0 from the emulator with xtrs or a
 FredHD.

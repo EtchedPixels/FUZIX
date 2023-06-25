@@ -9,6 +9,7 @@ uint16_t ramtop = PROGTOP;
 __sfr __at 0xE0 irqstat;
 __sfr __at 0xEF irqack;
 
+uint8_t banktype;
 uint8_t vtattr_cap;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
