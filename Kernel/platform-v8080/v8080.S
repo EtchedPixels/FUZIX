@@ -98,7 +98,7 @@ map_kernel_di:
 
 	.export map_process
 	.export map_process_di
-	.export map_process_a
+	.export map_proc_a
 
 map_process:
 map_process_di:
@@ -106,7 +106,7 @@ map_process_di:
 	ora l
 	jz map_kernel
 	mov a,m
-map_process_a:
+map_proc_a:
 	out 21
 	ret
 
