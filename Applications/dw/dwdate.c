@@ -55,6 +55,8 @@ static int get_time( uint8_t *tbuf )
     d.rbufz = 6;
     
     ret = ioctl( fd, DRIVEWIREC_TRANS, &d );
+    if (ret)
+        perror("drivewire");
     close( fd );
     return ret;
 }
@@ -103,11 +105,8 @@ int main( int argc, char *argv[] ){
 	}
     }
 
-    x=get_time( buf );
-    if( x ){
-	perror("drivewire");
+    if (get_time(buf))
 	exit(1);
-    }
 
     /* figure out secs from epoc */
      
