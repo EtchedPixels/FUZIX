@@ -1,7 +1,7 @@
 #
 APPS = util cmd sh games cave cpm v7games games cursesgames \
        as09 ld09 netd SmallC MWC asz80 flashrom ue cpmfs plato \
-       emulators cpnet
+       emulators cpnet dw
 
 .PHONY: $(APPS)
 
@@ -69,6 +69,9 @@ emulators:
 
 cpnet:
 	+(cd cpnet; $(MAKE) -f Makefile.$(USERCPU))
+
+dw:
+	+(cd dw; $(MAKE) -f Makefile.$(USERCPU))
 
 clean:
 	(cd util; $(MAKE) -f Makefile.$(USERCPU) clean)
