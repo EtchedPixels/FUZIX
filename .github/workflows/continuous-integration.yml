@@ -35,7 +35,7 @@ jobs:
           ;;
           esp32)
           PKGS="esptool"
-          (cd ~ && git clone --depth=1 --recursive https://github.com/espressif/esp-idf.git)
+          (cd ~ && git clone -b v5.0.2 --depth 1 --recursive https://github.com/espressif/esp-idf.git)
           (cd ~/esp-idf && ./install.sh esp32)
           echo "setup_sh=. ~/esp-idf/export.sh" >> $GITHUB_ENV
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
