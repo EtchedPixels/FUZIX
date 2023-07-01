@@ -348,7 +348,6 @@ sub gen_ucp {
                     }
                 }
                 elsif ($cmd eq 'r') { # rm arg1: file
-	            print "DEBUG $arg1 is $paths{$arg1}\n";
                     if (exists $paths{$arg1}) {
                         if ($paths{$arg1} ne 'd') {
                             delete $paths{$arg1};
