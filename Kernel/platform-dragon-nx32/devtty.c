@@ -533,17 +533,24 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 	extern unsigned char fontdata_8x8[];
 
 	if (minor == 1) {
+#ifdef CONFIG_FONT8X8SMALL
+		uint16_t size = 0;
+		uint16_t base = 96 * 8;
+#else
 		uint16_t size = 128 * 8;
 		uint16_t base = 128 * 8;
+#endif
 		switch (arg) {
 		case VTFONTINFO:
 			return uput(&fontinfo, ptr, sizeof(fontinfo));
 		case VTSETFONT:
-			size = base = 0;
+			size = base;
+			base = 0;
 		case VTSETUDG:
 			return uget(fontdata_8x8 + base, ptr, size);
 		case VTGETFONT:
-			size = base = 0;
+			size = base;
+			base = 0;
 		case VTGETUDG:
 			return uput(fontdata_8x8 + base, ptr, size);
 		}
