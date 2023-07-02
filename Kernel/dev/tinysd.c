@@ -74,10 +74,11 @@ static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 
 int sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
+	uint32_t block = lba << sd_shift[dev];
 	tinysd_busy = 1;
 	tinysd_unit = sd_dev[dev];
 
-	if (sd_send_command(is_read ? CMD17 : CMD24, lba << sd_shift[dev]))
+	if (sd_send_command(is_read ? CMD17 : CMD24, block))
 		goto error;
 	if (is_read) {
 		if (sd_spi_wait(false) != 0xFE)
