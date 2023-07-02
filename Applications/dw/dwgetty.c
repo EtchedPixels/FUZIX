@@ -35,28 +35,30 @@ static struct utmp ut;
 
 char buff[128];
 
-void doEcho( int f )
+static const unsigned char d_echo[3]={ 255, 253, 1 };
+static const unsigned char d_noecho[3]={ 255, 254, 1 };
+static const unsigned char d_willecho[3]={ 255, 251, 1 };
+static const unsigned char d_wontecho[3]={ 255, 252, 1 };
+
+void doEcho(int f)
 {
-	unsigned char e[3]={ 255, 253, 1 };
-	write( f, e, 3 );
+	write(f, d_echo, 3);
 }
 
-void dontEcho( int f )
+
+void dontEcho(int f)
 {
-	unsigned char e[3]={ 255, 254, 1 };
-	write( f, e, 3 );
+	write(f, d_noecho, 3);
 }
 
-void willEcho( int f )
+void willEcho(int f)
 {
-	unsigned char e[3]={ 255, 251, 1 };
-	write( f, e, 3 );
+	write(f, d_willecho, 3);
 }
 
-void wontEcho( int f )
+void wontEcho(int f)
 {
-	unsigned char e[3]={ 255, 252, 1 };
-	write( f, e, 3 );
+	write(f, d_wontecho, 3);
 }
 
 void getrply( int f )
