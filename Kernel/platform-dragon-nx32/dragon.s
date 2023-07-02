@@ -32,8 +32,8 @@
 	.globl ___hard_ei
 	.globl ___hard_irqrestore
 
-        include "kernel.def"
-        include "../kernel09.def"
+	include "kernel.def"
+	include "../kernel09.def"
 
 
 	.area .vectors
@@ -287,6 +287,8 @@ _hdb_id:
 _hdb_type:
 	.db 0	
 
+	.area .text
+;
 ;	Joystick helper
 ;
 ;	jsread(buffer)
@@ -337,19 +339,20 @@ jsover:
 	bra jssearch
 jsdone:
 	ldb $FF20	; save fire button in bit 0
+	std ,x++
 	rts
+
+	.area .data
 jstmp:
 	.byte 0
 
 	.area .common
-
-
 ;
 ;	FIXME:
 ;
 firq_handler:
 badswi_handler:
-	    rti
+	rti
 
 ;
 ;	debug via printer port
@@ -363,6 +366,6 @@ outchar:
 	sta 0xFF20
 	rts
 
-	    .area .commondata
+	.area .commondata
 
 _need_resched: .db 0
