@@ -532,8 +532,6 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
 	extern unsigned char fontdata_8x8[];
 
-	if (is_dw(minor))	/* remove once DW get its own ioctl() */
-		return tty_ioctl(minor, arg, ptr);
 	if (minor == 1) {
 		uint16_t size = 128 * 8;
 		uint16_t base = 128 * 8;
