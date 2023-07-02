@@ -5,16 +5,19 @@ SRCS  = dw.c dwgetty.c dwterm.c dwdate.c
 OBJS = $(SRCS:.c=.o)
 APPS = $(OBJS:.o=)
 
-all: $(APPS) size.report
+all: $(APPS)
 
 $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 $(APPS): %: %.o
-	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
-
-size.report: $(APPS)
-	ls -l $^ > $@
+	$(LINKER) $^ -o $@.debug $(LINKER_OPT) $(LINKER_TAIL)
+ifdef ELF2FUZIX
+	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
+	$(ELF2FUZIX) -o $@ $@.bin
+else
+	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
+endif
 
 clean:
 	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
