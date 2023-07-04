@@ -81,13 +81,13 @@ char cconv( char c ){
    we can't do intensity - so text disappears */
 void ckint(){
 	if( (fc ==  bc)  &&  inten ){
-		fc = fc + 1 & 0x7 ;
+		fc = (fc + 1) & 0x7 ;
 		out52n( 'b', fc );
 	}
 }
 
 /* Send a char to the console, processing for ANSI/TELNET chars */
-void charout( char c ){
+void charout( unsigned char c ){
 	static char mode=0;
 	int i;
 
@@ -256,7 +256,7 @@ void charout( char c ){
 /* print string to console under ANSI/TELNET */
 int mywrite( char *ptr, int len ){
 	int i=len;
-	while( i-- ) charout( *ptr++ );
+	while( i-- ) charout( (unsigned char) *ptr++ );
 	return len;
 }
 
@@ -270,7 +270,7 @@ void quit(){
 
 /* Add string to input buffer */
 void addstr(char *s){
-	for( ; ibuf[opos++]=*s; s++ )
+	for( ; (ibuf[opos++] = *s); s++ )
 		if( lecho ) write(1,s,1);
 	opos--;
 }
@@ -406,9 +406,11 @@ int myread( void ){
 		}
 		return 0;
 	}
+	/* never reached */
+	return 0;
 }
 
-my_open( int argc, char *argv[]){
+void my_open( int argc, char *argv[]){
 	if( !argv[optind] ){
 		fddw=open("/dev/tty3", O_RDWR|O_NDELAY);
 	}
@@ -427,8 +429,6 @@ my_open( int argc, char *argv[]){
 	new.c_lflag &= ~ICANON;
 	new.c_oflag &= ~OPOST;
 	tcsetattr( fddw, TCSANOW, &new );
-
-
 }
 
 int main( int argc, char *argv[]){
@@ -505,6 +505,3 @@ int main( int argc, char *argv[]){
 		}
 	}
 }
-
-
-

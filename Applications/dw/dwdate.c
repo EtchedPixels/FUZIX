@@ -18,7 +18,7 @@ static const uint16_t mktime_moffset[12]= { 0, 31, 59, 90, 120, 151, 181, 212, 2
 
 int silent = 0; /* silent I/O failure flag */
 
-static int printe( char *s ){
+static void printe( char *s ){
     write(2, s, strlen(s) );
     write(2, "\n", 1 );
 }
@@ -68,7 +68,7 @@ static int get_time( uint8_t *tbuf )
 int main( int argc, char *argv[] ){
 
     int i,x;
-    char buf[6];
+    unsigned char buf[6];
     uint8_t year, month, day, hour, minute, second;
     uint32_t ret;   /* accumulator for conversion */
     int setflg = 0;     /* set system time flag */

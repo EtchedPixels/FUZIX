@@ -103,7 +103,6 @@ static int envn;
 static void envset(const char *a, const char *b)
 {
 	int al = strlen(a);
-	static char hptr[5];
 	/* May unalign the memory pool but we don't care by this point */
 	char *tp = sbrk(al + strlen(b) + 2);
 	if (tp == (char *) -1) {
@@ -309,8 +308,6 @@ int main( int argc, char *argv[])
 	int len;
 	char c[2];
 
-
-
 	if( argc<3){
 		pute("usage: dwgetty tty port\n" );
 		exit(-1);
@@ -338,14 +335,14 @@ int main( int argc, char *argv[])
 	write(f,"\r",1);
 
 	for( i=0; i<4; i++){
-		len=read(f,buff,128);
+		read(f,buff,128);
 	}
 	conn=buff[0];
 
 	write(f, join, strlen(join) );
 	write(f, &conn, 1 );
 	write(f, "\r", 1 );
-	len=read(f,buff,128);
+	read(f,buff,128);
 
        	new.c_iflag |= IGNCR;
 	tcsetattr( f, TCSANOW,  &new );
@@ -353,5 +350,3 @@ int main( int argc, char *argv[])
 	c[1]=argv[1][strlen(argv[1])-1];
 	getty( argv[1], c, f );
 }
-
-
