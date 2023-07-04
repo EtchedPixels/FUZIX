@@ -11,7 +11,7 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 $(APPS): %: %.o
-	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 size.report: $(APPS)
 	ls -l $^ > $@
