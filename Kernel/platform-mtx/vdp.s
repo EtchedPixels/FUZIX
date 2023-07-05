@@ -15,17 +15,12 @@
 	    .globl _plot_char
 	    .globl _vtattr_notify
 	    .globl _fontdata_6x8
-	    .globl vdp_save_romfont
 ;
 ;	Don't provide the global vt hooks in vdp1.s, we want to wrap them
 ;	for our dual monitor setup
 ;
 VDP_DIRECT   .equ	0
 VDP_IRQ	     .equ	0	; leave the vdp irq off
-
-;	Dummy for the vdp1.s code. We actually use the ROM font
-
-_fontdata_6x8:
 
 ;
 ;	On an MSX at 4Mhz our loop worst case is 26 clocks so for
@@ -37,32 +32,6 @@ _fontdata_6x8:
 .macro VDP_DELAY2
 	    nop
 .endm
-
-	    .area _DISCARD
-vdp_copych:
-	    ld b,#8
-copy1:
-	    out (c),l
-	    out (c),h
-	    VDP_DELAY
-	    inc hl
-	    in a,(1)
-	    VDP_DELAY
-	    out (c),e
-	    out (c),d
-	    out (1),a
-	    inc de
-	    djnz copy1
-	    ret
-vdp_save_romfont:
-	    ld hl,#0x1800
-	    ld de,#0x7c00	; 3C00 in write mode
-	    ld bc,#0x8002	; 128 chars, port 2
-vdp_fontcopy:
-	    call vdp_copych
-	    bit 7,d
-	    jr z,vdp_fontcopy	; DE = 0x8000 we are done
-	    ret
 
 	    .area _COMMONMEM
 
@@ -101,7 +70,7 @@ videopos6:
 
 _cursor_on:
 	     ld a, (_outputtty)
-	     cp #4
+	     cp #5
 	     jp nz,  cursor_on		; VDP
 	     pop hl
 	     pop de
@@ -118,14 +87,14 @@ _cursor_on:
 	     ret
 
 _cursor_off: ld a, (_outputtty)
-	     cp #4
+	     cp #5
 	     jp nz, cursor_off		; VDP
 _cursor_disable:
 	     ret
 
 _clear_across:
 	     ld a, (_outputtty)
-	     cp #4
+	     cp #5
 	     jp nz, clear_across
 	     pop hl
 	     pop de
@@ -154,7 +123,7 @@ clearbyte:
 
 _clear_lines:
 	     ld a, (_outputtty)
-	     cp #4
+	     cp #5
 	     jp nz, clear_lines
 	     pop hl
 	     pop de
@@ -188,7 +157,7 @@ clearone:
 
 _scroll_up:
 	     ld a, (_outputtty)
-	     cp #4
+	     cp #5
 	     jp nz, scroll_up
 
 	     ld hl, (crtcbase)
@@ -210,7 +179,7 @@ do_scroll:
 
 _scroll_down:
 	     ld a, (_outputtty)
-	     cp #4
+	     cp #5
 	     jp nz, scroll_down
 	     ld hl, (crtcbase)
 	     ld de, #0xFF80
@@ -218,7 +187,7 @@ _scroll_down:
 
 _plot_char:
 	     ld a, (_outputtty)
-	     cp #4
+	     cp #5
 	     jp nz, plot_char
 	     ; Plot via 6845
 	     pop hl

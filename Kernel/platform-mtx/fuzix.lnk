@@ -35,6 +35,7 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 vt.rel
+font6x8.rel
 platform-mtx/vdp.rel
 mm.rel
 bankfixed.rel

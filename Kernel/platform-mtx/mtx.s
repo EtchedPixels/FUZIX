@@ -50,9 +50,9 @@
 
 	    .globl _vdp_init
 	    .globl _vdp_restore_font
+	    .globl _vdp_load_font
 	    .globl _vdp_type
 	    .globl _vdp_wipe_consoles
-	    .globl vdp_save_romfont
 
 	    .globl _vtinit
 	    .globl _probe_prop
@@ -295,7 +295,7 @@ init_hardware:
 
 vdp_setup:
 	call	_vdp_init
-	call	vdp_save_romfont
+	call	_vdp_load_font
 	call	_vdp_restore_font
 	call	_vdp_wipe_consoles
 

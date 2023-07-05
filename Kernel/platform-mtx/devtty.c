@@ -50,7 +50,7 @@ static uint8_t vswitch;
 static uint8_t syscon = 1;	/* system console output */
 
 static uint16_t tty_present = 0xDF;	/* 2 serial, may be gap, 4 consoles, unused bit */
-static struct vt_switch ttysave[5];
+static struct vt_switch ttysave[6];	/* 0 unused */
 
 uint8_t prop80;			/* Propeller not a 6845 based 80 column interface */
 uint8_t has_6845;
@@ -104,7 +104,7 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
  */
 static void set_output(uint_fast8_t minor)
 {
-	outputtty = minor - 1;
+	outputtty = minor;
 }
 
 /*
@@ -241,9 +241,9 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 			return;
 		/* Need a 'defer conswitch' to clean up the IRQ handling */
 		irq = di();
-		if (outputtty != minor - 1) {
+		if (outputtty != minor) {
 			vt_save(&ttysave[outputtty]);
-			set_output(minor - 1);
+			set_output(minor);
 			vt_load(&ttysave[outputtty]);
 		}
 		vtoutput(&c, 1);

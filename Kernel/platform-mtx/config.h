@@ -13,6 +13,7 @@
 /* Multiple VT support */
 #define CONFIG_VT_MULTI
 #define MAX_VT	5
+#define CONFIG_FONT6X8
 /* Fixed banking */
 #define CONFIG_BANK_FIXED
 /* 16 48K banks, 1 is kernel */
