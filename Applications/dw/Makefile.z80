@@ -5,7 +5,7 @@ FCCOPTS = -O2
 
 SRCSNS =
 
-SRCS  = dw.c dwgetty.c dwterm.c
+SRCS  = dw.c dwgetty.c dwterm.c dwdate.c
 
 SRCSBAD = 
 
