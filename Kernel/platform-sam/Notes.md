@@ -14,7 +14,6 @@ This port provides fairly basic support for the following configurations
 	Planned:
 		AtomIDE controller (16bit IDE)
 		Joystick
-		Mouse
 		Floppy Disk
 		Serial I/O (no emulation so tricky)
 		MegaRAM (as a RAM disc)
