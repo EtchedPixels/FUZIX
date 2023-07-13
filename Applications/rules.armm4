@@ -9,12 +9,12 @@ CFLAGS += -DNSOCKET=4
 
 LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs -lc$(PLATFORM) -pie -static -no-dynamic-linker -z max-page-size=4
 LIBGCCDIR = $(dir $(shell $(CC) $(CFLAGS) -print-libgcc-file-name))
-LINKER_OPT += -L$(LIBGCCDIR) -lgcc -T $(FUZIX_ROOT)/Library/elf2flt.ld --no-export-dynamic -Bstatic -no-dynamic-linker
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc -T $(FUZIX_ROOT)/Library/elf2fltarm.ld --no-export-dynamic -Bstatic -no-dynamic-linker
 STRIP_OPT =
 CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_$(PLATFORM).o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_$(PLATFORM).o
 # ELF2FUZIX = PATH=$(CROSS_PATH_BIN):$(PATH) $(FUZIX_ROOT)/Library/tools/elf2bin -p arm-none-eabi
-ELF2FUZIX = $(FUZIX_ROOT)/Standalone/elf2aout -s 8192
+ELF2FUZIX = $(FUZIX_ROOT)/Standalone/elf2aout -s 8192 -v
 .SUFFIXES: .c .o
 HOSTCC = cc
 HAS_FP = yes

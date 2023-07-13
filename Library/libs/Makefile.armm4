@@ -1,16 +1,15 @@
 CC = arm-none-eabi-gcc
 AR = arm-none-eabi-ar
 PLATFORM = armm4
-_PLATFORM = armm0
 export PLATFORM
-CC_OPT = -mcpu=cortex-m4 -mtune=cortex-m4 -march=armv7e-m+nofp -mthumb -fpie -DPIE -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin -Wall -g -Os -c -I../include -I../include/armm4
+CC_OPT = -DUSE_SYSMALLOC -mcpu=cortex-m4 -mtune=cortex-m4 -march=armv7e-m+nofp -mthumb -fpie -DPIE -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin -Wall -g -Os -c -I../include -I../include/armm4
 ASM_OPT = -g -xassembler-with-cpp -DUSE_AOUT
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h
 KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
-SRC_CRT0 = crt0_$(_PLATFORM).S crt0nostdio_$(_PLATFORM).S
-OBJ_CRT0 = $(SRC_CRT0:$(_PLATFORM).S=$(PLATFORM).o)
+SRC_CRT0 = crt0_armm4.S crt0nostdio_armm4.S
+OBJ_CRT0 = $(SRC_CRT0:.S=.o)
 SRC_ASM = setjmp_armm0.S longjmp_armm0.S helpers_armm0.S
 OBJ_ASM = $(SRC_ASM:.S=.o)
 SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
@@ -162,8 +161,8 @@ readline$(PLATFORM).lib: $(OBJ_RL)
 $(OBJ_ASM):%.o: %.S
 	$(CC) $(ASM_OPT) -c -o $@ $(@:.o=.S)
 
-$(OBJ_CRT0):%$(PLATFORM).o: %$(_PLATFORM).S
-	$(CC) $(ASM_OPT) -c -o $@ $(@:$(PLATFORM).o=$(_PLATFORM).S)
+$(OBJ_CRT0):%.o: %.S
+	$(CC) $(ASM_OPT) -c -o $@ $(@:.o=.S)
 
 $(OBJ_C):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
@@ -194,5 +193,5 @@ clean:
 
 install: ;
 
-crt0_$(PLATFORM).o: crt0_template_$(_PLATFORM).def
-crt0nostdio_$(PLATFORM).o: crt0_template_$(_PLATFORM).def
+crt0_armm4.o: crt0_template_armm0.def
+crt0nostdio_armm4.o: crt0_template_armm0.def
