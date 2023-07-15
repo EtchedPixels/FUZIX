@@ -11,7 +11,7 @@ $(OBJS): %.o : %.c
 	$(CC) -c $(CFLAGS) $(COPT) $<
 
 $(APPS): %: %.o
-	$(LINKER) $^ -o $@.debug $(LINKER_OPT) $(LINKER_TAIL)
+	$(LINKER) $(CRT0) $^ -o $@.debug $(LINKER_OPT) $(LINKER_TAIL)
 ifdef ELF2FUZIX
 	$(STRIP) -o $@.bin $(STRIP_OPT) $@.debug
 	$(ELF2FUZIX) -o $@ $@.bin
