@@ -14,7 +14,6 @@
 # cpm22:	Designed for S.100 and similar setups. Uses BIOS plus Z80
 #		customisations
 # cromemco:	Cromemco with banked memory
-# dk-tm4c129x:	Texas Instruments Tiva C Series Development Board
 # dragon-mooh:	Dragon 32/64 with Mooh 512K card (or xroar emulator)
 # dragon-nx32:	Dragon 32/64 with Spinx 512K card (or xroar emulator)
 # dyno:		Z180 based platform using RomWBW
@@ -65,6 +64,7 @@
 # socz80:	Will Sowerbutt's FPGA SocZ80 or extended version
 # tc2068:	Timex TC2068/TS2068 with DivIDE/DivMMC disk interface
 # tiny68k:	Bill Shen's Tiny68K or T68KRC
+# tm4c129x:	Texas Instruments Tiva C Series Boards
 # to8:		Thomson TO8/TO9+
 # tomssbc:	Tom's SBC running in RAM
 # tomssbc-rom:	Tom's SBC using the 4x16K banked ROM for the kernel

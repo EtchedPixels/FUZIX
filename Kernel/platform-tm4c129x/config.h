@@ -3,7 +3,7 @@
 #include "tm4c129x.h"
 
 /* Set this to build for the EK board with the SPI wired to the breakout,
-   and ethernet for now disabled */
+   and ethernet for now disabled. Undef this for the DK board. */
 #define CONFIG_EK
 
 #undef CONFIG_AUDIO

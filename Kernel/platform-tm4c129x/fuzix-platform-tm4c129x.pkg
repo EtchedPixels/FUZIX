@@ -1,6 +1,6 @@
-package platform-dk-tm4c129x
+package platform-tm4c129x
 
-disable-pkg platform-dk-tm4c129x
+disable-pkg platform-tm4c129x
 
 l /etc/netrc /etc/netrc.orig
 r /etc/netrc
