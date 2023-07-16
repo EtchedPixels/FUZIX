@@ -126,7 +126,7 @@ The supported target is the rcbus 8085 card with onboard bank MMU.
 ### ARM
 
 ARM M0 is supported using gcc and targetting the Raspberry Pi Pico. ARM M4
-targets for the DK-TM4C129X.
+targets for the DK-TM4C129X and EK-TM4C129X.
 
 ### ESP8266
 
@@ -269,7 +269,7 @@ currently supported due to lack of documentation/example code.
 
 ### DK-TM4C129X
 
-An ARM development board
+An ARM development board.
 
 ### Dragon 32
 
@@ -293,6 +293,10 @@ Sergey Kiselev's EasyZ80. Very similar to the RCbus and RC2014 systems with
 also IM2 interrupt mode support.
 
 https://github.com/skiselev/easy_z80
+
+### EK-TM4C129X
+
+An ARM evaluation board.
 
 ### ESP8266
 
