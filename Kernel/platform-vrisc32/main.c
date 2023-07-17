@@ -4,15 +4,12 @@
 #include <printf.h>
 #include <devtty.h>
 
-uint32_t sysconfig;
-
 void plt_idle(void)
 {
 	/* FIXME: disable IRQ, run tty interrupt, re-enable ? */
-}
-
-void do_beep(void)
-{
+	irqflags_t irq = di();
+	tty_poll();
+	irqrestore(irq);
 }
 
 /*
@@ -53,7 +50,9 @@ void pagemap_init(void)
 	extern uint8_t _end;
 	uint32_t e = (uint32_t)&_end;
 	/* Allocate the rest of memory to the userspace */
-	kmemaddblk((void *)e, 0x00100000 - e);
+	/* This will do for our test code but a lot of real RiscV is split I and D spaces so will need
+	   us to add some kind of split allocator */
+	kmemaddblk((void *)e, 0x3FCE0000 - e);
 //	enable_icache();
 }
 

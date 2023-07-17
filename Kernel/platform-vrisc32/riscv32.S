@@ -45,7 +45,8 @@ plt_monitor:
 
 init_early:
 	la	t0,udata_block
-	sw	t0,%lo(udata_shadow)(gp)
+	la	t1,udata_shadow
+	sw	t0,(t1)
 	jr	ra
 
 #
@@ -53,10 +54,12 @@ init_early:
 #
 init_hardware:
 # set system RAM size(hardcode hacks for now) TODO
-	li	t0,1024
-	sw	t0,%lo(ramsize)(gp)
+	li	t0,384
+	la	t1,ramsize
+	sh	t0,(t1)
 	addi	t0,t0,-64
-	sw	t0,%lo(procmem)(gp)
+	la	t1,procmem
+	sh	t0,(t1)
 # Set up vectors
 # TODO timer enable etc
 	jr	ra

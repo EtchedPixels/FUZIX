@@ -2,7 +2,7 @@
 #include <version.h>
 #include <kdata.h>
 #include <blkdev.h>
-#include <devide.h>
+#include <devsd.h>
 #include <devsys.h>
 #include <tty.h>
 
@@ -35,7 +35,7 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-  devide_init();
+  devsd_init();
 }
 
 

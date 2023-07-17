@@ -36,7 +36,8 @@
 
 #define MAX_BLKDEV 4
 
-#define CONFIG_IDE
+#define CONFIG_SD
+#define SD_DRIVE_COUNT	1
 
 #define plt_copyright()
 

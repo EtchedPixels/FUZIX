@@ -19,7 +19,7 @@ syscall_handler:
 	.option norelax
 	la	gp,__global_pointer$
 	.option	pop
-	lw	tp,%lo(udata_shadow)(gp)
+	la	tp,udata_shadow
 	sw	sp,U_DATA__U_SYSCALL_SP(tp)
 	addi	sp,tp, UBLOCK_SIZE - 12
 	# Top of stack must match what is expected by fork()
