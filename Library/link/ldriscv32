@@ -29,14 +29,14 @@ esac
 done
 
 # Link it twice 4K apart
-riscv64-linux-gnu-ld -n -m elf32lriscv_ilp32 --no-relax $ARGS -o "$TARGET.b0" -T "$FUZIX_ROOT/Library/link/riscv32.link"
-riscv64-linux-gnu-ld -n -m elf32lriscv_ilp32 --no-relax $ARGS -o "$TARGET.b1" -T "$FUZIX_ROOT/Library/link/riscv32.link2"
+riscv-unknown-elf-ld -n -m elf32lriscv_ilp32 --no-relax $ARGS -o "$TARGET.b0" -T "$FUZIX_ROOT/Library/link/riscv32.link"
+riscv-unknown-elf-ld -n -m elf32lriscv_ilp32 --no-relax $ARGS -o "$TARGET.b1" -T "$FUZIX_ROOT/Library/link/riscv32.link2"
 # Generate a map from the non-offset one
-riscv64-linux-gnu-nm -n "$TARGET.b0" > "$TARGET.map"
-#riscv64-linux-gnu-nm -n "$TARGET.b1" > "$TARGET.map2"
+riscv-unknown-elf-nm -n "$TARGET.b0" > "$TARGET.map"
+#riscv-unknown-elf-nm -n "$TARGET.b1" > "$TARGET.map2"
 # Turn them binary
-riscv64-linux-gnu-objcopy -O binary "$TARGET.b0" "$TARGET.bin0"
-riscv64-linux-gnu-objcopy -O binary "$TARGET.b1" "$TARGET.bin1"
+riscv-unknown-elf-objcopy -O binary "$TARGET.b0" "$TARGET.bin0"
+riscv-unknown-elf-objcopy -O binary "$TARGET.b1" "$TARGET.bin1"
 # Deduce the relocations
 $FUZIX_ROOT/Library/tools/riscv32toaout "$TARGET.bin0" "$TARGET.bin1" "$TARGET" "$TARGET.map"
 # Clean up

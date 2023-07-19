@@ -43,7 +43,6 @@ void deliver_signals(void)
 
 void pagemap_init(void)
 {
-	uint8_t r;
 	/* Linker provided end of kernel */
 	/* TODO: create a discard area at the end of the image and start
 	   there */
@@ -79,49 +78,44 @@ uint8_t plt_udata_set(ptptr p)
 }
 
 extern uint8_t kernel_flag;
-extern uint32_t *get_usp();
-extern void set_usp(uint32_t *p);
 
-/* This is the contents of the kstack above the C call stack for the
-   exception routine. We will need to handle FPU in future FIXME */
-
-struct trapdata {
-	uint32_t reg[9];	/* Enter frame R0-R7 + old FP */
-	uint32_t ra;		/* Return address */
-	uint16_t psr;		/* Saved PSR */
-};
-
-static uint8_t pushd(uint32_t **usp, uint32_t v)
+/* Invoked whenever an exception occurs (except syscall at the moment) */
+void exception(uint32_t mepc, uint32_t mcause, uint32_t mvalue)
 {
-	(*usp) --;
-	return uputl(v, *usp);
-}
-
-/* Invoked whenever an exception occurs */
-void exception(struct trapdata *frame, uint32_t event)
-{
-	uint16_t m;
 	ptptr proc = udata.u_ptab;
 	static const uint8_t sigtable[] = {
-		SIGBUS,	/* Abort */
-		SIGFPE, /* Slave ? FPU or MMU fault - need to dig more */
-		SIGILL,	/* Tried to execute supervisor op (ilegal in NS speak) */
-		SIGFPE,	/* Division by zero */
-		SIGTRAP, /* Flag instruction saw F bit set */
-		SIGTRAP, /* Breakpoint trap */
-		SIGTRAP, /* Trace trap */
-		SIGILL /* Undefined opcode (aka illegal instruction) */
+		SIGBUS,		/* Instruction alignment */
+		SIGSEGV,	/* Access fault */
+		SIGILL,		/* Illegal instruction */
+		SIGIOT,		/* Breakpoint */
+		SIGBUS,		/* Load alignment */
+		SIGBUS,		/* Store/AMO alignment */
+		SIGSEGV,	/* Store/AMO access */
+		0,		/* Syscall from user */
+		0,		/* Syscall from S */
+		SIGILL,		/* Unused */
+		0,		/* Syscall from kernel mode */
+		SIGSEGV,	/* Instruction page fault */
+		SIGSEGV,	/* Load page fault */
+		SIGILL,		/* Unused */
+		SIGSEGV,	/* Store/AMO page fault */
 	};
-	uint8_t sig = sigtable[event];
-	uint32_t *kframe = (uint32_t *)frame;
-	uint32_t *usp;
-	int err;
+	uint8_t sig;
 
+	/* Interrupts also pass this way */
+	if (mcause & 0x80000000) {
+//TODO		platform_interrupt(mcause);
+		return;
+	}
+
+	if (mcause < 16)
+		sig = sigtable[mcause];
+	else
+		sig = SIGILL;
+
+	/* FIXME - kill off kernel_flag for udata.u_insys ? */
 	if (kernel_flag) {
-		uint8_t i;
-		/* FIXME dump registers nicely */
-		for (i = 0; i < 16; i++)
-			kprintf("%x\n", *++kframe);
+		kprintf("mepc %p mcause %d mvalue %p\n", mepc, mcause, mvalue);
 		panic("ktrap");
 	}
 	/* Signal ourselves. We take care that the return out of

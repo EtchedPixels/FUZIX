@@ -13,6 +13,7 @@
 	.globl	interrupt_handler
 
 
+#if 0
 syscall_handler:
 	.option	nopic
 	.option	push
@@ -20,6 +21,7 @@ syscall_handler:
 	la	gp,__global_pointer$
 	.option	pop
 	la	tp,udata_shadow
+	la	tp,(tp)
 	sw	sp,U_DATA__U_SYSCALL_SP(tp)
 	addi	sp,tp, UBLOCK_SIZE - 12
 	# Top of stack must match what is expected by fork()
@@ -66,7 +68,9 @@ return_via_signal:
 	jal	deliver_signals
 	# TODO - restore retval/error
 	mret
+#endif
 
+#if 0
 # As we are not expecting fancy MMU stuff we put some things on
 # the caller stack. With an MMU we'd need to use mscratch and switch
 # stacks.
@@ -151,6 +155,7 @@ with_signal:
 	#	destination
 	jal	deliver_signals
 	j	no_signal
+#endif
 
 doexec:
 	jal	__hard_di

@@ -1,5 +1,5 @@
-export CROSS_LD=riscv64-linux-gnu-ld
-export CROSS_CC=riscv64-linux-gnu-gcc
+export CROSS_LD=riscv-unknown-elf-ld
+export CROSS_CC=riscv-unknown-elf-gcc
 export CROSS_CCOPTS=-g -c -Os -fno-strict-aliasing -fno-builtin -fno-stack-protector -Wall
 CROSS_CCOPTS+= -march=rv32ima_zicsr -mabi=ilp32 -fdata-sections -ffunction-sections
 CROSS_CCOPTS += -static-libgcc -I$(ROOT_DIR)/cpu-riscv32 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include -I$(FUZIX_ROOT)/Library/include/riscv32

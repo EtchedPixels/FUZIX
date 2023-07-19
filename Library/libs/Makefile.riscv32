@@ -1,5 +1,5 @@
-CC = riscv64-linux-gnu-gcc
-AR = riscv64-linux-gnu-ar
+CC = riscv-unknown-elf-gcc
+AR = riscv-unknown-elf-ar
 PLATFORM = riscv32
 export PLATFORM
 CC_OPT = -march=rv32ima -mabi=ilp32 -static -static-libgcc -mstrict-align

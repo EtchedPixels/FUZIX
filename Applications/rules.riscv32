@@ -1,8 +1,8 @@
 PLATFORM = riscv32
-CROSS_COMPILE=riscv64-linux-gnu-
-CC = riscv64-linux-gnu-gcc
-ASM = riscv64-linux-gnu-as
-AR = riscv64-linux-gnu-ar
+CROSS_COMPILE=riscv-unknown-elf-
+CC = $(CROSS_COMPILE)gcc
+ASM = $(CROSS_COMPILE)as
+AR = $(CROSS_COMPILE)ar
 LINKER = $(FUZIX_ROOT)/Library/link/ldriscv32
 CFLAGS = -march=rv32ima -mabi=ilp32 -static -static-libgcc
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin
