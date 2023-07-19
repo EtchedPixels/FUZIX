@@ -4,7 +4,7 @@
 # Useful values for general work
 #
 # 2063:		John Winans Z80 Retro system
-# 68K-nano:	A small retrobrew 68000 platform with IDE disk
+# 68Knano:	A small retrobrew 68000 platform with IDE disk
 # amprolb:	The legendary Ampro Littleboard
 # amstradnc/nc100:	Amstrad NC100 (or emulator)
 # amstradnc/nc200:	Amstrad NC200 (or emulator)
@@ -46,6 +46,7 @@
 # rcbus-6809:	RCBUS with 6809 CPU card
 # rcbus-68hc11:	RCBUS wiht 68HC11 CPU
 # rcbus-8085:	RCBUs with 80C85 CPU and 8/56K memory banking
+# rbus-ns32k:   RCBus with NS32K CPU
 # rcbus-sbc64:  RCBUS Z80SBC64 128K system and RTC
 # rcbus-z180:	RCBUS Z180 systems running in Z180 mode (includes SC126 etc)
 # rhyophyre:	Andrew Lynch's rhyohphre Z180/NEC7220 graphics
