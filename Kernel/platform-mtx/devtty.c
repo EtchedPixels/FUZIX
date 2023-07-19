@@ -44,7 +44,7 @@ static uint8_t tmsinkpaper[5] = { 0, 0xF4 };
 static uint8_t tmsborder[5]  = {0, 0x04 };
 uint8_t vidmode;		/* mode of the moment */
 
-uint8_t inputtty;		/* input side */
+uint8_t inputtty = 1;		/* input side */
 uint8_t outputtty;		/* output side */
 static uint8_t vswitch;
 static uint8_t syscon = 1;	/* system console output */
@@ -185,7 +185,7 @@ void vdp_attributes(void)
 static void vdp_restore(void)
 {
 	irqflags_t irq = di();
-	uint_fast8_t minor = inputtty + 1;
+	uint_fast8_t minor = inputtty;
 
 	vidmode = vmode[minor];
 	if (vidmode) {
@@ -499,11 +499,11 @@ static void keydecode(void)
 	if (c) {
 		switch (keyboard_grab) {
 		case 0:
-			vt_inproc(inputtty + 1, c);
+			vt_inproc(inputtty, c);
 			break;
 		case 1:
 			if (!input_match_meta(c)) {
-				vt_inproc(inputtty + 1, c);
+				vt_inproc(inputtty, c);
 				break;
 			}
 			/* Fall through */
