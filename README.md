@@ -93,7 +93,7 @@ friends, while UMZIX has a neat unified "make anything" function.
 * None of the above have an O88 style common sequence compressor
 * CC65 can't handle larger objects on stack, and lacks float support
 * We need a 'proper' 65C816 C compiler
-* ACK 8080 lacks floating point support
+* CC85 lacks floating point support for 8080/8085
 
 [travis-image]: https://travis-ci.org/EtchedPixels/FUZIX.png?branch=master
 [travis-url]: https://travis-ci.org/EtchedPixels/FUZIX
