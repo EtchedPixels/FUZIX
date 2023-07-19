@@ -17,7 +17,7 @@ NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DHOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/net/
+CROSS_CCOPTS += -I. -I../dev/ -I../dev/net/
 
 CROSS_CC_HIGH = --codeseg COMMONMEM
 
