@@ -1,5 +1,5 @@
 #
 #	Fuzix version
 #
-export VERSION = 0.4pre1
+export VERSION = 0.4rc1
 export SUBVERSION = ""
