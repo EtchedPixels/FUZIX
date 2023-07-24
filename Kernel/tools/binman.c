@@ -207,8 +207,8 @@ int main(int argc, char *argv[])
 	        pack_discard = 1;
         }
 
-/*	if (end < s__INITIALIZER)
-		end = s__INITIALIZER; */
+	if (end < s__INITIALIZER)
+		end = s__INITIALIZER;
 	if (end < start) {
 		/* We are dealing with an unpacked binary where the end
 		   will instead be _HEAP */
