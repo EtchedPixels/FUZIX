@@ -1,5 +1,6 @@
 Experimental port for the SC108 mainboard plus CF card plus RTC or CTC card, or
-for the SC114 combo mainboard/backplane.
+for the SC114 combo mainboard/backplane. Should also work with the SC707 but
+this has not been tested yet.
 
 Cards required:
 
