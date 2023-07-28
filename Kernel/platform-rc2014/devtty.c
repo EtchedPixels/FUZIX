@@ -361,9 +361,15 @@ static uint8_t sio_carrier(uint_fast8_t minor)
 {
         uint8_t c;
 	uint8_t p = ttyport[minor];
+	irqflags_t irq;
+
+	irq = di();
 
 	out(p, 0);
 	c = in(p);
+
+	irqrestore(irq);
+
 	if (c & 0x08)
 		return 1;
 	return 0;
