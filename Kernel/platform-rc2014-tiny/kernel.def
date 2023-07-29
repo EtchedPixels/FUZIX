@@ -18,6 +18,6 @@ CPU_CLOCK_KHZ		.equ	7372
 
 ; Z80 CTC ports
 CTC_CH0		.equ	0x88	; CTC channel 0 and interrupt vector
-CTC_CH1		.equ	0x89	; CTC channel 1 (periodic interrupts)
-CTC_CH2		.equ	0x8A	; CTC channel 2
-CTC_CH3		.equ	0x8B	; CTC channel 3
+CTC_CH1		.equ	0x89	; CTC channel 1 (serial B)
+CTC_CH2		.equ	0x8A	; CTC channel 2 (timer)
+CTC_CH3		.equ	0x8B	; CTC channel 3 (timer count)
