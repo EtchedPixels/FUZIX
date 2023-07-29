@@ -16,6 +16,7 @@ typedef int (*td_xfer)(uint_fast8_t unit, bool is_read, uint32_t block, uint8_t 
 extern uint8_t td_page;
 extern uint8_t td_raw;
 
+
 #ifdef _TINYDISK_PRIVATE
 
 #define MAX_PART	4
@@ -26,5 +27,6 @@ extern td_xfer td_op[CONFIG_TD_NUM];
 
 /* Setup/discard time */
 int td_register(td_xfer rwop, uint_fast8_t parts);
+extern uint8_t td_next;
 
 #endif

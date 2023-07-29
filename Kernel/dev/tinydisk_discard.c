@@ -87,22 +87,22 @@ uint_fast8_t tinydisk_setup(uint16_t dev)
 	return 1;
 }
 
-static uint8_t ntd;
+uint8_t td_next;
 static uint8_t warned;
 
 int td_register(td_xfer rwop, uint_fast8_t parts)
 {
-	if (ntd == CONFIG_TD_NUM) {
+	if (td_next == CONFIG_TD_NUM) {
 		if (!warned++)
                     kprintf(": no more device slots.\n");
 		return -2;
 	}
-	td_op[ntd] = rwop;
+	td_op[td_next] = rwop;
 	if (parts) {
-		if (!tinydisk_setup(ntd)) {
-			td_op[ntd] = NULL;
+		if (!tinydisk_setup(td_next)) {
+			td_op[td_next] = NULL;
 			return -1;
 		}
 	}
-	return ntd++;
+	return td_next++;
 }
