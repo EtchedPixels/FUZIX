@@ -57,6 +57,7 @@
 # sbcv2:	RBC/N8VEM SBC v2
 # sc108:	Small Computer Central SC108 and SC114 systems
 # sc111:	Small Computer Central SC111 system
+# sc720:	Small Computer Central SC720 system
 # scorpion:	Scorpion 256K (and some relatives) with NemoIDE
 # scrumpel:	Scrumpel Z180 system
 # searle:	Searle Z80 system with modified ROM and a timer added
