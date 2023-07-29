@@ -563,7 +563,12 @@ _plt_reboot:
 	out (0x99),a
 	ld a,#0x81
 	out (0x99),a
-	; Should also turn off the CTC if present ?
+	; CTC off
+	ld a,#0x43
+	out (CTC_CH0),a
+	out (CTC_CH1),a
+	out (CTC_CH2),a
+	out (CTC_CH3),a
         ld hl, #(MPGENA << 8) | 0xD3    ; OUT (MPGENA), A
         ld (0xFFFE), hl                 ; put it at the very top of RAM
         xor a                           ; A=0

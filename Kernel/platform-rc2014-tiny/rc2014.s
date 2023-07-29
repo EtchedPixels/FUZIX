@@ -269,6 +269,12 @@ _plt_monitor:
 	di
 	halt
 _plt_reboot:
+	; Silence the CTC - ROMWBW blows up if the CTC is left running
+	ld a,#0x43
+	out (CTC_CH0),a
+	out (CTC_CH1),a
+	out (CTC_CH2),a
+	out (CTC_CH3),a
 	call map_kernel
 	rst 0
 
