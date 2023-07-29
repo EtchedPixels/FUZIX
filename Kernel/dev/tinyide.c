@@ -7,13 +7,14 @@
 #ifdef CONFIG_TD_IDE
 
 uint8_t ide_present = 0;
-uint8_t ide_master = 0xFF;
-uint8_t ide_slave = 0xFF;
+uint8_t ide_dev[TD_IDE_NUM];
+uint8_t ide_unit;
 
 int ide_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 {
+    ide_unit = ide_dev[dev];
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
-    ide_write(devh, (dev == ide_slave) ? 0xF0 : 0xE0) ;	/* LBA, device */
+    ide_write(devh, (ide_unit & 1) ? 0xF0 : 0xE0) ;	/* LBA, device */
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
 
     if (lba < 32 && !is_read)
@@ -44,6 +45,7 @@ int ide_ioctl(uint_fast8_t minor, uarg_t request, char *unused)
 {
     if (request != BLKFLSBUF)
         return -1;
+    ide_unit = ide_unit[minor];
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
     ide_write(devh , (minor & 0x80) ? 0x10 : 0x40) ;	/* LBA, device */
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
