@@ -18,6 +18,7 @@
 	    .globl map_restore
 	    .globl map_for_swap
 	    .globl map_buffers
+	    .globl size_ram
 
             ; imported symbols
 	    .globl _program_vectors
@@ -49,37 +50,56 @@ banktest:
 
 size_ram:
 	    ld hl,#0xE7FF
+	    ld (hl),#0			; Write current bank (1) with 0
+	    ld a,#0x21			; Write 2 read 1
+	    out (0xFF),a
+	    ld (hl),a			; Write to bank 2 we hope
+	    cp (hl)			; Did write go to reading bank
+	    jr nz, has_bank		; If it did we get NZ and skip
+	    ld hl,#64			; No paged memory, just base
+	    ld a,#0x11
+	    out (0xFF),a		; Back to memory normality
+	    ret
+has_bank:
 	    ld de,#0xE7FE
 	    ld a,#0xF1
 	    out (0xFF),a		; write all
 	    ; Now test each bank and see who is present. There can be holes
+	    ld a,#0xAA
+	    ld (hl),a
 	    xor a
 	    ld c,a
 	    ld b,a
 	    ld (de),a
 	    ld a,#0x11
 size_loop:
+	    push af
 	    call banktest
-	    jr z,nobank
+	    jr nz,nobank
 	    set 0,c		; mask of banks present
 	    inc b		; count of banks present
 nobank:
-	    sla a
+	    pop af
 	    sla c
+	    add a
 	    jr nc,size_loop  
 	    ld a,#0x11
 	    out (0xFF),a	; back to kernel map
 	    srl c
 	    ld (_bankmap),bc	; count and mask
-	    ; Compute 64 * B
-	    ; FIXME: should be 64K + 48K * pages - 1 unless we check
-	    ; especially for high bits
-	    ld hl,#0
-	    srl b
-	    rr l
-	    srl b
-	    rr l
-	    ld h,b
+	    ld a,b		; number of banks present (including base)
+	    add a
+	    add a
+	    add a
+	    add a		; x 16
+	    ld h,#0
+	    ld l,a
+	    ld d,h
+	    ld e,a
+	    add hl,hl		; x 32
+	    add hl,de 		; x 48
+	    ld de,#16		; base memory
+	    add hl,de
 	    ret
 
             .area _CODE
@@ -104,7 +124,9 @@ init_hardware:
 	    sbc hl, de
             ld (_procmem), hl
 	    ld hl,#0
+	    push hl
 	    call _program_vectors
+	    pop af
 	    ; FIXME: interrupt mode is per port target ?
             ret
 

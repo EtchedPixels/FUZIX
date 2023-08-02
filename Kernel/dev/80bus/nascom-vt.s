@@ -37,7 +37,8 @@ addr:
 		ld d,h		; DE is now 00xx where xx is the X value
 		add hl,hl	; x 32
 		add hl,hl	; x 64
-		ld de,#VIDEO
+		add hl,de
+		ld de,#VIDEO+10
 		add hl,de
 		ret
 
@@ -71,6 +72,7 @@ _plot_char:
 		push bc
 		push de
 		push hl
+		call addr
 		ld (hl),c
 		ret
 
@@ -84,19 +86,19 @@ _clear_lines:
 		push hl
 		ld c,d
 		ld d,#0
-wipenext:
-		push de
 		call addr
-		xor a
+		ld a,c		; A is now line count
+		or a
+		ret z
 wipeline:
 		ld b,#48
 wiper:		ld (hl),#' '
 		inc hl
 		djnz wiper
-		pop de
-		inc e
-		dec d
-		jr nz, wipenext
+		ld bc,#16
+		add hl,bc
+		dec a
+		jr nz, wipeline
 		ret
 
 _clear_across:
@@ -133,7 +135,6 @@ nextup:
 		ex de,hl
 		add hl,bc
 		ex de,hl
-		pop bc
 		dec a
 		jr nz,nextup
 		ret

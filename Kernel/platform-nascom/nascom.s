@@ -33,6 +33,7 @@
 	.globl map_process_always
 	.globl map_save_kernel
 	.globl map_restore
+	.globl map_for_swap
 
 	.globl s__COMMONMEM
 	.globl l__COMMONMEM
@@ -54,17 +55,19 @@ _bufpool:
 plt_interrupt_all:
 	ret
 
+; FIXME
 _plt_monitor:
-	rst 0x20
-
 _plt_reboot:
-	rst 0x00
+	di
+	halt
+	jr _plt_reboot
 
 nascom_nmi:
 	push	af
 	ld	a,(_int_disabled)
 	or	a
 	jr	nz, nmi_event
+	; TODO: for rtc queue and check in irqrestore
 	pop	af
 	retn
 	; We took an NMI but interrupts are enabled - fake an interrupt
@@ -83,13 +86,15 @@ _int_disabled:
 	.byte	1
 
 ; -----------------------------------------------------------------------------
-; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)
+; KERNEL MEMORY BANK (prob below 0xC000, only accessible when the kernel is mapped)
 ; -----------------------------------------------------------------------------
 	.area _CODE
 
 init_early:
 	im	1
         ret
+
+	.area _COMMONMEM
 
 _program_vectors:
 	; we are called, with interrupts disabled, by both newproc() and crt0
@@ -154,3 +159,91 @@ outwait:
 	.area	_COMMONDATA
 _nmikey:
 	.byte	0
+
+	.area	_COMMONMEM
+;
+;	Helpers for PIO IDE
+;
+;	TODO: user and swap mapping
+;
+
+	.globl _devide_read_data
+	.globl _devide_write_data
+	.globl _td_raw
+	.globl _td_page
+
+_devide_read_data:
+	pop	de
+	pop	hl
+	push	hl		; HL is address base of block
+	push	de
+	ld	bc,#0x0005	; B to 0, C to port
+	ld	a,(_td_raw)	; user/kernel/swap
+	cp	#2
+	jr	nz, not_swapin
+	ld	a,(_td_page)
+	call	map_for_swap
+	jr	doread
+not_swapin:
+	or	a
+	jr	z, doread
+	call	map_process_always
+doread:
+	call	r256		; returns with B 0 port C
+	call	r256
+	ld	a,#0xF8
+	out	(0x04),a
+	jp	map_kernel
+r256:
+	ld	a,#0xF0		; Lower CS0, put register number on bus, R high
+	out	(0x04),a
+	ld	a,#0xD0		; drop R
+	out	(0x04),a
+	ini			; sample
+	jr	nz,r256
+	ret
+
+_devide_write_data:
+	pop	de
+	pop	hl
+	push	hl		; HL is address base of block
+	push	de
+	ld	bc,#0x0005	; B to 0, C to port
+	ld	a,#0xCF
+	out	(0x07),a
+	xor	a
+	out	(0x07),a	; Set port B direction
+	ld	a,(_td_raw)	; user/kernel/swap
+	cp	#2
+	jr	nz, not_swapout
+	ld	a,(_td_page)
+	call	map_for_swap
+	jr	dowrite
+not_swapout:
+	or	a
+	jr	z, dowrite
+	call	map_process_always
+dowrite:
+	call	w256		; returns with B 0 port C
+	call	w256
+	ld	a,#0xF8		; raise CS0 and restore bus to idle
+	out	(0x04),a
+	ld	a,#0xCF
+	out	(0x07),a
+	ld	a,#0xFF
+	out	(0x07),a	; back to read
+	jp	map_kernel
+w256:
+	ld	a,#0xF0		; Lower CS0, put register number on bus, W high
+	out	(0x04),a
+	outi
+	jr	z,wlast
+	ld	a,#0xB0		; drop W
+	out	(0x04),a
+	jr	w256
+wlast:
+	ld	a,#0xB0
+	out	(0x04),a
+	ld	a,#0xF0
+	out	(0x04),a
+	ret

@@ -1,6 +1,7 @@
 /* Set if you want RTC support */
 #define CONFIG_RTC
-#define CONFIG_RTC_INTERVAL 100
+/* RTC is fast */
+#define CONFIG_RTC_INTERVAL 1
 /* We don't have a clock interrupt */
 #define CONFIG_NO_CLOCK
 /* Enable to make ^Z dump the inode table for debug */
@@ -17,7 +18,7 @@
 #define CONFIG_BANK_FIXED
 
 #define MAX_MAPS	16
-#define MAP_SIZE	0xE600
+#define MAP_SIZE	0xC000
 
 #define CONFIG_BANKS	1	/* 1 x 60K */
 
@@ -37,7 +38,7 @@
 
 #define SWAP_SIZE   0x60 	/* 48K in blocks (to get the udata stash) */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xBE00	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0xC000	/* vectors so its a round number of sectors */
 
 #define MAX_SWAPS	64	/* Should be plenty (2MB!) */
 
@@ -49,12 +50,11 @@
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define MAX_BLKDEV	4
-
 /* Device parameters */
 #define NUM_DEV_TTY 2	  /* Tackle 80bus serial later */
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
+#define CONFIG_DYNAMIC_SWAP	/* Swap file by partition */
 #define NBUFS    5       /* Number of block buffers - keep in sync with asm! */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
@@ -64,8 +64,11 @@
 #define CONFIG_DYNAMIC_BUFPOOL
 
 #define CONFIG_TD
-#define CONFIG_TD_NUM	1
-#define CONFIG_TD_SD
+#define CONFIG_TD_NUM	2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TINYIDE_8BIT
+#define TD_IDE_NUM	1
 
 extern void plt_discard(void);
 #define plt_copyright()

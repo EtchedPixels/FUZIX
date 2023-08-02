@@ -87,8 +87,8 @@ static uint8_t keyin[9];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
-static uint8_t shiftmask[8] = {
-	0, 0, 0, 0, 0, 0, 0, 7
+static uint8_t shiftmask[9] = {
+	0, 0, 0, 0, 0, 0, 0, 24
 };
 
 __sfr __at 0 kbd_data;
@@ -102,18 +102,18 @@ static void keyproc(void)
 
 	for (i = 0; i < 9; i++) {
 		/* Read the keyboard row */
-		keyin[i] = kbd_data;
+		keyin[i] = ~kbd_data & 0x7F;
 		kbd_data = 1;	/* Clock the keyboard */
 		key = keyin[i] ^ keymap[i];
 		if (key) {
-			int n;
-			int m = 1;
+			uint8_t n;
+			uint8_t m = 1;
 			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m)) {
 					if (!(shiftmask[i] & m))
 						keysdown--;
 				}
-				if ((key & m) && !(keymap[i] & m)) {
+				else if ((key & m) && !(keymap[i] & m)) {
 					if (!(shiftmask[i] & m)) {
 						keysdown++;
 						newkey = 1;
@@ -136,37 +136,43 @@ static void keyproc(void)
  *	Escape is shift-enter, cs is shift-backspace, there is a lf/ch button
  *	and a graph button that's basically unused but will no doubt excite
  *	emacs people 8)
+ *
+ *	The keyboard bits are rather confusing as they are not wired 1:1 as you
+ *	might expect. Instead the order is
+ *
+ *	S1 S2 S0 S4 S5 S3 S6 *
  */
 
 uint8_t keyboard[9][8] = {
 	/* just a shift in the top row */
 	{0, 0, 0, 0, 0, 0, 0, 0},
-	{0, KEY_UP, 't', 'x', 'f', '5', 'b', 'h'},
-	{0, KEY_LEFT, 'y', 'z', 'd', '6', 'n', 'j'},
-	{0, KEY_DOWN, 'u', 's', 'e', '7', 'm', 'k'},
-	{0, KEY_RIGHT, 'i', 'a', 'w', '8', ',', 'l'},
+	{ 'h', 'b', '5', 'f', 'x', 't', KEY_UP, },
+	{ 'j', 'n', '6', 'd', 'z', 'y', KEY_LEFT, },
+	{ 'k', 'm', '7', 'e', 's', 'u', KEY_DOWN, },
+	{ 'l', ',', '8', 'w', 'a', 'i', KEY_RIGHT, },
 	/*  FIXME: the ? is the graph key - what to do with it */
-	{0, '?', 'o', 'q', '3', '9', '.', ';'},
-	{0, '[', 'p', '1', '2', '0', '/', ':'},
-	{0, ']', 'r', ' ', 'c', '4', 'v', 'g'},
+	{ ';', '.', '9', '3', 'q', 'o', '?', },
+	{ ':', '/', '0', '2', '1', 'p', '[', },
+	{ 'g', 'v', '4', 'c', ' ', 'r', ']', },
 	/* What to do with ch ? */
-	{0, '?', '@', 0, 0, '-', KEY_ENTER, KEY_BS}
+	{ KEY_BS, KEY_ENTER, '-', 0, 0, '@', '?', },
 	/* Ch, @ shift cntrl - ... */
 };
 
 uint8_t shiftkeyboard[9][8] = {
 	/* just a shift in the top row */
 	{0, 0, 0, 0, 0, 0, 0, 0},
-	{0, KEY_UP, 'T', 'X', 'F', '%', 'B', 'H'},
-	{0, KEY_LEFT, 'Y', 'Z', 'D', '&', 'N', 'J'},
-	{0, KEY_DOWN, 'U', 'S', 'E', '\'', 'M', 'K'},
-	{0, KEY_RIGHT, 'I', 'A', 'W', '(', '<', 'L'},
+	{ 'H', 'B', '%', 'F', 'X', 'T', KEY_UP, },
+	{ 'J', 'N', '&', 'D', 'Z', 'Y', KEY_LEFT, },
+	{ 'K', 'M', '\'', 'E', 'S','U', KEY_DOWN, },
+	{ 'L', '<', '(', 'W', 'A', 'I', KEY_RIGHT, },
 	/* FIXME key graph ? */
-	{0, '?', 'O', 'Q', KEY_POUND, ')', '>', '+'},
-	{0, ' \\ ', ' P ', ' ! ', ' "', '^', '/', '*'},
+	{ '+', '>', ')', KEY_POUND, 'Q', 'O', '?', },
+	{ '*', '/', '"', '!', 'P', '\\', ':', },
+	{ 'G', 'V', '$', 'C', ' ', 'R', '_',  },
 	{0, '_', 'R', ' ', 'C', '$', 'V', 'G'},
 	/* What to do with ch ? */
-	{0, '?', '@', 0, 0, '=', KEY_ESC, KEY_BS},
+	{ KEY_BS, KEY_ESC, '=', 0, 0, '@', '?', },
 	/* Ch, @ shift cntrl - ... */
 };
 

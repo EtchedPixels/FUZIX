@@ -1,6 +1,6 @@
 
 CSRCS = devnascom.c mm58174.c
-CSRCS += devices.c main.c
+CSRCS += devices.c main.c ide.c
 DISCARD_CSRCS = discard.c
 
 ASRCS = nascom.s crt0.s
@@ -10,10 +10,10 @@ NASRCS = ../dev/80bus/nascom-vt.s ../dev/80bus/nascom-pagemode.s
 NASRCS += ../dev/80bus/gm8x9.s
 NSRCS = ../dev/80bus/devgm8x9.c
 
-DSRCS = ../dev/tinydisk.c ../dev/tinysd.c
-DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
+DSRCS = ../dev/tinydisk.c ../dev/tinyide.c
+DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
 
-DASRCS = ../dev/z80softspi.s ../dev/z80softsd.s
+#DASRCS = ../dev/z80softspi.s ../dev/z80softsd.s
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
@@ -61,3 +61,18 @@ image:
 	sdasz80 -o nasboot.s
 	sdldz80 -m -i nasboot.rel
 	makebin -s 1024 nasboot.ihx | dd of=nasboot.bin bs=512 skip=1
+
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
+
+diskimage: image
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Make the kernel into a floppy  (CP/M 77 track single sided 512 bytes/sector)
+	dd if=/dev/zero of=$(IMAGES)/boot.fd bs=394240 count=1
+	dd if=../fuzix.bin bs=256 skip=1 of=$(IMAGES)/boot.fd conv=notrunc
+	# Put the commondata somewhere we can mvoe up on boot
+	dd if=../fuzix.bin bs=256 skip=252 seek=223 count=4 of=$(IMAGES)/boot.fd conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

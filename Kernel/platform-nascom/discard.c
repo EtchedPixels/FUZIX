@@ -15,6 +15,8 @@ void device_init(void)
 	/* Time of day clock */
 	// FIXME : once we merge both versions of the RTC handling inittod();
 #endif
+	ide_pio_setup();
+	ide_probe();
 }
 
 void map_init(void)

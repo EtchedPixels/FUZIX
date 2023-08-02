@@ -8,7 +8,7 @@
 
 uint16_t ramtop = PROGTOP;
 uint8_t vtattr_cap;
-uint16_t swap_dev;
+uint16_t swap_dev = 0xFFFF;
 uint8_t clk_irq;		/* Set if the clock can cause interrupts */
 uint8_t plt_tick_present;
 
@@ -22,6 +22,7 @@ void plt_idle(void)
 {
 	irqflags_t irq = di();
 	tty_poll();
+	kbd_poll();
 	sync_clock();
 	irqrestore(irq);
 }
@@ -89,6 +90,8 @@ void plt_discard(void)
 	}
 }
 
+/* SD mode - todo */
+#ifdef CONFIG_NASCOM_SD
 /*
  *	SD card bit bang. For now just a single card to get us going. We
  *	should fix the cs asm to allow for multiple cards
@@ -194,3 +197,4 @@ dowrite:
   __endasm;
 }
 
+#endif
