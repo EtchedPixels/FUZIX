@@ -49,7 +49,7 @@ banktest:
 	    ret
 
 size_ram:
-	    ld hl,#0xE7FF
+	    ld hl,#0x0004
 	    ld (hl),#0			; Write current bank (1) with 0
 	    ld a,#0x21			; Write 2 read 1
 	    out (0xFF),a
@@ -61,7 +61,7 @@ size_ram:
 	    out (0xFF),a		; Back to memory normality
 	    ret
 has_bank:
-	    ld de,#0xE7FE
+	    ld de,#0x0005
 	    ld a,#0xF1
 	    out (0xFF),a		; write all
 	    ; Now test each bank and see who is present. There can be holes
