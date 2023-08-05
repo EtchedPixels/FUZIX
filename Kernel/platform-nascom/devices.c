@@ -7,6 +7,7 @@
 #include <vt.h>
 #include <devtty.h>
 #include <tinydisk.h>
+#include <gm833.h>
 
 struct devsw dev_tab[] =	/* The device driver switch table */
 {
@@ -24,6 +25,7 @@ struct devsw dev_tab[] =	/* The device driver switch table */
 	{nxio_open, no_close, no_rdwr, no_rdwr, no_ioctl},
 	{nxio_open, no_close, no_rdwr, no_rdwr, no_ioctl},
 	{nxio_open, no_close, no_rdwr, no_rdwr, no_ioctl},
+	{gm833_open, no_close, gm833_read, gm833_write, no_ioctl}
 };
 
 bool validdev(uint16_t dev)

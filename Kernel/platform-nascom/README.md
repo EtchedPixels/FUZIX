@@ -3,7 +3,7 @@
 ## Supported Hardware
 
 NASCOM
-Paged RAM cards (3 or 4 required) - eg GM806 
+Paged RAM cards (3 or 4 pages required) - eg GM806, GM862
 Z80PIO wired to a CF adapter
 MM58174 based RTC (only used for time sync right now)
 
@@ -21,18 +21,21 @@ FC00-FFFF		Kernel stacks and common data
 - Video
 - Serial
 - PIO CF adapter
+- GM822 RTC (or similar) as timer only
+- GM833 RAMDisc
 
 ## TODO 
+- Sort out remaining keyboard bits - *, ctrl etc
 - Floppy (nascom or gm ? - WIP)
 - Finish rewiring nmi key handler
 - Implement RTC NMI timer interrupt
 - Normal interrupt handling for timer on PIO bit
 - SD instead of CF (will be very slow though)
 - Full RTC
+- MAP80 card and maybe combos
 
 ## Longer Term : Add on cards
 - GM816 CTC for proper timer interrupt
-- GM833 ramdisc (for swap in particular)
 - AVC video
 - Gemini SASI/SCSI
 

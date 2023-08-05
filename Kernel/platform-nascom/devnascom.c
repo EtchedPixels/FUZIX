@@ -88,7 +88,7 @@ static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
 static uint8_t shiftmask[9] = {
-	0, 0, 0, 0, 0, 0, 0, 24
+	0, 0, 0, 0, 0, 0, 0, 0, 24
 };
 
 __sfr __at 0 kbd_data;
@@ -170,7 +170,6 @@ uint8_t shiftkeyboard[9][8] = {
 	{ '+', '>', ')', KEY_POUND, 'Q', 'O', '?', },
 	{ '*', '/', '"', '!', 'P', '\\', ':', },
 	{ 'G', 'V', '$', 'C', ' ', 'R', '_',  },
-	{0, '_', 'R', ' ', 'C', '$', 'V', 'G'},
 	/* What to do with ch ? */
 	{ KEY_BS, KEY_ESC, '=', 0, 0, '@', '?', },
 	/* Ch, @ shift cntrl - ... */

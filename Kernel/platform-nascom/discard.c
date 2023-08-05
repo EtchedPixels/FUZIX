@@ -11,12 +11,18 @@ uint16_t bankmap;
 
 void device_init(void)
 {
-#ifdef CONFIG_RTC
-	/* Time of day clock */
-	// FIXME : once we merge both versions of the RTC handling inittod();
-#endif
+	unsigned i;
+	/* TODO: rtc init proper */
 	ide_pio_setup();
 	ide_probe();
+	/* Check for a RAMdisc */
+	if (gm833_probe() && swap_dev == 0xFFFF) {
+		/* If we found no swap use ramdisc 0 as 512K of swap */
+		swap_dev = 0x0800;
+		for (i = 0; i < 10; i++)
+			swapmap_add(i * 48);
+	}
+	
 }
 
 void map_init(void)

@@ -8,7 +8,7 @@ ASRCS += tricks.s commonmem.s
 
 NASRCS = ../dev/80bus/nascom-vt.s ../dev/80bus/nascom-pagemode.s
 NASRCS += ../dev/80bus/gm8x9.s
-NSRCS = ../dev/80bus/devgm8x9.c
+NSRCS = ../dev/80bus/devgm8x9.c ../dev/80bus/devgm833.c
 
 DSRCS = ../dev/tinydisk.c ../dev/tinyide.c
 DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
