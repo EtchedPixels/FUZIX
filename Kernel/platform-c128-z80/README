@@ -14,17 +14,16 @@ Tested
 - Video
 
 Done (in debug)
-- Interrupt handling. Needs fleshing out to use the right timers (screw bitbang 300
-  baud serial).
+- Interrupt handling. Needs fleshing out to use the right timers.
 - Keyboard (seems to scan ok, need shift table setting)
 - SD card (hangs probing here)
-- Basic probing of Georam and REU
-- Sizing of Georam
+- Basic probing of Georam and REU. (Seems to be blowing up x128)
+- Sizing of Georam (ditto)
+- Sizing of REU
 
 To Do
 - Optimize keyboard (spot all rows up on a fast poll - a trick we should do
  on TRS80 and ZX machines too!). Init keyboard with a scan at boot
-- Sizing of REU
 - Sprite pointers and memory ?
 - 80 column video as tty2 ?
 - REU and GeoRAM swap
@@ -51,24 +50,26 @@ x128 -8 cpm.system.6228151676.d64 -cartmmcr mmcrbios.bin -mmcrcardimage /tmp/ide
 Memory map
 0000-00FF	MMU magic setup
 0100-01FF	MMU magic setup
-0200-EFFF	Bank 0/1
-F000-FFFF	Common
+0200-EFFF	Bank 0/1 (D000-DFFF sometimes IO overlay)
+F000-FFFF	Common space (some is MMu and stuff)
 		(Q: can we set up bank 0 common bank 1 video font to hide font)
 
-Kernel
-0000-00FF	Zero page (shared ?)
-0100-01FF	Ditto (need to look into this and the MMU switching of page 0 and 1)
-0200-E3FF	Kernel
-E400-E7FF	Console
-E800-EFFF	Font
-F000-FFFF	Common
+Kernel (bank 0 mostly)
+0000-0FFF	ROM support from CP/M
+1000-E3FF	Kernel	[will need some bits for the ROM vars ?]
+EC00-EFFF	Console
+F000-FDFC	Common	(have to leave FDFD-FF free due to ROM
+FE00-FEFF	Free (istack ?)
+FFxx		MMU and inter CPU magic
 
-User
+User (bank 1 mostly)
 0000-00FF	Zero page (shared ?)
 0100-01FF	User (investigate MMU issue - might have to make sure kenrel
 		0100-01FF is only boot discardables)
 0200-EFFF	User
-F000-FFFF	Common
+F000-FDFC	Common
+FE00-FEFF	Free (istack ?)
+FFxx		MMU and inter CPU magic
 
 with graphics flag need to think about VIC video modes and locations
 

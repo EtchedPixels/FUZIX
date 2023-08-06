@@ -43,8 +43,8 @@ __sfr __banked __at 0xDC0D intcia;
 
 void plt_interrupt(void)
 {
-	handle_keys();
-	timer_interrupt();
+	//handle_keys();
+	//timer_interrupt();
 	intack = 0xFF;
 	intcia;
 }

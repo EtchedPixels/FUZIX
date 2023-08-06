@@ -1,3 +1,4 @@
+
 ;
 ;	Minimal C128 support
 ;
@@ -65,16 +66,28 @@ init_hardware:
 	ld	(1),hl
 	ld	hl,#interrupt_handler
 	ld	(0x39),hl
+	ld	(0xFDFE),hl
 	ld	hl,#nmi_handler
 	ld	(0x67),hl
 	ld	a,#0xC3
 	ld	(0),a
 	ld	(0x38),a
+	ld	(0xFDFD),a
 	ld	(0x66),a
+	;	For now shut up the CIA
+	ld	bc,#0xDC0D
+	ld	a,#0x7F
+	out	(c),a
+	in	a,(c)
+	inc	b
+	;	And CIA2
+	ld	a,#0x7F
+	out	(c),a
+	in	a,(c)
 	ret
 
 ;=========================================================================
-; Common Memory (mapped low below ROM)
+; Common Memory (mapped at F000 upwards)
 ;=========================================================================
         .area _COMMONMEM
 
@@ -98,8 +111,6 @@ plt_interrupt_all:
 ;=========================================================================
 ; Memory management
 ;=========================================================================
-
-; TODO - use preloads for these and save the stacking
 
 ;=========================================================================
 ; map_process - map process or kernel pages
@@ -134,7 +145,7 @@ map_for_swap:
 map_process_always:
 map_process_always_di:
 	push	af
-	ld	a,#0x3F		; Process in bank 0
+	ld	a,#0x7F		; Process in bank 1
 	ld	(map),a
 	ld	(0xFF00),a
 	pop	af
@@ -151,7 +162,7 @@ map_kernel:
 map_kernel_restore:
 map_kernel_di:
 	push	af
-	ld	a,#0x7F		; Kernel in bank 1
+	ld	a,#0x3F		; Kernel in bank 0
 	ld	(map),a
 	ld	(0xFF00),a
 	pop	af
@@ -163,11 +174,11 @@ map_kernel_di:
 ; Outputs: none, all registers preserved
 ;=========================================================================
 map_restore:
-	push af
-	ld a,(saved_map)
-	ld (map),a
-	ld (0xFF00),a
-	pop af
+	push	af
+	ld	a,(saved_map)
+	ld	(map),a
+	ld	(0xFF00),a
+	pop	af
 	ret
 
 ;=========================================================================
@@ -176,18 +187,61 @@ map_restore:
 ; Outputs: none
 ;=========================================================================
 map_save_kernel:
-	push af
-	ld a,(map)
-	ld (saved_map),a
-	ld a,#0x7F
-	ld (0xFF00),a
-	pop af
+	push	af
+	ld	a,(map)
+	ld	(saved_map),a
+	ld	a,#0x3F
+	ld	(map),a
+	ld	(0xFF00),a
+	pop	af
 	ret
 
-map:	.byte	0x7F
-saved_map:
-	.byte	0x7F
+;
+; C128 specific. Map the I/O space from kernel
+;
+map_io:
+	push	af
+	ld	a,#0x3E
+	ld	(map),a
+	ld	(0xFF00),a
+	pop	af
+	ret
 
+map:	.byte	0x3F
+saved_map:
+	.byte	0x3F
+
+;
+;	I/O helpers. This is ugly. The C128 has memory mapped I/O at Dxxx
+;	The Z80 can access this via in and out but accesses to non existent
+;	ranges go to memory so it's useless for probing and some other
+;	activities.
+;
+ioread8:
+	call	map_io
+	ld	a,(bc)
+	jp	map_kernel
+iowrite8:
+	call	map_io
+	ld	(bc),a
+	jp	map_kernel
+ioread16:
+	call	map_io
+	ld	a,(bc)
+	ld	l,a
+	inc	bc
+	ld	a,(bc)
+	ld	h,a
+	jp	map_kernel
+iowrite16:
+	call	map_io
+	ld	a,l
+	ld	(bc),a
+	inc	bc
+	ld	a,h
+	ld	(bc),a
+	jp	map_kernel
+;
 ;=========================================================================
 ; Basic console I/O
 ;=========================================================================
@@ -230,7 +284,7 @@ geo_setup:
 	dec	c
 	out	(c),a	;	A is the page
 	ld	hl, (_rd_block)
-	ld	de , #0xDE00
+	ld	de, #0xDE00
 	ld	bc, #256
 	inc	a	;	next page - used during copy
 	;	BC DE HL set up for copy, A is the next page
@@ -284,6 +338,7 @@ reu_execute:
 	out	(c),l
 	inc	c
 	out	(c),h		; Set C128 ptr
+	inc	c
 	;	Now work out the block address
 	xor	a
 	out	(c),a		; Block address low is always 0
@@ -298,6 +353,7 @@ reu_execute:
 	out	(c),e
 	inc	c
 	out	(c),d
+	inc	c
 	ld	hl,(_rd_dptr)
 	add	hl,de		; Get final dptr for return
 	ld	(_rd_dptr),hl
@@ -308,109 +364,160 @@ reu_execute:
 	out	(c),a
 	jp	map_kernel
 
-	.area _DISCARD
+	;	.area _DISCARD
+	.area _CODE
 
 	; Detect and size the RAM disc options
 	.globl	_reu_probe
-_reu_probe:
-	xor	a		; Do a compare at kernel AA55
-	ld	(_rd_page),a	; if it is an REU then we'll end up AC55
-	ld	hl,#0xAA55
-	ld	(_rd_dptr),hl
-	ld	a,#0x93
-	call	reu_execute
-	ld	c,#2
-	in	a,(c)
-	cp	#0x55
-	jr	nz, not_reu
+
+;
+;	Read or write byte DE0.24 REU to/from HL
+;
+_reu_getb:
+	ld	a,#0x91
+	jr	_reu_getput
+_reu_putb:
+	ld	a,#0x90
+_reu_getput:
+	ld	(0xFF03),a	; bank 0, I/O on
+	push	af
+	ld	bc,#0xDF02
+	out	(c),l
 	inc	c
-	in	a,(c)
-	cp	#0xAC
-	jr	nz, not_reu
-	ld	l,#1
-	;	TODO size the REU by writing a number to each boundary
-	;	and seeing when it breaks or repeats
+	out	(c),h
+	inc	c
+	xor	a
+	out	(c),a
+	inc	c
+	out	(c),e
+	inc	c
+	out	(c),d
+	inc	c
+	ld	a,#1
+	out	(c),a
+	xor	a
+	out	(c),a
+	inc	c
+	out	(c),a
+	pop	af
+	ld	c,#1
+	out	(c),a
+	ld	(0xFF01),a	; bank 0 I/O off
 	ret
+
+_reu_probe:
+	call	map_io
+	ld	bc,#0xDF00
+	in	a,(c)
+	and	#0X07
+	ld	hl,#0
+	jp	nz, map_kernel	; low bits not zero - not an REU
+	ld	hl,#tag
+	ld	de,#0
+	ld	(hl),d
+	call	_reu_putb	; We write 0 into the first REU byte
+	ld	(hl),#0xAA
+	call	_reu_getb
+	ld	a,(hl)		; We scribbled over our tag byte and got it back
+	or	a		; if this isn't back to 0 it's not an REU
+	jr	nz, not_reu
+	;	Walk the 16MB space in 64K chunks tagging and testing
+_reu_test:
+	inc	d
+	ld	(hl),d
+	call	_reu_putb
+	call	_reu_getb
+	ld	a,(hl)
+	cp	d
+	jr	nz, _reu_over	; Write failed - end
+	push	de
+	ld	d,#0
+	call	_reu_getb
+	pop	de
+	ld	a,(hl)		; Write wrapped - end
+	or	a
+	jr	nz, _reu_over
+	inc	d
+	jr	nz, _reu_test	; Test all pages
+	ld	hl,#32768	; 16MB - fully loaded
+	ret
+_reu_over:
+	; D is the number of 64K banks (128 buffers per bank)
+	xor	a
+	srl	d
+	rra
+	ld	h,d
+	ld	l,e
+	jp	map_kernel
 not_reu:
 not_geo:
-	ld	l,#0
-	ret
+	ld	hl,#0
+	jp	map_kernel
+
+tag:	.byte	0
 
 	.globl	_geo_probe
 
 geopat:
 	ld	bc,#0xDFFF
-	out	(c),a
+	call	iowrite8
 	dec	c
 	xor	a
-	out	(c),a
+	call	iowrite8
 	; Selected block 0
 	ld	bc,#0xDE00
-	out	(c),l
-	inc	c
-	out	(c),h
-	ret
+	jp	iowrite16
 
-; Read first byte of the first bank
-georead:
-	ld	bc,#0xDFFF
-	xor	a
-	out	(c),a		; Bank L,0
-	dec	c
-	out	(c),a
-	ld	bc,#0xDE00
-	in	a,(c)
-	ret
-
-; Label a bank with its own number
-geowrite:
-	ld	bc,#0xDFFF
-	out	(c),l
-	xor	a
-	dec	c
-	out	(c),a
-	ld	bc,#0xDE00
-	out	(c),l
-	ret
 
 _geo_probe:
 	; Georam is a simple banked paged RAM at $DExx controlled by $DFFx
+	; The probe isn't quite as simple as we would like because the board
+	; may wrap or fail writes to absent blocks
+	ld	hl,#0xDE00		; DE address E also 0
+	ld	de,#0xDFFF		; Bank
+	call	map_io
 	xor	a
-	ld	hl,#0xAA55		; Write AA55
-	call	geopat
-	ld	a,#1
-	ld	hl,#0x55AA		; Write 55AA in a different page
-	call	geopat
-	xor	a			; read the initial word back
-	ld	bc,#0xDFFF
-	out	(c),a
-	inc	c
-	out	(c),a
-	ld	bc,#0xDE00
-	in	a,(c)
-	cp	#0xAA			; shoudl be AA 55 if not something else
-	jr	nz, not_geo
-	inc	c
-	in	a,(c)
-	cp	#0x55
-	jr	nz, not_geo
-	ld	l,#0
-geo_next:
-	call	geowrite
-	call	georead
-	or	a
+	ld	(0xDFFE),a		; Page 0 of 16K bank
+	; Do a quick RAM sanity check
+	ld	a,(hl)			; Grab what is there
+	inc	hl
+	cpl
+	ld	(hl),a			; Write complement a byte on
+	cpl
+	dec	hl
+	cp	(hl)			; Check the original matches
+	ld	a,#0			; Preserves flags
 	jr	nz, geo_wrap
-	inc	l
-	jr	nz, geo_next
-	; We found the full 4MB */
+geo_scan:
+	ld	(de),a			; Bank select
+	cpl
+	ld	(hl),a			; Mark with own code inverted
+	cp	(hl)			; Check it wrote
+	jr	nz, geo_wrap_c		; Off end of available memory
+	cpl
+	ld	(hl),a			; Mark with own code non inverted
+	cp	(hl)			; Check it wrote
+	jr	nz, geo_wrap		; Off end of available memory
+	ld	c,a			; Save bank number
+	xor	a
+	ld	(de),a			; Bank 0
+	ld	a,(hl)			; Check didn't wrap into bank 0
+	or	a			; should still be zero
+	ld	a,c			; Get bank number back into A
+	jr	nz, geo_wrap
+	inc	a
+	jr	nz, geo_scan		; Max 256 blocks
 	ld	hl,#8192		; 8192 blocks
-	ret
+	jp	map_kernel
+geo_wrap_c:
+	cpl
 geo_wrap:
-	; We found l 16K banks
+	; We found A 16K banks
 	ld	h,#0
+	ld	l,a
 	add	hl,hl
 	add	hl,hl
 	add	hl,hl
 	add	hl,hl
 	add	hl,hl
-	ret
+	jp	map_kernel

@@ -7,7 +7,7 @@
 #include <printf.h>
 #include <devrd.h>
 
-static uint8_t rd_present;		/* Unknown */
+static uint16_t rd_size[2];
 
 /* Hooks to asm interface */
 extern uint8_t rd_page;
@@ -51,6 +51,10 @@ static int rd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
     /* We must be careful here. Our stack on a swap is private but we are
        going to overwrite udata in some cases */
     while (ct < num) {
+        if (rd_block >= rd_size[minor]) {
+            udata.u_error = EIO;
+            break;
+        }
         op();
         /* rd_dptr is advanced by the asm helpers */
         rd_block++;
@@ -63,7 +67,7 @@ int rd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     /* Cheaper to add than shift for the 0/1 to 1/2 case only */
-    if(minor > 1 || !(rd_present & (minor + 1))) {
+    if(minor > 1 || rd_size[minor] == 0) {
         udata.u_error = ENODEV;
         return -1;
     }
@@ -84,6 +88,10 @@ int rd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 void rd_probe(void)
 {
-    rd_present = reu_probe();
-    rd_present |= geo_probe();
+    rd_size[0] = reu_probe();
+    if (rd_size[0])
+        kprintf("Probed %d KB REU.\n", rd_size[0] >> 1);
+    rd_size[1] = geo_probe();
+    if (rd_size[1])
+        kprintf("Probed %d KB GeoRAM.\n", rd_size[1] >> 1);
 }

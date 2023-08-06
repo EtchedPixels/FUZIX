@@ -2,9 +2,9 @@
  *	Platform configuration
  */
 
-#define MEM_TOP		0xF000
-#define PROC_SIZE	60
-#define SWAP_SIZE	0x79
+#define MEM_TOP		0xE000
+#define PROC_SIZE	56
+#define SWAP_SIZE	0x79	/* FIXME */
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -22,9 +22,9 @@
 #define CONFIG_BANKS	1
 #define TICKSPERSEC 10		/* Ticks per second */
 #define PROGBASE    0x0000	/* also data base */
-#define PROGLOAD    0x0000	/* also data base */
+#define PROGLOAD    0x0100	/* also data base */
 #define PROGTOP     MEM_TOP	/* Top of program */
-#define KERNTOP	    0xFFFF	/* Grow buffers up to user space (5FFx is vectors) */
+#define KERNTOP	    0xDFFF	/* Grow buffers up to user space */
 
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    MEM_TOP	/* Swap out program */
@@ -72,7 +72,7 @@ extern uint16_t swap_dev;
 /* Console: 40 column for simplicity to begin with */
 #define CONFIG_VT
 #define CONFIG_VT_SIMPLE
-#define VT_BASE		((uint8_t *)0xEC00)
+#define VT_BASE		((uint8_t *)0x1000)
 #define VT_WIDTH	40
 #define VT_HEIGHT	25
 #define VT_RIGHT	39

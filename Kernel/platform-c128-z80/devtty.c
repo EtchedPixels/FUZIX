@@ -87,7 +87,17 @@ uint8_t shiftkeyboard[8][8] = {
 	{ KEY_UP, KEY_F6, KEY_F4, KEY_F2, KEY_F8, KEY_LEFT, KEY_ENTER, KEY_DEL }
 };
 
-static uint8_t shiftmask[8];	/* TODO FIXME */
+static uint8_t shiftmask[8] = {
+	0x24,
+	0x08,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x01,
+	0x00
+};
+
 /* buffer for port scan procedure */
 uint8_t keybuf[8];
 /* Previous state */
@@ -98,7 +108,7 @@ static uint8_t newkey;
 static int keysdown = 0;
 
 /*
- *	Walk a 0 bit along CIA #1 port A, recording the port B values. TGhis captures
+ *	Walk a 0 bit along CIA #1 port A, recording the port B values. This captures
  *	they keyboard. Joytick is via a different setup and needs adding
  */
 static void update_keyboard(void)
@@ -160,7 +170,7 @@ void handle_keys(void)
 		uint8_t key = keybuf[i] ^ keymap[i];
 		if (key) {
 			uint8_t m = 0x80;
-			for (n = 8; n >= 0; n--) {
+			for (n = 0; n < 8; n++) {
 				if ((key & m) && (keymap[i] & m))
 					if (!(shiftmask[i] & m))
 						keysdown--;
