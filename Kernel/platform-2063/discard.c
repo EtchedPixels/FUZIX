@@ -52,7 +52,7 @@ void pagemap_init(void)
 
 void device_init(void)
 {
-	uint8_t r = sd_init();
+	uint8_t r = sd_init(0);
 	if (r == 0)
 		return;
 	kputs("sd0: ");
