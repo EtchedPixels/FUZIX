@@ -31,6 +31,7 @@
 # mtx:		Memotech MTX512 with SDX or SD (or MEMU emulator)
 # multicomp09:	Extended multicomp 6809
 # n8:		Retrobrew N8 home computer
+# nascom:	Nascom 2 or 3 with page mode RAM and SD on PIO
 # p112:		DX Designs P112
 # pcw8256:	Amstrad PCW series
 # pentagon:	Pentagon (spectrum not quite clone)
