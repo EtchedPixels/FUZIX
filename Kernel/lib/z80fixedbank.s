@@ -6,6 +6,9 @@
 ;
 ;	Assumption - fits into a fixed number of whole 256 byte blocks
 ;
+
+	.area _COMMONMEM
+
 bankfork:
 	ld b, #(U_DATA_STASH - PROGBASE)/256
 	ld hl, #PROGBASE	; base of memory to fork (vectors included)
