@@ -13,6 +13,12 @@ static uint8_t ide_present;
 
 static int ide_wait_op(uint8_t mask, uint8_t val)
 {
+	uint_fast8_t st = ide_read(status);
+	if (st == 0x00 || st == 0xFF) {
+		kputs(" - absent\n");
+		return -1;
+	}
+
 	while((ide_read(status) & mask) != val) {
 		if (timer_expired(giveup)) {
 			kputs(" - no response\n");
