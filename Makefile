@@ -31,7 +31,7 @@
 # mtx:		Memotech MTX512 with SDX or SD (or MEMU emulator)
 # multicomp09:	Extended multicomp 6809
 # n8:		Retrobrew N8 home computer
-# nascom:	Nascom 2 or 3 with page mode RAM and SD on PIO
+# nascom:	Nascom 2 or 3 with page mode RAM and CF on PIO
 # p112:		DX Designs P112
 # pcw8256:	Amstrad PCW series
 # pentagon:	Pentagon (spectrum not quite clone)
@@ -47,7 +47,7 @@
 # rcbus-6809:	RCBUS with 6809 CPU card
 # rcbus-68hc11:	RCBUS wiht 68HC11 CPU
 # rcbus-8085:	RCBUs with 80C85 CPU and 8/56K memory banking
-# rbus-ns32k:   RCBus with NS32K CPU
+# rcbus-ns32k:   RCBus with NS32K CPU
 # rcbus-sbc64:  RCBUS Z80SBC64 128K system and RTC
 # rcbus-z180:	RCBUS Z180 systems running in Z180 mode (includes SC126 etc)
 # rhyophyre:	Andrew Lynch's rhyohphre Z180/NEC7220 graphics
@@ -84,9 +84,9 @@
 # z80retro:	Peter Wilson's Z80Retro
 # z80pack:	Z80Pack virtual Z80 platform
 # zeta-v2:	Zeta v2 retrobrew SBC (for Zeta V1 see sbcv2)
+# zrc:		Bill Shen's Zrc platform
 # zx+3:		ZX Spectrum +3
 # zxdiv:	ZX Spectrum 128K with DivIDE/DivMMC interface
-# zrc:		Bill Shen's Zrc platform
 
 TARGET=rc2014
 
