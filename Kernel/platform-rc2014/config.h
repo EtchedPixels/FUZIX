@@ -16,13 +16,13 @@
 #define CONFIG_RC2014_SD
 /* Do not set this unless you have the propellor graphics card installed
    and with non TMS9918A firmware as it can't be probed so will be assumed */
-#define CONFIG_RC2014_PROPGFX
+#undef CONFIG_RC2014_PROPGFX
 /* Below is a work in progress */
 /* Set this if using a bus extender. This then builds a special kernel
    for big systems that has some cards on a bus extender. See README. Do not
    set for a "normal" RC2014 system.
  */
-#define CONFIG_RC2014_EXTREME
+#undef CONFIG_RC2014_EXTREME
 
 
 #define OFTSIZE		56
