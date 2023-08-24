@@ -52,7 +52,7 @@ image:
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o bank.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec.o ../syscall_exec16.o ../blk384.o \
+	../syscall_exec.o ../syscall_exec16.o ../blk400.o \
 	_memcpy.o _memset.o _strlen.o \
 	../usermem.o ../usermem_std-wrx6.o devtty.o \
 	/opt/aswrx6/lib/libwrx6.a
@@ -65,7 +65,7 @@ diskimage:
 	# Make a blank disk image with partition
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the bootstrap loader
-	dd if=loader.bin bs=512 skip=1 of=$(IMAGES)/disk.img conv=notrunc
+	dd if=fuzix.img of=$(IMAGES)/disk.img conv=notrunc
 	# Add the file system
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel

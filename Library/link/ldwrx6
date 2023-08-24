@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+#	For now just drop out -s
+#
+TARGET=a.out
+
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	-s)
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+#
+set -e
+#
+echo "ccwrx6 "$ARGS"-o "$TARGET
+ccwrx6 $ARGS -o "$TARGET"

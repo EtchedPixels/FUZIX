@@ -41,10 +41,6 @@ _plt_switchout:
 	xfr	s,a
 	sta	(_udata + U_DATA__U_SP)	; Save old SP
 
-        ; set inint to false
-	clab
-	stab	(_inint)
-
         ; find another process to run (may select this one again) returns it
         ; in A
         jsr	_getproc
@@ -114,7 +110,7 @@ not_swapped:
 	lda	(s+)
 	ldx	(s+)
 
-	ldbb	(_inint)
+	ldbb	(_udata + U_DATA__U_ININTERRUPT)
         bnz	swtchdone	; in ISR, leave interrupts off
 	jsr	___hard_ei
 swtchdone:
