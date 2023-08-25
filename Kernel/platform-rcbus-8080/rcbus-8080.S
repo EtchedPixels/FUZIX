@@ -97,6 +97,13 @@ tmswait:
 	;
 	mvi a,1
 	sta _tms9918a_present
+	;
+	;	Turn interrupts on
+	;
+	mvi a,0xF0
+	out 0x99
+	mvi a,0x81
+	out 0x99
 	jmp uart_config
 	;
 	;	We still need a clock. Pray we have a 82C54 card at 0x3C
