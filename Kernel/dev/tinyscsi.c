@@ -40,7 +40,7 @@ static const uint8_t cmd_sense[6] = {
   0x03, 0x00, 0x00, 0x00, 0x10, 0x00
 };
 
-int scsi_sense(uint8_t dev, uint8_t *buf)
+int scsi_sense(uint_fast8_t dev, uint8_t *buf)
 {
   /* The sense goes to kernel so save and restore the tinydisk map */
   uint8_t mem = td_raw;

@@ -6,7 +6,6 @@
 	.export	clear_across
 	.export	cursor_on
 	.export	cursor_off
-	.export	_cursor_disable
 
 	; graphics API
 	.export	_vdp_rop
@@ -72,6 +71,7 @@ setupl:	mov	a,m
 	mov	a,d
 	out	VDP_CTRL
 	inr	d
+	inx	h
 	dcr	b
 	jnz	setupl
 	ret
@@ -101,6 +101,7 @@ _vdp_out:
 ;
 _vdp_init:
 _vdp_setup40:
+	push	b
 	lxi	h,_vdp_text40
 	call	vdp_setup
 	lxi	h,scrollconf40
@@ -114,9 +115,11 @@ setlp:
 	inx	d
 	dcr	b
 	jnz	setlp
+	pop	b
 	ret
 
 _vdp_setup32:
+	push	b
 	lxi	h,_vdp_text32
 	call	vdp_setup
 	lxi	h,scrollconf32
@@ -167,6 +170,7 @@ not9918a:   ; Use the version register
 ;	Load the font into the stash area
 ;
 _vdp_load_font:
+	push	b
 	lxi	d,0x7C00
 	mov	a,e
 	out	VDP_CTRL	; Set write and font area
@@ -182,6 +186,9 @@ wipelow:			; below font
 	jnz	wipelow
 	call	lf256
 	call	lf256
+	call	lf256
+	pop	b
+	ret
 lf256:	; b is 0 at this point
 	VDP_DELAY
         mov	a,m
@@ -198,16 +205,17 @@ lf256:	; b is 0 at this point
 ;	Reset the font from the cache at 3C00-3FFF in the video memory
 ;
 _vdp_restore_font:
+	push	b
 	lxi	d,0x3c00
 	lxi	h,0x5054
 	in	VDP_CTRL
-	mvi	a,13
+fontnext:
 	mov	a,e
 	out	VDP_CTRL
 	mov	a,d
 	out	VDP_CTRL	
 	VDP_DELAY2
-	in	VD_DATA
+	in	VDP_DATA
 	mov	c,a
 	mov	a,e
 	out	VDP_CTRL
@@ -233,9 +241,11 @@ _vdp_restore_font:
 	mov	a,d
 	ani	0x40
 	jz	fontnext
+	pop	b
 	ret
 
 _vdp_wipe_consoles:
+	push	b
 	xra	a
 	out	VDP_CTRL
 	mov	b,a
@@ -250,12 +260,14 @@ wipe_con:
 	jnz	wipe_con
 	dcr	d
 	jnz	wipe_con
+	pop	b
 	ret
 
 _vdp_setcolour:
 	pop	h
 	pop	d
 	push	d
+	push	b
 	xra	a
 	out	VDP_CTRL
 	mov	b,a
@@ -268,6 +280,7 @@ set_cmap:
 	VDP_DELAY
 	dcr	b
 	jnz	set_cmap
+	pop	b
 	pchl
 
 _vdp_setborder:
@@ -332,10 +345,12 @@ pos32:
 ;	Eww.. wonder if VT should provide a hint that its the 'next char'
 ;
 #ifdef	VDP_DIRECT
+	.export _plot_char
 _plot_char:
 #endif
 plot_char:
-	lxi	h,2
+	push	b
+	lxi	h,4
 	dad	sp
 	mov	e,m
 	inx	h
@@ -357,8 +372,9 @@ plotit2:
 	out	VDP_CTRL		; address | 0x40
 	mov	a,c
 	out	VDP_DATA		; character
-popret:
+popbret:
 	pop	psw
+	pop	b
 	ora	a
 	rnz
 	ei
@@ -382,9 +398,11 @@ scrollbuf:
 ;	scroll_down(void)
 ;
 #ifdef	VDP_DIRECT
+	.export	_scroll_down
 _scroll_down:
 #endif
 scroll_down:
+	push	b
 	lda	_outputtty
 	dcr	a
 	add	a			; 1K per screen
@@ -432,15 +450,17 @@ down_1:
 	xchg			; and back into DE
 	dcr	b
 	jnz	upline
-	jmp	popret
+	jmp	popbret
 
 ;
 ;	scroll_up(void)
 ;
 #ifdef VDP_DIRECT
+	.export	_scroll_up
 _scroll_up:
 #endif
 scroll_up:
+	push	b
 	lda	_int_disabled
 	push	psw
 	di
@@ -496,21 +516,23 @@ up_1:
 	xchg
 	dcr	b
 	jnz	downline
-	jmp	popret
+	jmp	popbret
 
 #ifdef VDP_DIRECT
+	.export	_clear_lines
 _clear_lines:
 #endif
 clear_lines:
-	pop	h
-	pop	d	; E = line, C = count
-	pop	b
 	push	b
-	push	d
-	push	h
+	lxi	h,4
+	dad	sp
+	mov	e,m
+	inx	h
+	inx	h
+	mov	c,m
 	xra	a
 	cmp	c
-	rz
+	jz	nowork
 
 	lda	_int_disabled
 	push	psw
@@ -535,13 +557,18 @@ l1:	out	VDP_DATA	; Inner loop clears a line, outer counts
         jnz	l1
 	dcr	e
 	jnz	l2
-	jmp	popret
+	jmp	popbret
+nowork:
+	pop	b
+	ret
 
 #ifdef	VDP_DIRECT
+	.export	_clear_across
 _clear_across:
 #endif
 clear_across:
-	lxi	h,2
+	push	b
+	lxi	h,4
 	dad	sp
 	mov	e,m
 	inx	h
@@ -554,7 +581,7 @@ clear_across:
 	;	No lines ?
 	xra	a
 	cmp	c
-	rz
+	jz	nowork
 
 	lda	_int_disabled
 	push	psw
@@ -572,27 +599,28 @@ l3:	out	VDP_DATA
 	VDP_DELAY
 	dcr	b
 	jnz	l3
-	jmp	popret
+	jmp	popbret
 
 ;
 ;	cursor_on()		-	cursor on save old char
 ;
 #ifdef	VDP_DIRECT
+	.export	_cursor_on
 _cursor_on:
 #endif
 cursor_on:
-	pop	h
-	pop	d
-	pop	b
 	push	b
-	push	d
-	push	h
-	mov	e,c			;  X and Y into DE
+	lxi	h,4
+	dad	sp
+	mov	e,m
+	inx	h
+	inx	h
+	mov	d,m
 	lda	_outputtty
 	mov	c,a
 	lda	_inputtty
 	cmp	c
-	rnz
+	jnz	nowork
 	lda	_int_disabled
 	push	psw
 	di
@@ -600,14 +628,14 @@ cursor_on:
 	shld	cursorpos
 	xchg
 	mvi	b, 0x00			; reading
-	call videopos
+	call	videopos
 	mov	a,l
 	out	VDP_CTRL		; address
 	mov	a,h
 	out	VDP_CTRL		; address
 	VDP_DELAY2
 	in	VDP_DATA		; character
-	sta cursorpeek			; save it away
+	sta	cursorpeek		; save it away
 	xri	0x80			; write the cursor in inverse
 	mov	c,a
 	mvi	a,0x40
@@ -620,9 +648,11 @@ cursor_on:
 ;	cursor_off(void)	-	turn the cursor off, restore char
 ;
 #ifdef VDP_DIRECT
+	.export	_cursor_off
 _cursor_off:
 #endif
 cursor_off:
+	push	b
 	lda	_outputtty
 	mov	c,a
 	lda	_inputtty

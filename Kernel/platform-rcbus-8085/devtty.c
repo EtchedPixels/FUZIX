@@ -8,15 +8,23 @@
 #include <rcbus.h>
 
 static unsigned char tbuf1[TTYSIZ];
+static unsigned char tbuf2[TTYSIZ];
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
     {   tbuf1,   tbuf1,   tbuf1,   TTYSIZ,   0,   TTYSIZ/2 },
+    {   tbuf2,   tbuf2,   tbuf2,   TTYSIZ,   0,   TTYSIZ/2 },
 };
 
 static uint_fast8_t acia_minor;
 static uint_fast8_t uart_minor;
 static uint_fast8_t num_uart;
+
+/* Mostly not used yet but needed by VDP code for multi console */
+uint8_t inputtty = 1;
+uint8_t outputtty = 1;
+uint8_t vtattr_cap;
+uint8_t vidmode;
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
@@ -84,6 +92,10 @@ int tty_carrier(uint_fast8_t minor)
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
+  uint8_t ch = c;
+  /* Shadow the first console on the TMS 9918A */
+  if (minor == 1 && tms9918a_present)
+	vtoutput(&ch, 1);
   if (minor == acia_minor)
     ttyout_acia(c);
   else
@@ -189,4 +201,12 @@ void rctty_init(void)
     uart_minor = ++num_uart;
     /* TODO: set up and termios mask */
   }
+}
+
+void do_beep(void)
+{
+}
+
+void cursor_disable(void)
+{
 }

@@ -40,6 +40,15 @@
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
 
+#define CONFIG_VT
+/*#define CONFIG_VT_MULTI
+#define MAX_VT	4 */
+#define VT_HEIGHT	24
+#define VT_BOTTOM	23
+#define VT_WIDTH	40	/* vt_twidth */
+#define VT_RIGHT	39	/* vt_tright */
+#define CONFIG_FONT6X8
+
 #define CONFIG_TINYDISK
 #define CONFIG_TD_NUM	4
 #define CONFIG_TD_IDE
