@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <tinyide.h>
+#include <tinyscsi.h>
 #include <ch375.h>
 
 /*
@@ -47,5 +48,6 @@ void device_init(void)
 	ds1302_init();
 	ppide_init();
 	ide_probe();
+	scsi_init();
 	ch375_probe();
 }

@@ -1,14 +1,17 @@
 LIBPATH=../../Library/libs
 
-CSRCS += devices.c main.c devtty.c devinput.c
+CSRCS += devices.c main.c devtty.c devinput.c devscsi.c
 DISCARD_CSRCS = discard.c
 
-DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/ds1302_discard.c ../dev/tinydisk_discard.c
+DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/ds1302_discard.c
+DISCARD_DSRCS += ../dev/tinydisk_discard.c ../dev/tinyscsi_discard.c
+
 DSRCS = ../dev/tinyide.c ../dev/tinydisk.c ../dev/ds1302.c ../dev/ch375.c
+DSRCS += ../dev/tinyscsi.c
 
 CROSS_CCOPTS += -I../dev/
 
-ASRCS = crt0.S commonmem.S ppide.S rcbus-8085.S tricks.S vdp1.S
+ASRCS = crt0.S commonmem.S ppide.S rcbus-8085.S tricks.S vdp1.S ncr5380.S
 DASRCS = ../dev/ds1302_8085.S
 
 AOBJS = $(ASRCS:.S=.o)
@@ -60,6 +63,7 @@ image:
 	devinput.o ../devinput.o ../blk512.o \
 	../dev/tinydisk_discard.o ../dev/tinydisk.o ../dev/tinyide_discard.o \
 	../dev/tinyide.o ppide.o ../dev/ch375.o \
+	../dev/tinyscsi_discard.o ../dev/tinyscsi.o devscsi.o ncr5380.o \
 	../dev/ds1302.o ../dev/ds1302_discard.o ../dev/ds1302_8085.o \
 	../usermem_std-8085.o -m fuzix.tmpmap /opt/cc85/lib/lib8085.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
