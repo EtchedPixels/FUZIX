@@ -66,6 +66,75 @@ wipe:
 	ora c
 	jnz wipe
 
+;
+;	Now sort out the common across banks. We need to do this with our
+;	low memory pinned to the first bank
+;
+	lxi d,__common
+nextword:
+	mvi a,0x03		; read common RAM0 keep low RAM0
+	out 0xFF
+	lhlx
+	mvi a,0x43		; write common RAM1 low RAM0
+	out 0xFF
+	shlx
+	mvi a,0x13		; RAM2
+	out 0xFF
+	shlx
+	mvi a,0x53		; RAM3
+	out 0xFF
+	shlx
+	mvi a,0x07		; RAM4
+	out 0xFF
+	shlx
+	mvi a,0x47		; RAM5
+	out 0xFF
+	shlx
+	mvi a,0x17		; RAM6
+	out 0xFF
+	shlx
+	mvi a,0x57		; RAM7
+	out 0xFF
+	shlx
+	inx d
+	inx d
+	xra a
+	cmp d
+	jnz nextword
+
+	; Set up bankid for the paging code
+
+	lxi h,bankid
+	mvi a,0x03
+	out 0xFF
+	mov m,a
+	mvi a,0x43
+	out 0xFF
+	mov m,a
+	mvi a,0x13
+	out 0xFF
+	mov m,a
+	mvi a,0x53
+	out 0xFF
+	mov m,a
+	mvi a,0x07
+	out 0xFF
+	mov m,a
+	mvi a,0x47
+	out 0xFF
+	mov m,a
+	mvi a,0x17
+	out 0xFF
+	mov m,a
+	mvi a,0x57
+	out 0xFF
+	mov m,a
+
+	; Set up memory mapping for kernel entry
+	mvi a,0x57		; kernel, common of  init
+	sta curmap
+	out 0xFF		; Back to RAM 0, 0
+
         call init_hardware
 
         call _fuzix_main

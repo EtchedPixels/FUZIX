@@ -6,19 +6,29 @@
 #include <blkdev.h>
 #include <devfdc765.h>
 
+/*
+ *	The MMU map bits are arranged as
+ *
+ *	A16L A16H A17L A17H A18L A18H A19L A19H and resets to 0 (ROM)
+ *	on boot. We are entered with MMU mapping 3 and we use this
+ *	as our kernel
+ *
+ *	Our user mappings then become (using high and low of banks)
+ *	C3 33 F3 0F CF 3F FF
+ */
+
 void pagemap_init(void)
 {
-	/* 0x03 is the kernel mapping */
-	pagemap_add(0x83);
-	pagemap_add(0x23);
-	pagemap_add(0xA3);
-	pagemap_add(0x0B);
-	pagemap_add(0x8B);
-	pagemap_add(0x2B);
-	pagemap_add(0xAB);
-	/* We don't use the other 8K blocks at this point. We should
-	   eventually copy common into each bank and use part of that
-	   top space for user and fast udata switching like Z180 */
+	/* Low 0 is kernel map, high 0 unused except at boot */
+	pagemap_add(0xC3);
+	pagemap_add(0x33);
+	pagemap_add(0xF3);
+	pagemap_add(0x0F);
+	pagemap_add(0xCF);
+	pagemap_add(0x3F);
+	/* This one weill be picked up by init and must be first to
+	   match crt0.S */
+	pagemap_add(0xFF);
 }
 
 /* Nothing to do for the map of init */

@@ -28,14 +28,14 @@
 #define TICKSPERSEC 10   /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xDE00  /* Top of program, base of U_DATA copy */
+#define PROGTOP     0xE000  /* Top of program, base of U_DATA */
 #define PROC_SIZE   60	  /* Memory needed per process */
 
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
 
-#define SWAP_SIZE   0x70 	/* 56K in blocks (we actually don't need the low 256) */
+#define SWAP_SIZE   0x71 	/* 56K in blocks plus udata */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP	    0xE000	/* vectors so its a round number of sectors */
+#define SWAPTOP	    0xE200	/* vectors so its a round number of sectors */
 #define MAX_SWAPS   16		/* The full drive would actually be 85! */
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
