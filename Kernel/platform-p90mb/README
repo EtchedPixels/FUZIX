@@ -1,0 +1,13 @@
+Fuzix test for the P90MB
+
+TODO
+- Loader
+- Serial baud rate setting
+- I2C
+- UART 2 stop bits via mode 3 ?
+- External devices ?
+- Watchdog
+
+Longer Term
+- Play with soft control of upper address bits and buddy allocator
+
