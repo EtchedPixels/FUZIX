@@ -14,3 +14,7 @@
 #define EI		ei
 
 #define FAKE_IRET
+
+#define CH375_STATUS	0xBE
+#define CH375_CMD	0xBE
+#define CH375_DATA	0xBF

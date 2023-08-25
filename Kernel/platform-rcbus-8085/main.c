@@ -3,8 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devfdc765.h>
 #include <rcbus.h>
 
 uaddr_t ramtop = PROGTOP;

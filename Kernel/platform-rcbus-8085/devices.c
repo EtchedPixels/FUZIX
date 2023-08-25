@@ -4,8 +4,7 @@
 #include <tty.h>
 #include <devsys.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devide.h>
+#include <tinydisk.h>
 
 
 struct devsw dev_tab[5] =  /* The device driver switch table */
@@ -13,7 +12,7 @@ struct devsw dev_tab[5] =  /* The device driver switch table */
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
   /* 0: /dev/hd		Hard disc block devices */
-  {  blkdev_open, no_close,    blkdev_read,   blkdev_write, blkdev_ioctl },
+  {  td_open, 	  no_close,    td_read,       td_write,     td_ioctl     },
   /* 1: /dev/fd		Floppy disc block devices  */
   {  nxio_open,   no_close,    no_rdwr,       no_rdwr,      no_ioctl     },
   /* 2: /dev/tty	TTY devices */

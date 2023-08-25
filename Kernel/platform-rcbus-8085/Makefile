@@ -3,8 +3,8 @@ LIBPATH=../../Library/libs
 CSRCS += devices.c main.c devtty.c devinput.c
 DISCARD_CSRCS = discard.c
 
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c ../dev/ds1302_discard.c
-DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/ds1302.c
+DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/ds1302_discard.c ../dev/tinydisk_discard.c
+DSRCS = ../dev/tinyide.c ../dev/tinydisk.c ../dev/ds1302.c ../dev/ch375.c
 
 CROSS_CCOPTS += -I../dev/
 
@@ -57,8 +57,9 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec.o ../syscall_exec16.o  \
-	ppide.o devinput.o ../devinput.o ../blk512.o \
-	../dev/blkdev.o ../dev/mbr.o ../dev/devide.o ../dev/devide_discard.o \
+	devinput.o ../devinput.o ../blk512.o \
+	../dev/tinydisk_discard.o ../dev/tinydisk.o ../dev/tinyide_discard.o \
+	../dev/tinyide.o ppide.o ../dev/ch375.o \
 	../dev/ds1302.o ../dev/ds1302_discard.o ../dev/ds1302_8085.o \
 	../usermem_std-8085.o -m fuzix.tmpmap /opt/cc85/lib/lib8085.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map

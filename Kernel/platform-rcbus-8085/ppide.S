@@ -1,176 +1,148 @@
 #include "../kernel-8085.def"
-;
-;	First draft on an 8085 PPIDE driver.
-;
-;	Does not yet include swap support.
-;
 
-#define PPIDE_PPI_BUS_READ	0x92
-#define PPIDE_PPI_BUS_WRITE	0x80
+#define PPI_BUS_READ	0x92
+#define PPI_BUS_WRITE	0x80
 
-#define PPIDE_PPI_WR_LINE	0x20
-#define PPIDE_PPI_RD_LINE	0x40
+#define PPI_WR_LINE	0x20
+#define PPI_RD_LINE	0x40
 
-#define IDE_REG_STATUS		0x0F
+#define PPI_PORT_A		0x20
+#define PPI_PORT_B		0x21
+#define PPI_PORT_C		0x22
+#define PPI_CTRL		0x23
+
 #define IDE_REG_DATA		0x08
-
-#define BLKPARAM_ADDR_OFFSET	0
-#define BLKPARAM_IS_USER_OFFSET	2
+#define IDE_REG_STATUS		0x0F
 
 	.setcpu 8085
 
-	.code
+	.export _ide_read
 
-	.export _devide_readb
-;
-;	Read a byte from an IDE register and hand it back to the C code
-;
-_devide_readb:
+_ide_read:
 	ldsi 2
 	ldax d
-	out 0x22
-	push b
-	mov b,a
-	ori PPIDE_PPI_RD_LINE
-	out 0x22
-	in 0x20
+	out PPI_PORT_C
+	ori PPI_RD_LINE
+	out PPI_PORT_C
+	in PPI_PORT_A
 	mov l,a
-	mov a,b
-	out 0x22
-	mvi h,0
-	pop b
+	ldax d
+	out PPI_PORT_C
 	ret
 
-	.export _devide_writeb
-;
-;	Write a byte to an IDE register for C code
-;
-_devide_writeb:
-	ldsi 4
-	lhlx
-	ldsi 2
-	push b
+	.export _ide_write
 
-	mvi a,PPIDE_PPI_BUS_WRITE
-	out 0x23
-	ldax d
-	out 0x22
+_ide_write:
+	mvi a,PPI_BUS_WRITE
+	out PPI_CTRL
+	ldsi 2
+	ldax d			; register
+	mov l,a			; save
+	out PPI_PORT_C
+	ldsi 4
+	ldax d			; value
+	out PPI_PORT_A
+	xra a
+	out PPI_PORT_B
 	mov a,l
-	out 0x20
-	mov a,h
-	out 0x21
-	ldax d
-	mov b,a
-	ori PPIDE_PPI_WR_LINE
-	out 0x22
-	mov a,b
-	out 0x22
-	mvi a,PPIDE_PPI_BUS_READ
-	out 0x23
-	pop b
+	ori PPI_WR_LINE
+	out PPI_PORT_C
+	mov a,l
+	out PPI_PORT_C
+	mvi a,PPI_BUS_READ
+	out PPI_CTRL
 	ret
 
 	.common
 
 	.export _devide_read_data
-;
-;	Perform the data block transfer when reading. blk_op holds all the
-;	parameter information we need
-;
+
 _devide_read_data:
-	push b
-	; Point at the data register
-	mvi a,IDE_REG_DATA
-	out 0x22
-	; Get the destination buffer
-	lhld _blk_op + BLKPARAM_ADDR_OFFSET
-	; Set d and e up as fast copies of the values we need to out
-	mov d,a
-	ori PPIDE_PPI_RD_LINE
-	mov e,a
-	; If we are doing a user transfer map the process
-	; We don't yet support swap or buffer mappings (FIXME)
-	lda _blk_op + BLKPARAM_IS_USER_OFFSET
+	pop d
+	pop h
+	push h
+	push d
+	lda _td_raw
 	ora a
-	push psw
-	cnz map_proc_always
-	; 256 words per transfer
+	jz ide_rk
+	dcr a
+	jz ide_ru
+	lda _td_page
+	call map_for_swap
+	jmp ide_rk
+ide_ru:
+	call map_proc_always
+ide_rk:
+	push b
 	mvi b,0
-goread:
-	; Write the register | RD
-	mov a,e
-	out 0x22
-	; Read the byte back from the interface (no polling - it is faster
-	; than we are)
-	in 0x20
-	; Save it
+	mvi a, IDE_REG_DATA
+	out PPI_PORT_C			; Set up port ready for ready
+	mov d,a
+	ori PPI_RD_LINE
+	mov e,a
+readloop:
+	mov a,e				; Read cycle
+	out PPI_PORT_C
+	in PPI_PORT_A			; Get data
 	mov m,a
 	inx h
-	; Repeat for second byte
-	in 0x21
+	in PPI_PORT_B			; Get high byte
 	mov m,a
 	inx h
-	; Drop RD
 	mov a,d
-	out 0x22
-	; Check if done
+	out PPI_PORT_C			; RD back high
 	dcr b
-	jnz goread
-	; Fix up mappings
-	pop psw
+	jnz readloop			; Done ?
 	pop b
-	rz
 	jmp map_kernel
+
 
 	.export _devide_write_data
 
 _devide_write_data:
-	; Point at the data register
-	mvi a,IDE_REG_DATA
-	out 0x22
-	; Switch the bus direction on the 82C55 for ports A and B
-	mvi a,PPIDE_PPI_BUS_WRITE
-	out 0x23
-	; Get the source buffer
-	lhld _blk_op + BLKPARAM_ADDR_OFFSET
-	; Set up d and e as the register values we need to out
-	mvi d,IDE_REG_DATA
-	mvi e,IDE_REG_DATA + PPIDE_PPI_WR_LINE
-	; Map the user space if needed
-	; Need to do swap and buffer mappings properly
-	lda _blk_op + BLKPARAM_IS_USER_OFFSET
+	pop d
+	pop h
+	push h
+	push d
+	lda _td_raw
 	ora a
+	jz ide_wk
+	dcr a
+	jz ide_wu
+	lda _td_page
+	call map_for_swap
+	jmp ide_wk
+ide_wu:
+	call map_proc_always
+ide_wk:
 	push b
-	push psw
-	cnz map_proc_always
 	mvi b,0
-gowrite:
-	; Write bit off
-	mov a,d
-	out 0x22
-	; Now put the data value on the bus (the register is already set)
+	mvi a, IDE_REG_DATA
+	out PPI_PORT_C			; Set up port ready for ready
+	mov d,a
+	ori PPI_WR_LINE
+	mov e,a
+	mvi a, PPI_BUS_WRITE	; Set diredtion
+	out PPI_CTRL
+writeloop:
+	mov a,d				; Write high
+	out PPI_PORT_C
 	mov a,m
+	out PPI_PORT_A			; Put low byte
+	mov m,a
 	inx h
-	out 0x20
 	mov a,m
+	out PPI_PORT_B			; Put high byte
 	inx h
-	out 0x21
-	; Strobe write with data pending and settled
-	mov a,e
-	out 0x22
-	; Check if we are done
+	mov a,e				; Write low, strobe write
+	out PPI_PORT_C
 	dcr b
-	jnz gowrite
-	; Drop the write bit
+	jnz writeloop			; Done ?
 	mov a,d
-	out 0x22
-	; Put the bus back in the read direction as all other code expects
-	mvi a,PPIDE_PPI_BUS_READ
-	out 0x23
-	; Recover the mappings
-	pop psw
+	out PPI_PORT_C			; WR high
+	mvi a,PPI_BUS_READ
+	out PPI_CTRL			; Bus direction to read
 	pop b
-	rz
 	jmp map_kernel
 
 	.discard
@@ -182,7 +154,7 @@ gowrite:
 ;	for read state
 ;
 _ppide_init:
-	mvi a,PPIDE_PPI_BUS_READ
+	mvi a,PPI_BUS_READ
 	out 0x23
 	mvi a,IDE_REG_STATUS
 	out 0x22

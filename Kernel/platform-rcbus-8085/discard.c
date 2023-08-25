@@ -3,8 +3,8 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devfdc765.h>
+#include <tinyide.h>
+#include <ch375.h>
 
 /*
  *	The MMU map bits are arranged as
@@ -45,5 +45,7 @@ uint_fast8_t plt_param(char *p)
 void device_init(void)
 {
 	ds1302_init();
-	devide_init();
+	ppide_init();
+	ide_probe();
+	ch375_probe();
 }
