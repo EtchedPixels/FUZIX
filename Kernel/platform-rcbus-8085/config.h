@@ -59,6 +59,7 @@
 
 #define BOOT_TTY (512 + 1)/* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
+#define TTY_INIT_BAUD B115200	/* Hardwired generally */
 
 #define CMDLINE	NULL	  /* Location of root dev name */
 
