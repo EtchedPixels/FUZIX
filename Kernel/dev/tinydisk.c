@@ -71,7 +71,7 @@ fail:
 	return -1;
 }
 
-int td_open(uint8_t minor, uint16_t flag)
+int td_open(uint_fast8_t minor, uint16_t flag)
 {
 	uint8_t dev = minor >> 4;
 	minor &= 0x0F;
@@ -82,12 +82,12 @@ int td_open(uint8_t minor, uint16_t flag)
 	return 0;
 }
 
-int td_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int td_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	return td_transfer(minor, true, rawflag);
 }
 
-int td_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int td_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	return td_transfer(minor, false, rawflag);
 
