@@ -3,9 +3,6 @@ RCBUS 8085
 Initial support for the 8085 CPU/MMU + 16550A UART card setup
 using RCBUS.
 
-TODO: from compiler change (checked on other ports)
-- fprintf of a -1 int seems to produce nonsense - casting bug somewhere ?
-
 Supported Hardware
 
 	Etched Pixels 80C85/MMU card with CPU and MMU
@@ -24,7 +21,9 @@ Options
 
 To Enable
 	ACIA at 0xA0			(in progress)
-	Joystick at 0x01/0x02
+	CH375				(in progress)
+	NCR SCSI			(in progress)
+DONE	Joystick at 0x01/0x02
 	More serial ports
 	TMS9918A as console maybe ? (what to do for keyboard ? - PS2)
 	TMS9918A extended features?
@@ -65,7 +64,4 @@ file system and PC partition tables as normal.
 
 The emulator image can be run with
 
-rcbus-8085 -1 -r 512-8085.rom -B -I emu-ide.img -R
-
-but note that there is currently no timer emulation so there will be no
-timer interrupts and some behaviour will be very odd under emulation.
+rcbus-8085 -1 -r 512-8085.rom -B -I emu-ide.img -R -T
