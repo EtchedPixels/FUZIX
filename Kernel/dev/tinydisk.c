@@ -65,7 +65,7 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	}
 	return ct << 9;
 error:
-	kprintf("hd: I/O error\n");
+	kprintf("hd%c: I/O error\n", dev + 'a');
 fail:
 	udata.u_error = EIO;
 	return -1;
