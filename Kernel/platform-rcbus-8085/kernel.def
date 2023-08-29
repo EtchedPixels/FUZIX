@@ -15,9 +15,9 @@
 
 #define FAKE_IRET
 
-#define CH375_STATUS	0xBE
-#define CH375_CMD	0xBE
-#define CH375_DATA	0xBF
+#define CH375_STATUS	0xBF
+#define CH375_CMD	0xBF
+#define CH375_DATA	0xBE
 
 #define B_RST		0x80
 #define B_AACK		0x10
