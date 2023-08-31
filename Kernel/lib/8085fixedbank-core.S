@@ -91,11 +91,12 @@ _switchin:
 	ora a
 	jnz not_swapped
 	;
-	;	Swapping time. Interrupts back on
+	;	Swapping time. Interrupts back on. Can't yet do this
+	;	as it needs core changes (bank switch stacking etc)
 	;
-	ei
-	xra a
-	sta _int_disabled
+;	ei
+;	xra a
+;	sta _int_disabled
 	;
 	;	Can we rely on the compiler not mashing the stacked var ?
 	;
