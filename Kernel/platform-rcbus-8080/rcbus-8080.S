@@ -47,8 +47,8 @@ _plt_idle:
 _tms_interrupt:
 	in 0x99
 	ani 0x80
-	mov e,a
-	mvi d,0
+	mov l,a
+	mvi h,0
 	ret
 
 	.common
@@ -67,9 +67,9 @@ tmsinit:
 	mvi a,0x88
 	cmp d
 	jz tmsdone
-	mov a,d
-	out 0x99
 	mov a,m
+	out 0x99
+	mov a,d
 	out 0x99
 	inx h
 	inr d
@@ -263,6 +263,7 @@ map_buffers:
 .export map_proc
 .export map_proc_di
 .export map_proc_a
+.export map_for_swap
 
 map_proc:
 map_proc_di:
@@ -435,3 +436,121 @@ _jsin2:
 	in 0x02
 	mov l,a
 	ret
+
+;
+;	USB adapter
+;
+.export _ch375_rdata
+
+_ch375_rdata:
+	in CH375_DATA
+	mov l,a
+	ret
+
+.export _ch375_rstatus
+
+_ch375_rstatus:
+	in CH375_STATUS
+	mov l,a
+	ret
+
+.export _ch375_wcmd
+
+_ch375_wcmd:
+	pop h
+	pop d
+	mov a,e
+	out CH375_CMD
+	push d
+	pchl
+
+.export _ch375_wdata
+
+_ch375_wdata:
+	pop h
+	pop d
+	mov a,e
+	out CH375_DATA
+	push d
+	pchl
+
+.export _nap20
+;
+;	Worsr case is an 8MHz Tundra 80C85 @ 8 blocks per uS so 160 clocks
+;	of which we used 28 in the call/ret (so 132 left)
+;
+_nap20:
+	mvi a,10	; Gives us 133 clocks in the loop, 161 clocks total
+nap:
+	dcr a		; 4	(14 per loop + 7 on last)
+	jnz nap		; 10/7
+	ret
+
+	.common
+
+.export _ch375_rblock
+
+; These move 64 bytes at a time as the interface runs on USB URBs not disk
+; blocks
+_ch375_rblock:
+	pop d
+	pop h
+	push h
+	push d
+	push b		; Save BC required by ABI
+	lda _td_raw
+	ora a
+	jz rblock_k
+	dcr a
+	jz rblock_u
+	lda _td_page
+	call map_for_swap
+	jmp rblock_k
+rblock_u:
+	call map_proc_always
+rblock_k:
+	mvi b,32
+rblock:
+	in CH375_DATA
+	mov m,a
+	inx h
+	in CH375_DATA
+	mov m,a
+	inx h
+	dcr b
+	jnz rblock
+	pop b
+	jmp map_kernel
+
+
+.export _ch375_wblock
+
+_ch375_wblock:
+	pop d
+	pop h
+	push h
+	push d
+	push b		; Save BC required by ABI
+	lda _td_raw
+	ora a
+	jz wblock_k
+	dcr a
+	jz wblock_u
+	lda _td_page
+	call map_for_swap
+	jmp wblock_k
+wblock_u:
+	call map_proc_always
+wblock_k:
+	mvi b,32
+wblock:
+	mov a,m
+	out CH375_DATA
+	inx h
+	mov a,m
+	out CH375_DATA
+	inx h
+	dcr b
+	jnz wblock
+	pop b
+	jmp map_kernel

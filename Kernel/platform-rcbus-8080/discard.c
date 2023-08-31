@@ -35,5 +35,8 @@ uint_fast8_t plt_param(char *p)
 void device_init(void)
 {
 	ds1302_init();
-	devide_init();
+	ppide_init();
+	ide_probe();
+	scsi_init();
+	ch375_probe();
 }

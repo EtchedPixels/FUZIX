@@ -41,9 +41,11 @@
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
 
-#define CONFIG_IDE
-#define CONFIG_PPIDE
-#define MAX_BLKDEV 1	    /* One IDE */
+#define CONFIG_TINYDISK
+#define CONFIG_TD_NUM	4
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TD_SCSI
 
 #define swap_map(x)	((uint8_t *)(x)) /* Simple zero based mapping */
 

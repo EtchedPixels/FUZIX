@@ -1,14 +1,16 @@
 LIBPATH=../../Library/libs
 
-CSRCS += devices.c main.c devtty.c devinput.c
+CSRCS += devices.c main.c devtty.c devinput.c devscsi.c
 DISCARD_CSRCS = discard.c
 
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c ../dev/ds1302_discard.c
-DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/ds1302.c
+DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
+DISCARD_DSRCS += ../dev/tinyscsi_discard.c ../dev/ds1302_discard.c
+DSRCS = ../dev/tinydisk.c ../dev/tinyide.c ../dev/tinyscsi.c ../dev/ds1302.c
+DSRCS += ../dev/ch375.c
 
 CROSS_CCOPTS += -I../dev/
 
-ASRCS = crt0.S commonmem.S ppide.S rcbus-8080.S tricks.S vdp1.S
+ASRCS = crt0.S commonmem.S ncr5380.S ppide.S rcbus-8080.S tricks.S vdp1.S
 DASRCS = ../dev/ds1302_8080.S
 
 AOBJS = $(ASRCS:.S=.o)
@@ -49,7 +51,7 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin loader.tmp
 
 image: 
-	$(CROSS_LD) -b -C 0x0100 -S 0xE800 -X 0xD800 -o fuzix.bin crt0.o devices.o main.o \
+	$(CROSS_LD) -b -C 0x0100 -S 0xE800 -o fuzix.bin crt0.o devices.o main.o \
 	discard.o commonmem.o tricks.o rcbus-8080.o devtty.o \
 	../start.o ../version.o ../lowlevel-8080.o \
 	../bankfixed.o ../timer.o ../kdata.o  \
@@ -57,9 +59,11 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec.o ../syscall_exec16.o  \
-	ppide.o devinput.o ../devinput.o ../blk512.o \
-	../dev/blkdev.o ../dev/mbr.o ../dev/devide.o ../dev/devide_discard.o \
-	../dev/ds1302.o ../dev/ds1302_discard.o ../dev/ds1302_8080.o \
+	../dev/tinydisk.o ../dev/tinyscsi.o ../dev/tinyide.o \
+	../dev/tinydisk_discard.o ../dev/tinyide_discard.o \
+	../dev/tinyscsi_discard.o ppide.o devinput.o ../devinput.o \
+	devscsi.o ncr5380.o ../dev/ch375.o \
+	../blk512.o  ../dev/ds1302.o ../dev/ds1302_discard.o ../dev/ds1302_8080.o \
 	../usermem_std-8080.o -m fuzix.tmpmap /opt/cc85/lib/lib8080.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
 	../tools/pack85 <../fuzix.map fuzix.bin ../fuzix.bin

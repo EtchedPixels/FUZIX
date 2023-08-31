@@ -14,3 +14,32 @@
 #define EI		ei
 
 #define FAKE_IRET
+
+#define CH375_STATUS	0xBF
+#define CH375_CMD	0xBF
+#define CH375_DATA	0xBE
+
+#define B_RST		0x80
+#define B_AACK		0x10
+#define B_ASEL		0x04
+#define B_ABUS		0x01
+
+#define B_BUSY		0x40
+#define B_REQ		0x20
+#define B_MSG		0x10
+#define B_CD		0x08
+#define B_IO		0x04
+
+#define B_PHAS		0x08
+
+#define ncr_base	0x58
+#define ncr_data	ncr_base
+#define ncr_cmd		ncr_base + 1
+#define ncr_mod		ncr_base + 2
+#define ncr_tgt		ncr_base + 3
+#define ncr_bus		ncr_base + 4
+#define ncr_st		ncr_base + 5
+#define ncr_dma_w	ncr_base + 5
+#define ncr_int		ncr_base + 7
+#define ncr_dma_r	ncr_base + 7
+#define ncr_dack	ncr_base + 8
