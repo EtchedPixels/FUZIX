@@ -1,0 +1,66 @@
+; Keep these in sync with struct u_data;;
+
+#include "platform/kernel.def"
+
+#define U_DATA__U_PTAB              _udata+0   /* struct p_tab*	*/
+#define U_DATA__U_PAGE              _udata+2   /* uint16_t		*/
+#define U_DATA__U_PAGE2             _udata+4   /* uint16_t		*/
+#define U_DATA__U_INSYS             _udata+6   /* bool		*/
+#define U_DATA__U_CALLNO            _udata+7   /* uint8_t		*/
+#define U_DATA__U_SYSCALL_SP        _udata+8   /* void *		*/
+#define U_DATA__U_RETVAL            _udata+10  /* int16_t		*/
+#define U_DATA__U_ERROR             _udata+12  /* int16_t		*/
+#define U_DATA__U_SP                _udata+14  /* void *		*/
+#define U_DATA__U_ININTERRUPT       _udata+16  /* bool		*/
+#define U_DATA__U_CURSIG            _udata+17  /* int8_t		*/
+#define U_DATA__U_ARGN              _udata+18  /* uint16_t		*/
+#define U_DATA__U_ARGN1             _udata+20  /* uint16_t		*/
+#define U_DATA__U_ARGN2             _udata+22  /* uint16_t		*/
+#define U_DATA__U_ARGN3             _udata+24  /* uint16_t		*/
+#define U_DATA__U_ISP               _udata+26  /* void * initial stack pointer when _execing */
+#define U_DATA__U_TOP               _udata+28  /* uint16_t		*/
+#define U_DATA__U_BREAK             _udata+30  /* uint16_t		*/
+#define U_DATA__U_CODEBASE	    _udata+32  /* uint16_t		*/
+#define U_DATA__U_SIGVEC            _udata+34  /* table of function pointers void *	*/
+#define U_DATA__U_BASE              _udata+98  /* uint8_t *		*/
+#define U_DATA__U_COUNT             _udata+100 /* uint16_t		*/
+#define U_DATA__U_OFFSET            _udata+102 /* uint32_t		*/
+
+; Keep these in sync with struct p_tab;;
+#define P_TAB__P_STATUS_OFFSET      0
+#define P_TAB__P_FLAGS_OFFSET	    1
+#define P_TAB__P_TTY_OFFSET         2
+#define P_TAB__P_PID_OFFSET         3
+#define P_TAB__P_PAGE_OFFSET        15
+#define P_TAB__P_PAGE2_OFFSET       17
+
+#define P_RUNNING                   1   /* value from include/kernel.h */
+#define P_READY                     2   /* value from include/kernel.h */
+
+#define PFL_BATCH		    4	/* value from include/kernel.h */
+
+#define OS_BANK                     0	/* value from include/kernel.h */
+
+#define EAGAIN                      11	/* value from include/kernel.h */
+
+; Keep in sync with struct blkbuf
+#define BUFSIZE                     520
+
+; Currently only used for 8085
+
+#ifndef INT_ENTER
+#define INT_ENTER		; just use the automatic di
+#endif
+
+#ifndef INT_EXIT
+#define INT_EXIT		; nothing needed by default
+#endif
+
+#ifndef EI
+#define EI ei
+#endif
+
+#ifndef DI
+#define DI di
+#endif
+
