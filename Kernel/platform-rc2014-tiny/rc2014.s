@@ -551,3 +551,4 @@ inchar_acia:
 	jr z,inchar_acia		; no data, wait
 	in a,(ACIA_D)   		; read the character from the UART
 	ret
+

@@ -49,6 +49,8 @@
 	.globl interrupt_handler
 	.globl nmi_handler
 
+	.globl ___sdcc_enter_ix
+
 	.include "kernel.def"
 
         ; startup code
@@ -60,13 +62,25 @@ restart0:
 	jp init
 	.ds 5
 restart8:
-	.ds 8
+	jp	___sdcc_enter_ix
+	.ds 5
 restart10:
-	.ds 8
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds 3
 restart18:
-	.ds 8
+	pop	af
+	pop	ix
+	ret
+	.ds	4
 restart20:
-	.ds 8
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
+	.ds	3
 restart28:
 	.ds 8
 restart30:
@@ -162,4 +176,30 @@ wait_ready:
 	bit 6,a
 	jr z,wait_ready
 	ret
-	
+
+;
+;       Stub helpers for code compactness.
+;
+;   Note that sdcc_enter_ix is in the standard compiler support already
+;
+;   The first two use an rst as a jump. In the reload sp case we don't
+;   have to care. In the pop ix case for the function end we need to
+;   drop the spare frame first, but we know that af contents don't
+;   matter
+;
+
+___spixret:
+	ld      sp,ix
+	pop     ix
+	ret
+___ixret:
+	pop     af
+	pop     ix
+	ret
+___ldhlhl:
+	ld      a,(hl)
+	inc     hl
+	ld      h,(hl)
+	ld      l,a
+	ret
+
