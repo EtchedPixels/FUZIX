@@ -591,7 +591,7 @@ ___hard_di:
  di
  mov a,m
  mvi m,1
- mov e,a
+ mov l,a
  ret
 
 .export ___hard_irqrestore
