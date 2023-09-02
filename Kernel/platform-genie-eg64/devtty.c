@@ -250,7 +250,7 @@ void trstty_probe(void)
 }
 
 uint8_t keymap[8];
-static uint8_t keyin[8];
+uint8_t keyin[8];
 static uint8_t keybyte, keybit;
 static uint8_t newkey;
 static int keysdown = 0;
@@ -263,10 +263,10 @@ static void keyproc(void)
 	int i;
 	uint8_t key;
 
+	keyscan();
 	for (i = 0; i < 8; i++) {
 		/* Set one of A0 to A7, and read the byte we get back.
 		   Invert that to get a mask of pressed buttons */
-		keyin[i] = *(uint8_t *) (0x3800 | (1 << i));
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			int n;
@@ -426,7 +426,7 @@ void kbd_interrupt(void)
 {
 	/* Fast path. Scan all the matrix lines at once and see if any
 	   key is down in one quick check */
-	if (keysdown == 0 && *((volatile uint8_t *)0x38FF) == 0x00)
+	if (keysdown == 0 && anykey() == 0x00)
 		return;
 	newkey = 0;
 	keyproc();

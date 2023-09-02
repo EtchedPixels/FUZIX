@@ -34,8 +34,6 @@
 #define CONFIG_BANKS	1	/* 32K */
 
 /* Vt definitions */
-#define CONFIG_VT_SIMPLE
-#define VT_BASE		((uint8_t *)0x3C00)
 #define VT_MAP_CHAR(x)	vt_map_char(x)
 #define VT_WIDTH	64
 #define VT_HEIGHT	16

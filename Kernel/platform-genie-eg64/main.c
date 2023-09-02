@@ -27,12 +27,6 @@ void do_beep(void)
 {
 }
 
-/* Work around SDCC bugs */
-uint8_t sdcc_bug_2753(uint8_t v) __z88dk_fastcall
-{
-  return v;
-}
-
 __sfr __at 0xE0 irqstat3;
 __sfr __at 0xEC irqack3;
 
@@ -41,16 +35,16 @@ __sfr __at 0xEC irqack3;
 void plt_interrupt(void)
 {
   uint8_t dummy;
-  uint8_t irq = *((volatile uint8_t *)0x37E0);
+  uint8_t irq = ioread(0x37E0);
 
   tty_interrupt();
   kbd_interrupt();
 
   if (irq & 0x40)
-    dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37EC));
-  if (irq & 0x80) {	/* FIXME??? */
+    dummy = ioread(0x37EC);
+  if (irq & 0x80) {
     timer_interrupt();
-    dummy = sdcc_bug_2753(*((volatile uint8_t *)0x37E0));	/* Ack the timer */
+    dummy = ioread(0x37E0);	/* Ack the timer */
   }
 }
 
@@ -166,15 +160,4 @@ size_t strlen(const char *p)
   while(*p++)
     len++;
   return len;
-}
-
-uint8_t video_lower;
-
-uint8_t vt_map_char(uint8_t x)
-{
-  if (video_lower)
-    return x;
-  if (x >= 96 && x <= 127)
-    return x - 32;
-  return x;
 }

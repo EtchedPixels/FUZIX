@@ -5,13 +5,6 @@
 #include <kdata.h>
 #include "trs80.h"
 
-void vt_check_lower(void)
-{
-  *VT_BASE = 'a';
-  if (*VT_BASE == 'a')
-    video_lower = 1;
-}
-
 void device_init(void)
 {
 #ifdef CONFIG_RTC

@@ -1,4 +1,3 @@
-
 extern uint8_t trs80_model;
 #define TRS80_MODEL1	0
 #define TRS80_MODEL3	1
@@ -41,3 +40,9 @@ extern uint8_t video_lower;	/* Lowercase available */
  */
 
 extern void bufsetup(void);
+
+/* Helpers for I/O as I/O is not usually mapped in kernel space */
+extern void keyscan(void);
+extern uint8_t anykey(void);
+extern void vt_check_lower(void);
+extern uint8_t ioread(uint16_t addr) __z88dk_fastcall;

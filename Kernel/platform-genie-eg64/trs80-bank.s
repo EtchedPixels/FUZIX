@@ -17,6 +17,7 @@
 	.globl map_for_swap
 	.globl map_save_kernel
 	.globl map_restore
+	.globl map_io
 
         ; imported symbols
         .globl _ramsize
@@ -59,14 +60,14 @@ init_hardware:
         ld (0x0031), hl
 
         ; Set vector for jump to NULL
-        ld (0x0000), a   
+        ld (0x0000), a
         ld hl, #null_handler  ;   to Our Trap Handler
         ld (0x0001), hl
 
         ld (0x0066), a  ; Set vector for NMI
         ld hl, #nmi_handler
         ld (0x0067), hl
-	
+
 	ld hl,#96
 	ld (_ramsize),hl
 	ld hl,#39
@@ -89,7 +90,7 @@ map_kernel:
 map_kernel_di:
 map_kernel_restore:
 	push af
-	ld a,#0xC0		; Internal memory, ROM unmapped, IO
+	ld a,#0xE0		; Internal memory, ROM unmapped, IO unmapped
 	ld (map_state),a
 	out (0xC0),a
 	pop af
@@ -100,7 +101,7 @@ map_for_swap:
 map_proc_always:
 map_proc_always_di:
 	push af
-	ld a,#0xD0		; External high, ROM unmapped, IO
+	ld a,#0xD0		; External high, ROM unmapped, IO mapped
 	ld (map_state),a	; (so we can do screen mapping)
 	out (0xC0),a
 	pop af
@@ -113,13 +114,19 @@ map_save_kernel:
 	ld (map_state),a
 	out (0xC0),a
 	pop af
-	ret	
+	ret
 map_restore:
 	push af
 	ld a,(map_save_val)
 	ld (map_state),a
 	out (0xC0),a
 	pop af
+	ret
+
+map_io:
+	ld a,#0xD0
+	ld (map_state),a
+	out (0xC0),a
 	ret
 
 map_state:
