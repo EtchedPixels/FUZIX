@@ -1,7 +1,7 @@
 #ifndef __Z180_DOT_H__
 #define __Z180_DOT_H__
 
-void copy_and_map_process(uint16_t *pageptr);
+void copy_and_map_proc(uint16_t *pageptr);
 
 /* irqvector values */
 #define Z180_INT_UNUSED     0xFF
