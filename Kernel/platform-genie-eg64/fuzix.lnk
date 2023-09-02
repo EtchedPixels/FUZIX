@@ -38,6 +38,7 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
+memalloc_none.rel
 swap.rel
 simple.rel
 vt.rel

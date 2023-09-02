@@ -16,7 +16,7 @@
 	.globl _fd_selected
 	.globl _fd_tab
 	.globl _fd_cmd
-	.globl map_kernel_restore, map_process_always
+	.globl map_kernel_restore, map_proc_always
 	.globl go_fast, go_slow
 
 	.module floppy
@@ -319,7 +319,7 @@ _fd_operation:
 	ld	a, (_fd_map)
 	or	a
 	push	af
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	call	go_slow
 	ld	ix, #_fd_cmd
 	ld	c, DATA(ix)
