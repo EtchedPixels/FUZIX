@@ -23,9 +23,9 @@
 	.globl _current_map
 	.globl map_kernel
 	.globl map_kernel_di
-	.globl map_process_always
-	.globl map_process_always_di
-	.globl map_process
+	.globl map_proc_always
+	.globl map_proc_always_di
+	.globl map_proc
 	.globl map_save_kernel
 	.globl map_restore
 	.globl _set_initial_map
@@ -344,12 +344,12 @@ map_kernel_di:
 	pop af
 	ret
 
-map_process:
+map_proc:
 	ld a,h
 	or l
 	jr z, map_kernel
 	; Fall through
-map_process_always:
+map_proc_always:
 	push af
 	push hl
 	di
@@ -360,7 +360,7 @@ map_process_always:
 	ld hl,#_user_map
 	jr switch_pop_out
 
-map_process_always_di:
+map_proc_always_di:
 	push af
 	push hl
 	ld a,#1
@@ -710,7 +710,7 @@ _ramtab:
         .globl __uputw
         .globl __uzero
 
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl  map_kernel
 ;
 ;	We need these in common as they bank switch
@@ -744,7 +744,7 @@ __uputc:
 	push hl
 	push de
 	push bc
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 uputc_out:
 	jp map_kernel			; map the kernel back below common
@@ -756,20 +756,20 @@ __uputw:
 	push hl
 	push de
 	push bc
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	jp map_kernel
 
 __ugetc:
-	call map_process_always
+	call map_proc_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel
 
 __ugetw:
-	call map_process_always
+	call map_proc_always
         ld a, (hl)
 	inc hl
 	ld h, (hl)
@@ -782,7 +782,7 @@ __uput:
 	add ix, sp
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
-	call map_process_always
+	call map_proc_always
 	ldir
 uput_out:
 	call map_kernel
@@ -796,7 +796,7 @@ __uget:
 	add ix, sp
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
-	call map_process_always
+	call map_proc_always
 	ldir
 	jr uput_out
 
@@ -811,7 +811,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_always
+	call map_proc_always
 	ld (hl), #0
 	dec bc
 	ld a, b

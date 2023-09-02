@@ -31,7 +31,7 @@
             .globl _plt_reboot
 	    .globl nmi_handler
 	    .globl null_handler
-	    .globl map_process_always
+	    .globl map_proc_always
 	    .globl map_kernel
 	    .globl _vdp_load_font
 
@@ -172,7 +172,7 @@ _copy_vectors:
 	    ld de,#_bufpool
 	    ld bc,#256
 	    ldir
-	    call map_process_always
+	    call map_proc_always
 	    dec h		; pointers back
 	    dec d
 	    inc b		; bc = 256
