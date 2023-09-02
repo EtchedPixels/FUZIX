@@ -11,11 +11,11 @@
             .globl _program_vectors
 	    .globl map_kernel
 	    .globl map_kernel_restore
-	    .globl map_process
-	    .globl map_process_always
+	    .globl map_proc
+	    .globl map_proc_always
 	    .globl map_kernel_di
-	    .globl map_process_di
-	    .globl map_process_always_di
+	    .globl map_proc_di
+	    .globl map_proc_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl _int_disabled
@@ -159,7 +159,7 @@ _program_vectors:
             push de
 
 	    ; At this point the common block has already been copied
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
             ld hl, #0
@@ -326,23 +326,23 @@ no_irq_on:  pop af
 ;
 ;	All registers preserved
 ;
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push hl
 	    push af
 	    ld hl, #_udata + U_DATA__U_PAGE
-	    call map_process_2
+	    call map_proc_2
 	    pop af
 	    pop hl
 	    ret
 ;
 ;	HL is the page table to use, A is eaten, HL is eaten
 ;
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
 	    or l
-	    jr nz, map_process_2
+	    jr nz, map_proc_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
 ;
@@ -360,7 +360,7 @@ map_kernel_di:
 	    out (0x12), a
 	    pop af
             ret
-map_process_2:
+map_proc_2:
 	    ld a, (hl)
 	    out (0x10), a
 	    inc hl
@@ -378,7 +378,7 @@ map_restore:
 	    push hl
 	    push af
 	    ld hl,#map_savearea
-	    call map_process_2
+	    call map_proc_2
 	    pop af
 	    pop hl
 	    ret

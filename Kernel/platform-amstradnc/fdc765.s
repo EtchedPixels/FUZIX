@@ -6,7 +6,7 @@
 		.include "kernel.def"
 		.include "../kernel-z80.def"
 
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl	map_kernel
 
 	.globl _fd765_do_nudge_tc
@@ -127,7 +127,7 @@ _fd765_do_read:
 
 	ld a, (_fd765_is_user)
 	or a
-	call nz, map_process_always
+	call nz, map_proc_always
 	
 	xor a						; 8: Data length (unused)
 	call fd765_tx
@@ -167,7 +167,7 @@ _fd765_do_write:
 
 	ld a, (_fd765_is_user)
 	or a
-	call nz, map_process_always
+	call nz, map_proc_always
 	
 	xor a						; 8: Data length (unused)
 	call fd765_tx
