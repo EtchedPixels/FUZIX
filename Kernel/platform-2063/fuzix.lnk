@@ -29,6 +29,7 @@ syscall_fs3.rel
 syscall_other.rel
 syscall_net.rel
 network.rel
+memalloc_none.rel
 mm.rel
 swap.rel
 bankfixed.rel

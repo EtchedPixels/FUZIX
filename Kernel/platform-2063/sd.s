@@ -32,7 +32,7 @@
 
 	.globl	map_for_swap
 	.globl	map_kernel
-	.globl	map_process_always
+	.globl	map_proc_always
 
 _sd_spi_slow:
 _sd_spi_fast:
@@ -230,7 +230,7 @@ _sd_spi_receive_sector:
 	call	map_for_swap
 	jr	rx_byte
 rx_user:
-	call	map_process_always
+	call	map_proc_always
 rx_byte:
 	call	_sd_spi_receive_byte
 	;	Mark the SD busy (sd_spi_receive_byte marked it idle
@@ -271,7 +271,7 @@ _sd_spi_transmit_sector:
 	call	map_for_swap
 	jr	tx_byte
 tx_user:
-	call	map_process_always
+	call	map_proc_always
 tx_byte:
 	ld	l,(ix)
 	inc	ix
