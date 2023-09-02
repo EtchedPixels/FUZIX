@@ -64,5 +64,3 @@ diskimage: image
 	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Add the bootstrap in block 0 of the partition
 	dd if=boot.bin of=$(IMAGES)/disk.img bs=512 count=1 seek=2048 conv=notrunc
-	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
