@@ -99,7 +99,6 @@ static int ch375_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dpt
         } else {
             if (r != 0x1E)
                 return 0;
-            /* FIXME: again ch376 is what ? */
             ch375_wcmd(ch_wd);
             ch375_wdata(0x40);	/* Send write count */
             ch375_wblock(dptr);
