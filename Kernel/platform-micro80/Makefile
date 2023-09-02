@@ -1,8 +1,8 @@
 ASRCS = crt0.s tricks.s commonmem.s micro80.s
 CSRCS = devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/mbr.c
-DSRCS = ../dev/devide.c ../dev/blkdev.c
+DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
+DSRCS = ../dev/tinydisk.c ../dev/tinyide.c
 NSRCS = 
 
 AOBJS = $(ASRCS:.s=.rel)

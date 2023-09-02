@@ -37,8 +37,8 @@ usermem.rel
 usermem_std-z80.rel
 platform-micro80/discard.rel
 platform-micro80/devtty.rel
-platform-micro80/mbr.rel
-platform-micro80/blkdev.rel
-platform-micro80/devide.rel
-platform-micro80/devide_discard.rel
+platform-micro80/tinydisk.rel
+platform-micro80/tinydisk_discard.rel
+platform-micro80/tinyide.rel
+platform-micro80/tinyide_discard.rel
 -e
