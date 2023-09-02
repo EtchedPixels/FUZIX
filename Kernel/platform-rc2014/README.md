@@ -125,7 +125,8 @@ Other serial options
 0xBA		QUART serial
 0xBB		PS/2 Bitbang
 0xBC		Z80 Coprocessor
-0xBD-0xBF	Free
+0xBD
+0xBE-0xBF	CH375 USB
 0xC0		DS1302 clock			|	Z180 Internal I/O     |    DS12885
 0xC0-0xFF	Scanned for extra 16x50		|	Z180 Internal I/O
 0xD0		AY-3-8910 (TODO)		|
