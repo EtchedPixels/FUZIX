@@ -37,6 +37,7 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
+memalloc_none.rel
 bankfixed.rel
 devsys.rel
 platform-cromemco/devtty.rel
