@@ -30,6 +30,7 @@ syscall_fs2.rel
 syscall_fs3.rel
 syscall_other.rel
 mm.rel
+memalloc_none.rel
 swap.rel
 simple.rel
 tty.rel

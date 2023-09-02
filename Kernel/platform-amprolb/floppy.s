@@ -6,7 +6,7 @@
 	.area _COMMONMEM
 
 	.globl	map_kernel
-	.globl	map_process_always
+	.globl	map_proc_always
 	.globl  _wd_map
 
 USEC_WAIT	.equ	19
@@ -208,7 +208,7 @@ _wd_setup:
 _wd_read:
 	ld	a,(_wd_map)
 	or	a
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	call	wd_wait
 	ex	de,hl		; data into DE
 	ld	b,#0x88		; READ
@@ -221,7 +221,7 @@ _wd_read:
 _wd_write:
 	ld	a,(_wd_map)
 	or	a
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	call	wd_wait
 	ex	de,hl
 	ld	b,#0xA8		; WRITE

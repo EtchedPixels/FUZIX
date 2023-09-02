@@ -16,7 +16,7 @@
 		.area _COMMONMEM
 
 	.globl	map_kernel
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl  map_for_swap
 
 	.globl  _td_raw
@@ -287,7 +287,7 @@ via_k:
 	;	will return with L 1 or 0 for bad/good
 	jp	map_kernel
 via_u:
-	call	map_process_always
+	call	map_proc_always
 	jr	via_k
 
 _ncr5380_reset_on:
