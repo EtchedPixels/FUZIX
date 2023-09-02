@@ -14,10 +14,10 @@
 		.globl map_kernel
 		.globl map_kernel_di
 		.globl map_kernel_restore
-		.globl map_process
-		.globl map_process_a
-		.globl map_process_always
-		.globl map_process_always_di
+		.globl map_proc
+		.globl map_proc_a
+		.globl map_proc_always
+		.globl map_proc_always_di
 		.globl map_save_kernel
 		.globl map_restore
 
@@ -93,22 +93,22 @@ init_hardware:
 		out (27),a
 		jp _init_hardware_c
 
-map_process_a:
+map_proc_a:
 		ld (map),a
 		jp _sysmod_set_map
 
-map_process:
+map_proc:
 		ld a,h
 		or l
 		jr z, map_kernel
 		ld a,(hl)
 		jp _sysmod_set_map
 
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 		push af
 		ld a,(_udata + U_DATA__U_PAGE);
-		call map_process_a
+		call map_proc_a
 		pop af
 		ret
 map_kernel:
@@ -116,7 +116,7 @@ map_kernel_di:
 map_kernel_restore:
 		push af
 		xor a
-		call map_process_a
+		call map_proc_a
 		pop af
 plt_interrupt_all:
 		ret
@@ -147,7 +147,7 @@ _program_vectors:
 		push hl ; put stack back as it was
 		push de
 
-		call map_process
+		call map_proc
 
 program_vectors_k:
 		; now install the interrupt vector

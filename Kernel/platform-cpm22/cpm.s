@@ -29,7 +29,7 @@
 
 	.globl biosbase
 
-	.globl map_process_a
+	.globl map_proc_a
 	.globl map_kernel
 
 ;
@@ -158,7 +158,7 @@ _cpm_diskread:
 	ld a,(_cpm_map)
 	or a
 	push af
-	call nz, map_process_a
+	call nz, map_proc_a
 	call _cpm_read
 	; Return is in L
 	pop af
@@ -169,7 +169,7 @@ _cpm_diskwrite:
 	ld a,(_cpm_map)
 	or a
 	push af
-	call nz, map_process_a
+	call nz, map_proc_a
 	call _cpm_write
 	; Return is in L
 	pop af
