@@ -1,4 +1,4 @@
-ZRC
+# ZRC
 
 A Z80 an CPLD based system that can plug into a RC2014 bus if desired
 
@@ -10,7 +10,7 @@ to CF.
 One option might be to just reserve a bank for the udata stash and claim 512
 bytes of user space back ?
 
-Memory map
+## Memory map
 
 Kernel
 0000-7FFF	Kernel
@@ -21,21 +21,20 @@ User
 7E00-7FFF	Udata stash
 
 
-Hardware:
+## Hardware:
 
 Currently this build supports
 
 - Onboard not-quite ACIA including interrupt
 - Onboard CF
 - External Wifi
+- DS1302 clock
 
 It really needs a time source adding, perhaps also more serial devices
 and a video/keyboard option.
-
 
 Installation
 
 make diskimage
 
 boot it. It does not need or want a softloaded ROMWBW.
-

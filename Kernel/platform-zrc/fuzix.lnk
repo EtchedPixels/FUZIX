@@ -36,10 +36,10 @@ swap.rel
 bankfixed.rel
 devsys.rel
 platform-zrc/devtty.rel
-platform-zrc/blkdev.rel
-platform-zrc/mbr.rel
-platform-zrc/devide.rel
-platform-zrc/devide_discard.rel
+platform-zrc/tinydisk.rel
+platform-zrc/tinydisk_discard.rel
+platform-zrc/tinyide.rel
+platform-zrc/tinyide_discard.rel
 platform-zrc/ds1302.rel
 platform-zrc/ds1302_discard.rel
 platform-zrc/ds1302_rcbus.rel

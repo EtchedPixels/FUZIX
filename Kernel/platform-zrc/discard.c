@@ -4,8 +4,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <blkdev.h>
-#include <devide.h>
-#include <propio2.h>
+#include <tinyide.h>
 #include <ds1302.h>
 
 extern int strcmp(const char *, const char *);
@@ -64,13 +63,13 @@ void pagemap_init(void)
 
 /*
  *	Called after interrupts are enabled in order to enumerate and set up
- *	any devices. In our case we set up the 16550A UART and then probe the
- *	IDE and SD card.
+ *	any devices. In our case we set up the DS1302 for a time reference
+ *	and then probe the IDE card.
  */
 
 void device_init(void)
 {
-	devide_init();
 	ds1302_init();
+	ide_probe();
 	sock_init();
 }

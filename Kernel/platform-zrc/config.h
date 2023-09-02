@@ -26,13 +26,11 @@
 #define PROC_SIZE   32 	    /* Memory needed per process including stash */
 
 /* 	So much RAM we don't bother with swap */
-
-/* What is the maximum number of /dev/hd devices we have. In theory right now
-   it's actually 3 - two in the IDE and one on the SD interface */
-#define MAX_BLKDEV	4
-/* Select IDE disk support, and PPIDE (parallel port IDE) as the interface */
-#define CONFIG_IDE
-//#define CONFIG_PPIDE	/* PPIDE is present */
+#define CONFIG_TD_NUM		4
+/* RC2014 style CF IDE */
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
 
 #define BOOTDEVICENAMES "hd#"
 
