@@ -38,6 +38,7 @@ vt.rel
 font6x8.rel
 platform-mtx/vdp.rel
 mm.rel
+memalloc_none.rel
 bankfixed.rel
 swap.rel
 devsys.rel

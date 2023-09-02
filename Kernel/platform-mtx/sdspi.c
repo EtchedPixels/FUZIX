@@ -59,7 +59,7 @@ bool sd_spi_receive_sector(void) __naked
 not_swapin:
 #endif
     or a
-    call nz,map_process_always
+    call nz,map_proc_always
 doread:
     ld bc, #0xD7	; b = 0, c = port
 rs1:
@@ -93,7 +93,7 @@ bool sd_spi_transmit_sector(void) __naked
 not_swapout:
 #endif
     or a
-    call nz,map_process_always
+    call nz,map_proc_always
 dowrite:
     ld bc, #0xD6
 ws1:

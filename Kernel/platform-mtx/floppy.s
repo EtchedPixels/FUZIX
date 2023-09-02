@@ -17,7 +17,7 @@
 	.globl _fd_cmd
 	.globl _fd_data
 
-	.globl map_process_always
+	.globl map_proc_always
 	.globl map_kernel
 
 FDCREG	.equ	0x10
@@ -287,7 +287,7 @@ _fd_operation:
 	ld	ix, #_fd_cmd + 1 ; command
 	or	a
 	push	af
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	call	fdsetup		; Set up for a command
 	ld	l, a
 	ld	h, #0

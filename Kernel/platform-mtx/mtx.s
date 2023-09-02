@@ -15,11 +15,11 @@
 	    .globl map_kernel_restore
 	    .globl map_buffers
 	    .globl map_kernel_di
-	    .globl map_process
-	    .globl map_process_di
-	    .globl map_process_a
-	    .globl map_process_always
-	    .globl map_process_always_di
+	    .globl map_proc
+	    .globl map_proc_di
+	    .globl map_proc_a
+	    .globl map_proc_always
+	    .globl map_proc_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
@@ -336,7 +336,7 @@ _sil_memcpy:
 	    ld a, 5(ix)	; map
 	    ld e, 8(ix)	; block
 	    ld d, 9(ix)
-	    call map_process_a	; map in the user space we want
+	    call map_proc_a	; map in the user space we want
 	    ld c, 11(ix) ; port base
 	    out (c), e	 ; block low
 	    inc c
@@ -393,7 +393,7 @@ _program_vectors:
             push hl ; put stack back as it was
             push de
 
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
             ld hl, #0
@@ -435,19 +435,19 @@ map_kernel_di:
 	    out (0), a
 	    pop af
             ret
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
 	    ld a, (hl)
 map_for_swap:
-map_process_a:
+map_proc_a:
 	    ld (map_copy), a
 	    out (0), a
 	    ret
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push af
 	    ld a, (_udata + U_DATA__U_PAGE)
 map_set_a:
