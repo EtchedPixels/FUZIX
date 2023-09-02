@@ -47,7 +47,7 @@
 	    .globl _vidmode
 	    .globl outcharhex
 
-	    .globl map_process_always
+	    .globl map_proc_always
 	    .globl map_kernel
 
 	    .area _CODE
@@ -203,11 +203,7 @@ _vdp_restore_font:
 	    ld de,#0x3c00
 	    ld hl,#0x5054
 	    ld bc,(_vdpport)
-	    in a,(c)			; debug check REMOVE
-	    ld a,#13
-	    out (0x2f),a
-	    ld a,#10
-	    out (0x2f),a
+	    in a,(c)
 fontnext:
 	    out (c),e
 	    out (c),d
@@ -399,6 +395,7 @@ down_0:
 	    add hl, de		; relative to our position
 	    out (c), l
 	    out (c), h
+	; FIME - from vdpport - and into other copies
 	    ld b, #40
 	    ld hl, #scrollbuf
 	    dec c
@@ -631,7 +628,7 @@ _vdp_rop:
 	    ld e, 4(ix)		; lines
 	    ld bc,(_vdpport);
 	    inc c		; data port
-	    call map_process_always
+	    call map_proc_always
 ropl:
 	    ld b,d
 ropc:
@@ -679,7 +676,7 @@ _vdp_wop:
 	    ld e,4(ix)		; lines
 	    ld bc,(_vdpport)	;
 	    inc c		; data port
-	    call map_process_always
+	    call map_proc_always
 wopl:
 	    ld b,d
 wopc:
