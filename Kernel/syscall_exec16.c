@@ -279,20 +279,3 @@ nogood:
 #undef argv
 #undef envp
 
-
-/*
- *	Stub the 32bit only allocator calls
- */
-
-arg_t _memalloc(void)
-{
-	udata.u_error = ENOMEM;
-	return -1;
-}
-
-arg_t _memfree(void)
-{
-	udata.u_error = ENOMEM;
-	return -1;
-}
-

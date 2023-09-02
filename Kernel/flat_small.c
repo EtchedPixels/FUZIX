@@ -862,24 +862,4 @@ arg_t stack_extend(uaddr_t sp)
 	map_pages(udata.u_ptab, 1);
 	return 0;
 }
-
-/*
- *	If we don't provide these then malloc will fall back
- *	entirely upon brk which is exactly what we want.
- */
-
-/* No memalloc */
-arg_t _memalloc(void)
-{
-	udata.u_error = ENOMEM;
-	return -1;
-}
-
-arg_t _memfree(void)
-{
-	udata.u_error = ENOMEM;
-	return -1;
-}
-
-
 #endif

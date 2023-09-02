@@ -54,7 +54,7 @@ CS4SRCS = syscall_other.c
 #
 #	Set EXECFORMAT to use one of the standard loaders
 #
-CS5SRCS = syscall_exec.c
+CS5SRCS = syscall_exec.c memalloc_none.c
 ifneq ($(EXECFORMAT),)
 CS5SRCS += syscall_exec$(EXECFORMAT).c
 endif
