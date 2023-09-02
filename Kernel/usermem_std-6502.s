@@ -5,7 +5,7 @@
 		.export __uget, __ugetc, __ugetw
 		.export __uput, __uputc, __uputw, __uzero
 
-		.import map_kernel, map_process_always
+		.import map_kernel, map_proc_always
 		.import outxa, popax
 		.importzp ptr2, tmp2
 ;
@@ -54,7 +54,7 @@ __uget:		sta tmp2
 		beq __uget_tail		; if none skip to the tail
 
 __uget_blk:
-		jsr map_process_always	; map the user process in
+		jsr map_proc_always	; map the user process in
 		lda (ptr3), y		; get a byte of user data
 		jsr map_kernel		; map the kernel back in
 		sta (ptr2), y		; save it to the kernel buffer
@@ -68,7 +68,7 @@ __uget_blk:
 __uget_tail:	cpy tmp2		; finished ?
 		beq __uget_done
 
-		jsr map_process_always	; map the user process
+		jsr map_proc_always	; map the user process
 		lda (ptr3),y		; get a byte of user data
 		jsr map_kernel		; map the kernel back in
 		sta (ptr2),y		; save it to the kernel buffer
@@ -83,14 +83,14 @@ __uget_done:
 __ugetc:	sta ptr2
 		stx ptr2+1
 __uget_ptr2:
-		jsr map_process_always
+		jsr map_proc_always
 		ldy #0
 		lda (ptr2),y
 		jmp map_kernel
 
 __ugetw:	sta ptr2
 		stx ptr2+1
-		jsr map_process_always
+		jsr map_proc_always
 		ldy #1
 		lda (ptr2),y
 		tax
@@ -115,7 +115,7 @@ __uput:		sta tmp2
 __uput_blk:
 		jsr map_kernel
 		lda (ptr3), y
-		jsr map_process_always
+		jsr map_proc_always
 		sta (ptr2), y
 		iny
 		bne __uput_blk
@@ -128,7 +128,7 @@ __uput_tail:	cpy tmp2
 		beq __uput_done
 		jsr map_kernel
 		lda (ptr3),y
-		jsr map_process_always
+		jsr map_proc_always
 		sta (ptr2),y
 		iny
 		bne __uput_tail
@@ -142,7 +142,7 @@ __uput_done:
 __uputc:	sta ptr2
 		stx ptr2+1
 		jsr popax
-		jsr map_process_always
+		jsr map_proc_always
 		ldy #0
 		sta (ptr2),y
 		jmp map_kernel
@@ -150,7 +150,7 @@ __uputc:	sta ptr2
 __uputw:	sta ptr2
 		stx ptr2+1
 		jsr popax
-		jsr map_process_always
+		jsr map_proc_always
 		ldy #0
 		sta (ptr2),y
 		txa
@@ -165,7 +165,7 @@ __uzero:	sta tmp2
 		stx ptr2+1
 
 		; Our C stack vanishes at this point
-		jsr map_process_always
+		jsr map_proc_always
 
 		ldy #0
 		tya

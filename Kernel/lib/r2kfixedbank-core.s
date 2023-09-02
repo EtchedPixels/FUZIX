@@ -29,9 +29,9 @@
 	.globl _udata
 
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_a
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_a
+	.globl map_proc_always
 
 
         ; imported debug symbols
@@ -59,7 +59,7 @@ _plt_switchout:
         ld (U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
 	; Stash the uarea back into process memory
-	call map_process_always
+	call map_proc_always
 	ld hl, #_udata
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
@@ -136,16 +136,17 @@ _switchin:
 	ld (_int_disabled),a
 	ipres
 .endif
-	ld a, (hl)
 not_swapped:
+	push hl
 	ld hl, (U_DATA__U_PTAB)
 	or a,a
 	sbc hl, de
+	pop hl
 	jr z, skip_copyback	; Tormod's optimisation: don't copy the
 				; the stash back if we are the task who
 				; last owned the real udata
 	; Pages please !
-	call map_process_a
+	call map_proc_a
 
         ; bear in mind that the stack will be switched now, so we can't use it
 	; to carry values over this point
@@ -264,7 +265,7 @@ _dofork:
 
 	; Copy done
 
-	call map_process_always
+	call map_proc_always
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any

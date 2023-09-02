@@ -22,7 +22,7 @@
         .globl __uputw
         .globl __uzero
 
-	.globl  map_process_save
+	.globl  map_proc_save
 	.globl  map_kernel_restore
 ;
 ;	We need these in common as they bank switch
@@ -60,7 +60,7 @@ __uputc:
 	push de
 	push bc
 	push iy
-	call map_process_save
+	call map_proc_save
 	ld (hl), e
 uputc_out:
 	jp map_kernel_restore			; map the kernel back below common
@@ -74,20 +74,20 @@ __uputw:
 	push de
 	push bc
 	push iy
-	call map_process_save
+	call map_proc_save
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	jp map_kernel_restore
 
 __ugetc:
-	call map_process_save
+	call map_proc_save
         ld l, (hl)
 	ld h, #0
 	jp map_kernel_restore
 
 __ugetw:
-	call map_process_save
+	call map_proc_save
         ld a, (hl)
 	inc hl
 	ld h, (hl)
@@ -103,7 +103,7 @@ __uput:
 	
 uput_l:	ld a, (hl)
 	inc hl
-	call map_process_save
+	call map_proc_save
 	ld (de), a
 	call map_kernel_restore
 	inc de
@@ -125,7 +125,7 @@ __uget:
 	jr z, uput_out			; but count is at this point magic
 	
 uget_l:
-	call map_process_save
+	call map_proc_save
 	ld a, (hl)
 	inc hl
 	call map_kernel_restore
@@ -149,7 +149,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_save
+	call map_proc_save
 	ld (hl), #0
 	dec bc
 	ld a, b

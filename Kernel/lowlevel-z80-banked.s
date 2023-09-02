@@ -24,9 +24,9 @@
 
 	; platform provided functions
 	.globl map_kernel
-	.globl map_process_always
+	.globl map_proc_always
 	.globl map_kernel_di
-	.globl map_process_always_di
+	.globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
 	.globl outchar
@@ -146,7 +146,7 @@ signal_return:
 	push af
 	call _chksigs
 	pop af
-	call map_process_always
+	call map_proc_always
 	ld sp, (_udata + U_DATA__U_SYSCALL_SP)
 	jr deliver_signals
 
@@ -216,7 +216,7 @@ unix_syscall_entry:
         di
 
 
-	call map_process_always
+	call map_proc_always
 
 	xor a
 	ld (_udata + U_DATA__U_INSYS), a
@@ -287,7 +287,7 @@ via_signal:
 ;
 _doexec:
         di
-        call map_process_always
+        call map_proc_always
 
         pop bc ; return address
 	pop af ; bank number
@@ -576,7 +576,7 @@ not_running:
 	; We have been rescheduled, remap ourself and go back to user
 	; space via signal handling
 	;
-	call map_process_always	; Get our user mapping back
+	call map_proc_always	; Get our user mapping back
 
 	; We were pre-empted but have now been rescheduled
 	; User stack

@@ -12,7 +12,7 @@ bankfork:
 bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
-	call map_process_a
+	call map_proc_a
 	ld de, #bouncebuffer
 	ld bc, #256
 
@@ -32,7 +32,7 @@ next0:
 	push bc
 	ld b, a			; save the parent bank id
 	ld a, c			; switch to the child
-	call map_process_a
+	call map_proc_a
 	push bc			; save the bank pointers
 	ld hl, #bouncebuffer
 	ld bc, #256

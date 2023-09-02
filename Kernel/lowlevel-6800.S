@@ -163,7 +163,7 @@ noinc:
 	jsr _unix_syscall
 	sei
 	clr _udata+U_DATA__U_INSYS
-	jsr map_process_always	; no-op in pure banked
+	jsr map_proc_always	; no-op in pure banked
 	lds _udata+U_DATA__U_SYSCALL_SP
 	; Now the fun bit - the CPU saves X and D so we have to patch them
 	; into the return frame
@@ -225,7 +225,7 @@ _doexec:
 	tsx
 	ldx 2,x
 	sei
-	jsr map_process_always
+	jsr map_proc_always
 	lds _udata+U_DATA__U_ISP
 	des				; offset by 1 on the 680X
 	clr _udata+U_DATA__U_INSYS
@@ -332,7 +332,7 @@ interrupt_handler:
 	tst _need_resched
 	bne preemption
 	; Put the process memory map back
-	jsr map_process_always
+	jsr map_proc_always
 	; Put the process stack back
 	lds istack_switched_sp
 	; We are no longer on the istack or in an interrupt
@@ -401,7 +401,7 @@ not_running:
 	; We are not in a syscall
 	clr _udata+U_DATA__U_INSYS
 	; We are mapoped in memory
-	jsr map_process_always
+	jsr map_proc_always
 	; Move to user stack before interrupt
 	lds _udata+U_DATA__U_SYSCALL_SP
 	ldaa _udata+U_DATA__U_CURSIG

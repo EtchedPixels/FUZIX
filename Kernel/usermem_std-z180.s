@@ -29,7 +29,7 @@
         .globl __uputw
         .globl __uzero
 
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl  map_kernel_restore
 
 	.globl s__COMMONMEM
@@ -174,7 +174,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_always
+	call map_proc_always
 	ld (hl), #0
 	dec bc
 	ld a, b
@@ -201,7 +201,7 @@ __uputc:
 	push hl
 	push de
 	push bc
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 uputc_out:
 	jp map_kernel_restore			; map the kernel back below common
@@ -213,20 +213,20 @@ __uputw:
 	push hl
 	push de
 	push bc
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	jp map_kernel_restore
 
 __ugetc:
-	call map_process_always
+	call map_proc_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel_restore
 
 __ugetw:
-	call map_process_always
+	call map_proc_always
         ld a, (hl)
 	inc hl
 	ld h, (hl)

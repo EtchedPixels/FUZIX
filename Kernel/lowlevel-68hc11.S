@@ -199,7 +199,7 @@ syscall_main:
 	jsr unix_syscall
 	sei
 	clr udata+U_DATA__U_INSYS
-	jsr map_process_always	; no-op in pure banked
+	jsr map_proc_always	; no-op in pure banked
 	lds udata+U_DATA__U_SYSCALL_SP
 	; Now the fun bit - the CPU saves X and D so we have to patch them
 	; into the return frame
@@ -240,7 +240,7 @@ doexec:
 	xgdx				; execute address into x
 	sei
 	clr udata+U_DATA__U_INSYS
-	jsr map_process_always
+	jsr map_proc_always
 	lds udata+U_DATA__U_ISP
 	des				; offset by 1 on the 680X
 	cli
@@ -377,7 +377,7 @@ interrupt_handler:
 	bne preemption
 
 	; No pre-emption - map the process back
-	jsr map_process_always
+	jsr map_proc_always
 	; Switch back to our kernel stack with the RTI frame
 	lds istack_switched_sp
 	; Clean up
@@ -434,7 +434,7 @@ not_running:
 	clr udata+U_DATA__U_ININTERRUPT
 	clr udata+U_DATA__U_INSYS
 	; Map back in
-	jsr map_process_always
+	jsr map_proc_always
 	; Return to our user stack
 	lds udata+U_DATA__U_SYSCALL_SP
 	; Check for signals

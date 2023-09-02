@@ -11,27 +11,27 @@
 _uputc:
 	tsx
 	ldx 2,x
-	jsr map_process_always
+	jsr map_proc_always
 	stab 0,x
 	jmp map_kernel
 
 _uputw:
 	tsx
 	ldx 2,x
-	jsr map_process_always
+	jsr map_proc_always
 	std 0,x
 	jmp map_kernel
 
 _ugetc:
 	xgdx
-	jsr map_process_always
+	jsr map_proc_always
 	ldab 0,x
 	clra
 	jmp map_kernel
 
 _ugetw:
 	xgdx
-	jsr map_process_always
+	jsr map_proc_always
 	ldd 0,x
 	jmp map_kernel
 
@@ -39,7 +39,7 @@ _uzero:
 	tsx
 	ldx 2,x			; size
 	xgdx			; swap over as we want pointer in X
-	jsr map_process_always
+	jsr map_proc_always
 	; Optimize, unroll etc ?
 uzerolp:
 	clr 0,x
@@ -59,7 +59,7 @@ _uget:
 	std __end	; stop marker
 	ldx 2,x		; to
 ugetl:
-	jsr map_process_always
+	jsr map_proc_always
 	ldab ,y
 	iny
 	jsr map_kernel
@@ -85,7 +85,7 @@ _uput:
 uputl:
 	ldab ,y
 	iny
-	jsr map_process_always
+	jsr map_proc_always
 	stab ,x
 	inx
 	jsr map_kernel

@@ -26,8 +26,8 @@
 	.globl _udata
 
 	.globl map_kernel_restore
-	.globl map_process_a
-	.globl map_process_save
+	.globl map_proc_hl
+	.globl map_proc_save
 	.globl map_save_kmap
 	.globl map_restore_kmap
 
@@ -61,7 +61,7 @@ _plt_switchout:
 
 
 	; Stash the uarea back into process memory
-	call map_process_save
+	call map_proc_save
 	ld hl, #_udata
 	ld de, #U_DATA_STASH
 	ld bc, #U_DATA__TOTALSIZE
@@ -147,14 +147,16 @@ _switchin:
 .endif
 	ld a, (hl)
 not_swapped:
+	push hl
 	ld hl, (_udata + U_DATA__U_PTAB)
 	or a
 	sbc hl, de
+	pop hl
 	jr z, skip_copyback	; Tormod's optimisation: don't copy the
 				; the stash back if we are the task who
 				; last owned the real udata
 	; Pages please !
-	call map_process_a
+	call map_proc_hl
 
         ; bear in mind that the stack will be switched now, so we can't use it
 	; to carry values over this point
@@ -282,7 +284,7 @@ _dofork:
 
 	; Copy done
 
-	call map_process_save
+	call map_proc_save
 
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any

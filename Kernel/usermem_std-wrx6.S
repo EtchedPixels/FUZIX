@@ -14,7 +14,7 @@ __uputc:
 	stx	(-s)
 	ldb	4(s)
 	ldx	6(s)
-	jsr	map_process_always
+	jsr	map_proc_always
 	stbb	(x)
 	jsr	map_kernel
 	ldx	(s+)
@@ -24,7 +24,7 @@ __uputw:
 	stx	(-s)
 	ldb	4(s)
 	ldx	6(s)
-	jsr	map_process_always
+	jsr	map_proc_always
 	stb	(x)
 	jsr	map_kernel
 	ldx	(s+)
@@ -32,7 +32,7 @@ __uputw:
 
 __ugetc:
 	ldb	2(s)
-	jsr	map_process_always
+	jsr	map_proc_always
 	ldbb	(b)
 	jsr	map_kernel
 	xfr	b,a
@@ -40,7 +40,7 @@ __ugetc:
 
 __ugetw:
 	ldb	2(s)
-	jsr	map_process_always
+	jsr	map_proc_always
 	ldb	(b)
 	jsr	map_kernel
 	xfr	b,a
@@ -51,7 +51,7 @@ __uzero:
 	ldx	6(s)
 	ldb	4(s)
 	bnz	noworkz
-	jsr	map_process_always
+	jsr	map_proc_always
 	clab
 	; FIXME: do word alignment and word clears
 uzerolp:
@@ -79,7 +79,7 @@ ugetl:
 
 ugetlp:
 	sta	(-s)
-	jsr	map_process_always
+	jsr	map_proc_always
 	ldbb	(x+)
 	jsr	map_kernel
 	stbb	(y+)
@@ -106,7 +106,7 @@ uputl:
 uputlp:
 	sta	(-s)
 	ldbb	(x+)
-	jsr	map_process_always
+	jsr	map_proc_always
 	stbb	(y+)
 	jsr	map_kernel
 	lda	(s+)

@@ -30,7 +30,7 @@
 
 	; platform provided functions
 	.globl map_kernel
-	.globl map_process_always
+	.globl map_proc_always
         .globl map_save
         .globl map_restore
 	.globl outchar
@@ -107,7 +107,7 @@ unix_syscall_entry:
 
         ; map process memory back in based on common (common may have
         ; changed on a task switch)
-        jsr map_process_always
+        jsr map_proc_always
 
         ; switch back to user stack
         lds U_DATA__U_SYSCALL_SP
@@ -183,7 +183,7 @@ _doexec:
 
 	; map task into address space
 	; preserves x
-        jsr map_process_always
+        jsr map_proc_always
 
 	; base address
 	ldy U_DATA__U_CODEBASE
@@ -287,7 +287,7 @@ not_running:
 	;
 	; We will resume here after the pre-emption. Get back onto
 	; the user stack and map ourself in
-	jsr map_process_always
+	jsr map_proc_always
 	lds U_DATA__U_SYSCALL_SP
 	bra intdone
 

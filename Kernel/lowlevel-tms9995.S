@@ -212,7 +212,7 @@ unix_syscall_entry:
 	bl	@_unix_syscall
 	limi	IRQ_OFF
 	clr	@_udata+U_DATA__U_INSYS
-	bl	@map_process_always
+	bl	@map_proc_always
 
 	;	Return stack (do we need this ?)
 	mov	@_udata + U_DATA__U_SYSCALL_SP, r9
@@ -229,7 +229,7 @@ unix_syscall_entry:
 	rtwp
 
 _doexec:
-	bl	@map_process_always
+	bl	@map_proc_always
 	mov	@_udata+U_DATA__U_ISP, r13
 	clr	@_udata+U_DATA__U_INSYS
 	;	Write r4 into the user workspace
@@ -315,7 +315,7 @@ interrupt_handler:
 	jne	@preemption
 	; No pre-emption, but may be signals pending. Map the user process
 	clr	@_udata+U_DATA__U_ININTERRUPT
-	bl	@map_process_always
+	bl	@map_proc_always
 	b	@deliver_signal
 	; Kernel fast path - restore the MMU instead of setting it for
 	; the process. Again all the work is done by the work space flip
@@ -380,7 +380,7 @@ not_running:
 	; or interrupt (as they are not pre-emptible)
 	clr 	@_udata+U_DATA__U_ININTERRUPT
 	clr	@_udata+U_DATA__U_INSYS
-	bl	@map_process_always
+	bl	@map_proc_always
 	; Pop the context we saved and return to it
 	b	@pop_workspace
 

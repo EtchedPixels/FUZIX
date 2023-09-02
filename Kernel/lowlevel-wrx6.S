@@ -101,7 +101,7 @@ deliver_signals_2:
 	xas
 	jsr	map_kernel_di
 	jsr	_chksigs
-	jsr	map_process_always_di
+	jsr	map_proc_always_di
 	lda	(_udata+U_DATA__U_SYSCALL_SP)
 	xas
 	bra	deliver_signals
@@ -145,7 +145,7 @@ unix_syscall_entry:
 	ei
 	clab
 	stab	(_udata+U_DATA__U_INSYS)
-	jsr	map_process_always	; no-op in pure banked
+	jsr	map_proc_always	; no-op in pure banked
 	lda	(_udata+U_DATA__U_SYSCALL_SP)
 	xas
 	lda	(_udata+U_DATA__U_RETVAL)
@@ -168,7 +168,7 @@ via_signal:
 _doexec:
 	ldx	4(s)
 	di
-	jsr	map_process_always
+	jsr	map_proc_always
 	lda	(_udata+U_DATA__U_ISP)
 	xas
 	clab
@@ -193,7 +193,7 @@ interrupt_handler:
 	clab
 	ldab	(_need_resched)
 	bnz	preemption
-	jsr	map_process_always
+	jsr	map_proc_always
 	clab
 	stab	(_udata+U_DATA__U_ININTERRUPT)
 	ldab	(_udata+U_DATA__U_INSYS)
@@ -249,7 +249,7 @@ not_running:
 	jsr _plt_switchout
 	clr _udata+U_DATA__U_ININTERRUPT
 	clr _udata+U_DATA__U_INSYS
-	jsr map_process_always
+	jsr map_proc_always
 	lds _udata+U_DATA__U_SYSCALL_SP
 	ldaa _udata+U_DATA__U_CURSIG
 	beq no_signals

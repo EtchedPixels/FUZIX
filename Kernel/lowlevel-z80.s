@@ -24,7 +24,7 @@
 
 	; platform provided functions
 	.globl map_kernel_di
-	.globl map_process_always_di
+	.globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
 	.globl outchar
@@ -151,7 +151,7 @@ signal_return:
 	ld (_int_disabled),a
 	call map_kernel_di
 	call _chksigs
-	call map_process_always_di
+	call map_proc_always_di
 	ld sp, (_udata + U_DATA__U_SYSCALL_SP)
 	jr deliver_signals
 
@@ -230,7 +230,7 @@ unix_syscall_entry:
 	; FIXME: another spot we di but have the flag wrong and call stuff
 	; although we probably just need a rule that _di versions can't
 	; rely on it!
-	call map_process_always_di
+	call map_proc_always_di
 
 	xor a
 	ld (_udata + U_DATA__U_INSYS), a
@@ -304,7 +304,7 @@ via_signal:
 ;
 _doexec:
         di
-        call map_process_always_di
+        call map_proc_always_di
 
         pop bc ; return address
         pop de ; start address
@@ -611,7 +611,7 @@ not_running:
 	; We have been rescheduled, remap ourself and go back to user
 	; space via signal handling
 	;
-	call map_process_always_di ; Get our user mapping back
+	call map_proc_always_di ; Get our user mapping back
 
 
 	; We were pre-empted but have now been rescheduled

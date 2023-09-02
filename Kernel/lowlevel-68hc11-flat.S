@@ -421,7 +421,7 @@ common_intr:
 	lds	shared_sp
 	bra	signal_out
 was_preempt:
-	jsr	map_process_always
+	jsr	map_proc_always
 	lds	shared_sp
 	bra	signal_out
 
@@ -466,7 +466,7 @@ syscall_main:
 
 	;	Put the stack back to do the remap
 	lds	#syscall_stack
-	jsr	map_process_always
+	jsr	map_proc_always
 
 	;	Back to the user stack saved by
 	;	the caller
@@ -500,7 +500,7 @@ doexec:
 	clr	udata+U_DATA__U_INSYS
 	ldx	udata+U_DATA__U_ISP
 	lds	#syscall_stack		; Temp stack for the switch
-	jsr	map_process_always
+	jsr	map_proc_always
 	txs				; Set the stack up	
 	xgdx				; execute address into x
 	cli

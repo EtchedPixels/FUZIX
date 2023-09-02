@@ -26,7 +26,7 @@
 	.import _unix_syscall_i
 	.import map_restore
 	.import map_save_kernel
-	.import map_process_always
+	.import map_proc_always
 	.import map_kernel
 	.import _plt_interrupt_i
 	.import plt_doexec
@@ -58,7 +58,7 @@ unix_syscall_entry:
 	lda #0
 	sta _kernel_flag
 unix_sig_exit:
-	jsr map_process_always	; Map back process if we have common
+	jsr map_proc_always	; Map back process if we have common
 	rts
 
 ;
@@ -77,7 +77,7 @@ unix_sig_exit:
 _doexec:
 	ldy #0
 	sty _kernel_flag
-	jsr map_process_always
+	jsr map_proc_always
 	sei
 	jmp plt_doexec
 
@@ -103,7 +103,7 @@ interrupt_handler:
 	jsr _plt_interrupt_i	; call via C int wrapper
 	lda _kernel_flag
 	bne interrupt_k
-	jmp map_process_always		; may have switched task
+	jmp map_proc_always		; may have switched task
 interrupt_k:
 	jmp map_restore
 

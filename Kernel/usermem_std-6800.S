@@ -13,7 +13,7 @@ __uputc:
 	tsx
 	ldab 5,x
 	ldx 2,x
-	jsr map_process_always
+	jsr map_proc_always
 	stab 0,x
 	jsr map_kernel
 	jmp ret4
@@ -23,7 +23,7 @@ __uputw:
 	tsx
 	ldab 5,x
 	ldx 2,x
-	jsr map_process_always
+	jsr map_proc_always
 	staa 0,x
 	stab 1,x
 	jsr map_kernel
@@ -32,7 +32,7 @@ __uputw:
 __ugetc:
 	tsx
 	ldx 2,x
-	jsr map_process_always
+	jsr map_proc_always
 	ldab 0,x
 	clra
 	jsr map_kernel
@@ -41,7 +41,7 @@ __ugetc:
 __ugetw:
 	tsx
 	ldx 2,x
-	jsr map_process_always
+	jsr map_proc_always
 	ldaa 0,x
 	ldab 1,x
 	jsr map_kernel
@@ -52,7 +52,7 @@ __uzero:
 	ldaa 2,x
 	ldab 3,x
 	ldx 4,x
-	jsr map_process_always
+	jsr map_proc_always
 	; Optimize, unroll etc ?
 	pshb
 uzeropg:
@@ -94,7 +94,7 @@ __uget:
 	stx @from
 ugetl:
 	ldx @from
-	jsr map_process_always
+	jsr map_proc_always
 	ldab ,x
 	inx
 	jsr map_kernel
@@ -131,7 +131,7 @@ uputl:
 	inx
 	stx @from
 	ldx @to
-	jsr map_process_always
+	jsr map_proc_always
 	stab ,x
 	jsr map_kernel
 	inx

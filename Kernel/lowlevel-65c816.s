@@ -5,7 +5,7 @@
 	.export _doexec
 	.export interrupt_handler
 	.export nmi_handler
-	.export map_process_always
+	.export map_proc_always
 	.export map_kernel
 	.export _userpage
 	.export _brk_limit
@@ -889,18 +889,18 @@ abort_inst:
 	.a8
 	.i8
 
-map_process_always:
+map_proc_always:
 	lda U_DATA__U_PAGE
 	sta _userpage
 	rts
-map_process:
+map_proc:
 	cmp #0
-	bne map_process_2
+	bne map_proc_2
 	cpx #0
-	bne map_process_2
+	bne map_proc_2
 map_kernel:
 	rts
-map_process_2:
+map_proc_2:
 	sta ptr1
 	stx ptr1+1
 	lda (ptr1)	; 4 bytes if needed
