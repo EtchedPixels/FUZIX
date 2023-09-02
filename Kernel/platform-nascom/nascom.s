@@ -28,9 +28,9 @@
 	.globl map_kernel
 	.globl map_kernel_di
 	.globl map_kernel_restore
-	.globl map_process
-	.globl map_process_a
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_a
+	.globl map_proc_always
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
@@ -105,7 +105,7 @@ _program_vectors:
 	push	hl ; put stack back as it was
 	push	de
 
-	call	map_process
+	call	map_proc
 
 	; write zeroes across all vectors
 	ld	hl, #0
@@ -187,7 +187,7 @@ _devide_read_data:
 not_swapin:
 	or	a
 	jr	z, doread
-	call	map_process_always
+	call	map_proc_always
 doread:
 	call	r256		; returns with B 0 port C
 	call	r256
@@ -222,7 +222,7 @@ _devide_write_data:
 not_swapout:
 	or	a
 	jr	z, dowrite
-	call	map_process_always
+	call	map_proc_always
 dowrite:
 	call	w256		; returns with B 0 port C
 	call	w256
