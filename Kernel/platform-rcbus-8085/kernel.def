@@ -1,7 +1,5 @@
 #define U_DATA__TOTALSIZE 0x200 /* 256+256 bytes */
 
-#define U_DATA_STASH	0xDE00	/* DE00-DFFF */
-
 #define PROGBASE	0x0000
 #define PROGLOAD	0x0100
 
