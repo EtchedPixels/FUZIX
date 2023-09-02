@@ -8,14 +8,14 @@
 	.globl _program_vectors
 	.globl map_kernel
 	.globl map_kernel_restore
-	.globl map_process
+	.globl map_proc
 	.globl map_buffers
 	.globl map_buffers_user
 	.globl map_buffers_user_h
 	.globl map_kernel_di
-	.globl map_process_di
-	.globl map_process_always
-	.globl map_process_always_di
+	.globl map_proc_di
+	.globl map_proc_always
+	.globl map_proc_always_di
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
@@ -208,7 +208,7 @@ _program_vectors:
 	push de
 
 	; At this point the common block has already been copied
-	call map_process
+	call map_proc
 
 	; write zeroes across all vectors
 	ld hl,#0
@@ -272,15 +272,15 @@ _program_vectors:
 ;=========================================================================
 
 ;=========================================================================
-; map_process_always - map process pages
+; map_proc_always - map process pages
 ; Inputs: page table address in #U_DATA__U_PAGE
 ; Outputs: none; all registers preserved
 ;=========================================================================
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	push hl
 	ld hl,#_udata + U_DATA__U_PAGE
-        jr map_process_2_pophl_ret
+        jr map_proc_2_pophl_ret
 
 map_buffers_user:
 	push hl
@@ -290,7 +290,7 @@ map_buffers_user:
 	ld hl,(_udata + U_DATA__U_PAGE + 2)
 	ld (_ubuffer_pages + 2),hl
 	ld hl,#_ubuffer_pages
-        jr map_process_2_pophl_ret
+        jr map_proc_2_pophl_ret
 
 map_buffers_user_h:
 	push hl
@@ -300,18 +300,18 @@ map_buffers_user_h:
 	ld l,#36
 	ld (_ubuffer_pages + 2),hl
 	ld hl,#_ubuffer_pages
-        jr map_process_2_pophl_ret
+        jr map_proc_2_pophl_ret
 
 ;=========================================================================
-; map_process - map process or kernel pages
+; map_proc - map process or kernel pages
 ; Inputs: page table address in HL, map kernel if HL == 0
 ; Outputs: none; A and HL destroyed
 ;=========================================================================
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	ld a,h
 	or l				; HL == 0?
-	jr nz,map_process_2		; HL == 0 - map the kernel
+	jr nz,map_proc_2		; HL == 0 - map the kernel
 
 ;=========================================================================
 ; map_kernel - map kernel pages
@@ -323,7 +323,7 @@ map_kernel_di:
 map_kernel_restore:
 	push hl
 	ld hl,#_kernel_pages
-        jr map_process_2_pophl_ret
+        jr map_proc_2_pophl_ret
 
 ;=========================================================================
 ; map_buffers - map kernel with disk buffers at 0x4000-0x7FFF
@@ -333,14 +333,14 @@ map_kernel_restore:
 map_buffers:
 	push hl
 	ld hl,#_kernelbuf_pages
-        jr map_process_2_pophl_ret
+        jr map_proc_2_pophl_ret
 
 ;=========================================================================
-; map_process_2 - map process or kernel pages
+; map_proc_2 - map process or kernel pages
 ; Inputs: page table address in HL
 ; Outputs: none, HL destroyed
 ;=========================================================================
-map_process_2:
+map_proc_2:
 	push de
 	push af
 
@@ -372,8 +372,8 @@ map_process_2:
 map_restore:
 	push hl
 	ld hl,#map_savearea
-map_process_2_pophl_ret:
-	call map_process_2
+map_proc_2_pophl_ret:
+	call map_proc_2
 	pop hl
 	ret
 
@@ -390,7 +390,7 @@ map_save_kernel:
 	ld hl,(mpgsel_cache+2)
 	ld (map_savearea+2),hl
 	ld hl,#_kernel_pages
-	jr map_process_2_pophl_ret
+	jr map_proc_2_pophl_ret
 
 ;=========================================================================
 ; map_for_swap - map a page into a bank for swap I/O
