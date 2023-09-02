@@ -433,7 +433,7 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 	{
 		struct vdp_rw rw;
 		uint16_t size;
-		uint8_t *addr = (uint8_t *)rw.data;
+		uint8_t *addr;
 		if (vswitch == 0) {
 			udata.u_error = EINVAL;
 			return -1;
@@ -443,6 +443,7 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			return -1;
 		}
 		size = rw.lines * rw.cols;
+		addr = (uint8_t *)rw.data;
 		if (valaddr(addr, size, is_wr) != size) {
 			udata.u_error = EFAULT;
 			return -1;
