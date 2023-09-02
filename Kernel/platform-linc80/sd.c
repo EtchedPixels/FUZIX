@@ -70,7 +70,7 @@ bool sd_spi_receive_sector(void) __naked
 not_swapin:
 #endif
     or a
-    call nz,map_process_always
+    call nz,map_proc_always
 doread:
     call _sd_spi_rx_sector
     pop af
@@ -95,7 +95,7 @@ bool sd_spi_transmit_sector(void) __naked
 not_swapout:
 #endif
     or a
-    call nz,map_process_always
+    call nz,map_proc_always
 dowrite:
     call _sd_spi_tx_sector
     pop af

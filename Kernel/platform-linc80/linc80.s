@@ -11,11 +11,11 @@
 	.globl _kernel_flag
         .globl map_kernel
         .globl map_buffers
-        .globl map_process_always
-        .globl map_process
+        .globl map_proc_always
+        .globl map_proc
         .globl map_kernel_di
         .globl map_kernel_restore
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
 	.globl map_for_swap
@@ -39,6 +39,7 @@
 	.globl nmi_handler
         .globl outcharhex
 	.globl init
+	.globl ___sdcc_enter_ix
 
 	.globl s__COMMONMEM
 	.globl l__COMMONMEM
@@ -85,12 +86,12 @@ map_a:
 	out (0x38),a
 	pop af
 	ret
-map_process:
+map_proc:
 	ld a,h
 	or l
 	jr z, map_kernel
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 map_for_swap:
 	push af
 	ld a,#3
@@ -120,11 +121,6 @@ _program_early_vectors:
         ld hl, #interrupt_handler
         ld (0x0039), hl
 
-        ; set restart vector for FUZIX system calls
-        ld (0x0030), a   ;  (rst 30h is unix function call vector)
-        ld hl, #unix_syscall_entry
-        ld (0x0031), hl
-
         ld (0x0000), a   
         ld hl, #null_handler   ;   to Our Trap Handler
         ld (0x0001), hl
@@ -132,6 +128,12 @@ _program_early_vectors:
         ld (0x0066), a  ; Set vector for NMI
         ld hl, #nmi_handler
         ld (0x0067), hl
+
+	;' Install the RST size helpers
+	ld hl,#rstblock
+	ld de,#0x8
+	ld bc,#32
+	ldir
 
 _program_vectors:
 plt_interrupt_all:
@@ -344,3 +346,36 @@ sio_handler_im2 b, SIOB_C, SIOB_D, reti
 
 	.area _BOOT
 	jp init
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
