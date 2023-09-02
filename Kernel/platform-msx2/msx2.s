@@ -12,12 +12,12 @@
             .globl _program_vectors
 	    .globl map_kernel
 	    .globl map_kernel_restore
-	    .globl map_process
+	    .globl map_proc
 	    .globl _map_kernel
-	    .globl map_process_always
+	    .globl map_proc_always
 	    .globl map_kernel_di
-	    .globl map_process_di
-	    .globl map_process_always_di
+	    .globl map_proc_di
+	    .globl map_proc_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl enaslt
@@ -149,7 +149,7 @@ _program_vectors:
             push de
 
 	    ; At this point the common block has already been copied
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
 	    ; on MSX this is probably the wrong thing to do!!! FIXME
@@ -197,21 +197,21 @@ _program_vectors:
 ;
 ;	All registers preserved
 ;
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push hl
 	    ld hl, #_udata + U_DATA__U_PAGE
-	    call map_process_2
+	    call map_proc_2
 	    pop hl
 	    ret
 ;
 ;	HL is the page table to use, A is eaten, HL is eaten
 ;
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
 	    or l
-	    jr nz, map_process_2
+	    jr nz, map_proc_2
 ;
 ;	Map in the kernel below the current common, go via the helper
 ;	so our cached copy is correct.
@@ -222,11 +222,11 @@ map_kernel_di:
 map_kernel:
 	    push hl
 	    ld hl, #map_kernel_data
-	    call map_process_2
+	    call map_proc_2
 	    pop hl
 	    ret
 
-map_process_2:
+map_proc_2:
 	    push de
             push bc
 	    push af
@@ -256,7 +256,7 @@ map_process_2:
 map_restore:
 	    push hl
 	    ld hl,#map_savearea
-	    call map_process_2	; Put the mapper back right
+	    call map_proc_2	; Put the mapper back right
 	    pop hl
 	    ret
 ;
@@ -269,7 +269,7 @@ map_save_kernel:
 	    ld hl, (map_table + 2)
 	    ld (map_savearea + 2), hl
 	    ld hl, #map_kernel_data
-	    call map_process_2
+	    call map_proc_2
 	    pop hl
 	    ret
 
