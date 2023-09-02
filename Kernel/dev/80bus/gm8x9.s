@@ -12,7 +12,7 @@
 
 	.globl _io_page
 	.globl _gm8x9_steprate
-	.globl map_process_a
+	.globl map_proc_a
 	.globl map_kernel
 
 ;
@@ -95,7 +95,7 @@ _gm8x9_ioread:
 	ret nz
 	ld a,(_io_page)
 	or a
-	call nz, map_process_a
+	call nz, map_proc_a
 	; FIXME: need to sort out head loading and also side here
 	ld a,#FDREAD
 	out (0xE0),a			; issue command
@@ -137,7 +137,7 @@ _gm8x9_iowrite:
 	ret nz
 	ld a,(_io_page)
 	or a
-	call nz, map_process_a
+	call nz, map_proc_a
 	; FIXME: need to sort out head loading and also side here
 	ld a,#FDWRITE
 	out (0xE0),a			; issue command

@@ -116,7 +116,7 @@ static void gm833_inir_mapped(uint8_t *ptr) __z88dk_fastcall __naked
 __asm
     ld a,(_map)
     or a
-    call nz, map_process_a
+    call nz, map_proc_a
     ld bc,#0x80FD
     inir
     jp map_kernel
@@ -128,7 +128,7 @@ static void gm833_otir_mapped(uint8_t *ptr) __z88dk_fastcall __naked
 __asm
     ld a,(_map)
     or a
-    call nz,map_process_a
+    call nz,map_proc_a
     ld bc,#0x80FD
     otir
     jp map_kernel
