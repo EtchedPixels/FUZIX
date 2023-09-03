@@ -39,6 +39,8 @@
 
 	.globl z80_irq
 
+	.globl ___sdcc_enter_ix
+
 	.include "kernel.def"
         .include "../cpu-z180/z180.def"
 
@@ -54,17 +56,24 @@
 	ld	sp,#0xFFFF
 	jp	startup
 ; RST 8
-	ret
-	.ds	7
+	jp	___sdcc_enter_ix
+	.ds	5
 ; RST 10
+	ld	sp,ix
+	pop	ix
 	ret
-	.ds	7
+	.ds	3
 ; RST 18
+	pop	af
+	pop	ix
 	ret
-	.ds	7
+	.ds	4
 ; RST 20
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
 	ret
-	.ds	7
 ; RST 28
 	ret
 	.ds	7

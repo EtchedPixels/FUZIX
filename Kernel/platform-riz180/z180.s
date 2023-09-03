@@ -10,7 +10,7 @@
         .globl z180_init_early
         .globl _init_hardware_c
         .globl _program_vectors
-        .globl _copy_and_map_process
+        .globl _copy_and_map_proc
         .globl interrupt_table ; not used elsewhere but useful to check correct alignment
         .globl hw_irqvector
         .globl _irqvector
@@ -35,9 +35,9 @@
 	.globl map_buffers
         .globl map_kernel
 	.globl map_kernel_restore
-        .globl map_process_always
+        .globl map_proc_always
         .globl map_kernel_di
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
 	.globl map_for_swap
@@ -103,7 +103,7 @@ z180_init_hardware:
 ;
 ;	More complicared than the usual set up as our banks are smaller.
 ;
-_copy_and_map_process:
+_copy_and_map_proc:
         di          ; just to be sure
         pop bc      ; temporarily store return address
         pop de      ; function argument -- pointer to base page number
@@ -202,7 +202,7 @@ _dofork:
         ld de, #P_TAB__P_PAGE_OFFSET
         add hl, de
         push hl
-        call _copy_and_map_process
+        call _copy_and_map_proc
         pop hl
 
         ; now the copy operation is complete we can get rid of the stuff
@@ -674,8 +674,8 @@ map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
         pop af
         ret
 
-map_process_always_di:
-map_process_always: ; map the process into the low 60K based on current common mem (which is unchanged)
+map_proc_always_di:
+map_proc_always: ; map the process into the low 60K based on current common mem (which is unchanged)
         push af
 .if DEBUGBANK
         ld a, #'='
@@ -758,7 +758,7 @@ swapinstack:
 .endif
 
 _program_vectors:
-	call	map_process_always
+	call	map_proc_always
 	ld	a,#0xC3
 	ld	(0),a
 	ld	(0x38),a
