@@ -7,13 +7,13 @@
         .globl init_hardware
 	.globl _program_vectors
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_always
-	.globl map_process_a
+	.globl map_proc
+	.globl map_proc_always
+	.globl map_proc_a
 	.globl map_kernel_di
 	.globl map_kernel_restore
-	.globl map_process_di
-	.globl map_process_always_di
+	.globl map_proc_di
+	.globl map_proc_always_di
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
@@ -346,7 +346,7 @@ _program_vectors:
 	push de
 
 	; At this point the common block has already been copied
-	call map_process
+	call map_proc
 
 	; write zeroes across all vectors
 	ld hl,#0
@@ -383,20 +383,20 @@ program_kvectors:
 ; Memory management
 ;=========================================================================
 
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	ld a,h
 	or l				; HL == 0?
 	jr z,map_kernel			; HL == 0 - map the kernel
 	ld a,(hl)
 map_for_swap:
-map_process_a:
+map_proc_a:
 	ld (pagereg),a
 	out (0x1f),a
 	ret
 
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	push af
 	ld a,(_udata + U_DATA__U_PAGE)
 map_pop_a:
