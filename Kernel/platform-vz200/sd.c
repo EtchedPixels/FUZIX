@@ -56,7 +56,7 @@ bool sd_spi_receive_sector(uint8_t *ptr) __naked
     call map_buffers
     jr doread
 to_user:
-    call map_process_always
+    call map_proc_always
 doread:
     ld bc, #57
     ld d,#0xFF
@@ -88,7 +88,7 @@ bool sd_spi_transmit_sector(uint8_t *ptr) __naked
     call map_buffers
     jr dowrite
 from_user:
-    call map_process_always
+    call map_proc_always
 dowrite:
     ld bc, #57
 writel:
