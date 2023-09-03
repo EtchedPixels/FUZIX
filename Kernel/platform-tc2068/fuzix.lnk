@@ -35,6 +35,7 @@ tty.rel
 vt.rel
 font8x8.rel
 mm.rel
+memalloc_none.rel
 simple.rel
 swap.rel
 devsys.rel
