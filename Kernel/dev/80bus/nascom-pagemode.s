@@ -26,6 +26,8 @@
             .globl _procmem
 	    .globl _bankmap
 
+	    .globl ___sdcc_enter_ix
+
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
@@ -127,6 +129,11 @@ init_hardware:
 	    push hl
 	    call _program_vectors
 	    pop af
+	    ; RST helpers
+	    ld hl,#rstblock
+	    ld de,#8
+	    ld bc,#32
+	    ldir
 	    ; FIXME: interrupt mode is per port target ?
             ret
 
@@ -201,3 +208,36 @@ map_restore:
 	    out (0xFF), a
 	    pop af
 	    ret
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
