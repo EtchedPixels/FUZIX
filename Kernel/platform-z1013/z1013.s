@@ -7,12 +7,12 @@
         .globl init_hardware
 	.globl _program_vectors
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_always
 	.globl map_kernel_di
 	.globl map_kernel_restore
-	.globl map_process_di
-	.globl map_process_always_di
+	.globl map_proc_di
+	.globl map_proc_always_di
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
@@ -125,12 +125,12 @@ rom_out:
 
 
 ;=========================================================================
-; map_process - map process or kernel pages
+; map_proc - map process or kernel pages
 ; Inputs: page table address in HL, map kernel if HL == 0
 ; Outputs: none; A and HL destroyed
 ;=========================================================================
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	ld a,h
 	or l				; HL == 0?
 	jr z,map_kernel			; HL == 0 - map the kernel
@@ -150,11 +150,11 @@ map_for_swap:
 	; fall through
 
 ;=========================================================================
-; map_process_always - map process pages
+; map_proc_always - map process pages
 ; Inputs: page table address in #U_DATA__U_PAGE
 ; Outputs: none; all registers preserved
 ;=========================================================================
-map_process_always:
+map_proc_always:
 	di
 	push af
 	call rom_out
@@ -171,7 +171,7 @@ still_di:
 	pop	af
 	ret
 
-map_process_always_di:
+map_proc_always_di:
 	push	af
 was_u:
 	call	rom_out
@@ -267,7 +267,7 @@ outpt:	.word 0xEC00
         .globl __uputw
         .globl __uzero
 
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl  map_kernel
 ;
 ;	We need these in common as they bank switch
@@ -301,7 +301,7 @@ __uputc:
 	push hl
 	push de
 	push bc
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 uputc_out:
 	jp map_kernel			; map the kernel back below common
@@ -313,20 +313,20 @@ __uputw:
 	push hl
 	push de
 	push bc
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	jp map_kernel
 
 __ugetc:
-	call map_process_always
+	call map_proc_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel
 
 __ugetw:
-	call map_process_always
+	call map_proc_always
         ld a, (hl)
 	inc hl
 	ld h, (hl)
@@ -339,7 +339,7 @@ __uput:
 	add ix, sp
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
-	call map_process_always
+	call map_proc_always
 	ldir
 uput_out:
 	call map_kernel
@@ -353,7 +353,7 @@ __uget:
 	add ix, sp
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
-	call map_process_always
+	call map_proc_always
 	ldir
 	jr uput_out
 
@@ -368,7 +368,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_always
+	call map_proc_always
 	ld (hl), #0
 	dec bc
 	ld a, b
@@ -468,7 +468,7 @@ ramconf:
 	ld	c,a		; port
 	ld	a,(_rd_page)	; check if we need to page user space in
 	or	a
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	ld	b,#0		; Set up b for the caller
 	ld	a,l
 	inc	a		; second port info
