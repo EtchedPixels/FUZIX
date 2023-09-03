@@ -70,7 +70,7 @@ extern unsigned char vt_map_char(unsigned char);
 #define NUM_DEV_TTY 2
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
-#define NBUFS    4         /* Number of block buffers - keep in sync with asm! */
+#define NBUFS    4         /* Number of block buffers */
 #define NMOUNTS	 4	   /* Number of mounts at a time */
 
 extern void plt_discard(void);

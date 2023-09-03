@@ -20,6 +20,7 @@
 	        .area _INITIALIZED
 		.area _BUFFERS
 		.area _DISCARD
+	        .area _INITIALIZER
 
 		; 32K-64K kernel only map
 		.area _CODE1
@@ -28,7 +29,6 @@
 
 		; Tell binman to leave the image alone
 		.area _PAGE0
-	        .area _INITIALIZER
 
         	; imported symbols
         	.globl _fuzix_main
@@ -56,6 +56,9 @@
 ;
 start:
 		ld sp, #kstack_top
+		ld a,#0xD0
+		; Unmap I/O space as it may have _DATA over it
+		out (0xC0),a
 		; Zero the data area
 		ld hl, #s__DATA
 		ld de, #s__DATA + 1

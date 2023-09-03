@@ -2,7 +2,6 @@
 -i fuzix.ihx
 -b _BOOT=0x0100
 -b _CODE=0x0200
--b _INITIALIZER=0x37C0
 -b _COMMONMEM=0x4000
 -b _CODE1=0x8000
 -b _DISCARD=0x6800
