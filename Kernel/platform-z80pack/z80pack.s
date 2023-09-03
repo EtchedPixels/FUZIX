@@ -17,11 +17,11 @@
 	    .globl map_kernel
 	    .globl map_kernel_di
 	    .globl map_kernel_restore
-	    .globl map_process
-	    .globl map_process_di
-	    .globl map_process_always
-	    .globl map_process_always_di
-	    .globl map_process_a
+	    .globl map_proc
+	    .globl map_proc_di
+	    .globl map_proc_always
+	    .globl map_proc_always_di
+	    .globl map_proc_a
 	    .globl map_save_kernel
 	    .globl map_restore
 
@@ -86,7 +86,7 @@ _fd_bankcmd:pop de		; return
 	    ld a, (_int_disabled)
 	    di
 	    push af		; save DI state
-	    call map_process_di	; HL alread holds our bank
+	    call map_proc_di	; HL alread holds our bank
 	    ld a, c		; issue the command
 	    out (13), a		;
 	    call map_kernel_di	; return to kernel mapping
@@ -147,7 +147,7 @@ _program_vectors:
             push hl ; put stack back as it was
             push de
 
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
             ld hl, #0
@@ -193,17 +193,17 @@ map_kernel_restore:
 	    out (21), a
 	    pop af
             ret
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
 	    ld a, (hl)
-map_process_a:
+map_proc_a:
 	    out (21), a
             ret
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push af
 	    ld a, (_udata + U_DATA__U_PAGE)
 	    out (21), a
