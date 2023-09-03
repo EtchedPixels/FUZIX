@@ -62,7 +62,6 @@
         .globl kstack_top
 	.globl istack_switched_sp
 	.globl istack_top
-	.globl _ssig
 	.globl _udata
 	.globl syscall_platform
 

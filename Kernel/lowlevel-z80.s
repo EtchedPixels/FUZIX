@@ -529,13 +529,7 @@ null_pointer_trap:
 trap_signal:
 	push hl
 	ld hl,(_udata + U_DATA__U_PTAB)
-	ld de, #P_TAB__P_PID_OFFSET
-	add hl,de
-	ld e,(hl)
-	inc hl
-	ld d,(hl)
-	inc hl
-	push de
+	push hl
         call _ssig
 	; Now fall into pre-emption from which we will not return
 ;
