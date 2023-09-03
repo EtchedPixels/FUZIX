@@ -19,7 +19,9 @@
 	.globl _fd_selected
 	.globl _fd_tab
 	.globl _fd_cmd
-	.globl map_kernel, map_process_always
+	.globl map_kernel, map_proc_always
+
+	.module floppy
 
 FDCREG	.equ	0xF0
 FDCTRK	.equ	0xF1
@@ -354,7 +356,7 @@ _fd_operation:
 	ex	de,hl
 	ld	a, (_fd_map)
 	or	a
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	push	ix
 	ld	ix, #_fd_cmd
 	ld	l, DATA(ix)

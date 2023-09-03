@@ -18,11 +18,11 @@
 	.globl map_kernel
 	.globl map_kernel_di
 	.globl map_kernel_restore
-	.globl map_process
-	.globl map_process_di
-	.globl map_process_a
-	.globl map_process_always
-	.globl map_process_always_di
+	.globl map_proc
+	.globl map_proc_di
+	.globl map_proc_a
+	.globl map_proc_always
+	.globl map_proc_always_di
 	.globl map_save_kernel
 	.globl map_restore
 	.globl _opreg
@@ -220,12 +220,12 @@ map_kernel_restore:
 ;	Mapping codes 0x63 / 0x73. 0x94 on a bank expanded TRS80 then
 ;	selects how the upper bank decodes
 ;
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	ld	a, h
 	or	l
 	jr	z, map_kernel
-map_process_hl:
+map_proc_hl:
 	ld	a, (_opreg)
 	and	#0x8C
 	or	#0x63
@@ -245,7 +245,7 @@ bankpatch:
 	out	(0x94), a	; self modified
 	ret
 
-map_process_a:			; used by bankfork
+map_proc_a:			; used by bankfork
 	push	af
 	push	bc
 	ld	b, a
@@ -264,12 +264,12 @@ maplo2:
 	pop	af
 	ret
 
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push af
 	    push hl
 	    ld hl, #_udata + U_DATA__U_PAGE
-	    call map_process_hl
+	    call map_proc_hl
 	    pop hl
 	    pop af
 	    ret

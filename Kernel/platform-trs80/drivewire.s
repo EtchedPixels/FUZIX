@@ -4,8 +4,8 @@
 	.globl _dw_transaction
 	.globl _dw_reset
 
-	.globl map_process_a
-	.globl map_process_always
+	.globl map_proc_a
+	.globl map_proc_always
 	.globl map_kernel
 
 
@@ -22,7 +22,7 @@ _dw_transaction:
 	ld a,-10(ix)
 	or a
 	push af
-	call nz, map_process_always
+	call nz, map_proc_always
 	ld h,-2(ix)
 	ld l,-3(ix)
 	ld b,-4(ix)
@@ -70,7 +70,7 @@ _dw_operation:
 	push bc
 
 	ld b, 7(iy)	; page map LSB
-	call map_process_a
+	call map_proc_a
 	ld h, 3(iy)	; pointer
 	ld l, 4(iy)
 	ld b, 1(iy)
