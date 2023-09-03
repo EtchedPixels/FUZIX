@@ -7,12 +7,12 @@
         .globl init_hardware
 	.globl _program_vectors
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_always
 	.globl map_kernel_di
 	.globl map_kernel_restore
-	.globl map_process_di
-	.globl map_process_always_di
+	.globl map_proc_di
+	.globl map_proc_always_di
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
@@ -300,7 +300,7 @@ _program_vectors:
 	push de
 
 	; At this point the common block has already been copied
-	call map_process
+	call map_proc
 
 	; write zeroes across all vectors
 	ld hl,#0
@@ -383,12 +383,12 @@ no_work_di:
 	ret
 
 ;=========================================================================
-; map_process - map process or kernel pages
+; map_proc - map process or kernel pages
 ; Inputs: page table address in HL, map kernel if HL == 0
 ; Outputs: none; A and HL destroyed
 ;=========================================================================
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	ld a,h
 	or l				; HL == 0?
 	jr z,map_kernel			; HL == 0 - map the kernel
@@ -408,18 +408,18 @@ map_for_swap:
 	; fall through
 
 ;=========================================================================
-; map_process_always - map process pages
+; map_proc_always - map process pages
 ; Inputs: page table address in #U_DATA__U_PAGE
 ; Outputs: none; all registers preserved
 ;=========================================================================
-map_process_always:
+map_proc_always:
 	push af
 	ld a,#1
 	call rom_control
 	pop af
 	ret
 
-map_process_always_di:
+map_proc_always_di:
 	push af
 	ld a,#1
 	call rom_control_di
