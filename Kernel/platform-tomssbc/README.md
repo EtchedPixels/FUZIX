@@ -1,4 +1,10 @@
-Fuzix for Tom's SBC version C with mods.
+# Fuzix for Tom's SBC version C with mods.
+## Versions
+
+For an EPROM based build that requires no board modifications see
+the tomssbc-rom target.
+
+## Hardware
 
 This is a port to Tom's SBC. There are two hardware modifications required.
 The first is to bend up A16 on the RAM so it is not grounded, and instead
@@ -23,8 +29,9 @@ Finally you need to inject the ROM with a helper function in the space at
 the top as the monitor for the system doesn't have this included and it
 is needed to bootstrap software using both RAM banks. See README.ROMPatch.
 
-Memory map
+## Memory map
 
+````
 Kernel
 
 0000-00FF	Vectors (present in both banks)
@@ -40,21 +47,24 @@ User
 F000-F1FF	Kernel stack alternative (used during some bank switch ops)
 F200-F2FF	Istack alternate (we may take interrupts in either bank)
 F300-FFFF	Common (mostly valid in both banks)
+```
 
-BUGS
+## Things To Do
+- Build a suitably high CP/M emuation and test it
+- Faster interbank copying
+- Swap only needed blocks for speed up
 
-TO DO
-Build a suitably high CP/M emuation and test it
-Faster interbank copying
-Swap only needed blocks for speed up
+## Emulation
 
-Emulation
-
+````
 make diskimage
 searle -r scm.rom -T -i emu-ide.img -B -t
+````
 
-Real Hardware
+#Real Hardware
 
+````
 make diskimage
+````
 
 Boot the machine and in the monitor run the CPM command.
