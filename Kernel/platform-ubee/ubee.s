@@ -13,11 +13,11 @@
 	    .globl map_kernel
 	    .globl map_kernel_di
 	    .globl map_kernel_restore
-	    .globl map_process
-	    .globl map_process_di
-	    .globl map_process_a
-	    .globl map_process_always
-	    .globl map_process_always_di
+	    .globl map_proc
+	    .globl map_proc_di
+	    .globl map_proc_a
+	    .globl map_proc_always
+	    .globl map_proc_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
@@ -332,7 +332,7 @@ _program_vectors:
             push hl ; put stack back as it was
             push de
 
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
             ld hl, #0
@@ -378,25 +378,25 @@ map_kernel_restore:
 	    out (0x50), a
 	    pop af
 	    ret
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
-map_process_hl:
+map_proc_hl:
 	    ld a, (hl)
 map_for_swap:
-map_process_a:			; used by bankfork
+map_proc_a:			; used by bankfork
 	    ld (mapreg), a
 	    out (0x50), a
             ret
 
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push af
 	    push hl
 	    ld hl, #_udata + U_DATA__U_PAGE
-	    call map_process_hl
+	    call map_proc_hl
 	    pop hl
 	    pop af
 	    ret

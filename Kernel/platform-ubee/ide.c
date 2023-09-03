@@ -52,7 +52,7 @@ void devide_read_data(void) __naked
 not_swapin:
 #endif
             or a                                    ; test is_user
-            call nz, map_process_always             ; map user memory first if required
+            call nz, map_proc_always                ; map user memory first if required
 swapin:
             inir                                    ; transfer first 256 bytes
             inir                                    ; transfer second 256 bytes
@@ -78,7 +78,7 @@ void devide_write_data(void) __naked
 not_swapout:
 #endif
             or a                                    ; test is_user
-            call nz, map_process_always             ; else map user memory first if required
+            call nz, map_proc_always                ; else map user memory first if required
 swapout:
 outloop:
             ;

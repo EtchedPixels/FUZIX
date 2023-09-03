@@ -36,6 +36,7 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
+memalloc_none.rel
 swap.rel
 platform-ubee/net_native.rel
 bankfixed.rel

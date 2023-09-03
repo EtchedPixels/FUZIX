@@ -13,7 +13,7 @@
 	.globl fd_nmi_handler
 
 	.globl map_kernel
-	.globl map_process_always
+	.globl map_proc_always
 
 FDCREG	.equ	0x40
 FDCTRK	.equ	0x41
@@ -21,6 +21,7 @@ FDCSEC	.equ	0x42
 FDCDATA	.equ	0x43
 FDCCTRL	.equ	0x48
 
+	.module floppy
 ;
 ;	interrupt register reports 0x80 for interrut, 0x40 for drq
 ;	(0x20 is the unrelated reset button)
@@ -184,7 +185,7 @@ fdiosetup:
 					; to meet timing
 	ld	a, USER(ix)
 	or	a
-	call	nz, map_process_always
+	call	nz, map_proc_always
 
 	ld	a, #1
 	ld	(fdc_active), a		; NMI pop and jump
