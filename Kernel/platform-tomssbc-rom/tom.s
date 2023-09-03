@@ -11,13 +11,13 @@
 	.globl null_handler
 
         .globl map_kernel
-        .globl map_process_always
-        .globl map_process
+        .globl map_proc_always
+        .globl map_proc
         .globl map_kernel_di
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
-	.globl map_process_save
+	.globl map_proc_save
 	.globl map_kernel_restore
 	.globl map_buffers
 	.globl map_for_swap
@@ -145,7 +145,7 @@ init_hardware:
         ld (_procmem), hl
 
 	; Add the vectors to the low RAM
-	call map_process_always
+	call map_proc_always
 	ld a,#0xC3
 	ld (0),a
 	ld hl,#null_handler
@@ -223,7 +223,7 @@ switch_bank:
         out (0x38), a
         ret
 
-map_process:
+map_proc:
         ld a, h
         or l
         jr z, map_kernel_nosavea
@@ -237,9 +237,9 @@ map_process:
 ;	We always save here so that existing code works until we have a
 ;	clear usage of save/restore forms across the kernel
 ;
-map_process_save:
-map_process_always:
-map_process_always_di:
+map_proc_save:
+map_proc_always:
+map_proc_always_di:
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
@@ -262,8 +262,8 @@ map_save_kernel:
 ;	invocation of kernel code in fact runs common code and the
 ;	common code will bank in the right kernel bits for us when it calls
 ;	out of common into banked code. We do a restore to handle all the
-;	callers who do map_process_always/map_kernel pairs. Probably we
-;	should have some global change to map_process_save/map_kernel_restore
+;	callers who do map_proc_always/map_kernel pairs. Probably we
+;	should have some global change to map_proc_save/map_kernel_restore
 ;
 map_kernel_di:
 map_kernel:
@@ -604,7 +604,7 @@ __stub_4_3:
         .globl __uputw
         .globl __uzero
 
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl  map_kernel
 
 ;
@@ -641,7 +641,7 @@ __uputc:
 	push de
 	push bc
 	push iy
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 uputc_out:
 	jp map_kernel			; map the kernel back below common
@@ -655,20 +655,20 @@ __uputw:
 	push de
 	push bc
 	push iy
-	call map_process_always
+	call map_proc_always
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	jp map_kernel
 
 __ugetc:
-	call map_process_always
+	call map_proc_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel
 
 __ugetw:
-	call map_process_always
+	call map_proc_always
         ld a, (hl)
 	inc hl
 	ld h, (hl)
@@ -681,7 +681,7 @@ __uput:
 	add ix, sp
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
-	call map_process_always
+	call map_proc_always
 	ldir
 uput_out:
 	call map_kernel
@@ -695,7 +695,7 @@ __uget:
 	add ix, sp
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
-	call map_process_always
+	call map_proc_always
 	ldir
 	jr uput_out
 
@@ -712,7 +712,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_always
+	call map_proc_always
 	ld (hl), #0
 	dec bc
 	ld a, b
