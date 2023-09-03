@@ -5,20 +5,16 @@
 #include <printf.h>
 #include <stdbool.h>
 #include <timer.h>
-#include <devide.h>
-#include <blkdev.h>
-
+#include <tinyide.h>
+#include <plt_ide.h>
 
 /* We know we have one drive only */
 
 void ide_resume(void)
 {
-    devide_writeb(ide_reg_devhead, 0xE0);
-    if (devide_wait(IDE_STATUS_READY)) {
-        devide_writeb(ide_reg_features,0x01);
-        devide_writeb(ide_reg_command, IDE_CMD_SET_FEATURES);
-        if (devide_wait(IDE_STATUS_READY))
-            return;
-    }
-    panic("IDE resume failed!");
+    ide_write(devh, 0xE0);
+    while(ide_read(status) & 0x80);	/* Wait for !BSY */
+    ide_write(error,0x01);
+    ide_write(cmd, 0xEF);		/* Set Features */
+    while((ide_read(status) & 0x40) == 0x40);	/* Wait for DRDY */
 }

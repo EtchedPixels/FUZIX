@@ -43,6 +43,7 @@
 	.globl _ide_resume
 	.globl _udata
 	.globl _mach_zrcc
+	.globl ___sdcc_enter_ix
 
 	; exported debugging tools
 	.globl outchar
@@ -129,6 +130,12 @@ is_zrcc:
 	; Fall through into the setup
 vectors:
 	call program_kvectors
+
+	; Install RST helpers
+	ld hl,#rstblock
+	ld de,#8
+	ld bc,#32
+	ldir
 
 	; Look for an SIO using the ROMWBW algorithm
 
@@ -480,3 +487,35 @@ lobit:
 	dec a
 	jp bitwait
 
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret

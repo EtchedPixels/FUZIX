@@ -35,10 +35,10 @@ devsys.rel
 usermem.rel
 platform-rcbus-sbc64/discard.rel
 platform-rcbus-sbc64/devtty.rel
-platform-rcbus-sbc64/mbr.rel
-platform-rcbus-sbc64/blkdev.rel
-platform-rcbus-sbc64/devide.rel
-platform-rcbus-sbc64/devide_discard.rel
+platform-rcbus-sbc64/tinydisk.rel
+platform-rcbus-sbc64/tinyide.rel
+platform-rcbus-sbc64/tinydisk_discard.rel
+platform-rcbus-sbc64/tinyide_discard.rel
 platform-rcbus-sbc64/platform_ide.rel
 platform-rcbus-sbc64/ds1302.rel
 platform-rcbus-sbc64/ds1302_discard.rel
