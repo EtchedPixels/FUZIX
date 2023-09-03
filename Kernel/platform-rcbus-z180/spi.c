@@ -168,7 +168,7 @@ not_swapin:
 #endif
         or a
         jr z, rd_kernel
-        call map_process_always             ; map user process
+        call map_proc_always             ; map user process
         jr rxnextbyte
 rd_kernel:
         call map_buffers
@@ -230,7 +230,7 @@ not_swapout:
 #endif
         or a
         jr z, wr_kernel
-        call map_process_always             ; map user process
+        call map_proc_always             ; map user process
         jr gotransmit
 wr_kernel:
         call map_buffers
