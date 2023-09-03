@@ -36,6 +36,7 @@ syscall_other.rel
 syscall_net.rel
 tty.rel
 mm.rel
+memalloc_none.rel
 bank16kfc.rel
 swap.rel
 devsys.rel

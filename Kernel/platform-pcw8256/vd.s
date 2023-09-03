@@ -15,7 +15,7 @@
 		.globl _vd_drive_op
 
 		.globl map_for_swap
-		.globl map_process_always
+		.globl map_proc_always
 		.globl map_buffers
 		.globl map_kernel
 
@@ -51,7 +51,7 @@ _vd_do_op:
 not_swap:
 		or a
 		jr z, op_kernel
-		call map_process_always
+		call map_proc_always
 		jr do_op
 op_kernel:
 		call map_buffers

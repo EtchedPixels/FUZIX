@@ -11,7 +11,7 @@
 	.include "kernel.def"
 	.include "../kernel-z80.def"
 
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl	map_kernel
 
 	.globl _fd765_do_nudge_tc
@@ -73,6 +73,10 @@ fd765_tx_loop:
 	ex (sp), hl
 	ret
 
+fd765_sense:
+	ld a,#8		; SENSE INTERRUPT STATUS
+	call fd765_tx
+	ret c
 ; Reads bytes from the FDC data register until the FDC tells us to stop (by
 ; lowering DIO in the status register).
 
@@ -86,6 +90,10 @@ read_status_loop:
 	add a,a
 	ret nc				; ...low, no more data
 	ini
+	ex (sp),hl			; 12us for the controller
+	ex (sp),hl			; to sort out the status bit
+	ex (sp),hl
+	ex (sp),hl
 	jr read_status_loop		; next byte
 _fd765_status:
 	.ds 8				; 8 bytes of status data
@@ -132,20 +140,14 @@ _fd765_drive:
 
 ; Waits for a SEEK or RECALIBRATE command to finish by polling SENSE INTERRUPT STATUS.
 wait_for_seek_ending:
-	; TODO : timeout
-	in	a,(FD_ST)
-	and	#0x1F
-	jr	nz, wait_for_seek_ending
+	in	a,(0xF8)
+	and	#0x20			; FDC interrupt ?
+	jr	z, wait_for_seek_ending
 
-	call	fd765_read_status
-
-;	ld a, #0x08				; SENSE INTERRUPT STATUS
-;	call fd765_tx
-;	call fd765_read_status
-;
-;	ld a, (_fd765_status)
-;	bit 5, a				; SE, seek end
-;	jr z, wait_for_seek_ending
+	call	fd765_sense
+	ld	a,(_fd765_status)
+	bit	5,a
+	jr	z, wait_for_seek_ending
 
 	; Now settle the head
 	ld a, #30		; 30ms
@@ -200,7 +202,7 @@ _fd765_do_read:
 	ld a, (_fd765_is_user)
 	or a
 	push af
-	call nz, map_process_always
+	call nz, map_proc_always
 
 	di				; performance critical,
 					; run with interrupts off
@@ -246,7 +248,7 @@ _fd765_do_write:
 	ld a, (_fd765_is_user)
 	or a
 	push af
-	call nz, map_process_always
+	call nz, map_proc_always
 
 	di
 

@@ -10,17 +10,17 @@
             .globl _program_vectors
 	    .globl map_buffers
 	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_always
+	    .globl map_proc
+	    .globl map_proc_always
 	    .globl map_kernel_di
 	    .globl map_kernel_restore
-	    .globl map_process_di
-	    .globl map_process_always_di
+	    .globl map_proc_di
+	    .globl map_proc_always_di
 	    .globl _int_disabled
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
-	    .globl map_process_a
+	    .globl map_proc_hl
 	    .globl plt_interrupt_all
 
             ; exported debugging tools
@@ -222,7 +222,7 @@ _program_vectors:
             push hl ; put stack back as it was
             push de
 
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
             ld hl, #0
@@ -252,9 +252,9 @@ _program_vectors:
 ;	We must provide
 ;
 ;	map_kernel		-	map in the kernel, trashes nothing
-;	map_process_always	-	map in the current process, ditto
+;	map_proc_always	-	map in the current process, ditto
 ;	map_buffers		-	map in the kernel + buffers, ditto
-;	map_process		-	map the pages pointed to by hl, eats
+;	map_proc		-	map the pages pointed to by hl, eats
 ;					a, hl
 ;
 kmap:	    .db 0x80, 0x81, 0x82
@@ -266,7 +266,7 @@ map_kernel_restore:
 	    push af
 	    push hl
 	    ld hl, #kmap
-	    call map_process_1
+	    call map_proc_1
             pop hl
 	    pop af
 	    ret
@@ -279,12 +279,12 @@ map_for_swap:
 	   out (0xF1),a			; and the mapping
 	   ret
 
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push af
 	    push hl
 	    ld hl, #_udata + U_DATA__U_PAGE
-	    call map_process_1
+	    call map_proc_1
 	    pop hl
 	    pop af
 	    ret
@@ -292,13 +292,13 @@ map_process_always_di:
 ;
 ;	We shouldn't need IRQ protection here - review
 ;
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
-map_process_a:	; really map_process_hl in our case.
-map_process_1:
+map_proc_hl:
+map_proc_1:
 	    push de
 	    push bc
 	    ld de, #map_current
@@ -327,7 +327,7 @@ map_save_kernel:
 	    ldi
 	    push af
 	    ld hl, #kmap
-	    call map_process_1
+	    call map_proc_1
 	    pop af
 	    pop bc
 	    pop de
@@ -337,7 +337,7 @@ map_save_kernel:
 map_restore:push hl
 	    push af
 	    ld hl, #map_save_area
-            call map_process_1
+            call map_proc_1
 	    pop af
             pop hl
             ret
