@@ -16,7 +16,7 @@ CPU_Z180	.equ	Z80_TYPE-2
 
         ; imported symbols
         .globl map_kernel
-        .globl map_process_always
+        .globl map_proc_always
         .globl _devfd_dtbl
 	.globl _plt_idle
 
@@ -611,7 +611,7 @@ FdcXit:
 ; inner section of FdCmd routine, has to touch buffers etc
 FdCmdXfer:
         BIT     0,D             ; Buffer in user memory?
-        CALL    NZ, map_process_always
+        CALL    NZ, map_proc_always
 
         ; send the command (length is in B, command is in C)
         PUSH    HL              ; save pointer for possible Transfer
