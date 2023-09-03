@@ -72,7 +72,7 @@ void devide_read_data(void) __naked
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
             or a                                    ; test is_user
             push af                                 ; save flags
-            call nz, map_process_always             ; map user memory first if required
+            call nz, map_proc_always             ; map user memory first if required
 goread:     ; now we do the transfer
             out (c), e                              ; assert /RD
     	    out (c), d                              ; de-assert /RD
@@ -117,7 +117,7 @@ void devide_write_data(void) __naked
             ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
             or a                                    ; test is_user
             push af                                 ; save flags
-            call nz, map_process_always             ; map user memory first if required
+            call nz, map_proc_always             ; map user memory first if required
 gowrite:    ; now we do the transfer
             dec c				    ; data (port A)
             outi                                    ; write byte to LSB
