@@ -32,7 +32,7 @@ bool sd_spi_receive_sector(void) __naked
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
     or a
     push af
-    call nz,map_process_always
+    call nz,map_proc_always
     call _sd_spi_rx_sector
     pop af
     ret z
@@ -47,7 +47,7 @@ bool sd_spi_transmit_sector(void) __naked
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
     or a
     push af
-    call nz,map_process_always
+    call nz,map_proc_always
     call _sd_spi_tx_sector
     pop af
     ret z
