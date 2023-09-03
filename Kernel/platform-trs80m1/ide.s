@@ -1,7 +1,7 @@
 	.globl _devide_read_data
 	.globl _devide_write_data
 
-	.globl map_process_always
+	.globl map_proc_always
 	.globl map_kernel_restore
 
 	.globl _blk_op
@@ -28,7 +28,7 @@ _devide_read_data:
 	or a
 	jr z, no_map
 	push af
-	call map_process_always
+	call map_proc_always
 	pop af
 no_map:
 	inir
@@ -48,7 +48,7 @@ _devide_write_data:
 	or a
 	jr z, no_mapw
 	push af
-	call map_process_always
+	call map_proc_always
 	pop af
 no_mapw:
 	otir

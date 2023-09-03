@@ -7,13 +7,14 @@
             ; exported symbols
             .globl init_hardware
 	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_a
-	    .globl map_process_always
+	    .globl map_proc
+	    .globl map_proc_a
+	    .globl map_proc_hl
+	    .globl map_proc_always
 	    .globl map_kernel_di
-	    .globl map_process_di
-	    .globl map_process_always_di
-	    .globl map_process_save
+	    .globl map_proc_di
+	    .globl map_proc_always_di
+	    .globl map_proc_save
 	    .globl map_kernel_restore
 	    .globl map_save_kernel
 	    .globl map_restore
@@ -210,12 +211,12 @@ fork_mapsave:
 ;	Select the bank for the relevant process. Update the ksave_map so we
 ;	can restore the correct kernel mapping when banked.
 ;
-map_process_di:
-map_process:
+map_proc_di:
+map_proc:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
-map_process_hl:
+map_proc_hl:
             ld bc, (map_reg)
 	    ld (ksave_map),bc	; for map_kernel_restore
 	    ld b,(hl)		; udata page
@@ -223,7 +224,7 @@ map_process_hl:
 	    out (c), b
             ret
 
-map_process_a:			; used by bankfork
+map_proc_a:			; used by bankfork
 	    push bc
 	    ld bc, (map_reg)
 	    ld (ksave_map), bc
@@ -233,9 +234,9 @@ map_process_a:			; used by bankfork
 	    pop bc
 	    ret
 
-map_process_save:
-map_process_always:
-map_process_always_di:
+map_proc_save:
+map_proc_always:
+map_proc_always_di:
 	    push af
 	    push bc
 	    ld bc, (map_reg)
@@ -527,7 +528,7 @@ __uputc:
 	push de
 	push bc
 	push iy
-	call map_process_save
+	call map_proc_save
 	ld (hl), e
 uputc_out:
 	jp map_kernel_restore			; map the kernel back below common
@@ -541,20 +542,20 @@ __uputw:
 	push de
 	push bc
 	push iy
-	call map_process_save
+	call map_proc_save
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	jp map_kernel_restore
 
 __ugetc:
-	call map_process_save
+	call map_proc_save
         ld l, (hl)
 	ld h, #0
 	jp map_kernel_restore
 
 __ugetw:
-	call map_process_save
+	call map_proc_save
         ld a, (hl)
 	inc hl
 	ld h, (hl)
@@ -573,7 +574,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_save
+	call map_proc_save
 	ld (hl), #0
 	dec bc
 	ld a, b

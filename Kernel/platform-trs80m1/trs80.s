@@ -10,9 +10,9 @@
             .globl _program_vectors
 	    .globl plt_interrupt_all
 	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_a
-	    .globl map_process_always
+	    .globl map_proc
+	    .globl map_proc_a
+	    .globl map_proc_always
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_kernel_restore
@@ -215,7 +215,7 @@ _hd_xfer_in:
 	   ld a, (_hd_page)
 	   or a
 	   push af
-	   call nz, map_process_a
+	   call nz, map_proc_a
 	   ld bc, #0xC8			; 256 bytes from 0xC8
 	   inir
 	   pop af
@@ -232,7 +232,7 @@ _hd_xfer_out:
 	   ld a, (_hd_page)
 	   or a
 	   push af
-	   call nz, map_process_a
+	   call nz, map_proc_a
 	   ld bc, #0xC8			; 256 bytes to 0xC8
 	   otir
 	   pop af

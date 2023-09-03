@@ -13,12 +13,12 @@
 	.globl go_slow
 	.globl go_fast
 
-	.globl map_process_always
+	.globl map_proc_always
 	.globl map_kernel_restore
 
 _tape_op:
 	call go_slow
-	call map_process_always
+	call map_proc_always
 	call do_tape_op
 	push af
 	call map_kernel_restore
