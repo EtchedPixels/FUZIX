@@ -27,7 +27,7 @@ void map_init(void)
 {
     /* clone udata and stack into a regular process bank, return with common memory
        for the new process loaded */
-    copy_and_map_process(&init_process->p_page);
+    copy_and_map_proc(&init_process->p_page);
     /* kernel bank udata (0x300 bytes) is never used again -- could be reused? */
 }
 
