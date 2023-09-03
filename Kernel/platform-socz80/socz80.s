@@ -14,11 +14,11 @@
             .globl _tty_writeready
             .globl _tty_outproc
 	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_always
+	    .globl map_proc
+	    .globl map_proc_always
 	    .globl map_kernel_di
-	    .globl map_process_di
-	    .globl map_process_always_di
+	    .globl map_proc_di
+	    .globl map_proc_always_di
 	    .globl map_kernel_restore
 	    .globl map_save_kernel
 	    .globl map_restore
@@ -346,7 +346,7 @@ _program_vectors:
             push hl ; put stack back as it was
             push de
 
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
             ld hl, #0x0
@@ -389,8 +389,8 @@ mmumsg:     .ascii "MMU page "
 ;
 ; HL points to the page array for this task, or NULL for kernel
 ; Preserve all but a, hl
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
  	    or l
 	    jr nz, map_loadhl
@@ -400,8 +400,8 @@ map_process_di:
 ;
 ; map the current process, preserves all registers
 ;
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push hl
 	    ld hl, #_udata + U_DATA__U_PAGE
 	    call map_loadhl

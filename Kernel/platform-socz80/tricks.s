@@ -14,7 +14,6 @@
         .globl _dofork
         .globl _runticks
         .globl unix_syscall_entry
-        .globl map_process
         .globl interrupt_handler
 	.globl _int_disabled
 

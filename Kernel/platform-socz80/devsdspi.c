@@ -74,7 +74,7 @@ bool sd_spi_receive_sector(void) __naked
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET);
     or a	; Set the Z flag up and save it, dont do it twice
     push af
-    call nz,map_process_always
+    call nz,map_proc_always
     call rx256
     call rx256
 xferout:
@@ -99,7 +99,7 @@ bool sd_spi_transmit_sector(void) __naked
     ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
     or a	; Set the Z flag up and save it, dont do it twice
     push af
-    call nz,map_process_always
+    call nz,map_proc_always
     ld a,#0xFF
     ld bc, #SD_SPI_TX
     otir

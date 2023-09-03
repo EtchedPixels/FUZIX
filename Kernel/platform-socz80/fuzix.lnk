@@ -34,6 +34,7 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
+memalloc_none.rel
 devsys.rel
 platform-socz80/devlpr.rel
 platform-socz80/devtty.rel
