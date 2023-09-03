@@ -48,6 +48,7 @@
         .globl outnewline
         .globl outstring
         .globl outstringhex
+	.globl ___sdcc_enter_ix
 
 .ifne CONFIG_SWAP
 	.globl _do_swapout
@@ -149,21 +150,20 @@ copykernel:
 
 z180_init_hardware:
         ; setup interrupt vectors for the kernel bank
-
-        ; Install the interrupt vector at 0x0038
-        ld a, #0xC3 ; JP instruction
-        ld (0x0038), a
-        ld hl, #z80_irq
-        ld (0x0039), hl
-
+	ld a,#0xC3
         ; Set vector for jump to NULL
         ld (0x0000), a   
         ld hl, #null_handler  ;   to Our Trap Handler
         ld (0x0001), hl
 
-        ld (0x0066), a  ; Set vector for NMI
+        ld (0x0066), a  	; Set vector for NMI
         ld hl, #nmi_handler
         ld (0x0067), hl
+
+	ld hl,#rstblock		; Install rst helpers
+	ld de,#8
+	ld bc,#32
+	ldir
 
         ; program Z180 interrupt table registers
         ld hl, #interrupt_table ; note table MUST be 32-byte aligned!
@@ -352,6 +352,7 @@ _dofork:
         push hl
         push de
 
+
         ld (fork_proc_ptr), hl
 
         ; prepare return value in parent process -- HL = p->p_pid;
@@ -406,6 +407,8 @@ _dofork:
         ld (_runticks), hl
         ; in the child process, fork() returns zero.
         ;
+	ld a,#0x00		; DEBUG
+	out (0xFD),a
         ; And we exit, with the kernel mapped, the child now being deemed
         ; to be the live uarea. The parent is frozen in time and space as
         ; if it had done a switchout().
@@ -920,3 +923,36 @@ swapstack:
 	.ds 128
 swapinstack:
 .endif
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
