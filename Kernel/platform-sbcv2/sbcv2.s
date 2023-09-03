@@ -15,10 +15,10 @@
 	    .globl map_buffers
 	    .globl map_kernel
 	    .globl map_kernel_di
-	    .globl map_process
-	    .globl map_process_a
-	    .globl map_process_always
-	    .globl map_process_always_di
+	    .globl map_proc
+	    .globl map_proc_a
+	    .globl map_proc_always
+	    .globl map_proc_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
 	    .globl map_for_swap
@@ -197,7 +197,7 @@ _program_vectors:
             push hl ; put stack back as it was
             push de
 
-	    call map_process
+	    call map_proc
 
             ; now install the interrupt vector at 0x0038
             ld a, #0xC3 ; JP instruction
@@ -241,13 +241,13 @@ map_kernel:
 	    out (0x78), a
 	    pop af
 	    ret
-	    ; map_process is called with HL either NULL or pointing to the
+	    ; map_proc is called with HL either NULL or pointing to the
 	    ; page mapping. Unlike the other calls it's allowed to trash AF
-map_process:
+map_proc:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
-map_process_hl:
+map_proc_hl:
 	    ld a, (hl)			; and fall through
 	    ;
 	    ; With a simple bank switching system you need to provide a
@@ -256,7 +256,7 @@ map_process_hl:
 	    ; For swap you need to provide what for simple banking is an
 	    ; identical routine.
 map_for_swap:
-map_process_a:			; used by bankfork
+map_proc_a:			; used by bankfork
 	    dec a		; We bias by 1 because 0 is a valid user
 	    ld (mapreg), a	; bank
 	    out (0x78), a
@@ -267,12 +267,12 @@ map_process_a:			; used by bankfork
 	    ; Map the current process into memory. We do this by extracting
 	    ; the bank value from u_page.
 	    ;
-map_process_always_di:
-map_process_always:
+map_proc_always_di:
+map_proc_always:
 	    push af
 	    push hl
 	    ld hl, #_udata + U_DATA__U_PAGE
-	    call map_process_hl
+	    call map_proc_hl
 	    pop hl
 	    pop af
 	    ret
@@ -345,7 +345,7 @@ _plt_prop_sd_read:
 	    ld a, (_blk_op + BLKPARAM_SWAP_PAGE)
 	    jr nz, do_read_a
 	    ld a, (_udata + U_DATA__U_PAGE)
-do_read_a:  call map_process_a
+do_read_a:  call map_proc_a
 do_read:    ld bc,#0xAB
 	    inir
 	    inir
@@ -360,7 +360,7 @@ _plt_prop_sd_write:
 	    ld a, (_blk_op + BLKPARAM_SWAP_PAGE)
 	    jr nz, do_write_a
 	    ld a, (_udata + U_DATA__U_PAGE)
-do_write_a: call map_process_a
+do_write_a: call map_proc_a
 do_write:   ld bc,#0xAB
 	    otir
 	    otir
