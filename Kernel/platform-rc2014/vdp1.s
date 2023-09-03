@@ -62,7 +62,7 @@
 ;
 ;	Core support
 ;
-	.globl map_process_always
+	.globl map_proc_always
 	.globl map_kernel_restore
 	.globl _fontdata_6x8
 
@@ -408,7 +408,7 @@ _vdp_rop:
 	    ld e, 4(ix)		; lines
 	    ld bc,(_vdpport);
 	    inc c		; data port
-	    call map_process_always
+	    call map_proc_always
 ropl:
 	    ld b,d
 ropc:
@@ -457,7 +457,7 @@ _vdp_wop:
 	    ld e,4(ix)		; lines
 	    ld bc,(_vdpport)	;
 	    inc c		; data port
-	    call map_process_always
+	    call map_proc_always
 wopl:
 	    ld b,d
 wopc:

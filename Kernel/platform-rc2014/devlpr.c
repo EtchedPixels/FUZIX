@@ -209,7 +209,7 @@ not_swapin:
 #endif
             or a                                    ; test is_user
             jr z, rd_kernel
-            call map_process_always  	            ; map user memory first if required
+            call map_proc_always  	            ; map user memory first if required
             jr doread
 rd_kernel:
             call map_buffers
@@ -299,7 +299,7 @@ not_swapout:
 #endif
             or a                                    ; test is_user
             jr z, wr_kernel
-            call map_process_always                 ; else map user memory first if required
+            call map_proc_always                 ; else map user memory first if required
             jr dowrite
 wr_kernel:
             call map_buffers
@@ -350,7 +350,7 @@ not_swapin:
 #endif
             or a                                    ; test is_user
             jr z, rd_kernel
-            call map_process_always  	            ; map user memory first if required
+            call map_proc_always  	            ; map user memory first if required
             jr doread
 rd_kernel:
             call map_buffers
@@ -440,7 +440,7 @@ not_swapout:
 #endif
             or a                                    ; test is_user
             jr z, wr_kernel
-            call map_process_always                 ; else map user memory first if required
+            call map_proc_always                 ; else map user memory first if required
             jr dowrite
 wr_kernel:
             call map_buffers

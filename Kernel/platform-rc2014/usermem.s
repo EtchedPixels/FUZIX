@@ -30,7 +30,7 @@
 
 	.globl _udata
 
-	.globl  map_process_save
+	.globl  map_proc_save
 	.globl  map_kernel_restore
 
 	.globl ldir_or_dma
@@ -56,7 +56,7 @@ __uzero:
 	ld a, b	; check for 0 copy
 	or c
 	ret z
-	call map_process_save
+	call map_proc_save
 	ld (hl), #0
 	dec bc
 	ld a, b
@@ -82,7 +82,7 @@ __uputc:
 	push de
 	push bc
 	push iy
-	call map_process_save
+	call map_proc_save
 	ld (hl), e
 uputc_out:
 	ld hl,#0
@@ -97,20 +97,20 @@ __uputw:
 	push de
 	push bc
 	push iy
-	call map_process_save
+	call map_proc_save
 	ld (hl), e
 	inc hl
 	ld (hl), d
 	jr uputc_out
 
 __ugetc:
-	call map_process_save
+	call map_proc_save
         ld l, (hl)
 	ld h, #0
 	jp map_kernel_restore
 
 __ugetw:
-	call map_process_save
+	call map_proc_save
         ld a, (hl)
 	inc hl
 	ld h, (hl)

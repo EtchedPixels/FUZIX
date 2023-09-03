@@ -86,7 +86,7 @@ not_swapin:
     call map_buffers
     jr doread
 to_user:
-    call map_process_always
+    call map_proc_always
 doread:
     call _sd_spi_rx_sector
     jp map_kernel_restore
@@ -111,7 +111,7 @@ not_swapout:
     call map_buffers
     jr dowrite
 from_user:
-    call map_process_always
+    call map_proc_always
 dowrite:
     call _sd_spi_tx_sector
     jp map_kernel_restore

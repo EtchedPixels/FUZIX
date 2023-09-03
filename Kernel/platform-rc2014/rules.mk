@@ -16,3 +16,5 @@ export CROSS_CC_SYS4=--codeseg CODE1
 export CROSS_CC_SYS5=--codeseg CODE3
 export CROSS_CC_SEGDISC=--codeseg DISCARD --constseg DISCARD
 export CROSS_CC_NETWORK=--codeseg CODE3
+# Turn on rst usage
+CROSS_CCOPTS += --peep-file $(FUZIX_ROOT)/Kernel/cpu-z80/rst.peep
