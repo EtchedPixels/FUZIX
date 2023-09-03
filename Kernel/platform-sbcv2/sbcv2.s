@@ -39,6 +39,7 @@
             .globl unix_syscall_entry
             .globl outcharhex
 	    .globl null_handler
+	    .globl ___sdcc_enter_ix
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
@@ -166,6 +167,13 @@ ramsize512:
             push hl
             call _program_vectors
             pop hl
+
+	    ; Compiler helper vectors - in kernel bank only
+
+	    ld	hl,#rstblock
+	    ld	de,#8
+	    ld	bc,#32
+	    ldir
 
             im 1 ; set CPU interrupt mode
 
@@ -365,3 +373,36 @@ do_write:   ld bc,#0xAB
 	    otir
 	    otir
 	    jp map_kernel
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
