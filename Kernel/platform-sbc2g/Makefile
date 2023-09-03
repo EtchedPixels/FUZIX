@@ -9,8 +9,8 @@ DISCSRCS = discard.c
 ASRCS = sbc2g.s crt0.s
 ASRCS += tricks.s commonmem.s
 
-DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
+DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
+DSRCS = ../dev/tinydisk.c ../dev/tinyide.c
 NSRCS = 
 
 DASRCS =

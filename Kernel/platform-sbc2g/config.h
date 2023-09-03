@@ -44,11 +44,12 @@ extern uint16_t swap_dev;
  */
 #define swap_map(x)	((uint8_t *)(x))
 
-/* What is the maximum number of /dev/hd devices we have. In theory right now
-   it's actually 3 - two in the IDE and one on the SD interface */
-#define MAX_BLKDEV	2
-/* Select IDE disk support, and PPIDE (parallel port IDE) as the interface */
-#define CONFIG_IDE
+/* IDE/CF support */
+#define CONFIG_TD
+#define CONFIG_TD_NUM	2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
 
 #define BOOTDEVICENAMES "hd#"
 

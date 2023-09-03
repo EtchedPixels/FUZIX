@@ -36,8 +36,8 @@ swap.rel
 bankfixed.rel
 devsys.rel
 platform-sbc2g/devtty.rel
-platform-sbc2g/blkdev.rel
-platform-sbc2g/mbr.rel
-platform-sbc2g/devide.rel
-platform-sbc2g/devide_discard.rel
+platform-sbc2g/tinydisk.rel
+platform-sbc2g/tinydisk_discard.rel
+platform-sbc2g/tinyide.rel
+platform-sbc2g/tinyide_discard.rel
 -e

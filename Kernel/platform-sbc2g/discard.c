@@ -3,10 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devide.h>
-#include <propio2.h>
-#include <ds1302.h>
+#include <tinyide.h>
 
 /*
  *	Everything in this file ends up in discard which means the moment
@@ -60,5 +57,5 @@ void pagemap_init(void)
 
 void device_init(void)
 {
-	devide_init();
+	ide_probe();
 }
