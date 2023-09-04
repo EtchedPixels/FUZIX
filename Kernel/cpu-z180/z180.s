@@ -405,10 +405,9 @@ _dofork:
         ; runticks = 0;
         ld hl, #0
         ld (_runticks), hl
+	;
         ; in the child process, fork() returns zero.
         ;
-	ld a,#0x00		; DEBUG
-	out (0xFD),a
         ; And we exit, with the kernel mapped, the child now being deemed
         ; to be the live uarea. The parent is frozen in time and space as
         ; if it had done a switchout().
