@@ -1,16 +1,16 @@
 #include <kernel.h>
-#include <blkdev.h>
-#include <devsd.h>
+#include <tinysd.h>
+#include "printf.h"
 
 __sfr __at 0xE7 divmmc_cs;
 __sfr __at 0xEB divmmc_data;
 
 void sd_spi_raise_cs(void)
 {
-    divmmc_cs = 0x03;		/* Active low */
+    divmmc_cs = 0xFF;//0x03;		/* Active low */
 }
 
-void sd_spi_transmit_byte(uint8_t b)
+void sd_spi_transmit_byte(uint8_t b) SD_SPI_CALLTYPE
 {
     divmmc_data = b;
 }
@@ -20,15 +20,24 @@ uint8_t sd_spi_receive_byte(void)
     return divmmc_data;
 }
 
+/*
+ *	The ZX Uno works on the bits, Zesarux for some reason
+ *	just does "FE is card 0 else card 1", meaning you can't unselect
+ *	and it mishandles most values.
+ */
 void sd_spi_lower_cs(void)
 {
-    if (sd_drive == 0)
-      divmmc_cs = 0x02;	/* Lower bit 0 (active low) */
+    if (tinysd_unit == 0)
+      divmmc_cs = 0xFE;	/* Lower bit 0 (active low) */
     else
-      divmmc_cs = 0x01;	/* Lower bit 1 (active low) */
+      divmmc_cs = 0xFD;	/* Lower bit 1 (active low) */
 }
 
-void sd_spi_clock(bool go_fast)
+void sd_spi_fast(void)
+{
+}
+
+void sd_spi_slow(void)
 {
 }
 
@@ -40,22 +49,29 @@ COMMON_MEMORY
  * Could also unroll these a bit for speed
  */
 
-bool sd_spi_receive_sector(void) __naked
+bool sd_spi_receive_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
 {
   __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
+#ifdef SD_SPI_BANKED
+    pop bc
+    pop de
+    pop hl
+    push hl
+    push de
+    push bc
+#endif    
+    ld a, (_td_raw)
     push af
 #ifdef SWAPDEV
     cp #2
     jr nz, not_swapin
-    ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+    ld a,(_td_page)
     call map_for_swap
     jr doread
 not_swapin:
 #endif
     or a
-    call nz,map_process_always
+    call nz,map_proc_always
 doread:
     ld bc, #0xEB	 ; b = 0, c = port
     ld a,#0x05
@@ -73,22 +89,29 @@ doread:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(void) __naked
+bool sd_spi_transmit_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
 {
   __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
+#ifdef SD_SPI_BANKED
+    pop bc
+    pop de
+    pop hl
+    push hl
+    push de
+    push bc
+#endif    
+    ld a, (_td_raw)
     push af
 #ifdef SWAPDEV
     cp #2
     jr nz, not_swapout
-    ld a, (_blk_op+BLKPARAM_SWAP_PAGE)
+    ld a, (_td_page)
     call map_for_swap
     jr dowrite
 not_swapout:
 #endif
     or a
-    call nz,map_process_always
+    call nz,map_proc_always
 dowrite:
     ld bc, #0xEB
     ld a,#0x05
@@ -105,4 +128,3 @@ dowrite:
     ret
   __endasm;
 }
-
