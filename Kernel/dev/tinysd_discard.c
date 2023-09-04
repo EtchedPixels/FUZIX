@@ -37,7 +37,9 @@ static uint8_t sendcmd(uint8_t *cmd)
     n = 0;
     while(++n <= 6)
         sd_spi_transmit_byte(*cmd++);
+#ifndef CONFIG_TD_SD_EMUBUG        
     sd_spi_receive_byte();
+#endif
     n = 0xA0;
     while(++n) {
         r = sd_spi_receive_byte();

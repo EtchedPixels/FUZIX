@@ -63,7 +63,9 @@ static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 	sd_spi_transmit_byte(arg);
 #endif
 	sd_spi_transmit_byte(0x01);
+#ifndef CONFIG_TD_SD_EMUBUG        
 	sd_spi_receive_byte();
+#endif
 	n = 20;
 	do {
 		res = sd_spi_receive_byte();
