@@ -19,7 +19,8 @@ extern uint8_t td_raw;
 
 #ifdef _TINYDISK_PRIVATE
 
-#define MAX_PART	4
+/* Base disk and four partitions */
+#define MAX_PART	5
 
 extern uint32_t td_lba[CONFIG_TD_NUM][MAX_PART + 1];
 extern td_xfer td_op[CONFIG_TD_NUM];
