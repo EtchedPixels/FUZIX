@@ -34,7 +34,7 @@
 #define CONFIG_NET
 #define CONFIG_NET_NATIVE
 
-/* IDE/CF support */
+/* SD card support */
 #define CONFIG_TD_NUM	1
 #define CONFIG_TD_SD
 #define SD_SPI_CALLTYPE	__z88dk_fastcall
