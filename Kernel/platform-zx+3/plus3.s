@@ -14,10 +14,10 @@
 	.globl nmi_handler
 
         .globl map_kernel
-        .globl map_process_always
-        .globl map_process
+        .globl map_proc_always
+        .globl map_proc
         .globl map_kernel_di
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
 	.globl map_kernel_restore
@@ -125,7 +125,7 @@ init_hardware:
         .area _COMMONMEM
 
 _program_early_vectors:
-	call map_process_always
+	call map_proc_always
 	call set_vectors
 	call map_kernel
 set_vectors:
@@ -161,13 +161,13 @@ _program_vectors:
 	; Swap helper. Map the page in A into the address space such
 	; that swap_map() gave the correct pointer to use. Undone by
 	; a map_kernel_{restore}
-map_process:
+map_proc:
         ld a, h
         or l
         jr z, map_kernel
 map_for_swap:
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	push af
 	ld a,#0x1			; 0 1 2 3
 	jr map_a_pop

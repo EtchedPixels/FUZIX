@@ -31,7 +31,7 @@
 		.include "kernel.def"
 		.include "../kernel-z80.def"
 
-	.globl  map_process_always
+	.globl  map_proc_always
 	.globl	map_kernel
 
 	.globl _fd765_do_nudge_tc
@@ -235,7 +235,7 @@ _fd765_do_read:
 	ld a, (_fd765_is_user)
 	or a
 	push af
-	call nz, map_process_always
+	call nz, map_proc_always
 
 	ld a,#0x05
 	out (0xFE),a
@@ -340,7 +340,7 @@ _fd765_do_write:
 	ld a, (_fd765_is_user)
 	or a
 	push af
-	call nz, map_process_always
+	call nz, map_proc_always
 
 	ld a,#0x05
 	out (0xFE),a
