@@ -57,7 +57,7 @@ int ide_ioctl(uint_fast8_t minor, uarg_t request, char *unused)
 #endif
 
 #ifdef CONFIG_TINYIDE_SDCCPIO
-
+#ifndef IDE_NONSTANDARD_XFER
 /* Port I/O: Currently Z80/Z180 only */
 
 COMMON_MEMORY
@@ -125,5 +125,5 @@ dowrite:
 }
 
 #endif
-
+#endif
 #endif
