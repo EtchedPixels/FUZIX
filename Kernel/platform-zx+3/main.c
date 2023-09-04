@@ -5,6 +5,7 @@
 #include <printf.h>
 #include <devtty.h>
 #include <devinput.h>
+#include <net_w5x00.h>
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
@@ -60,8 +61,9 @@ void plt_discard(void)
 {
 	uint16_t discard_size = ((uint16_t)&udata) - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
-
+#ifdef CONFIG_KMOD
 	kmod_init(bufpool_end, &udata);
+#endif
 
 	discard_size /= sizeof(struct blkbuf);
 
@@ -95,5 +97,60 @@ unsigned plt_kmod_set(uint8_t *top)
 void swapper(ptptr p)
 {
   p;
+}
+#endif
+
+#ifdef CONFIG_NET_W5100
+
+uint8_t w5x00_readcb(uint16_t off)
+{
+}
+
+uint8_t w5x00_readsb(uint8_t s, uint16_t off)
+{
+}
+
+uint16_t w5x00_readcw(uint16_t off)
+{
+}
+
+uint16_t w5x00_readsw(uint8_t s, uint16_t off)
+{
+}
+
+void w5x00_bread(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+}
+
+void w5x00_breadu(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+}
+
+void w5x00_writecb(uint16_t off, uint8_t n)
+{
+}
+
+void w5x00_writesb(uint8_t sock, uint16_t off, uint8_t n)
+{
+}
+
+void w5x00_writecw(uint16_t off, uint16_t n)
+{
+}
+
+void w5x00_writesw(uint8_t sock, uint16_t off, uint16_t n)
+{
+}
+
+void w5x00_bwrite(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+}
+
+void w5x00_bwriteu(uint16_t bank, uint16_t off, void *pv, uint16_t n)
+{
+}
+
+void w5x00_setup(void)
+{
 }
 #endif

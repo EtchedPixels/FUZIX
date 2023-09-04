@@ -4,16 +4,16 @@
 #include <tty.h>
 #include <devsys.h>
 #include <vt.h>
-#include <devide.h>
-#include <devsd.h>
-#include <blkdev.h>
+#include <tinydisk.h>
+#include <tinyide.h>
+#include <tinysd.h>
 #include <devtty.h>
 #include <devfdc765.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
   /* 0: /dev/hd		Hard disc block devices */
-  {  blkdev_open,  no_close,     blkdev_read,   blkdev_write,  blkdev_ioctl },
+  {  td_open,      no_close,     td_read,	td_write,	td_ioctl },
   /* 1: /dev/fd		Floppy disc block devices */
   {  devfd_open,   no_close,     devfd_read,    devfd_write,   no_ioctl },
   /* 2: /dev/tty	TTY devices */
@@ -37,10 +37,10 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-#ifdef CONFIG_IDE
-  devide_init();
+#ifdef CONFIG_TD_IDE
+  ide_probe();
 #endif
-#ifdef CONFIG_SD
-  devsd_init();
+#ifdef CONFIG_TD_SD
+  sd_probe();
 #endif
 }

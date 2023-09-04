@@ -37,13 +37,7 @@
 	; Somewhere to throw it out of the way
         .area _INITIALIZER
 
-	;
-	;	We load these at D800 at the moment, so we avoid the
-	;	ldir overlap problem as we unpack.
-	;
         .area _DISCARD
-
-
         .area _COMMONMEM
 	.area _FONT
 
@@ -85,22 +79,28 @@ _start:
         di
 
         ld sp, #kstack_top
-
-	ld sp,#kstack_top
 	;
 	; move the common memory where it belongs    
 	ld hl, #s__DATA
 	ld de, #s__COMMONMEM
 	ld bc, #l__COMMONMEM
 	ldir
+
 	; then the font
 	ld de, #s__FONT
 	ld bc, #l__FONT
 	ldir
-	; then the discard
+
+	; then the discard (backwards as will overlap)
 	ld de, #s__DISCARD
-	ld bc, #l__DISCARD
-	ldir
+	ld bc, #l__DISCARD-1
+	ex de,hl
+	add hl,bc
+	ex de,hl
+	add hl,bc
+	lddr
+	ldd
+
 	; then zero the data area
 	ld hl, #s__DATA
 	ld de, #s__DATA + 1

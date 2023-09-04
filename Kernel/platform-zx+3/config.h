@@ -1,7 +1,5 @@
-#define CONFIG_IDE
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
-#define CONFIG_SD
-#define SD_DRIVE_COUNT	2
+
 #define CONFIG_FDC765
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -34,7 +32,11 @@
 #define CONFIG_DYNAMIC_SWAP
 #define MAXTICKS	20	/* Has to be high because we are swap only */
 
-#define CONFIG_KMOD
+#undef CONFIG_KMOD
+
+#define CONFIG_NET
+#define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5100
 
 /* Custom banking */
 
@@ -65,7 +67,6 @@
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5       /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
-#define MAX_BLKDEV 4	    /* 2 IDE drives, 2 SD drive */
 
 #define SWAPBASE 0x0000
 #define SWAPTOP  0xC000UL
@@ -75,5 +76,18 @@
 
 /* We swap by hitting the user map */
 #define swap_map(x)		((uint8_t *)(x))
+
+#define CONFIG_TD
+#define CONFIG_TD_NUM	2
+/* IDE/CF support */
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
+/* SD support */
+#define TD_SD_NUM 2
+#define CONFIG_TD_SD
+/* Emulator for this platform needs bug workarounds */
+#define CONFIG_TD_SD_EMUBUG
+#define SD_SPI_CALLTYPE	__z88dk_fastcall
 
 #define BOOTDEVICENAMES "hd#,fd#"

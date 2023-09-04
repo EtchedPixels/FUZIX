@@ -1,11 +1,12 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/devfdc765.c ../dev/devsd.c
-DDSRCS = ../dev/devide_discard.c ../dev/mbr.c ../dev/devsd_discard.c
+DSRCS = ../dev/tinyide.c ../dev/tinydisk.c ../dev/devfdc765.c ../dev/tinysd.c
+DDSRCS = ../dev/tinyide_discard.c ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
 DZSRCS = ../dev/zx/divide.c ../dev/zx/zxkeyboard.c ../dev/zx/devinput.c ../dev/zx/zxmmc.c
 DDZSRCS =
 ASRCS = crt0.s plus3.s zxvideo.s fdc765.s
 ASRCS += tricks.s commonmem.s
+NSRCS = ../dev/net/net_w5x00.c
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
@@ -14,9 +15,10 @@ DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
 DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
 DZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DZSRCS))
 DDZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DDZSRCS))
-OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS)
+NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/zx/
+CROSS_CCOPTS += -I../dev/ -I../dev/zx/ -I../dev/net
 
 CROSS_CC_SEG3 = --codeseg CODE3
 
@@ -39,6 +41,9 @@ $(DZOBJS): %.rel: ../dev/zx/%.c
 
 $(DDZOBJS): %.rel: ../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+
+$(NOBJS): %.rel: ../dev/net/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
