@@ -38,6 +38,7 @@
 	.globl nmi_handler
 	.globl null_handler
         .globl _boot_from_rom
+	.globl ___sdcc_enter_ix
 
 	; exported debugging tools
 	.globl inchar
@@ -70,6 +71,13 @@ init_hardware:
         push hl
         call _program_vectors
         pop hl
+
+	; Compiler helper vectors - in kernel bank only
+
+	ld	hl,#rstblock
+	ld	de,#8
+	ld	bc,#32
+	ldir
 
         ; Stop floppy drive motors
         ld a, #0x0C
@@ -401,4 +409,37 @@ inchar:
 	and #0x01			; test if data is in receive buffer
 	jp z,inchar			; no data, wait
 	in a,(UART0_RBR)		; read the character from the UART
+	ret
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
 	ret
