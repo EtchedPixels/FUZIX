@@ -87,9 +87,9 @@ _start:
 	ldir
 
 	; then the font
-	ld de, #s__FONT
-	ld bc, #l__FONT
-	ldir
+;	ld de, #s__FONT
+;	ld bc, #l__FONT
+;	ldir
 
 	; then the discard (backwards as will overlap)
 	ld de, #s__DISCARD

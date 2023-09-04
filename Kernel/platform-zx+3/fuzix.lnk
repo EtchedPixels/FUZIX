@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -l z80
 -b _CODE=0x0100
--b _COMMONMEM=0xF000
+-b _COMMONMEM=0xF300
 platform-zx+3/crt0.rel
 platform-zx+3/commonmem.rel
 platform-zx+3/plus3.rel

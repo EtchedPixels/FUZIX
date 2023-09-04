@@ -35,8 +35,8 @@ start:
 
 motor_on:
 	; Wait for the motor to catch back up - clear the screen !
-	ld bc,#0x7ffd
-	ld a,#0x08		; screen on 7
+	ld bc,#0x1ffd
+	ld a,#0x0F		; motor on
 	out (c),a
 	ld hl,#0x4000
 	ld de,#0x4001
@@ -49,6 +49,17 @@ motor_on:
 	ld bc,#0x1ffd
 	ld a,#0x0D		; special paging 4/5/6/3. motor on
 	out (c),a
+
+;
+;	Grab the ROM font using a helper
+;
+	ld hl,#fontget
+	ld de,#0x5D00
+	ld bc,#0x0100
+	ldir
+
+	call 0x5D00
+
 ;
 ;	Ok now we can try and load stuff
 ;	9 sectors per track and we need to start from 0/2
@@ -190,3 +201,32 @@ fd765_tx_loop:
 	ex (sp),ix
 	ex (sp),ix
 	ret
+
+;
+;	This must be relocatable code. Interrupts are off.
+;
+;	On entry +3 mode map 4/5/6/3
+;
+fontget:
+	ld bc,#0x1FFD
+	ld a,#0x0C		; 128K mode keep motor on, 48K ROM
+	out (c),a
+	; Now in 128K mode, bank 5 holding our code hasn't moved
+	ld b,#0x7F
+	ld a,#0x17		; 48K ROM, bank 3 high
+	out (c),a
+	; 48K ROM is now 0000-3FFF and bank 7 is C000-FFFF and display
+	; Now copy the font where we can get it easily and in future also
+	; set it
+	ld hl,#0x3D00
+	ld de,#0xFD00
+	ld bc,#0x0300
+	ldir
+	; Now to get back to sanity
+	ld bc,#0x7FFD
+	ld a,#0x0C		; screen on 7, don't care about high bank
+	out (c),a		; but need bits 2-1 set to 10 for 4/5/6/3
+	ld b,#0x1F
+	ld a,#0x0D		; back to 4 5 6 3
+	out (c),a
+	ret			; our stack is back so this is now safe

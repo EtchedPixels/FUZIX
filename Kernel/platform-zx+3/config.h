@@ -19,8 +19,6 @@
 #define CONFIG_VT
 /* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
-#define CONFIG_FONT8X8
-#define CONFIG_FONT8X8SMALL
 
 /* Swap based one process in RAM */
 #define CONFIG_SWAP_ONLY

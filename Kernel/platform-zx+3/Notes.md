@@ -1,18 +1,14 @@
-ZX Spectrum +2A/+3
+# ZX Spectrum +2A/+3
+
+
+## Mmeory Model
 
 The memory mapping on this machine is a bit friendlier but it's still single
 (large) process in memory at a time to get the best result. Banked kernel
 2 x 32K is also doable but probably not such a good use of the machine
 
-Note:
-
-We keep the discard high up below the common because otherwise the packed
-image overlaps itself and the ldir into discard corrupts the image
-
-Memory Model
-
 We use +2A/+3 'special paging mode'. It's special, but limited. Sufficient for
-a nice one process in memory model however
+a nice one process in memory model.
 
 One quirk of this box is that banks 4-7 run at an effective 2.5-3Mhz due to
 video wait states but 0-3 run the full 3.5. Thus we want to land some things
@@ -31,38 +27,32 @@ and the video can be at the bottom of 5 or 7
 
 As we can't get 5 anywhere convenient video has to go in 7
 
-To get started we run with
+We run with the following mappings
 
-User
+| User	| 0 / 1 / 2  | Common 3
+| Kernel  | 4 / 5 / 6  | Common 3
+| Video   | 4 / 7 / 6  | Common 3
 
-0 / 1 / 2		Common 3
+Bank 7 is only partially used at this point
 
-Kernel
+| 0000-17FF | 	The 6K of screen bitmap
+| 1800-1AFF |	Attributes
+| 3D00-3FFF |	Font
 
-4 / 5 / 6 		Common 3
-
-Video (routines in common)
-
-4 / 7 / 6 		Common 3
-
-External buffers in 7 eventually (using 4/7/6/3 mapping)
+So we could possible use external buffers but it isn't clear what gain
+there would be if any.
 
 Annoyingly there is no easy way to do direct video except maybe once we
 do the video in loader hint hack then we can flip the screen to 5 and
 load an app from 5D00-wherever. Still ugly.
 
-
-TODO
+## TODO
 
 Fix memory size reporting 64 v 48K
 
 Floppy drive B - set drive info and propogate it
 
 Floppy drive B - set parameters at init time
-
-
-Move buffers into upper part of bank 7 to see if can get kernel below
-C000 + E000 upwards to get bigger user image ?
 
 Q for all these machines - if ports in 4000-7FFF range are contended does
 it speed up our divide/divmmc code to unroll it and also set b to 0xFF
@@ -89,8 +79,6 @@ in bottom of that chunk.
 
 Would give direct mapped video
 
-Parent first fork mode
-
 Turn on interrupts during swapping
 
-Generic 8bit IDE support
+Debug generic 8bit IDE support on emulator

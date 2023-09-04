@@ -34,6 +34,10 @@ SCREENBASE	.equ 0x40
 	call map_kernel
 .endm
 
+	.globl _fontdata_8x8
+
+_fontdata_8x8	.equ	0x7D00		; routines except this
+					; to point to space char
         .area _COMMONMEM
 
 	.include "../dev/zx/video.s"
