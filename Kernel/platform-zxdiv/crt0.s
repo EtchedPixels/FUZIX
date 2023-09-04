@@ -123,7 +123,7 @@ _marker:
 
 	.area _STUBS
 stubs:
-	.ds 512
+	.ds 640
 
 	.area _BUFFERS
 ;

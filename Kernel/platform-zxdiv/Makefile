@@ -1,7 +1,8 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
-DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
+DSRCS = ../dev/tinyide.c ../dev/tinysd.c ../dev/tinydisk.c
+DDSRCS = ../dev/tinyide_discard.c ../dev/tinysd_discard.c
+DDSRCS += ../dev/tinydisk_discard.c
 DZSRCS = ../dev/zx/divide.c ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c
 DZSRCS += ../dev/zx/devinput.c ../dev/zx/bank128.c
 DDZSRCS = ../dev/zx/zxuno.c

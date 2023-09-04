@@ -8,8 +8,8 @@
 	.area BOOT	(ABS)
 
 	.globl null_handler
-	.globl unix_syscall_entry
 	.globl interrupt_handler
+	.globl ___sdcc_enter_ix
 
 	.org 0
 
@@ -27,18 +27,29 @@ loader5:
 	; This is where the EEPROM calls us
 	jp start
 rst_8:
-	.ds 8
-rst_10:
-	.ds 8
-rst_18:
-	.ds 8
-rst_20:
-	.ds 8
+	jp	___sdcc_enter_ix
+	.ds	5
+rst10:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+rst18:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+rst20:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
+	.ds 3
 rst_28:
 	.ds 8
 rst_30:
-	jp unix_syscall_entry
-	.ds 5
+	.ds 8
 rst_38:
 	jp interrupt_handler
 	.ds 0x66-0x3B
