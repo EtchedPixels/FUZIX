@@ -1,5 +1,4 @@
 #include <kernel.h>
-#include <blkdev.h>
 #include <tinysd.h>
 
 /* FIXME: optimise by unrolling inir and otir 16 ways */
