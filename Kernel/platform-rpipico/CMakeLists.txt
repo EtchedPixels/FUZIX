@@ -48,6 +48,7 @@ add_executable(fuzix
 	../lowlevel-armm0.c
 	../malloc.c
 	../mm.c
+	../memalloc_none.c
 	../process.c
 	../start.c
 	../swap.c
