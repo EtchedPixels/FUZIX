@@ -3,7 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
 
 extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
 
@@ -82,4 +81,10 @@ void map_init(void)
 
 void plt_copyright(void)
 {
+}
+
+/* Nothing special needed for NemoIDE reset at boot */
+void ide_reset(void)
+{
+	ide_std_reset();
 }

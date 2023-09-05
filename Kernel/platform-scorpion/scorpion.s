@@ -14,13 +14,13 @@
 	.globl null_handler
 
         .globl map_kernel
-        .globl map_process_always
-        .globl map_process
+        .globl map_proc_always
+        .globl map_proc
         .globl map_kernel_di
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
-	.globl map_process_save
+	.globl map_proc_save
 	.globl map_kernel_restore
 	.globl map_for_swap
 	.globl current_map
@@ -209,7 +209,7 @@ switch_bank_nosave:
         ret
 
 
-map_process:
+map_proc:
         ld a, h
         or l
         jr z, map_kernel_nosavea
@@ -227,9 +227,9 @@ map_process:
 ;	We always save here so that existing code works until we have a
 ;	clear usage of save/restore forms across the kernel
 ;
-map_process_save:
-map_process_always:
-map_process_always_di:
+map_proc_save:
+map_proc_always:
+map_proc_always_di:
 	push af
 	ld a, (current_map)
 	ld (ksave_map), a
@@ -251,8 +251,8 @@ map_save_kernel:
 ;	invocation of kernel code in fact runs common code and the
 ;	common code will bank in the right kernel bits for us when it calls
 ;	out of common into banked code. We do a restore to handle all the
-;	callers who do map_process_always/map_kernel pairs. Probably we
-;	should have some global change to map_process_save/map_kernel_restore
+;	callers who do map_proc_always/map_kernel pairs. Probably we
+;	should have some global change to map_proc_save/map_kernel_restore
 ;
 map_kernel_di:
 map_kernel:
