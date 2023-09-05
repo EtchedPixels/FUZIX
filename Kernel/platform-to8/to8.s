@@ -7,8 +7,8 @@
 	; exported
 	.globl map_kernel
 	.globl map_video
-	.globl map_process
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
 	.globl map_for_swap
@@ -145,7 +145,7 @@ savemap:
 	.byte	0
 
 	.area .common
-map_process_always
+map_proc_always
 	pshs	a
 	;	Set the upper page. The low 16K is kernel, the other chunk
 	;	is fixed for now until we tackle video.
@@ -270,7 +270,7 @@ _fdbios_flop:
 	tst	_fd_map
 	beq	via_kernel
 	; Loading into a current user pages
-	jsr	map_process_always
+	jsr	map_proc_always
 via_kernel:
 	jsr	$E82A
 	ldb	#0
