@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <tinysd.h>
+#include <printf.h>
 
 /* FIXME: optimise by unrolling inir and otir 16 ways */
 
@@ -43,9 +44,17 @@ COMMON_MEMORY
  * Could also unroll these a bit for speed
  */
 
-bool sd_spi_receive_sector(uint8_t *data) __naked __z88dk_fastcall
+bool sd_spi_receive_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
 {
   __asm
+#ifdef SD_SPI_BANKED
+    pop bc
+    pop de
+    pop hl
+    push hl
+    push de
+    push bc
+#endif
     ld a, (_td_raw)
     push af
 #ifdef SWAPDEV
@@ -79,9 +88,17 @@ doread:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t *data) __naked __z88dk_fastcall
+bool sd_spi_transmit_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
 {
   __asm
+#ifdef SD_SPI_BANKED
+    pop bc
+    pop de
+    pop hl
+    push hl
+    push de
+    push bc
+#endif
     ld a, (_td_raw)
     push af
 #ifdef SWAPDEV
