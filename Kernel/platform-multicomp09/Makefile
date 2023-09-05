@@ -50,7 +50,7 @@ image:
 	multicomp09.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	../dev/drivewire/drivewire.o devdw.o ttydw.o blkdev.o mbr.o \
-	devsdc.o sdc.o \
+	devsdc.o sdc.o ../memalloc_none.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \

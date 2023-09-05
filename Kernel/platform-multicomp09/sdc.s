@@ -25,7 +25,7 @@ _devsd_write
 	ldy	#512		; 512 bytes
         tst     _blk_op+2       ; test user/kernel xfer
         beq     WrBiz           ; if zero then stay in kernel space
-        jsr     map_process_always ; else flip to user space
+        jsr     map_proc_always ; else flip to user space
 WrBiz	lda	SDCTL
 	cmpa	#$a0
 	bne	WrBiz		; space not available
@@ -49,7 +49,7 @@ _devsd_read
 	ldy	#512		; 512 bytes
         tst     _blk_op+2       ; test user/kernel xfer
         beq     RdBiz           ; if zero then stay in kernel space
-        jsr     map_process_always ; else flip to user space
+        jsr     map_proc_always ; else flip to user space
 RdBiz	lda	SDCTL
 	cmpa	#$e0
 	bne	RdBiz		; byte not available
