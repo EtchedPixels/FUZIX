@@ -40,7 +40,7 @@ image:
 	$(CROSS_LD) -o ../fuzix.bin --mapfile ../fuzix.map -C ld65.cfg crt0.o commonmem.o \
 	rcbus-6502.o ../start.o ../version.o ../lowlevel-6502.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	blkdev.o mbr.o devide.o devide_discard.o \
+	blkdev.o mbr.o devide.o devide_discard.o ../memalloc_none.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
