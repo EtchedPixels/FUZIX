@@ -35,10 +35,10 @@ devsys.rel
 usermem.rel
 platform-sc108/discard.rel
 platform-sc108/devtty.rel
-platform-sc108/mbr.rel
-platform-sc108/blkdev.rel
-platform-sc108/devide.rel
-platform-sc108/devide_discard.rel
+platform-sc108/tinydisk.rel
+platform-sc108/tinydisk_discard.rel
+platform-sc108/tinyide.rel
+platform-sc108/tinyide_discard.rel
 platform-sc108/ide.rel
 platform-sc108/usermem.rel
 platform-sc108/ds1302.rel

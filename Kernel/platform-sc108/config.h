@@ -63,8 +63,10 @@ extern uint16_t swap_dev;
    of this setting */
 #define CONFIG_RTC_INTERVAL	100
 
-/* IDE/CF support */
-#define CONFIG_IDE
+#define CONFIG_TD_NUM		2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
 
 /* Device parameters */
 #define NUM_DEV_TTY 4
