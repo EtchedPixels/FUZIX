@@ -72,7 +72,7 @@ bool sd_spi_receive_sector(void) __naked
     call map_buffers
     jr doread
 to_user:
-    call map_process_always
+    call map_proc_always
 doread:
     ld bc,#0xDF10
     ld e,#0xFF
@@ -109,7 +109,7 @@ bool sd_spi_transmit_sector(void) __naked
     jr nz, from_user
     call map_buffers
 from_user:
-    call map_process_always
+    call map_proc_always
 dowrite:
     ld bc,#0xDF10
     ld d,#0x80

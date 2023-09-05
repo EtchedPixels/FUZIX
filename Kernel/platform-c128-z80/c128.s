@@ -8,12 +8,12 @@
         .globl init_hardware
 	.globl _program_vectors
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_always
 	.globl map_kernel_di
 	.globl map_kernel_restore
-	.globl map_process_di
-	.globl map_process_always_di
+	.globl map_proc_di
+	.globl map_proc_always_di
 	.globl map_save_kernel
 	.globl map_restore
 	.globl map_for_swap
@@ -113,12 +113,12 @@ plt_interrupt_all:
 ;=========================================================================
 
 ;=========================================================================
-; map_process - map process or kernel pages
+; map_proc - map process or kernel pages
 ; Inputs: page table address in HL, map kernel if HL == 0
 ; Outputs: none; A and HL destroyed
 ;=========================================================================
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	ld a,h
 	or l				; HL == 0?
 	jr z,map_kernel			; HL == 0 - map the kernel
@@ -138,12 +138,12 @@ map_for_swap:
 	; fall through
 
 ;=========================================================================
-; map_process_always - map process pages
+; map_proc_always - map process pages
 ; Inputs: page table address in #U_DATA__U_PAGE
 ; Outputs: none; all registers preserved
 ;=========================================================================
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	push	af
 	ld	a,#0x7F		; Process in bank 1
 	ld	(map),a
@@ -269,7 +269,7 @@ _rd_block:
 geo_setup:
 	ld	a,(_rd_page)
 	or	a
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	ld	hl,(_rd_block)
 	; As an address this looks like
 	;	0BBBBBBB BPPPPPPX [XXXXXXXX]
@@ -332,7 +332,7 @@ reu_execute:
 	push	af
 	ld	a,(_rd_page)
 	or	a
-	call	nz, map_process_always
+	call	nz, map_proc_always
 	ld	hl,(_rd_dptr)
 	ld	bc,#0xDF02
 	out	(c),l
