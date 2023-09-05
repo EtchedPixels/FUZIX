@@ -50,6 +50,7 @@
         .globl nmi_handler
 	.globl null_handler
         .globl interrupt_handler
+	.globl ___sdcc_enter_ix
 
 	.include "kernel.def"
 	.include "../kernel-z80.def"
@@ -74,14 +75,25 @@ rst0:
 	jp	go
 	nop
 	nop
-rst8:	ret
-	.ds	7
-rst10:	ret
-	.ds	7
-rst18:	ret
-	.ds	7
-rst20:	ret
-	.ds	7
+rst8:
+	jp	___sdcc_enter_ix
+	.ds	5
+rst10:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+rst18:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+rst20:	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
+	.ds	3
 rst28:	ret
 	.ds	7
 rst30:	ret
