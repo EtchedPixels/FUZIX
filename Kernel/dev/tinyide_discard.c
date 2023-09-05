@@ -100,12 +100,38 @@ static void do_ide_register(uint8_t unit)
 	td_register(ide_xfer, 1);
 }
 
+#ifdef CONFIG_TINYIDE_RESET
+
+static void ide_reset_wait(void)
+{
+    timer_t timeout;
+
+    timeout = set_timer_ms(25);
+
+    while(!timer_expired(timeout))
+       plt_idle();
+}
+
+void ide_std_reset(void)
+{
+	ide_write(devh, 0xE0);
+	ide_write(dctrl, 0x06);	/* Reset, no interrupts */
+	ide_reset_wait();
+	ide_write(dctrl, 0x02);	/* no interrupts */
+	ide_reset_wait();
+}
+
+#endif
+
 void ide_probe(void)
 {
 	uint_fast8_t n;
 	uint8_t *buf = (uint8_t *)tmpbuf();
 	for (n = 0 ; n < TD_IDE_NUM; n++) {
 		ide_unit = n << 1;
+#ifdef CONFIG_TINYIDE_RESET
+		ide_reset();
+#endif
 		/* Issue an EDD if we can - timeout -> no drives */
 		/* Now issue an identify for each drive */
 		ide_identify(0, buf);

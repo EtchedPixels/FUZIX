@@ -26,5 +26,8 @@ extern uint8_t ide_dev[TD_IDE_NUM];
 extern uint8_t ide_unit;
 
 void ide_probe(void);
+void ide_std_reset(void);
+
+void ide_reset(void);	/* Optional caller provided */
 
 #endif
