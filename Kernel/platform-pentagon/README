@@ -59,3 +59,6 @@ To Do:
 
 Floppy disk interfaces are problematic. The standard Betadisk interface locks
 the I/O ports to its ROM being active, which sucks.
+
+
+Emulator:

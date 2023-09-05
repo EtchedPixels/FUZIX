@@ -1,7 +1,4 @@
 #define CONFIG_MULTI
-#define CONFIG_IDE
-#define CONFIG_SD
-#define SD_DRIVE_COUNT	2
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -73,5 +70,20 @@
 
 /* All our pages get mapped into the top 16K bank for swapping use */
 #define swap_map(x)		((uint8_t *)(x|0xC000))
+
+#define CONFIG_TD
+#define CONFIG_TD_NUM	2
+/* IDE/CF support */
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
+/* SD support */
+#define TD_SD_NUM 2
+#define CONFIG_TD_SD
+/* Emulator for this platform needs bug workarounds */
+#define CONFIG_TD_SD_EMUBUG
+/* Banked so no z88dk fastcalls */
+#define SD_SPI_CALLTYPE
+#define SD_SPI_BANKED
 
 #define BOOTDEVICENAMES "hd#,fd#"
