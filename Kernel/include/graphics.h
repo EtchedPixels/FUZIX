@@ -48,6 +48,7 @@ struct display {
 #define GFX_MULTIMODE	32	/* Has multiple modes */
 #define GFX_PALETTE_SET	64	/* Has settable colour palette */
 #define GFX_TEXT	128	/* Console text works in this mode */
+#define GFX_WRAP	256	/* Viewport wraps */
   uint16_t memory;		/* Memory size in KB (may be 0 if not relevant) */
   uint16_t commands;
 #define GFX_DRAW	1	/* Supports the draw command */
@@ -63,6 +64,7 @@ struct display {
 #define GFX_WRITE	256	/* Supports writing a buffer */
 #define GFX_AWRITE	512	/* Supports writing an attribute buffer */
 #define GFX_EXG		1024	/* Simultaenous GFX_READ/GFX_WRITE to swap */
+#define GFX_SCROLL	2048	/* Has a scrolling viewport */
   uint16_t twidth;		/* Character size information */
   uint16_t theight;		/* Characters per line/column */
  /* We may want to add some hardware ones as we hit machines that have them */
@@ -114,6 +116,7 @@ struct videomap {
 #define GFXIOC_WRITE		0x0313	/* Write to screen direct */
 #define GFXIOC_AWRITE		0x0314	/* Write to attributes direct */
 #define GFXIOC_EXG		0x0315	/* Exchange a block */
+#define GFXIOC_SCROLL		0x0316	/* Set scroll offsets */
 
 /*
  *	VDP specific ioctls: The 0x032X range is reused for each type
