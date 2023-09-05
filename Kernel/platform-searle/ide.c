@@ -1,12 +1,10 @@
-#define _IDE_PRIVATE
-
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
 #include <stdbool.h>
 #include <timer.h>
-#include <devide.h>
-#include <blkdev.h>
+#include <tinyide.h>
+#include <plt_ide.h>
 
 /*
  *	We need slightly custom transfer routines for the IDE controller
@@ -20,11 +18,14 @@ COMMON_MEMORY
 #undef ei
 #undef di
 
-void devide_read_data(void) __naked
+void devide_read_data(uint8_t *data) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop de
+            pop hl
+            push hl
+            push de
+            ld a, (_td_raw)
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
 	    or a
@@ -49,11 +50,14 @@ via_kernel:
     __endasm;
 }
 
-void devide_write_data(void) __naked
+void devide_write_data(uint8_t *data) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop de
+            pop hl
+            push hl
+            push de
+            ld a, (_td_raw)
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
 	    or a

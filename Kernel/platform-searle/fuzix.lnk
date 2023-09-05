@@ -35,10 +35,10 @@ devsys.rel
 usermem.rel
 platform-searle/discard.rel
 platform-searle/devtty.rel
-platform-searle/mbr.rel
-platform-searle/blkdev.rel
-platform-searle/devide.rel
-platform-searle/devide_discard.rel
+platform-searle/tinydisk.rel
+platform-searle/tinydisk_discard.rel
+platform-searle/tinyide.rel
+platform-searle/tinyide_discard.rel
 platform-searle/ide.rel
 platform-searle/usermem.rel
 -e
