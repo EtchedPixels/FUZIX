@@ -330,7 +330,7 @@ _fd_operation:
 	ldy	6,s		; Drive struct
 	tst	,x+		; User or kernel ?
 	beq	fd_op_k
-	jsr	map_process_always
+	jsr	map_proc_always
 fd_op_k:
 	jsr	fdsetup		; Set up for a command
 	tfr	a,b		; Status code or 0xFF for total failure

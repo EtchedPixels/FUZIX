@@ -111,7 +111,7 @@ _sd_spi_receive_sector:
 	sty endspi
 	lda _blk_op+2
 	beq rdspi
-	jsr map_process_always
+	jsr map_proc_always
 rdspi:	lda #ECE+FRX		; FRX on, external clock on
 	sta <SPICTRL
 	lda <SPIDATA		; read old value, triggers shifting in new
@@ -144,7 +144,7 @@ _sd_spi_transmit_sector:
 	sty endspi
 	lda _blk_op+2
 	beq wrspi
-	jsr map_process_always
+	jsr map_proc_always
 wrspi:	lda #ECE		; ext clock, no FRX
 	sta SPICTRL
 write8:

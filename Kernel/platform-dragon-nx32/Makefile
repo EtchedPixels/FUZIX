@@ -66,7 +66,7 @@ image: dwfuz.bin
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devfd.o floppy.o devices.o \
 	multihead.o crt9128.o vc.o vc_asm.o \
-	../dev/drivewire/drivewire.o devdw.o ttydw.o \
+	../dev/drivewire/drivewire.o devdw.o ttydw.o ../memalloc_none.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

@@ -9,9 +9,9 @@
 	; exported
 	.globl size_ram
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_a
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_a
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
 	.globl copybank
@@ -88,10 +88,10 @@ map_kernel
 	sta sammap0
 	puls a,pc
 
-map_process
+map_proc
 	tsta
 	beq map_kernel
-map_process_a
+map_proc_a
 	sta map_copy
 	bmi map1	; map 128 is for the internal upper 32K
 	sta sammap0
@@ -100,7 +100,7 @@ map_process_a
 map1	sta sammap1
 	rts
 
-map_process_always
+map_proc_always
 	pshs a
 	lda U_DATA__U_PAGE+1		; LSB of 16-bit page
 map_set_a

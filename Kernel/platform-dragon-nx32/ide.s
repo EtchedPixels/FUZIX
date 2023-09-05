@@ -29,7 +29,7 @@ _devide_read_data:
 	sty endp
 	tst _blk_op+2
 	beq readword
-	jsr map_process_always
+	jsr map_proc_always
 readword:
 	lda <IDEDATA
 	ldb <IDEDATA_L		; latched
@@ -48,7 +48,7 @@ _devide_write_data:
 	sty endp
 	tst _blk_op+2
 	beq writeword
-	jsr map_process_always
+	jsr map_proc_always
 writeword:
 	ldd ,x++
 	stb <IDEDATA_L

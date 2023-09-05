@@ -10,9 +10,9 @@
         .globl _plt_monitor
         .globl _inint
         .globl map_kernel
-        .globl map_process
-        .globl map_process_a
-        .globl map_process_always
+        .globl map_proc
+        .globl map_proc_a
+        .globl map_proc_always
         .globl copybank
 	.globl _nready
 	.globl _plt_idle
@@ -53,7 +53,7 @@ _plt_switchout:
 	sts U_DATA__U_SP	; this is where the SP is restored in _switchin
 
 	; Stash the uarea into process memory bank
-	jsr map_process_always
+	jsr map_proc_always
 
 	ldx #_udata
 	ldy #U_DATA_STASH
@@ -97,7 +97,7 @@ _switchin:
 	lda P_TAB__P_PAGE_OFFSET+1,x
 
 not_swapped:
-	jsr map_process_a
+	jsr map_proc_a
 	
 	; fetch uarea from process memory
 	ldx #U_DATA_STASH
@@ -220,7 +220,7 @@ fork_copy:
 	jsr copybank
 
 ; stash parent uarea (including kernel stack)
-	jsr map_process_a
+	jsr map_proc_a
 	ldx #_udata
 	ldu #U_DATA_STASH
 stashf	ldd ,x++
