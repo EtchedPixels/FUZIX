@@ -10,9 +10,9 @@
 	.globl reloc
 	.globl size_ram
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_a
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_a
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
 	.globl copybank
@@ -60,7 +60,7 @@ map_restore
 	; fall-through
 
 * might be called with interrupts enabled from drivers
-map_process_always
+map_proc_always
 	pshs cc,a
 	lda #1
 	orcc #0x10
@@ -69,16 +69,16 @@ map_process_always
 	puls cc,a,pc
 
 * called by I/O drivers (also for swapping)
-map_process
+map_proc
 	cmpx #0
 	beq map_kernel
 	pshs cc
 	orcc #0x10
-	jsr map_process_a
+	jsr map_proc_a
 	pshs cc,pc
 
 * called directly by switchin
-map_process_a
+map_proc_a
 	jsr mmu_remap_x
 	lda #1
 	sta map_copy

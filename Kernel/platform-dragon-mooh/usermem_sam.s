@@ -21,7 +21,7 @@
 	.globl __uzero
 
 	; imported
-	.globl map_process_always
+	.globl map_proc_always
 	.globl map_kernel
 
 	.area .common
@@ -29,7 +29,7 @@
 __ugetc:
 	pshs cc		; save IRQ state
 	orcc #0x10
-	jsr map_process_always
+	jsr map_proc_always
 	ldb ,x
 	jsr map_kernel
 	clra
@@ -39,7 +39,7 @@ __ugetc:
 __ugetw:
 	pshs cc
 	orcc #0x10
-	jsr map_process_always
+	jsr map_proc_always
 	ldx ,x
 	jsr map_kernel
 	puls cc,pc
@@ -50,7 +50,7 @@ __uget:
 	ldy 9,s		; count
 	orcc #0x10
 	ldb #1
-	jsr map_process_always	; make sure user task regs are set up
+	jsr map_proc_always	; make sure user task regs are set up
 ugetl:
 	stb 0xff91
 	lda ,x+
@@ -66,7 +66,7 @@ __uputc:
 	pshs cc
 	orcc #0x10
 	ldd 3,s
-	jsr map_process_always
+	jsr map_proc_always
 	exg d,x
 	stb ,x
 	jsr map_kernel
@@ -77,7 +77,7 @@ __uputw:
 	pshs cc
 	orcc #0x10
 	ldd 3,s
-	jsr map_process_always
+	jsr map_proc_always
 	exg d,x
 	std ,x
 	jsr map_kernel
@@ -91,7 +91,7 @@ __uput:
 	ldu 7,s		; user address
 	ldy 9,s		; count
 	ldb #1
-	jsr map_process_always	; make sure user task regs are set up
+	jsr map_proc_always	; make sure user task regs are set up
 	clr 0xff91
 uputl:
 	lda ,x+
@@ -108,7 +108,7 @@ __uzero:
 	pshs y,cc
 	ldy 5,s
 	orcc #0x10
-	jsr map_process_always
+	jsr map_proc_always
 	tfr y,d
 	clra
 	lsrb		; odd count?
