@@ -37,7 +37,7 @@ _plt_switchout:
 	psha				; Return code
 	sts _udata + U_DATA__U_SP	; Save old SP
 
-	jsr map_process_always
+	jsr map_proc_always
 	jsr stash_udata
 	jsr map_kernel
 
@@ -100,7 +100,7 @@ _switchin:
 	ldab	P_TAB__P_PAGE_OFFSET+1,x
 
 not_swapped:
-	jsr	map_process_x
+	jsr	map_proc_x
 
 	; We must do this inline as we will be changing stack under
 	; ourselves and without stack
@@ -265,7 +265,7 @@ fork_copy:
 	bsr bank2bank
 
 	ldx _udata+U_DATA__U_PTAB
-	jsr map_process_x
+	jsr map_proc_x
 	jsr stash_udata
 	jmp map_kernel_di
 
