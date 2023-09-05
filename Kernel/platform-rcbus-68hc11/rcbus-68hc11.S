@@ -9,12 +9,12 @@
             .globl program_vectors
 	    .globl map_kernel
 	    .globl map_kernel_di
-	    .globl map_process
-	    .globl map_process_always
-	    .globl map_process_always_di
+	    .globl map_proc
+	    .globl map_proc_always
+	    .globl map_proc_always_di
 	    .globl map_save_kernel
 	    .globl map_restore
-	    .globl map_process_x
+	    .globl map_proc_x
 	    .globl plt_interrupt
 	    .globl copy_common
 	    .globl cur_map
@@ -238,7 +238,7 @@ program_vectors:
 	    ; just pass it on
 
 	    xgdx
-	    jsr map_process
+	    jsr map_proc
 	    ;
 	    ; We need to split these up
 	    ;
@@ -299,8 +299,8 @@ commoncp:
 ;
 ;	Map the current process, do not change register values
 ;
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    pshx
 	    ldx #udata + U_DATA__U_PAGE
 	    jsr map_bank
@@ -309,9 +309,9 @@ map_process_always_di:
 ;
 ;	X points to the map table of this process, preserve D
 ;
-map_process:
+map_proc:
 	    cpx #0
-	    bne map_process_2
+	    bne map_proc_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
 ;	the kernel lives in 32/33/34/35
@@ -340,12 +340,12 @@ kmap:
 ;	another process is when we swap and swap is handled by a different
 ;	mapping technique
 ;
-map_process_x:
+map_proc_x:
 	    pshb
 	    ldab #P_TAB__P_PAGE_OFFSET
 	    abx
 	    bra map_in
-map_process_2:
+map_proc_2:
 map_bank:
 	    pshb
 map_in:
@@ -458,7 +458,7 @@ hd_read_data:
 	;
 	;	We must flip banks before we play mmu pokery, or it will
 	; undo all our work. This means our variables must be commondata
-	; and we must reference them before we map_process
+	; and we must reference them before we map_proc
 	ldab hd_map
 	beq hd_kmap
 	deca
@@ -467,7 +467,7 @@ hd_read_data:
 	bsr map_for_swap
 	bra hd_kmap
 hd_umap:
-	jsr map_process_always
+	jsr map_proc_always
 hd_kmap:
 	clrb
 	jsr hd_read256
@@ -488,7 +488,7 @@ hd_write_data:
 	;
 	;	We must flip banks before we play mmu pokery, or it will
 	; undo all our work. This means our variables must be commondata
-	; and we must reference them before we map_process
+	; and we must reference them before we map_proc
 	;
 	ldab hd_map
 	beq hd_kmapw
@@ -498,7 +498,7 @@ hd_write_data:
 	bsr map_for_swap
 	bra hd_kmapw
 hd_umapw:
-	jsr map_process_always
+	jsr map_proc_always
 hd_kmapw:
 	clrb
 	jsr hd_write256
@@ -588,7 +588,7 @@ sd_spi_transmit_sector:
 	bsr map_for_swap
 	bra from_k
 from_u:
-	bsr map_process_always
+	bsr map_proc_always
 from_k:
 	clra
 	ldx #0xF000
@@ -621,7 +621,7 @@ sd_spi_receive_sector:
 	bsr map_for_swap
 	bra to_k
 to_u:
-	bsr map_process_always
+	bsr map_proc_always
 to_k:
 	clra
 	ldx #0xF000
