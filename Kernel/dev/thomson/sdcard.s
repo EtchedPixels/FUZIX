@@ -127,7 +127,7 @@ sdd_rx_loop:
 	puls	y,dp
 	jmp	map_kernel
 sdd_rx_user:
-	jsr	map_process_always
+	jsr	map_proc_always
 	bra	sdd_rx_kernel
 
 _sddrive_transmit_sector:
@@ -182,7 +182,7 @@ sdd_tx_loop:
 	puls	dp
 	jmp	map_kernel
 sdd_tx_user:
-	jsr	map_process_always
+	jsr	map_proc_always
 	bra	sdd_tx_kernel
 
 ;
@@ -297,7 +297,7 @@ sdmo_rx_loop:
 	puls	y,dp
 	jmp	map_kernel
 sdmo_rx_user:
-	jsr	map_process_always
+	jsr	map_proc_always
 	bra	sdmo_rx_kernel
 
 _sdmo_transmit_sector:
@@ -352,7 +352,7 @@ sdmo_tx_loop:
 	puls	y,dp
 	jmp	map_kernel
 sdmo_tx_user:
-	jsr	map_process_always
+	jsr	map_proc_always
 	bra	sdmo_tx_kernel
 
 ;
@@ -465,7 +465,7 @@ sdmt_rx_loop:
 	puls	y,dp
 	jmp	map_kernel
 sdmt_rx_user:
-	jsr	map_process_always
+	jsr	map_proc_always
 	bra	sdmt_rx_kernel
 
 _sdmoto_transmit_sector:
@@ -520,7 +520,7 @@ sdmt_tx_loop:
 	puls	y,dp
 	jmp	map_kernel
 sdmt_tx_user:
-	jsr	map_process_always
+	jsr	map_proc_always
 	bra	sdmt_tx_kernel
 
 _sdmoto_init:
