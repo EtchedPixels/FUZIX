@@ -60,7 +60,7 @@ image:
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../vt.o ../devsys.o ../usermem.o ../syscall_fs2.o \
 	../syscall_fs3.o ../syscall_exec.o ../syscall_exec16.o  \
-	devinput.o ../devinput.o ../blk512.o \
+	devinput.o ../devinput.o ../blk512.o ../memalloc_none.o \
 	../dev/tinydisk_discard.o ../dev/tinydisk.o ../dev/tinyide_discard.o \
 	../dev/tinyide.o ppide.o ../dev/ch375.o vdp1.o ../font6x8.o \
 	../dev/tinyscsi_discard.o ../dev/tinyscsi.o devscsi.o ncr5380.o \
