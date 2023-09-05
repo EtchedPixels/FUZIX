@@ -33,8 +33,8 @@ start:
 	ld 	a,#0x07		; Bank 7 top
 	ld	bc,#0x7FFD
 	out	(c),a
-	ld	hl,#0x4000	; Wipe video
-	ld	de,#0x4001
+	ld	hl,#0xC000	; Wipe video
+	ld	de,#0xC001
 	ld	bc,#6911
 	ld	(hl),#0
 	ldir

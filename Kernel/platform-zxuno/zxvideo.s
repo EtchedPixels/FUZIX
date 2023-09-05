@@ -77,7 +77,7 @@ _plot_char:
         rl b
         ld c, a
 
-        ld hl, #_fontdata_8x8-32*8    ; font
+        ld hl, #_fontdata_8x8    ; font
         add hl, bc          ; hl points to first byte of char data
 
 	pop bc

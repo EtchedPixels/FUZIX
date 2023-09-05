@@ -16,4 +16,7 @@ extern int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 
 extern uint8_t vtborder;
 
+extern uint8_t portff;
+extern uint8_t radastan;
+
 #endif

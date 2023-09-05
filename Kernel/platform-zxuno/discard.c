@@ -8,7 +8,6 @@
 
 extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
 
-
 void pagemap_init(void)
 {
 	unsigned i = 1024;
@@ -19,6 +18,7 @@ void pagemap_init(void)
 		kempston = 1;
 		kmouse = 1;
 		fuller = 1;
+		radastan = 1;
 	}
 	pagemap_add(0x01);
 	pagemap_add(0x81);

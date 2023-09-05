@@ -28,7 +28,6 @@
 /* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
 #define CONFIG_FONT8X8
-#define CONFIG_FONT8X8SMALL
 
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
