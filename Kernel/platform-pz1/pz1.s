@@ -6,8 +6,8 @@
             .export init_hardware
             .export _program_vectors
 	    .export map_kernel
-	    .export map_process
-	    .export map_process_always
+	    .export map_proc
+	    .export map_proc_always
 	    .export map_save_kernel
 	    .export map_restore
 
@@ -141,7 +141,7 @@ _program_vectors:
 	    ;
 	    ; our C caller will invoke us with the pointer in x,a
 	    ; just pass it on
-	    jsr map_process
+	    jsr map_proc
 program_vectors_k:
 	    lda #<vector
 	    sta $FFFE
@@ -159,15 +159,15 @@ program_vectors_k:
 ;
 ;	On a banked setup the semantics are:
 ;
-;	map_process_always()
+;	map_proc_always()
 ;	Map the current process (ie the one with the live uarea)
 ;
 ;	map_kernel()
 ;	Map the kernel
 ;
-;	map_process(pageptr [in X,A])
+;	map_proc(pageptr [in X,A])
 ;	if pageptr = 0 then map_kernel
-;	else map_process using the pageptr
+;	else map_proc using the pageptr
 ;
 ;	map_save
 ;	save the current mapping
@@ -181,7 +181,7 @@ program_vectors_k:
 ;	ptr1 and tmp1 may be destroyed by these methods, but no other
 ;	temporaries.
 ;
-map_process_always:
+map_proc_always:
 	    pha
 	    txa
 	    pha
@@ -194,11 +194,11 @@ map_process_always:
 ;
 ;	X,A points to the map table of this process
 ;
-map_process:
+map_proc:
 	    cmp #0
-	    bne map_process_2
+	    bne map_proc_2
 	    cpx #0
-	    bne map_process_2
+	    bne map_proc_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
 ;	the kernel lives in 0/1/2/3
@@ -221,7 +221,7 @@ map_kernel:
 ;
 ;	Entry point to map a linear bank range. We switch 4000-FFFF
 ;	0000-3FFF are switched on the task switch so are valid for
-;	map_process_always cases but not mapping an arbitrary process.
+;	map_proc_always cases but not mapping an arbitrary process.
 ;	This is ok - when we add swap it uses map_for_swap and that will map
 ;	a 16K window in and out (which will need us to fix save/restore)
 ;
@@ -238,7 +238,7 @@ map_bank_i:			; We are not mapping the first user page yet
 	    rts
 
 ; X,A holds the map table of this process
-map_process_2:
+map_proc_2:
 	    sta ptr1
 	    stx ptr1+1
 	    tya
@@ -679,7 +679,7 @@ _hd_data_in:
 	    stx ptr1+1
 	    lda _hd_mode
 	    beq no_remapr
-	    jsr map_process_always
+	    jsr map_proc_always
 no_remapr:
 	    ldy #0
 hdin1:
@@ -702,7 +702,7 @@ _hd_data_out:
 	    stx ptr1+1
 	    lda _hd_mode
 	    beq no_remapw
-	    jsr map_process_always
+	    jsr map_proc_always
 no_remapw:
 	    ldy #0
 hdout1:
