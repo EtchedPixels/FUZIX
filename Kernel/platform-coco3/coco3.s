@@ -13,8 +13,8 @@
             .globl interrupt_handler
             .globl _program_vectors
 	    .globl map_kernel
-	    .globl map_process
-	    .globl map_process_always
+	    .globl map_proc
+	    .globl map_proc_always
 	    .globl map_save
 	    .globl map_restore
 	    .globl _need_resched
@@ -270,19 +270,19 @@ firq_handler:
 
 ;;; Userspace mapping pages 7+  kernel mapping pages 3-5, first common 6
 ;;; All registers preserved
-map_process_always:
+map_proc_always:
 	    pshs x,y,u
 	    ldx #U_DATA__U_PAGE
-	    jsr map_process_2
+	    jsr map_proc_2
 	    puls x,y,u,pc
 
 ;;; Maps a page table into cpu space
 ;;;   takes: X - pointer page table ( ptptr )
 ;;;   returns: nothing
 ;;;   modifies: nothing
-map_process:
+map_proc:
 	    cmpx #0		; is zero?
-	    bne map_process_2	; no then map process; else: map the kernel
+	    bne map_proc_2	; no then map process; else: map the kernel
 	;; !!! fall-through to below
 
 ;;; Maps the Kernel into CPU space
@@ -305,7 +305,7 @@ map_kernel:
 ;;;   takes: X = pointer to page table
 ;;;   returns: nothing
 ;;;   modifies: nothing
-map_process_2:
+map_proc_2:
 	    pshs x,y,a
 	    ldy #0xffa0		; MMU user map. We can fiddle with
 
@@ -414,7 +414,7 @@ blkdev_rawflg
         incb         ; inc page no... next block no.
         stb 0xffa9   ; store it in mmu
 	puls d,x,pc
-proc@	jsr map_process_always
+proc@	jsr map_proc_always
  	; get parameters from C, X points to cmd packet
 out@	puls d,x,pc
 

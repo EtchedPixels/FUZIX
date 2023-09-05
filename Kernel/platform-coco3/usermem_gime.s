@@ -23,7 +23,7 @@ WINTR	equ	256		; window xfer treshold
 	.globl 	__uzero
 
 	; imported
-	.globl 	map_process_always
+	.globl 	map_proc_always
 	.globl 	map_kernel
 
 	.area 	.common
@@ -31,7 +31,7 @@ WINTR	equ	256		; window xfer treshold
 __ugetc:
 	pshs 	cc	; save IRQ state
 	orcc 	#0x10
-	jsr 	map_process_always
+	jsr 	map_proc_always
 	ldb 	,x
 	jsr 	map_kernel
 	clra
@@ -41,7 +41,7 @@ __ugetc:
 __ugetw:
 	pshs 	cc
 	orcc 	#0x10
-	jsr 	map_process_always
+	jsr 	map_proc_always
 	ldx 	,x
 	jsr 	map_kernel
 	puls 	cc,pc
@@ -64,7 +64,7 @@ __uget1:
 	ldu 	7,s	; user address
 	ldy 	9,s	; count
 ugetl:
-	jsr 	map_process_always
+	jsr 	map_proc_always
 	lda 	,x+
 	jsr 	map_kernel
 	sta 	,u+
@@ -77,7 +77,7 @@ __uputc:
 	pshs 	cc
 	orcc 	#0x10
 	ldd 	3,s
-	jsr 	map_process_always
+	jsr 	map_proc_always
 	exg 	d,x
 	stb 	,x
 	jsr 	map_kernel
@@ -88,7 +88,7 @@ __uputw:
 	pshs 	cc
 	orcc 	#0x10
 	ldd 	3,s
-	jsr 	map_process_always
+	jsr 	map_proc_always
 	exg 	d,x
 	std 	,x
 	jsr 	map_kernel
@@ -116,7 +116,7 @@ __uput1:
 	ldy 	9,s		; count
 uputl:
 	lda 	,x+
-	jsr 	map_process_always
+	jsr 	map_proc_always
 	sta 	,u+
 	jsr 	map_kernel
 	leay 	-1,y
@@ -129,7 +129,7 @@ __uzero:
 	lda 	#0
 	ldy 	5,s
 	orcc 	#0x10
-	jsr 	map_process_always
+	jsr 	map_proc_always
 uzloop:
 	sta 	,x+
 	leay 	-1,y
