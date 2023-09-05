@@ -48,7 +48,7 @@ image:
 	$(CROSS_LD) -b -C 0x400 -S 0xF000 -Z 0x80 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
 	rcbus-6303.o ../start.o ../version.o ../lowlevel-6303.o \
 	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
-	blkdev.o mbr.o devide.o devide_discard.o \
+	blkdev.o mbr.o devide.o devide_discard.o ../memalloc_none.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank16kfc.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
