@@ -10,9 +10,9 @@
 	.globl _mpi_set_slot
 	.globl _cart_hash
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_a
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_a
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
         .globl init_early
@@ -164,9 +164,9 @@ map_kr:
 	clr $ffde	;	ROM in
 	puls a,pc
 	
-map_process:
-map_process_always:
-map_process_a:
+map_proc:
+map_proc_always:
+map_proc_a:
 	clr romin
 	clr $ffdf	;	ROM out
 	rts

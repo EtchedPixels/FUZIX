@@ -61,7 +61,7 @@ image:
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	../dev/drivewire/drivewire.o devdw.o tinyide.o tinyide_discard.o ide.o \
-	tinydisk.o tinydisk_discard.o \
+	tinydisk.o tinydisk_discard.o ../memalloc_none.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
@@ -82,7 +82,7 @@ image:
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	../dev/drivewire/drivewire.o devdw.o tinyide.o tinyide_discard.o ide.o \
-	tinydisk.o tinydisk_discard.o \
+	tinydisk.o tinydisk_discard.o ../memalloc_none.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \

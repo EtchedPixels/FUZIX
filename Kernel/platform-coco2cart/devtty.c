@@ -424,7 +424,7 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 	case VTSETFONT:
 //			size = base = 0;
 //		case VTSETUDG:
-		return uget(fontdata_8x8 + base, ptr, size);
+		return uget(ptr, fontdata_8x8 + base, size);
 		case VTGETFONT:
 //			size = base = 0;
 //		case VTGETUDG:

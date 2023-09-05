@@ -23,7 +23,7 @@ _devide_read_data:
 	sty endp
 	tst _td_page
 	beq readword
-	jsr map_process_always
+	jsr map_proc_always
 readword:
 	; word 1
 	lda <IDEDATA
@@ -102,7 +102,7 @@ _devide_write_data:
 	sty endp
 	tst _td_page
 	beq writeword
-	jsr map_process_always
+	jsr map_proc_always
 writeword:
 	ldd ,x++
 	stb <IDEDATA_L

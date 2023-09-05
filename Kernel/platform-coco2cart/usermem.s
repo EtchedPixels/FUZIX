@@ -21,14 +21,14 @@
 	.area .common
 
 __ugetc:
-	jsr map_process_always
+	jsr map_proc_always
 	ldb ,x
 	clra
 	tfr d,x
 	jmp map_kernel
 
 __ugetw:
-	jsr map_process_always
+	jsr map_proc_always
 	ldx ,x
 	jmp map_kernel
 
@@ -36,7 +36,7 @@ __uget:
 	pshs u,y
 	ldu 6,s		; user address
 	ldy 8,s		; count
-	jsr map_process_always
+	jsr map_proc_always
 ugetl:
 	lda ,x+
 	sta ,u+
@@ -48,7 +48,7 @@ ugetl:
 
 __uputc:
 	ldd 2,s
-	jsr map_process_always
+	jsr map_proc_always
 	exg d,x
 	stb ,x
 	ldx #0
@@ -56,7 +56,7 @@ __uputc:
 
 __uputw:
 	ldd 2,s
-	jsr map_process_always
+	jsr map_proc_always
 	exg d,x
 	std ,x
 	ldx #0
@@ -67,7 +67,7 @@ __uput:
 	pshs u,y
 	ldu 6,s		; user address
 	ldy 8,s		; count
-	jsr map_process_always
+	jsr map_proc_always
 uputl:
 	lda ,x+
 	sta ,u+
@@ -81,7 +81,7 @@ __uzero:
 	pshs y
 	lda #0
 	ldy 4,s
-	jsr map_process_always
+	jsr map_proc_always
 uzloop:
 	sta ,x+
 	leay -1,y
