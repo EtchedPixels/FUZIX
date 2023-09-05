@@ -64,7 +64,7 @@ _sd_spi_transmit_sector:
 	jsr	map_for_swap
 	bra	writebyte
 writeuser:
-	jsr	map_process_always
+	jsr	map_proc_always
 writebyte:
 	bsr	_sd_spi_receive_byte
 	stb	,y+
@@ -87,7 +87,7 @@ _sd_spi_receive_sector:
 	jsr	map_for_swap
 	bra	readbyte
 readuser:
-	jsr	map_process_always
+	jsr	map_proc_always
 readbyte:
 	bsr	_sd_spi_receive_byte
 	stb	,y+

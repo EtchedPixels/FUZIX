@@ -46,7 +46,7 @@ image:
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o mem-rcbus.o \
 	rcbus-6809.o ../bank16k.o ds1302.o ds1302_6809.o \
-	../devinput.o devinput.o \
+	../devinput.o devinput.o ../memalloc_none.o \
 	../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o ../blk512.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \

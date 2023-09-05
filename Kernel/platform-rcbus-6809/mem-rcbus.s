@@ -7,8 +7,8 @@
 	; exported
 	.globl size_ram
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
 	.globl map_for_swap
@@ -46,7 +46,7 @@ size_ram:
 
 	.area .common
 
-map_process:
+map_proc:
 	cmpx	#0
 	bne	map_procu
 map_kernel:
@@ -69,7 +69,7 @@ map_procu:
 	stb	$FE7A
 	puls	d,pc
 
-map_process_always:
+map_proc_always:
 	pshs	d
 	ldd	U_DATA__U_PAGE
 	std	cur_map
@@ -123,13 +123,13 @@ skipio:
 	bra	commoncp
 
 __ugetc:
-	jsr map_process_always
+	jsr map_proc_always
 	ldb ,x
 	clra
 	tfr d,x
 	jmp map_kernel
 __ugetw:
-	jsr map_process_always
+	jsr map_proc_always
 	ldx ,x
 	jmp map_kernel
 __uget:
@@ -137,7 +137,7 @@ __uget:
 	ldu 6,s
 	ldy 8,s
 ugetl:
-	jsr map_process_always
+	jsr map_proc_always
 	lda ,x+
 	jsr map_kernel
 	sta ,u+
@@ -148,7 +148,7 @@ ugetl:
 
 __uputc:
 	ldd 2,s
-	jsr map_process_always
+	jsr map_proc_always
 	exg d,x
 	stb ,x
 	jsr map_kernel
@@ -156,7 +156,7 @@ __uputc:
 	rts
 __uputw:
 	ldd 2,s
-	jsr map_process_always
+	jsr map_proc_always
 	exg d,x
 	std ,x
 	jsr map_kernel
@@ -172,7 +172,7 @@ __uput:
 uputl:
 	jsr map_kernel
 	lda ,x+
-	jsr map_process_always
+	jsr map_proc_always
 	sta ,u+
 	leay -1,y
 	bne uputl
@@ -183,7 +183,7 @@ uputl:
 __uzero:
 	pshs y
 	ldy 4,s
-	jsr map_process_always
+	jsr map_proc_always
 	tfr y,d
 	clra
 	lsrb

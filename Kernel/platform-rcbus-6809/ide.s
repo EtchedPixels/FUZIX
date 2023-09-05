@@ -36,7 +36,7 @@ _devide_read_data:
 	jsr map_for_swap
 	bra readbyte
 readuser:
-	jsr map_process_always
+	jsr map_proc_always
 readbyte:
 	lda <IDEDATA
 	sta ,x+
@@ -61,7 +61,7 @@ _devide_write_data:
 	jsr map_for_swap
 	bra writebyte
 writeuser:
-	jsr map_process_always
+	jsr map_proc_always
 writebyte:
 	lda ,x+
 	sta <IDEDATA
