@@ -92,8 +92,10 @@ rst38:	jp	interrupt_handler
 	jp	nmi_handler
 
 go:
+	; On entry we are in ZX128 made we have the mapping as
+	; ROM/5/2/? and screen in 7. (5/8/? on systens with bank 2 not
+	; shared..
 	; Wipe screen with test pattern
-
 	ld	bc,#0x7ffd
 	ld	a,#0x0F
 	out	(c),a

@@ -14,15 +14,15 @@
 	.globl null_handler
 
         .globl map_kernel
-        .globl map_process_always
+        .globl map_proc_always
         .globl map_kernel_di
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
-	.globl map_process_save
+	.globl map_proc_save
 	.globl map_kernel_restore
 	.globl map_for_swap
-	.globl map_process_a
+	.globl map_proc_a
 	.globl map_video_save
 
         .globl _need_resched
@@ -120,66 +120,54 @@ init_hardware:
 _program_vectors:
 	ret
 
-map_process_a:
+;
+;	On the ZX Uno this is simple. On the SE/Chloe however the
+;	dual MMU has restrictions. In particular for us the top page
+;	must be even when using dock/ex space.
+;
+map_for_swap:
+map_proc_a:
 	push	af
 	push	bc
-	ld	c,a
+map_user:
+	di
+	ld	(user_map),a
+	ld	bc,#0x7FFD
+	ld	a,#0x08
+	out	(c),a		; Bank 0 high
 	ld	a,#0xFC
-	out	(0xF4),a
-	ld	a,c
-	jr	map_res_a
+	out	(0xF4),a	; DOCK/EXT on
+	ld	bc,(user_map)	; user_map into C
+	dec 	c		; now 0x00 or 0x80
+	ld	a,(_portff)
+	and	#0x7F
+	or	c		; DOCK/EXT bit
+	ld	(_portff),a
+	out	(0xFF),a	; and set up the choice
+ei_out:
+	ld	a,(_int_disabled)
+	or	a
+	jr	nz, no_ei
+	ei
+no_ei:
+	pop	bc
+	pop	af
+	ret
+
+map_proc_save:
+map_proc_always:
+map_proc_always_di:
+	push	af
+	push	bc
+	ld	a,(_udata+U_DATA__U_PAGE)
+	jp	map_user
 
 map_proc_hl:
 	push	af
 	push	bc
-	ld	a,#0xFC		; All but low 16K from dock or ex
-	out	(0xF4),a
 	ld	a,(hl)
-map_res_a:
-	ld	(user_map),a
-	dec	a
-	ld	a,(_portff)
-	ld	c,#0x80		; 2 is EXROM
-	jr	nz, is_exr
-	ld	c,#0		; 1 is DOCK
-is_exr:
-	and	#0x7F		; Clear the dock/exrom bit
-	or	c		; Merge in the new one
-	ld	(_portff),a	; Switch
-	out	(0xFF),a
-	pop	bc
-	pop	af
-	ret
+	jp	map_user
 
-map_process_save:
-map_process_always:
-map_process_always_di:
-map_for_swap:
-	push	hl
-	ld	hl,#U_DATA__U_PAGE
-	call	map_proc_hl
-	pop	hl
-	ret
-;
-;	Save and switch to kernel
-;
-map_save_kernel:
-	push	af
-	push	bc
-	ld	a,(user_map)
-	ld	(user_store),a
-        ld	a, (high_map)
-        ld	(high_store), a
-	ld	a,#0x0B		; bank 3 screen 7
-	ld	(high_map),a
-	ld	bc,#0x7FFD
-	out	(c),a
-	xor	a
-	ld	(user_map),a
-	out	(0xF4),a
-	pop	bc
-	pop	af
-	ret
 ;
 ;	Kernel - clear the bank register so we get standard memory
 ;	(plus the DIVMMC space)
@@ -189,16 +177,15 @@ map_kernel:
 map_kernel_restore:
 	push	af
 	push	bc
+	di
 	xor	a
 	ld	(user_map),a
-	out	(0xF4),a
+	out	(0xF4),a	; Dock/Ext off
 	ld	a,#0x0B		; bank 3 screen 7
 	ld	bc,#0x7FFD
 	ld	(high_map),a
 	out	(c),a
-	pop	bc
-	pop	af
-	ret
+	jp	ei_out
 ;
 ;	Temporarily switch to video memory, this lives in bank 7 so replaces
 ;	some of the kernel. This is fine as we are in common
@@ -206,10 +193,28 @@ map_kernel_restore:
 map_video_save:
 	push	af
 	push	bc
+	di
 	ld	a,#0x0F		; bank 7 screen 7
-map_set_high:
-	ld	(high_map),a
 	ld	bc,#0x7FFD
+	ld	(high_map),a
+	out	(c),a
+	jp	ei_out
+;
+;	Save and switch to kernel (always in IRQ context)
+;
+map_save_kernel:
+	push	af
+	push	bc
+	ld	a,(user_map)
+	ld	(user_store),a
+        ld	a, (high_map)
+        ld	(high_store), a
+	xor	a
+	ld	(user_map),a
+	out	(0xF4),a
+	ld	bc,#0x7FFD
+	ld	a,#0x0B
+	ld	(high_map),a
 	out	(c),a
 	pop	bc
 	pop	af
@@ -221,16 +226,15 @@ map_restore:
 	ld	a, (user_store)
 	ld	(user_map),a
 	or	a
-	jr	nz, map_restore_u
+	jp	nz, map_user
 	out	(0xF4),a
 	ld	a,(high_store)
-	jr	map_set_high
-map_restore_u:
-	ld	a,#0xFC
-	out	(0xF4),a
-	ld	a,(user_map)
-	jp	map_res_a
-
+	ld	(high_map),a
+	ld	bc,#0x7FFD
+	out	(c),a
+	pop	bc
+	pop	af
+	ret
 
 ;
 ;	We have no easy serial debug output instead just breakpoint this

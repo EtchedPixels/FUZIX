@@ -54,3 +54,44 @@ TODO:
 -	Graphics apps loaded below C000 and with video map ?
 	(need a flag to say a graphics app was loaded - missing from core)
 -	Use DMA engine
+
+
+Ideas on how to fix
+
+Run 128K mode
+
+Then we could map
+0000-1FFF		Commoncode, whatever		} From DivMMC
+2000-3FFF		Common data			}
+4000-BFFF		Kernel code (usual 5/2)
+C000-FFFF		0 for kernel, 7 for video, other options
+
+4000-FFFF		Dock proc1
+4000-FFFF		Dock proc2
+
+Page 7			Video (512 x 192 mode)
+			Font
+
+kernel is timex mmu off
+video is timex mmu off , 7
+user is timex mmu on for 4000-FFFF dock or ext
+
+Run in 64 column video, ULAplus palette
+
+Free pages
+1,3,4,6			Could use to bank kernel, external buffers etc
+			= 64K
+DIVMMC memory		All but 16K (112K) but same space as common
+low 16K dock/ext	= 32K
+
+(Spectranet memory is divmmc and ext/dock re-used)
+
+total left over memory -> 208K
+4 x swap slots but tricky to implement that way
+Hide all the crap in a vswap device that falls back to the old swap when
+full by calling down the chain to the mmc (nicely or via hack)
+
+vswap can be mostly isolated into asm helper that knows how to find and copy
+in/out page 0-n from top/bottom of ram with interrupts off
+
+Q: top video flagged apps at 0xBFFF and map screen high (top 8 or 16K)

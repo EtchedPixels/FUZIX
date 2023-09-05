@@ -1,5 +1,3 @@
-#define CONFIG_SD
-#define SD_DRIVE_COUNT	1
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -18,7 +16,7 @@
 /* This is the number of banks of user memory available (maximum) */
 #define MAX_MAPS	2
 /* We have 0000-1FFF common */
-#define MAP_SIZE	0xE000
+#define MAP_SIZE	0xC000
 /* How many banks do we have in our address space */
 #define CONFIG_BANKS	1	/* 1 x 56K */
 
@@ -71,6 +69,15 @@
 #define SWAP_SIZE 0x60
 #define MAX_SWAPS	16
 #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
+
+#define CONFIG_TD
+#define CONFIG_TD_NUM	2
+/* SD support */
+#define TD_SD_NUM 1
+#define CONFIG_TD_SD
+/* Emulator for this platform needs bug workarounds */
+#define CONFIG_TD_SD_EMUBUG
+#define SD_SPI_CALLTYPE __z88dk_fastcall
 
 /* We need to direct map things because of the Timex MMU modes */
 #define swap_map(x)		((uint8_t *)x)

@@ -17,8 +17,8 @@ void pagemap_init(void)
 	kmouse = 1;
 	fuller = 1;
 
-	pagemap_add(1);
-	pagemap_add(2);
+	pagemap_add(0x01);
+	pagemap_add(0x81);
 
 }
 
