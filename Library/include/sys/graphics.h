@@ -15,6 +15,7 @@ struct display {
 #define FMT_TEXT	4	/* Text only mode */
 #define FMT_MONO_WB_TILE8 5	/* White on black 8x8 tiled (Amstrad PCW etc) */
 #define FMT_6PIXEL_128	6	/* 2x3 tiles from 128 (TRS80 style) */
+#define FMT_4PIXEL_128	7	/* 2x2 tiles from 128 (6847 style) */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
@@ -26,6 +27,7 @@ struct display {
 #define FMT_AMS4	134	/* Amstrad 4 colour - ditto */
 #define FMT_AMS16	135	/* Amstraid 16 colour - ditto */
 #define FMT_8PIXEL_MTX	136	/* 256 characters graphics mode symbols (MTX) */
+#define FMT_3BPP_U16	137	/* 5 x 3bpp pixels a word (top bit unused) */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918A	128	/* Not neccessarily MSX... */
@@ -36,6 +38,8 @@ struct display {
 #define HW_MICROLABS4	133	/* Microlabs Grafyx for Model 4 */
 #define HW_LOWE_LE18	134	/* Low Electronics LE-18 */
 #define HW_VDP_9958	135	/* VDP9958 MSX2+ etc */
+#define HW_EF9345	136	/* Thomson EF9345 */
+#define HW_PROPGFX	137	/* RCbus propellor graphics */
   uint16_t features;
 #define GFX_MAPPABLE	1	/* Can map into process memory */
 #define GFX_PALETTE	2	/* Has colour palette */
@@ -44,6 +48,7 @@ struct display {
 #define GFX_MULTIMODE	32	/* Has multiple modes */
 #define GFX_PALETTE_SET	64	/* Has settable colour palette */
 #define GFX_TEXT	128	/* Console text works in this mode */
+#define GFX_WRAP	256	/* Viewport wraps */
   uint16_t memory;		/* Memory size in KB (may be 0 if not relevant) */
   uint16_t commands;
 #define GFX_DRAW	1	/* Supports the draw command */
@@ -59,6 +64,7 @@ struct display {
 #define GFX_WRITE	256	/* Supports writing a buffer */
 #define GFX_AWRITE	512	/* Supports writing an attribute buffer */
 #define GFX_EXG		1024	/* Simultaenous GFX_READ/GFX_WRITE to swap */
+#define GFX_SCROLL	2048	/* Has a scrolling viewport */
  /* We may want to add some hardware ones as we hit machines that have them */
   uint16_t twidth;		/* Character size information */
   uint16_t theight;		/* Characters per line/column */
