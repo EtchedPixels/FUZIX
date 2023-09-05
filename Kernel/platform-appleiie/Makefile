@@ -25,7 +25,7 @@ clean:
 image:
 	$(CROSS_LD) -o ../fuzix.bin --mapfile ../fuzix.map -C ld65.cfg crt0.o commonmem.o \
 	appleii.o ../start.o ../version.o ../lowlevel-6502.o ../simple.o \
-	../swap.o \
+	../swap.o ../memalloc_none.o \
 	tricks.o main.o ../timer.o ../kdata.o devhd.o devices.o ../vt.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bankfixed.o \

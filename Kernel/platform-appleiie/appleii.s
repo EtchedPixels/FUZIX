@@ -6,8 +6,8 @@
         .export init_hardware
         .export _program_vectors
 	.export map_kernel
-	.export map_process
-	.export map_process_always
+	.export map_proc
+	.export map_proc_always
 	.export map_save_kernel
 	.export map_restore
 
@@ -141,7 +141,7 @@ _program_vectors:
 ;
 ;	For performance reasons user is in the main bank
 ;
-map_process_always:
+map_proc_always:
 	sta $C002
 	sta $C004
 	sta $C054
@@ -150,11 +150,11 @@ map_process_always:
 ;	X,A points to the map table of this process but it doesn't
 ;	matter as we have one process
 ;
-map_process:
+map_proc:
 	cmp	#0
-	bne	map_process_always
+	bne	map_proc_always
 	cpx	#0
-	bne	map_process_always
+	bne	map_proc_always
 ;
 ;	Map in the kernel
 ;	$200-$BFFF from aux bank
@@ -176,7 +176,7 @@ map_kernel:
 map_restore:
 	lda	saved_map
 	beq	map_kernel
-	bne	map_process_always
+	bne	map_proc_always
 ;
 ;	Save the current mapping. For the moment we just track if we are
 ;	user or kernel. We may eventually need to track language bank
