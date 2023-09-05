@@ -36,7 +36,7 @@ image: bootblock
 	$(CROSS_LD) -b -C 0x0100 -S 0xE800 -o fuzix.bin crt0.o devices.o main.o \
 	commonmem.o tricks.o v8080.o devtty.o \
 	../start.o ../version.o ../lowlevel-8080.o \
-	../bankfixed.o ../timer.o ../kdata.o  \
+	../bankfixed.o ../timer.o ../kdata.o  ../memalloc_none.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o \
