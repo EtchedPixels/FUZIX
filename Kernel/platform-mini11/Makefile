@@ -61,7 +61,7 @@ image: loadsd
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bankfixed.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec.o ../syscall_exec16.o ../blk512.o \
+	../syscall_exec.o ../syscall_exec16.o ../blk512.o ../memalloc_none.o \
 	../usermem.o ../usermem_std-68hc11-flat.o devtty.o >../fuzix.map
 	$(CROSS_OBJCOPY) ../fuzix.elf -O binary ../fuzix.bin
 

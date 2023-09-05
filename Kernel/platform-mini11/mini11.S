@@ -10,12 +10,12 @@
         .globl program_vectors
 	.globl map_kernel
 	.globl map_kernel_di
-	.globl map_process
-	.globl map_process_always
-	.globl map_process_always_di
+	.globl map_proc
+	.globl map_proc_always
+	.globl map_proc_always_di
 	.globl map_save_kernel
 	.globl map_restore
-	.globl map_process_x
+	.globl map_proc_x
 	.globl plt_interrupt
 
         ; exported debugging tools
@@ -333,8 +333,8 @@ nullirq:
 ;	This is running on the mini shared stack so only use
 ;	a few bytes and always run with interrupts off
 ;
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	psha
 	ldaa	udata + U_DATA__U_PAGE+1	; big endian
 	staa	IOBASE		; switch bank
@@ -343,9 +343,9 @@ map_process_always_di:
 ;
 ;	X points to the map table of this process, preserve D
 ;
-map_process:
+map_proc:
 	cpx #0
-	bne map_process_2
+	bne map_proc_2
 ;
 ;	Map in the kernel
 ;
@@ -357,7 +357,7 @@ map_kernel:
 	pula
 	rts
 
-map_process_2:
+map_proc_2:
 	ldaa	1,x
 	staa	IOBASE
 	rts
