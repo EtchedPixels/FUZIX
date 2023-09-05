@@ -55,7 +55,7 @@ image: bootfuz.bin
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
 	coco2.o discard.o ../simple.o \
-	../start.o ../version.o ../lowlevel-6809.o \
+	../start.o ../version.o ../lowlevel-6809.o ../memalloc_none.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
 	tinydisk.o tinydisk_discard.o tinyide.o tinyide_discard.o ide.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \

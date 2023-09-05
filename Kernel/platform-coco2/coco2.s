@@ -9,9 +9,9 @@
 	.globl _mpi_set_slot
 	.globl _cart_hash
 	.globl map_kernel
-	.globl map_process
-	.globl map_process_a
-	.globl map_process_always
+	.globl map_proc
+	.globl map_proc_a
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
         .globl init_early
@@ -143,9 +143,9 @@ ___hard_irqrestore:		; B holds the data
 _program_vectors:
 map_kernel:
 map_restore:
-map_process:
-map_process_always:
-map_process_a:
+map_proc:
+map_proc_always:
+map_proc_a:
 map_save:
 	rts
 
