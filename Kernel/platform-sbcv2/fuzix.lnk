@@ -37,12 +37,12 @@ swap.rel
 bankfixed.rel
 devsys.rel
 platform-sbcv2/devtty.rel
-platform-sbcv2/blkdev.rel
-platform-sbcv2/mbr.rel
-platform-sbcv2/devide.rel
-platform-sbcv2/devide_discard.rel
+platform-sbcv2/tinydisk.rel
+platform-sbcv2/tinydisk_discard.rel
+platform-sbcv2/tinyide.rel
+platform-sbcv2/tinyide_discard.rel
 platform-sbcv2/propio2.rel
-platform-sbcv2/ppide_rbc.rel
+platform-sbcv2/tinyide_ppide_rbc.rel
 platform-sbcv2/ds1302.rel
 platform-sbcv2/ds1302_discard.rel
 platform-sbcv2/ds1302_rbc.rel

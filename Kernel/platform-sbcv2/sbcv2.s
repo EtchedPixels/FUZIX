@@ -40,6 +40,8 @@
             .globl outcharhex
 	    .globl null_handler
 	    .globl ___sdcc_enter_ix
+	    .globl _td_raw
+	    .globl _td_page
 
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
@@ -342,15 +344,16 @@ BLKPARAM_SWAP_PAGE		.equ	3
 	    .globl _plt_prop_sd_read
 	    .globl _plt_prop_sd_write
 
-	    .globl _blk_op
-
 _plt_prop_sd_read:
-	    ld a,(_blk_op + BLKPARAM_IS_USER_OFFSET)
-	    ld hl, (_blk_op + BLKPARAM_ADDR_OFFSET)
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    ld a,(_td_raw)
 	    or a
 	    jr z, do_read
 	    dec a
-	    ld a, (_blk_op + BLKPARAM_SWAP_PAGE)
+	    ld a, (_td_page)
 	    jr nz, do_read_a
 	    ld a, (_udata + U_DATA__U_PAGE)
 do_read_a:  call map_proc_a
@@ -360,12 +363,15 @@ do_read:    ld bc,#0xAB
 	    jp map_kernel
 
 _plt_prop_sd_write:
-	    ld a,(_blk_op + BLKPARAM_IS_USER_OFFSET)
-	    ld hl, (_blk_op + BLKPARAM_ADDR_OFFSET)
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    ld a,(_td_raw)
 	    or a
 	    jr z, do_write
 	    dec a
-	    ld a, (_blk_op + BLKPARAM_SWAP_PAGE)
+	    ld a, (_td_page)
 	    jr nz, do_write_a
 	    ld a, (_udata + U_DATA__U_PAGE)
 do_write_a: call map_proc_a

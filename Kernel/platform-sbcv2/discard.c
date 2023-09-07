@@ -3,8 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devide.h>
+#include <tinyide.h>
 #include <propio2.h>
 #include <ds1302.h>
 
@@ -82,7 +81,7 @@ __sfr __at 0x69 uart_ier;
 void device_init(void)
 {
 	uart_ier = 0x0D;	/* This may be our timer so do it first */
-	devide_init();
+	ide_probe();
 	prop_sd_probe();
 	ds1302_init();
 	sock_init();

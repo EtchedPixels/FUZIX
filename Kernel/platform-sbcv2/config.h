@@ -44,12 +44,11 @@ extern uint16_t swap_dev;
  */
 #define swap_map(x)	((uint8_t *)(x))
 
-/* What is the maximum number of /dev/hd devices we have. In theory right now
-   it's actually 3 - two in the IDE and one on the SD interface */
-#define MAX_BLKDEV	4
-/* Select IDE disk support, and PPIDE (parallel port IDE) as the interface */
-#define CONFIG_IDE
-#define CONFIG_PPIDE	/* PPIDE is present */
+/* PPIDE support and also Prop SD */
+#define CONFIG_TD_NUM		3	/* 2 PPIDDE one prop */
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TINYIDE_PPI
 
 /* Floppy controller does not do high density. Well it does but we can't keep
    up at 4MHz so default to 720K media for now */
