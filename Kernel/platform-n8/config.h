@@ -1,10 +1,14 @@
-/* On-board SD on the N8 */
-#define CONFIG_SD
-#define SD_DRIVE_COUNT 1
+/* Allow for 3 disk devices */
+#define CONFIG_TD_NUM		3
 
-/* Select IDE disk support, and PPIDE (parallel port IDE) as the interface */
-#define CONFIG_IDE
-#define CONFIG_PPIDE	/* PPIDE is present */
+/* On-board SD on the N8 */
+#define CONFIG_TD_SD
+#define TD_SD_NUM	1
+
+/* PPIDE support */
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TINYIDE_PPI
 
 #define CONFIG_FLOPPY
 

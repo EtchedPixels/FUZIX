@@ -51,13 +51,20 @@ reverse_byte_a:
     byte; /* squelch compiler warning */
 }
 
-void sd_spi_clock(bool go_fast)
+void sd_spi_fast(void)
 {
     unsigned char c;
 
     c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
-    if(!go_fast)
-        c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
+    CSIO_CNTR = c;
+}
+
+void sd_spi_slow(void)
+{
+    unsigned char c;
+
+    c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
+    c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
     CSIO_CNTR = c;
 }
 
@@ -131,10 +138,14 @@ COMMON_MEMORY
 /* WRS: measured byte transfer time as approx 5.66us with Z180 @ 36.864MHz,
    three times faster. Main change is to start the next receive operation 
    as soon as possible and overlap the loop housekeeping with the receive. */
-bool sd_spi_receive_sector(void) __naked
+bool sd_spi_receive_sector(uint8_t *data) __naked
 {
     __asm
 waitrx: 
+        pop bc
+        pop de
+        push de			; address
+        push bc
         in0 a, (_CSIO_CNTR)     ; wait for any current transmit or receive operation to complete
         tst a, #0x30
         jr nz, waitrx
@@ -143,13 +154,12 @@ waitrx:
         ld h, a                 ; stash value for reuse later
 
         ; load parameters
-        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+        ld a, (_td_raw)
         ld bc, #512                             ; sector size
 #ifdef SWAPDEV
         cp #2
         jr nz, not_swapin
-        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        ld a,(_td_page)
         call map_for_swap
         jr rxnextbyte
 not_swapin:
@@ -198,17 +208,20 @@ waitrx3:
     __endasm;
 }
 
-bool sd_spi_transmit_sector(void) __naked
+bool sd_spi_transmit_sector(uint8_t *data) __naked
 {
     __asm
         ; load parameters
-        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+        pop bc
+        pop de
+        push de
+        push bc
+        ld a,(_td_raw)
         ld hl, #512                             ; sector size
 #ifdef SWAPDEV
         cp #2
         jr nz, not_swapout
-        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        ld a,(_td_page)
         call map_for_swap
         jr gotransmit
 not_swapout:

@@ -2,9 +2,11 @@ ASRCS = crt0.s z180.s commonmem.s n8.s ds1302-n8.s monitor.s vdp.s
 ASRCS += keyboard.s mouse.s
 CSRCS += devices.c main.c devtty.c devsdspi.c devinput.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devsd_discard.c ../dev/devide_discard.c ../dev/ds1302_discard.c
-DSRCS = ../dev/devsd.c ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
-DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/ppide_rbc.c ../dev/devfd.c
+DISCARD_DSRCS = ../dev/ds1302_discard.c ../dev/tinydisk_discard.c
+DISCARD_DSRCS += ../dev/tinysd_discard.c ../dev/tinyide_discard.c
+DSRCS = ../dev/tinydisk.c ../dev/devfd.c
+DSRCS += ../dev/tinysd.c ../dev/tinyide.c ../dev/ds1302.c
+DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/tinyide_ppide_rbc.c
 DASRCS = ../dev/devfd_hw.s
 
 AOBJS = $(ASRCS:.s=.rel)

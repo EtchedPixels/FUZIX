@@ -4,9 +4,9 @@
 #include <tty.h>
 #include <devsys.h>
 #include <devtty.h>
-#include <devsd.h>
-#include <devide.h>
-#include <blkdev.h>
+#include <tinysd.h>
+#include <tinyide.h>
+#include <tinydisk.h>
 #include <ds1302.h>
 #include <devfd.h>
 #include "n8.h"
@@ -14,7 +14,7 @@
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
 /*   open	    close	read		write		ioctl */
-  {  blkdev_open,   no_close,	blkdev_read,	blkdev_write,	blkdev_ioctl },	/* 0: /dev/hd -- standard block device interface */
+  {  td_open,	    no_close,	td_read,	td_write,	td_ioctl },	/* 0: /dev/hd -- standard block device interface */
 #ifdef CONFIG_FLOPPY
   {  fd_open,	    fd_close,	fd_read,	fd_write,	no_ioctl},
 #else
@@ -37,11 +37,11 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
-#ifdef CONFIG_SD
-    devsd_init();
-#endif
-#ifdef CONFIG_PPIDE
-    devide_init();
-#endif
     ds1302_init();
+#ifdef CONFIG_TD_SD
+    sd_probe();
+#endif
+#ifdef CONFIG_TD_IDE
+    ide_probe();
+#endif
 }
