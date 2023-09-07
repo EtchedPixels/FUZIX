@@ -113,6 +113,12 @@ init_hardware:
             call _program_vectors
             pop hl
 
+            ; RST peepholes support (only in kernel maps)
+	    ld hl,#rstblock
+	    ld de,#8
+	    ld bc,#32
+	    ldir
+
 	    ld a, #'Z'
 	    out (0x2F), a
 
@@ -177,20 +183,6 @@ _program_vectors:
             ld (0x0066), a  ; Set vector for NMI
             ld hl, #nmi_handler
             ld (0x0067), hl
-
-            ; RST peepholes support
-            ld hl,#___sdcc_enter_ix
-            ld (0x08),a
-            ld (0x09),hl
-            ld hl,#___spixret
-            ld (0x10),a
-            ld (0x11),hl
-            ld hl,#___ixret
-            ld (0x18),a
-            ld (0x19),hl
-            ld hl,#___ldhlhl
-            ld (0x20),a
-            ld (0x21),hl
 
 	    jr map_kernel
 
@@ -274,32 +266,6 @@ map_save_kernel:
 	    ret
 
 		.area _CODE
-
-;
-;       Stub helpers for code compactness.
-;
-;   Note that sdcc_enter_ix is in the standard compiler support already
-;
-;   The first two use an rst as a jump. In the reload sp case we don't
-;   have to care. In the pop ix case for the function end we need to
-;   drop the spare frame first, but we know that af contents don't
-;   matter
-;
-
-___spixret:
-            ld      sp,ix
-            pop     ix
-            ret
-___ixret:
-            pop     af
-            pop     ix
-            ret
-___ldhlhl:
-            ld      a,(hl)
-            inc     hl
-            ld      h,(hl)
-            ld      l,a
-            ret
 
 ;
 ;	Slot mapping functions.
@@ -448,3 +414,36 @@ outchar:
 	    out (0x2F), a
 	    pop af
 	    ret
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
