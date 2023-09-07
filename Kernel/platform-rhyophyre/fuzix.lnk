@@ -39,11 +39,11 @@ devinput.rel
 vt.rel
 platform-rhyophyre/discard.rel
 platform-rhyophyre/devtty.rel
-platform-rhyophyre/devide.rel
-platform-rhyophyre/devide_discard.rel
-platform-rhyophyre/ppide_rbc.rel
-platform-rhyophyre/mbr.rel
-platform-rhyophyre/blkdev.rel
+platform-rhyophyre/tinyide.rel
+platform-rhyophyre/tinyide_discard.rel
+platform-rhyophyre/tinyide_ppide_rbc.rel
+platform-rhyophyre/tinydisk.rel
+platform-rhyophyre/tinydisk_discard.rel
 platform-rhyophyre/ds1302.rel
 platform-rhyophyre/ds1302_discard.rel
 platform-rhyophyre/ds1302-rph.rel

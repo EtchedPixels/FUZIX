@@ -47,10 +47,11 @@ extern uint16_t swap_dev;
 /* Hardware parameters */
 #define Z180_IO_BASE       0x40
 
-#define MAX_BLKDEV 2	    /* 2 IDE drives */
-
-#define CONFIG_IDE
-#define CONFIG_PPIDE
+/* PPIDE support */
+#define CONFIG_TD_NUM		2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TINYIDE_PPI
 
 /* On-board DS1302 on RPH, we can read the time of day from it */
 #define CONFIG_RTC_DS1302
