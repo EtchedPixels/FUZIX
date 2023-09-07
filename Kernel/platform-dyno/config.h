@@ -28,12 +28,15 @@
 #define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   64      /* Memory needed per process */
 
-#define CONFIG_IDE
-#define CONFIG_PPIDE
-
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
 #define BOOTDEVICENAMES "hd#"
+
+/* PPIDE support */
+#define CONFIG_TD_NUM		2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TINYIDE_PPI
 
 #define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in mark4.s */

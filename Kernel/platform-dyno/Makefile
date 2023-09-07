@@ -1,8 +1,8 @@
 ASRCS = crt0.s z180.s commonmem.s dyno.s monitor.s
 CSRCS += devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c
-DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ppide_rbc.c ../dev/bq4845.c
+DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/tinydisk_discard.c
+DSRCS = ../dev/tinyide.c ../dev/tinydisk.c ../dev/tinyide_ppide_rbc.c ../dev/bq4845.c
 DSRCS += ../dev/devfd.c
 DASRCS = ../dev/devfd_hw.s
 

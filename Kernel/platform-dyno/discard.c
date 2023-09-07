@@ -2,7 +2,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
 #include "config.h"
 #include <z180.h>
 #include <bq4845.h>

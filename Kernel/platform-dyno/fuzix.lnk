@@ -37,11 +37,11 @@ swap.rel
 devsys.rel
 platform-dyno/discard.rel
 platform-dyno/devtty.rel
-platform-dyno/devide.rel
-platform-dyno/devide_discard.rel
-platform-dyno/ppide_rbc.rel
-platform-dyno/mbr.rel
-platform-dyno/blkdev.rel
+platform-dyno/tinyide.rel
+platform-dyno/tinyide_discard.rel
+platform-dyno/tinyide_ppide_rbc.rel
+platform-dyno/tinydisk.rel
+platform-dyno/tinydisk_discard.rel
 platform-dyno/bq4845.rel
 platform-dyno/monitor.rel
 platform-dyno/devfd.rel
