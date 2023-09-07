@@ -14,7 +14,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <stdbool.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <tty.h>
 #include <propio2.h>
 
@@ -190,9 +190,9 @@ int prop_sd_flush_cache(void)
  * The platform needs to provide platform specific common hooks to inir
  * or otir 512 bytes from the right bank
  */
-uint8_t prop_sd_transfer_sector(void)
+int prop_sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
-    uint8_t *p = &blk_op.lba;	/* Sadly SDCC sucks at this otherwise */
+    uint8_t *p = &lba;	/* Sadly SDCC sucks at this otherwise */
     uint8_t cmd;
 
     /* Need to track and handle no media and media changes */
@@ -207,7 +207,7 @@ uint8_t prop_sd_transfer_sector(void)
     dio = *p;
 
     /* LBA loaded */
-    if (blk_op.is_read)
+    if (is_read)
         cmd = CMD_READ;
     else
         cmd = CMD_PREP;
@@ -216,10 +216,10 @@ uint8_t prop_sd_transfer_sector(void)
         return 0;
 
     /* Now do the transfer via the platform specific helper */
-    if (blk_op.is_read)
-        plt_prop_sd_read();
+    if (is_read)
+        plt_prop_sd_read(dptr);
     else {
-        plt_prop_sd_write();
+        plt_prop_sd_write(dptr);
         if (prop_send_cmd(CMD_WRITE) < 0)
             return 0;
     }
@@ -230,7 +230,6 @@ uint8_t prop_sd_transfer_sector(void)
 
 uint8_t prop_sd_probe(void)
 {
-    blkdev_t *blk;
     if (prop_sd_reset())
         return 0;
     /* Ok we have something. For now do the open here. We need to tweak
@@ -238,15 +237,7 @@ uint8_t prop_sd_probe(void)
     if (prop_sd_open() < 0)
         return 0;
 
-    blk = blkdev_alloc();
-    if (blk == NULL)
-        return 0;
-
-    blk->transfer = prop_sd_transfer_sector;
-    blk->flush = prop_sd_flush_cache;
-    blk->drive_lba_count = prop_sd_capacity;
-
     kputs("PropIO SD: ");
-    blkdev_scan(blk, SWAPSCAN);
+    td_register(prop_sd_xfer, 1);
     return 1;
 }

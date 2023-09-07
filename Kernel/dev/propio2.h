@@ -10,7 +10,7 @@ extern uint8_t prop_tty_writeready(void);
 
 extern uint8_t prop_sd_probe(void);
 
-extern void plt_prop_sd_read(void);
-extern void plt_prop_sd_write(void);
+extern void plt_prop_sd_read(uint8_t *dptr);
+extern void plt_prop_sd_write(uint8_t *dptr);
 
 #endif
