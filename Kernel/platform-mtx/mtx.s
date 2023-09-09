@@ -274,19 +274,11 @@ init_hardware:
         call	_program_vectors
         pop	hl
 
-	ld	a,#0xC3
-	ld	hl,#___sdcc_enter_ix
-	ld	(0x08),a
-	ld	(0x09),hl
-	ld	hl,#___spixret
-	ld	(0x10),a
-	ld	(0x11),hl
-	ld	hl,#___ixret
-	ld	(0x18),a
-	ld	(0x19),hl
-	ld	hl,#___ldhlhl
-	ld	(0x20),a
-	ld	(0x21),hl
+	; Add the rst vectors for code shortening
+	ld	hl,#rstblock
+	ld	de,#8
+	ld	bc,#32
+	ldir
 
 	; Program the video engine
 	call	_vdp_type
@@ -508,7 +500,7 @@ _probe_6845:
 ;	Stub helpers for code compactness. Note that
 ;	sdcc_enter_ix is in the standard compiler support already
 ;
-	.area _CODE
+	.area _DISCARD
 
 ;
 ;	The first two use an rst as a jump. In the reload sp case we don't
@@ -516,14 +508,19 @@ _probe_6845:
 ;	drop the spare frame first, but we know that af contents don't
 ;	matter
 ;
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
 ___spixret:
 	ld	sp,ix
 	pop	ix
 	ret
+	.ds	3
 ___ixret:
 	pop	af
 	pop	ix
 	ret
+	.ds	4
 ___ldhlhl:
 	ld	a,(hl)
 	inc	hl
