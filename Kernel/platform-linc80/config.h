@@ -55,10 +55,14 @@ extern uint16_t swap_dev;
 #define MAX_BLKDEV 3	    /* 3 IDE + 2 x SD for now */
 
 /* IDE/CF support */
-#define CONFIG_IDE
-#define CONFIG_SD
-
-#define SD_DRIVE_COUNT		2
+#define CONFIG_TD_NUM	2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
+/* And SD */
+#define CONFIG_TD_SD
+#define TD_SD_NUM	2
+#define SD_SPI_CALLTYPE	__z88dk_fastcall
 
 /* Device parameters */
 #define NUM_DEV_TTY 2
