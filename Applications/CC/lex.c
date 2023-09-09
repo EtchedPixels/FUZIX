@@ -117,7 +117,7 @@ void out_block(void *pv, unsigned len)
 	}
 }
 
-char filename[16];
+char filename[33];
 
 unsigned line_num;
 
@@ -168,12 +168,13 @@ void next_token(void)
 
 		if (line_num & 0x8000) {
 			line_num &= 0x7FFF;
-			for (c = 0; c < 16; c++) {
+			for (c = 0; c < 32; c++) {
 				*p = tokbyte();
 				if (*p == 0)
 					break;
 				p++;
 			}
+			*p = 0;
 		}
 		next_token();
 		return;

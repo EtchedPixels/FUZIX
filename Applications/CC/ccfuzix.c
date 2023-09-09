@@ -74,7 +74,7 @@
 #define CRT0		LIBPATH"crt0.o"
 #define LIBC		LIBPATH"libc.a"
 #define LIBCPU		LIBPATH"libcpu.a"
-#define COPTRULES	LIBPATH"cot.rules"
+#define COPTRULES	LIBPATH"copt.rules"
 
 /* Once we support slotting in CPU types etc */
 static char *cputab[] = {

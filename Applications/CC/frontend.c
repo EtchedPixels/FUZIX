@@ -19,7 +19,7 @@
 #include "target.h"
 
 
-static unsigned char filename[16] = { "<stdin>" };
+static unsigned char filename[33] = { "<stdin>" };
 static unsigned filechange = 1;
 
 static int isoctal(unsigned char c)
@@ -144,6 +144,7 @@ static void directive(void)
 {
 	unsigned char *p = filename;
 	unsigned c;
+
 	line = 0;
 
 	do {
@@ -154,16 +155,19 @@ static void directive(void)
 		line = 10 * line + c - '0';
 		c = getchar();
 	}
+	if (c == '\n')
+		return;
+
 	/* Should be a quote next */
 	c = getchar();
 	if (c == '"') {
 		while ((c = getchar()) != EOF && c != '"') {
 			/* Skip magic names */
 			if (p == filename && c == '<')
-				p = filename + 15;
+				p = filename + 32;
 			if (c == '/')
 				p = filename;
-			else if (p < filename + 15)
+			else if (p < filename + 32)
 				*p++ = c;
 		}
 		filechange = 1;
@@ -286,6 +290,7 @@ static void encode_byte(unsigned c)
 static void write_token(unsigned c)
 {
 	unsigned char *tp;
+	unsigned n = 0;
 	if (oldline != line || filechange) {
 		oldline = line;
 		outbyte(T_LINE & 0xFF);
@@ -294,7 +299,7 @@ static void write_token(unsigned c)
 		if (filechange) {
 			outbyte(0x80 | (line >> 8));
 			tp = filename;
-			while(*tp)
+			while(*tp && n++ < 32)
 				outbyte(*tp++);
 			outbyte(0);
 		} else
