@@ -1,0 +1,438 @@
+# Branches
+	jmp %1
+%1:
+=
+%1:
+
+	jmp %2
+%1:
+%2:
+=
+%1:
+%2:
+
+	jmp %1
+	jmp %2
+=
+	jmp %1
+
+# Trivial
+	xchg
+	xchg
+=
+
+	xchg
+;
+	xchg
+=
+
+	push h
+	pop h
+=
+
+	push h
+;
+	pop h
+=
+
+	shld _%1
+;
+	lhld _%1
+=
+	shld _%1
+
+	lhld _%1
+	shld _%2
+;
+	lhld _%1
+=
+	lhld _%1
+	shld _%2
+
+	lxi h,%1
+	shld %2
+;
+	lxi h,%1
+=
+	lxi h,%1
+	shld %2
+
+        lxi h,%1
+        shld %2
+;
+        lxi h,%1
+=
+	lxi h,%1
+	shld %2
+
+	xchg
+	pop d
+	xchg
+=
+	pop h
+
+# Clean up trivial multiple loads - often from assignments
+	lxi h,%1
+	shld %2
+	lxi h,%1
+=
+	lxi h,%1
+	shld %2
+
+	lxi h,%1
+	shld %2
+;
+	lxi h,%1
+=
+	lxi h,%1
+	shld %2
+
+	lxi h,%1
+	shld %2
+	shld %3
+;
+	lxi h,%1
+=
+	lxi h,%1
+	shld %2
+	shld %3
+
+# Trivial byte cleanup
+	mvi a,0
+	mov m,a
+	mov l,a
+=
+	xra a
+	mov m,a
+	mov l,a
+
+# Simple stack optimize for pushes of same
+	lxi h,%1
+	push h
+	lxi h,%1
+=
+	lxi h,%1
+	push h
+
+# Compare 0 cast from char
+	mvi h,0
+	call __cmpeq0
+=
+	call __cmpeq0b
+
+# Compare 0 cast from char
+	mvi h,0
+	call __cmpne0
+=
+	call __cmpne0b
+
+# Assign 0L
+	push h
+	lxi h,0
+	shld __hireg
+	call __assignl
+=
+	call __assign0l
+
+# Remove do {} while (0);
+%1:
+	lxi h,0
+	call __bool
+;
+	jnz %1
+=
+	lxi h,0
+
+# Optimize repeated call pattern (the ; matters here)
+	pop d
+;
+	mvi l,%1
+	push h
+=
+	mvi l,%1
+	xthl
+
+	pop d
+;
+	lxi h,%1
+	push h
+=
+	lxi h,%1
+	xthl
+
+# comparisons with a cast when not to zero
+	mvi h,0
+	lxi d,%1
+	call __cmp%2
+=
+	mvi e,<%1
+	call __cmp%2b
+
+# the same pattern occurs a lot for small multiplication
+	mvi h,0
+	lxi d,%1
+	call __mulde%2
+=
+	lxi d,%1
+	call __mulde%2b
+
+# we may rework this if we build args as we go, but in the mean time
+	push h
+	lxi h,%1
+	pop psw
+	push h
+=
+	lxi h,%1
+	push h
+
+	push h
+	lhld %1
+	pop psw
+	push h
+=
+	lhld %1
+	push h
+
+# And via xthl
+	push h
+	lxi h,%1
+	xthl
+=
+	lxi h,%1
+	push h
+
+	push h
+	lhld %1
+	xthl
+=
+	lhld %1
+	push h
+
+# Common postinc/dec
+	push h
+	lxi h,1
+	call __postinc
+=
+	call __postinc1
+
+	push h
+	lxi h,2
+	call __postinc
+=
+	call __postinc2
+
+	push h
+	lxi h,1
+	call __postdec
+=
+	call __postdec1
+
+	push h
+	lxi h,2
+	call __postdec
+=
+	call __postdec2
+
+# Common postinc/dec via d
+	push d
+	lxi h,1
+	call __postinc
+=
+	call __postinc1d
+
+	push d
+	lxi h,2
+	call __postinc
+=
+	call __postinc2d
+
+	push d
+	lxi h,1
+	call __postdec
+=
+	call __postdec1d
+
+	push d
+	lxi h,2
+	call __postdec
+=
+	call __postdec2d
+
+# Common pre inc/dec
+	lxi d,1
+	call __pluseqde
+=
+	call __pluseq1
+
+	lxi d,2
+	call __pluseqde
+=
+	call __pluseq2
+
+	lxi d,1
+	call __minuseqde
+=
+	call __minuseq1
+
+	lxi d,2
+	call __minuseqde
+=
+	call __minuseq2
+
+# Common pre inc/dec via d
+	push d
+	lxi h,1
+	call __pluseq
+=
+	call __pluseq1d
+
+	push d
+	lxi h,2
+	call __pluseq
+=
+	call __pluseq2d
+
+	push d
+	lxi h,1
+	call __minuseq
+=
+	call __minuseq1d
+
+	push d
+	lxi h,2
+	call __minuseq
+=
+	call __minuseq2d
+
+	xchg
+	call __pluseq1
+=
+	call __pluseq1d
+
+	xchg
+	call __pluseq2
+=
+	call __pluseq2d
+
+	xchg
+	call __minuseq1
+=
+	call __minuseq1d
+
+	xchg
+	call __minuseq2
+=
+	call __minuseq2d
+
+# Common pattern in C	 if (x & c) 
+	call __bandde
+	call __bool
+=
+	call __bbandde
+
+# Merge array/struct offsetting (fixme - should be constify cleaned)
+	lxi d,%1
+	dad d
+	lxi d,%2
+	dad d
+=
+	lxi d,%1+%2
+	dad d
+
+# for loop cleanup
+L%1_l:
+;
+	jmp L%1_n
+L%1_c:
+;
+	jmp L%1_l
+L%1_n:
+=
+L%1_l:
+L%1_c:
+L%1_n:
+
+# Remove always false/true paths
+	lxi h,1
+	call __bool
+;
+	jz %1
+=
+;
+
+	lxi h,0
+	call __bool
+	jz %1
+=
+	jmp %1
+
+	lxi h,1
+	call __bool
+;
+	jnz %1
+=
+	jmp %1
+
+	lxi h,0
+	call __bool
+;
+	jnz %1
+=
+;
+
+# Tidy up some load patterns
+	push h
+	lxi h,%1
+	xchg
+	pop h
+=
+	lxi d,%1
+
+	call _stword%1
+;
+	call _ldword%1
+=
+	call _stword%1
+
+	shld T%1
+;
+	lhld T%1
+=
+	shld T%1
+
+	lhld T%1
+	shld T%2
+;
+	lhld T%1
+=
+	lhld T%1
+	shld T%2
+
+	mov l,a
+	call boolc
+=
+	call boolc_a
+
+# Register tidy
+	mov l,c
+	mov b,h
+	push h
+;
+=
+	push b
+;
+
+# Silly stuff
+	inx h
+	dcx h
+=
+
+	dcx h
+	inx h
+=
+
+# derefl is commonly linked to an add hl,sp
+	add hl,sp
+	call __derefl
+=
+	call __dereflsp
