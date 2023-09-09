@@ -1,0 +1,34 @@
+TMS9995 support
+
+This follows a slightly unusual syntax for the TMS9900 series processors
+that is designed to be saner and more normal than the standard one.
+
+It differs in the following ways
+
+1.	lower case is allowed.
+2.	The 'r' for register names is required. Removing this requirement is
+	easy but it is enforced as it leads to much more readable assembly
+	language.
+3.	The prefix for hex is 0x not '>'. '>' and '<' as with other targets are
+	the upper or lower byte respectively. This is done both to keep the
+	assemblers consistent and for sanity.
+4.	It accepts the TI 990/12 floating point operations as they are used
+	by cc9995 for emulation trap floating point.
+5.	Jump instructions accept the following formats
+	J @x	-	a jump to that address
+	J n	-	where n is numeric or absolute - a jump by that
+			amount of bytes.
+
+In addition it provides the following constructed instructions
+
+rt	br *r11
+
+ljcc	generates either jcc or if the branch range is insufficient
+	generates the reversed jcc over a branch
+ljmp	generates a jmp or b depending upon the length
+
+The directives supported mirror the other ports of this assembler. It is not
+intended as a replacement assembler for the standard TI syntax. Dave Pitts'
+asm990 serves that purpose. Rather it is intended to integrate the tms9995
+C compiler in a consistent way.
+

@@ -1,0 +1,12 @@
+Z80 Support
+
+Official instruction set including the Z180 instructions
+
+An additional .Z180 command to specify Z180 instructions are allowed
+
+To Add
+======
+
+The ability to specify high or low byte of a symbol with < and > or some
+other related syntax. This needs a new relocation type for high bytes.
+

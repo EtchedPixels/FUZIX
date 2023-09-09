@@ -1,0 +1,46 @@
+6502 support
+
+Minimally tested at this point as 6502 Fuzix is really only base level.
+
+Suports the full 6502 instruction set. The syntax is fairly conventional but
+might benefit from a few synonyms.
+
+Addresses are assumed to be zp relative when a constant whose value is < 256
+and the instruction has a zp form, otherwise absolute.
+
+A symbol can be forced to be a type by defining it within that segment thus
+
+	.ZP
+fred	.equ	32
+
+creates a ZP based definition
+
+	.ABSOLUTE
+fred	.equ	32
+
+creates an absolute constant (non-relocating)
+
+	.CODE
+
+fred	.equ	32
+
+creates a 16bit relocatable symbol relative to code space.
+
+All the magic conversions assume ZP is 0.
+
+To Add
+======
+
+2A03
+65C02
+65CE02
+
+maybe 65C816
+
+The ability to specify where ZP is (and we need somewhere to tag that in the
+object file format and linker!)
+
+The ability to refuse to do ZP co-oercions for 65c816
+
+Syntax for high byte/low byte of ( <$xx >$xx )
+

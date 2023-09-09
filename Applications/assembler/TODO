@@ -1,0 +1,73 @@
+DONE	Add outraw outrab and use them so that we can generate relocations
+DONE	Check error cases (seg +seg , unknown + seg etc)
+DONE	Automatic symbols __code __data __bss __endcode __enddata __endbss
+
+DONE	- Need to add .code .equ and all the other .byte type stuff that is nice to have
+	- .include for asm hacking (or parse cpp #line)
+
+
+Check that JR works with symbols properly (require they are in the same .o maybe)
+
+DONE
+Rules for segment v absolute
+
+	seg - seg	=	absolute		if same seg
+	seg - seg	=	error			if not
+
+	seg + abs	=	seg
+	seg - abs	= 	seg
+
+	abs any abs	= 	abs
+
+	multiply/divide of segs -> disallow ? and require things like
+		x / 2 - y / 2 is done as (x - y) / 2 ?
+
+
+DONE	Proper error messages needed
+DONE	Error checking
+
+later:
+	need a syntax/operator for high/low byte of seg
+	output is then segbyteh or segbytel and follows same rules as segment
+	(what about mixing them ?)
+
+	PC relative 8 and 16bit addressing (including dealing with processors
+	using .+2 etc as the base).
+
+DONE - Proper output logic
+DONE	- write an invalid header
+DONE	- for each segment
+DONE		- write segment (counting relocs)
+DONE		- write reloc tab (or fold it in ?)
+DONE	- write symbol table
+DONE	- write debug table
+DONE	- rewind and fix header
+
+Relocation types
+
+DONE	versus our segment base for this object module (usual)
+DONE	versus other segment base for this module
+DONE	versus unresolved symbol
+IP	PC relative (not so much Z80)
+
+Need to support relocations for 16bit and also 8bit ZP. Do we need to extend
+the assembler to support relocations for high 8 / low 8 ? Probably not for Z80
+and means more reloc info in syms/addrs but would do for other processors like
+6502. Ugly because if we do then we need not just a segment for an address
+but also to know if its address high/address low/address/absolute - add to
+a_type somehow ?
+
+link
+DONE 	read each module header that we include
+DONE	load its symbols
+DONE	compute base of each versus segment
+DONE	compute base of segments (split I/D differs a bit etc)
+DONE	resolve all symbols we can
+DONE	write out segments relocating and resolving
+DONE	Unresolved symbols allowed for -r
+
+	For debug scan each module header again and then
+	copy all the debug symbols (relocating as we go)
+
+DONE	Libraries
+	Ranlib

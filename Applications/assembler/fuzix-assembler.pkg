@@ -1,0 +1,8 @@
+package  assembler
+if-file  as
+
+f 0755 /bin/as as
+f 0755 /bin/dumpobj dumpobj
+f 0755 /bin/nm ld
+f 0755 /bin/nm nm
+f 0755 /bin/osize osize

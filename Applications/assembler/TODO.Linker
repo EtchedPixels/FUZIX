@@ -1,0 +1,143 @@
+Allow link segments to be specified by order not just address. So you
+can say something like
+
+	-D +CODE
+
+to put data directly after code (and maybe -D -CODE for before it to just
+fit)
+
+Set them up as a chain C L D B D S or something like that at setup
+if we parse one that specifies an order then put it after the one
+specified but check for loops (eg -D CODE -T DATA)
+
+Support for segment sizes
+
+	-D C000:4000
+
+etc
+
+REL_MOD	Set relocation modifiers (sticky)
+
+	Scale	(for BPTR etc)
+	Mask
+
+A relocation must not change any bits outside the mask if the overflow check
+is on for that relocation. eg on an 1802 we might have
+
+	Scale 1, Mask FF
+	BRA >addr
+	Scale 1, Mask FFFF
+
+to do a short branch and check it doesn't not page cross
+
+In asm we need an align dot relative to segment start, pad with m
+(and .page for 256 for some ports). How to do for non abs as we'll have
+alignment varying so internal relative values change. Needs big thinking
+on jr etc!
+
+Support 9bit (ie 16bit on 8bit machine) "bytes" so we can generate output
+for PDP15 etc and then postprocess it for an 18bit machine. Can't just make
+byte size 16/18bit because of char pointers to partial words
+
+(DEC10 is a different nightmare ;))
+
+Reserve D0 xx for extended relocation ops (Ex is PCrel so may not be free ?)
+
+Fuzix relocatable binaries
+
+Banking
+
+Directive to bank link switches code for bank 8-13 (gives us 6 banks of
+overlay - hopefully enough).
+
+asm as usual but with blocks needed eventually (do packing by object module
+size as a starter).
+
+For each object module copy code into first bank it fits until no room then
+switch bank, repeat until done.
+
+Add a relocation for "my bank" and for "bank of symbol"
+
+Target specific relocations for stubbing and calls
+
+- Need to allow for bank sizes of "dunno"
+
+Could in theory do similar for data and bss objects if useful (eg packing
+around holes). Fine except for bank A follows bank B
+
+Need a binary format for overlay including files
+
+
+Relocation option
+
+REL_BANK len.w
+
+We can generate this on the assembler passes
+
+Assembler would be something like
+
+	.text
+	.block
+
+blahblah
+
+	.endblock
+
+Allow one "block" per segment to be live at a time. So
+
+	.text
+	.block
+	blah
+	.literal
+	blah
+	.text
+	.endblock
+	.literal
+	.endblock
+
+is valid
+
+len is allowed to be inaccurate so long as it's merely slightly over - eg
+for jr shrinkage if convenient to do that way. ie len is advisory not a hard
+value used in the link processing beyond the space check
+
+REL_BANK len
+
+Linker checks a block fits entirely into the segments in order of the mask
+and places the segment in the first one where it fits. Can be used for
+overlays but also for annoying shit like holes in the memory map where
+it will slot functions in to fit
+
+For banked code we'd then generate something like
+
+	JSR interbank
+	DB bank	
+	DW addr
+
+Reserve D0 8-Fx say for REL_TARGET_SPECIFIC
+
+8080/Z80 would then use
+
+D0 80
+	generate CALL __bank_a_b DW addr or PUSH AF CALL POP AF
+	(or keep a separate bank stack and RST DW v CALL - faster ?)
+
+D0 81
+	generate STUB if needed - seg 7 for stubs. Stubs are placed
+	in the now unused CODE segment
+
+6303/6803/68HC11
+	JSR __bank_a_b DW  / PSHX CALL PULX
+
+6800	Hard - don't bother ?
+
+65C816 - TBD	(tricky to compact it)
+
+	JSR __bank_a_b __addr
+	JSR nopnop
+
+Rabbit really wants more segments (lots of 8K ones) but maybe we don't need
+segments in the conventional sense (could use virtual 0x10-0xFF) but need
+diff binary format
+
+		

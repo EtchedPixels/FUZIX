@@ -1,0 +1,8 @@
+6800 Support
+============
+
+Full 6800, 6803, 6303 instruction set. Self sizing branches.
+
+Heavily tested as this is used as the backend toolchain for the 6800 C
+compiler.
+

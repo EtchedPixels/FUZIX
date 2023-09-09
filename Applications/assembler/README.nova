@@ -1,0 +1,33 @@
+DG Nova Support
+
+Very experimental support for the full NOVA4 instruction set.
+
+This is a word oriented machine. There is no .byte, and .ascii will pad to
+the next machine word.
+
+Differences:
+- Instead of an octal radix conventional syntax is used
+- Case doesn't matter
+- All the non instruction forms look like a modern assembler
+- You can write @addr in .word and similar places to generate an address
+  with indirect
+
+
+To Do
+
+Check CPU type and macros for specifying it
+
+Add .local for inserting constants and hiding them in the flow with ,skp so
+that you can write things like
+
+		lda	2, #12345
+
+		(ditto with @#)
+
+and have the assembler generate
+
+		lda	someoffset,1
+		someinstrutions
+		something,skp
+		.word 12345  (@# makes this .word @12345)
+
