@@ -100,13 +100,11 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 			left->a_sym = NULL;
 			return;
 		}
-#if 0
 		/* - constant we can do. The left segment remains unchanged */
 		/* Disable this until we have a negative tag for the linker
 		   to do overflow processing correctly */
 		if (right->a_segment == ABSOLUTE)
 			return;
-#endif
 	}
 	left->a_sym = NULL;
 	aerr(MUST_BE_ABSOLUTE);

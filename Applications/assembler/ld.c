@@ -961,6 +961,7 @@ static void write_binary(FILE * op, FILE *mp)
 	hdr.o_size[1] = size[1];
 	hdr.o_size[2] = size[2];
 	hdr.o_size[3] = size[3];
+	hdr.o_size[7] = size[7];
 
 	rewind(op);
 	if (!rawstream)
@@ -976,6 +977,8 @@ static void write_binary(FILE * op, FILE *mp)
 	if (ldmode != LD_FUZIX)
 		write_stream(op, ABSOLUTE);
 	write_stream(op, CODE);
+	if (ldmode == LD_FUZIX)
+		write_stream(op, LITERAL);
 	hdr.o_segbase[1] = ftell(op);
 	write_stream(op, DATA);
 	/* Absolute images may contain things other than code/data/bss */
@@ -987,7 +990,7 @@ static void write_binary(FILE * op, FILE *mp)
 	else {
 		/* ZP is ok in Fuzix but is not initialized in a defined way */
 		for (i = ldmode == LD_FUZIX ? 5 : 4; i < OSEG; i++) {
-			if (size[i]) {
+			if (i != LITERAL && size[i]) {
 				fprintf(stderr, "Unsupported data in non-standard segment %d.\n", i);
 				break;
 			}
