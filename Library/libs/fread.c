@@ -36,7 +36,7 @@ int fread(void *buf, size_t size, size_t nelm, FILE * fp)
 	if (len >= bytes) {	/* Enough buffered */
 		memcpy(buf, fp->bufpos, bytes);
 		fp->bufpos += bytes;
-		return bytes;
+		return nelm;
 	} else if (len > 0) {	/* Some buffered */
 		memcpy(buf, fp->bufpos, len);
 		got = len;
