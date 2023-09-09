@@ -1,7 +1,0 @@
-package  SmallC
-if-file  scc6809
-
-f 0755 /usr/bin/scc6809        scc6809
-f 0755 /usr/bin/sccz80         sccz80
-f 0755 /usr/bin/scc6801        scc6801
-f 0755 /usr/bin/scc8080        scc8080
