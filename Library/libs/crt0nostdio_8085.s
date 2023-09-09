@@ -11,7 +11,7 @@ __text:
 
 		; Fixed up by binman for now. Would be nice to teach tools
 		; to handle absolute address with negative displacement
-		.word __data		; code
+		.word __data-0x100	; code
 		.word __data_size	; data
 		.word __bss_size	; bss size
 
