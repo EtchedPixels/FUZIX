@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.68hc11
+include $(FUZIX_ROOT)/Target/rules.68hc11
 
 CFLAGS += -DNETD_BIG_ENDIAN
 

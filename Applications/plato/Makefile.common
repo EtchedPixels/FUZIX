@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 SRCS = io_base.c keyboard_base.c plato.c protocol.c screen_base.c terminal.c \
        touch_base.c tgi_ascii.c

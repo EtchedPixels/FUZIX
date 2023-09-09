@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.tms9995
+include $(FUZIX_ROOT)/Target/rules.tms9995
 
 CFLAGS += -DNETD_BIG_ENDIAN
 

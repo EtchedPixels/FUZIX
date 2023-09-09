@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 SRCS  = ac.c col.c dc.c diff.c ed.c makekey.c ptx.c sum.c wall.c
 SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c

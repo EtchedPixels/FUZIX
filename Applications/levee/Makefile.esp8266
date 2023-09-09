@@ -1,21 +1,2 @@
-include $(FUZIX_ROOT)/Applications/rules.esp8266
-
-CSRCS = beep.c blockio.c display.c doscall.c editcor.c exec.c find.c
-CSRCS += flexcall.c gemcall.c globals.c insert.c main.c misc.c modify.c
-CSRCS += move.c rmxcall.c ucsd.c undo.c unixcall.c wildargs.c
-HDRS  = extern.h grep.h levee.h proto.h
-
-OBJS = $(CSRCS:.c=.o)
-
-all: levee
-
-levee: $(OBJS) $(CRT0)
-	$(LINKER) -o levee.bin $(CRT0) $(OBJS) $(LINKER_OPT)
-	$(ELF2FUZIX) -o $@ $@.bin
-
-.c.o:
-	$(CC) $(CFLAGS) $(COPT) -c -DVT52=0 -DANSI=1 -o $@ $<
-
+#
 clean:
-	rm -rf $(OBJS) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.rel *.asm
-	rm -f levee *.bin levee-termcap

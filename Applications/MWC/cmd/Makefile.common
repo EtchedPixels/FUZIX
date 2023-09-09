@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 SRCS  = ac.c almanac.c at.c calendar.c col.c cron.c deroff.c du.c ed.c expr.c
 SRCS += find.c m4.c make.c moo.c pr.c tar.c test.c ttt.c

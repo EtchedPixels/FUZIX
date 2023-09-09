@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 SRC = advent.c adventdb.c database.c english.c itverb.c lib.c saveadv.c \
       turn.c verb.c global.c
@@ -22,7 +22,7 @@ advent: $(CRT0) $(OBJ)
 	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 clean:
-	rm -f $(OBJS) $(OBJSNS) $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+	rm -f *.o $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
 
 rmbak:
 	rm -f *~ core

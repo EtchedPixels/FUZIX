@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 CSRCS = beep.c blockio.c display.c doscall.c editcor.c exec.c find.c
 CSRCS += flexcall.c gemcall.c globals.c insert.c main.c misc.c modify.c

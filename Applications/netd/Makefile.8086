@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.8086
+include $(FUZIX_ROOT)/Target/rules.8086
 
 SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c coconic.c ping.c ntpdate.c

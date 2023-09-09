@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 SRCSNS = advint.c fortune.c qrun.c z1.c z2.c z3.c z4.c z5.c z8.c
 

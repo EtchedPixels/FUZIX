@@ -1,7 +1,7 @@
 # Can't share this yet as cl65 doesn't know the stack option so we need
 # to add a wrappe for cl65 FIXME
 #
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 SRCS  = args.c blok.c builtin.c cmd.c ctype.c error.c expand.c fault.c io.c \
         macro.c main.c msg.c name.c print.c service.c setbrk.c stak.c \
