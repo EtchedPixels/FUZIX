@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 {
    int ar, i;
    char * p;
-static char Usage[] = "Usage: cpp -E -0 -Dxxx -Uxxx -Ixxx infile -o outfile";
+static char Usage[] = "Usage: cpp -E -Dxxx -Uxxx -Ixxx infile -o outfile";
 
 #ifdef LC_CTYPE
    setlocale(LC_CTYPE, "");
@@ -55,22 +55,6 @@ static char Usage[] = "Usage: cpp -E -0 -Dxxx -Uxxx -Ixxx infile -o outfile";
    case 'T': alltok = 0; break;
    case 'A': dialect = DI_ANSI; break;
    case 'K': dialect = DI_KNR; break;
-
-	     /* Some options for describing the code generator. */
-   case '0': define_macro("__BCC__");
-	     define_macro("__AS386_16__");
-	     define_macro("__8086__");
-	     break;
-   case '3': define_macro("__BCC__");
-	     define_macro("__AS386_32__");
-	     define_macro("__i386__");
-	     break;
-   case 'c': define_macro("__CALLER_SAVES__");
-	     break;
-   case 'f': define_macro("__FIRST_ARG_IN_AX__");
-	     break;
-   case 'O': define_macro("__OPTIMISED__");
-	     break;
 
    case 'C': /* Keep comments. */
 	     cwarn("-C not implemented");
@@ -136,7 +120,6 @@ static char Usage[] = "Usage: cpp -E -0 -Dxxx -Uxxx -Ixxx infile -o outfile";
    if (!curfile)
       cfatal(Usage);
 
-#if 0
    /* Define date and time macros. */
    if (dialect != DI_KNR) {
       time_t now;
@@ -152,7 +135,6 @@ static char Usage[] = "Usage: cpp -E -0 -Dxxx -Uxxx -Ixxx infile -o outfile";
       sprintf(buf, "__DATE__=\"%.3s %.2s %.4s\"", timep + 4, timep + 8, timep + 20);
       define_macro(buf);
    }
-#endif
 
    if (outfile) ofd = fopen(outfile, "w");
    else         ofd = stdout;

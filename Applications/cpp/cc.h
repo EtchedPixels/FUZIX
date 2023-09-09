@@ -1,11 +1,4 @@
-
-#ifndef P
-#if __STDC__
 #define P(x) x
-#else
-#define P(x) ()
-#endif
-#endif
 
 extern void cfatal P((char*));
 extern void cerror P((char*));

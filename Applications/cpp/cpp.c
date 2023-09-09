@@ -1,11 +1,6 @@
-
 #include <stdio.h>
 #include <string.h>
-#ifdef __STDC__
 #include <stdlib.h>
-#else
-#include <malloc.h>
-#endif
 #include "cc.h"
 
 #define CPP_DEBUG 0	/* LOTS of junk to stderr. */
@@ -52,11 +47,7 @@ FILE * curfile;
 char * c_fname;
 int    c_lineno = 0;
 
-#ifdef __BCC__
 typedef long int_type;		/* Used for preprocessor expressions */
-#else
-typedef int int_type;		/* Used for preprocessor expressions */
-#endif
 static int  curtok = 0;		/* Used for preprocessor expressions */
 
 static int    fi_count = 0;
@@ -1239,7 +1230,7 @@ static int_type get_exp_value(void)
    return sign<0 ? -value: value;
 }
 
-void gen_substrings(char *macname, char *data_str, int arg_count, int is_vararg)
+static void gen_substrings(char *macname, char *data_str, int arg_count, int is_vararg)
 {
    char * mac_text = 0;
    struct arg_store *arg_list;

@@ -1,4 +1,4 @@
 package  ccp
 if-file  cpp
 
-f 0644 /usr/bin/cpp           cpp
+f 0755 /usr/bin/cpp           cpp
