@@ -664,10 +664,10 @@ int rpn_eval(const char* expr, char** vars)
             if ( isdigit(*ptr) ) {
                 // It's a variable
                 char v = *ptr++;
-                char *endptr;
+                char *endpt2;
                 char *val = vars[v-'0'];
-                n = strtol(val, &endptr, 0);
-                if ( endptr == val ) {
+                n = strtol(val, &endpt2, 0);
+                if ( endpt2 == val ) {
                     fprintf(stderr,"Optimiser error, cannot parse variable: %s\n",val);
                     exit(1);
                 }

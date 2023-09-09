@@ -68,8 +68,8 @@ static void set_once(unsigned bits)
 
 static unsigned base_type(void)
 {
-	once_flags = 0;
 	unsigned type = CINT;
+	once_flags = 0;
 
 	while (is_type_word()) {
 		switch (token) {

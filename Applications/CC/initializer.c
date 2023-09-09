@@ -5,7 +5,7 @@
  *	we generate the assignment tree, for static or globals we generate a
  *	stream of data with types for the backend.
  */
-static void initializer_single(struct symbol *sym, unsigned type, unsigned storage)
+static void ini_single(struct symbol *sym, unsigned type, unsigned storage)
 {
     struct node *n = expression_tree(0);
     n = typeconv(n, type, 1);
@@ -21,7 +21,7 @@ static void initializer_single(struct symbol *sym, unsigned type, unsigned stora
 /* C99 permits trailing comma and ellipsis */
 /* Strictly {} is not permitted - there must be at least one value */
 
-static unsigned initializer_string(unsigned n)
+static unsigned ini_string(unsigned n)
 {
         /* This one is weird because the string is not literal */
         if (n)
@@ -37,7 +37,7 @@ static unsigned initializer_string(unsigned n)
  *	TODO: In theory we could have a platform that needs padding
  *	and we don't deal with that aspect of alignment yet
  */
-static unsigned initializer_group(struct symbol *sym, unsigned type, unsigned n, unsigned storage)
+static unsigned ini_group(struct symbol *sym, unsigned type, unsigned n, unsigned storage)
 {
     unsigned sized = n;
     unsigned string = 0;
@@ -53,7 +53,7 @@ static unsigned initializer_group(struct symbol *sym, unsigned type, unsigned n,
     if (token == T_STRING) {
         if (!string)
             typemismatch();
-        return initializer_string(n);
+        return ini_string(n);
     }
     require(T_LCURLY);
     if (!sized)
@@ -61,7 +61,7 @@ static unsigned initializer_group(struct symbol *sym, unsigned type, unsigned n,
     while(n && token != T_RCURLY) {
         /* Deal with the second string special case, gotta love C some days */
         if (token == T_STRING && string) {
-            n = initializer_string(sized);
+            n = ini_string(sized);
             require(T_RCURLY);
             return n;
         }
@@ -95,7 +95,7 @@ static unsigned initializer_group(struct symbol *sym, unsigned type, unsigned n,
  *	We don't deal with auto here as with arrays because we don't support
  *	the C extensions of auto array and struct with initializers.
  */
-static void initializer_struct(struct symbol *psym, unsigned type, unsigned storage)
+static void ini_struct(struct symbol *psym, unsigned type, unsigned storage)
 {
     struct symbol *sym = symbol_ref(type);
     unsigned *p = sym->data.idx;
@@ -144,7 +144,7 @@ static void initializer_struct(struct symbol *psym, unsigned type, unsigned stor
  *	layer of the array which should be a series of values in the type
  *	of the array. The base value may be a structure.
  */
-static void initializer_array(struct symbol *sym, unsigned type, unsigned depth, unsigned storage)
+static void ini_array(struct symbol *sym, unsigned type, unsigned depth, unsigned storage)
 {
     unsigned n = array_dimension(type, depth);
     unsigned count = 0;
@@ -155,7 +155,7 @@ static void initializer_array(struct symbol *sym, unsigned type, unsigned depth,
         if (n == 0)
             n = TARGET_MAX_PTR;
         while(n--) {
-            initializer_array(sym, type, depth + 1, storage);
+            ini_array(sym, type, depth + 1, storage);
             count++;
             /* Trailing comma is allowed so eat it before checking n */
             if (match(T_COMMA) && n)
@@ -169,7 +169,7 @@ static void initializer_array(struct symbol *sym, unsigned type, unsigned depth,
             put_padding_data(type_sizeof(type));
         require(T_RCURLY);
     } else {
-        n = initializer_group(sym, type_deref(type), n, storage);
+        n = ini_group(sym, type_deref(type), n, storage);
         if (array_dimension(type, 1) == 0)
             sym->type = array_with_size(type, n);
     }
@@ -181,11 +181,11 @@ static void initializer_array(struct symbol *sym, unsigned type, unsigned depth,
 void initializers(struct symbol *sym, unsigned type, unsigned storage)
 {
     if (PTR(type) && !IS_ARRAY(type)) {
-        initializer_single(sym, type, storage);
+        ini_single(sym, type, storage);
         return;
     }
     if (IS_ARITH(type)) {
-        initializer_single(sym, type, storage);
+        ini_single(sym, type, storage);
         return;
     }
     /* No complex stack initializers, for now at least */
@@ -202,9 +202,9 @@ void initializers(struct symbol *sym, unsigned type, unsigned storage)
                                    function forms even if it would be more
                                    logical than the C syntax */
     else if (IS_ARRAY(type))
-        initializer_array(sym, type, 1, storage);
+        ini_array(sym, type, 1, storage);
     else if (IS_STRUCT(type))
-        initializer_struct(sym, type, storage);
+        ini_struct(sym, type, storage);
     else
         error("cannot initialize this type");
 }

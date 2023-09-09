@@ -731,8 +731,8 @@ void make_node(struct node *n)
 
 static void load_symbols(const char *path)
 {
-	sym_fd = open(path, O_RDONLY);
 	uint8_t n[2];
+	sym_fd = open(path, O_RDONLY);
 	if (sym_fd == -1) {
 		perror(path);
 		exit(1);

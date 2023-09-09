@@ -309,6 +309,7 @@ static struct node *hier10(void)
 	unsigned name;
 	unsigned t;
 	unsigned is_tcast = 0;
+	unsigned s;
 
 	/* C syntax fun. The grammar has two cases here for (, the first
 	   is a primary (a bracketed expression) the second is a typecast
@@ -337,7 +338,7 @@ static struct node *hier10(void)
 			}
 			op = token;
 			/* It's an lval so we want the pointer form */
-			unsigned s = type_scale(l->type);
+			s = type_scale(l->type);
 			next_token();
 			/* Put the constant on the right for convenience */
 			/* We can know the constant will fit a UINT for 16bit boxes

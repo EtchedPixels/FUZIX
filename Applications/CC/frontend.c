@@ -399,6 +399,7 @@ static unsigned tokenize_symbol(unsigned c)
 	return new_symbol(symstr, h, symnum++)->id;
 }
 
+#ifndef NO_FLOAT
 /*
  *	Floating point helpers
  *
@@ -476,6 +477,8 @@ unsigned long floatify(unsigned long val)
 	unget(c);
 	return float_convert(val + frac);
 }
+
+#endif
 
 static unsigned long decimal(unsigned char c)
 {
@@ -581,6 +584,7 @@ static unsigned tokenize_numeric(unsigned c)
 	c = get();
 	cup = toupper(c);
 
+#ifndef NO_FLOAT
 	/* Integer part of a float */
 	if (c == '.') {
 		val = floatify(val);
@@ -591,6 +595,7 @@ static unsigned tokenize_numeric(unsigned c)
 		is_float = 1;
 		c = get();
 	}
+#endif
 
 	while (1) {
 		cup = toupper(c);
@@ -609,7 +614,7 @@ static unsigned tokenize_numeric(unsigned c)
 	/* UF is not valid but LF or FL is a double */
 	if (force_float && force_unsigned)
 		error("invalid type specifiers");
-
+#ifndef NO_FLOAT
 	if (force_float && !is_float) {
 		val = float_convert(val);
 		is_float = 1;
@@ -618,7 +623,9 @@ static unsigned tokenize_numeric(unsigned c)
 		/* We don't care about double yet - and we'll probably usually
 		   have double == float anyway */
 		type = T_FLOATVAL;
-	} else {
+	} else
+#endif
+	{
 		/* Anything can be shoved in a ulong */
 		type = T_ULONGVAL;
 		/* FIXME: this needs review for the -32768 case */

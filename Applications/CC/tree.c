@@ -184,8 +184,8 @@ static void nameref(struct node *n)
 	if (is_constant(n->right) && IS_NAME(n->left->op)) {
 		unsigned value = n->left->value + n->right->value;
 		struct node *l = n->left;
+		memcpy(n , n->right, sizeof(*n));
 		free_node(n->right);
-		*n = *n->right;
 		n->value = value;
 		n->left = NULL;
 		n->right = NULL;
@@ -286,7 +286,7 @@ struct node *bool_tree(struct node *n)
 }
 
 /* Calculate arithmetic promotion */
-static unsigned arith_promotion(unsigned lt, unsigned rt)
+static unsigned arith_pro(unsigned lt, unsigned rt)
 {
 	if (PTR(lt))
 		lt = UINT;
@@ -305,7 +305,7 @@ static unsigned arith_promotion(unsigned lt, unsigned rt)
 	return lt;
 }
 
-struct node *arith_promotion_tree(unsigned op, struct node *l,
+struct node *arith_pro_tree(unsigned op, struct node *l,
 				  struct node *r)
 {
 	/* We know both sides are arithmetic */
@@ -313,7 +313,7 @@ struct node *arith_promotion_tree(unsigned op, struct node *l,
 	unsigned rt = type_canonical(r->type);
 	struct node *n;
 
-	lt = arith_promotion(lt, rt);
+	lt = arith_pro(lt, rt);
 
 	if (l->type != lt)
 		l = make_cast(l, lt);
@@ -330,7 +330,7 @@ struct node *arith_tree(unsigned op, struct node *l, struct node *r)
 {
 	if (!IS_ARITH(l->type) || !IS_ARITH(r->type))
 		badtype();
-	return arith_promotion_tree(op, l, r);
+	return arith_pro_tree(op, l, r);
 }
 
 /* Two argument integer or bit pattern
@@ -343,14 +343,14 @@ struct node *intarith_tree(unsigned op, struct node *l, struct node *r)
 		badtype();
 	if (op == T_LTLT || op == T_GTGT) {
 		struct node *n;
-		lt = arith_promotion(lt, lt);
+		lt = arith_pro(lt, lt);
 		if (lt != rt)
 			l = make_cast(l, lt);
 		n = tree(op, l, make_cast(r, CINT));
 		n->type = lt;
 		return n;
 	} else
-		return arith_promotion_tree(op, l, r);
+		return arith_pro_tree(op, l, r);
 }
 
 /* Two argument ordered compare - allows pointers
@@ -577,13 +577,16 @@ struct node *constify(struct node *n)
 
 		/* Lval names are constant but a maths operation on two name lval is not */
 		if (is_name(l->op) || is_name(r->op)) {
-			if (op != T_PLUS)
+			if (op != T_PLUS && op != T_MINUS)
 				return NULL;
 			/* Special case for name + const */
 			if (is_name(l->op)) {
 				if (is_name(r->op))
 					return NULL;
-				l->value += r->value;
+				if (op == T_PLUS)
+					l->value += r->value;
+				else
+					l->value -= r->value;
 				free_node(r);
 				free_node(n);
 				return l;
