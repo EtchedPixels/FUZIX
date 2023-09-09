@@ -1,4 +1,3 @@
-SRC_CC = cc85.c
 SRC_C1 = target-8080.c
 SRC_C2 = backend-8080.c
 

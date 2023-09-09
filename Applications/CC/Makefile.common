@@ -7,6 +7,7 @@ SRC_C1 += body.c declaration.c enum.c error.c expression.c header.c idxdata.c \
 	initializer.c label.c lex.c main.c primary.c stackframe.c storage.c \
 	struct.c switch.c symbol.c tree.c type.c type_iterator.c
 SRC_C2 += backend.c
+SRC_CC += ccfuzix.c
 SRC_COPT = copt.c
 
 INC0 = token.h
@@ -22,8 +23,6 @@ OBJ_C1 = $(SRC_C1:.c=.o)
 OBJ_C2 = $(SRC_C2:.c=.o)
 OBJ_CC = $(SRC_CC:.c=.o)
 OBJ_COPT = $(SRC_COPT:.c=.o)
-
-all: cc cc0 cc1 cc2
 
 .c.o:
 	$(CC) $(FLOAT) $(CFLAGS) $(CCOPTS) -c $<
