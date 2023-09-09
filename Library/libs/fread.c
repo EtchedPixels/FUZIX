@@ -40,6 +40,7 @@ int fread(void *buf, size_t size, size_t nelm, FILE * fp)
 	} else if (len > 0) {	/* Some buffered */
 		memcpy(buf, fp->bufpos, len);
 		got = len;
+		fp->bufpos += bytes;
 	}
 	/* Need more; do it with a direct read */
 	len = read(fp->fd, (char *) buf + got, bytes - got);
