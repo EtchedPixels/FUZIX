@@ -505,7 +505,8 @@ struct node *constify(struct node *n)
 		}
 	}
 	/* Remove multiply by 1 or 0 */
-	if (op == T_STAR && r->op == T_CONSTANT) {
+	/* TODO: We can do the same for floats but a float 0 isn't necessarily 0 */
+	if (op == T_STAR && r->op == T_CONSTANT && IS_INTORPTR(r->type)) {
 		if (r->value == 1) {
 			free_node(r);
 			free_node(n);
@@ -519,7 +520,7 @@ struct node *constify(struct node *n)
 		}
 	}
 	/* Divide by 1 */
-	if (op == T_SLASH && r->op == T_CONSTANT) {
+	if (op == T_SLASH && r->op == T_CONSTANT && IS_INTORPTR(r->type)) {
 		if (r->value == 1) {
 			free_node(n);
 			free_tree(r);
@@ -604,7 +605,7 @@ struct node *constify(struct node *n)
 			n->left = l;
 		}
 		/* Only do constant work with simple types */
-		if (!IS_INTARITH(lt) && !PTR(lt))
+		if (!IS_INTORPTR(lt))
 			return NULL;
 		if (l->flags & LVAL)
 			return NULL;
@@ -696,9 +697,20 @@ struct node *constify(struct node *n)
 		/* Uni-ops */
 		unsigned rt = r->type;
 		unsigned long value = r->value;
-		if (!IS_INTARITH(rt) && !PTR(rt))
-			return NULL;
+
 		if (r->flags & LVAL)
+			return NULL;
+
+		/* We special case one float manipulation as we need it here
+		   until we change how the front end tokenises -const */
+
+		if (r->op == T_CONSTANT && (rt == FLOAT || rt == DOUBLE)) {
+			/* FIXME: this assumes IEE754 math at 32bit */
+			r->value ^= 0x80000000UL;
+			return r;
+		}
+
+		if (!IS_INTORPTR(rt))
 			return NULL;
 
 		switch(op) {

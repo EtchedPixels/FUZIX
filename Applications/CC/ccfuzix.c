@@ -62,7 +62,17 @@
 #define BINPATH		"/usr/bin/"
 #define LIBPATH		"/usr/lib/"
 #define INCPATH		"/usr/include/"
-#define CPUINCPATH	"/usr/include/8085/"	/* FIXME - arch dep */
+#if defined(CPU_8080)
+#define CPUINCPATH	"/usr/include/8080/"
+const char *cpudef = "__8080__";
+char *cpu = "8080";
+#elif defined(CPU_8085)
+#define CPUINCPATH	"/usr/include/8085/"
+const char *cpudef = "__8085__";
+char *cpu = "8085";
+#else
+#error "Unknown target"
+#endif
 
 #define CMD_AS		BINPATH"as"
 #define CMD_CC0		LIBPATH"cc0"
@@ -115,9 +125,7 @@ char *target;
 int strip;
 int c_files;
 int standalone;
-char *cpu = "8085";	/* TODO */
 int mapfile;
-/* TODO: OS_FUZIX won't work until ld is taught about literal segments */
 #define OS_NONE		0
 #define OS_FUZIX	1
 int targetos = OS_FUZIX;
@@ -774,6 +782,9 @@ int main(int argc, char *argv[]) {
 			usage();
 		}
 	}
+
+	append_obj(&deflist, cpudef, 0);
+	append_obj(&deflist, "__STDC__", 0);
 
 	if (!standalone) {
 		add_system_include(INCPATH);

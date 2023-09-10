@@ -25,7 +25,7 @@ OBJ_CC = $(SRC_CC:.c=.o)
 OBJ_COPT = $(SRC_COPT:.c=.o)
 
 .c.o:
-	$(CC) $(FLOAT) $(CFLAGS) $(CCOPTS) -c $<
+	$(CC) $(FLOAT) $(CFLAGS) -DCPU_$(USERCPU) $(CCOPTS) -c $<
 
 cc0: $(OBJ_C0)
 	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)

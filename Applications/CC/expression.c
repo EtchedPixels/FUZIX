@@ -692,6 +692,10 @@ static struct node *hier1(void)
 		/* You can't assign to an array/offset, you assign to
 		   the underlying type */
 		l->type = type_canonical(l->type);
+		if (!IS_SIMPLE(l->type) && !PTR(l->type)) {
+			badtype();
+			return l;
+		}
 		return assign_tree(l, r);	/* Assignment */
 	} else {
 		fc = token;
@@ -774,7 +778,8 @@ unsigned expression(unsigned comma, unsigned mkbool, unsigned flags)
 		return VOID;
 	n = expression_tree(comma);
 	if (mkbool && !(flags & NORETURN)) {
-		if (!IS_INTARITH(n->type) && !PTR(n->type))
+		/* Float and double are valid */
+		if (!IS_ARITH(n->type) && !PTR(n->type))
 			typemismatch();
 		/* NORETURN CCONLY etc also apply both to the bool node and the original */
 		n->flags |= flags;

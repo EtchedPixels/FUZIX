@@ -35,6 +35,7 @@
 #define BASE_TYPE(x)	((x) & ~7)
 #define IS_ARITH(x)	(!PTR(x) && (x) < VOID)
 #define IS_INTARITH(x)	(!PTR(x) && (x) < FLOAT)
+#define IS_INTORPTR(x)	((x) < (FLOAT | 7))
 
 #define C_SIMPLE	0x0000
 #define C_STRUCT	0x4000

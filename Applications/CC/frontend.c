@@ -157,7 +157,7 @@ static void directive(void)
 	}
 	if (c == '\n')
 		return;
-
+		
 	/* Should be a quote next */
 	c = getchar();
 	if (c == '"') {
@@ -437,7 +437,8 @@ static float float_exp(float val)
 	if (c == '-') {
 		eneg = 1;
 		c = get();
-	}
+	} else if (c == '+')
+		c = get();
 	while(isdigit(c)) {
 		unsigned pe;
 		pe = exp;
@@ -472,13 +473,35 @@ unsigned long floatify_e(unsigned long val)
 unsigned long floatify(unsigned long val)
 {
 	unsigned c;
+	unsigned uc;
 	float frac = 0.0;
 	while (isdigit(c = get())) {
 		frac += (c - '0');
 		frac /= 10.0;
 	}
-	if (c == 'e')
+	uc = toupper(c);
+	if (uc =='E')
 		return float_convert(float_exp(val + frac));
+	unget(c);
+	return float_convert(val + frac);
+}
+
+/*
+ *	Similar but for hex constants
+ */
+unsigned long floatify_hex(unsigned long val)
+{
+	unsigned c;
+	unsigned uc;
+	float frac = 0.0;
+	while (isxdigit(c = get())) {
+		frac += (c - '0');
+		frac /= 16.0;
+	}
+	uc = toupper(c);
+	if (uc =='P')
+		return float_convert(float_exp(val + frac));
+	/* Strictly speaking this is an error TODO */
 	unget(c);
 	return float_convert(val + frac);
 }
@@ -523,6 +546,13 @@ static unsigned long hexadecimal(void)
 
 	for (;;) {
 		c = get();
+#ifndef NO_FLOAT
+		/* Hex style float constants */
+		if (c == '.')
+			return floatify_hex(val);
+		if (c == 'p' || c == 'P')
+			return float_convert(float_exp(val));
+#endif			
 		if (!isxdigit(c)) {
 			unget(c);
 			break;
@@ -547,6 +577,10 @@ static unsigned long octal(void)
 	c = get();
 	if (c == 'x' || c == 'X')
 		return hexadecimal();
+#ifndef NO_FLOAT		
+	if (c == '.')
+		return floatify(0);
+#endif		
 	unget(c);
 
 	for (;;) {
@@ -569,9 +603,9 @@ static unsigned long octal(void)
 
 /*
  *	TODO
- *	float, double, longlong
+ *	longlong
  */
-static unsigned tokenize_numeric(unsigned c)
+static unsigned tokenize_numeric(unsigned c, unsigned neg)
 {
 	unsigned long val;
 	unsigned force_unsigned = 0;
@@ -581,12 +615,16 @@ static unsigned tokenize_numeric(unsigned c)
 	unsigned type;
 	unsigned cup;
 
-	if (c == '0')
-		val = octal();
-	else
-		val = decimal(c);
-
-	c = get();
+	if (c == '.') 
+		/* Float with 0 lead */
+		val = 0;
+	else {
+		if (c == '0')
+			val = octal();
+		else
+			val = decimal(c);
+		c = get();
+	}
 	cup = toupper(c);
 
 #ifndef NO_FLOAT
@@ -595,7 +633,7 @@ static unsigned tokenize_numeric(unsigned c)
 		val = floatify(val);
 		is_float = 1;
 		c = get();
-	} else if (cup == 'e') {
+	} else if (cup == 'E') {
 		val = floatify_e(val);
 		is_float = 1;
 		c = get();
@@ -606,7 +644,7 @@ static unsigned tokenize_numeric(unsigned c)
 		cup = toupper(c);
 		if (cup == 'F' && !force_float)
 			force_float = 1;
-		if (cup == 'U' && !force_unsigned)
+		else if (cup == 'U' && !force_unsigned)
 			force_unsigned = 1;
 		else if (cup == 'L' && !force_long)
 			force_long = 1;
@@ -623,6 +661,13 @@ static unsigned tokenize_numeric(unsigned c)
 	if (force_float && !is_float) {
 		val = float_convert(val);
 		is_float = 1;
+	}
+	if (neg) {
+		/* Assumes IEEE754 */
+		if (is_float)
+			val ^= 0x80000000UL;
+		else
+			val = -val;
 	}
 	if (is_float) {
 		/* We don't care about double yet - and we'll probably usually
@@ -648,6 +693,13 @@ static unsigned tokenize_numeric(unsigned c)
 				type = T_INTVAL;
 		}
 	}
+	if (neg) {
+		/* Assumes IEEE754 */
+		if (type == T_FLOATVAL)
+			val ^= 0x80000000UL;
+		else
+			val = -val;
+	}
 	/* Order really doesn't matter here so stick to LE. We will worry about 
 	   actual byte order in the code generation */
 	encode_byte(val);
@@ -659,7 +711,12 @@ static unsigned tokenize_numeric(unsigned c)
 
 static unsigned tokenize_number(unsigned c)
 {
-	return tokenize_numeric(c);
+	return tokenize_numeric(c, 0);
+}
+
+static unsigned tokenize_neg(unsigned c)
+{
+	return tokenize_numeric(c, 1);
 }
 
 static unsigned hexpair(void)
@@ -816,6 +873,17 @@ static unsigned tokenize(void)
 	c2 = get();
 /*	if (c == '-' && isdigit(c2))
 		return tokenize_neg(c2); */
+	/* Until we fix the negative handling we need to deal with the
+	   a = -.1 case specially. When we fix minus parsing this all goes
+	   away */
+	if (c == '-' && c2 == '.')
+		return tokenize_neg(c2);
+	/* Funny case - whilst . is a token . followed by a digit is part
+	   of a number */
+	if (c == '.' && isdigit(c2)) {
+		unget(c2);
+		return tokenize_number(c);
+	}
 	if (c2 == c) {
 		p = strchr(doublesym, c);
 		if (p) {
