@@ -87,20 +87,6 @@ SRC_LM += vfscanf_m.c vfprintf_m.c
 SRC_LM += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
 SRC_LM += mathhelper.c
 
-SRC_LM += acos.c acosh.c asin.c asinh.c atan2.c atan.c atanh.c
-SRC_LM += cbrt.c ceil.c copysign.c erf.c exp.c expm1.c
-SRC_LM += fabs.c fdim.c floor.c fmax.c fmin.c fmod.c frexp.c
-SRC_LM += hypot.c j0.c j1.c jn.c
-SRC_LM += ldexp.c lgamma.c lgamma_r.c log.c log2.c log10.c
-SRC_LM += lrint.c lround.c
-SRC_LM += modf.c nearbyint.c pow.c
-SRC_LM += remquo.c rint.c round.c
-SRC_LM += scalbn.c
-SRC_LM += sin.c sincos.c sinh.c
-SRC_LM += sqrt.c tgamma.c
-SRC_LM += __expo2.c __double_bits.c __fpclassify.c __log1p.c
-
-
 OBJ_C = $(SRC_C:.c=.o)
 OBJ_CURS = $(SRC_CURS:.c=.o)
 OBJ_CT = $(SRC_CT:.c=.o)
@@ -110,7 +96,7 @@ OBJ_HARD = $(SRC_HARD:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_LM) $(OBJ_RL)
 
 all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
-     termcap$(PLATFORM).lib readline$(PLATFORM).lib #m($PLATFORM).lib
+     termcap$(PLATFORM).lib readline$(PLATFORM).lib m$(PLATFORM).lib crt0.o
 
 $(OBJ_ALL): $(KRN_HEADERS_COPY)
 
@@ -129,6 +115,10 @@ syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
 	$(AR) r syslib$(PLATFORM).lib $$(cat syslib.l)
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
+	cp libc$(PLATFORM).a libc.a
+
+crt0.o: crt0_8080.o
+	cp crt0_8080.o crt0.o
 
 fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
 	$<
@@ -146,14 +136,17 @@ liberror.txt: ../tools/liberror
 curses$(PLATFORM).lib: $(OBJ_CURS)
 	$(AR) rc curses$(PLATFORM).lib $(OBJ_CURS)
 	ln -sf curses$(PLATFORM).lib libcurses$(PLATFORM).a
+	cp libcurses$(PLATFORM).a libcurses.a
 
 termcap$(PLATFORM).lib: $(OBJ_CT)
 	$(AR) rc termcap$(PLATFORM).lib $(OBJ_CT)
 	ln -sf termcap$(PLATFORM).lib libtermcap$(PLATFORM).a
+	cp libtermcap$(PLATFORM).a libtermcap.a
 
 m$(PLATFORM).lib: $(OBJ_LM)
 	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
+	cp libm$(PLATFORM).a libm.a
 
 c$(PLATFORM).lib: $(OBJ_LM)
 	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
@@ -162,6 +155,7 @@ c$(PLATFORM).lib: $(OBJ_LM)
 readline$(PLATFORM).lib: $(OBJ_RL)
 	$(AR) rc readline$(PLATFORM).lib $(OBJ_RL)
 	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
+	cp libreadline$(PLATFORM).a libreadline.a
 
 $(OBJ_ASM):%.o: %.s
 	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
