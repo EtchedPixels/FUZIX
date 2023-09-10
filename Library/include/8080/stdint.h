@@ -39,4 +39,7 @@ typedef int32_t int_fast32_t;
 
 #define NO_64BIT
 
+/* Ugly hack for the maths lib for the moment */
+#define double float
+
 #endif

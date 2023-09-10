@@ -6,13 +6,16 @@
 
 int ilogbf(float x)
 {
-	union fshape u = {x};
-	int e = u.bits>>23 & 0xff;
+	union fshape u;
+	int e;
+
+	u.value = x;
+	e = u.bits>>23 & 0xff;
 
 	if (!e) {
 		u.bits <<= 9;
 		if (u.bits == 0) {
-/*FIXME			FORCE_EVAL(0/0.0f); */
+			FORCE_EVAL(0/0.0f);
 			return FP_ILOGB0;
 		}
 		/* subnormal x */
@@ -20,7 +23,7 @@ int ilogbf(float x)
 		return e;
 	}
 	if (e == 0xff) {
-/*FIXME		FORCE_EVAL(0/0.0f); */
+		FORCE_EVAL(0/0.0f);
 		return u.bits<<9 ? FP_ILOGBNAN : INT_MAX;
 	}
 	return e - 0x7f;
