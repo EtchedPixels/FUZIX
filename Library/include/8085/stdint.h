@@ -39,6 +39,6 @@ typedef int32_t int_fast32_t;
 
 #define NO_64BIT
 
-#define double
+#define double	float
 
 #endif
