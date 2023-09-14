@@ -21,6 +21,7 @@
 
 #include <kernel.h>
 #include <tinydisk.h>
+#include <printf.h>
 #include "ch375.h"
 
 static uint8_t ch_ver;
