@@ -55,4 +55,5 @@ platform-rcbus-z180/devi2c.rel
 platform-rcbus-z180/i2c.rel
 platform-rcbus-z180/net_w5x00.rel
 platform-rcbus-z180/wiznet.rel
+platform-rcbus-z180/ch375.rel
 -e

@@ -107,4 +107,5 @@ void device_init(void)
 		netdev_init();
 #endif
 	}
+	ch375_probe();
 }
