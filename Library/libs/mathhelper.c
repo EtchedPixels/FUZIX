@@ -1,5 +1,11 @@
 #include "libm.h"
 
+#ifndef FORCE_EVAL
+void __force_eval(float f)
+{
+}
+#endif
+
 #if defined(NO_64BIT) && !defined(double)
 
 /* Not tested these yet */
