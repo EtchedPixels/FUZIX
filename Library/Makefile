@@ -127,6 +127,7 @@ ifeq ($(USERCPU),z80)
 	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/include/sys/
 	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
 	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
 endif
 ifeq ($(USERCPU),ez80_z80)
 	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
@@ -147,6 +148,7 @@ ifeq ($(USERCPU),ez80_z80)
 	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/include/sys/
 	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
 	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
 endif
 ifeq ($(USERCPU),6502)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
