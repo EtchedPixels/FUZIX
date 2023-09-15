@@ -297,48 +297,58 @@ static void process_header(void)
 	case H_FOR:
 		compile_expression();
 		/* We will loop back to the conditional */
-		gen_label("_l", h.h_data);
+		gen_label("_l", h.h_name);
 		/* A blank conditional on the for is a C oddity and means 'always true' */
 		if (compile_expression() != VOID) {
 			/* Exit the loop if false */
-			gen_jfalse("_b", h.h_data);
+			gen_jfalse("_b", h.h_name);
 		}
 		/* Jump top the main body if not */
-		gen_jump("_n", h.h_data);
+		gen_jump("_n", h.h_name);
 		/* We continue with the final clause of the for */
-		gen_label("_c", h.h_data);
+		gen_label("_c", h.h_name);
 		compile_expression();
 		/* Then jump to the condition */
-		gen_jump("_l", h.h_data);
+		gen_jump("_l", h.h_name);
 		/* Body starts here */
-		gen_label("_n", h.h_data);
+		gen_label("_n", h.h_name);
 		break;
 	case H_FOR | H_FOOTER:
-		gen_jump("_c", h.h_data);
-		gen_label("_b", h.h_data);
+		gen_jump("_c", h.h_name);
+		gen_label("_b", h.h_name);
 		break;
 	case H_WHILE:
-		gen_label("_c", h.h_data);
-		compile_expression();
-		gen_jfalse("_b", h.h_data);
+		gen_label("_c", h.h_name);
+		if (h.h_data == -1) {
+			compile_expression();
+			gen_jfalse("_b", h.h_name);
+		} else if (h.h_data == 0)
+			gen_jump("_b", h.h_name);
+		/* And for the truth case just drop into the code */
 		break;
 	case H_WHILE | H_FOOTER:
-		gen_jump("_c", h.h_data);
-		gen_label("_b", h.h_data);
+		/* A while (0) has no loop branch */
+		if (h.h_data != 0)
+			gen_jump("_c", h.h_name);
+		gen_label("_b", h.h_name);
 		break;
 	case H_DO:
-		gen_label("_c", h.h_data);
+		gen_label("_c", h.h_name);
 		break;
 	case H_DO | H_FOOTER:
-		gen_jump("_c", h.h_data);
-		gen_label("_b", h.h_data);
+		gen_jump("_c", h.h_name);
+		gen_label("_b", h.h_name);
 		break;
 	case H_DOWHILE:
-		compile_expression();
-		gen_jtrue("_c", h.h_data);
+		if (h.h_data == -1) {
+			compile_expression();
+			gen_jtrue("_c", h.h_name);
+		} else if (h.h_data == 1)
+			gen_jump("_c", h.h_name);
+		/* For while(0) just drop out */
 		break;
 	case H_DOWHILE | H_FOOTER:
-		gen_label("_b", h.h_data);
+		gen_label("_b", h.h_name);
 		break;
 	case H_BREAK:
 		gen_jump("_b", h.h_name);
@@ -347,12 +357,23 @@ static void process_header(void)
 		gen_jump("_c", h.h_name);
 		break;
 	case H_IF:
-		compile_expression();
-		gen_jfalse("_e", h.h_name);
+		/* The front end tells us 0/1 false, true, or -1 for
+		   expression. This will guide the code elimination in the
+		   backend, which can throw code unless there are other
+		   labels within. We can only eliminate simple stuff this way
+		   as we just don't have the memory to spot a goto into a block
+		   that is unreachable. In particular it is legal to goto the
+		   middle of a block so we must put the branches in */
+		if (h.h_data == -1) {
+			compile_expression();
+			gen_jfalse("_e", h.h_name);
+		} else if (h.h_data == 0)
+			gen_jump("_e", h.h_name);
 		break;
 	case H_ELSE:
 		gen_jump("_f", h.h_name);
-		gen_label("_e", h.h_name);
+		if (h.h_data != 1)
+			gen_label("_e", h.h_name);
 		break;
 	case H_IF | H_FOOTER:
 		/* If we have an else then _f is needed, if not _e is */
@@ -365,7 +386,7 @@ static void process_header(void)
 		func_ret_used = 1;
 		break;
 	case H_RETURN | H_FOOTER:
-		gen_jump("_r", func_ret);
+		gen_exit("_r", func_ret);
 		break;
 	case H_LABEL:
 		sprintf(tbuf, "_g%d", h.h_data);

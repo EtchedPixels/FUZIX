@@ -18,8 +18,39 @@
 #include "token.h"
 #include "target.h"
 
+#if defined(__linux__)
+/* _itoa */
+static char buf[7];
+
+char *_uitoa(unsigned int i)
+{
+	char *p = buf + sizeof(buf);
+	int c;
+
+	*--p = '\0';
+	do {
+		c = i % 10;
+		i /= 10;
+		*--p = '0' + c;
+	} while (i);
+	return p;
+}
+
+char *_itoa(int i)
+{
+	char *p;
+	if (i >= 0)
+		return _uitoa(i);
+	p = _uitoa(-i);
+	*--p = '-';
+	return p;
+}
+
+#endif
+
 
 static unsigned char filename[33] = { "<stdin>" };
+
 static unsigned filechange = 1;
 
 static int isoctal(unsigned char c)
@@ -51,21 +82,67 @@ static unsigned err;
 static unsigned line = 1;
 static unsigned oldline = 0;
 
+static void colonspace(void)
+{
+	write(2, ": ", 2);
+}
+
+static void writes(const char *p)
+{
+	unsigned len = strlen(p);
+	write(2, p, len);
+}
+
+static void report(char code, const char *p)
+{
+	writes((const char *) filename);
+	colonspace();
+	writes(_itoa(line));
+	colonspace();
+	write(2, &code, 1);
+	colonspace();
+	writes(p);
+	write(2, "\n", 1);
+}
+
 void error(const char *p)
 {
-	fprintf(stderr, "%s: %d: E: %s\n", filename, line, p);
+	report('E', p);
 	err++;
 }
 
 void warning(const char *p)
 {
-	fprintf(stderr, "%s: %d: W: %s\n", filename, line, p);
+	report('W', p);
 }
 
 void fatal(const char *p)
 {
 	error(p);
 	exit(1);
+}
+
+#define BLOCK 512
+
+static uint8_t buffer[BLOCK];	/* 128 for CPM */
+static uint8_t *bufptr = buffer + BLOCK;
+static uint16_t bufleft = 0;
+
+/* Pull the input stream in blocks and optimize for our case as this
+   is of course a very hot path. This design allows for future running
+   on things like CP/M and with the right block size is also optimal for
+   Fuzix */
+
+static unsigned bgetc(void)
+{
+	if (bufleft == 0) {
+		bufleft = read(0, buffer, BLOCK);
+		if (bufleft == 0)
+			return EOF;
+		bufptr = buffer;
+	}
+	bufleft--;
+	return *bufptr++;
 }
 
 static unsigned pushback;
@@ -87,10 +164,10 @@ unsigned get(void)
 		}
 		return c;
 	}
-	c = getchar();
-	while(c == '#' && isnl) {
+	c = bgetc();
+	while (c == '#' && isnl) {
 		directive();
-		c = getchar();
+		c = bgetc();
 	}
 	isnl = 0;
 	if (c == '\n') {
@@ -99,7 +176,7 @@ unsigned get(void)
 	}
 	/* backslash newline continuation */
 	if (lastbslash && c == '\n')
-		c = getchar();
+		c = bgetc();
 
 	if (c == '\\')
 		lastbslash = 1;
@@ -148,20 +225,20 @@ static void directive(void)
 	line = 0;
 
 	do {
-		c = getchar();
-	} while(isspace(c));
+		c = bgetc();
+	} while (isspace(c));
 
 	while (isdigit(c)) {
 		line = 10 * line + c - '0';
-		c = getchar();
+		c = bgetc();
 	}
 	if (c == '\n')
 		return;
-		
+
 	/* Should be a quote next */
-	c = getchar();
+	c = bgetc();
 	if (c == '"') {
-		while ((c = getchar()) != EOF && c != '"') {
+		while ((c = bgetc()) != EOF && c != '"') {
 			/* Skip magic names */
 			if (p == filename && c == '<')
 				p = filename + 32;
@@ -173,7 +250,7 @@ static void directive(void)
 		filechange = 1;
 	}
 	*p = 0;
-	while((c = getchar()) != EOF) {
+	while ((c = bgetc()) != EOF) {
 		if (c == '\n')
 			return;
 	}
@@ -196,8 +273,7 @@ static unsigned symnum = T_SYMBOL;
  *	Add a symbol to our symbol tables as we discover it. Log the
  *	fact if tracing.
  */
-static struct name *new_symbol(const char *name, unsigned hash,
-				 unsigned id)
+static struct name *new_symbol(const char *name, unsigned hash, unsigned id)
 {
 	struct name *s;
 	if (nextsym == symbols + MAXNAME)
@@ -250,8 +326,8 @@ static void write_symbol_table(void)
 		exit(1);
 	}
 	n[0] = len;
-	n[1] = len  >> 8;
-	if (write (fd, n, 2) != 2 || write(fd, symbase, len) != len)
+	n[1] = len >> 8;
+	if (write(fd, n, 2) != 2 || write(fd, symbase, len) != len)
 		error("symbol I/O");
 	close(fd);
 }
@@ -261,11 +337,23 @@ static void write_symbol_table(void)
  *	which is strings.
  */
 
+static uint8_t outbuf[BLOCK];
+static uint8_t *outptr = outbuf;
 
-/* TODO: buffer this sensibly for speed */
 static void outbyte(unsigned char c)
 {
-	if (write(1, &c, 1) != 1)
+	*outptr++ = c;
+	if (outptr == outbuf + BLOCK) {
+		outptr = outbuf;
+		if (write(1, outbuf, BLOCK) != BLOCK)
+			error("I/O");
+	}
+}
+
+static void outflush(void)
+{
+	unsigned len = outptr - outbuf;
+	if (len && write(1, outbuf, len) != len)
 		error("I/O");
 }
 
@@ -299,7 +387,7 @@ static void write_token(unsigned c)
 		if (filechange) {
 			outbyte(0x80 | (line >> 8));
 			tp = filename;
-			while(*tp && n++ < 32)
+			while (*tp && n++ < 32)
 				outbyte(*tp++);
 			outbyte(0);
 		} else
@@ -404,243 +492,376 @@ static unsigned tokenize_symbol(unsigned c)
 	return new_symbol(symstr, h, symnum++)->id;
 }
 
-#ifndef NO_FLOAT
 /*
- *	Floating point helpers
+ *	Software float encoding. This is a bit long winded because
+ *	we want it to work on an 8bit micro on a compiler that
+ *	has no floating point so that you can bootstrap an FP
+ *	compiler with an integer only one.
+ */
+
+/*
+ *	This does all the clever stuff and is about the only
+ *	IEEE754 dependent part of the operation except negate.
  *
- *	It would probably make sense to rewrite these entirely in integer
- *	type terms for compactness - and also so we can support other
- *	formats.
+ *	We are passed a 32.32 fixed point value in sum/frac along
+ *	with a binary exponent (exp) from building the bits, and a
+ *	decimal exponent from the user.
+ *
+ *	We turn this into a 28bit mantissa for ease of manipulation
+ *	and then exponentiate for the passed exponent adjusting the
+ *	binary exponent as we go to keep the bits. Finally we normalize it
+ *	to 24bit manitissa and assemble an unsigned IEEE 754 float.
+ *
+ *	This is not paritcularly fast. It's adequate for the compiler
+ *	but it's not clear there is any gain from using an FP version
+ *	for FP capable compilers.
  */
 
-/*
- *	val is an entire number that we want to make float instead
- */
+static uint16_t rtype;
+static uint32_t result;
 
-unsigned long float_convert(float val)
+static void overflow(void)
 {
-	static union {
-		float f;
-		unsigned long ul;
-	} v;
-	v.f = val;
-	return v.ul;
+	error("overflow");
 }
 
-static float float_exp(float val)
+static void exp_overflow(void)
 {
+	warning("exponent under/overflow");
+}
+
+static void convert_fix32(int exp, uint32_t sum, uint32_t frac, int uexp)
+{
+	rtype = T_FLOATVAL;
+	if (sum == 0 && frac == 0) {
+		result = 0;
+		return;
+	}
+
+	/* Start by getting it down to 28bits */
+	while (!(sum & 0x08000000)) {
+		sum <<= 1;
+		if (frac & 0x80000000)
+			sum |= 1;
+		frac <<= 1;
+		exp--;
+	}
+	/* A 28bit number will never overflow when multiplied by ten */
+	while (uexp > 0) {
+		sum *= 10;
+		/* Shift it down to keep it fitting */
+		while (sum & 0xF0000000) {
+			sum >>= 1;
+			exp++;
+		}
+		uexp--;
+	}
+	/* Fix up the exponent in the other direction */
+	while (uexp < 0) {
+		sum /= 10;
+		while (!(sum & 0x08000000)) {
+			sum <<= 1;
+			exp--;
+		}
+		uexp++;
+	}
+
+	exp += 22;
+	/* If the sum has too many bits then shift it down and adjust
+	   the exponent */
+	while (sum & 0xFF000000) {
+		sum >>= 1;
+		exp++;
+	}
+	/* If there are leading zero bits, then shift up and merge in frac */
+	while ((sum & 0x00800000) == 0) {
+		sum <<= 1;
+		if (frac & 0x80000000)
+			sum++;
+		frac <<= 1;
+		exp--;
+	}
+
+	exp += 128;
+
+	/* No denormals */
+	if (exp < 1) {
+		exp_overflow();
+		result = 0;	/* Zero */
+		return;
+	}
+	if (exp > 254) {
+		exp_overflow();
+		result = 0x7F800000;	/* Infinity */
+		return;
+	}
+
+	/* Assemble result */
+	sum &= 0x007FFFFF;
+	sum |= (exp << 23) & 0x7F800000UL;
+	result = sum;
+}
+
+/* After the E or P in a floating point value is a signed decimal exponent.
+   Parse this */
+static int parse_exponent(void)
+{
+	uint32_t sum = 0, n;
+	int neg = 1;
 	unsigned c;
-	unsigned exp = 0;
-	unsigned eneg = 0;
 
 	c = get();
 	if (c == '-') {
-		eneg = 1;
+		neg = -1;
 		c = get();
 	} else if (c == '+')
 		c = get();
-	while(isdigit(c)) {
-		unsigned pe;
-		pe = exp;
-		exp = exp * 10 + c - '0';
-		if (exp < pe)
-			error("overflow");
+
+	/* Parse integer digits only */
+	while (isdigit(c)) {
+		c -= '0';
+		n = sum * 10 + c;
+		if (n < sum)
+			overflow();
+		sum = n;
 		c = get();
 	}
-
 	unget(c);
-	while(exp--) {
-		if (eneg == 1)
-			val /= 10;
-		else
-			val *= 10;
-	}
-	return val;
+	/* If it is out of the range then error */
+	if (sum > 128)
+		exp_overflow();
+	return sum * neg;
 }
 
-/*
- *	val is the whole number before the exponent declaration as we
- *	didn't find a dot
- */
-unsigned long floatify_e(unsigned long val)
-{
-	return float_convert(float_exp(val));
-}
-/*
- *	val is the piece before the decimal point and we now need to
- *	make this a float
- */
-unsigned long floatify(unsigned long val)
-{
-	unsigned c;
-	unsigned uc;
-	float frac = 0.0;
-	while (isdigit(c = get())) {
-		frac += (c - '0');
-		frac /= 10.0;
-	}
-	uc = toupper(c);
-	if (uc =='E')
-		return float_convert(float_exp(val + frac));
-	unget(c);
-	return float_convert(val + frac);
-}
+/* Decimal float format digits.digitsEdigits. We don't handle
+   the 0.0000000000000000000000000000000001 type silly yet */
 
-/*
- *	Similar but for hex constants
- */
-unsigned long floatify_hex(unsigned long val)
+/* Table of decminal fractions as binary value. We only need 24bit
+   precision worst case so this is adequate */
+static const uint32_t fraction[10] = {
+	/* 0.100000 */ 0x199999A0,
+	/* 0.010000 */ 0x28F5C28,
+	/* 0.001000 */ 0x418937,
+	/* 0.000100 */ 0x68DB8,
+	/* 0.000010 */ 0xA7C5,
+	/* 0.000001 */ 0x10C6,
+	/* 0.000000 */ 0x1AD,
+	/* 0.000000 */ 0x2A,
+	/* 0.000000 */ 0x4,
+	0
+};
+
+static void dec_format(unsigned c)
 {
-	unsigned c;
-	unsigned uc;
-	float frac = 0.0;
-	while (isxdigit(c = get())) {
-		frac += (c - '0');
-		frac /= 16.0;
-	}
-	uc = toupper(c);
-	if (uc =='P')
-		return float_convert(float_exp(val + frac));
-	/* Strictly speaking this is an error TODO */
-	unget(c);
-	return float_convert(val + frac);
-}
+	uint32_t sum = 0, frac = 0, n;
+	unsigned ex = 0, uex;
 
-#endif
-
-static unsigned long decimal(unsigned char c)
-{
-	unsigned long val = c - '0';
-	unsigned long prev;
-
-	for (;;) {
-		c = get();
+	/* Parse digits before . : could be integer or float */
+	while (c != 'E' && c != 'e' && c != '.') {
 		if (!isdigit(c)) {
+			/* Done */
 			unget(c);
-			break;
+			if (ex == 0) {
+				result = sum;
+				rtype = T_INTVAL;
+				return;
+			}
+			/* Oversized integer */
+			overflow();
+			return;
 		}
-		prev = val;
-		val *= 10;
-		val += c - '0';
-		if (val < prev) {
-			error("overflow");
-			return 0;
+		c -= '0';
+		n = sum * 10 + c;
+		/* If we wrap then keep shifting */
+		/* There's probably a better way to do this */
+		while (n < sum) {
+			sum >>= 1;
+			ex++;
+			n = sum * 10 + c;
+		}
+		sum = n;
+		c = get();
+	}
+	/* We have done the integer part, and found floaty stuff */
+	n = 0;
+	/* Parse any fractional part using the fraction table */
+	if (c == '.') {
+		while (1) {
+			c = get();
+			if (c == 'E' || c == 'e')
+				break;
+			if (!isdigit(c)) {
+				unget(c);
+				convert_fix32(ex, sum, frac, 0);
+				return;
+			}
+			c -= '0';
+			if (fraction[n]) {
+				frac += c * fraction[n];
+				n++;
+			}
 		}
 	}
-	return val;
+	/* If we shifted the non fractional part to make it fit then we
+	   don't need the frac bits */
+	if (ex)
+		frac = 0;
+	/* Now look for an exponent */
+	if (c == 'E' || c == 'e')
+		uex = parse_exponent();
+	else
+		unget(c);
+	convert_fix32(ex, sum, frac, uex);
 }
+
+/*
+ *	Hex format
+ *	- parse a hex number
+ *	- if we find a P or a . then it's a float
+ */
 
 static unsigned unhex(unsigned c)
 {
-	if (c <= '9')
-		return c - '0';
-	else
-		return tolower(c) - 'a' + 10;
+	c = toupper(c);
+	c -= '0';
+	if (c > 9)
+		c -= 7;
+	return c;
 }
 
-static unsigned long hexadecimal(void)
+static void hex_format(void)
 {
-	unsigned long val = 0;
-	unsigned long prev;
+	uint32_t sum = 0, frac = 0, n;
 	unsigned c;
+	int ct;
+	unsigned ex = 0, uex;
 
-	for (;;) {
+	/* Parse digits before . : could be integer or float */
+	while (1) {
 		c = get();
-#ifndef NO_FLOAT
-		/* Hex style float constants */
-		if (c == '.')
-			return floatify_hex(val);
-		if (c == 'p' || c == 'P')
-			return float_convert(float_exp(val));
-#endif			
-		if (!isxdigit(c)) {
-			unget(c);
+		if (c == '.' || c == 'P' || c == 'p')
 			break;
+		if (!isxdigit(c)) {
+			/* Done */
+			unget(c);
+			if (ex == 0) {
+				result = sum;
+				rtype = T_INTVAL;
+				return;
+			}
+			/* Oversized integer */
+			error("range");
+			return;
 		}
-		prev = val;
-		val <<= 4;
-		val += unhex(c);
-		if (val < prev) {
-			error("overflow");
-			return 0;
+		c = unhex(c);
+		n = sum << 4;
+
+		if (n >= sum)
+			sum = n + c;
+		else
+			/* Digits we are parsing are not relevant, but remember
+			   the shift */
+			ex += 4;
+	}
+	/* We have done the integer part, and found floaty stuff */
+	ct = 28;
+
+	/* If we stopped parsing because we had too many bits then
+	   don't add in the fractional part */
+	if (ex)
+		ct = -1;
+
+	if (c == '.') {
+		while (1) {
+			c = get();
+			if (c == 'P' || c == 'p')
+				break;
+			if (!isxdigit(c)) {
+				unget(c);
+				convert_fix32(ex, sum, frac, 0);
+				return;
+			}
+			/* Keep adding on fraction bits that fit */
+			c = unhex(c);
+			/* Only add relevant fractions */
+			if (ct >= 0) {
+				frac |= c << n;
+				ct -= 4;
+			}
 		}
 	}
-	return val;
+	/* Now look for an exponent */
+	if (c == 'P' || c == 'p')
+		uex = parse_exponent();
+	else
+		unget(c);
+	convert_fix32(ex, sum, frac, uex);
 }
 
-static unsigned long octal(void)
+/*
+ *	We parsed a 0, check for 0x or octal
+ */
+static void oct_format(void)
 {
-	unsigned long val = 0;
-	unsigned long prev;
+	uint32_t sum = 0, n;
 	unsigned c;
 
 	c = get();
-	if (c == 'x' || c == 'X')
-		return hexadecimal();
-#ifndef NO_FLOAT		
-	if (c == '.')
-		return floatify(0);
-#endif		
-	unget(c);
-
-	for (;;) {
-		c = get();
-		if (!isoctal(c)) {
-			unget(c);
-			break;
-		}
-		prev = val;
-		val <<= 3;
-		val += c - '0';
-		if (val < prev) {
-			error("overflow");
-			return 0;
-		}
+	if (c == 'x' || c == 'X') {
+		hex_format();
+		return;
 	}
-	return val;
+	if (c == '.') {
+		/* Implied fractional part of decimal */
+		dec_format(c);
+		return;
+	}
+
+	while (c >= '0' && c <= '7') {
+		n = (sum << 3) + c - '0';
+		if (n < sum)
+			overflow();
+		sum = n;
+		c = get();
+	}
+	/* Done */
+	unget(c);
+	result = sum;
+	rtype = T_INTVAL;
+}
+
+/*
+ *	Leading digit
+ *	0	octal or hex
+ *	other	decimal
+ *
+ *	Parse a C number. The statics result and rtype
+ *	are set up as the bits and the float/int status
+ */
+static void parse_digits(unsigned c)
+{
+	if (c == '0')
+		oct_format();
+	else
+		dec_format(c);
 }
 
 
 /*
- *	TODO
- *	longlong
+ *	TODO longlong if we add it to the compiler
  */
 static unsigned tokenize_numeric(unsigned c, unsigned neg)
 {
-	unsigned long val;
 	unsigned force_unsigned = 0;
 	unsigned force_long = 0;
 	unsigned force_float = 0;
-	unsigned is_float = 0;
-	unsigned type;
 	unsigned cup;
 
-	if (c == '.') 
-		/* Float with 0 lead */
-		val = 0;
-	else {
-		if (c == '0')
-			val = octal();
-		else
-			val = decimal(c);
-		c = get();
-	}
-	cup = toupper(c);
+	parse_digits(c);
 
-#ifndef NO_FLOAT
-	/* Integer part of a float */
-	if (c == '.') {
-		val = floatify(val);
-		is_float = 1;
-		c = get();
-	} else if (cup == 'E') {
-		val = floatify_e(val);
-		is_float = 1;
-		c = get();
-	}
-#endif
-
+	/* Look for trailing type information */
 	while (1) {
+		c = get();
 		cup = toupper(c);
 		if (cup == 'F' && !force_float)
 			force_float = 1;
@@ -652,61 +873,54 @@ static unsigned tokenize_numeric(unsigned c, unsigned neg)
 			unget(c);
 			break;
 		}
-		c = get();
 	}
 	/* UF is not valid but LF or FL is a double */
 	if (force_float && force_unsigned)
 		error("invalid type specifiers");
-#ifndef NO_FLOAT
-	if (force_float && !is_float) {
-		val = float_convert(val);
-		is_float = 1;
+
+	if (force_float && rtype != T_FLOATVAL) {
+		convert_fix32(0, result, 0, 0);
+		/* This also sets rtype */
 	}
 	if (neg) {
-		/* Assumes IEEE754 */
-		if (is_float)
-			val ^= 0x80000000UL;
+		/* Assumes IEEE 754 */
+		if (rtype == T_FLOATVAL)
+			result ^= 0x80000000UL;
 		else
-			val = -val;
+			result = -result;
 	}
-	if (is_float) {
-		/* We don't care about double yet - and we'll probably usually
-		   have double == float anyway */
-		type = T_FLOATVAL;
-	} else
-#endif
-	{
+	if (rtype != T_FLOATVAL) {
 		/* Anything can be shoved in a ulong */
-		type = T_ULONGVAL;
+		rtype = T_ULONGVAL;
 		/* FIXME: this needs review for the -32768 case */
 		/* Will it fit in a uint ? */
-		if (!force_long && val <= TARGET_MAX_UINT) {
-			type = T_UINTVAL;
-			if (!force_unsigned && val <= TARGET_MAX_INT)
-				type = T_INTVAL;
-		} else  if (!force_unsigned) {
+		if (!force_long && result <= TARGET_MAX_UINT) {
+			rtype = T_UINTVAL;
+			if (!force_unsigned && result <= TARGET_MAX_INT)
+				rtype = T_INTVAL;
+		} else if (!force_unsigned) {
 			/* Maybe a signed long then ? */
-			if (val <= TARGET_MAX_LONG)
-				type = T_LONGVAL;
+			if (result <= TARGET_MAX_LONG)
+				rtype = T_LONGVAL;
 			/* Will it fit in a signed integer ? */
-			if (!force_long && val <= TARGET_MAX_INT)
-				type = T_INTVAL;
+			if (!force_long && result <= TARGET_MAX_INT)
+				rtype = T_INTVAL;
 		}
 	}
 	if (neg) {
 		/* Assumes IEEE754 */
-		if (type == T_FLOATVAL)
-			val ^= 0x80000000UL;
+		if (rtype == T_FLOATVAL)
+			result ^= 0x80000000UL;
 		else
-			val = -val;
+			result = -result;
 	}
 	/* Order really doesn't matter here so stick to LE. We will worry about 
 	   actual byte order in the code generation */
-	encode_byte(val);
-	encode_byte(val >> 8);
-	encode_byte(val >> 16);
-	encode_byte(val >> 24);
-	return type;
+	encode_byte(result);
+	encode_byte(result >> 8);
+	encode_byte(result >> 16);
+	encode_byte(result >> 24);
+	return rtype;
 }
 
 static unsigned tokenize_number(unsigned c)
@@ -935,6 +1149,8 @@ int main(int argc, char *argv[])
 		t = tokenize();
 		write_token(t);
 	} while (t != T_EOF);
+	/* Write the remaining decode */
+	outflush();
 	write_symbol_table();
 	return err;
 }

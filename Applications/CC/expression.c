@@ -388,7 +388,7 @@ static struct node *hier10(void)
 		r = make_rval(hier10());
 		if (!IS_ARITH(r->type) && !PTR(r->type))
 			badtype();
-		return bool_tree(tree(op, NULL, r));
+		return bool_tree(tree(op, NULL, r), 0);
 	case T_STAR:
 		r = make_rval(hier10());
 		if (!PTR(r->type))
@@ -662,7 +662,7 @@ static struct node *hier1a(void)
 
 	/* Check the two sides of colon are compatible */
 	if (a1t == a2t || type_pointermatch(a1, a2) || (IS_ARITH(a1t) && IS_ARITH(a2t))) {
-		a2 = tree(T_QUESTION, bool_tree(l), tree(T_COLON, a1, typeconv(a2, a1t, 1)));
+		a2 = tree(T_QUESTION, bool_tree(l, NEEDCC), tree(T_COLON, a1, typeconv(a2, a1t, 1)));
 		/* Takes the type of the : arguments not the ? */
 		a2->type = a1t;
 	}
@@ -770,12 +770,12 @@ struct node *expression_tree(unsigned comma)
 
 
 /* Generate an expression and write it the output */
-unsigned expression(unsigned comma, unsigned mkbool, unsigned flags)
+static struct node *expression(unsigned comma, unsigned mkbool, unsigned flags)
 {
 	struct node *n;
-	unsigned t;
+
 	if (token == T_SEMICOLON)
-		return VOID;
+		return NULL;
 	n = expression_tree(comma);
 	if (mkbool && !(flags & NORETURN)) {
 		/* Float and double are valid */
@@ -783,12 +783,10 @@ unsigned expression(unsigned comma, unsigned mkbool, unsigned flags)
 			typemismatch();
 		/* NORETURN CCONLY etc also apply both to the bool node and the original */
 		n->flags |= flags;
-		n = bool_tree(n);
+		n = bool_tree(n, NEEDCC | flags);
 	}
 	n->flags |= flags;
-	t = n->type;
-	write_tree(n);
-	return t;
+	return n;
 }
 
 /* We need a another version of this for initializers that allows global or
@@ -811,11 +809,43 @@ unsigned const_int_expression(void)
    normally boolean/condition code except switch */
 unsigned bracketed_expression(unsigned mkbool)
 {
+	struct node *n;
 	unsigned t;
 	require(T_LPAREN);
-	t = expression(1, mkbool, mkbool ? CCONLY : 0);
+	n = expression(1, mkbool, mkbool ? CCONLY : 0);
 	require(T_RPAREN);
+	/* No expression was present - this can be valid with for() */
+	if (n == NULL)
+		return VOID;
+	t = n->type;
+	write_tree(n);
 	return t;
+}
+
+/* Bracketed expressions where we also want to do code block optimizing.
+   As well as the expression we return an indication of whether the
+   result is constant true, false or unknown.
+
+   In order to get the header/expression ordering right this function
+   does not write the tree immediately. See tree.c:write_logic as well */
+struct node *logic_expression(unsigned *truth)
+{
+	struct node *n, *r;
+	require(T_LPAREN);
+	n = expression(1, 1, CCONLY);
+	if (n == NULL) {
+		error("expression expected");
+		/* Return something so we can continue parsing */
+		return bool_tree(make_constant(0, CINT), 0);
+	}
+	r = n->right;
+	require(T_RPAREN);
+	/* bool of a constant */
+	if (n->op == T_BOOL && r->op == T_CONSTANT)
+		*truth = r->value;
+	else	/* Unknown */
+		*truth = -1;
+	return n;
 }
 
 void expression_or_null(unsigned mkbool, unsigned flags)
@@ -826,8 +856,10 @@ void expression_or_null(unsigned mkbool, unsigned flags)
 		n = tree(T_NULL, NULL, NULL);
 		n->type = VOID;
 		write_tree(n);
-	} else
-		expression(1, mkbool, flags);
+	} else {
+		n = expression(1, mkbool, flags);
+		write_tree(n);
+	}
 }
 
 void expression_typed(unsigned type)

@@ -66,6 +66,8 @@
 static unsigned frame_len;	/* Number of bytes of stack frame */
 static unsigned sp;		/* Stack pointer offset tracking */
 static unsigned argbase;	/* Argument offset in current function */
+static unsigned unreachable;	/* Code after an unconditional jump */
+static unsigned func_cleanup;	/* Zero if we can just ret out */
 
 static const char *regnames[] = {	/* Register variable names */
 	NULL,
@@ -152,7 +154,7 @@ static unsigned is_simple(struct node *n)
 		return 0;
 
 	/* We can load these directly into a register */
-	if (op == T_CONSTANT || op == T_LABEL || op == T_NAME || op == T_REG )
+	if (op == T_CONSTANT || op == T_LABEL || op == T_NAME || op == T_REG || op == T_RREF || op == T_RDEREF)
 		return 10;
 	/* We can load this directly into a register but it may be a byte longer */
 	if (op == T_NREF || op == T_LBREF)
@@ -169,30 +171,73 @@ struct node *gen_rewrite_node(struct node *n)
 {
 	struct node *l = n->left;
 	struct node *r = n->right;
+	struct node *c;
 	unsigned op = n->op;
 	unsigned nt = n->type;
+	int val;
 
-	/* TODO
-		- rewrite some reg ops
-	*/
-
-	/* *regptr */
-	if (op == T_DEREF && r->op == T_RREF) {
-		n->op = T_RDEREF;
-		n->value = r->value;
-		n->right = NULL;
-		return n;
-	}
-	/* *regptr = */
-	/* TODO: spot the following tree
+	/* spot the following tree
+			T_DEREF
 			    T_PLUS
 		       T_RREF    T_CONSTANT -128-127-size
 	  so we can rewrite EQ/RDEREF off base + offset from pointer within range using ix offset */
-	if (op == T_EQ && l->op == T_RREF) {
-		n->op = T_REQ;
-		n->value = l->value;
-		n->left = NULL;
-		return n;
+	if (op == T_DEREF) {
+		if (r->op == T_PLUS) {
+			c = r->right;
+			if (r->left->op == T_RREF && c->op == T_CONSTANT) {
+				val = c->value;
+				/* For now - depends on size */
+				/* IX and IY only ranged, BC char * direct */
+				if (val == 0 || (val >= -128 && val < 125 && r->left->value != 1)) {
+					n->op = T_RDEREF;
+					n->val2 = val;
+					n->value = r->left->value;
+					n->right = NULL;
+					free_tree(r);
+					return n;
+				}
+			}
+		} else if (r->op == T_RREF) {
+			val = r->value;
+			if (val == 0 || (val >= -128 && val < 125 && r->value != 1)) {
+				n->op = T_RDEREF;
+				n->val2 = 0;
+				n->value = val;
+				n->right = NULL;
+				free_node(r);
+				return n;
+			}
+		}
+	}
+	if (op == T_EQ) {
+		if (l->op == T_PLUS) {
+			c = l->right;
+			if (l->left->op == T_RREF && c->op == T_CONSTANT) {
+				val = c->value;
+				/* For now - depends on size */
+				/* IX and IY only -  BC char * direct only */
+				if (val == 0 || (val >= -128 && val < 125 && l->left->value != 1)) {
+					n->op = T_REQ;
+					n->val2 = val;
+					n->value = l->left->value;
+					n->left = NULL;
+					free_tree(l);
+					return n;
+				}
+			}
+		} else if (l->op == T_RREF) {
+			val = l->value;
+			/* For now - depends on size */
+			/* IX and IY only -  BC char * direct only */
+			if (val == 0 || (val >= -128 && val < 125 && l->value != 1)) {
+				n->op = T_REQ;
+				n->val2 = 0;
+				n->value = val;
+				n->left = NULL;
+				free_node(l);
+				return n;
+			}
+		}
 	}
 	/* Rewrite references into a load operation */
 	if (nt == CCHAR || nt == UCHAR || nt == CSHORT || nt == USHORT || PTR(nt)) {
@@ -213,6 +258,11 @@ struct node *gen_rewrite_node(struct node *n)
 			}
 			if (r->op == T_LABEL) {
 				squash_right(n, T_LBREF);
+				return n;
+			}
+			if (r->op == T_RREF) {
+				squash_right(n, T_RDEREF);
+				n->val2 = 0;
 				return n;
 			}
 		}
@@ -305,6 +355,11 @@ void gen_frame(unsigned size)
 	frame_len = size;
 	sp = 0;
 
+	if (size || (func_flags & (F_REG(1)|F_REG(2)|F_REG(3))))
+		func_cleanup = 1;
+	else
+		func_cleanup = 0;
+
 	argbase = ARGBASE;
 	if (func_flags & F_REG(1)) {
 		printf("\tpush bc\n");
@@ -373,12 +428,24 @@ void gen_epilogue(unsigned size)
 
 void gen_label(const char *tail, unsigned n)
 {
+	unreachable = 0;
 	printf("L%d%s:\n", n, tail);
+}
+
+/* A return statement. We can sometimes shortcut this if we have
+   no cleanup to do */
+void gen_exit(const char *tail, unsigned n)
+{
+	if (func_cleanup)
+		gen_jump(tail, n);
+	else
+		printf("\tret\n");
 }
 
 void gen_jump(const char *tail, unsigned n)
 {
 	printf("\tjr L%d%s\n", n, tail);
+	unreachable = 1;
 }
 
 void gen_jfalse(const char *tail, unsigned n)
@@ -457,13 +524,9 @@ void gen_switchdata(unsigned n, unsigned size)
 	printf("\t.word %d\n", size);
 }
 
-void gen_case(unsigned tag, unsigned entry)
-{
-	printf("Sw%d_%d:\n", tag, entry);
-}
-
 void gen_case_label(unsigned tag, unsigned entry)
 {
+	unreachable = 0;
 	printf("Sw%d_%d:\n", tag, entry);
 }
 
@@ -552,6 +615,9 @@ void gen_tree(struct node *n)
 /*
  *	Return 1 if the node can be turned into direct access. The VOID check
  *	is a special case we need to handle stack clean up of void functions.
+ *
+ *	TODO;  Add T_RREF here and teach the helpers to generate (ix) loads
+ *	via DE (and bc via ld a,(bc) ld e,a)
  */
 static unsigned access_direct(struct node *n)
 {
@@ -569,8 +635,6 @@ static unsigned access_direct(struct node *n)
 /*
  *	Get something that passed the access_direct check into de. Could
  *	we merge this with the similar hl one in the main table ?
- *
- *	TODO: pass reg as char *, can use BC unlike 8080
  */
 
 static unsigned load_r_with(const char *rp, struct node *n)
@@ -611,6 +675,10 @@ static unsigned load_r_with(const char *rp, struct node *n)
 		}
 		printf("\tpush %s\n\tpop %s\n", regnames[n->value], rp);
 		return 1;
+	case T_RDEREF:
+		printf("\tld %c,(%s + %d)\n", *rp, regnames[n->value], n->val2);
+		printf("\tld %c,(%s + %d)\n", rp[1], regnames[n->value], n->val2+ 1);
+		return 1;
 	default:
 		return 0;
 	}
@@ -625,6 +693,11 @@ static unsigned load_bc_with(struct node *n)
 static unsigned load_de_with(struct node *n)
 {
 	return load_r_with("de", n);
+}
+
+static unsigned load_hl_with(struct node *n)
+{
+	return load_r_with("hl", n);
 }
 
 static unsigned load_a_with(struct node *n)
@@ -646,7 +719,14 @@ static unsigned load_a_with(struct node *n)
 			printf("\tld a,c\n");
 			break;
 		}
-		/* Fall through */
+		return 0;
+	case T_RDEREF:
+		if (n->value == 1) {
+			printf("\tld a,(bc)\n");
+			break;
+		}
+		printf("\tlod a,(%s+%d)\n", regnames[n->value], n->val2);
+		break;
 	default:
 		return 0;
 	}
@@ -1306,6 +1386,10 @@ unsigned gen_shortcut(struct node *n)
  	struct node *r = n->right;
 	unsigned nr = n->flags & NORETURN;
 
+	/* Don't generate unreachable blocks */
+	if (unreachable)
+		return 1;
+
 	/* The comma operator discards the result of the left side, then
 	   evaluates the right. Avoid pushing/popping and generating stuff
 	   that is surplus */
@@ -1315,6 +1399,29 @@ unsigned gen_shortcut(struct node *n)
  		/* Parent determines child node requirements */
 		codegen_lr(r);
 		r->flags |= nr;
+		return 1;
+	}
+	if (n->op == T_BOOL) {
+		codegen_lr(r);
+		if (r->flags & ISBOOL)
+			return 1;
+		s = get_size(r->type);
+		if (s <= 2 && (n->flags & CCONLY)) {
+			if (s == 2)
+				printf("\tld a,h\n\tor l\n");
+			else
+				printf("\tld a,l\n\tor a\n");
+			return 1;
+		}
+		if (IS_RABBIT && s <= 2) {
+			/* quick way to bool byte */
+			if (s == 1)
+				printf("\tld h,l\n");
+			printf("\tbool hl\n");
+		} else
+			/* Too big or value needed */
+			helper(n, "bool");
+		n->flags |= ISBOOL;
 		return 1;
 	}
 	/* Re-order assignments we can do the simple way */
@@ -1352,7 +1459,7 @@ unsigned gen_shortcut(struct node *n)
 	if (n->op == T_RSTORE)
 		return load_r_with(regnames[n->value], r);
 
-	/* Assignment to *BC, byte pointer always */
+	/* Assignment to *BC is byte pointer always */
 	if (n->op == T_REQ) {
 		const char *rp = regnames[n->value];
 		switch(n->value) {
@@ -1371,23 +1478,20 @@ unsigned gen_shortcut(struct node *n)
 			if (s == 1) {
 				if (!load_a_with(r)) {
 					codegen_lr(r);
-					printf("\tld (%s),l\n", rp);
+					printf("\tld (%s + %d),l\n", rp, n->val2);
 					return 1;
 				}
-				/* TODO: fix asm */
 				if (*rp == 'i')
-					printf("\tld (%s + 0),a\n", rp);
+					printf("\tld (%s + %d),a\n", rp, n->val2);
 				else
 					printf("\tld (%s),a\n", rp);
 				return 1;
 			}
 			if (s == 2) {
-				if (!load_de_with(r)) {
+				if (!load_hl_with(r))
 					codegen_lr(r);
-					printf("\tex de,hl\n");
-				}
-				printf("\tld (%s + 0),e\n", rp);
-				printf("\tld (%s + 1),d\n", rp);
+				printf("\tld (%s + %d),l\n", rp, n->val2);
+				printf("\tld (%s + %d),h\n", rp, n->val2 + 1);
 				return 1;
 			}
 			return 0;
@@ -1729,7 +1833,6 @@ unsigned gen_node(struct node *n)
 			printf("\tcall __%sw\n\t.word %d\n", name, v + 2);
 		return 1;
 	case T_RREF:
-		/* TODO: IX and IY */
 		if (nr)
 			return 1;
 		if (n->value == 1) {
@@ -1860,14 +1963,14 @@ unsigned gen_node(struct node *n)
 				printf("\tld l,a\n");
 			return 1;
 		case 2:
-			printf("\tld l,(ix + 0)\n");	/* TODO: fix asm ? */
+			printf("\tld l,(ix + %d)\n", n->val2);
 			if (size == 2)
-				printf("\tld h,(ix + 1)\n");
+				printf("\tld h,(ix + %d)\n", n->val2 + 1);
 			return 1;
 		case 3:
-			printf("\tld l,(iy)\n");
+			printf("\tld l,(iy + %d)\n", n->val2);
 			if (size == 2)
-				printf("\tld h,(iy + 1)\n");
+				printf("\tld h,(iy + %d)\n", n->val2 + 1);
 			return 1;
 		}
 		return 0;

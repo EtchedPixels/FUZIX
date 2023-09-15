@@ -11,7 +11,7 @@ static void makelb(const char *p, unsigned n)
     fprintf(f, "\n\t.export __ldbyte%d\n\n\t.setcpu 8080\n\t.code\n", n);
     fprintf(f, "__ldbyte%d:\n", n);
     fprintf(f, "\tlxi h,%d\n", n);
-    fprintf(f, "\rdad sp\n");
+    fprintf(f, "\tdad sp\n");
     fprintf(f, "\tmov l,m\n");
     fprintf(f, "\tret\n");
     fclose(f);
@@ -28,7 +28,7 @@ static void makesb(const char *p, unsigned n)
     fprintf(f, "__stbyte%d:\n", n);
     fprintf(f, "\tmov a,l\n");
     fprintf(f, "\tlxi h,%d\n", n);
-    fprintf(f, "\rdad sp\n");
+    fprintf(f, "\tdad sp\n");
     fprintf(f, "\tmov m,a\n");
     fprintf(f, "\tmov l,a\n");
     fprintf(f, "\tret\n");
@@ -46,7 +46,7 @@ static void makelw(const char *p, unsigned n)
     fprintf(f, "\n\t.export __ldword%d\n\n\t.setcpu 8080\n\t.code\n", n);
     fprintf(f, "__ldword%d:\n", n);
     fprintf(f, "\tlxi h,%d\n", n);
-    fprintf(f, "\rdad sp\n");
+    fprintf(f, "\tdad sp\n");
     fprintf(f, "\tmov a,m\n");
     fprintf(f, "\tinx h\n");
     fprintf(f, "\tmov h,m\n");
@@ -66,7 +66,7 @@ static void makesw(const char *p, unsigned n)
     fprintf(f, "__stword%d:\n", n);
     fprintf(f, "\txchg\n");
     fprintf(f, "\tlxi h,%d\n", n);
-    fprintf(f, "\rdad sp\n");
+    fprintf(f, "\tdad sp\n");
     fprintf(f, "\tmov m,e\n");
     fprintf(f, "\tinx h\n");
     fprintf(f, "\tmov m,d\n");

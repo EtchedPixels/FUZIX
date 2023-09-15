@@ -273,16 +273,40 @@ void write_null_tree(void)
 	write_tree(tree(T_NULL, NULL, NULL));
 }
 
+void write_logic_tree(struct node *n, unsigned truth)
+{
+	if (truth == -1)
+		write_tree(n);
+	else
+		free_tree(n);
+}
+
 /*
- *	Trees with type rules
+ *	Trees with type rule.
  */
 
-struct node *bool_tree(struct node *n)
+/*
+ *	A bool tree is special, we don't optimize the T_BOOL at the
+ *	top level or we'll just (wrongly) remove it.
+ */
+struct node *bool_tree(struct node *n, unsigned flags)
 {
+	struct node *b;
 	if (n->op == T_BOOL)
 		return n;
-	n = tree(T_BOOL, NULL, n);
-	n->type = CINT;
+	if (flags & NEEDCC) {
+		/* The subtree should already be optimized */
+		/* Make the new node */
+		b = new_node();
+		b->op = T_BOOL;
+		b->type = CINT;
+		b->right = n;
+		b->flags |= flags;
+		return b;
+	} else {
+		n = tree(T_BOOL, NULL, n);
+		n->type = CINT;
+	}
 	return n;
 }
 
@@ -363,7 +387,7 @@ struct node *ordercomp_tree(unsigned op, struct node *l, struct node *r)
 		n = tree(op, l, r);
 	else
 		n = arith_tree(op, l, r);
-	return bool_tree(n);
+	return bool_tree(n, 0);
 }
 
 struct node *assign_tree(struct node *l, struct node *r)
@@ -395,7 +419,7 @@ struct node *logic_tree(unsigned op, struct node *l, struct node *r)
 		badtype();
 	if (!PTR(rt) && !IS_ARITH(rt))
 		badtype();
-	n = tree(op, bool_tree(l), bool_tree(r));
+	n = tree(op, bool_tree(l, 0), bool_tree(r, 0));
 	n->type = CINT;
 	return n;
 }
@@ -534,39 +558,47 @@ struct node *constify(struct node *n)
 			free_node(r);
 			free_node(n);
 			warning("always false");
-			return bool_tree(make_constant(0, CINT));
+			return bool_tree(make_constant(0, CINT), 0);
 		}
 		if (op == T_GTEQ && !tree_impure(l)) {
 			free_tree(l);
 			free_node(r);
 			free_node(n);
 			warning("always true");
-			return bool_tree(make_constant(1, CINT));
+			return bool_tree(make_constant(1, CINT), 0);
 		}
 	}
-#if 0
-	/* This will always fail as we don't eliminate T_BOOL or understand
-	   T_BOOL(const) is a constant value that still typecasts and flag sets */
 	/* The logic ops are special as they permit shortcuts and need to be
 	   dealt with l->r */
 	if (op == T_ANDAND || op == T_OROR) {
 		l = constify(l);
 		if (l == NULL || !IS_INTARITH(l->type) || (l->flags & LVAL))
 			return NULL;
-		if (op == T_OROR && l->value) {
+		if (op == T_OROR) {
 			free_tree(l);
-			free_tree(r);
 			free_node(n);
-			return bool_tree(make_constant(1, CINT));
+			if (l->value) {
+				free_tree(r);
+				return bool_tree(make_constant(1, CINT), 0);
+			} else {
+				return bool_tree(r, 0);
+			}
 		}
-		if (op == T_ANDAND && !l->value) {
+		if (op == T_ANDAND) {
 			free_tree(l);
-			free_tree(r);
 			free_node(n);
-			return bool_tree(make_constant(0, CINT));
+			if (!l->value) {
+				free_tree(r);
+				return bool_tree(make_constant(0, CINT), 0);
+			} else {
+				return bool_tree(r, 0);
+			}
 		}
+		/* TODO: We don't deal with the X && 0 case - we need an
+		   op for evaluate, throw away result and return 0. Maybe
+		   we can build a tree of expr,0 ?, ditto || 1 */
+		return NULL;
 	}
-#endif
 	if (r) {
 		r = constify(r);
 		if (r == NULL)
@@ -597,6 +629,12 @@ struct node *constify(struct node *n)
 			free_node(l);
 			free_node(n);
 			return r;
+		}
+		/* This works for FP for all the wrong reasons - FIXME */
+		if ((op == T_PLUS || op == T_MINUS) && r->type == T_CONSTANT && r->value == 0) {
+			free_node(n);
+			free_node(r);
+			return l;
 		}
 		if (l) {
 			l = constify(l);
@@ -725,7 +763,12 @@ struct node *constify(struct node *n)
 		case T_BANG:
 			value = !value;
 			break;
-		/* We can't do T_BOOL because it's used to set flags */
+		/* Rewriting bool may lose condition code setting, but we can
+		   fix that up at the end */
+		case T_BOOL:
+			if (n->flags & NEEDCC)
+				return NULL;
+			/* Fall through */
 		case T_CAST:
 			/* We are working with integer constant types so this is ok */
 			return replace_constant(n, n->type, value);

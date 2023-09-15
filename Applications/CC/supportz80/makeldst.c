@@ -11,7 +11,7 @@ static void makelb(const char *p, unsigned n)
     fprintf(f, "\n\t.export __ldbyte%d\n\t.code\n", n);
     fprintf(f, "__ldbyte%d:\n", n);
     fprintf(f, "\tld hl,%d\n", n);
-    fprintf(f, "\radd hl,sp\n");
+    fprintf(f, "\tadd hl,sp\n");
     fprintf(f, "\tld l,(hl)\n");
     fprintf(f, "\tret\n");
     fclose(f);
@@ -28,7 +28,7 @@ static void makesb(const char *p, unsigned n)
     fprintf(f, "__stbyte%d:\n", n);
     fprintf(f, "\tld a,l\n");
     fprintf(f, "\tld hl,%d\n", n);
-    fprintf(f, "\radd hl,sp\n");
+    fprintf(f, "\tadd hl,sp\n");
     fprintf(f, "\tld (hl),a\n");
     fprintf(f, "\tret\n");
     fclose(f);
@@ -45,7 +45,7 @@ static void makelw(const char *p, unsigned n)
     fprintf(f, "\n\t.export __ldword%d\n\t.code\n", n);
     fprintf(f, "__ldword%d:\n", n);
     fprintf(f, "\tld hl,%d\n", n);
-    fprintf(f, "\radd hl,sp\n");
+    fprintf(f, "\tadd hl,sp\n");
     fprintf(f, "\tld a,(hl)\n");
     fprintf(f, "\tinc hl\n");
     fprintf(f, "\tld h,(hl)\n");
@@ -65,7 +65,7 @@ static void makesw(const char *p, unsigned n)
     fprintf(f, "__stword%d:\n", n);
     fprintf(f, "\tex de,hl\n");
     fprintf(f, "\tld hl,%d\n", n);
-    fprintf(f, "\radd hl,sp\n");
+    fprintf(f, "\tadd hl,sp\n");
     fprintf(f, "\tld (hl),e\n");
     fprintf(f, "\tinc hl\n");
     fprintf(f, "\tld (hl),d\n");
