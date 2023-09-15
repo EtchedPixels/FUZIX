@@ -44,3 +44,10 @@ clean:
 
 rmbak:
 	rm -f *~ core
+
+z1.o: z1.c fweep.c
+z2.o: z2.c fweep.c
+z3.o: z3.c fweep.c
+z4.o: z4.c fweep.c
+z5.o: z5.c fweep.c
+z8.o: z8.c fweep.c
