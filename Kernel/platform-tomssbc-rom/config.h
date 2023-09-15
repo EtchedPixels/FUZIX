@@ -1,4 +1,3 @@
-#define CONFIG_IDE
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -44,7 +43,13 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 2
+#define NUM_DEV_TTY	2
+#define CONFIG_TD_NUM	4
+/* RC2014 style CF IDE */
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
+#define IDE_NONSTANDARD_XFER	/* As we are banked use own helpers */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5       /* Number of block buffers */

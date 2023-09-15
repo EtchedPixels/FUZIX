@@ -3,8 +3,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devide.h>
+#include <tinyide.h>
 
 /* string.c
  * Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
@@ -34,7 +33,5 @@ void plt_copyright(void)
 
 void device_init(void)
 {
-#ifdef CONFIG_IDE
-	devide_init();
-#endif
+	ide_probe();
 }

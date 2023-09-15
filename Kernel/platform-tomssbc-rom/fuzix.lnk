@@ -42,8 +42,8 @@ memalloc_none.rel
 swap.rel
 devsys.rel
 platform-tomssbc-rom/devtty.rel
-platform-tomssbc-rom/devide.rel
-platform-tomssbc-rom/devide_discard.rel
-platform-tomssbc-rom/mbr.rel
-platform-tomssbc-rom/blkdev.rel
+platform-tomssbc-rom/tinyide.rel
+platform-tomssbc-rom/tinyide_discard.rel
+platform-tomssbc-rom/tinydisk.rel
+platform-tomssbc-rom/tinydisk_discard.rel
 -e

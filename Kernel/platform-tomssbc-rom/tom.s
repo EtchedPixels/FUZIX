@@ -723,3 +723,49 @@ __uzero:
 	inc de
 	ldir
 	jp uputc_out
+
+;
+;	IDE helpers
+;
+	.globl _td_page
+	.globl _td_raw
+
+	.globl _devide_write_data
+	.globl _devide_read_data
+
+map:
+	ld	bc,#IDE_REG_DATA
+	ld	a,(_td_raw)
+	or	a
+	ret	z
+	dec	a
+	jp	z,map_proc_always
+	ld	a,(_td_page)
+	jp	map_for_swap
+
+_devide_write_data:
+	pop	bc
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
+	call	map
+	otir
+	otir
+	jr	ide_out
+_devide_read_data:
+	pop	bc
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
+	call	map
+	inir
+	inir
+ide_out:
+	ld	a,(_td_raw)
+	or	a
+	ret	z
+	jp	map_kernel

@@ -1,7 +1,7 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/devide.c ../dev/blkdev.c
-DDSRCS = ../dev/devide_discard.c ../dev/mbr.c
+DSRCS = ../dev/tinyide.c ../dev/tinydisk.c
+DDSRCS = ../dev/tinyide_discard.c ../dev/tinydisk_discard.c
 ASRCS = start.s crt0.s tom.s tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=.rel)
