@@ -13,13 +13,15 @@
 #include <stdbool.h>
 #include "config.h"
 #include <z180.h>
-#include <blkdev.h>
-#include <devsd.h>
-#include <z180itx.h>
+#include <tinysd.h>
 
 #define CSIO_CNTR_TE           (1<<4)   /* transmit enable */
 #define CSIO_CNTR_RE           (1<<5)   /* receive enable */
 #define CSIO_CNTR_END_FLAG     (1<<7)   /* operation completed flag */
+
+static uint8_t spi_slow[4];
+
+__sfr __at 0x42 ppi_c;
 
 /* the CSI/O and SD card send the bits of each byte in opposite orders, so we need to flip them over */
 static uint8_t reverse_byte(uint8_t byte) __naked
@@ -51,36 +53,44 @@ reverse_byte_a:
     byte; /* squelch compiler warning */
 }
 
-__sfr __at 0x42 ppi_c;
-
-void sd_spi_clock(bool go_fast)
+void sd_spi_fast(void)
 {
-    unsigned char c;
-
-    c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
-    if(!go_fast)
-        c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
-    CSIO_CNTR = c;
+    spi_slow[1] = 0;
 }
 
-void sd_spi_lower_cs(void)
+void sd_spi_slow(void)
 {
-    /* wait for idle */
-    while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
-    ppi_c = sd_drive;
+    spi_slow[1] = 1;
 }
 
 void sd_spi_raise_cs(void)
 {
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
+    /* Set CS bits back */
     ppi_c = 7;
 }
 
 void spi_select_port(uint8_t port)
 {
+    uint8_t c;
+
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     ppi_c = port;
+
+    if (spi_slow[port]) {
+        c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
+        c = c | 0x03;     /* set low two bits, clk/160 (can go down to clk/1280, see data sheet) */
+        CSIO_CNTR = c;
+    } else {
+        CSIO_CNTR &= 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
+    }
+}
+
+/* SD is on SPI 1 */
+void sd_spi_lower_cs(void)
+{
+    spi_select_port(tinysd_unit + 1);
 }
 
 void sd_spi_transmit_byte(unsigned char byte)
@@ -106,9 +116,9 @@ uint8_t sd_spi_receive_byte(void)
     unsigned char c;
 
     /* wait for any current transmit or receive operation to complete */
-    do{
+    do {
         c = CSIO_CNTR;
-    }while(c & (CSIO_CNTR_TE | CSIO_CNTR_RE));
+    } while(c & (CSIO_CNTR_TE | CSIO_CNTR_RE));
 
     /* enable receive operation */
     CSIO_CNTR = c | CSIO_CNTR_RE;
@@ -131,9 +141,13 @@ COMMON_MEMORY
 /* WRS: measured byte transfer time as approx 5.66us with Z180 @ 36.864MHz,
    three times faster. Main change is to start the next receive operation 
    as soon as possible and overlap the loop housekeeping with the receive. */
-bool sd_spi_receive_sector(void) __naked
+bool sd_spi_receive_sector(uint8_t *addr) __naked
 {
     __asm
+        pop hl
+        pop de
+        push de
+        push hl
 waitrx: 
         in0 a, (_CSIO_CNTR)     ; wait for any current transmit or receive operation to complete
         tst a, #0x30
@@ -143,13 +157,12 @@ waitrx:
         ld h, a                 ; stash value for reuse later
 
         ; load parameters
-        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+        ld a, (_td_raw) 			; blkparam.is_user
         ld bc, #512                             ; sector size
 #ifdef SWAPDEV
         cp #2
         jr nz, not_swapin
-        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        ld a,(_td_page)
         call map_for_swap
         jr rxnextbyte
 not_swapin:
@@ -198,17 +211,20 @@ waitrx3:
     __endasm;
 }
 
-bool sd_spi_transmit_sector(void) __naked
+bool sd_spi_transmit_sector(uint8_t *addr) __naked
 {
     __asm
         ; load parameters
-        ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-        ld de, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+        pop hl
+        pop de
+        push de
+        push hl
+        ld a, (_td_raw) 			; blkparam.is_user
         ld hl, #512                             ; sector size
 #ifdef SWAPDEV
         cp #2
         jr nz, not_swapout
-        ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+        ld a,(_td_page)
         call map_for_swap
         jr gotransmit
 not_swapout:

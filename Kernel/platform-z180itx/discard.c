@@ -2,9 +2,8 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devide.h>
-#include <devsd.h>
+#include <tinyide.h>
+#include <tinysd.h>
 #include "config.h"
 #include <z180.h>
 #include <netdev.h>
@@ -92,8 +91,8 @@ uint8_t plt_param(char *p)
 
 void device_init(void)
 {
-	devide_init();
-	devsd_init();
+	ide_probe();
+	sd_probe();
 #ifdef CONFIG_NET
 	netdev_init();
 #endif

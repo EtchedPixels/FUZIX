@@ -28,7 +28,14 @@
 #define KERNTOP     0xF000  /* Kernel has lower 60KB */
 #define PROC_SIZE   64      /* Memory needed per process */
 
-#define CONFIG_IDE
+#define CONFIG_TD_NUM		4
+/* RC2014 style CF IDE */
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
+/* SD via CSIO : Needs an additional GPIO pin so not on all boards. */
+#define CONFIG_TD_SD
+#define TD_SD_NUM		1
 
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	(0x0081)  /* Location of root dev name */
@@ -40,12 +47,6 @@
 
 /* Hardware parameters : internal hardware at 0xC0-0xFF */
 #define Z180_IO_BASE       0xC0
-
-#define MAX_BLKDEV 4	    /* 2 IDE drives, 2 SD drives */
-
-/* SD via CSIO : Needs an additional GPIO pin */
-#define CONFIG_SD
-#define SD_DRIVE_COUNT 1	/* Need to figure out how we deal with this */
 
 #define NUM_DEV_TTY	2
 /* UART0 as the console */
