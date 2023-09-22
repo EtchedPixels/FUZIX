@@ -35,10 +35,10 @@ devsys.rel
 usermem.rel
 platform-tomssbc/discard.rel
 platform-tomssbc/devtty.rel
-platform-tomssbc/mbr.rel
-platform-tomssbc/blkdev.rel
-platform-tomssbc/devide.rel
-platform-tomssbc/devide_discard.rel
+platform-tomssbc/tinydisk.rel
+platform-tomssbc/tinydisk_discard.rel
+platform-tomssbc/tinyide.rel
+platform-tomssbc/tinyide_discard.rel
 platform-tomssbc/ide.rel
 platform-tomssbc/usermem.rel
 -e
