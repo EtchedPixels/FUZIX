@@ -1,5 +1,5 @@
 ROOT = ../..
-include $(ROOT)/Applications/rules.armm0
+include $(ROOT)/Target/rules.armm0
 LINKER_OPT += -lcurses$(PLATFORM) -ltermcap$(PLATFORM) -lc$(PLATFORM)
 
 SRCS  = invaders.c
