@@ -13,15 +13,17 @@
 #include <crt9128.h>
 #include <input.h>
 
+static uint8_t has_acia;
+
 void set_vc_mode(uint8_t);
 void set_vid_mode(void);
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-uint8_t *uart_data = (uint8_t *)0xFF04;		/* ACIA data */
-uint8_t *uart_status = (uint8_t *)0xFF05;	/* ACIA status */
-uint8_t *uart_command = (uint8_t *)0xFF06;	/* ACIA command */
-uint8_t *uart_control = (uint8_t *)0xFF07;	/* ACIA control */
+uint8_t *uart_data = (volatile uint8_t *)0xFF04;	/* ACIA data */
+uint8_t *uart_status = (volatile uint8_t *)0xFF05;	/* ACIA status */
+uint8_t *uart_command = (volatile uint8_t *)0xFF06;	/* ACIA command */
+uint8_t *uart_control = (volatile uint8_t *)0xFF07;	/* ACIA control */
 
 #define ACIA_TTY 5
 #define is_dw(minor) (minor >= DW_MIN_OFF)
@@ -75,7 +77,7 @@ static uint8_t vmode;
 static uint8_t kbd_timer;
 struct vt_repeat keyrepeat = { 40, 4 };
 
-/* tty1 is the screen tty2 is the serial port */
+/* tty1 is the screen tty5 is the serial port */
 
 /* Output for the system console (kprintf etc) */
 void kputchar(uint_fast8_t c)
@@ -399,6 +401,8 @@ void do_plt_interrupt(uint_fast8_t re)
 		wakeup(&plt_interrupt);
 		dw_vpoll();
 	}
+	if (has_acia)
+		tty_interrupt();
 }
 
 void plt_interrupt(void)
@@ -625,4 +629,16 @@ int my_tty_close(uint_fast8_t minor)
 	if (is_dw(minor) && ttydata[minor].users == 1)
 		dw_vclose(minor);
 	return (tty_close(minor));
+}
+
+void tty_detect(void)
+}
+	if (*uart_status & 2) {
+		uart_command = 0x03;	/* Force into reset */
+		if (*uart_status & 2)
+			return;
+		uart_command = 0x96;	/* Set up */
+		has_acia = 1;
+		kputs("ACIA at 0xFF04.\n");
+	}
 }
