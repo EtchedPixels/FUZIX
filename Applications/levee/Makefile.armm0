@@ -1,5 +1,5 @@
 ROOT = ../..
-include $(ROOT)/Applications/rules.armm0
+include $(ROOT)/Target/rules.armm0
 
 CSRCS = beep.c blockio.c display.c doscall.c editcor.c exec.c find.c
 CSRCS += flexcall.c gemcall.c globals.c insert.c main.c misc.c modify.c

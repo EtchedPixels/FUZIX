@@ -1,5 +1,5 @@
 ROOT = ../../..
-include $(ROOT)/Applications/rules.armm0
+include $(ROOT)/Target/rules.armm0
 
 SRCS  = ac.c col.c dc.c diff.c ed.c makekey.c ptx.c sum.c wall.c
 SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
