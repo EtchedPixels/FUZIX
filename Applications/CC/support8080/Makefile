@@ -48,7 +48,6 @@ OBJ = workspace.o __true.o __switchc.o __switch.o __switchl.o __pushl.o __sex.o 
 include ldst.mk
 
 ldword/_10.o: makeldst
-	mkdir -p ldbyte ldword stbyte stword
 	./makeldst
 	cc85 -c ldword/_10.s
 
@@ -64,5 +63,4 @@ lib8080.a: makeldst $(OBJ)
 
 clean:
 	rm -f *.o *.a
-	rm -f ldword/* stword/* ldbyte/* ldword/*
-
+	rm -f ldword/* stword/*
