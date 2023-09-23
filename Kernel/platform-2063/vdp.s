@@ -21,6 +21,7 @@
 ; TMS setup
 VDP_IRQ		.equ	0
 VDP_DIRECT	.equ	1
+VDP_ROP		.equ	1
 
 ; 10MHz. TODO - do the maths but this should be roughly right
 .macro VDP_DELAY
