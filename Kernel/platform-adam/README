@@ -1,0 +1,9 @@
+Initial sketch for Coleco Adam with 128K RAM
+
+TODO
+- Adamnet drivers (will suck as 1K block and reblocking needed)
+- Sort out joystick/spinners
+- NMI driven timer mask and help (same as we need for the Nascom)
+- Write some bootstrap code
+- Test
+
