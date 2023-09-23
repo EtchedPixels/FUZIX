@@ -438,10 +438,8 @@ int vdptty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			udata.u_error = EINVAL;
 			return -1;
 		}
-		if (uget(ptr, &rw, sizeof(struct vdp_rw)) != sizeof(struct vdp_rw)) {
-			udata.u_error = EFAULT;
+		if (uget(ptr, &rw, sizeof(struct vdp_rw)))
 			return -1;
-		}
 		size = rw.lines * rw.cols;
 		addr = (uint8_t *)rw.data;
 		if (valaddr(addr, size, is_wr) != size) {

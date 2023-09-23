@@ -24,6 +24,7 @@
 ;
 VDP_DIRECT	.equ	1
 VDP_IRQ		.equ	1
+VDP_ROP		.equ	1
 
 ;
 ;	On an MSX at 3.5Mhz our loop worst case is 26 clocks so for
