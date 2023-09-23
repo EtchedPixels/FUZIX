@@ -136,6 +136,7 @@ void tty_sleeping(uint_fast8_t minor)
 /* 6551 mode handling */
 
 static uint8_t baudbits[] = {
+	0x1E,		/* 0 - unused */
 	0x11,		/* 50 */
 	0x12,		/* 75 */
 	0x13,		/* 110 */
