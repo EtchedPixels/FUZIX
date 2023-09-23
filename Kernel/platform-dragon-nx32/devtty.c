@@ -20,10 +20,10 @@ void set_vid_mode(void);
 
 #undef  DEBUG			/* UNdefine to delete debug code sequences */
 
-uint8_t *uart_data = (volatile uint8_t *)0xFF04;	/* ACIA data */
-uint8_t *uart_status = (volatile uint8_t *)0xFF05;	/* ACIA status */
-uint8_t *uart_command = (volatile uint8_t *)0xFF06;	/* ACIA command */
-uint8_t *uart_control = (volatile uint8_t *)0xFF07;	/* ACIA control */
+volatile uint8_t *uart_data = (volatile uint8_t *)0xFF04;	/* ACIA data */
+volatile uint8_t *uart_status = (volatile uint8_t *)0xFF05;	/* ACIA status */
+volatile uint8_t *uart_command = (volatile uint8_t *)0xFF06;	/* ACIA command */
+volatile uint8_t *uart_control = (volatile uint8_t *)0xFF07;	/* ACIA control */
 
 #define ACIA_TTY 5
 #define is_dw(minor) (minor >= DW_MIN_OFF)
@@ -633,7 +633,7 @@ int my_tty_close(uint_fast8_t minor)
 }
 
 void tty_detect(void)
-}
+{
 	if (*uart_status & 2) {
 		uart_command = 0x03;	/* Force into reset */
 		if (*uart_status & 2)
