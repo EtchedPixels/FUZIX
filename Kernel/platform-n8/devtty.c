@@ -513,10 +513,8 @@ int n8tty_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			udata.u_error = EINVAL;
 			return -1;
 		}
-		if (uget(ptr, &rw, sizeof(struct vdp_rw)) != sizeof(struct vdp_rw)) {
-			udata.u_error = EFAULT;
+		if (uget(ptr, &rw, sizeof(struct vdp_rw)))
 			return -1;
-		}
 		addr = (uint8_t *)rw.data;
 		size = rw.lines * rw.cols;
 		if (valaddr(addr, size, is_wr) != size) {

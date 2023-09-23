@@ -24,6 +24,7 @@
 ;
 VDP_DIRECT	.equ	1
 VDP_IRQ		.equ	0
+VDP_ROP		.equ	1
 
 ;
 ;	The loops as they stand are good for up to about 8MHz. On a Z180
