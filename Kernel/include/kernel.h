@@ -1,5 +1,5 @@
 /****************************************************
-FUZIX (Unix Z80 Implementation) Kernel:  unix.h
+FUZIX (Unix clone implementation) Kernel:  unix.h
 From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 *****************************************************/
 /* History:
@@ -1195,6 +1195,7 @@ extern void plt_monitor(void);
 extern uint_fast8_t plt_param(char *p);
 extern void plt_switchout(void);
 extern void plt_interrupt(void);
+extern void plt_reinterrupt(void);
 extern uint_fast8_t plt_suspend(void);
 extern uint_fast8_t plt_udata_set(ptptr p);
 
