@@ -10,9 +10,6 @@
 	    .globl cursor_off
 	    .globl _cursor_disable
 
-	    ; graphics API
-	    .globl _vdp_rop
-	    .globl _vdp_wop
 
 	    .globl cursorpos
 
@@ -47,8 +44,6 @@
 	    .globl _vidmode
 	    .globl outcharhex
 
-	    .globl map_proc_always
-	    .globl map_kernel
 
 	    .area _CODE
 
@@ -607,6 +602,17 @@ _vdp_set_console:
 ;	perhaps a silly check on an unprotected Z80 but when we get to Z280
 ;	it might matter rather more!
 ;
+;	This implementation won't work with thunked memory
+;
+		.if VDP_ROP
+
+	    ; graphics API
+	    .globl _vdp_rop
+	    .globl _vdp_wop
+
+	    .globl map_proc_always
+	    .globl map_kernel
+
 _vdp_rop:
 	    push ix
 	    push hl
@@ -703,6 +709,7 @@ boundclear:
 	    ld hl,#0
 	    jp map_kernel
 
+		.endif
 
 ;
 ;	This must be in data or common not code
