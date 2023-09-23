@@ -38,3 +38,8 @@ void plt_interrupt(void)
 		}
 	}
 }
+
+void plt_reinterrupt(void)
+{
+	tty_poll();
+}

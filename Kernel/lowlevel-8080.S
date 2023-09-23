@@ -289,6 +289,55 @@ nmimsg:
 ;
 .export interrupt_handler
 
+reinterrupt:
+	; Interrupt during interrupt but on alt stack (eg swap)
+	sta	_int_disabled	; A is 1 right now
+	;
+	;	What we avoid in register saves over Z80 we make up for in
+	;	runtime stuff
+	;
+	; 	C temporaries
+	lhld	__tmp
+	push	h
+	lhld	__hireg
+	push	h
+	lhld	__tmp2
+	push	h
+	lhld	__tmp2+2
+	push	h
+	lhld	__tmp3
+	push	h
+	lhld	__tmp3+2
+	push	h
+	lhld	__retaddr
+	push	h
+
+	call _plt_reinterrupt
+
+	pop	h
+	shld	__retaddr
+	pop	h
+	shld	__tmp3+2
+	pop	h
+	shld	__tmp3
+	pop	h
+	shld	__tmp2+2
+	pop	h
+	shld	__tmp2
+	pop	h
+	shld	__hireg
+	pop	h
+	shld	__tmp
+
+	xra	a
+	sta	_int_disabled
+
+	pop	h
+	pop	d
+	pop	b
+	pop	psw
+	ret
+
 interrupt_handler:
 	push psw
 	INT_ENTER
@@ -296,6 +345,11 @@ interrupt_handler:
 	push d
 	push h
 	call plt_interrupt_all
+
+	lda	U_DATA__U_ININTERRUPT
+	ora	a
+	jnz	reinterrupt
+
 	; Switch stacks
 	lxi h,0
 	dad sp

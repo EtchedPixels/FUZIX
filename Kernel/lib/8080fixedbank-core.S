@@ -93,10 +93,11 @@ _switchin:
 	;
 	;	Swapping time. Interrupts back on. Can't yet do this
 	;	as it needs core changes (bank switch stacking etc)
+	;	We must be on the swap stack when this occurs
 	;
-;	ei
-;	xra a
-;	sta _int_disabled
+	ei
+	xra a
+	sta _int_disabled
 	;
 	;	Can we rely on the compiler not mashing the stacked var ?
 	;
