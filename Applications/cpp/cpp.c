@@ -738,8 +738,10 @@ static void do_proc_include(void)
             if( fd ) {
 	       fi_count++;
 	       curfile = fd;
-	    } else
+	    } else {
+	       fprintf(stderr, "'%s' - ", p);
                cerror("Cannot open include file");
+            }
 
             return;
          }
