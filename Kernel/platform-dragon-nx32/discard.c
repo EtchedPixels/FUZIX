@@ -175,4 +175,5 @@ void map_init(void)
                 kputchar('\n');
 	}
 	mpi_set_slot(bootslot);
+	tty_detect();
 }
