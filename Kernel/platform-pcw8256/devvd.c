@@ -1,7 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <pcw8256.h>
 #include <devvd.h>
 
@@ -22,39 +22,31 @@ struct cpm3_dpb {
 #define MAXDRIVE	4
 #define VD_DRIVE_NR_MASK	0xFF
 
-
 static struct cpm3_dpb dpb[MAXDRIVE];
 struct cpm3_dpb *vd_dpb;
 uint16_t vd_track;
 uint16_t vd_sector;
 uint16_t vd_drive_op;
-uint8_t vd_mapping;
-uint8_t vd_page;
 
-static uint8_t devvd_transfer_sector(void)
+/* Until we change the td behaviour for unit to be nicer */
+static uint8_t vd_dev[CONFIG_TD_NUM];
+
+static int devvd_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-    uint_fast8_t drive = blk_op.blkdev->driver_data & VD_DRIVE_NR_MASK;
-    uint16_t lba = blk_op.lba;	/* We know it'll fit 16bit */
+    uint_fast8_t drive = vd_dev[unit];
 
     /* Fixme: cache the logical spt */
     vd_track = lba / (dpb[drive].spt >> 2);
     vd_sector = lba % (dpb[drive].spt >> 2);
 
-    vd_mapping = blk_op.is_user;
-    vd_page = blk_op.swap_page;
-    vd_drive_op = (drive << 8) | (blk_op.is_read ? 0x04 : 0x05); 
+    vd_drive_op = (drive << 8) | (is_read ? 0x04 : 0x05);
     vd_dpb = dpb + drive;
     
-    if (vd_do_op(blk_op.addr))
+    if (vd_do_op(dptr))
         return 0;
     return 1;
 }
     
-static int devvd_flush_cache(void)
-{
-    return 0;
-}
-
 static uint8_t devvd_open(uint8_t i)
 {
     dpb[i].spt = i;	/* cheap hack for the asm interface */
@@ -63,7 +55,6 @@ static uint8_t devvd_open(uint8_t i)
 
 void devvd_probe(void)
 {
-    blkdev_t *blk;
     uint8_t i;
 
     for (i = 2; i < MAXDRIVE; i++) {
@@ -73,17 +64,9 @@ void devvd_probe(void)
                 kprintf("vd%d: sectors/track unsuitable.\n");
                 continue;
             }
-            blk = blkdev_alloc();
-            if (blk == NULL) {
-                kputs("vd: too many devices.\n");
-                return;
-            }
-            blk->transfer = devvd_transfer_sector;
-            blk->flush = devvd_flush_cache;
-            blk->driver_data = i & VD_DRIVE_NR_MASK;
-            /* Assumes 512 byte sectors */
-            blk->drive_lba_count = (dpb[i].dsm + 1) << (dpb[i].bsh - 2);
-            blkdev_scan(blk, SWAPSCAN);
+            vd_dev[td_next] = i;
+            if (td_register(devvd_xfer, 1) < 0)
+                continue;
         }
     }
 }

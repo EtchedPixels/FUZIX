@@ -4,6 +4,7 @@
 	; when they are first seen.	
 	.area _CODE
 	.area _CODE2
+	.area _HOME
 	.area _VIDEO
 	.area _CONST
 	.area _INITIALIZED

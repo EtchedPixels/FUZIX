@@ -7,8 +7,6 @@
 		.globl _vd_do_open
 		.globl _vd_do_op
 
-		.globl _vd_mapping
-		.globl _vd_page
 		.globl _vd_track
 		.globl _vd_sector
 		.globl _vd_dpb
@@ -18,6 +16,9 @@
 		.globl map_proc_always
 		.globl map_buffers
 		.globl map_kernel
+
+		.globl _td_raw
+		.globl _td_page
 
 		.area _COMMONMEM
 
@@ -42,10 +43,10 @@ _vd_do_op:
 		ld hl,(_vd_track)
 		ld de,(_vd_sector)
 		ld bc,(_vd_drive_op)	; B drive C op
-		ld a,(_vd_mapping)
+		ld a,(_td_raw)
 		cp #2
 		jr nz, not_swap
-		ld a,(_vd_page)
+		ld a,(_td_page)
 		call map_for_swap
 		jr do_op
 not_swap:

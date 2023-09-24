@@ -33,8 +33,10 @@
 
 #define CONFIG_INPUT
 #define CONFIG_INPUT_GRABMAX 3
-#define MAX_BLKDEV	2	/* UIDE or Joyce never both */
-#define CONFIG_IDE	/* Has an IDE controller - maybe anyway: UIDE */
+#define CONFIG_TD_NUM	2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+
 #undef CONFIG_NET
 #undef CONFIG_NET_NATIVE
 

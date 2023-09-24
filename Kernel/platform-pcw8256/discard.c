@@ -49,28 +49,27 @@ __sfr __at 0xFD printstat;
 
 void device_init(void)
 {
-  fd_probe();
-  if (is_joyce)
-    devvd_probe();
-  else
-    devide_init();
+	fd_probe();
+	if (is_joyce)
+		devvd_probe();
+	else
+		ide_probe();
 }
 
 void machine_ident(void)
 {
-  if (new_fdc == 0) {
-    if (printstat & 0x20)
-      model = MODEL_PCW9512;
-    else if (ramsize == 256)
-      model = MODEL_PCW8256;
-    else
-      model = MODEL_PCW8512;
-  } else {
-    if (ramsize > 256)
-      model = MODEL_PCW9512PLUS;
-    else
-      model = MODEL_PCW9256;	/* Or 10 - basically identical */
-  }
-  kprintf("Model: %s%s\n",
-    mname[model], is_joyce?"(joyce)":"");
+	if (new_fdc == 0) {
+		if (printstat & 0x20)
+			model = MODEL_PCW9512;
+		else if (ramsize == 256)
+			model = MODEL_PCW8256;
+		else
+			model = MODEL_PCW8512;
+	} else {
+		if (ramsize > 256)
+			model = MODEL_PCW9512PLUS;
+		else
+			model = MODEL_PCW9256;	/* Or 10 - basically identical */
+	}
+	kprintf("Model: %s%s\n", mname[model], is_joyce?"(joyce)":"");
 }

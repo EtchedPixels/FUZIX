@@ -45,10 +45,10 @@ platform-pcw8256/devlpr.rel
 platform-pcw8256/devtty.rel
 vt.rel
 font8x8.rel
-platform-pcw8256/blkdev.rel
-platform-pcw8256/mbr.rel
-platform-pcw8256/devide.rel
-platform-pcw8256/devide_discard.rel
+platform-pcw8256/tinydisk.rel
+platform-pcw8256/tinydisk_discard.rel
+platform-pcw8256/tinyide.rel
+platform-pcw8256/tinyide_discard.rel
 platform-pcw8256/devvd.rel
 platform-pcw8256/vd.rel
 platform-pcw8256/devinput.rel

@@ -2,7 +2,7 @@
 #include <version.h>
 #include <kdata.h>
 #include <devfd.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <devsys.h>
 #include <devlpr.h>
 #include <devtty.h>
@@ -16,7 +16,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
   /* 0: /dev/hd		Hard disc block devices (UIDE or FIDHD) */
-  {  blkdev_open, no_close,	blkdev_read, blkdev_write, blkdev_ioctl },	/* 0: /dev/hd -- standard block device interface */
+  {  td_open, 	no_close,	td_read,     td_write,     td_ioctl	},
   /* 1: /dev/fd		Floppy disc block devices */
   {  devfd_open,  no_close,     devfd_read,  devfd_write,  no_ioctl     },
   /* 2: /dev/tty	TTY devices */

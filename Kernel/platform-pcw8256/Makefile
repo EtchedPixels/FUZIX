@@ -3,8 +3,8 @@ CSRCS = devlpr.c devtty.c devfd.c devinput.c devvd.c
 CSRCS += devices.c main.c
 DISCARD_CSRCS = discard.c
 
-DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/mbr.c ../dev/devfdc765.c
-DISCARD_DSRCS = ../dev/devide_discard.c
+DSRCS = ../dev/tinyide.c ../dev/tinydisk.c ../dev/devfdc765.c
+DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/tinydisk_discard.c
 
 NSRCS = ../dev/net/net_native.c
 
