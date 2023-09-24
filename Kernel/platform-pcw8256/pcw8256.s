@@ -123,19 +123,10 @@ ramcount:
         pop	hl
 
 	; Set up the rst helpers
-	ld	a,#0xC3
-	ld	hl,#___sdcc_enter_ix
-	ld	(0x08),a
-	ld	(0x09),hl
-	ld	hl,#___spixret
-	ld	(0x10),a
-	ld	(0x11),hl
-	ld	hl,#___ixret
-	ld	(0x18),a
-	ld	(0x19),hl
-	ld	hl,#___ldhlhl
-	ld	(0x20),a
-	ld	(0x21),hl
+	ld	hl,#rstblock
+	ld	de,#8
+	ld	bc,#32
+	ldir
 
 	; Now safe to call C code
 
@@ -374,29 +365,6 @@ outcharl:
 	    out (0xE0), a
 	    ret
 
-	    .area _CODE
-;
-;	RST stub helpers
-;
-;	The first two use an rst as a jump. In the reload sp case we don't
-;	have to care. In the pop ix case for the function end we need to
-;	drop the spare frame first, but we know that af contents don't
-;	matter
-;
-___spixret:
-	ld	sp,ix
-	pop	ix
-	ret
-___ixret:
-	pop	af
-	pop	ix
-	ret
-___ldhlhl:
-	ld	a,(hl)
-	inc	hl
-	ld	h,(hl)
-	ld	l,a
-	ret
 ;
 ; Video helpers. Video is in banks 4/5 for now
 ;
@@ -564,6 +532,40 @@ clearal:
 	    jr nz, clearal
 	    call map_kernel
 	    ret
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
+
 
 ;
 ;	Need to live outside of common/code. Take care not to access them
