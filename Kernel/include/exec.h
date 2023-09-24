@@ -13,20 +13,6 @@
 #define AF_68000_020	1		/* Has 68020 features */
 #else
 
-/* 16 byte header for current old style binary */
-struct old_exec {
-	uint8_t a_bra[3];		/* 3 bytes of op code */
-	uint8_t a_magic[4];		/* FZX1 */
-	uint8_t a_base;			/* Load address page */
-	uint16_t a_size;		/* Binary memory request 0 = all */
-	uint16_t a_text;
-	uint16_t a_data;
-	uint16_t a_bss;
-	/* This isn't really part of the header but a location fixed after
-	   it */
-	/* uint16_t a_sigvec; */
-};
-
 /* 16 byte header for current style binary. We try to reflect the general
    pattern of naming in classic Unixlike systems */
 
@@ -86,7 +72,7 @@ struct exec {
 	uint8_t a_entry;		/* Entry point - 0-255 bytes in only */
 	/* These are kept in pages */
 	uint8_t a_size;			/* Binary memory request 0 = all */
-	uint8_t a_stack;		/* Stack size hint */
+	uint8_t a_stack;		/* Stack size hint (not yet used) */
 	uint8_t a_zp;			/* Zero/Direct page space required */
 
 	/* This isn't really part of the header but a location fixed after
