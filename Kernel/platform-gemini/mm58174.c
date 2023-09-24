@@ -1,5 +1,10 @@
 #include <kernel.h>
 
+/*
+ *	This will work with the RTC card or GM816. Both produce an NMI
+ *	if interrupting however.
+ */
+
 __sfr __at 0x22 secs;
 __sfr __at 0x23 tensecs;
 __sfr __at 0x2F irq;
