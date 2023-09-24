@@ -53,6 +53,7 @@ static const char *vdpnametab[] = {
   "TMS9918A",
   "V9938",
   "V9958",
+  "V9990"
 };
 
 void device_init(void)
@@ -71,7 +72,7 @@ void device_init(void)
     inittod();
 #endif
 
-  if (vdptype < 3)
+  if (vdptype < 4)
     vdpname = vdpnametab[vdptype];
 
     if (machine_type == MACHINE_MSX1) {
