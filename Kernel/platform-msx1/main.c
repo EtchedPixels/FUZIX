@@ -3,7 +3,8 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
+#include <tinydisk.h>
+#include <devide_sunrise.h>
 #include <msx.h>
 
 /* These are set by the msx startup asm code */
@@ -15,6 +16,10 @@ uint8_t machine_type;
 uint8_t vdptype;
 uint8_t *bouncebuffer;
 uint16_t devtab[4][4][3];
+
+extern uint8_t *disk_dptr;
+extern uint8_t disk_rw;
+extern uint32_t disk_lba;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
@@ -60,7 +65,7 @@ void plt_discard(void)
         bufpool_end++;
         n++;
     }
-    kprintf("%d buffers added\n", n);
+    kprintf("%d buffers added (end %p)\n", n,  bufpool_end);
 }
 
 uint8_t device_find(const uint16_t *romtab)
@@ -93,37 +98,37 @@ uint8_t device_find(const uint16_t *romtab)
  */
 unsigned blk_xfer_bounced(xferfunc_t xferfunc, uint16_t arg)
 {
-    uint8_t *addr = blk_op.addr;
-    uint8_t old_user = blk_op.is_user;
+    uint8_t *addr = disk_dptr;
+    uint8_t old_user = td_raw;
 
     /* Shortcut: this range can only occur for a user mode I/O */
-    if (addr >= (uint8_t *)0x3E00U && addr < (uint8_t *)0x8000U) {
+    if (addr > (uint8_t *)0x3E00U && addr < (uint8_t *)0x8000U) {
         /* We can't just use tmpbuf because the buffer might be dirty which would
            trigger a recursive I/O and then badness happens */
-        blk_op.addr = bouncebuffer;
-        blk_op.is_user = 0;
-//        kprintf("bounced do_xfer %p %x:", addr, mask);
-        if (blk_op.is_read) {
+        disk_dptr = bouncebuffer;
+        td_raw = 0;
+//      kprintf("bounced do_xfer %p %d:", addr, disk_rw);
+        if (disk_rw == 1) {	/* Read */
             if (xferfunc(arg))
                 goto fail;
-            uput(blk_op.addr, addr, 512);
+            uput(disk_dptr, addr, 512);
         } else {
-            uget(addr, blk_op.addr, 512);
+            uget(addr, disk_dptr, 512);
             if (xferfunc(arg))
                 goto fail;
         }
-//        kprintf("bounced done.\n");
-        blk_op.addr = addr;
-        blk_op.is_user = old_user;
+//      kprintf("bounced done.\n");
+        disk_dptr = addr;
+        td_raw = old_user;
         return 1;
     }
-//    kprintf("do_xfer %d %p %x..", blk_op.is_user, addr, mask);
+//  kprintf("do_xfer %d %p..", td_raw, addr);
     if (xferfunc(arg) == 0) {
-//        kputs("done.\n");
+//      kputs("done.\n");
         return 1;
     }
 fail:
-    blk_op.addr = addr;
-    blk_op.is_user = old_user;
+    disk_dptr = addr;
+    td_raw = old_user;
     return 0;
 }

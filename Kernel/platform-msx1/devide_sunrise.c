@@ -2,13 +2,20 @@
 #include <kdata.h>
 #include <printf.h>
 #include <timer.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <devide_sunrise.h>
 #include <msx.h>
 
 uint16_t ide_error;
 uint16_t ide_base = 0x7E00;
 uint8_t *devide_buf;
+
+/* Map from device major >> 4 to actual sunrise disk */
+static uint8_t sunrise_dev[CONFIG_TD_NUM];
+
+/* Remember if either disk needs a cache flush */
+static uint8_t sunrise_dirty[2];
+static uint8_t sunrise_cache[2];
 
 struct msx_map sunrise_u, sunrise_k;
 
@@ -22,13 +29,16 @@ static void delay(void)
        plt_idle();
 }
 
-static uint8_t sunrise_transfer_sector(void)
+static int sunrise_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-    uint8_t drive = (blk_op.blkdev->driver_data & IDE_DRIVE_NR_MASK);
-    uint8_t mask = drive ? 0xF0 : 0xE0;
+    uint8_t drive = sunrise_dev[dev];
+    uint8_t mask = (drive & 1) ? 0xF0 : 0xE0;
 
-    if (!blk_op.is_read)
-        blk_op.blkdev->driver_data |= FLAG_CACHE_DIRTY;
+    if (is_read == 0)
+        sunrise_dirty[drive] = 1;
+    disk_lba = lba;
+    disk_dptr = dptr;
+    disk_rw = is_read;
     if (blk_xfer_bounced(do_ide_xfer, mask) == 0) {
         if (ide_error == 0xFF)
             kprintf("ide%d: timeout.\n", drive);
@@ -39,61 +49,73 @@ static uint8_t sunrise_transfer_sector(void)
     return 1;
 }        
     
-static int sunrise_flush_cache(void)
-{
-    uint8_t drive;
+#if 0
+/* When we get TD support */
 
-    drive = blk_op.blkdev->driver_data & IDE_DRIVE_NR_MASK;
-    /* check drive has a cache and was written to since the last flush */
-    if((blk_op.blkdev->driver_data & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY))
-		                 != (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY))
+static int sunrise_flush_cache(uint_fast8_t dev)
+{
+    uint8_t drive = sunrise_dev[dev];
+
+    if (sunrise_dirty[dev] == 0 || sunrise_cache[dev] == 0)
         return 0;
-    
+    sunrise_dirty[dev] = 0;
+
     if (do_ide_flush_cache(drive ? 0xF0 : 0xE0)) {
         udata.u_error = EIO;
         return -1;
     }
     return 0;
 }
+#endif
 
 static void sunrise_init_drive(uint8_t drive)
 {
     uint8_t mask = drive ? 0xF0 : 0xE0;
-    blkdev_t *blk;
+    uint8_t *dptr;
+    int dev;
+    uint_fast8_t i;
 
-    kprintf("IDE drive %d: ", drive);
+    kprintf("%d: ", drive);
     devide_buf = tmpbuf();
     if (do_ide_init_drive(mask) == NULL)
-        goto failout;
+    goto failout;
+    /* Check the LBA bit is set, and print the name */
+    dptr = devide_buf + 54;		/* Name info */
+    if (*dptr)
+        for (i = 0; i < 20; i++) {
+	    kputchar(dptr[1]);
+	    kputchar(*dptr);
+	    dptr += 2;
+	}
     if (!(devide_buf[99] & 0x02)) {
-        kputs("LBA unsupported.\n");
+        kputs("- non LBA");
         goto failout;
     }
-    blk = blkdev_alloc();
-    if (!blk)
-        goto failout;
-    blk->transfer = sunrise_transfer_sector;
-    blk->flush = sunrise_flush_cache;
-    blk->driver_data = drive;
+    sunrise_dev[td_next] = drive;
+    dev = td_register(sunrise_xfer, 1);
+    if (dev < 0)
+        goto failout2;
+
+#if 0
+    /* TODO: when tinyide gets there */
+        blk->flush = sunrise_flush_cache;
+#endif
 
     if( !(((uint16_t*)devide_buf)[82] == 0x0000 && ((uint16_t*)devide_buf)[83] == 0x0000) ||
          (((uint16_t*)devide_buf)[82] == 0xFFFF && ((uint16_t*)devide_buf)[83] == 0xFFFF) ){
 	/* command set notification is supported */
-	if(devide_buf[164] & 0x20){
+	if(devide_buf[164] & 0x20) {
 	    /* write cache is supported */
-            blk->driver_data |= FLAG_WRITE_CACHE;
+	    sunrise_cache[dev] = 1;
 	}
     }
 
-    /* read out the drive's sector count */
-    blk->drive_lba_count = le32_to_cpu(*((uint32_t*)&devide_buf[120]));
-
     /* done with our temporary memory */
     tmpfree(devide_buf);
-    blkdev_scan(blk, SWAPSCAN);
     return;
 failout:
     kputs("\n");
+failout2:
     tmpfree(devide_buf);
 }
 
@@ -129,6 +151,6 @@ void sunrise_probe(void)
     delay();
     do_ide_end_reset();
     delay();
-    for (i = 0; i < IDE_DRIVE_COUNT; i++)
+    for (i = 0; i < 2; i++)
         sunrise_init_drive(i);
 }

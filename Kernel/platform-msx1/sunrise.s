@@ -14,7 +14,6 @@
 	.globl map_kernel
 	.globl _switch_map
 
-	.globl _blk_op
 	.globl _ticks
 	.globl _devide_buf
 
@@ -22,6 +21,12 @@
 	.globl _sunrise_k
 
 	.globl _int_disabled
+
+	.globl _disk_lba
+	.globl _disk_dptr
+	.globl _disk_rw
+
+	.globl _td_raw
 
 	.module sunrise
 
@@ -186,7 +191,7 @@ flush_good:
 _do_ide_xfer:
 	push ix
 	ld ix,(_ide_base)
-	ld a,(_blk_op + BLK_OP_ISUSER)
+	ld a,(_td_raw)
 	or a
 	jr nz, xfer_user
 	call map_sunrise_k
@@ -195,7 +200,7 @@ xfer_user:
 	call map_sunrise_u
 init_io:
 	ld e,l
-	ld hl, (_blk_op + BLK_OP_LBA + 2)
+	ld hl, (_disk_lba + 2)
 	ld a,h
 	and #0x0F			; Merge drive and bits 24-27
 	or e
@@ -206,11 +211,11 @@ init_io:
 	pop hl
 	jr nz, xfer_timeout
 	ld IDE_REG_LBA_2(ix),l
-	ld hl, (_blk_op + BLK_OP_LBA)
+	ld hl, (_disk_lba)
 	ld IDE_REG_LBA_1(ix),h
 	ld IDE_REG_LBA_0(ix),l
 	ld IDE_REG_SEC_COUNT(ix),#1
-	ld a,(_blk_op + BLK_OP_ISREAD)
+	ld a,(_disk_rw)
 	or a
 	jr z, send_cmd
 	ld IDE_REG_COMMAND(ix),#IDE_CMD_READ_SECTOR
@@ -245,7 +250,7 @@ xfer_timeout:
 ;	deal with it here
 ;
 devide_xfer_r:
-	ld de,(_blk_op + BLK_OP_ADDR)
+	ld de,(_disk_dptr)
 	; We don't have to worry about swap being special for this port
 	; Our caller also is responsible for working out when to bounce
 xfer_do:
@@ -256,7 +261,7 @@ xfer_do:
 	ret
 
 devide_xfer_w:
-	ld hl,(_blk_op + BLK_OP_ADDR)
+	ld hl,(_disk_dptr)
 	; We don't have to worry about swap being special for this port
 	; Our caller also is responsible for working out when to bounce
 	ld de,#0x7C00
@@ -272,3 +277,10 @@ devide_rx_buf:
 	pop hl
 	ret
 
+_disk_dptr:
+	.word	0
+_disk_rw:
+	.byte	0
+_disk_lba:
+	.word	0
+	.word	0

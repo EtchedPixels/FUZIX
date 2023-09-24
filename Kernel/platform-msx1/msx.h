@@ -41,6 +41,10 @@ extern void copy_vectors(void);
 extern uint16_t devtab[4][4][3];
 extern uint8_t *bouncebuffer;
 
+extern uint8_t *disk_dptr;
+extern uint8_t disk_rw;
+extern uint32_t disk_lba;
+
 typedef unsigned (*xferfunc_t)(uint16_t) __z88dk_fastcall;
 extern unsigned blk_xfer_bounced(xferfunc_t func, uint16_t arg);
 

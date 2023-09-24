@@ -9,7 +9,7 @@ ASRCS = msx1.s crt0.s vdp.s slots.s cartridge.s
 ASRCS += tricks.s commonmem.s sunrise.s
 
 DISCARD_DSRCS =
-DSRCS = ../dev/blkdev.c ../dev/mbr.c
+DSRCS = ../dev/tinydisk.c ../dev/tinydisk_discard.c
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)

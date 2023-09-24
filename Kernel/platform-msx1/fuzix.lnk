@@ -22,8 +22,8 @@ platform-msx1/devtty.rel
 platform-msx1/devfd.rel
 platform-msx1/devlpr.rel
 platform-msx1/devices.rel
-platform-msx1/blkdev.rel
-platform-msx1/mbr.rel
+platform-msx1/tinydisk.rel
+platform-msx1/tinydisk_discard.rel
 platform-msx1/devide_sunrise.rel
 platform-msx1/sunrise.rel
 devio.rel

@@ -59,7 +59,9 @@ extern uint16_t swap_dev;
 #define NBUFS    5        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 2	    /* IDE or SD ?? */
+#define CONFIG_TINYDISK
+#define CONFIG_TD_NUM	2	/* Two devices on the sunrise */
+
 /* We don't use the generic IDE support due to the ghastly MSX slot mappings */
 
 /* Device parameters */
