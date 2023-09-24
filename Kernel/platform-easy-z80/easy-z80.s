@@ -41,6 +41,7 @@
 	.globl _udata
 	.globl istack_top
 	.globl ___hard_di
+	.globl ___sdcc_enter_ix
 
 	; exported debugging tools
 	.globl outchar
@@ -76,6 +77,12 @@ init_hardware:
         push hl
         call _program_vectors
         pop hl
+
+	; RST shorteners
+	ld hl,#rstblock
+	ld de,#8
+	ld bc,#32
+	ldir
 
 	; Get the internal DI state right
 	call ___hard_di
@@ -210,24 +217,12 @@ _program_vectors:
 	; At this point the common block has already been copied
 	call map_proc
 
-	; write zeroes across all vectors
-	ld hl,#0
-	ld de,#1
-	ld bc,#0x007f			; program first 0x80 bytes only
-	ld (hl),#0x00
-	ldir
-
-	; now install the interrupt vector at 0x0038
+	; now install the interrupt vector at 0x0038 (shouldn't be used)
 
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
 	ld hl,#interrupt_handler
 	ld (0x0039),hl
-
-	; set restart vector for UZI system calls
-	ld (0x0030),a			; rst 30h is unix function call vector
-	ld hl,#unix_syscall_entry
-	ld (0x0031),hl
 
 	ld (0x0000),a
 	ld hl,#null_handler		; to Our Trap Handler
@@ -565,3 +560,36 @@ sio_sp:	.dw 0
 
 sio_handler_im2	a, SIOA_C, SIOA_D, reti
 sio_handler_im2 b, SIOB_C, SIOB_D, reti
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
