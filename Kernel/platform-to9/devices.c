@@ -15,7 +15,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
 // minor    open         close        read      write       ioctl
 // -----------------------------------------------------------------
   /* 0: /dev/hd		Hard disc block devices (IDE) */
-  {  td_open,	    no_close,	 td_read,  td_write, no_ioctl },
+  {  td_open,	    no_close,	 td_read,  td_write, td_ioctl },
   /* 1: /dev/fd		Floppy disc block devices  */
   {  fd_open,       no_close,    fd_read,  fd_write,  no_ioctl },
   /* 2: /dev/tty	TTY devices */
