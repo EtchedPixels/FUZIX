@@ -10,9 +10,6 @@ uint16_t ide_error;
 uint16_t ide_base = 0x7E00;
 uint8_t *devide_buf;
 
-/* Map from device major >> 4 to actual sunrise disk */
-static uint8_t sunrise_dev[CONFIG_TD_NUM];
-
 /* Remember if either disk needs a cache flush */
 static uint8_t sunrise_dirty[2];
 static uint8_t sunrise_cache[2];
@@ -29,9 +26,8 @@ static void delay(void)
        plt_idle();
 }
 
-static int sunrise_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
+static int sunrise_xfer(uint_fast8_t drive, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-    uint8_t drive = sunrise_dev[dev];
     uint8_t mask = (drive & 1) ? 0xF0 : 0xE0;
 
     if (is_read == 0)
@@ -91,8 +87,7 @@ static void sunrise_init_drive(uint8_t drive)
         kputs("- non LBA");
         goto failout;
     }
-    sunrise_dev[td_next] = drive;
-    dev = td_register(sunrise_xfer, 1);
+    dev = td_register(drive, sunrise_xfer, 1);
     if (dev < 0)
         goto failout2;
 

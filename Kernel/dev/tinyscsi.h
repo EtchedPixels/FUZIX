@@ -8,10 +8,7 @@ int scsi_sense(uint_fast8_t dev, uint8_t *buf);
 int scsi_cmd(uint_fast8_t dev, uint8_t *cmd, uint8_t *data, uint16_t len);
 void scsi_reset(void);
 
-extern uint8_t scsi_dev[CONFIG_TD_NUM];
 extern uint8_t scsi_status[2];
 extern uint8_t scsi_id;
-extern uint_fast8_t scsi_num;
-extern uint_fast8_t scsi_first;
 
 #endif

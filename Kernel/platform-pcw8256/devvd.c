@@ -28,20 +28,15 @@ uint16_t vd_track;
 uint16_t vd_sector;
 uint16_t vd_drive_op;
 
-/* Until we change the td behaviour for unit to be nicer */
-static uint8_t vd_dev[CONFIG_TD_NUM];
-
-static int devvd_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t *dptr)
+static int devvd_xfer(uint_fast8_t drive, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-    uint_fast8_t drive = vd_dev[unit];
-
     /* Fixme: cache the logical spt */
     vd_track = lba / (dpb[drive].spt >> 2);
     vd_sector = lba % (dpb[drive].spt >> 2);
 
     vd_drive_op = (drive << 8) | (is_read ? 0x04 : 0x05);
     vd_dpb = dpb + drive;
-    
+
     if (vd_do_op(dptr))
         return 0;
     return 1;
@@ -64,8 +59,8 @@ void devvd_probe(void)
                 kprintf("vd%d: sectors/track unsuitable.\n");
                 continue;
             }
-            vd_dev[td_next] = i;
-            if (td_register(devvd_xfer, 1) < 0)
+            kprintf("%c: ", i + 'A');
+            if (td_register(i, devvd_xfer, 1) < 0)
                 continue;
         }
     }

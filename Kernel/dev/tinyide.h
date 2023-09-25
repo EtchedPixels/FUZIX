@@ -22,7 +22,7 @@ extern void ide_write(uint_fast8_t r, uint_fast8_t v);
 extern void devide_read_data(uint8_t *p);
 extern void devide_write_data(uint8_t *p);
 int ide_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t * dptr);
-extern uint8_t ide_dev[TD_IDE_NUM];
+extern uint8_t ide_dev[CONFIG_TD_NUM];
 extern uint8_t ide_unit;
 
 void ide_probe(void);

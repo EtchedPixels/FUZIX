@@ -238,6 +238,6 @@ uint8_t prop_sd_probe(void)
         return 0;
 
     kputs("PropIO SD: ");
-    td_register(prop_sd_xfer, 1);
+    td_register(0, prop_sd_xfer, 1);
     return 1;
 }

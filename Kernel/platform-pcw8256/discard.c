@@ -2,7 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
-#include <devide.h>
+#include <tinyide.h>
 #include <devvd.h>
 #include <devfd.h>
 #include <devtty.h>

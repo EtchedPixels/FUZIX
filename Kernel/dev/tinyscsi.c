@@ -26,9 +26,6 @@
 
 #ifdef CONFIG_TD_SCSI
 
-uint8_t scsi_dev[CONFIG_TD_NUM];
-uint_fast8_t scsi_first;
-uint_fast8_t scsi_num;
 uint8_t scsi_id;		/* Our initiator ID */
 
 static uint8_t cmd_rw[6] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
@@ -55,7 +52,6 @@ int scsi_sense(uint_fast8_t dev, uint8_t *buf)
 int scsi_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
   uint8_t buf[16];
-  dev = scsi_dev[dev - scsi_first];
   /* Only use the 10 byte command if needed, older drives don't know it */
   if (lba > 0xFFFFF) {
       cmd_rw10[0] = is_read ? 0x2A : 0x2A; /* READ/WRITE EXTENDED */

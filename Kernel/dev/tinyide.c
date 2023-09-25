@@ -7,12 +7,11 @@
 #ifdef CONFIG_TD_IDE
 
 uint8_t ide_present = 0;
-uint8_t ide_dev[TD_IDE_NUM];
 uint8_t ide_unit;
 
 int ide_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-    ide_unit = ide_dev[dev];
+    ide_unit = dev;
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
     ide_write(devh, (ide_unit & 1) ? 0xF0 : 0xE0) ;	/* LBA, device */
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
@@ -41,11 +40,11 @@ int ide_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 
 /* TODO - hook up ioctl - needs tinydisk tweaking */
 #if 0
-int ide_ioctl(uint_fast8_t minor, uarg_t request, char *unused)
+int ide_ioctl(uint_fast8_t dev, uarg_t request, char *unused)
 {
     if (request != BLKFLSBUF)
         return -1;
-    ide_unit = ide_unit[minor];
+    ide_unit = dev;
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
     ide_write(devh , (minor & 0x80) ? 0x10 : 0x40) ;	/* LBA, device */
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
@@ -56,8 +55,8 @@ int ide_ioctl(uint_fast8_t minor, uarg_t request, char *unused)
 }
 #endif
 
-#ifdef CONFIG_TINYIDE_SDCCPIO
 #ifndef IDE_NONSTANDARD_XFER
+#ifdef CONFIG_TINYIDE_SDCCPIO
 /* Port I/O: Currently Z80/Z180 only */
 
 COMMON_MEMORY

@@ -41,9 +41,6 @@
 #define sdc_reg_param2 *((volatile uint8_t *)SDC_REG_PARAM2)
 #define sdc_reg_param3 *((volatile uint8_t *)SDC_REG_PARAM3)
 
-static uint8_t sd0 = 0xFF;
-static uint8_t sd1 = 0xFF;
-
 
 /* Assembler glue */
 
@@ -58,14 +55,13 @@ typedef void (*sdc_transfer_function_t)( unsigned char *addr);
 
 
 
-static int sdc_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
+static int sdc_xfer(uint8_t drive, bool is_read, uint32_t lba, uint8_t *dptr)
 {
 	uint8_t *ptr = ((uint8_t *)&lba) + 1;      /* points to 24 bit lba in blk op */
 	uint8_t t;                /* temporarory sdc status holder */
 	uint8_t cmd;              /* holds SDC command value */
 	sdc_transfer_function_t fptr;  /* holds which xfer routine we want */
 	uint8_t n = 2;
-	uint8_t drive = (dev == sd1) ? 1 : 0;
 
 	/* in 256 byte sectors */
 	lba += lba;
@@ -136,9 +132,7 @@ void devsdc_init(void)
 		kputs("SDC: ");
 	    	/* turn on uber-secret SDC LBA mode*/
 		sdc_reg_ctl = 0x43; 
-		sd0 = td_register(sdc_xfer, 1);
-		sd1 = td_register(sdc_xfer, 1);
-		if (sd0 == 0xFF && sd1 == 0xFF)
+		if ((td_register(0, sdc_xfer, 1) & td_register(1, sdc_xfer, 1)) == 0xFF)
 			kputs("Not found.\n");
 		else
 			kputs("Ok.\n");

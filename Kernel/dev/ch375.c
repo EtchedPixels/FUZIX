@@ -158,6 +158,6 @@ uint_fast8_t ch375_probe(void)
     if (r != 0x14)
         return 0;
     /* And done */
-    ch_dev = td_register(ch375_xfer, 1);
+    ch_dev = td_register(0, ch375_xfer, 1);
     return 1;
 }

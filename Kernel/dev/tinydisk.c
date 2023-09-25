@@ -16,6 +16,7 @@
 uint8_t td_page;
 uint8_t td_raw;
 uint32_t td_lba[CONFIG_TD_NUM][MAX_PART + 1];
+uint8_t td_unit[CONFIG_TD_NUM];
 td_xfer td_op[CONFIG_TD_NUM];
 
 static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
@@ -57,7 +58,7 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	/* Here be dragons. In the swap case we will load over udata so watch
 	   we avoid udata. values */
 	while (ct < nblock) {
-		if (td_op[dev] (dev, is_read, lba, dptr) == 0)
+		if (td_op[dev] (td_unit[dev], is_read, lba, dptr) == 0)
 			goto error;
 		ct++;
 		dptr += 512;
@@ -75,7 +76,7 @@ int td_open(uint_fast8_t minor, uint16_t flag)
 {
 	uint8_t dev = minor >> 4;
 	minor &= 0x0F;
-	if (dev > CONFIG_TD_NUM || minor > MAX_PART || td_op[dev] == NULL) {
+	if (dev >= CONFIG_TD_NUM || minor > MAX_PART || td_op[dev] == NULL) {
 		udata.u_error = ENODEV;
 		return -1;
 	}

@@ -90,7 +90,7 @@ uint_fast8_t tinydisk_setup(uint16_t dev)
 uint8_t td_next;
 static uint8_t warned;
 
-int td_register(td_xfer rwop, uint_fast8_t parts)
+int td_register(uint_fast8_t unit, td_xfer rwop, uint_fast8_t parts)
 {
 	if (td_next == CONFIG_TD_NUM) {
 		if (!warned++)
@@ -98,6 +98,7 @@ int td_register(td_xfer rwop, uint_fast8_t parts)
 		return -2;
 	}
 	td_op[td_next] = rwop;
+	td_unit[td_next] = unit;
 	if (parts) {
 		if (!tinydisk_setup(td_next)) {
 			td_op[td_next] = NULL;
