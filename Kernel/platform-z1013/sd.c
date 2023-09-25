@@ -1,9 +1,9 @@
 #include <kernel.h>
 #include <blkdev.h>
-#include <devsd.h>
+#include <tinysd.h>
 #include <z80softspi.h>
 
-#ifdef CONFIG_SD
+#ifdef CONFIG_TD_SD
 
 /*
  *	SD card bit bang. For now just a single card to get us going. We
@@ -39,41 +39,50 @@ void sd_spi_lower_cs(void)
     pio_d = spi_piostate;
 }
 
-void sd_spi_clock(bool go_fast) __z88dk_fastcall
+void sd_spi_slow(void)
 {
-  used(go_fast);
+}
+
+void sd_spi_fast(void)
+{
 }
 
 COMMON_MEMORY
 
-bool sd_spi_receive_sector(void) __naked
+bool sd_spi_receive_sector(uint8_t *p) __naked
 {
   __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
+    pop de
+    pop hl
+    push hl
+    push de
+    ld a, (_td_raw)
     or a
     jr nz, from_user
     call map_buffers
     jr doread
 to_user:
-    call map_process_always
+    call map_proc_always
 doread:
     call _sd_spi_rx_sector
     jp map_kernel_restore
   __endasm;
 }
 
-bool sd_spi_transmit_sector(void) __naked
+bool sd_spi_transmit_sector(uint8_t *p) __naked
 {
   __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
+    pop de
+    pop hl
+    push hl
+    push de
+    ld a, (_td_raw)
     or a
     jr nz, from_user
     call map_buffers
     jr dowrite
 from_user:
-    call map_process_always
+    call map_proc_always
 dowrite:
     call _sd_spi_tx_sector
     jp map_kernel_restore

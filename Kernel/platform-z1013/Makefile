@@ -1,10 +1,10 @@
 ASRCS = crt0.s tricks.s commonmem.s z1013.s fdc765.s
 CSRCS = devices.c main.c devtty.c devrtc.c devrd.c sd.c video.c fdc.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
-DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/devfdc765.c
-DHSRCS = ../dev/blkdev.c
-DSRCS += 
+DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/tinysd_discard.c
+DISCARD_DSRCS += ../dev/tinydisk_discard.c
+DSRCS = ../dev/tinyide.c ../dev/tinysd.c ../dev/devfdc765.c
+DSRCS += ../dev/tinydisk.c
 DASRCS = ../dev/z80softsd.s ../dev/z80softspi.s
 NSRCS = 
 

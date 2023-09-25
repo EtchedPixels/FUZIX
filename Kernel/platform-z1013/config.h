@@ -4,8 +4,8 @@
  *	See README.CONFIG
  */
 
-#define CONFIG_IDE		/* GIDE */
-#undef CONFIG_SD		/* SD card bitbanged on I/O port */
+#define CONFIG_TD_IDE		/* GIDE */
+#undef CONFIG_TD_SD		/* SD card bitbanged on I/O port */
 #define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
 #undef CONFIG_PIO_TICK		/* 10Hz square wave on PIO bit 3 for timer */
 #define CONFIG_K1520_SOUND	/* We only use the CTC bits for now */
@@ -88,28 +88,29 @@ extern uint16_t swap_dev;
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 2	    /* 2 IDE and/or SD*/
+#define CONFIG_TD_NUM	4
 
 /* On-board RTC on the GIDE or an RTC card */
-#if defined(CONFIG_IDE) || defined(CONFIG_RTC_70)
+#if defined(CONFIG_TD_IDE) || defined(CONFIG_RTC_70)
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_INTERVAL	1
+#endif
+
+#ifdef CONFIG_TD_SD
+#define TD_SD_NUM	1
 #endif
 
 #if !defined(CONFIG_PIO_TICK) && !defined(CONFIG_K1520_SOUND)
 #define CONFIG_NO_CLOCK
 #endif
 
-#ifdef CONFIG_SD
-#define SD_DRIVE_COUNT 1
-#define SD_SPI_CALLTYPE __z88dk_fastcall
-#endif
-
 /* JKCEMU has some limits */
 #ifdef CONFIG_JKCEMU
-#define CONFIG_IDE_CHS		/* No LBA support in emulation */
-#define IDE_DRIVE_COUNT	1	/* Work around buggy emulator */
+#define CONFIG_TD_IDE_CHS	/* No LBA support in emulation */
+#define TD_IDE_NUM	1	/* Work around buggy emulator */
 #endif
 
 /* Device parameters */

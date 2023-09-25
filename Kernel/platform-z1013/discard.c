@@ -2,9 +2,8 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devide.h>
-#include <devsd.h>
+#include <tinyide.h>
+#include <tinysd.h>
 #include <devfdc765.h>
 #include "config.h"
 
@@ -53,12 +52,12 @@ void device_init(void)
 	/* Set up for 10Hz */
 #endif
 	rd_probe();
-#ifdef CONFIG_IDE
-	devide_init();
+#ifdef CONFIG_TD_IDE
+	ide_probe();
 #endif
-#ifdef CONFIG_SD
+#ifdef CONFIG_TD_SD
 	sd_setup();
-	devsd_init();
+	sd_probe();
 #endif
 #ifdef CONFIG_FDC765
 	if (fd765_probe())
