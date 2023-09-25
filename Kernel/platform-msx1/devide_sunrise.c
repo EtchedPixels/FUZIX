@@ -45,12 +45,10 @@ static int sunrise_xfer(uint_fast8_t drive, bool is_read, uint32_t lba, uint8_t 
     return 1;
 }        
     
-#if 0
-/* When we get TD support */
-
-static int sunrise_flush_cache(uint_fast8_t dev)
+static int sunrise_ioctl(uint_fast8_t dev, uarg_t request, char *data)
 {
-    uint8_t drive = sunrise_dev[dev];
+    if (request != BLKFLSBUF)
+        return -1;
 
     if (sunrise_dirty[dev] == 0 || sunrise_cache[dev] == 0)
         return 0;
@@ -87,7 +85,7 @@ static void sunrise_init_drive(uint8_t drive)
         kputs("- non LBA");
         goto failout;
     }
-    dev = td_register(drive, sunrise_xfer, 1);
+    dev = td_register(drive, sunrise_xfer, sunrise_ioct1);
     if (dev < 0)
         goto failout2;
 

@@ -16,5 +16,5 @@ void device_init(void)
 	sd_shift[0] = *((uint8_t *)0x89FF) == 3 ? 0 : 9;
 	sd_spi_clock(1);
 	/* Install a single tinysd interface */
-	td_register(0, sd_xfer, 1);
+	td_register(0, sd_xfer, td_ioctl_none, 1);
 }

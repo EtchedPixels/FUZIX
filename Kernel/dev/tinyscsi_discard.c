@@ -107,7 +107,7 @@ void scsi_probe(uint_fast8_t my_id)
         if (n != my_id) {
             if (scsi_probe_unit(n)) {
                 /* Attach the disk we found */
-                r = td_register(n, scsi_xfer, 1);
+                r = td_register(n, scsi_xfer, td_ioctl_none, 1);
                 if (r < 0)
                     continue;
             }

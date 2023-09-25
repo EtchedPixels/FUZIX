@@ -12,6 +12,8 @@ int td_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
 int td_ioctl(uint_fast8_t minor, uarg_t request, char *data);
 
 typedef int (*td_xfer)(uint_fast8_t unit, bool is_read, uint32_t block, uint8_t * dptr);
+typedef int (*td_ioc)(uint_fast8_t unit, uarg_t request, char *data);
+extern int td_ioctl_none(uint_fast8_t minor, uarg_t request, char *data);
 
 extern uint8_t td_page;
 extern uint8_t td_raw;
@@ -23,10 +25,11 @@ extern uint8_t td_raw;
 
 extern uint32_t td_lba[CONFIG_TD_NUM][MAX_PART + 1];
 extern td_xfer td_op[CONFIG_TD_NUM];
+extern td_ioc td_iop[CONFIG_TD_NUM];
 extern uint8_t td_unit[CONFIG_TD_NUM];
 #endif
 
 /* Setup/discard time */
-int td_register(uint_fast8_t unit, td_xfer rwop, uint_fast8_t parts);
+int td_register(uint_fast8_t unit, td_xfer rwop, td_ioc ioctl, uint_fast8_t parts);
 
 #endif

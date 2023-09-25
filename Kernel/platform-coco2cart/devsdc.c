@@ -132,7 +132,8 @@ void devsdc_init(void)
 		kputs("SDC: ");
 	    	/* turn on uber-secret SDC LBA mode*/
 		sdc_reg_ctl = 0x43; 
-		if ((td_register(0, sdc_xfer, 1) & td_register(1, sdc_xfer, 1)) == 0xFF)
+		if ((td_register(0, sdc_xfer, td_ioctl_none, 1) & 
+			td_register(1, sdc_xfer, td_ioctl_none, 1)) == 0xFF)
 			kputs("Not found.\n");
 		else
 			kputs("Ok.\n");

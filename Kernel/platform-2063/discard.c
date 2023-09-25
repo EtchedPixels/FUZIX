@@ -57,5 +57,5 @@ void device_init(void)
 		return;
 	kputs("sd0: ");
 	sd_shift[0] = (r & CT_BLOCK) ? 0 : 9;
-	td_register(0, sd_xfer, 1);
+	td_register(0, sd_xfer, td_ioctl_none, 1);
 }

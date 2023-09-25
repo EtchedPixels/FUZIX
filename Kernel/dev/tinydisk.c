@@ -18,6 +18,7 @@ uint8_t td_raw;
 uint32_t td_lba[CONFIG_TD_NUM][MAX_PART + 1];
 uint8_t td_unit[CONFIG_TD_NUM];
 td_xfer td_op[CONFIG_TD_NUM];
+td_ioc td_iop[CONFIG_TD_NUM];
 
 static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
@@ -94,9 +95,14 @@ int td_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 }
 
-/* TODO */
-int td_ioctl(uint_fast8_t minor, uarg_t request, char *data)
+int td_ioctl_none(uint_fast8_t dev, uarg_t request, char *data)
 {
 	udata.u_error = ENOTTY;
 	return -1;
+}
+
+int td_ioctl(uint_fast8_t minor, uarg_t request, char *data)
+{
+	uint8_t dev = minor >> 4;
+	return td_iop[dev](td_unit[dev], request, data);
 }

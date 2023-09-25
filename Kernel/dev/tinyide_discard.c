@@ -94,11 +94,6 @@ static void ide_identify(int dev, uint8_t *buf)
 	ide_present |= (1 << dev);
 }
 
-static void do_ide_register(uint8_t unit)
-{
-	td_register(unit, ide_xfer, 1);
-}
-
 #ifdef CONFIG_TINYIDE_RESET
 
 static void ide_reset_wait(void)
@@ -137,9 +132,9 @@ void ide_probe(void)
 		if (ide_present)
 			ide_identify(1, buf);
 		if (ide_present & 1)
-			td_register(ide_unit, ide_xfer, 1);
+			td_register(ide_unit, ide_xfer, ide_ioctl, 1);
 		if (ide_present & 2)
-			td_register(ide_unit + 1, ide_xfer, 1);
+			td_register(ide_unit + 1, ide_xfer, ide_ioctl, 1);
 	}
 	tmpfree(buf);
 }

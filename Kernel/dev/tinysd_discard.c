@@ -150,7 +150,7 @@ void sd_probe(void)
         if (!(t & CT_BLOCK))
             sd_shift[n] = 9;
         if (t != CT_NONE) {
-            r = td_register(n, sd_xfer, 1);
+            r = td_register(n, sd_xfer, td_ioctl_none, 1);
             if (r < 0)
                 continue;
         }

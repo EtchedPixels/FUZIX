@@ -38,22 +38,19 @@ int ide_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
     return 1;
 }
 
-/* TODO - hook up ioctl - needs tinydisk tweaking */
-#if 0
 int ide_ioctl(uint_fast8_t dev, uarg_t request, char *unused)
 {
     if (request != BLKFLSBUF)
         return -1;
     ide_unit = dev;
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
-    ide_write(devh , (minor & 0x80) ? 0x10 : 0x40) ;	/* LBA, device */
+    ide_write(devh , (dev & 0x01) ? 0xF0 : 0xE0) ;	/* LBA, device */
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
     while(!(ide_read(status) & 0x40));	/* Wait DRDY */
     ide_write(cmd, 0xE7);
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
     return 0;
 }
-#endif
 
 #ifndef IDE_NONSTANDARD_XFER
 #ifdef CONFIG_TINYIDE_SDCCPIO

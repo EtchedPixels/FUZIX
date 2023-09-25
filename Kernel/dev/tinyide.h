@@ -22,6 +22,7 @@ extern void ide_write(uint_fast8_t r, uint_fast8_t v);
 extern void devide_read_data(uint8_t *p);
 extern void devide_write_data(uint8_t *p);
 int ide_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t * dptr);
+int ide_ioctl(uint_fast8_t dev, uarg_t request, char *unused);
 extern uint8_t ide_dev[CONFIG_TD_NUM];
 extern uint8_t ide_unit;
 

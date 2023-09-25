@@ -60,7 +60,7 @@ void devvd_probe(void)
                 continue;
             }
             kprintf("%c: ", i + 'A');
-            if (td_register(i, devvd_xfer, 1) < 0)
+            if (td_register(i, devvd_xfer, td_ioctl_none, 1) < 0)
                 continue;
         }
     }
