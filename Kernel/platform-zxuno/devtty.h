@@ -19,4 +19,6 @@ extern uint8_t vtborder;
 extern uint8_t portff;
 extern uint8_t radastan;
 
+extern uint8_t is_zxuno;
+
 #endif

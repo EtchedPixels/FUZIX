@@ -7,6 +7,7 @@
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
+uint8_t is_zxuno;
 
 void plt_idle(void)
 {

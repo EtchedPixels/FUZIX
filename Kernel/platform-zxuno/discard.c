@@ -3,7 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <blkdev.h>
 #include <zxuno.h>
 
 extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
@@ -14,6 +13,7 @@ void pagemap_init(void)
 
 	if (probe_zxuno()) {
 		configure_zxuno();
+		is_zxuno = 1;
 		/* These are always present */
 		kempston = 1;
 		kmouse = 1;
