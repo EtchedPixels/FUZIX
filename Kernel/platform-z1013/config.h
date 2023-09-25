@@ -93,7 +93,6 @@ extern uint16_t swap_dev;
 /* On-board RTC on the GIDE or an RTC card */
 #if defined(CONFIG_TD_IDE) || defined(CONFIG_RTC_70)
 #define CONFIG_TINYIDE_SDCCPIO
-#define CONFIG_TINYIDE_8BIT
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_INTERVAL	1
