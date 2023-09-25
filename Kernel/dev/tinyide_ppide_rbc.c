@@ -57,6 +57,19 @@ COMMON_MEMORY
 void devide_read_data(uint8_t *addr) __naked
 {
     __asm
+#ifdef CONFIG_BANKED
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+#else
+            pop de
+            pop hl
+            push hl
+            push de
+#endif
             ld a, #data
             ld c, #PPIDE_BASE+2                     ; select control lines
             out (c), a                              ; select IDE data register
@@ -98,6 +111,19 @@ goread:     ; now we do the transfer
 void devide_write_data(uint8_t *addr) __naked
 {
     __asm
+#ifdef CONFIG_BANKED
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+#else
+            pop de
+            pop hl
+            push hl
+            push de
+#endif
             ld c, #PPIDE_BASE+2                     ; select control lines
             ld a, #data
             out (c), a                              ; select data register
