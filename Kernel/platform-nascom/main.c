@@ -63,6 +63,7 @@ void plt_interrupt(void)
 			timer_interrupt();
 			timer_interrupt();
 			timer_interrupt();
+			timer_interrupt();
 			/* Do we need to read again ? */
 		}
 	}
