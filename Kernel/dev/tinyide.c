@@ -16,9 +16,6 @@ int ide_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
     ide_write(devh, (ide_unit & 1) ? 0xF0 : 0xE0) ;	/* LBA, device */
     while(ide_read(status) & 0x80);	/* Wait !BUSY */
 
-    if (lba < 32 && !is_read)
-      panic("badlba");
-
     /* FIXME upper 4 bits */
     ide_write(cylh, lba >> 16);
     ide_write(cyll, lba >> 8);
@@ -37,6 +34,70 @@ int ide_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
       return 0;
     return 1;
 }
+
+#ifdef CONFIG_TD_IDE_CHS
+
+uint8_t ide_spt[TD_IDE_NUM];
+uint8_t ide_heads[TD_IDE_NUM];
+uint16_t ide_cyls[TD_IDE_NUM];
+
+static uint32_t last_lba_b;
+static uint8_t last_dev = 0xFF;
+static uint8_t last_head;
+static uint16_t last_cyl;
+
+int ide_chs_xfer(uint_fast8_t drive, bool is_read, uint32_t lba, uint8_t *dptr)
+{
+    ide_unit = drive;
+    uint32_t sector;
+    uint32_t head;
+    uint16_t cyl;
+
+    /* Avoid the expensive 32bit maths (on 8bit anyway) by spotting
+       further requests on the same head/cylinder as for those we just
+       need to adjust the sector register */
+    if (drive == last_dev && lba >= last_lba_b &&
+      lba < last_lba_b + ide_spt[drive]) {
+        head = last_head;
+        cyl = last_cyl;
+        sector = lba - last_lba_b;
+    } else {
+      /* Didn't manage to shortcut the maths */
+      head = lba / ide_spt[drive];
+      cyl = head / ide_heads[drive];
+      sector = lba % ide_spt[drive];
+      head %= ide_heads[drive];
+      head |= 0xA0;
+      if (drive & 1)
+        head |= 0x10;
+      last_dev = drive;
+      last_lba_b = lba - sector;
+      last_head = head;
+      last_cyl = cyl;
+    }
+
+    while(ide_read(status) & 0x80);	/* Wait !BUSY */
+    ide_write(devh, head) ;		/* head / device */
+    while(ide_read(status) & 0x80);	/* Wait !BUSY */
+
+    ide_write(cylh, cyl >> 8);
+    ide_write(cyll, cyl);
+    ide_write(sec, sector + 1);		/* 1 based */
+    ide_write(count, 1);
+    while(!(ide_read(status) & 0x40));	/* Wait DRDY */
+    ide_write(cmd, is_read ? 0x20 : 0x30);
+    while(!(ide_read(status) & 0x08));	/* Wait DRQ */
+    if (is_read)
+      devide_read_data(dptr);
+    else
+      devide_write_data(dptr);
+
+    while(ide_read(status) & 0x80);	/* Wait !BUSY */
+    if (ide_read(status) & 0x01)	/* Error */
+      return 0;
+    return 1;
+}
+#endif
 
 int ide_ioctl(uint_fast8_t dev, uarg_t request, char *unused)
 {

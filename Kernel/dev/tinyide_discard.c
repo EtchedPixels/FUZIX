@@ -87,8 +87,15 @@ static void ide_identify(int dev, uint8_t *buf)
 			dptr += 2;
 		}
 	if (!(buf[99] & 0x02)) {	/* No LBA ? */
+#ifdef CONFIG_TD_IDE_CHS
+		ide_present |= (1 << dev);
+		ide_spt[dev] = buf[12];
+		ide_heads[dev] = buf[6];
+		ide_cyls[dev] = buf[2] | (buf[3] << 8);
+#else
 		kputs(" - non-LBA\n");
-		return;
+		return
+#endif
 	}
 	kputs(" - OK\n");
 	ide_present |= (1 << dev);
@@ -117,25 +124,40 @@ void ide_std_reset(void)
 
 #endif
 
+static void ide_register(uint_fast8_t unit)
+{
+#ifdef CONFIG_TD_IDE_CHS
+	if (ide_heads[unit]) {
+		td_register(unit, ide_chs_xfer, ide_ioctl, 1);
+		return;
+	}
+#endif	
+	td_register(unit, ide_xfer, ide_ioctl, 1);
+}
+
 void ide_probe(void)
 {
 	uint_fast8_t n;
+	unsigned chs = 0;
 	uint8_t *buf = (uint8_t *)tmpbuf();
-	for (n = 0 ; n < TD_IDE_NUM; n++) {
-		ide_unit = n << 1;
+	for (n = 0 ; n < TD_IDE_NUM; n += 2) {
+		ide_unit = n;
 #ifdef CONFIG_TINYIDE_RESET
 		ide_reset();
 #endif
 		/* Issue an EDD if we can - timeout -> no drives */
 		/* Now issue an identify for each drive */
 		ide_identify(0, buf);
-		if (ide_present)
+		if (ide_present && n < TD_IDE_NUM - 1) {
+			ide_unit++;
 			ide_identify(1, buf);
+		}
 		if (ide_present & 1)
-			td_register(ide_unit, ide_xfer, ide_ioctl, 1);
+			ide_register(ide_unit);
 		if (ide_present & 2)
-			td_register(ide_unit + 1, ide_xfer, ide_ioctl, 1);
+			ide_register(ide_unit + 1);
 	}
 	tmpfree(buf);
 }
+
 #endif

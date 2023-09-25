@@ -2,7 +2,7 @@
 #define TINYIDE_H
 
 #ifndef TD_IDE_NUM
-#define TD_IDE_NUM	1		/* One port, max two devices (master/slave) per port */
+#define TD_IDE_NUM	2		/* One port, max two devices (master/slave) per port */
 #endif
 
 /* SDCC does I/O space weirdly. An __sfr __at x is a reference to the space
@@ -18,12 +18,17 @@ extern void ide_write(uint_fast8_t r, uint_fast8_t v);
 #define ide_write(x,y)	(*(x) = (y))
 #endif
 
+extern uint8_t ide_spt[TD_IDE_NUM];
+extern uint8_t ide_heads[TD_IDE_NUM];
+extern uint16_t ide_cyls[TD_IDE_NUM];
+
 /* Assembler glue */
 extern void devide_read_data(uint8_t *p);
 extern void devide_write_data(uint8_t *p);
 int ide_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t * dptr);
+int ide_chs_xfer(uint_fast8_t unit, bool is_read, uint32_t lba, uint8_t * dptr);
 int ide_ioctl(uint_fast8_t dev, uarg_t request, char *unused);
-extern uint8_t ide_dev[CONFIG_TD_NUM];
+extern uint8_t ide_dev[TD_IDE_NUM];
 extern uint8_t ide_unit;
 
 void ide_probe(void);
