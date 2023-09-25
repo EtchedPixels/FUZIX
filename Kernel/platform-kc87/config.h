@@ -2,7 +2,7 @@
  *	Build options
  */
 
-#undef CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
+#define CONFIG_RD_SWAP		/* Swap on the ramdisc not GIDE */
 #define CONFIG_ROM_PAGEOUT	/* MegaROM can be paged out of C000-E7FF */
 #define CONFIG_JKCEMU		/* Work around JKCEMU problems
                                     - no LBA emulation
@@ -81,7 +81,7 @@ extern uint16_t swap_dev;
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define MAX_BLKDEV 2	    /* 2 IDE */
+#define CONFIG_TD_NUM 2	    /* 2 IDE */
 
 /* On-board RTC on the GIDE */
 #define CONFIG_RTC
@@ -89,12 +89,13 @@ extern uint16_t swap_dev;
 #define CONFIG_RTC_INTERVAL	1
 
 /* IDE/CF support */
-#define CONFIG_IDE
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
 
 /* JKCEMU has some limits */
 #ifdef CONFIG_JKCEMU
-#define CONFIG_IDE_CHS		/* For testing only */
-#define IDE_DRIVE_COUNT	1	/* Work around buggy emulator */
+#define CONFIG_TD_IDE_CHS		/* For testing only */
+#define TD_IDE_NUM		1	/* Work around buggy emulator */
 #endif
 
 /* Device parameters */

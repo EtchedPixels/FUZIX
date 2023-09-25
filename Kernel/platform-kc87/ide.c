@@ -1,22 +1,27 @@
 #include <kernel.h>
-#include <blkdev.h>
-#include <devide.h>
+#include <tinyide.h>
+#include <plt_ide.h>
 
 /* Port I/O: Currently Z80 only */
 
 COMMON_MEMORY
 
-void devide_read_data(void) __naked
+void devide_read_data(uint8_t *ptr) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw) ; blkparam.is_user
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapin
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)	    ; blkparam.swap_page
             call map_for_swap
             jr doread
 not_swapin:
@@ -34,17 +39,22 @@ doread:
     __endasm;
 }
 
-void devide_write_data(void) __naked
+void devide_write_data(uint8_t *ptr) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw) 			    ; blkparam.is_user
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)			    ; blkparam.swap_page
             call map_for_swap
             jr dowrite
 not_swapout:

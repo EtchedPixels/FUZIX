@@ -46,10 +46,10 @@ platform-kc87/discard.rel
 platform-kc87/devtty.rel
 platform-kc87/devrd.rel
 platform-kc87/devrtc.rel
-platform-kc87/blkdev.rel
-platform-kc87/mbr.rel
-platform-kc87/devide.rel
-platform-kc87/devide_discard.rel
+platform-kc87/tinydisk.rel
+platform-kc87/tinydisk_discard.rel
+platform-kc87/tinyide.rel
+platform-kc87/tinyide_discard.rel
 platform-kc87/ide.rel
 platform-kc87/vt.rel
 platform-kc87/maths32.rel
