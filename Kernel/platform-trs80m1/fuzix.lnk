@@ -55,10 +55,10 @@ platform-trs80m1/devlpr.rel
 platform-trs80m1/devtty.rel
 platform-trs80m1/vtsupport.rel
 platform-trs80m1/devinput.rel
-platform-trs80m1/devide.rel
-platform-trs80m1/blkdev.rel
-platform-trs80m1/mbr.rel
+platform-trs80m1/tinyide.rel
+platform-trs80m1/tinydisk.rel
 platform-trs80m1/discard.rel
-platform-trs80m1/devide_discard.rel
+platform-trs80m1/tinyide_discard.rel
+platform-trs80m1/tinydisk_discard.rel
 platform-trs80m1/ide.rel
 -e

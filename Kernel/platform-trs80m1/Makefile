@@ -11,8 +11,8 @@ ASRCS += tricks.s commonmem.s floppy.s floppy3.s stringy.s ide.s
 C2SRCS = buffers.c devfd.c devhd.c
 # And these so CODE1 is under 32K
 C2SRCS += devices.c main.c devstringy.c devinput.c devgfx.c
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
-DISCARD_DSRCS = ../dev/devide_discard.c
+DSRCS = ../dev/tinydisk.c ../dev/tinyide.c
+DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/tinydisk_discard.c
 
 
 COBJS = $(CSRCS:.c=.rel)

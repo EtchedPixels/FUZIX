@@ -22,7 +22,7 @@ void device_init(void)
   /* The supermem and the IDE controller clash. If we found a supermem then
      don't look for IDE */
   if (trs80_mapper != MAP_SUPERMEM)
-    devide_init();
+    ide_probe();
   trstty_probe();
   gfx_init();
   tape_init();

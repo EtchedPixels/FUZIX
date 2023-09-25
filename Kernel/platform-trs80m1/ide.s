@@ -2,60 +2,57 @@
 	.globl _devide_write_data
 
 	.globl map_proc_always
+	.globl map_proc_a
 	.globl map_kernel_restore
 
-	.globl _blk_op
+	.globl _td_raw
+	.globl _td_page
 
 	.module ide
 ;
 ;	If we ever do a native driver for M3SE we'll want to do something
 ;	different here for that and use ide_select to switch interface types
 ;
-; FIXME: Move these somewhere better
-BLKPARAM_ADDR_OFFSET		.equ	0
-BLKPARAM_IS_USER_OFFSET		.equ	2
-BLKPARAM_SWAP_PAGE		.equ	3
 
 IDE_REG_DATA			.equ	0x40
 
 	.area _COMMONMEM
 
-_devide_read_data:
-	ld a,(_blk_op + BLKPARAM_IS_USER_OFFSET)
-	ld hl,(_blk_op + BLKPARAM_ADDR_OFFSET)
-	ld bc,#IDE_REG_DATA
+map:
+	ld	a,(_td_raw)
+	ld	bc,#IDE_REG_DATA
 	; Swap not yet supported
-	or a
-	jr z, no_map
-	push af
-	call map_proc_always
-	pop af
-no_map:
+	or	a
+	ret	z	; Kernel - no remap
+	dec	a
+	jp	z, map_proc_always
+	ld	a,(_td_page)
+	jp	map_proc_a
+
+_devide_read_data:
+	pop	bc
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
+	call	map
 	inir
 	inir
-	or a
-	ret z
-	push af
-	call map_kernel_restore
-	pop af
-	ret
+unmap:
+	ld	a,(_td_raw)
+	or	a
+	ret	z
+	jp	map_kernel_restore
 
 _devide_write_data:
-	ld a,(_blk_op + BLKPARAM_IS_USER_OFFSET)
-	ld hl,(_blk_op + BLKPARAM_ADDR_OFFSET)
-	ld bc,#IDE_REG_DATA
-	; Swap not yet supported
-	or a
-	jr z, no_mapw
-	push af
-	call map_proc_always
-	pop af
-no_mapw:
+	pop	bc
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
+	call	map
 	otir
 	otir
-	or a
-	ret z
-	push af
-	call map_kernel_restore
-	pop af
-	ret
+	jr	unmap

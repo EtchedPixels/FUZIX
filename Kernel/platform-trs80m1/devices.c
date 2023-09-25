@@ -11,7 +11,7 @@
 #include <devgfx.h>
 #include <devfd3.h>
 #include <devstringy.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <trs80.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -34,8 +34,8 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   {  nxio_open,     no_close,   no_rdwr,   no_rdwr,    no_ioctl },
   /* 8: tape (for now - may move to 5 if lots of boxes have tape) */
   {  tape_open,     tape_close, tape_read, tape_write, tape_ioctl },
-  /* 9: ide block devices (temporarily until we make /dev/hd a blkdev device */
-  {  blkdev_open, no_close,     blkdev_read,   blkdev_write,   blkdev_ioctl  },
+  /* 9: IDE - until we figure out how to deal with trs80 native disks via td */
+  {  td_open,     no_close,     td_read,   td_write,   td_ioctl  },
 };
 
 bool validdev(uint16_t dev)

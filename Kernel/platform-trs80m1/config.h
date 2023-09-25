@@ -30,8 +30,10 @@
 #undef CONFIG_NET
 #undef CONFIG_NET_NATIVE
 /* And IDE */
-#define MAX_BLKDEV	2
-#define CONFIG_IDE
+#define CONFIG_TD_NUM	4
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_8BIT
 
 #define MAX_MAPS	16	/* 512K */
 
