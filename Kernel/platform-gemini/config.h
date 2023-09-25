@@ -58,7 +58,6 @@
 #define CONFIG_TD_IDE
 #define CONFIG_TINYIDE_INDIRECT
 #define CONFIG_TINYIDE_8BIT
-#define TD_IDE_NUM	1
 
 extern void plt_discard(void);
 #define plt_copyright()
