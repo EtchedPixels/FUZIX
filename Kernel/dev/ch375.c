@@ -124,7 +124,7 @@ uint_fast8_t ch375_probe(void)
     ch375_cmd2(0x06, 0x55);
     r = ch375_rdata();
     if (r != 0xAA) {
-        kprintf("ch375: response %2x not AA\n", r);
+/*        kprintf("ch375: response %2x not AA\n", r); */
         return 0;
     }
     ch375_wcmd(0x01);	/* Version */
