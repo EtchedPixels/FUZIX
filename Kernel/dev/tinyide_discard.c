@@ -52,8 +52,6 @@ static void ide_identify(int dev, uint8_t *buf)
 
 	kprintf("%x : ", dev);
 
-	if (ide_wait_nbusy() == -1)
-		return;
 	ide_write(devh, dev << 4);	/* Select */
 	if (ide_wait_nbusy() == -1)
 		return;
@@ -153,9 +151,9 @@ void ide_probe(void)
 			ide_identify(1, buf);
 		}
 		if (ide_present & 1)
-			ide_register(ide_unit);
+			ide_register(n);
 		if (ide_present & 2)
-			ide_register(ide_unit + 1);
+			ide_register(n + 1);
 	}
 	tmpfree(buf);
 }
