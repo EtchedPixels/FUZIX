@@ -50,11 +50,8 @@ ROM assumptions
 
 TODO
 -	Asm video
--	Figure out ramdisc detect
--	Debug ramdisc - seems to work but crashes with swapping
+-	Figure out ramdisc detect/sizing
 -	Floppies
--	Setups where 0x8000-0xBFFF also vanishes if you page out the RAM for
-	the ROM
 -	Printer
 -	Joysticks
 -	Sound (eventually)

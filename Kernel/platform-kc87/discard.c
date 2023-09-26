@@ -11,6 +11,7 @@ void map_init(void)
 	uint_fast8_t i;
 	for (i = 0; i < MAX_SWAPS; i++)
 		swapmap_init(i);
+	swap_dev = 0x0300;	/* RAM 0 */
 #endif
 	/* Update according to build size */
 	procmem = PROC_SIZE;

@@ -43,8 +43,9 @@ static int rd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
     /* We must be careful here. Our stack on a swap is private but we are
        going to overwrite udata in some cases */
     while (ct < num) {
-        /* Should really measure this - could be up to 2MB TODO */
-        if (rd_block > 511)
+        /* Should detect this when we do card detect. Could be 128K, 512K
+           or 2MB! */
+        if (rd_block > 1023)
             break;
         op();
         /* rd_dptr is advanced by the asm helpers */

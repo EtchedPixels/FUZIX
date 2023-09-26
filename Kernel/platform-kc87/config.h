@@ -50,16 +50,16 @@
 #define UDATA_BLKS  1
 #define UDATA_SIZE  0x200	/* One block */
 
+#define CONFIG_DYNAMIC_SWAP
+extern uint16_t swap_dev;
+#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+
 #ifdef CONFIG_RD_SWAP
-#define MAX_SWAPS   	7
-#define PTABSIZE	7
-#define SWAPDEV		0x300
+#define MAX_SWAPS   	(1024/SWAP_SIZE)
+#define PTABSIZE	MAX_SWAPS
 #else
 #define MAX_SWAPS	16	 /* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-#define CONFIG_DYNAMIC_SWAP
-#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
-extern uint16_t swap_dev;
 #endif
 
 #define MAXTICKS    20		/* As we are pure swap */
