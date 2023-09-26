@@ -94,7 +94,7 @@ static void ide_identify(int dev, uint8_t *buf)
 		ide_cyls[dev] = buf[2] | (buf[3] << 8);
 #else
 		kputs(" - non-LBA\n");
-		return
+		return;
 #endif
 	}
 	kputs(" - OK\n");
