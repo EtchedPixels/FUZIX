@@ -1,7 +1,1 @@
-#
-#	Not for 68HC11
-#
-
-all:
-
-clean:
+include Makefile.common

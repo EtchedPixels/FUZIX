@@ -40,8 +40,6 @@ void to_emulator(void) __naked
 __asm
                 ld hl,(__call_sys+1)	; syscall addr
                 ld (0x31),hl		; save it (0x31 for historic reasons FIXME)
-                ld a,#0x10
-                out (0xFD),a
 		ld hl,(_image + 6)	; code size (and copy size)
 		ld b,h
 		ld c,l			; Save copy size

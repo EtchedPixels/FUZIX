@@ -1,0 +1,7 @@
+package	cpm
+
+if-file runcpm
+
+f 0755 /usr/bin/runcpm runcpm
+d 0755 /usr/lib/cpm
+f 0644 /usr/lib/cpm/emulator.bin emulator.bin
