@@ -644,9 +644,7 @@ Fcn20:	CALL	RWprep		; Prepare file for access
 
 ;     arg.recno++;
 
-	PUSH	AF
 	CALL	IncCR		; Bump Current Record #
-	POP	AF
 
 RWEx:	JP	C,Exit1		; ..Error if Carry Set
 
@@ -700,9 +698,7 @@ Fcn21A:	CALL	DoWrite		;   Write
 
 ;     arg.recno++;
 
-	PUSH	AF
 	CALL	IncCR		; Bump Current Record #
-	POP	AF
 
 ;         return (255);
 ;     return (0);
@@ -1206,12 +1202,19 @@ CkSrch:	PUSH	DE		; Save Regs
 	RET
 
 ;.....
-; Bump current Record # for sequential R/W operations
+; Bump current Record # for sequential R/W operations. CP/M uses only
+; 7bits of the low byte
 
-IncCR:	LD	IY,(_arg)
-	INC	32(IY)		; Bump Lo byte
-	RET	NZ
+IncCR:	
+	PUSH	AF
+	LD	IY,(_arg)
+	INC	32(IY)
+	BIT	7,32(IY)
+	JR	Z, NoBump
+	LD	32(IY),#0	
 	INC	12(IY)		; Bump Hi byte
+NoBump:
+	POP	AF
 	RET
 
 ;.....

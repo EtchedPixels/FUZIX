@@ -678,9 +678,7 @@ Fcn20:	call	RWprep		; Prepare file for access
 
 ;     arg.recno++;
 
-	push	psw
 	call	IncCR		; Bump Current Record #
-	pop	psw
 
 RWEx:	jc	Exit1		; ..Error if Carry Set
 
@@ -739,9 +737,7 @@ Fcn21A:	call	DoWrite		;   Write
 
 ;     arg.recno++;
 
-	push	psw
 	call	IncCR		; Bump Current Record #
-	pop	psw
 
 ;         return (255);
 ;     return (0);
@@ -1306,15 +1302,20 @@ CkSrch:	push	d		; Save Regs
 
 IncCR:	push	h
 	push	d
+	push	psw
 	lhld	_arg
 	lxi	d,32
 	dad	d
 	inr	m
-	jnz	nocarry
+	mov	a,m
+	ral
+	jnc	nocarry
+	mvi	m,0
 	lxi	d,-20
 	dad	d
 	inr	m
 nocarry:
+	pop	psw
 	pop	d
 	pop	h
 	; TODO Check no caller relies on this setting up IY
