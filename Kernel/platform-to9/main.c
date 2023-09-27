@@ -4,13 +4,18 @@
 #include <printf.h>
 #include <device.h>
 #include <devtty.h>
+#include <devinput.h>
 #include <sd.h>
 
 uint8_t membanks;
+uint8_t in_bios;
 uint16_t swap_dev;
+uint8_t inputdev;
+uint8_t inputwait;
 
 void plt_idle(void)
 {
+    /* Should be sufficient just to sleep */
     irqflags_t irq = di();
     poll_keyboard();
     irqrestore(irq);
@@ -27,6 +32,22 @@ void do_beep(void)
 
 void plt_discard(void)
 {
+}
+
+static uint8_t intct;
+
+void plt_interrupt(void)
+{
+	if (!in_bios)
+	    poll_keyboard();
+	if (++intct == 5) {
+	    timer_interrupt();
+	    intct = 0;
+	    if (inputwait)
+	        wakeup(&inputwait);
+        }
+        /* Clear timer interrupt */
+//        *((volatile uint16_t *)0xE7C6);
 }
 
 uint8_t vtattr_cap;

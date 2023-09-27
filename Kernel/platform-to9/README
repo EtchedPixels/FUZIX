@@ -5,9 +5,20 @@ The TO9 sits between the TO7/70 and the TO8 systems. It lacks the ability to mov
 it does support 40 column single page mono display. That is sufficient for our purposes but more limited.
 To handle this properly we really need banked gcc 6809 mods doing.
 
+This code will not work on the TO7/70 alas. The 7/70 has no method to move
+the video or claim back part of the video memory, whilst on the TO9 we can
+force 8K two colour mode for the console and use the other 8K as common RAM
+space.
+
+Status:
+-	Starts init, blows up forking.
+
 TODO:
--	Figure out how the PIA memory banking works
--	Figure out how to make a catridge you can run from the TO9
+-	Recognize extra 64K memory banks
+-	Fork code finish
+-	Swap. As with to8 will need custom bank handling for the swap out
+	of the live task because we copy to work around the memory
+	banking limitations.
 
 The memory management is more restrictive and involves PIA incantations
 DDRB is set 0F, 17, E7, 47, 67, 27
@@ -20,7 +31,7 @@ Memory Map:
 4000-5FFF	2 x 8K bank	Bank 0 in 2 8K chunks (some modes need 1 some 2 some use 2 banks)
 				(Video is always in this bank)
 6000-9FFF	Banked RAM
-6000-60FF	Reserved for firmware (in bank mapped only ?)
+6000-60FF	Reserved for firmware
 6100-9FFF	Fixed RAM	1
 A000-DFFF	Banked RAM	6 banks for the rest of the 128K) another 4 differently encoded
 				  if the RAM expansion is present
@@ -33,7 +44,7 @@ Memory mapping:
 Cartridge	:	0000-3FFF	Kernel low bank (could page but don't except for boot copies)
 Video		:	4000-5FFF	Half kernel, half video for TO9.	Common here ?
 Fixed 16K	:	6000-9FFF	User fixed (6000-60FF reserved by monitor)
-Bank 0		:	A000-DFFF	Kernel upper segment
+Bank 1		:	A000-DFFF	Kernel upper segment
 ROM/Monitor/IO	:	E000-FFFF	Including font eventually with luck
 
 User Mapping
@@ -128,3 +139,23 @@ FIR light pen
 IRQ 6846 - timept, irqpt
 
 E7E8-E7EB 6551 on RS232 card
+
+
+Make cartridge visible
+
+LDA $E7C3
+ANDA FB
+STA $E7C3
+LDA $E7E6
+ANDA DF
+STA $E7E6
+
+Cartridge header
+
+23 x ascii
+0x0D
+0x0000
+0xNN		(checksum of previous bytes to equal $55)
+0x00
+warm-entry.w
+cold-entry.w

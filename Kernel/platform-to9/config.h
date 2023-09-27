@@ -21,6 +21,8 @@
 #define VT_BOTTOM	23
 #define VT_INITIAL_LINE	0
 
+#define CONFIG_INPUT
+
 #define CONFIG_BANKS	1
 /* And swapping */
 #define SWAPDEV     0x0		/* Uses part of IDE slice 0 */
@@ -35,7 +37,7 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-#define TICKSPERSEC 50   /* Ticks per second */
+#define TICKSPERSEC 10   /* Ticks per second */
 #define PROGBASE    0x6400  /* also data base */
 #define PROGLOAD    0x6400  /* also data base */
 #define PROGTOP     0xE000  /* Top of program */
@@ -44,7 +46,7 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 #define CONFIG_TD_NUM	2
-#define CONFIG_TD_SD	1
+#define CONFIG_TD_SD
 #define TD_SD_NUM	1
 
 /* Device parameters */

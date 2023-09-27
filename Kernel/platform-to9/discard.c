@@ -7,6 +7,7 @@
 #include <tinydisk.h>
 #include <tinysd.h>
 #include <sd.h>
+#include <devinput.h>
 
 void map_init(void)
 {
@@ -14,19 +15,19 @@ void map_init(void)
 
 void pagemap_init(void)
 {
-	pagemap_add(0x17);
-	pagemap_add(0xE7);
-	pagemap_add(0xA7);
-	pagemap_add(0x67);
-	pagemap_add(0x27);
-	/* Extended pages if fitted - two bytes so need special
-	   handling as actually F8 and then bits 6 and 2 of the 6946 port */
-#if 0
-	pagemap_add(0xF8);
-	pagemap_add(0xF9);
-	pagemap_add(0xFA);
-	pagemap_add(0xFB);
-#endif	
+	uint_fast8_t i;
+	/* Two process banks of 32K in pages 3/4 and 5/6. We don't
+	   use page 7 right now. Need to add the extra banks still somehow */
+	pagemap_add(0xE1);	/* E8 18 */
+	pagemap_add(0x59);	/* 58 98 */
+	/* Somewhere to put this */
+	i = *(volatile uint8_t *)0x6074;
+	i &= 0xC0;
+	if (i == 0x40)
+		kputs("Light pen detected.\n");
+	else if (i == 0xC0)
+		kputs("Mouse detected.\n");
+	inputdev = i & 0xC0;
 }
 
 void to_sd_probe(void)

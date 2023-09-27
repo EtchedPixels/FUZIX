@@ -1,10 +1,5 @@
 	;
-	; TO9 system routines.
-	;
-	; Very similar to the TO8 except that the banking is a bit messier
-	; and only cartridge space can go in the cartridge area
-	;
-	; Not yet handled - the extended 64K bank option
+	; TO9 systems
 	;
 
 	.module to9
@@ -12,11 +7,12 @@
 	; exported
 	.globl map_kernel
 	.globl map_video
-	.globl map_process
-	.globl map_process_always
-	.globl map_for_swap
+	.globl unmap_video
+	.globl map_proc
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
+	.globl map_for_swap
         .globl init_early
         .globl init_hardware
         .globl _program_vectors
@@ -48,21 +44,19 @@
 ;	Get some video up early for debug
 ;
 init_early:
-	lda	#$24			; video from colour plane 40 col mono
-	sta	$E7DC
-	lda	#0
-	sta	$E7DD			; black border
 	rts
 
 init_hardware:
-	ldd	#192			; for now - need to size properly
+	lda	#0x60			; Set the direct page
+	tfr	a,dp
+	ldd	#128			; for now - need to size properly
 	std	_ramsize
-	ldd	#192-48			; Kernel has 2,4 and half of 0
-	std	_procmem		; 
+	ldd	#128-64			; kernel is 48K but there's a spare
+	std	_procmem		; page we can't use right now
 	ldd	<$CF			; system font pointer
 	subd	#0x00F8			; back 256 as starts at 32 and back
 	std	_fontbase		; 8 because it is upside down
-	jsr	video_init
+	jsr	video_init		; see the video code
 	ldd	#unix_syscall_entry	; Hook SWI
 	std	<$2F
 	rts
@@ -85,7 +79,7 @@ ___hard_irqrestore:		; B holds the data
 ___hard_ei:
 	lda $6019
 	ora #$20
-;	sta $6019
+	sta $6019
 	andcc #0xef
 	rts
 ___hard_di:
@@ -93,7 +87,7 @@ ___hard_di:
 hard_di_2
 	lda $6019
 	anda #$DF
-;	sta $6019
+	sta $6019
 	orcc #0x10
 	rts
 
@@ -104,95 +98,74 @@ hard_di_2
 	.area .common
 
 _program_vectors:
-	; TODO set 2064 to JMP to our irq in setup code
-	rts
-
-	; TODO
-map_for_swap:
+	ldx	#irqhandler
+	stx	$6027		; Hook timer
 	rts
 
 map_kernel:
-	pshs	d,cc
+	pshs	a
 map_kernel_1:
-	; This is overkill somewhat but we do neeed to set the video bank
-	; for irq cases interrupting video writes.
-	; TODO: optimize
-	orcc	#$10
-	ldb	$E7CB
-	andb	#0xFB
-	stb	$E7CB
-	lda	#0x1F
+	;	Unlike the TO9+ we don't have to worry about video maps
+	;	as the video is only mapped with interrupts off because
+	;	of the hairy memory map.
+	lda	#0xF0
 	sta	kmap
-	sta	$E7C9		;	set the A000-DFFF bank
-	orb	#$04
-	stb	$E7CB
-	lda	$E7C3
-	anda	#$FE
-	tfr	a,b
-	anda	#$01
-	sta	kmap+2
-	stb	$E7C3		;	Ensure kernel half of bank 0 is mapped
-	puls	d,cc,pc
+	sta	0xE7C9
+	puls	a,pc
 
 map_video:
 	pshs	a
-	lda	#1
-	sta	kmap+2
-	lda	$E7C3		;	Map the bitmap bank
-	ora	#$01
-	sta	$E7C3
+	lda	$E7C3
+	ora	#1
+	sta	$E7C3		;	Video in the low 16K bank
 	puls	a,pc
-	
-	.area	.commondata
+
+unmap_video:
+	pshs	a
+	lda	$E7C3
+	anda	#0xFE
+	sta	$E7C3		;	Video in the low 16K bank
+	puls	a,pc
+
+;
+;	.commondata is not accessible in the video map case unlike the
+;	TO8/TO9+ port.
+;
+	.area .commondata
 kmap:
 	.byte	0		; 	A000-DFFF
-	.byte	0		;	0000-3FFF
-	.byte	0		;	Video half bank
 savemap:
-	.byte	0
-	.byte	0
 	.byte	0
 
 	.area .common
-map_process_always
-	pshs	d,cc
+map_proc_always
+	pshs	a
 	;	Set the upper page. The low 16K is kernel, the other chunk
-	;	is fixed.
-	lda	U_DATA__U_PAGE
-	orcc	#$10
-	ldb	$E7CB
-	andb	#0xFB
-	stb	$E7CB
+	;	is fixed for now until we tackle video.
+	lda	U_DATA__U_PAGE+1
+	anda	#0xF0
+	ora	#0x08
 	sta	kmap
-	sta	$E7C9		;	Set A000-DFFF and video bank. Don't
-				;	touch the video 8K mapping
-	orb	#$04
-	stb	$E7CB
-	puls	d,cc,pc
+	sta	$E7C9		;	Set A000-DFFF, video will be right
+	puls	a,pc
 
 map_save:
-	pshs	d
-	ldd	kmap
-	std	savemap
-	lda	kmap+2
-	sta	savemap+2
+	pshs	a
+	lda	kmap
+	sta	savemap
 	bra	map_kernel_1
 
 map_restore:
-	pshs	d,cc
-	ldd	savemap
-	std	kmap
-	ldb	$E7CB
-	andb	#0xFB
-	stb	$E7CB
+	pshs	a
+	lda	savemap
+	sta	kmap
 	sta	$E7C9
-	orb	#$04
-	stb	$E7CB
-	lda	$E7C3
-	anda	#$FE
-	ora	kmap+2
-	sta	$E7C3
-	puls	d,cc,pc
+	puls	a,pc
+
+map_for_swap:
+	; TODO
+	rts
+
 
 	.area .common
 outchar:
@@ -209,9 +182,8 @@ _need_resched:
 	.area	.common
 
 ;
-;	6021 is the vector for irqpt 6027 for timept - seems it takes one or
-;	the other according to what is going on. May need to dump and trace
-;	monitor to see how to clean up the stack our way
+;	Hook the timer interrupt but frob the stack so that we get
+;	to run last by pushing a fake short rti frame
 ;
 irqhandler:
 	; for a full frame pshs cc,a,b,dp,x,y,u,pc then fix up 10,s 0,s
@@ -221,28 +193,76 @@ irqhandler:
 	anda	#$7F
 	pshs	a,x
 	jmp	$E830	; will run and then end up in interrupt_handler
-
 ;
 ;	Keyboard glue
 ;
 	.area .text2
 
 	.globl _mon_keyboard
-
+	.globl _mon_mouse
+	.globl _mon_lightpen
+;
+;	This is interlocked by the IRQ paths
+;
 _mon_keyboard:
 	jmp	$E806
 
+;
+;	These require the in_bios flag
+;
+_mon_mouse:
+	pshs	y
+	jsr	$EC08
+	beq	right_up
+	lda	#2
+	bra	left
+right_up:
+	lda	#0		; preserve C
+left:
+	bcc	left_up
+	inca
+left_up:
+	; Now do position
+	sta	_mouse_buttons
+	jsr	$EC06
+	stx	_mouse_x
+	sty	_mouse_y
+	puls	y,pc
+
+_mon_lightpen:
+	pshs	y
+	jsr	$E818
+	bcs	no_read
+	stx	_mouse_x
+	sty	_mouse_y
+	jsr	$E81B
+	lda	#0
+	adca	#0
+	sta	_mouse_buttons
+	ldx	#1
+	puls	y,pc
+no_read:
+	ldx	#0
+	puls	y,pc
+
+
 	.area .common
+
 ;
 ;	Floppy glue
+;
+;	Set in_bios so we can avoid re-entry between floppy
+;	and keyboard scan
 ;
 	.globl _fdbios_flop
 
 _fdbios_flop:
+	lda	#1
+	sta	_in_bios
 	tst	_fd_map
 	beq	via_kernel
 	; Loading into a current user pages
-	jsr	map_process_always
+	jsr	map_proc_always
 via_kernel:
 	jsr	$E82A
 	ldb	#0
@@ -251,5 +271,6 @@ via_kernel:
 flop_good
 	; ensure map is correct
 	tfr	d,x
+	clr	_in_bios
 	jmp	map_kernel
 

@@ -1,17 +1,17 @@
-CSRCS = devices.c main.c
+CSRCS = devices.c main.c devinput.c
 
 C3SRCS = libc.c
 
 CDSRCS = discard.c
 
-DSRCS =	../dev/tinydisk.o ../dev/tinysd.o
-DDSRCS = ../dev/tinydisk_discard.o ../dev/tinysd_discard.o
+DSRCS =	../dev/tinydisk.c ../dev/tinysd.c
+DDSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
 
 ASRCS = crt0.s to9.s
-ASRCS += tricks.s commonmem.s usermem.o
+ASRCS += tricks.s commonmem.s usermem.s
 
 TSRCS = ../dev/thomson/devfdc.c ../dev/thomson/devtty.c
-TASRCS = ../dev/thomson/video.s ../dev/thomson/sdcard.s
+TASRCS = ../dev/thomson/video-to9.s ../dev/thomson/sdcard.s
 
 COBJS = $(CSRCS:.c=.o)
 C3OBJS = $(C3SRCS:.c=.o)
@@ -65,14 +65,15 @@ boot.bin: boot.s ../tools/bless-to8
 image: boot.bin
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
-	to9.o discard.o ../bankfixed.o usermem.o \
+	to9.o discard.o ../bankfixed.o usermem.o ../memalloc_none.o \
 	../start.o ../version.o ../lowlevel-6809.o ../usermem_std-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o \
-	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o \
+	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o devinput.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o video.o ../syscall_fs3.o ../syscall_exec.o
+	devtty.o libc.o ../vt.o video-to9.o ../syscall_fs3.o ../syscall_exec.o \
+	../devinput.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 	../tools/lw-checkmap ../fuzix.map
 	
@@ -93,9 +94,14 @@ image: boot.bin
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage:
+	# Assemble the cartridge
+	# Low 32K is 1:1 map
+	dd if=fuzix.img of=$(IMAGES)/fuzix.memo7 bs=4096 count=8
+	# Upper 16K block A000-DFFF
+	dd if=fuzix.img of=$(IMAGES)/fuzix.memo7 bs=4096 skip=10 seek=8 count=4
+	# Nothing in the top 16K
+	dd if=/dev/zero of=$(IMAGES)/fuzix.memo7 bs=4096 seek=12 count=4
 	# Make a blank disk image with partition
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
-	# Write a boot floppy
-	cp fuzix.bin $(IMAGES)/boot.fd
