@@ -192,6 +192,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flag)
 		if (ttydata[ACIA_TTY].termios.c_cflag & PARMRK)
 			r |= 0x80;	/* Mark/space */
 	}
+	*uart_command = r;
 }
 
 int tty_carrier(uint_fast8_t minor)
@@ -632,14 +633,18 @@ int my_tty_close(uint_fast8_t minor)
 	return (tty_close(minor));
 }
 
+/* It would be nice to make this a more robust check but it seems to work
+   so far */
 void tty_detect(void)
 {
-	if (*uart_status & 2) {
-		uart_command = 0x03;	/* Force into reset */
-		if (*uart_status & 2)
-			return;
-		uart_command = 0x96;	/* Set up */
+	/* Ensure any data was read if present */
+	*uart_data;
+	/* Should now be no error bits and recevier should be empty */
+	if (*uart_status & 0x0F)
+		return;
+	/* Should be nothing in TX */
+	if (*uart_status & 0x10) {
+		kputs("6551 ACIA at 0xFF04.\n");
 		has_acia = 1;
-		kputs("ACIA at 0xFF04.\n");
 	}
 }
