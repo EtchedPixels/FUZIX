@@ -7,10 +7,11 @@ section .udata  load 0x2100
 section .istack
 section .commondata
 section .common load 0xB000
+section .start
 section .text
 section .video
 section .text2 load 0x6000
 section .text3
-section .start load 0x2800
-section .discard
-entry start
+section .discard load 0x2800
+section .cartheader load 0xEFE0
+entry 0

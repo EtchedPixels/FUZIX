@@ -57,12 +57,7 @@ $(AOBJS): %.o: %.s
 clean:
 	rm -f *.o *~ boot.bin boot.tmp boot.tmp2 fuzix.bin fuzix.img fuzix.tmp 
 
-boot.bin: boot.s ../tools/bless-to8
-	lwasm -r -b -oboot.tmp boot.s
-	../tools/decb-image < boot.tmp boot.tmp2
-	dd bs=256 skip=98 count=1 < boot.tmp2 | ../tools/bless-to8 >boot.bin
-
-image: boot.bin
+image:
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
 	mo6.o discard.o ../bankfixed.o \
@@ -71,25 +66,11 @@ image: boot.bin
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o video.o ../syscall_fs3.o ../syscall_exec.o
+	devtty.o libc.o ../vt.o video.o ../syscall_fs3.o ../syscall_exec.o \
+	../memalloc_none.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 	../tools/lw-checkmap ../fuzix.map
 	
-	# TODO: reorder for MO6
-	# 320K disk image
-	dd if=/dev/zero of=fuzix.bin bs=1024 count=320
-	# The disk image starts with the bootblock
-	dd if=boot.bin of=fuzix.bin bs=256 conv=notrunc
-	# A000-DFFF
-	dd if=fuzix.img of=fuzix.bin bs=256 seek=1 skip=160 count=64 conv=notrunc
-	# 0000-3FFF
-	dd if=fuzix.img of=fuzix.bin bs=256 seek=65 count=64 conv=notrunc
-	# 6400-9FFF
-	dd if=fuzix.img of=fuzix.bin bs=256 seek=129 skip=100 count=60 conv=notrunc
-	# 4000-5FFF
-	dd if=fuzix.img of=fuzix.bin bs=256 seek=189 skip=64 count=32 conv=notrunc
-	# And done.
-
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage:

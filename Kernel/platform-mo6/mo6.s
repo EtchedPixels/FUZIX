@@ -8,8 +8,7 @@
 	; exported
 	.globl map_kernel
 	.globl map_video
-	.globl map_process
-	.globl map_process_always
+	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
         .globl init_early
@@ -97,70 +96,53 @@ _program_vectors:
 	rts
 ;
 map_kernel:
-	pshs	d
+	pshs	a
 map_kernel_1:
-	; This is overkill somewhat but we do neeed to set the video bank
-	; for irq cases interrupting video writes.
 	;
 	; TODO: we'll need to flip between cartridge and video once video
 	; is user mapped high
 	;
-	ldd	#0x0200		;	FIXME - what is the right value for memo7 map
-	std	kmap
-	std	$A7E5		;	set the 6000-9FFF to 2
-	anda	#$01
-	sta	kmap+2
-	stb	$A7C3		;	Ensure kernel half of bank 0 is mapped
-	puls	d,pc
+	lda	#0x02
+	sta	kmap
+	sta	$A7E5		;	set 6000-9FFF to 2 (kernel)
+	puls	a,pc
 
 map_video:
 	pshs	a
-	lda	#1
-	sta	kmap+2
-	lda	$A7C3		;	Map the bitmap bank
-	ora	#$01
-	sta	$A7C3
+	lda	#3
+	sta	kmap
+	sta	$A7E5		;	set 6000-9FFF to 3 (video0
 	puls	a,pc
 
 	.area	.commondata
 kmap:
 	.byte	0		; 	6000-9FFF
-	.byte	0		;	B000-EFFF
-	.byte	0		;	Video half bank
 savemap:
-	.byte	0
-	.byte	0
 	.byte	0
 
 	.area	.common
 
-map_process_always
+map_proc_always
 	pshs	a
 	;	Set the upper page. The low 16K is kernel, the other chunk
 	;	is fixed.
 	ldd	U_DATA__U_PAGE
-	std	kmap
-	std	$A7E5		;	Set A000-DFFF and video bank. Don't
+	sta	kmap
+	sta	$A7E5		;	Set 6000-9FFF and video bank. Don't
 				;	touch the video 8K mapping
 	puls	a,pc
 
 map_save:
-	pshs	d
-	ldd	kmap
-	std	savemap
-	lda	kmap+2
-	sta	savemap+2
+	pshs	a
+	lda	kmap
+	sta	savemap
 	bra	map_kernel_1
 
 map_restore:
-	pshs	d
-	ldd	savemap
-	std	kmap
-	std	$A7E5
-	lda	$A7C3
-	anda	#$FE
-	ora	kmap+2
-	sta	$A7C3
+	pshs	a
+	lda	savemap
+	sta	kmap
+	sta	$A7E5
 	puls	d,pc
 
 
@@ -219,7 +201,7 @@ _fdbios_flop:
 	tst	_fd_map
 	beq	via_kernel
 	; Loading into a current user pages
-	jsr	map_process_always
+	jsr	map_proc_always
 via_kernel:
 	swi
 	.byte	0x26

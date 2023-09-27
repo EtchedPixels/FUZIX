@@ -1,10 +1,16 @@
+
 ;
-;	TODO: udata needs to be in common space so swap needs to be smarter
-;	about split udata
+;	Bank switching for Thompson MO6
+;
+;	Basically a TO8 rotated 16K
+;
+;
+;	TODO: parent first mode would be a win due to the copier cost
+;	TODO: assumes TO8/TO9+ mode
 ;
         .module tricks
 
-	# imported
+	#imported
         .globl _makeproc
         .globl _chksigs
         .globl _getproc
@@ -12,11 +18,11 @@
         .globl _inint
         .globl map_kernel
         .globl map_process
-        .globl map_process_a
         .globl map_process_always
         .globl copybank
 	.globl _nready
 	.globl _plt_idle
+	.globl _udata
 
 	# exported
         .globl _plt_switchout
@@ -33,12 +39,18 @@
 _ramtop:
 	.dw 0
 
+newpp   .dw 0
+
+_cur2:
+	.byte 0
+
 	.area .common
 
 ; Switchout switches out the current process, finds another that is READY,
 ; possibly the same process, and switches it in.  When a process is
 ; restarted after calling switchout, it thinks it has just returned
 ; from switchout().
+;
 _plt_switchout:
 	orcc #0x10		; irq off
 
@@ -49,19 +61,20 @@ _plt_switchout:
 	pshs d,y,u
 	sts U_DATA__U_SP	; this is where the SP is restored in _switchin
 
+	; get process table in
+	jsr map_kernel
+
         ; find another (or same) process to run, returned in X
         jsr _getproc
         jsr _switchin
         ; we should never get here
         jsr _plt_monitor
 
-badswitchmsg:
-	.ascii "_switchin: FAIL"
+badswitchmsg: .ascii "_switchin: FAIL"
         .db 13
 	.db 10
 	.db 0
 
-newpp   .dw 0
 
 ; new process pointer is in X
 _switchin:
@@ -69,17 +82,66 @@ _switchin:
 
 	stx newpp
 	; get process table
-	lda P_TAB__P_PAGE_OFFSET+1,x		; LSB of 16-bit page no
+	lda P_TAB__P_PAGE_OFFSET+1,x		; Page of process we are switching in as
 
+	; check if we are switching to the same process
+	cmpa U_DATA__U_PAGE+1
+	beq no_work
+
+	; process was swapped out?
 	cmpa #0
 	bne not_swapped
 	jsr _swapper		; void swapper(ptptr p)
 	ldx newpp
-	lda P_TAB__P_PAGE_OFFSET+1,x
 
 not_swapped:
-	; we have now new stacks so get new stack pointer before any jsr
+	lda U_DATA__U_PAGE+1
+	cmpa #0xFF		; Exited so no mapping ?
+	bne keep_map
+	clr _cur2		; Don't try and save old map to page FF
+keep_map:
+	; This isn't quite as simple as usual. We've got two blocks of memory
+	; and one of them we have to copy in and out of
+	; TODO: spot _exit() case where we don't need to save anything.
+	ldb _cur2		; current bank 6xxx
+	beq bankclear		; image in the space may be dead
+
+bankout:
+	incb			; Get the mapping for the save page
+	stb $A7E5		; set bank for 6000-9FFF (assumes MO6 mapping)
+	pshs x,y
+	ldx #$2100		; copy all but the monitor vars (includes udata)
+	ldy #$6100
+bankout_cp:
+	ldd ,x++
+	std ,y++
+	cmpx #$6000		; copy the entire bank out
+	bne bankout_cp
+	puls x,y
+
+bankclear:
+	; Now it gets trickier. We are copying in - but over our live stack!
+	; IRQ and FIRQ must be off ! FIXME- FIRQ mask above...
+bankin:
+	lda P_TAB__P_PAGE_OFFSET+1,x
+	sta _cur2		; remember the bank that is actually now resident
+	inca			; Get the page for the copy
+	sta $A7E5		; map it at 6000-9FFF for copying
+	ldx #$6100
+	ldy #$2100
+bankin_cp:
+	ldd ,x++
+	std ,y++
+	cmpx #$A000
+	bne bankin_cp
+
+no_work:
+	ldx newpp
+	lda P_TAB__P_PAGE_OFFSET+1,x
+	; Put upper map back correctly
+	sta $A7E5
 	lds U_DATA__U_SP
+	; Ok now in the right spot on the child stack and mapping
 
 	; get back kernel page so that we see process table
 	jsr map_kernel
@@ -150,10 +212,8 @@ _dofork:
         ; now we're in a safe state for _switchin to return in the parent
 	; process.
 
-	ldx U_DATA__U_PTAB
-	jsr _swapout
-	cmpd #0
-	bne forked_up
+	jsr fork_copy			; copy process memory to new bank
+					; and save parents uarea
 
 	; We are now in the kernel child context
 
@@ -179,6 +239,50 @@ _dofork:
 	; if it had done a switchout().
 	puls y,u,pc
 
-forked_up:	; d is already -1
-	puls y,u,pc
-	rts
+fork_copy:
+; Unoptimized - we don't look at U_BREAK and other stuff
+;
+	ldx fork_proc_ptr
+	ldb P_TAB__P_PAGE_OFFSET+1,x	; child page
+	stb _cur2			; child is now deemed to own cur2
+	ldb U_DATA__U_PAGE+1		; parent bank
+	incb				; parent low page
+	stb $A7E5			; make it appear at A000
+
+	; Copy the low page into the backup for the parent
+	ldx #$2100
+	ldy #$6100
+save_low:				; copy the low 16K of user
+	ldd ,x++			; stack etc into the parent
+	std ,y++			; copy
+	cmpx #$6000
+	bne save_low
+
+	; we are in common so we can steal 0000-3FFF *if we are careful* -
+	; review the IRQ handlers! TODO. This won't work on a TO9 as we'll
+	; only be able to land ROM pages there
+	; Weirdness: the two 8K blocks are flipped from the 6000 view so
+	; copy accordingly to compensate.
+	ldb _cur2
+	stb $A7E5			; map the child properly into 6000-9FFF
+	ldb U_DATA__U_PAGE+1
+	orb #$60			; RAM in wndow, writeable
+	stb $A7E6			; map the low 16K to the parent upper block
+
+	; Copy the high page into the child copy allowing for the 8K flip
+	ldx #$D000
+	ldy #$6000
+save_hi:				; copy the low 16K of user
+	ldd ,x++			; stack etc into the parent
+	std ,y++			; copy
+	cmpx #$F000
+	bne save_hi
+
+	ldx #$B000
+save_hi2:				; copy the low 16K of user
+	ldd ,x++			; stack etc into the parent
+	std ,y++			; copy
+	cmpx #$D000
+	bne save_hi2
+
+	jmp map_kernel			; put the memory map back sane

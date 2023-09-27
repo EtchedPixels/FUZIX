@@ -29,4 +29,8 @@ void plt_discard(void)
 {
 }
 
+void plt_interrupt(void)
+{
+}
+
 uint8_t vtattr_cap;
