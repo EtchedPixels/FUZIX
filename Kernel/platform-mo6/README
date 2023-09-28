@@ -5,10 +5,8 @@ This is sort of a TO8 but with the memory map messed around and some other adjus
 for MO5 compatibility. The MO5 doesn't have the needed RAM or mappings.
 
 TODO:
-- Work out how the IRQ hooks work and add them
 - Shuffle image into cartridge
 - Finish and debug cart boot
-- Adapt calls to SWI
 - SD card hooks
 - Floppy hooks
 
@@ -78,3 +76,10 @@ Need to steal the timer and IRQ somehow whilst not breaking the monitor when
 we return in weird ways on a task switch.
 
 Cartridge apparently runs from 0xEFFE/EFFF on boot
+
+Syscalls
+
+The monitor provides the address of a vector of SWI calls rather than providing
+any mechanism to redirect SWI. We point the vector 20 bytes before our single
+entry as all our syscall SWI happen to be followed by CMPD. This is a cheat
+but will do for now.

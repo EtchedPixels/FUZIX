@@ -34,6 +34,10 @@
 ;	We are running from B000
 
 coldboot:
+	ldb	#$14		; Cursor off
+	swi
+	.byte	0x02
+
 	orcc	#$50
 	;	Cartridge bank 0 is 0000-3FFF
 	;	Map the rest as we want it

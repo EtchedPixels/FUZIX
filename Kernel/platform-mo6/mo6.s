@@ -53,6 +53,24 @@ init_hardware:
 	subd	#0x00F8			; back 256 as starts at 32 and back
 	std	_fontbase		; 8 because it is upside down
 	jsr	video_init
+	ldd	$205E
+	std	monswi
+	ldd	#swivec-0x20		; rework the SWI vectors for syscall
+	std	$205E			; steal SWI
+	ldx	#$2061
+	lda	2,x
+	bne	oldint
+	ldd	#interrupt_handler
+	std	,x
+	lda	#1
+	sta	2,x
+	bra	intdone
+oldint:
+	; Chain system int but the tricky way as we must run last
+	ldd	,x
+	std	oldintvec + 1
+	ldd	#irqhandler
+intdone:
 	rts
 
         .area .common
@@ -172,7 +190,8 @@ irqhandler:
 	tfr	cc,a
 	anda	#$7F
 	pshs	a,x
-	jmp	$E830	; will run and then end up in interrupt_handler
+oldintvec:
+	jmp	$1234	; will run and then end up in interrupt_handler
 
 ;
 ;	Keyboard glue
@@ -182,10 +201,14 @@ irqhandler:
 	.globl _mon_keyboard
 
 _mon_keyboard:
+	ldx	monswi
+	stx	$205E
 	swi
 	.byte	0x0A
 	beq	nokey
 	tfr	d,x
+	ldx	#swivec
+	stx	$205E
 	rts
 nokey:
 	ldx	#0
@@ -203,12 +226,16 @@ _fdbios_flop:
 	; Loading into a current user pages
 	jsr	map_proc_always
 via_kernel:
+	ldx	monswi
+	stx	$205E
 	swi
 	.byte	0x26
 	ldb	#0
 	bcc	flop_good
 	ldb	<$4E
 flop_good
+	ldx	#swivec
+	stx	$205E
 	; ensure map is correct
 	tfr	d,x
 	jmp	map_kernel
@@ -234,3 +261,8 @@ _sd_spi_transmit_sector:
 	rts
 _sd_spi_receive_sector:
 	rts
+
+	.area .commondata
+
+swivec:	.word	unix_syscall_entry
+monswi:	.word	0
