@@ -90,6 +90,8 @@ void map_insert(char *name, uint16_t start, uint16_t end)
         c = '2';
     else if (strcmp(name, ".text3") == 0)
         c = '3';
+    else if (strcmp(name, ".text4") == 0)
+        c = '4';
     else if (strcmp(name, ".video") == 0)
         c = 'V';
     else if (strcmp(name, ".videodata") == 0)
