@@ -214,7 +214,7 @@ void con_clear_to_eol(void)
 void con_clear_to_bottom(void)
 {
 	/* Most terminals have a clear to end of screen */
-	if (t_clreos)
+	if (t_clreos && 0)
 		con_twrite(t_clreos, screen_height);
 	/* If not then clear each line, which may in turn emit
 	   a lot of spaces in desperation */
@@ -1462,8 +1462,8 @@ void dirty_below(void)
 void adjust_dirty(int n)
 {
 	if (n < 0) {
-		memmove(dirty, dirty - n, MAX_HEIGHT + n);
-		memset(dirty + MAX_HEIGHT - n, 0, -n);
+		memmove(dirty, dirty -  n, MAX_HEIGHT + n);
+		memset(dirty + MAX_HEIGHT + n, 0, -n);
 	} else if (n > 0) {
 		memmove(dirty + n, dirty, MAX_HEIGHT - n);
 		memset(dirty, 0, n);
@@ -1472,13 +1472,16 @@ void adjust_dirty(int n)
 
 void dirty_all(void)
 {
-	memset(dirty, 0, MAX_HEIGHT);
+	memset(dirty, 255, MAX_HEIGHT);
 	dirtyn = 1;
 }
 
 /*
  *	The main redisplay logic.
  */
+
+static unsigned tilde_start;	/* First line already set to ~ for end of doc */
+
 void display(int redraw)
 {
 	char *p;
@@ -1507,8 +1510,11 @@ void display(int redraw)
 	else
 		adjust_dirty(opage);
 
-	if (redraw)
+	if (redraw) {
+		dirtyn = 1;
 		dirty_all();
+		tilde_start = 255;
+	}
 
 	i = j = 0;
 	epage = page;
@@ -1575,15 +1581,17 @@ void display(int redraw)
 		*dirtyp = 255;
 	}
 	/* Now mark out the unused lines with ~ markers if needed */
-	while (++i < screen_height) {
-		if (*dirtyp != 255) {
-			*dirtyp = 255;
+	j = i + 1;
+	while (++i < tilde_start) {
+		if (*dirtyp) {
+			*dirtyp = 0;
 			con_goto(i, 0);
 			con_putc('~');
 			con_clear_to_eol();
 		}
 		dirtyp++;
 	}
+	tilde_start = j;
 	/* Put the cursor back where the user expects it to be */
 	con_goto(row, col);
 }
@@ -1673,8 +1681,6 @@ int main(int argc, char *argv[])
 	if (con_init())
 		return (3);
 
-	con_goto(0,0);
-	con_clear_to_bottom();
 	con_goto(0,0);
 	
 	signal(SIGHUP, hupped);
