@@ -16,6 +16,8 @@ struct display {
 #define FMT_MONO_WB_TILE8 5	/* White on black 8x8 tiled (Amstrad PCW etc) */
 #define FMT_6PIXEL_128	6	/* 2x3 tiles from 128 (TRS80 style) */
 #define FMT_4PIXEL_128	7	/* 2x2 tiles from 128 (6847 style) */
+#define FMT_PLANAR2	8	/* Two bitplanes - TODO - ioctl for order, spacing etc */
+#define FMT_PLANAR4	9	/* Four bitplanes - Ditto.. TODO */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
@@ -28,6 +30,8 @@ struct display {
 #define FMT_AMS16	135	/* Amstraid 16 colour - ditto */
 #define FMT_8PIXEL_MTX	136	/* 256 characters graphics mode symbols (MTX) */
 #define FMT_3BPP_U16	137	/* 5 x 3bpp pixels a word (top bit unused) */
+#define FMT_THOMSON_C16	138	/* Interleaved packed pixel */
+#define FMT_THOMSON_TO7	139	/* two colours per 8 pixel row */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918A	128	/* Not neccessarily MSX... */
