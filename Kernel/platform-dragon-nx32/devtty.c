@@ -183,7 +183,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flag)
 		r = baudbits[r];
 	r |= bitbits[(ttydata[ACIA_TTY].termios.c_cflag & CSIZE) >> 4];
 	*uart_control = r;
-	r = 0x0A;	/* rx and tx on, !rts low, dtr int off, no echo */
+	r = 0x0B;	/* rx and tx on, !rts low, dtr int off, no echo */
 	if (ttydata[ACIA_TTY].termios.c_cflag & PARENB) {
 		if (ttydata[ACIA_TTY].termios.c_cflag & PARODD)
 			r |= 0x20;	/* Odd parity */
