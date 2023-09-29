@@ -66,7 +66,7 @@ vidaddr:
 low_bank:
 	addb	,s+		; add in the X value
 	tfr	d,y
-	; FIXME: MO6 will need another add here
+	adda	#VIDEO_OFF
 	jmp	map_video
 ;
 ;	plot_char(int8_t y, int8_t x, uint16_t c)

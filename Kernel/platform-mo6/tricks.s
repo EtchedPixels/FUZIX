@@ -286,3 +286,26 @@ save_hi2:				; copy the low 16K of user
 	bne save_hi2
 
 	jmp map_kernel			; put the memory map back sane
+
+;
+;	Switch to exchage based - TODO
+;
+
+	ldx	#$6000
+	ldu	#$D000
+memxchg:
+	ldd	,x
+	ldy	,u
+	std	,u++
+	sty	,x++
+	cmpx	#$8000
+	bne	memxchg
+	ldu	#$B000
+memxchg2:
+	ldd	,x
+	ldy	,u
+	std	,u++
+	sty	,x++
+	cmpx	#$A000
+	bne	memxchg2
+	rts

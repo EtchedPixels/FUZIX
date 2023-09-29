@@ -12,6 +12,7 @@ uint8_t in_bios;
 uint16_t swap_dev;
 uint8_t inputdev;
 uint8_t inputwait;
+uint8_t vblank_wait;
 
 void plt_idle(void)
 {
@@ -46,6 +47,8 @@ void plt_interrupt(void)
 	    if (inputwait)
 	        wakeup(&inputwait);
         }
+        if (vblank_wait)
+            wakeup(&vblank_wait);
         /* Clear timer interrupt */
 //        *((volatile uint16_t *)0xE7C6);
 }

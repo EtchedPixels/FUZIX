@@ -153,6 +153,9 @@ map_proc_always
 	sta	kmap
 	sta	$E7E5		;	Set A000-DFFF and video bank. Don't
 				;	touch the 8K bank 0 map
+	lda	#0x63
+	sta	kmap+1
+	sta	$E7E6		;	Video for user space at 0
 	; TODO - map video on this switch
 	puls	a,pc
 

@@ -3,6 +3,7 @@ define lensympat __sectionlen_%s__
 section .page1 load 0x0000
 section .data
 section .bss
+section .text4
 section .udata  load 0x2100
 section .istack
 section .commondata

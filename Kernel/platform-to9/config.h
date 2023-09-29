@@ -9,6 +9,8 @@
 /* Multiple processes in memory at once */
 #define CONFIG_MULTI
 
+#define CONFIG_TO9		/* TO9 behvaiour for video etc */
+
 #define CONFIG_BANK_FIXED
 #define MAX_MAPS	15	/* Probably actually 14 - check */
 #define MAP_SIZE	0x7C00	/* 32K minus udata */

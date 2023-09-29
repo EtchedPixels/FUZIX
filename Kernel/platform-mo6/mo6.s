@@ -11,6 +11,7 @@
 	.globl map_proc_always
 	.globl map_save
 	.globl map_restore
+	.globl map_for_swap
         .globl init_early
         .globl init_hardware
         .globl _program_vectors
@@ -55,7 +56,7 @@ init_hardware:
 	jsr	video_init
 	ldd	$205E
 	std	monswi
-	ldd	#swivec-0x20		; rework the SWI vectors for syscall
+	ldd	#swivec-0x10		; rework the SWI vectors for syscall
 	std	$205E			; steal SWI
 	ldx	#$2061
 	lda	2,x
@@ -163,6 +164,9 @@ map_restore:
 	sta	$A7E5
 	puls	d,pc
 
+map_for_swap:
+	; TODO
+	rts
 
 	.area .common
 outchar:
@@ -239,28 +243,6 @@ flop_good
 	; ensure map is correct
 	tfr	d,x
 	jmp	map_kernel
-;
-;	SD glue
-;
-	.globl _sd_spi_raise_cs
-	.globl _sd_spi_lower_cs
-	.globl _sd_spi_transmit_byte
-	.globl _sd_spi_receive_byte
-	.globl _sd_spi_transmit_sector
-	.globl _sd_spi_receive_sector
-
-_sd_spi_raise_cs:
-	rts
-_sd_spi_lower_cs:
-	rts
-_sd_spi_transmit_byte:
-	rts
-_sd_spi_receive_byte:
-	rts
-_sd_spi_transmit_sector:
-	rts
-_sd_spi_receive_sector:
-	rts
 
 	.area .commondata
 

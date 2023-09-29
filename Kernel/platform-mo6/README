@@ -7,8 +7,10 @@ for MO5 compatibility. The MO5 doesn't have the needed RAM or mappings.
 TODO:
 - Shuffle image into cartridge
 - Finish and debug cart boot
-- SD card hooks
-- Floppy hooks
+- Swap and bank exchange logic (will match the Spectrum 128K but in
+  6809. MO6+network ram cart is going to be a bit of a different beast
+- Joystick
+- Map video over cartridge space when in usermode
 
 Cartridge rom appears to have a 32byte end block that contains
 

@@ -1,17 +1,17 @@
-CSRCS = devices.c main.c
+CSRCS = devices.c main.c devinput.c
 
 C3SRCS = libc.c
 
 CDSRCS = discard.c
 
-DSRCS =	../dev/tinydisk.o ../dev/tinysd.o
-DDSRCS = ../dev/tinydisk_discard.o
+DSRCS =	../dev/tinydisk.c ../dev/tinysd.c
+DDSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
 
-ASRCS = crt0.s mo6.s
+ASRCS = crt0.s mo6.s usermem.s
 ASRCS += tricks.s commonmem.s
 
 TSRCS = ../dev/thomson/devfdc.c ../dev/thomson/devtty.c
-TASRCS = ../dev/thomson/video.s
+TASRCS = ../dev/thomson/video-to8.s ../dev/thomson/sdcard.s
 
 COBJS = $(CSRCS:.c=.o)
 C3OBJS = $(C3SRCS:.c=.o)
@@ -29,12 +29,13 @@ all: $(OBJS)
 
 export CROSS_CC_SEGD=-mcode-section=.text3
 export CROSS_CC_SEGI=-mcode-section=.text
+export CROSS_CC_SEGX=-mcode-section=.text4
 
 $(COBJS): %.o: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGX) -c $<
 
 $(C3OBJS): %.o: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGI) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGX) -c $<
 
 $(CDOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
@@ -60,14 +61,15 @@ clean:
 image:
 	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
-	mo6.o discard.o ../bankfixed.o \
+	mo6.o discard.o ../bankfixed.o usermem.o ../memalloc_none.o \
 	../start.o ../version.o ../lowlevel-6809.o ../usermem_std-6809.o \
-	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o devfdc.o \
+	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o \
+	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o devinput.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o video.o ../syscall_fs3.o ../syscall_exec.o \
-	../memalloc_none.o
+	devtty.o libc.o ../vt.o video-to8.o ../syscall_fs3.o ../syscall_exec.o \
+	../devinput.o
 	../tools/decb-image <../fuzix.bin fuzix.img
 	../tools/lw-checkmap ../fuzix.map
 	
