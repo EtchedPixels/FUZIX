@@ -1558,7 +1558,7 @@ void adjust_dirty(int n)
 {
 	if (n < 0) {
 		memmove(dirty, dirty - n, MAX_HEIGHT + n);
-		memset(dirty + MAX_HEIGHT - n, 0, -n);
+		memset(dirty + MAX_HEIGHT + n, 0, -n);
 	} else if (n > 0) {
 		memmove(dirty + n, dirty, MAX_HEIGHT - n);
 		memset(dirty, 0, n);
@@ -1567,13 +1567,16 @@ void adjust_dirty(int n)
 
 void dirty_all(void)
 {
-	memset(dirty, 0, MAX_HEIGHT);
+	memset(dirty, 255, MAX_HEIGHT);
 	dirtyn = 1;
 }
 
 /*
  *	The main redisplay logic.
  */
+
+static unsigned cl_start;	/* Track clear lines below bottom of edit */
+
 void display(int redraw)
 {
 	char *p;
@@ -1607,8 +1610,11 @@ void display(int redraw)
 		status_dirty = 1;
 	}
 
-	if (redraw)
+	if (redraw) {
+		dirtyn = 1;
 		dirty_all();
+		cl_start = screen_height - 2;
+	}
 
 	i = j = 0;
 	epage = page;
@@ -1675,14 +1681,17 @@ void display(int redraw)
 		*dirtyp = 255;
 	}
 	/* Now mark out the unused lines with ~ markers if needed */
-	while (++i < screen_height - 2) {
-		if (*dirtyp != 255) {
-			*dirtyp = 255;
+	j = i + 1;
+	while (++i < cl_start && i < screen_height - 2) {
+		if (*dirtyp) {
+			*dirtyp = 0;
 			con_goto(i, 0);
 			con_clear_to_eol();
 		}
 		dirtyp++;
 	}
+	cl_start = j;
+
 	if (status_dirty) {
 		con_goto(screen_height - 2, 0);
 		con_reverse();
@@ -1747,7 +1756,6 @@ int main(int argc, char *argv[])
 	if (con_init())
 		return (3);
 
-	con_clear();
 	con_goto(0,0);
 
 	signal(SIGHUP, hupped);
