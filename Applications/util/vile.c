@@ -1513,7 +1513,7 @@ void display(int redraw)
 	if (redraw) {
 		dirtyn = 1;
 		dirty_all();
-		tilde_start = 255;
+		tilde_start = screen_height;
 	}
 
 	i = j = 0;
