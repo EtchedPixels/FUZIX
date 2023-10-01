@@ -142,12 +142,13 @@ Commodore 64 differences:
 #include <termios.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <signal.h>
 
-#ifdef GRAPHICS
+#ifndef __linux__
 #include "sys/graphics.h"
 #endif
 
-#define VERSION "0.1ac2"
+#define VERSION "0.2"
 
 typedef uint8_t uchr;	/* for brevity */
 typedef uint16_t ushrt;	/* -- ditto -- */
@@ -252,6 +253,8 @@ static short mem_offset;	/* Load address of snapshot in physical RAM */
 static char snapid[20];
 
 static int fast, slow, miss;
+
+static uchr console;		/* Console graphics mode */
 
 #define AV0 argv[0]
 
@@ -894,8 +897,10 @@ static uchr runact(ushrt ccond, uchr noun)
 			/* Always delay a bit */
 			if (n == 0)
 				n = 1;
+#ifndef __linux__
 			/* Not portable but clock_nanosleep is even less so */
 			_pause(n);
+#endif
 			break;
 		case 19:	/* INK */
 			if (arch == ARCH_CPC)
@@ -1652,197 +1657,173 @@ static void expch(uchr cch, ushrt * n)
 }
 
 
-#ifdef GRAPHICS
+static uchr ink = 7;
+static uchr paper = 0;
+static uchr inverse = 0;
+static uchr ypos;	/* Not yet used */
+static uint8_t lcolour = 0x70;
+static char colbuf[6] = "\033aX\033bX";
 
-/*
- *	TODO: 
- *		Use spectrum font ?
- *		UDG font
- *		Colour parsing and display
- *		Graphically render text
- *		Cente & Scale text on wide displays
- *		Patch/Press split screen support
- *		Char mode I/O without echo throughout
- *		Emulate input insert behaviour in prompts ?
- *		Use scrolling/blit if supported by platform
- */
+static struct termios saved_ts;
+static uchr ts_valid;
 
-/* FIXME: reset on new game and on load */
-static uint8_t seen[256/8];
+static uchr udg;
 
-/* For the moment */
-static char gpath[] = "picXX.gfx";
-static const char hex[] = "0123456789ABCDEF";
-static uint16_t pict[261];
-
-static uint16_t pixw, pixh;	/* Pixel screen size */
-static uint8_t has_gfx;		/* True if graphics mode in use */
-static uint8_t has_txt;		/* True if text I/O available */
-static uint8_t invert;		/* Mono invert ? */
-
-/* For the moment just assume we also have text support */
-
-struct gfx_draw {
-	uint16_t len;
-	uint16_t y;
-	uint16_t x;
-	uint8_t data[0];
-};
-
-static void clrscr(void)
+static void termexit(int sig)
 {
-	struct gfx_draw *clr = (struct gfx_draw *)pict;
-	uint8_t *p;
-	uint16_t w;
+	if (ts_valid)
+		tcsetattr(0, TCSANOW, &saved_ts);
+	_exit(0);
+}
 
-	if (!has_gfx || has_txt) {
-		write(1, "\033H\033J", 4);
-		return;
-	}
-	p = clr->data;
-	/* FIXME: assumes mono */
-	w = pixw >> 3;		/* In bytes */
-	while(w > 255) {
-		*p++ = 255;
-		*p++ = 0x00;
-		*p++ = 0x00;
-		w -= 255;
-	}
-	*p++ = w;
-	*p++ = 0x00;
-	*p++ = 0x00;
-	*p++ = 0x00;		/* End of line */
-	*p++ = 0x00;		/* End of op */
-	clr->x = 0;
-	clr->len = p - clr->data + 4;
-	for (w = 0; w < pixh; w++) {
-		clr->y = w;
-		if (ioctl(0, GFXIOC_DRAW, pict) == -1)
-			perror("GFXIOC_DRAW");
-	}	
-}	
-
-static void initdisplay(void)
+static void termclean(void)
 {
-	static struct display m;
-	uint16_t wneed;
-	
-	memset(seen, 0, 256/8);
-	/* TODO - sanity test and request mode */
-	if (ioctl(0, GFXIOC_GETINFO, &m) < 0) {
-		perror("graphics");
-		has_txt = 1;
-		has_gfx = 0;
-		return;
+	if (ts_valid)
+		tcsetattr(0, TCSANOW, &saved_ts);
+}
+
+#ifndef __linux__
+
+static struct fontinfo fs;
+
+static unsigned load_tile(unsigned n)
+{
+	unsigned r = 4;	/* Rows per block */
+	uchr ch[17];
+	uchr *p;
+	uchr i, h, l;
+
+	switch(fs.format) {
+	case FONT_INFO_8X16:
+		n = 8;
+		/* Fall through */
+	case FONT_INFO_8X8:
+		h = (n & 1) ? 0x0F: 0x00;
+		h |= (n & 2) ? 0xF0: 0x00;
+		l = (n & 4) ? 0x0F : 0x00;
+		l |= (n & 8) ? 0xF0 : 0x00;
+		break;
+	case FONT_INFO_6X12P16:
+		n = 6;
+		/* Fall through */
+	case FONT_INFO_6X8:
+		h = (n & 1) ? 0x07: 0x00;
+		h |= (n & 2) ? 0x38: 0x00;
+		l = (n & 4) ? 0x07 : 0x00;
+		l |= (n & 8) ? 0x38 : 0x00;
+		break;
+	case FONT_INFO_4X6:
+		r = 3;
+		/* Fall through */
+	case FONT_INFO_4X8:
+		h = (n & 1) ? 0x33: 0x00;
+		h |= (n & 2) ? 0xCC: 0x0F;
+		l = (n & 4) ? 0x33 : 0x00;
+		l |= (n & 8) ? 0xCC : 0x00;
+		break;
+	default:
+		/* We don't know how to make block chars in weird forms */
+		return 0;
 	}
-	if ((m.commands & (GFX_WRITE | GFX_DRAW)) == (GFX_WRITE | GFX_DRAW))
-		has_gfx = 1;
-	pixw = m.width;
-	pixh = m.height;
+	p = ch;
+	*p++ = n + fs.udg_low;
+	for (i = 0; i < n; i++)
+		*p++ = h;
+	for (i = 0; i < n; i++)
+		*p++ = l;
+	if(ioctl(0, VTSETUDG, &ch))
+		return 0;
+	return 1;
+}
 
-	has_txt = m.features & GFX_TEXT;
+static unsigned load_user(unsigned n)
+{
+	unsigned r = 4;	/* Rows per block */
+	uchr ch[17];
+	uchr *p = ch;
+	uchr i, tmp;
+	uint16_t ptr = zword(23675);
 
-	wneed = 256;
-	if (arch != ARCH_SPECTRUM)
-		wneed = 320;
-	
-	switch(m.format) {
-		case FMT_MONO_BW:
-			invert = 1;
+	*p++ = n + fs.udg_low + 0x10;
+	for (i = 0; i < 8; i++) {
+		uchr bits = zmem(ptr++);
+		
+		switch(fs.format) {
+		case FONT_INFO_8X16:
+			*p++ = bits;
+		case FONT_INFO_8X8:
+			*p++ = bits;
 			break;
-		case FMT_MONO_WB:
-			invert = 0;
+		case FONT_INFO_6X8:
+			*p++ = ((bits & 0x70) >> 2) | ((bits & 0x0E) >> 1);
 			break;
-		case FMT_TEXT:
-			has_gfx = 0;
+		case FONT_INFO_6X12P16:
+			if (i & 1)
+				*p++ = ((bits & 0x70) >> 2) | ((bits & 0x0E) >> 1);
+			*p++ = ((bits & 0x70) >> 2) | ((bits & 0x0E) >> 1);
+			break;
+		case FONT_INFO_4X6:
+			if (i == 0 && i == 4)
+				break;
+		case FONT_INFO_4X8:
+			tmp = (bits & 0x03) ? 0x11 : 0x00;
+			tmp |= (bits & 0x0C) ? 0x22 : 0x00;
+			tmp |= (bits & 0x30) ? 0x44 : 0x00;
+			tmp |= (bits & 0xC0) ? 0x88 : 0x00;
+			*p++ = tmp;
 			break;
 		default:
-			if (!has_txt)
-				errstr("unsupported video format", NULL);
-			has_gfx = 0;
-	}
-	
-	if (m.height < 192 || m.width < wneed)
-		has_gfx = 0;
-	/* Decide if need to double width stuff 
-	
-	if (pixw >= 2 * wneed && has_gfx)
-		textdbx = 1;
-	if (pixh >= 384 && has_gfx)
-		textdby = 1;
-	*/
-}
-
-/* Deal with black on white versus white on black and using the same
-   b/w bitmaps */
-static void memflip(uint16_t *p, uint16_t len)
-{
-	while(len--)
-		*p++ ^= 0xFFFF;
-}
-
-static void drawlocation(void)
-{
-	int fd;
-	uint8_t b = 1 << (CURLOC & 7);
-	uint8_t n = CURLOC >> 3;
-	if ((seen[n] & b) && state.flags[29] != 255)
-		return;
-	seen[n] |= b;
-	state.flags[29] = 0;
-	
-	gpath[3] = hex[CURLOC >> 4];
-	gpath[4] = hex[CURLOC & 0x0F];
-
-	fd = open(gpath, O_RDONLY);
-	if (fd < 0)
-		return;
-	/* Ok we have an actual picture */
-	n = 0;
-	/* FIXME: hard coded for the moment */
-	pict[0] = 522;
-	pict[2] = (pixw - 256) / 2;	/* Centre */
-	pict[3] = 32;
-	pict[4] = 16;
-	/* Possible want to consider scaling issues, especially on different
-	   aspect ratio display - eg 640 x 200 ? */
-	while(n < 192) {
-		if (read(fd, pict + 5, 512) != 512) {
-			perror(gpath);
-			exit(1);
+			return 1;
 		}
-		pict[1] = n;
-		if (invert)
-			memflip(pict + 5, 256);
-		if (ioctl(0, GFXIOC_WRITE, pict) < 0) {
-			perror("GFXIOC_WRITE");
-			exit(1);
-		}
-		n += 16;
 	}
-	close(fd);
-	getch();
-	clrscr();
+	if(ioctl(0, VTSETUDG, &ch))
+		return 1;
+	return 2;
 }
 
-static void opch32(char ch)
+static unsigned load_udg(void)
 {
-	/* Output a character, assuming 32 or 40 column screen */
-	/* FIXME if (has_gfx ... ) else */
-	write(1, &ch, 1);
-	if (ch == '\n')
-		xpos = 0;
-	else if (ch == 8 && xpos)
-		xpos--;
-	else if (arch == ARCH_SPECTRUM && xpos == 31)
-		nl();
-	else if (arch != ARCH_SPECTRUM && xpos == 39)
-		nl();
-	else
-		xpos++;
+	unsigned i = fs.udg_low;
+	unsigned n;
+
+	if (fs.udg_high - fs.udg_low < 16)
+		return 0;
+	for (n = 0; n < 16; n++) {
+		if (load_tile(n) == 0)
+			return 0;
+	}
+	/* Now can we fit in user UDG ? */
+	if (fs.udg_high - fs.udg_low <= 0x25)
+		return 1;
+	for (n = 0; n < 25; n++) {
+		if (load_user(n) == 0)
+			return 1;
+	}
+	return 2;
 }
-	
-#else
+
+#endif
+		
+static void terminit(void)
+{
+	struct termios ts;
+	if (tcgetattr(0, &ts)) {
+		memcpy(&saved_ts, &ts, sizeof(ts));
+		ts_valid = 1;
+		signal(SIGINT, termexit);
+		signal(SIGPIPE, termexit);
+		signal(SIGQUIT, termexit);
+		atexit(termclean);
+		cfmakeraw(&ts);
+		tcsetattr(0, TCSANOW, &ts);
+#ifndef __linux__
+		if (ioctl(0, VTSIZE, 0) != -1)
+			console = 1;
+		if (ioctl(0, VTGETUDG, &fs) == 0)
+			udg = load_udg();
+#endif
+	}
+}
 
 static void drawlocation(void)
 {
@@ -1850,20 +1831,98 @@ static void drawlocation(void)
 
 static void initdisplay(void)
 {
+	terminit();
 }
 
 static void clrscr(void)
 {
-	char n;
+	if (console) {
+		write(1, "\033H\033J", 4);
+		xpos = 0;
+		ypos = 0;
+	}
+	/* TODO termcap */
+}
 
-	for (n = 0; n < 24; n++)
-		nl();
+static void setcolour(void)
+{
+	uint8_t ncol;
+	if (inverse)
+		ncol = (paper << 4) | ink;
+	else
+		ncol = (ink << 4) | paper;
+	if (ncol != lcolour) {
+		colbuf[2] = ink | 0x40;
+		colbuf[5] = paper | 0x40;
+		write(1, colbuf, 6);
+		lcolour = ncol;
+	}
 }
 
 static void opch32(char ch)
 {
-	/* Output a character, assuming 32 or 40 column screen */
-	/* FIXME: need to be smart about widths in target */
+	static uchr state;	/* Video render state */
+	if (console) {
+		switch(state) {
+		case 1:
+			state = 0;
+			ink = ch & 7;
+			return;
+		case 2:
+			state = 0;
+			paper = ch & 7;
+			return;
+		case 3:
+			state = 0;
+			return;
+		case 4:
+			inverse = ch & 1;
+			state = 0;
+			return;
+		}
+			
+		/* Interpret ZX codes in full */
+		switch(ch) {
+		case 8:
+			if (xpos)
+				xpos--;
+			break;
+		case 16:	/* ink */
+			state = 1;
+			break;
+		case 17:	/* paper */
+			state = 2;
+			break;
+		case 18:	/* flash - ignore */
+			state = 3;
+			break;
+		case 19:	/* bright - ignore */
+			state = 3;
+			break;
+		case 20:	/* inverse */
+			state = 4;
+			break;
+		case 21:	/* over - ignore */
+			state = 3;
+			break;
+		case 9:
+			ch = ' ';	/* Really cursor right */
+		default:
+			if (ch >= 0x7F && !udg)
+				ch = ' ';
+			if (ch >= 0x90 && udg != 2)
+				ch = '#';
+			write(1, &ch, 1);
+			if (arch == ARCH_SPECTRUM && xpos == 31)
+				nl();
+			else if (arch != ARCH_SPECTRUM && xpos == 39)
+				nl();
+			else
+				xpos++;
+		/* TOOD: A-C, 22, 23 */
+		}
+		return;
+	}
 	if (ch > 126)
 		ch = '?';	/* No UDGs */
 	write(1, &ch, 1);
@@ -1878,5 +1937,3 @@ static void opch32(char ch)
 	else
 		xpos++;
 }
-
-#endif
