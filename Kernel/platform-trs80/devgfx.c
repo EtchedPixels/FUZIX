@@ -11,9 +11,10 @@
 #include <kdata.h>
 #include <vt.h>
 #include <graphics.h>
+#include <devtty.h>
 #include <devgfx.h>
 
-static const struct display trsdisplay[2] = {
+static const struct display trsdisplay[3] = {
   {
     /* Once we get around to it this is probably best described as
        160 x 72 sixel */
@@ -31,12 +32,25 @@ static const struct display trsdisplay[2] = {
     1,
     640, 240,
     1024, 256,
-    1, 1,		/* Need adding to ioctls */
+    8, 1,		/* Need adding to ioctls */
     FMT_MONO_BW,
     HW_TRS80GFX,
-    GFX_MULTIMODE|GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can in theory do pans */
+    GFX_MULTIMODE|GFX_MAPPABLE|GFX_OFFSCREEN,	/* Can do pans */
     32,
-    0
+    GFX_SCROLL,
+    80,24,
+  },
+  {
+    1,
+    640, 240,
+    1024, 256,
+    0xFF, 0xFF,		/* Need adding to ioctls */
+    FMT_MONO_BW,
+    HW_TRS80GFX,
+    GFX_MULTIMODE|GFX_MAPPABLE,
+    32,
+    0,
+    80, 24
   }
   /* FIXME: Need to add Micrographyx at some point (needs a different id to
      the TRS80 model III one */
@@ -54,6 +68,9 @@ static const struct videomap trsmap = {
 
 
 __sfr __at 0x83 gfx_ctrl;
+__sfr __at 0x8C gfx_xpan;
+__sfr __at 0x8D gfx_ypan;
+__sfr __at 0x8E gfx_xor;
 
 static uint8_t vmode;
 
@@ -71,12 +88,21 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
   case GFXIOC_GETMODE:
   case GFXIOC_SETMODE:
     m = ugetc(ptr);
-    if (m > 1)
+    if (m > 1 || gfxtype == 0)
       break;
+    if (m)
+      m = gfxtype;
     if (arg == GFXIOC_GETMODE)
       return uput(&trsdisplay[m], ptr, sizeof(struct display));
     vmode = m;
-    gfx_ctrl = m ? 3 : 0;	/* we might want 1 for special cases */
+    if (gfxtype == 1) {
+      gfx_xpan = 0;
+      gfx_ypan = 0;
+      gfx_xor = 1;
+      gfx_ctrl = m ? 3 : 0;	/* we might want 1 for special cases */
+    } else {
+      gfx_ctrl = m ? 1: 0;
+    }
     return 0;
   case GFXIOC_UNMAP:
     return 0;
@@ -86,6 +112,13 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
     if (vmode == 0)
       break;
     return uput(&trsmap, ptr, sizeof(trsmap));
+  case GFX_SCROLL:
+    if (vmode == 1) {
+      gfx_xpan = ugetw(ptr) & 127;
+      gfx_ypan = ugetw(ptr + 2) & 255;
+      return 0;
+    }
+    break;
   }
   return -1;
 }

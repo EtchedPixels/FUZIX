@@ -11,6 +11,7 @@ __sfr __at 0xEF irqack;
 
 uint8_t banktype;
 uint8_t vtattr_cap;
+uint8_t gfxtype;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 

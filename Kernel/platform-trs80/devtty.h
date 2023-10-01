@@ -14,4 +14,6 @@ extern uint8_t shiftkeyboard[8][8];
 
 extern uint8_t *vtbase[2];
 extern uint8_t curtty;
+
+extern uint8_t gfxtype;
 #endif
