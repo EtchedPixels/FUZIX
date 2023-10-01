@@ -38,7 +38,7 @@ image: trs80load.bin hdload.bin
 	# Boot block at 0,0
 	dd if=trs80load.bin of=boot.raw bs=256 count=1 conv=notrunc
 	# Kernel lives on the end of the disk (so we can add an fs)
-	dd if=../fuzix.bin of=boot.raw bs=1 seek=133632 conv=notrunc
+	dd if=../fuzix.bin of=boot.raw bs=1 seek=129024 conv=notrunc
 	../tools/makejv3 -s -t dd40s -d boot.raw boot4p.jv3
 	dd if=hdload.bin of=hdboot.raw bs=256 count=1 conv=notrunc
 	../tools/makejv3 -s -t dd40s -d hdboot.raw hdboot4p.jv3

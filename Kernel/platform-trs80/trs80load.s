@@ -115,7 +115,7 @@ nextsec:
 	    inc h
 	    jr nextsec
 
-tracknum:   .db 28			; tracks 29-39 (50688 bytes)
+tracknum:   .db 27			; tracks 28-39 (55296 bytes)
 
 				; ctc6845 registers in reverse order
 	    .db 99

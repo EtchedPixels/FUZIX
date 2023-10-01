@@ -38,6 +38,9 @@
 	    .globl _modout
 	    .globl _int_disabled
 
+	    .globl map_proc_always
+	    .globl map_kernel
+
 	    .globl s__COMMONMEM
 	    .globl l__COMMONMEM
 
@@ -197,3 +200,248 @@ _hd_xfer_out:
 	   call map_kernel
 	   ret
 
+;
+;	Graphics
+;
+	.globl _gfx_write
+	.globl _gfx_read
+	.globl _gfx_draw
+	.globl _gfx_exg
+	.globl _gfx_blit
+
+	.globl _ctrl_cache
+
+_gfx_write:
+	call map_proc_always
+	push ix
+	push hl
+	pop ix
+	ld de,#8
+	add hl,de
+
+	ld e,6(ix)			; Lines to do
+	ld d,2(ix)			; Y
+
+	ld a,(_ctrl_cache)
+	or #0x40			; clock X on write
+	out (0x83),a
+	ld c,#0x82			; data
+
+wnextline:
+	ld a,d
+	out (0x81),a			; set Y
+	ld b,4(ix)			; width
+	ld a,0(ix)			; X left
+	out (0x80),a
+	otir				; write bytes
+	inc d				; move down
+	dec e				; count one off
+	jr nz, wnextline
+	pop ix
+	ld hl,#0
+	jp map_kernel
+
+
+_gfx_read:
+	call map_proc_always
+	push ix
+	push hl
+	pop ix
+	ld de,#8
+	add hl,de
+
+	ld e,4(ix)			; Lines to do
+	ld d,0(ix)			; Y
+
+	ld a,(_ctrl_cache)
+	or #0x10			; clock X on read
+	out (0x83),a
+	ld c,#0x82			; data
+
+rnextline:
+	ld a,d
+	out (0x81),a			; set Y
+	ld b,6(ix)			; width
+	ld a,2(ix)			; X left
+	out (0x80),a
+	inir				; write bytes
+	inc d				; move down
+	dec e				; count one off
+	jr nz, rnextline
+	pop ix
+	ld hl,#0
+	jp map_kernel
+
+
+_gfx_exg:
+	call map_proc_always
+	push ix
+	push hl
+	pop ix
+	ld de,#8
+	add hl,de
+
+	ld e,4(ix)			; Lines to do
+	ld d,0(ix)			; Y
+
+	ld a,(_ctrl_cache)
+	or #0x20			; clock X on write
+	out (0x83),a
+	ld c,#0x82			; data
+
+enextline:
+	ld a,d
+	out (0x81),a			; set Y
+	ld b,6(ix)			; width
+	ld a,2(ix)			; X left
+	out (0x80),a
+ebyte:
+	ld a,(hl)			; get new
+	ini				; read byte to memory
+	out (0x82),a			; write new and inc
+	djnz ebyte
+	inc d				; move down
+	dec e				; count one off
+	jr nz, enextline
+	pop ix
+	ld hl,#0
+	jp map_kernel
+
+_gfx_draw:
+	call map_proc_always		; Length, Y, X
+	ld de,#6			
+	add hl,de
+	push ix
+	push hl
+	pop ix
+	ld a,(_ctrl_cache)
+	or #0x40			; clock X on write
+	out (0x83),a
+	ld d,4(ix)			; X
+	ld e,2(ix)			; Y
+nextopline:
+	; Set position
+	ld a,d
+	out (0x80),a
+	ld a,e
+	out (0x81),a
+nextop:
+	xor a
+	ld b,(hl)
+	cp b
+	jr z,line_done
+	inc hl
+	ld c,(hl)
+	inc hl
+oploop:
+	in a,(0x82)			; read no inc
+	and c
+	xor (hl)
+	out (0x82),a			; write, inc
+	djnz oploop
+	inc hl
+	jr nextop
+line_done:
+	inc e				; down a line
+	xor a
+	cp (hl)
+	jr  nz, nextopline
+	pop ix
+	ld hl,#0
+	jp map_kernel
+
+_gfx_blit:
+	push ix
+	push hl
+	pop ix
+
+	ld d,10(ix)			; width
+	res 7,d
+
+	exx
+	ld a,(_ctrl_cache)
+	or #0x10			; alt bc are the config sets
+	ld b,a
+	xor #0x30
+	ld c,a
+	exx
+
+	ld a,0(ix)			; Compare Y
+	cp 4(ix)
+	jr c, blitrd
+	jr nz, blitlu
+	ld a,2(ix)			; and X
+	cp 6(ix)
+	jr c, blitrd
+
+blitlu:
+	ld e,8(ix)			; start on bottom line and work up
+	dec e
+blitlu_n:
+	exx
+	ld a,b
+	out (0x83),a
+	exx
+	ld a,2(ix)			; source X
+	out (0x80),a
+	ld a,e
+	add 0(ix)			; add Y source
+	out (0x81),a
+	ld b,d				; width of line
+	ld hl,#scratch
+	inir
+	exx
+	ld a,6(ix)
+	out (0x80),a
+	ld a,e
+	add 4(ix)			; add Y dest
+	out (0x81),a
+	ld a,c
+	out (0x83),a
+	exx	
+	ld b,d
+	ld hl,#scratch
+	otir
+	dec e
+	jr nz, blitlu_n
+	pop ix
+	ld hl,#0
+	ret
+	
+blitrd:
+	ld e,#0				; line counter
+blitrd_n:
+	exx
+	ld a,b
+	out (0x83),a
+	exx
+	ld a,d				; source X
+	out (0x80),a
+	ld a,e
+	add 0(ix)			; add Y source
+	out (0x81),a
+	ld b,8(ix)			; width of line
+	ld hl,#scratch
+	inir
+	exx
+	ld a,d
+	out (0x80),a
+	ld a,e
+	add 4(ix)			; add Y dest
+	out (0x81),a
+	ld a,c
+	out (0x83),a
+	exx	
+	ld b,8(ix)
+	ld hl,#scratch
+	otir
+	inc e
+	ld a, 8(ix)			; height match ?
+	cp e
+	jr nz, blitrd_n
+	pop ix
+	ld hl,#0
+	ret
+
+scratch:
+	.ds 128

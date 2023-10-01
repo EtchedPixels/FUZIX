@@ -1,4 +1,5 @@
 #include <kernel.h>
+#include <printf.h>
 #include <devhd.h>
 #include <devtty.h>
 #include <tty.h>
@@ -32,9 +33,10 @@ __sfr __at 0x8E gfx_xor;
 
 static uint_fast8_t probe_gfx(void)
 {
+ kputs("Probing gfx\n");
  gfx_x = 1;
  if (gfx_x != 1)
-  return;
+  return 0;
  gfx_ctrl = 0x10;	/* Graphics off, inc X on read */
  gfx_data;
  if (gfx_x != 0x11)
@@ -49,7 +51,9 @@ static uint_fast8_t probe_gfx(void)
 
 void device_init(void)
 {
+ kputs("Probing gfx\n");
   gfxtype = probe_gfx();
+  kputs("Done\n");
   vtbuf_init();
 #ifdef CONFIG_RTC
   /* Time of day clock */

@@ -26,32 +26,31 @@ static const struct display trsdisplay[3] = {
 	 HW_UNACCEL,
 	 GFX_MULTIMODE | GFX_TEXT,
 	 2,
-	 0 },
-	{
+	 0
+	 }, {
 	 1,
 	 640, 240,
 	 1024, 256,
 	 8, 1,			/* Need adding to ioctls */
 	 FMT_MONO_BW,
 	 HW_TRS80GFX,
-	 GFX_MULTIMODE | GFX_MAPPABLE | GFX_OFFSCREEN,	/* Can do pans */
+	 /* The tandy one has offscreen space and can pan */
+	 GFX_MULTIMODE | GFX_MAPPABLE | GFX_OFFSCREEN | GFX_READ | GFX_WRITE | GFX_DRAW | GFX_EXG | GFX_BLIT,
 	 32,
 	 GFX_SCROLL,
 	 80, 24,
-	  },
-	{
+	}, {
 	 1,
 	 640, 240,
 	 1024, 256,
 	 0xFF, 0xFF,		/* Need adding to ioctls */
 	 FMT_MONO_BW,
 	 HW_TRS80GFX,
-	 GFX_MULTIMODE | GFX_MAPPABLE,
+	 GFX_MULTIMODE | GFX_MAPPABLE | GFX_READ | GFX_WRITE | GFX_DRAW | GFX_EXG | GFX_BLIT,
 	 32,
 	 0,
-	 80, 24 }
-	/* FIXME: Need to add Micrographyx at some point (needs a different id to
-	   the TRS80 model III one */
+	 80, 24
+	}
 };
 
 /* Assumes a Tandy board */
@@ -71,11 +70,35 @@ __sfr __at 0x8D gfx_ypan;
 __sfr __at 0x8E gfx_xor;
 
 static uint8_t vmode;
+uint8_t ctrl_cache;
+
+extern unsigned gfx_blit(struct blit *blit) __z88dk_fastcall;
+extern unsigned gfx_draw(uint8_t *ptr) __z88dk_fastcall;
+extern unsigned gfx_exg(uint8_t *ptr) __z88dk_fastcall;
+extern unsigned gfx_read(uint8_t *ptr) __z88dk_fastcall;
+extern unsigned gfx_write(uint8_t *ptr) __z88dk_fastcall;
+
+static uint16_t gfx_valid(uint8_t *ptr)
+{
+	unsigned x = ugetw(ptr);
+	unsigned y = ugetw(ptr + 2);
+	unsigned w = ugetw(ptr + 4);
+	unsigned h = ugetw(ptr + 6);
+	if (gfxtype == 0)
+		return -1;
+	if (x > 79 || y > 239 || h > 240 || w > 80 ||
+		x + w > 80 || y + h > 240) {
+		udata.u_error = EINVAL;
+		return 0;
+	}
+	return w * h + 8;
+}
 
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 {
 	uint8_t m;
-	int err;
+	uint16_t len;
+	struct blit blit;
 
 	if (minor > 2 || (arg >> 8 != 0x03))
 		return vt_ioctl(minor, arg, ptr);
@@ -99,11 +122,47 @@ int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr)
 			gfx_xpan = 0;
 			gfx_ypan = 0;
 			gfx_xor = 1;
-			gfx_ctrl = m ? 3 : 0;	/* we might want 1 for special cases */
+			ctrl_cache = m ? 3 : 0;	/* we might want 1 for special cases */
 		} else {
-			gfx_ctrl = m ? 1 : 0;
+			ctrl_cache = m ? 1 : 0;
 		}
+		gfx_ctrl = ctrl_cache;
 		return 0;
+	case GFX_WRITE:
+		len = gfx_valid(ptr);
+		if (len == 0 || valaddr(ptr, len, 0))
+			return -1;
+		return gfx_write(ptr);
+	case GFX_READ:
+		len = gfx_valid(ptr);
+		if (len == 0 || valaddr(ptr, len, 1))
+			return -1;
+		return gfx_read(ptr);
+	case GFX_EXG:
+		len = gfx_valid(ptr);
+		if (len == 0 || valaddr(ptr, len, 1))
+			return -1;
+		return gfx_exg(ptr);
+	case GFX_DRAW:
+		if (gfxtype == 0)
+			return -1;
+		len = ugetw(ptr);
+		if (valaddr(ptr, len, 0))
+			return -1;
+		if (ugetw(ptr + 2) > 239 || ugetw(ptr + 4) > 79) {
+			udata.u_error = ERANGE;
+			return -1;
+		}
+		return gfx_draw(ptr);
+	case GFX_BLIT:
+		if (uget(ptr, &blit, sizeof(struct blit)))
+			return -1;
+		if (blit.xs > 127 || blit.xd > 127 || blit.ys > 256 || blit.yd > 256 || 
+			blit.height > 255 || blit.width > 128 || blit.height == 0 || blit.width == 0) {
+			udata.u_error = ERANGE;
+			return -1;
+		}
+		return gfx_blit(&blit);
 	case GFXIOC_UNMAP:
 		return 0;
 		/* Users can "map" 8) the I/O ports into their process and use the
