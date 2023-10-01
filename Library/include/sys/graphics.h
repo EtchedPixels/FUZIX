@@ -137,4 +137,21 @@ struct vdp_rw {		/* Do not touch without changing asm helpers */
 #define VDPIOC_READ		0x0321	/* Read TMS9918A space */
 #define VDPIOC_WRITE		0x0322	/* Write TMS9918A space */
 
+struct fontinfo {
+    uint8_t font_low;
+    uint8_t font_high;
+    uint8_t udg_low;
+    uint8_t udg_high;
+    uint8_t format;
+#define FONT_INFO_8X8	0
+#define FONT_INFO_6X8	1
+#define FONT_INFO_4X8	2	/* packed twice in each byte */
+#define FONT_INFO_4X6	3
+#define FONT_INFO_8X11P16  4	/* 8 x 11 but packed 16 line packed */
+#define FONT_INFO_8X16	5
+#define FONT_INFO_6X12P16  6	/* 6x12 on 16 byte boundaries
+				   16 line packed, low 6 bits */
+};
+
+
 #endif
