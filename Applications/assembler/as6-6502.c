@@ -36,9 +36,18 @@ SYM	sym[] = {
 	{	0,	".discard",	TSEGMENT,	DISCARD	},
 	{	0,	".common",	TSEGMENT,	COMMON	},
 	{	0,	".literal",	TSEGMENT,	LITERAL	},
+	{	0,	".6502",	TCPU,		CPU_6502	},
+	{	0,	".65c02",	TCPU,		CPU_65C02	},
+	{	0,	".65c816",	TCPU,		CPU_65C816	},
+	{	0,	".i8",		TI,		1	},
+	{	0,	".i16",		TI,		2	},
+	{	0,	".a8",		TA,		1	},
+	{	0,	".a16",		TA,		2	},
 	
 	/* Class zero instructions: Those ending 00 */
-	{	0,	"bit",		TCLASS0,	0x20	},
+	/* X form is thode that grow imm, ab inx,x and dp index x on
+	  65C02/65C816 */
+	{	0,	"bit",		TCLASS0X,	0x20	},
 	/* JMP (x) is special .. so omit 0x60 entry */
 	{	0,	"jmp",		TJMP,		0x40	},
 	{	0,	"sty",		TCLASS0,	0x80	},
@@ -48,6 +57,7 @@ SYM	sym[] = {
 	
 
 	/* Class one instructions: Those ending 01 */
+	/* Most get dp indirect on C02, long, sr and sr indexed on 816 */
 	{	0,	"ora",		TCLASS1,	0x01	},
 	{	0,	"and",		TCLASS1,	0x21	},
 	{	0,	"eor",		TCLASS1,	0x41	},
@@ -64,8 +74,9 @@ SYM	sym[] = {
 	{	0,	"ror",		TCLASS2,	0x62	},
 	{	0,	"stx",		TCLASS2Y,	0x82	},
 	{	0,	"ldx",		TCLASS2Y,	0xA2	},
-	{	0,	"dec",		TCLASS2,	0xC2	},
-	{	0,	"inc",		TCLASS2,	0xE2	},
+	/* with a special form of dec a on C02 and later */
+	{	0,	"dec",		TCLASS2A,	0x3AC2	},
+	{	0,	"inc",		TCLASS2A,	0x1AE2	},
 
 	/* Bcc instructions */
         {	0,	"bpl",		TREL8,		0x10	},
@@ -107,7 +118,53 @@ SYM	sym[] = {
         {	0,	"brk",		TBRK,		0x00	},
         {	0,	"jsr",		TJSR,		0x20	},
         {	0,	"rti",		TIMPL,		0x40	},
-        {	0,	"rts",		TIMPL,		0x60	}
+        {	0,	"rts",		TIMPL,		0x60	},
+
+        /* 65C02 - also adds Zero Page indirect and absolute indexed
+           indirect */
+        {	0,	"bra",		TREL8C,		0x80	},
+        {	0,	"phx",		TIMPLC,		0xDA	},
+        {	0,	"phy",		TIMPLC,		0x5A	},
+        {	0,	"plx",		TIMPLC,		0xFA	},
+        {	0,	"ply",		TIMPLC,		0x7A	},
+        /* Weird stuffed in extra instruction in four formats */
+        {	0,	"stz",		TSTZ,		0x00	},
+        {	0,	"trb",		TABDP,		0x1C14	},
+        {	0,	"tsb",		TABDP,		0x0C04	},
+
+        /* 65C816 - 16bit modes, rep/sep and direct page
+           adds 24bit addressing and indexing */
+        {	0,	"brl",		TREL16,		0x82	},
+        {	0,	"cop",		TBRK,		0x02	},
+        {	0,	"jml",		TJML,		0x5C	},
+        {	0,	"jsl",		TLONG,		0x22	},
+        {	0,	"mvn",		TMVN,		0x54	},
+        {	0,	"mvp",		TMVN,		0x44	},
+        {	0,	"pea",		TIMM16,		0xF4	},
+        {	0,	"pei",		TPEI,		0xD4	},
+        {	0,	"per",		TREL16,		0x62	},
+        {	0,	"phb",		TIMPL16,	0x8B	},
+        {	0,	"phd",		TIMPL16,	0x0B	},
+        {	0,	"phk",		TIMPL16,	0x4B	},
+        {	0,	"plb",		TIMPL16,	0xAB	},
+        {	0,	"pld",		TIMPL16,	0x2B	},
+        {	0,	"rep",		TREP,		0xC2	},
+        {	0,	"rtl",		TIMPL16,	0x40	},
+        {	0,	"sep",		TREP,		0xE2	},
+        {	0,	"stp",		TIMPL16,	0xDB	},
+        {	0,	"tad",		TIMPL16,	0x5B	},
+        {	0,	"tcd",		TIMPL16,	0x5B	},
+        {	0,	"tas",		TIMPL16,	0x1B	},
+        {	0,	"tcs",		TIMPL16,	0x1B	},
+        {	0,	"tdc",		TIMPL16,	0x7B	},
+        {	0,	"tsc",		TIMPL16,	0x3B	},
+        {	0,	"txy",		TIMPL16,	0x9B	},
+        {	0,	"tyx",		TIMPL16,	0x98	},
+        {	0,	"wait",		TIMPL16,	0xCB	},
+        {	0,	"wdm",		TIMPL16,	0x42	},
+        {	0,	"xba",		TIMPL16,	0xEB	},
+        {	0,	"swa",		TIMPL16,	0xEB	},
+        {	0,	"xce",		TIMPL16,	0xFB	}
 };
 
         
@@ -133,7 +190,7 @@ void syminit(void)
 }
 
 char *etext[] = {
-	"unexpected character",
+	"unexpected character",		/* 10 */
 	"phase error",
 	"multiple definitions",
 	"syntax error",
@@ -143,14 +200,18 @@ char *etext[] = {
 	"Bcc out of range",
 	"condition required",
 	"invalid register for operation",
-	"address required",
+	"address required",		/* 20 */
 	"invalid id",
 	"bad addressing mode",
 	"divide by 0",
 	"constant out of range",
 	"data in BSS",
 	"segment overflow",
-	"segment conflict"
+	"segment conflict",
+	"data in zero page",
+	"out of range",
+	"unsupported by this cpu",
+	"too many resizable branches"
 };
 
 /*
@@ -163,7 +224,6 @@ char *etext[] = {
 void isokaors(ADDR *ap, int paren)
 {
 	int mode;
-	int reg;
 
 	mode = ap->a_type&TMMODE;
 	if (mode == TUSER)

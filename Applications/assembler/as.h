@@ -286,22 +286,26 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 #define TPUBLIC	0x0080			/* Exported symbol */
 #define TMADDR	0x00F0			/* Addressing mode bits */
 
-#define	TZP	0x0010			/* 0000 is TUSER */
-#define TACCUM	0x0020
-#define TZPX	0x0030
-#define TZPY	0x0040
-#define TABSX	0x0050
-#define TABSY	0x0060
+#define	TZP		0x0010		/* 0000 is TUSER */
+#define TACCUM		0x0020
+#define TZPX		0x0030
+#define TZPY		0x0040
+#define TABSX		0x0050
+#define TABSY		0x0060
 #define TZPX_IND	0x0070
 #define TZPY_IND	0x0080
-#define TZP_IND	0x0090
-
+#define TZP_IND		0x0090
+#define TZP_INDL	0x00A0
+#define TALX_IND	0x00B0
+#define TZPYL_IND	0x00C0
+#define TSR		0x00D0
+#define TSRY_IND	0x00E0
+#define TABSL		0x00F0
 
 #define	TNEW	0x0000			/* Virgin */
 #define	TUSER	0x0100			/* User name */
 #define	TBR	0x0200			/* Byte register */
 #define	TWR	0x0300			/* Word register */
-#define	TSR	0x0400			/* Special register (I, R) */
 #define	TDEFB	0x0500			/* defb */
 #define	TDEFW	0x0600			/* defw */
 #define	TDEFS	0x0700			/* defs */
@@ -324,6 +328,23 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 #define TBRK	0x1700			/* BRK */
 #define TJSR	0x1800			/* JSR */
 #define TBRA16	0x1900			/* Jcc asm magic */
+#define TI	0x1A00			/* Set index size */
+#define TA	0x1B00			/* Set accum size */
+#define TCPU	0x1C00			/* Set CPU type */
+#define TIMPLC	0x1D00			/* 65C02 implicit */
+#define TIMPL16	0x1E00			/* 65C816 implicit */
+#define TCLASS2A 0x1F00			/* INC/DEC A */
+#define TIMM16	0x2000			/* 16bit immediate 65C816 */
+#define TSTZ	0x2100			/* Store zero 65C02 */
+#define TABDP	0x2200			/* Ops taking abs,dp only */
+#define TMVN	0x2300			/* MVN/MVP 65C816 */
+#define TPEI	0x2400			/* PEI 65C816 */
+#define TREP	0x2500			/* REP 65C816 */
+#define TJML	0x2600			/* JML 65C816 */
+#define TLONG	0x2700			/* Abslute 24bit long 65C816 */
+#define TREL8C	0x2800			/* 8bit rel, 65C02 */
+#define TREL16	0x2900			/* 16bit rel, 65C816 */
+#define TCLASS0X 0x2A00			/* bit is slightly odd */
 
 /*
  * Registers.
@@ -331,6 +352,14 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 #define	A	0
 #define	X	1
 #define	Y	2
+
+/*
+ *	 CPU types
+ */
+
+#define CPU_6502		0
+#define CPU_65C02		1
+#define CPU_65C816		2
 
 /*
  *	Error message numbers
@@ -359,6 +388,9 @@ typedef	uint16_t	VALUE;		/* For symbol values */
 #define SEGMENT_OVERFLOW 26
 #define DATA_IN_ZP	27
 #define	SEGMENT_CLASH	28
+#define RANGE		29
+#define BADCPU		30
+#define TOO_MANY_BRA	31
 
 #elif TARGET_DGNOVA
 
