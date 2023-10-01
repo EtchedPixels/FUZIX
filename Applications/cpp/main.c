@@ -14,7 +14,7 @@
 
 #define MAXINCPATH	5
 
-int main P((int argc, char ** argv));
+int main P((int argc, char *argv[]));
 void undefine_macro P((char * name));
 void define_macro P((char * name));
 void print_toks_cpp P((void));
@@ -187,6 +187,9 @@ FILE *open_include(char *fname, char *mode, int checkrel)
 {
    FILE * fd = 0;
    int i;
+#ifdef __CC65__
+   static
+#endif   
    char buf[256], *p;
 
    if( checkrel )
@@ -199,11 +202,13 @@ FILE *open_include(char *fname, char *mode, int checkrel)
       fd=fopen(buf, mode);
    }
    if (!fd) {
+      /* FIXME: buffer overrun */
       for(i=0; i<MAXINCPATH; i++)
 	 if (include_paths[i]) {
 	   strcpy(buf, include_paths[i]);
 	   if (buf[strlen(buf)-1] != '/') strcat(buf, "/");
 	   strcat(buf, fname);
+	   fprintf(stderr, "Trying '%s'\n", buf);
 	   fd=fopen(buf,  mode);
 	   if( fd ) break;
 	 }
