@@ -16,6 +16,7 @@ struct tty_coco3 {
 	unsigned char csave;	/* charactor that is under the cursor */
 	struct vt_switch vt;	/* the vt.o module's state */
 	unsigned int scrloc;	/* location to put into gimme */
+	unsigned char border;	/* border value */
 	unsigned char vmod;	/* video mode */
 	unsigned char vres;	/* video register settings of this tty */
 	unsigned char width;	/* text width of screen */

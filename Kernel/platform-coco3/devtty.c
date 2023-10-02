@@ -24,6 +24,7 @@
 
 extern uint8_t hz;
 
+static uint8_t is_rgb;
 
 uint8_t vtattr_cap;
 uint8_t curattr;
@@ -161,6 +162,7 @@ static struct tty_coco3 ttytab[] VSECTD = {
 	 0,
 	 { 0, 0, 0, 0, 0, 0, 7, 0},
 	 0x10000 / 8,
+	 0,
 	 0x04,
 	 0x74,			/* 80 column */
 	 80,
@@ -174,6 +176,7 @@ static struct tty_coco3 ttytab[] VSECTD = {
 	 0,
 	 { 0, 0, 0, 0, 0, 0, 7, 0},
 	 0x11000 / 8,
+	 0,
 	 0x04,
 	 0x6c,			/* 40 column */
 	 40,
@@ -203,6 +206,7 @@ void apply_gime(int minor)
 	*(volatile uint16_t *) 0xff9d = s;
 	*(volatile uint8_t *) 0xff98 = (hz & 0x78) | p->vmod;
 	*(volatile uint8_t *) 0xff99 = p->vres;
+	*(volatile uint8_t *) 0xff9a = p->border;
 	twidth = curtty->width << 1;	/* One word per symbol */
 	theight = curtty->height;
 }
@@ -426,12 +430,22 @@ void vtattr_notify(void)
 	curattr = ((vtink & 7) << 3) + (vtpaper & 7);
 }
 
+static const uint8_t rgb_def_pal[16] = {
+	0, 8, 32, 40, 16, 24, 48, 56,	/* Black, blue, red, magenta, green, cyan, yellow, white */
+	0, 9, 36, 45, 18, 27, 54, 63	/* full intensity versions */
+};
+
+/* Do our best to get something that looks bearable on a TV */
+static const uint8_t cmp_def_pal[16] = {
+	0, 11, 23, 24, 31, 45, 36, 63,
+	0, 44, 23, 57, 47, 61, 52, 63
+};
+
 int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 {
+	uint_fast8_t c;
 	if (minor > 2)		/* remove once DW get its own ioctl() */
 		return tty_ioctl(minor, arg, ptr);
-	if (arg >> 8 != 0x03)
-		return vt_ioctl(minor, arg, ptr);
 	switch (arg) {
 	case GFXIOC_GETINFO:
 		return uput(ttytab[minor - 1].fdisp, ptr, sizeof(struct display));
@@ -464,25 +478,26 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 			}
 			return err;
 		}
+	case VTBORDER:
+		c = ugetc(ptr);
+		if (is_rgb || hz)
+			c = rgb_def_pal[c & 15];	/* IGRB to COCO palette */
+		else
+			c = cmp_def_pal[c & 15];	/* composite COCO palette */
+		curtty->border = c;
+		*((volatile uint8_t *)0xFF9A) = c;
+		return 0;
 	default:
 		break;
 	}
+	return vt_ioctl(minor, arg, ptr);
 
-	udata.u_error = ENOTTY;
-	return -1;
-
-      inval:udata.u_error = EINVAL;
+inval:	udata.u_error = EINVAL;
 	return -1;
 }
 
 
 /* Initial Setup stuff down here. */
-
-uint8_t rgb_def_pal[16] = {
-	0, 8, 32, 40, 16, 24, 48, 63,
-	0, 8, 32, 40, 16, 24, 48, 63
-};
-
 
 static void apply_defmode(uint8_t defmode)
 {
@@ -508,8 +523,22 @@ void devtty_init()
 	/* set default keyboard delay/repeat rates */
 	keyrepeat.first = REPEAT_FIRST * (TICKSPERSEC / 10);
 	keyrepeat.continual = REPEAT_CONTINUAL * (TICKSPERSEC / 10);
-	apply_defmode(0);
+	is_rgb = *((volatile uint8_t *)0xFF22) & 8;
+	if (is_rgb)
+		apply_defmode(0);
+	else {
+		/* Composite. Use a green background and black writing */
+		ttytab[0].vt.paper = 12;
+		ttytab[1].vt.paper = 12;
+		ttytab[0].vt.ink = 0;
+		ttytab[1].vt.ink = 0;
+		apply_defmode(1);
+	}
 	/* make video palettes match vt.h's definitions. */
-	memcpy((uint8_t *) 0xffb0, rgb_def_pal, 16);
+	if (is_rgb || hz)
+		memcpy((uint8_t *) 0xffb0, rgb_def_pal, 16);
+	else	/* These are bit dubious see : https://exstructus.com/tags/coco/australia-colour-palette/ */
+		memcpy((uint8_t *) 0xffb0, cmp_def_pal, 16);
 	vt_load(&curtty->vt);
+	clear_lines(0, theight);
 }
