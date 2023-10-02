@@ -350,6 +350,7 @@ static struct display display[4] = {
 		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK|GFX_MULTIMODE,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
+		32,16
 	},
 	{
 		1,
@@ -361,6 +362,7 @@ static struct display display[4] = {
 		GFX_TEXT|GFX_MAPPABLE|GFX_VBLANK|GFX_MULTIMODE,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE,
+		32,16
 	},
 	/* 128 x 192 four colour modes */
 	{
@@ -373,6 +375,7 @@ static struct display display[4] = {
 		GFX_MAPPABLE|GFX_VBLANK,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE|GFX_MULTIMODE,
+		16,16
 	},
 	{
 		3,
@@ -384,6 +387,7 @@ static struct display display[4] = {
 		GFX_MAPPABLE|GFX_VBLANK,
 		0,
 		GFX_DRAW|GFX_READ|GFX_WRITE|GFX_MULTIMODE,
+		16,16
 	},
 	/* Possibly we should also allow for SG6 and SG4 ?? */
 };
