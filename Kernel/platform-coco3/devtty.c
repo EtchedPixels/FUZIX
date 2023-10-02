@@ -97,6 +97,7 @@ static struct display fmodes[] = {
 	 GFX_PALETTE | GFX_MULTIMODE | GFX_PALETTE_SET | GFX_TEXT,	/* all the crap we support in this mode */
 	 0,			/* Memory size irrelevant */
 	 0,			/* supports no graphics commands */
+	 80, 25
 	}, {
 	 1,			/* Mode  number */
 	 40, 25,		/* screen size */
@@ -107,6 +108,7 @@ static struct display fmodes[] = {
 	 GFX_PALETTE | GFX_MULTIMODE | GFX_PALETTE_SET | GFX_TEXT,	/* all the crap we support in this mode */
 	 0,			/* Memory size irrelevant */
 	 0,			/* supports no graphics commands */
+	 40, 25
 	}, {
 	 2,			/* Mode  number */
 	 64, 25,		/* screen size */
@@ -117,6 +119,7 @@ static struct display fmodes[] = {
 	 GFX_PALETTE | GFX_MULTIMODE | GFX_PALETTE_SET | GFX_TEXT,	/* all the crap we support in this mode */
 	 0,			/* Memory size irrelevant */
 	 0,			/* supports no graphics commands */
+	 64, 25
 	}, {
 	 3,			/* Mode  number */
 	 32, 25,		/* screen size */
@@ -127,6 +130,7 @@ static struct display fmodes[] = {
 	 GFX_PALETTE | GFX_MULTIMODE | GFX_PALETTE_SET | GFX_TEXT,	/* all the crap we support in this mode */
 	 0,			/* Memory size irrelevant */
 	 0,			/* supports no graphics commands */
+	 32, 25
 	}, {
 	 4,			/* Mode  number */
 	 256, 192,		/* screen size */
@@ -136,7 +140,8 @@ static struct display fmodes[] = {
 	 HW_UNACCEL,		/* no acceleration */
 	 0,			/* no features */
 	 0,			/* Memory size irrelevant */
-	 GFX_DRAW | GFX_READ | GFX_WRITE	/* only the basics */
+	 GFX_DRAW | GFX_READ | GFX_WRITE,	/* only the basics */
+	 32, 24
 	}
 };
 
@@ -198,6 +203,8 @@ void apply_gime(int minor)
 	*(volatile uint16_t *) 0xff9d = s;
 	*(volatile uint8_t *) 0xff98 = (hz & 0x78) | p->vmod;
 	*(volatile uint8_t *) 0xff99 = p->vres;
+	twidth = curtty->width << 1;	/* One word per symbol */
+	theight = curtty->height;
 }
 
 /* A wrapper for tty_close that closes the DW port properly */
@@ -408,7 +415,7 @@ void plt_interrupt(void)
 	dw_vpoll();
 }
 
-/* At this point the COCO2 doesn't use interrupt nesting */
+/* At this point the COCO3 doesn't use interrupt nesting */
 void plt_reinterrupt(void)
 {
 	panic("reint");

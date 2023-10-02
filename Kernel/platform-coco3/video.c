@@ -16,108 +16,20 @@ extern void video_cmd(char *rlt_data);
 
 static int irq;
 
-static void map_for_video()
+static void map_for_video(void)
 {
 	irq = di();
 	*(uint8_t *) 0xffa9 = 8;
 	*(uint8_t *) 0xffaa = 9;
 }
 
-static void map_for_kernel()
+static void map_for_kernel(void)
 {
 	*(uint8_t *) 0xffa9 = 1;
 	*(uint8_t *) 0xffaa = 2;
 	irqrestore(irq);
 }
 
-static uint8_t *char_addr(unsigned int y1, unsigned char x1)
-{
-	return curtty->base + VT_WIDTH * y1 * 2 + (uint16_t) (x1 * 2);
-}
-
-void cursor_off(void)
-{
-	map_for_video();
-	if (curtty->cpos)
-		*curtty->cpos = curtty->csave;
-	map_for_kernel();
-}
-
-void cursor_on(int8_t y, int8_t x)
-{
-	map_for_video();
-	curtty->csave = *(char_addr(y, x) + 1);
-	curtty->cpos = char_addr(y, x) + 1;
-	*curtty->cpos = *curtty->cpos ^ 0x3f;
-	map_for_kernel();
-}
-
-void cursor_disable(void)
-{
-}
-
-void plot_char(int8_t y, int8_t x, uint16_t c)
-{
-	unsigned char *p = char_addr(y, x);
-	map_for_video();
-	*p++ = VT_MAP_CHAR(c);
-	*p = curattr;
-	map_for_kernel();
-}
-
-void clear_lines(int8_t y, int8_t ct)
-{
-	uint16_t wc = ct * VT_WIDTH;
-	map_for_video();
-	uint16_t *s = (uint16_t *) char_addr(y, 0);
-	uint16_t w = ' ' * 0x100 + curattr;
-	while (wc--)
-		*s++ = w;
-	map_for_kernel();
-}
-
-void clear_across(int8_t y, int8_t x, int16_t l)
-{
-	map_for_video();
-	uint16_t *s = (uint16_t *) char_addr(y, x);
-	uint16_t w = ' ' * 0x100 + curattr;
-	while (l--)
-		*s++ = w;
-	map_for_kernel();
-}
-
-static void rmemcpy(unsigned char *dest, unsigned char *src, size_t n)
-{
-	unsigned char *d = dest + n;
-	unsigned char *s = src + n;
-	while (s != src)
-		*--d = *--s;
-}
-
-void scroll_up(void)
-{
-	map_for_video();
-	memcpy(curtty->base, curtty->base + VT_WIDTH * 2, VT_WIDTH * 2 * VT_BOTTOM);
-	map_for_kernel();
-}
-
-void scroll_down(void)
-{
-	map_for_video();
-	rmemcpy(curtty->base + VT_WIDTH * 2, curtty->base, VT_WIDTH * 2 * VT_BOTTOM);
-	map_for_kernel();
-}
-
-
-unsigned char vt_map(unsigned char c)
-{
-	/* The CoCo3's gime has a strange code for underscore */
-	if (c == '_')
-		return 0x7F;
-	if (c == '`')
-		return 0x5E;	/* up arrow */
-	return c;
-}
 
 // Get copy user buffer to video mem
 // 

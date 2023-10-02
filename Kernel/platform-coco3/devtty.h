@@ -27,7 +27,8 @@ struct tty_coco3 {
 
 extern struct tty_coco3 *curtty;
 extern uint8_t curattr;
-
+extern uint8_t twidth;
+extern uint8_t theight;
 int my_tty_close(uint8_t minor);	/* wrapper call to close DW ports */
 int gfx_ioctl(uint8_t minor, uarg_t arg, char *ptr);
 void set_defmode(char *s);
