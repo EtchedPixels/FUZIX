@@ -199,7 +199,7 @@ clean:
 	rm -f tools/modlib-z80 tools/plus3boot tools/raw2dsk tools/raw2mgt tools/trdify tools/visualize
 	rm -f tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt
 	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion tools/trslabel
-	rm -f tools/atariboot tools/fontexpand font8x8_exp2.c 
+	rm -f tools/atariboot tools/fontexpand font8x8_exp2.c tools/diskpad
 	rm -f *.rel *.lst *.sym *.o *.bin
 	rm -f lowlevel-6303.s lowlevel-6803.s usermem_std-6303.s usermem_std-6803.s modlib.s
 	+$(MAKE) -C platform-$(TARGET) clean
