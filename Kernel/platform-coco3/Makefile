@@ -1,6 +1,6 @@
 
-CSRCS = ttydw.c mbr.c dwtime.c devsys.c
-CSRCS += devices.c main.c libc.c devsdc.c devlpr.c devrtsd.c
+CSRCS = ttydw.c dwtime.c devsys.c
+CSRCS += devices.c main.c libc.c devsdc.c devlpr.c devrtsd.c mbr.c
 
 CDSRCS = ../dev/tinyide_discard.c ../dev/tinysd_discard.c ../dev/tinydisk_discard.c
 
@@ -112,7 +112,7 @@ image: boot.bin
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o ../syscall_exec.o ../blk512.o ../memalloc_none.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
-	videoll.o dwtime.o devsys.o \
+	videoll.o dwtime.o devsys.o mbr.o \
 	../syscall_net.o net_native.o $(DRIVERS)
 # make DECB disk w/ new kernel
 	rm -f fuzix.dsk

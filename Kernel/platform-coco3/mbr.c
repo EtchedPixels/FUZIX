@@ -1,9 +1,7 @@
-/* 2015-01-04 Will Sowerbutts */
-
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 
 typedef struct {
 	uint8_t flags;
@@ -33,30 +31,22 @@ typedef struct {
 } boot_record_t;
 
 
-void mbr_parse(char letter)
+uint_fast8_t td_plt_setup(uint_fast8_t letter, uint_fast8_t dev, uint32_t *lba, void *buf)
 {
-	boot_record_t *br;
+	boot_record_t *br = buf;
 	uint8_t i, k = 0;
 	uint32_t tstart;
 	uint32_t tlen;
 
-	kprintf("hd%c: ", letter);
-
-	/* allocate temporary memory */
-	br = (boot_record_t *) tmpbuf();
-
-	blk_op.is_read = true;
-	blk_op.is_user = false;
-	blk_op.addr = (uint8_t *) br;
-	blk_op.lba = 0;
-	blk_op.nblock = 1;
+	udata.u_block = 0;
+	udata.u_nblock = 1;
+	udata.u_dptr = (void *) br;
 
 	/* FIX: should also check table's CRC */
-	if (!blk_op.blkdev->transfer() || br->magic != MBR_SIGNATURE) {
-		kputs("No CCPT");
-		return;
-	}
+	if (td_read(dev, 0, 0) != BLKSIZE || br->magic != MBR_SIGNATURE)
+		return 2;		/* Try PC format */
 
+	kprintf("hd%c: ", letter);
 	/* add each entry to blkops struct */
 	/*  This adds paritions as it finds good ones? */
 	for (i = 0; i < MBR_ENTRY_COUNT; i++) {
@@ -66,21 +56,17 @@ void mbr_parse(char letter)
 		/* if valid entry, then adjust offset/len to blocks */
 		else {
 			tstart = br->partition[i].start;
-			tlen = br->partition[i].len;
-			if (!br->secz) {
+			if (!br->secz)
 				tstart >>= 1;
-				tlen >>= 1;
-			} else {
+			else
 				tstart <<= (br->secz - 1);
-				tlen <<= (br->secz - 1);
-			}
-			blk_op.blkdev->lba_first[k] = tstart;
-			blk_op.blkdev->lba_count[k] = tlen;
-			kprintf("hd%c%d ", letter, k + 1);
+			*lba++ = tstart;
 			k++;
+			kprintf("hd%c%d ", letter, k);
+			/* TODO: swap on CCPT */
+			if (k == MAX_PART)
+				break;
 		}
 	}
-
-	/* release temporary memory */
-	tmpfree(br);
+	return 1;	/* Found it, don't scan further */
 }

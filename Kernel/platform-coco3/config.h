@@ -84,6 +84,7 @@ extern unsigned char vt_map(unsigned char c);
 #define CONFIG_TD_IDE
 #define CONFIG_TD_SD
 #define TD_SD_NUM	2
+#define CONFIG_TD_CUSTOMPART		/* Custom partition tables (CCPT) */
 
 #define CONFIG_RTC		/* enable RTC code */
 #define CONFIG_RTC_INTERVAL 100	/* time in deciseconds to atually poll rtc */

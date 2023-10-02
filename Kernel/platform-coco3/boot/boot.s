@@ -54,7 +54,7 @@ start
 	ldb	#'I		; input mode
 	jsr	open
 	lbcs	abort
-	lda	#'U		; print "U"
+	lda	#'Z		; print "Z"
 	jsr	$a282
 	;; calculate sectors for each screen block
 	ldd	size
