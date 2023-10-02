@@ -7,9 +7,12 @@
 ;;;  can out-run the built-in SPI interface (12mhz),
 ;;;  So we sprinkle in some NOP's.
 ;;; 
-	.globl _sd_spi_clock
+	.globl _sd_spi_fast
+	.globl _sd_spi_slow
 	.globl _sd_spi_raise_cs
 	.globl _sd_spi_lower_cs
+	.globl _sd_spi_fast
+	.globl _sd_spi_slow
 	.globl _sd_spi_transmit_byte
 	.globl _sd_spi_receive_byte
 	.globl _sd_spi_transmit_sector
@@ -17,7 +20,8 @@
 
 	.area	.text
 
-_sd_spi_clock
+_sd_spi_fast:
+_sd_spi_slow:
 	rts
 	
 _sd_spi_raise_cs
@@ -42,7 +46,6 @@ _sd_spi_receive_byte
 	
 _sd_spi_transmit_sector
 	lda	#0		; loop counter
-	ldx	_blk_op		; X = buffer address
 	jsr	blkdev_rawflg	; flip mmu mapping to whatever rawflag says
 a@	ldb	,x+
 	stb	$ff65
@@ -57,7 +60,6 @@ a@	ldb	,x+
 	
 _sd_spi_receive_sector
 	lda	#512/8
-	ldx	_blk_op
 	jsr	blkdev_rawflg
 a@	ldb	$ff65
 	stb	,x+
