@@ -9,8 +9,7 @@
 
 #include <kernel.h>
 #include <kdata.h>
-#include <blkdev.h>
-#include <mbr.h>
+#include <tinydisk.h>
 #include <devrtsd.h>
 #include <printf.h>
 
@@ -40,14 +39,8 @@
 typedef void (*sdc_transfer_function_t)(unsigned char *addr);
 
 
-/* blkdev method: flush drive */
-int devrtsd_flush(void)
-{
-	return 0;
-}
-
 /* blkdev method: transfer sectors */
-uint8_t devrtsd_transfer(void)
+static int devrtsd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
 	int i = 2;
 	uint8_t *ptr;
@@ -55,9 +48,9 @@ uint8_t devrtsd_transfer(void)
 	uint8_t cmd;
 
 	/* convert to 256 byte sector LBA */
-	blk_op.lba *= 2;
+	lba *= 2;
 
-	if (blk_op.is_read) {
+	if (is_read) {
 		cmd = SDC_CMD_READ;
 		fptr = devrtsd_read;
 	} else {
@@ -65,8 +58,8 @@ uint8_t devrtsd_transfer(void)
 		fptr = devrtsd_write;
 	}
 
-	cmd |= blk_op.blkdev->driver_data;
-	ptr = ((uint8_t *) (&blk_op.lba)) + 1;
+	cmd |= dev;
+	ptr = ((uint8_t *) (&lba)) + 1;
 	while (i--) {
 		/* set lsn */
 		sdc_lsn_high = ptr[0];
@@ -77,31 +70,23 @@ uint8_t devrtsd_transfer(void)
 		/* send command */
 		sdc_command = cmd;
 		/* xfer data */
-		fptr(blk_op.addr);
+		fptr(dptr);
 		/* wait for ready */
 		while (sdc_status & (SDC_ST_BUSY | SDC_ST_SBUSY));
-		blk_op.lba++;
-		blk_op.addr += 256;
+		lba++;
+		dptr += 256;
 	}
 	return 1;
 }
 
 __attribute__((section(".discard")))
 /* blkdev method: initalize device */
-void devrtsd_init(void)
+void devrtsd_probe(void)
 {
-	blkdev_t *blk;
 	int i;
 
 	kputs("RTSD: ");
 	/* fixme: add some device checking/reporting here */
-	for (i = 0; i < 4; i++) {
-		blk = blkdev_alloc();
-		blk->driver_data = i;
-		blk->transfer = devrtsd_transfer;
-		blk->flush = devrtsd_flush;
-		/* assume max 24 bit size? (how big are images?) */
-		blk->drive_lba_count = 16777216;
-	}
-	kputs("Ok.\n");
+	for (i = 0; i < 4; i++)
+		td_register(i, devrtsd_xfer, td_ioctl_none, 1);
 }

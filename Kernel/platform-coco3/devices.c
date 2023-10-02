@@ -59,7 +59,7 @@ void device_init(void)
 	devsdc_probe();
 #endif
 #ifdef CONFIG_COCOSDNANO
-	devrtsd_init();
+	devrtsd_probe();
 #endif
 	dw_init();
 	inittod();
