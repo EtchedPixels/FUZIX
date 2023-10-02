@@ -56,7 +56,7 @@ void device_init(void)
 	ide_probe();
 #endif
 #ifdef CONFIG_COCOSDC
-	devsdc_init();
+	devsdc_probe();
 #endif
 #ifdef CONFIG_COCOSDNANO
 	devrtsd_init();
