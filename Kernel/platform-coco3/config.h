@@ -80,8 +80,10 @@ extern unsigned char vt_map(unsigned char c);
 #define DW_MIN_OFF  3		/* Minor number offset */
 
 /* Block device define */
-#define MAX_BLKDEV  4		/* 2 IDE + 2 SDC */
-#define CONFIG_IDE
+#define CONFIG_TD_NUM	4		/* 2 IDE + 2 SDC */
+#define CONFIG_TD_IDE
+#define CONFIG_TD_SD
+#define TD_SD_NUM	2
 
 #define CONFIG_RTC		/* enable RTC code */
 #define CONFIG_RTC_INTERVAL 100	/* time in deciseconds to atually poll rtc */
@@ -98,10 +100,5 @@ unsigned char getq(unsigned char *ptr);
 typedef unsigned char *queueptr_t;
 #define GETQ(p) getq(p)
 #define PUTQ(p, v) putq((p), (v))
-
-
-/* define for SD */
-#define SD_DRIVE_COUNT 1
-#define CONFIG_SD
 
 #define CONFIG_DEV_PLATFORM

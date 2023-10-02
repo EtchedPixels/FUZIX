@@ -21,7 +21,6 @@ _devide_read_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	ldx _blk_op
 	jsr blkdev_rawflg
 	leay 512,x
 	sty endp
@@ -38,7 +37,6 @@ _devide_write_data:
 	pshs y,dp
 	lda #0xFF
 	tfr a,dp
-	ldx _blk_op
 	jsr blkdev_rawflg
 	leay 512,x
 	sty endp

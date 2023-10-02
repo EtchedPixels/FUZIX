@@ -403,13 +403,12 @@ a@	ldd	,x++
 ;;; WARNING: the blk_op struct will not be available for rawflag=1/2 after calling this!
 blkdev_rawflg
 	pshs d,x     ; save regs
-	ldx #_blk_op ; X = blkdev operations
-        ldb 2,x      ; get raw mode
+	ldb _td_raw ; 0 = kernel 1 = user 2 = swap
         decb         ; compare to 1
         bmi out@     ; less than or equal: 0, or 1 don't do map
 	beq proc@    ; is direct to process
         ;; is swap so map page into kernel memory at 0x0000
-        ldb 3,x      ; get page no
+        ldb _td_page ; get page no for swap
         stb 0xffa8   ; task 1, kernel task regs.
         incb         ; inc page no... next block no.
         stb 0xffa9   ; store it in mmu

@@ -2,9 +2,9 @@
 CSRCS = ttydw.c mbr.c dwtime.c devsys.c
 CSRCS += devices.c main.c libc.c devsdc.c devlpr.c devrtsd.c
 
-CDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
+CDSRCS = ../dev/tinyide_discard.c ../dev/tinysd_discard.c ../dev/tinydisk_discard.c
 
-DSRCS = ../dev/devdw.c ../dev/blkdev.c ../dev/devide.c ../dev/devsd.c
+DSRCS = ../dev/devdw.c ../dev/tinydisk.c ../dev/tinyide.c ../dev/tinysd.c
 
 NSRCS = ../dev/net/net_native.c
 
@@ -13,8 +13,8 @@ ASRCS += tricks.s commonmem.s usermem_gime.s ../dev/drivewire/drivewire.s sdc.s 
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-DOBJS = devdw.o blkdev.o devide.o devsd.o
-NOBJS = net_native.o
+DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
+NOBJS = $(patsubst ../dev/net/%.c,%.o, $(NSRCS))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(CDOBJS) $(NOBJS)
 
@@ -53,12 +53,12 @@ CROSS_CC += -DCONFIG_COCOSDC
 endif
 
 ifdef COCO_IDE
-DRIVERS += devide.o devide_discard.o ide.o
+DRIVERS += tinyide.o tinyide_discard.o ide.o
 CROSS_CC += -DCONFIG_COCOIDE
 endif
 
 ifdef COCO_SDFPGA
-DRIVERS += devsd.o devsd_discard.o sd.o
+DRIVERS += tinysd.o tinysd_discard.o sd.o
 CROSS_CC += -DCONFIG_COCOSDFPGA
 endif
 
@@ -106,7 +106,7 @@ image: boot.bin
 	crt0.o commonmem.o \
 	coco3.o ../start.o ../version.o ../lowlevel-6809.o \
 	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	../dev/drivewire/drivewire.o devdw.o ttydw.o blkdev.o mbr.o devlpr.o \
+	../dev/drivewire/drivewire.o devdw.o ttydw.o tinydisk.o tinydisk_discard.o devlpr.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank16k.o ../swap.o \
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \

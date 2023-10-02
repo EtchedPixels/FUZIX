@@ -6,8 +6,9 @@
 #include <tty.h>
 #include <vt.h>
 #include <devtty.h>
-#include <blkdev.h>
-#include <devide.h>
+#include <tinydisk.h>
+#include <tinyide.h>
+#include <tinysd.h>
 #include <dwtime.h>
 #include <netdev.h>
 #include <devlpr.h>
@@ -15,26 +16,25 @@
 #include <devdw.h>
 #include <ttydw.h>
 #include <devsdc.h>
-#include <devsd.h>
 
 struct devsw dev_tab[] =	/* The device driver switch table */
 {
 	/* 0: /dev/hd         Hard disc block devices */
-	{ blkdev_open, no_close,     blkdev_read, blkdev_write, blkdev_ioctl },
+	{ td_open,	no_close,	td_read,	td_write,	td_ioctl },
 	/* 1: /dev/fd         Floppy disc block devices  */
-	{ nxio_open,   no_close,     no_rdwr,     no_rdwr,      no_ioctl },
+	{ nxio_open,	no_close,	no_rdwr,	no_rdwr,	no_ioctl },
 	/* 2: /dev/tty        TTY devices */
-	{ tty_open,    my_tty_close, tty_read,    tty_write,    gfx_ioctl },
+	{ tty_open, 	my_tty_close,	tty_read,	tty_write,	gfx_ioctl },
 	/* 3: /dev/lpr        Printer devices */
-	{ lpr_open,    lpr_close, no_rdwr,        lpr_write,    no_ioctl },
+	{ lpr_open,	lpr_close,	no_rdwr,        lpr_write,	no_ioctl },
 	/* 4: /dev/mem etc    System devices (one offs) */
-	{ no_open,     sys_close, sys_read,       sys_write,    sys_ioctl },
+	{ no_open,	sys_close,	sys_read,       sys_write,	sys_ioctl },
 	/* Pack to 7 with nxio if adding private devices and start at 8 */
-	{ nxio_open,   no_close,  no_rdwr,        no_rdwr,      no_ioctl },
-	{ nxio_open,   no_close,  no_rdwr,        no_rdwr,      no_ioctl },
-	{ nxio_open,   no_close,  no_rdwr,        no_rdwr,      no_ioctl },
+	{ nxio_open,	no_close,	no_rdwr,        no_rdwr,	no_ioctl },
+	{ nxio_open,	no_close,	no_rdwr,        no_rdwr,	no_ioctl },
+	{ nxio_open,	no_close,	no_rdwr,        no_rdwr,	no_ioctl },
 	/* /dev/dw   Drivewire */
-	{ dw_open,     no_close, dw_read,         dw_write,     dw_ioctl },
+	{ dw_open,     no_close,	dw_read,	dw_write,	dw_ioctl },
 };
 
 bool validdev(uint16_t dev)
@@ -50,10 +50,10 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
 #ifdef CONFIG_COCOSDFPGA
-	devsd_init();
+	sd_probe();
 #endif
 #ifdef CONFIG_COCOIDE
-	devide_init();
+	ide_probe();
 #endif
 #ifdef CONFIG_COCOSDC
 	devsdc_init();
