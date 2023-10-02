@@ -32,27 +32,16 @@ extern uint16_t swapdev;
 #define MAX_SWAPS	32
 #define swap_map(x)  ((uint8_t *)(x & 0x3fff ))
 
-/* The Drivewire block dev rawmode=1 doesn't work just now
-   with the bank16k.c memory layout (yet), so we have to
-   use legacy binary loading... */
-/* #define CONFIG_LEGACY_EXEC */
-
 
 /* Video terminal, not a serial tty */
 #define CONFIG_VT
 #define CONFIG_VT_MULTI
-/* We want the 8x8 font */
-// #define CONFIG_VT_SIMPLE
-/* Vt definitions */
 #define VT_BASE      (uint8_t *)0xb400
 #define VT_WIDTH	curtty->width
 #define VT_HEIGHT	curtty->height
 #define VT_RIGHT	curtty->right
 #define VT_BOTTOM	curtty->bottom
 #define VT_INITIAL_LINE 0
-
-extern unsigned char vt_map(unsigned char c);
-#define VT_MAP_CHAR(x)  vt_map(x)
 
 #define TICKSPERSEC 60		/* Ticks per second */
 #define PROGBASE    0x0100	/* also data base */

@@ -216,7 +216,7 @@ int my_tty_close(uint_fast8_t minor)
 {
 	if (minor > 2 && ttydata[minor].users == 1)
 		dw_vclose(minor);
-	return (tty_close(minor));
+	return tty_close(minor);
 }
 
 /* Output for the system console (kprintf etc) */
