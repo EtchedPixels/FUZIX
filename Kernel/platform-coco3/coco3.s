@@ -293,8 +293,8 @@ map_proc:
 map_kernel:
 	    pshs a
 	    lda #1		; flip to mmu map 1 (kernel)
-	    sta 0xff91		;
 	    sta	init1_mirror	; save copy in INIT1 mirror
+	    sta 0xff91		;
 	    puls a,pc
 
 ;;; User is in the FFA0 map with the top 8K as common
@@ -329,8 +329,8 @@ map_proc_2:
 
 
 	    lda  #0
-	    sta 0xff91			; new mapping goes live here
 	    sta init1_mirror		; and save INIT1 setting in mirror
+	    sta 0xff91			; new mapping goes live here
 	    puls x,y,a,pc		; so had better include common!
 
 ;;;

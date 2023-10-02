@@ -12,6 +12,9 @@
 /* Reclaim discard space for buffers */
 #define CONFIG_DYNAMIC_BUFPOOL
 
+/* Permit large I/O requests to bypass cache and go direct to userspace */
+#define CONFIG_LARGE_IO_DIRECT(x)	1
+
 /* We use flexible 16K banks so use the helper */
 #define CONFIG_BANK16
 #define CONFIG_BANKS	4
