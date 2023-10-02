@@ -8,11 +8,11 @@ section .text
 section .text.hot
 section .text.unlikely
 section .data
-section .buffers
-section .discard
 section	.bss
+section .buffers
 section .udata load 0xe000
 section .common
 section .commondata
+section .discard high 0xdfff
 section .cpage load 0xfe00
 entry start

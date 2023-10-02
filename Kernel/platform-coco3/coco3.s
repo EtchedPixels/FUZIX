@@ -174,11 +174,13 @@ b@	sta	,x+
 	ldb	#%01001100	; coco3 mode + fexx constant
 	stb	$ff90
 	;; detect PAL or NTSC ROM
+	; Use the low 8K again for probing - we are running in the discard
+	; area (C000-DFFF)
 	ldb	#$3f		; put Super BASIC in mmu
-	stb	$ffae		;
-	lda	$c033		; get BASIC's "mirror" of Video Reg
-	ldb	#$0a		; put Fuzix Kernel back in mmu
-	stb	$ffae		;
+	stb	$ffa8
+	lda	$0033		; get BASIC's "mirror" of Video Reg
+	ldb	#$00		; put Fuzix Kernel back in mmu
+	stb	$ffa8		;
 	anda	#$8		; mask off 50 hz bit
 	sta	_hz		; save for future use
 	;; continue setup of regs

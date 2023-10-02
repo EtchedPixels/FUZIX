@@ -34,4 +34,3 @@ bss_wipe:
 	jsr 	_fuzix_main
 	orcc 	#0x10
 stop:	bra 	stop
-
