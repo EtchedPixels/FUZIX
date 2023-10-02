@@ -53,6 +53,7 @@ struct display {
 #define GFX_PALETTE_SET	64	/* Has settable colour palette */
 #define GFX_TEXT	128	/* Console text works in this mode */
 #define GFX_WRAP	256	/* Viewport wraps */
+#define GFX_BITALIGN	512	/* Operations are bit not byte aligned */
   uint16_t memory;		/* Memory size in KB (may be 0 if not relevant) */
   uint16_t commands;
 #define GFX_DRAW	1	/* Supports the draw command */
@@ -72,6 +73,12 @@ struct display {
   uint16_t twidth;		/* Character size information */
   uint16_t theight;		/* Characters per line/column */
  /* We may want to add some hardware ones as we hit machines that have them */
+};
+
+struct blit {
+ unsigned ys, xs;
+ unsigned yd, xd;
+ unsigned height, width;
 };
 
 /* FIXME: need a way to describe/set modes if multiple supported */
@@ -120,7 +127,7 @@ struct videomap {
 #define GFXIOC_WRITE		0x0313	/* Write to screen direct */
 #define GFXIOC_AWRITE		0x0314	/* Write to attributes direct */
 #define GFXIOC_EXG		0x0315	/* Exchange a block */
-#define GFXIOC_SCROLL		0x0316	/* Set scroll offsets */
+#define GFXIOC_SCROLL		0x0316	/* Set scroll offsets x word, y word */
 
 /*
  *	VDP specific ioctls: The 0x032X range is reused for each type

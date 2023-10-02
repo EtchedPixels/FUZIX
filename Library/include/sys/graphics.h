@@ -120,6 +120,16 @@ struct videomap {
 #define GFXIOC_WRITE		0x0313	/* Write to screen direct */
 #define GFXIOC_AWRITE		0x0314	/* Write to attributes direct */
 #define GFXIOC_EXG		0x0315	/* Exchange a block */
+#define GFXIOC_SCROLL		0x0316	/* Set scroll offsets x word, y word */
+
+struct blit {
+ uint16_t ys;
+ uint16_t xs;
+ uint16_t yd;
+ uint16_t xd;
+ uint16_t height;
+ uint16_t width;
+};
 
 /*
  *	VDP specific ioctls: The 0x032X range is reused for each type
