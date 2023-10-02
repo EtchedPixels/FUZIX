@@ -15,13 +15,16 @@ typedef int (*td_xfer)(uint_fast8_t unit, bool is_read, uint32_t block, uint8_t 
 typedef int (*td_ioc)(uint_fast8_t unit, uarg_t request, char *data);
 extern int td_ioctl_none(uint_fast8_t minor, uarg_t request, char *data);
 
+/* Optional target provided function with CONFIG_TD_CUSTOMPART to handle platforms
+   that don't use PC format tables */
+extern uint_fast8_t td_plt_setup(uint_fast8_t letter, uint_fast8_t unit, uint32_t *lba, void *br);
 extern uint8_t td_page;
 extern uint8_t td_raw;
 
-#ifdef _TINYDISK_PRIVATE
-
 /* Base disk and four partitions */
 #define MAX_PART	5
+
+#ifdef _TINYDISK_PRIVATE
 
 extern uint32_t td_lba[CONFIG_TD_NUM][MAX_PART + 1];
 extern td_xfer td_op[CONFIG_TD_NUM];

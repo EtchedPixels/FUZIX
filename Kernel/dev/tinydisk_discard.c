@@ -55,20 +55,28 @@ static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 uint_fast8_t tinydisk_setup(uint16_t dev)
 {
 	uint32_t *lba = td_lba[dev];
-	uint_fast8_t n = 0;
+	uint_fast8_t n;
 	uint_fast8_t c = 0;
 	boot_record_t *br = (boot_record_t *) tmpbuf();
 	partition_table_entry_t *pe = br->partition;
+
+	/* Platform custom partitions */
+#ifdef CONFIG_TD_CUSTOMPART
+	n = td_plt_setup('a' + dev, td_unit[dev], lba, (void *)br);
+	if (n < 2)
+		return n;
+#endif
 	udata.u_block = 0;
 	udata.u_nblock = 1;
 	udata.u_dptr = (void *) br;
-	if (td_read(dev << 4, 0, 0) != BLKSIZE) {
+	if (td_read(td_unit[dev], 0, 0) != BLKSIZE) {
 		tmpfree(br);
 		return 0;
 	}
 	kprintf("hd%c: ", 'a' + dev);
 
 	if (le16_to_cpu(br->signature) == MBR_SIGNATURE) {
+		n = 0;
 		while (n < 4) {
 			if (pe->type_chs_last[0]) {
 				kprintf("hd%c%d ", 'a' + dev, ++c);
