@@ -269,11 +269,6 @@ int tty_carrier(uint_fast8_t minor)
 	return 1;
 }
 
-void tty_interrupt(void)
-{
-
-}
-
 void tty_data_consumed(uint_fast8_t minor)
 {
 }
@@ -307,6 +302,14 @@ static volatile uint8_t *pia_row = (uint8_t *) 0xFF00;
 /* Columns for scanning: multiplexed with the printer port */
 static volatile uint8_t *pia_col = (uint8_t *) 0xFF02;
 
+static uint8_t keyany(void)
+{
+	uint8_t x;
+	*pia_col = 0x00;
+	x = ~*pia_row;
+	*pia_col = 0xFF;
+	return x;
+}
 
 static void keyproc(void)
 {
@@ -403,15 +406,17 @@ void plt_interrupt(void)
 {
 	*pia_col;
 	newkey = 0;
-	keyproc();
-	if (keysdown && (keysdown < 3)) {
-		if (newkey) {
-			keydecode();
-			kbd_timer = keyrepeat.first;
-		} else {
-			if (!--kbd_timer) {
+	if (keysdown || keyany()) {
+		keyproc();
+		if (keysdown && (keysdown < 3)) {
+			if (newkey) {
 				keydecode();
-				kbd_timer = keyrepeat.continual;
+				kbd_timer = keyrepeat.first;
+			} else {
+				if (!--kbd_timer) {
+					keydecode();
+					kbd_timer = keyrepeat.continual;
+				}
 			}
 		}
 	}
