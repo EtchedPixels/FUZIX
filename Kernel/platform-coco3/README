@@ -37,6 +37,21 @@ https://launchpad.net/~tormodvolden/+archive/ubuntu/m6809
 BOOTING
 *************************
 
+HDBDOS
+------
+make diskimage
+
+The result will be Images/coco3/disk.img which is a raw IDE disk image
+with the necessary boot floppy integrated into it as a virtual disk.
+
+For emulation purposes this can be booted with
+
+xroar -machine coco3 -cart ide -cart-rom hdblba13.rom -load-hd0 Images/coco3/disk.img
+
+You probably also want to specify -ccr none
+
+Drivewire
+---------
 Booting this Fuzix is accomplished via some flavor of Disk Extended
 Color Basic (DECB).  When building Fuzix two disk images are
 produced. The first, "Kernel/platform-coco3/fuzix.dsk", is a standard

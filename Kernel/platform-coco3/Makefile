@@ -93,6 +93,7 @@ $(AOBJS): %$(BINEXT): %.s
 
 clean:
 	rm -f $(OBJS) $(JUNK) fuzix.dsk boot.bin core *~
+	rm -f fuzix.tmp
 
 image: boot.bin
 	$(CROSS_CC) $(CROSS_CCOPTS) -O0 -c -o ../bank16k.o ../bank16k.c
@@ -123,5 +124,15 @@ image: boot.bin
 boot.bin: boot/boot.s
 	lwasm -lboot.list -oboot.bin boot/boot.s
 
+IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
-
+diskimage:
+	# Make a blank disk image with partition
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
+	# Add the file system
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
+	# Add the floppy image (assumes the usual binary hdbdos image and offset)
+	$(FUZIX_ROOT)/Kernel/tools/diskpad <fuzix.dsk >fuzix.tmp
+	dd if=fuzix.tmp of=$(IMAGES)/disk.img bs=512 seek=339420 conv=notrunc
+	# Make an emulator image of it
+	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
