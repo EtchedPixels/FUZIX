@@ -41,7 +41,6 @@
 	    .globl null_handler
 	    .globl video_init
 	    .globl _scanmem
-	    .globl copy_mmu
 
             include "kernel.def"
             include "../kernel09.def"
@@ -166,9 +165,6 @@ b@	sta	,x+
 	inca
 	decb
 	bne	b@
-	;; move mmu bank 0x6 to 0x0a
-	ldd	#$060a
-	jsr	copy_mmu
         ;; set temporary screen up
 	clr	$ff9c		; reset scroll register
 	ldb	#%01001100	; coco3 mode + fexx constant
