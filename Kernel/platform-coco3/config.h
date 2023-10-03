@@ -21,8 +21,10 @@
 #define MAX_MAPS 128-3
 #define MAPBASE 0x0000
 /* And swapping */
-extern uint16_t swapdev;
-#define SWAPDEV  swapdev
+/* Swap will be set up when a suitably labelled partition is seen */
+#define CONFIG_DYNAMIC_SWAP
+extern uint16_t swap_dev;
+#define SWAPDEV  swap_dev
 #define SWAP_SIZE   0x71
 /* FIXME */
 #define SWAPBASE    0x0000	/* We swap the lot in one, include the */
@@ -42,6 +44,7 @@ extern uint16_t swapdev;
 #define VT_RIGHT	curtty->right
 #define VT_BOTTOM	curtty->bottom
 #define VT_INITIAL_LINE 0
+#define	TTYSIZE	    256		/* Banked so we can afford full size buffers */
 
 #define TICKSPERSEC 60		/* Ticks per second */
 #define PROGBASE    0x0100	/* also data base */

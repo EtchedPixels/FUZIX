@@ -1,13 +1,29 @@
-Fuzix for CoCo3 (512k)
+# TODO
+
+- devinput support (joystick, keyboard)
+- switch to 8K banking
+- 640x200 mono graphics support ?
+DONE - 32K screen space (reclaim 3f, move user up, what is 10 used for ?)
+- Mouse ??? https://nickmarentes.com/ProjectArchive/hires.html
+YES - Can we then fit in networking and coco ethernet stuff or COCOIO (W5100)
+  direct connect at 0xFF68-FF6b (ctrl, addr hi, addr lo, data)
+- 2MB RAM support
+- FIXME: double check graphics ops versus low map
+- 32K video, with helper ops doing bank flip on the right line
+  Will need some thought for best results - do we want to put
+  one console in each 16K block and except for 32K modes allow
+  them to co-exist and switch ?
+
+# Brett's Old Notes (mostly obsolete)
+
+# Fuzix for CoCo3 (512k)
 
 Copyright 2015, Brett M. Gordon, under GPL2.
-
 
 This port is for running FUZIX on an emulated 512K Ram Color
 Computer 3.  This port is based heavily on the platform-6809test and
 the two dragon ports by Tormod Volden.  It will not, as yet, work on a
-stock 128k CoCo3; No disk swapping is supported, and until then, a
-128K version will be unexciting, anyway.
+stock 128k CoCo3.
 
 
 *************************

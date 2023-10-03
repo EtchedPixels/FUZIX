@@ -172,7 +172,7 @@ b@	ldb	,x+		; get a byte from src
 _putq
 	pshs	cc		; save interrupt state
 	orcc	#0x50		; stop interrupt till we restore map
-	lda	#0x3f		; mmu page 10 for queue structs
+	lda	#0x0C		; mmu page 0C for queue structs
 	sta	0xffa9		;
 	stb	,x		; store the character
 	lda	#1		; restore kernel map
@@ -187,7 +187,7 @@ _putq
 _getq
 	pshs	cc		; save interrupt state
 	orcc	#0x50		; stop interrupt till we restore map
-	lda	#0x3f		; mmu page 10 for queue structs
+	lda	#0x0C		; mmu page 0C for queue structs
 	sta	0xffa9		;
 	ldb	,x
 	lda	#1		; restore kernel map

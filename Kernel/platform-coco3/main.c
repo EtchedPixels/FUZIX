@@ -8,7 +8,7 @@
 
 #define DISC __attribute__((section(".discard")))
 
-uint16_t swapdev = 0;
+uint16_t swap_dev = 0xFFFF;
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
 DISC void plt_copyright(void)
@@ -21,7 +21,7 @@ void plt_discard(void)
 	bufptr bp = bufpool_end;
 
 	/* Until we switch to 8K pages then this will be E000 */
-	while(bp + 1 < 0xC000) {
+	while(bp + 1 < (void *)0xC000) {
 		memset(bp, 0, sizeof(struct blkbuf));
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
@@ -101,7 +101,7 @@ DISC uint8_t plt_param(char *p)
 		return -1;
 	}
 	if (!strncmp(p, "SWAP=", 5)) {
-		swapdev = bootdevice(p + 5);
+		swap_dev = bootdevice(p + 5);
 		return -1;
 	}
 	if (!strncmp(p, "VTMODE=", 7)) {
