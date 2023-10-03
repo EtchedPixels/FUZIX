@@ -18,19 +18,17 @@ DISC void plt_copyright(void)
 
 void plt_discard(void)
 {
-	extern uint8_t discard_size;
 	bufptr bp = bufpool_end;
 
-	kprintf("%d buffers reclaimed from discard\n", discard_size);
-
-	bufpool_end += discard_size;
-
-	memset(bp, 0, discard_size * sizeof(struct blkbuf));
-
-	for (bp = bufpool + NBUFS; bp < bufpool_end; ++bp) {
+	/* Until we switch to 8K pages then this will be E000 */
+	while(bp + 1 < 0xC000) {
+		memset(bp, 0, sizeof(struct blkbuf));
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
+		bp++;
 	}
+	kprintf("%d buffers reclaimed from discard\n", bp - bufpool_end);
+	bufpool_end = bp;
 }
 
 
@@ -67,26 +65,29 @@ DISC int scanmem(void)
 /*
  Map handling: We have flexible paging. Each map table consists
  of a set of pages with the last page repeated to fill any holes.
+ 
+ 0-7: kernel (6-7 form init common as well)
+ 8-B: video
+ C  : paged kernel buffers
+ D+ : user
  */
+
 DISC void pagemap_init(void)
 {
 	int i;
-	int max = scanmem();
+	int max = scanmem() - 1;	/* Pairs so need one for the upper top */
 
 	/*  We have 64 8k pages for a CoCo3 so insert every other one
 	 *  into the kernel allocator map, skipping 3f. 3f holds our constant
-	 *  page and tty buffers.  This code only works if page nos. are oddly
-	 *  aligned after the kernel.
+	 *  page and tty buffers.
 	 */
-	for (i = 0xb; i < 0x3f; i += 2)
-		pagemap_add(i);
-	for (i = 0x40; i < max; i += 2)
+	for (i = 0x0D; i < max; i += 2)
 		pagemap_add(i);
 	/* add common page last so init gets it */
 	pagemap_add(6);
-	/* initialize swap pages */
-	for (i = 0; i < MAX_SWAPS; i++)
-		swapmap_init(i);
+//	/* initialize swap pages */
+//	for (i = 0; i < MAX_SWAPS; i++)
+//		swapmap_init(i);
 }
 
 DISC void map_init(void)

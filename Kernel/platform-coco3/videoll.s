@@ -6,8 +6,9 @@
 
 
 	;; exported
-	.globl	_memset
-	.globl	_memcpy
+	.globl _memset
+	.globl _memcpy
+	.globl _memcmp
 	.globl _video_read
 	.globl _video_write
 	.globl _video_cmd
@@ -56,6 +57,25 @@ a@	ldb	,u+
 	bne	a@
 	puls	x,y,u,pc
 
+;;;	int memcmp(const void *s1, const void *s2, size_t sz)
+_memcmp:
+	pshs	x,y,u
+	ldu	8,s
+	ldy	10,s
+a@	ldb	,u+
+	cmpb	,x+
+	bcs	retneg
+	bne	retpos
+	leay	-1,y
+	bne	a@
+	ldd	#0
+	puls	x,y,u,pc
+retneg:
+	ldd	#-1
+	puls	x,y,u,pc
+retpos:
+	ldd	#1
+	puls	x,y,u,pc
 
 ;
 ;	These routines wortk in both 256x192x2 and 128x192x4 modes

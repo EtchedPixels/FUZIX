@@ -83,8 +83,8 @@ extern uint16_t swapdev;
 
 /* Level 2 groups, coredumps, network */
 #undef CONFIG_LEVEL_2
-#undef CONFIG_NET
-#undef CONFIG_NET_NATIVE
+#define CONFIG_NET
+#define CONFIG_NET_NATIVE
 
 /* redefine tty queue primitives to use our banking ones */
 void putq(unsigned char *ptr, char c);

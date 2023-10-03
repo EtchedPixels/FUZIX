@@ -20,6 +20,8 @@ OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(CDOBJS) $(NOBJS)
 
 CROSS_CCOPTS += -I../dev/
 
+HIGH = -mcode-section=.text3
+
 JUNK = $(CSRCS:.c=.o) $(ASRCS:.s=.o) $(DSRCS:.c=.o)
 
 # Set 'SUBTARGET' to one of: emu, real, fpga, nano. 
@@ -82,7 +84,7 @@ $(CDOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(DOBJS): %$(BINEXT): ../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(HIGH) -c $<
 
 $(NOBJS): %$(BINEXT): ../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
@@ -112,7 +114,7 @@ image: boot.bin
 	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
 	../syscall_fs3.o ../syscall_exec.o ../blk512.o ../memalloc_none.o \
 	../usermem_std-6809.o devtty.o libc.o ../vt.o usermem_gime.o video.o \
-	videoll.o dwtime.o devsys.o mbr.o \
+	videoll.o dwtime.o devsys.o mbr.o ../network.o \
 	../syscall_net.o net_native.o $(DRIVERS)
 # make DECB disk w/ new kernel
 	rm -f fuzix.dsk
