@@ -62,14 +62,14 @@ uint_fast8_t tinydisk_setup(uint16_t dev)
 
 	/* Platform custom partitions */
 #ifdef CONFIG_TD_CUSTOMPART
-	n = td_plt_setup('a' + dev, td_unit[dev], lba, (void *)br);
+	n = td_plt_setup(dev, lba, (void *)br);
 	if (n < 2)
 		return n;
 #endif
 	udata.u_block = 0;
 	udata.u_nblock = 1;
 	udata.u_dptr = (void *) br;
-	if (td_read(td_unit[dev], 0, 0) != BLKSIZE) {
+	if (td_read(dev << 4, 0, 0) != BLKSIZE) {
 		tmpfree(br);
 		return 0;
 	}

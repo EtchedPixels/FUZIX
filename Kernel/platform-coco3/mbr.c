@@ -31,7 +31,7 @@ typedef struct {
 } boot_record_t;
 
 
-uint_fast8_t td_plt_setup(uint_fast8_t letter, uint_fast8_t dev, uint32_t *lba, void *buf)
+uint_fast8_t td_plt_setup(uint_fast8_t dev, uint32_t *lba, void *buf)
 {
 	boot_record_t *br = buf;
 	uint8_t i, k = 0;
@@ -43,10 +43,10 @@ uint_fast8_t td_plt_setup(uint_fast8_t letter, uint_fast8_t dev, uint32_t *lba, 
 	udata.u_dptr = (void *) br;
 
 	/* FIX: should also check table's CRC */
-	if (td_read(dev, 0, 0) != BLKSIZE || br->magic != MBR_SIGNATURE)
+	if (td_read(dev << 4, 0, 0) != BLKSIZE || br->magic != MBR_SIGNATURE)
 		return 2;		/* Try PC format */
 
-	kprintf("hd%c: ", letter);
+	kprintf("hd%c: ", dev + 'a');
 	/* add each entry to blkops struct */
 	/*  This adds paritions as it finds good ones? */
 	for (i = 0; i < MBR_ENTRY_COUNT; i++) {
@@ -62,7 +62,7 @@ uint_fast8_t td_plt_setup(uint_fast8_t letter, uint_fast8_t dev, uint32_t *lba, 
 				tstart <<= (br->secz - 1);
 			*lba++ = tstart;
 			k++;
-			kprintf("hd%c%d ", letter, k);
+			kprintf("hd%c%d ", dev + 'a', k);
 			/* TODO: swap on CCPT */
 			if (k == MAX_PART)
 				break;

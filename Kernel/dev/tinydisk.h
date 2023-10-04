@@ -17,7 +17,7 @@ extern int td_ioctl_none(uint_fast8_t minor, uarg_t request, char *data);
 
 /* Optional target provided function with CONFIG_TD_CUSTOMPART to handle platforms
    that don't use PC format tables */
-extern uint_fast8_t td_plt_setup(uint_fast8_t letter, uint_fast8_t unit, uint32_t *lba, void *br);
+extern uint_fast8_t td_plt_setup(uint_fast8_t unit, uint32_t *lba, void *br);
 extern uint8_t td_page;
 extern uint8_t td_raw;
 

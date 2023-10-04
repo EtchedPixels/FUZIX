@@ -14,7 +14,9 @@ static uint8_t ide_present;
 static int ide_wait_op(uint8_t mask, uint8_t val)
 {
 	uint_fast8_t st = ide_read(status);
-	if (st == 0x00 || st == 0xFF) {
+	/* 0x78 is the bus float for many systems with CMOS Z80 and nothing pulling the idle bus. It's
+	   also conveniently a nonsense IDE status */
+	if (st == 0x00 || st == 0xFF || st == 0x78) {
 		kputs(" - absent\n");
 		return -1;
 	}
@@ -48,18 +50,27 @@ static void ide_identify(int dev, uint8_t *buf)
 	uint8_t *dptr = buf;
         int i;
 
+        ide_unit = dev;
+
 	giveup = set_timer_ms(2000);
 
 	kprintf("%x : ", dev);
 
-	ide_write(devh, dev << 4);	/* Select */
+	ide_write(devh, (dev & 1) << 4);	/* Select */
 	if (ide_wait_nbusy() == -1)
 		return;
-#ifdef CONFIG_TINYIDE_8BIT
-	if (ide_wait_drdy() == -1)
+
+	/* At this point DRQ should be low */
+	if (ide_wait_op(0x08, 0x00))
 		return;
-	ide_write(error, 0x01);		/* 8bit mode */
-	ide_write(cmd, 0xEF);
+
+#ifdef CONFIG_TINYIDE_8BIT
+	if (IDE_IS_8BIT(dev)) {
+		if (ide_wait_drdy() == -1)
+			return;
+		ide_write(error, 0x01);		/* 8bit mode */
+		ide_write(cmd, 0xEF);
+	}
 #endif
 	if (ide_wait_drdy() == -1)
 		return;
@@ -139,20 +150,17 @@ void ide_probe(void)
 	unsigned chs = 0;
 	uint8_t *buf = (uint8_t *)tmpbuf();
 	for (n = 0 ; n < TD_IDE_NUM; n += 2) {
-		ide_unit = n;
 #ifdef CONFIG_TINYIDE_RESET
 		ide_reset();
 #endif
 		/* Issue an EDD if we can - timeout -> no drives */
 		/* Now issue an identify for each drive */
-		ide_identify(0, buf);
-		if (ide_present && n < TD_IDE_NUM - 1) {
-			ide_unit++;
-			ide_identify(1, buf);
-		}
-		if (ide_present & 1)
+		ide_identify(n, buf);
+		if (ide_present && n < TD_IDE_NUM - 1)
+			ide_identify(n + 1, buf);
+		if (ide_present & (1 << n))
 			ide_register(n);
-		if (ide_present & 2)
+		if (ide_present & (2 << n))
 			ide_register(n + 1);
 	}
 	tmpfree(buf);
