@@ -2,15 +2,13 @@
 #include <kdata.h>
 #include <printf.h>
 #include <timer.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <devppa.h>
 
 /* The PPA is really a full on SCSI to parallel port adapter but we treat it
-   all as a magic block device for now.
-   
-   TODO: write the asm helpers for block mode */
+   all as a magic block device for now. */
 
-#ifdef CONFIG_BLK_PPA
+#ifdef CONFIG_TD_PPA
 
 static void ppa_d_pulse(uint8_t v)
 {
@@ -148,20 +146,15 @@ static uint8_t ppa_command(uint8_t target, uint8_t *cmd, uint8_t cmd_len, uint8_
 
 static uint8_t cmd_rw[6] = { 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
 
-static uint_fast8_t ppa_transfer_sector(void)
+static int td_xfer_sector(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-    cmd_rw[0] = blk_op.is_read ? 0x08 : 0x0A;
-    cmd_rw[1] = (blk_op.lba >> 16) & 0x0F;
-    cmd_rw[2] = blk_op.lba >> 8;
-    cmd_rw[3] = blk_op.lba;
-    if (ppa_command(6, cmd_rw, 6, blk_op.addr, 1))
+    cmd_rw[0] = is_read ? 0x08 : 0x0A;
+    cmd_rw[1] = (lba >> 16) & 0x0F;
+    cmd_rw[2] = lba >> 8;
+    cmd_rw[3] = lba;
+    if (ppa_command(6, cmd_rw, 6, dptr, 1))
         return 0;
     return 1;
-}
-
-static int ppa_flush_cache(void)
-{
-	return 0;
 }
 
 static uint8_t ppa_devinit(void)
@@ -190,20 +183,12 @@ static uint8_t ppa_devinit(void)
 
 uint8_t ppa_init(void)
 {
-    blkdev_t *blk;
-
     if (ppa_devinit())
         return 0;
-    
-    blk = blkdev_alloc();
-    if (blk == NULL)
-        return 0;
-    blk->transfer = ppa_transfer_sector;
-    blk->flush = ppa_flush_cache;
-    blk->driver_data = 0;
-    blk->drive_lba_count = 0xFFFFFF;	 /* For now */
+
     kputs("ZIP drive 0: ");
-    blkdev_scan(blk, 1);
+    if (td_register(0, td_xfer_sector, td_ioctl_none, 1)< 0)
+	kputchar('\n');
     return 1;
 }
 
