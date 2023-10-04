@@ -81,8 +81,8 @@
 # z180itx:	Z180ITX prototype
 # z80-mbc2:	MBC2 Z80 with modern microcontroller as I/O
 # z80membership: Z80 membership card
-# z80retro:	Peter Wilson's Z80Retro
 # z80pack:	Z80Pack virtual Z80 platform
+# z80retro:	Peter Wilson's Z80Retro
 # zeta-v2:	Zeta v2 retrobrew SBC (for Zeta V1 see sbcv2)
 # zrc:		Bill Shen's Zrc platform
 # zx+3:		ZX Spectrum +3
