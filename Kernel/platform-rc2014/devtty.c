@@ -1271,11 +1271,11 @@ uint8_t register_uart(uint16_t port, struct uart *ops)
 }
 
 /* Ditto into discard */
-
 void insert_uart(uint16_t port, struct uart *ops)
 {
 	struct uart **p = &uart[NUM_DEV_TTY];
 	uint16_t *pt = &ttyport[NUM_DEV_TTY];
+	queue_t *q = &ttyinq[NUM_DEV_TTY];
 	uint8_t *buf;
 
 	/* Are we going to throw out a UART ? If so recycle the allocated
@@ -1289,7 +1289,9 @@ void insert_uart(uint16_t port, struct uart *ops)
 	while(p != uart + 1) {
 		*p = p[-1];
 		*pt = pt[-1];
+		*q = q[-1];
 		p--;
+		q--;
 		pt--;
 	}
 	uart[1] = ops;
