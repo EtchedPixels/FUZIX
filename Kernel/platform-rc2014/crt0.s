@@ -21,7 +21,6 @@
 	.area _BUFFERS
         .area _DISCARD
 	.area _FONT	   ; only used at start up so discardable
-        .area _INITIALIZER ; binman copies this to the right place for us
 	.area _CODE1
 	.area _DISCARD1
         .area _CODE2
@@ -29,6 +28,7 @@
 	.area _VECTORS	    ; 32 byte aligned
         .area _COMMONMEM
 	.area _COMMONDATA
+        .area _INITIALIZER ; binman copies this to the right place for us
 
         ; exported symbols
         .globl init

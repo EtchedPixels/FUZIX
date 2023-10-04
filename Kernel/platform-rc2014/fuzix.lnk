@@ -7,6 +7,7 @@
 -b _VECTORS=0xFF00
 -b _COMMONMEM=0xEE00
 -b _DISCARD=0xC300
+-b _INITIALIZER=0x4000
 -l z80
 platform-rc2014/crt0.rel
 platform-rc2014/commonmem.rel
