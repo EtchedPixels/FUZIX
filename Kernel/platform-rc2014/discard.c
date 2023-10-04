@@ -41,6 +41,11 @@ static uint8_t probe_tms9918a(void)
 	/* Should see the top bit go high */
 	do {
 		v = tms9918a_ctrl & 0x80;
+		/* On some systems the floating bus can confuse the high/low test so do extra
+		   checking - also this speeds stuff up */
+		/* We should never see C or 5S set as we have no sprites running */
+		if (v & 0x60)
+			return 0;
 	} while(--ct && !(v & 0x80));
 
 	if (ct == 0)
@@ -405,8 +410,10 @@ void vdu_setup(void)
 	if (shadowcon) {
 		uint8_t n = 0;
 		shadowcon = 0;
-		while (n++ < num_tms)
-			insert_uart(0x98, &tms_uart);
+		if (tms9918a_present) {
+			while (n++ < num_tms)
+				insert_uart(0x98, &tms_uart);
+		}
 		if (macca_present) {
 			insert_uart(MACCA_BASE, &macca_uart);
 			insert_uart(MACCA_BASE, &macca_uart);
@@ -425,8 +432,10 @@ void vdu_setup(void)
 			vidcard[n++] = VID_MACCA;
 			vidcard[n++] = VID_MACCA;
 		}
-		while(num_tms--)
-			vidcard[n++] = VID_TMS9918A;
+		if (tms9918a_present) {
+			while(num_tms--)
+				vidcard[n++] = VID_TMS9918A;
+		}
 		/* Set the video state up. It's a bit scrambled at this
 		   point so we just cycle the consoles to clean up */
 		for (n = 1; n < 5; n++)
