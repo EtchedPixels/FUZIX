@@ -256,9 +256,6 @@ void init_hardware_c(void)
 {
 	ramsize = 512;
 	procmem = 512 - 112;
-
-	/* No probe for this one... */
-
 	ef9345_present = ef9345_probe();
 	if (ef9345_present) {
 		shadowcon = 1;
@@ -274,6 +271,7 @@ void init_hardware_c(void)
 	}
 
 #ifdef CONFIG_RC2014_PROPGFX
+	/* No probe for this one... */
 	macca_present = macca_init();
 #endif
 	if (macca_present) {
@@ -281,8 +279,8 @@ void init_hardware_c(void)
 			shadowcon = 1;
 			vt_twidth = 40;
 			vt_tright = 39;
-			vt_theight = 24;
-			vt_tbottom = 23;
+			vt_theight = 30;
+			vt_tbottom = 29;
 			curvid = vidcard[1] = VID_MACCA;
 			vtinit();
 		}
