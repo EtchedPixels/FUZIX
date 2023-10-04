@@ -615,22 +615,15 @@ int netproto_socket(void)
 					if ((st->type == udata.u_net.args[2]) &&
 					    ((st->protocol == 0) ||
 					     (udata.u_net.args[3] == 0) ||
-					     (udata.u_net.args[3] ==
-					      st->protocol))) {
-						sockdata[i].socket =
-						  &sockets[i];
+					     (udata.u_net.args[3] == st->protocol))) {
+						sockdata[i].socket = &sockets[i];
 						sockets[i].s_num = i;
 						net_setup(&sockets[i]);
-						sockets[i].s_class =
-						  udata.u_net.args[2];
-						sockets[i].s_state =
-						  SS_UNCONNECTED;
-						sockets[i].s_type =
-						  st->info;
-						sockets[i].s_protocol =
-						  udata.u_net.args[3];
-						udata.u_net.sock =
-						  sockets[i].s_num;
+						sockets[i].s_class = udata.u_net.args[2];
+						sockets[i].s_state = SS_UNCONNECTED;
+						sockets[i].s_type = st->info;
+						sockets[i].s_protocol = udata.u_net.args[3];
+						udata.u_net.sock = sockets[i].s_num;
 						irqrestore(irq);
 						return 0;
 					}
