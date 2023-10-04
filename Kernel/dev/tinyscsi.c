@@ -33,7 +33,9 @@ static uint8_t cmd_rw10[10] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00
 };
 
-static const uint8_t cmd_sense[6] = {
+/* Don't make this const. It's local and static so the banking code will assume
+   the pointer isn't passed to another bank if const - but it is here */
+static uint8_t cmd_sense[6] = {
   0x03, 0x00, 0x00, 0x00, 0x10, 0x00
 };
 
