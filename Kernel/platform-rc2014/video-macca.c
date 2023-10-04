@@ -43,21 +43,15 @@
 
 extern uint8_t fontdata_6x8[];
 
-#ifdef CONFIG_RC2014_EXTREME
-__sfr __banked __at 0x40B8 vid_cmd;
-__sfr __banked __at 0x41B8 vid_data;
-__sfr __at 0x68 vid_pio;
-
-#else
-
 __sfr __at 0x40 vid_cmd;
 __sfr __at 0x41 vid_data;
-
-#endif
+#define DPORT 0x41
 
 static uint8_t scroll_pos;
 static uint8_t con_xbias;
 static uint8_t ma_mode;
+
+extern void macca_expand_font(uint16_t port);
 
 static void tilemap_set(unsigned char y1, unsigned char x1)
 {
@@ -72,7 +66,7 @@ static void tilemap_set(unsigned char y1, unsigned char x1)
 		off = 80 * y1;
 	else
 		off = 64 * y1;
-	off += y1 + x1;
+	off += x1;
 	if (con_xbias)
 		off += vt_twidth;
 	vid_cmd = CMD_TILEMAP;
@@ -103,7 +97,7 @@ void ma_cursor_on(int8_t y, int8_t x)
 		vid_data = 0;
 		vid_data = x << 3;
 		vid_data = y << 3;
-		vid_data = 1;	/* For testing */
+		vid_data = 0;
 		if (x > 31)
 			vid_data = 1;
 		else
@@ -206,7 +200,6 @@ static void macca_set_char(uint8_t ch, uint8_t *p)
 
 static void macca_set_mode(uint8_t mode)
 {
-	uint8_t *p;
 	unsigned n = 0;
 	unsigned i;
 	uint8_t modebits = mode;
@@ -238,32 +231,18 @@ static void macca_set_mode(uint8_t mode)
 			vid_data = 0xFC;
 
 		/* Load the font */
-		p = fontdata_6x8;
 		vid_cmd = CMD_TILEBITS;
 		/* We only load 32 to 127 */
 		vid_data = 0x00;
 		vid_data = 0x08;	/* 2K in */
-
-		while (n++ < 768) {
-			uint8_t i;
-			uint8_t b = *p++;
-			/* Expand each pixel row into a tile row of 8 bytes */
-			for (i = 0; i < 8; i++) {
-				if (b & 0x80)
-					vid_data = 0xFC;
-				else
-					vid_data = 0x08;
-				b <<= 1;
-			}
-		}
+		macca_expand_font(DPORT);
 	}
 }
 
 /* 320 x 240 40 x 30 */
 uint8_t macca_init(void)
 {
-	macca_set_mode(0x80);
-	ma_clear_lines(0, 30);
+	macca_set_mode(0);
 	return 1;
 }
 
@@ -508,7 +487,7 @@ static ttyready_t macca_writeready(uint8_t minor)
 }
 
 struct uart macca_uart = {
-	macca_intr,		/* TODO */
+	macca_intr,
 	macca_writeready,
 	macca_putc,
 	macca_setup,

@@ -1128,3 +1128,47 @@ ___ldhlhl:
 	ld	h,(hl)
 	ld	l,a
 	ret
+
+
+	.area _CODE3
+
+	.globl _macca_expand_font
+	.globl _fontdata_6x8
+
+_macca_expand_font:
+	pop hl
+	pop de
+	pop bc		; port
+	push bc
+	push de
+	push hl
+	ld hl,#_fontdata_6x8
+	ld de,#768
+nchar:
+	push de
+	ld d,(hl)
+	inc hl
+	; now expand the bits
+	ld e,#8
+nextpixel:
+	ld a,#0xFC
+	rl d
+	jr c,setbit
+	ld a,#0x08
+setbit:
+	out (c),a
+	dec e
+	push bc
+	ld b,#64		; Wait for the poor Propeller to catch up
+				; with us.
+snore:
+	djnz snore
+	pop bc
+
+	jr nz,nextpixel
+	pop de
+	dec de
+	ld a,d
+	or e
+	jr nz, nchar
+	ret

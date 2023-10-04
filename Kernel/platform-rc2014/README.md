@@ -1,3 +1,9 @@
+TODO
+- can we drop initializer info into bank 0 area that is not relevant say
+0x4000 where code is in other logical banks and will binman move it. If so
+can then unconst the various video helpers and hopefully fix the relocation
+problem ?
+
 # This is Fuzix for the RC2014 and related machines with 512/512K RAM/ROM
 
 Modified for RC2014 with FlashROM/Ram board by Scott Baker <smbaker@gmail.com>.
@@ -152,7 +158,6 @@ Joystick 1 and 2		01-02B8
 I2C				06B8/07B8
 MG ZIP/Lpr			0C-0FB8
 Wiznet 5300			28-2DB8
-PropGFX Video			40-43B8
 EF9345				44B8/46B8
 PS/2				60B8,64B8
 I2C will move 			6C-6FB8
