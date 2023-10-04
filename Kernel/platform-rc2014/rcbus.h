@@ -126,4 +126,7 @@ extern int ps2_type;
 #define PS2_BITBANG	1
 #define PS2_DIRECT	2
 
+extern void ppide_init(void);
+extern uint16_t ide_port;
+
 #endif

@@ -78,3 +78,30 @@ DMAPORT		.equ	0x04	; Z80DMA
 	in d,(c)
 	rlc d
 .endm
+
+;
+;	NCR 5380 SCSI
+;
+B_RST	.equ	0x80
+B_AACK	.equ	0x10
+B_ASEL	.equ	0x04
+B_ABUS	.equ	0x01
+
+B_BUSY	.equ	0x40
+B_MSG	.equ	0x10
+B_CD	.equ	0x08
+B_IO	.equ	0x04
+
+B_PHAS	.equ	0x08
+
+ncr_base	.equ	0x58
+ncr_data	.equ	ncr_base
+ncr_cmd		.equ	ncr_base + 1
+ncr_mod		.equ	ncr_base + 2
+ncr_tgt		.equ	ncr_base + 3
+ncr_bus		.equ	ncr_base + 4
+ncr_st		.equ	ncr_base + 5
+ncr_dma_w	.equ	ncr_base + 5
+ncr_int		.equ	ncr_base + 7
+ncr_dma_r	.equ	ncr_base + 7
+ncr_dack	.equ	ncr_base + 8

@@ -196,13 +196,18 @@ COMMON_MEMORY
 void ppa_block_read(void) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+	    pop bc
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    push bc
+            ld a, (_td_raw)
                                                     ; and count
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapin
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)
             call map_for_swap
             jr doread
 not_swapin:
@@ -286,13 +291,18 @@ read_loop:
 void ppa_block_write(void) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+	    pop bc
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    push bc
+            ld a, (_td_raw)
             ld bc, (_ppa_port)	                    ; setup port number
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)
             call map_for_swap
             jr dowrite
 not_swapout:
@@ -337,13 +347,17 @@ write_loop:
 void ppa_block_read(void) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-                                                    ; and count
+	    pop bc
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    push bc
+            ld a, (_td_raw)
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapin
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)
             call map_for_swap
             jr doread
 not_swapin:
@@ -427,13 +441,18 @@ read_loop:
 void ppa_block_write(void) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+	    pop bc
+	    pop de
+	    pop hl
+	    push hl
+	    push de
+	    push bc
+            ld a, (_td_raw)
             ld bc, (_ppa_port)	                    ; setup port number
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)
             call map_for_swap
             jr dowrite
 not_swapout:

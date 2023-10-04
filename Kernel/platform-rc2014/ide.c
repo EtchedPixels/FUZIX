@@ -1,67 +1,68 @@
 #include <kernel.h>
-#include <blkdev.h>
-#include <devide.h>
-#include <ppide.h>
+#include <tinydisk.h>
+#include <tinyide.h>
+#include <plt_ide.h>
 #include <printf.h>
 
 uint16_t ide_port = 0x0010;		/* 256 count, port 0x10 */
-static uint8_t drive;
 /* Port I/O: Currently Z80 only */
 
-static void cf_read_data(void);
-static void cf_write_data(void);
+static uint_fast8_t drive;
 
-void ide_select(uint_fast8_t d)
-{
-    drive = d >> 1;
-}
+static void cf_read_data(uint8_t *dptr);
+static void cf_write_data(uint8_t *dptr);
 
-uint8_t devide_readb(uint_fast8_t reg)
+uint8_t ide_read(uint_fast8_t reg)
 {
-    if (drive == 1)	/* PPIDE */
-        return ppide_readb(reg);
+    if (ide_unit > 1)	/* PPIDE */
+        return ppide_read(reg);
     else if (reg & 0x08)
         return in(ide_port + (reg & 7));
     return 0x00;
 }
 
-void devide_writeb(uint_fast8_t reg, uint_fast8_t val)
+void ide_write(uint_fast8_t reg, uint_fast8_t val)
 {
-    if (drive == 1)	/* PPIDE */
-        ppide_writeb(reg, val);
+    if (ide_unit > 1)	/* PPIDE */
+        ppide_write(reg, val);
     else if (reg & 0x08)
         out(ide_port + (reg & 7), val);
 }
 
-void devide_read_data(void)
+void devide_read_data(uint8_t *dptr)
 {
-    if (drive == 1)	/* PPIDE */
-        ppide_read_data();
+    if (ide_unit > 1)	/* PPIDE */
+        ppide_read_data(dptr);
     else
-        cf_read_data();
+        cf_read_data(dptr);
 }
 
-void devide_write_data(void)
+void devide_write_data(uint8_t *dptr)
 {
-    if (drive == 1)	/* PPIDE */
-        ppide_write_data();
+    if (ide_unit > 1)	/* PPIDE */
+        ppide_write_data(dptr);
     else
-        cf_write_data();
+        cf_write_data(dptr);
 }
 
 COMMON_MEMORY
 
-static void cf_read_data(void) __naked
+static void cf_read_data(uint8_t *dptr) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw)
             ld bc, (_ide_port)                      ; setup port number
                                                     ; and count
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapin
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)			    ; swap
             call map_for_swap
             jr doread
 not_swapin:
@@ -78,24 +79,29 @@ doread:
     __endasm;
 }
 
-static void cf_write_data(void) __naked
+static void cf_write_data(uint8_t *dptr) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw)
             ld bc, (_ide_port)                      ; setup port number
                                                     ; and count
 #ifdef SWAPDEV
 	    cp #2
             jr nz, not_swapout
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
+            ld a, (_td_page)			    ; blkparam.swap_page
             call map_for_swap
             jr dowrite
 not_swapout:
 #endif
             or a                                    ; test is_user
             jr z, wr_kernel
-            call map_proc_always                 ; else map user memory first if required
+            call map_proc_always		    ; else map user memory first if required
             jr dowrite
 wr_kernel:
             call map_buffers

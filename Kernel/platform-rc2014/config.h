@@ -14,6 +14,8 @@
 #define CONFIG_RC2014_FLOPPY
 /* Set this for SD card support via PIO or SC129 at 0x68 */
 #define CONFIG_RC2014_SD
+/* Set this for SCSI support via the NCR5380 at 0x58 */
+#define CONFIG_RC2014_SCSI
 /* Do not set this unless you have the propellor graphics card installed
    and with non TMS9918A firmware as it can't be probed so will be assumed */
 #undef CONFIG_RC2014_PROPGFX
@@ -34,11 +36,11 @@
  */
 
 #ifdef CONFIG_RC2014_CF
-#define CONFIG_IDE
+#define CONFIG_TD_IDE
 #endif
 #ifdef CONFIG_RC2014_PPIDE
-#define CONFIG_IDE
-#define CONFIG_PPIDE
+#define CONFIG_TD_IDE
+#define CONFIG_TD_PPIDE
 #endif
 #ifdef CONFIG_RC2014_NET
 /* Core Networking support */
@@ -56,8 +58,8 @@
 #define CONFIG_FLOPPY
 #endif
 #ifdef CONFIG_RC2014_SD
-#define CONFIG_SD
-#define SD_DRIVE_COUNT 1
+#define CONFIG_TD_SD
+#define TD_SD_NUM 1
 #define SD_SPI_CALLTYPE __z88dk_fastcall
 #endif
 
@@ -75,6 +77,8 @@
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 /* 32 x 16K pages, 3 pages for kernel, whatever the RAM disk uses */
 #define MAX_MAPS	(32 - 3)
+/* Banked kernel */
+#define CONFIG_BANKED
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	4
@@ -110,7 +114,16 @@ extern uint16_t swap_dev;
 
 #define MAX_BLKDEV 5	    /* 1 floppy, 4 IDE or SD and maybe a ZIP */
 
-#define CONFIG_BLK_PPA
+#define CONFIG_TINYDISK
+#define CONFIG_TD_NUM	5
+#ifdef CONFIG_TD_IDE
+#define TD_IDE_NUM	4
+#define CONFIG_TINYIDE_INDIRECT
+#define CONFIG_TINYIDE_8BIT
+#define IDE_IS_8BIT(x)	((x) < 2)
+#endif
+#define CONFIG_TD_SCSI
+#define CONFIG_TD_PPA
 
 #undef CONFIG_RTC_DS12885
 #ifdef CONFIG_RTC_DS12885

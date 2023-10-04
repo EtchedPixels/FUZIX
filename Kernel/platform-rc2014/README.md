@@ -1,8 +1,5 @@
-TODO
-- can we drop initializer info into bank 0 area that is not relevant say
-0x4000 where code is in other logical banks and will binman move it. If so
-can then unconst the various video helpers and hopefully fix the relocation
-problem ?
+TODO:
+TODO: Import romwbw IMM driver
 
 # This is Fuzix for the RC2014 and related machines with 512/512K RAM/ROM
 
@@ -41,7 +38,7 @@ Other serial options
 #### Video
 -	EF9345 80 column text/graphics
 -	TMS9918A 40 column text/graphics
--	Propeller Graphics (also as text console)
+-	Propeller Graphics (also as 40x30 VGA text console)
 
 #### Keyboard / Mouse
 -	PS/2 bitbang at 0xBB
@@ -64,6 +61,8 @@ Other serial options
 -	Floppy controller
 -	SD card over Z80 PIO. GPIO or KIO
 -	Arduino SD card shield on Gluino
+-	CH375 USB adapter
+-	NCR5380 SCSI
 
 ### Networking
 -	Wiznet 5100 or 5300 module on carrier
@@ -106,8 +105,8 @@ Other serial options
 0x44-0x47	EF9345
 0x48-0x4D	Floppy controller (EPFDC)
 0x48-0x58	Floppy controller (RC2014 *)
-0x59-0x5B	Free (0x4E-0x5B free EPFDC)
-0x5C-0x5F	TFT Panel0x60		PS/2				|	Z80PIO
+0x58-0x5F	Floppy (RC2014)			|	NCR5380 SCSI
+0x60		PS/2				|	Z80PIO
 0x61-0x63	Free				|	Z80PIO
 0x64		PS/2				|	Z80PIO
 0x65-0x67	Free				|	Z80PIO
@@ -121,7 +120,7 @@ Other serial options
 0x90-0x97	IDE CF on EIPC and EasyZ80	|	Older CF mirrors here
 0x98-0x99	TMS9918A/38/58
 0x9A-0x9B	TMS9938/58
-0x9C-0x9F	Free
+0x9C-0x9F	TFT panel
 0xA0-0xA7	16x50 Serial			|	SC26C92 serial       |    ACIA
 		Also used sometimes for sound (0xA0-0xA2)
 0xA8-0xAF	Free				|	SC26C92 serial (ctd)

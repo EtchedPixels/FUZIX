@@ -1136,39 +1136,78 @@ ___ldhlhl:
 	.globl _fontdata_6x8
 
 _macca_expand_font:
-	pop hl
-	pop de
-	pop bc		; port
-	push bc
-	push de
-	push hl
-	ld hl,#_fontdata_6x8
-	ld de,#768
+	pop	hl
+	pop	de
+	pop	bc		; port
+	push	bc
+	push	de
+	push	hl
+	ld	hl,#_fontdata_6x8
+	ld	de,#768
 nchar:
-	push de
-	ld d,(hl)
-	inc hl
+	push	de
+	ld	d,(hl)
+	inc	hl
 	; now expand the bits
-	ld e,#8
+	ld	e,#8
 nextpixel:
-	ld a,#0xFC
-	rl d
-	jr c,setbit
-	ld a,#0x08
+	ld	a,#0xFC
+	rl	d
+	jr	c,setbit
+	ld	a,#0x08
 setbit:
-	out (c),a
-	dec e
-	push bc
-	ld b,#64		; Wait for the poor Propeller to catch up
+	out	(c),a
+	dec	e
+	push	bc
+	ld b,	#64		; Wait for the poor Propeller to catch up
 				; with us.
 snore:
-	djnz snore
-	pop bc
+	djnz	snore
+	pop	bc
 
-	jr nz,nextpixel
-	pop de
-	dec de
-	ld a,d
-	or e
-	jr nz, nchar
+	jr	nz,nextpixel
+	pop	de
+	dec	de
+	ld 	a,d
+	or	e
+	jr	nz, nchar
 	ret
+
+;
+;	Helpers for the CH375
+;
+	.area _CODE
+
+	.globl _nap20
+
+	; 18.432MHz so 360 cycles (25 in call/ret sequence)
+_nap20:
+	ld	b,#28
+snooze:
+	djnz	snooze
+	ret
+
+	.area _COMMONMEM
+
+	.globl _ch375_rblock
+	.globl _ch375_wblock
+	.globl _td_raw
+	.globl _td_page
+
+map:
+	ld	bc,#0x40BE		; 64 bytes port BE
+	ld	a,(_td_raw)
+	ret	z
+	dec	a
+	jp	z,map_proc_always
+	ld	a,(_td_page)
+	jp	map_for_swap
+
+_ch375_rblock:
+	call	map
+	inir
+	jp	map_kernel
+_ch375_wblock:
+	call	map
+	otir
+	jp	map_kernel

@@ -4,10 +4,8 @@
 #include <devtty.h>
 #include <ds1302.h>
 #include <ds12885.h>
-#include <devide.h>
-#include <devsd.h>
-#include <blkdev.h>
-#include <ppide.h>
+#include <tinyide.h>
+#include <tinysd.h>
 #include <rcbus.h>
 #include <vt.h>
 #include <netdev.h>
@@ -691,16 +689,21 @@ void device_init(void)
 {
 	if (eipc_present)
 		ide_port = 0x0090;
-#ifdef CONFIG_IDE
-	devide_init();
-#ifdef CONFIG_PPIDE
+#ifdef CONFIG_TD_IDE
+#ifdef CONFIG_TD_PPIDE
 	ppide_init();
 #endif
+	ide_probe();
 #endif
-#ifdef CONFIG_SD
+#ifdef CONFIG_TD_SD
 	pio_setup();
-	devsd_init();
+	kputs("sd0: ");
+	sd_probe();
 #endif
+	ch375_probe();
+#ifdef CONFIG_TD_SCSI
+	scsi_init();
+#endif	
 	lpr_init();
 #ifdef CONFIG_NET
 	sock_init();
