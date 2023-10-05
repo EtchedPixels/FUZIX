@@ -4,17 +4,17 @@
 -b _CODE=0x1000
 -b _SERIAL=0xD00
 -l z80
-platform-micro80/crt0.rel
-platform-micro80/commonmem.rel
-platform-micro80/micro80.rel
+platform/platform-micro80/crt0.rel
+platform/platform-micro80/commonmem.rel
+platform/platform-micro80/micro80.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-platform-micro80/tricks.rel
-platform-micro80/main.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-micro80/tricks.rel
+platform/platform-micro80/main.rel
 timer.rel
 kdata.rel
-platform-micro80/devices.rel
+platform/platform-micro80/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -34,11 +34,11 @@ simple.rel
 tty.rel
 devsys.rel
 usermem.rel
-usermem_std-z80.rel
-platform-micro80/discard.rel
-platform-micro80/devtty.rel
-platform-micro80/tinydisk.rel
-platform-micro80/tinydisk_discard.rel
-platform-micro80/tinyide.rel
-platform-micro80/tinyide_discard.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-micro80/discard.rel
+platform/platform-micro80/devtty.rel
+platform/platform-micro80/tinydisk.rel
+platform/platform-micro80/tinydisk_discard.rel
+platform/platform-micro80/tinyide.rel
+platform/platform-micro80/tinyide_discard.rel
 -e

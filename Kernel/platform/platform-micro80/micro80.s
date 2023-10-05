@@ -37,7 +37,7 @@
 	.globl outchar
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 
 ;=========================================================================
@@ -418,7 +418,7 @@ _sioa_txl:
 _siob_txl:
 	.db 0
 
-	.include "../dev/z80sio.s"
+	.include "../../dev/z80sio.s"
 
 sio_ports a
 sio_ports b
