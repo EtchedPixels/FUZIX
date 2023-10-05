@@ -22,7 +22,7 @@
 
 	.module ps2bitbang-n8-kbd
 
-	.include "../dev/ps2bitbang-z80.def"
+	.include "../../dev/ps2bitbang-z80.def"
 
 	.area _DATA
 

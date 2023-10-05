@@ -1,9 +1,7 @@
             .module vdp
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
-
-
+            .include "../../cpu-z80/kernel-z80.def"
 
 	    .area _COMMONMEM
 
@@ -57,7 +55,7 @@ twiddle_thumbs:			; Burn 125 clocks including the call return
 		nop		; 98
 		ret
 
-	    .include "../dev/vdp1.s"
+	    .include "../../dev/vdp1.s"
 
 	    .area _COMMONMEM
 
