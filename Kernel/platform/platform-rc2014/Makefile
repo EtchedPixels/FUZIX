@@ -5,36 +5,36 @@ CSRCS += devinput.c devgpio.c wiznet.c devlpr.c
 CSRCS += softzx81.c i2c.c ps2direct.c devscsi.c
 C3SRCS = video-tms9918a.c video-macca.c video-ef9345.c multivt.c devtty.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/tinyide_discard.c ../dev/ds1302_discard.c
-DISCARD_DSRCS += ../dev/tinysd_discard.c ../dev/tinyscsi_discard.c
-DSRCS = ../dev/devfd.c ../dev/tinyide.c ../dev/tinydisk_discard.c ../dev/tinydisk.c
-DSRCS +=  ../dev/ds1302.c ../dev/ppide_rbc.c ../dev/tinysd.c
-DSRCS += ../dev/ps2kbd.c ../dev/ps2mouse.c ../dev/amd9511.c
-DSRCS += ../dev/ds12885.c ../dev/ds12885_z80.c
-DSRCS += ../dev/devppa.c ../dev/devi2c.c ../dev/pcf8584.c
-DSRCS += ../dev/ch375.c ../dev/tinyscsi.c
-DASRCS = ../dev/devfd_hw-banked.s ../dev/ds1302_rcbus.s
-DASRCS += ../dev/z80dma.s ../dev/z80softsd.s ../dev/z80softspi.s
-DASRCS += ../dev/ps2bitbang-rcbus-kbd.s ../dev/ps2bitbang-rcbus-mouse.s
-NSRCS = ../dev/net/net_w5x00.c ../dev/net/net_w5300.c
-DRSRCS = ../dev/rcbus/zxkeyboard.c
-DRASRCS = ../dev/rcbus/zxkey.s
+DISCARD_DSRCS = ../../dev/tinyide_discard.c ../../dev/ds1302_discard.c
+DISCARD_DSRCS += ../../dev/tinysd_discard.c ../../dev/tinyscsi_discard.c
+DSRCS = ../../dev/devfd.c ../../dev/tinyide.c ../../dev/tinydisk_discard.c ../../dev/tinydisk.c
+DSRCS +=  ../../dev/ds1302.c ../../dev/ppide_rbc.c ../../dev/tinysd.c
+DSRCS += ../../dev/ps2kbd.c ../../dev/ps2mouse.c ../../dev/amd9511.c
+DSRCS += ../../dev/ds12885.c ../../dev/ds12885_z80.c
+DSRCS += ../../dev/devppa.c ../../dev/devi2c.c ../../dev/pcf8584.c
+DSRCS += ../../dev/ch375.c ../../dev/tinyscsi.c
+DASRCS = ../../dev/devfd_hw-banked.s ../../dev/ds1302_rcbus.s
+DASRCS += ../../dev/z80dma.s ../../dev/z80softsd.s ../../dev/z80softspi.s
+DASRCS += ../../dev/ps2bitbang-rcbus-kbd.s ../../dev/ps2bitbang-rcbus-mouse.s
+NSRCS = ../../dev/net/net_w5x00.c ../../dev/net/net_w5300.c
+DRSRCS = ../../dev/rcbus/zxkeyboard.c
+DRASRCS = ../../dev/rcbus/zxkey.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
 C3OBJS = $(C3SRCS:.c=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
-NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
-DROBJS = $(patsubst ../dev/rcbus/%.c,%.rel, $(DRSRCS))
-DRAOBJS = $(patsubst ../dev/rcbus/%.s,%.rel, $(DRASRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
+DROBJS = $(patsubst ../../dev/rcbus/%.c,%.rel, $(DRSRCS))
+DRAOBJS = $(patsubst ../../dev/rcbus/%.s,%.rel, $(DRASRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(C3OBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS)
 OBJS += $(DISCARD_COBJS) $(NOBJS) $(DROBJS) $(DRAOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/net/ -I../dev/rcbus/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/net/ -I../../dev/rcbus/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -49,25 +49,25 @@ $(COBJS): %.rel: %.c
 $(C3OBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
-$(DAOBJS): %.rel: ../dev/%.s
+$(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../dev/net/%.c
+$(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_NETWORK) -c $<
 
-$(DROBJS): %.rel: ../dev/rcbus/%.c
+$(DROBJS): %.rel: ../../dev/rcbus/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
-$(DRAOBJS): %.rel: ../dev/rcbus/%.s
+$(DRAOBJS): %.rel: ../../dev/rcbus/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 
@@ -79,11 +79,11 @@ clean:
 #
 image: bootblock
 	cat boot-romwbw.bin >fuzix.romwbw
-	dd if=../common.bin bs=16384 count=1 >>fuzix.romwbw
-	dd if=../bank1.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
-	dd if=../common.bin bs=16384 skip=3 count=1 conv=sync >>fuzix.romwbw
-	dd if=../bank2.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
-	dd if=../bank3.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
+	dd if=../../common.bin bs=16384 count=1 >>fuzix.romwbw
+	dd if=../../bank1.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
+	dd if=../../common.bin bs=16384 skip=3 count=1 conv=sync >>fuzix.romwbw
+	dd if=../../bank2.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
+	dd if=../../bank3.bin bs=16384 skip=1 count=2 conv=sync >>fuzix.romwbw
 
 bootblock:
 	sdasz80 -o boot-romwbw.s
@@ -107,36 +107,36 @@ diskimage: image
 
 ## Dependencies
 bootrom.s: kernel.def
-commonmem.s: ../cpu-z80/std-commonmem.s
+commonmem.s: ../../cpu-z80/std-commonmem.s
 crt0.s: kernel.def
-monitor.s: kernel.def ../lib/monitor-z80.s
+monitor.s: kernel.def ../../lib/monitor-z80.s
 ncr5380.s: kernel.def
-rc2014.s: kernel.def ../lib/z180-support.s
+rc2014.s: kernel.def ../../lib/z180-support.s
 tricks.s: kernel.def
 usermem.s: kernel.def
-kernel.def: ../kernel-z80.def
+kernel.def: ../../cpu-z80/kernel-z80.def
 
-devgpio.c: ../include/kernel.h ../include/kdata.h ../include/gpio.h rcbus.h
-devices.c: ../include/kernel.h ../include/kdata.h ../include/tty.h ../include/devsys.h ../dev/devfd.h ../dev/devrd.h devtty.h ../dev/tinydisk.h devlpr.h
-devinput.c: ../include/kernel.h ../include/kdata.h ../include/input.h ../dev/ps2mouse.h
-devlpr.c: ../include/kernel.h ../include/kdata.h ../include/printf.h ../include/printer.h ../dev/tinydisk.h ../dev/devppa.h devlpr.h
-devtty.c: ../include/kernel.h ../include/kdata.h ../include/printf.h ../include/tty.h ../include/graphics.h devtty.h rcbus.h ../include/vt.h z180_uart.h multivt.h
-discard.c: ../include/kernel.h ../include/kdata.h ../include/printf.h devtty.h ../dev/ds1302.h ../dev/ds12885.h ../dev/tinyide.h ../dev/tinysd.h ../dev/tinydisk.h rcbus.h ../include/vt.h ../include/netdev.h ../dev/rcbus/zxkey.h ../dev/ps2kbd.h ../dev/ps2mouse.h ../include/graphics.h devlpr.h ../dev/pcf8584.h z180_uart.h multivt.h
-i2c.c: ../include/kernel.h ../include/i2c.h ../dev/pcf8584.h
-ide.c: ../include/kernel.h ../dev/tinydisk.h ../dev/tinyide.h ../include/printf.h plt_ide.h
-main.c: ../include/kernel.h ../include/kdata.h ../include/printf.h ../include/timer.h devtty.h ../dev/devfd.h devinput.h ../include/rtc.h ../dev/ds1302.h ../dev/ds12885.h rcbus.h ../dev/ps2kbd.h ../dev/rcbus/zxkey.h softzx81.h ../dev/net/net_w5x00.h
-multivt.c: ../include/kernel.h ../include/kdata.h ../include/printf.h ../include/tty.h ../include/graphics.h devtty.h rcbus.h ../include/vt.h multivt.h
-ppide.c: ../include/kernel.h ../dev/tinydisk.h ../dev/tinyide.h ../include/printf.h plt_ide.h
-ps2.c: ../include/kernel.h ../dev/ps2mouse.h ../dev/ps2kbd.h rcbus.h
-ps2direct.c: ../include/kernel.h ../include/printf.h ../dev/ps2kbd.h ../dev/ps2mouse.h
-sd.c: ../include/kernel.h ../dev/tinydisk.h ../dev/tinysd.h ../dev/z80softspi.h rcbus.h
-softzx81.c: ../include/kernel.h ../include/kdata.h softzx81.h ../include/vt.h devtty.h
-video-ef9345.c: ../include/kernel.h ../include/kdata.h ../include/tty.h ../include/vt.h devtty.h rcbus.h ../include/graphics.h ../include/printf.h multivt.h
-video-macca.c: ../include/kernel.h ../include/kdata.h ../include/tty.h ../include/vt.h devtty.h rcbus.h ../include/graphics.h multivt.h
-video-tms9918a.c: ../include/kernel.h ../include/kdata.h ../include/tty.h ../include/graphics.h devtty.h rcbus.h ../include/vt.h ../include/cpu_ioctl.h softzx81.h multivt.h
-wiznet.c: ../include/kernel.h ../include/kdata.h ../include/printf.h ../include/netdev.h ../dev/net/net_w5x00.h ../dev/net/net_w5300.h
+devgpio.c: ../../include/kernel.h ../../include/kdata.h ../../include/gpio.h rcbus.h
+devices.c: ../../include/kernel.h ../../include/kdata.h ../../include/tty.h ../../include/devsys.h ../../dev/devfd.h ../../dev/devrd.h devtty.h ../../dev/tinydisk.h devlpr.h
+devinput.c: ../../include/kernel.h ../../include/kdata.h ../../include/input.h ../../dev/ps2mouse.h
+devlpr.c: ../../include/kernel.h ../../include/kdata.h ../../include/printf.h ../../include/printer.h ../../dev/tinydisk.h ../../dev/devppa.h devlpr.h
+devtty.c: ../../include/kernel.h ../../include/kdata.h ../../include/printf.h ../../include/tty.h ../../include/graphics.h devtty.h rcbus.h ../../include/vt.h z180_uart.h multivt.h
+discard.c: ../../include/kernel.h ../../include/kdata.h ../../include/printf.h devtty.h ../../dev/ds1302.h ../../dev/ds12885.h ../../dev/tinyide.h ../../dev/tinysd.h ../../dev/tinydisk.h rcbus.h ../../include/vt.h ../../include/netdev.h ../../dev/rcbus/zxkey.h ../../dev/ps2kbd.h ../../dev/ps2mouse.h ../../include/graphics.h devlpr.h ../../dev/pcf8584.h z180_uart.h multivt.h
+i2c.c: ../../include/kernel.h ../../include/i2c.h ../../dev/pcf8584.h
+ide.c: ../../include/kernel.h ../../dev/tinydisk.h ../../dev/tinyide.h ../../include/printf.h plt_ide.h
+main.c: ../../include/kernel.h ../../include/kdata.h ../../include/printf.h ../../include/timer.h devtty.h ../../dev/devfd.h devinput.h ../../include/rtc.h ../../dev/ds1302.h ../../dev/ds12885.h rcbus.h ../../dev/ps2kbd.h ../../dev/rcbus/zxkey.h softzx81.h ../../dev/net/net_w5x00.h
+multivt.c: ../../include/kernel.h ../../include/kdata.h ../../include/printf.h ../../include/tty.h ../../include/graphics.h devtty.h rcbus.h ../../include/vt.h multivt.h
+ppide.c: ../../include/kernel.h ../../dev/tinydisk.h ../../dev/tinyide.h ../../include/printf.h plt_ide.h
+ps2.c: ../../include/kernel.h ../../dev/ps2mouse.h ../../dev/ps2kbd.h rcbus.h
+ps2direct.c: ../../include/kernel.h ../../include/printf.h ../../dev/ps2kbd.h ../../dev/ps2mouse.h
+sd.c: ../../include/kernel.h ../../dev/tinydisk.h ../../dev/tinysd.h ../../dev/z80softspi.h rcbus.h
+softzx81.c: ../../include/kernel.h ../../include/kdata.h softzx81.h ../../include/vt.h devtty.h
+video-ef9345.c: ../../include/kernel.h ../../include/kdata.h ../../include/tty.h ../../include/vt.h devtty.h rcbus.h ../../include/graphics.h ../../include/printf.h multivt.h
+video-macca.c: ../../include/kernel.h ../../include/kdata.h ../../include/tty.h ../../include/vt.h devtty.h rcbus.h ../../include/graphics.h multivt.h
+video-tms9918a.c: ../../include/kernel.h ../../include/kdata.h ../../include/tty.h ../../include/graphics.h devtty.h rcbus.h ../../include/vt.h ../../include/cpu_ioctl.h softzx81.h multivt.h
+wiznet.c: ../../include/kernel.h ../../include/kdata.h ../../include/printf.h ../../include/netdev.h ../../dev/net/net_w5x00.h ../../dev/net/net_w5300.h
 
-../include/kernel.h: config.h
-../dev/tinyide.h: plt_ide.h
+../../include/kernel.h: config.h
+../../dev/tinyide.h: plt_ide.h
 
-# TODO ../dev dependenceis
+# TODO ../../dev dependenceis

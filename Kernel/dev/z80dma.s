@@ -8,8 +8,8 @@
 
 		.module z80dma
 
-		.include "../platform/kernel.def"
-		.include "../kernel-z80.def"
+		.include "../build/kernel.def"
+		.include "../../cpu-z80/kernel-z80.def"
 
 		.globl ldir_or_dma
 		.globl sector_dma_in

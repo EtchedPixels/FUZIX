@@ -1,7 +1,7 @@
         .module tricks
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 TOP_PORT	.equ	MPGSEL_3
 

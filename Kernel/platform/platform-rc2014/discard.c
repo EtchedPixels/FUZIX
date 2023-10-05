@@ -6,6 +6,8 @@
 #include <ds12885.h>
 #include <tinyide.h>
 #include <tinysd.h>
+#include <tinyscsi.h>
+#include <ch375.h>
 #include <rcbus.h>
 #include <vt.h>
 #include <netdev.h>
@@ -17,6 +19,7 @@
 #include <pcf8584.h>
 #include "z180_uart.h"
 #include "multivt.h"
+#include "ncr5380.h"
 
 /* Everything in here is discarded after init starts */
 

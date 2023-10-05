@@ -52,7 +52,7 @@
 	.globl _syscpu
 
 	.include "kernel.def"
-	.include "../kernel-z80.def"
+	.include "../../cpu-z80/kernel-z80.def"
 
         ; startup code. Starts _CODE because we want it to be at 0x0100
 	; Entered with SP high and the stack holding platform info

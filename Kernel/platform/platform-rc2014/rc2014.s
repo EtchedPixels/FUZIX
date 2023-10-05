@@ -62,7 +62,7 @@
 	.globl l__CODE1
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ;=========================================================================
 ; Constants
@@ -1094,7 +1094,7 @@ inchar_acia:
 ;	And the Z180 support code
 ;
 
-	.include "../lib/z180-support.s"
+	.include "../../lib/z180-support.s"
 
 ;
 ;	Stub helpers for code compactness. Note that
