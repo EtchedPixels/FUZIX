@@ -5,17 +5,17 @@
 -b _COMMONMEM=0xE800
 -b _DISCARD=0xD800
 -l z80
-platform-c128-z80/crt0.rel
-platform-c128-z80/commonmem.rel
-platform-c128-z80/c128.rel
+platform/platform-c128-z80/crt0.rel
+platform/platform-c128-z80/commonmem.rel
+platform/platform-c128-z80/c128.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-platform-c128-z80/tricks.rel
-platform-c128-z80/main.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-c128-z80/tricks.rel
+platform/platform-c128-z80/main.rel
 timer.rel
 kdata.rel
-platform-c128-z80/devices.rel
+platform/platform-c128-z80/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -36,13 +36,13 @@ tty.rel
 vt.rel
 devsys.rel
 usermem.rel
-usermem_std-z80.rel
-platform-c128-z80/discard.rel
-platform-c128-z80/devtty.rel
-platform-c128-z80/mbr.rel
-platform-c128-z80/blkdev.rel
-platform-c128-z80/devsd.rel
-platform-c128-z80/devsd_discard.rel
-platform-c128-z80/sd.rel
-platform-c128-z80/devrd.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-c128-z80/discard.rel
+platform/platform-c128-z80/devtty.rel
+platform/platform-c128-z80/mbr.rel
+platform/platform-c128-z80/blkdev.rel
+platform/platform-c128-z80/devsd.rel
+platform/platform-c128-z80/devsd_discard.rel
+platform/platform-c128-z80/sd.rel
+platform/platform-c128-z80/devrd.rel
 -e
