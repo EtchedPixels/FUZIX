@@ -1,7 +1,7 @@
 /*
  *	ROM booted Fuzix
  */
-		#include "../kernel-68000.def"
+		#include "../../cpu-68000/kernel-68000.def"
 
 		.globl __end
 		.globl __bss_start
