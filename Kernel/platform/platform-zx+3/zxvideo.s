@@ -40,5 +40,5 @@ _fontdata_8x8	.equ	0x7D00		; routines except this
 					; to point to space char
         .area _COMMONMEM
 
-	.include "../dev/zx/video.s"
+	.include "../../dev/zx/video.s"
 

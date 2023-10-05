@@ -1,24 +1,24 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/tinyide.c ../dev/tinydisk.c ../dev/devfdc765.c ../dev/tinysd.c
-DDSRCS = ../dev/tinyide_discard.c ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
-DZSRCS = ../dev/zx/divide.c ../dev/zx/zxkeyboard.c ../dev/zx/devinput.c ../dev/zx/zxmmc.c
+DSRCS = ../../dev/tinyide.c ../../dev/tinydisk.c ../../dev/devfdc765.c ../../dev/tinysd.c
+DDSRCS = ../../dev/tinyide_discard.c ../../dev/tinydisk_discard.c ../../dev/tinysd_discard.c
+DZSRCS = ../../dev/zx/divide.c ../../dev/zx/zxkeyboard.c ../../dev/zx/devinput.c ../../dev/zx/zxmmc.c
 DDZSRCS =
 ASRCS = crt0.s plus3.s zxvideo.s fdc765.s
 ASRCS += tricks.s commonmem.s
-NSRCS = ../dev/net/net_w5x00.c
+NSRCS = ../../dev/net/net_w5x00.c
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
-DZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DZSRCS))
-DDZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DDZSRCS))
-NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.rel, $(DDSRCS))
+DZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DZSRCS))
+DDZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DDZSRCS))
+NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/zx/ -I../dev/net
+CROSS_CCOPTS += -I../../dev/ -I../../dev/zx/ -I../../dev/net
 
 CROSS_CC_SEG3 = --codeseg CODE3
 
@@ -30,19 +30,19 @@ $(COBJS): %.rel: %.c
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DDOBJS): %.rel: ../dev/%.c
+$(DDOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DZOBJS): %.rel: ../dev/zx/%.c
+$(DZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DDZOBJS): %.rel: ../dev/zx/%.c
+$(DDZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../dev/net/%.c
+$(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %.rel: %.s
@@ -58,13 +58,13 @@ image:
 	sdldz80 -i loader.rel
 	makebin -s 65536 loader.ihx loader.tmp
 	# Extract the loader itself
-	dd if=loader.tmp bs=512 skip=127 | ../tools/plus3boot >loader.bin
+	dd if=loader.tmp bs=512 skip=127 | ../../tools/plus3boot >loader.bin
 	# Padding to fill the virtual disk
 	dd if=/dev/zero of=padding.bin bs=512 count=360
 	# Make a disk image to work from
-	cat loader.bin ../fuzix.bin padding.bin >disk.raw
+	cat loader.bin ../../fuzix.bin padding.bin >disk.raw
 	# And generate a 40 track plus3 disk from it
-	../tools/raw2dsk disk.raw fuzix.dsk
+	../../tools/raw2dsk disk.raw fuzix.dsk
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
