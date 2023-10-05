@@ -2,6 +2,6 @@
 -i setup.ihx
 -b _BOOTSTRAP=0x8000
 setup.rel
-../font8x8_exp2.rel
+../../font8x8_exp2.rel
 -e
 

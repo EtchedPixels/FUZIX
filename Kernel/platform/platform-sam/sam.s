@@ -51,7 +51,7 @@
 	    .globl l__COMMONMEM
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 KERNEL_LOW	.equ	0x20		; 0/1 low 2/3 high (ROM off)
 KERNEL_HIGH	.equ	2

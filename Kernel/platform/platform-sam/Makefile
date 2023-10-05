@@ -2,21 +2,21 @@
 CSRCS = devlpr.c devtty.c devfd.c devatom.c msm6242b.c devinput.c
 CSRCS += devices.c main.c
 
-DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c
+DSRCS = ../../dev/devide.c ../../dev/mbr.c ../../dev/blkdev.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c
+DISCARD_DSRCS = ../../dev/devide_discard.c
 
 ASRCS = sam.s crt0.s sam_vt.s floppy.s atom.s
 ASRCS += tricks.s commonmem.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
 OBJS  = $(COBJS) $(AOBJS) $(DOBJS) $(DISCARD_COBJS) $(DISCARD_DOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -28,13 +28,13 @@ $(COBJS): %.rel: %.c
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
@@ -46,13 +46,13 @@ image:	boot setup
 	# Boot block at track 4 sector 1
 	dd if=boot.bin of=fuzix.raw bs=512 seek=40 count=1 conv=notrunc
 	# Kernel from track 4 sector 2 highest 32K first
-	dd if=../fuzix.bin of=fuzix.raw bs=512 seek=41 skip=64 count=64 conv=notrunc
+	dd if=../../fuzix.bin of=fuzix.raw bs=512 seek=41 skip=64 count=64 conv=notrunc
 	# Low 32K next
-	dd if=../fuzix.bin of=fuzix.raw bs=512 seek=105 count=64 conv=notrunc
+	dd if=../../fuzix.bin of=fuzix.raw bs=512 seek=105 count=64 conv=notrunc
 	# Font and setup from 64K further on
 	dd if=setup.bin of=fuzix.raw bs=512 seek=169 skip=64 conv=notrunc
 	# Now shuffle it into a .mgt file
-	../tools/raw2mgt fuzix.raw fuzix.mgt
+	../../tools/raw2mgt fuzix.raw fuzix.mgt
 
 boot:
 	sdasz80 -o boot.s

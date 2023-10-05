@@ -16,7 +16,7 @@
         .module atom
 
 	.include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 
 	.globl _devide_read_data
