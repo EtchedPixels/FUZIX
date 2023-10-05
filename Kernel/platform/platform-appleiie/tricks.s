@@ -22,8 +22,8 @@
 	.import pushax
 	.import _udata
 
-    .include "kernel.def"
-    .include "../kernel02.def"
+	.include "kernel.def"
+	.include "../../cpu-6502/kernel02.def"
 	.include "zeropage.inc"
 
 ; FIXME: review but all but some of the fork logic looks safe to go in code

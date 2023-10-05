@@ -2,7 +2,7 @@
 ;	Driver routines for firmware interfaces
 ;
             .include "kernel.def"
-            .include "../kernel02.def"
+            .include "../../cpu-6502/kernel02.def"
 	    .include "zeropage.inc"
 
 	.export _pascal_op
