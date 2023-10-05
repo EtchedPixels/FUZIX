@@ -3,20 +3,20 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF400
 -l ez80_z80
-platform-ezretro/crt0.rel
-platform-ezretro/commonmem.rel
-platform-ezretro/ezretro.rel
-platform-ezretro/main.rel
+platform/platform-ezretro/crt0.rel
+platform/platform-ezretro/commonmem.rel
+platform/platform-ezretro/ezretro.rel
+platform/platform-ezretro/main.rel
 start.rel
 version.rel
-lowlevel-ez80_z80.rel
-usermem_std-ez80_z80.rel
-platform-ezretro/tricks.rel
+cpu-ez80_z80/lowlevel-ez80_z80.rel
+cpu-ez80_z80/usermem_std-ez80_z80.rel
+platform/platform-ezretro/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-ezretro/devfd.rel
-platform-ezretro/devices.rel
+platform/platform-ezretro/devfd.rel
+platform/platform-ezretro/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -31,10 +31,11 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
+memalloc_none.rel
 bankfixed.rel
 swap.rel
 devsys.rel
-platform-ezretro/devtty.rel
+platform/platform-ezretro/devtty.rel
 level2.rel
 syscall_level2.rel
 syscall_net.rel
