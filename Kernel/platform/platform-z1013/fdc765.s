@@ -16,7 +16,7 @@
 		.module fdc765
 
 		.include "kernel.def"
-		.include "../kernel-z80.def"
+		.include "../../cpu-z80/kernel-z80.def"
 
 	.globl  map_process_always
 	.globl	map_kernel
