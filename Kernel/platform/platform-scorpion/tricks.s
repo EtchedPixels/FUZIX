@@ -5,4 +5,4 @@
 	call switch_bank_nosave
 .endm
 
-	.include "../dev/zx/tricks-big.s"
+	.include "../../dev/zx/tricks-big.s"

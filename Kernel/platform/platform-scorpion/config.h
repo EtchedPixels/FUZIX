@@ -81,7 +81,6 @@
 /* IDE/CF support */
 #define CONFIG_TD_IDE
 #define CONFIG_TINYIDE_SDCCPIO
-#define CONFIG_TINYIDE_8BIT
 #define CONFIG_TINYIDE_RESET
 /* SD support */
 #define TD_SD_NUM 2
