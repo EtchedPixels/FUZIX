@@ -14,7 +14,7 @@
 	.export _ramtop
 
 #include "kernel.def"
-#include "../kernel-tms9995.def"
+#include "../../cpu-tms9995/kernel-tms9995.def"
 
 	.common
 

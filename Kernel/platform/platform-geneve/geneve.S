@@ -7,12 +7,12 @@
             .export _program_vectors
 	    .export map_kernel
 	    .export map_kernel_di
-	    .export map_process
-	    .export map_process_always
-	    .export map_process_always_di
+	    .export map_proc
+	    .export map_proc_always
+	    .export map_proc_always_di
 	    .export map_save_kernel
 	    .export map_kernel_restore
-	    .export map_process_x
+	    .export map_proc_x
 
             ; exported debugging tools
             .export _plt_monitor
@@ -23,7 +23,7 @@
 	    .export ___hard_irqrestore
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../../cpu-tms9995/kernel-tms9995.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -94,7 +94,7 @@ _program_vectors:
 	dect	r13
 	mov	r11,*r13
 	mov	r4,r0
-	bl	@map_process
+	bl	@map_proc
 	bl	@program_vectors_k
 	bl	@map_kernel
 	mov	*r13+,r11
@@ -157,16 +157,16 @@ xop_trap:
 ;
 ;	Map the current process.
 ;
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	mov	@_udata + U_DATA__U_PAGE,r0
 	jmp	@map_bank
 ;
 ;	Map process in r0, use r0
 ;
-map_process:
+map_proc:
 	ci	r0,0
-	jne	@map_process_2
+	jne	@map_proc_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
 ;	the kernel lives in 32/33/34/35
@@ -195,11 +195,11 @@ kmap:
 ;
 ;	Probably we should use the 8K/56K MMU card.
 ;
-map_process_x:
+map_proc_x:
 	; r0 holds the process
 	ai	r0, P_TAB__P_PAGE_OFFSET
 	mov	*r0,r0
-map_process_2:
+map_proc_2:
 map_bank:
 	mov	*r0, @cur_map
 	mov	*r0+,@0xF110
@@ -294,10 +294,10 @@ _hd_read_data:
 	;
 	;	We must flip banks before we play mmu pokery, or it will
 	; undo all our work. This means our variables must be commondata
-	; and we must reference them before we map_process
+	; and we must reference them before we map_proc
 	movb	@_hd_map,r0
 	jeq	@hd_kmap
-	bl	@map_process_always
+	bl	@map_proc_always
 hd_kmap:
 	movb	@0xFE10,*r4+
 	dec	r2
@@ -310,7 +310,7 @@ _hd_write_data:
 	li	r2,512
 	movb	@_hd_map,r0
 	jeq	@hd_kmapw
-	bl	@map_process_always
+	bl	@map_proc_always
 hd_kmapw:
 	movb	*r4+,@0xFE10
 	dec	r2

@@ -7,18 +7,18 @@ ASRCS += tricks.S commonmem.S
 
 CDSRCS = discard.c
 
-DSRCS = ../dev/devide.c ../dev/blkdev.c ../dev/xtkbd.c
-DISCARD_DSRCS = ../dev/mbr.c ../dev/devide_discard.c
+DSRCS = ../../dev/devide.c ../../dev/blkdev.c ../../dev/xtkbd.c
+DISCARD_DSRCS = ../../dev/mbr.c ../../dev/devide_discard.c
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.S=$(BINEXT))
-DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.o, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.o, $(DISCARD_DSRCS))
 
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DISCARD_DOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 all:	$(OBJS)
 
@@ -32,32 +32,32 @@ $(AOBJS): %$(BINEXT): %.S
 	cpp -E $<  >$*.s
 	$(CROSS_AS) $(ASOPTS) $*.s
 
-$(DOBJS): %$(BINEXT): ../dev/%.c
+$(DOBJS): %$(BINEXT): ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
-	mv ../dev/$*.o .
+	mv ../../dev/$*.o .
 
-$(DISCARD_DOBJS): %$(BINEXT): ../dev/%.c
+$(DISCARD_DOBJS): %$(BINEXT): ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
-	mv ../dev/$*.o .
+	mv ../../dev/$*.o .
 
 clean:
 	rm -f $(OBJS) *.o core *~ fuzix.bin fuzix.tmpmap
 	rm -f commonmem.s crt0.s rc2014-9995.s tricks.s
 
 image:
-	$(CROSS_LD) -A2 -b -C 0x0200 -S 0xF200 -Z 0xF000 -o ../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
-	geneve.o ../start.o ../version.o ../lowlevel-tms9995.o \
-	tricks.o main.o discard.o ../timer.o ../kdata.o devices.o \
+	$(CROSS_LD) -A2 -b -C 0x0200 -S 0xF200 -Z 0xF000 -o ../../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
+	geneve.o ../../start.o ../../version.o ../../cpu-tms9995/lowlevel-tms9995.o \
+	tricks.o main.o discard.o ../../timer.o ../../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o \
-	vdp.o v99xx.o ../vt.o ../font6x8.o keyboard.o xtkbd.o \
-	devinput.o ../devinput.o ../blk512.o \
-	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../bank8k.o \
-	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec.o ../syscall_exec16.o \
-	../usermem.o ../usermem_std-tms9995.o devtty.o \
+	vdp.o v99xx.o ../../vt.o ../../font/font6x8.o keyboard.o xtkbd.o \
+	devinput.o ../../devinput.o ../../blk512.o \
+	../../devio.o ../../filesys.o ../../process.o ../../inode.o ../../syscall_fs.o \
+	../../syscall_proc.o ../../syscall_other.o ../../mm.o ../../swap.o ../../mm/bank8k.o \
+	../../tty.o ../../devsys.o ../../syscall_fs2.o ../../syscall_fs3.o \
+	../../syscall_exec.o ../../syscall_exec16.o ../../mm/memalloc_none.o \
+	../../usermem.o ../../cpu-tms9995/usermem_std-tms9995.o devtty.o \
 	/opt/cc9995/lib/libc.a /opt/cc9995/lib/lib9995.a
-	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../fuzix.map
+	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 
 LOADER0: loader.S
 	$(CROSS_CC) -tti994a -s loader.s -o loader
