@@ -5,17 +5,17 @@
 -b _DISCARD=0x8200
 -b _INITIALIZER=0xA000
 -l z80
-platform-rc2014-tiny/crt0.rel
-platform-rc2014-tiny/commonmem.rel
-platform-rc2014-tiny/rc2014.rel
+platform/platform-rc2014-tiny/crt0.rel
+platform/platform-rc2014-tiny/commonmem.rel
+platform/platform-rc2014-tiny/rc2014.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-platform-rc2014-tiny/tricks.rel
-platform-rc2014-tiny/main.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-rc2014-tiny/tricks.rel
+platform/platform-rc2014-tiny/main.rel
 timer.rel
 kdata.rel
-platform-rc2014-tiny/devices.rel
+platform/platform-rc2014-tiny/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -35,14 +35,14 @@ simple.rel
 tty.rel
 devsys.rel
 usermem.rel
-usermem_std-z80.rel
-platform-rc2014-tiny/discard.rel
-platform-rc2014-tiny/devtty.rel
-platform-rc2014-tiny/tinydisk_discard.rel
-platform-rc2014-tiny/tinydisk.rel
-platform-rc2014-tiny/tinyide.rel
-platform-rc2014-tiny/tinyide_discard.rel
-platform-rc2014-tiny/ds1302.rel
-platform-rc2014-tiny/ds1302_discard.rel
-platform-rc2014-tiny/ds1302_rcbus.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-rc2014-tiny/discard.rel
+platform/platform-rc2014-tiny/devtty.rel
+platform/platform-rc2014-tiny/tinydisk_discard.rel
+platform/platform-rc2014-tiny/tinydisk.rel
+platform/platform-rc2014-tiny/tinyide.rel
+platform/platform-rc2014-tiny/tinyide_discard.rel
+platform/platform-rc2014-tiny/ds1302.rel
+platform/platform-rc2014-tiny/ds1302_discard.rel
+platform/platform-rc2014-tiny/ds1302_rcbus.rel
 -e
