@@ -12,9 +12,9 @@
         .module usermem
 	.z180
 
-	.include "platform/kernel.def"
+	.include "build/kernel.def"
         .include "cpu-z180/z180.def"
-        .include "kernel-z80.def"
+        .include "cpu-z80/kernel-z80.def"
 
         ; exported symbols
         .globl __uget

@@ -39,7 +39,7 @@
         .globl kstack_top
 
 	.include "kernel.def"
-        .include "../cpu-z180/z180.def"
+        .include "../../cpu-z180/z180.def"
 
 	.globl outchar
 

@@ -21,8 +21,8 @@ cpm-loader/cpmload.bin:	cpm-loader/cpmload.s cpm-loader/fuzixload.s cpm-loader/m
 
 tools/makejv3: tools/makejv3.c
 
-fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
-	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
+fuzix.ihx: target $(OBJS) platform/platform-$(TARGET)/fuzix.lnk tools/bankld/sdldz80
+	$(CROSS_LD) -n -k $(LIBZ80) -f platform/platform-$(TARGET)/fuzix.lnk
 
 fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/bintomdv cpm-loader/cpmload.bin tools/visualize
 	-cp hogs.txt hogs.txt.old
@@ -31,5 +31,5 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	tools/visualize < fuzix.map
 	tools/bihx fuzix.ihx
 	tools/binprep
-	+make -C platform-$(TARGET) image
+	+make -C platform/platform-$(TARGET) image
 

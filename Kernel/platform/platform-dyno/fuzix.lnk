@@ -4,19 +4,19 @@
 -b _COMMONMEM=0xF600
 -b _DISCARD=0xE000
 -l z180
-platform-dyno/crt0.rel
-platform-dyno/commonmem.rel
-platform-dyno/z180.rel
-platform-dyno/dyno.rel
-platform-dyno/main.rel
+platform/platform-dyno/crt0.rel
+platform/platform-dyno/commonmem.rel
+platform/platform-dyno/z180.rel
+platform/platform-dyno/dyno.rel
+platform/platform-dyno/main.rel
 start.rel
 version.rel
-lowlevel-z180.rel
-usermem_std-z180.rel
+cpu-z180/lowlevel-z180.rel
+cpu-z180/usermem_std-z180.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-dyno/devices.rel
+platform/platform-dyno/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -35,15 +35,15 @@ memalloc_none.rel
 banksplit.rel
 swap.rel
 devsys.rel
-platform-dyno/discard.rel
-platform-dyno/devtty.rel
-platform-dyno/tinyide.rel
-platform-dyno/tinyide_discard.rel
-platform-dyno/tinyide_ppide_rbc.rel
-platform-dyno/tinydisk.rel
-platform-dyno/tinydisk_discard.rel
-platform-dyno/bq4845.rel
-platform-dyno/monitor.rel
-platform-dyno/devfd.rel
-platform-dyno/devfd_hw.rel
+platform/platform-dyno/discard.rel
+platform/platform-dyno/devtty.rel
+platform/platform-dyno/tinyide.rel
+platform/platform-dyno/tinyide_discard.rel
+platform/platform-dyno/tinyide_ppide_rbc.rel
+platform/platform-dyno/tinydisk.rel
+platform/platform-dyno/tinydisk_discard.rel
+platform/platform-dyno/bq4845.rel
+platform/platform-dyno/monitor.rel
+platform/platform-dyno/devfd.rel
+platform/platform-dyno/devfd_hw.rel
 -e

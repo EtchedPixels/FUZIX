@@ -69,7 +69,8 @@
 	.globl _udata
 
         .include "../build/kernel.def"
-        .include "kernel-z80.def"
+	; This up and down makes sure we can include it from cpu-z180.
+        .include "../cpu-z80/kernel-z80.def"
 
 ; these make the code below more readable. sdas allows us only to 
 ; test if an expression is zero or non-zero.
