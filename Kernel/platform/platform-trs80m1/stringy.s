@@ -4,7 +4,7 @@
 	.globl	_tape_err
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 	.area _COMMONMEM
 

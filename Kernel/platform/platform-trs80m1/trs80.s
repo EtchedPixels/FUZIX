@@ -50,7 +50,7 @@
 	    .globl mapper_init
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x4000 upwards after the udata etc)

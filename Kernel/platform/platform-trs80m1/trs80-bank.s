@@ -48,7 +48,7 @@
             .globl __uzero
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (above 08000, only accessible when the kernel is mapped)
