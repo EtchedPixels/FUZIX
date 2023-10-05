@@ -9,7 +9,7 @@
 	.export _ramtop
 
 #include "kernel.def"
-#include "../kernel-tms9995.def"
+#include "../../cpu-tms9995/kernel-tms9995.def"
 
 	.common
 
@@ -86,7 +86,7 @@ _plt_switchout:
 	mov	r15,*r13
 	mov	r13,@_udata + U_DATA__U_SP	; Save old SP
 
-	bl	@map_process_always
+	bl	@map_proc_always
 	bl	@stash_udata
 	bl	@map_kernel
 
@@ -137,7 +137,7 @@ _switchin:
 
 not_swapped:
 	mov	r8,r0
-	bl	@map_process_x
+	bl	@map_proc_x
 
 	; We must do this inline as we will be changing stack under
 	; ourselves and without stack
@@ -241,7 +241,7 @@ _dofork:
 	;
 	; Stash the udata for the parent switchin path
 	;
-	bl	@map_process_always
+	bl	@map_proc_always
 	bl	@stash_udata
 	bl	@map_kernel
 
@@ -284,7 +284,7 @@ _dofork:
 	bl	@copyblock
 copydone:
 	mov	@_udata+U_DATA__U_PTAB,r0
-	bl	@map_process_x
+	bl	@map_proc_x
 	bl	@stash_udata
 	;	And this also puts back our memory map from the effects of
 	;	the fork copy

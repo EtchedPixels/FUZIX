@@ -1,4 +1,4 @@
-#include "platform/kernel.def"
+#include "../build/kernel.def"
 #include "kernel-tms9995.def"
 
 	.code
