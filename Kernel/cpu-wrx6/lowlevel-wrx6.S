@@ -21,7 +21,7 @@
 
 	.setcpu 6
 
-#include "platform/kernel.def"
+#include "../build/kernel.def"
 #include "kernel-wrx6.def"
 
 	.code

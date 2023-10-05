@@ -1,11 +1,4 @@
 ;
-;	TMS9995 version for the Geneve
-;
-;	This is a lot less hairy than many platforms because we have some
-;	stable memory at all times and lots of registers.
-;
-;	Sadly we dont have enough fast scratch to keep a workpad per process
-;
 ;	TODO: all the fun stuff like swap and swap stacks
 ;
         .export _plt_switchout
@@ -14,7 +7,7 @@
 	.export _ramtop
 
 #include "kernel.def"
-#include "../kernel-tms9995.def"
+#include "../../cpu-wrx6/kernel-wrx6.def"
 
 	.common
 

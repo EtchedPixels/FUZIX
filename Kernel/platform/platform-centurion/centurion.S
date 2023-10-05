@@ -7,12 +7,12 @@
             .export _program_vectors
 	    .export map_kernel
 	    .export map_kernel_di
-	    .export map_process
-	    .export map_process_always
-	    .export map_process_always_di
+	    .export map_proc
+	    .export map_proc_always
+	    .export map_proc_always_di
 	    .export map_save_kernel
 	    .export map_kernel_restore
-	    .export map_process_x
+	    .export map_proc_x
 
 	    ; DMA
 	    .export _dma_set_length
@@ -29,7 +29,7 @@
 	    .export ___hard_irqrestore
 
 #include "kernel.def"
-#include "../kernel-tms9995.def"
+#include "../../cpu-wrx6/kernel-wrx6.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -121,16 +121,16 @@ program_vectors_k:
 ;
 ;	Map the current process.
 ;
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	lda	_udata + U_DATA__U_PAGE
 	bra	map_bank_c
 ;
 ;	Map process in r0, use r0
 ;
-map_process:
+map_proc:
 	ori	a,a
-	bnz	map_process_2
+	bnz	map_proc_2
 ;
 ;	Map in the kernel below the current common, all registers preserved
 ;	the kernel lives in 32/33/34/35
@@ -145,11 +145,11 @@ map_kernel:
 kmap:
 	.ds	32		; 2K x 32 maps per ipl
 
-map_process_x:
+map_proc_x:
 	; A holds the process
 	ldb	P_TAB__P_PAGE_OFFSET
 	add	b,a
-map_process_2:
+map_proc_2:
 map_bank_c:
 	; Copy the map into a scratch common space until we know more
 	; about how the MMU load works (ie virtual v physical and is
