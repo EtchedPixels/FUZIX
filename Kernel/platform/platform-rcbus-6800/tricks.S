@@ -16,7 +16,7 @@
 	.export _ramtop
 
 #include "kernel.def"
-#include "../kernel-6800.def"
+#include "../../cpu-6800/kernel-6800.def"
 
 	.common
 

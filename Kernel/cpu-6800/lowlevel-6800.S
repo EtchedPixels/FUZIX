@@ -24,7 +24,7 @@
 
 	.export preemption
 
-#include "platform/kernel.def"
+#include "../build/kernel.def"
 #include "kernel-6800.def"
 
 	.code
