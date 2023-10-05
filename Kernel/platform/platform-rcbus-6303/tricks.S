@@ -16,7 +16,7 @@
 	.export _ramtop
 
 #include "kernel.def"
-#include "../kernel-6303.def"
+#include "../../cpu-6303/kernel-6303.def"
 
 	.setcpu 6303
 

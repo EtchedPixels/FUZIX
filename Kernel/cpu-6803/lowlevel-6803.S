@@ -26,8 +26,8 @@
 
 	.setcpu 6803
 
-#include "platform/kernel.def"
-#include "kernel-6303.def"
+#include "../build/kernel.def"
+#include "../cpu-6303/kernel-6303.def"
 
 	.code
 

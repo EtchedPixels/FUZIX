@@ -1,2 +1,2 @@
 #define WITH_6303
-#include "lowlevel-6803.S"
+#include "../cpu-6803/lowlevel-6803.S"
