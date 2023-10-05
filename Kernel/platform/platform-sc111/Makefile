@@ -1,20 +1,20 @@
 ASRCS = crt0.s z180.s commonmem.s sc111.s monitor.s
 CSRCS += devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/ds1302_discard.c
-DSRCS = ../dev/devide.c ../dev/mbr.c ../dev/blkdev.c ../dev/ds1302.c
-DASRCS = ../dev/ds1302_rcbus.s
+DISCARD_DSRCS = ../../dev/devide_discard.c ../../dev/ds1302_discard.c
+DSRCS = ../../dev/devide.c ../../dev/mbr.c ../../dev/blkdev.c ../../dev/ds1302.c
+DASRCS = ../../dev/ds1302_rcbus.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(DAOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -26,22 +26,22 @@ $(AOBJS): %.rel: %.s
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DAOBJS): %.rel: ../dev/%.s
+$(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ fuzix.com makecpmloader loader.bin loader.tmp boot-romwbw.bin
 
-z180.rel:		z180.s kernel.def ../cpu-z180/z180.s
+z180.rel: z180.s kernel.def ../../cpu-z180/z180.s
 
 boot-romwbw.bin: boot-romwbw.s
 	sdasz80 -o boot-romwbw.s
@@ -95,7 +95,7 @@ diskimage: image romwbw
 	# SCM loader at 0x2800
 	dd if=loader.bin of=$(IMAGES)/disk.img bs=512 skip=20 seek=20 count=4 conv=notrunc
 	# Kernel starting 0x3000
-	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=24 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=24 conv=notrunc
 	# Filesystem starting at 1M/0x0010:0000
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Make an emulator image of it

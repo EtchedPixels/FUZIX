@@ -3,19 +3,19 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF600
 -l z80
-platform-sbc2g/crt0.rel
-platform-sbc2g/commonmem.rel
-platform-sbc2g/sbc2g.rel
+platform/platform-sbc2g/crt0.rel
+platform/platform-sbc2g/commonmem.rel
+platform/platform-sbc2g/sbc2g.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+cpu-z80/lowlevel-z80.rel
 usermem.rel
-platform-sbc2g/tricks.rel
-platform-sbc2g/main.rel
-platform-sbc2g/discard.rel
+platform/platform-sbc2g/tricks.rel
+platform/platform-sbc2g/main.rel
+platform/platform-sbc2g/discard.rel
 timer.rel
 kdata.rel
-platform-sbc2g/devices.rel
+platform/platform-sbc2g/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -35,9 +35,9 @@ memalloc_none.rel
 swap.rel
 bankfixed.rel
 devsys.rel
-platform-sbc2g/devtty.rel
-platform-sbc2g/tinydisk.rel
-platform-sbc2g/tinydisk_discard.rel
-platform-sbc2g/tinyide.rel
-platform-sbc2g/tinyide_discard.rel
+platform/platform-sbc2g/devtty.rel
+platform/platform-sbc2g/tinydisk.rel
+platform/platform-sbc2g/tinydisk_discard.rel
+platform/platform-sbc2g/tinyide.rel
+platform/platform-sbc2g/tinyide_discard.rel
 -e

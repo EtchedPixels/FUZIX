@@ -4,7 +4,7 @@
 ;	bank to bank copier will give vastly better fork() performance.
 ;
 	.include "kernel.def"
-	.include "../kernel-z80.def"
+	.include "../../cpu-z80/kernel-z80.def"
 
 ;
 ;	All of the fixed bank support is available as a library routine,
@@ -17,14 +17,14 @@
 ;
 ;	We can use the fast Z80 copiers in this case
 ;
-	.include "../lib/z80user1.s"
+	.include "../../lib/z80user1.s"
 ;
 ;	The when it all works you can consider following this example and
 ;	optimizing it hard.
 ;
 ;	Firstly we still want the core of the fixed bank support
 ;
-	.include "../lib/z80fixedbank-core.s"
+	.include "../../lib/z80fixedbank-core.s"
 
 ;
 ;	We want to provide our own optimized direct 32K bank to bank

@@ -4,19 +4,19 @@
 -b _COMMONMEM=0xF600
 -b _DISCARD=0xE000
 -l z180
-platform-sc111/crt0.rel
-platform-sc111/commonmem.rel
-platform-sc111/z180.rel
-platform-sc111/sc111.rel
-platform-sc111/main.rel
+platform/platform-sc111/crt0.rel
+platform/platform-sc111/commonmem.rel
+platform/platform-sc111/z180.rel
+platform/platform-sc111/sc111.rel
+platform/platform-sc111/main.rel
 start.rel
 version.rel
-lowlevel-z180.rel
-usermem_std-z180.rel
+cpu-z180/lowlevel-z180.rel
+cpu-z180/usermem_std-z180.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-sc111/devices.rel
+platform/platform-sc111/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -35,14 +35,14 @@ memalloc_none.rel
 banksplit.rel
 swap.rel
 devsys.rel
-platform-sc111/discard.rel
-platform-sc111/devtty.rel
-platform-sc111/devide.rel
-platform-sc111/devide_discard.rel
-platform-sc111/mbr.rel
-platform-sc111/blkdev.rel
-platform-sc111/monitor.rel
-platform-sc111/ds1302.rel
-platform-sc111/ds1302_discard.rel
-platform-sc111/ds1302_rcbus.rel
+platform/platform-sc111/discard.rel
+platform/platform-sc111/devtty.rel
+platform/platform-sc111/devide.rel
+platform/platform-sc111/devide_discard.rel
+platform/platform-sc111/mbr.rel
+platform/platform-sc111/blkdev.rel
+platform/platform-sc111/monitor.rel
+platform/platform-sc111/ds1302.rel
+platform/platform-sc111/ds1302_discard.rel
+platform/platform-sc111/ds1302_rcbus.rel
 -e

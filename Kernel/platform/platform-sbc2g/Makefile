@@ -1,4 +1,4 @@
-CROSS_CCOPTS += -I../dev/ -I../dev/net/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/net/
 
 
 CSRCS = devtty.c
@@ -9,19 +9,19 @@ DISCSRCS = discard.c
 ASRCS = sbc2g.s crt0.s
 ASRCS += tricks.s commonmem.s
 
-DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
-DSRCS = ../dev/tinydisk.c ../dev/tinyide.c
+DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
 NSRCS = 
 
 DASRCS =
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
 DISCOBJS = $(DISCSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
 
 OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
 
@@ -35,19 +35,19 @@ $(COBJS): %.rel: %.c
 $(DISCOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../dev/net/%.c
+$(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DAOBJS): %.rel: ../dev/%.s
+$(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 clean:
@@ -69,7 +69,7 @@ diskimage:
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=16512 conv=notrunc
 	# Add the kernel
-	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
 	# Add the bootloader
 	dd if=loader.bin of=$(IMAGES)/disk.img seek=16384 conv=notrunc
 	# Make an emulator image of it

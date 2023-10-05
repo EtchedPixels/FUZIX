@@ -3,17 +3,17 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
 -l z80
-platform-sc108/crt0.rel
-platform-sc108/commonmem.rel
-platform-sc108/sc108.rel
+platform/platform-sc108/crt0.rel
+platform/platform-sc108/commonmem.rel
+platform/platform-sc108/sc108.rel
 start.rel
 version.rel
-lowlevel-z80-thunked.rel
-platform-sc108/tricks.rel
-platform-sc108/main.rel
+cpu-z80/lowlevel-z80-thunked.rel
+platform/platform-sc108/tricks.rel
+platform/platform-sc108/main.rel
 timer.rel
 kdata.rel
-platform-sc108/devices.rel
+platform/platform-sc108/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -33,15 +33,15 @@ simple.rel
 tty.rel
 devsys.rel
 usermem.rel
-platform-sc108/discard.rel
-platform-sc108/devtty.rel
-platform-sc108/tinydisk.rel
-platform-sc108/tinydisk_discard.rel
-platform-sc108/tinyide.rel
-platform-sc108/tinyide_discard.rel
-platform-sc108/ide.rel
-platform-sc108/usermem.rel
-platform-sc108/ds1302.rel
-platform-sc108/ds1302_discard.rel
-platform-sc108/ds1302_rcbus.rel
+platform/platform-sc108/discard.rel
+platform/platform-sc108/devtty.rel
+platform/platform-sc108/tinydisk.rel
+platform/platform-sc108/tinydisk_discard.rel
+platform/platform-sc108/tinyide.rel
+platform/platform-sc108/tinyide_discard.rel
+platform/platform-sc108/ide.rel
+platform/platform-sc108/usermem.rel
+platform/platform-sc108/ds1302.rel
+platform/platform-sc108/ds1302_discard.rel
+platform/platform-sc108/ds1302_rcbus.rel
 -e
