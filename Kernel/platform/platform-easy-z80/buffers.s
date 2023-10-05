@@ -6,7 +6,7 @@
 	.area _COMMONMEM
 
 	.include "kernel.def"
-	.include "../kernel-z80.def"
+	.include "../../cpu-z80/kernel-z80.def"
 
 	.globl _do_blkzero
 	.globl _do_blkcopyk
