@@ -50,7 +50,7 @@
         .globl interrupt_handler
 
 	.include "kernel.def"
-	.include "../kernel-z80.def"
+	.include "../../cpu-z80/kernel-z80.def"
 
 	;
         ; startup code. Runs from 0x100. The kernel is mapped into pages

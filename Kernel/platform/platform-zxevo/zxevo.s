@@ -16,10 +16,10 @@
 
 	.globl map_buffers
         .globl map_kernel
-        .globl map_process_always
-        .globl map_process
+        .globl map_proc_always
+        .globl map_proc
         .globl map_kernel_di
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
 	.globl map_kernel_restore
@@ -48,7 +48,7 @@
         .globl outstringhex
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK
@@ -130,7 +130,7 @@ _program_vectors:
 	pop hl
 	push hl
 	push de
-	call map_process
+	call map_proc
 
         ; write zeroes across all vectors
         ld hl, #0
@@ -160,12 +160,12 @@ _program_vectors:
 
 	jr map_kernel
 
-map_process:
+map_proc:
         ld a, h
         or l
         jr z, map_kernel
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	push af
 	push bc
 	push hl

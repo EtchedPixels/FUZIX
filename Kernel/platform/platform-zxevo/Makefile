@@ -2,24 +2,24 @@ ASRCS = crt0.s zxevo.s video.s
 ASRCS += tricks.s commonmem.s
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/devide.c ../dev/devsd.c ../dev/blkdev.c
-DDSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c ../dev/mbr.c
-DZSRCS = ../dev/zx/evommc.c ../dev/zx/zxkeyboard.c ../dev/zx/devinput.c
+DSRCS = ../../dev/devide.c ../../dev/devsd.c ../../dev/blkdev.c
+DDSRCS = ../../dev/devide_discard.c ../../dev/devsd_discard.c ../../dev/mbr.c
+DZSRCS = ../../dev/zx/evommc.c ../../dev/zx/zxkeyboard.c ../../dev/zx/devinput.c
 DDZSRCS =
-NSRCS = ../dev/net/net_native.c
+NSRCS = ../../dev/net/net_native.c
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
-DZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DZSRCS))
-DDZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DDZSRCS))
-NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.rel, $(DDSRCS))
+DZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DZSRCS))
+DDZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DDZSRCS))
+NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
 
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/zx/ -I../dev/net/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/zx/ -I../../dev/net/
 
 all:	$(OBJS)
 
@@ -29,19 +29,19 @@ $(COBJS): %.rel: %.c
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DDOBJS): %.rel: ../dev/%.c
+$(DDOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DZOBJS): %.rel: ../dev/zx/%.c
+$(DZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DDZOBJS): %.rel: ../dev/zx/%.c
+$(DDZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../dev/net/%.c
+$(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %.rel: %.s
@@ -66,4 +66,4 @@ image:
 	# 512 bytes at 24576
 	dd if=load-fat.tmp of=load-fat bs=512 skip=48
 	dd if=/dev/zero bs=256 count=1 >FUZIX.BIN
-	cat ../fuzix.bin >>FUZIX.BIN
+	cat ../../fuzix.bin >>FUZIX.BIN
