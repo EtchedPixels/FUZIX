@@ -6,14 +6,14 @@
 -b _SERIAL=0xFD00
 -b _DISCARD=0xC800
 -l z80
-platform-z80retro/crt0.rel
-platform-z80retro/commonmem.rel
-platform-z80retro/z80retro.rel
+platform/platform-z80retro/crt0.rel
+platform/platform-z80retro/commonmem.rel
+platform/platform-z80retro/z80retro.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-platform-z80retro/tricks.rel
-platform-z80retro/main.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-z80retro/tricks.rel
+platform/platform-z80retro/main.rel
 timer.rel
 kdata.rel
 devio.rel
@@ -37,13 +37,13 @@ tty.rel
 devsys.rel
 devinput.rel
 usermem.rel
-usermem_std-z80.rel
-platform-z80retro/devices.rel
-platform-z80retro/discard.rel
-platform-z80retro/devtty.rel
-platform-z80retro/tinydisk.rel
-platform-z80retro/tinydisk_discard.rel
-platform-z80retro/tinysd.rel
-platform-z80retro/tinysd_discard.rel
-platform-z80retro/spi.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-z80retro/devices.rel
+platform/platform-z80retro/discard.rel
+platform/platform-z80retro/devtty.rel
+platform/platform-z80retro/tinydisk.rel
+platform/platform-z80retro/tinydisk_discard.rel
+platform/platform-z80retro/tinysd.rel
+platform/platform-z80retro/tinysd_discard.rel
+platform/platform-z80retro/spi.rel
 -e
