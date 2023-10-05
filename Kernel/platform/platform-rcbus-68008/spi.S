@@ -1,5 +1,5 @@
 
-#include "../kernel-68000.def"
+#include "../cpu-68000/kernel-68000.def"
 
 		.globl sd_spi_transmit_byte
 		.globl sd_spi_receive_byte
