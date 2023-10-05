@@ -2,7 +2,7 @@
  *	We provide a vector table for the ROM forwading. It's not in the
  *	68000 format/order though.
  */
-		#include "../kernel-68000.def"
+		#include "../../cpu-68000/kernel-68000.def"
 
 		.globl __end
 		.globl __bss_start
