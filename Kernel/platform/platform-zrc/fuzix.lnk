@@ -3,19 +3,19 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF400
 -l z80
-platform-zrc/crt0.rel
-platform-zrc/commonmem.rel
-platform-zrc/zrc.rel
+platform/platform-zrc/crt0.rel
+platform/platform-zrc/commonmem.rel
+platform/platform-zrc/zrc.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+cpu-z80/lowlevel-z80.rel
 usermem.rel
-platform-zrc/tricks.rel
-platform-zrc/main.rel
-platform-zrc/discard.rel
+platform/platform-zrc/tricks.rel
+platform/platform-zrc/main.rel
+platform/platform-zrc/discard.rel
 timer.rel
 kdata.rel
-platform-zrc/devices.rel
+platform/platform-zrc/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -36,15 +36,15 @@ memalloc_none.rel
 swap.rel
 bankfixed.rel
 devsys.rel
-platform-zrc/devtty.rel
-platform-zrc/tinydisk.rel
-platform-zrc/tinydisk_discard.rel
-platform-zrc/tinyide.rel
-platform-zrc/tinyide_discard.rel
-platform-zrc/ds1302.rel
-platform-zrc/ds1302_discard.rel
-platform-zrc/ds1302_rcbus.rel
-platform-zrc/net_native.rel
-platform-zrc/net_w5x00.rel
-platform-zrc/wiznet.rel
+platform/platform-zrc/devtty.rel
+platform/platform-zrc/tinydisk.rel
+platform/platform-zrc/tinydisk_discard.rel
+platform/platform-zrc/tinyide.rel
+platform/platform-zrc/tinyide_discard.rel
+platform/platform-zrc/ds1302.rel
+platform/platform-zrc/ds1302_discard.rel
+platform/platform-zrc/ds1302_rcbus.rel
+platform/platform-zrc/net_native.rel
+platform/platform-zrc/net_w5x00.rel
+platform/platform-zrc/wiznet.rel
 -e
