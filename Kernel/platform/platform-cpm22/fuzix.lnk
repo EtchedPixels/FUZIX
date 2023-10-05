@@ -4,21 +4,21 @@
 -b _SYSMOD=0xE000
 -b _COMMONMEM=0xE400
 -l z80
-platform-cpm22/crt0.rel
-platform-cpm22/commonmem.rel
-platform-cpm22/cpm.rel
-platform-cpm22/lowlevel.rel
-platform-cpm22/main.rel
+platform/platform-cpm22/crt0.rel
+platform/platform-cpm22/commonmem.rel
+platform/platform-cpm22/cpm.rel
+platform/platform-cpm22/lowlevel.rel
+platform/platform-cpm22/main.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-usermem_std-z80.rel
-platform-cpm22/tricks.rel
+cpu-z80/lowlevel-z80.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-cpm22/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-cpm22/devfd.rel
-platform-cpm22/devices.rel
+platform/platform-cpm22/devfd.rel
+platform/platform-cpm22/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -38,7 +38,7 @@ bankfixed.rel
 swap.rel
 devsys.rel
 devinput.rel
-platform-cpm22/devlpr.rel
-platform-cpm22/devtty.rel
-platform-cpm22/devinput.rel
+platform/platform-cpm22/devlpr.rel
+platform/platform-cpm22/devtty.rel
+platform/platform-cpm22/devinput.rel
 -e

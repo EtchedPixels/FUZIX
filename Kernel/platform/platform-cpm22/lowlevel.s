@@ -38,7 +38,7 @@
 		.globl _init_hardware_c
 
 		.include "kernel.def"
-		.include "../kernel-z80.def"
+		.include "../../cpu-z80/kernel-z80.def"
 
 ;
 ; Buffers (we use asm to set this up as we need them in a special segment

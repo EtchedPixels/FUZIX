@@ -23,8 +23,8 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ 
 
 image:
-	cp ../fuzix.bin fuzix56.com
-	(cd ..; $(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix48.lnk)
-	(cd ..; tools/bihx fuzix.ihx; tools/binprep)
-	cp ../fuzix.bin fuzix48.com
+	cp ../../fuzix.bin fuzix56.com
+	(cd ../..; $(CROSS_LD) -n -k $(LIBZ80) -f platform/platform-$(TARGET)/fuzix48.lnk)
+	(cd ../..; tools/bihx fuzix.ihx; tools/binprep)
+	cp ../../fuzix.bin fuzix48.com
 
