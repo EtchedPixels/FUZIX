@@ -2,5 +2,5 @@
 -i fuzix_disk.ihx
 -b _BOOT=0xF100
 -l z80
-platform-msx2/diskboot.rel
+platform/platform-msx2/diskboot.rel
 -e

@@ -2,5 +2,5 @@
 -i fuzix_boot.ihx
 -b _BOOT=0x4000
 -l z80
-platform-msx2/bootrom.rel
+platform/platform-msx2/bootrom.rel
 -e

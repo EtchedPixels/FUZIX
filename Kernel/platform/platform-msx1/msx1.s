@@ -58,7 +58,7 @@
 	    .globl s__DISCARD
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 
 	    .globl _bufpool

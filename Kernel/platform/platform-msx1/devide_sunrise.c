@@ -54,13 +54,12 @@ static int sunrise_ioctl(uint_fast8_t dev, uarg_t request, char *data)
         return 0;
     sunrise_dirty[dev] = 0;
 
-    if (do_ide_flush_cache(drive ? 0xF0 : 0xE0)) {
+    if (do_ide_flush_cache(dev ? 0xF0 : 0xE0)) {
         udata.u_error = EIO;
         return -1;
     }
     return 0;
 }
-#endif
 
 static void sunrise_init_drive(uint8_t drive)
 {
@@ -85,7 +84,7 @@ static void sunrise_init_drive(uint8_t drive)
         kputs("- non LBA");
         goto failout;
     }
-    dev = td_register(drive, sunrise_xfer, sunrise_ioct1);
+    dev = td_register(drive, sunrise_xfer, sunrise_ioctl, 1);
     if (dev < 0)
         goto failout2;
 

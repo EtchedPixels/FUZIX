@@ -144,7 +144,7 @@ void sunrise_probe(void)
 
     for (ide_slot = 1; ide_slot < 3; ide_slot++) {
         mapslot_bank1(ide_slot);
-        if (memcmp(0x4098, sunrise_id, 8) == 0)
+        if (memcmp((const char *)0x4098, sunrise_id, 8) == 0)
             break;
     }
     mapslot_bank1(slotram);
