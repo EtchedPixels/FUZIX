@@ -26,7 +26,7 @@
 	.globl _vid_b
 
 	include "kernel.def"
-	include "../kernel09.def"
+	include "../../cpu-6809/kernel09.def"
 
 ;
 ;	TODO: could hide the text video functions and init in discard ?

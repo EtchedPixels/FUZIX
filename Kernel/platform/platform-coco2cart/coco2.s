@@ -41,7 +41,7 @@
 	.globl outchar
 
 	include "kernel.def"
-	include "../kernel09.def"
+	include "../../cpu-6809/kernel09.def"
 
 
 

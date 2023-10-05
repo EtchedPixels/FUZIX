@@ -8,23 +8,23 @@ C3SRCS = libc.c devtty.c
 
 CDSRCS = discard.c 
 
-DSRCS = ../dev/devdw.c ../dev/tinydisk.c ../dev/tinyide.c
-DDSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
+DSRCS = ../../dev/devdw.c ../../dev/tinydisk.c ../../dev/tinyide.c
+DDSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
 
 ASRCS = crt0.s coco2.s ide.s usermem.s sdc.s
 ASRCS += bootstrap.s bootstrap_sdc.s #bootstrap_dw.s
-ASRCS += tricks.s commonmem.s ../dev/drivewire/drivewire.s video.s
+ASRCS += tricks.s commonmem.s ../../dev/drivewire/drivewire.s video.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
 CIOBJS = $(CISRCS:.c=$(BINEXT))
 C3OBJS = $(C3SRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.o, $(DDSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.o, $(DDSRCS))
 OBJS  = $(COBJS) $(C3OBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(CIOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 all: $(OBJS)
 
@@ -42,10 +42,10 @@ $(C3OBJS): %$(BINEXT): %.c
 $(CDOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %$(BINEXT): ../dev/%.c
+$(DOBJS): %$(BINEXT): ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGD) -c $<
 
-$(DDOBJS): %$(BINEXT): ../dev/%.c
+$(DDOBJS): %$(BINEXT): ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(AOBJS): %$(BINEXT): %.s
@@ -55,20 +55,20 @@ clean:
 	rm -f *.o *~ fuzixide.rom fuzixsdc.rom fuxix.img
 
 image:
-	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link \
+	$(CROSS_LD) -o ../../fuzix.bin -Map=../../fuzix.map --script=fuzix.link \
 	--oformat=decb \
-	crt0.o bootstrap.o commonmem.o coco2.o discard.o ../simple.o \
-	../start.o ../version.o ../lowlevel-6809.o \
-	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	../dev/drivewire/drivewire.o devdw.o tinyide.o tinyide_discard.o ide.o \
-	tinydisk.o tinydisk_discard.o ../memalloc_none.o \
-	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
-	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
-	../syscall_exec16.o devtty.o libc.o ../vt.o video.o  ../syscall_fs3.o \
-	../blk512.o ../font8x8.o devsdc.o sdc.o ../devinput.o devinput.o
-	../tools/lw-checkmap ../fuzix.map
-	../tools/decb-image <../fuzix.bin fuzix.img
+	crt0.o bootstrap.o commonmem.o coco2.o discard.o ../../simple.o \
+	../../start.o ../../version.o ../../cpu-6809/lowlevel-6809.o \
+	tricks.o main.o ../../timer.o ../../kdata.o devices.o \
+	../../dev/drivewire/drivewire.o devdw.o tinyide.o tinyide_discard.o ide.o \
+	tinydisk.o tinydisk_discard.o ../../memalloc_none.o \
+	../../devio.o ../../filesys.o ../../process.o ../../inode.o ../../syscall_fs.o \
+	../../syscall_proc.o ../../syscall_other.o ../../syscall_exec.o ../../mm.o ../../swap.o \
+	../../tty.o ../../devsys.o ../../usermem.o usermem.o ../../syscall_fs2.o \
+	../../syscall_exec16.o devtty.o libc.o ../../vt.o video.o  ../../syscall_fs3.o \
+	../../blk512.o ../../font8x8.o devsdc.o sdc.o ../../devinput.o devinput.o
+	../../tools/lw-checkmap ../../fuzix.map
+	../../tools/decb-image <../../fuzix.bin fuzix.img
 	# This has changed with the discard change
 	# We now have C000-FFFF ROM
 	# 0400-7FFF single RAM block
@@ -76,19 +76,19 @@ image:
 	dd if=fuzix.img of=fuzixide.rom bs=1024 skip=48 count=16
 	dd if=fuzix.img of=fuzix.ide bs=1024 skip=1 count=31
 
-	$(CROSS_LD) -o ../fuzix-sdc.bin -Map=../fuzix-sdc.map --script=fuzix.link \
+	$(CROSS_LD) -o ../../fuzix-sdc.bin -Map=../../fuzix-sdc.map --script=fuzix.link \
 	--oformat=decb \
-	crt0.o bootstrap_sdc.o commonmem.o coco2.o discard.o ../simple.o \
-	../start.o ../version.o ../lowlevel-6809.o \
-	tricks.o main.o ../timer.o ../kdata.o devices.o \
-	../dev/drivewire/drivewire.o devdw.o tinyide.o tinyide_discard.o ide.o \
-	tinydisk.o tinydisk_discard.o ../memalloc_none.o \
-	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../syscall_exec.o ../mm.o ../swap.o \
-	../tty.o ../devsys.o ../usermem.o usermem.o ../syscall_fs2.o \
-	../syscall_exec16.o devtty.o libc.o ../vt.o video.o  ../syscall_fs3.o \
-	../blk512.o ../font8x8.o devsdc.o sdc.o ../devinput.o devinput.o
-	../tools/decb-image <../fuzix-sdc.bin fuzix-sdc.img
+	crt0.o bootstrap_sdc.o commonmem.o coco2.o discard.o ../../simple.o \
+	../../start.o ../../version.o ../../cpu-6809/lowlevel-6809.o \
+	tricks.o main.o ../../timer.o ../../kdata.o devices.o \
+	../../dev/drivewire/drivewire.o devdw.o tinyide.o tinyide_discard.o ide.o \
+	tinydisk.o tinydisk_discard.o ../../memalloc_none.o \
+	../../devio.o ../../filesys.o ../../process.o ../../inode.o ../../syscall_fs.o \
+	../../syscall_proc.o ../../syscall_other.o ../../syscall_exec.o ../../mm.o ../../swap.o \
+	../../tty.o ../../devsys.o ../../usermem.o usermem.o ../../syscall_fs2.o \
+	../../syscall_exec16.o devtty.o libc.o ../../vt.o video.o  ../../syscall_fs3.o \
+	../../blk512.o ../../font8x8.o devsdc.o sdc.o ../../devinput.o devinput.o
+	../../tools/decb-image <../../fuzix-sdc.bin fuzix-sdc.img
 	dd if=fuzix-sdc.img of=fuzixsdc.rom bs=1024 skip=48 count=16
 	dd if=fuzix-sdc.img of=fuzix.sdc bs=1024 skip=1 count=31
 
