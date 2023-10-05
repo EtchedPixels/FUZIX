@@ -1,4 +1,4 @@
-#include "../kernel-pdp11.def"
+#include "../../cpu-pdp11/kernel-pdp11.def"
 
 	.text
 
