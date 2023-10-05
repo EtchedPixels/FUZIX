@@ -12,8 +12,8 @@
         .globl _ds1302_get_data
 
         .include "kernel.def"
-        .include "../cpu-z180/z180.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z180/z180.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; DS1202 interface

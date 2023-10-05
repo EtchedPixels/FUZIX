@@ -14,7 +14,7 @@
         .z180
 
         .include "kernel.def"
-        .include "../cpu-z180/z180.def"
+        .include "../../cpu-z180/z180.def"
 
 dparm       .equ    0x0B
 loadaddr    .equ    0x8000  ; P112 bootstrap loads us here
