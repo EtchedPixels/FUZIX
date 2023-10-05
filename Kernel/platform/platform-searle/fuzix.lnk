@@ -3,17 +3,17 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
 -l z80
-platform-searle/crt0.rel
-platform-searle/commonmem.rel
-platform-searle/searle.rel
+platform/platform-searle/crt0.rel
+platform/platform-searle/commonmem.rel
+platform/platform-searle/searle.rel
 start.rel
 version.rel
-lowlevel-z80-thunked.rel
-platform-searle/tricks.rel
-platform-searle/main.rel
+cpu-z80/lowlevel-z80-thunked.rel
+platform/platform-searle/tricks.rel
+platform/platform-searle/main.rel
 timer.rel
 kdata.rel
-platform-searle/devices.rel
+platform/platform-searle/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -33,12 +33,12 @@ simple.rel
 tty.rel
 devsys.rel
 usermem.rel
-platform-searle/discard.rel
-platform-searle/devtty.rel
-platform-searle/tinydisk.rel
-platform-searle/tinydisk_discard.rel
-platform-searle/tinyide.rel
-platform-searle/tinyide_discard.rel
-platform-searle/ide.rel
-platform-searle/usermem.rel
+platform/platform-searle/discard.rel
+platform/platform-searle/devtty.rel
+platform/platform-searle/tinydisk.rel
+platform/platform-searle/tinydisk_discard.rel
+platform/platform-searle/tinyide.rel
+platform/platform-searle/tinyide_discard.rel
+platform/platform-searle/ide.rel
+platform/platform-searle/usermem.rel
 -e

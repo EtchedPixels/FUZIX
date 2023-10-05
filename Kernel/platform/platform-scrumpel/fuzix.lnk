@@ -4,19 +4,19 @@
 -b _COMMONMEM=0xF400
 -b _DISCARD=0xE000
 -l z180
-platform-scrumpel/crt0.rel
-platform-scrumpel/commonmem.rel
-platform-scrumpel/z180.rel
-platform-scrumpel/scrumpel.rel
-platform-scrumpel/main.rel
+platform/platform-scrumpel/crt0.rel
+platform/platform-scrumpel/commonmem.rel
+platform/platform-scrumpel/z180.rel
+platform/platform-scrumpel/scrumpel.rel
+platform/platform-scrumpel/main.rel
 start.rel
 version.rel
-lowlevel-z180.rel
-usermem_std-z180.rel
+cpu-z180/lowlevel-z180.rel
+cpu-z180/usermem_std-z180.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-scrumpel/devices.rel
+platform/platform-scrumpel/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -36,16 +36,16 @@ memalloc_none.rel
 banksplit.rel
 swap.rel
 devsys.rel
-platform-scrumpel/discard.rel
-platform-scrumpel/devtty.rel
-platform-scrumpel/devide.rel
-platform-scrumpel/devide_discard.rel
-platform-scrumpel/spi.rel
-platform-scrumpel/ppide.rel
-platform-scrumpel/devsd.rel
-platform-scrumpel/devsd_discard.rel
-platform-scrumpel/mbr.rel
-platform-scrumpel/blkdev.rel
-platform-scrumpel/monitor.rel
-platform-scrumpel/net_native.rel
+platform/platform-scrumpel/discard.rel
+platform/platform-scrumpel/devtty.rel
+platform/platform-scrumpel/devide.rel
+platform/platform-scrumpel/devide_discard.rel
+platform/platform-scrumpel/spi.rel
+platform/platform-scrumpel/ppide.rel
+platform/platform-scrumpel/devsd.rel
+platform/platform-scrumpel/devsd_discard.rel
+platform/platform-scrumpel/mbr.rel
+platform/platform-scrumpel/blkdev.rel
+platform/platform-scrumpel/monitor.rel
+platform/platform-scrumpel/net_native.rel
 -e

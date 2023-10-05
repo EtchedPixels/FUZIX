@@ -3,17 +3,17 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
 -l z80
-platform-simple80/crt0.rel
-platform-simple80/commonmem.rel
-platform-simple80/simple80.rel
+platform/platform-simple80/crt0.rel
+platform/platform-simple80/commonmem.rel
+platform/platform-simple80/simple80.rel
 start.rel
 version.rel
-lowlevel-z80-thunked.rel
-platform-simple80/tricks.rel
-platform-simple80/main.rel
+cpu-z80/lowlevel-z80-thunked.rel
+platform/platform-simple80/tricks.rel
+platform/platform-simple80/main.rel
 timer.rel
 kdata.rel
-platform-simple80/devices.rel
+platform/platform-simple80/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -33,15 +33,15 @@ simple.rel
 tty.rel
 devsys.rel
 usermem.rel
-platform-simple80/discard.rel
-platform-simple80/devtty.rel
-platform-simple80/mbr.rel
-platform-simple80/blkdev.rel
-platform-simple80/devide.rel
-platform-simple80/devide_discard.rel
-platform-simple80/ide.rel
-platform-simple80/usermem.rel
-platform-simple80/ds1302.rel
-platform-simple80/ds1302_discard.rel
-platform-simple80/ds1302_rcbus.rel
+platform/platform-simple80/discard.rel
+platform/platform-simple80/devtty.rel
+platform/platform-simple80/mbr.rel
+platform/platform-simple80/blkdev.rel
+platform/platform-simple80/devide.rel
+platform/platform-simple80/devide_discard.rel
+platform/platform-simple80/ide.rel
+platform/platform-simple80/usermem.rel
+platform/platform-simple80/ds1302.rel
+platform/platform-simple80/ds1302_discard.rel
+platform/platform-simple80/ds1302_rcbus.rel
 -e
