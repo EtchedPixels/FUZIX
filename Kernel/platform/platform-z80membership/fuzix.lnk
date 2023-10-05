@@ -3,19 +3,19 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF500
 -l z80
-platform-z80membership/crt0.rel
-platform-z80membership/commonmem.rel
-platform-z80membership/z80membership.rel
+platform/platform-z80membership/crt0.rel
+platform/platform-z80membership/commonmem.rel
+platform/platform-z80membership/z80membership.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+cpu-z80/lowlevel-z80.rel
 usermem.rel
-platform-z80membership/tricks.rel
-platform-z80membership/main.rel
-platform-z80membership/discard.rel
+platform/platform-z80membership/tricks.rel
+platform/platform-z80membership/main.rel
+platform/platform-z80membership/discard.rel
 timer.rel
 kdata.rel
-platform-z80membership/devices.rel
+platform/platform-z80membership/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -35,10 +35,10 @@ memalloc_none.rel
 swap.rel
 bankfixed.rel
 devsys.rel
-platform-z80membership/devtty.rel
-platform-z80membership/blkdev.rel
-platform-z80membership/mbr.rel
-platform-z80membership/devsd.rel
-platform-z80membership/devsd_discard.rel
-platform-z80membership/sdcard.rel
+platform/platform-z80membership/devtty.rel
+platform/platform-z80membership/blkdev.rel
+platform/platform-z80membership/mbr.rel
+platform/platform-z80membership/devsd.rel
+platform/platform-z80membership/devsd_discard.rel
+platform/platform-z80membership/sdcard.rel
 -e
