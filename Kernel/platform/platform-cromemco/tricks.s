@@ -1,6 +1,6 @@
 
 	.include "kernel.def"
-	.include "../kernel-z80.def"
+	.include "../../cpu-z80/kernel-z80.def"
 
 	;
 	; We can't quite use the standard helpers as we have rather weird

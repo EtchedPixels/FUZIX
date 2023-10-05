@@ -35,7 +35,7 @@ image:
 	makebin -s 256 cloader-16fdc.ihx > cloader-16fdc.tmp
 	dd if=cloader-16fdc.tmp of=cloader-16fdc.bin bs=1 skip=128 count=128
 	# Assemble a standard IBM format SSSD 8" disk image
-	cat cloader-16fdc.bin ../fuzix.bin > fuzix.boot
+	cat cloader-16fdc.bin ../../fuzix.bin > fuzix.boot
 
 diskimage: image
 	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/root.dsk 96 2464)

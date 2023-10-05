@@ -6,23 +6,23 @@
 -b _SERIAL=0x0100
 -b _BOOT=0x0100
 -l z80
-platform-cromemco/crt0.rel
-platform-cromemco/commonmem.rel
-platform-cromemco/cromemco.rel
-platform-cromemco/vector.rel
-platform-cromemco/main.rel
-platform-cromemco/discard.rel
-platform-cromemco/interrupt.rel
+platform/platform-cromemco/crt0.rel
+platform/platform-cromemco/commonmem.rel
+platform/platform-cromemco/cromemco.rel
+platform/platform-cromemco/vector.rel
+platform/platform-cromemco/main.rel
+platform/platform-cromemco/discard.rel
+platform/platform-cromemco/interrupt.rel
 start.rel
 version.rel
-lowlevel-z80-thunked.rel
-platform-cromemco/tricks.rel
+cpu-z80/lowlevel-z80-thunked.rel
+platform/platform-cromemco/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-cromemco/usermem.rel
-platform-cromemco/devfd.rel
-platform-cromemco/devices.rel
+platform/platform-cromemco/usermem.rel
+platform/platform-cromemco/devfd.rel
+platform/platform-cromemco/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -40,5 +40,5 @@ mm.rel
 memalloc_none.rel
 bankfixed.rel
 devsys.rel
-platform-cromemco/devtty.rel
+platform/platform-cromemco/devtty.rel
 -e

@@ -2,4 +2,4 @@
 
         .area _COMMONMEM
 
-	.include "../cpu-z80/std-commonmem.s"
+	.include "../../cpu-z80/std-commonmem.s"

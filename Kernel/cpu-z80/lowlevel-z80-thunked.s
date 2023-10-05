@@ -65,7 +65,7 @@
 	.globl _udata
 	.globl syscall_platform
 
-        .include "platform/kernel.def"
+        .include "build/kernel.def"
         .include "kernel-z80.def"
 
 	HIGH
