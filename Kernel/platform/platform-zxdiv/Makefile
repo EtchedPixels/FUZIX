@@ -1,24 +1,24 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/tinyide.c ../dev/tinysd.c ../dev/tinydisk.c
-DDSRCS = ../dev/tinyide_discard.c ../dev/tinysd_discard.c
-DDSRCS += ../dev/tinydisk_discard.c
-DZSRCS = ../dev/zx/divide.c ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c
-DZSRCS += ../dev/zx/devinput.c ../dev/zx/bank128.c
-DDZSRCS = ../dev/zx/zxuno.c
+DSRCS = ../../dev/tinyide.c ../../dev/tinysd.c ../../dev/tinydisk.c
+DDSRCS = ../../dev/tinyide_discard.c ../../dev/tinysd_discard.c
+DDSRCS += ../../dev/tinydisk_discard.c
+DZSRCS = ../../dev/zx/divide.c ../../dev/zx/divmmc.c ../../dev/zx/zxkeyboard.c
+DZSRCS += ../../dev/zx/devinput.c ../../dev/zx/bank128.c
+DDZSRCS = ../../dev/zx/zxuno.c
 ASRCS = crt0.s zx128.s zxvideo.s
 ASRCS += tricks.s commonmem.s loader-divide.s
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
-DZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DZSRCS))
-DDZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DDZSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.rel, $(DDSRCS))
+DZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DZSRCS))
+DDZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DDZSRCS))
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/zx/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/zx/
 
 CROSS_CC_SEG3 = --codeseg CODE3
 
@@ -30,16 +30,16 @@ $(COBJS): %.rel: %.c
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DDOBJS): %.rel: ../dev/%.c
+$(DDOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DZOBJS): %.rel: ../dev/zx/%.c
+$(DZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DDZOBJS): %.rel: ../dev/zx/%.c
+$(DDZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(AOBJS): %.rel: %.s
@@ -53,16 +53,16 @@ clean:
 # Re-order the image and snapshop it
 image:
 	# Merge the first code bank into common
-	dd if=../bank1.bin bs=16384 skip=3 seek=3 count=1 \
-		of=../common.bin conv=notrunc
+	dd if=../../bank1.bin bs=16384 skip=3 seek=3 count=1 \
+		of=../../common.bin conv=notrunc
 	# The bootstrap to con Fatware
-	# dd if=../common.bin of=BOOT.BIN bs=8192 count=1
+	# dd if=../../common.bin of=BOOT.BIN bs=8192 count=1
 	# Rest of the base image, starts at 0x2200, pad it
-	# dd if=../common.bin bs=65536 count=1 conv=sync | \
+	# dd if=../../common.bin bs=65536 count=1 conv=sync | \
 	#	dd of=strap.bin bs=512 skip=17
 	# Banked segments 1 and 7
-	# dd if=../bank2.bin bs=16384 skip=3 >>strap.bin conv=sync
-	# dd if=../bank3.bin bs=16384 skip=3 >>strap.bin conv=sync
+	# dd if=../../bank2.bin bs=16384 skip=3 >>strap.bin conv=sync
+	# dd if=../../bank3.bin bs=16384 skip=3 >>strap.bin conv=sync
 
 	# Build an esxdos friendly setup
 	sdasz80 -o load-esx.s
@@ -73,10 +73,10 @@ image:
 
 	# Now build a FUZIX.BIN to load
 	# in the order we need it
-	dd if=../common.bin bs=65536 count=1 conv=sync | \
+	dd if=../../common.bin bs=65536 count=1 conv=sync | \
 		dd of=FUZIX.BIN
-	dd if=../bank2.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
-	dd if=../bank3.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
+	dd if=../../bank2.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
+	dd if=../../bank3.bin bs=16384 skip=3 >>FUZIX.BIN conv=sync
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 # Adjust to wherever you have ESXDOS unpacked

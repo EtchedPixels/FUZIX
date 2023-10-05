@@ -1,2 +1,2 @@
 
-	.include "../dev/zx/tricks.s"
+	.include "../../dev/zx/tricks.s"
