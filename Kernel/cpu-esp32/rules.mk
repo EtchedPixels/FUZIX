@@ -1,6 +1,6 @@
 export CROSS_LD = xtensa-esp32-elf-ld
 export CROSS_CC = xtensa-esp32-elf-gcc
-export CROSS_CCOPTS=-c -g -Os -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -I$(ROOT_DIR)/cpu-esp32 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include -I$(ROOT_DIR) -I$(FUZIX_ROOT)/Library/include/esp32/ -I$(FUZIX_ROOT)/Library/include/ -mconst16 -mforce-no-pic -mauto-litpools -fstrict-volatile-bitfields
+export CROSS_CCOPTS=-c -g -Os -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -I$(ROOT_DIR)/cpu-esp32 -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include -I$(ROOT_DIR) -I$(FUZIX_ROOT)/Library/include/esp32/ -I$(FUZIX_ROOT)/Library/include/ -mconst16 -mforce-no-pic -mauto-litpools -fstrict-volatile-bitfields
 export CROSS_AS=$(CROSS_CC) $(CROSS_CCOPTS)
 export CROSS_CC_SEG1=
 export CROSS_CC_SEG2=
