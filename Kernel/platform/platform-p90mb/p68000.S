@@ -1,5 +1,5 @@
 
-#include "../kernel-68000.def"
+#include "../../cpu-68000/kernel-68000.def"
 
 #define SBUF	$80002021
 #define SCON	$80002023
