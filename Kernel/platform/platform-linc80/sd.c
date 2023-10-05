@@ -1,6 +1,6 @@
 #include <kernel.h>
 #include <blkdev.h>
-#include <devsd.h>
+#include <tinysd.h>
 #include <z80softspi.h>
 
 /*
@@ -41,30 +41,32 @@ void sd_spi_raise_cs(void)
 
 void sd_spi_lower_cs(void)
 {
-    if (sd_drive == 0)
+    if (tinysd_unit == 0)
         spi_piostate &= ~0x08;
     else
         spi_piostate &= ~0x10;
     piob_d = spi_piostate;
 }
 
-void sd_spi_clock(bool go_fast) __z88dk_fastcall
+void sd_spi_fast(void)
 {
-  used(go_fast);
+}
+
+void sd_spi_slow(void)
+{
 }
 
 COMMON_MEMORY
 
-bool sd_spi_receive_sector(void) __naked
+bool sd_spi_receive_sector(uint8_t *data) __naked __z88dk_fastcall
 {
   __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
+    ld a, (_td_raw)
     push af
 #ifdef SWAPDEV
     cp #2
     jr nz, not_swapin
-    ld a,(_blk_op+BLKPARAM_SWAP_PAGE)
+    ld a,(_td_page)
     call map_for_swap
     jr doread
 not_swapin:
@@ -80,16 +82,14 @@ doread:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(void) __naked
+bool sd_spi_transmit_sector(uint8_t *data) __naked __z88dk_fastcall
 {
   __asm
-    ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET)
-    ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)
-    push af
+    ld a, (_td_raw)
 #ifdef SWAPDEV
     cp #2
     jr nz, not_swapout
-    ld a, (_blk_op+BLKPARAM_SWAP_PAGE)
+    ld a, (_td_page)
     call map_for_swap
     jr dowrite
 not_swapout:

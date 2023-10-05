@@ -2,9 +2,8 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <devide.h>
-#include <devsd.h>
-#include <blkdev.h>
+#include <tinyide.h>
+#include <tinysd.h>
 #include "config.h"
 
 extern void pio_setup(void);
@@ -16,10 +15,10 @@ void map_init(void)
 void device_init(void)
 {
         pio_setup();
-#ifdef CONFIG_IDE
-	devide_init();
+#ifdef CONFIG_TD_IDE
+	ide_probe();
 #endif
-#ifdef CONFIG_SD
-	devsd_init();
+#ifdef CONFIG_TDSD
+	sd_probe();
 #endif
 }
