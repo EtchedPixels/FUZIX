@@ -6,7 +6,7 @@
 ;;;
 
 	include "kernel.def"
-        include "../kernel09.def"
+        include "../../cpu-6809/kernel09.def"
 
 	;; window xfer treshhold - any user/krn space xtfers
 	;; bigger than this will be routed to the banking/windowing

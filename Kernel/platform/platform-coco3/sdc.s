@@ -5,9 +5,6 @@
 ;;;
 ;;; 
 
-;;; imported
-	.globl blk_op		; blk operation arguments
-
 ;;; exported
 	.globl _devsdc_write
 	.globl _devsdc_read

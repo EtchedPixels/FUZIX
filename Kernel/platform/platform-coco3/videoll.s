@@ -27,7 +27,7 @@
 	.globl _theight
 
 	include "kernel.def"
-	include "../kernel09.def"
+	include "../../cpu-6809/kernel09.def"
 	
 	.area .video
 
