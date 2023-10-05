@@ -6,7 +6,7 @@
 ;;;
 
 	include "kernel.def"
-        include "../kernel09.def"
+        include "../../cpu-6809/kernel09.def"
         include "platform.def"
 
 	;; window xfer threshhold - any user/krn space xtfers

@@ -20,7 +20,7 @@
 	.globl _ramtop
 
         include "kernel.def"
-        include "../kernel09.def"
+        include "../../cpu-6809/kernel09.def"
         include "platform.def"
 
 	.area .data
