@@ -1,23 +1,23 @@
 ASRCS = crt0.s tricks.s commonmem.s vz200.s video.s
 CSRCS = devices.c main.c devtty.c sd.c devlpr.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/tinydisk_discard.c
-DSRCS = ../dev/tinydisk.c ../dev/tinysd.c
+DISCARD_DSRCS = ../../dev/tinydisk_discard.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinysd.c
 DASRCS =
 NSRCS = 
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DHOBJS = $(patsubst ../dev/%.c,%.rel, $(DHSRCS))
-DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
-NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DHOBJS = $(patsubst ../../dev/%.c,%.rel, $(DHSRCS))
+DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DHOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/net/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/net/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -29,20 +29,20 @@ $(AOBJS): %.rel: %.s
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
-$(DAOBJS): %.rel: ../dev/%.s
+$(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
 
 # We don't put it in discard as it fits better in code1
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(NOBJS): %.rel: ../dev/net/%.c
+$(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
@@ -55,11 +55,11 @@ image: booter boot bootblock
 	# Bank 0 0x9000 for 28K
 	# Common 0x7200 for 5.5K
 	# Font packed on the end for machines with the high res mod
-	dd if=../bank1.bin of=fuzix.boot bs=512 skip=32 count=20
-	dd if=../bank2.bin of=fuzix.boot bs=512 skip=32 seek=20 count=20
-	dd if=../common.bin of=fuzix.boot bs=512 skip=72 seek=40 count=56
-	dd if=../common.bin of=fuzix.boot bs=512 skip=57 seek=96 count=11
-	dd if=../bank3.bin of=fuzix.boot bs=512 skip=56 seek=107 count=4
+	dd if=../../bank1.bin of=fuzix.boot bs=512 skip=32 count=20
+	dd if=../../bank2.bin of=fuzix.boot bs=512 skip=32 seek=20 count=20
+	dd if=../../common.bin of=fuzix.boot bs=512 skip=72 seek=40 count=56
+	dd if=../../common.bin of=fuzix.boot bs=512 skip=57 seek=96 count=11
+	dd if=../../bank3.bin of=fuzix.boot bs=512 skip=56 seek=107 count=4
 
 booter: booter.s
 	sdasz80 -o booter.s

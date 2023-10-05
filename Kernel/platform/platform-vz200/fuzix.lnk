@@ -7,18 +7,18 @@
 -b _INITIALIZER=0x001
 -b _FONT=0x7000
 -l z80
-platform-vz200/crt0.rel
-platform-vz200/commonmem.rel
-platform-vz200/vz200.rel
+platform/platform-vz200/crt0.rel
+platform/platform-vz200/commonmem.rel
+platform/platform-vz200/vz200.rel
 start.rel
 version.rel
-lowlevel-z80-banked.rel
-usermem_std-z80-banked.rel
-platform-vz200/tricks.rel
-platform-vz200/main.rel
+cpu-z80/lowlevel-z80-banked.rel
+cpu-z80/usermem_std-z80-banked.rel
+platform/platform-vz200/tricks.rel
+platform/platform-vz200/main.rel
 timer.rel
 kdata.rel
-platform-vz200/devices.rel
+platform/platform-vz200/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -40,12 +40,12 @@ usermem.rel
 vt.rel
 devsys.rel
 font8x8.rel
-platform-vz200/discard.rel
-platform-vz200/devtty.rel
-platform-vz200/tinydisk.rel
-platform-vz200/tinydisk_discard.rel
-platform-vz200/tinysd.rel
-platform-vz200/sd.rel
-platform-vz200/video.rel
-platform-vz200/devlpr.rel
+platform/platform-vz200/discard.rel
+platform/platform-vz200/devtty.rel
+platform/platform-vz200/tinydisk.rel
+platform/platform-vz200/tinydisk_discard.rel
+platform/platform-vz200/tinysd.rel
+platform/platform-vz200/sd.rel
+platform/platform-vz200/video.rel
+platform/platform-vz200/devlpr.rel
 -e
