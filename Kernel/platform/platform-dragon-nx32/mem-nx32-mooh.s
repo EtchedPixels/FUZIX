@@ -30,7 +30,7 @@ sammap0	equ 0xFFDE
 ; crmen   equ 0x08
 
 	include "kernel.def"
-	include "../kernel09.def"
+	include "../cpu-6809/kernel09.def"
 
 	.area .discard
 

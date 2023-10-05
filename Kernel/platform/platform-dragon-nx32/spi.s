@@ -16,7 +16,7 @@
 	.globl _blk_op
 
         include "kernel.def"
-        include "../kernel09.def"
+        include "../../cpu-6809/kernel09.def"
 
 ; 65SPI control flags
 FRX	equ 0x10		; Fast Receive mode
