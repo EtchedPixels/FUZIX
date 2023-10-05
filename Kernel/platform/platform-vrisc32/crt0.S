@@ -1,4 +1,4 @@
-#include "../kernel-riscv32.def"
+#include "../../cpu-riscv32/kernel-riscv32.def"
 #
 #	Called with interrupts off and in supervisor mode
 #

@@ -1,4 +1,4 @@
-#include "../kernel-ns32k.def"
+#include "../../cpu-riscv32/kernel-riscv32.def"
 
 
 	.globl	plt_switchout

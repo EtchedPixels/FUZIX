@@ -1,4 +1,4 @@
-#include "../kernel-riscv32.def"
+#include "../../cpu-riscv32/kernel-riscv32.def"
 /*
  *	Lots left to fill in
  */

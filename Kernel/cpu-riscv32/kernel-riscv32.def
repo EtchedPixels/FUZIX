@@ -1,4 +1,4 @@
-#include "platform/kernel.def"
+#include "../build/kernel.def"
 
 /* alignment is 1 for char, 2 for short, 4 for long */
 
