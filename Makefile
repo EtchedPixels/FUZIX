@@ -45,9 +45,9 @@
 # rcbus-6502:	RCBUS with 65C02 or 65C816, VIA and 512K RAM/ROM
 # rcbus-68008:  RCBUS with 68008 CPU, PPIDE and flat 512/512K memory card
 # rcbus-6809:	RCBUS with 6809 CPU card
-# rcbus-68hc11:	RCBUS wiht 68HC11 CPU
+# rcbus-68hc11:	RCBUS with 68HC11 CPU
 # rcbus-8085:	RCBUs with 80C85 CPU and 8/56K memory banking
-# rcbus-ns32k:   RCBus with NS32K CPU
+# rcbus-ns32k:  RCBus with NS32K CPU
 # rcbus-sbc64:  RCBUS Z80SBC64 128K system and RTC
 # rcbus-z180:	RCBUS Z180 systems running in Z180 mode (includes SC126 etc)
 # rhyophyre:	Andrew Lynch's rhyohphre Z180/NEC7220 graphics
@@ -93,7 +93,7 @@ TARGET=rc2014
 include version.mk
 
 # Get the CPU type
-include Kernel/platform-$(TARGET)/target.mk
+include Kernel/platform/platform-$(TARGET)/target.mk
 
 ifeq ($(USERCPU),)
 	USERCPU = $(CPU)
