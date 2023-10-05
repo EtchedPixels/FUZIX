@@ -15,7 +15,7 @@
         .globl _devmem_write
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
         .area _CODE
 _devmem_write:
