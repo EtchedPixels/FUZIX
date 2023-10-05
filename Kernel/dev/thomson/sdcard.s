@@ -1,6 +1,6 @@
 
-	include "../../platform/kernel.def"
-	include "../../kernel09.def"
+	include "../../build/kernel.def"
+	include "../../cpu-6809/kernel09.def"
 
 	.area .common
 

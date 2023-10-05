@@ -4,26 +4,26 @@ C3SRCS = libc.c
 
 CDSRCS = discard.c
 
-DSRCS =	../dev/tinydisk.c ../dev/tinysd.c
-DDSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
+DSRCS =	../../dev/tinydisk.c ../../dev/tinysd.c
+DDSRCS = ../../dev/tinydisk_discard.c ../../dev/tinysd_discard.c
 
 ASRCS = crt0.s to8.s
 ASRCS += tricks.s commonmem.s usermem.s
 
-TSRCS = ../dev/thomson/devfdc.c ../dev/thomson/devtty.c
-TASRCS = ../dev/thomson/video-to8.s ../dev/thomson/sdcard.s
+TSRCS = ../../dev/thomson/devfdc.c ../../dev/thomson/devtty.c
+TASRCS = ../../dev/thomson/video-to8.s ../../dev/thomson/sdcard.s
 
 COBJS = $(CSRCS:.c=.o)
 C3OBJS = $(C3SRCS:.c=.o)
 CDOBJS = $(CDSRCS:.c=.o)
 AOBJS = $(ASRCS:.s=.o)
-DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.o, $(DDSRCS))
-TOBJS = $(patsubst ../dev/thomson/%.c,%.o, $(TSRCS))
-TAOBJS = $(patsubst ../dev/thomson/%.s,%.o, $(TASRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.o, $(DDSRCS))
+TOBJS = $(patsubst ../../dev/thomson/%.c,%.o, $(TSRCS))
+TAOBJS = $(patsubst ../../dev/thomson/%.s,%.o, $(TASRCS))
 OBJS  = $(COBJS) $(C3OBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(TOBJS) $(TAOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/thomson/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/thomson/
 
 all: $(OBJS)
 
@@ -39,16 +39,16 @@ $(C3OBJS): %.o: %.c
 $(CDOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.o: ../dev/%.c
+$(DOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGD) -c $<
 
-$(DDOBJS): %.o: ../dev/%.c
+$(DDOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(TOBJS): %.o: ../dev/thomson/%.c
+$(TOBJS): %.o: ../../dev/thomson/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
 
-$(TAOBJS): %.o: ../dev/thomson/%.s
+$(TAOBJS): %.o: ../../dev/thomson/%.s
 	$(CROSS_AS) $(ASOPTS)  $< -o $*.o
 
 $(AOBJS): %.o: %.s
@@ -57,25 +57,25 @@ $(AOBJS): %.o: %.s
 clean:
 	rm -f *.o *~ boot.bin boot.tmp boot.tmp2 fuzix.bin fuzix.img fuzix.tmp 
 
-boot.bin: boot.s ../tools/bless-to8
+boot.bin: boot.s ../../tools/bless-to8
 	lwasm -r -b -oboot.tmp boot.s
-	../tools/decb-image < boot.tmp boot.tmp2
-	dd bs=256 skip=98 count=1 < boot.tmp2 | ../tools/bless-to8 >boot.bin
+	../../tools/decb-image < boot.tmp boot.tmp2
+	dd bs=256 skip=98 count=1 < boot.tmp2 | ../../tools/bless-to8 >boot.bin
 
 image: boot.bin
-	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
+	$(CROSS_LD) -o ../../fuzix.bin -Map=../../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
-	to8.o discard.o ../bankfixed.o usermem.o ../memalloc_none.o \
-	../start.o ../version.o ../lowlevel-6809.o ../usermem_std-6809.o \
-	tricks.o main.o ../timer.o ../kdata.o devices.o tinydisk.o tinysd.o \
+	to8.o discard.o ../../bankfixed.o usermem.o ../../memalloc_none.o \
+	../../start.o ../../version.o ../../cpu-6809/lowlevel-6809.o \
+	tricks.o main.o ../../timer.o ../../kdata.o devices.o tinydisk.o tinysd.o \
 	sdcard.o tinydisk_discard.o tinysd_discard.o devfdc.o devinput.o \
-	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o ../blk512.o \
-	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o video-to8.o ../syscall_fs3.o ../syscall_exec.o \
-	../devinput.o
-	../tools/decb-image <../fuzix.bin fuzix.img
-	../tools/lw-checkmap ../fuzix.map
+	../../devio.o ../../filesys.o ../../process.o ../../inode.o ../../syscall_fs.o \
+	../../syscall_proc.o ../../syscall_other.o ../../mm.o ../../swap.o ../../blk512.o \
+	../../tty.o ../../devsys.o ../../usermem.o ../../syscall_fs2.o ../../syscall_exec16.o \
+	devtty.o libc.o ../../vt.o video-to8.o ../../syscall_fs3.o ../../syscall_exec.o \
+	../../devinput.o
+	../../tools/decb-image <../../fuzix.bin fuzix.img
+	../../tools/lw-checkmap ../../fuzix.map
 	
 	# 320K disk image
 	dd if=/dev/zero of=fuzix.bin bs=1024 count=320
