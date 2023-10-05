@@ -4,22 +4,22 @@
 -b _COMMONDATA=0x2000
 -b _CODE=0x4000
 -l z80
-platform-zxuno/crt0.rel
-platform-zxuno/commonmem.rel
-platform-zxuno/zx128.rel
-platform-zxuno/zxvideo.rel
-platform-zxuno/main.rel
-platform-zxuno/discard.rel
-platform-zxuno/zxuno.rel
+platform/platform-zxuno/crt0.rel
+platform/platform-zxuno/commonmem.rel
+platform/platform-zxuno/zx128.rel
+platform/platform-zxuno/zxvideo.rel
+platform/platform-zxuno/main.rel
+platform/platform-zxuno/discard.rel
+platform/platform-zxuno/zxuno.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-usermem_std-z80.rel
-platform-zxuno/tricks.rel
+cpu-z80/lowlevel-z80.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-zxuno/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-zxuno/devices.rel
+platform/platform-zxuno/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -41,12 +41,12 @@ bankfixed.rel
 swap.rel
 devsys.rel
 devinput.rel
-platform-zxuno/devtty.rel
-platform-zxuno/tinysd.rel
-platform-zxuno/tinysd_discard.rel
-platform-zxuno/divmmc.rel
-platform-zxuno/tinydisk.rel
-platform-zxuno/tinydisk_discard.rel
-platform-zxuno/devinput.rel
-platform-zxuno/zxkeyboard.rel
+platform/platform-zxuno/devtty.rel
+platform/platform-zxuno/tinysd.rel
+platform/platform-zxuno/tinysd_discard.rel
+platform/platform-zxuno/divmmc.rel
+platform/platform-zxuno/tinydisk.rel
+platform/platform-zxuno/tinydisk_discard.rel
+platform/platform-zxuno/devinput.rel
+platform/platform-zxuno/zxkeyboard.rel
 -e

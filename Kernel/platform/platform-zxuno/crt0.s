@@ -53,7 +53,7 @@
 	.globl ___sdcc_enter_ix
 
 	.include "kernel.def"
-	.include "../kernel-z80.def"
+	.include "../../cpu-z80/kernel-z80.def"
 
 
 ;	We are run from 0x0000 (_CODE1)

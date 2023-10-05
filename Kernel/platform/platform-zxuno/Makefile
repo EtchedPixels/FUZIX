@@ -1,23 +1,23 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/tinysd.c ../dev/tinydisk.c
-DDSRCS = ../dev/tinysd_discard.c ../dev/tinydisk_discard.c
-DZSRCS = ../dev/zx/divmmc.c ../dev/zx/zxkeyboard.c
-DZSRCS += ../dev/zx/devinput.c ../dev/zx/bank128.c
-DDZSRCS = ../dev/zx/zxuno.c
+DSRCS = ../../dev/tinysd.c ../../dev/tinydisk.c
+DDSRCS = ../../dev/tinysd_discard.c ../../dev/tinydisk_discard.c
+DZSRCS = ../../dev/zx/divmmc.c ../../dev/zx/zxkeyboard.c
+DZSRCS += ../../dev/zx/devinput.c ../../dev/zx/bank128.c
+DDZSRCS = ../../dev/zx/zxuno.c
 ASRCS = crt0.s zx128.s zxvideo.s
 ASRCS += tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
-DZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DZSRCS))
-DDZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DDZSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.rel, $(DDSRCS))
+DZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DZSRCS))
+DDZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DDZSRCS))
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/zx/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/zx/
 
 all:	$(OBJS)
 
@@ -27,16 +27,16 @@ $(COBJS): %.rel: %.c
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DDOBJS): %.rel: ../dev/%.c
+$(DDOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DZOBJS): %.rel: ../dev/zx/%.c
+$(DZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DDZOBJS): %.rel: ../dev/zx/%.c
+$(DDZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(AOBJS): %.rel: %.s
@@ -58,7 +58,7 @@ image:
 
 	# Now build a FUZIX.BIN to load
 	# in the order we need it
-	cp ../fuzix.bin FUZIX.BIN
+	cp ../../fuzix.bin FUZIX.BIN
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 # Adjust to wherever you have ESXDOS unpacked
