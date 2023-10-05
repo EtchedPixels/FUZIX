@@ -45,7 +45,7 @@
 	        .globl kstack_top
 
                 .include "kernel.def"
-                .include "../kernel-z80.def"
+                .include "../../cpu-z80/kernel-z80.def"
 
 	        ; startup code
 	        .area _BOOT

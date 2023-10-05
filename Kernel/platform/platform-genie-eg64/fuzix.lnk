@@ -6,23 +6,23 @@
 -b _CODE1=0x8000
 -b _DISCARD=0x6800
 -l z80
-platform-genie-eg64/crt0.rel
-platform-genie-eg64/commonmem.rel
-platform-genie-eg64/trs80.rel
-platform-genie-eg64/trs80-bank.rel
+platform/platform-genie-eg64/crt0.rel
+platform/platform-genie-eg64/commonmem.rel
+platform/platform-genie-eg64/trs80.rel
+platform/platform-genie-eg64/trs80-bank.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+cpu-z80/lowlevel-z80.rel
 usermem.rel
-platform-genie-eg64/tricks.rel
-platform-genie-eg64/main.rel
+platform/platform-genie-eg64/tricks.rel
+platform/platform-genie-eg64/main.rel
 timer.rel
 kdata.rel
-platform-genie-eg64/devfd.rel
-platform-genie-eg64/floppy.rel
-platform-genie-eg64/devhd.rel
-platform-genie-eg64/devhd_discard.rel
-platform-genie-eg64/devices.rel
+platform/platform-genie-eg64/devfd.rel
+platform/platform-genie-eg64/floppy.rel
+platform/platform-genie-eg64/devhd.rel
+platform/platform-genie-eg64/devhd_discard.rel
+platform/platform-genie-eg64/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -43,8 +43,8 @@ simple.rel
 vt.rel
 devsys.rel
 devinput.rel
-platform-genie-eg64/devinput.rel
-platform-genie-eg64/devlpr.rel
-platform-genie-eg64/devtty.rel
-platform-genie-eg64/discard.rel
+platform/platform-genie-eg64/devinput.rel
+platform/platform-genie-eg64/devlpr.rel
+platform/platform-genie-eg64/devtty.rel
+platform/platform-genie-eg64/discard.rel
 -e

@@ -45,7 +45,7 @@
 	.globl _vtoutput
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x0000 upwards after the udata etc)

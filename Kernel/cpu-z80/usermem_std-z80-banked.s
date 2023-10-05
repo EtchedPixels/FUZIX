@@ -6,7 +6,7 @@
 ;
         .module usermem
 
-	.include "platform/kernel.def"
+	.include "build/kernel.def"
         .include "kernel-z80.def"
 
         ; exported symbols

@@ -10,17 +10,17 @@
 -b _CODE5=0xC000
 -b _COMMONMEM=0x0400
 -l z80
-platform-kc87/crt0.rel
-platform-kc87/commonmem.rel
-platform-kc87/kc87.rel
+platform/platform-kc87/crt0.rel
+platform/platform-kc87/commonmem.rel
+platform/platform-kc87/kc87.rel
 start.rel
 version.rel
-lowlevel-z80-banked.rel
-platform-kc87/tricks.rel
-platform-kc87/main.rel
+cpu-z80/lowlevel-z80-banked.rel
+platform/platform-kc87/tricks.rel
+platform/platform-kc87/main.rel
 timer.rel
 kdata.rel
-platform-kc87/devices.rel
+platform/platform-kc87/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -41,16 +41,16 @@ tty.rel
 devsys.rel
 usermem.rel
 vt.rel
-platform-kc87/usermem.rel
-platform-kc87/discard.rel
-platform-kc87/devtty.rel
-platform-kc87/devrd.rel
-platform-kc87/devrtc.rel
-platform-kc87/tinydisk.rel
-platform-kc87/tinydisk_discard.rel
-platform-kc87/tinyide.rel
-platform-kc87/tinyide_discard.rel
-platform-kc87/ide.rel
-platform-kc87/vt.rel
-platform-kc87/maths32.rel
+platform/platform-kc87/usermem.rel
+platform/platform-kc87/discard.rel
+platform/platform-kc87/devtty.rel
+platform/platform-kc87/devrd.rel
+platform/platform-kc87/devrtc.rel
+platform/platform-kc87/tinydisk.rel
+platform/platform-kc87/tinydisk_discard.rel
+platform/platform-kc87/tinyide.rel
+platform/platform-kc87/tinyide_discard.rel
+platform/platform-kc87/ide.rel
+platform/platform-kc87/vt.rel
+platform/platform-kc87/maths32.rel
 -e
