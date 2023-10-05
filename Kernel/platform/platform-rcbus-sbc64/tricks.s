@@ -1,8 +1,8 @@
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
-	.include "../lib/z80fixedbank-core.s"
-	.include "../lib/z80user1.s"
+	.include "../../lib/z80fixedbank-core.s"
+	.include "../../lib/z80user1.s"
 
 ;
 ;	This is related so we will keep it here. Copy the process memory

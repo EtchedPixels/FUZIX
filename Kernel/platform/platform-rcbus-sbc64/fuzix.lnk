@@ -3,17 +3,17 @@
 -b _CODE=0x1000
 -b _COMMONMEM=0xF400
 -l z80
-platform-rcbus-sbc64/crt0.rel
-platform-rcbus-sbc64/commonmem.rel
-platform-rcbus-sbc64/rcbus.rel
+platform/platform-rcbus-sbc64/crt0.rel
+platform/platform-rcbus-sbc64/commonmem.rel
+platform/platform-rcbus-sbc64/rcbus.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-platform-rcbus-sbc64/tricks.rel
-platform-rcbus-sbc64/main.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-rcbus-sbc64/tricks.rel
+platform/platform-rcbus-sbc64/main.rel
 timer.rel
 kdata.rel
-platform-rcbus-sbc64/devices.rel
+platform/platform-rcbus-sbc64/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -33,14 +33,14 @@ bankfixed.rel
 tty.rel
 devsys.rel
 usermem.rel
-platform-rcbus-sbc64/discard.rel
-platform-rcbus-sbc64/devtty.rel
-platform-rcbus-sbc64/tinydisk.rel
-platform-rcbus-sbc64/tinyide.rel
-platform-rcbus-sbc64/tinydisk_discard.rel
-platform-rcbus-sbc64/tinyide_discard.rel
-platform-rcbus-sbc64/platform_ide.rel
-platform-rcbus-sbc64/ds1302.rel
-platform-rcbus-sbc64/ds1302_discard.rel
-platform-rcbus-sbc64/ds1302_rcbus.rel
+platform/platform-rcbus-sbc64/discard.rel
+platform/platform-rcbus-sbc64/devtty.rel
+platform/platform-rcbus-sbc64/tinydisk.rel
+platform/platform-rcbus-sbc64/tinyide.rel
+platform/platform-rcbus-sbc64/tinydisk_discard.rel
+platform/platform-rcbus-sbc64/tinyide_discard.rel
+platform/platform-rcbus-sbc64/platform_ide.rel
+platform/platform-rcbus-sbc64/ds1302.rel
+platform/platform-rcbus-sbc64/ds1302_discard.rel
+platform/platform-rcbus-sbc64/ds1302_rcbus.rel
 -e
