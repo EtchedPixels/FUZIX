@@ -55,12 +55,8 @@ $(DISCARD_COBJS): %.rel: %.c
 
 clean:
 	rm -f $(OBJS) core *~  *.asm *.rst *.lst *.sym *.rel
-	rm -f nasboot.lk nasboot.bin
 
 image:
-	sdasz80 -o nasboot.s
-	sdldz80 -m -i nasboot.rel
-	makebin -s 1024 nasboot.ihx | dd of=nasboot.bin bs=256 skip=1 count=1 conv=sync
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
