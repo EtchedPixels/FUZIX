@@ -1,4 +1,4 @@
-#include "platform/kernel.def"
+#include "../build/kernel.def"
 
 /* Keep these in sync with struct u_data!! */
 

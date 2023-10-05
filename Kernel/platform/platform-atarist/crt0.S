@@ -1,4 +1,4 @@
-#include "../kernel-68000.def"
+#include "../../cpu-68000/kernel-68000.def"
 
 /*
  *	Need to wipe BSS etc once we figure out our preferred boot method

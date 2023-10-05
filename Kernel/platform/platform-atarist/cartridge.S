@@ -13,7 +13,7 @@ install:
 
 	even
 kernel_begin:
-	incbin	"../fuzix.bin"
+	incbin	"../../fuzix.bin"
 kernel_end:
 
 	section .filename
