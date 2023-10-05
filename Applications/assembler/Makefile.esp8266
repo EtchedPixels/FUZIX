@@ -1,0 +1,5 @@
+# No ESP8266 support (or room)
+
+all:
+
+clean:
