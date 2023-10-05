@@ -1,6 +1,6 @@
-	.include "platform/kernel.def"
+	.include "../build/kernel.def"
         .include "kernel02.def"
-	.include "platform/zeropage.inc"
+	.include "../build/zeropage.inc"
 
 		.export __uget, __ugetc, __ugetw
 		.export __uput, __uputc, __uputw, __uzero

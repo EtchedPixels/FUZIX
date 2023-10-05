@@ -33,8 +33,8 @@
 	.import CTemp
 	.import _plt_monitor
 
-	.include "platform/zeropage.inc"
-	.include "platform/kernel.def"
+	.include "../build/zeropage.inc"
+	.include "../build/kernel.def"
 	.include "kernel02.def"
 
 	.segment "COMMONMEM"

@@ -27,7 +27,7 @@
 	.import incsp2
 
         .include "kernel.def"
-        .include "../kernel02.def"
+        .include "../../cpu-6502/kernel02.def"
 	.include "zeropage.inc"
 
         .segment "COMMONMEM"

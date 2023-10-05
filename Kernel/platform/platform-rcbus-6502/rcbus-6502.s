@@ -51,7 +51,7 @@
 	    .import _create_init_common
 
             .include "kernel.def"
-            .include "../kernel02.def"
+            .include "../../cpu-6502/kernel02.def"
 	    .include "zeropage.inc"
 
 ; -----------------------------------------------------------------------------
