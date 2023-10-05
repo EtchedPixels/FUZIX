@@ -1,5 +1,5 @@
 
-#NSRCS = ../dev/net/net_native.c
+#NSRCS = ../../dev/net/net_native.c
 CSRCS += devices.c main.c devtty.c devfd.c devrtc.c
 
 ASRCS = crt0.s jeeretro.s
@@ -7,7 +7,7 @@ ASRCS += tricks.s commonmem.s
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
-#NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+#NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(NOBJS)
 
@@ -21,7 +21,7 @@ $(AOBJS): %.rel: %.s
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-#$(NOBJS): %.rel: ../dev/net/%.c
+#$(NOBJS): %.rel: ../../dev/net/%.c
 #	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:

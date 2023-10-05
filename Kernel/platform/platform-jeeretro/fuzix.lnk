@@ -3,20 +3,20 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF400
 -l z80
-platform-jeeretro/crt0.rel
-platform-jeeretro/commonmem.rel
-platform-jeeretro/jeeretro.rel
-platform-jeeretro/main.rel
+platform/platform-jeeretro/crt0.rel
+platform/platform-jeeretro/commonmem.rel
+platform/platform-jeeretro/jeeretro.rel
+platform/platform-jeeretro/main.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-usermem_std-z80.rel
-platform-jeeretro/tricks.rel
+cpu-z80/lowlevel-z80.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-jeeretro/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-jeeretro/devfd.rel
-platform-jeeretro/devices.rel
+platform/platform-jeeretro/devfd.rel
+platform/platform-jeeretro/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -31,11 +31,12 @@ syscall_proc.rel
 syscall_other.rel
 tty.rel
 mm.rel
+memalloc_none.rel
 bankfixed.rel
 swap.rel
 devsys.rel
-platform-jeeretro/devtty.rel
-platform-jeeretro/devrtc.rel
+platform/platform-jeeretro/devtty.rel
+platform/platform-jeeretro/devrtc.rel
 level2.rel
 syscall_level2.rel
 syscall_net.rel

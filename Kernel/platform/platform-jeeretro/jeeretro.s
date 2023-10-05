@@ -24,11 +24,11 @@
 	    .globl map_kernel
 	    .globl map_kernel_di
 	    .globl map_kernel_restore
-	    .globl map_process
-	    .globl map_process_di
-	    .globl map_process_always
-	    .globl map_process_always_di
-	    .globl map_process_a
+	    .globl map_proc
+	    .globl map_proc_di
+	    .globl map_proc_always
+	    .globl map_proc_always_di
+	    .globl map_proc_a
 	    .globl map_save_kernel
 	    .globl map_restore
 
@@ -52,7 +52,7 @@
             .globl interrupt_handler
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0xF000 upwards)
@@ -150,7 +150,7 @@ _program_vectors:
             push hl ; put stack back as it was
             push de
 
-	    call map_process
+	    call map_proc
 
             ; write zeroes across all vectors
             ld hl, #0
@@ -188,19 +188,19 @@ map_kernel_restore:
 	    in a, (7)
 	    pop af
             ret
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	    ld a, h
 	    or l
 	    jr z, map_kernel
 	    ld a, (hl)
-map_process_a:
+map_proc_a:
             push af
 	    in a, (7)
             pop af
             ret
-map_process_always:
-map_process_always_di:
+map_proc_always:
+map_proc_always_di:
 	    push af
 	    ld a, (_udata + U_DATA__U_PAGE)
 	    in a, (7)
