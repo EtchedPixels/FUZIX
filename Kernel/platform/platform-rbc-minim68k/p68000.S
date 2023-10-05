@@ -1,5 +1,5 @@
 
-#include "../kernel-68000.def"
+#include "../../cpu-68000/kernel-68000.def"
 #include "config.h"
 
 #ifdef MINI68K_TRAP_BIOSCALL
