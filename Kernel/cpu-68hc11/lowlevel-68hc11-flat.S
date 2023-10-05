@@ -23,7 +23,7 @@
 
 	.globl preemption		; for debugging
 
-#include "platform/kernel.def"
+#include "../build/kernel.def"
 #include "kernel-hc11.def"
 
 

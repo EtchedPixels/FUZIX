@@ -29,7 +29,7 @@
 
 
 #include "kernel.def"
-#include "../kernel-hc11.def"
+#include "../../cpu-68hc11/kernel-hc11.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK

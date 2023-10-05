@@ -148,8 +148,8 @@ SECTIONS
   {
     *(.discard)
     *(.discard.*)
-    ../start.o(.text)
-    ../start.o(.text.*)
+    ../../start.o(.text)
+    ../../start.o(.text.*)
     devide_discard.o(.text)
     devide_discard.o(.text.*)
     devsd_discard.o(.text)
