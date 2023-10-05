@@ -61,7 +61,7 @@
 	.globl istack_top
 	.globl _ssig
 
-        include "platform/kernel.def"
+        include "../build/kernel.def"
         include "kernel09.def"
 
         .area .common

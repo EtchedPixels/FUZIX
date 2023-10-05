@@ -1,6 +1,6 @@
 	.module usermem
 
-	include "platform/kernel.def"
+	include "../build/kernel.def"
         include "kernel09.def"
 
 ;

@@ -8,7 +8,7 @@
 	.globl _devide_write_data
 
         include "kernel.def"
-        include "../kernel09.def"
+        include "../../cpu-6809/kernel09.def"
 
 	.area .common
 ;

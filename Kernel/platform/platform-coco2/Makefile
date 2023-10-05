@@ -5,9 +5,9 @@ C3SRCS = libc.c
 
 CDSRCS = discard.c
 
-DSRCS = ../dev/tinyide.c ../dev/tinydisk.c
+DSRCS = ../../dev/tinyide.c ../../dev/tinydisk.c
 
-DDSRCS = ../dev/tinydisk_discard.c ../dev/tinyide_discard.c
+DDSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
 
 ASRCS = crt0.s coco2.s ide.s video.s
 ASRCS += tricks.s commonmem.s
@@ -16,11 +16,11 @@ COBJS = $(CSRCS:.c=$(BINEXT))
 C3OBJS = $(C3SRCS:.c=$(BINEXT))
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
 AOBJS = $(ASRCS:.s=$(BINEXT))
-DOBJS = $(patsubst ../dev/%.c,%.o, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.o, $(DDSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.o, $(DDSRCS))
 OBJS  = $(COBJS) $(C3OBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 all: $(OBJS)
 
@@ -36,13 +36,13 @@ $(C3OBJS): %$(BINEXT): %.c
 $(CDOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-tinyide.o: ../dev/tinyide.c
+tinyide.o: ../../dev/tinyide.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGI) -c $<
 
-tinydisk.o: ../dev/tinydisk.c
+tinydisk.o: ../../dev/tinydisk.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGD) -c $<
 
-$(DDOBJS): %$(BINEXT): ../dev/%.c
+$(DDOBJS): %$(BINEXT): ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(AOBJS): %$(BINEXT): %.s
@@ -52,19 +52,19 @@ clean:
 	rm -f *.o *~ fuzix.tmp fuzix.img bootfuz.bin
 
 image: bootfuz.bin
-	$(CROSS_LD) -o ../fuzix.bin -Map=../fuzix.map --script=fuzix.link --oformat=decb \
+	$(CROSS_LD) -o ../../fuzix.bin -Map=../../fuzix.map --script=fuzix.link --oformat=decb \
 	crt0.o commonmem.o \
-	coco2.o discard.o ../simple.o \
-	../start.o ../version.o ../lowlevel-6809.o ../memalloc_none.o \
-	tricks.o main.o ../timer.o ../kdata.o devices.o \
+	coco2.o discard.o ../../simple.o \
+	../../start.o ../../version.o ../../cpu-6809/lowlevel-6809.o ../../memalloc_none.o \
+	tricks.o main.o ../../timer.o ../../kdata.o devices.o \
 	tinydisk.o tinydisk_discard.o tinyide.o tinyide_discard.o ide.o \
-	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
-	../syscall_proc.o ../syscall_other.o ../mm.o ../swap.o \
-	../tty.o ../devsys.o ../usermem.o ../syscall_fs2.o ../syscall_exec16.o \
-	devtty.o libc.o ../vt.o ../syscall_fs3.o ../syscall_exec.o ../blk512.o \
+	../../devio.o ../../filesys.o ../../process.o ../../inode.o ../../syscall_fs.o \
+	../../syscall_proc.o ../../syscall_other.o ../../mm.o ../../swap.o \
+	../../tty.o ../../devsys.o ../../usermem.o ../../syscall_fs2.o ../../syscall_exec16.o \
+	devtty.o libc.o ../../vt.o ../../syscall_fs3.o ../../syscall_exec.o ../../blk512.o \
 	video.o
-	../tools/decb-image <../fuzix.bin fuzix.img
-	../tools/lw-checkmap ../fuzix.map
+	../../tools/decb-image <../../fuzix.bin fuzix.img
+	../../tools/lw-checkmap ../../fuzix.map
 	# Repack the high spot F0-FF where it wants it
 	dd if=fuzix.img of=fuzix.tmp bs=256 skip=240
 	dd if=fuzix.tmp of=fuzix.img bs=1024 seek=32 conv=notrunc
