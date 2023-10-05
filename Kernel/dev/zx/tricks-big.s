@@ -33,7 +33,7 @@
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
         .area _COMMONMEM
 

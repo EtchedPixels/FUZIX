@@ -1,10 +1,10 @@
 CSRCS = devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/tinyide.c ../dev/tinysd.c ../dev/tinydisk.c
-DDSRCS = ../dev/tinyide_discard.c ../dev/tinysd_discard.c
-DDSRCS += ../dev/tinydisk_discard.c
-DZSRCS = ../dev/zx/nemoide.c ../dev/zx/zxmmc.c ../dev/zx/zxkeyboard.c
-DZSRCS += ../dev/zx/devinput.c ../dev/zx/bankbig.c ../dev/zx/zxtty.c
+DSRCS = ../../dev/tinyide.c ../../dev/tinysd.c ../../dev/tinydisk.c
+DDSRCS = ../../dev/tinyide_discard.c ../../dev/tinysd_discard.c
+DDSRCS += ../../dev/tinydisk_discard.c
+DZSRCS = ../../dev/zx/nemoide.c ../../dev/zx/zxmmc.c ../../dev/zx/zxkeyboard.c
+DZSRCS += ../../dev/zx/devinput.c ../../dev/zx/bankbig.c ../../dev/zx/zxtty.c
 DDZSRCS =
 ASRCS = crt0.s pentagon.s zxvideo.s
 ASRCS += tricks.s commonmem.s
@@ -12,13 +12,13 @@ ASRCS += tricks.s commonmem.s
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
-DZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DZSRCS))
-DDZOBJS = $(patsubst ../dev/zx/%.c,%.rel, $(DDZSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.rel, $(DDSRCS))
+DZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DZSRCS))
+DDZOBJS = $(patsubst ../../dev/zx/%.c,%.rel, $(DDZSRCS))
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/zx/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/zx/
 
 CROSS_CC_SEG3 = --codeseg CODE3
 
@@ -30,16 +30,16 @@ $(COBJS): %.rel: %.c
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DDOBJS): %.rel: ../dev/%.c
+$(DDOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DZOBJS): %.rel: ../dev/zx/%.c
+$(DZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DDZOBJS): %.rel: ../dev/zx/%.c
+$(DDZOBJS): %.rel: ../../dev/zx/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(AOBJS): %.rel: %.s
@@ -57,25 +57,25 @@ loader.bin: loader.s
 
 image: loader.bin
 	# Low 16K (will end up in bank 0 0000-3FFF)
-	dd if=../common.bin bs=16384 conv=sync skip=0 count=1 of=block0
+	dd if=../../common.bin bs=16384 conv=sync skip=0 count=1 of=block0
 	# Bank 1 (C000-FFFF)
-	dd if=../bank1.bin bs=16384 conv=sync skip=3 count=1 of=block1
+	dd if=../../bank1.bin bs=16384 conv=sync skip=3 count=1 of=block1
 	# Bank 2 (8000-BFFF)
-	dd if=../common.bin bs=16384 conv=sync skip=2 count=1 of=block2
+	dd if=../../common.bin bs=16384 conv=sync skip=2 count=1 of=block2
 	# Bank 6 (C000-FFFF)
-	dd if=../bank2.bin bs=16384 conv=sync skip=3 count=1 of=block3
+	dd if=../../bank2.bin bs=16384 conv=sync skip=3 count=1 of=block3
 	# Bank 7 (C000-FFFF)
-	dd if=../bank3.bin bs=16384 conv=sync skip=3 count=1 of=block4
+	dd if=../../bank3.bin bs=16384 conv=sync skip=3 count=1 of=block4
 
 	cp base-image.trd fuzix.trd
 	# Insert 4K loader
-	../tools/trdify fuzix.trd BOOT0 loader.bin
+	../../tools/trdify fuzix.trd BOOT0 loader.bin
 	# Kernel image
-	../tools/trdify fuzix.trd BLOCK0 block0
-	../tools/trdify fuzix.trd BLOCK1 block1
-	../tools/trdify fuzix.trd BLOCK2 block2
-	../tools/trdify fuzix.trd BLOCK3 block3
-	../tools/trdify fuzix.trd BLOCK4 block4
+	../../tools/trdify fuzix.trd BLOCK0 block0
+	../../tools/trdify fuzix.trd BLOCK1 block1
+	../../tools/trdify fuzix.trd BLOCK2 block2
+	../../tools/trdify fuzix.trd BLOCK3 block3
+	../../tools/trdify fuzix.trd BLOCK4 block4
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
