@@ -40,7 +40,7 @@
 	.globl l__COMMONMEM
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (below 0xE800, only accessible when the kernel is mapped)

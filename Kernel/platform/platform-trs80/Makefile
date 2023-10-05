@@ -6,15 +6,15 @@ DISCARD_CSRCS = discard.c devhd_discard.c
 ASRCS = trs80.s trs80-bank.s crt0.s
 ASRCS += tricks.s commonmem.s floppy.s drivewire.s
 
-DSRCS = ../dev/devdw.c
+DSRCS = ../../dev/devdw.c
 
 COBJS = $(CSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
 OBJS  = $(COBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 all:	$(OBJS) trs80load.bin
 
@@ -24,7 +24,7 @@ $(COBJS): %.rel: %.c
 $(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DISCARD_COBJS): %.rel: %.c
@@ -38,10 +38,10 @@ image: trs80load.bin hdload.bin
 	# Boot block at 0,0
 	dd if=trs80load.bin of=boot.raw bs=256 count=1 conv=notrunc
 	# Kernel lives on the end of the disk (so we can add an fs)
-	dd if=../fuzix.bin of=boot.raw bs=1 seek=129024 conv=notrunc
-	../tools/makejv3 -s -t dd40s -d boot.raw boot4p.jv3
+	dd if=../../fuzix.bin of=boot.raw bs=1 seek=129024 conv=notrunc
+	../../tools/makejv3 -s -t dd40s -d boot.raw boot4p.jv3
 	dd if=hdload.bin of=hdboot.raw bs=256 count=1 conv=notrunc
-	../tools/makejv3 -s -t dd40s -d hdboot.raw hdboot4p.jv3
+	../../tools/makejv3 -s -t dd40s -d hdboot.raw hdboot4p.jv3
 
 trs80load.bin: trs80load.s
 	sdasz80 -o trs80load.s
@@ -62,4 +62,4 @@ diskimage: image
 	# Build a file system to fit
 	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-filesystem $(ENDIANFLAGH) $(IMAGES)/filesys.img 256 21760)
 	cat xtrsheader $(IMAGES)/filesys.img >$(IMAGES)/hard4p-0
-	../tools/trslabel $(IMAGES)/hard4p-0
+	../../tools/trslabel $(IMAGES)/hard4p-0
