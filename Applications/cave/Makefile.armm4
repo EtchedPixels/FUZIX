@@ -1,5 +1,5 @@
 ROOT = ../..
-include $(ROOT)/Applications/rules.armm4
+include $(ROOT)/Target/rules.armm4
 
 SRC = advent.c adventdb.c database.c english.c itverb.c lib.c saveadv.c \
       turn.c verb.c global.c

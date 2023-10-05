@@ -1,5 +1,5 @@
 ROOT = ../..
-include $(ROOT)/Applications/rules.armm4
+include $(ROOT)/Target/rules.armm4
 LINKER_OPT += -ltermcap$(PLATFORM) -lc$(PLATFORM)
 
 SRCSNS =
