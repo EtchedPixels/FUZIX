@@ -13,7 +13,7 @@
 
 	.module ps2bitbang-rc2014-kbd
 
-	.include "../dev/ps2bitbang-z80.def"
+	.include "../../dev/ps2bitbang-z80.def"
 
 	.area _DATA
 

@@ -4,19 +4,19 @@
 -b _COMMONMEM=0xF800
 -b _DISCARD=0xE000
 -l z180
-platform-yaz180/crt0.rel
-platform-yaz180/commonmem.rel
-platform-yaz180/z180.rel
-platform-yaz180/yaz180.rel
-platform-yaz180/main.rel
+platform/platform-yaz180/crt0.rel
+platform/platform-yaz180/commonmem.rel
+platform/platform-yaz180/z180.rel
+platform/platform-yaz180/yaz180.rel
+platform/platform-yaz180/main.rel
 start.rel
 version.rel
-lowlevel-z180.rel
-usermem_std-z180.rel
+cpu-z180/lowlevel-z180.rel
+cpu-z180/usermem_std-z180.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform-yaz180/devices.rel
+platform/platform-yaz180/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -35,12 +35,12 @@ memalloc_none.rel
 bankfixed.rel
 swap.rel
 devsys.rel
-platform-yaz180/discard.rel
-platform-yaz180/devtty.rel
-platform-yaz180/devide.rel
-platform-yaz180/devide_discard.rel
-platform-yaz180/ppide.rel
-platform-yaz180/mbr.rel
-platform-yaz180/blkdev.rel
-platform-yaz180/monitor.rel
+platform/platform-yaz180/discard.rel
+platform/platform-yaz180/devtty.rel
+platform/platform-yaz180/devide.rel
+platform/platform-yaz180/devide_discard.rel
+platform/platform-yaz180/ppide.rel
+platform/platform-yaz180/mbr.rel
+platform/platform-yaz180/blkdev.rel
+platform/platform-yaz180/monitor.rel
 -e

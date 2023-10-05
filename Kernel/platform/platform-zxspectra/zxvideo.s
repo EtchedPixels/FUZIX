@@ -25,5 +25,5 @@ SCREENBASE	.equ	0xC0
 
         .area _VIDEO
 
-	.include "../dev/zx/video-banked.s"
+	.include "../../dev/zx/video-banked.s"
 

@@ -10,7 +10,7 @@
 
 	.module ps2bitbang-itx-mouse
 
-	.include "../dev/ps2bitbang-z80.def"
+	.include "../../dev/ps2bitbang-z80.def"
 
 	.area _DATA
 
