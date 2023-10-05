@@ -75,20 +75,15 @@ void plt_interrupt(void)
 void plt_discard(void)
 {
 	bufptr bp = bufpool_end;
-	extern uint16_t discard_size;
 
-	discard_size /= sizeof(struct blkbuf);
-
-	kprintf("%d buffers reclaimed from discard\n", discard_size);
-
-	bufpool_end += discard_size;	/* Reclaim the discard space */
-
-	memset(bp, 0, discard_size * sizeof(struct blkbuf));
-	/* discard_size is in discard so it dies here */
-	for (bp = bufpool + NBUFS; bp < bufpool_end; ++bp) {
+	while(bp + 1 < (void *)0xF000) {
+		memset(bp, 0, sizeof(struct blkbuf));
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
+		bp++;
 	}
+	kprintf("%d buffers reclaimed from discard\n", bp - bufpool_end);
+	bufpool_end = bp;
 }
 
 /* SD mode - todo */

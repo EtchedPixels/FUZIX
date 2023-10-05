@@ -25,6 +25,8 @@ FC00-FFFF		Kernel stacks and common data
 - GM833 RAMDisc
 
 ## TODO 
+- Probe top of bankable space and adjust top of user memory to match
+- Report correct ramsize based on bankable space size
 - Sort out remaining keyboard bits - *, ctrl etc
 - Floppy (nascom or gm ? - WIP)
 - Finish rewiring nmi key handler

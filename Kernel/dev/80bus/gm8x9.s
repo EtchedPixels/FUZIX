@@ -1,7 +1,7 @@
 	.module gm8x9
 
 	.include "kernel.def"
-	.include "../kernel-z80.def"
+	.include "../../cpu-z80/kernel-z80.def"
 
 	.globl _gm8x9_ioread
 	.globl _gm8x9_iowrite

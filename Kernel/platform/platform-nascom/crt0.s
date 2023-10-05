@@ -15,9 +15,9 @@
         .area _GSFINAL
 	; Buffers must be directly before discard as they will
 	; expand over it
+        .area _COMMONMEM
 	.area _BUFFERS
 	.area _DISCARD
-        .area _COMMONMEM
 
         .area _COMMONDATA
         ; Doesn't matter if these go over the I/O space as they are
