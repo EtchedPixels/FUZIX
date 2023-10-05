@@ -1,7 +1,7 @@
         .module usermem
 
         .include "socz80.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
         .include "kernel.def"
 
         ; imported symbols

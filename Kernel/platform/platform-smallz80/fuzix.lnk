@@ -4,19 +4,19 @@
 -b _CODE=0x3800
 -b _COMMONMEM=0xF600
 -l z80
-platform-smallz80/crt0.rel
-platform-smallz80/commonmem.rel
-platform-smallz80/smallz80.rel
+platform/platform-smallz80/crt0.rel
+platform/platform-smallz80/commonmem.rel
+platform/platform-smallz80/smallz80.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+cpu-z80/lowlevel-z80.rel
 usermem.rel
-platform-smallz80/tricks.rel
-platform-smallz80/main.rel
-platform-smallz80/discard.rel
+platform/platform-smallz80/tricks.rel
+platform/platform-smallz80/main.rel
+platform/platform-smallz80/discard.rel
 timer.rel
 kdata.rel
-platform-smallz80/devices.rel
+platform/platform-smallz80/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -36,10 +36,10 @@ memalloc_none.rel
 swap.rel
 bankfixed.rel
 devsys.rel
-platform-smallz80/devtty.rel
-platform-smallz80/blkdev.rel
-platform-smallz80/mbr.rel
-platform-smallz80/devide.rel
-platform-smallz80/devide_discard.rel
-platform-smallz80/devrtc.rel
+platform/platform-smallz80/devtty.rel
+platform/platform-smallz80/blkdev.rel
+platform/platform-smallz80/mbr.rel
+platform/platform-smallz80/devide.rel
+platform/platform-smallz80/devide_discard.rel
+platform/platform-smallz80/devrtc.rel
 -e

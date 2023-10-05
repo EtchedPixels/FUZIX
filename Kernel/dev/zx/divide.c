@@ -12,10 +12,19 @@ COMMON_MEMORY
 void devide_read_data(uint8_t *p) __naked
 {
     __asm
+#ifdef CONFIG_BANKED
+            pop bc
             pop de
             pop hl
             push hl
             push de
+            push bc
+#else
+            pop de
+            pop hl
+            push hl
+            push de
+#endif
             ld a, (_td_raw) 			    ; I/O type ?
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
@@ -49,10 +58,19 @@ doread:
 void devide_write_data(uint8_t *p) __naked
 {
     __asm
+#ifdef CONFIG_BANKED
+            pop bc
             pop de
             pop hl
             push hl
             push de
+            push bc
+#else
+            pop de
+            pop hl
+            push hl
+            push de
+#endif
             ld a, (_td_raw) ;			    ; I/O type
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count

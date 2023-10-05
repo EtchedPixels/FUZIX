@@ -1,4 +1,3 @@
-#define CONFIG_IDE
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -30,6 +29,12 @@
 #define MAXTICKS	20
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
+
+#define CONFIG_TD_NUM		2
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_8BIT
+#define CONFIG_TINYIDE_SDCCPIO
+#define IDE_IS_8BIT(x)		1
 
 /* Custom banking */
 

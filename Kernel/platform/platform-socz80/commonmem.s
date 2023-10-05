@@ -3,12 +3,12 @@
         .module commonmem
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
         .area _COMMONMEM
         ; ------------------------------------------------------------------------------------------------
         ; 0xF800: start of common memory
         ; ------------------------------------------------------------------------------------------------
 
-	.include "../cpu-z80/std-commonmem.s"
+	.include "../../cpu-z80/std-commonmem.s"
 

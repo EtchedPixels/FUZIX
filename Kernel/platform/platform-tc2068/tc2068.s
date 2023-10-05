@@ -23,6 +23,7 @@
 	.globl map_kernel_restore
 	.globl map_for_swap
 	.globl map_video
+	.globl map_buffers
 	.globl current_map
 
         .globl _need_resched
@@ -48,7 +49,7 @@
         .globl outstringhex
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (below 0x4000)
@@ -139,6 +140,7 @@ map_save_kernel:
         ld a, (current_map)
         ld (map_store), a
 	pop af
+map_buffers:
 map_kernel_di:
 map_kernel:
 map_kernel_restore:

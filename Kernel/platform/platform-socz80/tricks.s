@@ -22,7 +22,7 @@
 
         .include "socz80.def"
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 ;
 ;	These do not need to be in common memory as we don't have to
 ;	pull udata remapping tricks on a 16K banked system. In the case of
