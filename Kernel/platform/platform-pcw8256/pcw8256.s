@@ -60,7 +60,7 @@
             .globl outstringhex
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; VIDEO MEMORY BANK (0x4000-0xBFFF during video work)
