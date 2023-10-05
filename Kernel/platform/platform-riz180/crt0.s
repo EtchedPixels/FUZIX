@@ -42,7 +42,7 @@
 	.globl ___sdcc_enter_ix
 
 	.include "kernel.def"
-        .include "../cpu-z180/z180.def"
+        .include "../../cpu-z180/z180.def"
 
 	.globl outchar
 

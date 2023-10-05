@@ -2,7 +2,7 @@
 
                 .module monitor
                 .include "kernel.def"
-	        .include "../cpu-z180/z180.def"
+	        .include "../../cpu-z180/z180.def"
                 .globl _plt_monitor
 		.globl _plt_reboot
                 .globl map_kernel
@@ -16,7 +16,7 @@
 ; -----------------------------------------------------------------------------
 .ifne USE_FANCY_MONITOR ; -----------------------------------------------------
                 .area _COMMONMEM ; actual monitor lives in high memory
-                .include "../lib/monitor-z80.s"
+                .include "../../lib/monitor-z80.s"
 
 ;                .area _COMMONMEM ; just a stub goes in common memory
 _plt_monitor:

@@ -20,8 +20,8 @@
         .globl _rtc_shadow
 
         .include "kernel.def"
-        .include "../cpu-z180/z180.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z180/z180.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; Buffers
