@@ -1,0 +1,82 @@
+#include "platform/kernel.def"
+
+/* alignment is 1 for char, 2 for short, 4 for long */
+
+/* Keep these in sync with struct u_data!! */
+
+#define U_DATA__U_PTAB		0
+#define U_DATA__U_PAGE		4
+#define U_DATA__U_PAGEB		5
+#define U_DATA__U_PAGE2		6
+#define U_DATA__U_INSYS		8
+#define U_DATA__U_CALLNO	9
+#define U_DATA__U_SYSCALL_SP	12
+#define U_DATA__U_RETVAL	16
+#define U_DATA__U_ERROR		20
+#define U_DATA__U_SP		24
+#define U_DATA__U_ININTERRUPT	28
+#define U_DATA__U_CURSIG	29
+#define U_DATA__U_ARGN		32
+#define U_DATA__U_ARGN1		36
+#define U_DATA__U_ARGN2		40
+#define U_DATA__U_ARGN3		44
+#define U_DATA__U_ISP		48
+#define U_DATA__U_TOP		52
+#define U_DATA__U_BREAK		56
+#define U_DATA__U_CODEBASE	60
+#define U_DATA__U_SIGVEC	64
+
+#define UBLOCK_SIZE		1024
+
+#define P_TAB__P_STATUS_OFFSET	0
+#define P_TAB__P_FLAGS_OFFSET	1
+#define P_TAB__P_TTY_OFFSET	2
+#define P_TAB__P_PID_OFFSET	4
+#define P_TAB__P_PAGE_OFFSET	24
+#define P_TAB__P_PAGE_OFFSETB	25
+#define P_TAB__P_UDATA_OFFSET	28
+
+#define P_RUNNING		1
+#define P_READY			2
+#define P_DEFER			3
+
+#define PFL_BATCH		4
+
+#define OS_BANK			0
+
+#define EAGAIN			11
+
+#define SIGHUP		 1
+#define SIGINT		 2
+#define SIGQUIT		 3
+#define SIGILL		 4
+#define SIGTRAP		 5
+#define SIGABRT		 6
+#define SIGIOT		 6
+#define SIGBUS		 7
+#define SIGFPE		 8
+#define SIGKILL		 9
+#define SIGUSR1		10
+#define SIGSEGV		11
+#define SIGUSR2		12
+#define SIGPIPE		13
+#define SIGALRM		14
+#define SIGTERM		15
+#define SIGSTKFLT	16
+#define SIGCHLD		17
+#define SIGCONT		18
+#define SIGSTOP		19
+#define SIGTSTP		20
+#define SIGTTIN		21
+#define SIGTTOU		22
+#define SIGURG		23
+#define SIGXCPU		24
+#define SIGXFSZ		25
+#define SIGVTALRM	26
+#define SIGPROF		27
+#define SIGWINCH	28
+#define SIGIO		29
+#define SIGPOLL		SIGIO
+#define SIGPWR		30
+#define SIGSYS		31
+#define	SIGUNUSED	31

@@ -5,6 +5,7 @@
 
 #define ALIGNUP(v)   alignup(v, 4)
 #define ALIGNDOWN(v) aligndown(v, 4)
+#define STACKALIGN(v) aligndown(v, 16)
 
 #define uputp    uputl          /* Copy user pointer type */
 #define ugetp(x) ugetl(x)	/* between user and kernel */
