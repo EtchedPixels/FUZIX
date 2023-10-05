@@ -57,6 +57,7 @@ extern uint16_t swap_dev;
 #define CONFIG_TD_IDE
 #define CONFIG_TINYIDE_SDCCPIO
 #define CONFIG_TINYIDE_8BIT
+#define IDE_IS_8BIT(x)	1
 #define IDE_NONSTANDARD_XFER	/* As we are banked use own helpers */
 
 /* UART0 as the console */

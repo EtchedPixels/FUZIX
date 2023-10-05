@@ -1,17 +1,17 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../dev/tinyide.c ../dev/tinydisk.c
-DDSRCS = ../dev/tinyide_discard.c ../dev/tinydisk_discard.c
+DSRCS = ../../dev/tinyide.c ../../dev/tinydisk.c
+DDSRCS = ../../dev/tinyide_discard.c ../../dev/tinydisk_discard.c
 ASRCS = start.s crt0.s tom.s tricks.s commonmem.s
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
 AOBJS = $(ASRCS:.s=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DDOBJS = $(patsubst ../dev/%.c,%.rel, $(DDSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DDOBJS = $(patsubst ../../dev/%.c,%.rel, $(DDSRCS))
 OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 CROSS_CC_SEG3 = --codeseg CODE3
 
@@ -23,10 +23,10 @@ $(COBJS): %.rel: %.c
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
 
-$(DDOBJS): %.rel: ../dev/%.c
+$(DDOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(AOBJS): %.rel: %.s
@@ -39,12 +39,12 @@ clean:
 	
 
 # Re-order the image and turn it into the raw image to load from disk
-image:	../tools/makeeprom64
+image:	../../tools/makeeprom64
 	# Assemble the ROM as a single image
-	../tools/makeeprom64
+	../../tools/makeeprom64
 
-../tools/makeeprom64: ../tools/makeeprom64.c
-	gcc -Wall -pedantic ../tools/makeeprom64.c -o ../tools/makeeprom64
+../../tools/makeeprom64: ../../tools/makeeprom64.c
+	gcc -Wall -pedantic ../../tools/makeeprom64.c -o ../../tools/makeeprom64
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 

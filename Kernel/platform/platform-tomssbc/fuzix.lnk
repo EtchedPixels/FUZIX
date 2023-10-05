@@ -3,17 +3,17 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF000
 -l z80
-platform-tomssbc/crt0.rel
-platform-tomssbc/commonmem.rel
-platform-tomssbc/tom.rel
+platform/platform-tomssbc/crt0.rel
+platform/platform-tomssbc/commonmem.rel
+platform/platform-tomssbc/tom.rel
 start.rel
 version.rel
-lowlevel-z80-thunked.rel
-platform-tomssbc/tricks.rel
-platform-tomssbc/main.rel
+cpu-z80/lowlevel-z80-thunked.rel
+platform/platform-tomssbc/tricks.rel
+platform/platform-tomssbc/main.rel
 timer.rel
 kdata.rel
-platform-tomssbc/devices.rel
+platform/platform-tomssbc/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -33,12 +33,12 @@ simple.rel
 tty.rel
 devsys.rel
 usermem.rel
-platform-tomssbc/discard.rel
-platform-tomssbc/devtty.rel
-platform-tomssbc/tinydisk.rel
-platform-tomssbc/tinydisk_discard.rel
-platform-tomssbc/tinyide.rel
-platform-tomssbc/tinyide_discard.rel
-platform-tomssbc/ide.rel
-platform-tomssbc/usermem.rel
+platform/platform-tomssbc/discard.rel
+platform/platform-tomssbc/devtty.rel
+platform/platform-tomssbc/tinydisk.rel
+platform/platform-tomssbc/tinydisk_discard.rel
+platform/platform-tomssbc/tinyide.rel
+platform/platform-tomssbc/tinyide_discard.rel
+platform/platform-tomssbc/ide.rel
+platform/platform-tomssbc/usermem.rel
 -e

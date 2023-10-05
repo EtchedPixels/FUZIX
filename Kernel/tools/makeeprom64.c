@@ -30,9 +30,9 @@ void load_bank(const char *n, uint16_t base)
 
 void load_main(void)
 {
-    FILE *f = fopen("../common.bin", "r");
+    FILE *f = fopen("../../common.bin", "r");
     if (f == NULL) {
-        perror("../common.bin");
+        perror("../../common.bin");
         exit(1);
     }
     fread(ram, 65536, 1, f);
@@ -41,10 +41,10 @@ void load_main(void)
 
 void load_banks(void)
 {
-    load_bank("../bank1.bin", 0);
-    load_bank("../bank2.bin", 0x4000);
-    load_bank("../bank3.bin", 0x8000);
-    load_bank("../bank4.bin", 0xC000);
+    load_bank("../../bank1.bin", 0);
+    load_bank("../../bank2.bin", 0x4000);
+    load_bank("../../bank3.bin", 0x8000);
+    load_bank("../../bank4.bin", 0xC000);
 }
 
 /* Compress the RAM space into a block we expand. The linker fills with 0xFF

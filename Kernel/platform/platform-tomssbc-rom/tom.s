@@ -83,7 +83,7 @@
 	.globl __stub_4_3
 
         .include "kernel.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; Base address of SIO/2 chip 0x00
 
