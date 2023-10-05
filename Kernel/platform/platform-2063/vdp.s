@@ -1,7 +1,7 @@
             .module vdp
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 	    .area _COMMONMEM
 
@@ -35,4 +35,4 @@ VDP_ROP		.equ	1
 	nop
 .endm
 
-	    .include "../dev/vdp1.s"
+	    .include "../../dev/vdp1.s"

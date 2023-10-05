@@ -68,7 +68,7 @@
 	.globl _ssig
 	.globl _udata
 
-        .include "platform/kernel.def"
+        .include "../build/kernel.def"
         .include "kernel-z80.def"
 
 ; these make the code below more readable. sdas allows us only to 

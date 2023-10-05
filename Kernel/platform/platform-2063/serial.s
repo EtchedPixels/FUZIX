@@ -48,7 +48,7 @@ _sioa_txl:
 _siob_txl:
 	.db 0
 
-	.include "../dev/z80sio.s"
+	.include "../../dev/z80sio.s"
 
 ;
 ;	This macro builds the data area

@@ -1,22 +1,22 @@
 ASRCS = crt0.s tricks.s commonmem.s 2063.s sd.s serial.s vdp.s
 CSRCS = devices.c main.c devtty.c devlpr.c devinput.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinysd_discard.c
-DSRCS = ../dev/tinydisk.c ../dev/tinysd.c
+DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinysd_discard.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinysd.c
 DASRCS =
-NSRCS = ../dev/net/net_native.c
+NSRCS = ../../dev/net/net_native.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
-NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/net/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/net/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
@@ -28,19 +28,19 @@ $(AOBJS): %.rel: %.s
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DAOBJS): %.rel: ../dev/%.s
+$(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../dev/net/%.c
+$(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
@@ -61,6 +61,6 @@ diskimage: image
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Add the bootstrap in block 0 of the partition
 	dd if=boot.bin of=$(IMAGES)/disk.img bs=512 count=1 seek=2048 conv=notrunc

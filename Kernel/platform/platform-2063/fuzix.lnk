@@ -4,17 +4,17 @@
 -b _COMMONMEM=0xF000
 -b _SERIAL=0xFE00
 -l z80
-platform-2063/crt0.rel
-platform-2063/commonmem.rel
-platform-2063/2063.rel
+platform/platform-2063/crt0.rel
+platform/platform-2063/commonmem.rel
+platform/platform-2063/2063.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-platform-2063/tricks.rel
-platform-2063/main.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-2063/tricks.rel
+platform/platform-2063/main.rel
 timer.rel
 kdata.rel
-platform-2063/devices.rel
+platform/platform-2063/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -39,16 +39,16 @@ font6x8.rel
 devinput.rel
 devsys.rel
 usermem.rel
-platform-2063/discard.rel
-platform-2063/devtty.rel
-platform-2063/devlpr.rel
-platform-2063/devinput.rel
-platform-2063/tinydisk_discard.rel
-platform-2063/tinydisk.rel
-platform-2063/tinysd_discard.rel
-platform-2063/tinysd.rel
-platform-2063/sd.rel
-platform-2063/serial.rel
-platform-2063/vdp.rel
-platform-2063/net_native.rel
+platform/platform-2063/discard.rel
+platform/platform-2063/devtty.rel
+platform/platform-2063/devlpr.rel
+platform/platform-2063/devinput.rel
+platform/platform-2063/tinydisk_discard.rel
+platform/platform-2063/tinydisk.rel
+platform/platform-2063/tinysd_discard.rel
+platform/platform-2063/tinysd.rel
+platform/platform-2063/sd.rel
+platform/platform-2063/serial.rel
+platform/platform-2063/vdp.rel
+platform/platform-2063/net_native.rel
 -e
