@@ -3,19 +3,19 @@
 -b _CODE=0x0000
 -b _COMMONMEM=0xF400
 -l z80
-platform-z80-mbc2/crt0.rel
-platform-z80-mbc2/commonmem.rel
-platform-z80-mbc2/z80-mbc2.rel
+platform/platform-z80-mbc2/crt0.rel
+platform/platform-z80-mbc2/commonmem.rel
+platform/platform-z80-mbc2/z80-mbc2.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+cpu-z80/lowlevel-z80.rel
 usermem.rel
-platform-z80-mbc2/tricks.rel
-platform-z80-mbc2/main.rel
-platform-z80-mbc2/discard.rel
+platform/platform-z80-mbc2/tricks.rel
+platform/platform-z80-mbc2/main.rel
+platform/platform-z80-mbc2/discard.rel
 timer.rel
 kdata.rel
-platform-z80-mbc2/devices.rel
+platform/platform-z80-mbc2/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -35,9 +35,9 @@ memalloc_none.rel
 swap.rel
 bankfixed.rel
 devsys.rel
-platform-z80-mbc2/devtty.rel
-platform-z80-mbc2/blkdev.rel
-platform-z80-mbc2/mbr.rel
-platform-z80-mbc2/devdisk.rel
-platform-z80-mbc2/devrtc.rel
+platform/platform-z80-mbc2/devtty.rel
+platform/platform-z80-mbc2/blkdev.rel
+platform/platform-z80-mbc2/mbr.rel
+platform/platform-z80-mbc2/devdisk.rel
+platform/platform-z80-mbc2/devrtc.rel
 -e
