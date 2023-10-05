@@ -1,8 +1,8 @@
 ASRCS = crt0.s tricks.s commonmem.s lb.s ncr5380.s dart.s floppy.s
 CSRCS = devices.c main.c devtty.c devfd.c devscsi.c devlpr.c
 DISCARD_CSRCS = discard.c
-DISCARD_DSRCS = ../dev/tinydisk_discard.c ../dev/tinyscsi_discard.c
-DSRCS = ../dev/tinydisk.c ../dev/tinyscsi.c
+DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyscsi_discard.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinyscsi.c
 DHSRCS = 
 DSRCS +=  
 DASRCS = 
@@ -11,15 +11,15 @@ NSRCS =
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
 DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DHOBJS = $(patsubst ../dev/%.c,%.rel, $(DHSRCS))
-DAOBJS = $(patsubst ../dev/%.s,%.rel, $(DASRCS))
-NOBJS = $(patsubst ../dev/net/%.c,%.rel, $(NSRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DHOBJS = $(patsubst ../../dev/%.c,%.rel, $(DHSRCS))
+DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DHOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../dev/ -I../dev/net/
+CROSS_CCOPTS += -I../../dev/ -I../../dev/net/
 
 CROSS_CC_HIGH = --codeseg COMMONMEM
 
@@ -33,22 +33,22 @@ $(AOBJS): %.rel: %.s
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_HIGH) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_HIGH) -c $<
 
-$(DHOBJS): %.rel: ../dev/%.c
+$(DHOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_HIGH) -c $<
 
-$(DAOBJS): %.rel: ../dev/%.s
+$(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 $(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../dev/net/%.c
+$(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 clean:
@@ -62,9 +62,9 @@ cpmboot.com: cpmboot.s
 	dd if=cpmboot.tmp of=cmpboot.com bs=256 skip=1
 
 image: cpmboot.com
-	dd if=../fuzix.bin of=fuzix.rom bs=32768 count=1
+	dd if=../../fuzix.bin of=fuzix.rom bs=32768 count=1
 	# We have a 512 byte hole we leave for the loader
-	dd if=../fuzix.bin of=diskstrap bs=33280 count=1 skip=1
+	dd if=../../fuzix.bin of=diskstrap bs=33280 count=1 skip=1
 	cat diskstrap >>cpmboot.com
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)

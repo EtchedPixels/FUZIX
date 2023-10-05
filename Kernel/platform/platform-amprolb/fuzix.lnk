@@ -6,17 +6,17 @@
 -b _INITIALIZER=0xA000
 -b _SERIAL=0xFE00
 -l z80
-platform-amprolb/crt0.rel
-platform-amprolb/commonmem.rel
-platform-amprolb/lb.rel
+platform/platform-amprolb/crt0.rel
+platform/platform-amprolb/commonmem.rel
+platform/platform-amprolb/lb.rel
 start.rel
 version.rel
-lowlevel-z80.rel
-platform-amprolb/tricks.rel
-platform-amprolb/main.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-amprolb/tricks.rel
+platform/platform-amprolb/main.rel
 timer.rel
 kdata.rel
-platform-amprolb/devices.rel
+platform/platform-amprolb/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -36,16 +36,16 @@ simple.rel
 tty.rel
 devsys.rel
 usermem.rel
-platform-amprolb/discard.rel
-platform-amprolb/devtty.rel
-platform-amprolb/dart.rel
-platform-amprolb/devlpr.rel
-platform-amprolb/devfd.rel
-platform-amprolb/floppy.rel
-platform-amprolb/tinydisk.rel
-platform-amprolb/tinydisk_discard.rel
-platform-amprolb/tinyscsi.rel
-platform-amprolb/tinyscsi_discard.rel
-platform-amprolb/devscsi.rel
-platform-amprolb/ncr5380.rel
+platform/platform-amprolb/discard.rel
+platform/platform-amprolb/devtty.rel
+platform/platform-amprolb/dart.rel
+platform/platform-amprolb/devlpr.rel
+platform/platform-amprolb/devfd.rel
+platform/platform-amprolb/floppy.rel
+platform/platform-amprolb/tinydisk.rel
+platform/platform-amprolb/tinydisk_discard.rel
+platform/platform-amprolb/tinyscsi.rel
+platform/platform-amprolb/tinyscsi_discard.rel
+platform/platform-amprolb/devscsi.rel
+platform/platform-amprolb/ncr5380.rel
 -e
