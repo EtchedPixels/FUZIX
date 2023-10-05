@@ -1,2 +1,2 @@
 fuzix.bin: target $(OBJS)
-	+make -C platform-$(TARGET) image
+	+make -C platform/platform-$(TARGET) image

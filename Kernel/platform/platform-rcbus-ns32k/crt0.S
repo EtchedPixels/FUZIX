@@ -1,4 +1,4 @@
-#include "../kernel-ns32k.def"
+#include "../cpu-ns32k/kernel-ns32k.def"
 #
 #	Called with interrupts off and in supervisor mode
 #
