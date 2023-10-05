@@ -1,4 +1,4 @@
-.include "../cpu-z180/z180.s"
+.include "../../cpu-z180/z180.s"
 
 		.area _CODE
 

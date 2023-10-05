@@ -33,6 +33,7 @@
 #define CONFIG_TD_IDE
 #define CONFIG_TINYIDE_SDCCPIO
 #define CONFIG_TINYIDE_8BIT
+#define IDE_IS_8BIT(x)		1
 /* SD via CSIO : Needs an additional GPIO pin so not on all boards. */
 #define CONFIG_TD_SD
 #define TD_SD_NUM		1
