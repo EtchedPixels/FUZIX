@@ -3,19 +3,19 @@
 -b _CODE=0x0100
 -b _COMMONMEM=0xF400
 -l z80
-platform-sc720/crt0.rel
-platform-sc720/commonmem.rel
-platform-sc720/sc720.rel
+platform/platform-sc720/crt0.rel
+platform/platform-sc720/commonmem.rel
+platform/platform-sc720/sc720.rel
 start.rel
 version.rel
-lowlevel-z80.rel
+cpu-z80/lowlevel-z80.rel
 usermem.rel
-platform-sc720/tricks.rel
-platform-sc720/main.rel
-platform-sc720/discard.rel
+platform/platform-sc720/tricks.rel
+platform/platform-sc720/main.rel
+platform/platform-sc720/discard.rel
 timer.rel
 kdata.rel
-platform-sc720/devices.rel
+platform/platform-sc720/devices.rel
 devio.rel
 filesys.rel
 blk512.rel
@@ -36,16 +36,16 @@ memalloc_none.rel
 swap.rel
 bankfixed.rel
 devsys.rel
-platform-sc720/devtty.rel
-platform-sc720/tinydisk.rel
-platform-sc720/tinydisk_discard.rel
-platform-sc720/tinyide.rel
-platform-sc720/tinyide_discard.rel
-platform-sc720/ds1302.rel
-platform-sc720/ds1302_discard.rel
-platform-sc720/ds1302_rcbus.rel
-platform-sc720/net_native.rel
-platform-sc720/net_w5x00.rel
-platform-sc720/net_w5300.rel
-platform-sc720/wiznet.rel
+platform/platform-sc720/devtty.rel
+platform/platform-sc720/tinydisk.rel
+platform/platform-sc720/tinydisk_discard.rel
+platform/platform-sc720/tinyide.rel
+platform/platform-sc720/tinyide_discard.rel
+platform/platform-sc720/ds1302.rel
+platform/platform-sc720/ds1302_discard.rel
+platform/platform-sc720/ds1302_rcbus.rel
+platform/platform-sc720/net_native.rel
+platform/platform-sc720/net_w5x00.rel
+platform/platform-sc720/net_w5300.rel
+platform/platform-sc720/wiznet.rel
 -e
