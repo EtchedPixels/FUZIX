@@ -7,19 +7,19 @@ DISCSRCS = discard.c
 ASRCS = crt0.s mtx.s vdp.s floppy.s
 ASRCS += tricks.s commonmem.s
 
-DISCARD_DSRCS = ../dev/devide_discard.c ../dev/devsd_discard.c
-DSRCS = ../dev/blkdev.c ../dev/devide.c ../dev/mbr.c
-DSRCS += ../dev/ppide_rbc.c ../dev/devsd.c
+DISCARD_DSRCS = ../../dev/devide_discard.c ../../dev/devsd_discard.c
+DSRCS = ../../dev/blkdev.c ../../dev/devide.c ../../dev/mbr.c
+DSRCS += ../../dev/ppide_rbc.c ../../dev/devsd.c
 
 AOBJS = $(ASRCS:.s=.rel)
 COBJS = $(CSRCS:.c=.rel)
 DISCOBJS = $(DISCSRCS:.c=.rel)
-DOBJS = $(patsubst ../dev/%.c,%.rel, $(DSRCS))
-DISCARD_DOBJS = $(patsubst ../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DISCOBJS) $(DISCARD_DOBJS)
 
-CROSS_CCOPTS += -I../dev/
+CROSS_CCOPTS += -I../../dev/
 
 JUNK = *.rel *.lst *.asm *.sym *.rst
 
@@ -31,13 +31,13 @@ $(AOBJS): %.rel: %.s
 $(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DOBJS): %.rel: ../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DISCOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
@@ -63,7 +63,7 @@ IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage: image
 	# Bootable Binary
-	cp ../fuzix.bin $(IMAGES)/fuzix.com
+	cp ../../fuzix.bin $(IMAGES)/fuzix.com
 	# 80 track root floppy
 	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAGH) $(FUZIX_ROOT)/Images/$(TARGET)/root.dsk 128 2560)
 	# CF IDE
@@ -74,6 +74,6 @@ diskimage: image
 	# Add the loader
 	dd if=biosloader.bin of=$(IMAGES)/disk.img bs=512 seek=0 conv=notrunc
 	# Add the kernel
-	dd if=../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

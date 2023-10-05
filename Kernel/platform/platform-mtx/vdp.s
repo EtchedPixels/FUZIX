@@ -1,7 +1,7 @@
             .module vdp
 
             .include "kernel.def"
-            .include "../kernel-z80.def"
+            .include "../../cpu-z80/kernel-z80.def"
 
 
 	    .globl _outputtty
@@ -36,7 +36,7 @@ VDP_ROP      .equ	1
 
 	    .area _COMMONMEM
 
-	    .include "../dev/vdp1.s"
+	    .include "../../dev/vdp1.s"
 
 ;
 ;	Turn co-ordinates D,E into offset HL
