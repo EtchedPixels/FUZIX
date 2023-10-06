@@ -1,4 +1,4 @@
-APPOTHER = cpuinfo fforth
+APPOTHER = cpuinfo
 include Makefile.common
 
 cpuinfo: cpuinfo.o cpuinfo-wrx6.o
