@@ -72,7 +72,7 @@ all: $(OBJS)
 $(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) -I.. $< -o $@
 
-$(OBJS): ../../kernel-esp32.def
+$(OBJS): ../../cpu-esp32/kernel-esp32.def
 
 $(COBJS): %.o: %.c
 	$(CROSS_CC) -I../../dev/ -I../../dev/net $(CROSS_CCOPTS) $< -o $@
