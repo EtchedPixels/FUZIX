@@ -74,3 +74,5 @@ extern void swap_blocks(void *, void *, unsigned int);
 #define ntohl(x) ((uint32_t)(__builtin_bswap32((uint32_t)(x))))
 
 #define NORETURN __attribute__((__noreturn__))
+
+#define __fastcall
