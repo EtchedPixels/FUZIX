@@ -13,9 +13,9 @@ pico_sdk_init()
 include_directories(
 	.
 	..
-	../dev
-	../include
-	../cpu-armm0
+	../../dev
+	../../include
+	../../cpu-armm0
 )
 
 add_executable(fuzix
@@ -31,38 +31,38 @@ add_executable(fuzix
 	tricks.S
 	core1.c
 	usbdescriptors.c
-	../dev/blkdev.c
-	../dev/mbr.c
-	../dev/devsd_discard.c
-	../dev/devsd.c
-	../lib/dhara/error.c
-	../lib/dhara/journal.c
-	../lib/dhara/map.c
-	../lib/hexdump.c
-	../blk512.c
-	../devio.c
-	../devsys.c
-	../filesys.c
-	../inode.c
-	../kdata.c
-	../lowlevel-armm0.c
-	../malloc.c
-	../mm.c
-	../memalloc_none.c
-	../process.c
-	../start.c
-	../swap.c
-	../syscall_execelf32.c
-	../syscall_exec.c
-	../syscall_fs.c
-	../syscall_fs2.c
-	../syscall_fs3.c
-	../syscall_other.c
-	../syscall_proc.c
-	../timer.c
-	../tty.c
-	../usermem.c
-	../version.c
+	../../dev/blkdev.c
+	../../dev/mbr.c
+	../../dev/devsd_discard.c
+	../../dev/devsd.c
+	../../lib/dhara/error.c
+	../../lib/dhara/journal.c
+	../../lib/dhara/map.c
+	../../lib/hexdump.c
+	../../blk512.c
+	../../devio.c
+	../../devsys.c
+	../../filesys.c
+	../../inode.c
+	../../kdata.c
+	../../cpu-armm0/lowlevel-armm0.c
+	../../malloc.c
+	../../mm.c
+	../../memalloc_none.c
+	../../process.c
+	../../start.c
+	../../swap.c
+	../../syscall_execelf32.c
+	../../syscall_exec.c
+	../../syscall_fs.c
+	../../syscall_fs2.c
+	../../syscall_fs3.c
+	../../syscall_other.c
+	../../syscall_proc.c
+	../../timer.c
+	../../tty.c
+	../../usermem.c
+	../../version.c
 )
 
 target_link_libraries(fuzix
