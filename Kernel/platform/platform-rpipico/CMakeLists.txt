@@ -46,9 +46,9 @@ add_executable(fuzix
 	../../inode.c
 	../../kdata.c
 	../../cpu-armm0/lowlevel-armm0.c
-	../../malloc.c
+	../../mm/malloc.c
 	../../mm.c
-	../../memalloc_none.c
+	../../mm/memalloc_none.c
 	../../process.c
 	../../start.c
 	../../swap.c

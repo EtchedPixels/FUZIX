@@ -8,7 +8,7 @@ build/fuzix.elf: ../../version.c build/Makefile
 	$(MAKE) -C build
 
 ../../version.c:
-	$(MAKE) -C .. TARGET=rpipico version.c
+	$(MAKE) -C ../.. TARGET=rpipico version.c
 
 build/Makefile: CMakeLists.txt $(wildcard ../../*.[chS]) $(wildcard ../../*/*.[chS])
 	mkdir -p build

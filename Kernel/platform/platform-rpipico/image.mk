@@ -1,4 +1,4 @@
 fuzix.bin::
-	+make -C platform-rpipico image
-	cp platform-rpipico/build/fuzix.uf2 $@
+	+make -C platform/platform-rpipico image
+	cp platform/platform-rpipico/build/fuzix.uf2 $@
 
