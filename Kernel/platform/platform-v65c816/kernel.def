@@ -1,27 +1,13 @@
 ; UZI mnemonics for memory addresses etc
 
-; (this is struct u_data from kernel.h)
-U_DATA                  .set $0100	; stomps over bootstrap
 ; 256+256		(U, kstack copy, k C stack copy)
-U_DATA__TOTALSIZE       .set $0200
-U_DATA_STASH		.set $FC00	; leaves FFxx for vectors and stubs
+U_DATA__TOTALSIZE       .equ $0200
+U_DATA_STASH		.equ $E000
 
-PROGLOAD		.set $0100
-ZPBASE			.set $0
+PROGLOAD		.equ $0100
+ZPBASE			.equ $0
 
-KERNEL_BANK		.set $0		; bank number
-KERNEL_FAR		.set $000000	; data 24 bit
-KERNEL_CODE_FAR		.set $000000	; code 24bit
+IRQ_DP			.equ $FF00	; FF00-FF3F
+KERNEL_DP		.equ $00	; We use the real ZP for kernel DP
 
-; Add this to twice the bank number to get the high 8bits of the 16bit CPU stack
-; for this process
-STACK_BANKOFF		.set $EE	; F000-FDFF
-; Direct page for IRQ processing (saves us saving/restoring DP registers)
-; Can probably use the same page as the IRQ CPU stack... FIXME
-; FIXME clashes with end of stack banks
-IRQ_DP			.set $FF00	; FF00-FF3F
-KERNEL_DP		.set $00	; We use the real ZP for kernel DP
-
-MAP_SIZE		.set $FC00
-
-PROGBASE		.set $0100
+PROGBASE		.equ $0100

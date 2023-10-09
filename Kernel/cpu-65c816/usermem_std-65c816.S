@@ -1,123 +1,150 @@
-#include "build/kernel.def"
+#include "../build/kernel.def"
 #include "kernel816.def"
 
-	.export __uget, __ugetc, __ugetw
-	.export __uput, __uputc, __uputw, __uzero
+	.export __uget
+	.export __ugetc
+	.export __ugetw
+	.export __uput
+	.export	__uputc
+	.export __uputw
+	.export __uzero
 
 	.65c816
 	.a16
 	.i16
 
 ;
-;	ptr1 and tmp1 are reserved for map_* functions in 6502 but
-;	are actually free here.
+;	Unoptimized reference code for now
 ;
 	.code
 
 ; user, dst, count(count in ax)
 ;
-;	These use mvn which uses Y so we need interrupts off. We might want
-;	to do some other kind of fast copy loop if possible or split this
-;	into say 256 byte bursts with ints on/off between ?
-;
 __uget:
-	php
-	sei
-	phy
-	lda	U_DATA__U_PAGE
+	tyx		; need in x for dec
+	lda	0,y
+	sta	@tmp
+	lda	2,y
+	sta	@tmp2
+	lda	4,y
+	beq	ugetdone
+	and	#1
+	beq	ugetl
+	jsr	map_proc_always
 	sep	#0x20
 	.a8
-	sta	KERNEL_CODE+kpatch+1		; FIXME: f:KERNEL_CODE+
-					; as we might be split I/D
+	lda	(@tmp)
 	rep	#0x20
 	.a16
-	lda	4,y			; number
-	beq	nomove
-	ldx	0,y			; src
-	pha
-	lda	2,y			; dst
-	tay
-	pla
-	phb
-kpatch:
-	mvn	#0,#KERNEL_BANK
-	plb
-nomove:
-	ply
+	jsr	map_kernel
+	sep	#0x20
+	.a8
+	sta	(@tmp2)
+	rep	#0x20
+	.a16
+	dec	4,x
+	inc	@tmp
+	inc	@tmp2
+	lsr	4,x
+	beq	ugetdone
+	; We have a byte to do first
+ugetl:
+	jsr	map_proc_always
+	lda	(@tmp)
+	jsr	map_kernel
+	sta	(@tmp)
+	inc	@tmp
+	inc	@tmp
+	inc	@tmp2
+	inc	@tmp2
+	dec	4,x
+	bne	ugetl
+ugetdone:
 	lda	#0
-	plp
+	iny
+	iny
+	iny
+	iny
+	iny
+	iny
 	rts
 
 __ugetc:
 	ldx	0,y
-	phb
-	lda	U_DATA__U_PAGE
-	pha
-	plb
+	jsr	map_proc_always
 	sep	#0x20
 	.a8
 	lda	0,x
 	rep	#0x20
 	.a16
-	plb
-	iny
-	iny
+	jsr	map_kernel
 	rts
 
 __ugetw:
 	ldx	0,y
-	phb
-	lda	U_DATA__U_PAGE
-	pha
-	plb
+	jsr	map_proc_always
 	lda	0,x
-	plb
+	jsr	map_kernel
+	rts
+
+__uput:
+	tyx		; need in x for dec
+	lda	0,y
+	sta	@tmp
+	lda	2,y
+	sta	@tmp2
+	lda	4,y
+	beq	uputdone
+	and	#1
+	beq	uputl
+	sep	#0x20
+	.a8
+	lda	(@tmp)
+	rep	#0x20
+	.a16
+	jsr	map_proc_always
+	sep	#0x20
+	.a8
+	sta	(@tmp2)
+	rep	#0x20
+	.a16
+	dec	4,x
+	inc	@tmp
+	inc	@tmp2
+	lsr	4,x
+	beq	uputdone
+	; We have a byte to do first
+uputl:
+	jsr	map_kernel
+	lda	(@tmp)
+	jsr	map_proc_always
+	sta	(@tmp)
+	inc	@tmp
+	inc	@tmp
+	inc	@tmp2
+	inc	@tmp2
+	dec	4,x
+	bne	putl
+uputdone:
+	lda	#0
+	iny
+	iny
+	iny
+	iny
 	iny
 	iny
 	rts
 
-__uput:
-	php
-	sei
-	phy
-	lda	U_DATA__U_PAGE
-	sep	#0x20
-	.a8
-	sta	KERNEL_CODE+kpatch2+2		; FIXME: far
-					; as we might be split I/D
-	rep	#0x20
-	.a16
-	lda	4,y			; number
-	beq	nomove
-	ldx	0,y			; src
-	pha
-	lda	2,y			; dst
-	tay
-	pla
-	phb
-kpatch2:
-	mvn	#KERNEL_BANK,#0
-	plb
-nomove:
-	ply
-	lda	#0
-	plp
-	jmp	__fnexit6
-
 __uputc:
 	ldx	2,y
-	phb
-	lda	U_DATA__U_PAGE
-	pha
-	lda	0,y
-	plb
+	jsr	map_proc_always
+	lda	0,y		; kstack is in common so this is ok
+	sep	#0x20
 	.a8
-	rep	#0x20
 	sta	0,x
+	rep	#0x20
 	.a16
-	sep 	#0x20
-	plb
-	lda	#0
+	jsr	map_kernel
 	iny
 	iny
 	iny
@@ -126,14 +153,10 @@ __uputc:
 
 __uputw:
 	ldx	2,y
-	phb
-	lda	U_DATA__U_PAGE
-	pha
-	lda	0,y
-	plb
+	jsr	map_proc_always
+	lda	0,y		; kstack is in common so this is ok
 	sta	0,x
-	plb
-	lda	#0
+	jsr	map_kernel
 	iny
 	iny
 	iny
@@ -141,45 +164,29 @@ __uputw:
 	rts
 
 __uzero:
-	lda	U_DATA__U_PAGE
-	sta	KERNEL_CODE+uzero_patch+1	; FIXME far
-	sta	KERNEL_CODE+uzero_patch+2
-
-	; Clear lead byte in user space
-	ldx	0,y
-	phb
-	pha
-	plb
-	lda	#0
-	sep	#0x20
-	.a8
-	sta	0,x
-	rep	#0x20
-	.a16
-	plb
-
-	; Set up an overlapping block move
 	ldx	0,y
 	lda	2,y
-	beq	nowork
-	dec	a
-	beq	nowork
-
-	phb	; save bank
-	php	; save flags
-	sei	; ints off
-	phy	; save stack
-
-	txy	; set y up as overlap ptr (x + 1)
-	iny	; for destination
-	; Use mvn to wipe the range required
-	; The set up is worth it as most uzero() calls are big
-	; ranges
-uzero_patch:
-	mvn	#0,#0
-	ply	; get c stack back
-	plp	; interrupts back as they were
-nowork:
-	plb	; bank back as it was
-	lda	#0 ; all good
+	sta	@tmp
+	beq	uzdone
+	and	#1
+	beq	uzloop
+	jsr	map_proc_always
+	sep	#0x20
+	.a8
+	stz	0,x
+	rep	#0x20
+	.a16
+	inx
+	lsr	@tmp
+	beq	uzdone
+uzloop:	stz	0,x
+	inx
+	inx
+	dec	@tmp
+	bne	uzloop
+uzdone:	iny
+	iny
+	iny
+	iny
 	rts
+
