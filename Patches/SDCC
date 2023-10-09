@@ -1,0 +1,153 @@
+**
+**	Obsolete: the compiler fork used for SDCC is now at
+**	https://github.com/EtchedPixels/sdcc280
+**
+**	This fork is only needed to build banked kernels. A standard
+**	distribution SDCC should build other code correctly as the kernel
+**	contains workarounds for the wrong segment constants bug (which is
+**	*still* present)
+**
+
+
+
+
+
+
+
+
+Bank Switching for SDCC 3.5
+
+Correct problem where SDCC puts string constants in code not in const
+segments. That doesn't usually matter but it's a killer when the code is
+banked!
+
+Add an option --external-banker which modifies the generated code to suit
+the customised linker in Fuzix.
+
+Each call is replaced with push af call pop af, and the functions look for
+arguments two bytes further up the stack than normal.
+
+The linker then computes for itself which functions are inter-bank and then
+replaces those calls with calls to a bank helper followed by the 2 bytes
+of the call address (total 5 bytes - matching the push/pop). The bank
+helpers use the additional two bytes of space to stack the bank numbers for
+calls and returns.
+
+Function pointers are not modified by this patch, the linker instead
+constructs a stub in common space and replaces the pointer.
+
+
+diff -u --new-file --recursive sdcc.vanilla/src/SDCCglue.c sdcc/src/SDCCglue.c
+--- sdcc.vanilla/src/SDCCglue.c	2015-10-02 14:13:04.036912687 +0100
++++ sdcc/src/SDCCglue.c	2015-10-02 14:15:36.357845339 +0100
+@@ -1610,14 +1610,19 @@
+                   emitDebugSym (oBuf, sym);
+                   dbuf_printf (oBuf, " == .\n");
+                 }
+-              dbuf_printf (oBuf, "%s:\n", sym->rname);
+               /* special case for character strings */
+               if (IS_ARRAY (sym->type) && IS_CHAR (sym->type->next) && SPEC_CVAL (sym->etype).v_char)
+                 {
++                  if (options.const_seg)
++                    dbuf_tprintf(&code->oBuf, "\t!area\n", options.const_seg);
++                  dbuf_printf (oBuf, "%s:\n", sym->rname);
+                   printChar (oBuf, SPEC_CVAL (sym->etype).v_char, size);
++                  if (options.const_seg)
++                    dbuf_tprintf(oBuf, "\t!areacode\n", options.code_seg);
+                 }
+               else
+                 {
++                  dbuf_printf (oBuf, "%s:\n", sym->rname);
+                   dbuf_tprintf (oBuf, "\t!ds\n", (unsigned int) size & 0xffff);
+                 }
+             }
+diff -u --new-file --recursive sdcc.vanilla/src/z80/gen.c sdcc/src/z80/gen.c
+--- sdcc.vanilla/src/z80/gen.c	2015-10-02 14:13:04.041912684 +0100
++++ sdcc/src/z80/gen.c	2015-10-02 14:35:48.163309546 +0100
+@@ -4207,7 +4207,11 @@
+         {
+           spillPair (PAIR_HL);
+           fetchPairLong (PAIR_HL, AOP (IC_LEFT (ic)), ic, 0);
++          if (z80_opts.externalBanker)
++            emit2("push af;noopt");
+           emit2 ("call ___sdcc_call_hl");
++          if (z80_opts.externalBanker)
++            emit2("pop af;noopt");
+         }
+       else
+         {
+@@ -4215,7 +4219,11 @@
+           wassertl (!IY_RESERVED, "__z88dk_fastcall through function pointer for --reserve-regs-iy unimplemented");
+           spillPair (PAIR_IY);
+           fetchPairLong (PAIR_IY, AOP (IC_LEFT (ic)), ic, 0);
++          if (z80_opts.externalBanker)
++            emit2("push af;noopt");
+           emit2 ("call ___sdcc_call_iy");
++          if (z80_opts.externalBanker)
++            emit2("pop af;noopt");
+         }
+       freeAsmop (IC_LEFT (ic), NULL);
+     }
+@@ -4240,9 +4248,20 @@
+           else
+             {
+               bool jump = (!ic->parmBytes && IFFUNC_ISNORETURN (ftype));
++              if (z80_opts.externalBanker) {
++              /* When running with an external banker we push a spare word on
++                 the stack frames. The linker and banker will use this on the
++                 call/return paths between banks, while for in-bank calls its
++                 about as efficient as we get without special casing or link
++                 time assembly */
++                emit2("push af;noopt");
++                jump = 0;
++              }
+               emit2 ("%s %s", jump ? "jp" : "call",
+                 (OP_SYMBOL (IC_LEFT (ic))->rname[0] ? OP_SYMBOL (IC_LEFT (ic))->rname : OP_SYMBOL (IC_LEFT (ic))->name));
+               regalloc_dry_run_cost += 3;
++              if (z80_opts.externalBanker)
++                emit2("pop af;noopt");
+             }
+         }
+     }
+@@ -4455,6 +4474,11 @@
+             }
+         }
+     }
++  /* We have 4 byte stacked on a call for an external banker and must
++     do our own adjustment. Any explicit 'far' has already been done
++     and is different, so don't adjust twice */
++  if (z80_opts.externalBanker && !FUNC_BANKED(ftype))
++    _G.stack.param_offset += 2;
+ 
+   if (bcInUse)
+     {
+diff -u --new-file --recursive sdcc.vanilla/src/z80/main.c sdcc/src/z80/main.c
+--- sdcc.vanilla/src/z80/main.c	2015-10-02 14:13:04.042912684 +0100
++++ sdcc/src/z80/main.c	2015-10-02 15:39:24.910642035 +0100
+@@ -41,6 +41,7 @@
+ #define OPTION_OLDRALLOC       "--oldralloc"
+ #define OPTION_FRAMEPOINTER    "--fno-omit-frame-pointer"
+ #define OPTION_EMIT_EXTERNS    "--emit-externs"
++#define OPTION_EXT_BANKER      "--external-banker"
+ 
+ static char _z80_defaultRules[] = {
+ #include "peeph.rul"
+@@ -77,6 +78,7 @@
+   {0, OPTION_OLDRALLOC,       &options.oldralloc, "Use old register allocator"},
+   {0, OPTION_FRAMEPOINTER,    &z80_opts.noOmitFramePtr, "Do not omit frame pointer"},
+   {0, OPTION_EMIT_EXTERNS,    NULL, "Emit externs list in generated asm"},
++  {0, OPTION_EXT_BANKER,      &z80_opts.externalBanker, "Generate call and return frames for an external banker"},
+   {0, NULL}
+ };
+ 
+diff -u --new-file --recursive sdcc.vanilla/src/z80/z80.h sdcc/src/z80/z80.h
+--- sdcc.vanilla/src/z80/z80.h	2015-10-02 14:13:04.042912684 +0100
++++ sdcc/src/z80/z80.h	2015-10-02 14:24:01.707621902 +0100
+@@ -26,6 +26,7 @@
+     int port_back;
+     int reserveIY;
+     int noOmitFramePtr;
++    int externalBanker;
+   }
+ Z80_OPTS;
+ 
