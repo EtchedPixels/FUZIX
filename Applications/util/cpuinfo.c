@@ -397,6 +397,49 @@ static void cpu_ident(void)
         cpu_vendor = 1;
 }
 
+#elif defined(__SDCC_r2k)
+static uint8_t cpu_vendor;
+static uint8_t cpu_id;
+static const char *vendor_name[] = { "Rabbit" };
+/* TODO: R3K etc idents too */
+static const char *cpu_name[] = { "2000", "2000A", "2000B", "2000C" };
+static const int8_t cpu_step = -1;
+static const int8_t cpu_MHz = 0;
+static const uint8_t cpu_cache = 0;
+static const char cpu_fpu[]="no";
+static char *cpu_bugs = "";
+static char *cpu_flags = "";
+static const uint8_t cpu_vsize = 16;
+static uint8_t cpu_psize = 20;
+static const char *cpu_pm = NULL;
+
+static void cpu_ident(void)
+{
+    /* TODO */
+
+}
+#elif defined(__65c816__)
+/* Strictly speaking this could be a Ricoh 5A22 but we are hardly likely
+   to ever run on a SNES ! */
+static uint8_t cpu_vendor;
+static uint8_t cpu_id;
+static const char *vendor_name[] = { "Western Design Center" };
+static const char *cpu_name[] = {"65c816" };
+static const int8_t cpu_step = -1;
+static const int8_t cpu_MHz = 0;
+static const uint8_t cpu_cache = 0;
+static const char cpu_fpu[]="no";
+static char *cpu_bugs = "";
+static char *cpu_flags = "";
+static const uint8_t cpu_vsize = 16;
+static uint8_t cpu_psize = 24;
+static const char *cpu_pm = NULL;
+
+static void cpu_ident(void)
+{
+    /* TODO */
+
+}
 #else
 #error "unsupported CPU"
 #endif
