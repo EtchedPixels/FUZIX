@@ -1,1 +1,194 @@
-	include Makefile.6502
+CC = cc65c816
+ASM = cc65c816
+AR = ar
+PLATFORM = 65c816
+export PLATFORM
+CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/65c816 -X
+CC_NOOPT = $(CC_OPT)
+ASM_OPT = -c -o
+# copied in from kernel tree
+# KRN_HEADERS = userstructs.h drivewire.h
+# KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
+# KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
+SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
+OBJ_CRT0 = $(SRC_CRT0:.s=.o)
+SRC_ASM = setjmp_65c816.s longjmp_65c816.s
+OBJ_ASM = $(SRC_ASM:.s=.o)
+SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
+SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
+SRC_C += calloc.c cfree.c clock.c closedir.c closedir_r.c
+SRC_C += clock_gettime.c clock_getres.c clock_settime.c
+SRC_C += connect.c creat.c crypt.c ctermid.c ctime.c cuserid.c
+SRC_C += dirname.c
+SRC_C += err.c errno.c error.c
+SRC_C += execl.c execv.c execvp.c exit.c
+SRC_C += fclose.c fdatasync.c fflush.c fgetc.c fgetgrent.c fgetpwent.c
+SRC_C += fgetpos.c fgets.c fopen.c fork.c fprintf.c fputc.c fputs.c fread.c
+SRC_C += free.c fsetpos.c fsync.c ftell.c fwrite.c getcwd.c
+SRC_C += getenv.c __getgrent.c getgrgid.c getgrnam.c getloadavg.c getlogin.c
+SRC_C += getopt.c getpeername.c
+SRC_C += getpw.c __getpwent.c getpwnam.c getpwuid.c
+SRC_C += gets.c getsockname.c gettimeofday.c
+SRC_C += getw.c gmtime.c gmtime_r.c grent.c htons.c htonl.c
+SRC_C += inet_addr.c inet_aton.c inet_network.c inet_ntoa.c inet_ntop.c inet_pton.c
+SRC_C += index.c initgroups.c isatty.c killpg.c
+SRC_C += libintl.c listen.c
+SRC_C += localtim.c localtim_r.c lseek.c lsearch.c lstat.c ltoa.c ltostr.c
+SRC_C += malloc.c mkfifo.c mkstemps.c mntent.o nanosleep.c
+SRC_C += opendir.c opendir_r.c pause.c perror.c
+SRC_C += popen.c printf.c putenv.c putchar.c putpwent.c putw.c pwent.c qsort.c
+SRC_C += raise.c rand.c readdir.c readlink.c realloc.c recvfrom.c regerror.c
+SRC_C += regsub.c remount.c remove.c rewind.c rewinddir.c rindex.c rootmntent.c
+SRC_C += seekdir.c sendto.c setbuffer.c setenv.c
+SRC_C += setlocale.c setvbuf.c settimeofday.c sgetl.c shutdown.c sigdisp.c sleep.c
+SRC_C += socket.c sprintf.c sputl.c stat.c statvfs.c stdio0.c stime.c
+SRC_C += strcasecmp.c strcasestr.c strdup.c stricmp.c strlcpy.c strncasecmp.c
+SRC_C += strnlen.c strnicmp.c strsep.c strxfrm.c strcoll.c strsignal.c
+SRC_C += strtod.c strtol.c swab.c swapon.c system.c
+SRC_C += telldir.c time.c tmpfile.c tmpnam.c ttyname.c
+SRC_C += tzset.c umount.c ungetc.c usleep.c utent.c utimes.c utsname.c
+SRC_C += vfork.c vfprintf.c vprintf.c wait.c xitoa.c pathconf.c
+SRC_C += gethostname.c sysconf.c confstr.c memccpy.c getpass.c
+# ctype
+SRC_C += isalnum.c isalpha.c isascii.c isblank.c iscntrl.c isdigit.c
+SRC_C += isgraph.c islower.c isprint.c ispunct.c isspace.c isupper.c
+SRC_C += isxdigit.c toupper.c tolower.c
+# tty layer
+SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
+SRC_C += cfmakeraw.c cfspeed.c revoke.c
+# scanf
+SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
+# Seems to give the compiler a hard time
+SRC_HARD += regexp.c
+# Pieces we inherit in this case from the compiler library instead
+SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
+SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
+SRC_C += strncpy.c strpbrk.c strrchr.c strspn.c strstr.c strtok.c strtok_r.c
+SRC_C += memchr.c memcmp.c memcpy.c memset.c memmove.c
+
+SRC_CT += termcap.c tgetent.c
+
+SRC_CURS = $(shell find curses -name '*.c')
+
+SRC_RL = readline.c readline_fn.c
+
+SRC_LM += acosf.c acoshf.c asinf.c asinhf.c atan2f.c atanf.c atanhf.c
+SRC_LM += cbrtf.c ceilf.c copysignf.c erff.c expf.c expm1f.c
+SRC_LM += fabsf.c fdimf.c floorf.c fmaxf.c fminf.c fmodf.c frexpf.c
+SRC_LM += hypotf.c ilogbf.c j0f.c j1f.c jnf.c
+SRC_LM += ldexpf.c lgammaf.c lgammaf_r.c logf.c log2f.c log10f.c logbf.c
+SRC_LM += lrintf.c lroundf.c
+SRC_LM += modff.c nearbyintf.c nextafterf.c powf.c
+SRC_LM += remainderf.c remquof.c rintf.c roundf.c
+SRC_LM += scalbnf.c scalbln.c
+SRC_LM += sinf.c sincosf.c sinhf.c
+SRC_LM += sqrtf.c tgammaf.c
+SRC_LM += vfscanf_m.c vfprintf_m.c
+SRC_LM += __expo2f.c __float_bits.c __fpclassifyf.c __log1pf.c __signgam.c
+SRC_LM += mathhelper.c
+
+OBJ_C = $(SRC_C:.c=.o)
+OBJ_CURS = $(SRC_CURS:.c=.o)
+OBJ_CT = $(SRC_CT:.c=.o)
+OBJ_RL = $(SRC_RL:.c=.o)
+OBJ_LM = $(SRC_LM:.c=.o)
+OBJ_HARD = $(SRC_HARD:.c=.o)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_LM) $(OBJ_RL)
+
+all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
+     termcap$(PLATFORM).lib readline$(PLATFORM).lib m$(PLATFORM).lib crt0.o 
+
+#$(OBJ_ALL): $(KRN_HEADERS_COPY)
+
+#$(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
+#	cp ../../Kernel/include/$(notdir $@) $@
+
+libc.l:%.l:$(OBJ_C) $(OBJ_ASM) $(OBJ_HARD)
+	ls $(OBJ_C) $(OBJ_ASM) $(OBJ_HARD)  > libc.l
+
+syscall.l: fuzix$(PLATFORM)/syslib.l
+	../tools/syscall_$(PLATFORM)
+	(cd fuzix$(PLATFORM); make)
+	cat fuzix$(PLATFORM)/syslib.l | tr " " "\\n" | sed -e "s/^/fuzix$(PLATFORM)\//" >syscall.l
+
+syslib$(PLATFORM).lib: syscall.l libc.l
+	cat libc.l syscall.l >syslib.l
+	$(AR) rc syslib$(PLATFORM).lib $$(cat syslib.l)
+	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
+	cp libc$(PLATFORM).a libc.a
+
+crt0.o: crt0_65c816.o
+	cp crt0_65c816.o crt0.o
+
+fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
+	$<
+	make -C fuzix$(PLATFORM)
+
+../tools/syscall_$(PLATFORM): ../tools/syscall_$(PLATFORM).c
+	make -C .. tools/syscall_$(PLATFORM)
+
+liberror.txt: ../tools/liberror
+	$< > $@
+
+../tools/liberror: ../tools/liberror.c
+	make -C .. tools/liberror
+
+curses$(PLATFORM).lib: $(OBJ_CURS)
+	$(AR) rc curses$(PLATFORM).lib $(OBJ_CURS)
+	ln -sf curses$(PLATFORM).lib libcurses$(PLATFORM).a
+	cp libcurses$(PLATFORM).a libcurses.a
+
+termcap$(PLATFORM).lib: $(OBJ_CT)
+	$(AR) rc termcap$(PLATFORM).lib $(OBJ_CT)
+	ln -sf termcap$(PLATFORM).lib libtermcap$(PLATFORM).a
+	cp libtermcap$(PLATFORM).a libtermcap.a
+
+m$(PLATFORM).lib: $(OBJ_LM)
+	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
+	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
+	cp libm$(PLATFORM).a libm.a
+
+c$(PLATFORM).lib: $(OBJ_LM)
+	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
+	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
+
+readline$(PLATFORM).lib: $(OBJ_RL)
+	$(AR) rc readline$(PLATFORM).lib $(OBJ_RL)
+	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
+	cp libreadline$(PLATFORM).a libreadline.a
+
+$(OBJ_ASM):%.o: %.s
+	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
+
+$(OBJ_CRT0):%.o: %.s
+	$(ASM) $(ASM_OPT) $@ $(@:.o=.s)
+
+$(OBJ_C):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c)
+
+$(OBJ_CT):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c)
+
+$(OBJ_CURS):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c) -o $@
+
+$(OBJ_LM):%.o: %.c
+	$(CC) $(CC_OPT) -DBUILD_LIBM $(@:.o=.c) -o $@
+
+$(OBJ_HARD):%.o: %.c
+	$(CC) $(CC_NOOPT) $(@:.o=.c)
+
+$(OBJ_RL):%.o: %.c
+	$(CC) $(CC_OPT) $(@:.o=.c)
+
+clean:
+	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
+	libc$(PLATFORM).a libm$(PLATFORM).a libtermcap$(PLATFORM).a \
+	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt \
+	syslib$(PLATFORM).a
+	-cd fuzix$(PLATFORM) && make clean
+	rm -rf fuzix$(PLATFORM)/Makefile
+#	rm -f $(KRN_HEADERS_COPY)
+	-cd curses && rm -rf *.o *.asm *.sym *.lst *~
+
+install: ;
