@@ -235,7 +235,7 @@ arg_t _umask(void)
   char *data;
  ********************************************/
 #define fd (int)udata.u_argn
-#define request (int)udata.u_argn1
+#define request (unsigned)udata.u_argn1
 #define data (char *)udata.u_argn2
 
 arg_t _ioctl(void)
