@@ -152,7 +152,7 @@ uart_config:
 	mvi a,2
 	out 0xA0
 	mvi a,ACIA_RTS_LOW
-	sta 0xA0
+	out 0xA0
 
 	;
 	; Now check for a 16x50
