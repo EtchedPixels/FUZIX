@@ -12,7 +12,7 @@ pico_sdk_init()
 
 include_directories(
 	.
-	..
+	../..
 	../../dev
 	../../include
 	../../cpu-armm0
