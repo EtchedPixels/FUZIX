@@ -466,11 +466,11 @@ V.SCF    equ   0
          use   dw4read.s
          use   dw4write.s
          ELSE
-         use   ../dev/drivewire/dwread-6809.s
-         use   ../dev/drivewire/dwwrite-6809.s
+         use   ../../dev/drivewire/dwread-6809.s
+         use   ../../dev/drivewire/dwwrite-6809.s
          ENDC
 
-         use   ../dev/drivewire/dw-6809.def
+         use   ../../dev/drivewire/dw-6809.def
 
 csize    equ   *-Entry
 eom      equ   *-Top
