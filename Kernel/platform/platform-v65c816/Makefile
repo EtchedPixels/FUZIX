@@ -2,13 +2,10 @@
 CSRCS = devtty.c devhd.c
 CSRCS += devices.c main.c
 
-LSRCS = ../lib/65c816.s
-LOBJS = $(patsubst ../lib/%.s,%.o, $(LSRCS))
-
 NSRCS = ../dev/net/net_native.c
 NOBJS = $(patsubst ../dev/net/%.c,%.o, $(NSRCS))
 
-ASRCS = v65.s crt0.s
+ASRCS = v65c816.s crt0.s
 ASRCS += commonmem.s
 
 COBJS = $(CSRCS:.c=$(BINEXT))
@@ -37,12 +34,13 @@ clean:
 image:
 	$(CROSS_LD) -o ../fuzix.bin --mapfile ../fuzix.map -C ld65.cfg \
 	crt0.o commonmem.o \
-	v65.o ../start.o ../version.o ../lowlevel-65c816.o \
-	65c816.o main.o ../timer.o ../kdata.o devhd.o devices.o \
+	v65c816.o ../start.o ../version.o ../cpu-65c816/lowlevel-65c816.o \
+	main.o ../timer.o ../kdata.o devhd.o devices.o \
 	../devio.o ../filesys.o ../process.o ../inode.o ../syscall_fs.o \
 	../syscall_proc.o ../syscall_other.o ../mm.o ../bank65c816.o \
 	../tty.o ../devsys.o ../syscall_fs2.o ../syscall_fs3.o \
-	../syscall_exec16.o ../usermem.o ../usermem_std-65c816.o devtty.o \
-	../syscall_net.o ../syscall_exec.o net_native.o ../vt.o ../font8x8.o
+	../syscall_exec16.o ../usermem.o ../cpu-65c816/usermem_std-65c816.o \
+	devtty.o ../syscall_net.o ../syscall_exec.o net_native.o ../vt.o \
+	../font8x8.o
 	dd if=../fuzix.bin of=fuzix.img bs=256 skip=255 count=1
 	dd if=../fuzix.bin of=fuzix.img bs=256 seek=1 skip=1 conv=notrunc
