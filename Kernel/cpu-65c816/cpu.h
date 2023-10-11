@@ -36,6 +36,10 @@ typedef union {            /* this structure is endian dependent */
 
 #define ntohs(x)	((((x) & 0xFF) << 8) | (((x) & 0xFF00) >> 8))
 
+#define le16_to_cpu(x)	(x)
+#define le32_to_cpu(x)	(x)
+#define cpu_to_le16(x)	(x)
+#define cpu_to_le32(x)	(x)
 #define regptr
 
 #define __packed

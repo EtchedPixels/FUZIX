@@ -14,7 +14,6 @@
 	.export emulation
 
 	.export outstring
-	.export outstringhex
 	.export outnewline
 	.export outcharhex
 
@@ -22,6 +21,10 @@
 	.export _sys_cpu_feat
 	.export _set_cpu_type
 	.export _sys_stubs
+
+	.export ___hard_di
+	.export ___hard_ei
+	.export ___hard_irqrestore
 
 	.export _need_resched
 
@@ -40,10 +43,38 @@ _sys_cpu_feat:
 _set_cpu_type:
 	rts
 
+___hard_di:
+	php
+	pla
+	sei
+	rts
+
+___hard_ei:
+	php
+	pla
+	cli
+	rts
+
+___hard_irqrestore:
+	lda 0,y
+	pha
+	plp
+	iny
+	iny
+	rts
+;
+;	Custom brk() limit as U_DATA__U_SYSCLAL_SP is not our C stack
+;
+_brk_limit:
+	ldx	U_DATA__U_SYSCALL_SP
+	lda	1,x		; SP is next byte to use
+	clc
+	sbc	#512
+	rts
 ;
 ;	We enter via BRK and are in the user map
 ;
-unix_syscall_entry:
+unix_syscall_handler:
 	; We can trash registers here fairly freely except Y which is the
 	; user stack (and thus argument ptr)
 	plx	; get return address byte
@@ -56,7 +87,6 @@ unix_syscall_entry:
 	rep	#0x20
 	.a16
 	
-	phx	; return past the syscall code
 	lda	0,y
 	sta	U_DATA__U_ARGN
 	lda	2,y
@@ -71,7 +101,12 @@ unix_syscall_entry:
 	lda	#1
 	sta	U_DATA__U_INSYS
 	.a16
-	sty	U_DATA__U_SYSCALL_SP
+	;	We keep the user stack ptr on the CPU stack
+	;	and the cpu stack pointer in the udata. Needs special
+	;	handling for brk() as with 6502
+	phy
+	tsx
+	stx	U_DATA__U_SYSCALL_SP
 
 	; We should probably flip stack here and have a cpu stack for user
 	; for kernel (in the user map ?) and interrupt
@@ -88,7 +123,9 @@ unix_syscall_entry:
 	stz	U_DATA__U_INSYS
 	rep	#0x20
 	.a16
-	ldy	U_DATA__U_SYSCALL_SP
+	ldx	U_DATA__U_SYSCALL_SP
+	txs
+	ply
 	lda	U_DATA__U_CURSIG
 	bne	via_signal
 	ldx	U_DATA__U_ERROR
@@ -122,9 +159,11 @@ deliver_signal:
 	sei
 	ldy	#kstack_top
 	jsr	map_kernel_di
-	jsr	chksigs
+	jsr	_chksigs
 	jsr	map_proc_always_di
-	ldy	U_DATA_U_SYSCALL_SP
+	ldx	U_DATA__U_SYSCALL_SP
+	txs
+	ply
 	bra	deliver_signal
 sigdone_y:
 	iny
@@ -137,6 +176,10 @@ _doexec:
 	ldx	0,y	; execution address
 	jsr	map_proc_always
 	ldy	U_DATA__U_ISP
+	txa
+	ldx	#USER_SP
+	txs
+	tax
 	sep	#0x20
 	.a8
 	stz	U_DATA__U_INSYS
@@ -149,7 +192,7 @@ _doexec:
 reinterrupt:
 	rep	#0x20
 	.a16
-	jsr	plt_reinterrupt
+	jsr	_plt_reinterrupt
 	bra	int_done
 
 interrupt_handler:
@@ -176,18 +219,24 @@ interrupt_handler:
 	; do addr 0 check ??
 	sep	#0x20
 	.a16
-	sty	istack_switched_sp
+	phy
+	tsx
+	stx	istack_switched_sp
 	ldy	#istack_top	
+	ldx	#IRQ_SP
+	txs
 	jsr	map_save_kernel
 	jsr	_plt_interrupt
 	rep	#0x20
 	.a8
-	lda	need_resched
+	lda	_need_resched
 	bne	preemption
 	sep	#0x20
 	.a16
 	jsr	map_restore
-	ldy	istack_switched_sp
+	ldx	istack_switched_sp
+	txs
+	ply
 	rep	#0x20
 	.a8
 	stz	U_DATA__U_ININTERRUPT
@@ -196,7 +245,7 @@ interrupt_handler:
 	.a16
 	bne	int_done
 int_out:
-	jsr	deliver_signals
+	jsr	deliver_signal
 int_done:
 	lda	#KERNEL_DP	; ?? sep kernel/user ??
 	tcd
@@ -207,14 +256,16 @@ int_done:
 	; Pre-emtpion is effectively faking a null syscall that
 	; suspends/resumes
 preemption:
-	stz	need_resched
+	stz	_need_resched
 	sep	#0x20
 	inc	U_DATA__U_INSYS
 	.a16
 	lda	istack_switched_sp
-	sta	UDATA__U_SYSCALL_SP
+	sta	U_DATA__U_SYSCALL_SP
 	ldy	#kstack_top
-	jsr	chksigs
+	ldx	#kstack_cpu_top
+	txs
+	jsr	_chksigs
 	ldx	U_DATA__U_PTAB
 	sep	#0x20
 	.a8
@@ -237,7 +288,9 @@ not_running:
 	rep	#0x20
 	.a16
 	jsr	map_proc_always_di
-	ldy	U_DATA__U_SYSCALL_SP
+	ldx	U_DATA__U_SYSCALL_SP
+	txs
+	ply
 	bra	int_out
 ;
 ;	Trap handlers
@@ -256,7 +309,7 @@ sync_sig:
 	.a8
 	lda	_kernel_flag
 	bne	ktrap
-	lda	U_DATA_U__ININTERRUPT
+	lda	U_DATA__U_ININTERRUPT
 	bne	itrap
 	rep	#0x20
 	.a16

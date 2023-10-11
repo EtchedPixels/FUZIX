@@ -1,5 +1,5 @@
 export CROSS_AS=cc65c816 -X -c
-export CROSS_LD=ld65c816
+export CROSS_LD=ld6502
 export CROSS_CC=cc65c816
 export CROSS_CCOPTS= -X -c -Os -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG2=

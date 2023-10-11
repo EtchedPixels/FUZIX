@@ -124,7 +124,7 @@ uputl:
 	inc	@tmp2
 	inc	@tmp2
 	dec	4,x
-	bne	putl
+	bne	uputl
 uputdone:
 	lda	#0
 	iny
