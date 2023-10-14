@@ -28,8 +28,8 @@ uint8_t vidmode;
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
-	/*CSIZE|CSTOPB|PARENB|PARODD| */ _CSYS,
-	_CSYS
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
+	CSIZE|CSTOPB|PARENB|PARODD|_CSYS,
 };
 
 /* ACIA is always port 1 if present */
@@ -246,13 +246,11 @@ int rctty_open(uint_fast8_t minor, uint16_t flag)
 
 void rctty_init(void)
 {
-	if (acia_present) {
+	if (acia_present)
 		acia_minor = ++num_uart;
-		termios_mask[1] = _CSYS | CSIZE | CSTOPB | PARENB | PARODD;
-	}
 	if (uart_present) {
 		uart_minor = ++num_uart;
-		/* TODO: set up and termios mask */
+		termios_mask[uart_minor] |= CBAUD;
 	}
 }
 

@@ -21,14 +21,13 @@ void plt_interrupt(void)
 
 	/* If the TMS9918A is present prefer it as a time source */
 	if (tms9918a_present) {
-		if (tms_interrupt()) {
+		if (tms_interrupt())
 			vblank++;
+		while(vblank >= 6) {
 			/* TODO vblank wakeup for gfx */
-			if (vblank == 6) {
-				timer_interrupt();
-				poll_input();
-				vblank = 0;
-			}
+			timer_interrupt();
+			poll_input();
+			vblank -= 6;
 		}
 	} else {
 		/* If not then use the 82C54 */
@@ -41,5 +40,7 @@ void plt_interrupt(void)
 
 void plt_reinterrupt(void)
 {
+	if (tms_interrupt())
+		vblank++;
 	tty_poll();
 }

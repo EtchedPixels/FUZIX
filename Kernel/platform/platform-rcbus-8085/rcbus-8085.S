@@ -436,7 +436,7 @@ _acia_poll:
 	in 0xA0
 	rar
 	lxi h,-1
-	rz
+	rnc
 	in 0xA1
 	mvi h,0
 	mov l,a
