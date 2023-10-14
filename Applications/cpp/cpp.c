@@ -753,11 +753,24 @@ static void do_proc_include(void)
    return;
 }
 
+static void mem(void)
+{
+	cfatal("Preprocessor out of memory");
+}
+
 static void *xmalloc(size_t size)
 {
-    char *p = malloc(size);
+    void *p = malloc(size);
     if (p == 0)
-        cfatal("Preprocessor out of memory");
+    	mem();
+    return p;
+}
+
+static void *xrealloc(void *ptr, size_t size)
+{
+    void *p = realloc(ptr, size);
+    if (p == 0)
+    	mem();
     return p;
 }
 
@@ -802,8 +815,7 @@ static void do_proc_define(void)
 	       if( cc+strlen(curword)+4 >= len)
 	       {
 		  len = cc + WORDSIZE;
-		  ptr = (struct define_item *) realloc(ptr, sizeof(struct define_item) + len);
-		  if(ptr==0) cfatal("Preprocessor out of memory");
+		  ptr = (struct define_item *) xrealloc(ptr, sizeof(struct define_item) + len);
 	       }
 	       if( cc+strlen(curword) < len)
 	       {
@@ -838,8 +850,7 @@ static void do_proc_define(void)
          if( cc+4 > len )
          {
             len = cc + WORDSIZE;
-            ptr = (struct define_item *) realloc(ptr, sizeof(struct define_item) + len);
-            if(ptr==0) cfatal("Preprocessor out of memory");
+            ptr = (struct define_item *) xrealloc(ptr, sizeof(struct define_item) + len);
          }
          ptr->value[cc++] = ch;
          ch = pgetc();
@@ -860,7 +871,7 @@ static void do_proc_define(void)
 #endif
 
       /* Clip to correct size and save */
-      ptr = (struct define_item *) realloc(ptr, sizeof(struct define_item) + cc);
+      ptr = (struct define_item *) xrealloc(ptr, sizeof(struct define_item) + cc);
       ptr->name = set_entry(0, name, ptr);
       ptr->in_use = 0;
       ptr->next = 0;
@@ -1254,7 +1265,7 @@ static void gen_substrings(char *macname, char *data_str, int arg_count, int is_
 
       if (cc+2 >= len) {
 	 len += 20;
-	 arg_list[ac].name = realloc(arg_list[ac].name, len);
+	 arg_list[ac].name = xrealloc(arg_list[ac].name, len);
       }
       arg_list[ac].name[cc++] = *data_str;
       arg_list[ac].name[cc] = '\0';
@@ -1295,7 +1306,7 @@ static void gen_substrings(char *macname, char *data_str, int arg_count, int is_
 
       if (cc+2 >= len) {
 	 len += 20;
-	 arg_list[ac].value = realloc(arg_list[ac].value, len);
+	 arg_list[ac].value = xrealloc(arg_list[ac].value, len);
       }
 
 #if 0
@@ -1426,7 +1437,7 @@ static char *insert_substrings(char *data_str, struct arg_store *arg_list, int a
 	 }
 
 	 /* Other characters ... */
-	 if (cc+2 > len) { len += 20; rv = realloc(rv, len); }
+	 if (cc+2 > len) { len += 20; rv = xrealloc(rv, len); }
 	 rv[cc++] = *data_str++;
 	 continue;
       }
@@ -1451,7 +1462,7 @@ static char *insert_substrings(char *data_str, struct arg_store *arg_list, int a
 	       rv[cc++] = '"';
 	       while(*s == ' ' || *s == '\t') s++;
 	       while (*s) {
-		  if (cc+4 > len) { len += 20; rv = realloc(rv, len); }
+		  if (cc+4 > len) { len += 20; rv = xrealloc(rv, len); }
 		  if (*s == '"') rv[cc++] = '\\';
 		  rv[cc++] = *s++;
 	       }
@@ -1473,7 +1484,7 @@ static char *insert_substrings(char *data_str, struct arg_store *arg_list, int a
 	 cerror("'#' operator should be followed by a macro argument name");
       }
 
-      if (cc+2+strlen(s) > len) { len += strlen(s)+20; rv = realloc(rv, len); }
+      if (cc+2+strlen(s) > len) { len += strlen(s)+20; rv = xrealloc(rv, len); }
       strcpy(rv+cc, s);
       cc = strlen(rv);
    }
