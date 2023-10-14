@@ -18,7 +18,7 @@
 
 		; platform provided functions
 		.globl map_kernel
-		.globl map_process_always
+		.globl map_proc_always
 	        .globl map_save_kernel
        		.globl map_restore
 		.globl outchar
@@ -49,7 +49,7 @@
 		.globl _chksigs
 		.globl _udata
 
-	        .include "platform/kernel.def"
+	        .include "build/kernel.def"
 	        .include "kernel-rabbit.def"
 
 		.area _COMMONMEM
@@ -115,7 +115,7 @@ signal_return:
 		ld sp, #kstack_top
 		call map_kernel
 		call _chksigs
-		call map_process_always
+		call map_proc_always
 		ld sp, (_udata + U_DATA__U_SYSCALL_SP)
 		jr deliver_signals
 
@@ -191,7 +191,7 @@ unix_syscall_entry:
         	ipset1
 
 
-		call map_process_always
+		call map_proc_always
 
 		xor a,a
 		ld (_udata + U_DATA__U_INSYS), a
@@ -263,7 +263,7 @@ via_signal:
 ;
 _doexec:
 	        ipset1
-	        call map_process_always
+	        call map_proc_always
 
 	        pop bc ; return address
 	        pop de ; start address
@@ -490,7 +490,7 @@ not_running:
 		; We have been rescheduled, remap ourself and go back to user
 		; space via signal handling
 		;
-		call map_process_always	; Get our user mapping back
+		call map_proc_always	; Get our user mapping back
 		; We were pre-empted but have now been rescheduled
 		; User stack
 		ld sp, (_udata + U_DATA__U_SYSCALL_SP)

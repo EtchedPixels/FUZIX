@@ -37,7 +37,7 @@
         ; imported debug symbols
         .globl outstring, outde, outhl, outbc, outnewline, outchar, outcharhex
 
-        .include "../kernel-rabbit.def"
+        .include "../../cpu-r2k/kernel-rabbit.def"
         .include "kernel.def"
 
         .area _COMMONMEM

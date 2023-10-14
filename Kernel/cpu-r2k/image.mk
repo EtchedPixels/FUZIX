@@ -9,8 +9,8 @@ tools/visualize: tools/visualize.c
 
 tools/binman: tools/binman.c
 
-fuzix.ihx: target $(OBJS) platform-$(TARGET)/fuzix.lnk
-	$(CROSS_LD) -n -k $(LIBZ80) -f platform-$(TARGET)/fuzix.lnk
+fuzix.ihx: target $(OBJS) platform/platform-$(TARGET)/fuzix.lnk
+	$(CROSS_LD) -n -k $(LIBZ80) -f platform/platform-$(TARGET)/fuzix.lnk
 
 fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tools/binmunge tools/visualize
 	-cp hogs.txt hogs.txt.old
@@ -21,5 +21,5 @@ fuzix.bin: fuzix.ihx tools/bihx tools/analysemap tools/memhogs tools/binman tool
 	makebin -s 65536 -p fuzix.ihx >fuzix.tmp
 	tools/binman fuzix.tmp fuzix.map fuzix.bin
 
-	+$(MAKE) -C platform-$(TARGET) image
+	+$(MAKE) -C platform/platform-$(TARGET) image
 	tools/visualize < fuzix.map
