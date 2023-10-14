@@ -75,7 +75,7 @@ size_t strlcpy(char *dst, const char *src, size_t dstsize)
    really here so if it's useful to take useful bits from qe we can. It's
    also a good basis to pull out and use for other small apps */
 
-uint_fast8_t screenx, screeny, screen_height, screen_width;
+uint_fast8_t screenx = 255, screeny = 255, screen_height, screen_width;
 
 static char *t_go, *t_clreol, *t_clreos;
 static uint8_t conbuf[64];
@@ -1309,7 +1309,10 @@ int zz(void)
 		dobeep();
 		return 0;
 	}
-	return save_done(filename, 1);
+	if (*filename)
+		return save_done(filename, 1);
+	else
+		warning("no filename");
 }
 
 int noop(void)
