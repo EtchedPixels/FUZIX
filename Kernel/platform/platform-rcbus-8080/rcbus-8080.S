@@ -79,7 +79,9 @@ tmsdone:
 	lxi h,0x8000
 tmswait:
 	dcx h
-	jk no_tms
+	mov a,h
+	ora l
+	jz no_tms
 
 	; Now see if the device is actually present
 	in 0x99
@@ -374,7 +376,7 @@ _acia_poll:
 	in 0xA0
 	rar
 	lxi h,-1
-	rz
+	rnc
 	in 0xA1
 	mvi h,0
 	mov l,a
