@@ -1,0 +1,51 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _CONST=0xC000
+-l z80
+platform/platform-genieiis/crt0.rel
+platform/platform-genieiis/commonmem.rel
+platform/platform-genieiis/genieiis.rel
+platform/platform-genieiis/ram192-bank.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80.rel
+usermem.rel
+platform/platform-genieiis/tricks.rel
+platform/platform-genieiis/main.rel
+timer.rel
+kdata.rel
+platform/platform-genieiis/devfd.rel
+platform/platform-genieiis/floppy.rel
+platform/platform-genieiis/devhd.rel
+platform/platform-genieiis/devhd_discard.rel
+platform/platform-genieiis/devgfx.rel
+platform/platform-genieiis/devices.rel
+platform/platform-genieiis/net_native.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_net.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+memalloc_none.rel
+swap.rel
+bankfixed.rel
+vt.rel
+devsys.rel
+devinput.rel
+platform/platform-genieiis/devlpr.rel
+platform/platform-genieiis/devtty.rel
+platform/platform-genieiis/vtsupport.rel
+platform/platform-genieiis/devinput.rel
+platform/platform-genieiis/discard.rel
+-e
