@@ -35,3 +35,5 @@ MPGSEL_1	.equ	0x61	; Bank_1 page select register (W/O)
 MPGSEL_2	.equ	0x62	; Bank_2 page select register (W/O)
 MPGSEL_3	.equ	0x63	; Bank_3 page select register (W/O)
 MPGENA		.equ	0x64	; along with other things
+
+NBUFS		.equ	5	; must match config.h

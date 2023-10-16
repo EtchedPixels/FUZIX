@@ -193,9 +193,30 @@ sio_irqv:
 
 _plt_monitor:
 _plt_reboot:
+	; Shut down the interrupt sources as RomWBW doesn't clear the CTC
+	; so gets a nasty surprise
+	ld a,#0x43
+	out (CTC_CH0),a			; set CH0 mode
+	out (CTC_CH1),a			; set CH1 mode
+	out (CTC_CH2),a			; set CH2 mode
+	out (CTC_CH3),a			; set CH3 mode
+	xor a				; Register 0 in each channel
+	out (SIOA_C), a
+	out (SIOB_C), a
+	ld a,#0x18			; Reset the SIO channels
+	out (SIOA_C), a
+	out (SIOB_C), a
+	ld b,#8
+	ld hl,#wipei
+iretl:
+	push hl				; Eat any pending events
+	reti
+wipei:
+	djnz iretl
         ; We need to map the ROM back in -- ideally into every page.
         ; This little trick based on a clever suggestion from John Coffman.
         di
+	im 1
         ld hl, #(MPGENA << 8) | 0xD3    ; OUT (MPGENA), A
         ld (0xFFFE), hl                 ; put it at the very top of RAM
         xor a                           ; A=0
@@ -229,13 +250,6 @@ _program_vectors:
 	; At this point the common block has already been copied
 	call map_proc
 
-	; write zeroes across all vectors
-	ld hl,#0
-	ld de,#1
-	ld bc,#0x007f			; program first 0x80 bytes only
-	ld (hl),#0x00
-	ldir
-
 	ld a,#0xC3			; JP instruction
 	ld (0x0038),a
 	ld hl,#interrupt_handler
@@ -254,7 +268,7 @@ _program_vectors:
 ;=========================================================================
 ; Memory management
 ; - kernel pages:     32 - 34
-; - common page:      35
+; - common page:      35 (also init top page)
 ; - user space pages: 36 - 63
 ;=========================================================================
 
@@ -381,9 +395,9 @@ _copy_common:
 
 ; MPGSEL registers are write only, so their content is cached here
 mpgsel_cache:
-	.db	0,0,0
+	.db	0x3C,0x3D,0x3E
 top_bank:	; the shared tricks code needs this name for cache+3
-	.db	0
+	.db	0x3F
 
 ; kernel page mapping
 _kernel_pages:
@@ -495,17 +509,24 @@ sio_ports a
 sio_ports b
 
 	.area _COMMONMEM
-
 ;
-;	As the serial is so fast we keep it in common so we can avoid any
-;	switching overheads.
+;	We don't do any clever IRQ re-entry tricks so we can use the istack.
+;	If we ever do soft interrupts and take the sio during a timer int
+;	we will need a small (16 byte or so) private sio work stack and to
+;	be very careful with our stack handling on switches.
 ;
-
 .macro switch
+	ld (sio_sp),sp
+	ld sp,#istack_top
+	call map_save_kernel
+.endm
+.macro switchback
+	call map_restore
+	ld sp,(sio_sp)
 .endm
 
-.macro switchback
-.endm
+sio_sp:
+	.dw 0
 
 sio_handler_im2	a, SIOA_C, SIOA_D, reti
 sio_handler_im2 b, SIOB_C, SIOB_D, reti

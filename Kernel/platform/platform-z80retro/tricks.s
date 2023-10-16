@@ -49,6 +49,7 @@ fork_next:
 	ld a, c
 	ld (mpgsel_cache+3),a	; cache the page number
 	out (MPGSEL_3), a	; our last bank repeats up to common
+	ld (mpgsel_cache+3),a	; update in live map
 	; --- we are now on the stack copy, parent stack is locked away ---
 	ret			; this stack is copied so safe to return on
 

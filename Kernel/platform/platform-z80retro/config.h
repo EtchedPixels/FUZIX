@@ -46,7 +46,7 @@ extern uint16_t swap_dev;
 #define CMDLINE	NULL  /* Location of root dev name */
 #define BOOTDEVICENAMES "hd#,fd,,rd"
 
-/* TODO: dynamic buffers */
+#define CONFIG_DYNAMIC_BUFPOOL
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 

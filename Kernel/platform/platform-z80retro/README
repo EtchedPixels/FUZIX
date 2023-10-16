@@ -13,7 +13,7 @@ CTC timers (CTC is required)
 
 TODO:
 video card (+ matrix keyboard ?)
-Multiple SD cards (needs tinysd improving)
+Multiple SD cards
 I2C bus and DS1307
 
 Do we want a separate buffer bank and lots of buffers given bitbang SD ?
@@ -43,3 +43,17 @@ costs servicing the SIO vectors.
 The timer does currently block the serial interrupt and it's not clear there
 is much we can do about it easily.
 
+Memory Map (Kernel)
+0000-00FF	RST vectors etc
+0100-01FF	Bootstrap code
+0200-03FF	Serial buffers (page aligned)
+0400-BFFF	Kernel
+C000-EFFF	Top of user in the switched common banks
+F000-FFDF	Kernel common
+FFE0-FFFF	IM2 vectors
+
+Memory Map (user)
+0000-00FF	RST vectors etc
+0100-EFFF	User
+F000-FFDF	Kernel common
+FFE0-FFFF	IM2 vectors
