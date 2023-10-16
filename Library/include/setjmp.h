@@ -17,6 +17,18 @@
 	extern int _setjmp(jmp_buf __env);
 	#define setjmp(x) _setjmp(x)
 
+#elif defined(__8080__)
+
+	typedef unsigned jmp_buf[3];	/*  BC (sp) and sp */
+	extern int _setjmp(jmp_buf __env);
+	#define setjmp(x) _setjmp(x)
+
+#elif defined(__z80__)
+
+	typedef unsigned jmp_buf[5];	/*  IY IX BC (sp) and sp */
+	extern int _setjmp(jmp_buf __env);
+	#define setjmp(x) _setjmp(x)
+
 #elif defined(__65c816__)
 
 	typedef unsigned jmp_buf[2];	/*  (SP) and Y */
@@ -83,20 +95,6 @@
 	/* Fetch the compiler's setjmp.h. */
 	#include_next <setjmp.h>
 	
-#elif defined(__i80)
-	/* __setjmp is magic in ACK. We may need to go with that but it might
-	   be easier to use our own implementation */
-	typedef struct {
-		long __mask;
-		int __flag;
-		void (*__pc)(void);
-		void *__sp;
-		void *__lp;
-	} jmp_buf[1];
-	extern int __setjmp(jmp_buf __env, int __savemask);
-	extern void longjmp(jmp_buf __env, int __val);
-	#define setjmp(__env) __setjmp((__env), 0)
-
 #elif defined(__ARM_EABI__)
 
 	typedef uint32_t jmp_buf[10];
