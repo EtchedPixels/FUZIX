@@ -55,6 +55,7 @@
 	di
 	ld	sp,#0xFFFF
 	jp	startup
+	nop
 ; RST 8
 	jp	___sdcc_enter_ix
 	.ds	5
