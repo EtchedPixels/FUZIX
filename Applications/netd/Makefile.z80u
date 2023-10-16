@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Target/rules.z80
+include $(FUZIX_ROOT)/Target/rules.z80u
 
 CFLAGS += -DNETD_LITTLE_ENDIAN
 
