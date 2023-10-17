@@ -5,66 +5,85 @@ CSRCS += devices.c main.c wiznet.c
 
 DISCSRCS = discard.c
 
-ASRCS = zrc.s crt0.s
-ASRCS += tricks.s commonmem.s
+ASRCS = zrc.S crt0.S
+ASRCS += tricks.S commonmem.S
 
-DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c ../../dev/ds1302_discard.c
+DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
+DISCARD_DSRCS += ../../dev/ds1302_discard.c
 DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
 DSRCS += ../../dev/ds1302.c
 NSRCS = ../../dev/net/net_w5x00.c ../../dev/net/net_native.c
 
-DASRCS = ../../dev/ds1302_rcbus.s
+DASRCS = ../../dev/ds1302_rcbusu.S
 
-COBJS = $(CSRCS:.c=.rel)
-AOBJS = $(ASRCS:.s=.rel)
-NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
-DISCOBJS = $(DISCSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+COBJS = $(CSRCS:.c=.o)
+AOBJS = $(ASRCS:.S=.o)
+NOBJS = $(NSRCS:.c=.o)
+DISCOBJS = $(DISCSRCS:.c=.o)
+DISCARD_DOBJS = $(DISCARD_DSRCS:.c=.o)
+DOBJS = $(DSRCS:.c=.o)
+DAOBJS = $(DASRCS:.S=.o)
 
 OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
 
-JUNK =  *.lst *.asm *.sym *.rst *.lst
+JUNK =  *.o
 
 all:	$(OBJS)
 
-$(COBJS): %.rel: %.c
+$(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCOBJS): %.rel: %.c
+$(DISCOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../../dev/%.c
+$(DOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../../dev/%.c
+$(DISCARD_DOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../../dev/net/%.c
+$(NOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %.rel: %.s
+$(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DAOBJS): %.rel: ../../dev/%.s
+$(DAOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ boot.ihx boot.rel boot
+	rm -f $(OBJS) $(JUNK)  core *~ boot.ihx boot.o boot
 
 #
 #	Attach the kernel to the boot block
 #
 image:	boot
-
+	$(CROSS_LD) -b -C 0x0100 -S 0xF400 -o fuzix.bin \
+	crt0.o commonmem.o zrc.o ../../start.o \
+	../../version.o ../../cpu-z80u/lowlevel-z80u.o \
+	../../usermem.o tricks.o main.o discard.o \
+	../../timer.o ../../kdata.o devices.o ../../devio.o \
+	../../filesys.o ../../blk512.o ../../process.o \
+	../../inode.o ../../syscall_exec.o ../../syscall_exec16.o \
+	../../syscall_fs.o ../../syscall_fs2.o ../../syscall_fs3.o \
+	../../syscall_proc.o ../../syscall_other.o ../../syscall_net.o \
+	../../network.o ../../tty.o ../../mm.o ../../mm/memalloc_none.o \
+	../../swap.o ../../mm/bankfixed.o ../../devsys.o \
+	devtty.o ../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
+	../../dev/tinyide.o ../../dev/tinyide_discard.o \
+	../../dev/net/net_native.o ../../dev/net/net_w5x00.o wiznet.o \
+	../../dev/ds1302_rcbusu.o ../../dev/ds1302.o ../../dev/ds1302_discard.o \
+	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
+	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
+	
 #
 #	Compile up the boot block
 #
 boot: boot.s
-	sdasz80 -o boot.s
-	sdldz80 -i boot.rel
-	makebin -s 512 boot.ihx | ../../tools/doubleup > boot
+	asz80 boot.s -o boot.o
+	ldz80 -b -C 0 boot.o -o boot.bin
+	../../tools/doubleup <boot.bin >boot
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
@@ -74,7 +93,7 @@ diskimage:
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=256 seek=4 skip=1 conv=notrunc
 	# Add the zrc bootstrap
 	dd if=boot of=$(IMAGES)/disk.img bs=446 count=1 conv=notrunc
 	# Make an emulator image of it

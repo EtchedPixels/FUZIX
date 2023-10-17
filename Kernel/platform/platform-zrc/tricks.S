@@ -3,8 +3,8 @@
 ;	only reason to do otherwise is for speed. A custom bank logic aware
 ;	bank to bank copier will give vastly better fork() performance.
 ;
-	.include "kernel.def"
-	.include "../../cpu-z80/kernel-z80.def"
+#include "kernelu.def"
+#include "../../cpu-z80u/kernel-z80.def"
 
 ;
 ;	All of the fixed bank support is available as a library routine,
@@ -21,13 +21,13 @@
 ;
 ;	Firstly we still want the core of the fixed bank support
 ;
-	.include "../../lib/z80fixedbank-core.s"
+#include "../../lib/z80ufixedbank-core.s"
 
 ;	We can also use the standard fast user copiers because all the
 ;	kernel objects we need to copy to/from userspace exist in the
 ;	user mapping.
 ;
-	.include "../../lib/z80user1.s"
+#include "../../lib/z80uuser1.s"
 
 ;
 ;	We want to provide our own optimized direct 32K bank to bank
@@ -56,15 +56,15 @@ bankfork:
 	ld (spcache),sp
 	; 32256 bytes to copy.
 	; Stack pointer at the target buffer
-	ld sp,#PROGBASE	; Base of memory to fork
+	ld sp, PROGBASE	; Base of memory to fork
 	; 8 outer loops
-	ld a,#8
+	ld a, 8
 	ld (copyct),a
 	xor a		; 256 inner loops of 16 (total 32k)
 copyloop:
 	ex af,af'	; Save A as we need an A for ioports
 cpatch0:
-	ld a,#0		; parent bank (patched in for speed)
+	ld a, 0		; parent bank (patched in for speed)
 bankpatch1:
 	out (0x1f),a
 	pop bc		; copy 16 bytes out of parent
@@ -78,7 +78,7 @@ bankpatch1:
 	pop iy
 	ld (sp_patch+1),sp
 cpatch1:
-	ld a,#0		; child bank (also patched in for speed)
+	ld a, 0		; child bank (also patched in for speed)
 bankpatch2:
 	out (0x1f),a
 	push iy		; and put them back into the child
@@ -95,17 +95,17 @@ bankpatch2:
 	jr z, setdone	; 252 loops ?
 copy_cont:
 sp_patch:
-	ld sp,#0
+	ld sp, 0
 	jp copyloop
 ;
 ;	This outer loop only runs 8 times so isn't quite so performance
 ;	critical
 ;
 setdone:
-	ld hl,#copyct
+	ld hl, copyct
 	dec (hl)	
 	jr z, copy_over
-	ld a,#252
+	ld a, 252
 	jr copy_cont
 copy_over:
 	;

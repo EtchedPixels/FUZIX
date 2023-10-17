@@ -1,58 +1,42 @@
 ;
 ;	ZRC support
 ;
-
-	.module zrc
-
 	; exported symbols
-	.globl init_early
-	.globl init_hardware
-	.globl interrupt_handler
-	.globl _program_vectors
-	.globl map_buffers
-	.globl map_kernel
-	.globl map_kernel_di
-	.globl map_kernel_restore
-	.globl map_proc
-	.globl map_proc_a
-	.globl map_proc_always
-	.globl map_proc_always_di
-	.globl map_save_kernel
-	.globl map_restore
-	.globl map_for_swap
-	.globl plt_interrupt_all
-	.globl _kernel_flag
-	.globl _int_disabled
+	.export init_early
+	.export init_hardware
+	.export _program_vectors
+	.export map_buffers
+	.export map_kernel
+	.export map_kernel_di
+	.export map_kernel_restore
+	.export map_proc
+	.export map_proc_a
+	.export map_proc_always
+	.export map_proc_always_di
+	.export map_save_kernel
+	.export map_restore
+	.export map_for_swap
+	.export plt_interrupt_all
+	.export _kernel_flag
+	.export _int_disabled
 
 	; exported debugging tools
-	.globl _plt_monitor
-	.globl _plt_reboot
-	.globl outchar
+	.export _plt_monitor
+	.export _plt_reboot
+	.export outchar
 
-	; imported symbols
-	.globl _ramsize
-	.globl _procmem
-	.globl istack_top
-	.globl istack_switched_sp
-	.globl unix_syscall_entry
-	.globl outcharhex
-	.globl null_handler
-
-	.globl ___sdcc_enter_ix
-
-	.globl s__COMMONMEM
-	.globl l__COMMONMEM
-
-	.include "kernel.def"
-	.include "../../cpu-z80/kernel-z80.def"
+#include "kernelu.def"
+#include "../../cpu-z80u/kernel-z80.def"
 
 ;
 ; Buffers (we use asm to set this up as we need them in a special segment
 ; so we can recover the discard memory into the buffer pool
 ;
 
-	.globl _bufpool
-	.area _BUFFERS
+	.export _bufpool
+
+; FIXME	.area _BUFFERS
+	.bss
 
 _bufpool:
 	.ds BUFSIZE * NBUFS
@@ -60,14 +44,15 @@ _bufpool:
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (kept even when we task switch)
 ; -----------------------------------------------------------------------------
-	.area _COMMONMEM
+
+	.common
 
 ;
 ;	Interrupt flag. This needs to be in common memory for most memory
 ;	models. It starts as 1 as interrupts start off.
 ;
 _int_disabled:
-	.db 1
+	.byte 1
 ;
 ;	This method is invoked early in interrupt handling before any
 ;	complex handling is done. It's useful on a few platforms but
@@ -95,7 +80,7 @@ _plt_reboot:
 ; KERNEL MEMORY BANK (may be below 0x8000, only accessible when the kernel is
 ; mapped)
 ; -----------------------------------------------------------------------------
-	.area _CODE
+	.code
 
 ;
 ;	This routine is called very early, before the boot code shuffles
@@ -108,7 +93,8 @@ init_early:
 ; -----------------------------------------------------------------------------
 ; DISCARD is memory that will be recycled when we exec init
 ; -----------------------------------------------------------------------------
-	.area _DISCARD
+	.discard
+
 ;
 ;	After the kernel has shuffled things into place this code is run.
 ;	It's the best place to breakpoint or trace if you are not sure your
@@ -148,15 +134,15 @@ init_hardware:
 ;	Bank switching unsurprisingly must be in common memory space so it's
 ;	always available.
 ;
-	.area _COMMONMEM
+	.common
 
 mapreg:
-	.db 0	; Our map register is write only so keep a copy
+	.byte 0	; Our map register is write only so keep a copy
 mapsave:
-	.db 0	; Saved copy of the previous map (see map_save)
+	.byte 0	; Saved copy of the previous map (see map_save)
 
 _kernel_flag:
-	.db 1	; We start in kernel mode
+	.byte 1	; We start in kernel mode
 
 ;
 ;	This is invoked with a NULL argument at boot to set the kernel
@@ -188,7 +174,7 @@ _program_vectors:
 	ld (0x0000), a
 	ld hl, #null_handler   ;   to Our Trap Handler
 	ld (0x0001), hl
-
+#if 0
 	; RST peepholes support
 	ld hl,#___sdcc_enter_ix
 	ld (0x08),a
@@ -202,6 +188,7 @@ _program_vectors:
 	ld hl,#___ldhlhl
 	ld (0x20),a
 	ld (0x21),hl
+#endif
 
 
 	; and fall into map_kernel
@@ -306,7 +293,7 @@ twait:	in a,(0x80)
 	out (0x81),a
 	ret
 
-		.area _DISCARD
+	.discard
 ;
 ;	This block is copied into the rst area
 ;
@@ -324,6 +311,8 @@ twait:	in a,(0x80)
 
 ; 8
 rstblock:
+#if 0
+/* TODO */
 	jp	___sdcc_enter_ix
 	.ds	5
 ; 16
@@ -343,3 +332,40 @@ ___ldhlhl:
 	ld      h,(hl)
 	ld      l,a
 	ret
+#endif
+
+;
+;	IDE disk helpers
+;
+	.export _devide_read_data
+	.export _devide_write_data
+
+ide_map:
+	ld	a,(_td_raw)
+	ld	bc,0x10		; port 10, 256 times
+	or	a
+	jp	z, map_buffers
+	dec	a
+	jp	z, map_proc_always
+	ld	a,(_td_page)
+	jp	map_for_swap
+
+_devide_read_data:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	call	ide_map
+	inir
+	inir
+	jp	map_kernel_restore
+
+_devide_write_data:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	call	ide_map
+	otir
+	otir
+	jp	map_kernel_restore

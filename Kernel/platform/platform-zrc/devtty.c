@@ -19,8 +19,8 @@
 #include <tty.h>
 #include <devtty.h>
 
-__sfr __at 0x80 acia_c;
-__sfr __at 0x81 acia_d;
+#define acia_c 	0x80
+#define acia_d	0x81
 
 /*
  *	One buffer for each tty
@@ -82,9 +82,9 @@ void kputchar(uint_fast8_t c)
  *
  *	A video display that never blocks will just return TTY_READY_NOW
  */
-uint_fast8_t tty_writeready(uint_fast8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
-	return acia_c & 0x02 ? TTY_READY_NOW : TTY_READY_SOON;
+	return in(acia_c) & 0x02 ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 /*
@@ -98,7 +98,7 @@ uint_fast8_t tty_writeready(uint_fast8_t minor)
  */
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-	acia_d = c;
+	out(acia_d, c);
 }
 
 /*
@@ -148,6 +148,6 @@ void tty_data_consumed(uint_fast8_t minor)
  */
 void tty_poll(void)
 {
-	if (acia_c & 1)
-		tty_inproc(1, acia_d);
+	if (in(acia_c) & 1)
+		tty_inproc(1, in(acia_d));
 }
