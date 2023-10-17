@@ -48,11 +48,12 @@ static char day[] = {
  * and can live here until we have a final one in libc
  */
 
-static time_t mkgmtime(struct tm *t)
+static time_t mkgmtime(struct tm *tp)
 {
+        register struct tm *t = tp;
 	short month, year;
 	time_t result;
-	static int m_to_d[12] =
+	static const int m_to_d[12] =
 		{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 
 	month = t->tm_mon;
@@ -101,8 +102,9 @@ time_t mktime(struct tm	*t)
 /*
  *	Fuzix real time clock reading and date setting
  */
-void unbc(uint8_t *p)
+void unbc(uint8_t *pp)
 {
+    register uint8_t *p = pp;
     uint8_t c = *p & 0x0F;
     c += 10 * ((*p & 0xF0) >> 4);
     *p = c;
@@ -110,7 +112,7 @@ void unbc(uint8_t *p)
 
 uint8_t bc(uint8_t a)
 {
-    uint8_t u = 0;
+    uint_fast8_t u = 0;
     while (a >= 10) {
        a -= 10;
        u += 0x10;
@@ -122,8 +124,8 @@ int rtcdate(void)
 {
     struct tm tm;
     struct cmos_rtc rtc;
-    uint8_t *p;
-    uint8_t i;
+    register uint8_t *p;
+    register uint_fast8_t i;
 
     int fd = open("/dev/rtc", O_RDONLY);
     if (fd == -1)
@@ -169,9 +171,9 @@ int rtcdate(void)
 int rtcwrite(void)
 {
     time_t t;
-    struct tm *tm;
+    register struct tm *tm;
     struct cmos_rtc rtc;
-    uint8_t *p;
+    register uint8_t *p;
 
     int fd = open("/dev/rtc", O_RDWR);
     if (fd == -1)
@@ -220,11 +222,11 @@ static struct tm notime;
 
 int main(int argc, char *argv[])
 {
-    struct tm *tm;
+    register struct tm *tm;
     time_t t;
     char newval[128];
     int y,m,d,h,s;
-    int set = 0;
+    register int set = 0;
     int opt;
     int user = 0, autom = 0, wr = 0;
 

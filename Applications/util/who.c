@@ -24,10 +24,10 @@
 
 int main(int argc, char *argv[])
 {
-	struct utmp *entry;
-	char *timestr;
+	register struct utmp *entry;
+	register char *timestr;
 	char *p;
-	uint8_t fmt = 0;
+	register uint_fast8_t fmt = 0;
 
 	p = strchr(argv[0],'/');
 	if (p)

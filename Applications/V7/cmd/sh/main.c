@@ -40,7 +40,7 @@ static char ineof;
 
 static int line_input(const char *prmpt)
 {
-	int l;
+	register int l;
 	if (!isatty(standin->fdes))
 		return -1;	/* Not a tty */
 	do {
@@ -60,8 +60,9 @@ static int line_input(const char *prmpt)
 	return l + 1;
 }
 
-int lineread(int fd, char *buf, int len)
+int lineread(int fd, char *bufp, int len)
 {
+	register char *buf = bufp;
 	int bias = 0;
 	int r;
 	if (fd == standin->fdes && inleft) {

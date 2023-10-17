@@ -41,22 +41,23 @@ int expand(char *as, int rflg)
 	register char *s, *cs, *fs;
 	ARGPTR schain = gchain;
 	STATBUF statb;
-	#ifdef FUZIX_INTERNAL_DIR_API
-		/* Use the internal API to avoid sucking in readdir and thus malloc */
-		struct __dirent entry;
-		int dirf;
-	#else
-		struct dirent* entry;
-		DIR* dirf;
-	#endif
+#ifdef FUZIX_INTERNAL_DIR_API
+	/* Use the internal API to avoid sucking in readdir and thus malloc */
+	struct __dirent entry;
+	int dirf;
+#else
+	struct dirent* entry;
+	DIR* dirf;
+#endif
 
 	if (trapnote & SIGSET)
 		return (0);
 
 	s = cs = as;
-	#ifdef FUZIX_INTERNAL_DIR_API
+	/* FIXME: overruns */
+#ifdef FUZIX_INTERNAL_DIR_API
 	entry.d_name[DIRSIZ - 1] = 0;	/* to end the string */
-	#endif
+#endif
 
 	/* check for meta chars */
 	{

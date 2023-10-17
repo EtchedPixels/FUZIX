@@ -5,7 +5,7 @@
 
 int main(int argc, const char *argv[])
 {
-    const char *p;
+    register const char *p;
     char c;
     int  i, nflag, eflag;
 
