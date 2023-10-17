@@ -41,7 +41,7 @@ static uint8_t histend = 0;
 
 static void history_set(void)
 {
-    size_t s = hlen[histp];
+    register size_t s = hlen[histp];
     if (s > rl_bufend - rl_base)
         s = rl_bufend - rl_base;
     memcpy(rl_base, hptr[histp], s);
@@ -51,7 +51,7 @@ static void history_set(void)
 
 static void history_add(void)
 {
-    uint8_t i;
+    register uint_fast8_t i;
     size_t l;
     size_t s = rl_end - rl_base;
     
@@ -123,7 +123,7 @@ static void backspace(char c)
 static void reprint_end(char c)
 {
     /* Reprint cursor to len and then cursor back to the right place */
-    char *p = rl_cursor;
+    register char *p = rl_cursor;
 
     /* Reprint from cursor to end */
     while(p < rl_end)
@@ -139,7 +139,7 @@ static void reprint_end(char c)
 
 static void reprint_start(void)
 {
-    char *p = rl_base;
+    register char *p = rl_base;
     /* Reprint up to cursor, leave cursor there */
     while(p <= rl_cursor)
         quoted_putchar(*p++);
@@ -185,7 +185,7 @@ static void bspace(void)
 #ifdef WITH_HISTORY
 static void history(int8_t dir)
 {
-    char *p = rl_cursor;
+    register char *p = rl_cursor;
 
     if (rl_hbuffer == NULL)
         return;
@@ -221,10 +221,10 @@ static void history(int8_t dir)
 int rl_edit_timeout(int fd, int ofd, const char *prompt,
                 char *input, size_t len, uint8_t timeout, int (*timeout_fn)(void))
 {
-    uint8_t c;
-    uint8_t quote = 0;
-    uint8_t esc = 0;
-    uint8_t r;
+    uint_fast8_t c;
+    uint_fast8_t quote = 0;
+    uint_fast8_t esc = 0;
+    register uint_fast8_t r;
 
     rl_base = input;
     rl_end = input;
