@@ -60,3 +60,5 @@ typedef union {            /* this structure is endian dependent */
 
 extern void out(uint_fast8_t port, uint_fast8_t val);
 extern uint_fast8_t in(uint_fast8_t port);
+
+#define regptr	register
