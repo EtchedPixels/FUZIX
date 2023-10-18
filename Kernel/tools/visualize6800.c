@@ -11,9 +11,9 @@ struct section {
 	uint16_t size;
 };
 
-struct section sect[8];
+struct section sect[14];
 
-static char sectname[8] = "ACDBXZSL";
+static char sectname[14] = "ACDBXZSLsb";
 
 static void check_overlap(int a, int b)
 {
@@ -40,10 +40,10 @@ static void mark_map(void)
 {
 	int i, j;
 
-	for (i = 1; i < 8; i++) {
+	for (i = 1; i < 10; i++) {
 		if ((unsigned)sect[i].base + sect[i].size > 0xFFFF) {
 			fprintf(stderr, "Section %c runs over the top of memory.\n",
-				sect[i].base + sect[i].size - 1);
+				sectname[i], sect[i].base + sect[i].size - 1);
 		}
 		for (j = 1; j < i; j++)
 			check_overlap(i, j);
@@ -89,6 +89,12 @@ int main(int argc, char *argv[])
 		if (strcmp(name, "__literal_size") == 0)
 			sect[7].size = addr;
 
+		if (strcmp(name, "__commondata_size") == 0)
+			sect[8].size = addr;
+
+		if (strcmp(name, "__buffers_size") == 0)
+			sect[9].size = addr;
+
 		if (strcmp(name, "__code") == 0)
 			sect[1].base = addr;
 
@@ -107,8 +113,14 @@ int main(int argc, char *argv[])
 		if (strcmp(name, "__common") == 0)
 			sect[6].base = addr;
 
-		if (strcmp(name, "__literal") == 0)
+                if (strcmp(name, "__literal") == 0)
 			sect[7].base = addr;
+
+                if (strcmp(name, "__commondata") == 0)
+			sect[8].base = addr;
+
+                if (strcmp(name, "__buffers") == 0)
+			sect[9].base = addr;
 	}
 	mark_map();
 	for (r = 0; r < 4; r++) {
