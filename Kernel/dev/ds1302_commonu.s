@@ -29,23 +29,38 @@ _ds1302_set_driven:
 	pop hl
 	push hl
 	push de
-        ld b, l                 ; load argument
+	push bc
         ld a, (_rtc_shadow)
         and >PIN_DATA_HIZ      ; 0 - output pin
-        bit 0, b                ; test bit
+        bit 0, l                ; test bit
         jr nz, writereg
         or <PIN_DATA_HIZ
         jr writereg
 
 _ds1302_set_data:
+	pop de
+	pop hl
+	push hl
+	push de
+	push bc
         ld bc, PIN_DATA_OUT
         jr setpin
 
 _ds1302_set_ce:
+	pop de
+	pop hl
+	push hl
+	push de
+	push bc
         ld bc, PIN_CE
         jr setpin
 
 _ds1302_set_clk:
+	pop de
+	pop hl
+	push hl
+	push de
+	push bc
         ld bc, PIN_CLK
         jr setpin
 
@@ -54,14 +69,15 @@ setpin:
 	pop hl
 	push hl
 	push de
+	push bc
         ld a, (_rtc_shadow)     ; load current register contents
         and b                   ; unset the pin
-        ld b, l                 ; load argument from caller (fastcall)
-        bit 0, b                ; test bit
+        bit 0, l                ; test bit
         jr z, writereg          ; arg is false
         or c                    ; arg is true
 writereg:
 	ld bc, (_rtc_port)
         out (c), a	        ; write out new register contents
         ld (_rtc_shadow), a      ; update our shadow copy
+	pop bc
         ret
