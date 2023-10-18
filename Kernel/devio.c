@@ -473,8 +473,9 @@ int no_ioctl(uint_fast8_t minor, uarg_t a, char *b)
  */
 
 /* add something to the tail of the queue. */
-bool insq(struct s_queue * q, uint_fast8_t c)
+bool insq(struct s_queue * qp, uint_fast8_t c)
 {
+	regptr struct s_queue *q = qp;
 	bool r;
 
 	irqflags_t irq = di();
@@ -494,8 +495,9 @@ bool insq(struct s_queue * q, uint_fast8_t c)
 
 
 /* Remove something from the head of the queue. */
-bool remq(struct s_queue * q, uint_fast8_t *cp)
+bool remq(struct s_queue * qp, uint_fast8_t *cp)
 {
+	regptr struct s_queue *q = qp;
 	bool r;
 
 	irqflags_t irq = di();
@@ -516,8 +518,9 @@ bool remq(struct s_queue * q, uint_fast8_t *cp)
 
 
 /* Clear the queue to empty conditions.  (UZI280 addition) */
-void clrq(struct s_queue *q)
+void clrq(struct s_queue *qp)
 {
+	regptr struct s_queue *q = qp;
 	irqflags_t irq = di();
 
 	q->q_head = q->q_tail = q->q_base;
@@ -528,8 +531,9 @@ void clrq(struct s_queue *q)
 
 
 /* Remove something from the tail; the most recently added char. */
-bool uninsq(struct s_queue *q, uint_fast8_t *cp)
+bool uninsq(struct s_queue *qp, uint_fast8_t *cp)
 {
+	regptr struct s_queue *q = qp;
 	bool r;
 	irqflags_t irq = di();
 
