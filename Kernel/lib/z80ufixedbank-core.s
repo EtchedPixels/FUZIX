@@ -282,8 +282,7 @@ _dofork:
 	; if it had done a switchout().
         ret
 
-; FIXME	.area _COMMONDATA
-	.common
+	.commondata
 ;
 ;	For the moment
 ;
