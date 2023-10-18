@@ -27,14 +27,14 @@ go:
 		ld bc, __bss_size - 1
 		ld (hl), 0
 		ldir
-#if 0
+
 ;		Zero buffers area
-		ld hl, s__BUFFERS
-		ld de, s__BUFFERS + 1
-		ld bc, l__BUFFERS - 1
+		ld hl, __buffers
+		ld de, __buffers+1
+		ld bc, __buffers_size - 1
 		ld (hl), 0
 		ldir
-#endif
+
 		call init_early
 		call init_hardware
 		call _fuzix_main

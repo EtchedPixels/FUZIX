@@ -35,8 +35,7 @@
 
 	.export _bufpool
 
-; FIXME	.area _BUFFERS
-	.bss
+	.buffers
 
 _bufpool:
 	.ds BUFSIZE * NBUFS
@@ -334,6 +333,7 @@ ___ldhlhl:
 	ret
 #endif
 
+	.common
 ;
 ;	IDE disk helpers
 ;
