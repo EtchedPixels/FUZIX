@@ -65,11 +65,6 @@ _ds1302_set_clk:
         jr setpin
 
 setpin:
-	pop de
-	pop hl
-	push hl
-	push de
-	push bc
         ld a, (_rtc_shadow)     ; load current register contents
         and b                   ; unset the pin
         bit 0, l                ; test bit
