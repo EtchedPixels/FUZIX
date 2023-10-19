@@ -73,7 +73,6 @@ void prn(int n)
 	prs(numbuf);
 }
 
-/* FIXME: use libc */
 void itos(int n)
 {
 	register char *abuf;
@@ -83,17 +82,14 @@ void itos(int n)
 	pr = FALSE;
 	a = n;
 	for (i = 10000; i != 1; i /= 10) {
-		if ((pr |= (d = a / i))) {
+		if ((pr |= (d = a / i)))
 			*abuf++ = d + '0';
-		}
 		a %= i;
-		;
 	}
 	*abuf++ = a + '0';
 	*abuf++ = 0;
 }
 
-/* FIXME: use libc */
 int stoi(const char *icp)
 {
 	register const char *cp = icp;
