@@ -202,13 +202,11 @@ FILE *open_include(char *fname, char *mode, int checkrel)
       fd=fopen(buf, mode);
    }
    if (!fd) {
-      /* FIXME: buffer overrun */
       for(i=0; i<MAXINCPATH; i++)
 	 if (include_paths[i]) {
-	   strcpy(buf, include_paths[i]);
-	   if (buf[strlen(buf)-1] != '/') strcat(buf, "/");
-	   strcat(buf, fname);
-	   fprintf(stderr, "Trying '%s'\n", buf);
+	   strlcpy(buf, include_paths[i], 256);
+	   if (buf[strlen(buf)-1] != '/') strlcat(buf, "/", 256);
+	   strlcat(buf, fname, 256);
 	   fd=fopen(buf,  mode);
 	   if( fd ) break;
 	 }
