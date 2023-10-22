@@ -1522,8 +1522,6 @@ void display(int redraw)
 	i = j = 0;
 	epage = page;
 
-	fprintf(stderr, "redraw w %d rd %d dirtyn %d\n",
-		screen_width, redraw, dirtyn);
 	/*
 	 *      We need to add two optimized paths to this
 	 *      1. Only the cursor moved
@@ -1545,10 +1543,8 @@ void display(int redraw)
 		}
 		p = ptr(epage);
 		/* We ran out of screen or buffer */
-		if (screen_height <= i || ebuf <= p)  {
-			fprintf(stderr, "done %d (sh %d)\n", i, screen_height);
+		if (screen_height <= i || ebuf <= p)
 			break;
-		}
 		/* Normal characters */
 		if (*p != '\n') {
 			uint8_t s = con_size_x(*p, j);
@@ -1562,7 +1558,6 @@ void display(int redraw)
 				}
 				/* Draw the symbol */
 				con_putc(*p);
-				fputc(*p, stderr);
 			}
 			j += s;
 		} else {
