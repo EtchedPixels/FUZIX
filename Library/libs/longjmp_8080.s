@@ -10,17 +10,14 @@
 _longjmp:
 	lxi	h,4
 	dad	sp
-	mov	e,m		; return code
+	mov	c,m		; return code
 	inx	h
-	mov	d,m		; and high half
-	mov	a,d
-	ora	e
+	mov	b,m		; and high half
+	mov	a,b
+	ora	c
 	jnz	retok
-	inx	d		; force return code non zero
+	inr	c		; force return code non zero
 retok:
-	xchg
-	shld	__tmp		; save return code
-	xchg
 	dcx	h
 	dcx	h		; now points to end of buffer arg
 	mov	d,m
@@ -41,8 +38,9 @@ retok:
 	mov	d,m
 	inx	h		; points to saved bc
 	push	d		; return address
+	push	b		; return code
 	mov	c,m
 	inx	h
 	mov	b,m
-	lhld	__tmp		; recover return value
+	pop	h		; retunr code
 	ret
