@@ -21,7 +21,7 @@ __uputc:
 	mov d,a
 	call map_proc_always
 	mov m,d
-	lxi d,0
+	lxi h,0
 	jmp map_kernel
 
 .export __uputw
@@ -36,7 +36,7 @@ __uputw:
 	pop h		; data now HL
 	call map_proc_always
 	shlx		; (DE)=HL
-	lxi d,0
+	lxi h,0
 	jmp map_kernel
 	
 .export __ugetc
