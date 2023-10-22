@@ -415,7 +415,7 @@ int row, col;
    careful on comparisons */
 size_t indexp, page, epage;
 int input;
-int repeat;
+int repeat = -1;
 char *buf;
 char *ebuf;
 char *gap;
@@ -1475,7 +1475,7 @@ void adjust_dirty(int n)
 
 void dirty_all(void)
 {
-	memset(dirty, 255, MAX_HEIGHT);
+	memset(dirty, 0, MAX_HEIGHT);
 	dirtyn = 1;
 }
 
@@ -1522,6 +1522,8 @@ void display(int redraw)
 	i = j = 0;
 	epage = page;
 
+	fprintf(stderr, "redraw w %d rd %d dirtyn %d\n",
+		screen_width, redraw, dirtyn);
 	/*
 	 *      We need to add two optimized paths to this
 	 *      1. Only the cursor moved
@@ -1543,8 +1545,10 @@ void display(int redraw)
 		}
 		p = ptr(epage);
 		/* We ran out of screen or buffer */
-		if (screen_height <= i || ebuf <= p)
+		if (screen_height <= i || ebuf <= p)  {
+			fprintf(stderr, "done %d (sh %d)\n", i, screen_height);
 			break;
+		}
 		/* Normal characters */
 		if (*p != '\n') {
 			uint8_t s = con_size_x(*p, j);
@@ -1558,6 +1562,7 @@ void display(int redraw)
 				}
 				/* Draw the symbol */
 				con_putc(*p);
+				fputc(*p, stderr);
 			}
 			j += s;
 		} else {
