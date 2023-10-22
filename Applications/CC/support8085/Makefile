@@ -1,7 +1,7 @@
 all: lib8085.a crt0.o
 
 OBJ = workspace.o __true.o __switchc.o __switch.o __switchl.o __pushl.o __sex.o \
-      __ldwordw.o \
+      __ldwordw.o __ldword.o \
       __and.o __andeq.o __or.o __oreq.o __xor.o __xoreq.o \
       __andeqde.o __oreqde.o __xoreqde.o \
       __minuseq.o __pluseq.o __pluseqn.o __minuseqn.o __pluseqde.o __minuseqde.o \
@@ -10,7 +10,7 @@ OBJ = workspace.o __true.o __switchc.o __switch.o __switchl.o __pushl.o __sex.o 
       __boolc.o __cplc.o __notc.o \
       __minus.o __plus.o \
       __postinc.o __postdec.o __postincn.o __postdecn.o \
-      __shl.o __shr.o \
+      __shr.o \
       __shleq.o __shrequ.o __shreq.o \
       __shlde.o \
       __divdeu.o __divde.o \
@@ -48,7 +48,7 @@ OBJ = workspace.o __true.o __switchc.o __switch.o __switchl.o __pushl.o __sex.o 
 
 lib8085.a: $(OBJ)
 	rm -f lib8085.a
-	ar qc lib8085.a $(OBJ)
+	ar qc lib8085.a `../lorder85 $(OBJ) | tsort`
 
 clean:
 	rm -f *.o *.a

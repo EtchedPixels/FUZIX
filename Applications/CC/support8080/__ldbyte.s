@@ -8,10 +8,11 @@
 
 __ldbyte:
 	pop	h
-	mov	e,m
+	mov	a,m
 	inx	h
-	mvi	d,0
 	push	h
+	mvi	h,0
+	mov	l,a
 	dad	sp
 	mov	l,m
 	ret

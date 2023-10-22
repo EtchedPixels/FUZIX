@@ -105,6 +105,7 @@
 #define T_SWITCH	0x101D
 #define T_TYPEDEF	0x101E
 #define T_WHILE		0x101F
+#define T_RESTRICT	0x1020	/* We treat this as a nop */
 
 /* Encodings for tokenized constants */
 /* These are followed by a 4 byte little endian value */

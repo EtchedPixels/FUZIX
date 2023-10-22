@@ -2,8 +2,11 @@
 ;		(HL) &= DE
 ;
 		.export __oreqde
+		.export __oreqde0d
 		.code
 
+__oreqde0d:
+		ld	d,0
 __oreqde:
 		ld	a,(hl)
 		or	e

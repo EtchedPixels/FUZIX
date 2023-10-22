@@ -6,10 +6,11 @@
 
 __ldbyte:
 		pop	hl
-		ld	e,(hl)
+		ld	a,(hl)
 		inc	hl
-		ld	d,0
 		push	hl
+		ld	l,a
+		ld	h,0
 		add	hl,sp
 		ld	l,(hl)
 		ret

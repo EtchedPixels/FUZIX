@@ -17,16 +17,22 @@ static unsigned func_type;
 unsigned func_flags;
 
 /* C keyword statements */
+
 static void if_statement(void)
 {
+	struct node *n;
 	unsigned tag = next_tag++;
-	header(H_IF, tag, 0);
+	unsigned t;
+
 	next_token();
-	bracketed_expression(1);
+	n = logic_expression(&t);
+
+	header(H_IF, tag, t);
+	write_logic_tree(n, t);
 	statement_block(0);
 	if (token == T_ELSE) {
 		next_token();
-		header(H_ELSE, tag, 0);
+		header(H_ELSE, tag, t);
 		statement_block(0);
 		footer(H_IF, tag, 1);
 	} else
@@ -37,15 +43,19 @@ static void while_statement(void)
 {
 	unsigned oldbrk = break_tag;
 	unsigned oldcont = cont_tag;
+	struct node *n;
+	unsigned t;
 
 	break_tag = next_tag++;
 	cont_tag = break_tag;
 
 	next_token();
-	header(H_WHILE, cont_tag, break_tag);
-	bracketed_expression(1);
+	n = logic_expression(&t);
+
+	header(H_WHILE, cont_tag, t);
+	write_logic_tree(n, t);
 	statement_block(0);
-	footer(H_WHILE, cont_tag, break_tag);
+	footer(H_WHILE, cont_tag, t);
 
 	break_tag = oldbrk;
 	cont_tag = oldcont;
@@ -53,25 +63,29 @@ static void while_statement(void)
 
 static void do_statement(void)
 {
+	struct node *n;
 	unsigned oldbrk = break_tag;
 	unsigned oldcont = cont_tag;
+	unsigned t;
 
 	break_tag = next_tag++;
 	cont_tag = break_tag;
 
 	next_token();
-	header(H_DO, cont_tag, break_tag);
+	header(H_DO, cont_tag, 0);
 	statement_block(0);
 	require(T_WHILE);
-	header(H_DOWHILE, cont_tag, break_tag);
-	bracketed_expression(1);
+	n = logic_expression(&t);
+	header(H_DOWHILE, cont_tag, t);
 	require(T_SEMICOLON);
-	footer(H_DOWHILE, cont_tag, break_tag);
+	write_logic_tree(n, t);
+	footer(H_DOWHILE, cont_tag, t);
 
 	break_tag = oldbrk;
 	cont_tag = oldcont;
 }
 
+/* TODO: optimize the cases where the for loop condition is 0 or 1 */
 static void for_statement(void)
 {
 	unsigned oldbrk = break_tag;
@@ -362,6 +376,7 @@ void function_body(unsigned st, unsigned name, unsigned type)
 	init_labels();
 
 	statement_block(1);
+
 	footer(H_FUNCTION, func_tag, name);
 
 	rewrite_header(hrw, H_FRAME, frame_size(), func_flags);

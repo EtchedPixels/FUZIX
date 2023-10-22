@@ -5,9 +5,9 @@
 		.code
 _memcpy:
 		push	bc
-		ld	h,9
+		ld	hl,9
 		add	hl,sp
-		ld	b,(hl)
+		ld	b,(hl)	; Count
 		dec	hl
 		ld	c,(hl)
 		dec	hl

@@ -1,9 +1,12 @@
+		.export __cmpltequ0d
 		.export __cmpltequ
 		.export __cmpltequb
 		.code
 
 		; true if HL <= DE
 
+__cmpltequ0d:
+		ld	d,0
 __cmpltequ:
 		or	a
 		sbc	hl,de

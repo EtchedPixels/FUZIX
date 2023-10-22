@@ -1,5 +1,6 @@
 		.export __muldeb
 		.export __mulde
+		.export __mulde0d
 		.export __mul
 
 		.code
@@ -14,6 +15,7 @@ __mul:
 ;
 ;		HL * DE
 ;
+__mulde0d:	ld	d,0
 __mulde:	push	bc
 
 		ld	b,h		; save old upper byte

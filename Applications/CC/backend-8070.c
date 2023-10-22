@@ -276,7 +276,7 @@ void gen_prologue(const char *name)
 }
 
 /* Generate the stack frame */
-void gen_frame(unsigned size)
+void gen_frame(unsigned size, unsigned aframe)
 {
 	/* Annoyingly we can't use autoindex on SP */
 	frame_len = size;
@@ -292,7 +292,7 @@ void gen_frame(unsigned size)
 	}
 }
 
-void gen_epilogue(unsigned size)
+void gen_epilogue(unsigned size, unsigned argsize)
 {
 	if (sp != size) {
 		error("sp");

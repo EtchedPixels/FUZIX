@@ -61,3 +61,8 @@ unsigned frame_size(void)
 {
     return local_max;
 }
+
+unsigned arg_size(void)
+{
+    return arg_frame;
+}

@@ -1,9 +1,12 @@
 		.export __cmpgtequ
+		.export __cmpgtequ0d
 		.export __cmpgtequb
 		.code
 
 		; true if HL >= DE
 
+__cmpgtequ0d:
+		ld	d,0
 __cmpgtequ:
 		or	a
 		sbc	hl,de

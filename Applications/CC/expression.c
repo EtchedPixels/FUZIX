@@ -88,7 +88,7 @@ struct node *typeconv_implicit(struct node *n)
  *	we always push 2 bytes so char as arg takes 2 and we need to do
  *	the right thing.
  */
-struct node *call_args(unsigned *narg, unsigned *argt, unsigned *argsize)
+struct node *call_args(unsigned *narg, unsigned *argt, unsigned *argsize, unsigned *va)
 {
 	struct node *n = expression_tree(0);
 	unsigned t;
@@ -97,9 +97,10 @@ struct node *call_args(unsigned *narg, unsigned *argt, unsigned *argsize)
 	if (*argt == VOID)
 		unexarg();
 	/* Implicit */
-	else if (*argt == ELLIPSIS)
+	else if (*argt == ELLIPSIS) {
 		n = typeconv_implicit(n);
-	else {
+		*va = 1;
+	} else {
 		/* Explicit prototyped argument */
 		if (*narg) {
 			n = typeconv(n, type_canonical(*argt++), 1);
@@ -115,7 +116,7 @@ struct node *call_args(unsigned *narg, unsigned *argt, unsigned *argsize)
 	t = n->type;
 	if (match(T_COMMA)) {
 		/* Switch around for calling order */
-		n = tree(T_ARGCOMMA, call_args(narg, argt, argsize), n);
+		n = tree(T_ARGCOMMA, call_args(narg, argt, argsize, va), n);
 		n->type = t;
 		return n;
 	}
@@ -136,6 +137,7 @@ struct node *function_call(struct node *n)
 	unsigned *argt, *argp;
 	unsigned argsize = 0;
 	unsigned narg;
+	unsigned va = 0;
 
 	/* Must be a function or pointer to function */
 	if (!IS_FUNCTION(n->type)) {
@@ -160,13 +162,14 @@ struct node *function_call(struct node *n)
 		n  = sf_tree(T_FUNCCALL, NULL, n);
 		missedarg(narg, argp[0]);
 	} else {
-		n = sf_tree(T_FUNCCALL, call_args(&narg, argp, &argsize), n);
+		n = sf_tree(T_FUNCCALL, call_args(&narg, argp, &argsize, &va), n);
 		missedarg(narg, argp[0]);
 	}
 	/* Always emit this - some targets have other uses for knowing
 	   the boundary of a function call return */
 	n->type = type;
 	n = tree(T_CLEANUP, n, make_constant(argsize, UINT));
+	n->val2 = va;
 	return n;
 }
 
@@ -398,6 +401,8 @@ static struct node *hier10(void)
 		return r;
 	case T_AND:
 		r = hier10();
+		if (r->op == T_REG)
+			error("can't take address of register");
 		/* If it's an lvalue then just stop being an lvalue */
 		if (r->flags & LVAL) {
 			r->flags &= ~LVAL;

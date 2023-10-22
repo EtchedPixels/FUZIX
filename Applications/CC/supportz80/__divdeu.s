@@ -3,8 +3,10 @@
 ;
 		.export __divu
 		.export __divdeu
+		.export __divdeu0d
 		.export __remu
 		.export __remdeu
+		.export __remdeu0d
 		.code
 
 __divu:
@@ -15,12 +17,17 @@ __divu:
 		ex	de,hl
 		ret
 
+__divdeu0d:
+		ld	d,0
 __divdeu:
 		call	__remdeu
 		ex	de,hl
 		ret
 
 
+__remdeu0d:
+		ld	d,0
+		jr	__remdeu
 __remu:
 		ex	de,hl
 		pop	hl

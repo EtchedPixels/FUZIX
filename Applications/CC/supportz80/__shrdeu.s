@@ -1,5 +1,7 @@
 		.export __shrdeu
 		.export __shrde
+		.export __shrdeu0d
+		.export __shrde0d
 		.export __shru
 		.code
 
@@ -9,12 +11,14 @@ __shru:
 		ex	(sp),hl		; return up stack, h is now the value to shift
 		jp	__shrdeu
 
+__shrde0d:
 __shrde:
 		ld	a,h
 		add	a,a
 		jr	c,__shrdeneg
 		; Positive right shift signed and unsigned are the same
 __shrdeu:
+__shrdeu0d:
 		ld	a,e
 		and	15
 		ret	z		; no work to do

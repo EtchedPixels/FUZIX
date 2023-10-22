@@ -18,4 +18,3 @@ __minusu:
 		sbb	d
 		mov	h,a
 		ret
-

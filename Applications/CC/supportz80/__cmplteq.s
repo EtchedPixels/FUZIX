@@ -2,6 +2,7 @@
 ;		True if HL <= DE
 ;
 		.export __cmplteq
+		.export __cmplteq0d
 		.export __cmplteqb
 
 		.code
@@ -11,7 +12,8 @@
 ;	The 8085 has K which might be worth using TODO
 __cmplteqb:
 		ld	h,0
-		ld	d,h
+__cmplteq0d:
+		ld	d,0
 __cmplteq:
 		ld	a,h
 		xor	d

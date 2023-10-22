@@ -3,6 +3,10 @@
 ;
 		.export __assignl
 		.export	__assign0l
+		.export	__assign0la
+		.export	__assign1l
+		.export __assignl0de
+
 		.code
 
 __assignl:
@@ -22,11 +26,16 @@ __assignl:
 		pop	hl		; saved low word
 		ret
 
-
+__assign1l:
+		ld	a,1
+		jr	__assign0la
 ; Assign 0L to lval in HL
 __assign0l:
 		xor	a
+__assign0la:
 		ld	(hl),a
+		ld	e,a
+		xor	a
 		inc	hl
 		ld	(hl),a
 		inc	hl
@@ -36,4 +45,19 @@ __assign0l:
 		ld	h,a
 		ld	l,a
 		ld	(__hireg),hl	; clear hireg
+		pop	af
+		ld	l,e
+		ld	h,0
+		ret
+
+__assignl0de:
+		xor	a
+		ld	(hl),e
+		inc	hl
+		ld	(hl),d
+		inc	hl
+		ld	(hl),a
+		inc	hl
+		ld	(hl),a
+		ex	de,hl		; return should be value
 		ret

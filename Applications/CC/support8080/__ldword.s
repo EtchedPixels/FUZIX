@@ -8,11 +8,11 @@
 
 __ldword:
 	pop	h		; Get byte following call
-	mov	e,m
+	mov	a,m
 	inx	h
-	mvi	d,0
 	push	h		; Return to byte after info byte
-	xchg			; HL is now the offset
+	mvi	h,0
+	mov	l,a		; HL is now the offset
 	dad	sp		; Add to SP
 	mov	a,m		; Load into HL
 	inx	h

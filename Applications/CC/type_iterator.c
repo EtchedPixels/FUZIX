@@ -11,7 +11,7 @@ unsigned is_modifier(void)
 	/* Track volatile hints */
 	if (token == T_VOLATILE)
 		voltrack++;
-	return (token == T_CONST || token == T_VOLATILE);
+	return (token == T_CONST || token == T_VOLATILE || token == T_RESTRICT);
 }
 
 unsigned is_type_word(void)
@@ -267,6 +267,7 @@ void type_parse_function(unsigned ptr)
 
 	mark_storage(&argsave, &locsave);
 	parse_function_arguments(tplt);
+	header(H_ARGFRAME, arg_size(), 0);
 	pop_storage(&argsave, &locsave);
 
 	idx = sym_find_idx(S_FUNCDEF, tplt, *tplt + 1);

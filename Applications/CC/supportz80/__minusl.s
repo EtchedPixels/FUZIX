@@ -6,7 +6,7 @@
 
 __minusl:
 		ex	de,hl	; low half of value into DE
-		ld	h,2
+		ld	hl,2
 		add	hl,sp	; pointer into stack
 
 		ld	a,(hl)

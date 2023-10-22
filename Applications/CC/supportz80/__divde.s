@@ -3,9 +3,14 @@
 ;
 		.export __div
 		.export __divde
+		.export __divde0d
 		.export __rem
 		.export __remde
+		.export __remde0d
 
+__divde0d:
+		ld	d,0
+		jr	__divde
 __div:
 		ex	de,hl
 		pop	hl
@@ -27,6 +32,9 @@ __divde:
 		pop	bc
 		ret
 
+__remde0d:
+		ld	d,0
+		jr	__remde
 __rem:
 		ex	de,hl
 		pop	hl

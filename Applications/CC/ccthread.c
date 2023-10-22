@@ -43,7 +43,7 @@
  *	Split I/D
  */
 
-#undef DEBUG
+#define DEBUG
 
 #include <stdio.h>
 #include <stdint.h>
@@ -60,17 +60,25 @@
 #define LIBPATH		"/opt/ccthread/lib/"
 #define INCPATH		"/opt/ccthread/include/"
 
-#define CMD_AS		BINPATH"asthread"
+#define BIN1802PATH	"/opt/as1802/bin/"
+#define CMD_AS1802	BIN1802PATH"as1802"
+#define CMD_LD1802	BIN1802PATH"ld1802"
+
 #define CMD_CC0		LIBPATH"cc0"
 #define CMD_CC1		LIBPATH"cc1.thread"
 #define CMD_CC2		LIBPATH"cc2.thread"
 #define CMD_COPT	LIBPATH"copt"
 #define CMD_CPP		LIBPATH"cpp"
-#define CMD_LD		BINPATH"ldthread"
 #define CRT0		LIBPATH"crt0.o"
 #define LIBC		LIBPATH"libc.a"
 #define LIBCPU		LIBPATH"libthread.a"
 #define COPTRULES	LIBPATH"rules.thread"
+
+static char *cputab[] = {
+	"1802",
+	NULL
+};
+
 
 struct obj {
 	struct obj *next;
@@ -104,7 +112,7 @@ char *target;
 int strip;
 int c_files;
 int standalone;
-char *cpu = "0";
+char *cpu = "1802";
 int mapfile;
 /* TODO: OS_FUZIX won't work until ld is taught about literal segments */
 #define OS_NONE		0
@@ -334,7 +342,8 @@ static void build_arglist(char *p)
 
 void convert_s_to_o(char *path)
 {
-	build_arglist(CMD_AS);
+	/* FIXME: to depend on cpu */
+	build_arglist(CMD_AS1802);
 	add_argument(path);
 	run_command();
 	pathmod(path, ".s", ".o", 5);
@@ -417,7 +426,8 @@ void preprocess_c(char *path)
 
 void link_phase(void)
 {
-	build_arglist(CMD_LD);
+	/* FIXME: to depend on target */
+	build_arglist(CMD_LD1802);
 	switch (targetos) {
 		case OS_FUZIX:
 			switch(fuzixsub) {
@@ -620,7 +630,12 @@ void uniopt(char *p)
 
 static unsigned valid_cpu(char *name)
 {
-	/* Eventually I guess we'll make this pick the assembler to use */
+	char **p = cputab;
+	while(*p) {
+		if (strcmp(name, *p) == 0)
+			return 1;
+		p++;
+	}
 	return 0;
 }
 
@@ -737,6 +752,9 @@ int main(int argc, char *argv[]) {
 			usage();
 		}
 	}
+
+	if (strcmp(cpu, "1802") == 0)
+		append_obj(&deflist, "__1802__", 0);
 
 	if (!standalone)
 		add_system_include(INCPATH);

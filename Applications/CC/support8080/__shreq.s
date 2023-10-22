@@ -12,14 +12,14 @@ __shreq:
 	xthl		; pointer into hl
 
 	mov	a,e	; save shift value
-	xchg
-	mov	e,m
+
+	mov	e,m	; Value into DE, pointer is HL
 	inx	h
 	mov	d,m
 
 	; No work to do
 	ani	15
-	rz
+	jz	nowork
 
 	push	b
 	mov	c,a
@@ -39,12 +39,16 @@ shuffle:
 	jnz	shuffle
 shdone:
 	pop	b
-	mov	m,d
+	mov	m,d	; Store result
 	dcx	h
 	mov	m,e
+nowork:			; Value into HL, and done
 	xchg
 	ret
 
+;
+;	Same work loop but for negative numbers
+;
 sh1:
 	stc
 	mov	a,d

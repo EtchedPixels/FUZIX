@@ -756,6 +756,10 @@ int main(int argc, char *argv[]) {
 			usage();
 		}
 	}
+	if (strcmp(cpu, "8080") == 0)
+		append_obj(&deflist, "__8080__", 0);
+	else
+		append_obj(&deflist, "__8085__", 0);
 
 	if (!standalone)
 		add_system_include(INCPATH);

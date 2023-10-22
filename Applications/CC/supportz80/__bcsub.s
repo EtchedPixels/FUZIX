@@ -7,5 +7,5 @@ __bcsub:	ld	a,c
 		ld	c,a
 		ld	a,b
 		sbc	a,h
-		ld	c,a
+		ld	b,a
 		ret

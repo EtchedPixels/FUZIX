@@ -12,19 +12,19 @@ __shrequ:
 	xthl		; pointer into hl
 
 	mov	a,e	; save shift value
-	xchg
+
 	mov	e,m
 	inx	h
-	mov	d,m
+	mov	d,m	; DE is value HL is ptr
 
 	; No work to do
 	ani	15
-	rz
+	jz	nowork
 
 	cpi	8
 	jc	nobyte
 
-	mov	e,d
+	mov	e,d	; Shift 8 bits in one go
 	mvi	d,0
 
 	sui	8
@@ -44,9 +44,11 @@ shuffle:
 	dcr	c
 	jnz	shuffle
 
-	mov	m,d
+	mov	m,d	; Store back into HL
 	dcx	h
 	mov	m,e
 
-	pop	b
+	pop	b	; Recover B
+nowork:
+	xchg		; Value is the return
 	ret

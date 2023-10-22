@@ -2,17 +2,17 @@
 ;		True if HL >= DE
 ;
 		.export __cmpgteq
+		.export __cmpgteq0d
 		.export __cmpgteqb
 
 		.code
 ;
 ;	The 8080 doesn't have signed comparisons directly
 ;
-;	The 8085 has K which might be worth using TODO
-;
 __cmpgteqb:
 		ld	h,0
-		ld	d,h
+__cmpgteq0d:
+		ld	d,0
 __cmpgteq:
 		ld	a,h
 		xor	d

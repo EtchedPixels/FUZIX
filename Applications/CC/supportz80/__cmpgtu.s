@@ -1,7 +1,10 @@
 		.export __cmpgtu
+		.export __cmpgtu0d
 		.code
 
 		; true if HL > DE
+__cmpgtu0d:
+		ld	d,0
 __cmpgtu:
 		or	a
 		sbc	hl,de

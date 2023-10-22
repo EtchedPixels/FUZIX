@@ -5,6 +5,10 @@
 
 ; Shift HL left by E
 
+__shl:
+		xchg
+		pop	h
+		xthl
 __shlde:
 	mov	a,e
 __shldec:

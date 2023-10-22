@@ -443,6 +443,8 @@ static const char *keytab[] = {
 	"switch",
 	"typedef",
 	"while",
+	/* Nonsense */
+	"restrict",
 	NULL
 };
 

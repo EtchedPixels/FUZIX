@@ -1,6 +1,7 @@
 ;
 ;		True if HL < DE
 ;
+		.export __cmplt0d
 		.export __cmplt
 		.export __cmpltb
 		.code
@@ -11,7 +12,8 @@
 ;
 __cmpltb:
 		ld	h,0
-		ld	d,h
+__cmplt0d:
+		ld	d,0
 __cmplt:
 		ld	a,h
 		xor	d

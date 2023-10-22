@@ -13,6 +13,7 @@ __ldwordw:
 	mov	d,m
 	inx	h
 	push	h
+	xchg
 	dad	sp
 	mov	a,m
 	inx	h

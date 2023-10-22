@@ -91,9 +91,9 @@ __muleql:
 	push	h
 	lxi	d,__tmp2	; copy lval into tmp2
 	call	__copy4
-	call	__domull	; result is now in hireg;tmp
+	call	__domull	; result is now in hireg;tmp3
 	pop	d
-	shld	__tmp
+	shld	__tmp	;	; result is now in hireg;tmp
 	lxi	h,__tmp
 	call	__copy4		; stick it back in the register
 	lhld	__tmp		; set up HL correctly for return

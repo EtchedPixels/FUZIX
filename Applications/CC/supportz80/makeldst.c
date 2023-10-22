@@ -30,6 +30,7 @@ static void makesb(const char *p, unsigned n)
     fprintf(f, "\tld hl,%d\n", n);
     fprintf(f, "\tadd hl,sp\n");
     fprintf(f, "\tld (hl),a\n");
+    fprintf(f, "\tld l,a\n");
     fprintf(f, "\tret\n");
     fclose(f);
 }

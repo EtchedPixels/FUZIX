@@ -24,7 +24,7 @@ unsigned opt;
 unsigned optsize;
 const char *codeseg = "code";
 
-static unsigned process_one_block(uint8_t *h);
+static unsigned process_one_block(uint8_t * h);
 
 static const char *argv0;
 
@@ -57,7 +57,7 @@ char *namestr(unsigned n)
 {
 	struct name *np = nhead;
 	struct name *prev = NULL;
-	while(np) {
+	while (np) {
 		if (np->id == n) {
 			if (prev) {
 				prev->next = np->next;
@@ -192,7 +192,7 @@ static struct node *rewrite_tree(struct node *n)
 		n->right = rewrite_tree(n->right);
 		f |= n->right->flags;
 	}
-	if (f & (SIDEEFFECT|IMPURE))
+	if (f & (SIDEEFFECT | IMPURE))
 		n->flags |= IMPURE;
 	depth--;
 	/* Convert LVAL flag into pointer type */
@@ -206,10 +206,34 @@ static struct node *rewrite_tree(struct node *n)
 	return gen_rewrite_node(n);
 }
 
+#ifdef DEBUG
+
+static void dump_tree(struct node *n, unsigned depth)
+{
+	unsigned i;
+	if (n == NULL)
+		return;
+	for (i = 0; i < depth; i++)
+		fputs("    ", stderr);
+	fprintf(stderr, "%x v%lx t%x f%x \n", n->op, n->value, n->type, n->flags);
+	dump_tree(n->left, depth + 1);
+	dump_tree(n->right, depth + 1);
+}
+#endif
+
 static unsigned process_expression(void)
 {
-	struct node *n = rewrite_tree(load_tree());
+	struct node *n = load_tree();
 	unsigned t;
+#ifdef DEBUG
+	fprintf(stderr, ":load:\n");
+	dump_tree(n, 0);
+#endif
+	n = rewrite_tree(n);
+#ifdef DEBUG
+	fprintf(stderr, ":rewritten:\n");
+	dump_tree(n, 0);
+#endif
 	gen_tree(n);
 	t = n->type;
 	free_tree(n);
@@ -226,7 +250,7 @@ static unsigned compile_expression(void)
 	do {
 		xread(0, h, 2);
 		t = process_one_block(h);
-	} while(h[1] != '^');
+	} while (h[1] != '^');
 	return t;
 }
 
@@ -237,6 +261,7 @@ static unsigned compile_expression(void)
 
 static unsigned func_ret;
 static unsigned frame_len;
+static unsigned argframe_len;
 static unsigned func_ret_used;
 unsigned func_flags;
 
@@ -249,7 +274,7 @@ static void process_literal(unsigned id)
 
 	/* A series of bytes terminated by a 0 marker. Internal
 	   zero is quoted, undo the quoting and turn it into data */
-	while(1) {
+	while (1) {
 		if (read(0, &c, 1) != 1)
 			error("unexpected EOF");
 		if (c == 0) {
@@ -286,12 +311,15 @@ static void process_header(void)
 	case H_FRAME:
 		frame_len = h.h_name;
 		func_flags = h.h_data;
-		gen_frame(h.h_name);
+		gen_frame(h.h_name, argframe_len);
+		break;
+	case H_ARGFRAME:
+		argframe_len = h.h_name;
 		break;
 	case H_FUNCTION | H_FOOTER:
 		if (func_ret_used)
 			gen_label("_r", h.h_name);
-		gen_epilogue(frame_len);
+		gen_epilogue(frame_len, argframe_len);
 		pop_area();
 		break;
 	case H_FOR:
@@ -333,18 +361,19 @@ static void process_header(void)
 		gen_label("_b", h.h_name);
 		break;
 	case H_DO:
-		gen_label("_c", h.h_name);
+		gen_label("_t", h.h_name);
 		break;
 	case H_DO | H_FOOTER:
-		gen_jump("_c", h.h_name);
+		gen_jump("_t", h.h_name);
 		gen_label("_b", h.h_name);
 		break;
 	case H_DOWHILE:
+		gen_label("_c", h.h_name);
 		if (h.h_data == -1) {
 			compile_expression();
-			gen_jtrue("_c", h.h_name);
+			gen_jtrue("_t", h.h_name);
 		} else if (h.h_data == 1)
-			gen_jump("_c", h.h_name);
+			gen_jump("_t", h.h_name);
 		/* For while(0) just drop out */
 		break;
 	case H_DOWHILE | H_FOOTER:
@@ -383,10 +412,11 @@ static void process_header(void)
 			gen_label("_e", h.h_name);
 		break;
 	case H_RETURN:
-		func_ret_used = 1;
+//              func_ret_used = 1;
 		break;
 	case H_RETURN | H_FOOTER:
-		gen_exit("_r", func_ret);
+		if (gen_exit("_r", func_ret) == 0)
+			func_ret_used = 1;
 		break;
 	case H_LABEL:
 		sprintf(tbuf, "_g%d", h.h_data);
@@ -443,7 +473,7 @@ static void process_header(void)
 			push_area(A_DATA);
 		process_literal(h.h_name);
 		break;
-	case H_STRING| H_FOOTER:
+	case H_STRING | H_FOOTER:
 		pop_area();
 		break;
 	default:
@@ -724,9 +754,8 @@ void make_node(struct node *n)
 		return;
 	case T_BOOL:
 		/* Check if we know it's already bool */
-		if (n->right && (n->right->flags & ISBOOL))
-			break;
-		helper(n, "bool");
+		if (!(n->right && (n->right->flags & ISBOOL)))
+			helper(n, "bool");
 		n->flags |= ISBOOL;
 		break;
 	case T_NAME:
@@ -746,6 +775,7 @@ void make_node(struct node *n)
 		exit(1);
 	}
 }
+
 /*
  *	Load the symbol table from the front end
  */
@@ -812,7 +842,7 @@ void codegen_lr(struct node *n)
 	unsigned o = branching_operator(n);
 
 	/* Don't generate any tree that has no side effects and no return */
-	if ((n->flags & (SIDEEFFECT|IMPURE|NORETURN)) == NORETURN)
+	if ((n->flags & (SIDEEFFECT | IMPURE | NORETURN)) == NORETURN)
 		return;
 
 	/* The case of NORETURN alone must be dealt with in the target code generators */
@@ -822,8 +852,8 @@ void codegen_lr(struct node *n)
 	if (o) {
 		unsigned lab = codegen_label++;
 		/*  foo ? a : b is a strange beast. At this point we have
-		    foo in the work register so need do nothing, and let the
-		    ? subtree resolve it */
+		   foo in the work register so need do nothing, and let the
+		   ? subtree resolve it */
 		if (o == 4) {
 			codegen_lr(n->left);
 			codegen_lr(n->right);

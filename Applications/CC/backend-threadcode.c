@@ -13,6 +13,9 @@
  */
 static unsigned frame_len;	/* Number of bytes of stack frame */
 static unsigned sp;		/* Stack pointer offset tracking */
+static unsigned frame_off;	/* Space between arg and local */
+static unsigned has_fp;		/* Uses a frame pointer ? */
+static unsigned big_endian;	/* Machine word endianness */
 
 #define T_NREF		(T_USER)		/* Load of C global/static */
 #define T_CALLNAME	(T_USER+1)		/* Function call by name */
@@ -122,7 +125,7 @@ void gen_segment(unsigned s)
 {
 	switch(s) {
 	case A_CODE:
-		printf("\t.text\n");
+		printf("\t%s\n", codeseg);
 		break;
 	case A_DATA:
 		printf("\t.data\n");
@@ -144,29 +147,35 @@ void gen_prologue(const char *name)
 }
 
 /* Generate the stack frame */
-void gen_frame(unsigned size)
+void gen_frame(unsigned size, unsigned aframe)
 {
-	frame_len = size;
+	frame_len = size + frame_off;
 	sp += size;
 	gen_helpcall(NULL);
-	printf("enter\n");
+	printf("fnenter\n");
 	gen_value(UINT, size);
 }
 
-void gen_epilogue(unsigned size)
+void gen_epilogue(unsigned size, unsigned argsize)
 {
 	if (sp != size) {
 		error("sp");
 	}
 	sp -= size;
 	gen_helpcall(NULL);
-	printf("exit\n");
-	gen_value(UINT, size);
+	printf("fnexit\n");
 }
 
 void gen_label(const char *tail, unsigned n)
 {
 	printf("L%d%s:\n", n, tail);
+}
+
+unsigned gen_exit(const char *tail, unsigned n)
+{
+	gen_helpcall(NULL);
+	printf("fnexit\n");
+	return 1;
 }
 
 void gen_jump(const char *tail, unsigned n)
@@ -269,9 +278,14 @@ void gen_value(unsigned type, unsigned long value)
 	case CLONG:
 	case ULONG:
 	case FLOAT:
-		/* We are little endian */
-		printf("\t.word %d\n", (unsigned) (value & 0xFFFF));
-		printf("\t.word %d\n", (unsigned) ((value >> 16) & 0xFFFF));
+		/* Word endianness of target */
+		if (big_endian) {
+			printf("\t.word %d\n", (unsigned) ((value >> 16) & 0xFFFF));
+			printf("\t.word %d\n", (unsigned) (value & 0xFFFF));
+		} else {
+			printf("\t.word %d\n", (unsigned) (value & 0xFFFF));
+			printf("\t.word %d\n", (unsigned) ((value >> 16) & 0xFFFF));
+		}
 		break;
 	default:
 		error("unsuported type");
@@ -280,6 +294,14 @@ void gen_value(unsigned type, unsigned long value)
 
 void gen_start(void)
 {
+	if (cpu == 1802) {
+		frame_off = 4;	/* Two words - old FP and old BPC */
+		has_fp = 1;	/* Offsets are FP relative */
+		big_endian = 0;	/* Little endian */
+	} else {
+		fprintf(stderr, "threadcode: unknown CPU\n");
+		exit(1);
+	}
 	printf("\t.code\n");
 }
 
@@ -429,12 +451,20 @@ unsigned gen_node(struct node *n)
 	case T_ARGUMENT:
 		/* Turn argument into local effectively */
 		helper(n, "loadl");
-		printf("\t.word %d\n", WORD(n->value + frame_len + sp));
+		if (!has_fp)
+			v += sp;
+		printf("\t.word %d\n", v + frame_len);
 		return 1;
 	case T_LOCAL:
 		/* Adjust offsets of convenience */
 		helper(n, "loadl");
-		printf("\t.word %d\n", WORD(n->value + sp));
+		if (!has_fp)
+			v += sp;
+		printf("\t.word %d\n", v);;
+		return 1;
+	case T_FUNCCALL:
+		/* Can't use helper() directly as type is return type */
+		printf("\t.word __callfunc\n");
 		return 1;
 	}
 	return 0;

@@ -11,6 +11,7 @@ __ldwordw:
 		ld	d,(hl)
 		inc	hl
 		push	hl
+		ex	de,hl
 		add	hl,sp
 		ld	a,(hl)
 		inc	hl

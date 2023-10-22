@@ -2,8 +2,11 @@
 ;		(HL) &= DE
 ;
 		.export __xoreqde
+		.export __xoreqde0d
 		.code
 
+__xoreqde0d:
+		ld	d,0
 __xoreqde:
 		ld	a,(hl)
 		xor	e

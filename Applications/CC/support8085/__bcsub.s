@@ -7,5 +7,5 @@ __bcsub:	mov	a,c
 		mov	c,a
 		mov	a,b
 		sbb	h
-		mov	c,a
+		mov	b,a
 		ret

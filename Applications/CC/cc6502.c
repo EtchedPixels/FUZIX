@@ -1,7 +1,4 @@
 /*
- *	TODO: figure out how to split this so we have one front end and a linked
- *	file per target.
- *
  *	It's easiest to think of what cc does as a sequence of four
  *	conversions. Each conversion produces the inputs to the next step
  *	and the number of types is reduced. If the step is the final
@@ -59,27 +56,27 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 
-#define BINPATH		"/opt/ccz80/bin/"
-#define LIBPATH		"/opt/ccz80/lib/"
-#define INCPATH		"/opt/ccz80/include/"
+#define BINPATH		"/opt/cc6502/bin/"
+#define LIBPATH		"/opt/cc6502/lib/"
+#define INCPATH		"/opt/cc6502/include/"
 
-#define CMD_AS		BINPATH"asz80"
+#define CMD_AS		BINPATH"as6502"
 #define CMD_CC0		LIBPATH"cc0"
-#define CMD_CC1		LIBPATH"cc1.z80"
-#define CMD_CC2		LIBPATH"cc2.z80"
+#define CMD_CC1		LIBPATH"cc1.6502"
+#define CMD_CC2		LIBPATH"cc2.6502"
 #define CMD_COPT	LIBPATH"copt"
 #define CMD_CPP		LIBPATH"cpp"
-#define CMD_LD		BINPATH"ldz80"
+#define CMD_LD		BINPATH"ld6502"
 #define CRT0		LIBPATH"crt0.o"
 #define LIBC		LIBPATH"libc.a"
-#define LIBCPU_Z80	LIBPATH"libz80.a"
-#define LIBCPU_Z180	LIBPATH"libz180.a"
-#define COPTRULES_Z80	LIBPATH"rules.z80"
-#define COPTRULES_Z180	LIBPATH"rules.z180"
+#define LIBCPU_6502	LIBPATH"lib6502.a"
+#define LIBCPU_65C02	LIBPATH"lib65c02.a"
+#define COPTRULES_6502	LIBPATH"rules.6502"
+#define COPTRULES_65C02	LIBPATH"rules.65c02"
 
 static char *cputab[] = {
-	"z80",
-	"z180",
+	"6502",
+	"65C02",
 	NULL
 };
 
@@ -115,7 +112,8 @@ char *target;
 int strip;
 int c_files;
 int standalone;
-char *cpu = "z80";
+char *cpu = "6502";
+char cpucode[2] = "0";
 int mapfile;
 /* TODO: OS_FUZIX won't work until ld is taught about literal segments */
 #define OS_NONE		0
@@ -374,7 +372,7 @@ void convert_c_to_s(char *path)
 	build_arglist(CMD_CC2);
 	/* The sym stuff is a bit hackish right now */
 	add_argument(".symtmp");
-	add_argument(cpu + 1);
+	add_argument(cpucode);
 	optstr[0] = optimize;
 	optstr[1] = '\0';
 	add_argument(optstr);
@@ -391,10 +389,10 @@ void convert_c_to_s(char *path)
 	redirect_out(tmp);
 	run_command();
 	build_arglist(CMD_COPT);
-	if (strcmp(cpu, "z180") == 0)
-		add_argument(COPTRULES_Z180);
+	if (strcmp(cpu, "65C02") == 0)
+		add_argument(COPTRULES_65C02);
 	else
-		add_argument(COPTRULES_Z80);
+		add_argument(COPTRULES_6502);
 	redirect_in(tmp);
 	redirect_out(pathmod(path, ".#", ".s", 2));
 	run_command();
@@ -474,10 +472,10 @@ void link_phase(void)
 		append_obj(&libpathlist, LIBPATH, 0);
 		append_obj(&liblist, LIBC, TYPE_A);
 	}
-	if (strcmp(cpu, "z180") == 0)
-		append_obj(&liblist, LIBCPU_Z180, TYPE_A);
+	if (strcmp(cpu, "65C02") == 0)
+		append_obj(&liblist, LIBCPU_65C02, TYPE_A);
 	else
-		append_obj(&liblist, LIBCPU_Z80, TYPE_A);
+		append_obj(&liblist, LIBCPU_6502, TYPE_A);
 	add_argument_list(NULL, &objlist);
 	resolve_libraries();
 	run_command();
@@ -638,10 +636,14 @@ void uniopt(char *p)
 static unsigned valid_cpu(char *name)
 {
 	char **p = cputab;
+	unsigned n = '0';
 	while(*p) {
-		if (strcmp(name, *p) == 0)
+		if (strcmp(name, *p) == 0) {
+			cpucode[0] = n;
 			return 1;
+		}
 		p++;
+		n++;
 	}
 	return 0;
 }
@@ -759,11 +761,9 @@ int main(int argc, char *argv[]) {
 			usage();
 		}
 	}
-
-	if (strcmp(cpu, "z80") == 0)
-		append_obj(&deflist, "__z80__", 0);
-	else
-		append_obj(&deflist, "__z180__", 0);
+	if (strcmp(cpu, "65C02") == 0)
+		append_obj(&deflist, "__65C02__", 0);
+	append_obj(&deflist, "__6502__", 0);
 
 	if (!standalone)
 		add_system_include(INCPATH);

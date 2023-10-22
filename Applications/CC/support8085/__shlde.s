@@ -1,3 +1,4 @@
+			.export __shl
 			.export __shlde
 			.export __shldec
 			.setcpu 8080
@@ -5,6 +6,10 @@
 
 ; Shift HL left by E
 
+__shl:
+	xchg
+	pop	h
+	xthl
 __shlde:
 	mov	a,e
 __shldec:

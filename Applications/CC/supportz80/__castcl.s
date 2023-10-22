@@ -16,6 +16,6 @@ __castc_ul:
 positive:
 		ld	a,h
 		ld	(__hireg),a
-		ld	(_hireg+1),a
+		ld	(__hireg+1),a
 		ret
 

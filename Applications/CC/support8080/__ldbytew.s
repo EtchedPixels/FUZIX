@@ -13,6 +13,7 @@ __ldbytew:
 	mov	d,m
 	inx	h
 	push	h
+	xchg
 	dad	sp
 	mov	l,m
 	ret
