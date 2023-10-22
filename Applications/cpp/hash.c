@@ -33,8 +33,8 @@ static int hashvalue(char *word);
 
 void *read_entry(char *word)
 {
-	int hash_val;
-	struct hashentry *hashline;
+	unsigned hash_val;
+	register struct hashentry *hashline;
 	if (hashtable == 0)
 		return 0;
 	hash_val = hashvalue(word);
@@ -53,8 +53,8 @@ void *read_entry(char *word)
 
 char *set_entry(char *word, void *value)
 {
-	int hash_val, i;
-	struct hashentry *hashline, *prev;
+	unsigned hash_val, i;
+	register struct hashentry *hashline, *prev;
 	hash_val = hashvalue(word);
 
 	hashline = hashtable[hash_val];
@@ -90,8 +90,8 @@ char *set_entry(char *word, void *value)
 
 static int hashvalue(char *word)
 {
-	unsigned val = 0;
-	char *p = word;
+	register unsigned val = 0;
+	register char *p = word;
 
 	while (*p) {
 		val = ((val << 4) ^ ((val >> 12) & 0xF) ^ ((*p++) & 0xFF));

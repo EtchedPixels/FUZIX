@@ -16,21 +16,21 @@ extern const char *_ltoa(long l);
 
 #define MAXINCPATH	5
 
-int main P((int argc, char *argv[]));
-void undefine_macro P((char *name));
-void define_macro P((char *name));
-void print_toks_cpp P((void));
-void print_toks_raw P((void));
-void define_macro P((char *));
-void undefine_macro P((char *));
-void cmsg P((char *mtype, char *str));
-char *token_txn P((int));
-void pr_indent P((int));
-void hash_line P((void));
+int main(int argc, char *argv[]);
+void undefine_macro(char *name);
+void define_macro(char *name);
+void print_toks_cpp(void);
+void print_toks_raw(void);
+void define_macro(char *);
+void undefine_macro(char *);
+void cmsg(char *mtype, char *str);
+char *token_txn(int);
+void pr_indent(int);
+void hash_line(void);
 
 char *include_paths[MAXINCPATH];
 
-char last_name[512] = "";
+char last_name[256] = "";
 int last_line = -1;
 int debug_mode = 0;
 int p_flag = 0;
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 	if (dialect != DI_KNR) {
 		time_t now;
 		char *timep;
-		char buf[128];
+		char buf[32];
 		time(&now);
 		timep = ctime(&now);
 
@@ -190,7 +190,7 @@ void undefine_macro(char *name)
 
 	ptr = read_entry(name);
 	if (ptr) {
-		set_entry(name, (void *) 0);
+		set_entry(name, NULL);
 		if (!ptr->in_use)
 			free(ptr);
 	}
@@ -228,13 +228,13 @@ FILE *open_include(char *fname, char *mode, int checkrel)
 	char buf[256], *p;
 
 	if (checkrel) {
-		strcpy(buf, c_fname);
+		strlcpy(buf, c_fname, 256);
 		p = strrchr(buf, '/');
 		if (p)
 			*++p = 0;
 		else
 			*(p = buf) = 0;
-		strcpy(p, fname);
+		strlcpy(p, fname, p - buf);
 
 		fd = fopen(buf, mode);
 	}

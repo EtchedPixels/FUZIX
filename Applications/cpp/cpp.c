@@ -84,26 +84,26 @@ struct arg_store {
 	int in_define;
 };
 
-static int chget P((void));
-static int chget_raw P((void));
-static void unchget P((int));
-static int gettok_nosub P((void));
-static int get_onetok P((int));
-static int pgetc P((void));
-static int do_preproc P((void));
-static int do_proc_copy_hashline P((void));
-static int do_proc_if P((int));
-static void do_proc_include P((void));
-static void do_proc_define P((void));
-static void do_proc_undef P((void));
-static void do_proc_else P((void));
-static void do_proc_endif P((void));
-static void do_proc_tail P((void));
-static int get_if_expression P((void));
-static int_type get_expression P((int));
-static int_type get_exp_value P((void));
-static void gen_substrings P((char *, char *, int, int));
-static char *insert_substrings P((char *, struct arg_store *, int));
+static int chget(void);
+static int chget_raw(void);
+static void unchget(int);
+static int gettok_nosub(void);
+static int get_onetok(int);
+static int pgetc(void);
+static int do_preproc(void);
+static int do_proc_copy_hashline(void);
+static int do_proc_if(int);
+static void do_proc_include(void);
+static void do_proc_define(void);
+static void do_proc_undef(void);
+static void do_proc_else(void);
+static void do_proc_endif(void);
+static void do_proc_tail(void);
+static int get_if_expression(void);
+static int_type get_expression(int);
+static int_type get_exp_value(void);
+static void gen_substrings(char *, char *, int, int);
+static char *insert_substrings(char *, struct arg_store *, int);
 
 int gettok(void)
 {
@@ -452,7 +452,7 @@ static int get_onetok(int keep)
 
 static int pgetc(void)
 {
-	int ch, ch1;
+	register int ch, ch1;
 
 	for (;;) {
 		if ((ch = chget()) == EOF)
@@ -514,7 +514,9 @@ static int pgetc(void)
 /* This function handles the first and second translation phases of Ansi-C */
 static int chget(void)
 {
-	int ch, ch1;
+	register int ch1;
+	int ch;
+
 	for (;;) {
 		ch = chget_raw();
 		if (ch == '\\') {

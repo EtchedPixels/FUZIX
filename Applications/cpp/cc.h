@@ -1,9 +1,7 @@
-#define P(x) x
-
-extern void cfatal P((char*));
-extern void cerror P((char*));
-extern void cwarn P((char*));
-extern FILE * open_include P((char*, char*, int));
+extern void cfatal(char*);
+extern void cerror(char*);
+extern void cwarn(char*);
+extern FILE * open_include(char*, char*, int);
 
 extern FILE * curfile;
 extern char   curword[];
@@ -15,11 +13,11 @@ extern int    dialect;
 #define DI_KNR	1
 #define DI_ANSI	2
 
-extern int gettok P((void));
+extern int gettok(void);
 
 struct token_trans { char * name; int token; };
-struct token_trans * is_ctok P((const char *str, unsigned int len));
-struct token_trans * is_ckey P((const char *str, unsigned int len));
+struct token_trans *is_cto(const char *str, unsigned int len);
+struct token_trans *is_ckey(const char *str, unsigned int len);
 
 #define WORDSIZE	128
 #define TK_WSPACE	256
@@ -91,16 +89,16 @@ struct token_trans * is_ckey P((const char *str, unsigned int len));
 #define TK_VOLATILE	(TKS_CKEY+30)
 #define TK_WHILE	(TKS_CKEY+31)
 
-#define MAX_INCLUDE 64	/* Nested includes */
-#define MAX_DEFINE  64	/* Nested defines */
+#define MAX_INCLUDE 16	/* Nested includes */
+#define MAX_DEFINE  8	/* Nested defines */
 
-extern char * set_entry(char *,void *);
-extern void * read_entry(char*);
+extern char *set_entry(char *,void *);
+extern void *read_entry(char*);
 
 struct define_item
 {
-   struct define_arg * next;
-   char * name;
+   struct define_arg *next;
+   char *name;
    int arg_count;	/* -1 = none; >=0 = brackets with N args */
    int in_use;		/* Skip this one for looking up #defines */
    int varargs;		/* No warning if unexpected arguments. */
