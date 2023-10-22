@@ -5,7 +5,7 @@
 __text:
 		.word 0x80A8	; Fuzix executable
 		.byte 1			; 8080 series
-		.byte 0			; 8080 feature set
+		.byte 1			; Z80 feature set
 		.byte 1			; Base 0x100
 		.byte 0			; No hints
 

@@ -109,3 +109,30 @@ void *malloc(size_t size)
 		}
 	}
 }
+
+void free(void *ptr)
+{
+	struct memh *mh = MH(ptr), *p;
+
+	if (ptr == NULL)
+		return;
+
+	/* Find the free list block that is just before us */
+	for (p = __mfreeptr; !(p < mh && mh < p->next); p = p->next)
+		if (p >= p->next && (p < mh || mh < p->next))
+			break;
+	/* Fix up and if we can merge forward */
+	if (mh + mh->size == p->next) {
+		mh->size += p->next->size;
+		mh->next = p->next->next;
+	} else
+		mh->next = p->next;
+	/* Ditto backwards */
+	if (p + p->size == mh) {
+		p->size += mh->size;
+		p->next = mh->next;
+	} else {
+		p->next = mh;
+	}
+	__mfreeptr = p;
+}
