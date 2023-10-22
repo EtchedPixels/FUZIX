@@ -10,101 +10,92 @@
 
 /*
  * Two functions:
- * char * set_entry(int namespace, char * name, void * value);
+ * char * set_entry(char * name, void * value);
  *        returns a pointer to the copy of the name;
  *
- * void * read_entry(int namespace, char * name);
+ * void * read_entry(char * name);
  *        returns the value;
  */
 
-struct hashentry
-{
-   struct hashentry * next;
-   void * value;
-   int    namespace;
-   char	  word[1];
+struct hashentry {
+	struct hashentry *next;
+	void *value;
+	char word[1];
 };
 
-struct hashentry ** hashtable;
-int  hashsize  = 0xFF;	/* 2^X -1 */
-int  hashcount = 0;
-static int hashvalue P((int namespace, char * word));
+#define HASHSIZE	256
 
-void *read_entry(int namespace, char *word)
+static struct hashentry *hashtable[HASHSIZE];
+int hashsize = 0xFF;		/* 2^X -1 */
+int hashcount = 0;
+
+static int hashvalue(char *word);
+
+void *read_entry(char *word)
 {
-   int hash_val;
-   struct hashentry * hashline;
-   if( hashtable == 0 ) return 0;
-   hash_val = hashvalue(namespace, word);
+	int hash_val;
+	struct hashentry *hashline;
+	if (hashtable == 0)
+		return 0;
+	hash_val = hashvalue(word);
 
-   hashline = hashtable[hash_val];
+	hashline = hashtable[hash_val];
 
-   for(; hashline; hashline = hashline->next)
-   {
-      if(namespace != hashline->namespace) continue;
-      if(word[0] != hashline->word[0])     continue;
-      if(strcmp(word, hashline->word) )    continue;
-      return hashline->value;
-   }
-   return 0;
+	for (; hashline; hashline = hashline->next) {
+		if (word[0] != hashline->word[0])
+			continue;
+		if (strcmp(word, hashline->word))
+			continue;
+		return hashline->value;
+	}
+	return 0;
 }
 
-char *set_entry(int namespace, char *word, void *value)
+char *set_entry(char *word, void *value)
 {
-   int hash_val, i;
-   struct hashentry * hashline, *prev;
-   hash_val = hashvalue(namespace, word);
+	int hash_val, i;
+	struct hashentry *hashline, *prev;
+	hash_val = hashvalue(word);
 
-   if( hashtable )
-   {
-      hashline = hashtable[hash_val];
+	hashline = hashtable[hash_val];
 
-      for(prev=0; hashline; prev=hashline, hashline = hashline->next)
-      {
-         if(namespace != hashline->namespace) continue;
-         if(word[0] != hashline->word[0])     continue;
-         if(strcmp(word, hashline->word) )    continue;
-         if( value ) hashline->value = value;
-         else
-         {
-            if( prev == 0 ) hashtable[hash_val] = hashline->next;
-            else            prev->next = hashline->next;
-            free(hashline);
-            return 0;
-         }
-         return hashline->word;
-      }
-   }
-   if( value == 0 ) return 0;
-   if( hashtable == 0 )
-   {
-      hashtable = malloc((hashsize+1)*sizeof(char*));
-      if( hashtable == 0 ) cfatal("Out of memory");
-      for(i=0; i<=hashsize; i++) hashtable[i] = 0;
-   }
-   /* Add record */
-   hashline = malloc(sizeof(struct hashentry)+strlen(word));
-   if( hashline == 0 ) cfatal("Out of memory");
-   else
-   {
-      hashline->next  = hashtable[hash_val];
-      hashline->namespace = namespace;
-      hashline->value = value;
-      strcpy(hashline->word, word);
-      hashtable[hash_val] = hashline;
-   }
-   return hashline->word;
+	for (prev = 0; hashline; prev = hashline, hashline = hashline->next) {
+		if (word[0] != hashline->word[0])
+			continue;
+		if (strcmp(word, hashline->word))
+			continue;
+		if (value)
+			hashline->value = value;
+		else {
+			if (prev == 0)
+				hashtable[hash_val] = hashline->next;
+			else
+				prev->next = hashline->next;
+			free(hashline);
+			return 0;
+		}
+		return hashline->word;
+	}
+	if (value == 0)
+		return 0;
+
+	/* Add record */
+	hashline = xmalloc(sizeof(struct hashentry) + strlen(word));
+	hashline->next = hashtable[hash_val];
+	hashline->value = value;
+	strcpy(hashline->word, word);
+	hashtable[hash_val] = hashline;
+	return hashline->word;
 }
 
-static int hashvalue(int namespace, char *word)
+static int hashvalue(char *word)
 {
-   int val = namespace;
-   char *p = word;
+	unsigned val = 0;
+	char *p = word;
 
-   while(*p)
-   {
-      val = ((val<<4)^((val>>12)&0xF)^((*p++)&0xFF));
-   }
-   val &= hashsize;
-   return val;
+	while (*p) {
+		val = ((val << 4) ^ ((val >> 12) & 0xF) ^ ((*p++) & 0xFF));
+	}
+	val &= HASHSIZE - 1;
+	return val;
 }

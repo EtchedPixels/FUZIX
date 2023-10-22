@@ -94,8 +94,8 @@ struct token_trans * is_ckey P((const char *str, unsigned int len));
 #define MAX_INCLUDE 64	/* Nested includes */
 #define MAX_DEFINE  64	/* Nested defines */
 
-extern char * set_entry P((int,char*,void*));
-extern void * read_entry P((int,char*));
+extern char * set_entry(char *,void *);
+extern void * read_entry(char*);
 
 struct define_item
 {
@@ -106,3 +106,6 @@ struct define_item
    int varargs;		/* No warning if unexpected arguments. */
    char value[1];	/* [arg,]*value */
 };
+
+void *xmalloc(size_t size);
+void *xrealloc(void *ptr, size_t size);
