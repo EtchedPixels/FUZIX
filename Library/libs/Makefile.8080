@@ -113,7 +113,7 @@ syscall.l: fuzix$(PLATFORM)/syslib.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
-	$(AR) r syslib$(PLATFORM).lib $$(cat syslib.l)
+	$(AR) r syslib$(PLATFORM).lib `lorder85 $$(cat syslib.l) | tsort`
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 	cp libc$(PLATFORM).a libc.a
 
@@ -134,26 +134,22 @@ liberror.txt: ../tools/liberror
 	make -C .. tools/liberror
 
 curses$(PLATFORM).lib: $(OBJ_CURS)
-	$(AR) rc curses$(PLATFORM).lib $(OBJ_CURS)
+	$(AR) rc curses$(PLATFORM).lib `lorder85 $(OBJ_CURS) | tsort`
 	ln -sf curses$(PLATFORM).lib libcurses$(PLATFORM).a
 	cp libcurses$(PLATFORM).a libcurses.a
 
 termcap$(PLATFORM).lib: $(OBJ_CT)
-	$(AR) rc termcap$(PLATFORM).lib $(OBJ_CT)
+	$(AR) rc termcap$(PLATFORM).lib `lorder85 $(OBJ_CT) | tsort`
 	ln -sf termcap$(PLATFORM).lib libtermcap$(PLATFORM).a
 	cp libtermcap$(PLATFORM).a libtermcap.a
 
 m$(PLATFORM).lib: $(OBJ_LM)
-	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
+	$(AR) rc m$(PLATFORM).lib `lorder85 $(OBJ_LM) | tsort`
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
 	cp libm$(PLATFORM).a libm.a
 
-c$(PLATFORM).lib: $(OBJ_LM)
-	$(AR) rc m$(PLATFORM).lib $(OBJ_LM)
-	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
-
 readline$(PLATFORM).lib: $(OBJ_RL)
-	$(AR) rc readline$(PLATFORM).lib $(OBJ_RL)
+	$(AR) rc readline$(PLATFORM).lib `lorder85 $(OBJ_RL) | tsort`
 	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
 	cp libreadline$(PLATFORM).a libreadline.a
 
