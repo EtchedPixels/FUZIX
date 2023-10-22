@@ -31,6 +31,11 @@ SYM	sym[] = {
 	{	0,	"data",		TSEGMENT,	DATA	},
 	{	0,	"bss",		TSEGMENT,	BSS	},
 	{	0,	"zp",		TSEGMENT,	ZP	},
+	{	0,	"discard",	TSEGMENT,	DISCARD	},
+	{	0,	"common",	TSEGMENT,	COMMON	},
+	{	0,	"literal",	TSEGMENT,	LITERAL	},
+	{	0,	"commondata",	TSEGMENT,	COMMONDATA },
+	{	0,	"buffers",	TSEGMENT,	BUFFERS	},
 	{	0,	".code",	TSEGMENT,	CODE	},
 	{	0,	".data",	TSEGMENT,	DATA	},
 	{	0,	".bss",		TSEGMENT,	BSS	},
@@ -38,6 +43,8 @@ SYM	sym[] = {
 	{	0,	".discard",	TSEGMENT,	DISCARD	},
 	{	0,	".common",	TSEGMENT,	COMMON	},
 	{	0,	".literal",	TSEGMENT,	LITERAL	},
+	{	0,	".commondata",	TSEGMENT,	COMMONDATA },
+	{	0,	".buffers",	TSEGMENT,	BUFFERS	},
 	
 	{	0,	"jmp",		TMEMORY,	0x0000  },
 	{	0,	"jsr",		TMEMORY,	0x0800  },
@@ -61,7 +68,7 @@ SYM	sym[] = {
 	{	0,	"dob",		TIO,		0x6400	},
 	{	0,	"dic",		TIO,		0x6500	},
 	{	0,	"doc",		TIO,		0x6600	},
-	{	0,	"skip",		TDEV,		0x6700	},
+	{	0,	"skp",		TDEV,		0x6700	},
 	
 	
 	/* Then the post NOVA 1 operations that are less elegant being

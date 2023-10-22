@@ -47,7 +47,7 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 {
 	uint16_t m = (left->a_type & TMMODE);
 	if (m == TBR || m == TWR) {
-		if (op != '+')
+		if (op != '+' && op != '-')
 			aerr(MUST_BE_ABSOLUTE);
 		if ((right->a_type & TMMODE) == TUSER) {
 			left->a_segment = right->a_segment;
@@ -101,8 +101,10 @@ static void chksegment(ADDR *left, ADDR *right, int op)
 			return;
 		}
 		/* - constant we can do. The left segment remains unchanged */
-		/* Disable this until we have a negative tag for the linker
-		   to do overflow processing correctly */
+		/* How useful it is depends on the target having REL_OVERFLOW
+		   enabled. We need a sane way to set this for a reloc
+		   if we hit this path - ie set it in the resulting addr
+		   somewhere TODO */
 		if (right->a_segment == ABSOLUTE)
 			return;
 	}

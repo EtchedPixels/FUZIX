@@ -41,13 +41,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <ctype.h>
 #include <sys/stat.h>
-#include <ar.h>
 
 #include "obj.h"
 #include "ld.h"
+#include "ar.h"				/* Pick up our ar.h just in case the
+					   compiling OS has a weird ar.h */
 
 static char *arg0;			/* Command name */
 static struct object *processing;	/* Object being processed */
@@ -77,8 +79,9 @@ static const char *mapname;		/* Name of map file to write */
 static const char *outname;		/* Name of output file */
 static uint16_t dot;			/* Working address as we link */
 
-static uint8_t progress;		/* Did we make forward progress ?
+static unsigned progress;		/* Did we make forward progress ?
 					   Used while library linking */
+static const char *segmentorder = "CLDBX";	/* Segment default order */
 
 /*
  *	Report an error, and if possible give the object or library that
@@ -111,6 +114,129 @@ static void *xmalloc(size_t s)
 	if (p == NULL)
 		error("out of memory");
 	return p;
+}
+
+/*
+ *	Optimized disk I/O for library scanning
+ */
+
+static uint8_t iobuf[512];
+static uint8_t *ioptr;
+static unsigned ioblock;
+static unsigned iopos;
+static unsigned iolen;
+static int iofd;
+
+static void io_close(void)
+{
+	close(iofd);
+	iofd = -1;
+}
+
+static unsigned io_get(unsigned block)
+{
+	if (block != ioblock + 1 && lseek(iofd, ((off_t)block) << 9, 0L) < 0) {
+		perror("lseek");
+		exit(err | 1);
+	}
+//	printf("io_get: seek to %lx\n", (off_t)(block << 9));
+	ioblock = block;
+	iolen = read(iofd, iobuf, 512);
+	if (iolen == -1) {
+		perror("read");
+		exit(err | 1);
+	}
+	iopos = 0;
+	ioptr = iobuf;
+/* 	printf("io_get read block %d iolen now %d\n", block, iolen); */
+	return iolen;
+}
+
+static int io_lseek(off_t pos)
+{
+	unsigned block = pos >> 9;
+	if (block != ioblock)
+		io_get(block);
+	iopos = pos & 511;
+	ioptr = iobuf + iopos;
+	if (iopos > iolen)
+		return -1;
+/*	printf("io_lseek %lx, block %d pos %d len %d\n",
+		pos, ioblock, iopos, iolen); */
+	return 0;
+}
+
+static off_t io_getpos(void)
+{
+	return (((off_t)ioblock) << 9) | iopos;
+}
+
+static int io_read(void *bufp, unsigned len)
+{
+	unsigned left = iolen - iopos;
+	uint8_t *buf = bufp;
+	unsigned n;
+	unsigned bytes = 0;
+
+	while(len) {
+/*		printf("len %d, left %d, ptr %p, iopos %d iolen %d\n",
+			len, left, ioptr, iopos, iolen); 
+		if (ioptr != iobuf + iopos) {
+			fprintf(stderr, "Botch %p %p\n",
+				ioptr, iobuf + iopos);
+			exit(1);
+		} */
+		n = len;
+		if (n > left)
+			n = left;
+		if (n) {
+			memcpy(buf, ioptr, n);
+			ioptr += n;
+			iopos += len;
+			len -= n;
+			bytes += n;
+			buf += n;
+		}
+		if (len) {
+			if (io_get(ioblock + 1) == 0)
+				break;
+			left = iolen;
+		}
+	}
+/*	printf("io_read %d\n", bytes); */
+	return bytes;
+}
+
+static unsigned io_read16(void)
+{
+	uint8_t p[2];
+	io_read(p, 2);
+	return (p[1] << 8) | p[0];
+}
+
+/* Our embedded relocs make this a hot path so optimize it. We may
+   want a helper that hands back blocks until the reloc marker ? */
+
+static unsigned io_readb(uint8_t *ch)
+{
+	if (iopos < iolen) {
+		iopos++;
+		*ch = *ioptr++;
+		return 1;
+	} else
+		return io_read(ch, 1);
+}
+
+static int io_open(const char *path)
+{
+	iofd = open(path, O_RDONLY);
+	ioblock = 0xFFFF;	/* Force a re-read */
+	if (iofd == -1 || io_lseek(0)) {
+		perror(path);
+		exit(err | 1);
+	}
+/*	printf("opened %s\n", path); */
+	return iofd;
 }
 
 static FILE *xfopen(const char *path, const char *mode)
@@ -236,7 +362,7 @@ static int is_undefined(const char *name)
 	if (s == NULL || !(s->type & S_UNKNOWN))
 		return 0;
 	/* This is a symbol we need */
-	progress = 1;
+	progress++;
 	return 1;
 }
 
@@ -370,7 +496,7 @@ static void print_symbol(struct symbol *s, FILE *fp)
 	if (s->type & S_UNKNOWN)
 		c = 'U';
 	else {
-		c = "acdbzxs7"[s->type & S_SEGMENT];
+		c = "ACDBZXSLsb"[s->type & S_SEGMENT];
 		if (s->type & S_PUBLIC)
 			c = toupper(c);
 	}
@@ -429,7 +555,7 @@ static int have_object(off_t pos, const char *name)
  *	Do all the error reporting and processing needed to incorporate
  *	the module, and load and add all the symbols.
  */
-static struct object *load_object(FILE * fp, off_t off, int lib, const char *path)
+static struct object *load_object(off_t off, int lib, const char *path)
 {
 	int i;
 	uint8_t type;
@@ -443,8 +569,8 @@ static struct object *load_object(FILE * fp, off_t off, int lib, const char *pat
 	o->off = off;
 	processing = o;	/* For error reporting */
 
-	xfseek(fp, off);
-	if (fread(&o->oh, sizeof(o->oh), 1, fp) != 1 || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0) {
+	io_lseek(off);
+	if (io_read(&o->oh, sizeof(o->oh)) != sizeof(o->oh) || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0) {
 		/* A library may contain other things, just ignore them */
 		if (lib) {
 			free_object(o);
@@ -463,13 +589,13 @@ static struct object *load_object(FILE * fp, off_t off, int lib, const char *pat
 	o->syment = (struct symbol **) xmalloc(sizeof(struct symbol *) * nsym);
 	o->nsym = nsym;
 restart:
-	xfseek(fp, off + o->oh.o_symbase);
+	io_lseek(off + o->oh.o_symbase);
 	sp = o->syment;
 	for (i = 0; i < nsym; i++) {
-		type = fgetc(fp);
-		fread(name, NAMELEN, 1, fp);
+		io_readb(&type);
+		io_read(name, NAMELEN);
 		name[NAMELEN] = 0;
-		value = fgetc(fp) + (fgetc(fp) << 8);
+		value = io_read16();	/* Little endian */
 		if (!(type & S_UNKNOWN) && (type & S_SEGMENT) >= OSEG) {
 			fprintf(stderr, "Symbol %s\n", name);
 			if ((type & S_SEGMENT) == UNKNOWN)
@@ -523,6 +649,30 @@ static void append_segment(int a, int b)
 		error("image too large");
 }
 
+static char segnames[] = "CDBZXSLsb";
+
+static void order_segments(void)
+{
+	const char *s = segmentorder;
+	unsigned last = 0xFF;
+	unsigned n;
+
+	while(*s) {
+		char *p = strchr(segnames, *s);
+		if (p == NULL) {
+			fprintf(stderr, "Unknown segment '%c'.\n", *s);
+			error("invalid segment order");
+		}
+		n = p - segnames + 1;
+		if (!baseset[n]) {
+			if (last != 0xFF)
+				append_segment(n, last);
+		}
+		last = n;
+		s++;
+	}
+}
+
 /*
  *	Once all the objects are loaded this function walks the list and
  *	assigns each object file a base address for each segment. We do
@@ -545,7 +695,7 @@ static void set_segment_bases(void)
 		for (i = 1; i < OSEG; i++) {
 			if (verbose)
 				printf("\t%c : %04X\n",
-					"ACDBZXc?"[i], o->oh.o_size[i]);
+					"ACDBZSXSLsb?"[i], o->oh.o_size[i]);
 			size[i] += o->oh.o_size[i];
 			if (size[i] < o->oh.o_size[i])
 				error("segment too large");
@@ -559,26 +709,13 @@ static void set_segment_bases(void)
 	/* We now know where to put the binary */
 	if (ldmode == LD_RELOC) {
 		/* Creating a binary - put the segments together */
-		if (split_id && !baseset[2])
+		if (split_id && !baseset[2]) {
 			base[2] = 0;
-		else {
-			append_segment(7, 1);
-			append_segment(2, 7);
-			append_segment(3, 2);
+			baseset[2] = 1;
 		}
-	} else {
-		/* FIXME: some kind of link scripts one day ? */
-		/* Where to put stuff. Try and be helpful. This is a shade
-		   Fuzix oriented */
-		/* Default literals then data after code */
-		append_segment(7, 1);
-		append_segment(2, 7);
-		append_segment(3, 2);
-		/* ZP we leave alone */
-		/* Discard after BSS */
-		append_segment(5, 3);
-		/* Common we can't really do much to guess a layout */
 	}
+	order_segments();
+
 	if (ldmode != LD_RFLAG) {
 		/* ZP if any is assumed to be set on input */
 		/* FIXME: check the literals fit .. make this a more sensible
@@ -596,6 +733,8 @@ static void set_segment_bases(void)
 		insert_internal_symbol("__zp", ZP, 0);
 		insert_internal_symbol("__discard", DISCARD, 0);
 		insert_internal_symbol("__common", COMMON, 0);
+		insert_internal_symbol("__buffers", BUFFERS, 0);
+		insert_internal_symbol("__commondata", COMMONDATA, 0);
 		insert_internal_symbol("__code_size", ABSOLUTE, size[CODE]);
 		insert_internal_symbol("__data_size", ABSOLUTE, size[DATA]);
 		insert_internal_symbol("__bss_size", ABSOLUTE, size[BSS]);
@@ -603,6 +742,8 @@ static void set_segment_bases(void)
 		insert_internal_symbol("__zp_size", ABSOLUTE, size[ZP]);
 		insert_internal_symbol("__discard_size", ABSOLUTE, size[DISCARD]);
 		insert_internal_symbol("__common_size", ABSOLUTE, size[COMMON]);
+		insert_internal_symbol("__buffers_size", ABSOLUTE, size[BUFFERS]);
+		insert_internal_symbol("__commondata_size", ABSOLUTE, size[COMMONDATA]);
 	}
 	/* Now set the base of each object appropriately */
 	memcpy(&pos, &base, sizeof(pos));
@@ -667,10 +808,10 @@ static void target_put(struct object *o, uint16_t value, uint16_t size, FILE *op
 	}
 }
 
-static int target_pgetb(FILE *ip)
+static uint8_t target_pgetb(void)
 {
-	int c = fgetc(ip);
-	if (c == EOF)
+	uint8_t c;
+	if (io_readb(&c) == 0)
 		error("unexpected EOF");
 	return c;
 }
@@ -681,15 +822,15 @@ static int target_pgetb(FILE *ip)
  *	while the instruction stream being relocated is of necessity native
  *	endian.
  */
-static uint16_t target_get(struct object *o, uint16_t size, FILE *ip)
+static uint16_t target_get(struct object *o, uint16_t size)
 {
 	if (size == 1)
-		return target_pgetb(ip);
+		return target_pgetb();
 	else {
 		if (o->oh.o_flags & OF_BIGENDIAN)
-			return (target_pgetb(ip) << 8) + target_pgetb(ip);
+			return (target_pgetb() << 8) + target_pgetb();
 		else
-			return target_pgetb(ip) + (target_pgetb(ip) << 8);
+			return target_pgetb() + (target_pgetb() << 8);
 	}
 }
 
@@ -702,17 +843,17 @@ static uint16_t target_get(struct object *o, uint16_t size, FILE *ip)
  * LD_RELOC: a relocation stream is output with no remaining symbol relocations
  *	     and all internal relocations resolved.
  */
-static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
+static void relocate_stream(struct object *o, int segment, FILE * op)
 {
-	int c;
 	uint8_t size;
+	uint8_t code;
 	uint16_t r;
 	struct symbol *s;
+	uint8_t tmp;
 
 	processing = o;
 
-	while ((c = fgetc(ip)) != EOF) {
-		uint8_t code = (uint8_t) c;
+	while (io_readb(&code) == 1) {
 		uint8_t optype;
 		uint8_t overflow = 1;
 		uint8_t high = 0;
@@ -728,7 +869,7 @@ static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
 			dot++;
 			continue;
 		}
-		code = fgetc(ip);
+		io_readb(&code);
 		if (code == REL_EOF) {
 			processing = NULL;
 			return;
@@ -754,19 +895,18 @@ static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
 				fprintf(stderr, "%s: cannot set address in non absolute segment.\n", o->path);
 				exit(1);
 			}
-			dot = fgetc(ip);
-			dot |= fgetc(ip) << 8;
+			dot = io_read16();
 			xfseek(op, dot);
 			continue;
 		}
 		if (code == REL_OVERFLOW) {
 			overflow = 0;
-			code = fgetc(ip);
+			io_readb(&code);
 		}
 		if (code == REL_HIGH) {
 			high = 1;
 			overflow = 0;
-			code = fgetc(ip);
+			io_readb(&code);
 		}
 		/* Relocations */
 		size = ((code & S_SIZE) >> 4) + 1;
@@ -792,7 +932,7 @@ static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
 			}
 			/* Relocate the value versus the new segment base and offset of the
 			   object */
-			r = target_get(o, size, ip);
+			r = target_get(o, size);
 //			fprintf(stderr, "Target is %x, Segment %d base is %x\n", 
 //				r, seg, o->base[seg]);
 			r += o->base[seg];
@@ -819,8 +959,7 @@ static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
 				error("invalid reloc type");
 			case REL_SYMBOL:
 			case REL_PCREL:
-				r = fgetc(ip);
-				r |= fgetc(ip) << 8;
+				r = io_read16();
 				/* r is the symbol number */
 				if (r >= o->nsym)
 					error("invalid reloc sym");
@@ -844,12 +983,15 @@ static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
 						fputc(s->number >> 8, op);
 					}
 					/* Copy the bytes to relocate */
-					fputc(fgetc(ip), op);
-					if (size == 2 || optype == REL_PCREL)
-						fputc(fgetc(ip), op);
+					io_readb(&tmp);
+					fputc(tmp, op);
+					if (size == 2 || optype == REL_PCREL) {
+						io_readb(&tmp);
+						fputc(tmp, op);
+					}
 				} else {
 					/* Get the relocation data */
-					r = target_get(o, optype == REL_PCREL ? 2 : size, ip);
+					r = target_get(o, optype == REL_PCREL ? 2 : size);
 					/* Add the offset from the output segment base to the
 					   symbol */
 					r += s->value;
@@ -896,11 +1038,10 @@ static void relocate_stream(struct object *o, int segment, FILE * op, FILE * ip)
  *	Open an object file and seek to the right location in case it is
  *	a library module.
  */
-static FILE *openobject(struct object *o)
+static void openobject(struct object *o)
 {
-	FILE *fp = xfopen(o->path, "r");
-	xfseek(fp, o->off);
-	return fp;
+	io_open(o->path);
+	io_lseek(o->off);
 }
 
 /*
@@ -913,10 +1054,10 @@ static void write_stream(FILE * op, int seg)
 	struct object *o = objects;
 
 	while (o != NULL) {
-		FILE *ip = openobject(o);	/* So we can hide library gloop */
+		openobject(o);	/* So we can hide library gloop */
 		if (verbose)
 			printf("Writing %s#%ld:%d\n", o->path, o->off, seg);
-		xfseek(ip, o->off + o->oh.o_segbase[seg]);
+		io_lseek(o->off + o->oh.o_segbase[seg]);
 		if (verbose)
 			printf("%s:Segment %d file seek base %d\n",
 				o->path,
@@ -930,8 +1071,8 @@ static void write_stream(FILE * op, int seg)
 		   be in the binary space */
 		else if (ldmode == LD_ABSOLUTE)
 			xfseek(op, dot);
-		relocate_stream(o, seg, op, ip);
-		xfclose(ip);
+		relocate_stream(o, seg, op);
+		io_close();
 		o = o->next;
 	}
 	if (!rawstream) {
@@ -1018,18 +1159,21 @@ static void write_binary(FILE * op, FILE *mp)
  *	Scan through all the object modules in this ar archive and offer
  *	them to the linker.
  */
-static void process_library(const char *name, FILE *fp)
+static void process_library(const char *name)
 {
 	static struct ar_hdr ah;
 	off_t pos = SARMAG;
 	unsigned long size;
 
 	while(1) {
-		xfseek(fp, pos);
-		if (fread(&ah, sizeof(ah), 1, fp) == 0)
+		io_lseek(pos);
+		if (io_read(&ah, sizeof(ah)) != sizeof(ah))
 			break;
-		if (ah.ar_fmag[0] != 96 || ah.ar_fmag[1] != '\n')
+		if (ah.ar_fmag[0] != 96 || ah.ar_fmag[1] != '\n') {
+			printf("Bad fmag %02X %02X\n",
+				ah.ar_fmag[0],ah.ar_fmag[1]);
 			break;
+		}
 		size = atol(ah.ar_size);
 #if 0 /* TODO */
 		if (strncmp(ah.ar_name, ".RANLIB", 8) == 0)
@@ -1038,7 +1182,7 @@ static void process_library(const char *name, FILE *fp)
 		libentry = ah.ar_name;
 		pos += sizeof(ah);
 		if (!have_object(pos, name))
-			load_object(fp, pos, 1, name);
+			load_object(pos, 1, name);
 		pos += size;
 		if (pos & 1)
 			pos++;
@@ -1054,30 +1198,34 @@ static void process_library(const char *name, FILE *fp)
  */
 static void add_object(const char *name, off_t off, int lib)
 {
-	static char x[SARMAG];
-	FILE *fp = xfopen(name, "r");
+	static uint8_t x[SARMAG];
+	io_open(name);
 	if (off == 0 && !lib) {
 		/* Is it a bird, is it a plane ? */
-		fread(x, SARMAG, 1, fp);
+		io_read(x, SARMAG);
 		if (memcmp(x, ARMAG, SARMAG) == 0) {
 			/* No it's a library. Do the library until a
 			   pass of the library resolves nothing. This isn't
 			   as fast as we'd like but we need ranlib support
 			   to do faster */
 			do {
+				if (verbose)
+					printf(":: Library scan %s\n", name);
 				progress = 0;
-				xfseek(fp, SARMAG);
-				process_library(name, fp);
+				io_lseek(SARMAG);
+				process_library(name);
+				if (verbose)
+					printf(":: Pass resovled %d symbols\n", progress);
 			/* FIXME: if we counted unresolved symbols we might
 			   be able to exit earlier ? */
 			} while(progress);
-			xfclose(fp);
+			io_close();
 			return;
 		}
 	}
-	xfseek(fp, off);
-	load_object(fp, off, lib, name);
-	xfclose(fp);
+	io_lseek(off);
+	load_object(off, lib, name);
+	io_close();
 }
 
 /*
@@ -1091,7 +1239,7 @@ int main(int argc, char *argv[])
 
 	arg0 = argv[0];
 
-	while ((opt = getopt(argc, argv, "rbvtsiu:o:m:A:B:C:D:S:X:Z:")) != -1) {
+	while ((opt = getopt(argc, argv, "rbvtsiu:o:m:f:A:B:C:D:S:X:Z:")) != -1) {
 		switch (opt) {
 		case 'r':
 			ldmode = LD_RFLAG;
@@ -1121,6 +1269,9 @@ int main(int argc, char *argv[])
 		case 'i':
 			split_id = 1;
 			break;
+		case 'f':
+			segmentorder = optarg;
+			break;
 		case 'A':
 			align = xstrtoul(optarg);
 			if (align == 0)
@@ -1138,9 +1289,9 @@ int main(int argc, char *argv[])
 			base[2] = xstrtoul(optarg);
 			baseset[2] = 1;
 			break;
-		case 'L':
-			base[4] = xstrtoul(optarg);
-			baseset[4] = 1;
+		case 'L':	/* LITERAL */
+			base[7] = xstrtoul(optarg);
+			baseset[7] = 1;
 			break;
 		case 'S':	/* Shared/Common */
 			base[6] = xstrtoul(optarg);

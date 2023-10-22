@@ -215,6 +215,17 @@ void getaddr(ADDR *ap)
 	}
 }
 
+/* Handle the corner case of labels in direct page being used as relative
+   branches from the overlapping 'absolute' space. Assumes DP = 0 */
+static int segment_incompatible(ADDR *ap)
+{
+	if (ap->a_segment == segment)
+		return 0;
+	if (ap->a_segment == 4 && segment == 0 && ap->a_value < 256)
+		return 0;
+	return 1;
+}
+
 uint8_t class2_mask(uint8_t opcode, uint16_t type, uint8_t mode)
 {
 	uint8_t r;
@@ -245,16 +256,17 @@ uint8_t class2_mask(uint8_t opcode, uint16_t type, uint8_t mode)
 			r = 5;
 			break;
 		case TABSX:
-			if (opcode != 0xB2)
+			if (mode == 0)
 				r = 7;
 			else
 				qerr(BADMODE);
 			break;
 		case TABSY:
-			if (opcode == 0xB2)
+			if (mode == 1)
 				r = 7;
 			else
 				qerr(BADMODE);
+			break;
 		default:
 			aerr(BADMODE);
 			break;
@@ -295,6 +307,14 @@ loop:
 			if ((sp->s_type&TMMODE) != TNEW
 			&&  (sp->s_type&TMASG) == 0)
 				sp->s_type |= TMMDF;
+			sp->s_type &= ~TMMODE;
+			sp->s_type |= TUSER;
+			sp->s_value = dot[segment];
+			sp->s_segment = segment;
+		} else if (pass != 3) {
+			/* Don't check for duplicates, we did it already
+			   and we will confuse ourselves with the pass
+			   before. Instead blindly update the values */
 			sp->s_type &= ~TMMODE;
 			sp->s_type |= TUSER;
 			sp->s_value = dot[segment];
@@ -414,17 +434,68 @@ loop:
 		acc_size = opcode;
 		break;
 
-	case TREL8C:
-		require_cpu(CPU_65C02);
-		/* Fall through */
-	case TREL8:
+	case TREL8:	/* Branch */
+		/* Algorithm:
+			Pass 0: generate worst case code. We then know things
+				that can safely be turned short because more
+				shortening will only reduce gap
+			Pass 1: generate code case based upon pass 0 but now
+				using short branch conditionals
+			Pass 2: repeat this because pass 1 causes a lot of
+				collapses. Pin down the choices we made.
+			Pass 3: generate code. We don't "fix" any further
+				possible shortenings because we need the
+				addresses in pass 3 to exactly match pass 2
+		*/
 		getaddr(&a1);
-		/* TODO ? Resizing */
-		disp = a1.a_value-dot[segment]-2;
-		if (disp<-128 || disp>127 || a1.a_segment != segment)
-			aerr(BRA_RANGE);
-		outab(opcode);
-		outab(disp);
+		disp = a1.a_value - dot[segment] - 2;
+		if (pass == 3)
+			c = getnextrel();
+		else {
+			c = 0;
+			if (pass == 0 || segment_incompatible(&a1) || disp<-128 || disp>127 )
+				c = 1;
+			if (pass == 2)
+				setnextrel(c);
+		}
+		if (c) {
+			outab(opcode ^ 0x20);	/* reverse branch */
+			outab(3);	/* Over the jump */
+			outab(0x4C);	/* JMP */
+			outraw(&a1);
+		} else {
+			outab(opcode);
+			/* Should never happen */
+			if (disp < -128 || disp > 127)
+				aerr(BRA_RANGE);
+			outab(disp);
+		}
+		break;
+	case TREL8C:
+		/* Similar but without condition so we can just swap for
+		   a jump or brl */
+		require_cpu(CPU_65C02);
+		getaddr(&a1);
+		disp = a1.a_value - dot[segment] - 2;
+		if (pass == 3)
+			c = getnextrel();
+		else {
+			c = 0;
+			if (pass == 0 || segment_incompatible(&a1) || disp<-128 || disp>127 )
+				c = 1;
+			if (pass == 2)
+				setnextrel(c);
+		}
+		if (c) {
+			outab(0x4C);	/* JMP */
+			outraw(&a1);
+		} else {
+			outab(opcode);
+			/* Should never happen */
+			if (disp < -128 || disp > 127)
+				aerr(BRA_RANGE);
+			outab(disp);
+		}
 		break;
 	case TREL16:
 		require_cpu(CPU_65C816);
@@ -679,7 +750,7 @@ loop:
 		getaddr(&a1);
 		reg = class2_mask(opcode, a1.a_type, 1);
 		outab(opcode | (reg << 2));
-		/* No stor eimmediate */
+		/* No store immediate */
 		if (reg == 0 && opcode == 0x82)
 			aerr(BADMODE);
 		if (reg == 0 && idx_size == 2)

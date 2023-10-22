@@ -32,6 +32,8 @@ SYM	sym[] = {
 	{	0,	".discard",	TSEGMENT,	DISCARD	},
 	{	0,	".common",	TSEGMENT,	COMMON	},
 	{	0,	".literal",	TSEGMENT,	LITERAL	},
+	{	0,	".commondata",	TSEGMENT,	COMMONDATA },
+	{	0,	".buffers",	TSEGMENT,	BUFFERS	},
 	
 
 	/* Operations are in four classes

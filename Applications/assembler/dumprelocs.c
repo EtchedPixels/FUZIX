@@ -150,7 +150,7 @@ static void reloc_symbol(int fd, int size)
     p += sprintf(p, "%.*s", NAMELEN, symptr(n) + 1);
     n = reloc_word(fd, size);
     if (n)
-        sprintf(p, "+%d", n);
+        sprintf(p, "+0x%04X", n);
 }
 
 static void reloc_symvalue(int fd, int seg, int size)
@@ -167,11 +167,11 @@ static void reloc_symvalue(int fd, int seg, int size)
         p = find_symbol_before(seg, n, &v);
         if (p) {
             if (v)
-                sprintf(relbuf + 12, "%.16s+%d", p + 1, n - v );
+                sprintf(relbuf + 12, "%.16s+0x%04X", p + 1, n - v );
             else
                 sprintf(relbuf + 12, "%.16s", p + 1);
         } else
-            sprintf(relbuf + 12, "%-5d", n);
+            sprintf(relbuf + 12, "0x%04X", n);
     } else
         reloc_value(fd, size);
 }

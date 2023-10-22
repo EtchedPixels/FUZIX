@@ -43,6 +43,8 @@ SYM	sym[] = {
 	{	0,	".common",	TSEGMENT,	COMMON	},
 	{	0,	".zp",		TSEGMENT,	ZP	},
 	{	0,	".literal",	TSEGMENT,	LITERAL	},
+	{	0,	".commondata",	TSEGMENT,	COMMONDATA },
+	{	0,	".buffers",	TSEGMENT,	BUFFERS	},
 	{	0,	".setcpu",	TSETCPU,	XXXX	},
 
 	/* 0x0X		:	Implicit */

@@ -46,12 +46,17 @@ SYM	sym[] = {
 	{	0,	"bss",		TSEGMENT,	BSS	},
 	{	0,	"discard",	TSEGMENT,	DISCARD	},
 	{	0,	"common",	TSEGMENT,	COMMON	},
+	{	0,	"literal",	TSEGMENT,	LITERAL	},
+	{	0,	"commondata",	TSEGMENT,	COMMONDATA },
+	{	0,	"buffers",	TSEGMENT,	BUFFERS	},
 	{	0,	".code",	TSEGMENT,	CODE	},
 	{	0,	".data",	TSEGMENT,	DATA	},
 	{	0,	".bss",		TSEGMENT,	BSS	},
 	{	0,	".discard",	TSEGMENT,	DISCARD	},
 	{	0,	".common",	TSEGMENT,	COMMON	},
 	{	0,	".literal",	TSEGMENT,	LITERAL	},
+	{	0,	".commondata",	TSEGMENT,	COMMONDATA },
+	{	0,	".buffers",	TSEGMENT,	BUFFERS	},
 	{	0,	".setcpu",	TSETCPU,	XXXX	},
 	/* First quadrant, various miscellaneous groupings with 3 bit
 	   register encoding */
@@ -147,7 +152,7 @@ SYM	sym[] = {
 	{	0,	"jm",		TI16,		0x00FA  },
 	{	0,	"ei",		TIMPL,		0x00FB  },
 	{	0,	"cm",		TI16,		0x00FC  },
-	{	0,	"jk",		TI16,		0x00FD  },
+	{	0,	"jk",		TI16_85,	0x00FD  },
 	{	0,	"cpi",		TI8,		0x00FE  },
 };
 

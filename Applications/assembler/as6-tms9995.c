@@ -48,6 +48,8 @@ SYM	sym[] = {
 	{	0,	".discard",	TSEGMENT,	DISCARD	},
 	{	0,	".common",	TSEGMENT,	COMMON	},
 	{	0,	".literal",	TSEGMENT,	LITERAL	},
+	{	0,	".commondata",	TSEGMENT,	COMMONDATA },
+	{	0,	".buffers",	TSEGMENT,	BUFFERS	},
 
 	/* We don't have a direct page or such things but we do have a
 	   small fast RAM area on the TMS9995 which serves the same

@@ -89,9 +89,8 @@ static unsigned jr_to_jp(unsigned opcode)
 	/* JR to JP */
 	if (opcode == 0x18)
 		return 0xC3;
-	/* JR cc - extract relevant bits  and add them to the JP c base */
-	opcode &= 0x38;
-	return 0xC2|opcode;
+	/* JR cc to JP cc */
+	return opcode + 0xA2;
 }
 
 /*
@@ -369,7 +368,7 @@ loop:
 				aerr(BRA_RANGE);
 			/* Write the relative form */
 			outab(opcode);
-			outab(disp);
+			outab(disp & 0xFF);
 		}
 		break;
 
@@ -447,7 +446,7 @@ loop:
 		getaddr(&a1);
 		istuser(&a1);
 		outab(opcode);
-		outabchk2(value);
+		outabchk2(&a1);
 		break;
 
 	case TIO180:	/* out0 and in0 */
@@ -461,7 +460,7 @@ loop:
 				aerr(INVALID_REG);
 			outab(opcode << 8);
 			outab(opcode | (reg << 3));
-			outabchk2(a2.a_value);
+			outabchk2(&a2);
 			break;
 		}
 		aerr(INVALID_REG);
@@ -472,7 +471,7 @@ loop:
 		getaddr(opcode==OPIN ? &a2 : &a1);
 		if (a1.a_type==(TBR|A) && a2.a_type==(TUSER|TMINDIR)) {
 			outab(opcode);
-			outabchk2(a2.a_value);
+			outabchk2(&a2);
 			break;
 		}
 		if ((a1.a_type&TMMODE)==TBR && a2.a_type==(TBR|TMINDIR|C)) {
@@ -595,7 +594,7 @@ loop:
 		getaddr(&a1);
 		if (a1.a_type == TUSER) {
 			outab(opcode | OPSUBI);
-			outabchk2(a1.a_value);
+			outabchk2(&a1);
 			break;
 		}
 		if ((a1.a_type&TMMODE) == TBR) {
@@ -614,7 +613,7 @@ loop:
 		if (a1.a_type == (TBR|A)) {
 			if (a2.a_type == TUSER) {
 				outab(opcode | OPSUBI);
-				outabchk2(a2.a_value);
+				outabchk2(&a2);
 				break;
 			}
 			if ((a2.a_type&TMMODE) == TBR) {

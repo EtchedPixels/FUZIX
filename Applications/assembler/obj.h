@@ -13,7 +13,7 @@
 #define NAMELEN			16
 #endif
 
-#define OSEG	8
+#define OSEG	14
 
 struct objhdr
 {
@@ -48,6 +48,7 @@ struct objhdr
 #define OA_6502_65C816	16	/* 65C816 and relatives */
 #define OA_6502_ZPAT0	32	/* Binary Assumes ZP is at 0 */
 #define OA_6502_65CE02	64	/* Does anyone really care ? */
+#define OA_6502_65C816_16 128	/* 16bit mode binary */
 
 #define OA_DGNOVA_MUL	1
 #define OA_DGNOVA_FPU	2
@@ -143,7 +144,9 @@ struct objhdr
 #define DISCARD		5		/* Discard for things like kernels */
 #define COMMON		6		/* Common for things like kernels */
 #define LITERAL		7		/* Literals (mostly a compiler helper) */
-/* Special cases 8+ don't exist as real segments */
+#define COMMONDATA	8		/* Common for writables */
+#define BUFFERS		9		/* Bufferrs for kernel */
+/* Special cases 10+ don't exist as real segments */
 #define PCREL		14		/* assumed signed */
 /* and 15 is 'any' */
 

@@ -19,7 +19,7 @@ static int show_debug = 1;
 static int show_name;
 static int show_undef;
 
-static char segname[] = "ATDB???????????U";
+static char segname[] = "ACDBZXSLsb?????U";
 
 static int do_nm(FILE *fp, const char *name)
 {
@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
             perror(argv[optind]);
             err |= 1;
         } else {
+            printf("%s:\n", argv[optind]);
             err |= do_nm(fp, argv[optind]);
             fclose(fp);
         }
