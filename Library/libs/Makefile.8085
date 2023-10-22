@@ -179,9 +179,7 @@ $(OBJ_RL):%.o: %.c
 
 clean:
 	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
-	libc$(PLATFORM).a libm$(PLATFORM).a libtermcap$(PLATFORM).a \
-	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt \
-	syslib$(PLATFORM).a
+	lib*.a liberror.txt
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
 	rm -f $(KRN_HEADERS_COPY)
