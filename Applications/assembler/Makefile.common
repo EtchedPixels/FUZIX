@@ -1,0 +1,32 @@
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
+
+.SUFFIXES: .c .o
+
+ASRC += as0.c as2.c as3.c as4.c 
+TSRC = dumprelocs.c ld.c nm.c osize.c
+APP = dumprelocs ld nm osize
+
+AOBJ = $(ASRC:.c=.o)
+OBJ = $(AOBJ) $(TSRC:.c=.o)
+
+all: $(APP) as
+
+as: $(AOBJ)
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+$(APP): %: %.o
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+	
+.c.o:
+	$(CC) $(CFLAGS) $(TARGET) $(CCOPTS) -c $<
+
+clean:
+	rm -f *.o $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+
+rmbak:
+	rm -f *~ core
+
+
+$(ASRC) : as.h
+
+$(TSRC): ld.h obj.h
