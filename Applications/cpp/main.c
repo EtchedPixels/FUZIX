@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
-
+#include <errno.h>
 #include "cc.h"
 
 extern const char *_ltoa(long l);
@@ -57,6 +57,8 @@ int main(int argc, char *argv[])
 			case 'd':
 				debug_mode++;
 				break;
+			case 'E':
+				break;
 			case 'T':
 				alltok = 0;
 				break;
@@ -67,9 +69,6 @@ int main(int argc, char *argv[])
 				dialect = DI_KNR;
 				break;
 
-			case 'C':	/* Keep comments. */
-				cwarn("-C not implemented");
-				break;
 			case 'P':
 				p_flag++;
 				break;
@@ -89,7 +88,7 @@ int main(int argc, char *argv[])
 						break;
 					}
 				if (i >= MAXINCPATH)
-					cfatal("Too many items in include path for CPP");
+					cfatal("cpp: too many includes");
 				break;
 			case 'D':
 				if (argv[ar][2])
@@ -143,10 +142,12 @@ int main(int argc, char *argv[])
 
 	if (!curfile)
 		cfatal(Usage);
-
+#if 0
+	/* TODO: sort memory usage */		
 	/* Define date and time macros. */
 	if (dialect != DI_KNR) {
 		time_t now;
+		struct tm *tm;
 		char *timep;
 		char buf[32];
 		time(&now);
@@ -164,6 +165,7 @@ int main(int argc, char *argv[])
 		memcpy(buf + 17, timep + 20, 4);
 		define_macro(buf);
 	}
+#endif	
 
 	if (outfile)
 		ofd = fopen(outfile, "w");
@@ -171,6 +173,8 @@ int main(int argc, char *argv[])
 		ofd = stdout;
 	if (!ofd)
 		cfatal("Cannot open output file");
+
+	hash_init();
 
 #ifdef CPP_DEBUG
 	if (debug_mode)
@@ -190,8 +194,8 @@ void undefine_macro(char *name)
 
 	ptr = read_entry(name);
 	if (ptr) {
-		set_entry(name, NULL);
-		if (!ptr->in_use)
+		set_entry(name, NULL, 0);
+		if (!(ptr->flags & F_INUSE))
 			free(ptr);
 	}
 }
@@ -200,7 +204,8 @@ void define_macro(char *name)
 {
 	char *p;
 	char *value;
-	struct define_item *ptr;
+	register struct define_item *ptr;
+	unsigned size;
 
 	if ((p = strchr(name, '=')) != 0) {
 		*p = 0;
@@ -210,13 +215,15 @@ void define_macro(char *name)
 
 	undefine_macro(name);
 
-	ptr = malloc(sizeof(struct define_item) + strlen(value));
-	ptr->name = set_entry(name, ptr);
+	size = sizeof(struct define_item) + strlen(value);
+	ptr = xmalloc(size);
 	strcpy(ptr->value, value);
 	ptr->arg_count = -1;
-	ptr->in_use = 0;
-	ptr->next = 0;
+	ptr->flags = 0;
+	ptr->name = set_entry(name, ptr, size);
 }
+
+extern int errno;
 
 FILE *open_include(char *fname, char *mode, int checkrel)
 {
@@ -227,6 +234,7 @@ FILE *open_include(char *fname, char *mode, int checkrel)
 #endif
 	char buf[256], *p;
 
+	memory_short();
 	if (checkrel) {
 		strlcpy(buf, c_fname, 256);
 		p = strrchr(buf, '/');
@@ -248,11 +256,15 @@ FILE *open_include(char *fname, char *mode, int checkrel)
 				fd = fopen(buf, mode);
 				if (fd)
 					break;
+				if (errno != ENOENT) {
+					perror(buf);
+					exit(1);
+				}
 			}
 	}
 	if (!fd)
 		return fd;
-	c_fname = strdup(buf);
+	c_fname = xstrdup(buf);
 	c_lineno = 1;
 
 	return fd;

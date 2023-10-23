@@ -6,6 +6,6 @@
 #ifdef __GNUC__
 __inline
 #endif
-static unsigned int hash1 P((register const char *, register unsigned int));
+static unsigned int hash1(register const char *, register unsigned int);
 
 #include "token1.h"

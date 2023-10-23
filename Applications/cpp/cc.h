@@ -16,7 +16,7 @@ extern int    dialect;
 extern int gettok(void);
 
 struct token_trans { char * name; int token; };
-struct token_trans *is_cto(const char *str, unsigned int len);
+struct token_trans *is_ctok(const char *str, unsigned int len);
 struct token_trans *is_ckey(const char *str, unsigned int len);
 
 #define WORDSIZE	128
@@ -92,18 +92,23 @@ struct token_trans *is_ckey(const char *str, unsigned int len);
 #define MAX_INCLUDE 16	/* Nested includes */
 #define MAX_DEFINE  8	/* Nested defines */
 
-extern char *set_entry(char *,void *);
-extern void *read_entry(char*);
-
 struct define_item
 {
-   struct define_arg *next;
    char *name;
-   int arg_count;	/* -1 = none; >=0 = brackets with N args */
-   int in_use;		/* Skip this one for looking up #defines */
-   int varargs;		/* No warning if unexpected arguments. */
+   int8_t arg_count;	/* -1 = none; >=0 = brackets with N args */
+   uint8_t flags;
+#define F_BUSY		1
+#define F_INUSE		2
+#define F_VARARG	4
    char value[1];	/* [arg,]*value */
 };
 
 void *xmalloc(size_t size);
 void *xrealloc(void *ptr, size_t size);
+char *xstrdup(const char *);
+
+extern void hash_init(void);
+extern unsigned memory_short(void);
+extern char *set_entry(char *, struct define_item *, unsigned);
+extern struct define_item *read_entry(char *);
+extern void unlock_entry(struct define_item *);

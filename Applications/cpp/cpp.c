@@ -312,11 +312,12 @@ static int get_onetok(int keep)
 
 	/* Words */
 	if (state == 1) {
-		struct define_item *ptr;
+		struct define_item *ptr = NULL;
 		unchget(ch);
-		if (!dont_subst && (ptr = read_entry(curword)) != 0 && !ptr->in_use) {
+		if (!dont_subst && (ptr = read_entry(curword)) != 0 && !(ptr->flags & F_INUSE)) {
 			if (def_count >= MAX_DEFINE) {
 				cwarn("Preprocessor recursion overflow");
+				unlock_entry(ptr);
 				return TK_WORD;
 			} else if (ptr->arg_count >= 0) {
 				/* An open bracket must follow the word */
@@ -327,13 +328,14 @@ static int get_onetok(int keep)
 					unchget(ch);
 					if (ch1)
 						unchget(ch1);
+					unlock_entry(ptr);
 					return TK_WORD;
 				}
 
 				/* We have arguments to process so lets do so. */
-				gen_substrings(ptr->name, ptr->value, ptr->arg_count, ptr->varargs);
+				gen_substrings(ptr->name, ptr->value, ptr->arg_count, ptr->flags & F_VARARG);
 
-				/* Don't mark macros with arguments as in use, it's very 
+				/* Don't mark macros with arguments as in use, it's very
 				 * difficult to say what the correct result would be so
 				 * I'm letting the error happen. Also if I do block
 				 * recursion then it'll also block 'pseudo' recursion
@@ -342,6 +344,7 @@ static int get_onetok(int keep)
 				 def_ref = ptr;
 				 ptr->in_use = 1;
 				 */
+				unlock_entry(ptr);
 			} else if (ptr->value[0]) {
 				/* Simple direct substitution; note the shortcut (above) for
 				 * macros that are defined as null */
@@ -354,10 +357,11 @@ static int get_onetok(int keep)
 				def_ref = ptr;
 				def_ptr = ptr->value;
 				def_start = 0;
-				ptr->in_use = 1;
+				ptr->flags |= F_INUSE;
 			}
 			goto Try_again;
 		}
+		unlock_entry(ptr);
 		return TK_WORD;
 	}
 
@@ -622,8 +626,10 @@ static int realchget(void)
 				return (unsigned char) ch;
 			if (def_start)
 				free(def_start);
-			if (def_ref)
-				def_ref->in_use = 0;
+			if (def_ref) {
+				def_ref->flags &= ~F_INUSE;
+				unlock_entry(def_ref);
+			}
 
 			def_count--;
 			def_ref = saved_ref[def_count];
@@ -647,7 +653,7 @@ static int realchget(void)
 			c_lineno++;
 
 		/* Treat all control characters, except the standard whitespace
-		 * characters of TAB and NL as completely invisible. 
+		 * characters of TAB and NL as completely invisible.
 		 */
 		if (ch >= 0 && ch < ' ' && ch != '\n' && ch != '\t' && ch != EOF)
 			continue;
@@ -769,7 +775,7 @@ static void do_proc_include(void)
 				break;
 			if (ch == ch1) {
 				*p = '\0';
-				p = strdup(curword);
+				p = xstrdup(curword);
 
 				do {
 					ch1 = pgetc();
@@ -810,24 +816,41 @@ static void mem(void)
 
 void *xmalloc(size_t size)
 {
-	void *p = malloc(size);
-	if (p == 0)
-		mem();
-	return p;
+	register void *p;
+	do {
+		p = malloc(size);
+		if (p)
+			return p;
+	} while(memory_short());
+	mem();
 }
 
 void *xrealloc(void *ptr, size_t size)
 {
-	void *p = realloc(ptr, size);
-	if (p == 0)
-		mem();
-	return p;
+	register void *p;
+	do {
+		p = realloc(ptr, size);
+		if (p)
+			return p;
+	} while(memory_short());
+	mem();
+}
+
+char *xstrdup(const char *ptr)
+{
+	register char *p;
+	do {
+		p = strdup(ptr);
+		if (p)
+			return p;
+	} while(memory_short());
+	mem();
 }
 
 static void do_proc_define(void)
 {
 	int ch, ch1;
-	struct define_item *ptr, *old_value = 0;
+	struct define_item *ptr, *old_value = NULL;
 	int cc, len;
 	char name[WORDSIZE];
 
@@ -835,12 +858,11 @@ static void do_proc_define(void)
 		strcpy(name, curword);
 		ptr = read_entry(name);
 		if (ptr) {
-			set_entry(name, NULL);	/* Unset var */
-			if (ptr->in_use)
+			set_entry(name, NULL, 0);	/* Unset var */
+			if (ptr->flags & F_INUSE)
 				/* Eeeek! This shouldn't happen; so just let it leak. */
 				cwarn("macro redefined while it was in use!?");
-			else
-				old_value = ptr;
+			old_value = ptr;
 		}
 
 		/* Skip blanks */
@@ -870,7 +892,7 @@ static void do_proc_define(void)
 						ptr->arg_count++;
 						ch = gettok_nosub();
 						if (ch == TK_ELLIPSIS) {
-							ptr->varargs = 1;
+							ptr->flags |= F_VARARG;
 							ch = gettok_nosub();
 							if (ch == ',')
 								ch = '*';	/* Force error if not ')' */
@@ -885,7 +907,8 @@ static void do_proc_define(void)
 				free(ptr);
 				while (ch != '\n')
 					ch = pgetc();
-				set_entry(name, (void *) old_value);	/* Return var to old. */
+				set_entry(name, NULL, 0);	/* Kill var */
+				unlock_entry(old_value);
 				return;
 			}
 			while ((ch = pgetc()) == ' ' || ch == '\t');
@@ -916,9 +939,8 @@ static void do_proc_define(void)
 
 		/* Clip to correct size and save */
 		ptr = (struct define_item *) xrealloc(ptr, sizeof(struct define_item) + cc);
-		ptr->name = set_entry(name, ptr);
-		ptr->in_use = 0;
-		ptr->next = 0;
+		ptr->name = set_entry(name, ptr, sizeof(struct define_item) + cc);
+		ptr->flags &= ~F_INUSE;
 
 		if (old_value) {
 			if (strcmp(old_value->value, ptr->value) != 0)
@@ -938,8 +960,8 @@ static void do_proc_undef(void)
 	if ((ch = gettok_nosub()) == TK_WORD) {
 		ptr = read_entry(curword);
 		if (ptr) {
-			set_entry(curword, NULL);	/* Unset var */
-			if (ptr->in_use)
+			set_entry(curword, NULL, 0);	/* Unset var */
+			if (ptr->flags & F_INUSE)
 				/* Eeeek! This shouldn't happen; so just let it leak. */
 				cwarn("macro undefined while it was in use!?");
 			else
@@ -956,6 +978,7 @@ static void do_proc_undef(void)
 static int do_proc_if(int type)
 {
 	int ch = 0;
+	struct define_item *ptr;
 	if (if_false && if_hidden) {
 		if (type != 3)
 			if_hidden++;
@@ -997,7 +1020,9 @@ static int do_proc_if(int type)
 			ch = gettok_nosub();
 			if (ch == TK_WORD) {
 				do_proc_tail();
-				if_false = (read_entry(curword) == 0);
+				ptr = read_entry(curword);
+				if_false = (ptr == NULL);
+				unlock_entry(ptr);
 				if (type == 1)
 					if_false = !if_false;
 			} else {
@@ -1214,6 +1239,7 @@ static int_type get_exp_value(void)
 {
 	int_type value = 0;
 	int sign = 1;
+	struct define_item *ptr;
 
 	if (curtok == '!') {
 		curtok = get_onetok(SKIP_SPACE);
@@ -1275,7 +1301,9 @@ static int_type get_exp_value(void)
 			if (curtok == '(' && gettok_nosub() != TK_WORD)
 				cerror("'defined' keyword requires argument");
 			else {
-				value = (read_entry(curword) != 0);
+				ptr = read_entry(curword);
+				value = (ptr != 0);
+				unlock_entry(ptr);
 				if (curtok == '(' && gettok_nosub() != ')')
 					cerror("'defined' keyword requires closing ')'");
 				else
@@ -1401,8 +1429,8 @@ static void gen_substrings(char *macname, char *data_str, int arg_count, int is_
 	 * So we could scan this for calls to this macro and if we find one
 	 * that _exactly_ matches this call (including arguments) then we mark
 	 * this call's in_use flag.
-	 * 
-	 * OTOH, it would probably be best to throw away this expansion and 
+	 *
+	 * OTOH, it would probably be best to throw away this expansion and
 	 * pretend we never noticed this macro expansion in the first place.
 	 *
 	 * Still this is mostly academic as the error trapping works and
@@ -1529,8 +1557,8 @@ static char *insert_substrings(char *data_str, struct arg_store *arg_list, int a
 				else
 					/* Ansi stringize operation, this is very messy! */
 				if (ansi_stringize) {
+					struct define_item *ptr = NULL;
 					if (arg_list[ac].in_define) {
-						struct define_item *ptr;
 						if ((ptr = read_entry(s)) && ptr->arg_count == -1) {
 							s = ptr->value;
 						}
@@ -1554,6 +1582,7 @@ static char *insert_substrings(char *data_str, struct arg_store *arg_list, int a
 					rv[cc++] = '\0';
 					ansi_stringize = 0;
 					s = "";
+					unlock_entry(ptr);
 					break;
 				}
 
