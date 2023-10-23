@@ -41,9 +41,9 @@ store:
 		inc	hl
 		push	de		; save low half
 		ld	de,(__hireg)
-		ld	(hl),d
-		inc	hl
 		ld	(hl),e
+		inc	hl
+		ld	(hl),d
 		pop	hl
 		pop	bc
 		ret

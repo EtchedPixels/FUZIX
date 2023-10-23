@@ -1,3 +1,4 @@
+			.export __shl
 			.export __shlde
 			.export __shldec
 			.setcpu 8080

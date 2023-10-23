@@ -6,10 +6,8 @@ __shleql:
 		pop	hl
 		ex	(sp),hl
 		; HL is now the lval, A is the shift
-		and	31
-		jr	z,done
-		push	af
 		push	hl
+		push	af
 		ld	e,(hl)
 		inc	hl
 		ld	d,(hl)
@@ -19,6 +17,8 @@ __shleql:
 		ld	h,(hl)
 		ld	l,a
 		pop	af
+		and	31
+		jr	z,done
 loop:
 		ex	de,hl
 		add	hl,hl

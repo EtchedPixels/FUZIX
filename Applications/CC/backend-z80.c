@@ -501,7 +501,7 @@ void gen_epilogue(unsigned size, unsigned argsize)
 void gen_label(const char *tail, unsigned n)
 {
 	unreachable = 0;
-	printf("L%d%s:\n", n, tail);
+	printf("L%u%s:\n", n, tail);
 }
 
 /* A return statement. We can sometimes shortcut this if we have
@@ -521,19 +521,19 @@ unsigned gen_exit(const char *tail, unsigned n)
 
 void gen_jump(const char *tail, unsigned n)
 {
-	printf("\tjr L%d%s\n", n, tail);
+	printf("\tjr L%u%s\n", n, tail);
 	unreachable = 1;
 }
 
 void gen_jfalse(const char *tail, unsigned n)
 {
-	printf("\tjr %s,L%d%s\n", ccflags + 2, n, tail);
+	printf("\tjr %s,L%u%s\n", ccflags + 2, n, tail);
 	ccflags = "nzz";
 }
 
 void gen_jtrue(const char *tail, unsigned n)
 {
-	printf("\tjr %c%c,L%d%s\n", ccflags[0], ccflags[1], n, tail);
+	printf("\tjr %c%c,L%u%s\n", ccflags[0], ccflags[1], n, tail);
 	ccflags = "nzz";
 }
 
@@ -592,7 +592,7 @@ void gen_helpclean(struct node *n)
 
 void gen_switch(unsigned n, unsigned type)
 {
-	printf("\tld de,Sw%d\n", n);
+	printf("\tld de,Sw%u\n", n);
 	printf("\tjp __switch");
 	helper_type(type, 0);
 	printf("\n");
@@ -601,19 +601,19 @@ void gen_switch(unsigned n, unsigned type)
 
 void gen_switchdata(unsigned n, unsigned size)
 {
-	printf("Sw%d:\n", n);
-	printf("\t.word %d\n", size);
+	printf("Sw%u:\n", n);
+	printf("\t.word %u\n", size);
 }
 
 void gen_case_label(unsigned tag, unsigned entry)
 {
 	unreachable = 0;
-	printf("Sw%d_%d:\n", tag, entry);
+	printf("Sw%u_%u:\n", tag, entry);
 }
 
 void gen_case_data(unsigned tag, unsigned entry)
 {
-	printf("\t.word Sw%d_%d\n", tag, entry);
+	printf("\t.word Sw%u_%u\n", tag, entry);
 }
 
 void gen_data_label(const char *name, unsigned align)
@@ -623,12 +623,12 @@ void gen_data_label(const char *name, unsigned align)
 
 void gen_space(unsigned value)
 {
-	printf("\t.ds %d\n", value);
+	printf("\t.ds %u\n", value);
 }
 
 void gen_text_data(unsigned n)
 {
-	printf("\t.word T%d\n", n);
+	printf("\t.word T%u\n", n);
 }
 
 /* The label for a literal (currently only strings)
@@ -637,12 +637,12 @@ void gen_text_data(unsigned n)
 void gen_literal(unsigned n)
 {
 	if (n)
-		printf("T%d:\n", n);
+		printf("T%u:\n", n);
 }
 
 void gen_name(struct node *n)
 {
-	printf("\t.word _%s+%d\n", namestr(n->snum), WORD(n->value));
+	printf("\t.word _%s+%u\n", namestr(n->snum), WORD(n->value));
 }
 
 void gen_value(unsigned type, unsigned long value)
@@ -659,14 +659,14 @@ void gen_value(unsigned type, unsigned long value)
 		break;
 	case CSHORT:
 	case USHORT:
-		printf("\t.word %d\n", w);
+		printf("\t.word %u\n", w);
 		break;
 	case CLONG:
 	case ULONG:
 	case FLOAT:
 		/* We are little endian */
-		printf("\t.word %d\n", w);
-		printf("\t.word %d\n", (unsigned) ((value >> 16) & 0xFFFF));
+		printf("\t.word %u\n", w);
+		printf("\t.word %u\n", (unsigned) ((value >> 16) & 0xFFFF));
 		break;
 	default:
 		error("unsuported type");
@@ -675,7 +675,7 @@ void gen_value(unsigned type, unsigned long value)
 
 void gen_start(void)
 {
-	printf(";\t.setcpu %d\n", cpu);
+	printf(";\t.setcpu %u\n", cpu);
 }
 
 void gen_end(void)
@@ -686,7 +686,7 @@ void gen_tree(struct node *n)
 {
 	codegen_lr(n);
 	printf(";\n");
-/*	printf(";SP=%d\n", sp); */
+/*	printf(";SP=%u\n", sp); */
 }
 
 /*
@@ -715,7 +715,7 @@ unsigned generate_lref(unsigned v, unsigned size, unsigned to_de)
 	/* Rabbit amd Z280 have LD HL,(SP + n) */
 	if (HAS_LDHLSP && v <= 255 && !to_de) {
 		/* FIXME: We will load an extra byte for 16bit, so hopefully non MMIO TODO */
-		printf("\tld hl,(sp+%d)\n", v);
+		printf("\tld hl,(sp+%u)\n", v);
 		return 1;
 	}
 	/* This has to be a local so if it is byte sized we will load the
@@ -740,7 +740,7 @@ unsigned generate_lref(unsigned v, unsigned size, unsigned to_de)
 	if (size == 2 && opt > 2) {
 		printf("\tld hl,0x%x\n\tadd hl,sp\n", WORD(v));
 		if (IS_RABBIT)
-			printf("\tld hl,(hl + %d\n)\n", 0);
+			printf("\tld hl,(hl + %u\n)\n", 0);
 		else if (IS_EZ80 && to_de)
 			printf("\tld de,(hl)\n");
 		else if (to_de)
@@ -763,11 +763,11 @@ unsigned generate_lref(unsigned v, unsigned size, unsigned to_de)
 		printf("\tex de,hl\n");
 
 	if (v < LWDIRECT)
-		printf("\tcall __%s%d\n", name, v + 2);
+		printf("\tcall __%s%u\n", name, v + 2);
 	else if (v < 253)
-		printf("\tcall __%s\n\t.byte %d\n", name, v + 2);
+		printf("\tcall __%s\n\t.byte %u\n", name, v + 2);
 	else
-		printf("\tcall __%sw\n\t.word %d\n", name, v + 2);
+		printf("\tcall __%sw\n\t.word %u\n", name, v + 2);
 
 	if (to_de)
 		printf("\tex de,hl\n");
@@ -843,10 +843,10 @@ static unsigned load_r_with(const char *rp, struct node *n)
 
 	switch(n->op) {
 	case T_NAME:
-		printf("\tld %s,_%s+%d\n", rp, namestr(n->snum), v);
+		printf("\tld %s,_%s+%u\n", rp, namestr(n->snum), v);
 		return 1;
 	case T_LABEL:
-		printf("\tld %s,T%d+%d\n", rp, n->val2, v);
+		printf("\tld %s,T%u+%u\n", rp, n->val2, v);
 		return 1;
 	case T_CONSTANT:
 		/* We know this is not a long from the checks above */
@@ -854,12 +854,12 @@ static unsigned load_r_with(const char *rp, struct node *n)
 		return 1;
 	case T_NREF:
 		/* We know it is int or pointer */
-		printf("\tld %s,(_%s+%d)\n", rp, namestr(n->snum), v);
+		printf("\tld %s,(_%s+%u)\n", rp, namestr(n->snum), v);
 		return 1;
 		break;
 	/* TODO: fold together cleanly with NREF */
 	case T_LBREF:
-		printf("\tld %s,(T%d+%d)\n", rp, n->val2, v);
+		printf("\tld %s,(T%u+%u)\n", rp, n->val2, v);
 		return 1;
 	case T_RREF:
 		/* Assumes that BC isn't corrupted yet so is already the right value. Use
@@ -877,8 +877,8 @@ static unsigned load_r_with(const char *rp, struct node *n)
 		/* One oddity here - we can't load IX or IY from (ix) or (iy) */
 		if (*rp == 'i')
 			return 0;
-		printf("\tld %c,(%s + %d)\n", rp[1], regnames[n->value], n->val2);
-		printf("\tld %c,(%s + %d)\n", *rp, regnames[n->value], n->val2 + 1);
+		printf("\tld %c,(%s + %u)\n", rp[1], regnames[n->value], n->val2);
+		printf("\tld %c,(%s + %u)\n", *rp, regnames[n->value], n->val2 + 1);
 		return 1;
 	default:
 		return 0;
@@ -911,10 +911,10 @@ static unsigned load_a_with(struct node *n)
 		printf("\tld a,0x%x\n", BYTE(n->value));
 		break;
 	case T_NREF:
-		printf("\tld a,(_%s+%d)\n", namestr(n->snum), WORD(n->value));
+		printf("\tld a,(_%s+%u)\n", namestr(n->snum), WORD(n->value));
 		break;
 	case T_LBREF:
-		printf("\tld a,(T%d+%d)\n", n->val2, WORD(n->value));
+		printf("\tld a,(T%u+%u)\n", n->val2, WORD(n->value));
 		break;
 	case T_RREF:
 		/* TODO: ix/iy (can they happen ? */
@@ -928,7 +928,7 @@ static unsigned load_a_with(struct node *n)
 			printf("\tld a,(bc)\n");
 			break;
 		}
-		printf("\tld a,(%s+%d)\n", regnames[n->value], n->val2);
+		printf("\tld a,(%s+%u)\n", regnames[n->value], n->val2);
 		break;
 	case T_LREF:
 		return generate_lref_a(n->value);
@@ -979,7 +979,7 @@ static unsigned gen_deop(const char *op, struct node *n, struct node *r, unsigne
 	if (optsize && s == 2 && r->op == T_CONSTANT) {
 		unsigned v= r->value;
 		if (v < 256) {
-			printf("\tld e,%d\n", v);
+			printf("\tld e,%u\n", v);
 			printf("\tcall __%s", op);
 			if (sign)
 				helper_type(n->type, sign);
@@ -1303,7 +1303,7 @@ unsigned gen_direct(struct node *n)
 			return 0;
 		if (s == 1)
 			printf("\tld a,l\n");
-		printf("\tld (_%s+%d),", namestr(n->snum), WORD(n->value));
+		printf("\tld (_%s+%u),", namestr(n->snum), WORD(n->value));
 			return 1;
 		if (s == 1)
 			printf("a\n");
@@ -1316,7 +1316,7 @@ unsigned gen_direct(struct node *n)
 			return 0;
 		if (s == 1)
 			printf("\tld a,l\n");
-		printf("\tld (T%d+%d), ", n->val2, v);
+		printf("\tld (T%u+%u), ", n->val2, v);
 		if (s == 1)
 			printf("a\n");
 		else
@@ -1365,16 +1365,16 @@ unsigned gen_direct(struct node *n)
 		}
 		if (s == 4 && r->op == T_CONSTANT) {
 			if (v < 0x02) {
-				printf("\tcall __assign%dl\n", v);
+				printf("\tcall __assign%ul\n", v);
 				return 1;
 			}
 			if (v <= 0xFF) {
-				printf("\tld a,%d\n", v);
+				printf("\tld a,%u\n", v);
 				helper(n, "assign0la");
 				return 1;
 			}
 			if (v <= 0xFFFF) {
-				printf("\tld de,%d\n", v);
+				printf("\tld de,%u\n", v);
 				helper(n, "assignl0de");
 				return 1;
 			}
@@ -1464,9 +1464,9 @@ unsigned gen_direct(struct node *n)
 			if (b >= 0) {
 				/* Single clear bit */
 				if (b < 8)
-					printf("\tres %d,l\n", b);
+					printf("\tres %u,l\n", b);
 				else
-					printf("\tres %d,h\n", b - 8);
+					printf("\tres %u,h\n", b - 8);
 				return 1;
 			}
 		}
@@ -1479,19 +1479,19 @@ unsigned gen_direct(struct node *n)
 			if (b >= 0) {
 				/* Single set bit */
 				if (b < 8)
-					printf("\tset %d,l\n", b);
+					printf("\tset %u,l\n", b);
 				else
-					printf("\tset %d,h\n", b - 8);
+					printf("\tset %u,h\n", b - 8);
 				return 1;
 			}
 			/* For small values it's more efficient to do this inline even
 			   in -Os */
 			if (!(v & 0xFF00)) {
-				printf("\tld a,0x%x\n\tor l\nld l,a\n", v);
+				printf("\tld a,0x%x\n\tor l\n\tld l,a\n", v);
 				return 1;
 			}
 			if (!(v & 0x00FF)) {
-				printf("\tld a,0x%x\n\tor h\nld h,a\n", v >> 8);
+				printf("\tld a,0x%x\n\tor h\n\tld h,a\n", v >> 8);
 				return 1;
 			}
 		}
@@ -1501,15 +1501,17 @@ unsigned gen_direct(struct node *n)
 	case T_HAT:
 		/* For small values it's more efficient to do this inline even
 		   in -Os */
-		if (v == 0)
-			return 1;
-		if (!(v & 0xFF00)) {
-			printf("\tld a,0x%x\n\txor l\nld l,a\n", v);
-			return 1;
-		}
-		if (!(v & 0x00FF)) {
-			printf("\tld a,0x%x\n\txor h\nld h,a\n", v >> 8);
-			return 1;
+		if (r->op == T_CONSTANT && s <= 2) {
+			if (v == 0)
+				return 1;
+			if (!(v & 0xFF00)) {
+				printf("\tld a,0x%x\n\txor l\n\tld l,a\n", v);
+				return 1;
+			}
+			if (!(v & 0x00FF)) {
+				printf("\tld a,0x%x\n\txor h\n\tld h,a\n", v >> 8);
+				return 1;
+			}
 		}
 		if (gen_logicc(r, s, "xor", r->value, 3))
 			return 1;
@@ -1550,7 +1552,7 @@ unsigned gen_direct(struct node *n)
 		/* This occurs a lot with pointers */
 		if (s == 2 && r->op == T_CONSTANT) {
 			if (v <= 4) {
-				printf("\tcall __postinc%d\n", v);
+				printf("\tcall __postinc%u\n", v);
 				return 1;
 			}
 			if (v <= 255) {
@@ -1580,11 +1582,11 @@ unsigned gen_direct(struct node *n)
 		/* These are very common */
 		if (s == 2 && r->op == T_CONSTANT) {
 			if (v <= 4) {
-				printf("\tcall __pluseq%d\n", v);
+				printf("\tcall __pluseq%u\n", v);
 				return 1;
 			}
 			if (v < 256) {
-				printf("\tld e,%d\n", v);
+				printf("\tld e,%u\n", v);
 				printf("\tcall __pluseqe\n");
 				return 1;
 			}
@@ -1606,7 +1608,7 @@ unsigned gen_direct(struct node *n)
 		/* This occurs a lot with pointers */
 		if (s == 2 && r->op == T_CONSTANT) {
 			if (v <= 4) {
-				printf("\tcall __postdec%d\n", v);
+				printf("\tcall __postdec%u\n", v);
 				return 1;
 			}
 			if (v <= 255) {
@@ -1648,11 +1650,11 @@ unsigned gen_direct(struct node *n)
 		/* These are very common */
 		if (s == 2 && r->op == T_CONSTANT) {
 			if (v <= 4) {
-				printf("\tcall __minuseq%d\n", v);
+				printf("\tcall __minuseq%u\n", v);
 				return 1;
 			}
 			if (v < 256) {
-				printf("\tld e,%d\n", v);
+				printf("\tld e,%u\n", v);
 				printf("\tcall __minuseqe\n");
 				return 1;
 			}
@@ -1708,9 +1710,9 @@ unsigned gen_uni_direct(struct node *n)
 			/* Bit test on BC - always CCONLY */
 			v = n->value;
 			if (v < 8)
-				printf("\tbit %d,c\n", v);
+				printf("\tbit %u,c\n", v);
 			else
-				printf("\tbit %d,b\n", v - 8);
+				printf("\tbit %u,b\n", v - 8);
 		}
 	}
 	return 0;
@@ -1855,9 +1857,9 @@ unsigned gen_shortcut(struct node *n)
 		/* Expression result is now in HL */
 		if (s == 1) {
 			printf("\tld a,l\n");
-			printf("\tld (_%s+%d), a\n", namestr(n->snum), WORD(n->value));
+			printf("\tld (_%s+%u), a\n", namestr(n->snum), WORD(n->value));
 		} else {
-			printf("\tld (_%s+%d), hl\n", namestr(n->snum), WORD(n->value));
+			printf("\tld (_%s+%u), hl\n", namestr(n->snum), WORD(n->value));
 		}
 		return 1;
 	}
@@ -1866,7 +1868,7 @@ unsigned gen_shortcut(struct node *n)
 		/* Rabbit and Z280 */
 		if (HAS_LDHLSP && n->value + sp < 255 && s == 2) {
 			codegen_lr(n->right);
-			printf("\tld (sp + %d),hl\n", WORD(n->value + sp));
+			printf("\tld (sp + %u),hl\n", WORD(n->value + sp));
 			return 1;
 		}
 		/* General case */
@@ -1907,11 +1909,11 @@ unsigned gen_shortcut(struct node *n)
 			if (s == 1) {
 				if (!load_a_with(r)) {
 					codegen_lr(r);
-					printf("\tld (%s + %d),l\n", rp, n->val2);
+					printf("\tld (%s + %u),l\n", rp, n->val2);
 					return 1;
 				}
 				if (*rp == 'i')
-					printf("\tld (%s + %d),a\n", rp, n->val2);
+					printf("\tld (%s + %u),a\n", rp, n->val2);
 				else
 					printf("\tld (%s),a\n", rp);
 				return 1;
@@ -1919,18 +1921,18 @@ unsigned gen_shortcut(struct node *n)
 			if (s == 2) {
 				if (!load_hl_with(r))
 					codegen_lr(r);
-				printf("\tld (%s + %d),l\n", rp, n->val2);
-				printf("\tld (%s + %d),h\n", rp, n->val2 + 1);
+				printf("\tld (%s + %u),l\n", rp, n->val2);
+				printf("\tld (%s + %u),h\n", rp, n->val2 + 1);
 				return 1;
 			}
 			if (s == 4) {
 				if (!load_hl_with(r))
 					codegen_lr(r);
-				printf("\tld (%s + %d),l\n", rp, n->val2);
-				printf("\tld (%s + %d),h\n", rp, n->val2 + 1);
+				printf("\tld (%s + %u),l\n", rp, n->val2);
+				printf("\tld (%s + %u),h\n", rp, n->val2 + 1);
 				printf("\tld de, (__hireg)\n");
-				printf("\tld (%s + %d),e\n", rp, n->val2 + 2);
-				printf("\tld (%s + %d),d\n", rp, n->val2 + 3);
+				printf("\tld (%s + %u),e\n", rp, n->val2 + 2);
+				printf("\tld (%s + %u),d\n", rp, n->val2 + 3);
 				return 1;
 			}
 		}
@@ -2020,7 +2022,7 @@ unsigned gen_shortcut(struct node *n)
 				/* Z80 has no 16bit subtract for IX or IT */
 				if (reg != 1) {
 					if (r->op == T_CONSTANT) {
-						printf("\tld de,%d\n", -v);
+						printf("\tld de,%u\n", -v);
 						printf("\tadd %s,de\n", regnames[reg]);
 						return 1;
 					}
@@ -2050,7 +2052,7 @@ unsigned gen_shortcut(struct node *n)
 			codegen_lr(r);
 			if (reg != 1) {
 				if (r->op == T_CONSTANT) {
-					printf("\tlxi d,%d\n", -v);
+					printf("\tlxi d,%u\n", -v);
 					printf("\tadd %s,de\n", regnames[reg]);
 				} else {
 					codegen_lr(r);
@@ -2242,30 +2244,30 @@ unsigned gen_node(struct node *n)
 		/* Load from a name */
 	case T_NREF:
 		if (size == 1) {
-			printf("\tld a,(_%s+%d)\n", namestr(n->snum), v);
+			printf("\tld a,(_%s+%u)\n", namestr(n->snum), v);
 			printf("\tld l,a\n");
 			return 1;
 		} else if (size == 2) {
-			printf("\tld hl,(_%s+%d)\n", namestr(n->snum), v);
+			printf("\tld hl,(_%s+%u)\n", namestr(n->snum), v);
 			return 1;
 		} else if (size == 4) {
-			printf("\tld hl,(_%s+%d)\n", namestr(n->snum), v + 2);
+			printf("\tld hl,(_%s+%u)\n", namestr(n->snum), v + 2);
 			printf("\tld (__hireg),hl\n");
-			printf("\tld hl,(_%s+%d)\n", namestr(n->snum), v);
+			printf("\tld hl,(_%s+%u)\n", namestr(n->snum), v);
 			return 1;
 		}
 		break;
 	case T_LBREF:
 		if (size == 1) {
-			printf("\tld a,(T%d+%d)\n", n->val2, v);
+			printf("\tld a,(T%u+%u)\n", n->val2, v);
 			printf("\tld l,a\n");
 		} else if (size == 2) {
-			printf("\tld hl,(T%d+%d)\n", n->val2, v);
+			printf("\tld hl,(T%u+%u)\n", n->val2, v);
 			return 1;
 		} else if (size == 4) {
-			printf("\tld hl, (T%d+%d)\n", n->val2, v + 2);
+			printf("\tld hl, (T%u+%u)\n", n->val2, v + 2);
 			printf("\tld (__hireg),hl\n");
-			printf("\tld hl,(T%d+%d)\n", n->val2, v);
+			printf("\tld hl,(T%u+%u)\n", n->val2, v);
 		} else
 			error("lbrb");
 		return 1;
@@ -2274,7 +2276,7 @@ unsigned gen_node(struct node *n)
 		   so can go away */
 		if (nr)
 			return 1;
-/*		printf(";L sp %d spval %d %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
+/*		printf(";L sp %u spval %u %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
 		if (generate_lref(v, size, 0))
 			return 1;
 		error("lrb");
@@ -2292,8 +2294,8 @@ unsigned gen_node(struct node *n)
  		return 1;
 	case T_NSTORE:
 		if (size == 4) {
-			printf("\tld (%s+%d), hl\n", namestr(n->snum), v);
-			printf("\tld de,(__hireg)\nld (%s+%d),de\n",
+			printf("\tld (%s+%u), hl\n", namestr(n->snum), v);
+			printf("\tld de,(__hireg)\nld (%s+%u),de\n",
 				namestr(n->snum), v + 2);
 			return 1;
 		}
@@ -2301,7 +2303,7 @@ unsigned gen_node(struct node *n)
 			return 0;
 		if (size == 1)
 			printf("\tld a,l\n");
-		printf("\tld (_%s+%d),", namestr(n->snum), v);
+		printf("\tld (_%s+%u),", namestr(n->snum), v);
 		if (size == 1)
 			printf("a\n");
 		else
@@ -2309,28 +2311,28 @@ unsigned gen_node(struct node *n)
 		return 1;
 	case T_LBSTORE:
 		if (size == 4) {
-			printf("\tld (T%d+%d),hl\n", n->val2, v);
-			printf("\tld de,(__hireg)\n\tld (T%d+%d),de\n",
+			printf("\tld (T%u+%u),hl\n", n->val2, v);
+			printf("\tld de,(__hireg)\n\tld (T%u+%u),de\n",
 				n->val2, v + 2);
 			return 1;
 		}
 		if (size > 2)
 			return 0;
 		if (size == 1)
-			printf("\tld a,l\n\tld (T%d+%d),a\n", n->val2, v);
+			printf("\tld a,l\n\tld (T%u+%u),a\n", n->val2, v);
 		else
-			printf("\tld (T%d+%d),hl\n", n->val2, v);
+			printf("\tld (T%u+%u),hl\n", n->val2, v);
 		return 1;
 	case T_LSTORE:
-/*		printf(";L sp %d spval %d %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
+/*		printf(";L sp %u spval %u %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
 		v += sp;
 		if (HAS_LDHLSP && v <= 255) {
 			if (size == 2) {
-				printf("\tld (sp+%d),hl\n", v);
+				printf("\tld (sp+%u),hl\n", v);
 				return 1;
 			}
 			if (HAS_LDASP && size == 1) {
-				printf("\tld a,l\n\tld (sp + %d),a d\n", v);
+				printf("\tld a,l\n\tld (sp + %u),a d\n", v);
 				return 1;
 			}
 		}
@@ -2347,7 +2349,7 @@ unsigned gen_node(struct node *n)
 			return 1;
 		}
 		if (size == 1 && (!optsize || v >= LWDIRECT)) {
-			printf("\tld a,l\n\tld hl,%d\n\tadd hl,sp\n\tld (hl),a\n", WORD(v));
+			printf("\tld a,l\n\tld hl,%u\n\tadd hl,sp\n\tld (hl),a\n", WORD(v));
 			if (!(n->flags & NORETURN))
 				printf("\tld l,a\n");
 			return 1;
@@ -2370,18 +2372,18 @@ unsigned gen_node(struct node *n)
 		/* Like load the helper is offset by two because of the
 		   stack */
 		if (v < 24)
-			printf("\tcall __%s%d\n", name, v + 2);
+			printf("\tcall __%s%u\n", name, v + 2);
 		else if (v < 253)
-			printf("\tcall __%s\n\t.byte %d\n", name, v + 2);
+			printf("\tcall __%s\n\t.byte %u\n", name, v + 2);
 		else
-			printf("\tcall __%sw\n\t.word %d\n", name, v + 2);
+			printf("\tcall __%sw\n\t.word %u\n", name, v + 2);
 		return 1;
 	case T_RSTORE:
 		load_regvar(n->value, size);
 		return 1;
 		/* Call a function by name */
 	case T_CALLNAME:
-		printf("\tcall _%s+%d\n", namestr(n->snum), v);
+		printf("\tcall _%s+%u\n", namestr(n->snum), v);
 		return 1;
 	case T_EQ:
 		if (size == 2) {
@@ -2410,23 +2412,23 @@ unsigned gen_node(struct node *n)
 			return 1;
 		case 2:
 			if (size == 4) {
-				printf("\tld h,(ix + %d)\n", n->val2 + 3);
-				printf("\tld l,(ix + %d)\n", n->val2 + 2);
+				printf("\tld h,(ix + %u)\n", n->val2 + 3);
+				printf("\tld l,(ix + %u)\n", n->val2 + 2);
 				printf("\tld (__hireg),hl\n");
 			}
 			if (size > 1)
-				printf("\tld h,(ix + %d)\n", n->val2 + 1);
-			printf("\tld l,(ix + %d)\n", n->val2);
+				printf("\tld h,(ix + %u)\n", n->val2 + 1);
+			printf("\tld l,(ix + %u)\n", n->val2);
 			return 1;
 		case 3:
 			if (size == 4) {
-				printf("\tld h,(iy + %d)\n", n->val2 + 3);
-				printf("\tld l,(iy + %d)\n", n->val2 + 2);
+				printf("\tld h,(iy + %u)\n", n->val2 + 3);
+				printf("\tld l,(iy + %u)\n", n->val2 + 2);
 				printf("\tld (__hireg),hl\n");
 			}
 			if (size > 1)
-				printf("\tld h,(iy + %d)\n", n->val2 + 1);
-			printf("\tld l,(iy + %d)\n", n->val2);
+				printf("\tld h,(iy + %u)\n", n->val2 + 1);
+			printf("\tld l,(iy + %u)\n", n->val2);
 			return 1;
 		}
 		return 0;
@@ -2452,7 +2454,7 @@ unsigned gen_node(struct node *n)
 		return 1;
 	case T_LABEL:
 		/* Used for const strings and local static */
-		printf("\tld hl,T%d+%d\n", n->val2, v);
+		printf("\tld hl,T%u+%u\n", n->val2, v);
 		return 1;
 	case T_CONSTANT:
 		switch(size) {
@@ -2469,18 +2471,18 @@ unsigned gen_node(struct node *n)
 		break;
 	case T_NAME:
 		printf("\tld hl,");
-		printf("_%s+%d\n", namestr(n->snum), v);
+		printf("_%s+%u\n", namestr(n->snum), v);
 		return 1;
 	/* FIXME: LBNAME ?? */
 	case T_LOCAL:
 		v += sp;
-/*		printf(";LO sp %d spval %d %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
+/*		printf(";LO sp %u spval %u %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
 		printf("\tld hl,0x%x\n", v);
 		printf("\tadd hl,sp\n");
 		return 1;
 	case T_ARGUMENT:
 		v += frame_len + argbase + sp;
-/*		printf(";AR sp %d spval %d %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
+/*		printf(";AR sp %u spval %u %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
 		printf("\tld hl,0x%x\n", v);
 		printf("\tadd hl,sp\n");
 		return 1;
@@ -2527,9 +2529,9 @@ unsigned gen_node(struct node *n)
 	case T_BTST:
 		/* Always CCONLY */
 		if (v < 8)
-			printf("\tbit %d, l\n", v);
+			printf("\tbit %u, l\n", v);
 		else
-			printf("\tbit %d, h\n", v - 8);
+			printf("\tbit %u, h\n", v - 8);
 		return 1;
 	}
 	return 0;

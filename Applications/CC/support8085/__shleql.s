@@ -9,8 +9,8 @@ __shleql:
 	; HL is now the lval, A is the shift
 	ani	31
 	jz	done
-	push	psw
 	push	h
+	push	psw
 	mov	e,m
 	inx	h
 	mov	d,m

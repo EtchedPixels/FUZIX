@@ -704,7 +704,7 @@ struct node *constify(struct node *n)
 			value ^= r->value;
 			break;
 		case T_LTLT:
-			value <<= r->value;
+//FIXME			value <<= r->value;
 			break;
 		case T_GTGT:
 			if (l->type & UNSIGNED)

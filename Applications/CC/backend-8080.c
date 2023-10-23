@@ -360,7 +360,7 @@ void gen_frame(unsigned size, unsigned aframe)
 		argbase += 2;
 	}
 	if (size > 10) {
-		opcode(OP_LXI, 0, R_HL, "lxi h,%d", -size);
+		opcode(OP_LXI, 0, R_HL, "lxi h,%u", (-size) & 0xFFFF);
 		opcode(OP_DAD, R_SP|R_HL, R_HL, "dad sp");
 		opcode(OP_SPHL, R_HL, R_SP, "sphl");
 		return;
@@ -384,7 +384,7 @@ void gen_epilogue(unsigned size, unsigned argsize)
 	   where we can burn the return */
 	sp -= size;
 	if (cpu == 8085 && size <= 255 && size > 4) {
-		opcode(OP_LDSI, R_SP, R_DE, "ldsi %d", size);
+		opcode(OP_LDSI, R_SP, R_DE, "ldsi %u", size);
 		opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 		opcode(OP_SPHL, R_HL, R_SP, "sphl");
 		opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
@@ -420,7 +420,7 @@ void gen_label(const char *tail, unsigned n)
 	unreachable = 0;
 	/* A branch label means the state is unknown so force any
 	   existing state and don't assume anything */
-	opcode(OP_LABEL, R_ALL, R_ALL, "L%d%s:", n, tail);
+	opcode(OP_LABEL, R_ALL, R_ALL, "L%u%s:", n, tail);
 }
 
 /* A return statement. We can sometimes shortcut this if we have
@@ -440,18 +440,18 @@ unsigned gen_exit(const char *tail, unsigned n)
 void gen_jump(const char *tail, unsigned n)
 {
 	/* Force anything deferred to complete before the jump */
-	opcode(OP_JUMP, R_ALL, 0, "jmp L%d%s", n, tail);
+	opcode(OP_JUMP, R_ALL, 0, "jmp L%u%s", n, tail);
 	unreachable = 1;
 }
 
 void gen_jfalse(const char *tail, unsigned n)
 {
-	opcode(OP_JUMP, R_ALL, 0, "jz L%d%s", n, tail);
+	opcode(OP_JUMP, R_ALL, 0, "jz L%u%s", n, tail);
 }
 
 void gen_jtrue(const char *tail, unsigned n)
 {
-	opcode(OP_JUMP, R_ALL, 0, "jnz L%d%s", n, tail);
+	opcode(OP_JUMP, R_ALL, 0, "jnz L%u%s", n, tail);
 }
 
 static void gen_cleanup(unsigned v)
@@ -464,7 +464,7 @@ static void gen_cleanup(unsigned v)
 		unsigned x = func_flags & F_VOIDRET;
 		if (!x)
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-		opcode(OP_LXI, 0, R_HL, "lxi h,%d", v);
+		opcode(OP_LXI, 0, R_HL, "lxi h,%u", v);
 		opcode(OP_DAD, R_SP|R_HL, R_HL, "dad sp");
 		opcode(OP_SPHL, R_HL, R_SP, "sphl");
 		if (!x)
@@ -511,7 +511,7 @@ void gen_helpclean(struct node *n)
 
 void gen_switch(unsigned n, unsigned type)
 {
-	opcode(OP_LXI, 0, R_DE, "lxi d,Sw%d", n);
+	opcode(OP_LXI, 0, R_DE, "lxi d,Sw%u", n);
 	/* Nothing is preserved over a switch */
 	printf("\tjmp __switch");
 	helper_type(type, 0);
@@ -520,19 +520,19 @@ void gen_switch(unsigned n, unsigned type)
 
 void gen_switchdata(unsigned n, unsigned size)
 {
-	opcode(OP_LABEL, 0, 0, "Sw%d:", n);
-	opcode(OP_DATA, 0, 0, ".word %d", size);
+	opcode(OP_LABEL, 0, 0, "Sw%u:", n);
+	opcode(OP_DATA, 0, 0, ".word %u", size);
 }
 
 void gen_case_label(unsigned tag, unsigned entry)
 {
 	unreachable = 0;
-	opcode(OP_LABEL, 0, 0, "Sw%d_%d:", tag, entry);
+	opcode(OP_LABEL, 0, 0, "Sw%u_%u:", tag, entry);
 }
 
 void gen_case_data(unsigned tag, unsigned entry)
 {
-	opcode(OP_LABEL, 0, 0, ".word Sw%d_%d", tag, entry);
+	opcode(OP_LABEL, 0, 0, ".word Sw%u_%u", tag, entry);
 }
 
 void gen_data_label(const char *name, unsigned align)
@@ -542,24 +542,24 @@ void gen_data_label(const char *name, unsigned align)
 
 void gen_space(unsigned value)
 {
-	opcode(OP_DATA, 0, 0, ".ds %d", value);
+	opcode(OP_DATA, 0, 0, ".ds %u", value);
 }
 
 void gen_text_data(unsigned n)
 {
-	opcode(OP_DATA, 0, 0, ".word T%d", n);
+	opcode(OP_DATA, 0, 0, ".word T%u", n);
 }
 
 /* The label for a literal (currently only strings) */
 void gen_literal(unsigned n)
 {
 	if (n)
-		opcode(OP_LABEL, 0, 0, "T%d:", n);
+		opcode(OP_LABEL, 0, 0, "T%u:", n);
 }
 
 void gen_name(struct node *n)
 {
-	opcode(OP_DATA, 0, 0, ".word _%s+%d", namestr(n->snum), WORD(n->value));
+	opcode(OP_DATA, 0, 0, ".word _%s+%u", namestr(n->snum), WORD(n->value));
 }
 
 void gen_value(unsigned type, unsigned long value)
@@ -576,14 +576,14 @@ void gen_value(unsigned type, unsigned long value)
 		break;
 	case CSHORT:
 	case USHORT:
-		opcode(OP_DATA, 0, 0, ".word %d", w);
+		opcode(OP_DATA, 0, 0, ".word %u", w);
 		break;
 	case CLONG:
 	case ULONG:
 	case FLOAT:
 		/* We are little endian */
-		opcode(OP_DATA, 0, 0, ".word %d\n", w);
-		opcode(OP_DATA, 0, 0, ".word %d\n", (unsigned) ((value >> 16) & 0xFFFF));
+		opcode(OP_DATA, 0, 0, ".word %u\n", w);
+		opcode(OP_DATA, 0, 0, ".word %u\n", (unsigned) ((value >> 16) & 0xFFFF));
 		break;
 	default:
 		error("unsuported type");
@@ -592,7 +592,7 @@ void gen_value(unsigned type, unsigned long value)
 
 void gen_start(void)
 {
-	printf("\t.setcpu %d\n", cpu);
+	printf("\t.setcpu %u\n", cpu);
 }
 
 void gen_end(void)
@@ -633,7 +633,7 @@ unsigned gen_lref(unsigned v, unsigned size, unsigned to_de)
 	   255 bytes from SP. However we end up trashing DE in doing so. For
 	   now don't use this for DE loads, look at saving stuff later TODO */
 	if (cpu == 8085 && v <= 255 && !to_de) {
-		opcode(OP_LDSI, R_SP, R_DE, "ldsi %d", v);
+		opcode(OP_LDSI, R_SP, R_DE, "ldsi %u", v);
 		if (size == 2)
 			opcode(OP_LHLX, R_DE|R_M, R_HL, "lhlx");
 		else {
@@ -657,7 +657,7 @@ unsigned gen_lref(unsigned v, unsigned size, unsigned to_de)
 	if (size == 1 && (!optsize || v >= LWDIRECT || to_de)) {
 		if (to_de)
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-		opcode(OP_LXI, 0, R_HL, "lxi h,%d", v);
+		opcode(OP_LXI, 0, R_HL, "lxi h,%u", v);
 		opcode(OP_DAD, R_SP|R_HL, R_HL, "dad sp");
 		opcode(OP_MOV, R_HL|R_M, R_L, "mov l,m");
 		if (to_de)
@@ -667,7 +667,7 @@ unsigned gen_lref(unsigned v, unsigned size, unsigned to_de)
 	/* Longer reach for 8085 is via addition games, but only for HL
 	   as lhlx requires we use DE and HL */
 	if (cpu == 8085 && size == 2 && !to_de) {
-		opcode(OP_LXI, 0, R_HL, "lxi h,%d", WORD(v));
+		opcode(OP_LXI, 0, R_HL, "lxi h,%u", WORD(v));
 		opcode(OP_DAD, R_SP|R_HL, R_HL, "dad sp");
 		opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 		opcode(OP_LHLX, R_DE|R_M, R_HL, "lhlx");
@@ -705,11 +705,11 @@ unsigned gen_lref(unsigned v, unsigned size, unsigned to_de)
 		opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 
 	if (v < LWDIRECT)
-		printf("\tcall __%s%d\n", name, v + 2);
+		printf("\tcall __%s%u\n", name, v + 2);
 	else if (v < 253)
-		printf("\tcall __%s\n\t.byte %d\n", name, v + 2);
+		printf("\tcall __%s\n\t.byte %u\n", name, v + 2);
 	else
-		printf("\tcall __%sw\n\t.word %d\n", name, v + 2);
+		printf("\tcall __%sw\n\t.word %u\n", name, v + 2);
 
 	if (to_de)
 		opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
@@ -768,26 +768,26 @@ static unsigned load_r_with(const char r, struct node *n, unsigned mask)
 
 	switch(n->op) {
 	case T_NAME:
-		opcode(OP_LXI, 0, mask, "lxi %c,_%s+%d", r, namestr(n->snum), v);
+		opcode(OP_LXI, 0, mask, "lxi %c,_%s+%u", r, namestr(n->snum), v);
 		return 1;
 	case T_LABEL:
-		opcode(OP_LXI, 0, mask, "lxi %c,T%d+%d", r, n->val2, v);
+		opcode(OP_LXI, 0, mask, "lxi %c,T%u+%u", r, n->val2, v);
 		return 1;
 	case T_CONSTANT:
 		/* We know this is not a long from the checks above */
-		opcode(OP_LXI, 0, mask, "lxi %c,%d", r, v);
+		opcode(OP_LXI, 0, mask, "lxi %c,%u", r, v);
 		return 1;
 	case T_NREF:
 		name = namestr(n->snum);
 		if (r == 'b')
 			return 0;
 		else if (r == 'h') {
-			opcode(OP_LHLD, R_MEM, R_HL, "lhld _%s+%d", name, v);
+			opcode(OP_LHLD, R_MEM, R_HL, "lhld _%s+%u", name, v);
 			return 1;
 		} else if (r == 'd') {
 			/* We know it is int or pointer */
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-			opcode(OP_LHLD, R_MEM, R_HL, "lhld _%s+%d\n", name, v);
+			opcode(OP_LHLD, R_MEM, R_HL, "lhld _%s+%u\n", name, v);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 			return 1;
 		}
@@ -797,12 +797,12 @@ static unsigned load_r_with(const char r, struct node *n, unsigned mask)
 		if (r == 'b')
 			return 0;
 		else if (r == 'h') {
-			opcode(OP_LHLD, R_MEM, R_HL, "lhld T%d+%d", n->val2, v);
+			opcode(OP_LHLD, R_MEM, R_HL, "lhld T%u+%u", n->val2, v);
 			return 1;
 		} else if (r == 'd') {
 			/* We know it is int or pointer */
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-			opcode(OP_LHLD, R_MEM, R_HL, "lhld T%d+%d", n->val2, v);
+			opcode(OP_LHLD, R_MEM, R_HL, "lhld T%u+%u", n->val2, v);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 			return 1;
 		}
@@ -849,13 +849,13 @@ static unsigned load_a_with(struct node *n)
 	switch(n->op) {
 	case T_CONSTANT:
 		/* We know this is not a long from the checks above */
-		opcode(OP_MVI, 0, R_A, "mvi a,%d", BYTE(n->value));
+		opcode(OP_MVI, 0, R_A, "mvi a,%u", BYTE(n->value));
 		break;
 	case T_NREF:
-		opcode(OP_LDA, R_MEM, R_A, "lda _%s+%d", namestr(n->snum), WORD(n->value));
+		opcode(OP_LDA, R_MEM, R_A, "lda _%s+%u", namestr(n->snum), WORD(n->value));
 		break;
 	case T_LBREF:
-		opcode(OP_LDA, R_MEM, R_A, "lda T%d+%d", n->val2, WORD(n->value));
+		opcode(OP_LDA, R_MEM, R_A, "lda T%u+%u", n->val2, WORD(n->value));
 		break;
 	case T_RREF:
 		opcode(OP_MOV, R_C, R_A, "mov a,c");
@@ -863,7 +863,7 @@ static unsigned load_a_with(struct node *n)
 	case T_LREF:
 		/* We don't want to trash HL as we may be doing an HL:A op */
 		opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-		opcode(OP_LXI, 0, R_HL, "lxi h,%d", WORD(n->value));
+		opcode(OP_LXI, 0, R_HL, "lxi h,%u", WORD(n->value));
 		opcode(OP_DAD, R_HL|R_SP, R_HL, "dad sp");
 		opcode(OP_MOV, R_HL|R_M, R_A, "mov a,m");
 		opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
@@ -1056,7 +1056,7 @@ static unsigned gen_logicc(struct node *n, unsigned s, const char *op, unsigned 
 			if (code == 3 && h == 255)
 				printf("\tcpl\n");
 			else
-				printf("\t%s %d", op, h);
+				printf("\t%s %u", op, h);
 			opcode(OP_MOV, R_A, R_H, "mov h,a");
 		}
 	}
@@ -1071,7 +1071,7 @@ static unsigned gen_logicc(struct node *n, unsigned s, const char *op, unsigned 
 		if (code == 3&& l == 255)
 			printf("\tcpl\n");
 		else
-			printf("\t%s %d\n", op, l);
+			printf("\t%s %u\n", op, l);
 		opcode(OP_MOV, R_A, R_L, "mov l,a");
 	}
 	return 1;
@@ -1138,7 +1138,7 @@ unsigned gen_direct(struct node *n)
 			printf("\tmov a,l\n\tsta");
 		else
 			printf("\tshld ");
-		printf("_%s+%d\n", namestr(n->snum), WORD(n->value));
+		printf("_%s+%u\n", namestr(n->snum), WORD(n->value));
 			return 1;
 		/* TODO 4/8 for long etc */
 		return 0;
@@ -1149,7 +1149,7 @@ unsigned gen_direct(struct node *n)
 			printf("\tmov a,l\n\tsta");
 		else
 			printf("\tshld");
-		printf(" T%d+%d\n", n->val2, v);
+		printf(" T%u+%u\n", n->val2, v);
 		return 1;
 	case T_RSTORE:
 		loadbc(s);
@@ -1170,7 +1170,7 @@ unsigned gen_direct(struct node *n)
 			/* We need to end up with the value in l if this is not NORETURN, also
 			   we can optimize constant a step more */
 			if (r->op == T_CONSTANT && nr)
-				opcode(OP_MVI, R_HL, R_MEM, "mvi m,%d", ((unsigned)r->value) & 0xFF);
+				opcode(OP_MVI, R_HL, R_MEM, "mvi m,%u", ((unsigned)r->value) & 0xFF);
 			else {
 				if (load_a_with(r) == 0)
 					return 0;
@@ -1223,7 +1223,7 @@ unsigned gen_direct(struct node *n)
 					repeated_op("dcx h", v);
 				return 1;
 			}
-			opcode(OP_LXI, 0, R_DE, "lxi d,%d", 65536 - v);
+			opcode(OP_LXI, 0, R_DE, "lxi d,%u", 65536 - v);
 			opcode(OP_DAD, R_HL|R_DE, R_HL, "dad d");
 			return 1;
 		}
@@ -1352,7 +1352,7 @@ unsigned gen_direct(struct node *n)
 				repeated_op("inr m", r->value >> 8);
 				return 1;
 			}
-			opcode(OP_MVI, 0, R_A, "mvi a,%d", r->value >> 8);
+			opcode(OP_MVI, 0, R_A, "mvi a,%u", r->value >> 8);
 			opcode(OP_ADD, R_MEM|R_HL|R_A, R_A, "add m");
 			opcode(OP_MOV, R_A|R_HL, R_MEM, "mov m,a");
 			return 1;
@@ -1373,7 +1373,7 @@ unsigned gen_direct(struct node *n)
 					if (r->value == 1)
 						printf("\tmov a,m\n\tdcr a\n\tmov m,a");
 					else
-						printf("\tmov a,m\n\tsbi %d\n\tmov m,a",
+						printf("\tmov a,m\n\tsbi %u\n\tmov m,a",
 							(int)r->value);
 				} else {
 					if (load_a_with(r) == 0)
@@ -1526,7 +1526,7 @@ unsigned gen_shortcut(struct node *n)
 			printf("\tshld");
 		else
 			printf("\tmov a,l\n\tsta");
-		printf(" _%s+%d\n", namestr(n->snum), WORD(n->value));
+		printf(" _%s+%u\n", namestr(n->snum), WORD(n->value));
 		return 1;
 	}
 	/* Locals we can do on 8085, 8080 is doable but messy - so not worth it */
@@ -1542,7 +1542,7 @@ unsigned gen_shortcut(struct node *n)
 		}
 		if (cpu == 8085 && n->value + sp < 255) {
 			codegen_lr(r);
-			opcode(OP_LDSI, R_SP, R_DE, "ldsi %d",WORD(n->value + sp));
+			opcode(OP_LDSI, R_SP, R_DE, "ldsi %u",WORD(n->value + sp));
 			if (s == 2)
 				printf("\tshlx\n");
 			else
@@ -1551,7 +1551,7 @@ unsigned gen_shortcut(struct node *n)
 		}
 	}
 	/* Shortcut any initialization of BC we can do directly */
-	if (n->op == T_RSTORE) {
+	if (n->op == T_RSTORE && nr) {
 		if (load_bc_with(r))
 			return 1;
 		return 0;
@@ -1584,14 +1584,14 @@ unsigned gen_shortcut(struct node *n)
 			if ((v & 0xFF00) == 0x0000)
 				opcode(OP_MVI, 0, R_H, "mvi h,0");
 			else if ((v & 0xFF00) != 0xFF00) {
-				opcode(OP_MVI, 0, R_A, "mvi a, %d", v >> 8);
+				opcode(OP_MVI, 0, R_A, "mvi a, %u", v >> 8);
 				opcode(OP_ANA, R_B, R_A, "ana b");
 				opcode(OP_MOV, R_A, R_H, "mov h,a");
 			}
 			if ((v & 0xFF) == 0x00)
 				opcode(OP_MVI, 0, R_L, "mvi l,0");
 			else if ((v & 0xFF) != 0xFF) {
-				opcode(OP_MVI, 0, R_A, "mvi a, %d", v & 0xFF);
+				opcode(OP_MVI, 0, R_A, "mvi a, %u", v & 0xFF);
 				opcode(OP_ANA, R_C, R_A, "ana c");
 				opcode(OP_MOV, R_A, R_L, "mov l,a");
 			}
@@ -1612,14 +1612,14 @@ unsigned gen_shortcut(struct node *n)
 			if ((v & 0xFF00) == 0xFF00)
 				opcode(OP_MVI, 0, R_H, "mvi h,0xff");
 			else if (v & 0xFF00) {
-				opcode(OP_MVI, 0, R_A, "mvi a, %d", v >> 8);
+				opcode(OP_MVI, 0, R_A, "mvi a, %u", v >> 8);
 				opcode(OP_ORA, R_B, R_A, "ora b");
 				opcode(OP_MOV, R_A, R_H, "mov h,a");
 			}
 			if ((v & 0xFF) == 0xFF)
 				opcode(OP_MVI, 0, R_L, "mvi l,0xff");
 			else if (v & 0xFF) {
-				opcode(OP_MVI, 0, R_A, "mvi a, %d", v & 0xFF);
+				opcode(OP_MVI, 0, R_A, "mvi a, %u", v & 0xFF);
 				opcode(OP_ORA, R_C, R_A, "ana c");
 				opcode(OP_MOV, R_A, R_L, "mov l,a");
 			}
@@ -1689,7 +1689,7 @@ unsigned gen_shortcut(struct node *n)
 				return 1;
 			}
 			if (r->op == T_CONSTANT) {
-				opcode(OP_LXI, 0, R_HL, "lxi h,%d", -v);
+				opcode(OP_LXI, 0, R_HL, "lxi h,%u", -v);
 				opcode(OP_DAD, R_HL|R_BC, R_HL, "dad b");
 				loadbc(s);
 				return 1;
@@ -1884,35 +1884,35 @@ unsigned gen_node(struct node *n)
 		/* Load from a name */
 	case T_NREF:
 		if (size == 1) {
-			opcode(OP_LDA, R_M, R_A, "lda _%s+%d", namestr(n->snum), v);
+			opcode(OP_LDA, R_M, R_A, "lda _%s+%u", namestr(n->snum), v);
 			opcode(OP_MOV, R_A, R_L, "mov l,a");
 		} else if (size == 2) {
-			opcode(OP_LHLD, R_M, R_HL, "lhld _%s+%d\n", namestr(n->snum), v);
+			opcode(OP_LHLD, R_M, R_HL, "lhld _%s+%u\n", namestr(n->snum), v);
 			return 1;
 		} else if (size == 4) {
-			printf("\tlhld _%s+%d\n", namestr(n->snum), v + 2);
+			printf("\tlhld _%s+%u\n", namestr(n->snum), v + 2);
 			printf("\tshld __hireg\n");
-			printf("\tlhld _%s+%d\n", namestr(n->snum), v);
+			printf("\tlhld _%s+%u\n", namestr(n->snum), v);
 		} else
 			error("nrb");
 		return 1;
 	case T_LBREF:
 		if (size == 1) {
-			printf("\tlda T%d+%d\n", n->val2, v);
+			printf("\tlda T%u+%u\n", n->val2, v);
 			printf("\tmov l,a\n");
 		} else if (size == 2) {
-			printf("\tlhld T%d+%d\n", n->val2, v);
+			printf("\tlhld T%u+%u\n", n->val2, v);
 		} else if (size == 4) {
-			printf("\tlhld T%d+%d\n", n->val2, v + 2);
+			printf("\tlhld T%u+%u\n", n->val2, v + 2);
 			printf("\tshld __hireg\n");
-			printf("\tlhld T%d+%d\n", n->val2, v);
+			printf("\tlhld T%u+%u\n", n->val2, v);
 		} else
 			error("lbrb");
 		return 1;
 	case T_LREF:
 		/* We are loading something then not using it, and it's local
 		   so can go away */
-		/* printf(";L sp %d %s(%ld)\n", sp, namestr(n->snum), n->value); */
+		/* printf(";L sp %u %s(%ld)\n", sp, namestr(n->snum), n->value); */
 		if (nr)
 			return 1;
 		v += sp;
@@ -1926,10 +1926,10 @@ unsigned gen_node(struct node *n)
 		return 1;
 	case T_NSTORE:
 		if (size == 4) {
-			opcode(OP_SHLD, R_HL, R_M, "shld %s+%d", namestr(n->snum), v);
+			opcode(OP_SHLD, R_HL, R_M, "shld %s+%u", namestr(n->snum), v);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 			opcode(OP_LHLD, R_M, R_HL, "lhld __hireg");
-			opcode(OP_SHLD, R_HL, R_M, "shld %s+%d\n",
+			opcode(OP_SHLD, R_HL, R_M, "shld %s+%u\n",
 				namestr(n->snum), v + 2);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 			return 1;
@@ -1938,25 +1938,25 @@ unsigned gen_node(struct node *n)
 			printf("\tmov a,l\n\tsta");
 		else
 			printf("\tshld");
-		printf(" _%s+%d\n", namestr(n->snum), v);
+		printf(" _%s+%u\n", namestr(n->snum), v);
 		return 1;
 	case T_LBSTORE:
 		if (size == 4) {
-			printf("\tshld T%d+%d\n", n->val2, v);
+			printf("\tshld T%u+%u\n", n->val2, v);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-			printf("\tlhld __hireg\n\tshld T%d+%d\n",
+			printf("\tlhld __hireg\n\tshld T%u+%u\n",
 				n->val2, v + 2);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 			return 1;
 		}
 		if (size == 1) {
 			opcode(OP_MOV, R_L, R_A, "mov a,l");
-			opcode(OP_STA, R_A, R_M, "sta T%d+%d\n", n->val2, v);
+			opcode(OP_STA, R_A, R_M, "sta T%u+%u\n", n->val2, v);
 		} else
-			opcode(OP_SHLD, R_HL, R_M, "shld T%d+%d\n", n->val2, v);
+			opcode(OP_SHLD, R_HL, R_M, "shld T%u+%u\n", n->val2, v);
 		return 1;
 	case T_LSTORE:
-/*		printf(";L sp %d spval %d %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
+/*		printf(";L sp %u spval %u %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
 		v += sp;
 		if (v == 0 && size == 2 ) {
 			if (nr)
@@ -1968,7 +1968,7 @@ unsigned gen_node(struct node *n)
 			return 1;
 		}
 		if (cpu == 8085 && v <= 255) {
-			opcode(OP_LDSI, R_DE, R_DE, "ldsi %d", v);
+			opcode(OP_LDSI, R_DE, R_DE, "ldsi %u", v);
 			if (size == 2)
 				opcode(OP_SHLX, R_DE|R_HL, R_M, "shlx");
 			else {
@@ -1992,14 +1992,14 @@ unsigned gen_node(struct node *n)
 		   and much slower. As these are fairly rare just inline it */
 		if (cpu == 8085 && size == 2) {
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-			opcode(OP_LXI, 0, R_HL,  "lxi h,%d", WORD(v));
+			opcode(OP_LXI, 0, R_HL,  "lxi h,%u", WORD(v));
 			opcode(OP_DAD, R_HL|R_SP, R_HL, "dad sp");
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 			opcode(OP_SHLX, R_HL|R_DE, R_M, "shlx");
 			return 1;
 		}
 		if (size == 1 && (!optsize || v >= LWDIRECT)) {
-			printf("\tmov a,l\n\tlxi h,%d\n\tdad sp\n\tmov m,a\n", WORD(v));
+			printf("\tmov a,l\n\tlxi h,%u\n\tdad sp\n\tmov m,a\n", WORD(v));
 			if (!nr)
 				printf("\tmov l,a\n");
 			return 1;
@@ -2008,7 +2008,7 @@ unsigned gen_node(struct node *n)
 		/* We dealt with size one above */
 		if (opt > 2 && size == 2) {
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
-			printf("\tlxi h,%d\n\tdad sp\n\tmov m,e\n\tinx h\n", WORD(v));
+			printf("\tlxi h,%u\n\tdad sp\n\tmov m,e\n\tinx h\n", WORD(v));
 			printf("\tmov m,d\n");
 			if (!nr)
 				opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
@@ -2026,18 +2026,18 @@ unsigned gen_node(struct node *n)
 		/* Like load the helper is offset by two because of the
 		   stack */
 		if (v < 24)
-			printf("\tcall __%s%d\n", name, v + 2);
+			printf("\tcall __%s%u\n", name, v + 2);
 		else if (v < 253)
-			printf("\tcall __%s\n\t.byte %d\n", name, v + 2);
+			printf("\tcall __%s\n\t.byte %u\n", name, v + 2);
 		else
-			printf("\tcall __%sw\n\t.word %d\n", name, v + 2);
+			printf("\tcall __%sw\n\t.word %u\n", name, v + 2);
 		return 1;
 	case T_RSTORE:
 		loadbc(size);
 		return 1;
 		/* Call a function by name */
 	case T_CALLNAME:
-		opcode(OP_CALL, 0, R_BC|R_DE|R_HL|R_PSW, "call _%s+%d", namestr(n->snum), v);
+		opcode(OP_CALL, 0, R_BC|R_DE|R_HL|R_PSW, "call _%s+%u", namestr(n->snum), v);
 		return 1;
 	case T_EQ:
 		if (size == 2) {
@@ -2104,7 +2104,7 @@ unsigned gen_node(struct node *n)
 		if (nr)
 			return 1;
 		/* Used for const strings and local static */
-		opcode(OP_LXI, 0, R_HL, "lxi h,T%d+%d", n->val2, v);
+		opcode(OP_LXI, 0, R_HL, "lxi h,T%u+%u", n->val2, v);
 		return 1;
 	case T_CONSTANT:
 		if (nr)
@@ -2114,29 +2114,29 @@ unsigned gen_node(struct node *n)
 			opcode(OP_LXI, 0, R_HL, "lxi h,%u\n", ((n->value >> 16) & 0xFFFF));
 			opcode(OP_SHLD, R_HL, R_MEM, "shld __hireg");
 		case 2:
-			opcode(OP_LXI, 0, R_HL, "lxi h,%d", v & 0xFFFF);
+			opcode(OP_LXI, 0, R_HL, "lxi h,%u", v & 0xFFFF);
 			return 1;
 		case 1:
-			opcode(OP_MVI, 0, R_L, "mvi l,%d", v & 0xFF);
+			opcode(OP_MVI, 0, R_L, "mvi l,%u", v & 0xFF);
 			return 1;
 		}
 		break;
 	case T_NAME:
 		if (nr)
 			return 1;
-		opcode(OP_LXI, 0, R_HL, "lxi h, _%s+%d", namestr(n->snum), v);
+		opcode(OP_LXI, 0, R_HL, "lxi h, _%s+%u", namestr(n->snum), v);
 		return 1;
 	/* FIXME: LBNAME ?? */
 	case T_LOCAL:
 		if (nr)
 			return 1;
 		v += sp;
-/*		printf(";LO sp %d spval %d %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
+/*		printf(";LO sp %u spval %u %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
 		if (cpu == 8085 && v <= 255) {
-			opcode(OP_LDSI, R_DE|R_SP, R_DE, "ldsi %d", v);
+			opcode(OP_LDSI, R_DE|R_SP, R_DE, "ldsi %u", v);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 		} else {
-			opcode(OP_LXI, 0, R_HL, "lxi h,%d", v);
+			opcode(OP_LXI, 0, R_HL, "lxi h,%u", v);
 			opcode(OP_DAD, R_SP|R_HL, R_HL, "dad sp");
 		}
 		return 1;
@@ -2144,12 +2144,12 @@ unsigned gen_node(struct node *n)
 		if (nr)
 			return 1;
 		v += frame_len + argbase + sp;
-/*		printf(";AR sp %d spval %d %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
+/*		printf(";AR sp %u spval %u %s(%ld)\n", sp, spval, namestr(n->snum), n->value); */
 		if (cpu == 8085 && v <= 255) {
-			opcode(OP_LDSI, R_DE|R_SP, R_DE, "ldsi %d", v);
+			opcode(OP_LDSI, R_DE|R_SP, R_DE, "ldsi %u", v);
 			opcode(OP_XCHG, R_DE|R_HL, R_DE|R_HL, "xchg");
 		} else {
-			opcode(OP_LXI, 0, R_HL, "lxi h,%d", v);
+			opcode(OP_LXI, 0, R_HL, "lxi h,%u", v);
 			opcode(OP_DAD, R_SP|R_HL, R_HL, "dad sp");
 		}
 		return 1;

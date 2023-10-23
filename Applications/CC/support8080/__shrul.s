@@ -9,7 +9,7 @@ __shrul:
 		mov	a,l		; shift amount
 		pop	h		; return address
 		pop	d		; lower half of value
-		xthl			; swap return addr with lower half
+		xthl			; swap return addr with upper half
 
 		; value is now HL:DE
 

@@ -1,82 +1,112 @@
-			.export __shreql
-			.export __shrequl
-			.setcpu 8085
-			.code
+	.export __shreql
+	.export __shrequl
+	.setcpu 8080
+	.code
 ;
-;	On 8085 we have ARHL so right arithmetic isn't too hard
+;	Has to be done the hard way
+;
+;	TOS holds the lval, HL the shift
+;
+;
+;	We could optimize 8,16,24 bit shift slices with register swaps TODO
 ;
 __shreql:
 	mov	a,l
 	pop	h
 	xthl
-	push	b
+	push	b		; save BC
+	push	h
 	; HL is now the lval, A is the shift
 	ani	31
 	jz	done
-	push	h
-	call	setup4
-loop:
-	arhl
-loop2:
+	mov	b,a		; count
+	call	setup4		; HLDE is now the data
+	mov	a,h
+	ora	a
+	jp	shftu		; Sign bit positive - do unsigned shift
+shftn:
+	mov	a,h
+	stc			; Set top bit as we are shifting a negative number
+	rar
+	mov	h,a
+	mov	a,l
+	rar
+	mov	l,a
+	mov	a,d
+	rar
+	mov	d,a
+	mov	a,e
+	rar
+	mov	e,a
+	dcr	b
+	jnz	shftn
+
+	; Result is now in HL:DE, TOS is the pointer
+store:
+	shld	__hireg		; save high word
+	pop	h
+	mov	m,e		; Write low word back
+	inx	h
+	mov	m,d
+	inx	h
+	push	d		; Save low word
 	xchg
-	jc	slide1
-	arhl
+	lhld	__hireg		; Get high word in DE
 	xchg
-	dcr	a
-	jnz	loop
+	mov	m,e		; Write high word
+	inx	h
+	mov	m,d
+	pop	h		; get low back
+	pop	b		; recover register values
+	ret
+
+; No shift but still need to load it
 done:
-	; our value is now in HLDE
-	shld	__hireg		; save the upper half result
-	pop	h		; lval back
-	mov	m,e
-	inx	h
-	mov	m,d
-	inx	h
-	push	d
+	call	setup4
+	jmp	store
+
+; Just load the value on a 0 shfit
+nowork:
+	call	setup4
 	xchg
-	lhld	__hireg
-	xchg
-	mov	m,e		; write back the upper word
-	inx	h
-	mov	m,d
-	pop	h		; get low word back for result
 	pop	b
 	ret
-slide1:
-	arhl
-	dad	b		; set top bit
-	xchg
-	dcr	a
-	jnz	loop
-	jmp	done
-
 ;
-;	We have no right shift logical
+;	Shift through A on the 8080
 ;
 __shrequl:
-	mov	a,l
-	pop	h
-	xthl
-	push	b
+	mov	a,l		; save shift value
+	pop	h		; return
+	xthl			; swap with pointer
+	push	b		; save BC
 	; HL is now the lval, A is the shift
 	ani	31
-	jz	done
-	push	h
-	call	setup4
-
-	;	Do one slow shift to get a 0 bit top then fall into the
-	;	signed version
-	arhl
-	push	psw
-	mov	a,h
-	ani	0x7F
+	jz	nowork
+	push	h		; save pointer
+	mov	b,a		; count
+	call	setup4		; HLDE is now the data
+shftu:
+	mov	a,h		; Shift 32bits HLDE right through A
+	ora	a
+	rar
 	mov	h,a
-	pop	psw
-	jmp	loop2
+	mov	a,l
+	rar
+	mov	l,a
+	mov	a,d
+	rar
+	mov	d,a
+	mov	a,e
+	rar
+	mov	e,a
+	dcr	b
+	jnz	shftu
 
+	jmp	store
+;
+;	Load DEHL from (HL). Destroys A
+;
 setup4:
-	push	psw
-	lxi	b,0x8000	; used to do the shift carry
 	mov	e,m
 	inx	h
 	mov	d,m
@@ -85,5 +115,4 @@ setup4:
 	inx	h
 	mov	h,m
 	mov	l,a
-	pop	psw
 	ret

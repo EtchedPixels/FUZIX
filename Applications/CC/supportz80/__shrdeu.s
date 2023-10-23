@@ -27,6 +27,7 @@ __shrdeu0d:
 		ld	l,h
 		ld	h,0
 		sub	8
+		ret	z
 shrlp:
 		srl	h
 		rr	l
@@ -42,6 +43,8 @@ __shrdeneg:
 		jr	c,shrnlp
 		ld	l,h
 		ld	h,255
+		sub	8
+		ret	z
 shrnlp:
 		sra	h
 		rr	l

@@ -46,7 +46,7 @@ static unsigned int outrecord = 0;
 
 void out_write(void)
 {
-	if (lseek(1, outrecord * 128L, SEEK_SET) < 0)
+	if (lseek(1, outrecord * 128UL, SEEK_SET) < 0)
 		fatal("seek error");
 	if (outlen && write(1, outbuf, outlen) != outlen)
 		fatal("write error");
@@ -65,7 +65,7 @@ void out_flush(void)
    update headers */
 static void out_record_read(unsigned record)
 {
-	if (lseek(1, record * 128L, SEEK_SET) < 0)
+	if (lseek(1, record * 128UL, SEEK_SET) < 0)
 		fatal("seek error");
 	if (read(1, outbuf, 128) < 0)
 		fatal("read error");
@@ -75,7 +75,7 @@ static void out_record_read(unsigned record)
 /* Report the current record/offset */
 unsigned long out_tell(void)
 {
-	return (outrecord << 8) | outlen;
+	return (((unsigned long)outrecord) << 8) | outlen;
 }
 
 /* Go to a given record/offset from before */

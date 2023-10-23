@@ -28,6 +28,9 @@ static void toplevel(void)
 		voltrack = 0;
 		target_reginit();
 		declaration(S_EXTDEF);
+		/* For unix we should probably hide this, for CP/M it's
+		   going to be a nice to have */
+		write(2, ".", 1);
 	}
 }
 

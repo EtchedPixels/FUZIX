@@ -18,6 +18,7 @@ __shr:
 		dec	h		; FF for shifed signed negative 8 bits
 pve:
 		sub	8
+		ret	z
 shift:		sra	h
 		rr	l
 		dec	a

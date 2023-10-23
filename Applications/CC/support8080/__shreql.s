@@ -41,24 +41,23 @@ shftn:
 	dcr	b
 	jnz	shftn
 
-	; Result is now in HL:DE
+	; Result is now in HL:DE, TOS is the pointer
 store:
-	shld	__hireg
+	shld	__hireg		; save high word
 	pop	h
-	mov	m,e
+	mov	m,e		; Write low word back
 	inx	h
 	mov	m,d
 	inx	h
-	push	d
+	push	d		; Save low word
 	xchg
-	lhld	__hireg
+	lhld	__hireg		; Get high word in DE
 	xchg
-	mov	m,d
+	mov	m,e		; Write high word
 	inx	h
-	mov	m,e
-	xchg
+	mov	m,d
 	pop	h		; get low back
-	pop	b
+	pop	b		; recover register values
 	ret
 
 ; No shift but still need to load it
@@ -66,22 +65,28 @@ done:
 	call	setup4
 	jmp	store
 
+; Just load the value on a 0 shfit
+nowork:
+	call	setup4
+	xchg
+	pop	b
+	ret
 ;
 ;	Shift through A on the 8080
 ;
 __shrequl:
-	mov	a,l
-	pop	h
-	xthl
+	mov	a,l		; save shift value
+	pop	h		; return
+	xthl			; swap with pointer
 	push	b		; save BC
-	push	h
 	; HL is now the lval, A is the shift
 	ani	31
-	jz	done
+	jz	nowork
+	push	h		; save pointer
 	mov	b,a		; count
 	call	setup4		; HLDE is now the data
 shftu:
-	mov	a,h
+	mov	a,h		; Shift 32bits HLDE right through A
 	ora	a
 	rar
 	mov	h,a
@@ -98,7 +103,9 @@ shftu:
 	jnz	shftu
 
 	jmp	store
-
+;
+;	Load DEHL from (HL). Destroys A
+;
 setup4:
 	mov	e,m
 	inx	h

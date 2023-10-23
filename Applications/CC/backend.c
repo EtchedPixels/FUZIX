@@ -419,11 +419,11 @@ static void process_header(void)
 			func_ret_used = 1;
 		break;
 	case H_LABEL:
-		sprintf(tbuf, "_g%d", h.h_data);
+		sprintf(tbuf, "_g%u", h.h_data);
 		gen_label(tbuf, h.h_name);
 		break;
 	case H_GOTO:
-		sprintf(tbuf, "_g%d", h.h_data);
+		sprintf(tbuf, "_g%u", h.h_data);
 		gen_jump(tbuf, h.h_name);
 		break;
 	case H_SWITCH:
