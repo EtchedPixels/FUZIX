@@ -24,7 +24,7 @@ static uint8_t tzset_done;
 
 static uint8_t dpair(char **p, unsigned long *v, uint16_t mul)
 {
-        char *x = *p;
+        register char *x = *p;
         long n;
         if (!isdigit(*x))
                 return 2;	/* Error */
@@ -48,7 +48,7 @@ static uint8_t dpair(char **p, unsigned long *v, uint16_t mul)
 
 static char *parse_tzspec(char *in, long *l)
 {
-        uint8_t negate  = 0, r;
+        uint_fast8_t negate  = 0, r;
         unsigned long v = 0;
         /* The offset element of a timezone is
                 [+|-]hh[:mm][:ss] */
@@ -92,8 +92,9 @@ static char *parse_tzspec(char *in, long *l)
  *
  */
 
-static char *tzunit(char *in, char *tzstr, long *p, int required)
+static char *tzunit(char *inp, char *tzstr, long *p, int required)
 {
+        register char *in = inp;
         char *pe = tzstr + 5;
         while(*in && isalpha(*in)) {
                 if (tzstr < pe)
@@ -116,7 +117,7 @@ static char *tzunit(char *in, char *tzstr, long *p, int required)
         
 }
 
-char *parse_dst(char *p, int n)
+static char *parse_dst(char *p, int n)
 {
 	char *np;
 
@@ -160,11 +161,11 @@ char *parse_dst(char *p, int n)
 	}
 	return np;
 }	
-       
+
 void tzset(void)
 {
         char *tz = getenv("TZ");
-        char *p;
+        register char *p;
 
         if (tzset_done)
                 return;
@@ -199,12 +200,12 @@ void tzset(void)
            nth: 5		Last day 'd' in the month
  */
 
-static uint8_t do_find_day(struct tm *tm, uint8_t nth, uint8_t d, uint8_t leap)
+static uint8_t do_find_day(struct tm *tm, uint_fast8_t nth, uint_fast8_t d, uint_fast8_t leap)
 {
         extern const uint8_t __mon_lengths[2][12];
         /* Note mday is 1 based wday is 0 based */
         /* Find the day number of the 1st */
-        int8_t sday = tm->tm_mday - tm->tm_wday;
+        int_fast8_t sday = tm->tm_mday - tm->tm_wday;
         /* nth == 1 means 'first occurence of' */
         if (sday < 0 && nth == 1)
                 sday += 7;
@@ -222,7 +223,7 @@ static uint8_t do_find_day(struct tm *tm, uint8_t nth, uint8_t d, uint8_t leap)
 
 static void convert_dow(struct tm *tm)
 {
-        uint8_t leap = __isleap(1900+tm->tm_year);
+        uint_fast8_t leap = __isleap(1900+tm->tm_year);
         dsday[0] = do_find_day(tm, dswom[0], dsdow[0], leap);
         dsday[1] = do_find_day(tm, dswom[1], dsdow[1], leap);
 }
@@ -236,7 +237,7 @@ static void convert_dow(struct tm *tm)
 static int8_t calc_is_dst(struct tm *tm, uint32_t secs)
 {
 	uint16_t yday = tm->tm_yday;
-	uint8_t south = 0;
+	uint_fast8_t south = 0;
 	
 	switch(dsmode) {
 	default:
