@@ -3,8 +3,7 @@ ASM = cc85
 AR = ar
 PLATFORM = 8080
 export PLATFORM
-CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8080 -X
-CC_NOOPT = $(CC_OPT)
+CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8080 -X -Os
 ASM_OPT = -c -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h
@@ -58,8 +57,7 @@ SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c
 # scanf
 SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
-# Seems to give the compiler a hard time
-SRC_HARD += regexp.c
+SRC_C += regexp.c
 # Pieces we inherit in this case from the compiler library instead
 SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
 SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
@@ -92,8 +90,7 @@ OBJ_CURS = $(SRC_CURS:.c=.o)
 OBJ_CT = $(SRC_CT:.c=.o)
 OBJ_RL = $(SRC_RL:.c=.o)
 OBJ_LM = $(SRC_LM:.c=.o)
-OBJ_HARD = $(SRC_HARD:.c=.o)
-OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_HARD) $(OBJ_LM) $(OBJ_RL)
+OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_LM) $(OBJ_RL)
 
 all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
      termcap$(PLATFORM).lib readline$(PLATFORM).lib m$(PLATFORM).lib crt0.o
@@ -103,8 +100,8 @@ $(OBJ_ALL): $(KRN_HEADERS_COPY)
 $(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
 	cp ../../Kernel/include/$(notdir $@) $@
 
-libc.l:%.l:$(OBJ_C) $(OBJ_ASM) $(OBJ_HARD)
-	ls $(OBJ_C) $(OBJ_ASM) $(OBJ_HARD)  > libc.l
+libc.l:%.l:$(OBJ_C) $(OBJ_ASM)
+	ls $(OBJ_C) $(OBJ_ASM)  > libc.l
 
 syscall.l: fuzix$(PLATFORM)/syslib.l
 	../tools/syscall_$(PLATFORM)
@@ -170,9 +167,6 @@ $(OBJ_CURS):%.o: %.c
 
 $(OBJ_LM):%.o: %.c
 	$(CC) $(CC_OPT) -DBUILD_LIBM $(@:.o=.c) -o $@
-
-$(OBJ_HARD):%.o: %.c
-	$(CC) $(CC_NOOPT) $(@:.o=.c)
 
 $(OBJ_RL):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
