@@ -16,7 +16,7 @@ struct object {
     struct object *next;
     struct symbol **syment;
     /* We might want to store a subset of this */
-    struct objhdr oh;
+    struct objhdr *oh;
     uint16_t base[15];	/* Base address we select for this object */
     int nsym;
     const char *path;		/* We need more for library nodes.. */

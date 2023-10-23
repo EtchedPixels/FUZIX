@@ -305,6 +305,8 @@ static void free_object(struct object *o)
 {
 	if (o->syment)
 		free(o->syment);
+	if (o->oh)
+		free(o->oh);
 	free(o);
 }
 
@@ -547,6 +549,31 @@ static int have_object(off_t pos, const char *name)
 	return 0;
 }
 
+static unsigned get_object(struct object *o)
+{
+	o->oh = xmalloc(sizeof(struct objhdr));
+	io_lseek(o->off);
+	return io_read(o->oh, sizeof(struct objhdr));
+}
+
+static void put_object(struct object *o)
+{
+	if (o->oh)
+		free(o->oh);
+	o->oh = NULL;
+}
+
+/*
+ *	Open an object file and seek to the right location in case it is
+ *	a library module.
+ */
+static void openobject(struct object *o)
+{
+	io_open(o->path);
+	get_object(o);
+}
+
+
 /*
  *	Load a new object file. The off argument allows us to load an
  *	object module out of a library by giving the library file handle
@@ -569,8 +596,7 @@ static struct object *load_object(off_t off, int lib, const char *path)
 	o->off = off;
 	processing = o;	/* For error reporting */
 
-	io_lseek(off);
-	if (io_read(&o->oh, sizeof(o->oh)) != sizeof(o->oh) || o->oh.o_magic != MAGIC_OBJ || o->oh.o_symbase == 0) {
+	if (get_object(o) != sizeof(struct objhdr) || o->oh->o_magic != MAGIC_OBJ || o->oh->o_symbase == 0) {
 		/* A library may contain other things, just ignore them */
 		if (lib) {
 			free_object(o);
@@ -580,16 +606,16 @@ static struct object *load_object(off_t off, int lib, const char *path)
 		else	/* But an object file must be valid */
 			error("bad object file");
 	}
-	compatible_obj(&o->oh);
+	compatible_obj(o->oh);
 	/* Load up the symbols */
-	nsym = (o->oh.o_dbgbase - o->oh.o_symbase) / S_ENTRYSIZE;
+	nsym = (o->oh->o_dbgbase - o->oh->o_symbase) / S_ENTRYSIZE;
 	if (nsym < 0||nsym > 65535)
 		error("bad object file");
 	/* Allocate the symbol entries */
 	o->syment = (struct symbol **) xmalloc(sizeof(struct symbol *) * nsym);
 	o->nsym = nsym;
 restart:
-	io_lseek(off + o->oh.o_symbase);
+	io_lseek(off + o->oh->o_symbase);
 	sp = o->syment;
 	for (i = 0; i < nsym; i++) {
 		io_readb(&type);
@@ -625,13 +651,14 @@ restart:
 	insert_object(o);
 	/* Make sure all the files are the same architeture */
 	if (arch) {
-		if (o->oh.o_arch != arch)
+		if (o->oh->o_arch != arch)
 			error("wrong architecture");
 	} else
-		arch = o->oh.o_arch;
+		arch = o->oh->o_arch;
 	/* The CPU features required is the sum of all the flags in the objects */
-	arch_flags |= o->oh.o_cpuflags;
+	arch_flags |= o->oh->o_cpuflags;
 	processing = NULL;
+	put_object(o);
 	return o;
 }
 
@@ -690,16 +717,19 @@ static void set_segment_bases(void)
 		size[i] = 0;
 	/* Now run through once computing the basic size of each segment */
 	for (o = objects; o != NULL; o = o->next) {
+		openobject(o);
 		if (verbose)
 			printf("%s:\n", o->path);
 		for (i = 1; i < OSEG; i++) {
 			if (verbose)
 				printf("\t%c : %04X\n",
-					"ACDBZSXSLsb?"[i], o->oh.o_size[i]);
-			size[i] += o->oh.o_size[i];
-			if (size[i] < o->oh.o_size[i])
+					"ACDBZSXSLsb?"[i], o->oh->o_size[i]);
+			size[i] += o->oh->o_size[i];
+			if (size[i] < o->oh->o_size[i])
 				error("segment too large");
 		}
+		put_object(o);
+		io_close();
 	}
 
 	if (verbose) {
@@ -748,11 +778,14 @@ static void set_segment_bases(void)
 	/* Now set the base of each object appropriately */
 	memcpy(&pos, &base, sizeof(pos));
 	for (o = objects; o != NULL; o = o->next) {
+		openobject(o);
 		o->base[0] = 0;
 		for (i = 1; i < OSEG; i++) {
 			o->base[i] = pos[i];
-			pos[i] += o->oh.o_size[i];
+			pos[i] += o->oh->o_size[i];
 		}
+		put_object(o);
+		io_close();
 	}
 	/* At this point we have correctly relocated the base for each object. What
 	   we have yet to do is to relocate the symbols. Internal symbols are always
@@ -798,7 +831,7 @@ static void target_put(struct object *o, uint16_t value, uint16_t size, FILE *op
 	if (size == 1)
 		target_pquoteb(value, op);
 	else {
-		if (o->oh.o_flags&OF_BIGENDIAN) {
+		if (o->oh->o_flags&OF_BIGENDIAN) {
 			target_pquoteb(value >> 8, op);
 			target_pquoteb(value, op);
 		} else {
@@ -827,7 +860,7 @@ static uint16_t target_get(struct object *o, uint16_t size)
 	if (size == 1)
 		return target_pgetb();
 	else {
-		if (o->oh.o_flags & OF_BIGENDIAN)
+		if (o->oh->o_flags & OF_BIGENDIAN)
 			return (target_pgetb() << 8) + target_pgetb();
 		else
 			return target_pgetb() + (target_pgetb() << 8);
@@ -1035,16 +1068,6 @@ static void relocate_stream(struct object *o, int segment, FILE * op)
 }
 
 /*
- *	Open an object file and seek to the right location in case it is
- *	a library module.
- */
-static void openobject(struct object *o)
-{
-	io_open(o->path);
-	io_lseek(o->off);
-}
-
-/*
  *	Write out all the segments of the output file with any needed
  *	relocations performed. We write out the code and data segments but
  *	BSS and ZP must always be zero filled so do not need writing.
@@ -1057,11 +1080,11 @@ static void write_stream(FILE * op, int seg)
 		openobject(o);	/* So we can hide library gloop */
 		if (verbose)
 			printf("Writing %s#%ld:%d\n", o->path, o->off, seg);
-		io_lseek(o->off + o->oh.o_segbase[seg]);
+		io_lseek(o->off + o->oh->o_segbase[seg]);
 		if (verbose)
 			printf("%s:Segment %d file seek base %d\n",
 				o->path,
-				seg, o->oh.o_segbase[seg]);
+				seg, o->oh->o_segbase[seg]);
 		dot = o->base[seg];
 		/* For Fuzix we place segments in absolute space but don't
 		   bother writing out the empty page before */
@@ -1072,6 +1095,7 @@ static void write_stream(FILE * op, int seg)
 		else if (ldmode == LD_ABSOLUTE)
 			xfseek(op, dot);
 		relocate_stream(o, seg, op);
+		put_object(o);
 		io_close();
 		o = o->next;
 	}
@@ -1105,6 +1129,9 @@ static void write_binary(FILE * op, FILE *mp)
 	hdr.o_size[7] = size[7];
 
 	rewind(op);
+
+	if (verbose)
+		printf("Writing binary\n");
 	if (!rawstream)
 		fwrite(&hdr, sizeof(hdr), 1, op);
 	/* For LD_RFLAG number the symbols for output, for othe forms
@@ -1218,7 +1245,8 @@ static void add_object(const char *name, off_t off, int lib)
 					printf(":: Pass resovled %d symbols\n", progress);
 			/* FIXME: if we counted unresolved symbols we might
 			   be able to exit earlier ? */
-			} while(progress);
+			/* Don't rescan libs */
+			} while(0 && progress);
 			io_close();
 			return;
 		}
