@@ -51,10 +51,10 @@ extern double atof(const char *__nptr);
 
 extern int abs(int __i);
 extern long labs(long __i);
-extern char *_itoa(int __value);
-extern char *_uitoa(unsigned int __value);
-extern char *_ltoa(long __value);
-extern char *_ultoa(unsigned long __value);
+extern const char *_itoa(int __value);
+extern const char *_uitoa(unsigned int __value);
+extern const char *_ltoa(long __value);
+extern const char *_ultoa(unsigned long __value);
 
 extern char *__ultostr_r(char buf[34], unsigned long value, int __radix);
 extern char *__ltostr_r(char buf[34], long __value, int __radix);

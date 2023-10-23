@@ -10,7 +10,7 @@
 
 static char buf[7];
 
-char *_uitoa(unsigned int i)
+const char *_uitoa(unsigned int i)
 {
 	char *p = buf + sizeof(buf);
 	int c;
@@ -24,7 +24,7 @@ char *_uitoa(unsigned int i)
 	return p;
 }
 
-char *_itoa(int i) {
+const char *_itoa(int i) {
 	char *p;
 	if (i >= 0)
 		return _uitoa(i);

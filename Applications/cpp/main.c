@@ -12,8 +12,6 @@
 #include <errno.h>
 #include "cc.h"
 
-extern const char *_ltoa(long l);
-
 #define MAXINCPATH	5
 
 int main(int argc, char *argv[]);
