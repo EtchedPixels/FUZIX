@@ -28,14 +28,8 @@ esac
 done
 
 #
-#	Link at 0x100
-#
-#	Bit of a hack for now - once we teach ld about literal blocks and Fuzix binary
-#	formatting we can clean this up.
+#	Relocatable link
 #
 set -e
 #
-ccz80 -s $ARGS -o "$TARGET".b1 -M
-dd if="$TARGET".b1 of="$TARGET" bs=256 skip=1
-#$FUZIX_ROOT/Library/tools/binman85 "$TARGET"
-rm -f "$TARGET.b1"
+ccz80 -X -s $ARGS -o "$TARGET" -M
