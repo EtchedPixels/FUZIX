@@ -1,40 +1,4 @@
-FCC = ../../Library/tools/fcc -m$(USERCPU)
-FCCOPTS = $(FUZIX_CCOPTS)
-
-.SUFFIXES: .c .rel
-
-all:	zx80 zx80.rom zx81 zx81.rom
-
-zx80:	zx80.rel
-	$(FCC) $(Z80_PLATFORM) $(OPTS) zx80.rel -o zx80
-
-zx81:	zx81.rel
-	$(FCC) $(Z80_PLATFORM) $(OPTS) zx81.rel -o zx81
-
-.c.rel:
-	$(FCC) $(Z80_PLATFORM) $(FCCOPTS) -c $<
-
-zx80.rom: zx80-base.rom zx80bootup zx80rompatch
-	./zx80rompatch
-
-zx80rompatch: zx80rompatch.c
-	cc -Wall -pedantic zx80rompatch.c -o zx80rompatch
-
-zx80bootup: zx80bootup.s
-	sdasz80 -o zx80bootup.s
-	sdldz80 -i zx80bootup.rel
-	makebin -s 65535 zx80bootup.ihx zx80bootup
-
-zx81.rom: zx81-base.rom zx81bootup zx81rompatch
-	./zx81rompatch
-
-zx81rompatch: zx81rompatch.c
-	cc -Wall -pedantic zx81rompatch.c -o zx81rompatch
-
-zx81bootup: zx81bootup.s
-	sdasz80 -o zx81bootup.s
-	sdldz80 -i zx81bootup.rel
-	makebin -s 65535 zx81bootup.ihx zx81bootup
+all::
 
 clean:
 	rm -f *.ihx *.rel *.lnk *.map *~

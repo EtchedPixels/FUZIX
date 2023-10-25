@@ -31,15 +31,8 @@
 
 #define FLT_ROUNDS 1	/* Check this */
 
-#if defined(__SDCC_z80) || defined(__SDCC_z180)
-#define FLT_EVAL_METHOD 0
-typedef float float_t;
-typedef double double_t;
-#else
 #define FLT_EVAL_METHOD -2
 typedef float float_t;
 typedef double double_t;
-#endif
-
 
 #endif

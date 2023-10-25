@@ -1,9 +1,7 @@
-		.globl	__syscall
-		.globl __call_sys
-		.globl	_errno
+		.export	__syscall
 
 __syscall:
-		call	__call_sys
+		call	__text
 		ret	nc
 		ld	(_errno), hl		; error path
 		ld	hl, #0xffff

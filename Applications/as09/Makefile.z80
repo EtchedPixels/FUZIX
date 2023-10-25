@@ -1,51 +1,7 @@
-.SUFFIXES: .c .rel
+#include Makefile.common
 
-PLATFORM = 6809
-CC = fcc -m$(USERCPU) $(Z80_PLATFORM)
-CFLAGS = -c
-COPT = $(FUZIX_CCOPTS)
+# For now..
 
-OBJS =	as.rel assemble.rel errors.rel express.rel \
-	genbin.rel genlist.rel genobj.rel gensym.rel \
-	keywords.rel macro.rel mops.rel pops.rel readsrc.rel \
-	scan.rel table.rel typeconv.rel alloc.rel
+all:
 
-all: as09
-
-as09: $(OBJS)
-	$(CC) -o $@ --nostdio $(OBJS)
-
-clean realclean clobber:
-	rm -f *.rel as09 *~
-
-$(OBJS): const.h errors.h
-
-ar.h:
-	test -f ar.h || \
-	{ rm -f ar.h ; ln -s ../libc/include/ar.h . ; } || \
-	ln ../libc/include/ar.h .
-
-writebin.rel: writebin.c
-	$(CC) $(CFLAGS) $(DEFS) $(NATIVE) -c $<
-
-writerel.rel: writebin.c
-
-.c.rel:
-	$(CC) $(COPT) $(CFLAGS) $(DEFS) -c $< -o $@
-
-as.rel: const.h type.h byteord.h macro.h file.h flag.h globvar.h
-assemble.rel: const.h type.h address.h globvar.h opcode.h scan.h
-error.rel: const.h type.h
-express.rel: const.h type.h address.h globvar.h scan.h source.h
-genbin.rel: const.h type.h address.h file.h globvar.h
-genlist.rel: const.h type.h address.h flag.h file.h globvar.h macro.h scan.h \
-	   source.h
-genobj.rel: const.h type.h address.h file.h globvar.h
-gensym.rel: const.h type.h flag.h file.h globvar.h
-keywords.rel: const.h type.h globvar.h opcode.h
-macro.rel: const.h type.h globvar.h scan.h macro.h
-mops.rel: const.h type.h globvar.h opcode.h scan.h address.h
-pops.rel: const.h type.h address.h flag.h globvar.h opcode.h scan.h
-readsrc.rel: const.h type.h flag.h file.h globvar.h macro.h scan.h source.h
-scan.rel: const.h type.h globvar.h scan.h 
-table.rel: const.h type.h globvar.h opcode.h scan.h
+clean:

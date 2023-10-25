@@ -2,8 +2,9 @@ CC = cc85 -m8085
 ASM = cc85
 AR = ar
 PLATFORM = 8085
+PLATBIN = 85
 export PLATFORM
-CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/8085 -X -Os
+CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/$(PLATFORM) -X -Os
 ASM_OPT = -c -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h
@@ -11,7 +12,7 @@ KRN_HEADERS_SRC = $(addprefix ../../Kernel/include/,$(KRN_HEADERS))
 KRN_HEADERS_COPY = $(addprefix ../include/sys/,$(KRN_HEADERS))
 SRC_CRT0 = crt0_$(PLATFORM).s crt0nostdio_$(PLATFORM).s
 OBJ_CRT0 = $(SRC_CRT0:.s=.o)
-SRC_ASM = setjmp_8085.s longjmp_8085.s
+SRC_ASM = setjmp_$(PLATFORM).s longjmp_$(PLATFORM).s
 OBJ_ASM = $(SRC_ASM:.s=.o)
 SRC_C =  __argv.c abort.c accept.c aes256.c asctime.c asctime_r.c assert.c atexit.c
 SRC_C += basename.c bcmp.c bcopy.c bind.c bsearch.c bzero.c
@@ -57,7 +58,7 @@ SRC_C += tcgetattr.c tcsetattr.c tcdrain.c tcflow.c tcflush.c
 SRC_C += cfmakeraw.c cfspeed.c revoke.c
 # scanf
 SRC_C += fscanf.c scanf.c sscanf.c vfscanf.c vscanf.c vsscanf.c
-SRCS_C += regexp.c
+SRC_C += regexp.c
 # Pieces we inherit in this case from the compiler library instead
 SRC_C += strcpy.c strlen.c abs.c atof.c atoi.c atol.c labs.c
 SRC_C += strcat.c strchr.c strcmp.c strcspn.c strncat.c strncmp.c
@@ -110,12 +111,12 @@ syscall.l: fuzix$(PLATFORM)/syslib.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
-	$(AR) rc syslib$(PLATFORM).lib `lorder85 $$(cat syslib.l)| tsort`
+	$(AR) rc syslib$(PLATFORM).lib `lorder$(PLATBIN) $$(cat syslib.l)| tsort`
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 	cp libc$(PLATFORM).a libc.a
 
-crt0.o: crt0_8085.o
-	cp crt0_8085.o crt0.o
+crt0.o: crt0_$(PLATFORM).o
+	cp crt0_$(PLATFORM).o crt0.o
 
 fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
 	$<
@@ -131,22 +132,22 @@ liberror.txt: ../tools/liberror
 	make -C .. tools/liberror
 
 curses$(PLATFORM).lib: $(OBJ_CURS)
-	$(AR) rc curses$(PLATFORM).lib `lorder85 $(OBJ_CURS)| tsort`
+	$(AR) rc curses$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_CURS) | tsort`
 	ln -sf curses$(PLATFORM).lib libcurses$(PLATFORM).a
 	cp libcurses$(PLATFORM).a libcurses.a
 
 termcap$(PLATFORM).lib: $(OBJ_CT)
-	$(AR) rc termcap$(PLATFORM).lib `lorder85 $(OBJ_CT) | tsort`
+	$(AR) rc termcap$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_CT) | tsort`
 	ln -sf termcap$(PLATFORM).lib libtermcap$(PLATFORM).a
 	cp libtermcap$(PLATFORM).a libtermcap.a
 
 m$(PLATFORM).lib: $(OBJ_LM)
-	$(AR) rc m$(PLATFORM).lib `lorder85 $(OBJ_LM) | tsort`
+	$(AR) rc m$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_LM) | tsort`
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
 	cp libm$(PLATFORM).a libm.a
 
 readline$(PLATFORM).lib: $(OBJ_RL)
-	$(AR) rc readline$(PLATFORM).lib `lorder85 $(OBJ_RL) | tsort`
+	$(AR) rc readline$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_RL) | tsort`
 	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
 	cp libreadline$(PLATFORM).a libreadline.a
 
@@ -172,11 +173,11 @@ $(OBJ_RL):%.o: %.c
 	$(CC) $(CC_OPT) $(@:.o=.c)
 
 clean:
-	rm -rf *.o *.asm *.sym *.lst *.lib *~ syscall.l libc.l syslib.l \
+	rm -rf *.o *.lib *~ syscall.l libc.l syslib.l \
 	lib*.a liberror.txt
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
 	rm -f $(KRN_HEADERS_COPY)
-	-cd curses && rm -rf *.o *.asm *.sym *.lst *~
+	-cd curses && rm -rf *.o *~
 
 install: ;

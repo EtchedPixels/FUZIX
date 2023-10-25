@@ -1,52 +1,34 @@
-.SUFFIXES: .c .rel
+include $(FUZIX_ROOT)/Target/rules.z80
 
-SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c slip.c
+CFLAGS += -DNETD_LITTLE_ENDIAN
+
+SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c ping.c ntpdate.c
-SRCS += linein.c tinyirc.c htget.c ifconfig.c
+SRCS += htget.c tinyirc.c linein.c ifconfig.c
 
-OBJS = $(SRCS:.c=.rel)
+OBJS = $(SRCS:.c=.o)
 
-APPS = netd-slip telnet echoping dig httpd ping ntpdate tinyirc htget ifconfig
-
-OPTS = -DNETD_LITTLE_ENDIAN
+BUSTEDAPPS = netd
 
 all: $(APPS)
 
-netd-slip: $(OBJS)
-	fcc -m$(USERCPU) $(Z80_PLATFORM) -o netd-slip netd.rel uip.rel uiplib.rel timer.rel clock-arch.rel \
-	       uip_arp.rel slip.rel
 
-$(OBJS): %.rel: %.c
+netd: $(OBJS)
+	$(LINKER) $(LINKER_OPT) -o netd-lwwire $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o lwwire.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o telnet $(CRT0) telnet.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o echoping $(CRT0) echoping.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o dig $(CRT0) dig.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o httpd $(CRT0) httpd.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o ping $(CRT0) ping.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o ntpdate $(CRT0) ntpdate.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o htget $(CRT0) htget.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o tinyirc $(CRT0) tinyirc.o linein.o gethostbyname.o $(LIBC)
 
-.c.rel:
-	fcc -m$(USERCPU) $(Z80_PLATFORM) $(OPTS) -c $<
-
-telnet:	telnet.rel gethostbyname.rel
-	fcc -m$(USERCPU) -o $@ $^
-
-echoping: echoping.rel
-	fcc -m$(USERCPU) -o $@ $^
-
-dig: dig.rel
-	fcc -m$(USERCPU) -o $@ $^
-
-httpd: httpd.rel
-	fcc -m$(USERCPU) -o $@ $^
-
-ping: ping.rel gethostbyname.rel
-	fcc -m$(USERCPU) -o $@ $^
-
-ntpdate: ntpdate.rel gethostbyname.rel
-	fcc -m$(USERCPU) -o $@ $^
-
-tinyirc: tinyirc.rel linein.rel gethostbyname.rel
-	fcc -m$(USERCPU) -o $@ $^
-
-htget: htget.rel gethostbyname.rel
-	fcc -m$(USERCPU) --nostdio -o $@ $^
-
-ifconfig: ifconfig.rel
-	fcc -m$(USERCPU) -o $@ $^
+size.report: $(APPS)
+	ls -l $^ > $@
 
 clean:
-	rm -f *.rel *.lst *.asm *.noi *.map *.lk *.sym *~ *.ihx *.bin $(APPS)
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *~
+
+rmbak:
+	rm -f *~ core

@@ -16,18 +16,15 @@
 #define L_tmpnam 20
 #endif 
 
-/* Keep these out of the function because SDCC 3.4 generates hideous
-   bloated crap for in function static initializers */
-
-static char uniq_ch[62] =
-	 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-static char ret_val[L_tmpnam];
-static char c1;
-static char c2;
-static char c3;
 
 char *tmpnam(char *s)
 {
+    static char uniq_ch[62] =
+	 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    static char ret_val[L_tmpnam];
+    static char c1;
+    static char c2;
+    static char c3;
     struct stat stbuf;
 
     do {

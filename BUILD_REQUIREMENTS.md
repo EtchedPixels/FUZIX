@@ -1,7 +1,9 @@
 # Build Requirements
 
 This is a WIP list of the build requirements for Fuzix for diffferent
-targets
+targets. At the moment lots of compilers are used according to the target.
+The intent is to reduce this to gcc for bigger machines and the Fuzix native
+compiler for the small ones.
 
 ## General
 
@@ -37,7 +39,22 @@ M68K options. See [README.68000.md](README.68000.md) for a working example.
 
 ## 8080/8085
 
-ACK C compiler head: https://github.com/davidgiven/ack
+Fuzix Assemblers
+https://github.com/EtchedPixels/CC6303
+
+(At the moment they are in with cc6303 for historical reasons)
+
+cd as68
+make -f Makefile.8085 clean
+make -f Makefile.8085 install
+
+Fuzix C Compiler
+https://github.com/EtchedPixels/Fuzix-Compiler-Kit
+
+Build the assembler first and ensure it's on your path
+
+make bootstrap
+make install
 
 ## 8086
 
@@ -58,10 +75,36 @@ esptool
 
 ## Rabbit 2000/3000
 
-SDCC 3.9 or later
+Dropped. We don't yet have a usable platform/emulator for this. Will come
+back once we have assembler and compiler support from ccz80.
 
-## Z80/Z180/eZ80
+## Z80/Z180
 
-The code is built and tested with a slightly modified SDCC from
+Fuzix Assemblers
+https://github.com/EtchedPixels/CC6303
+
+(At the moment they are in with cc6303 for historical reasons)
+
+cd as68
+make -f Makefile.z80 clean
+make -f Makefile.z80 install
+
+Fuzix C Compiler
+https://github.com/EtchedPixels/Fuzix-Compiler-Kit
+
+Build the assembler first and ensure it's on your path
+
+make bootstrap
+make install
+
+For most kernels you still need a slightly modified SDCC from
 https://github.com/EtchedPixels/sdcc280. For all but banked kernels the
 current 4.x SDCC ought to work.
+
+This will gradually change.
+
+## eZ80
+
+Temporarily dropped. Will come back when the new C compiler has ez80 support
+and we have an actual meaningful ez80 platform for development (or a usable
+emulation).

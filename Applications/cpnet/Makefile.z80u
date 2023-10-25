@@ -1,4 +1,0 @@
-all::
-
-clean:
-	rm -f *.ihx *.rel *.lnk *.map *~ cpnet

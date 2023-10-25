@@ -1,4 +1,11 @@
+SRC_C1 = target-z80.c
+SRC_C2 = backend-z80.c
+
+FLOAT = -DNO_FLOAT
+
+#include Makefile.common
 
 all:
 
 clean:
+

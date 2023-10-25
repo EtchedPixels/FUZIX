@@ -15,7 +15,7 @@ static char namebuf[128];
 static void write_call(int n)
 {
   FILE *fp;
-  snprintf(namebuf, 128, "fuzixz80u/syscall_%s.s",syscall_name[n]);
+  snprintf(namebuf, 128, "fuzixz80/syscall_%s.s",syscall_name[n]);
   fp = fopen(namebuf, "w");
   if (fp == NULL) {
     perror(namebuf);
@@ -41,7 +41,7 @@ static void write_makefile(void)
   char path[256];
   FILE *fp;
 
-  fp = fopen("fuzixz80u/Makefile", "w");
+  fp = fopen("fuzixz80/Makefile", "w");
   if (fp == NULL) {
     perror("Makefile");
     exit(1);

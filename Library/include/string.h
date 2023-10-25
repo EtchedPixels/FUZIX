@@ -66,12 +66,4 @@ extern int strcoll(const char *__s1, const char *__s2);
 extern const char *strsignal(int __sig);
 extern char *strerror(int __errno);
 
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_r2k) || defined(__SDCC_r3ka)
-#define memcpy(dst, src, n) __builtin_memcpy(dst, src, n)
-#define strcpy(dst, src) __builtin_strcpy(dst, src)
-#define strncpy(dst, src, n) __builtin_strncpy(dst, src, n)
-#define strchr(s, c) __builtin_strchr(s, c)
-#define memset(dst, c, n) __builtin_memset(dst, c, n)
-#endif
-
 #endif		/* END OF DEFINITION	STRING.H */

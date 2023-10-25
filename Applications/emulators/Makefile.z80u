@@ -1,6 +1,0 @@
-all::
-
-clean:
-	rm -f *.ihx *.rel *.lnk *.map *~
-	rm -f zx80bootup zx80.rom zx80rompatch zx80
-	rm -f zx81bootup zx81.rom zx81rompatch zx81

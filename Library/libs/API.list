@@ -1,8 +1,5 @@
 Initial target API (SYS5.2 equivalent - ish)
 
-Z80 = implementation for float form in the SDCC library and we should eventually
-use that not our own if possible
-
 CODE: we have code
 FIXME: we have buggy code
 MISSING: needs to be added
@@ -12,46 +9,48 @@ Z80: optimized code in SDCC we should favour for Z80
 
 This doesn't cover the networking API which is currently rather minimal
 
+TODO: enable core fp in the new compiler
+
 a64l			CODE
-abort			FIXME
+abort			CODE
 abs			CODE
 access			CODE
 acos			CODE
-acosf			Z80 | CODE
+acosf			CODE
 acosh			CODE
-acoshf			CODE (check Z80)
+acoshf			CODE
 advance			NO
 alarm			CODE
 asctime			CODE
 asin			CODE
-asinf			Z80 | CODE
+asinf			CODE
 asinh			CODE
-asinhf			CODE (check Z80)
+asinhf			CODE
 assert			CODE
 atan			CODE
-atanf			Z80 | CODE
+atanf			CODE
 atan2			CODE
-atan2f			Z80 | CODE
+atan2f			CODE
 atanh			CODE
-atanhf			CODE (check Z80)
+atanhf			CODE
 atof			CODE
 atoi			CODE
 atol			CODE
 bsearch			CODE
 calloc			CODE
 ceil			CODE
-ceilf			Z80 | CODE
+ceilf			CODE
 chdir			CODE
 chmod			CODE
 chown			CODE
 clearerr		CODE
 clock			CODE
 close			CODE
-compile			CODE (but no to spec)
+compile			CODE (but not to spec)
 cos			CODE
-cosf			Z80 | CODE
+cosf			CODE
 cosh			CODE
-coshf			Z80 | CODE
+coshf			CODE
 creat			CODE
 crypt			CODE (but tea not DES)
 ctermid			CODE
@@ -65,7 +64,7 @@ endutent		CODE
 erand48			CODE
 erf			CODE
 erfc			CODE
-execl			CODE (MISSING on 6502)
+execl			CODE
 execle			MISSING
 execlp			CODE
 execv			CODE
@@ -74,9 +73,9 @@ execvp			CODE
 exit			CODE
 _exit			CODE
 exp			CODE
-expf			CODE | Z80
+expf			CODE
 fabs			CODE
-fabsf			CODE | Z80
+fabsf			CODE
 fclose			CODE
 fcntl			CODE
 fdopen			CODE
@@ -89,7 +88,7 @@ fgetpwent		CODE
 fgets			CODE
 fileno			CODE
 floor			CODE
-floorf			Z80 | CODE
+floorf			CODE
 fmod			CODE
 fmodf			CODE
 fopen			CODE
@@ -166,7 +165,7 @@ lfind			CODE
 link			CODE
 localtime		CODE
 lockf			NO (flock)
-log			CODE | Z80
+log			CODE
 logf			CODE
 log10			CODE
 log10f			CODE
@@ -187,7 +186,7 @@ memset			CODE
 mknod			CODE
 mktemp			OBSOLETE
 modf			CODE
-modff			Z80 | CODE
+modff			CODE
 monitor			OBSOLETE ?
 mount			CODE
 mrand48			CODE
@@ -199,7 +198,7 @@ pclose			CODE
 perror			CODE
 pipe			CODE
 popen			CODE
-pow			Z80 | CODE
+pow			CODE
 printf			CODE (check all fmts included)
 putc			CODE
 putchar			CODE
@@ -229,13 +228,13 @@ setvbuf			CODE
 sgetl			CODE
 signal			CODE
 sin			CODE
-sinf			CODE | Z80
+sinf			CODE
 sinh			CODE
 sinhf			CODE
 sleep			CODE
 sprintf			CODE
 sputl			CODE
-sqrt			Z80 | CODE
+sqrt			CODE
 srand			CODE
 srand48			CODE
 ssignal			OBSOLETE
@@ -260,7 +259,7 @@ swab			CODE
 sync			CODE
 system			CODE
 tan			CODE
-tanf			CODE | Z80
+tanf			CODE
 tanh			CODE
 tanhf			CODE
 tdelete			CODE

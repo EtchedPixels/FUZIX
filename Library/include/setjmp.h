@@ -4,14 +4,7 @@
 #include <types.h>
 #endif
 
-#if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_ez80_z80) || defined(__SDCC_r2k)
-
-	/* FIXME: need to add alt registers */
-	typedef int jmp_buf[7];
-	extern int __setjmp(jmp_buf __env);
-	#define setjmp(x) __setjmp(x)
-
-#elif defined(__8085__)
+#if defined(__8085__)
 
 	typedef unsigned jmp_buf[3];	/*  BC (sp) and sp */
 	extern int _setjmp(jmp_buf __env);

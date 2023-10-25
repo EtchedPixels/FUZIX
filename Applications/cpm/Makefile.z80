@@ -1,16 +1,1 @@
-#
-#	We can't build this for platforms other than 0 based so don't bother
-# with Z80_PLATFORM
-#
-all: emulator runcpm
-
-emulator: emulator.s
-	sdasz80 -o -l emulator.rel emulator.s
-	fcc --nocrt0 -o emulator.bin emulator.rel
-
-runcpm: runcpm.c
-	fcc -O2 -c --nostdio runcpm.c
-	fcc --nostdio -o runcpm runcpm.rel
-	
-clean:
-	rm -f *~ *.rel *.ihx *.tmp *.bin *.lst *.lk *.noi *.map cpm.def *.sym runcpm emulator runcpm.asm
+include Makefile.common

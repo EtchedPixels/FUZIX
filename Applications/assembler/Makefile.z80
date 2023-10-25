@@ -1,4 +1,5 @@
+ASRC = as1.c as6.c
 
-all:
+TARGET = -DTARGET_Z80
 
-clean:
+include Makefile.common

@@ -35,8 +35,6 @@ static int Err(const char *name, const char *mess, int c)
    return '?';			/* erroneous-option marker */
 }
 
-/* Moved out of function to stop SDCC generating loads of setup crap */
-static int sp = 1;		/* position within argument */
 
 int getopt(int argc, char *const argv[], const char *optstring)
 				/* returns letter, '?', EOF */
@@ -48,6 +46,7 @@ int getopt(int argc, char *const argv[], const char *optstring)
 #endif
    register int c;		/* option letter */
    register char *cp;		/* -> option in `optstring' */
+   static int sp = 1;		/* position within argument */
 
    optarg = NULL;
 
