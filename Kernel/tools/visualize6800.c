@@ -13,7 +13,7 @@ struct section {
 
 struct section sect[14];
 
-static char sectname[14] = "ACDBXZSLsb";
+static char sectname[16] = "ACDBXZSLsb??????";
 
 static void check_overlap(int a, int b)
 {
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 		if (strcmp(name, "__literal_size") == 0)
 			sect[7].size = addr;
 
-		if (strcmp(name, "__commondata_size") == 0)
+		if (strcmp(name, "__commondata_siz") == 0)
 			sect[8].size = addr;
 
 		if (strcmp(name, "__buffers_size") == 0)
