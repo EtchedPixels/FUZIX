@@ -7,8 +7,8 @@
 
 	.module softspi
 
-	.globl _spi_transmit_byte
-	.globl _spi_receive_byte
+	.globl _spi_tx_byte
+	.globl _spi_rx_byte
 	.globl spi0_set_regs
 	.globl spi0_bitbang_rx
 	.globl spi0_bitbang_tx
@@ -51,7 +51,7 @@ spi0_set_regs:
 	ld bc, (_spi_port)
 	ret	
 
-_spi_transmit_byte:
+_spi_tx_byte:
 	ld a,l				; C argument
 	push af
 	call spi0_set_regs
@@ -60,7 +60,7 @@ _spi_transmit_byte:
 	out (c),e			; drop final clock
 	ret
 
-_spi_receive_byte:
+_spi_rx_byte:
 	call spi0_set_regs
 	call spi0_bitbang_rx
 	out (c),e

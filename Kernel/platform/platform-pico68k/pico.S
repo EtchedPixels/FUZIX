@@ -10,10 +10,10 @@
 		.globl outchar
 		.globl plt_monitor
 
-		.globl sd_spi_receive_byte
-		.globl sd_spi_transmit_byte
-		.globl sd_spi_receive_sector
-		.globl sd_spi_transmit_sector
+		.globl sd_spi_rx_byte
+		.globl sd_spi_tx_byte
+		.globl sd_spi_rx_sector
+		.globl sd_spi_tx_sector
 
 .mri 1
 plt_monitor:
@@ -206,13 +206,13 @@ spi_tx_bit:
 ;
 ;	Wrappers for C calling
 ;
-sd_spi_receive_byte:
+sd_spi_rx_byte:
 	movem.l	d2-d4,-(sp)
 	bsr	spi_rx_byte
 	movem.l	(sp)+,d2-d4
 	rts
 
-sd_spi_transmit_byte
+sd_spi_tx_byte
 	movem.l	d2-d4,-(sp)
 	move.l	16(sp),d0
 	bsr	spi_tx_byte
@@ -222,7 +222,7 @@ sd_spi_transmit_byte
 ;
 ;	For an SD card this is the most critical path
 ;
-sd_spi_receive_sector:
+sd_spi_rx_sector:
 	movem.l	a2/d2-d5,-(sp)
 	; Get the argument - address of buffer
 	; As we are a flat system we don't have to worry about
@@ -239,7 +239,7 @@ rx_block:
 	movem.l	(sp)+,a2/d2-d5
 	rts
 
-sd_spi_transmit_sector:
+sd_spi_tx_sector:
 	movem.l	a2/d2-d5,-(sp)
 	move.l	24(sp),a2
 	move.w	#510,d5

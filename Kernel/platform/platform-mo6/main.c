@@ -56,67 +56,67 @@ uint8_t vtattr_cap;
 
 uint_fast8_t sd_type = 0;
 
-void sd_spi_transmit_byte(uint8_t b)
+void sd_spi_tx_byte(uint8_t b)
 {
 //    kprintf(">%2x", b);
     switch(sd_type) {
     case SDIF_SDDRIVE:
-        sddrive_transmit_byte(b);
+        sddrive_tx_byte(b);
         break;
     case SDIF_SDMOTO:
-        sdmoto_transmit_byte(b);
+        sdmoto_tx_byte(b);
         break;
     case SDIF_SDMO:
-        sdmo_transmit_byte(b);
+        sdmo_tx_byte(b);
         break;
     }
 }
 
-uint8_t sd_spi_receive_byte(void)
+uint8_t sd_spi_rx_byte(void)
 {
     uint8_t r;
     switch(sd_type) {
     case SDIF_SDDRIVE:
-        r = sddrive_receive_byte();
+        r = sddrive_rx_byte();
         break;
     case SDIF_SDMOTO:
-        r = sdmoto_receive_byte();
+        r = sdmoto_rx_byte();
         break;
     case SDIF_SDMO:
-        r = sdmo_receive_byte();
+        r = sdmo_rx_byte();
         break;
     }
 //    kprintf("<%2x", r);
     return r;
 }
 
-void sd_spi_transmit_sector(uint8_t *ptr)
+void sd_spi_tx_sector(uint8_t *ptr)
 {
     switch(sd_type) {
     case SDIF_SDDRIVE:
-        sddrive_transmit_sector(ptr);
+        sddrive_tx_sector(ptr);
         break;
     case SDIF_SDMOTO:
-        sdmoto_transmit_sector(ptr);
+        sdmoto_tx_sector(ptr);
         break;
     case SDIF_SDMO:
-        sdmo_transmit_sector(ptr);
+        sdmo_tx_sector(ptr);
         break;
     }
 }
 
-void sd_spi_receive_sector(uint8_t *ptr)
+void sd_spi_rx_sector(uint8_t *ptr)
 {
     uint16_t n;
     switch(sd_type) {
     case SDIF_SDDRIVE:
-        sddrive_receive_sector(ptr);
+        sddrive_rx_sector(ptr);
         break;
     case SDIF_SDMOTO:
-        sdmoto_receive_sector(ptr);
+        sdmoto_rx_sector(ptr);
         break;
     case SDIF_SDMO:
-        sdmo_receive_sector(ptr);
+        sdmo_rx_sector(ptr);
         break;
     }
 #if 0

@@ -1,6 +1,8 @@
 #ifndef TINYSD_H
 #define TINYSD_H
 
+#include <stdbool.h>
+
 extern uint_fast8_t sd_shift[CONFIG_TD_NUM];
 extern uint_fast8_t sd_dev[CONFIG_TD_NUM];
 extern uint8_t tinysd_busy;
@@ -18,13 +20,13 @@ void sd_probe(void);
 /* platform-specific SPI functions - match devsd as close as we can */
 void sd_spi_raise_cs(void);
 void sd_spi_lower_cs(void);
-void sd_spi_transmit_byte(uint_fast8_t byte) SD_SPI_CALLTYPE;
-uint_fast8_t sd_spi_receive_byte(void);
+void sd_spi_tx_byte(uint_fast8_t byte) SD_SPI_CALLTYPE;
+uint_fast8_t sd_spi_rx_byte(void);
 void sd_spi_slow(void);
 void sd_spi_fast(void);
 
-bool sd_spi_receive_sector(uint8_t * p) SD_SPI_CALLTYPE;
-bool sd_spi_transmit_sector(uint8_t * p) SD_SPI_CALLTYPE;
+bool sd_spi_rx_sector(uint8_t * p) SD_SPI_CALLTYPE;
+bool sd_spi_tx_sector(uint8_t * p) SD_SPI_CALLTYPE;
 
 /* Definitions for MMC/SDC command */
 #define CMD0    (0x40+0)	/* GO_IDLE_STATE */

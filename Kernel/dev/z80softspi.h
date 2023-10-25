@@ -13,13 +13,13 @@ extern uint8_t spi_clock;	/* bit to use for clock out */
 
 /* SD card specific */
 
-extern void sd_spi_rx_sector(uint16_t addr) __z88dk_fastcall;
-extern void sd_spi_tx_sector(uint16_t addr) __z88dk_fastcall;
+extern void spi_rx_sector(uint16_t addr);
+extern void spi_tx_sector(uint16_t addr);
 
 /* Aliases for any future split for systems with hardware SPI SD and
    other bitbang spi */
 
-extern void spi_transmit_byte(uint8_t byte) __z88dk_fastcall;
-extern uint8_t spi_receive_byte(void);
+extern void spi_tx_byte(uint8_t byte);
+extern uint8_t spi_rx_byte(void);
 
 #endif

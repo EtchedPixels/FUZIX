@@ -4,10 +4,10 @@
 
 	.area .common
 
-	.globl _sddrive_receive_sector
-	.globl _sddrive_transmit_sector
-	.globl _sddrive_transmit_byte
-	.globl _sddrive_receive_byte
+	.globl _sddrive_rx_sector
+	.globl _sddrive_tx_sector
+	.globl _sddrive_tx_byte
+	.globl _sddrive_rx_byte
 
 ;
 ;	SDDrive. The fastest bit bang option. Has hardware generating
@@ -35,7 +35,7 @@ sddrive_readb:
 	rola
 	rts
 
-_sddrive_receive_byte:
+_sddrive_rx_byte:
 	pshs	dp
 	ldb	#IOPAGE
 	tfr	b,dp
@@ -65,7 +65,7 @@ sddrive_writeb:
 	sta <$BF
 	rts
 
-_sddrive_transmit_byte:
+_sddrive_tx_byte:
 	pshs	dp
 	; byte in B
 	tfr	b,a
@@ -74,7 +74,7 @@ _sddrive_transmit_byte:
 	bsr	sddrive_writeb
 	puls	dp,pc
 
-_sddrive_receive_sector:
+_sddrive_rx_sector:
 	pshs	y,dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -130,7 +130,7 @@ sdd_rx_user:
 	jsr	map_proc_always
 	bra	sdd_rx_kernel
 
-_sddrive_transmit_sector:
+_sddrive_tx_sector:
 	pshs	dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -190,10 +190,10 @@ sdd_tx_user:
 ;	tape port for communcations (the lightpen port is
 ;	only used to take a 5v supplyy)
 ;
-	.globl _sdmo_receive_sector
-	.globl _sdmo_transmit_sector
-	.globl _sdmo_transmit_byte
-	.globl _sdmo_receive_byte
+	.globl _sdmo_rx_sector
+	.globl _sdmo_tx_sector
+	.globl _sdmo_tx_byte
+	.globl _sdmo_rx_byte
 
 sdmo_readb:
 	ldb	#$FE
@@ -208,7 +208,7 @@ sdm_rb:
 	tfr	d,x
 	rts
 
-_sdmo_receive_byte:
+_sdmo_rx_byte:
 	pshs	dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -235,7 +235,7 @@ sdmo_w1:
 sdmo_wbdone:
 	puls	b,pc
 
-_sdmo_transmit_byte:
+_sdmo_tx_byte:
 	pshs	dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -244,7 +244,7 @@ _sdmo_transmit_byte:
 	puls	dp,pc
 
 	
-_sdmo_receive_sector:
+_sdmo_rx_sector:
 	pshs	y,dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -300,7 +300,7 @@ sdmo_rx_user:
 	jsr	map_proc_always
 	bra	sdmo_rx_kernel
 
-_sdmo_transmit_sector:
+_sdmo_tx_sector:
 	pshs	y,dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -360,10 +360,10 @@ sdmo_tx_user:
 ;	bitbanging the PIA controlled joystick having changed
 ;	the direction of some bits.
 ;
-	.globl _sdmoto_receive_sector
-	.globl _sdmoto_transmit_sector
-	.globl _sdmoto_transmit_byte
-	.globl _sdmoto_receive_byte
+	.globl _sdmoto_rx_sector
+	.globl _sdmoto_tx_sector
+	.globl _sdmoto_tx_byte
+	.globl _sdmoto_rx_byte
 	.globl _sdmoto_init
 
 sdmoto_readb:
@@ -378,7 +378,7 @@ sdmt_rb:
 	bcs	sdmt_rb
 	rts
 
-_sdmoto_receive_byte:
+_sdmoto_rx_byte:
 	pshs	dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -403,7 +403,7 @@ sdmt_wb:
 	stb	<$CC
 	puls	b,pc
 
-_sdmoto_transmit_byte:
+_sdmoto_tx_byte:
 	pshs	dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -412,7 +412,7 @@ _sdmoto_transmit_byte:
 	puls	dp,pc
 	
 	
-_sdmoto_receive_sector:
+_sdmoto_rx_sector:
 	pshs	y,dp
 	lda	#IOPAGE
 	tfr	a,dp
@@ -468,7 +468,7 @@ sdmt_rx_user:
 	jsr	map_proc_always
 	bra	sdmt_rx_kernel
 
-_sdmoto_transmit_sector:
+_sdmoto_tx_sector:
 	pshs	y,dp
 	lda	#IOPAGE
 	tfr	a,dp
