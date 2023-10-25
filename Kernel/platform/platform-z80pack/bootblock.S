@@ -11,44 +11,45 @@
 ;
 ;	assemble with sdasz80
 ;
-		.area	ASEG(ABS)
+		.abs
+
 		.org	0
 
 start:		jr diskload
 
-rootdev:	.dw 0			; patched by hand
-swapdev:	.dw 0			; ditto
-		.dw 0			; spare
+rootdev:	.word 0			; patched by hand
+swapdev:	.word 0			; ditto
+		.word 0			; spare
 
-progress:	.db '/', '-', '\', '|'
+progress:	.byte '/', '-', '\', '|'
 
 diskload:	di
-		ld sp, #stack
-		ld hl, #0x88
+		ld sp, stack
+		ld hl, 0x88
 		exx
 		xor a
 		ld h, a
 		ld b, a
 		out (17), a		; sector high always 0
 		out (10), a		; drive always 0
-		ld a, #57		; start on track 58
+		ld a, 57		; start on track 58
 		out (11), a
 		exx
-		ld c, #19		; number of tracks to load (56Kish)
+		ld c, 19		; number of tracks to load (56Kish)
 load_tracks:	in a, (11)
 		inc a			; track
 		out (11), a
 		xor a
 		out (12), a
-		ld b, #26		; sectors
+		ld b, 26		; sectors
 load_sectors:	exx
 		ld a, b
-		and #3
-		add #progress
+		and 3
+		add a,progress
 		ld l, a
 		ld a, (hl)
 		out (01), a
-		ld a, #8
+		ld a, 8
 		out (01), a
 		inc b
 		exx
@@ -63,19 +64,19 @@ load_sectors:	exx
 		xor a			; read
 		out (13), a		; go
 		in a, (14)		; status
-		ld de, #128
+		ld de, 128
 		add hl, de
 		djnz load_sectors	; 26 sectors = 3328 bytes
 		dec c
 		jr nz, load_tracks
-		ld a, #0xc9		; to help debug
+		ld a, 0xc9		; to help debug
 		ld (start), a
-		ld a, #13
+		ld a, 13
 		out (1), a
-		ld a, #10
+		ld a, 10
 		out (1), a
 		jp 0x88
 
 		.ds 26
 stack:
-		.db 0xff
+		.byte 0xff
