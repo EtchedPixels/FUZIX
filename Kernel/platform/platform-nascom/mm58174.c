@@ -6,7 +6,7 @@
 
 uint8_t plt_rtc_secs(void)
 {
-    uint8_t r, r2;
+    register uint8_t r, r2;
     
     do {
         r = in(secs);

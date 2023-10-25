@@ -47,7 +47,7 @@ static int ide_wait_drq(void)
 
 static void ide_identify(int dev, uint8_t *buf)
 {
-	uint8_t *dptr = buf;
+	register uint8_t *dptr = buf;
         int i;
 
         ide_unit = dev;
@@ -146,7 +146,7 @@ static void ide_register(uint_fast8_t unit)
 
 void ide_probe(void)
 {
-	uint_fast8_t n;
+	register uint_fast8_t n;
 	unsigned chs = 0;
 	uint8_t *buf = (uint8_t *)tmpbuf();
 	for (n = 0 ; n < TD_IDE_NUM; n += 2) {

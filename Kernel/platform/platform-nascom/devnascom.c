@@ -95,7 +95,7 @@ static uint8_t shiftmask[9] = {
 
 static void keyproc(void)
 {
-	int i;
+	register int i;
 	uint8_t key;
 
 	out(kbd_data, 2);	/* Reset the keyboard */
@@ -179,7 +179,7 @@ static uint8_t kbd_timer;
 
 static void keydecode(void)
 {
-	uint8_t c;
+	register uint8_t c;
 	uint8_t m = 0;
 	uint8_t shift = 0;
 

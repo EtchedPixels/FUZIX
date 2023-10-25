@@ -57,8 +57,8 @@ uint_fast8_t tinydisk_setup(uint16_t dev)
 	uint32_t *lba = td_lba[dev];
 	uint_fast8_t n;
 	uint_fast8_t c = 0;
-	boot_record_t *br = (boot_record_t *) tmpbuf();
-	partition_table_entry_t *pe = br->partition;
+	register boot_record_t *br = (boot_record_t *) tmpbuf();
+	register partition_table_entry_t *pe = br->partition;
 
 	/* Platform custom partitions */
 #ifdef CONFIG_TD_CUSTOMPART

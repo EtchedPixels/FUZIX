@@ -93,7 +93,7 @@ static int gm8x9_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	uint8_t err = 0;
 	uint8_t side, sector, track;
 	irqflags_t irqflags;
-	struct gmfd *fd = gmfd_drives + minor;
+	register struct gmfd *fd = gmfd_drives + minor;
 
 	if (rawflag == 2)
 		goto bad2;
@@ -190,7 +190,7 @@ uint8_t gm8x9_density(uint8_t minor, uint8_t flags)
 int gm8x9_open(uint8_t minor, uint16_t flag)
 {
 	uint8_t den;
-	struct gmfd *d = gmfd_drives + minor;
+	register struct gmfd *d = gmfd_drives + minor;
 
 	flag;
 	if (((gm8x9_type & 0x80) && minor > 4) || minor > MAX_GMFD) {

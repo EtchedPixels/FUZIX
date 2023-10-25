@@ -23,8 +23,8 @@ td_ioc td_iop[CONFIG_TD_NUM];
 static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 {
 	uint8_t dev = minor >> 4;
-	uint16_t ct = 0;
-	uint8_t *dptr;
+	register uint16_t ct = 0;
+	register uint8_t *dptr;
 	uint16_t nblock;
 	uint32_t lba;
 
