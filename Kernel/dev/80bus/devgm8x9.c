@@ -9,13 +9,13 @@
 #include <nascom.h>
 #include <devgm8x9.h>
 
-__sfr __at 0xE0 gm8x9_cmd;
-__sfr __at 0xE0 gm8x9_status;
-__sfr __at 0xE1 gm8x9_track;
-__sfr __at 0xE2 gm8x9_sector;
-__sfr __at 0xE3 gm8x9_data;
-__sfr __at 0xE4 gm8x9_ctrl;
-__sfr __at 0xE5 gm8x9_type;
+#define gm8x9_cmd 0xE0
+#define gm8x9_status 0xE0
+#define gm8x9_track 0xE1
+#define gm8x9_sector 0xE2
+#define gm8x9_data 0xE3
+#define gm8x9_ctrl 0xE4
+#define gm8x9_type 0xE5
 
 #define SIDE		1
 #define DDENS		2
@@ -51,9 +51,9 @@ static uint8_t gm8x9_select(uint8_t drive, uint8_t flags)
 
 	if (drive_last != drive) {
 		if (drive_last != 0xFF)
-			gmfd_drives[drive_last].track = gm8x9_track;
+			gmfd_drives[drive_last].track = in(gm8x9_track);
 		drive_last = drive;
-		gm8x9_track = gmfd_drives[drive].track;
+		out(gm8x9_track, gmfd_drives[drive].track);
 		gm8x9_steprate = gmfd_drives[drive].steprate;
 		ret = 2;
 	}
@@ -61,7 +61,7 @@ static uint8_t gm8x9_select(uint8_t drive, uint8_t flags)
 	flags_last = flags;
 
 
-	if (gm8x9_type & 0x80) {
+	if (in(gm8x9_type) & 0x80) {
 		/* 809 / 829 */
 		drive = 1 << drive;
 		if (flags & SIDE)
@@ -77,7 +77,7 @@ static uint8_t gm8x9_select(uint8_t drive, uint8_t flags)
 	if (flags & EIGHTINCH)
 		drive |= 0x20;
 	gm8x9_cursel = drive;
-	gm8x9_ctrl = drive;
+	out(gm8x9_ctrl,drive);
 	return ret;
 }
 
@@ -128,7 +128,7 @@ static int gm8x9_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 		   restoring the head and seeking in order to re-align */
 		for (tries = 0; tries < 5; tries++) {
 			/* Try to get the requested track */
-			if (gm8x9_track != track) {
+			if (in(gm8x9_track) != track) {
 				if ((err = gm8x9_seek(track))) {
 					gm8x9_restore();
 					continue;

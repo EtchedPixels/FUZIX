@@ -6,14 +6,14 @@
 #include <kdata.h>
 #include <printf.h>
 
-__sfr __at 0xFB track;
-__sfr __at 0xFC sector;
-__sfr __at 0xFD data;
+#define track 0xFB
+#define sector 0xFC
+#define data 0xFD
 
-static void gm833_inir_mapped(uint8_t *ptr) __z88dk_fastcall;
-static void gm833_otir_mapped(uint8_t *ptr) __z88dk_fastcall;
+static void gm833_inir_mapped(uint8_t *ptr);
+static void gm833_otir_mapped(uint8_t *ptr);
 
-static uint8_t map;
+uint8_t gm833_map;
 static uint8_t num_gm833;
 
 static int gm833_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
@@ -24,13 +24,13 @@ static int gm833_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag
     unsigned lba;
     uint8_t *dptr;
 
-    map = 0;
+    gm833_map = 0;
     if (rawflag == 1) {
         if (d_blkoff(BLKSHIFT))
             return -1;
-        map = udata.u_page;
+        gm833_map = udata.u_page;
     } else if (rawflag == 2)
-        map = swappage;
+        gm833_map = swappage;
 
     /* On a swap udata gets overwritten so pull anything out first */
     lba = udata.u_block * 4;
@@ -39,8 +39,8 @@ static int gm833_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag
     ct = udata.u_nblock * 4;
 
     while(ct--) {
-        sector = lba;
-        track = (lba >> 8) | unit;
+        out(sector, lba);
+        out(track, (lba >> 8) | unit);
         if (is_read)
             gm833_inir_mapped(dptr);
         else
@@ -75,22 +75,22 @@ int gm833_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 static uint_fast8_t gm833_probe_track(uint_fast8_t probe)
 {
     uint_fast8_t tmp;
-    track = probe;
-    sector = 0;
-    tmp = data;
+    out(track, probe);
+    out(sector, 0);
+    tmp = in(data);
     /* Writing the logical track reset the counter for the sector bytes */
-    track = probe;
-    data = 0xAA;
-    track = probe;
-    if (data != 0xAA)
+    out(track, probe);
+    out(data, 0xAA);
+    out(track, probe);
+    if (in(data) != 0xAA)
         return 0;
-    track = probe;
-    data = 0x55;
-    track = probe;
-    if (data != 0x55)
+    out(track, probe);
+    out(data, 0x55);
+    out(track, probe);
+    if (in(data) != 0x55)
         return 0;
-    track = probe;
-    data = tmp;
+    out(track, probe);
+    out(data, tmp);
     return 1;
 }
 
@@ -107,30 +107,4 @@ uint_fast8_t gm833_probe(void)
     if (num_gm833)
         kprintf("gm833: %d found.\n", num_gm833);
     return num_gm833;
-}
-
-COMMON_MEMORY
-
-static void gm833_inir_mapped(uint8_t *ptr) __z88dk_fastcall __naked
-{
-__asm
-    ld a,(_map)
-    or a
-    call nz, map_proc_a
-    ld bc,#0x80FD
-    inir
-    jp map_kernel
-__endasm;
-}
-
-static void gm833_otir_mapped(uint8_t *ptr) __z88dk_fastcall __naked
-{
-__asm
-    ld a,(_map)
-    or a
-    call nz,map_proc_a
-    ld bc,#0x80FD
-    otir
-    jp map_kernel
-__endasm;
 }
