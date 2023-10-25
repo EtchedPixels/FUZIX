@@ -3,8 +3,8 @@
 #include <kdata.h>
 #include <devlpr.h>
 
-__sfr __at 0x02 lpstat;		/* I/O 2 and 3 */
-__sfr __at 0x03 lpdata;
+#define lpstat	0x02		/* I/O 2 and 3 */
+#define lpdata	0x03
 
 int lpr_open(uint8_t minor, uint16_t flag)
 {
@@ -41,12 +41,12 @@ int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
     while(udata.u_done < udata.u_count) {
         /* Note; on real hardware it might well be necessary to
            busy wait a bit just to get acceptable performance */
-        while (lpstat != 0xFF) {
+        while (in(lpstat) != 0xFF) {
             if (iopoll())
                 return udata.u_done;
         }
         /* FIXME: tidy up ugetc and sysio checks globally */
-        lpdata = ugetc(p++);
+        out(lpdata, ugetc(p++));
         udata.u_done++;
     }
     return udata.u_done;

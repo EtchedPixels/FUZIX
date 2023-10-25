@@ -9,17 +9,17 @@
 #include <devfd.h>
 #include <fdc.h>
 
-__sfr __at 10 fd_drive;
-__sfr __at 11 fd_track;
-__sfr __at 12 fd_sectorl;
-__sfr __at 13 fd_cmd;
-__sfr __at 14 fd_status;
-__sfr __at 15 fd_dmal;
-__sfr __at 16 fd_dmah;
-__sfr __at 17 fd_sectorh;
+#define fd_drive	10
+#define	fd_track	11
+#define	fd_sectorl	12
+#define fd_cmd		13
+#define fd_status	14
+#define	fd_dmal		15
+#define fd_dmah		16
+#define fd_sectorh	17
 
 /* floppies. 26 128 byte sectors, not a nice way to use all of them in 512's */
-static int sectrack[16] = {
+static unsigned sectrack[16] = {
     26, 26, 26, 26,
     0, 0, 0, 0,
     128, 128, 0, 0,
@@ -71,7 +71,7 @@ static uint8_t skewtab[4][32] = {
     { 1,7,13,19,25,5,11,17,23,3,9,15,21,2,8,14,20,26,6,12,18,24,4,10,16,22, }
 };
 
-int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
+int fd_ioctl(uint_fast8_t minor, uarg_t request, char *buffer)
 {
     switch(request) {
     case FDIO_GETCAP:
@@ -91,29 +91,29 @@ int fd_ioctl(uint8_t minor, uarg_t request, char *buffer)
 
 /* We will wrap on big disks if we ever try and support the Z80Pack P:
    that wants different logic */
-static void fd_geom(int minor, blkno_t block)
+static void fd_geom(unsigned minor, blkno_t block)
 {
     /* Turn block int track/sector 
        and write to the controller.
        Forced to do real / and % */
-    int track = block / sectrack[minor];
-    int sector = block % sectrack[minor];
+    unsigned track = block / sectrack[minor];
+    unsigned sector = block % sectrack[minor];
     if (minor >= 4) {
         /* Hard disk */
         sector++;
-        fd_sectorl = sector & 0xFF;
-        fd_sectorh = sector >> 8;
+        out(fd_sectorl, sector & 0xFF);
+        out(fd_sectorh, sector >> 8);
     } else {
         /* Floppy */
-        fd_sectorl = skewtab[minor][sector];
-        fd_sectorh = 0;
+        out(fd_sectorl, skewtab[minor][sector]);
+        out(fd_sectorh, 0);
     }
-    fd_track = track;
+    out(fd_track, track);
 }
 
-static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
+static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
 {
-    uint16_t dptr;
+    register uint16_t dptr;
     uint16_t ct = 0;
     uint8_t st;
     uint8_t map = 0;
@@ -149,25 +149,25 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
     /* FIXME: move core to using usize_t ? */
     dptr = (uint16_t)udata.u_dptr;
     while (ct < udata.u_nblock) {
-        fd_drive = minor;
+        out(fd_drive, minor);
         fd_geom(minor, udata.u_block);
         /* The Z80pack DMA uses the current MMU mappings... beware that
          * is odd - but most hardware would be PIO (inir/otir etc) anyway */
-        fd_dmal = dptr & 0xFF;
-        fd_dmah = dptr >> 8;
+        out(fd_dmal, dptr & 0xFF);
+        out(fd_dmah, dptr >> 8);
 
 #ifdef CONFIG_SWAP_ONLY
         /* No banking problems in swap only mode */
-        fd_cmd = 1 - is_read;
+        out(fd_cmd , 1 - is_read);
 #else
         if (map == 0)
-            fd_cmd = 1 - is_read;
+            out(fd_cmd, 1 - is_read);
         else	/* RAW I/O - switch to user bank and issue command via
                    a helper in common */
             fd_bankcmd(1 - is_read, page);
 #endif
 
-        st = fd_status;
+        st = in(fd_status);
         /* Real disks would need retries */
         if (st) {
             kprintf("fd%d: block %d, error %d\n", minor, udata.u_block, st);
@@ -181,7 +181,7 @@ static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag)
 }
 
 /* Media is fixed at start up time */
-int fd_open(uint8_t minor, uint16_t flag)
+int fd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= 8 || !sectrack[minor]) {
@@ -191,7 +191,7 @@ int fd_open(uint8_t minor, uint16_t flag)
     return 0;
 }
 
-int hd_open(uint8_t minor, uint16_t flag)
+int hd_open(uint_fast8_t minor, uint16_t flag)
 {
     flag;
     if(minor >= 8 || !sectrack[minor + 8]) {
