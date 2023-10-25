@@ -1,0 +1,5 @@
+ASRC = as1-6303.c as6-6303.c
+
+TARGET = -DTARGET_6303
+
+include Makefile.common
