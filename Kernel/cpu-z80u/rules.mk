@@ -1,4 +1,4 @@
-export CROSS_AS=ccz80 -X -c
+export CROSS_AS=ccz80 -X
 export CROSS_LD=ldz80
 export CROSS_CC=ccz80
 export CROSS_CCOPTS= -X -c -Os -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include
@@ -14,7 +14,7 @@ export CROSS_CC_SYS2=
 export CROSS_CC_SYS3=
 export CROSS_CC_SYS4=
 export CROSS_CC_SYS5=
-export ASOPTS=-c
+export ASOPTS = -c
 export ASMEXT = .S
 export BINEXT = .o
 export BITS=16
