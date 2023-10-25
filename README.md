@@ -1,3 +1,10 @@
+** ENGINEERING WORK IN PROGRESS **
+
+The Z80 side of the tree is currently moving to the new compiler including
+work on the compiler, linker and kernel. Thus some bits of it require you
+have absolutely bleeding edge pieces all around. I would suggest avoiding
+working on this tree for Z80 stuff right now. Non Z80 should be just fine.
+
 **FuzixOS**: Because Small Is Beautiful
 
 This is the initial public tree for the FuzixOS project. It is not yet useful although you can build and boot it and run
