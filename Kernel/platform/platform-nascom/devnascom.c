@@ -13,8 +13,8 @@ static char tbuf2[TTYSIZ];
 
 struct vt_repeat keyrepeat;
 
-__sfr __at 0x01 s6402_data;
-__sfr __at 0x02 s6402_status;
+#define	s6402_data	0x01
+#define s6402_status	0x02
 
 struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 	{NULL, NULL, NULL, 0, 0, 0},
@@ -41,23 +41,23 @@ ttyready_t tty_writeready(uint8_t minor)
 	uint8_t reg;
 	if (minor == 1)
 		return TTY_READY_NOW;
-	reg = s6402_status;
+	reg = in(s6402_status);
 	return (reg & 0x40) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
 	if (minor == 2)
-		s6402_data = c;
+		out(s6402_data, c);
 	else
 		vtoutput(&c, 1);
 }
 
 void tty_poll(void)
 {
-	uint8_t reg = s6402_status;
+	uint8_t reg = in(s6402_status);
 	if (reg & 0x80) {
-		reg = s6402_data;
+		reg = in(s6402_data);
 		tty_inproc(2, reg);
 	}
 }
@@ -91,19 +91,19 @@ static uint8_t shiftmask[9] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 24
 };
 
-__sfr __at 0 kbd_data;
+#define kbd_data	0
 
 static void keyproc(void)
 {
 	int i;
 	uint8_t key;
 
-	kbd_data = 2;		/* Reset the keyboard */
+	out(kbd_data, 2);	/* Reset the keyboard */
 
 	for (i = 0; i < 9; i++) {
 		/* Read the keyboard row */
-		keyin[i] = ~kbd_data & 0x7F;
-		kbd_data = 1;	/* Clock the keyboard */
+		keyin[i] = ~in(kbd_data) & 0x7F;
+		out(kbd_data, 1);	/* Clock the keyboard */
 		key = keyin[i] ^ keymap[i];
 		if (key) {
 			uint8_t n;

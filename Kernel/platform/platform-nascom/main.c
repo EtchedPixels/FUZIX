@@ -14,8 +14,6 @@ uint8_t plt_tick_present;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
-/* FIXME: missing prototype ? */
-extern int strcmp(const char *, const char *);
 /* On idle we spin checking for the terminals. Gives us more responsiveness
    for the polled ports */
 void plt_idle(void)
@@ -31,18 +29,28 @@ void do_beep(void)
 {
 }
 
-__sfr __at 0x21	clk_tenths;
-__sfr __at 0x22 clk_secs;
-__sfr __at 0x23 clk_tsecs;
-__sfr __at 0x2F clk_stat;
+#define clk_tenths	0x21
+#define clk_secs	0x22
+#define clk_tsecs	0x23
+#define clk_stat	0x2F
+
+int strcmp(const char *s1, const char *s2)
+{
+  char c1, c2;
+
+  while((c1 = *s1++) == (c2 = *s2++) && c1);
+  return c1 - c2;
+}
 
 uint8_t plt_param(char *p)
 {
 	if (strcmp(p, "clkint") == 0) {
-		clk_irq = 1;
+		out(clk_irq, 1);
 		/* FIXME: do a reset cycle first */
-		clk_stat = 0x9;	/* Repeating 0.5 sec - really 0.516.6 sec */
-		clk_stat | clk_stat | clk_stat;	/* Enable */
+		out(clk_stat, 0x9);	/* Repeating 0.5 sec - really 0.516.6 sec */
+		in(clk_stat);
+		in(clk_stat);
+		in(clk_stat);	/* Enable */
 		plt_tick_present = 1;
 		return 1;
 	}

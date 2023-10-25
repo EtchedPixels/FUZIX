@@ -3,32 +3,32 @@
 #include <tinyide.h>
 #include <plt_ide.h>
 
-__sfr __at 0x04 ide_ctrl;
-__sfr __at 0x05 ide_data;
-__sfr __at 0x06 porta;
-__sfr __at 0x07 portb;
+#define ide_ctrl	0x04
+#define ide_data	0x05
+#define porta		0x06
+#define portb		0x07
 
 static void ide_set_w(void)
 {
-    portb = 0xCF;
-    portb = 0x00;
+    out(portb, 0xCF);
+    out(portb, 0x00);
 }
 
 static void ide_set_r(void)
 {
-    portb = 0xCF;
-    portb = 0xFF;
+    out(portb, 0xCF);
+    out(portb, 0xFF);
 }
 
 uint8_t ide_read(uint8_t r)
 {
     uint8_t v;
     /* Active low control lines */
-    ide_ctrl = PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7);
-    ide_ctrl = PIOIDE_CS1|PIOIDE_W|PIOIDE_RESET|(r & 7);
-    v = ide_data;
-    ide_ctrl = PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7);
-    ide_ctrl = PIOIDE_CS0|PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET;
+    out(ide_ctrl, PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7));
+    out(ide_ctrl, PIOIDE_CS1|PIOIDE_W|PIOIDE_RESET|(r & 7));
+    v = in(ide_data);
+    out(ide_ctrl, PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7));
+    out (ide_ctrl, PIOIDE_CS0|PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET);
     return v;
 }
 
@@ -36,20 +36,20 @@ void ide_write(uint8_t r, uint_fast8_t v)
 {
     ide_set_w();
     /* Active low control lines */
-    ide_ctrl = PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7);
-    ide_data = v;
-    ide_ctrl = PIOIDE_CS1|PIOIDE_R|PIOIDE_RESET|(r & 7);
-    ide_ctrl = PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7);
-    ide_ctrl = PIOIDE_CS0|PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET;
+    out(ide_ctrl, PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7));
+    out(ide_data, v);
+    out(ide_ctrl, PIOIDE_CS1|PIOIDE_R|PIOIDE_RESET|(r & 7));
+    out(ide_ctrl, PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7));
+    out(ide_ctrl, PIOIDE_CS0|PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET);
     ide_set_r();
 }
 
 void ide_pio_setup(void)
 {
     /* Set up control port */
-    ide_ctrl = PIOIDE_CS0|PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET;
-    porta = 0xCF;
-    porta = 0x00;
+    out(ide_ctrl, PIOIDE_CS0|PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET);
+    out(porta, 0xCF);
+    out(porta, 0x00);
     /* Keep data as read usually */
     ide_set_r();
 }

@@ -1,18 +1,14 @@
-# 0 "commonmem.S"
-# 0 "<built-in>"
-# 0 "<command-line>"
-# 1 "commonmem.S"
 ;
-; We only have a small amount of true (ie writable) common space. We
-; don't really want stacks and stuff in it (it's contended by video)
-; but for now this will get us going
+;	We only have a small amount of true (ie writable) common space. We
+;	don't really want stacks and stuff in it (it's contended by video)
+;	but for now this will get us going
 ;
         .commondata
 
 ;
-; Standard Z80 common memory area blocks.
+;	Standard Z80 common memory area blocks.
 ;
-; Must remain a multiple of 256 bytes
+;	Must remain a multiple of 256 bytes
 ;
         ; exported symbols
         .export _ub
@@ -22,7 +18,7 @@
         .export istack_switched_sp
 
 
-_ub: ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
+_ub:    ; first 512 bytes: starts with struct u_block, with the kernel stack working down from above
 _udata:
 kstack_base:
         .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -53,7 +49,8 @@ istack_base:
         .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-; .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-; .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+;        .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+;        .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 istack_top:
 istack_switched_sp: .word 0
+

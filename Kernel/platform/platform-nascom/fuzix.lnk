@@ -4,28 +4,9 @@
 -b _COMMONDATA=0xFC00
 -b _INITIALIZER=0xF800
 -l z80
-platform/platform-nascom/crt0.rel
-platform/platform-nascom/commonmem.rel
-platform/platform-nascom/nascom.rel
 platform/platform-nascom/nascom-pagemode.rel
-start.rel
-version.rel
-cpu-z80/lowlevel-z80.rel
-usermem.rel
 cpu-z80/usermem_std-z80.rel
-platform/platform-nascom/tricks.rel
-platform/platform-nascom/main.rel
-platform/platform-nascom/discard.rel
-timer.rel
-kdata.rel
-platform/platform-nascom/devgm8x9.rel
-platform/platform-nascom/gm8x9.rel
-platform/platform-nascom/tinydisk.rel
-platform/platform-nascom/tinydisk_discard.rel
-platform/platform-nascom/tinyide.rel
-platform/platform-nascom/tinyide_discard.rel
 platform/platform-nascom/ide.rel
-platform/platform-nascom/devices.rel
 platform/platform-nascom/nascom-vt.rel
 devio.rel
 filesys.rel

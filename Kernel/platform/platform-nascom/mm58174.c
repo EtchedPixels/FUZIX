@@ -1,16 +1,16 @@
 #include <kernel.h>
 
-__sfr __at 0x22 secs;
-__sfr __at 0x23 tensecs;
-__sfr __at 0x2F irq;
+#define secs	0x22
+#define tensecs	0x23
+#define irq	0x2F
 
 uint8_t plt_rtc_secs(void)
 {
     uint8_t r, r2;
     
     do {
-        r = secs;
-        r2 = tensecs;
-    } while (secs != r);
+        r = in(secs);
+        r2 = in(tensecs);
+    } while (in(secs) != r);
     return r + 10 * r2;
 }

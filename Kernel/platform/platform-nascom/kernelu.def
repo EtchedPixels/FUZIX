@@ -1,0 +1,23 @@
+; FUZIX  mnemonics for memory addresses etc
+
+#define U_DATA__TOTALSIZE       0x200	; 512 bytes
+#define U_DATA_STASH		0xBE00	; CE00-CFFF
+
+#define PROGBASE		0x0000
+#define PROGLOAD		0x0100
+
+#define	NBUFS			5
+
+#define CONFIG_SWAP
+
+;
+;	SPI uses the top bit
+;
+
+#define	ROTATE	rla
+
+#define LOADFIRST \
+		in d,(c) \
+		rlc d
+
+#define VIDEO	0xF800

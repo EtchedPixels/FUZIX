@@ -3,60 +3,79 @@ CSRCS = devnascom.c mm58174.c
 CSRCS += devices.c main.c ide.c
 DISCARD_CSRCS = discard.c
 
-ASRCS = nascom.s crt0.s
-ASRCS += tricks.s commonmem.s
+ASRCS = nascom.S crt0.S
+ASRCS += tricks.S commonmem.S
 
-NASRCS = ../../dev/80bus/nascom-vt.s ../../dev/80bus/nascom-pagemode.s
-NASRCS += ../../dev/80bus/gm8x9.s
+NASRCS = ../../dev/80bus/nascom-vt.S ../../dev/80bus/nascom-pagemode.S
+NASRCS += ../../dev/80bus/gm8x9.S
 NSRCS = ../../dev/80bus/devgm8x9.c ../../dev/80bus/devgm833.c
 
 DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
 DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
 
-#DASRCS = ../../dev/z80softspi.s ../../dev/z80softsd.s
-
-COBJS = $(CSRCS:.c=.rel)
-AOBJS = $(ASRCS:.s=.rel)
-DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
-DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
-NAOBJS = $(patsubst ../../dev/80bus/%.s,%.rel, $(NASRCS))
-NOBJS = $(patsubst ../../dev/80bus/%.c,%.rel, $(NSRCS))
-DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+COBJS = $(CSRCS:.c=.o)
+AOBJS = $(ASRCS:.S=.o)
+DISCARD_COBJS = $(DISCARD_CSRCS:.c=.o)
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.S,%.o, $(DASRCS))
+NAOBJS = $(patsubst ../../dev/80bus/%.S,%.o, $(NASRCS))
+NOBJS = $(patsubst ../../dev/80bus/%.c,%.o, $(NSRCS))
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.o, $(DISCARD_DSRCS))
 OBJS  = $(COBJS) $(AOBJS) $(DISCARD_COBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS) $(NAOBJS) $(NOBJS)
 
-CROSS_CCOPTS += -I../../dev/ -I../../dev/80bus/
+CROSS_CCOPTS += -I. -I../../dev/ -I../../dev/80bus/
 
 all:	$(OBJS)
 
-$(COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+$(COBJS): %.o: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $<
 
-$(AOBJS): %.rel: %.s
+$(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DOBJS): %.rel: ../../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+$(DOBJS): %.o: ../../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $<
 
-$(NOBJS): %.rel: ../../dev/80bus/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
+$(NOBJS): %.o: ../../dev/80bus/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $<
 
-$(DAOBJS): %.rel: ../../dev/%.s
-	$(CROSS_AS) $(ASOPTS) $@ $<
+$(DAOBJS): %.o: ../../dev/%.s
+	$(CROSS_AS) $(ASOPTS) $<
 
-$(NAOBJS): %.rel: ../../dev/80bus/%.s
-	$(CROSS_AS) $(ASOPTS) $@ $<
+$(NAOBJS): %.o: ../../dev/80bus/%.S
+	$(CROSS_AS) $(ASOPTS) $<
 
-$(DISCARD_DOBJS): %.rel: ../../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+$(DISCARD_DOBJS): %.o: ../../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) $<
 
-$(DISCARD_COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
+$(DISCARD_COBJS): %.o: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) $<
 
 clean:
-	rm -f $(OBJS) core *~  *.asm *.rst *.lst *.sym *.rel
+	rm -f $(OBJS) core *~ *.o
 
 image:
+	# Note: if the code gets a tiny bit bigger then S will be over C000
+	# and the -S 0xC000 needs removing. Annoyingly it's right on the
+	# edge.
+	$(CROSS_LD) -b -C 0x0100 -8 0xFC00 -S 0xC000 -f CLDBSbXs -o ../../fuzix.bin \
+	crt0.o commonmem.o nascom.o ../../dev/80bus/nascom-pagemode.o \
+	../../start.o ../../version.o \
+	../../cpu-z80u/lowlevel-z80u.o ../../cpu-z80u/usermem_std-z80u.o \
+	../../usermem.o tricks.o main.o discard.o \
+	../../dev/80bus/devgm8x9.o ../../dev/80bus/gm8x9.o ide.o \
+	../../dev/80bus/nascom-vt.o devnascom.o ../../dev/80bus/devgm833.o mm58174.o \
+	../../timer.o ../../kdata.o devices.o ../../devio.o \
+	../../filesys.o ../../blk512.o ../../process.o \
+	../../inode.o ../../syscall_exec.o ../../syscall_exec16.o \
+	../../syscall_fs.o ../../syscall_fs2.o ../../syscall_fs3.o \
+	../../syscall_proc.o ../../syscall_other.o ../../syscall_net.o \
+	../../network.o ../../tty.o ../../vt.o ../../mm.o \
+	../../mm/memalloc_none.o ../../swap.o ../../mm/bankfixed.o \
+	../../devsys.o 	../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
+	../../dev/tinyide.o ../../dev/tinyide_discard.o \
+	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 

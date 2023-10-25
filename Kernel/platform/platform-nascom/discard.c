@@ -13,6 +13,7 @@ void device_init(void)
 {
 	unsigned i;
 	/* TODO: rtc init proper */
+	kputs("Checking for IDE interface on PIO\n");
 	ide_pio_setup();
 	ide_probe();
 	/* Check for a RAMdisc */
@@ -21,8 +22,8 @@ void device_init(void)
 		swap_dev = 0x0800;
 		for (i = 0; i < 10; i++)
 			swapmap_add(i * 48);
+		kputs("Using /dev/rd0 GM833 for swap\n");
 	}
-	
 }
 
 void map_init(void)

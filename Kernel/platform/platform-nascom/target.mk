@@ -1,1 +1,2 @@
-export CPU = z80
+export CPU = z80u
+export USERCPU = z80
