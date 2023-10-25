@@ -680,26 +680,37 @@ numeral:add a, 0x30 ; start at '0' (0x30='0')
 ;
 ;	I/O helpers for cases we don't use peepholes to write them out
 ;
+;	Must not trash BC
+;
+;	out(addr, val)		- not the heathen x86 version
+;
 _out:
 _out16:
-	pop hl
-	pop bc
-	pop de
-	push de
-	push bc
-	out (c),e
-	jp (hl)
+	push	bc
+	ld	hl,#4
+	add	hl,sp
+	ld	c,(hl)
+	inc	hl
+	ld	b,(hl)
+	inc	hl
+	ld	e,(hl)
+	out	(c),e
+	pop	bc
+	ret
 
 ;
 ;	Read a port
 ;
 _in16:
 _in:
-	pop hl
-	pop bc
-	push bc
-	push hl
-	in l, (c)
+	push	bc
+	ld	hl,#4
+	add	hl,sp
+	ld	c,(hl)
+	inc	hl
+	ld	b,(hl)
+	in	l, (c)
+	pop	bc
 	ret
 
 ;
