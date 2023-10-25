@@ -26,6 +26,7 @@ _plt_switchout:
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
         push hl ; return code
+	push bc ; register variable
         push ix
         push iy
         ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
@@ -54,7 +55,7 @@ swapped: .ascii "_switchin: SWAPPED"
 
 _switchin:
         di
-        pop bc  ; return address
+        pop bc  ; return address (we can trash bc here - we will restore one)
         pop de  ; new process pointer
 ;
 ;	FIXME: do we actually *need* to restore the stack !
@@ -74,7 +75,7 @@ _switchin:
 	add hl, de	; process ptr
 
 #ifdef CONFIG_SWAP
-	.globl _swapper
+
 	;
 	;	Always use the swapstack, otherwise when we call map_kernel
 	;	having copied the udata stash back to udata we will crap
@@ -164,8 +165,9 @@ skip_copyback:
         ; _switchout or _dofork
         ld sp, (_udata + U_DATA__U_SP)
 
-        pop iy
+        pop iy	; register variables
         pop ix
+	pop bc
         pop hl ; return code
 
         ; enable interrupts, if we didn't pre-empt in an ISR
@@ -217,6 +219,7 @@ _dofork:
         push hl ; HL still has p->p_pid from above, the return value in the parent
         push ix
         push iy
+	push bc
 
         ; save kernel stack pointer -- when it comes back in the parent we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
@@ -259,9 +262,11 @@ _dofork:
 
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
+	; ix/iy are untouched so don't need a restore BC is not so does
         pop bc
-        pop bc
-        pop bc
+        pop af
+        pop af
+	pop af	; and the pid
 
         ; Make a new process table entry, etc.
 	ld hl,#_udata
@@ -269,8 +274,8 @@ _dofork:
         ld  hl, (fork_proc_ptr)
         push hl
         call _makeproc
-        pop bc 
-	pop bc
+        pop af
+	pop af
 
         ; runticks = 0;
         ld hl, #0
