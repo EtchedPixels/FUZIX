@@ -3,8 +3,6 @@
 #include <kdata.h>
 #include <printf.h>
 #include <devtty.h>
-#include <devatsim.h>
-#include <net_z80pack.h>
 
 uaddr_t ramtop = PROGTOP;
 

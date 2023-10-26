@@ -1,16 +1,17 @@
-An FUZIX target for z80pack.
+# FUZIX for Z80Pack Emulation
 
-Z80Pack has a simple 4K fixed common and 60K fixed sized banks. We run FUZIX
-with one application per bank and the memory map currently is
+The kernel sets up Z80Pack with 60K banks and a 4K common for a 512K
+machine. The actual emultion itself goes up to 16MB. The values can
+be altered and this can be a useful test platform for various setups.
+
+## Memory Map
+
+Fuzix runs with the memory map as follows
 
 Bank 0:
-
 0000-0080	Vectors
 0081-0084	Saved CP/M command info
 0088		FUZIX kernel start
-????		FUZIX kernel end ~= A000
-(big kernels go up to E400 or so!)
-E800		Discard (blown away by user processes)
 End of kernel:	Common >= 0xF000
 		uarea
 		uarea stack
@@ -30,15 +31,19 @@ Bank 1 to Bank n:
 ECFF		Application end
 ED00-EFFF	uarea stash
 
-To build
+## Building
 
 make diskimage
 
 This will produce a boot.dsk for the A drive of Z80Pack and an
-hd-fuzix.dsk file which is a Z80Pack hard disk image (4MB) for drive I. Note
-that Fuzix will use drive J as a swap device.
+drivep.dsk file which is a Z80Pack hard disk image (512MB) for drive P. 
+Fuzix will use drive J as a swap device.
 
-To build by hand:
+This has changed from the older builds that use drive I. A 4MB drive isn't
+enough to hold the base system and all the compilers and tools so it was
+moved to use 32MB of P drive.
+
+## To build by hand:
 
 Put the kernel at the end of a floppy image from cyl 60
 Add the fs in the first 58 cyls (366 blocks)
@@ -50,3 +55,4 @@ dd the kernel image to offset 193024
 ie
 
 dd if=fuzix.bin of=drivea.cpm bs=1 seek=193024 conv=notrunc
+

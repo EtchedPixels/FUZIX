@@ -61,14 +61,14 @@ _plt_reboot:
 ;	We need the right bank present when we cause the transfer
 ;
 _fd_bankcmd:
-	ld	de,#5
-	add	hl,de
+	ld	hl,#5
+	add	hl,sp
 	ld	d,(hl)
 	dec	hl
-	ld	h,(hl)
+	ld	e,(hl)		; page ptr
 	dec	hl
 	dec	hl
-	ld	l,(hl)
+	ld	l,(hl)		; command
 
 	ex	de,hl		; bank to HL command to E
 
@@ -101,7 +101,7 @@ init_hardware:
 	; set system RAM size
 	ld	hl, 484
 	ld	(_ramsize), hl
-	ld	hl, (484-64)		; 64K for kernel
+	ld	hl, 484-64		; 64K for kernel
 	ld	(_procmem), hl
 
 	ld	a, 1
@@ -122,10 +122,12 @@ init_hardware:
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
 
-	.common
+	.commondata
 
 _int_disabled:
 	.byte 1
+
+	.common
 
 _program_vectors:
 	; we are called, with interrupts disabled, by both newproc() and crt0
@@ -236,7 +238,7 @@ mmu_kernel:
 	ld	a,h
 	or	a			; 00xx is bad
 	jr	z, badstack
-	cp	0xF0
+	cp	0xEE			; udata stash
 	jr	nc, badstack		; Fxxx is bad
 	in	a,(23)
 	bit	7,a			; Tripped MMU is bad if user
@@ -398,5 +400,8 @@ mmu_user:
 	ld	a,1
 	out	(23),a
 	ret
+
+	.commondata
+
 mmusave:
 	.byte	0

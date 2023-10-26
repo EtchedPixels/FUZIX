@@ -126,9 +126,6 @@ signal_return:
 ;
 ;	Syscall processing path
 ;
-;	This is the first part of the big API change. This is in effect
-;	a temporary ABI so don't build stuff to it!
-;
 unix_syscall_entry:
 	; We know the previous state was EI and that we won't do anything
 	; clever until we EI again, so we can avoid the helpers on the fast
@@ -411,7 +408,38 @@ mmu_irq_ret:
 	; the IRQ being taken
 	ld (_int_disabled),a
 
+	; 	C temporaries
+	ld hl,(__tmp)
+	push hl
+	ld hl,(__hireg)
+	push hl
+	ld hl,(__tmp2)
+	push hl
+	ld hl,(__tmp2+2)
+	push hl
+	ld hl,(__tmp3)
+	push hl
+	ld hl,(__tmp3+2)
+	push hl
+	ld hl,(__retaddr)
+	push hl
+
 	call _plt_interrupt
+
+	pop hl
+	ld (__retaddr),hl
+	pop hl
+	ld (__tmp3+2),hl
+	pop hl
+	ld (__tmp3),hl
+	pop hl
+	ld (__tmp2+2),hl
+	pop hl
+	ld (__tmp2),hl
+	pop hl
+	ld (__hireg),hl
+	pop hl
+	ld (__tmp),hl
 
 	ld a, (_need_resched)
 	or a

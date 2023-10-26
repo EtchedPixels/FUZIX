@@ -12,9 +12,11 @@
 
 unsigned int discard;
 unsigned int common;
+unsigned int commondata;
 unsigned int bss;
 unsigned int discard_size;
 unsigned int common_size;
+unsigned int commondata_size;
 unsigned int bss_size;
 
 struct match {
@@ -25,9 +27,11 @@ struct match {
 struct match rules[] = {
     { "__discard", &discard },
     { "__common", &common },
+    { "__commondata", &commondata },
     { "__bss", &bss },
     { "__discard_size", &discard_size },
     { "__common_size", &common_size },
+    { "__commondata_siz", &commondata_size },
     { "__bss_size", &bss_size },
     { NULL, NULL }
 };
@@ -76,6 +80,9 @@ int main(int argc, char *argv[])
     read_symbols();
     printf("BSS ends at %04X, packing discard (%04X/%04X) and common (%04X/%04X).\n",
         bss + bss_size, discard, discard_size, common, common_size);
+    if (commondata_size)
+        printf("Commondata found packing commondata (%04X/%04X)\n",
+            commondata, commondata_size);
 
     fd = open(argv[1], O_RDONLY);
     if (fd == -1) {
@@ -91,6 +98,10 @@ int main(int argc, char *argv[])
     addr = bss;
     memmove(image + addr, image + common, common_size);
     addr += common_size;
+    if (commondata_size) {
+        memmove(image + addr, image + commondata, commondata_size);
+        addr += commondata_size;
+    }
     memmove(image + addr, image + discard, discard_size);
     addr += discard_size;
     fd = open(argv[2], O_WRONLY|O_TRUNC|O_CREAT, 0600);
