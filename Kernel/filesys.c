@@ -237,8 +237,8 @@ inoptr srch_dir(inoptr wd, uint8_t *compname)
 
 inoptr srch_mt(inoptr ino)
 {
-    uint_fast8_t j;
-    struct mount *m = &fs_tab[0];
+    register uint_fast8_t j;
+    register struct mount *m = &fs_tab[0];
 
     for(j=0; j < NMOUNTS; ++j){
         if(m->m_dev != NO_DEVICE &&  m->m_mntpt == ino) {
@@ -1134,8 +1134,8 @@ uint8_t getmode(inoptr ino)
 
 static struct mount *newfstab(void)
 {
-    struct mount *m = fs_tab;
-    uint_fast8_t i;
+    register struct mount *m = fs_tab;
+    register uint_fast8_t i;
     for (i = 0; i < NMOUNTS; i++) {
         if (m->m_dev == NO_DEVICE)
             return m;
@@ -1146,8 +1146,8 @@ static struct mount *newfstab(void)
 
 struct mount *fs_tab_get(uint16_t dev)
 {
-    struct mount *m = fs_tab;
-    int i;
+    register struct mount *m = fs_tab;
+    register uint_fast8_t i;
     for (i = 0; i < NMOUNTS; i++) {
         if (m->m_dev == dev)
             return m;

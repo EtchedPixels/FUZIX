@@ -35,8 +35,8 @@ static void tty_selwake(uint_fast8_t minor, uint16_t event)
 int tty_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	uint_fast8_t c;
-	struct s_queue *q;
-	struct tty *t;
+	register struct s_queue *q;
+	register struct tty *t;
 
 	/* FIXME: fix race of timer versus the ptimer_insert to psleep_flags_io */
 	used(rawflag);
@@ -104,7 +104,7 @@ dead:
 
 int tty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
-	struct tty *t;
+	register struct tty *t;
 	uint_fast8_t c;
 
 	used(rawflag);
@@ -163,7 +163,7 @@ int tty_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 
 int tty_open(uint_fast8_t minor, uint16_t flag)
 {
-	struct tty *t;
+	register struct tty *t;
 	irqflags_t irq;
 
 	if (minor > NUM_DEV_TTY) {
@@ -223,7 +223,7 @@ out:
 /* Post processing for a successful tty open */
 void tty_post(inoptr ino, uint_fast8_t minor, uint16_t flag)
 {
-        struct tty *t = &ttydata[minor];
+	register struct tty *t = &ttydata[minor];
         irqflags_t irq = di();
 
 	/* If there is no controlling tty for the process, establish it */
@@ -266,7 +266,7 @@ void tty_exit(void)
 
 int tty_ioctl(uint_fast8_t minor, uarg_t request, char *data)
 {				/* Data in User Space */
-        struct tty *t;
+        register struct tty *t;
         uint_fast8_t waito = 0;
         staticfast struct termios tm;
 
@@ -390,8 +390,8 @@ uint_fast8_t tty_inproc(uint_fast8_t minor, uint_fast8_t c)
 	uint_fast8_t oc;
 	uint_fast8_t canon;
 	uint_fast8_t wr;
-	struct tty *t = &ttydata[minor];
-	struct s_queue *q = &ttyinq[minor];
+	register struct tty *t = &ttydata[minor];
+	register struct s_queue *q = &ttyinq[minor];
 
 	/* This is safe as ICANON is in the low bits */
 	canon = t->termios.c_lflag & ICANON;
@@ -582,7 +582,7 @@ void tty_putc_wait(uint_fast8_t minor, uint_fast8_t ch)
  */
 void tty_hangup(uint_fast8_t minor)
 {
-        struct tty *t = &ttydata[minor];
+        register struct tty *t = &ttydata[minor];
         if (t->users) {
 	        /* Kill users */
 	        sgrpsig(t->pgrp, SIGHUP);
@@ -791,7 +791,7 @@ int tty_inproc_full(uint_fast8_t minor, uint_fast8_t ch)
 int tty_inproc_softparity(uint_fast8_t minor, uint_fast8_t ch)
 {
 	uint_fast8_t p = 0x00;
-	struct termios *t = &ttydata[minor].termios;
+	register struct termios *t = &ttydata[minor].termios;
 
 	if (!(t->c_cflag & PARENB))
 		return tty_inproc_full(minor, ch);
@@ -813,7 +813,7 @@ int tty_inproc_softparity(uint_fast8_t minor, uint_fast8_t ch)
 
 void tty_break_event(uint_fast8_t minor)
 {
-	struct tty *tty = ttydata + minor;
+	register struct tty *tty = ttydata + minor;
 	struct s_queue *q = ttyinq + minor;
 
 	if (tty->termios.c_iflag & IGNBRK)
