@@ -1,6 +1,8 @@
 /* 
  * z80pack fd driver
  *
+ * Hard disks I and J are 4MB (255 track 128 sector). P is 512MB using
+ * 16384 spt. All sectors 128 bytes.
  */
 
 #include <kernel.h>
@@ -23,7 +25,7 @@ static unsigned sectrack[16] = {
     26, 26, 26, 26,
     0, 0, 0, 0,
     128, 128, 0, 0,
-    0, 0, 0, 0
+    0, 0, 0, 16384
 };
 
 static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag);
@@ -91,20 +93,33 @@ int fd_ioctl(uint_fast8_t minor, uarg_t request, char *buffer)
 
 /* We will wrap on big disks if we ever try and support the Z80Pack P:
    that wants different logic */
-static void fd_geom(unsigned minor, blkno_t block)
+static void fd_geom(unsigned minor, uint32_t block)
 {
     /* Turn block int track/sector 
        and write to the controller.
        Forced to do real / and % */
-    unsigned track = block / sectrack[minor];
-    unsigned sector = block % sectrack[minor];
-    if (minor >= 4) {
-        /* Hard disk */
+    /* To avoid expensive 32bit maths handle the big drive specially */
+    unsigned track;
+    unsigned sector;
+
+    if (minor == 7) {	/* P drive */
+        /* 16384 spt */
+        sector = ((uint16_t)block) & 0x3FFF;
+        track = block >> 14;
         sector++;
         out(fd_sectorl, sector & 0xFF);
         out(fd_sectorh, sector >> 8);
+    } else if (minor >= 4) {
+        /* Hard disk - 128 spt */
+        sector = ((uint16_t)block) & 0x7F;
+        track = ((uint16_t)block) >> 7;
+        sector++;
+        out(fd_sectorl, sector & 0xFF);
+        out(fd_sectorh, 0);
     } else {
         /* Floppy */
+        track = ((uint16_t)block) / sectrack[minor];
+        sector = ((uint16_t)block) % sectrack[minor];
         out(fd_sectorl, skewtab[minor][sector]);
         out(fd_sectorh, 0);
     }
@@ -118,9 +133,10 @@ static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
     uint8_t st;
     uint8_t map = 0;
     uint16_t *page = &udata.u_page;
+    uint32_t block;
 
     if(rawflag == 1) {
-        if (d_blkoff(7))
+        if (d_blkoff(9))
             return -1;
         map = 1;
 #ifdef SWAPDEV
@@ -134,15 +150,10 @@ static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
          *	must be prepared to switch common segment as well during
          *	a swap, or to perform mapping games using the banks
          */
-        udata.u_nblock *= (BLKSIZE / 128);
-        /* Limits us to 2^14 blocks (16MB) */
-        udata.u_block <<= 2;
 #endif
-    } else { /* rawflag == 0 */
-        udata.u_nblock = BLKSIZE / 128;		/* BLKSIZE bytes implied */
-        /* Limits us to 2^14 blocks (16MB) */
-        udata.u_block <<= 2;
     }
+    udata.u_nblock *= (BLKSIZE / 128);
+    block = udata.u_block << 2;
     /* Read the disk in four sector chunks. FIXME We ought to cache the geometry
        and just bump sector checking for a wrap. */
 
@@ -150,7 +161,7 @@ static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
     dptr = (uint16_t)udata.u_dptr;
     while (ct < udata.u_nblock) {
         out(fd_drive, minor);
-        fd_geom(minor, udata.u_block);
+        fd_geom(minor, block);
         /* The Z80pack DMA uses the current MMU mappings... beware that
          * is odd - but most hardware would be PIO (inir/otir etc) anyway */
         out(fd_dmal, dptr & 0xFF);
@@ -173,7 +184,7 @@ static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
             kprintf("fd%d: block %d, error %d\n", minor, udata.u_block, st);
             break;
         }
-        udata.u_block++;
+        block++;
         ct++;
         dptr += 128;
     }
