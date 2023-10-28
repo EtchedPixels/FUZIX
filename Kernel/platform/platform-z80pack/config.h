@@ -18,9 +18,6 @@
 #define MAX_MAPS	7
 #define MAP_SIZE	0xF000U
 
-/* Networking (not usable yet but for debug/development) */
-#undef CONFIG_NET
-#undef CONFIG_NET_NATIVE
 /* Read processes and big I/O direct into process space */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
@@ -51,10 +48,11 @@
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (256 + 1)  /* Device for swapping. (z80pack drive J) */
-#define NBUFS    6	  /* Number of block buffers */
+
+#define CONFIG_DYNAMIC_BUFPOOL 	/* Resize after boot */
+#define NBUFS    5	  /* Number of block buffers at boot */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
-#define plt_discard()
 #define plt_copyright()
 
 #define BOOTDEVICENNAMES "hd#,fd#"

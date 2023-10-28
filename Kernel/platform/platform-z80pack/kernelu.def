@@ -9,3 +9,6 @@
 
 #define Z80_MMU_HOOKS
 #define CONFIG_SWAP
+
+/* Must match config.h */
+#define NBUFS				5

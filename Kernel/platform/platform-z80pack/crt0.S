@@ -37,4 +37,3 @@ init:
         di
 stop:   halt
         jr stop
-

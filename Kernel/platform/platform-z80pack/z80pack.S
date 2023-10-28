@@ -405,3 +405,15 @@ mmu_user:
 
 mmusave:
 	.byte	0
+
+;
+; Buffers (we use asm to set this up as we need them in a special segment
+; so we can recover the discard memory into the buffer pool
+;
+
+	.export _bufpool
+
+	.buffers
+
+_bufpool:
+	.ds BUFSIZE * NBUFS
