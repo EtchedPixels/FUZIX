@@ -5,8 +5,8 @@ typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 
-typedef unsigned char uint_fast8_t;
-typedef signed char int_fast8_t;
+typedef unsigned int uint_fast8_t;
+typedef signed int int_fast8_t;
 
 typedef uint16_t size_t;
 typedef int16_t ssize_t;

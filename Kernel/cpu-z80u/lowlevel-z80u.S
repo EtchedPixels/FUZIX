@@ -738,6 +738,7 @@ _in:
 	inc	hl
 	ld	b,(hl)
 	in	l, (c)
+	ld	h,0
 	pop	bc
 	ret
 
