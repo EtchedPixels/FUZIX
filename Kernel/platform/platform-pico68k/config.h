@@ -59,3 +59,5 @@ extern uint16_t page_dev;
 #define BOOTDEVICENAMES "hd#"
 
 #define TTY_INIT_BAUD	B38400
+
+#define CONFIG_SMALL

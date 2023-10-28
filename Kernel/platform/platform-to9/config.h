@@ -61,3 +61,5 @@
 #define plt_copyright(x)
 
 #define BOOTDEVICENAMES "hd#,fd"
+
+#define CONFIG_SMALL

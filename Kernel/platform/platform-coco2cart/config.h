@@ -85,3 +85,5 @@ extern uint8_t vid_h, vid_b;
 #define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"
+
+#define CONFIG_SMALL	/* Small machine inode etc allocation */

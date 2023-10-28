@@ -51,3 +51,5 @@
 #define MAX_BLKDEV 1
 #define NMOUNTS	   1	      /* Number of mounts at a time */
 #define BOOTDEVICE 0x0000 /* Only one possible option */
+
+#define CONFIG_SMALL

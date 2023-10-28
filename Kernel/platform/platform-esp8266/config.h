@@ -115,6 +115,4 @@ extern uint8_t _code_top[];
 #define plt_copyright() /* */
 #define swap_map(x) ((uint8_t*)(x))
 
-
-/* vim: sw=4 ts=4 et: */
-
+#define CONFIG_SMALL

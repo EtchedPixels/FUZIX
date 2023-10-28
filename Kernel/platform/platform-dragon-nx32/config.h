@@ -90,3 +90,5 @@ extern void plt_discard(void);
 #define plt_copyright()		/* for now */
 
 #define BOOTDEVICENAMES "hd#,fd#"
+
+#define CONFIG_SMALL
