@@ -102,7 +102,7 @@ static void fd_geom(unsigned minor, uint32_t block)
     unsigned track;
     unsigned sector;
 
-    if (minor == 7) {	/* P drive */
+    if (minor == 15) {	/* P drive */
         /* 16384 spt */
         sector = ((uint16_t)block) & 0x3FFF;
         track = block >> 14;
