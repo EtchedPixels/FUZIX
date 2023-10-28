@@ -47,7 +47,7 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 static uint8_t ttypoll;
 
 /* Write to system console */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
     /* handle CRLF */
     if(c=='\n')

@@ -15,7 +15,7 @@ void zrtc_init(void)
 	inittod();
 }
 
-uint8_t plt_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
 	return in(clkd);
 }
@@ -23,7 +23,7 @@ uint8_t plt_rtc_secs(void)
 int plt_rtc_read(void)
 {
 	struct cmos_rtc cmos;
-	uint8_t *p = cmos.data.bytes;
+	register uint8_t *p = cmos.data.bytes;
 	uint16_t year;
 	irqflags_t irqflags;
 	uint16_t len = sizeof(struct cmos_rtc);

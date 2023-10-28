@@ -28,27 +28,27 @@ static unsigned sectrack[16] = {
     0, 0, 0, 16384
 };
 
-static int fd_transfer(bool is_read, uint8_t minor, uint8_t rawflag);
+int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag);
 
-int fd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(true, minor, rawflag);
 }
 
-int fd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int fd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(false, minor, rawflag);
 }
 
-int hd_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int hd_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(true, minor + 8, rawflag);
 }
 
-int hd_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int hd_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
     flag;
     return fd_transfer(false, minor + 8, rawflag);
@@ -126,12 +126,12 @@ static void fd_geom(unsigned minor, uint32_t block)
     out(fd_track, track);
 }
 
-static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
+int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
 {
     register uint16_t dptr;
     uint16_t ct = 0;
-    uint8_t st;
-    uint8_t map = 0;
+    uint_fast8_t st;
+    uint_fast8_t map = 0;
     uint16_t *page = &udata.u_page;
     uint32_t block;
 
@@ -152,6 +152,7 @@ static int fd_transfer(bool is_read, uint_fast8_t minor, uint_fast8_t rawflag)
          */
 #endif
     }
+
     udata.u_nblock *= (BLKSIZE / 128);
     block = udata.u_block << 2;
     /* Read the disk in four sector chunks. FIXME We ought to cache the geometry
