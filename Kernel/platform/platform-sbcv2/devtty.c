@@ -21,17 +21,17 @@
 #include <propio2.h>
 
 /* The 16x50 UART I/O ports */
-__sfr __at 0x68 uart_tx;
-__sfr __at 0x68 uart_rx;
-__sfr __at 0x68 uart_ls;
-__sfr __at 0x69 uart_ier;
-__sfr __at 0x69 uart_ms;
-__sfr __at 0x6A uart_fcr;
-__sfr __at 0x6B uart_lcr;
-__sfr __at 0x6C uart_mcr;
-__sfr __at 0x6D uart_lsr;
-__sfr __at 0x6E uart_msr;
-__sfr __at 0x6F uart_scr;
+#define uart_tx 0x68
+#define uart_rx 0x68
+#define uart_ls 0x68
+#define uart_ier 0x69
+#define uart_ms 0x69
+#define uart_fcr 0x6A
+#define uart_lcr 0x6B
+#define uart_mcr 0x6C
+#define uart_lsr 0x6D
+#define uart_msr 0x6E
+#define uart_scr 0x6F
 
 /*
  *	One buffer for each tty
@@ -105,11 +105,11 @@ void kputchar(uint_fast8_t c)
  *
  *	A video display that never blocks will just return TTY_READY_NOW
  */
-uint_fast8_t tty_writeready(uint_fast8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	/* FIXME: flow control */
 	if (ttymap[minor] == 1)
-		return (uart_lsr & 0x20) ? TTY_READY_NOW : TTY_READY_SOON;
+		return (in(uart_lsr) & 0x20) ? TTY_READY_NOW : TTY_READY_SOON;
 	return prop_tty_writeready();
 }
 
@@ -125,7 +125,7 @@ uint_fast8_t tty_writeready(uint_fast8_t minor)
 void tty_putc(uint_fast8_t minor ,uint_fast8_t c)
 {
 	if (ttymap[minor] == 1)
-		uart_tx = c;
+		out(uart_tx, c);
 	else
 		prop_tty_write(c);
 }
@@ -177,15 +177,15 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 			d |= 0x08;
 		if (!(t->c_cflag & PARODD))
 			d |= 0x10;
-		uart_lcr = d;
+		out(uart_lcr, d);
 		w = clocks[t->c_cflag & CBAUD];
-		uart_ls = w;
-		uart_ms = w >> 8;
-		uart_lcr = d & 0x7F;
+		out(uart_ls, w);
+		out(uart_ms, w >> 8);
+		out(uart_lcr, d & 0x7F);
 		/* FIXME: CTS/RTS support */
 		d = 0x03;	/* DTR RTS */
-		uart_mcr = d;
-		uart_ier = 0x0D;	/* We don't use tx ints */
+		out(uart_mcr, d);
+		out(uart_ier, 0x0D);	/* We don't use tx ints */
 	}
 }
 
@@ -206,7 +206,7 @@ void tty_sleeping(uint_fast8_t minor)
 int tty_carrier(uint_fast8_t minor)
 {
         if (ttymap[minor] == 1)
-		return uart_msr & 0x80;
+		return in(uart_msr) & 0x80;
 	return 1;
 }
 
@@ -230,9 +230,9 @@ void tty_poll(void)
 
 	/* Should be IRQ driven but we might not be so poll anyway if
 	   pending. IRQs are off here so this is safe */
-	if (uart_lsr & 0x01)
-		tty_inproc(minor, uart_rx);
-	msr = uart_msr;
+	if (in(uart_lsr) & 0x01)
+		tty_inproc(minor, in(uart_rx));
+	msr = in(uart_msr);
 	/* If we have a 10Hz clock wired to DSR then do timer interrupts */
 	if (timermsr && (msr & 0x02))
 		timer_interrupt();

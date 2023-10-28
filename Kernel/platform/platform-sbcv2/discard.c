@@ -20,7 +20,7 @@ extern int strcmp(const char *, const char *);
  *	we claim it, if not it gets passed to init. It's perfectly acceptable
  *	to act on a match and return to also pass it to init if you need to.
  */
-uint8_t plt_param(unsigned char *p)
+uint_fast8_t plt_param(unsigned char *p)
 {
 	if (strcmp(p, "msr") == 0) {
 		timermsr = 1;
@@ -76,11 +76,11 @@ void pagemap_init(void)
  *	IDE and SD card.
  */
 
-__sfr __at 0x69 uart_ier;
+#define uart_ier 0x69
 
 void device_init(void)
 {
-	uart_ier = 0x0D;	/* This may be our timer so do it first */
+	out(uart_ier, 0x0D);	/* This may be our timer so do it first */
 	ide_probe();
 	prop_sd_probe();
 	ds1302_init();

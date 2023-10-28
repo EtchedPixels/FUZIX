@@ -52,3 +52,22 @@ FDC_DATA	.equ	0x37	; 8272 Data Port (R/W)
 FDC_DOR		.equ	0x38	; Digital Output Register (W/O)
 
 CPU_CLOCK_KHZ	.equ	8000	; 8MHz is usual top
+
+;
+;	Values for the PPI port
+;
+ppi_port_a	.equ	0x60
+ppi_port_b	.equ	0x61
+ppi_port_c	.equ	0x62
+ppi_control	.equ	0x63
+
+PPIDE_CS0_LINE	.equ	0x08
+PPIDE_CS1_LINE	.equ	0x10
+PPIDE_WR_LINE	.equ	0x20
+PPIDE_RD_LINE	.equ	0x40
+PPIDE_RST_LINE	.equ	0x80
+
+PPIDE_PPI_BUS_READ	.equ	0x92
+PPIDE_PPI_BUS_WRITE	.equ	0x80
+
+ppide_data	.equ	PPIDE_CS0_LINE
