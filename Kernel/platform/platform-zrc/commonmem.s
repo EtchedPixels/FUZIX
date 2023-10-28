@@ -10,6 +10,12 @@
         .common
 
 # 1 "../../cpu-z80u/std-commonmem.s" 1
+# 0 "../../cpu-z80u/std-commonmem.S"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+# 0 "<command-line>" 2
+# 1 "../../cpu-z80u/std-commonmem.S"
 ;
 ;
 ; Standard Z80 common memory area blocks.
