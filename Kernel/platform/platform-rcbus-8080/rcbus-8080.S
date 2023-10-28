@@ -556,3 +556,15 @@ wblock:
 	jnz wblock
 	pop b
 	jmp map_kernel
+
+;
+; Buffers (we use asm to set this up as we need them in a special segment
+; so we can recover the discard memory into the buffer pool
+;
+
+	.export _bufpool
+
+	.buffers
+
+_bufpool:
+	.ds BUFSIZE * NBUFS

@@ -61,10 +61,10 @@
 #define NUM_DEV_TTY 2	  /* For now we support a 16x50 and an ACIA */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    8	  /* Number of block buffers */
+#define NBUFS    5	  /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+#define CONFIG_DYNAMIC_BUFPOOL
 
-#define plt_discard()
 #define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"
