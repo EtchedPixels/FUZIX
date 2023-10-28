@@ -18,11 +18,11 @@
 #include <tty.h>
 #include <propio2.h>
 
-__sfr __at 0xA8	tstatus;
-__sfr __at 0xA9 tdata;
-__sfr __at 0xAA dcmd;
-__sfr __at 0xAA dstatus;
-__sfr __at 0xAB dio;
+#define tstatus	0xA8
+#define tdata	0xA9
+#define dcmd	0xAA
+#define dstatus	0xAA
+#define dio	0xAB
 
 #define TBUSY		0x80
 #define TERR		0x40
@@ -46,25 +46,25 @@ __sfr __at 0xAB dio;
 #define DOVER		0x20
 #define DTO		0x10
 
-void prop_tty_poll(uint8_t minor)
+void prop_tty_poll(uint_fast8_t minor)
 {
     /* Keyboard data pending but not busy. Busy is ok - we'll pick it up
        next poll */
-    while((tstatus & (TKBD|TBUSY)) == TKBD) {
-        uint8_t r = tdata;
+    while((in(tstatus) & (TKBD|TBUSY)) == TKBD) {
+        uint_fast8_t r = in(tdata);
         tty_inproc(minor, r);
     }
 }
 
-void prop_tty_write(uint8_t c)
+void prop_tty_write(uint_fast8_t c)
 {
-    tdata = c;
+    out(tdata, c);
 }
 
 ttyready_t prop_tty_writeready(void)
 {
     /* Same basic idea - output ready and not busy */
-    return ((tstatus & (TDSP|TBUSY)) == TDSP) ? TTY_READY_NOW : TTY_READY_SOON;
+    return ((in(tstatus) & (TDSP|TBUSY)) == TDSP) ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 /*
@@ -82,11 +82,11 @@ static uint8_t prop_sd_status;
 static void prop_error(int st)
 {
     /* Recover the error bytes and bitch */
-    uint8_t *p = (uint8_t *)&prop_sd_error;
-    *p++ = dio;
-    *p++ = dio;
-    *p++ = dio;
-    *p = dio;
+    register uint8_t *p = (uint8_t *)&prop_sd_error;
+    *p++ = in(dio);
+    *p++ = in(dio);
+    *p++ = in(dio);
+    *p = in(dio);
     prop_sd_status = st;
     kprintf("propIO sd error: %d %lx\n", st, prop_sd_error);
 }
@@ -98,7 +98,7 @@ static int prop_idle(void)
     uint16_t n;
     /* Delay wants tuning */
     for (n = 0; n < 10000; n++) {
-        uint8_t s = dstatus;
+        uint_fast8_t s = in(dstatus);
         if (!(s & DBUSY))
             return s;
     }
@@ -107,14 +107,14 @@ static int prop_idle(void)
 }
 
 /* Send a command to the Propeller */
-static int8_t prop_send_cmd(uint8_t cmd)
+static int8_t prop_send_cmd(uint_fast8_t cmd)
 {
     int st;
     /* Ensure we've finished whatever is going on */
     if (prop_idle() < 0)
         return -1;
     /* Issue our command */
-    dcmd = cmd;
+    out(dcmd, cmd);
     /* Wait for it to go idle again. This needs review. I think it's safe
        for us to skip the second wait in some cases - notably a write command
        where we don't care because the next command will wait for it and
@@ -128,14 +128,14 @@ static int8_t prop_send_cmd(uint8_t cmd)
 
 /* Send a command and get data back. Various commands return a block of
    1 to 16 bytes of returned information */
-static int8_t prop_send_get(uint8_t cmd, uint8_t *buf, uint8_t l)
+static int8_t prop_send_get(uint_fast8_t cmd, uint8_t *buf, uint_fast8_t l)
 {
-    uint8_t st;
+    uint_fast8_t st;
     st = prop_send_cmd(cmd);
     if (st != 0)
         return st;
     while(l--)
-        *buf++ = dio;
+        *buf++ = in(dio);
     return 0;
 }
 
@@ -168,7 +168,7 @@ int8_t prop_sd_open(void)
     /* Type and capacity */
     if (prop_send_get(CMD_TYPE, &type, 1) < 0)
         return -1;
-    if (prop_send_get(CMD_CAP, &prop_sd_capacity, 4) < 0)
+    if (prop_send_get(CMD_CAP, (uint8_t *)&prop_sd_capacity, 4) < 0)
         return -1;
     return 1;
 }
@@ -190,10 +190,10 @@ int prop_sd_flush_cache(void)
  * The platform needs to provide platform specific common hooks to inir
  * or otir 512 bytes from the right bank
  */
-int prop_sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
+int prop_sd_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
-    uint8_t *p = &lba;	/* Sadly SDCC sucks at this otherwise */
-    uint8_t cmd;
+    register uint8_t *p = (uint8_t *)&lba;
+    uint_fast8_t cmd;
 
     /* Need to track and handle no media and media changes */
 
@@ -201,10 +201,10 @@ int prop_sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
     if (prop_send_cmd(CMD_NOP) < 0)
         return -1;
 
-    dio = *p++;
-    dio = *p++;
-    dio = *p++;
-    dio = *p;
+    out(dio, *p++);
+    out(dio, *p++);
+    out(dio, *p++);
+    out(dio, *p);
 
     /* LBA loaded */
     if (is_read)
@@ -228,7 +228,7 @@ int prop_sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 
 /* FIXME: this could move to discard space */
 
-uint8_t prop_sd_probe(void)
+uint_fast8_t prop_sd_probe(void)
 {
     if (prop_sd_reset())
         return 0;
