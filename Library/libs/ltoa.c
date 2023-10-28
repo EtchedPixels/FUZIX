@@ -26,7 +26,7 @@ const char *_ltoa(long val)
    char *p;
    int flg = 0;
    if( val < 0 ) { flg++; val= -val; }
-   p = _ultoa(val);
+   p = (char *)_ultoa(val);
    if(flg) *--p = '-';
    return p;
 }

@@ -28,7 +28,7 @@ const char *_itoa(int i) {
 	char *p;
 	if (i >= 0)
 		return _uitoa(i);
-	p = _uitoa(-i);
+	p = (char *)_uitoa(-i);
 	*--p = '-';
 	return p;
 }

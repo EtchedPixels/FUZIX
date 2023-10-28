@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 			pos++;
 
 		putstr("Files differ at byte position ");
-		bp1 = _ultoa(pos);
+		bp1 = (char *)_ultoa(pos);
 		putstr(bp1);
 		putstr("\n");
 		goto differ;

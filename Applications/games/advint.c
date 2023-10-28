@@ -1359,7 +1359,7 @@ char *trm_get(char *line)
 }
 
 /* trm_str - output a string */
-void trm_str(char *str)
+void trm_str(const char *str)
 {
 	while (*str)
 		trm_chr(*str++);

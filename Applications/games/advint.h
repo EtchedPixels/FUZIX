@@ -73,7 +73,7 @@ void trm_eol(void);
 char *trm_get(char *line);
 void trm_init(int rows, int cols, char *name);
 void trm_shutdown(char *textport);
-void trm_str(char *str);
+void trm_str(const char *str);
 void trm_wait(void);
 void trm_word(void);
 void trm_xstr(char *str);

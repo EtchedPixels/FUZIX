@@ -88,7 +88,7 @@ struct mntent *getmntent(FILE * fp)
 	return getmntent_r(fp, &me, mntbuf, _MAX_MNTLEN);
 }
 
-static char *quote_out(char *t, char *s)
+static char *quote_out(char *t, const char *s)
 {
 	if (t == NULL)
 		return NULL;

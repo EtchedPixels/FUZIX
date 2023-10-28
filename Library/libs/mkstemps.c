@@ -10,7 +10,7 @@ int mkstemps(char *s, int slen)
   __ktime_t t;
   char *p = s + strlen(s) - slen - 6;
   uint16_t value;
-  char *n;
+  const char *n;
   int fd;
 
   if (p < s)

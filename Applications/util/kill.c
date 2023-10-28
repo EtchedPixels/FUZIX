@@ -77,7 +77,7 @@ void printsigs(void)
 	int col=0;
 	while (s->suffix) {
 		int l = strlen(s->suffix);
-		char *np = _itoa(s->no);
+		const char *np = _itoa(s->no);
 		write(2, "SIG", 3 );
 		write(2, s->suffix, l);
 		write(2, "       ", 7 - l);
