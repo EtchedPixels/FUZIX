@@ -2,9 +2,9 @@
 #define __DEVFD_DOT_H__
 
 /* public interface */
-int gm8x9_read(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int gm8x9_write(uint8_t minor, uint8_t rawflag, uint8_t flag);
-int gm8x9_open(uint8_t minor, uint16_t flag);
+int gm8x9_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+int gm8x9_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
+int gm8x9_open(uint_fast8_t minor, uint16_t flag);
 
 /* low level interface */
 uint8_t gm8x9_seek(uint8_t track);

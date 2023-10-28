@@ -42,9 +42,9 @@ struct gmfd gmfd_drives[MAX_GMFD];
 /*
  *	Calculate the drive control value and if need be update it
  */
-static uint8_t gm8x9_select(uint8_t drive, uint8_t flags)
+static uint_fast8_t gm8x9_select(uint_fast8_t drive, uint_fast8_t flags)
 {
-	uint8_t ret = 1;
+	uint_fast8_t ret = 1;
 
 	if (drive_last == drive && flags_last == flags)
 		return 0;
@@ -86,12 +86,12 @@ static uint8_t gm8x9_select(uint8_t drive, uint8_t flags)
  *	add swapping!
  */
 
-static int gm8x9_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int gm8x9_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
 {
 	int ct = 0;
 	int tries;
-	uint8_t err = 0;
-	uint8_t side, sector, track;
+	uint_fast8_t err = 0;
+	uint_fast8_t side, sector, track;
 	irqflags_t irqflags;
 	register struct gmfd *fd = gmfd_drives + minor;
 
@@ -166,7 +166,7 @@ static int gm8x9_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 	return -1;
 }
 
-uint8_t gm8x9_density(uint8_t minor, uint8_t flags)
+uint_fast8_t gm8x9_density(uint_fast8_t minor, uint_fast8_t flags)
 {
 	flags &= EIGHTINCH;
 	/* Try double density */
@@ -187,9 +187,9 @@ uint8_t gm8x9_density(uint8_t minor, uint8_t flags)
 	return 255;
 }
 
-int gm8x9_open(uint8_t minor, uint16_t flag)
+int gm8x9_open(uint_fast8_t minor, uint16_t flag)
 {
-	uint8_t den;
+	uint_fast8_t den;
 	register struct gmfd *d = gmfd_drives + minor;
 
 	flag;
@@ -245,13 +245,13 @@ int gm8x9_open(uint8_t minor, uint16_t flag)
 	return 0;
 }
 
-int gm8x9_read(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int gm8x9_read(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	flag;
 	return gm8x9_transfer(minor, true, rawflag);
 }
 
-int gm8x9_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
+int gm8x9_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 {
 	flag;
 	rawflag;

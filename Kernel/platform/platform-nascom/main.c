@@ -42,7 +42,7 @@ int strcmp(const char *s1, const char *s2)
   return c1 - c2;
 }
 
-uint8_t plt_param(char *p)
+uint_fast8_t plt_param(char *p)
 {
 	if (strcmp(p, "clkint") == 0) {
 		out(clk_irq, 1);

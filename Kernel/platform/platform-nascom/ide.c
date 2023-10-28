@@ -20,9 +20,9 @@ static void ide_set_r(void)
     out(portb, 0xFF);
 }
 
-uint8_t ide_read(uint8_t r)
+uint8_t ide_read(uint_fast8_t r)
 {
-    uint8_t v;
+    uint_fast8_t v;
     /* Active low control lines */
     out(ide_ctrl, PIOIDE_CS1|PIOIDE_R|PIOIDE_W|PIOIDE_RESET|(r & 7));
     out(ide_ctrl, PIOIDE_CS1|PIOIDE_W|PIOIDE_RESET|(r & 7));
@@ -32,7 +32,7 @@ uint8_t ide_read(uint8_t r)
     return v;
 }
 
-void ide_write(uint8_t r, uint_fast8_t v)
+void ide_write(uint_fast8_t r, uint_fast8_t v)
 {
     ide_set_w();
     /* Active low control lines */
