@@ -27,8 +27,6 @@ void plt_interrupt(void)
 {
  tty_pollirq();
  timer_interrupt();
-// netat_poll();
-// netz_poll();
 }
 
 /* Nothing to do for the map of init */
@@ -36,7 +34,7 @@ void map_init(void)
 {
 }
 
-uint8_t plt_param(char *p)
+uint_fast8_t plt_param(char *p)
 {
  used(p);
  return 0;
