@@ -43,6 +43,20 @@ _plt_switchout:
  push bc ; register variable
         push ix
         push iy
+ ld hl,(__tmp)
+ push hl
+ ld hl,(__hireg)
+ push hl
+ ld hl,(__tmp2)
+ push hl
+ ld hl,(__tmp2+2)
+ push hl
+ ld hl,(__tmp3)
+ push hl
+ ld hl,(__tmp3+2)
+ push hl
+ ld hl,(__retaddr)
+ push hl
         ld (_udata + 14), sp ; this is where the SP is restored in _switchin
 
  ; Stash the uarea back into process memory
@@ -179,6 +193,20 @@ skip_copyback:
         ; _switchout or _dofork
         ld sp, (_udata + 14)
 
+ pop hl
+        ld (__retaddr),hl
+ pop hl
+ ld (__tmp3+2),hl
+ pop hl
+ ld (__tmp3),hl
+ pop hl
+ ld (__tmp2+2),hl
+ pop hl
+ ld (__tmp2),hl
+ pop hl
+ ld (__hireg),hl
+ pop hl
+ ld (__tmp),hl
         pop iy ; register variables
         pop ix
  pop bc
@@ -231,9 +259,23 @@ _dofork:
         ; When this process (the parent) is switched back in, it will be as if
         ; it returns with the value of the child's pid.
         push hl ; HL still has p->p_pid from above, the return value in the parent
+ push bc
         push ix
         push iy
- push bc
+ ld hl,(__tmp)
+ push hl
+ ld hl,(__hireg)
+ push hl
+ ld hl,(__tmp2)
+ push hl
+ ld hl,(__tmp2+2)
+ push hl
+ ld hl,(__tmp3)
+ push hl
+ ld hl,(__tmp3+2)
+ push hl
+ ld hl,(__retaddr)
+ push hl
 
         ; save kernel stack pointer -- when it comes back in the parent we'll be in
         ; _switchin which will immediately return (appearing to be _dofork()
@@ -277,9 +319,10 @@ _dofork:
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
  ; ix/iy are untouched so don't need a restore BC is not so does
+ ld hl,18
+ add hl,sp
+ ld sp,hl
         pop bc
-        pop af
-        pop af
  pop af ; and the pid
 
         ; Make a new process table entry, etc.
