@@ -15,6 +15,39 @@ uint8_t tms9918a_present;
 uint8_t uart_present;
 uint8_t rtc_shadow;
 
+/* This points to the last buffer in the disk buffers. There must be at least
+   four buffers to avoid deadlocks. */
+
+struct blkbuf *bufpool_end = bufpool + NBUFS;
+
+/*
+ *	We pack discard into the memory image is if it were just normal
+ *	code but place it at the end after the buffers. When we finish up
+ *	booting we turn everything from the buffer pool to common into
+ *	buffers. This blows away the _DISCARD segment.
+ */
+void plt_discard(void)
+{
+	/* We must not put buffers above E000 as we switch the top 8K
+	   per process. Only true common stuff can go here or discard
+	   during boot */
+	uint16_t discard_size = 0xE000 - (uint16_t)bufpool_end;
+	bufptr bp = bufpool_end;
+
+	discard_size /= sizeof(struct blkbuf);
+
+	kprintf("%d buffers added\n", discard_size);
+
+	bufpool_end += discard_size;
+
+	memset( bp, 0, discard_size * sizeof(struct blkbuf) );
+
+	for( bp = bufpool + NBUFS; bp < bufpool_end; ++bp ){
+		bp->bf_dev = NO_DEVICE;
+		bp->bf_busy = BF_FREE;
+	}
+}
+
 void plt_interrupt(void)
 {
 	tty_poll();

@@ -49,8 +49,12 @@ tricks.S: ../../lib/8085fixedbank.S ../../lib/8085fixedbank-core.S
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin loader.tmp
 
+#
+#	Do not move the common from E000 without updating tricks.S and swap
+#	handling.
+#
 image: 
-	$(CROSS_LD) -b -C 0x0100 -S 0xE000 -o fuzix.bin crt0.o devices.o main.o \
+	$(CROSS_LD) -b -C 0x0100 -S 0xE000 -f CLDBbXSs -o fuzix.bin crt0.o devices.o main.o \
 	discard.o commonmem.o tricks.o rcbus-8085.o devtty.o \
 	../../start.o ../../version.o ../../cpu-8085/lowlevel-8085.o \
 	../../mm/bankfixed.o ../../timer.o ../../kdata.o  \

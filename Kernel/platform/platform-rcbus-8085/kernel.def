@@ -5,6 +5,8 @@
 
 #define CONFIG_SWAP	1
 
+#define NBUFS		5
+
 #define INT_ENTER
 #define INT_EXIT
 #define DI		di
