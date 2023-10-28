@@ -180,11 +180,13 @@ void sync_clock(void)
 			newticks = plt_rtc_secs();
 			if (oldticks != 0xFF) {
 				tmp = newticks - oldticks;
-				if (tmp < 0)
-					tmp += 60;
-				tmp *= 10;
-				while(tmp--) {
-					timer_interrupt();
+				if (tmp) {
+					if (tmp < 0)
+						tmp += 60;
+					tmp *= 10;
+					while(tmp--) {
+						timer_interrupt();
+					}
 				}
 			}
 		}
