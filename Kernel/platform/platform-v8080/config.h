@@ -46,10 +46,10 @@
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define SWAPDEV  (256 + 1)  /* Device for swapping. (FIXME) */
-#define NBUFS    8	  /* Number of block buffers */
+#define NBUFS    5	  /* Number of block buffers */
 #define NMOUNTS	 4	  /* Number of mounts at a time */
+#define CONFIG_DYNAMIC_BUFPOOL
 
-#define plt_discard()
 #define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"

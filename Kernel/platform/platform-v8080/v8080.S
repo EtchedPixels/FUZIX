@@ -57,7 +57,7 @@ _program_vectors:
 	pop h
 	push h
 	push d
-	call map_process
+	call map_proc
 	call _program_v_u
 	call map_kernel_di
 	ret
@@ -96,12 +96,12 @@ map_kernel_di:
 	pop psw
 	ret
 
-	.export map_process
-	.export map_process_di
+	.export map_proc
+	.export map_proc_di
 	.export map_proc_a
 
-map_process:
-map_process_di:
+map_proc:
+map_proc_di:
 	mov a,h
 	ora l
 	jz map_kernel
@@ -228,56 +228,42 @@ poll2:
 
 	.common
 
-	.export _fd_op
+	.export _fd_bankcmd
+;
+;	We need the right bank present when we cause the transfer
+;
+_fd_bankcmd:
+	lxi	h,5
+	dad	sp
+	mov	d,m
+	dcx	h
+	mov 	e,m		; page ptr
+	dcx	h
+	dcx	h
+	mov	l,m		; command
 
-_fd_op:
-	lxi h,_fd_drive
-	mov a,m
-	out 10			; drive
-	inx h
-	mov a,m
-	out 11			; track
-	inx h
-	mov a,m
-	out 12			; sector l
-	inx h
-	mov a,m
-	out 17			; sector h
-	inx h
-	mov a,m
-	out 15			; dma l
-	inx h
-	mov a,m
-	out 16			; dma h
-	inx h
-	mov a,m
-	out 21			; mapping
-	inx h
-	mov a,m
-	out 13			; issue
-	xra a
-	out 21			; kernel mapping back
-	in 14			; return status
-	mov e,a
-	mvi d,0
+	xchg		; bank to HL command to E
+
+	lda	_int_disabled
+	di
+	push	psw		; save DI state
+	call	map_proc_di	; HL alread holds our bank
+	mov	a, e		; issue the command
+	out	13	;
+	call	map_kernel_di	; return to kernel mapping
+	pop	psw
+	ora	a
+	rnz
+	ei
 	ret
+;
+; Buffers (we use asm to set this up as we need them in a special segment
+; so we can recover the discard memory into the buffer pool
+;
 
-	.export _fd_drive
-	.export _fd_track
-	.export _fd_sector
-	.export _fd_dma
-	.export _fd_page
-	.export _fd_cmd
+	.export _bufpool
 
-_fd_drive:
-	.byte 0
-_fd_track:
-	.byte 0
-_fd_sector:
-	.word 0
-_fd_dma:
-	.word 0
-_fd_page:
-	.byte 0
-_fd_cmd:
-	.byte 0
+	.buffers
+
+_bufpool:
+	.ds BUFSIZE * NBUFS

@@ -2,6 +2,8 @@
 
 #define U_DATA_STASH	0xBE00	/* BE00-BFFF */
 
+#define NBUFS		5
+
 #define PROGBASE	0x0000
 #define PROGLOAD	0x0100
 
