@@ -12,6 +12,9 @@ go:
 		ld de, __common
 		ld bc, __common_size
 		ldir
+		ld de, __commondata
+		ld bc, __commondata_size
+		ldir
 		ld de, __discard
 		ld bc, __discard_size - 1
 		ex de,hl
