@@ -9,7 +9,7 @@ n 60660 2049 /dev/dw1
 n 60660 2050 /dev/dw2
 n 60660 2051 /dev/dw3
 
-f 0755 /bin/uef	../../Applications/ue/ue.fuzix
+f 0755 /bin/uef	../../../Applications/ue/ue.fuzix
 
 l /etc/inittab /etc/inittab.orig
 r /etc/inittab
