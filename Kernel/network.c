@@ -16,7 +16,7 @@ struct socket sockets[NSOCKET];
 
 int net_syscall(void)
 {
-	struct socket *s = sockets + udata.u_net.sock;
+	register struct socket *s = sockets + udata.u_net.sock;
 	struct socket *n;
 	int r;
 
@@ -134,7 +134,7 @@ int net_close(void)
 int net_write(void)
 {
 	int r;
-	struct socket *s = sockets + udata.u_net.sock;
+	register struct socket *s = sockets + udata.u_net.sock;
 	if (s->s_state != SS_CONNECTED && s->s_state != SS_CLOSING) {
 		if (s->s_state >= SS_CLOSEWAIT) {
 			udata.u_net.sig = SIGPIPE;
@@ -151,7 +151,7 @@ int net_write(void)
 int net_read(void)
 {
 	int r;
-	struct socket *s = sockets + udata.u_net.sock;
+	register struct socket *s = sockets + udata.u_net.sock;
 	if (s->s_error) {
 		udata.u_error = s->s_error;
 		s->s_error = 0;
@@ -183,8 +183,9 @@ void net_free(void)
  *	Helpers
  */
 
-void net_setup(struct socket *s)
+void net_setup(struct socket *sp)
 {
+	register struct socket *s = sp;	/* TODO: clean up when compiler gets reg arg */
 	s->s_state = SS_INIT;
 	s->s_iflags = 0;
 	s->s_parent = 0xFF;
