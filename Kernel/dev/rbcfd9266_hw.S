@@ -9,16 +9,19 @@
 
 	.z180
 
-        ; imported symbols
-        .export map_kernel
-        .export map_proc_always
-        .export _devfd_dtbl
-	.export _plt_idle
-
 #include "../build/kernel.def"
 #include "../cpu-z80u/kernel-z80.def"
 
 
+	.export _devfd_init
+	.export _devfd_read
+	.export _devfd_write
+
+	.export _devfd_track
+	.export _devfd_sector
+	.export _devfd_error
+	.export _devfd_buffer
+	.export _devfd_userbuf
 ;------------------------------------------------------------------------------
 	.code
 
@@ -84,7 +87,7 @@ _devfd_init:
         push    bc              ;   Keep on Stack for Exit
         push    hl
 	push	iy		; Must be saved for the C caller
-        ld      a,C
+        ld      a,c
         ld      (drive),a       ; Save Desired Device
         cp      #4              ; Legal?
         jr      nc,NoDrv        ; ..Exit if Error
@@ -139,7 +142,7 @@ _devfd_write:
 
 	push	iy
 
-        ld      a,C
+        ld      a,c
         ld      (drive),a       ; Save Desired Device
 
         call    Setup           ; Set up subsystem
