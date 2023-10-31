@@ -3,76 +3,71 @@
 ;	top 12K and then runs whatever is indicated at 0xFFFE/FFFF
 ;
 
-DATA		.equ 	0x10
-ERROR		.equ	0x11
-FEATURES	.equ	0x11
-COUNT		.equ	0x12
-LBA_0		.equ	0x13
-LBA_1		.equ	0x14
-LBA_2		.equ	0x15
-LBA_3		.equ	0x16
-STATUS		.equ	0x17
-CMD		.equ	0x17
+DATA		equ 	0x10
+ERROR		equ	0x11
+FEATURES	equ	0x11
+COUNT		equ	0x12
+LBA_0		equ	0x13
+LBA_1		equ	0x14
+LBA_2		equ	0x15
+LBA_3		equ	0x16
+STATUS		equ	0x17
+CMD		equ	0x17
 
-ERR		.equ	0
-DRQ		.equ	3
-READY		.equ	6
-BUSY		.equ	7
+ERR		equ	0
+DRQ		equ	3
+READY		equ	6
+BUSY		equ	7
 
-ATA_READ	.equ	0x20
+ATA_READ	equ	0x20
 
-SIOA_C		.equ	0x02
-SIOA_D		.equ	0x00
-SIOB_C		.equ	0x03
-SIOB_D		.equ	0x01
+SIOA_C		equ	0x02
+SIOA_D		equ	0x00
+SIOB_C		equ	0x03
+SIOB_D		equ	0x01
 
-	.area VECTOR(ABS)
+	.abs
 
-	.org 0xFFFE
-	.word start
-
-	.area BANKHELPER(ABS)
-
+	.abs
 	.org 0xFF00
 
 ;
 ;	Must exactly match the ROM (ugly but really we just need to write
 ;	a new better ROM anyway)
 ;
-STUBS:
-	JP	DO_PUT_FAR
-	JP	DO_GET_FAR
+stubs:
+	jp	do_put_far
+	jp	do_get_far
 
-DO_PUT_FAR:
-	LD C,#SIOB_C
-	LD B,A
-	LD A,#1
-	OUT (C),A
-	LD A,#0x58
-	OUT (C),A
-	LD (HL),B
-	LD A,#1
-	OUT (C),A
-	LD A,#0x18
-	OUT (C),A
-	RET
-DO_GET_FAR:
-	LD C,#SIOB_C
-	LD A,#1
-	OUT (C),A
-	LD A,#0x58
-	OUT (C),A
-	LD B,(HL)
-	LD A,#1
-	OUT (C),A
-	LD A,#0x18
-	OUT (C),A
-	LD A,B
-	RET
+do_put_far:
+	ld c,SIOB_C
+	ld b,a
+	ld a,1
+	out (c),a
+	ld a,0x58
+	out (c),a
+	ld (hl),b
+	ld a,1
+	out (c),a
+	ld a,0x18
+	out (c),a
+	ret
+do_get_far:
+	ld c,SIOB_C
+	ld a,1
+	out (c),a
+	ld a,0x58
+	out (c),a
+	ld b,(hl)
+	ld a,1
+	out (c),a
+	ld a,0x18
+	out (c),a
+	ld a,b
+	ret
 
 
-	.area LOADER(ABS)
-
+	.abs
 	.org 0xD000
 
 
@@ -84,41 +79,41 @@ start:
 	; because of the FFFE/FFFF thing.
 
 	ld sp, #0xFE00
-	ld hl,#hello
+	ld hl, hello
 	call serstr
 
 	xor a
 	out (0x38),a
 
 	call ide_ready
-	ld a,#0xE0
+	ld a, 0xE0
 	out (LBA_3),a
 	call ide_ready
 	xor a
 	out (LBA_2),a
 	out (LBA_1),a
 
-	ld de,#0x7C18		; sectors 24-119
-	ld hl,#0x0100		; load address
+	ld de, 0x7C18		; sectors 24-119
+	ld hl, 0x0100		; load address
 load_loop:
 	call ide_ready
 	ld a,e
 	out (LBA_0),a
-	ld a,#1
+	ld a, 1
 	out (COUNT),a
-	ld a,#ATA_READ
+	ld a, ATA_READ
 	out (CMD),a
 	nop
 	call ide_wait_drq
-	ld bc,#DATA
+	ld bc, DATA
 	inir
 	inir
-	ld a,#'.'
+	ld a, '.'
 	call serout
 	inc e
 	dec d
 	jr nz, load_loop
-	ld hl,#gogogo
+	ld hl, gogogo
 	call serstr
 	jp 0x0100
 
@@ -159,6 +154,14 @@ serstr:
 	jr serstr
 
 hello:
-	.asciz 'Grant Searle SBC LOADER 0.1\r\n\r\n'
+	.ascii 'Grant Searle SBC LOADER 0.1'
+	.byte 13,10,13,10
+	.byte 0
 gogogo:
-	.asciz '\r\nExecuting FUZIX...\r\n'
+	.byte 13,10
+	.ascii 'Executing FUZIX...'
+	.byte 13,10,0
+
+	.org 0xFFFE
+	.word start
+

@@ -1,165 +1,208 @@
+# 0 "usermem.S"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "usermem.S"
 ;
-;	We have a custom implementation of usermem. We really need
-;	to optimize ldir_to/from_user.
+; We have a custom implementation of usermem. We really need
+; to optimize ldir_to/from_user.
 ;
-        .module usermem
+# 1 "kernelu.def" 1
+; FUZIX mnemonics for memory addresses etc
 
-	.include "kernel.def"
-        .include "../../cpu-z80/kernel-z80.def"
+U_DATA__TOTALSIZE .equ 0x200 ; 256+256 bytes @ F000
+Z80_TYPE .equ 0 ; CMOS
+
+Z80_MMU_HOOKS .equ 0
+
+CONFIG_SWAP .equ 1
+
+PROGBASE .equ 0x0000
+PROGLOAD .equ 0x0100
+
+NBUFS .equ 4
+
+;
+; Select where to put the high code - in our case we need this
+; in common
+;
+
+
+HIGHPAGE .equ 0 ; We only have 1 page byte and the low page
+    ; isn't used
+# 6 "usermem.S" 2
+# 1 "../../cpu-z80u/kernel-z80.def" 1
+# 7 "usermem.S" 2
 
         ; exported symbols
-        .globl __uget
-        .globl __ugetc
-        .globl __ugetw
+        .export __uget
+        .export __ugetc
+        .export __ugetw
 
-        .globl __uput
-        .globl __uputc
-        .globl __uputw
-        .globl __uzero
+        .export __uput
+        .export __uputc
+        .export __uputw
+        .export __uzero
 
-	.globl ldir_from_user
-	.globl ldir_to_user
-
-	.globl _int_disabled
-
-        .area _COMMONMEM
-
+ .common
 
 uputget:
         ; load DE with the byte count
-        ld c, 8(ix) ; byte count
-        ld b, 9(ix)
-	ld a, b
-	or c
-	ret z		; no work
+        ld c, (ix + 8) ; byte count
+        ld b, (ix + 9)
+ ld a, b
+ or c
+ ret z ; no work
         ; load HL with the source address
-        ld l, 4(ix) ; src address
-        ld h, 5(ix)
+        ld l, (ix + 4) ; src address
+        ld h, (ix + 5)
         ; load DE with destination address
-        ld e, 6(ix)
-        ld d, 7(ix)
-	ret
+        ld e, (ix + 6)
+        ld d, (ix + 7)
+ ret
 
 __uget:
-	push ix
-	ld ix,#0
-	add ix, sp
-	call uputget
-	jr z, uget_out
-	push de
-	pop ix
-	call ldir_from_user
+ push ix
+ ld ix,0
+ add ix, sp
+ push bc
+ call uputget
+ jr z, uget_out
+ push de
+ pop ix
+ call ldir_from_user
 uget_out:
-	pop ix
-	ld hl,#0
-	ret
+ pop bc
+ pop ix
+ ld hl,0
+ ret
 
 __uput:
-	push ix
-	ld ix,#0
-	add ix,sp
-	call uputget
-	jr z, uget_out
-	push de
-	pop ix
-	call ldir_to_user
-	jr uget_out
+ push ix
+ ld ix,0
+ add ix,sp
+ push bc
+ call uputget
+ jr z, uget_out
+ push de
+ pop ix
+ call ldir_to_user
+ jr uget_out
 
 ;
-;	The kernel IRQ code will restore the bank if it interrupts this
-;	logic
+; The kernel IRQ code will restore the bank if it interrupts this
+; logic
 ;
 __uzero:
-	pop de
-	pop hl
-	pop bc
-	push bc
-	push hl
-	push de
-	ld a,b
-	or c
-	ret z
-	di
-	ld a,#1
-	out (0x03),a		; Port B WR 1
-	ld a,#0x58
-	out (0x03),a		; port B WR 1 to 0x58
-	ld (hl),#0
-	ld a,(_int_disabled)
-	or a
-	jr nz, noteiz
-	ei
+ ld hl,2
+ add hl,sp
+ push bc
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ inc hl
+ ld c,(hl)
+ inc hl
+ ld b,(hl)
+ ld a,b
+ or c
+ jr z,zout
+ di
+ ld a,1
+ out (0x03),a ; Port B WR 1
+ ld a,0x58
+ out (0x03),a ; port B WR 1 to 0x58
+ ld (hl),0
+ ld a,(_int_disabled)
+ or a
+ jr nz, noteiz
+ ei
 noteiz:
-	dec bc
-	ld a,b
-	or c
-	jr z, uout
-	ld e,l
-	ld d,h
-	inc de
-	ldir
+ dec bc
+ ld a,b
+ or c
+ jr z, uout
+ ld e,l
+ ld d,h
+ inc de
+ ldir
 uout:
-	di
-	ld a,#1			; port B WR 1
-	out (0x03),a
-	ld a,#0x18
-	out (0x03),a		; back to kernel
-	ld a,(_int_disabled)
-	or a
-	ret nz
-	ei
-	ret
+ di
+ ld a,1 ; port B WR 1
+ out (0x03),a
+ ld a,0x18
+ out (0x03),a ; back to kernel
+zout:
+ pop bc
+ ld a,(_int_disabled)
+ or a
+ ret nz
+ ei
+ ret
 
 __ugetc:
-	di
-	ld a,#1
-	out (0x03),a
-	ld a,#0x58
-	out (0x03),a
-	ld l,(hl)
-	ld h,#0
-	jr uout
+ push bc
+ di
+ ld a,1
+ out (0x03),a
+ ld a,0x58
+ out (0x03),a
+ ld l,(hl)
+ ld h,0
+ jr uout
 
 __ugetw:
-	di
-	ld a,#1
-	out (0x03),a
-	ld a,#0x58
-	out (0x03),a
-	ld a,(hl)
-	inc hl
-	ld h,(hl)
-	ld l,a
-	jr uout
-	
+ push bc
+ di
+ ld a,1
+ out (0x03),a
+ ld a,0x58
+ out (0x03),a
+ ld a,(hl)
+ inc hl
+ ld h,(hl)
+ ld l,a
+ jr uout
+
 __uputc:
-	pop bc
-	pop de
-	pop hl
-	push hl
-	push de
-	push bc
-	di
-	ld a,#1
-	out (0x03),a
-	ld a,#0x58
-	out (0x03),a
-	ld (hl),e
-	jr uout
+ ld hl,2
+ add hl,sp
+ push bc
+ ld c,(hl)
+ inc hl
+ inc hl
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ ex de,hl
+ di
+ ld a,1
+ out (0x03),a
+ ld a,0x58
+ out (0x03),a
+ ld (hl),c
+ ld hl,0
+ jr uout
 
 __uputw:
-	pop bc
-	pop de
-	pop hl
-	push hl
-	push de
-	push bc
-	di
-	ld a,#1
-	out (0x03),a
-	ld a,#0x58
-	out (0x03),a
-	ld (hl),e
-	inc hl
-	ld (hl),d
-	jr uout
+ ld hl,2
+ add hl,sp
+ push bc
+ ld c,(hl)
+ inc hl
+ ld b,(hl)
+ inc hl
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ ex de,hl
+ ld e,a
+ di
+ ld a,1
+ out (0x03),a
+ ld a,0x58
+ out (0x03),a
+ ld (hl),c
+ inc hl
+ ld (hl),b
+ ld hl,0
+ jr uout

@@ -31,7 +31,7 @@ uint8_t sio_r[] = {
 
 static void sio2_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
-	struct termios *t = &ttydata[minor].termios;
+	register struct termios *t = &ttydata[minor].termios;
 	uint8_t r;
 
 	used(flags);
@@ -86,24 +86,24 @@ void tty_pollirq_sio0(void)
 	uint8_t progress;
 
 	/* Check for an interrupt */
-	SIOA_C = 0;
-	if (!(SIOA_C & 2))
+	out(SIOA_C, 0);
+	if (!(in(SIOA_C) & 2))
 		return;
 
 	do {
 		progress = 0;
-		SIOA_C = 0;		// read register 0
-		ca = SIOA_C;
+		out(SIOA_C, 0);		// read register 0
+		ca = in(SIOA_C);
 		/* Input pending */
 		if (ca & 1) {
 			progress = 1;
-			tty_inproc(1, SIOA_D);
+			tty_inproc(1, in(SIOA_D));
 		}
 		/* Output pending */
 		if ((ca & 4) && (sleeping & 2)) {
 			tty_outproc(2);
 			sleeping &= ~2;
-			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
+			out(SIOA_C, 5 << 3);	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		/* Carrier changed on A: this is a timer interrupt from
 		   the external square wave generator */
@@ -113,22 +113,22 @@ void tty_pollirq_sio0(void)
 			old_ca = ca;
 		}
 		/* ACK any break or error events */
-		SIOA_C = 2 << 3;
+		out(SIOA_C, 2 << 3);
 
-		SIOB_C = 0;		// read register 0
-		cb = SIOB_C;
+		out(SIOB_C, 0);		// read register 0
+		cb = in(SIOB_C);
 		if (cb & 1) {
-			tty_inproc(2, SIOB_D);
+			tty_inproc(2, in(SIOB_D));
 			progress = 1;
 		}
 		if ((cb & 4) && (sleeping & 8)) {
 			tty_outproc(3);
 			sleeping &= ~8;
-			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
+			out(SIOB_C, 5 << 3);	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 
 		/* ACK any break or error events */
-		SIOB_C = 2 << 3;
+		out(SIOB_C, 2 << 3);
 
 	} while(progress);
 }

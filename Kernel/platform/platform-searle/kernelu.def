@@ -16,9 +16,7 @@ NBUFS		.equ	4
 ;	Select where to put the high code - in our case we need this
 ;	in common
 ;
-.macro HIGH
-		.area _COMMONMEM
-.endm
+#define HIGH	.common
 
 HIGHPAGE	.equ	0	; We only have 1 page byte and the low page
 				; isn't used
