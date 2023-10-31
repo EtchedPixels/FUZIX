@@ -22,9 +22,9 @@
 /* For now until we work out where this really belongs */
 uint8_t sock_wake[NSOCKET];
 
-static uint8_t irqmask;
+static uint_fast8_t irqmask;
 
-static uint8_t wiznet_present;
+static uint_fast8_t wiznet_present;
 
 #ifdef CONFIG_NET_W5100
 
@@ -430,8 +430,8 @@ static void w5x00_eof(struct socket *s)
 /* State management for creation of a socket. */
 static int net_alloc(void)
 {
-	uint8_t i = 0;
-	uint8_t j = 1;
+	register uint_fast8_t i = 0;
+	register uint_fast8_t j = 1;
 	while(i < NSOCKET) {
 		if (sock_free & j) {
 			sock_free &= ~j;
@@ -450,8 +450,8 @@ static int net_alloc(void)
 static struct socket *netproto_create(void)
 {
 	int n;
-	int i;
-	struct socket *s;
+	register int i;
+	register struct socket *s;
 	for (i = 0; i < WIZ_SOCKET; i++) {
 		if (wiz2sock_map[i] == 0xFF) {
 			n = net_alloc();
@@ -479,8 +479,8 @@ void netproto_free(struct socket *s)
 /* Until we do incoming socket support */
 struct socket *netproto_sockpending(struct socket *s)
 {
-	struct socket *n = sockets;
-	uint8_t id = s->s_num;
+	register struct socket *n = sockets;
+	register uint_fast8_t id = s->s_num;
 	int i;
 	for (i = 0; i < NSOCKET; i++) {
 		if (n->s_state != SS_UNUSED && n->s_parent == id) {
@@ -552,9 +552,9 @@ static int do_netproto_bind(struct socket *s)
  */
 static void w5x00_event_s(uint8_t i)
 {
-	uint8_t sn = wiz2sock_map[i];
-	struct socket *s;
-	uint16_t stat = w5x00_readsw(i, Sn_IR);	/* BE read of reg pair */
+	uint_fast8_t sn = wiz2sock_map[i];
+	register struct socket *s;
+	register uint16_t stat = w5x00_readsw(i, Sn_IR);	/* BE read of reg pair */
 
 	/* We got a pending event for a dead socket as we killed it. Shoot it
 	   again to make sure it's dead */
@@ -704,9 +704,9 @@ static void w5x00_event_s(uint8_t i)
 
 void w5x00_event(void)
 {
-	uint8_t irq;
-	uint8_t i = 0;
-	struct socket *s = sockets;
+	register uint_fast8_t irq;
+	uint_fast8_t i = 0;
+	register struct socket *s = sockets;
 
 	/* Polling cases */
 	irq = w5x00_readcb(SIR) & SIR_MASK;
@@ -752,9 +752,9 @@ void netproto_setup(struct socket *s)
 /* Helper belongs in network.c ? */
 int netproto_socket(void)
 {
-	struct socktype *st = socktype;
-	struct socket *s;
-	uint8_t famok = 0;
+	register struct socktype *st = socktype;
+	register struct socket *s;
+	uint_fast8_t famok = 0;
 
 	if (!wiznet_present) {
 		udata.u_error = ENETDOWN;
@@ -865,8 +865,8 @@ int netproto_read(struct socket *s)
 {
 	uint16_t i = s->proto.slot;
 	uint16_t n;
-	uint16_t r;
-	uint8_t filtered;
+	register uint16_t r;
+	uint_fast8_t filtered;
 
 	if (udata.u_count == 0)
 		return 0;
@@ -931,7 +931,7 @@ int netproto_read(struct socket *s)
 
 arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 {
-	uint16_t i = s->proto.slot;
+	register uint16_t i = s->proto.slot;
 	uint16_t room;
 	uint16_t n = 0;
 
@@ -1109,8 +1109,8 @@ void netdev_init(void)
 /* We probably want a generic ipv4 helper layer for some of this */
 int netproto_find_local(struct ksockaddr *ka)
 {
-	struct socket *s = sockets;
-	uint8_t n = 0;
+	register struct socket *s = sockets;
+	uint_fast8_t n = 0;
 	while(n < NSOCKET) {
 		if (s->s_state < SS_BOUND || s->src_addr.sa.family != AF_INET) {
 			s++;
@@ -1132,7 +1132,7 @@ int netproto_find_local(struct ksockaddr *ka)
 
 static void inc_autoport(void)
 {
-	uint16_t port = ntohs(autoport);
+	register uint16_t port = ntohs(autoport);
 	port++;
 	if (port == 32767)
 		port = 5000;
