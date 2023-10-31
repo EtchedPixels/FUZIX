@@ -7,19 +7,18 @@
 		.code
 
 _longjmp:
-	ld	hl,4
+	ld	hl,5
 	add	hl,sp
 	; We can destroy BC here - any old register variable state is
 	; lost in the longjmp
-	ld	c,(hl)
-	inc	hl
-	ld	b,(hl)		; BC is now return code
+	ld	b,(hl)
+	dec	hl
+	ld	c,(hl)		; BC is now return code
 	ld	a,b
 	or	c
 	jr	nz, retok
 	inc	c		; force return code non zero
 retok:
-	dec	hl
 	dec	hl		; now points to end of buffer arg
 	ld	d,(hl)
 	dec	hl		; and start

@@ -40,6 +40,5 @@ __setjmp:
 	ld	(hl),e		; save register variables IY
 	inc	hl
 	ld	(hl),d		;
-	inc	hl
 	ld	hl,0		; Return 0
 	ret
