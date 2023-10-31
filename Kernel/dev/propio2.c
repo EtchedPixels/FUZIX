@@ -121,8 +121,11 @@ static int8_t prop_send_cmd(uint_fast8_t cmd)
        pipeline better FIXME */
     if ((st = prop_idle()) < 0)
         return -1;
-    if (st)
-        prop_error(st);	/* Fetch 4 bytes of error code */
+    if (st & 0x40) {
+        if (cmd != CMD_INIT)
+            prop_error(st);	/* Fetch 4 bytes of error code */
+        return -1;
+    }
     return st;
 }
 
@@ -167,7 +170,7 @@ int8_t prop_sd_open(void)
         return 0;	/* No media probably */
     /* Type and capacity */
     if (prop_send_get(CMD_TYPE, &type, 1) < 0)
-        return -1;
+        return 0;	/* No media ? */
     if (prop_send_get(CMD_CAP, (uint8_t *)&prop_sd_capacity, 4) < 0)
         return -1;
     return 1;
@@ -232,12 +235,13 @@ uint_fast8_t prop_sd_probe(void)
 {
     if (prop_sd_reset())
         return 0;
-    /* Ok we have something. For now do the open here. We need to tweak
-       this a bit and make blk support removable media */
-    if (prop_sd_open() < 0)
+
+    /* Will become < 0 once we handle media changes in td somewhere */
+    if (prop_sd_open() <= 0)
         return 0;
 
     kputs("PropIO SD: ");
     td_register(0, prop_sd_xfer, td_ioctl_none, 1);
+    kputchar('\n');
     return 1;
 }
