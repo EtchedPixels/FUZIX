@@ -1,6 +1,5 @@
 CROSS_CCOPTS += -I../../dev/ -I../../dev/net/
 
-
 CSRCS = devtty.c
 CSRCS += devices.c main.c wiznet.c
 
@@ -60,15 +59,34 @@ clean:
 #	Attach the kernel to the boot block
 #
 image:	bootblock
-	cat boot-romwbw.bin ../../fuzix.bin >fuzix.romwbw
+	$(CROSS_LD) -b -C 0x0100 -S 0xF400 -f CLDBbXSs -o fuzix.bin \
+	crt0.o commonmem.o sbcv2.o ../../start.o \
+	../../version.o ../../cpu-z80u/lowlevel-z80u.o \
+	../../usermem.o tricks.o main.o discard.o \
+	../../timer.o ../../kdata.o devices.o ../../devio.o \
+	../../filesys.o ../../blk512.o ../../process.o \
+	../../inode.o ../../syscall_exec.o ../../syscall_exec16.o \
+	../../syscall_fs.o ../../syscall_fs2.o ../../syscall_fs3.o \
+	../../syscall_proc.o ../../syscall_other.o ../../syscall_net.o \
+	../../network.o ../../tty.o ../../mm.o ../../mm/memalloc_none.o \
+	../../swap.o ../../mm/bankfixed.o ../../devsys.o \
+	devtty.o ../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
+	../../dev/tinyide.o ../../dev/tinyide_discard.o \
+	../../dev/propio2.o ../../dev/rbcfd9266_hw.o \
+	../../dev/net/net_native.o ../../dev/net/net_w5x00.o wiznet.o \
+	../../dev/ds1302_rbc.o ../../dev/ds1302.o ../../dev/ds1302_discard.o \
+	../../dev/tinyide_ppide_rbc.o ../../dev/devfd.o \
+	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
+	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
+	cp boot-romwbw.bin fuzix.romwbw
+	dd if=../../fuzix.bin bs=256 skip=1 seek=4 of=fuzix.romwbw
 #
 #	Compile up the boot block
 #
 bootblock:
-	sdasz80 -o boot-romwbw.S
-	sdldz80 -i boot-romwbw.o
-	# This makes us a binary from physical 0
-	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
+	asz80 boot-romwbw.S
+	ldz80 -b boot-romwbw.o -o boot-romwbw.bin
 	# Chop off the leading 61440 bytes we don't want
 	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
 

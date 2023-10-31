@@ -23,6 +23,8 @@ start:
 	add hl,bc
 	ex de,hl
 	lddr
+	ldd
+
 	; then zero the data area
 	ld hl, __bss
 	ld de, __bss + 1
@@ -32,7 +34,7 @@ start:
 ;		Zero buffers area
 	ld hl, __buffers
 	ld de, __buffers + 1
-	ld bc, __buffers_size
+	ld bc, __buffers_size - 1
 	ld (hl), 0
 	ldir
 	call init_early

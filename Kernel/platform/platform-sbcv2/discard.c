@@ -80,9 +80,12 @@ void pagemap_init(void)
 
 void device_init(void)
 {
+	extern uint8_t ttymap[];
 	out(uart_ier, 0x0D);	/* This may be our timer so do it first */
 	ide_probe();
-	prop_sd_probe();
+	/* If we have a prop it will be console, if so check for SD */
+	if (ttymap[1] == 2)
+		prop_sd_probe();
 	ds1302_init();
 	sock_init();
 }

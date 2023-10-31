@@ -8,7 +8,6 @@
 	; exported symbols
 	.export init_early
 	.export init_hardware
-	.export interrupt_handler
 	.export _program_vectors
 	.export map_buffers
 	.export map_kernel
@@ -85,8 +84,6 @@ _plt_reboot:
 ; -----------------------------------------------------------------------------
 	.code
 
-	.export _ttymap
-;
 ;	This routine is called very early, before the boot code shuffles
 ;	things into place. We do the ttymap here mostly as an example but
 ;	even that really ought to be in init_hardware.
