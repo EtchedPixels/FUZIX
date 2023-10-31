@@ -4,6 +4,12 @@
 
 	.code
 
+	.export _ppide_init
+	.export _ide_read
+	.export _ide_write
+	.export _devide_read_data
+	.export _devide_write_data
+
 _ppide_init:
 	ld	a,PPIDE_PPI_BUS_READ
 	out	(ppi_port_c),a
@@ -22,13 +28,13 @@ _ide_read:
 	ld 	e,a
 	ld 	a,l
 	out	(ppi_port_c),a
-	ld	l,a
+	ld	l,e
 	ld	h,0
 	ret
 
 _ide_write:
-	ld	hl,#4
-	add	hl,de
+	ld	hl,4
+	add	hl,sp
 	ld	e,(hl)
 	dec	hl
 	dec	hl
@@ -70,13 +76,13 @@ _devide_read_data:
 #endif
 	push	bc
 	ld	a, ppide_data
-	ld	c,PPIDE_BASE+2		; select control lines
+	ld	c,ppi_port_c		; select control lines
 	out	(c), a			; select IDE data register
 	ld	d, ppide_data		; register address
 	ld	e, ppide_data + PPIDE_RD_LINE	; register address with /RD asserted
 	ld	b, 0			; setup count
 	call	devide_map
-	ld	a, PPIDE_BASE+0		; I will be needing this later
+	ld	a, ppi_port_a		; I will be needing this later
 goread:					; now we do the transfer
 	out	(c), e			; assert /RD
 	ld	c, a			; PPIDE_BASE
@@ -101,7 +107,7 @@ _devide_write_data:
 	push	de
 #endif
 	push	bc
-	ld	c, PPIDE_BASE+2		; select control lines
+	ld	c, ppi_port_c		; select control lines
 	ld	a, ppide_data
 	out	(c), a			; select data register
 	ld	a, PPIDE_PPI_BUS_WRITE
@@ -112,7 +118,7 @@ _devide_write_data:
 	ld	e, ppide_data + PPIDE_WR_LINE	; register address with /WR asserted
 	ld	b, 0			; setup count
 	call	devide_map
-	ld	a, PPIDE_BASE+0		; I will be needing this later
+	ld	a, ppi_port_a		; I will be needing this later
 gowrite:				; now we do the transfer
 	out (c), d			; de-assert /WR
 	ld	c, a			; PPIDE_BASE
