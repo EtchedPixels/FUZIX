@@ -15,10 +15,6 @@ uint8_t timermsr = 0;
  *	it needs to execute. On a machine with entirely interrupt driven
  *	hardware this could just halt for interrupt.
  */
-void plt_idle(void)
-{
-	__asm halt __endasm;
-}
 
 /*
  *	This routine is called from the interrupt handler code to process
@@ -46,7 +42,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  */
 void plt_discard(void)
 {
-	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
+	uint16_t discard_size = (uint16_t)&udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
 
 	discard_size /= sizeof(struct blkbuf);

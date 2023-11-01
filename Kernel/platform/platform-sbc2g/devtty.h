@@ -4,14 +4,14 @@
 /* SIO 2 ports */
 
 #define SIO0_BASE 0x00
-__sfr __at (SIO0_BASE + 0) SIOA_D;
-__sfr __at (SIO0_BASE + 1) SIOB_D;
-__sfr __at (SIO0_BASE + 2) SIOA_C;
-__sfr __at (SIO0_BASE + 3) SIOB_C;
+#define SIOA_D	(SIO0_BASE + 0)
+#define SIOB_D	(SIO0_BASE + 1)
+#define SIOA_C	(SIO0_BASE + 2)
+#define SIOB_C	(SIO0_BASE + 3)
 
-extern void sio2_otir(uint8_t port) __z88dk_fastcall;
+extern void sio2_otir(uint8_t port);
 
-void tty_putc(uint8_t minor, uint_fast8_t c);
+void tty_putc(uint_fast8_t minor, uint_fast8_t c);
 void tty_poll(void);
 
 #endif

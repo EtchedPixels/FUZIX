@@ -8,13 +8,7 @@
 ;	bootstrap goes for a bizarre wander.
 ;
 
-	.area VECTOR(ABS)
-
-	.org 0xFFFE
-	.word start
-
-	.area LOADER(ABS)
-
+	.abs
 ;
 ;	Occupies the entire 'boot track' (16K/32 sectors)
 ;	Just use the top bit so we can load the image easily
@@ -63,7 +57,7 @@ high:
 	out (LBA_2),a
 	out (LBA_1),a
 
-	ld de,#0x7C02		; sectors 2 to 126
+	ld de,#0x7B02		; sectors 2 to 126
 	ld hl,#0x0100		; load address
 load_loop:
 	call ide_ready
@@ -124,6 +118,13 @@ serstr:
 	jr serstr
 
 hello:
-	.asciz '\r\n\r\nSBC2G FUZIX LOADER 0.1\r\n\r\n'
+	.byte 13,10,13,10
+	.ascii 'SBC2G FUZIX LOADER 0.1'
+	.byte 13,10,13,10,0
 gogogo:
-	.asciz '\r\nExecuting FUZIX...\r\n'
+	.byte 13,10
+	.ascii 'Executing FUZIX...'
+	.byte 13,10,0
+
+	.org 0xFFFE
+	.word start

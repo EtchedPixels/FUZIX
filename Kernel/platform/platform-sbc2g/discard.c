@@ -16,7 +16,7 @@
  *	we claim it, if not it gets passed to init. It's perfectly acceptable
  *	to act on a match and return to also pass it to init if you need to.
  */
-uint8_t plt_param(unsigned char *p)
+uint_fast8_t plt_param(unsigned char *p)
 {
 }
 
