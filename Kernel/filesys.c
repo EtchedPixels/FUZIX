@@ -202,7 +202,7 @@ inoptr srch_dir(inoptr wd, uint8_t *compname)
     uint_fast8_t curentry;
     blkno_t curblock;
     struct blkbuf *buf;
-    struct direct *d;
+    register struct direct *d;
     int nblocks;
     uint16_t inum;
 
