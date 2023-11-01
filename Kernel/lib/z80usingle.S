@@ -26,6 +26,7 @@ _plt_switchout:
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
         push hl ; return code
+	push bc
         push ix
         push iy
         ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
@@ -48,7 +49,7 @@ _switchin:
         di
 	ld a,#1
 	ld (_int_disabled),a
-        pop bc  ; return address
+        pop bc  ; return address  - ok to trash BC here
         pop de  ; new process pointer
 ;
 ;	FIXME: do we actually *need* to restore the stack !
@@ -123,6 +124,7 @@ not_swapped:
 
         pop iy
         pop ix
+	pop bc
         pop hl ; return code
 
         ; enable interrupts, if the ISR isn't already running
@@ -164,6 +166,7 @@ _dofork:
         ; it returns with the value of the child's pid.
 	ld hl,#0
         push hl		;	#0 child
+	push bc
         push ix
         push iy
 
@@ -238,9 +241,10 @@ _dofork:
         ld l, a
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
+        pop iy
+        pop ix
         pop bc
-        pop bc
-        pop bc
+	pop de	; and throw the pid info away
 	; Return pid of child we forked into swap
         ret
 
