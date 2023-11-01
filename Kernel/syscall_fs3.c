@@ -207,7 +207,7 @@ char *name2;
 
 arg_t _link(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	inoptr ino2;
 	inoptr parent2;
 

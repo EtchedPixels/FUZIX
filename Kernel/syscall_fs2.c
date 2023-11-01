@@ -87,7 +87,7 @@ arg_t _chroot(void)
 
 arg_t _mknod(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	inoptr parent;
 
 	udata.u_error = 0;

@@ -142,7 +142,7 @@ arg_t _rename(void)
 
 arg_t _mkdir(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	inoptr parent;
 
 	if ((ino = n_open(name, &parent)) != NULL) {
@@ -214,7 +214,7 @@ char *path;
 
 arg_t _rmdir(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	inoptr parent;
 
 	/* Q: rmdir . */

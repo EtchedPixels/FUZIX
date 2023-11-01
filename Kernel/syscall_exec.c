@@ -15,9 +15,9 @@
 bool rargs(uint8_t **userspace_argv, struct s_argblk * argbuf)
 {
 	uint8_t *ptr;		/* Address of base of arg strings in user space */
-	uint8_t *up = (uint8_t *)userspace_argv;
-	uint8_t c;
-	uint8_t *bufp;
+	register uint8_t *up = (uint8_t *)userspace_argv;
+	register uint8_t c;
+	register uint8_t *bufp;
 	uint8_t *ep = argbuf->a_buf + ARGBUF_SIZE - 12;
 
 	argbuf->a_argc = 0;	/* Store argc in argbuf */
@@ -43,10 +43,10 @@ bool rargs(uint8_t **userspace_argv, struct s_argblk * argbuf)
 
 uint8_t **wargs(uint8_t *ptr, struct s_argblk *argbuf, int *cnt)	// ptr is in userspace
 {
-	uint8_t *argv;		/* Address of users argv[], just below ptr */
-	unsigned int argc, arglen;
+	register uint8_t *argv;		/* Address of users argv[], just below ptr */
+	register unsigned int argc, arglen;
 	uint8_t *argbase;
-	uint8_t *sptr;
+	register uint8_t *sptr;
 
 	sptr = argbuf->a_buf;
 
@@ -114,7 +114,7 @@ void coredump_memory(inoptr ino, uaddr_t base, usize_t len, uint16_t flags)
 uint8_t write_core_image(void)
 {
 	inoptr parent;
-	inoptr ino;
+	register inoptr ino;
 
 	udata.u_error = 0;
 

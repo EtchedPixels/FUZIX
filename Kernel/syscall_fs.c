@@ -240,7 +240,7 @@ arg_t _umask(void)
 
 arg_t _ioctl(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	uint16_t dev;
 	uint_fast8_t rclass = ((uint8_t)(request >> 8)) & 0xC0;
 	struct oft *oftp;
@@ -364,7 +364,7 @@ char *path;
 
 arg_t _unlink(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	inoptr pino;
 	int r;
 
