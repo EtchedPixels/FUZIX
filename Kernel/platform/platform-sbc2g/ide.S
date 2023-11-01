@@ -24,6 +24,7 @@ _devide_read_data:
 	call	ide_setup
 	inir                                    ; transfer first 256 bytes
 	inir                                    ; transfer second 256 bytes
+	pop	bc
 	jp	map_kernel
 
 _devide_write_data:
@@ -35,4 +36,5 @@ _devide_write_data:
 	call	ide_setup
 	otir                                    ; transfer first 256 bytes
 	otir                                    ; transfer second 256 bytes
+	pop	bc
 	jp	map_kernel

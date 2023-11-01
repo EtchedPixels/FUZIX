@@ -85,7 +85,7 @@ diskimage:
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=16512 conv=notrunc
 	# Add the kernel
-	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=256 skip=1 seek=4 conv=notrunc
 	# Add the bootloader
 	dd if=loader.bin of=$(IMAGES)/disk.img seek=16384 conv=notrunc
 	# Make an emulator image of it

@@ -109,41 +109,52 @@ uputget:
  ret ; Z is still false
 
 __uputc:
- pop bc ; return
- pop de ; char
- pop hl ; dest
- push hl
- push de
- push bc
+ ld hl,2
+ add hl,sp
+ ld e,(hl)
+ inc hl
+ inc hl
+ ld a,(hl)
+ inc hl
+ ld h,(hl)
+ ld l,a
  call map_proc_always
  ld (hl), e
 uputc_out:
  jp map_kernel ; map the kernel back below common
 
 __uputw:
- pop bc ; return
- pop de ; word
- pop hl ; dest
- push hl
- push de
- push bc
+ ld hl,2
+ add hl,sp
+ ld e,(hl)
+ inc hl
+ ld d,(hl) ; value
+ inc hl
+ ld a,(hl)
+ inc hl
+ ld h,(hl)
+ ld l,a
  call map_proc_always
  ld (hl), e
  inc hl
  ld (hl), d
  jp map_kernel
 
-;
-; ugetc and ugetw are fastcall so the address we need is already in
-; HL
-;
 __ugetc:
+ pop de
+ pop hl
+ push hl
+ push de
  call map_proc_always
         ld l, (hl)
  ld h, 0
  jp map_kernel
 
 __ugetw:
+ pop de
+ pop hl
+ push hl
+ push de
  call map_proc_always
         ld a, (hl)
  inc hl
@@ -155,12 +166,14 @@ __uput:
  push ix
  ld ix, 0
  add ix, sp
+ push bc
  call uputget ; source in HL dest in DE, count in BC
  jr z, uput_out ; but count is at this point magic
  call map_proc_always
  ldir
 uput_out:
  call map_kernel
+ pop bc
  pop ix
  ld hl, 0
  ret
@@ -169,6 +182,7 @@ __uget:
  push ix
  ld ix, 0
  add ix, sp
+ push bc
  call uputget ; source in HL dest in DE, count in BC
  jr z, uput_out ; but count is at this point magic
  call map_proc_always
