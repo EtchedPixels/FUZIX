@@ -3,12 +3,7 @@
 ;	top 12K and then runs whatever is indicated at 0xFFFE/FFFF
 ;
 
-	.area VECTOR(ABS)
-
-	.org 0xFFFE
-	.word start
-
-	.area LOADER(ABS)
+	.abs
 
 	.org 0xD000
 
@@ -40,42 +35,42 @@ start:
 	; just load the blocks after the loader (24-147). We can't overlap
 	; because of the FFFE/FFFF thing.
 
-	ld sp, #0xFE00
-	ld hl,#hello
+	ld sp, 0xFE00
+	ld hl, hello
 	call serstr
 
-	ld a,#0x01
+	ld a, 0x01
 	out (0x38),a
 
 	call ide_ready
-	ld a,#0xE0
+	ld a, 0xE0
 	out (LBA_3),a
 	call ide_ready
 	xor a
 	out (LBA_2),a
 	out (LBA_1),a
 
-	ld de,#0x7C18		; sectors 24-119
-	ld hl,#0x0100		; load address
+	ld de, 0x7B18		; sectors 24-119
+	ld hl, 0x0100		; load address
 load_loop:
 	call ide_ready
 	ld a,e
 	out (LBA_0),a
-	ld a,#1
+	ld a, 1
 	out (COUNT),a
-	ld a,#ATA_READ
+	ld a, ATA_READ
 	out (CMD),a
 	nop
 	call ide_wait_drq
-	ld bc,#DATA
+	ld bc, DATA
 	inir
 	inir
-	ld a,#'.'
+	ld a, '.'
 	call serout
 	inc e
 	dec d
 	jr nz, load_loop
-	ld hl,#gogogo
+	ld hl, gogogo
 	call serstr
 	jp 0x0100
 
@@ -116,6 +111,13 @@ serstr:
 	jr serstr
 
 hello:
-	.asciz 'TOMS SBC FUZIX LOADER 0.1\r\n\r\n'
+	.ascii 'TOMS SBC FUZIX LOADER 0.1'
+	.byte 13,10,13,10,0
 gogogo:
-	.asciz '\r\nExecuting FUZIX...\r\n'
+	.byte 13,10
+	.ascii 'Executing FUZIX...'
+	.byte 13,10,0
+
+	.org 0xFFFE
+
+	.word start
