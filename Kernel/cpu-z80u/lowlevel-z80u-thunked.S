@@ -179,7 +179,40 @@ interrupt_handler:
 	ld a, 1
 	ld (_udata + U_DATA__U_ININTERRUPT),a
 	ld (_int_disabled),a
+
+	; 	C temporaries
+	ld hl,(__tmp)
+	push hl
+	ld hl,(__hireg)
+	push hl
+	ld hl,(__tmp2)
+	push hl
+	ld hl,(__tmp2+2)
+	push hl
+	ld hl,(__tmp3)
+	push hl
+	ld hl,(__tmp3+2)
+	push hl
+	ld hl,(__retaddr)
+	push hl
+
 	call _plt_interrupt
+
+	pop hl
+	ld (__retaddr),hl
+	pop hl
+	ld (__tmp3+2),hl
+	pop hl
+	ld (__tmp3),hl
+	pop hl
+	ld (__tmp2+2),hl
+	pop hl
+	ld (__tmp2),hl
+	pop hl
+	ld (__hireg),hl
+	pop hl
+	ld (__tmp),hl
+
 	ld a,(_need_resched)
 	or a
 	jr nz, preemption
