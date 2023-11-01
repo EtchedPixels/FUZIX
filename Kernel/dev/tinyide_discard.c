@@ -56,7 +56,7 @@ static void ide_identify(int dev, uint8_t *buf)
 
 	kprintf("%x : ", dev);
 
-	ide_write(devh, (dev & 1) << 4);	/* Select */
+	ide_write(devh, 0xA0 | ((dev & 1) << 4));	/* Select */
 	if (ide_wait_nbusy() == -1)
 		return;
 
