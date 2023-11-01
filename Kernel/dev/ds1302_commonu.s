@@ -10,7 +10,7 @@
         .export _ds1302_set_driven
         .export _ds1302_get_data
 
-#include "../build/kernel.def"
+#include "../build/kernelu.def"
 #include "../cpu-z80u/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
