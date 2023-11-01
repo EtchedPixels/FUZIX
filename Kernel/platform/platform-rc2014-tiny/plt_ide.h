@@ -1,11 +1,17 @@
-__sfr __at 0x10 data;
-__sfr __at 0x11 error;
-__sfr __at 0x12 count;
-__sfr __at 0x13 sec;
-__sfr __at 0x14 cyll;
-__sfr __at 0x15 cylh;
-__sfr __at 0x16 devh;
-__sfr __at 0x17 cmd;
-__sfr __at 0x17 status;
+#define data	0x10
+#define error	0x11
+#define count	0x12
+#define sec	0x13
+#define cyll	0x14
+#define cylh	0x15
+#define devh	0x16
+#define cmd	0x17
+#define status	0x17
 
-#define IDE_REG_DATA	0x0010
+#define IDE_REG_DATA	0x10
+
+/* Due to our strange banking needs */
+#define IDE_NONSTANDARD_XFER
+
+#define ide_read(x)	in(x)
+#define ide_write(x,y)	out(x,y)

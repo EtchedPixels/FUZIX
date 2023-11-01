@@ -1,144 +1,106 @@
-; 2015-02-20 Sergey Kiselev
-; 2013-12-18 William R Sowerbutts
+# 0 "crt0.S"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "crt0.S"
+# 1 "kernelu.def" 1
+; FUZIX mnemonics for memory addresses etc
 
-        .module crt0
+U_DATA__TOTALSIZE .equ 0x200 ; 256+256 bytes @ 0xC000
+Z80_TYPE .equ 0 ; CMOS
 
-        ; Ordering of segments for the linker.
-        ; WRS: Note we list all our segments here, even though
-        ; we don't use them all, because their ordering is set
-        ; when they are first seen.
+Z80_MMU_HOOKS .equ 0
 
-	; Start with the ROM area CODE-CODE2
-        .area _CODE
-        .area _HOME     ; compiler stores __mullong etc in here if you use them
-        .area _CODE2
-	; Discard is loaded where process memory wil blow it away
-        .area _DISCARD
-	; The rest grows upwards from C000 starting with the udata so we can
-	; swap in one block, ending with the buffers so they can expand up
-        .area _COMMONMEM
-        .area _CONST
-        .area _INITIALIZED
-        .area _DATA
-        .area _BSEG
-        .area _BSS
-        .area _HEAP
-        ; note that areas below here may be overwritten by the heap at runtime, so
-        ; put initialisation stuff in here
-        .area _BUFFERS     ; _BUFFERS grows to consume all before it (up to KERNTOP)
-	; These get overwritten and don't matter
-        .area _INITIALIZER ; binman copies this to the right place for us
-        .area _GSINIT      ; unused
-        .area _GSFINAL     ; unused
+CONFIG_SWAP .equ 1
 
-        ; exported symbols
-        .globl init
+PROGBASE .equ 0x0000
+PROGLOAD .equ 0x0100
 
-        ; imported symbols
-        .globl _fuzix_main
-        .globl init_hardware
-        .globl s__INITIALIZER
-        .globl s__COMMONMEM
-        .globl l__COMMONMEM
-        .globl s__DISCARD
-        .globl l__DISCARD
-        .globl s__DATA
-        .globl l__DATA
-        .globl kstack_top
+; Mnemonics for I/O ports etc
 
-	.globl interrupt_handler
-	.globl nmi_handler
+CONSOLE_RATE .equ 115200
 
-	.globl ___sdcc_enter_ix
+CPU_CLOCK_KHZ .equ 7372
 
-	.include "kernel.def"
+; Z80 CTC ports
+CTC_CH0 .equ 0x88 ; CTC channel 0 and interrupt vector
+CTC_CH1 .equ 0x89 ; CTC channel 1 (serial B)
+CTC_CH2 .equ 0x8A ; CTC channel 2 (timer)
+CTC_CH3 .equ 0x8B ; CTC channel 3 (timer count)
+# 2 "crt0.S" 2
 
-        ; startup code
-        .area _PAGE0(ABS)
+ .abs
 
-.org	0
+.org 0
 
 restart0:
-	jp init
-	.ds 5
+ jp init
+ .ds 5
 restart8:
-	jp	___sdcc_enter_ix
-	.ds 5
+ .ds 8
 restart10:
-	ld	sp,ix
-	pop	ix
-	ret
-	.ds 3
+ .ds 8
 restart18:
-	pop	af
-	pop	ix
-	ret
-	.ds	4
+ .ds 8
 restart20:
-	ld	a,(hl)
-	inc	hl
-	ld	h,(hl)
-	ld	l,a
-	ret
-	.ds	3
+ .ds 8
 restart28:
-	.ds 8
+ .ds 8
 restart30:
-	.ds 8
+ .ds 8
 restart38:
-	jp interrupt_handler
-	.ds 5
+ jp interrupt_handler
+ .ds 5
 ; 0x40
-	.ds 26
+ .ds 26
 ; 0x66
-	jp nmi_handler
+ jp nmi_handler
 ;
-;	And 0x69 onwards we could use for code
+; And 0x69 onwards we could use for code
 ;
 
-	; Starts at 0x0080 at the moment
+ ; Starts at 0x0080 at the moment
 
-	.area _CODE
+ .code
 
-init:  
+init:
         di
-	ld sp,#0x8200		; safe spot
+ ld sp, 0xFFFF ; safe spot
 
-	; Init the ATA CF
-	; For now this is fairly dumb.
-	; We ought to init the UART here first so we can say something
-	; before loading.
-	ld a,#0xE0
-	out (0x16),a
-	xor a
-	out (0x14),a
-	out (0x15),a
-	; Set 8bit mode
-	call wait_ready
-	ld a, #1		; 8bit PIO
-	out (0x11),a
-	ld a, #0xEF		; SET FEATURES (8bit PIO)
-	out (0x17),a
-	call wait_ready
+ ; Init the ATA CF
+ ; For now this is fairly dumb.
+ ; We ought to init the UART here first so we can say something
+ ; before loading.
+ ld a, 0xE0
+ out (0x16),a
+ xor a
+ out (0x14),a
+ out (0x15),a
+ ; Set 8bit mode
+ call wait_ready
+ ld a, 1 ; 8bit PIO
+ out (0x11),a
+ ld a, 0xEF ; SET FEATURES (8bit PIO)
+ out (0x17),a
+ call wait_ready
 
-	; Load and map the rest of the image
-	ld d,#1
-	ld bc,#0x10		; c = data port  b = 0
-	ld hl,#0x8200		; Load 8200-FFFF
+ ; Load and map the rest of the image
+ ld d, 1
+ ld bc, 0x10 ; c = data port b = 0
+ ld hl, 0x8200 ; Load 8200-FFFF
 loader:
-	inc d
-	call load_sector
-	bit 6,d			; load 64 sectors 2-66
-	jr z, loader
+ inc d
+ call load_sector
+ bit 6,d ; load 64 sectors 2-66
+ jr z, loader
 
         ; switch to stack in high memory
-        ld sp, #kstack_top
+        ld sp, kstack_top
 
         ; Zero the data area
-        ld hl, #s__DATA
-        ld de, #s__DATA + 1
-        ld bc, #l__DATA - 1
-        ld (hl), #0
+        ld hl, __bss
+        ld de, __bss + 1
+        ld bc, __bss_size - 1
+        ld (hl), 0
         ldir
 
         ; Hardware setup
@@ -146,60 +108,33 @@ loader:
 
         ; Call the C main routine
         call _fuzix_main
-    
+
         ; fuzix_main() shouldn't return, but if it does...
         di
-stop:   halt
+stop: halt
         jr stop
 
 ;
-;	Load sector d from disk into HL and advance HL accordingly
+; Load sector d from disk into HL and advance HL accordingly
 ;
 load_sector:
-	ld a,d
-	out (0x13),a		; LBA
-	ld a,#1
-	out (0x12),a		; 1 sector
-	ld a,#0x20
-	out (0x17),a		; command
-	; Wait 
+ ld a,d
+ out (0x13),a ; LBA
+ ld a, 1
+ out (0x12),a ; 1 sector
+ ld a, 0x20
+ out (0x17),a ; command
+ ; Wait
 wait_drq:
-	in a,(0x17)
-	bit 3,a
-	jr z, wait_drq
-	; Get data, leave HL pointing to next byte, leaves B as 0 again
-	inir
-	inir
-	ret
+ in a,(0x17)
+ bit 3,a
+ jr z, wait_drq
+ ; Get data, leave HL pointing to next byte, leaves B as 0 again
+ inir
+ inir
+ ret
 wait_ready:
-	in a,(0x17)
-	bit 6,a
-	jr z,wait_ready
-	ret
-
-;
-;       Stub helpers for code compactness.
-;
-;   Note that sdcc_enter_ix is in the standard compiler support already
-;
-;   The first two use an rst as a jump. In the reload sp case we don't
-;   have to care. In the pop ix case for the function end we need to
-;   drop the spare frame first, but we know that af contents don't
-;   matter
-;
-
-___spixret:
-	ld      sp,ix
-	pop     ix
-	ret
-___ixret:
-	pop     af
-	pop     ix
-	ret
-___ldhlhl:
-	ld      a,(hl)
-	inc     hl
-	ld      h,(hl)
-	ld      l,a
-	ret
-
+ in a,(0x17)
+ bit 6,a
+ jr z,wait_ready
+ ret

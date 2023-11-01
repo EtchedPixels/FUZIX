@@ -61,7 +61,7 @@ extern uint16_t swap_dev;
 #define CONFIG_TD
 #define CONFIG_TD_NUM	2
 #define CONFIG_TD_IDE
-#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_INDIRECT
 #define CONFIG_TINYIDE_8BIT
 #define IDE_IS_8BIT(x)	1
 /* Device parameters */
@@ -74,3 +74,5 @@ extern uint16_t swap_dev;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 #define plt_copyright()
+
+#define CONFIG_SMALL
