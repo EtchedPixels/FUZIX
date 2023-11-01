@@ -391,30 +391,42 @@ numeral:add a, #0x30 ; start at '0' (0x30='0')
         jp outchar
 
 ;
-;	I/O helpers for cases we don't use __sfr
+;	I/O helpers for cases we don't use peepholes to write them out
+;
+;	Must not trash BC
+;
+;	out(addr, val)		- not the heathen x86 version
 ;
 _out:
-	pop hl
-	pop bc
-	out (c), b
-	push bc
-	jp (hl)
-
 _out16:
-	pop hl
-	pop bc
-	pop de
-	push de
-	push bc
-	out (c),e
-	jp (hl)
-
-_in16:
-	ld b,h
-_in:
-	ld c,l
-	in l, (c)
+	push	bc
+	ld	hl,#4
+	add	hl,sp
+	ld	c,(hl)
+	inc	hl
+	ld	b,(hl)
+	inc	hl
+	ld	e,(hl)
+	out	(c),e
+	pop	bc
 	ret
+
+;
+;	Read a port
+;
+_in16:
+_in:
+	push	bc
+	ld	hl,#4
+	add	hl,sp
+	ld	c,(hl)
+	inc	hl
+	ld	b,(hl)
+	in	l, (c)
+	ld	h,0
+	pop	bc
+	ret
+
 
 ;
 ;	Deal with all the NMOS Z80 bugs and the buggy emulators by
