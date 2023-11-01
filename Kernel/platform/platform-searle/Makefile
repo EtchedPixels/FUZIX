@@ -81,6 +81,6 @@ diskimage:
 	dd if=loader.bin of=$(IMAGES)/disk.img bs=446 count=1 conv=notrunc
 	dd if=loader.bin of=$(IMAGES)/disk.img bs=512 skip=1 seek=1 conv=notrunc
 	# And kernel
-	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=24 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=256 skip=1 seek=48 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

@@ -83,6 +83,8 @@ __uzero:
 	out (0x03),a		; Port B WR 1
 	ld a,0x58
 	out (0x03),a		; port B WR 1 to 0x58
+	ld l,e
+	ld h,d
 	ld (hl),0
 	ld a,(_int_disabled)
 	or a
@@ -93,8 +95,6 @@ noteiz:
 	ld a,b
 	or c
 	jr z, uout
-	ld e,l
-	ld d,h
 	inc de
 	ldir
 uout:

@@ -177,9 +177,9 @@ void tty_data_consumed(uint_fast8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(uint_fast8_t c)
 {
-	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
+	while(tty_writeready(TTYDEV & 0xFF) != TTY_READY_NOW);
 	if (c == '\n')
-		tty_putc(TTYDEV - 512, '\r');
-	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
-	tty_putc(TTYDEV - 512, c);
+		tty_putc(TTYDEV & 0xFF, '\r');
+	while(tty_writeready(TTYDEV & 0xFF) != TTY_READY_NOW);
+	tty_putc(TTYDEV & 0xFF, c);
 }

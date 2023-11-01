@@ -161,7 +161,8 @@ farput:
  ret
 
 bankhelper:
- .ascii 'Invoking bank helper\r\n'
+ .ascii 'Invoking bank helper'
+ .byte 13,10
  .byte 0
 
 
