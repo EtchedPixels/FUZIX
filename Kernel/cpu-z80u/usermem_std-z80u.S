@@ -44,24 +44,30 @@ uputget:
 	ret
 
 __uputc:
-	pop bc	;	return
-	pop de	;	char
-	pop hl	;	dest
-	push hl
-	push de
-	push bc
+	ld hl,2
+	add hl,sp
+	ld e,(hl)
+	inc hl
+	inc hl
+	ld a,(hl)
+	inc hl
+	ld h,(hl)
+	ld l,a
 	call map_proc_always
 	ld (hl), e
-uputc_out:
 	jp map_kernel_restore			; map the kernel back below common
 
 __uputw:
-	pop bc	;	return
-	pop de	;	word
-	pop hl	;	dest
-	push hl
-	push de
-	push bc
+	ld hl,2
+	add hl,sp
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	ld a,(hl)
+	inc hl
+	ld h,(hl)
+	ld l,a
 	call map_proc_always
 	ld (hl), e
 	inc hl
@@ -69,12 +75,20 @@ __uputw:
 	jp map_kernel_restore
 
 __ugetc:
+	pop de
+	pop hl
+	push hl
+	push de
 	call map_proc_always
         ld l, (hl)
 	ld h, #0
 	jp map_kernel_restore
 
 __ugetw:
+	pop de
+	pop hl
+	push hl
+	push de
 	call map_proc_always
         ld a, (hl)
 	inc hl
@@ -86,6 +100,7 @@ __uput:
 	push ix
 	ld ix, #0
 	add ix, sp
+	push bc
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
 	
@@ -100,6 +115,7 @@ uput_l:	ld a, (hl)
 	jr nz, uput_l
 
 uput_out:
+	pop bc
 	pop ix
 	ld hl, #0
 	ret
@@ -109,6 +125,7 @@ __uget:
 	push ix
 	ld ix, #0
 	add ix, sp
+	push bc
 	call uputget			; source in HL dest in DE, count in BC
 	jr z, uput_out			; but count is at this point magic
 	
@@ -126,23 +143,29 @@ uget_l:
 
 ;
 __uzero:
-	pop de	; return
-	pop hl	; address
-	pop bc	; size
+	ld hl,2
+	add hl,sp
 	push bc
-	push hl	
-	push de
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	ld c,(hl)
+	inc hl
+	ld b,(hl)
 	ld a, b	; check for 0 copy
 	or c
 	ret z
 	call map_proc_always
-	ld (hl), #0
+	ld l,e
+	ld h,d
+	ld (hl), 0
 	dec bc
 	ld a, b
 	or c
-	jp z, uputc_out
-	ld e, l
-	ld d, h
+	jp z, done
 	inc de
 	ldir
-	jp uputc_out
+done:
+	pop bc
+	jp map_kernel_restore
