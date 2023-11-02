@@ -122,23 +122,27 @@ __uget:
 
 ;
 __uzero:
-	pop de	; return
-	pop hl	; address
-	pop bc	; size
+	ld hl,2
+	add hl,sp
 	push bc
-	push hl	
-	push de
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	ld c,(hl)
+	inc hl
+	ld b,(hl)
 	ld a, b	; check for 0 copy
 	or c
 	ret z
 	call map_proc_always
+	ld l,e
+	ld h,d
 	ld (hl), 0
 	dec bc
 	ld a, b
 	or c
 	jp z, uputc_out
-	ld e, l
-	ld d, h
 	inc de
 	ldir
 	jp uputc_out
