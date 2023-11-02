@@ -12,7 +12,6 @@ _devide_read_data:
 	push hl
 	push de
 	push bc
-	ld bc, IDE_REG_DATA	; port and count
 	ld a, (_td_raw)
 	or a
 	jr z, read_k
@@ -22,12 +21,14 @@ _devide_read_data:
 	ld a,(bits_to_user + 1)
 	out (c),a
 read_k:
-	inir                                    ; transfer first 256 bytes
-	inir                                    ; transfer second 256 bytes
+	ld bc, IDE_REG_DATA	; port and count
+	inir                    ; transfer first 256 bytes
+	inir                    ; transfer second 256 bytes
 	ld bc,(sio_reg)
 	out (c),b
 	ld a,(bits_to_user)
 	out (c),a
+	pop bc
 	ld a,(_int_disabled)
 	or a
 	ret z
@@ -40,7 +41,6 @@ _devide_write_data:
 	push hl
 	push de
 	push bc
-	ld bc, IDE_REG_DATA	; port and count
 	ld a, (_td_raw)
 	or a
 	jr z, write_k
@@ -50,12 +50,14 @@ _devide_write_data:
 	ld a,(bits_to_user + 1)
 	out (c),a
 write_k:
-	otir                                    ; transfer first 256 bytes
-	otir                                    ; transfer second 256 bytes
+	ld bc, IDE_REG_DATA	; port and count
+	otir                    ; transfer first 256 bytes
+	otir                    ; transfer second 256 bytes
 	ld bc,(sio_reg)
 	out (c),b
 	ld a,(bits_to_user)
 	out (c),a
+	pop bc
 	ld a,(_int_disabled)
 	or a
 	ret z

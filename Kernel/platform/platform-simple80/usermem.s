@@ -106,11 +106,11 @@ __uput:
 ; logic
 ;
 __uzero:
- ld hl,4
+ ld hl,5
  add hl,sp
  ld d,(hl)
  dec hl
- ld d,(hl)
+ ld e,(hl)
  dec hl
  ld a,(hl)
  dec hl

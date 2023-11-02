@@ -8,7 +8,6 @@
 
         ; exported symbols
         .export init_hardware
-        .export interrupt_handler
         .export _program_vectors
  .export _kernel_flag
  .export map_page_low
@@ -61,9 +60,9 @@ NBUFS .equ 4
 
 HIGHPAGE .equ 0 ; We only have 1 page byte and the low page
     ; isn't used
-# 26 "simple80.S" 2
+# 25 "simple80.S" 2
 # 1 "../../cpu-z80u/kernel-z80.def" 1
-# 27 "simple80.S" 2
+# 26 "simple80.S" 2
 
 
 ; Base address of SIO/2 chip 0x80
@@ -124,8 +123,8 @@ init_hardware:
  ld hl, 60 ; We lose 4K to common space
         ld (_procmem), hl
 
- ld hl, s__COMMONMEM
- ld de, l__COMMONMEM
+ ld hl, __common
+ ld de, __common_size
 
  ; Modified board drives the RAM A16 differently
  ld a,(0xfffe)
@@ -298,7 +297,6 @@ _plt_halt:
 ;
 ; A little SIO helper
 ;
- .export _sio_r
  .export _sio2_otir
 
 _sio2_otir:
@@ -444,7 +442,7 @@ modified_mem:
  ld (banknum),a
  ld hl, 0xeae8
  ld (bits_from_user),hl
-            ld hl, 0x0503 ; SIOB R 5
+        ld hl, 0x0503 ; SIOB R 5
  ld (sio_reg),hl
  ld a, 0xea
  ld a,l ; get the register
@@ -473,7 +471,7 @@ far_ldir_1:
  inc hl
  out (c),b
  out (c),d
- ld (ix),a
+ ld (ix + 0),a
  inc ix
  exx
  dec bc
