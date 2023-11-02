@@ -56,12 +56,12 @@ init:
 	call wait_ready
 
 	; Load and map the rest of the image
-	ld d, 1
+	ld d, 2
 	ld bc, 0x10		; c = data port  b = 0
 	ld hl, 0x8200		; Load 8200-FFFF
 loader:
-	inc d
 	call load_sector
+	inc d
 	bit 6,d			; load 64 sectors 2-66
 	jr z, loader
 

@@ -24,7 +24,8 @@ uint8_t rtc_shadow;
 
 void plt_discard(void)
 {
-	while (bufpool_end + 1 <= (struct blkbuf *) 0xFFFFU) {
+	/* Tricky - need to avoid overflow */
+	while (bufpool_end <= (struct blkbuf *)(0xFFFFU - sizeof(struct blkbuf))) {
 		memset(bufpool_end, 0, sizeof(struct blkbuf));
 #if BF_FREE != 0
 		bufpool_end->bf_busy = BF_FREE;	/* redundant when BF_FREE == 0 */
