@@ -23,32 +23,29 @@ void map_init(void)
 	ramsize = PROC_SIZE;
 }
 
-__sfr __at 0x01 pio_c;
-__sfr __at 0x3C ctc_0;
-__sfr __at 0x3D ctc_1;
-__sfr __at 0x3E ctc_2;
-__sfr __at 0x3F ctc_3;
+#define	PIO_C	0x01
+#define CTC(x)	(0x3C + (x))
 
 void device_init(void)
 {
-	pio_c = 0xCF;		/* Mode 3 */
-	pio_c = 0x70;		/* MISO input, unused as input (so high Z) */
+	out(PIO_C, 0xCF);	/* Mode 3 */
+	out(PIO_C, 0x70);	/* MISO input, unused as input (so high Z) */
 #ifdef CONFIG_PIO_TICK
-	pio_c = 0xF0;		/* interrupt vector F2, 0x5FF0 */
-	pio_c = 0x97;		/* interrupt on low, mask to follow */
-	pio_c = 0x08;		/* bit 3 has the 10Hz square wave */
+	out(PIO_C, 0xF0);	/* interrupt vector F2, 0x5FF0 */
+	out(PIO_C, 0x97);	/* interrupt on low, mask to follow */
+	out(PIO_C,  0x08);		/* bit 3 has the 10Hz square wave */
 #else
-	pio_c = 0x07;		/* No interrupt, no mask */
+	out(PIO_C, 0x07);		/* No interrupt, no mask */
 #endif
 #ifdef CONFIG_K1520_SOUND	/* We care about the CTC not the sound */
 	/* The timers run 0->1->2->3 chained and the clock input is 1.79/4 Mhz */
-	ctc_0 = 0x55;		/* counter, falling */
-	ctc_0 = 250;		/* time constant */
-	ctc_1 = 0xD5;		/* int, counter, falling */
-	ctc_1 = 179;		/* time constant */
-	ctc_1 = 0xF0;		/* Vector 0x5FF2 (channel 1) */
-	ctc_2 = 0x01;		/* Ensure they are off */
-	ctc_3 = 0x01;
+	out(CTC(0), 0x55);	/* counter, falling */
+	out(CTC(0), 250);	/* time constant */
+	out(CTC(1), 0xD5);	/* int, counter, falling */
+	out(CTC(1), 179);	/* time constant */
+	out(CTC(1), 0xF0);	/* Vector 0x5FF2 (channel 1) */
+	out(CTC(2), 0x01);	/* Ensure they are off */
+	out(CTC(3), 0x01);
 	/* Set up for 10Hz */
 #endif
 	rd_probe();

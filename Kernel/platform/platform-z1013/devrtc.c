@@ -3,44 +3,16 @@
 #include <printf.h>
 #include <rtc.h>
 
-#ifdef CONFIG_RTC
+#ifdef CONFIG_rtc
 
 /* Use the specific RTC card if configured that way, otherwise use the GIDE
    option */
 #ifdef CONFIG_RTC_70
-__sfr __banked __at 0x70 rtc0;
-__sfr __banked __at 0x71 rtc1;
-__sfr __banked __at 0x72 rtc2;
-__sfr __banked __at 0x73 rtc3;
-__sfr __banked __at 0x74 rtc4;
-__sfr __banked __at 0x75 rtc5;
-__sfr __banked __at 0x76 rtc6;
-__sfr __banked __at 0x77 rtc7;
-__sfr __banked __at 0x78 rtc8;
-__sfr __banked __at 0x79 rtc9;
-__sfr __banked __at 0x7A rtcA;
-__sfr __banked __at 0x7B rtcB;
-__sfr __banked __at 0x7C rtcC;
-__sfr __banked __at 0x7D rtcD;
-__sfr __banked __at 0x7E rtcE;
-__sfr __banked __at 0x7F rtcF;
+#define rtc(x)		in(0x70 + (x))
+#define Wrtc(x,y)	out(0x70 + (x),(y))
 #else
-__sfr __banked __at 0x0045 rtc0;
-__sfr __banked __at 0x0145 rtc1;
-__sfr __banked __at 0x0245 rtc2;
-__sfr __banked __at 0x0345 rtc3;
-__sfr __banked __at 0x0445 rtc4;
-__sfr __banked __at 0x0545 rtc5;
-__sfr __banked __at 0x0645 rtc6;
-__sfr __banked __at 0x0745 rtc7;
-__sfr __banked __at 0x0845 rtc8;
-__sfr __banked __at 0x0945 rtc9;
-__sfr __banked __at 0x0A45 rtcA;
-__sfr __banked __at 0x0B45 rtcB;
-__sfr __banked __at 0x0C45 rtcC;
-__sfr __banked __at 0x0D45 rtcD;
-__sfr __banked __at 0x0E45 rtcE;
-__sfr __banked __at 0x0F45 rtcF;
+#define rtc(x)		in(0x45 + ((x) << 8))
+#define Wrtc(x)		out(0x45 + ((x) << 8), (y))
 #endif
 
 /* Full RTC support (for read - no write yet) */
@@ -55,21 +27,22 @@ int plt_rtc_read(void)
 		len = udata.u_count;
 
         irq = di();
-        rtcD |= 0x01;		/* Set hold and then */
-        while(rtcD & 0x02);	/* spin until not busy */
+        wrtc(0xD, rtc(0xD) | 1);/* Set hold and then */
+        while(rtc(0xD) & 0x02);	/* spin until not busy */
         
         /* Now safe to read the clock */
         /* FIXME: we assume 24hr mode */
-        p[6] = rtc0 | (rtc1 << 4);
-        p[5] = rtc2 | (rtc3 << 4);
-        p[4] = rtc4 | ((rtc5 << 4) & 0x30);
-        p[3] = rtc6 | (rtc7 << 4);
-        p[2] = rtc8 | (rtc9 << 4);
-        p[1] = rtcA | (rtcB << 4);
+        p[6] = rtc(0) | (rtc(1) << 4);
+        p[5] = rtc(2) | (rtc(3) << 4);
+        p[4] = rtc(4) | ((rtc(5) << 4) & 0x30);
+        p[3] = rtc(6) | (rtc(7) << 4);
+        p[2] = rtc(8) | (rtc(9) << 4);
+        p[1] = rtc(0xA) | (rtc(0xB) << 4);
         /* Assume 2000 based for now FIXME */
         p[0] = 0x20;
 
-        rtcD &= ~1;		/* Hold off */
+	/* Hold off */
+        wrtc(0xD, rtc(0xD) & ~1);
 
         irqrestore(irq);
 	cmos.type = CMOS_RTC_BCD;
@@ -90,10 +63,10 @@ uint8_t plt_rtc_secs(void)
         irqflags_t irq;
         uint8_t s;
         irq = di();
-        rtcD |= 0x01;		/* Set hold and then */
-        while(rtcD & 0x02);	/* spin until not busy */
-        s = rtc0 + 10 * rtc1;
-        rtcD &= ~0x01;
+        wrtc(0xD, rtc(0xD) | 0x010;	/* Set hold and then */
+        while(rtc(0xD) & 0x02);	/* spin until not busy */
+        s = rtc(0) + 10 * rtc(1);
+        wrtc(0xD, rtc(0xD) & ~1);
         irqrestore(irq);
         return s;
 }

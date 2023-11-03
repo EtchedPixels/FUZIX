@@ -13,9 +13,9 @@
                                     - no LBA emulation
                                     - buggy disk emulation
                                     - probably a bug in port 4 handling */
-#undef CONFIG_VIDEO_POPPE	/* 64x32 video */
+#undef CONFIG_VIDEO_POPPE	/* 64x32 video. Set this in kernelu.def also */
 #undef CONFIG_RTC_70		/* RTC at 0x70 (not GIDE RTC) */
-#undef CONFIG_FDC765		/* Floppy controller (not yet done) */
+#undef CONFIG_FDC765		/* Floppy controller (not yet done) - also set in kernelu.def */
 
 /*
  *	Platform configuration
@@ -58,11 +58,15 @@
 #define UDATA_SIZE  0x200	/* One block */
 
 #ifdef CONFIG_RD_SWAP
+#define UTFSIZE		15
+#define OFTSIZE		15
+#define ITABSIZE	20
 #define MAX_SWAPS   	7
 #define PTABSIZE	7
 #define SWAPDEV		0x300
 #else
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
+#define CONFIG_SMALL
 /* Swap will be set up when a suitably labelled partition is seen */
 #define CONFIG_DYNAMIC_SWAP
 #define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
@@ -92,7 +96,7 @@ extern uint16_t swap_dev;
 
 /* On-board RTC on the GIDE or an RTC card */
 #if defined(CONFIG_TD_IDE) || defined(CONFIG_RTC_70)
-#define CONFIG_TINYIDE_SDCCPIO
+#define CONFIG_TINYIDE_INDIRECT
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_INTERVAL	1

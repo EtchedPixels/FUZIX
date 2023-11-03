@@ -49,7 +49,7 @@ void plt_idle(void)
 	irqrestore(irq);
 }
 
-uint8_t plt_param(unsigned char *p)
+uint_fast8_t plt_param(unsigned char *p)
 {
 	used(p);
 	return 0;

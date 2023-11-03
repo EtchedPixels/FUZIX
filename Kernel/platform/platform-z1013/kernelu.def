@@ -1,11 +1,8 @@
 ; FUZIX mnemonics for memory addresses etc
 
 U_DATA__TOTALSIZE	.equ	0x200	; 256+256 bytes @ 0x0100
-Z80_TYPE		.equ	1	; Could be NMOS
 
-Z80_MMU_HOOKS		.equ 0
-
-CONFIG_SWAP		.equ 1
+#define CONFIG_SWAP 1
 
 PROGBASE		.equ	0x6000
 PROGLOAD		.equ	0x6000
@@ -14,11 +11,9 @@ PROGLOAD		.equ	0x6000
 ;	SPI uses the top bit
 ;
 
-.macro	ROTATE
-	rla
-.endm
+#define ROTATE		rla
+#define LOADFIRST 	in d,(c)
+#define LOADFIRST2	rlc d
 
-.macro LOADFIRST
-	in d,(c)
-	rlc d
-.endm
+#undef CONFIG_VIDEO_POPPE
+#undef CONFIG_FDC765

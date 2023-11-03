@@ -32,7 +32,8 @@ int tty_carrier(uint_fast8_t minor)
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-	vtoutput(&c, 1);
+	uint8_t ch = c;
+	vtoutput(&ch, 1);
 }
 
 void tty_sleeping(uint_fast8_t minor)

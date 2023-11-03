@@ -1,11 +1,14 @@
-__sfr __at 0x48 data;
-__sfr __at 0x49 error;
-__sfr __at 0x4A count;
-__sfr __at 0x4B sec;
-__sfr __at 0x4C cyll;
-__sfr __at 0x4D cylh;
-__sfr __at 0x4E devh;
-__sfr __at 0x4F cmd;
-__sfr __at 0x4F status;
+#define data	0x48
+#define error	0x49
+#define count	0x4A
+#define sec	0x4B
+#define cyll	0x4C
+#define cylh	0x4D
+#define devh	0x4E
+#define cmd	0x4F
+#define status	0x4F
 
 #define IDE_REG_DATA	0x0048
+
+#define ide_read(x)	in(x)
+#define ide_write(x,y)	out(x,y)
