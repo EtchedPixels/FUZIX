@@ -48,10 +48,11 @@ static uint16_t last_cyl;
 
 int ide_chs_xfer(uint_fast8_t drive, bool is_read, uint32_t lba, uint8_t *dptr)
 {
-    ide_unit = drive;
     uint32_t sector;
     uint32_t head;
     uint16_t cyl;
+
+    ide_unit = drive;
 
     /* Avoid the expensive 32bit maths (on 8bit anyway) by spotting
        further requests on the same head/cylinder as for those we just
