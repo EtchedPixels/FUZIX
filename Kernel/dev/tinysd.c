@@ -72,7 +72,7 @@ static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 	return res;		/* Return with the response value */
 }
 
-int sd_xfer(uint8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
+int sd_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t * dptr)
 {
 	uint32_t block = lba << sd_shift[dev];
 	tinysd_busy = 1;
