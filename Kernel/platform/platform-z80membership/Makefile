@@ -1,62 +1,80 @@
 CROSS_CCOPTS += -I../../dev/
 
-
 CSRCS = devtty.c devices.c main.c sdcard.c
 
 DISCSRCS = discard.c
 
-ASRCS = z80membership.s crt0.s
-ASRCS += tricks.s commonmem.s
+ASRCS = z80membership.S crt0.S
+ASRCS += tricks.S commonmem.S
 
-DISCARD_DSRCS = ../../dev/devsd_discard.c
-DSRCS = ../../dev/blkdev.c ../../dev/devsd.c ../../dev/mbr.c
+DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinysd_discard.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinysd.c
 NSRCS =
 
 DASRCS = 
 
-COBJS = $(CSRCS:.c=.rel)
-AOBJS = $(ASRCS:.s=.rel)
-NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
-DISCOBJS = $(DISCSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+COBJS = $(CSRCS:.c=.o)
+AOBJS = $(ASRCS:.S=.o)
+NOBJS = $(patsubst ../../dev/net/%.c,%.o, $(NSRCS))
+DISCOBJS = $(DISCSRCS:.c=.o)
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.o, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.S,%.o, $(DASRCS))
 
 OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
 
-JUNK =  *.lst *.asm *.sym *.rst *.lst *.rel *.tmp *.ihx
+JUNK =  *.lst *.asm *.Sym *.rst *.lst *.o *.tmp *.ihx
 
 all:	$(OBJS)
 
-$(COBJS): %.rel: %.c
+$(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCOBJS): %.rel: %.c
+$(DISCOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../../dev/%.c
+$(DOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../../dev/%.c
+$(DISCARD_DOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../../dev/net/%.c
+$(NOBJS): %.o: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %.rel: %.s
+$(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DAOBJS): %.rel: ../../dev/%.s
+$(DAOBJS): %.o: ../../dev/%.S
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ *.tmp
 
-loader.ihx: loader.s
-	sdasz80 -o loader.s
-	sdldz80 -i loader.rel
+loader.ihx: loader.S
+	asz80 loader.S
+	ldz80  -b loader.o -o loader.bin
+	# FIXME: need to convert to IHX
+	#objcopy --input-target=binary --output-target=ihx loader.bin loader.ihx
 
 image: loader.ihx
+	ldz80 -b -C 0x0100 -S 0xF400 -f CLDBbXSs -o fuzix.bin \
+	crt0.o commonmem.o z80membership.o tricks.o main.o discard.o devices.o \
+	devtty.o sdcard.o \
+	../../start.o ../../version.o ../../usermem.o ../../timer.o \
+	../../kdata.o ../../devio.o ../../filesys.o ../../blk512.o \
+	../../process.o ../../inode.o ../../syscall_exec.o \
+	../../syscall_exec16.o ../../syscall_fs.o ../../syscall_fs2.o \
+	../../syscall_fs3.o ../../syscall_proc.o ../../syscall_other.o \
+	../../syscall_net.o ../../tty.o ../../mm.o ../../mm/memalloc_none.o \
+	../../swap.o ../../mm/bankfixed.o ../../devsys.o \
+	../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
+	../../dev/tinysd.o ../../dev/tinysd_discard.o \
+	../../cpu-z80u/lowlevel-z80u.o \
+	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
+	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
+
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 

@@ -26,10 +26,9 @@
 #define PROC_SIZE   32 	    /* Memory needed per process including stash */
 
 /* What is the maximum number of /dev/hd devices we have */
-#define MAX_BLKDEV	2
-#define CONFIG_SD
-#define SD_DRIVE_COUNT	1
-#define SD_SPI_CALLTYPE __z88dk_fastcall
+#define CONFIG_TD_NUM	2
+#define CONFIG_TD_SD
+#define TD_SD_NUM	1
 
 #define BOOTDEVICENAMES "hd#"
 

@@ -13,17 +13,17 @@
 #include <tty.h>
 #include <devtty.h>
 
-__sfr __at 0xC8		uart_tx;
-__sfr __at 0xC8		uart_rx;
-__sfr __at 0xC8		uart_ls;
-__sfr __at 0xC9		uart_ier;
-__sfr __at 0xC9		uart_ms;
-__sfr __at 0xCA		uart_fcr;
-__sfr __at 0xCB		uart_lcr;
-__sfr __at 0xCC		uart_mcr;
-__sfr __at 0xCD		uart_lsr;
-__sfr __at 0xCE		uart_msr;
-__sfr __at 0xCF		uart_scr;
+#define	uart_tx		0xC8
+#define uart_rx		0xC8
+#define uart_ls		0xC8
+#define uart_ier	0xC9
+#define uart_ms		0xC9
+#define uart_fcr	0xCA
+#define uart_lcr	0xCB
+#define uart_mcr	0xCC
+#define uart_lsr	0xCD
+#define uart_msr	0xCE
+#define uart_scr	0xCF
 
 /*
  *	One buffer for each tty
@@ -84,10 +84,10 @@ void kputchar(uint_fast8_t c)
  *
  *	A video display that never blocks will just return TTY_READY_NOW
  */
-uint_fast8_t tty_writeready(uint_fast8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
 	used(minor);
-	return uart_lsr & 0x20 ? TTY_READY_NOW : TTY_READY_SOON;
+	return in(uart_lsr) & 0x20 ? TTY_READY_NOW : TTY_READY_SOON;
 }
 
 /*
@@ -102,7 +102,7 @@ uint_fast8_t tty_writeready(uint_fast8_t minor)
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	used(minor);
-	uart_tx = c;
+	out(uart_tx, c);
 }
 
 /*
@@ -158,15 +158,15 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	if (!(t->c_cflag & PARODD))
 		d |= 0x10;
 		
-	uart_lcr = d;
+	out(uart_lcr, d);
 
 	w = clocks[t->c_cflag & CBAUD];
 
-	uart_ls = w;
-	uart_ms = w >> 8;
-	uart_lcr = d & 0x7F;
+	out(uart_ls, w);
+	out(uart_ms, w >> 8);
+	out(uart_lcr,  d & 0x7F);
 
-	uart_ier = 0x0D;
+	out(uart_ier, 0x0D);
 }
 
 /*
@@ -204,6 +204,6 @@ void tty_data_consumed(uint_fast8_t minor)
  */
 void tty_poll(void)
 {	
-	while(uart_lsr & 1)
-		tty_inproc(1, uart_rx);
+	while(in(uart_lsr) & 1)
+		tty_inproc(1, in(uart_rx));
 }

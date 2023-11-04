@@ -20,8 +20,8 @@ Memory Layout
 Kernel
 0000-00FF	Interrupt vectors
 0100-7FFF	Kernel code only
-8000-F4FF	Kernel code and data
-F500-FFFF	Kernel common
+8000-F3FF	Kernel code and data
+F400-FFFF	Kernel common
 
 User
 0000-00FF	Interrupt vectors
