@@ -6,11 +6,8 @@
 ; FUZIX mnemonics for memory addresses etc
 
 U_DATA__TOTALSIZE .equ 0x200 ; 256+256 bytes @ 0x0100
-Z80_TYPE .equ 1 ; Could be NMOS
 
-Z80_MMU_HOOKS .equ 0
 
-CONFIG_SWAP .equ 1
 
 PROGBASE .equ 0x6000
 PROGLOAD .equ 0x6000
@@ -22,11 +19,15 @@ PROGLOAD .equ 0x6000
 
  .abs
  .org 0x5FF0
+
+__vectors:
  ; Starts at 0x5FF0
 
  ; Spot for interrupt vectors
  .word pio0_intr ; pio A
  .word interrupt_handler ; ctc channel 1
+
+ .export init
 
  .code
 
@@ -39,7 +40,7 @@ init:
  out (4),a
 
  im 2
- ld a, >s__VECTORS
+ ld a, >__vectors
  ld i,a
 
  ; Clear the screen

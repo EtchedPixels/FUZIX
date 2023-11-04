@@ -32,11 +32,8 @@
 ; FUZIX mnemonics for memory addresses etc
 
 U_DATA__TOTALSIZE .equ 0x200 ; 256+256 bytes @ 0x0100
-Z80_TYPE .equ 1 ; Could be NMOS
 
-Z80_MMU_HOOKS .equ 0
 
-CONFIG_SWAP .equ 1
 
 PROGBASE .equ 0x6000
 PROGLOAD .equ 0x6000
@@ -261,9 +258,6 @@ outpt: .word 0xEC00
         .export __uget
         .export __ugetc
         .export __ugetw
-
- .export outcharhex
- .export outhl
 
         .export __uput
         .export __uputc
@@ -644,3 +638,40 @@ hilo:
  out (0x02),a
  pop af
  reti
+
+ .common
+;
+; IDE disk helpers
+;
+ .export _devide_read_data
+ .export _devide_write_data
+
+ide_map:
+ ld a,(_td_raw)
+ ld bc,0x10 ; port 10, 256 times
+ or a
+ jp z, map_buffers
+ dec a
+ jp z, map_proc_always
+ ld a,(_td_page)
+ jp map_for_swap
+
+_devide_read_data:
+ pop de
+ pop hl
+ push hl
+ push de
+ call ide_map
+ inir
+ inir
+ jp map_kernel_restore
+
+_devide_write_data:
+ pop de
+ pop hl
+ push hl
+ push de
+ call ide_map
+ otir
+ otir
+ jp map_kernel_restore

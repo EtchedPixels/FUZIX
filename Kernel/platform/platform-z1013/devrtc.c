@@ -3,16 +3,16 @@
 #include <printf.h>
 #include <rtc.h>
 
-#ifdef CONFIG_rtc
+#ifdef CONFIG_RTC
 
 /* Use the specific RTC card if configured that way, otherwise use the GIDE
    option */
 #ifdef CONFIG_RTC_70
 #define rtc(x)		in(0x70 + (x))
-#define Wrtc(x,y)	out(0x70 + (x),(y))
+#define wrtc(x,y)	out(0x70 + (x),(y))
 #else
 #define rtc(x)		in(0x45 + ((x) << 8))
-#define Wrtc(x)		out(0x45 + ((x) << 8), (y))
+#define wrtc(x,y)	out(0x45 + ((x) << 8), (y))
 #endif
 
 /* Full RTC support (for read - no write yet) */
@@ -58,12 +58,12 @@ int plt_rtc_write(void)
 	return -1;
 }
 
-uint8_t plt_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
         irqflags_t irq;
         uint8_t s;
         irq = di();
-        wrtc(0xD, rtc(0xD) | 0x010;	/* Set hold and then */
+        wrtc(0xD, rtc(0xD) | 0x01);	/* Set hold and then */
         while(rtc(0xD) & 0x02);	/* spin until not busy */
         s = rtc(0) + 10 * rtc(1);
         wrtc(0xD, rtc(0xD) & ~1);

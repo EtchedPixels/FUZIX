@@ -241,9 +241,6 @@ outpt:	.word 0xEC00
         .export __ugetc
         .export __ugetw
 
-	.export outcharhex
-	.export outhl
-
         .export __uput
         .export __uputc
         .export __uputw
@@ -623,3 +620,40 @@ hilo:
 	out	(0x02),a
 	pop	af
 	reti
+
+	.common
+;
+;	IDE disk helpers
+;
+	.export _devide_read_data
+	.export _devide_write_data
+
+ide_map:
+	ld	a,(_td_raw)
+	ld	bc,0x10		; port 10, 256 times
+	or	a
+	jp	z, map_buffers
+	dec	a
+	jp	z, map_proc_always
+	ld	a,(_td_page)
+	jp	map_for_swap
+
+_devide_read_data:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	call	ide_map
+	inir
+	inir
+	jp	map_kernel_restore
+
+_devide_write_data:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	call	ide_map
+	otir
+	otir
+	jp	map_kernel_restore

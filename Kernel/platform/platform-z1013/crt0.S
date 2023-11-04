@@ -2,11 +2,15 @@
 
 	.abs
 	.org 0x5FF0
+
+__vectors:
 	; Starts at 0x5FF0
 
 	; Spot for interrupt vectors
 	.word pio0_intr			; pio A
 	.word interrupt_handler		; ctc channel 1
+
+	.export init
 
 	.code
 
@@ -19,7 +23,7 @@ init:
 	out (4),a
 
 	im 2
-	ld a, >s__VECTORS
+	ld a, >__vectors
 	ld i,a
 
 	; Clear the screen
