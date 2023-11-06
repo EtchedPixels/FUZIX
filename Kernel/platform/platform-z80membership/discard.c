@@ -58,5 +58,6 @@ void pagemap_init(void)
 
 void device_init(void)
 {
+	kputs("sd0: ");
 	sd_probe();
 }
