@@ -51,9 +51,14 @@ $(DAOBJS): %.o: ../../dev/%.S
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ *.tmp
 
-loader.ihx: loader.S
+bin2ihx:
+	cc -Wall -pedantic ../../tools/bin2ihx.c -o ../../tools/bin2ihx
+
+loader.ihx: loader.S bin2ihx
 	asz80 loader.S
 	ldz80  -b loader.o -o loader.bin
+	../../tools/bin2ihx loader.bin 0xF800 0x0100 >loader.ihx
+
 	# FIXME: need to convert to IHX
 	#objcopy --input-target=binary --output-target=ihx loader.bin loader.ihx
 
@@ -82,7 +87,7 @@ diskimage:
 	# Make a blank disk image with partition for FAT and FUZIX
 	dd if=parttab of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Land the Fuzix file system
-	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=12288 conv=notrunc
+	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=12288 conv=notrunc
 	# Build the MSDOS partition
 	dd if=/dev/zero of=dos.part bs=512 count=10240
 	mkdosfs dos.part
@@ -93,7 +98,7 @@ diskimage:
 	# Attach the MSDOS partition to the disk
 	dd if=dos.part of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=3 conv=notrunc
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=256 skip=1 seek=6 conv=notrunc
 	# Clean up
 	rm dos.part
 	rmdir tmpdir

@@ -543,7 +543,6 @@ __uputc:
  ld l,a
  call map_proc_always
  ld (hl), e
-uputc_out:
  jp map_kernel ; map the kernel back below common
 
 __uputw:
@@ -626,7 +625,7 @@ __uzero:
  ld b,(hl)
  ld a, b ; check for 0 copy
  or c
- ret z
+ jr z, popout
  call map_proc_always
  ld l,e
  ld h,d
@@ -634,8 +633,10 @@ __uzero:
  dec bc
  ld a, b
  or c
- jp z, uputc_out
+ jr z, popout
  inc de
  ldir
- jp uputc_out
+popout:
+ pop bc
+ jp map_kernel
 # 134 "tricks.S" 2

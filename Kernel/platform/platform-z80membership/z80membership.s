@@ -429,6 +429,7 @@ _sd_spi_rx_byte:
  ld a,l
  cpl
  ld l,a
+ ld h,0
  pop bc
  ret
 sd_spi_rx_sec:
