@@ -141,7 +141,7 @@ uint8_t sd_init(uint_fast8_t unit)
 
 void sd_probe(void)
 {
-    uint_fast8_t n = 0;
+    uint_fast8_t n;
     int r;
     uint_fast8_t t;
 
