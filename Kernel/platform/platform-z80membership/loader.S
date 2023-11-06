@@ -69,7 +69,7 @@ sd_load_1:
 	ret
 signon:
 	.byte 13,10,13,10
-	.ascii 'Z80 MEMBERSHIIP CARD FUZIX LOADER 0.1'
+	.ascii 'Z80 MEMBERSHIP CARD FUZIX LOADER 0.1'
 	.byte 13,10,0
 gogogo:
 	.byte 13,10
