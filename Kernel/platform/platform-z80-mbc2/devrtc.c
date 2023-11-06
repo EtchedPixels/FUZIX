@@ -18,14 +18,14 @@ int plt_rtc_read(void)
 
         irq = di();
 
-        opcode = OP_GET_RTC;
+        out(opcode, OP_GET_RTC);
         p[7] = 0;
-        p[6] = opread;		/* Seconds 0-59 */
-        p[5] = opread;		/* Minutes 0-59 */
-        p[4] = opread;		/* Hours 0-23 */
-        p[3] = opread;		/* Day of month 1-31 */
-        p[2] = opread;		/* Month 1-12 */
-        y = opread + 2000;	/* Year 2000-.. */
+        p[6] = in(opread);		/* Seconds 0-59 */
+        p[5] = in(opread);		/* Minutes 0-59 */
+        p[4] = in(opread);		/* Hours 0-23 */
+        p[3] = in(opread);		/* Day of month 1-31 */
+        p[2] = in(opread);		/* Month 1-12 */
+        y = in(opread) + 2000;		/* Year 2000-.. */
 
         irqrestore(irq);
 

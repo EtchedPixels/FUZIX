@@ -4,8 +4,8 @@ CSRCS = devtty.c devices.c main.c devdisk.c devrtc.c
 
 DISCSRCS = discard.c
 
-ASRCS = z80-mbc2.s crt0.s
-ASRCS += tricks.s commonmem.s
+ASRCS = z80-mbc2.S crt0.S
+ASRCS += tricks.S commonmem.S
 
 DISCARD_DSRCS = 
 DSRCS = ../../dev/blkdev.c ../../dev/mbr.c
@@ -13,39 +13,39 @@ NSRCS =
 
 DASRCS =
 
-COBJS = $(CSRCS:.c=.rel)
-AOBJS = $(ASRCS:.s=.rel)
-NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
-DISCOBJS = $(DISCSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+COBJS = $(CSRCS:.c=.o)
+AOBJS = $(ASRCS:.S=.o)
+NOBJS = $(patsubst ../../dev/net/%.c,%.o, $(NSRCS))
+DISCOBJS = $(DISCSRCS:.c=.o)
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.o, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.S,%.o, $(DASRCS))
 
 OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
 
-JUNK =  *.lst *.asm *.sym *.rst *.lst *.rel
+JUNK =  *.o
 
 all:	$(OBJS)
 
-$(COBJS): %.rel: %.c
+$(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCOBJS): %.rel: %.c
+$(DISCOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../../dev/%.c
+$(DOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../../dev/%.c
+$(DISCARD_DOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../../dev/net/%.c
+$(NOBJS): %.o: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %.rel: %.s
+$(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DAOBJS): %.rel: ../../dev/%.s
+$(DAOBJS): %.o: ../../dev/%.S
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 clean:

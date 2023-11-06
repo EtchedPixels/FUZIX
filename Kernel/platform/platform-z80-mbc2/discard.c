@@ -17,7 +17,7 @@
  *	we claim it, if not it gets passed to init. It's perfectly acceptable
  *	to act on a match and return to also pass it to init if you need to.
  */
-uint8_t plt_param(unsigned char *p)
+uint_fast8_t plt_param(unsigned char *p)
 {
 	return 0;
 }
@@ -49,8 +49,8 @@ void pagemap_init(void)
 {
 	pagemap_add(1);
 	pagemap_add(2);
-	opcode = OP_GET_SYSFLAGS;
-	if (opread & 0x02)
+	out(opcode, OP_GET_SYSFLAGS);
+	if (in(opread) & 0x02)
 		has_rtc = 1;
 }
 

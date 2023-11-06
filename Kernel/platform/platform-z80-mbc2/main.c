@@ -11,17 +11,6 @@ uint16_t swap_dev = 0xFFFF;
 uint8_t has_rtc;
 
 /*
- *	This routine is called continually when the machine has nothing else
- *	it needs to execute. On a machine with entirely interrupt driven
- *	hardware this could just halt for interrupt.
- */
-void plt_idle(void)
-{
-	/* Everything we need is interrupt driven */
-	__asm halt __endasm;
-}
-
-/*
  *	This routine is called from the interrupt handler code to process
  *	interrupts. All of the nasty stuff (register saving, bank switching,
  *	reti instructions) is dealt with for you.
@@ -32,8 +21,8 @@ void plt_idle(void)
 void plt_interrupt(void)
 {
 	uint8_t r;
-	opcode = OP_GET_IRQ;
-	r = opread;
+	out(opcode, OP_GET_IRQ);
+	r = in(opread);
 	if (r & IRQ_CONSOLE)
 		tty_poll();
 	if (r & IRQ_TIMER)
@@ -52,7 +41,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  */
 void plt_discard(void)
 {
-	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
+	uint16_t discard_size = (uint16_t)&udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
 
 	discard_size /= sizeof(struct blkbuf);
@@ -72,12 +61,12 @@ void plt_discard(void)
 /*
  *	Always called with interrupts off.
  */
-uint8_t plt_rtc_secs(void)
+uint_fast8_t plt_rtc_secs(void)
 {
 	if (has_rtc) {
-		opcode = OP_GET_RTC;
+		out(opcode, OP_GET_RTC);
 		/* Don't bother with the rest of the bytes */
-		return opread;
+		return in(opread);
 	}
 	return 255;
 }

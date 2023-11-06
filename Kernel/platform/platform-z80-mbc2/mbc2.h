@@ -1,8 +1,8 @@
 
 
 extern void vd_init(void);
-extern void vd_read(void);
-extern void vd_write(void);
+extern void vd_read(uint8_t *dptr);
+extern void vd_write(uint8_t *dptr);
 
 #define VD_DRIVE_NR_MASK	0x0F
 #define VD_DRIVE_COUNT		16
@@ -36,10 +36,10 @@ extern void vd_write(void);
 #define IRQ_CONSOLE		1
 #define IRQ_TIMER		2
 
-__sfr __at 0 opread;
-__sfr __at 0 opwrite;
-__sfr __at 1 opcode;
-__sfr __at 1 ttyport;
+#define opread			0
+#define opwrite			0
+#define opcode			1
+#define ttyport			1
 
 #define OP_PORT			1
 #define OP_RD_PORT		0

@@ -1,7 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <blkdev.h>
+#include <tinydisk.h>
 #include <mbc2.h>
 
 static uint8_t last_drive = 0xFF;
@@ -10,10 +10,9 @@ static uint8_t last_drive = 0xFF;
  *	Simple virtual drives (no raw SD access alas)
  */
 
-uint_fast8_t vd_transfer_sector(void)
+int vd_xfer(uint_fast8_t drive, bool is_read, uint32_t lba, uint8_t *dptr)
 {
     irqflags_t irq;
-    uint_fast8_t drive = blk_op.blkdev->driver_data & VD_DRIVE_NR_MASK;
     uint16_t track;
     uint8_t sector;
     uint8_t c;
@@ -21,11 +20,11 @@ uint_fast8_t vd_transfer_sector(void)
     irq = di();
 
     if (drive != last_drive) {
-        opcode = OP_SET_DISK;
-        opwrite = drive;
+        out(opcode, OP_SET_DISK);
+        out(opwrite, drive);
         last_drive = drive;
-        opcode = OP_GET_ERROR;
-        c = opread;
+        out(opcode, OP_GET_ERROR);
+        c = in(opread);
         if (c) {
             kprintf("hd: drive %d select failed %d.\n", drive, c);
             last_drive = 255;
@@ -34,22 +33,22 @@ uint_fast8_t vd_transfer_sector(void)
         }
     }
 
-    track = blk_op.lba >> 5;
-    sector = blk_op.lba & 0x1F;
+    track = lba >> 5;
+    sector = (uint16_t)lba & 0x1F;
 
-    opcode = OP_SET_TRACK;
-    opwrite = track;
-    opwrite = track >> 8;
-    opcode = OP_SET_SECTOR;
-    opwrite = sector;
+    out(opcode , OP_SET_TRACK);
+    out(opwrite, track);
+    out(opwrite, track >> 8);
+    out(opcode, OP_SET_SECTOR);
+    out(opwrite, sector);
 
-    if (blk_op.is_read)
-        vd_read();
+    if (is_read)
+        vd_read(dptr);
     else
-        vd_write();
+        vd_write(dptr);
 
-    opcode = OP_GET_ERROR;
-    c = opread;
+    out(opcode, OP_GET_ERROR);
+    c = in(opread);
     irqrestore(irq);
 
     if (c) {
@@ -66,24 +65,12 @@ int vd_flush(void)
 
 void vd_init_drive(uint_fast8_t drive)
 {
-    blkdev_t *blk;
-    irqflags_t irq;
-
-    irq = di();
-    opcode = OP_SET_DISK;
-    opwrite = drive;
-    opcode = OP_GET_ERROR;
-    if (opread == 0) {
-        blk = blkdev_alloc();
-        if (blk) {
-            blk->transfer = vd_transfer_sector;
-            blk->flush = vd_flush;
-            blk->driver_data = drive & VD_DRIVE_NR_MASK;
-            /* Fixed size */
-            blk->drive_lba_count = 8UL << 20;
-            blkdev_scan(blk, SWAPSCAN);
-        }
-    }
+    irqflags_t irq = di();
+    out(opcode, OP_SET_DISK);
+    out(opwrite,  drive);
+    out(opcode, OP_GET_ERROR);
+    if (in(opread) == 0)
+        td_register(drive, vd_xfer, NULL, 1);
     last_drive = 255;
     irqrestore(irq);
 }
@@ -95,72 +82,3 @@ void vd_init(void)
         vd_init_drive(d);
 }        
 
-COMMON_MEMORY
-
-void vd_read(void) __naked
-{
-    __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-            ld bc, #OP_RD_PORT                      ; setup port number
-                                                    ; and count
-            push af
-#ifdef SWAPDEV
-	    cp #2
-            jr nz, not_swapin
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
-            call map_for_swap
-            jr doread
-not_swapin:
-#endif
-            or a                                    ; test is_user
-            jr z, rd_kernel
-            call map_proc_always  	            ; map user memory first if required
-            jr doread
-rd_kernel:
-            call map_buffers
-doread:
-            ld a,#OP_READ_SECTOR
-            out (OP_PORT),a
-            inir                                    ; transfer first 256 bytes
-            inir                                    ; transfer second 256 bytes
-            pop af
-            or a
-            ret z
-            jp map_kernel                           ; else map kernel then return
-    __endasm;
-}
-
-void vd_write(void) __naked
-{
-    __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
-            ld bc, #OP_WR_PORT                      ; setup port number
-                                                    ; and count
-            push af
-#ifdef SWAPDEV
-	    cp #2
-            jr nz, not_swapout
-            ld a, (_blk_op+BLKPARAM_SWAP_PAGE)	    ; blkparam.swap_page
-            call map_for_swap
-            jr dowrite
-not_swapout:
-#endif
-            or a                                    ; test is_user
-            jr z, wr_kernel
-            call map_proc_always                    ; else map user memory first if required
-            jr dowrite
-wr_kernel:
-            call map_buffers
-dowrite:
-            ld a,#OP_WRITE_SECTOR
-            out (OP_PORT),a
-            otir                                    ; transfer first 256 bytes
-            otir                                    ; transfer second 256 bytes
-            pop af
-            or a
-            ret z
-            jp map_kernel                           ; else map kernel then return
-    __endasm;
-}
