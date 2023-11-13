@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# use rc file customized for CI testing
+cp Kernel/platform/platform-dragon-nx32/userspace/rc.ci_testing \
+   Kernel/platform/platform-dragon-nx32/userspace/rc
