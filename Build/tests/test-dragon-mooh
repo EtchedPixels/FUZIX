@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# Prereqs:
+#  Build with CI_TESTING=1
+
+BASROM=/usr/share/xroar/libredragon.rom
+CARTROM=/usr/share/xroar/sdboot.rom
+IMAGE=Images/dragon-mooh/disk.img
+UI=null
+
+LOGFILE=test-dragon-mooh.log
+
+if [ ! -e $IMAGE ]; then
+    echo No image file $IMAGE
+    exit 1
+fi
+
+if [ ! -e $BASROM -o ! -e $CARTROM ]; then
+    echo Requires ROM images $BASROM and $CARTROM
+    exit 1
+fi
+
+# set boot device to "hda1"
+printf '\265\136hda1\0' | dd bs=1 seek=380 conv=notrunc of=$IMAGE
+
+# run with crt9128 cartridge and dump stderr to file for later evaluation
+# runs up to 60 seconds or when motor relay is turned off
+echo "Starting XRoar $(date)"
+xroar \
+    -no-ratelimit \
+    -ui $UI \
+    -timeout 60 \
+    -timeout-motoroff 10 \
+    -default-machine dragon32 -romlist d32=$BASROM \
+    -cart mooh -cart-rom $CARTROM -load-hd0 $IMAGE \
+    2>&1 | tee $LOGFILE
+echo "XRoar done $(date)"
+
+# Look for marker written by platform testing rc
+grep -q "Testing done!" $LOGFILE
