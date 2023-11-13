@@ -60,9 +60,11 @@
 #define PROGLOAD    0x2200  /* also data base */
 #define PROGTOP     0xFE00  /* Top of program */
 
+#if !defined(BOOT_TTY)
 #define BOOT_TTY (512 + 1)   /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
                             /* Temp FIXME set to serial port for debug ease */
+#endif
 
 #define CONFIG_INPUT			/* Input device for joystick */
 #define CONFIG_INPUT_GRABMAX	3
