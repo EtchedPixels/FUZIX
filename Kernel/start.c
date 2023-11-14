@@ -384,7 +384,7 @@ void fuzix_main(void)
 	create_init();
 
 	/* Parameters message */
-	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
+	kprintf("%dKiB total RAM, %dKiB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 
 	/* runtime configurable, defaults to build time setting */
 	ticks_per_dsecond = TICKSPERSEC / 10;
