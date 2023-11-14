@@ -127,10 +127,10 @@ stand:
 	+(cd Standalone; $(MAKE))
 
 ltools:
-	+(cd Library; $(MAKE); $(MAKE) install)
+	+(cd Library; $(MAKE) && $(MAKE) install)
 
 libs: ltools
-	+(cd Library/libs; $(MAKE) -f Makefile.$(USERCPU); \
+	+(cd Library/libs; $(MAKE) -f Makefile.$(USERCPU) && \
 		$(MAKE) -f Makefile.$(USERCPU) install)
 
 apps: libs

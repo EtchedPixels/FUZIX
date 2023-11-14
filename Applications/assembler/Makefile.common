@@ -18,7 +18,7 @@ $(APP): %: %.o
 	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 	
 .c.o:
-	$(CC) $(CFLAGS) $(TARGET) $(CCOPTS) -c $<
+	$(CC) $(CFLAGS) $(TARGET_DEF) $(CCOPTS) -c $<
 
 clean:
 	rm -f *.o $(APPS) $(APPSNS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
