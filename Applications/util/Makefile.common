@@ -151,3 +151,7 @@ clean:
 
 rmbak:
 	rm -f *~ core
+
+ifneq ($(CI_TESTING),)
+init.o: CFLAGS += -DAUTOLOGIN
+endif

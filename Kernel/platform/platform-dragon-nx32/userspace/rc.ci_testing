@@ -1,0 +1,14 @@
+exec > /dev/tty2
+umask 022
+fsck -a /
+#dwdate -s -q || setdate
+remount -n / rw
+prtroot >/etc/mtab
+#Uncomment if you have multiple file systems
+#fsck -a
+#mount -a
+>/var/run/utmp
+echo "Starting various tests from rc"
+echo '[dc is working] P' | dc ; echo
+echo "Testing done!"
+echo "HEX 3c ff21 C! 34 ff21 C!" | fforth
