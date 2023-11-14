@@ -2,60 +2,57 @@
 ;	We have a custom implementation of usermem. We really need
 ;	to optimize ldir_to/from_user.
 ;
-        .module usermem
-
-	.include "kernel.def"
-        .include "../../cpu-z80/kernel-z80.def"
+#include "kernelu.def"
+#include "../../cpu-z80u/kernel-z80.def"
 
         ; exported symbols
-        .globl __uget
-        .globl __ugetc
-        .globl __ugetw
+        .export __uget
+        .export __ugetc
+        .export __ugetw
 
-        .globl __uput
-        .globl __uputc
-        .globl __uputw
-        .globl __uzero
+        .export __uput
+        .export __uputc
+        .export __uputw
+        .export __uzero
 
-	.globl ldir_from_user
-	.globl ldir_to_user
-
-        .area _COMMONMEM
-
+	.common
 
 uputget:
         ; load DE with the byte count
-        ld c, 8(ix) ; byte count
-        ld b, 9(ix)
+        ld c, (ix + 8) ; byte count
+        ld b, (ix + 9)
 	ld a, b
 	or c
 	ret z		; no work
         ; load HL with the source address
-        ld l, 4(ix) ; src address
-        ld h, 5(ix)
+        ld l, (ix + 4) ; src address
+        ld h, (ix + 5)
         ; load DE with destination address
-        ld e, 6(ix)
-        ld d, 7(ix)
+        ld e, (ix + 6)
+        ld d, (ix + 7)
 	ret
 
 __uget:
 	push ix
-	ld ix,#0
+	ld ix,0
 	add ix, sp
+	push bc
 	call uputget
 	jr z, uget_out
 	push de
 	pop ix
 	call ldir_from_user
 uget_out:
+	pop bc
 	pop ix
-	ld hl,#0
+	ld hl,0
 	ret
 
 __uput:
 	push ix
-	ld ix,#0
+	ld ix,0
 	add ix,sp
+	push bc
 	call uputget
 	jr z, uget_out
 	push de
@@ -68,46 +65,60 @@ __uput:
 ;	logic
 ;
 __uzero:
-	pop de
-	pop hl
-	pop bc
+	ld hl,5
+	add hl,sp
 	push bc
-	push hl
-	push de
+	ld b,(hl)
+	dec hl
+	ld c,(hl)
+	dec hl
+	ld a,(hl)
+	dec hl
+	ld l,(hl)
+	ld h,a
 	ld a,b
 	or c
-	ret z
-	ld a,#0x81
+	jr z,uzout
+	ld a,0x81
 	out (0x38),a		; user bank
 	rlca
 	out (0x30),a
-	ld (hl),#0
+	ld (hl),0
 	dec bc
 	ld a,b
 	or c
-	jr z, uout
+	jr z, uzout
 	ld e,l
 	ld d,h
 	inc de
 	ldir
-uout:
-	ld a,#1
+uzout:
+	ld a,1
 	out (0x38),a
 	rlca
 	out (0x30),a
+	pop bc
 	ret
 
 __ugetc:
-	ld a,#0x81
+	pop de
+	pop hl
+	push hl
+	push de
+	ld a,0x81
 	out (0x38),a
 	rlca
 	out (0x30),a
 	ld l,(hl)
 	ld h,#0
-	jr uout
+	jp map_kernel
 
 __ugetw:
-	ld a,#0x81
+	pop de
+	pop hl
+	push hl
+	push de
+	ld a,0x81
 	out (0x38),a
 	rlca
 	out (0x30),a
@@ -115,34 +126,44 @@ __ugetw:
 	inc hl
 	ld h,(hl)
 	ld l,a
-	jr uout
+	jp map_kernel
 	
 __uputc:
-	pop bc
-	pop de
-	pop hl
-	push hl
-	push de
-	push bc
-	ld a,#0x81
+	ld hl,2
+	add hl,sp
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	ld a,(hl)
+	inc hl
+	ld h,(hl)
+	ld l,a
+	ld a, 0x81
 	out (0x38),a
 	rlca
 	out (0x30),a
 	ld (hl),e
-	jr uout
+	ld hl,0
+	jp map_kernel
 
 __uputw:
-	pop bc
-	pop de
-	pop hl
-	push hl
-	push de
-	push bc
-	ld a,#0x81
+	ld hl,2
+	add hl,sp
+	ld e,(hl)
+	inc hl
+	ld d,(hl)
+	inc hl
+	ld a,(hl)
+	inc hl
+	ld h,(hl)
+	ld l,a
+	ld a, 0x81
 	out (0x38),a
 	rlca
 	out (0x30),a
 	ld (hl),e
 	inc hl
 	ld (hl),d
-	jr uout
+	ld hl,0
+	jp map_kernel

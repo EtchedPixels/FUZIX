@@ -23,12 +23,6 @@ void plt_discard(void)
 	kprintf("Buffers available: %d\n", bufpool_end - bufpool);
 }
 
-void plt_idle(void)
-{
-	/* TODO: irq logic */
-	__asm halt __endasm;
-}
-
 uint8_t plt_param(unsigned char *p)
 {
 	used(p);

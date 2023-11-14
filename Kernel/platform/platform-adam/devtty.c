@@ -180,7 +180,7 @@ void vdp_reload(void)
 
 static struct videomap tms_map = {
 	0,
-	0x98,		/* FIXME: update at boot ? */
+	0xA0,
 	0, 0,
 	0, 0,
 	1,

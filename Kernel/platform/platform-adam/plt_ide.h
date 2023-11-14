@@ -1,16 +1,16 @@
-__sfr __at 0x58 data;
-__sfr __at 0x01 error;
-__sfr __at 0x02 count;
-__sfr __at 0x03 sec;
-__sfr __at 0x04 cyll;
-__sfr __at 0x05 cylh;
-__sfr __at 0x06 devh;
-__sfr __at 0x07 cmd;
-__sfr __at 0x07 status;
+#define data	0x58
+#define error	0x01
+#define count	0x02
+#define sec	0x03
+#define cyll	0x04
+#define cylh	0x05
+#define devh	0x06
+#define cmd	0x07
+#define status	0x07
 
 #define IDE_REG_DATA	0x0058
 
 /* Altstatus and etc are 5A/5B */
 
-/* Special banking and has a word wide interface across two ports */
-#define IDE_NONSTANDARD_XFER
+#define ide_read(x)	in(x)
+#define ide_write(x,y)	out(x,y)

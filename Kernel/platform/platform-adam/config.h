@@ -63,9 +63,9 @@ extern uint16_t swap_dev;
 
 #define CONFIG_TD_NUM		2
 #define CONFIG_TD_IDE
-#define CONFIG_TINYIDE_SDCCPIO
-#define CONFIG_TINYIDE_8BIT
-#define IDE_IS_8BIT(x)	1
+#define CONFIG_TINYIDE_INDIRECT
+#undef CONFIG_TINYIDE_8BIT	/* Check */
+#define IDE_IS_8BIT(x)	0
 
 /* Device parameters */
 #define NUM_DEV_TTY 1
