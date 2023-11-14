@@ -8,7 +8,6 @@
 	; exported symbols
 	.export init_early
 	.export init_hardware
-	.export interrupt_handler
 	.export _program_vectors
 	.export map_buffers
 	.export map_kernel
@@ -23,6 +22,7 @@
 	.export plt_interrupt_all
 	.export _kernel_flag
 	.export _int_disabled
+	.export _plt_idle
 
 	; exported debugging tools
 	.export _plt_monitor

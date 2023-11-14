@@ -12,7 +12,6 @@
  ; exported symbols
  .export init_early
  .export init_hardware
- .export interrupt_handler
  .export _program_vectors
  .export map_buffers
  .export map_kernel
@@ -27,6 +26,7 @@
  .export plt_interrupt_all
  .export _kernel_flag
  .export _int_disabled
+ .export _plt_idle
 
  ; exported debugging tools
  .export _plt_monitor
@@ -77,6 +77,10 @@ CONFIG_SWAP .equ 1
 ; The number of disk buffers. Must match config.h
 ;
 NBUFS .equ 5
+
+OP_RD_PORT .equ 0
+OP_READ_SECTOR .equ 0x86
+OP_WRITE_SECTOR .equ 0x0C
 # 33 "z80-mbc2.S" 2
 # 1 "../../cpu-z80u/kernel-z80.def" 1
 # 34 "z80-mbc2.S" 2
