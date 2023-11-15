@@ -160,5 +160,7 @@ void tty_data_consumed(uint_fast8_t minor)
  */
 void tty_poll(void)
 {
-	tty_inproc(1, in(ttyport));
+	uint_fast8_t c = in(ttyport);
+	if (c)
+		tty_inproc(1, c);
 }

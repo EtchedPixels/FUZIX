@@ -108,4 +108,6 @@ extern uint16_t swap_dev;
    console should match a firmware set rate */
 #define TTY_INIT_BAUD B115200
 
+#define CONFIG_TD_NUM	8
+
 #define plt_copyright()

@@ -323,6 +323,7 @@ _vd_read:
 	out (OP_PORT),a
 	inir                                    ; transfer first 256 bytes
 	inir                                    ; transfer second 256 bytes
+	pop bc
 	jp map_kernel                           ; map kernel then return
 
 _vd_write:
@@ -337,4 +338,5 @@ _vd_write:
 	out (OP_PORT),a
 	otir                                    ; transfer first 256 bytes
 	otir                                    ; transfer second 256 bytes
+	pop bc
 	jp map_kernel                           ; map kernel then return

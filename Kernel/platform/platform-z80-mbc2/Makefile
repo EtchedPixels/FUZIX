@@ -8,7 +8,7 @@ ASRCS = z80-mbc2.S crt0.S
 ASRCS += tricks.S commonmem.S
 
 DISCARD_DSRCS = 
-DSRCS = ../../dev/blkdev.c ../../dev/mbr.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinydisk_discard.c
 NSRCS =
 
 DASRCS =

@@ -51,6 +51,11 @@ CONFIG_SWAP .equ 1
 ; The number of disk buffers. Must match config.h
 ;
 NBUFS .equ 5
+
+OP_RD_PORT .equ 0
+OP_PORT .equ 1
+OP_READ_SECTOR .equ 0x86
+OP_WRITE_SECTOR .equ 0x0C
 # 7 "tricks.S" 2
 # 1 "../../cpu-z80u/kernel-z80.def" 1
 # 8 "tricks.S" 2

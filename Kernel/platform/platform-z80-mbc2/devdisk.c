@@ -81,4 +81,3 @@ void vd_init(void)
     for (d = 0; d < VD_DRIVE_COUNT; d++)
         vd_init_drive(d);
 }        
-
