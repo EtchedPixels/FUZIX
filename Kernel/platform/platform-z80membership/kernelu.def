@@ -35,7 +35,7 @@ Z80_MMU_HOOKS		    .equ 0
 ;	Set this if the platform has swap enabled in config.h
 ;	SD card is a bit slow for swap
 ;
-CONFIG_SWAP		    .equ 0
+#undef CONFIG_SWAP
 ;
 ;	The number of disk buffers. Must match config.h
 ;
