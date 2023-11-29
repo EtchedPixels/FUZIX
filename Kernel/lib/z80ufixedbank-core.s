@@ -22,7 +22,7 @@
 ; This function can have no arguments or auto variables.
 ;
 _plt_switchout:
-        ld hl, #0 ; return code set here is ignored, but _switchin can 
+        ld hl, 0 ; return code set here is ignored, but _switchin can
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
         push hl ; return code
@@ -47,9 +47,9 @@ _plt_switchout:
 
 	; Stash the uarea back into process memory
 	call map_proc_always
-	ld hl, #_udata
-	ld de, #U_DATA_STASH
-	ld bc, #U_DATA__TOTALSIZE
+	ld hl, _udata
+	ld de, U_DATA_STASH
+	ld bc, U_DATA__TOTALSIZE
 	ldir
 	call map_kernel
 
@@ -77,7 +77,7 @@ _switchin:
         push de ; restore stack
         push bc ; restore stack
 
-	ld a,#1
+	ld a,1
 	ld (_int_disabled),a
 
 ;
@@ -85,11 +85,10 @@ _switchin:
 ;
 	call map_kernel
 
-        ld hl, #P_TAB__P_PAGE_OFFSET
+        ld hl, P_TAB__P_PAGE_OFFSET
 	add hl, de	; process ptr
 
 #ifdef CONFIG_SWAP
-
 	;
 	;	Always use the swapstack, otherwise when we call map_kernel
 	;	having copied the udata stash back to udata we will crap
@@ -98,7 +97,7 @@ _switchin:
 	;
 	;	Yes - this was a bitch to debug, please don't break it !
 	;
-	ld sp, #_swapstack
+	ld sp, _swapstack
 
         ld a, (hl)
 
@@ -119,10 +118,12 @@ _switchin:
 	ld (_int_disabled),a
 	push hl
 	push de
+	push de
 	call _swapper
 	pop de
+	pop de		; Save an extra copy as C uses the argument stack slot
 	pop hl
-	ld a,#1
+	ld a,1
 	ld (_int_disabled),a
 	di
 #endif
@@ -144,9 +145,9 @@ not_swapped:
 	; to carry values over this point
 
 	exx			; thank goodness for exx 8)
-	ld hl, #U_DATA_STASH
-	ld de, #_udata
-	ld bc, #U_DATA__TOTALSIZE
+	ld hl, U_DATA_STASH
+	ld de, _udata
+	ld bc, U_DATA__TOTALSIZE
 	ldir
 	exx
 
@@ -165,14 +166,14 @@ skip_copyback:
 	; wants optimising up a bit
 	ld ix, (_udata + U_DATA__U_PTAB)
         ; next_process->p_status = P_RUNNING
-        ld (ix + P_TAB__P_STATUS_OFFSET), #P_RUNNING
+        ld (ix + P_TAB__P_STATUS_OFFSET), P_RUNNING
 
 	; Fix the moved page pointers
 	; Just do one byte as that is all we use on this platform
 	ld a, (ix + P_TAB__P_PAGE_OFFSET)
 	ld (_udata + U_DATA__U_PAGE), a
         ; runticks = 0
-        ld hl, #0
+        ld hl, 0
         ld (_runticks), hl
 
         ; restore machine state -- note we may be returning from either
@@ -208,7 +209,7 @@ skip_copyback:
 
 switchinfail:
 	call outhl
-        ld hl, #badswitchmsg
+        ld hl, badswitchmsg
         call outstring
 	; something went wrong and we didn't switch in what we asked for
         jp _plt_monitor
@@ -234,7 +235,7 @@ _dofork:
         ld (fork_proc_ptr), hl
 
         ; prepare return value in parent process -- HL = p->p_pid;
-        ld de, #P_TAB__P_PID_OFFSET
+        ld de, P_TAB__P_PID_OFFSET
         add hl, de
         ld a, (hl)
         inc hl
@@ -276,7 +277,7 @@ _dofork:
         ; --------- copy process ---------
 
         ld hl, (fork_proc_ptr)
-        ld de, #P_TAB__P_PAGE_OFFSET
+        ld de, P_TAB__P_PAGE_OFFSET
         add hl, de
         ; load p_page
         ld c, (hl)
@@ -286,6 +287,7 @@ _dofork:
 	; FIXME: We will redefine this to expect udata as parent and (hl)
 	; as child so it's also clean for multibank. For now just make
 	; sure HL happens to be right
+	; bankfork must preserve ix and iy
 	call bankfork			;	do the bank to bank copy
 
 	; Copy done
@@ -295,9 +297,9 @@ _dofork:
 	; We are going to copy the uarea into the parents uarea stash
 	; we must not touch the parent uarea after this point, any
 	; changes only affect the child
-	ld hl, #_udata		; copy the udata from common into the
-	ld de, #U_DATA_STASH	; target process
-	ld bc, #U_DATA__TOTALSIZE
+	ld hl, _udata		; copy the udata from common into the
+	ld de, U_DATA_STASH	; target process
+	ld bc, U_DATA__TOTALSIZE
 	ldir
 	; Return to the kernel mapping
 	call map_kernel
@@ -312,7 +314,7 @@ _dofork:
 	pop af	; and the pid
 
         ; Make a new process table entry, etc.
-	ld hl,#_udata
+	ld hl,_udata
 	push hl
         ld  hl, (fork_proc_ptr)
         push hl
@@ -321,7 +323,7 @@ _dofork:
 	pop af
 
         ; runticks = 0;
-        ld hl, #0
+        ld hl, 0
         ld (_runticks), hl
         ; in the child process, fork() returns zero.
 	;
