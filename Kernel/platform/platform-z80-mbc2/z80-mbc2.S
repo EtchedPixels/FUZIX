@@ -299,7 +299,7 @@ outchar:
 ;
 
 vd_map:
-	ld bc, OP_RD_PORT
+	ld bc, OP_RD_PORT			; RD and WR use same port
 	ld a,(_td_raw)
 	or a
 	ret z

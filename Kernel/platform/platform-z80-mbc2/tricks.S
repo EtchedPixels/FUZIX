@@ -42,6 +42,7 @@
 ;
 bankfork:
 	push ix
+	push iy
 	ld (cpatch0 + 1),a	; patch parent into loop
 	ld a,c
 	ld (cpatch1 + 1),a	; patch child into loop
@@ -114,6 +115,7 @@ copy_over:
 	;
 	;	And the correct kernel bank.
 	;
+	pop iy
 	pop ix
 	jp map_kernel
 

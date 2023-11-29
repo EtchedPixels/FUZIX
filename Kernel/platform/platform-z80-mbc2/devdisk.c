@@ -70,7 +70,7 @@ void vd_init_drive(uint_fast8_t drive)
     out(opwrite,  drive);
     out(opcode, OP_GET_ERROR);
     if (in(opread) == 0)
-        td_register(drive, vd_xfer, NULL, 1);
+        td_register(drive, vd_xfer, td_ioctl_none, 1);
     last_drive = 255;
     irqrestore(irq);
 }
