@@ -1,76 +1,44 @@
-	        ; Ordering of segments for the linker.
-	        .area _CODE
-	        .area _CODE2
-		.area _HOME
-	        .area _CONST
-	        .area _INITIALIZED
-	        .area _DATA
-	        .area _BSEG
-	        .area _BSS
-	        .area _HEAP
-	        .area _GSINIT
-	        .area _GSFINAL
-		.area _BUFFERS
-	        .area _INITIALIZER
-		.area _DISCARD
-	        .area _COMMONMEM
-	        .area _COMMONDATA
+# 0 "crt0.S"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "crt0.S"
+        ; startup code
+ .code
 
-        	; imported symbols
-        	.globl _fuzix_main
-	        .globl init_early
-	        .globl init_hardware
-	        .globl s__DATA
-	        .globl l__DATA
-	        .globl s__DISCARD
-	        .globl l__DISCARD
-	        .globl s__BUFFERS
-	        .globl l__BUFFERS
-	        .globl s__COMMONMEM
-	        .globl l__COMMONMEM
-	        .globl s__COMMONDATA
-	        .globl l__COMMONDATA
-		.globl s__INITIALIZER
-	        .globl kstack_top
-		.globl map_kernel
-
-	        ; startup code
-	        .area _CODE
-
-		; Load at 0x0100
-		; We are executed from ROMWBW so we live in bank 14/15
-		; with the HBIOS proxy at FE00
+ ; Load at 0x0100
+ ; We are executed from ROMWBW so we live in bank 14/15
+ ; with the HBIOS proxy at FE00
 start:
-		di
-		ld sp, #kstack_top
-		; move the common memory where it belongs    
-		ld hl, #s__DATA
-		ld de, #s__COMMONMEM
-		ld bc, #l__COMMONMEM
-		ldir
-		ld de, #s__COMMONDATA
-		ld bc, #l__COMMONDATA
-		ldir
-		; then the discard
-		; Discard can just be linked in but is next to the buffers
-		ld de, #s__DISCARD
-		ld bc, #l__DISCARD
-		ldir
-		; then zero the data area
-		ld hl, #s__DATA
-		ld de, #s__DATA + 1
-		ld bc, #l__DATA - 1
-		ld (hl), #0
-		ldir
-;		Zero buffers area
-		ld hl, #s__BUFFERS
-		ld de, #s__BUFFERS + 1
-		ld bc, #l__BUFFERS - 1
-		ld (hl), #0
-		ldir
-		call init_early
-		call init_hardware
-		call _fuzix_main
-		di
-stop:		halt
-		jr stop
+ di
+ ld sp, kstack_top
+ ; move the common memory where it belongs
+ ld hl, __bss
+ ld de, __common
+ ld bc, __common_size
+ ldir
+ ld de, __commondata
+ ld bc, __commondata_size
+ ldir
+ ; then the discard
+ ; Discard can just be linked in but is next to the buffers
+ ld de, __discard
+ ld bc, __discard_size
+ ldir
+ ; then zero the data area
+ ld hl, __bss
+ ld de, __bss + 1
+ ld bc, __bss_size - 1
+ ld (hl), 0
+ ldir
+; Zero buffers area
+ ld hl, __buffers
+ ld de, __buffers + 1
+ ld bc, __buffers_size - 1
+ ld (hl), 0
+ ldir
+ call init_early
+ call init_hardware
+ call _fuzix_main
+ di
+stop: halt
+ jr stop

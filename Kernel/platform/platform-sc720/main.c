@@ -18,10 +18,10 @@ uint8_t ctc_present;
 uint16_t rtc_port = 0xC0;
 uint8_t rtc_shadow;
 
-__sfr __at 0x88 CTC_CH0;
-__sfr __at 0x89 CTC_CH1;
-__sfr __at 0x8A CTC_CH2;
-__sfr __at 0x8B CTC_CH3;
+#define CTC_CH0	0x88
+#define CTC_CH1	0x89
+#define CTC_CH2	0x8A
+#define CTC_CH3	0x8B
 
 /*
  *	This routine is called continually when the machine has nothing else
@@ -66,9 +66,9 @@ void plt_interrupt(void)
 {
 	tty_poll();
 	if (ctc_present) {
-		uint8_t n = 255 - CTC_CH3;
-		CTC_CH3 = 0x47;
-		CTC_CH3 = 0xFF;
+		uint8_t n = 255 - in(CTC_CH3);
+		out(CTC_CH3, 0x47);
+		out(CTC_CH3, 0xFF);
 		timer_tick(n);
 	}
 #ifdef CONFIG_NET_W5100
@@ -91,7 +91,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  */
 void plt_discard(void)
 {
-	uint16_t discard_size = (uint16_t)udata - (uint16_t)bufpool_end;
+	uint16_t discard_size = (uint16_t)&udata - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
 
 	discard_size /= sizeof(struct blkbuf);

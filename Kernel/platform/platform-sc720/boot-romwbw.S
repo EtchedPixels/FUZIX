@@ -15,7 +15,8 @@
 ;	The end must actually be the byte after we need. ROMWBW explodes
 ;	if given F200 F3FF !
 ;
-.area	    BOOT	(ABS)
+	.abs
+
 	.org	    0xF000
 
 	.ds   384
@@ -51,25 +52,25 @@
 ;	them in a register.
 ;
 bootit:
-	ld sp, #0xFE00		; SP as high as we can
-	ld bc, #0xF8F0		; Get the CPU info into H L and speed into
+	ld sp, 0xFE00		; SP as high as we can
+	ld bc, 0xF8F0		; Get the CPU info into H L and speed into
 				; DE
 	rst 8
 
 	push hl
 	push de
 
-	ld bc, #0xF100		; Get system type into L
+	ld bc, 0xF100		; Get system type into L
 	rst 8
 
 	push hl
 
-	ld bc, #0xF8E0		; Get boot sysinfo into DE
+	ld bc, 0xF8E0		; Get boot sysinfo into DE
 	rst 8
-	ld b, #0x13		; ROMWBW disk read request
+	ld b, 0x13		; ROMWBW disk read request
 	ld c, d			; Device (same as booted off)
-	ld hl, #0x8000		; Loading at 0x8000 for the moment
-	ld e, #32		; 32 sectors (16K)
+	ld hl, 0x8000		; Loading at 0x8000 for the moment
+	ld e, 32		; 32 sectors (16K)
 	push bc
 	rst 8			; Can error but if so wtf do we do ?
 	ld hl,#0x8000
@@ -87,10 +88,9 @@ bootit:
 	ldir
 	pop bc
 	ld hl,#0x8100		; Now load 8100 up
-	ld e, #55		; takes us up to F100. If that's not enough
+	ld e, 55		; takes us up to F100. If that's not enough
 				; before unpack we have a problem as we
 				; will need to move the loader
 	rst 8
 	jp 0x0100
 
-	

@@ -26,19 +26,20 @@
 #define		MR_INDIRECT	0x01
 
 /* Core helpers: platform supplied */
-__sfr __at 0x28 mr;
-__sfr __at 0x29 idm_ar0;
-__sfr __at 0x2A idm_ar1;
-__sfr __at 0x2B idm_dr;
+
+#define	mr	0x28
+#define idm_ar0	0x29
+#define idm_ar1	0x2A
+#define idm_dr	0x2B
 
 /* We assume indirect, autoinc is always set */
 uint8_t w5x00_readcb(uint16_t off)
 {
 	irqflags_t irq = di();
 	uint8_t r;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	r = idm_dr;
+	out(idm_ar0, off >> 8);
+	out(idm_ar1, off);
+	r = in(idm_dr);
 	irqrestore(irq);
 	return r;
 }
@@ -53,10 +54,10 @@ uint16_t w5x00_readcw(uint16_t off)
 {
 	irqflags_t irq = di();
 	uint16_t n;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	n = ((uint16_t)idm_dr) << 8;
-	n |= idm_dr;
+	out(idm_ar0, off >> 8);
+	out(idm_ar1, off);
+	n = ((uint16_t)in(idm_dr)) << 8;
+	n |= in(idm_dr);
 	irqrestore(irq);
 	return n;
 }
@@ -72,10 +73,10 @@ void w5x00_bread(uint16_t bank, uint16_t off, void *pv, uint16_t n)
 	irqflags_t irq = di();
 	uint8_t *p = pv;
 	off += bank;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
+	out(idm_ar0, off >> 8);
+	out(idm_ar1, off);
 	while(n--)
-		*p++ = idm_dr;
+		*p++ = in(idm_dr);
 	irqrestore(irq);
 }
 
@@ -84,19 +85,19 @@ void w5x00_breadu(uint16_t bank, uint16_t off, void *pv, uint16_t n)
 	irqflags_t irq = di();
 	uint8_t *p = pv;
 	off += bank;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
+	out(idm_ar0, off >> 8);
+	out (idm_ar1, off);
 	while(n--)
-		uputc(idm_dr, p++);
+		uputc(in(idm_dr), p++);
 	irqrestore(irq);
 }
 
 void w5x00_writecb(uint16_t off, uint8_t n)
 {
 	irqflags_t irq = di();
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	idm_dr = n;
+	out(idm_ar0, off >> 8);
+	out(idm_ar1, off);
+	out(idm_dr, n);
 	irqrestore(irq);
 }
 
@@ -108,10 +109,10 @@ void w5x00_writesb(uint8_t sock, uint16_t off, uint8_t n)
 void w5x00_writecw(uint16_t off, uint16_t n)
 {
 	irqflags_t irq = di();
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
-	idm_dr = n >> 8;
-	idm_dr = n;
+	out(idm_ar0, off >> 8);
+	out(idm_ar1, off);
+	out(idm_dr, n >> 8);
+	out(idm_dr, n);
 	irqrestore(irq);
 }
 
@@ -125,10 +126,10 @@ void w5x00_bwrite(uint16_t bank, uint16_t off, void *pv, uint16_t n)
 	irqflags_t irq = di();
 	uint8_t *p = pv;
 	off += bank;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
+	out(idm_ar0, off >> 8);
+	out(idm_ar1, off);
 	while(n--)
-		idm_dr = *p++;
+		out(idm_dr, *p++);
 	irqrestore(irq);
 }
 
@@ -137,18 +138,16 @@ void w5x00_bwriteu(uint16_t bank, uint16_t off, void *pv, uint16_t n)
 	irqflags_t irq = di();
 	uint8_t *p = pv;
 	off += bank;
-	idm_ar0 = off >> 8;
-	idm_ar1 = off;
+	out(idm_ar0, off >> 8);
+	out(idm_ar1, off);
 	while(n--)
-		idm_dr = ugetc(p++);
+		out(idm_dr, ugetc(p++));
 	irqrestore(irq);
 }
 
 void w5x00_setup(void)
 {
-	uint8_t i;
-	mr = 0x80;
-	mr = MR_AUTOINC|MR_INDIRECT;
+	out(mr, MR_AUTOINC|MR_INDIRECT);
 }
 
 #else
@@ -156,12 +155,12 @@ void w5x00_setup(void)
 /* Wiznet 5300 has its own interface */
 #include <net_w5300.h>
 
-__sfr __at 0x28	mr0;
-__sfr __at 0x29	mr1;
-__sfr __at 0x2A idm_arh;
-__sfr __at 0x2B idm_arl;
-__sfr __at 0x2C idm_drh;
-__sfr __at 0x2D idm_drl;
+#define mr0	0x28
+#define mr1	0x29
+#define idm_arh	0x2A
+#define idm_arl	0x2B
+#define idm_drh	0x2C
+#define idm_drl	0x2D
 
 /*
  * Not well documented: the drh/drl pair must always be used high then low,
@@ -173,10 +172,10 @@ uint16_t w5300_read(uint16_t off)
 {
 	irqflags_t irq = di();
 	uint16_t r;
-	idm_arh = off >> 8;
-	idm_arl = off;
-	r = idm_drh << 8;
-	r |= idm_drl;
+	out(idm_arh, off >> 8);
+	out(idm_arl, off);
+	r = in(idm_drh) << 8;
+	r |= in(idm_drl);
 	irqrestore(irq);
 	return r;
 }
@@ -186,10 +185,10 @@ uint16_t w5300_readn(uint16_t off)
 {
 	irqflags_t irq = di();
 	uint16_t r;
-	idm_arh = off >> 8;
-	idm_arl = off;
-	r = idm_drh;
-	r |= idm_drl << 8;
+	out(idm_arh, off >> 8);
+	out(idm_arl, off);
+	r = in(idm_drh);
+	r |= in(idm_drl) << 8;
 	irqrestore(irq);
 	return r;
 }
@@ -198,10 +197,10 @@ uint16_t w5300_readn(uint16_t off)
 void w5300_write(uint16_t off, uint16_t n)
 {
 	irqflags_t irq = di();
-	idm_arh = off >> 8;
-	idm_arl = off;
-	idm_drh = n >> 8;
-	idm_drl = n;
+	out(idm_arh, off >> 8);
+	out(idm_arl, off);
+	out(idm_drh, n >> 8);
+	out(idm_drl, n);
 	irqrestore(irq);
 }
 
@@ -209,10 +208,10 @@ void w5300_write(uint16_t off, uint16_t n)
 void w5300_writen(uint16_t off, uint16_t n)
 {
 	irqflags_t irq = di();
-	idm_arh = off >> 8;
-	idm_arl = off;
-	idm_drh = n;
-	idm_drl = n >> 8;
+	out(idm_arh, off >> 8);
+	out(idm_arl, off);
+	out(idm_drh, n);
+	out(idm_drl, n >> 8);
 	irqrestore(irq);
 }
 
@@ -224,10 +223,10 @@ void w5300_writen(uint16_t off, uint16_t n)
 void w5300_setup(void)
 {
 	uint16_t i;
-	mr1 = 0x80;	/* Reset */
+	out(mr1, 0x80);	/* Reset */
 	for (i = 0; i < 1000; i++);
-	mr0 |= 0x05;	/* FIFO in little endian, extended hold */
-	mr1 = 0x01;	/* Indiredct mode */
+	out(mr0, in(mr0) | 0x05);	/* FIFO in little endian, extended hold */
+	out(mr1, 0x01);	/* Indirect mode */
 }
 
 #endif

@@ -26,10 +26,10 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 };
 
 #define SIO0_BASE	0x80
-__sfr __at 0x80 SIOA_C;
-__sfr __at 0x81 SIOA_D;
-__sfr __at 0x82 SIOB_C;
-__sfr __at 0x83 SIOB_D;
+#define SIOA_C		(SIO0_BASE + 0)
+#define SIOA_D		(SIO0_BASE + 1)
+#define SIOB_C		(SIO0_BASE + 2)
+#define SIOB_D		(SIO0_BASE + 3)
 
 uint8_t sio_r[] = {
 	0x03, 0xC1,
@@ -123,29 +123,29 @@ void tty_poll(void)
 	uint8_t progress;
 
 	/* Check for an interrupt */
-	SIOA_C = 0;
-	if (!(SIOA_C & 2))
+	out(SIOA_C, 0);
+	if (!(in(SIOA_C) & 2))
 		return;
 
 	/* FIXME: need to process error/event interrupts as we can get
 	   spurious characters or lines on an unused SIO floating */
 	do {
 		progress = 0;
-		SIOA_C = 0;		// read register 0
-		ca = SIOA_C;
+		out(SIOA_C, 0);		// read register 0
+		ca = in(SIOA_C);
 		/* Input pending */
 		if (ca & 1) {
 			progress = 1;
-			tty_inproc(1, SIOA_D);
+			tty_inproc(1, in(SIOA_D));
 		}
 		/* Break */
 		if (ca & 2)
-			SIOA_C = 2 << 5;
+			out(SIOA_C, 2 << 5);
 		/* Output pending */
 		if ((ca & 4) && (sleeping & 2)) {
 			tty_outproc(2);
 			sleeping &= ~2;
-			SIOA_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
+			out(SIOA_C, 5 << 3);	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		/* Carrier changed */
 		if ((ca ^ old_ca) & 8) {
@@ -154,16 +154,16 @@ void tty_poll(void)
 			else
 				tty_carrier_drop(1);
 		}
-		SIOB_C = 0;		// read register 0
-		cb = SIOB_C;
+		out(SIOB_C, 0);		// read register 0
+		cb = in(SIOB_C);
 		if (cb & 1) {
-			tty_inproc(2, SIOB_D);
+			tty_inproc(2, in(SIOB_D));
 			progress = 1;
 		}
 		if ((cb & 4) && (sleeping & 8)) {
 			tty_outproc(3);
 			sleeping &= ~8;
-			SIOB_C = 5 << 3;	// reg 0 CMD 5 - reset transmit interrupt pending
+			out(SIOB_C, 5 << 3);	// reg 0 CMD 5 - reset transmit interrupt pending
 		}
 		if ((cb ^ old_cb) & 8) {
 			if (cb & 8)
@@ -218,11 +218,11 @@ void tty_data_consumed(uint_fast8_t minor)
 /* kernel writes to system console -- never sleep! */
 void kputchar(uint_fast8_t c)
 {
-	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
+	while(tty_writeready(TTYDEV  & 0xFF) != TTY_READY_NOW);
 	if (c == '\n')
-		tty_putc(TTYDEV - 512, '\r');
-	while(tty_writeready(TTYDEV - 512) != TTY_READY_NOW);
-	tty_putc(TTYDEV - 512, c);
+		tty_putc(TTYDEV  & 0xFF, '\r');
+	while(tty_writeready(TTYDEV  & 0xFF) != TTY_READY_NOW);
+	tty_putc(TTYDEV  & 0xFF, c);
 }
 
 int rctty_open(uint_fast8_t minor, uint16_t flag)

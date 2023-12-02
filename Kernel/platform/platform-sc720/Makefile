@@ -6,53 +6,53 @@ CSRCS += devices.c main.c wiznet.c
 
 DISCSRCS = discard.c
 
-ASRCS = sc720.s crt0.s
-ASRCS += tricks.s commonmem.s
+ASRCS = sc720.S crt0.S
+ASRCS += tricks.S commonmem.S
 
 DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/ds1302_discard.c ../../dev/tinyide_discard.c
 DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
 DSRCS += ../../dev/ds1302.c
 NSRCS = ../../dev/net/net_w5x00.c ../../dev/net/net_w5300.c ../../dev/net/net_native.c
 
-DASRCS = ../../dev/ds1302_rcbus.s
+DASRCS = ../../dev/ds1302_rcbusu.S
 
-COBJS = $(CSRCS:.c=.rel)
-AOBJS = $(ASRCS:.s=.rel)
-NOBJS = $(patsubst ../../dev/net/%.c,%.rel, $(NSRCS))
-DISCOBJS = $(DISCSRCS:.c=.rel)
-DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
-DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
+COBJS = $(CSRCS:.c=.o)
+AOBJS = $(ASRCS:.S=.o)
+NOBJS = $(patsubst ../../dev/net/%.c,%.o, $(NSRCS))
+DISCOBJS = $(DISCSRCS:.c=.o)
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.o, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.S,%.o, $(DASRCS))
 
 OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
 
-JUNK =  *.lst *.asm *.sym *.rst *.lst
+JUNK =  *.o
 
 all:	$(OBJS)
 
-$(COBJS): %.rel: %.c
+$(COBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCOBJS): %.rel: %.c
+$(DISCOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DOBJS): %.rel: ../../dev/%.c
+$(DOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DISCARD_DOBJS): %.rel: ../../dev/%.c
+$(DISCARD_DOBJS): %.o: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(NOBJS): %.rel: ../../dev/net/%.c
+$(NOBJS): %.o: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(AOBJS): %.rel: %.s
+$(AOBJS): %.o: %.S
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(DAOBJS): %.rel: ../../dev/%.s
+$(DAOBJS): %.o: ../../dev/%.S
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 clean:
-	rm -f $(OBJS) $(JUNK)  core *~ *.ihx *.bin *.rel *.tmp fuzix.romwbw
+	rm -f $(OBJS) $(JUNK)  core *~ *.ihx *.bin *.o *.tmp fuzix.romwbw
 
 #
 #	Attach the kernel to the boot block
@@ -63,10 +63,8 @@ image:	bootblock
 #	Compile up the boot block
 #
 bootblock:
-	sdasz80 -o boot-romwbw.s
-	sdldz80 -i boot-romwbw.rel
-	# This makes us a binary from physical 0
-	makebin -s 62464 boot-romwbw.ihx boot-romwbw.tmp
+	asz80 boot-romwbw.S
+	ldz80 -b boot-romwbw.o -o boot-romwbw.tmp
 	# Chop off the leading 61440 bytes we don't want
 	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
 
