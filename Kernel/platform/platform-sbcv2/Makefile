@@ -86,7 +86,7 @@ image:	bootblock
 #
 bootblock:
 	asz80 boot-romwbw.S
-	ldz80 -b boot-romwbw.o -o boot-romwbw.bin
+	ldz80 -b boot-romwbw.o -o boot-romwbw.tmp
 	# Chop off the leading 61440 bytes we don't want
 	dd if=boot-romwbw.tmp of=boot-romwbw.bin bs=512 count=2 skip=120
 
