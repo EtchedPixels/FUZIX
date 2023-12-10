@@ -684,7 +684,7 @@ static uint8_t *fifo_readu_bytes(uint16_t addr, uint_fast8_t s, uint8_t *uptr, u
 	}
 	/* Copy whole words */
 	while(len > 1) {
-		_uputw(w5300_read(addr), uptr);
+		_uputw(w5300_read(addr), (uint16_t *)uptr);
 		len -= 2;
 		uptr += 2;
 	}
@@ -897,7 +897,7 @@ arg_t netproto_write(struct socket *s, struct ksockaddr *ka)
 		len = min(room, udata.u_count);
 		n = len; 
 		while(n > 1) { 
-		        w5300_write(addr, _ugetw(udata.u_base));
+		        w5300_write(addr, _ugetw((uint16_t *)udata.u_base));
 		        udata.u_base += 2;
 		        n -= 2;
 		}
