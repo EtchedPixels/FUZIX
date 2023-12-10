@@ -9,7 +9,7 @@ SRCS  = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
         myst01.c myst02.c myst03.c myst04.c myst05.c myst06.c myst07.c \
 	myst08.c myst09.c myst10.c myst11.c fortune-gen.c qrun.c fortune.c \
 	z1.c z2.c z3.c z4.c z5.c z8.c startrek.c hamurabi.c cowsay.c advint.c \
-	taylormade.c dopewars.c
+	taylormade.c dopewars.c l9x.c
 
 SRCSFP =
 

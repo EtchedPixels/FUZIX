@@ -1,6 +1,6 @@
 include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
-SRCSNS = advint.c fortune.c qrun.c z1.c z2.c z3.c z4.c z5.c z8.c
+SRCSNS = advint.c fortune.c qrun.c z1.c z2.c z3.c z4.c z5.c z8.c l9x.c
 
 SRCS  = adv01.c adv02.c adv03.c adv04.c adv05.c adv06.c adv07.c \
         adv08.c adv09.c adv10.c adv11.c adv12.c adv13.c adv14a.c adv14b.c \
