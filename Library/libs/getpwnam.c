@@ -29,7 +29,7 @@ struct passwd *
 getpwnam(const char * name)
 {
   int passwd_fd;
-  struct passwd * passwd;
+  register struct passwd * passwd;
 
   if (name==NULL)
     {
