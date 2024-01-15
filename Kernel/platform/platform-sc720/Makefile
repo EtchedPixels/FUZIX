@@ -74,7 +74,8 @@ image:	bootblock
 	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
-	cat boot-romwbw.bin ../../fuzix.bin >fuzix.romwbw
+	cp boot-romwbw.bin fuzix.romwbw
+	dd if=../../fuzix.bin bs=256 skip=1 seek=4 of=fuzix.romwbw
 #
 #	Compile up the boot block
 #
