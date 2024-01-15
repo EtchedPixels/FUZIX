@@ -11,7 +11,6 @@
 
  .export init_early
  .export init_hardware
- .export interrupt_handler
  .export _program_vectors
  .export map_buffers
  .export map_kernel
@@ -77,9 +76,9 @@ Z80_MMU_HOOKS .equ 0
 ; The number of disk buffers. Must match config.h
 ;
 NBUFS .equ 5
-# 33 "sc720.S" 2
+# 32 "sc720.S" 2
 # 1 "../../cpu-z80u/kernel-z80.def" 1
-# 34 "sc720.S" 2
+# 33 "sc720.S" 2
 
 ; Base address of SIO/2 chip 0x80
 SIOA_C .equ 0x80
@@ -159,7 +158,6 @@ init_early:
 ;
 ; Serial I/O helper for SIO
 ;
- .export _sio_r
  .export _sio2_otir
 
 _sio2_otir:

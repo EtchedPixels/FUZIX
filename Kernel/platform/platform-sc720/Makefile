@@ -6,8 +6,7 @@ CSRCS += devices.c main.c wiznet.c
 
 DISCSRCS = discard.c
 
-ASRCS = sc720.S crt0.S
-ASRCS += tricks.S commonmem.S
+ASRCS = sc720.S crt0.S ide.S tricks.S commonmem.S
 
 DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/ds1302_discard.c ../../dev/tinyide_discard.c
 DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
@@ -58,6 +57,23 @@ clean:
 #	Attach the kernel to the boot block
 #
 image:	bootblock
+	$(CROSS_LD) -b -C 0x0100 -S 0xF400 -f CLDBbXSs -o fuzix.bin \
+	crt0.o commonmem.o sc720.o ../../start.o ../../version.o \
+	../../cpu-z80u/lowlevel-z80u.o ../../usermem.o tricks.o main.o discard.o \
+	../../timer.o ../../kdata.o devices.o ../../devio.o ../../filesys.o \
+	../../blk512.o ../../process.o ../../inode.o ../../syscall_exec.o \
+	../../syscall_exec16.o ../../syscall_fs.o ../../syscall_fs2.o \
+	../../syscall_fs3.o ../../syscall_proc.o ../../syscall_other.o \
+	../../syscall_net.o ../../network.o ../../tty.o ../../mm.o ../../mm/bankfixed.o \
+	../../mm/memalloc_none.o ../../swap.o ../../devsys.o devtty.o \
+	../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
+	../../dev/tinyide.o ../../dev/tinyide_discard.o ide.o \
+	../../dev/ds1302.o ../../dev/ds1302_discard.o ../../dev/ds1302_rcbusu.o \
+	../../dev/net/net_native.o ../../dev/net/net_w5x00.o \
+	../../dev/net/net_w5300.o wiznet.o \
+	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
+	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
 	cat boot-romwbw.bin ../../fuzix.bin >fuzix.romwbw
 #
 #	Compile up the boot block

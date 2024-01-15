@@ -7,7 +7,6 @@
 
 	.export init_early
 	.export init_hardware
-	.export interrupt_handler
 	.export _program_vectors
 	.export map_buffers
 	.export map_kernel
@@ -110,7 +109,6 @@ init_early:
 ;
 ;	Serial I/O helper for SIO
 ;
-	.export _sio_r
 	.export _sio2_otir
 
 _sio2_otir:
