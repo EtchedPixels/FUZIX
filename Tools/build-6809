@@ -1,0 +1,10 @@
+#!/bin/sh
+
+X=`which m6809-unknown-gcc`
+if [ "$X" = "" ]; then
+	echo "GCC is required: see http://www.lwtools.ca/"
+fi
+X=`which lwasm`
+if [ "$X" = "" ]; then
+	echo "LWTools is required: http://www.lwtools.ca/"
+fi

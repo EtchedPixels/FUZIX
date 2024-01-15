@@ -1,0 +1,11 @@
+#!/bin/sh
+
+X=`which as68`
+if [ "$X" = "" ]; then
+	(cd ../Applications/assembler; make -f Cross.6800)
+fi
+
+X=`which cc68`
+if [ "$X" = "" ]; then
+	echo "CC68 is required: see https://github.com/EtchedPixels/CC6303/"
+fi

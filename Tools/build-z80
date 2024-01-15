@@ -1,0 +1,7 @@
+#!/bin/sh
+(./build-z80)
+#
+#	And check for SDCC TODO
+#
+echo "This target also requires the banked SDCC 3.8 is installed"
+

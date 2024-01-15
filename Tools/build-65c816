@@ -1,0 +1,9 @@
+#!/bin/sh
+
+X=`which cc65`
+if [ "$X" = "" ]; then
+	echo "CC65 is required"
+else
+	echo -n "cc65: "
+	cc65 -V
+fi

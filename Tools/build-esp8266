@@ -1,0 +1,6 @@
+#!/bin/sh
+
+X=`xtensa-lx106-elf-gcc`
+if [ "$X" = "" ]; then
+	echo "gcc: xtensa-lx106-elf-gcc is required"
+fi

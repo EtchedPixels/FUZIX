@@ -1,0 +1,6 @@
+#!/bin/sh
+
+X=`which riscv-unknown-elf-gcc`
+if [ "$X" = "" ]; then
+	echo "gcc: riscv-unknown-elf-gcc"
+fi

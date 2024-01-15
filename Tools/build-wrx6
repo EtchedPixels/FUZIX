@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ -e /opt/aswrx6/bin/ccwrx6 ]; then
+	echo "ccwrx6: installed"
+	exit 0
+fi
+
+cd Applications/assembler
+make -f Cross.wrx6
+make -f Cross.wrx6 install
+
+echo "Now install the Centurion cross compiler"

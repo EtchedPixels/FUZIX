@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ -e /opt/cc85/bin/cc85 ]; then
+	echo "cc85: installed"
+	exit 0
+fi
+
+cd Applications/assembler
+make -f Cross.8085
+make -f Cross.8085 install
+
+echo "Now install the Fuzix Compiler Kit"
+echo "https://github.com/EtchedPixels/Fuzix-Compiler-Kit.git"
