@@ -254,7 +254,7 @@ uint8_t get_common(void)
    processes, after starting it with get_common()
 
 */
-void swap_finish(uint8_t page, ptptr p)
+void swap_finish(uint_fast8_t page, ptptr p)
 {
 	uint16_t map = p->p_page2;
 	pagemap_alloc2(p, page);
