@@ -1,0 +1,34 @@
+#
+#	Crossbuild 8085 version of the tools 
+#
+all: as85 ld85 nm85 osize85 dumprelocs85
+
+HDR = as.h ld.h obj.h
+
+AOBJ = as0.o as1-8085.o as2.o as3.o as4.o as6-8085.o
+
+CFLAGS = -DTARGET_8085 -Wall -pedantic
+
+as85: $(HDR) $(AOBJ)
+	cc -o as85 $(AOBJ)
+
+ld85: $(HDR) ld.o
+	cc -o ld85 ld.o
+
+nm85: $(HDR) nm.o
+	cc -o nm85 nm.o
+
+osize85: $(HDR) osize.o
+	cc -o osize85 osize.o
+
+dumprelocs85: $(HDR) dumprelocs.o
+	cc -o dumprelocs85 dumprelocs.o
+
+clean:
+	rm -f *.o *~
+	rm -f nm85 ld85 as85 osize85 dumprelocs85
+
+install: all
+	mkdir -p /opt/cc85/bin
+	cp nm85 ld85 as85 osize85 dumprelocs85 /opt/cc85/bin/
+

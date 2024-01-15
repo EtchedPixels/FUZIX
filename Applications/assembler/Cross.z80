@@ -1,0 +1,36 @@
+#
+#	Build z80 version of the tools
+#
+all: asz80 ldz80 nmz80 osizez80 dumprelocsz80 relocz80
+
+HDR = as.h ld.h obj.h
+
+AOBJ = as0.o as1.o as2.o as3.o as4.o as6.o
+
+CFLAGS = -DTARGET_Z80 -Wall -pedantic
+
+asz80: $(HDR) $(AOBJ)
+	cc -o asz80 $(AOBJ)
+
+ldz80: $(HDR) ld.o
+	cc -o ldz80 ld.o
+
+nmz80: $(HDR) nm.o
+	cc -o nmz80 nm.o
+
+relocz80: $(HDR) reloc.o
+	cc -o relocz80 reloc.o
+
+osizez80: $(HDR) osize.o
+	cc -o osizez80 osize.o
+
+dumprelocsz80: $(HDR) dumprelocs.o
+	cc -o dumprelocsz80 dumprelocs.o
+
+clean:
+	rm -f *.o *~
+	rm -f nmz80 ldz80 asz80 osizez80 dumprelocsz80
+
+install: all
+	mkdir -p /opt/ccz80/bin
+	cp nmz80 ldz80 asz80 osizez80 dumprelocsz80 relocz80 /opt/ccz80/bin/
