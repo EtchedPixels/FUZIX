@@ -3,4 +3,5 @@
 X=`which xtensa-esp32-elf-gcc`
 if [ "$X" = "" ]; then
 	echo "gcc: xtensa-esp32-elf-gcc is required"
+	exit 1
 fi

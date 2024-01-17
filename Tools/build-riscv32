@@ -2,5 +2,6 @@
 
 X=`which riscv-unknown-elf-gcc`
 if [ "$X" = "" ]; then
-	echo "gcc: riscv-unknown-elf-gcc"
+	echo "gcc: riscv-unknown-elf-gcc is required"
+	exit 1
 fi

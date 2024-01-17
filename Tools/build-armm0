@@ -2,5 +2,6 @@
 
 X=`which /opt/gcc-arm-eabi/bin/arm-none-eabi-gcc`
 if [ "$X" = "" ]; then
-	echo "gcc: /opt/gcc-arm-eabi/bin/arm-none-eabi-gcc"
+	echo "gcc: /opt/gcc-arm-eabi/bin/arm-none-eabi-gcc is required"
+	exit 1
 fi
