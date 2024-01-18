@@ -29,6 +29,7 @@ echo "Starting XRoar $(date)"
 xroar \
     -no-ratelimit \
     -ui $UI \
+    -ao null \
     -timeout 60 \
     -timeout-motoroff 10 \
     -default-machine dragon32 -romlist d32=$BASROM \
