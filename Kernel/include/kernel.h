@@ -88,18 +88,26 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
+#ifdef CONFIG_SMALL
+#define UFTSIZE		10	/* User files */
+#define OFTSIZE		15	/* Open files */
+#define ITABSIZE	20	/* Inodes */
+#define PTABSIZE	15	/* Processes */
+#else
 #ifndef UFTSIZE
-#define UFTSIZE 10       /* Number of user files */		/*280 = 22*/
+#define UFTSIZE		16	/* Number of user files */
 #endif
 #ifndef OFTSIZE
-#define OFTSIZE 15       /* Open file table size */		/*280 = 45*/
+#define OFTSIZE		56	/* Open file table size */
 #endif
 #ifndef ITABSIZE
-#define ITABSIZE 20      /* Inode table size */			/*280 = 45*/
+#define ITABSIZE	45	/* Inode table size */
 #endif
 #ifndef PTABSIZE
-#define PTABSIZE 15      /* Process table size. */
+#define PTABSIZE	16      /* Process table size. */
 #endif
+#endif
+
 #ifndef MAPBASE		/* Usually the start of program and map match */
 #define MAPBASE PROGBASE
 #endif
