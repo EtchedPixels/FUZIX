@@ -3,6 +3,7 @@
 X=`which cc65`
 if [ "$X" = "" ]; then
 	echo "CC65 is required"
+	exit 1
 else
 	echo -n "cc65: "
 	cc65 -V

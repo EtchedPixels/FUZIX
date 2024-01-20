@@ -3,4 +3,5 @@
 X=`which m6811-elf-gcc`
 if [ "$X" = "" ]; then
 	echo "gcc: m6811-elf-gcc is required"
+	exit 1
 fi

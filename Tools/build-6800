@@ -8,4 +8,5 @@ fi
 X=`which cc68`
 if [ "$X" = "" ]; then
 	echo "CC68 is required: see https://github.com/EtchedPixels/CC6303/"
+	exit 1
 fi
