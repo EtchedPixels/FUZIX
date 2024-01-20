@@ -89,10 +89,18 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
 #ifdef CONFIG_SMALL
+#ifndef UFTSIZE
 #define UFTSIZE		10	/* User files */
+#endif
+#ifndef OFTSIZE
 #define OFTSIZE		15	/* Open files */
+#endif
+#ifndef ITABSIZE
 #define ITABSIZE	20	/* Inodes */
+#endif
+#ifndef PTABSIZE
 #define PTABSIZE	15	/* Processes */
+#endif
 #else
 #ifndef UFTSIZE
 #define UFTSIZE		16	/* Number of user files */
