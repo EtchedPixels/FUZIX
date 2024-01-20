@@ -18,10 +18,12 @@
 ; -----------------------------------------------------------------------------
 
 _ds1302_get_data:
+	push bc
 	ld bc,(_rtc_port)
         in a, (c)       	; read input register
-        and #PIN_DATA_IN        ; mask off data pin
+        and PIN_DATA_IN        ; mask off data pin
         ld l, a                 ; return result in L
+	pop bc
         ret
 
 _ds1302_set_driven:
