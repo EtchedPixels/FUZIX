@@ -4,7 +4,7 @@ AR = ar
 PLATFORM = z80
 PLATBIN = z80
 export PLATFORM
-CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/$(PLATFORM) -X -Os
+CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/$(PLATFORM) -X -O
 ASM_OPT = -c -o
 # copied in from kernel tree
 KRN_HEADERS = userstructs.h drivewire.h
@@ -93,10 +93,8 @@ OBJ_RL = $(SRC_RL:.c=.o)
 OBJ_LM = $(SRC_LM:.c=.o)
 OBJ_ALL = $(OBJ_ASM) $(OBJ_C) $(OBJ_LM) $(OBJ_RL)
 
-all: syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
+all: $(KRN_HEADERS_COPY) syslib$(PLATFORM).lib liberror.txt $(OBJ_CRT0) curses$(PLATFORM).lib \
      termcap$(PLATFORM).lib readline$(PLATFORM).lib m$(PLATFORM).lib crt0.o 
-
-$(OBJ_ALL): $(KRN_HEADERS_COPY)
 
 $(KRN_HEADERS_COPY): $(KRN_HEADERS_SRC)
 	cp ../../Kernel/include/$(notdir $@) $@
