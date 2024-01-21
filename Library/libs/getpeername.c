@@ -2,7 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-int getsockname(int fd, struct sockaddr *addr, socklen_t *addrlen)
+int getpeername(int fd, struct sockaddr *addr, socklen_t *addrlen)
 {
     __uarg_t args[4];
     args[0] = 9;
