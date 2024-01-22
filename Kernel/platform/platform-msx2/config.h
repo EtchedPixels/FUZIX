@@ -62,3 +62,5 @@
 //#define CONFIG_RTC_RP5C01_NVRAM
 
 #define plt_copyright()
+
+#define CONFIG_SMALL	/* For now.. */

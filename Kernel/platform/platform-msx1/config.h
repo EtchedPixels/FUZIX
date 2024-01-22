@@ -76,3 +76,5 @@ extern uint16_t swap_dev;
 #define plt_copyright()
 
 extern uint8_t direct_io_range(uint16_t dev);
+
+#define CONFIG_SMALL		/* For now anyway */
