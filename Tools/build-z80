@@ -1,5 +1,5 @@
 #!/bin/sh
-(./build-z80)
+(./build-z80u)
 #
 #	And check for SDCC TODO
 #
