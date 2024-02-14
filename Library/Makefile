@@ -65,6 +65,9 @@ tools/syscall_wrx6: tools/syscall_wrx6.c ../Kernel/include/syscall_name.h
 tools/syscall_riscv32: tools/syscall_riscv32.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+tools/syscall_z8: tools/syscall_z8.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 tools/binman: tools/binman.c
 	$(CC) $(CFLAGS) -o $@ $<
 
@@ -169,6 +172,10 @@ ifeq ($(USERCPU),ns32k)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
 endif
 ifeq ($(USERCPU),wrx6)
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+endif
+ifeq ($(USERCPU),z8)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
 	install -m 0644 ../Kernel/include/drivewire.h include/sys/
 endif
