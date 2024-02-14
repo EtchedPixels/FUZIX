@@ -24,7 +24,7 @@ __uputw:
 	call	gargr4	; r0-r1 val, r2-r3 ptr
 	call map_proc_always
 	lde	@rr2,r0
-	incw	rr3
+	incw	rr2
 	lde	@rr2,r1
 	clr	r2
 	clr	r3
@@ -75,7 +75,7 @@ __uget:
 	incw	r12
 	lde	r1,@rr2
 
-	lde	r12,r0
+	ld	r12,r0
 	or	r12,r1
 	jr	z, nowork
 	;
@@ -119,7 +119,7 @@ __uput:
 	incw	r12
 	lde	r1,@rr2
 
-	lde	r12,r0
+	ld	r12,r0
 	or	r12,r1
 	jr	z, nowork
 	;
@@ -148,7 +148,7 @@ nowork:
 .export __uzero
 
 __uzero:
-	lde	r3,#2
+	ld	r3,#2
 	call	gargr4	;	0-1 ptr 2-3 length
 	
 	ld	r12,r2

@@ -102,9 +102,11 @@ raced:
 	call	map_proc_always_di
 	ld	r14,#>U_DATA__U_SYSCALL_SP
 	ld	r15,#<U_DATA__U_SYSCALL_SP
-	lde	254,@rr14		; restore sp
+	lde	r04,@rr14		; restore sp
 	incw	rr14
-	lde	255,@rr15
+	lde	r1,@rr15
+	ld	254,14
+	ld	255,15
 	jr	deliver_signals
 
 .export unix_syscall_entry
@@ -191,9 +193,11 @@ unix_syscall_entry:
 	; Switch stack back
 	ld	r14,#>U_DATA__U_SYSCALL_SP
 	ld	r15,#<U_DATA__U_SYSCALL_SP
-	lde	254,@rr14
+	lde	r0,@rr14
 	incw	rr14
-	lde	255,@rr14
+	lde	r1,@rr14
+	ld	254,r0
+	ld	255,r1
 
 	; Get the return info
 	ld	r14,#>U_DATA__U_RETVAL
@@ -288,12 +292,12 @@ _doexec:
 null_handler:
 	ld	r14,#>U_DATA__U_INSYS
 	ld	r15,#<U_DATA__U_INSYS
-	lde	r3,@r14
+	lde	r3,@rr14
 	or	r3,r3
 	jr	nz, trap_illegal
 	ld	r14,#>U_DATA__U_ININTERRUPT
 	ld	r15,#<U_DATA__U_ININTERRUPT
-	lde	r3,@r14
+	lde	r3,@rr14
 	or	r3,r3
 	jr	nz,trap_illegal
 	ld	r3,#7
@@ -308,7 +312,7 @@ null_handler:
 	incw	rr2
 	incw	rr2
 	incw	rr2	; P_PID_OFFSET
-	lde	r0@rr2
+	lde	r0,@rr2
 	incw	rr2
 	lde	r1,@rr2
 	push	r1
@@ -361,7 +365,7 @@ reinterrupt:
 
 	call	_plt_reinterrupt
 	srp	#MAINBANK
-	reti
+	iret
 
 interrupt_handler:
 	srp	#INTBANK
@@ -426,7 +430,7 @@ intout:
 interrupt_pop:
 	clr	_int_disabled
 	srp 	#MAINBANK
-	reti
+	iret
 
 trap_signal:
 	; r2,r3 is signal
@@ -456,9 +460,11 @@ preemption:
 	;
 	ld	r14,#>U_DATA__U_SYSCALL_SP
 	ld	r15,#<U_DATA__U_SYSCALL_SP
-	lde	@rr14,istack_switched_sp
+	ld	r0,istack_switched_sp
+	lde	@rr14,r0
 	incw	rr14
-	lde	@rr14,istack_switched_sp+1
+	ld	r1,istack_switched_sp+1
+	lde	@rr14,r1
 	ld	254,#>kstack_top
 	ld	255,#<kstack_top
 	;
@@ -472,20 +478,20 @@ preemption:
 	ld	r14,#>U_DATA__U_PTAB
 	ld	r15,#<U_DATA__U_PTAB
 	lde	r2,@rr14
-	inc	rr14
+	incw	rr14
 	lde	r3,@rr14
-	lde	r0,@rr3
+	lde	r0,@rr2
 	cp	r0,#P_RUNNING
 	jr	nz,not_running
 	ld	r0,#P_READY
-	lde	@rr3,r0
+	lde	@rr2,r0
 	;
 	;	Punish the process for using all of its time.
 	;
-	incw	rr3	; flags
-	lde	r0,@rr3
+	incw	rr2	; flags
+	lde	r0,@rr2
 	or	r0,#PFL_BATCH
-	lde	@rr3,r0
+	lde	@rr2,r0
 
 not_running:
 	;
@@ -500,10 +506,10 @@ not_running:
 	clr	r3
 	ld	r14,#>U_DATA__U_ININTERRUPT
 	ld	r15,#<U_DATA__U_ININTERRUPT
-	lde	@r14,r3
+	lde	@rr14,r3
 	ld	r14,#>U_DATA__U_INSYS
 	ld	r15,#<U_DATA__U_INSYS
-	lde	@r14,r3
+	lde	@rr14,r3
 	;
 	;	Get our mapping back
 	;
@@ -521,12 +527,12 @@ not_running:
 
 	ld	r14,#>U_DATA__U_CURSIG
 	ld	r15,#<U_DATA__U_CURSIG
-	lde	r3,@r14
+	lde	r3,@rr14
 	or	r3,r3
 	jr	nz, nosigcall
 	call	deliver_signals_2
-nosigcall
-	jr interrupt_pop
+nosigcall:
+	jp interrupt_pop
 
 ;
 ;	Debug code
@@ -603,9 +609,9 @@ outnibble:
 	and	r3,#0x0f
 	cp	r3,#10
 	jr	c,numeral
-	ad	r3,#7
+	add	r3,#7
 numeral:
-	ad	r3,#0x30		; '0'
+	add	r3,#0x30		; '0'
 	jp	outchar
 
 
@@ -631,7 +637,7 @@ ___hard_irqrestore:
 	ld	r15,255
 	incw	r14
 	incw	r14
-	lde	r3,@r14
+	lde	r3,@rr14
 	ld	_init_disabled,r3
 	di
 	cp	_int_disabled,#0
@@ -662,19 +668,31 @@ _cpu_detect:
 .export _in
 .export _out
 
+;
+;	The production board uses upper 32K of the data space as I/O
+;	whenever port 2 pin 6 is low
+;
 _in:
 	ld	r15,#2
 	call	_gargr2
+	ld	r12,2
+	push	r12
+	and	2,#0xBF		; I/O on
 	ld	r2,#0xFF	; I/O is at FFxx
 	lde	r3,@rr2
+	pop	r12		; restore I/O (might be on in an intr)
 	clr	r2
 	ret
 
 _out:
 	ld	r15,#2
 	call	__gargr4	; get both args into r0-r1/r2-r3
+	ld	r12,2
+	and	2,#0xBF		; I/O on
+	push	r12
 	ld	r0,#0xFF
 	lde	@rr0,r3
+	pop	2
 	ret
 
 .export _set_cpu_type
