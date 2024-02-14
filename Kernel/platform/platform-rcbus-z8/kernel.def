@@ -1,0 +1,10 @@
+; UZI mnemonics for memory addresses etc
+
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @E000
+
+U_DATA_STASH		    .equ 0xBE00	      ; BE00-BFFF
+
+PROGBASE		    .equ 0x0000
+PROGLOAD		    .equ 0x0100
+
+CONFIG_SWAP		    .equ 1
