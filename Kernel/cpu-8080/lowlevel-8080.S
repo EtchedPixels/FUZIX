@@ -1,16 +1,16 @@
 #
 ;
-;	8085 low level code
+;	8080 low level code
 ;
 ;	Much the same as the Z80 code except we don't provide in and out
 ;	helpers because it's impossible to make them re-entrant for any port
 ;
 	.setcpu 8080
 
-#include "../cpu-8085/kernel-8085.def"
+#include "../cpu-8080/kernel-8080.def"
 
 ;
-;	CPU setup and properties. As we are hardcoded for 8085 this isn't
+;	CPU setup and properties. As we are hardcoded for 8080 this isn't
 ;	too hard
 ;
 		.data
@@ -22,7 +22,7 @@
 _sys_cpu:
 	.byte 1		; 8080 family
 _sys_cpu_feat:
-	.byte 1		; 8085 feature set
+	.byte 1		; 8085 feature set - this is adjusted in probe
 
 _sys_stubs:
 	jmp	unix_syscall_entry
