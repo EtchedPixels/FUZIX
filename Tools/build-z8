@@ -1,0 +1,12 @@
+#!/bin/sh
+
+X=`which asz8`
+if [ "$X" = "" ]; then
+	(cd ../Applications/assembler; make -f Cross.6800)
+fi
+
+X=`which fcc`
+if [ "$X" = "" ]; then
+	echo "fcc is required: see https://github.com/EtchedPixels/FuzixCompilerKit/"
+	exit 1
+fi

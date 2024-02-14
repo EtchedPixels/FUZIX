@@ -1,0 +1,32 @@
+#
+#	Build z8 version of the tools
+#
+all: asz8 ldz8 nmz8 osizez8 dumprelocsz8
+
+HDR = as.h ld.h obj.h
+
+AOBJ = as0.o as1-z8.o as2.o as3.o as4.o as6-z8.o
+
+CFLAGS = -DTARGET_Z8 -Wall -pedantic
+
+asz8: $(HDR) $(AOBJ)
+	cc -o asz8 $(AOBJ)
+
+ldz8: $(HDR) ld.o
+	cc -o ldz8 ld.o
+
+nmz8: $(HDR) nm.o
+	cc -o nmz8 nm.o
+
+osizez8: $(HDR) osize.o
+	cc -o osizez8 osize.o
+
+dumprelocsz8: $(HDR) dumprelocs.o
+	cc -o dumprelocsz8 dumprelocs.o
+
+clean:
+	rm -f *.o *~
+	rm -f nmz8 ldz8 asz8 osizez8 dumprelocsz8
+
+install:
+	cp nmz8 ldz8 asz8 osizez8 dumprelocsz8 /opt/asz8/bin/
