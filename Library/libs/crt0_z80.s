@@ -125,6 +125,8 @@ __sighandler:
 		pop	hl
 		ld	hl,(__tmp)
 		ret			; to the previous frame via the
+
+		.data
 					; kernel helpers
 .export _environ
 _environ:	.word 0
