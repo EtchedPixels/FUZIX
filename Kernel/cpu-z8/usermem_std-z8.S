@@ -10,7 +10,7 @@
 
 __uputc:
 	ld 	r15,#2
-	call	gargr4	; r0-r1 val, r2-r3 ptr
+	call	__gargr4	; r0-r1 val, r2-r3 ptr
 	call map_proc_always
 	lde	@rr2,r1
 	clr	r2
@@ -21,7 +21,7 @@ __uputc:
 
 __uputw:
 	ld 	r15,#2
-	call	gargr4	; r0-r1 val, r2-r3 ptr
+	call	__gargr4	; r0-r1 val, r2-r3 ptr
 	call map_proc_always
 	lde	@rr2,r0
 	incw	rr2
@@ -34,7 +34,7 @@ __uputw:
 
 __ugetc:
 	ld	r15,#2
-	call	gargr2
+	call	__gargr2
 	call	map_proc_always
 	lde	r3,@rr2
 	clr	r2
@@ -44,7 +44,7 @@ __ugetc:
 
 __ugetw:
 	ld	r15,#2
-	call	gargr2
+	call	__gargr2
 	ld	r14,r2
 	ld	r15,r3
 	call	map_proc_always
@@ -149,7 +149,7 @@ nowork:
 
 __uzero:
 	ld	r3,#2
-	call	gargr4	;	0-1 ptr 2-3 length
+	call	__gargr4	;	0-1 ptr 2-3 length
 	
 	ld	r12,r2
 	or	r12,r3

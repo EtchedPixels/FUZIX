@@ -45,6 +45,7 @@ _sys_stubs:
 callr0:
 	push	r1
 	push	r0
+justret:
 	ret
 
 deliver_signals:
@@ -96,7 +97,7 @@ raced:
 	ld	254,#>kstack_top
 	ld	255,#<kstack_top
 
-	clr	int_disabled	; we keep this in register space as its asm only
+	clr	_int_disabled	; we keep this in register space as its asm only
 	call	map_kernel_di
 	call	_chksigs
 	call	map_proc_always_di
@@ -638,7 +639,7 @@ ___hard_irqrestore:
 	incw	r14
 	incw	r14
 	lde	r3,@rr14
-	ld	_init_disabled,r3
+	ld	_int_disabled,r3
 	di
 	cp	_int_disabled,#0
 	jr	nz, diret
@@ -665,6 +666,8 @@ _cpu_detect:
 ;	For speed critical cases you need asm stubs, for the others these
 ;	will do.
 ;
+;	TODO: I/O mapping is board specific so this belongs in the platform
+;
 .export _in
 .export _out
 
@@ -674,7 +677,7 @@ _cpu_detect:
 ;
 _in:
 	ld	r15,#2
-	call	_gargr2
+	call	__gargr2
 	ld	r12,2
 	push	r12
 	and	2,#0xBF		; I/O on
@@ -698,4 +701,90 @@ _out:
 .export _set_cpu_type
 
 _set_cpu_type:
+	ret
+
+	.export _memcpy
+	.export _memset
+	.export _strlen
+	.export _swab
+	.export _swab32
+
+_memcpy:
+	ld r15,#4
+	call __gargr4
+	ld r15,#6
+	call __garg12r2
+	; r12 is length
+	; r0/r1 dest
+	; r2/r3 src
+	incw r12
+	push r1
+	push r0
+	jr mcnext
+mcloop:
+	lde r14,@rr2
+	lde @rr0,r14
+	incw rr0
+	incw rr2
+mcnext:
+	decw rr12
+	jr nz,mcloop
+	pop r2
+	pop r3
+	ret
+	
+_memset:
+	ld r15,#4
+	call __gargr4
+	ld r15,#6
+	call __garg12r2
+	; r12 is length
+	; r0/r1 ptr
+	push r1
+	push r0
+	; r3 value
+	incw r12
+	jr msnext
+msloop:
+	lde @rr0,r3
+	incw rr0
+msnext:
+	decw rr2
+	jr nz, msloop
+	pop r2
+	pop r3
+	ret
+
+_strlen:
+	ld r15,#2
+	call __garg12r2
+	; r1,r13 is now ptr
+	clr r2
+	clr r3
+count:
+	lde r0,@rr12
+	jr z,strlen_done
+	incw rr12
+	incw rr2
+	jr count
+strlen_done:
+	ret
+
+_swab:
+	ld r15,#2
+	call __gargr2
+	ld r0,r3
+	ld r3,r2
+	ld r2,r0
+	ret
+
+_swab32:
+	ld r15,#2
+	call __gargr4
+	ld r12,r3
+	ld r3,r0
+	ld r0,r12
+	ld r12,r2
+	ld r2,r1
+	ld r1,r12
 	ret
