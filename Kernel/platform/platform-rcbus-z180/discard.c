@@ -101,7 +101,7 @@ uint8_t plt_param(char *p)
 void device_init(void)
 {
 	ide_probe();
-	if (systype == 10) {	/* Has SD glue */
+	if ((systype == 10) || (systype == 16)) {	/* Has SD glue */
 		sd_probe();
 #ifdef CONFIG_NET
 		netdev_init();
