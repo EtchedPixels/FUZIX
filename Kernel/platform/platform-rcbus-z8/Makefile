@@ -47,7 +47,7 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin loader.tmp
 
 image: 
-	$(CROSS_LD) -b -C 0x0100 -D 0x0100 -S 0xF000 -f CLDBbXSs -o fuzix.bin crt0.o devices.o main.o \
+	$(CROSS_LD) -i -b -C 0x0100 -D 0x0000 -S 0xF000 -f CXSDLBbs -o fuzix.bin crt0.o devices.o main.o \
 	discard.o commonmem.o tricks.o rcbus-z8.o devtty.o \
 	../../start.o ../../version.o ../../cpu-z8/lowlevel-z8.o \
 	../../mm/bankfixed.o ../../timer.o ../../kdata.o  ../../mm/memalloc_none.o \
@@ -59,7 +59,7 @@ image:
 	../../dev/tinydisk_discard.o ../../dev/tinysd_discard.o \
 	../../blk512.o ../../cpu-z8/usermem_std-z8.o -m fuzix.tmpmap /opt/fcc/lib/z8/libz8.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
-	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
+	cp fuzix.bin ../../fuzix.bin
 
 loader.o: loader.S
 	$(CROSS_AS) $(ASOPS) loader.S

@@ -173,53 +173,84 @@ switchfail:
 	jp _plt_monitor
 
 
-copypage:
-	push r0
-	push r1
-
-	; TODO - map the pages
-	; FIXME
-	; TODO
-
-	; Points 0x4000 and 0x8000
-	ld r14,#0x80
-	ld r12,#0x40
+; Copy 56K between two banks - this one is a bit of a mess with the
+; fixed banking setup.
+; Should optimize this to do the low 32K fast, then the upper
+; Also to use ldei and a buffer in register space
+copypages:
+	push r15
+	push r14
+	push r11
+	push r10
+	push r9
+	push r8
+	push r7
+	push r6
+	push r5
+	push r4
+	clr r14	; pointer
 	clr r15
-	clr r13
-	ld r0,#16
-	clr r1
-copylp:
-	lde r2,@rr12
-	incw rr12
-	lde @rr14,r2
+	ld r13,#0xFF	; pointer to MMU register
+	ld r12,r13
+	ld r2,2
+	push 2
+	; 8 bytes a loop for 56K
+	ld r2,#28
+	clr r3
+loop:
+	and 2,#0xBF	; I/O map on
+	; copy from r0 to r1
+	lde @rr12,r0	; Set source bank
+	or 2,#0x40	; I/O map off
+	push r14	; save low ptr
+	lde r4,@rr14
 	incw rr14
-	lde r2,@rr12
-	incw rr12
-	lde @rr14,r2
+	lde r5,@rr14
 	incw rr14
-	lde r2,@rr12
-	incw rr12
-	lde @rr14,r2
+	lde r6,@rr14
 	incw rr14
-	lde r2,@rr12
-	incw rr12
-	lde @rr14,r2
+	lde r7,@rr14
 	incw rr14
-	djnz r1, copylp	; copies 1K a loop
-	djnz r0, copylp ; 16K
-	pop r1
-	pop r0
-	inc 0
-	inc r1
+	lde r8,@rr14
+	incw rr14
+	lde r9,@rr14
+	incw rr14
+	lde r10,@rr14
+	incw rr14
+	lde r11,@rr14
+	pop r14		; will never cross a boundary mid process
+	and 2,#0xBF	; I/O map on
+	lde @rr12,r1	; Set dest bank
+	lde @rr14,r4
+	incw rr14
+	lde @rr14,r5
+	incw rr14
+	lde @rr14,r6
+	incw rr14
+	lde @rr14,r7
+	incw rr14
+	lde @rr14,r8
+	incw rr14
+	lde @rr14,r9
+	incw rr14
+	lde @rr14,r10
+	incw rr14
+	lde @rr14,r11
+	incw rr14
+	djnz r3,loop
+	djnz r2,loop
+	pop 2		; Restore I/O map
+	pop r4
+	pop r5
+	pop r6
+	pop r7
+	pop r8
+	pop r9
+	pop r10
+	pop r11
+	pop r14
+	pop r15
 	ret
-
-	; Copies 48K from bank r0 to bank r1
-copy48K:
-	call copypage
-	call copypage
-	call copypage
-	jp map_kernel
-
 
 _dofork:
 	ld r15,#2
@@ -258,12 +289,12 @@ _dofork:
 	ld r13,r15
 	add r13,#P_TAB__P_PAGE_OFFSET
 	adc r12,#0
-	lde r0,@rr12	; dest
+	lde r1,@rr12	; dest
 	ld r12,#>U_DATA__U_PAGE
 	ld r13,#<U_DATA__U_PAGE
-	lde r1,@rr12	; source
+	lde r0,@rr12	; source
 
-	call copy48K
+	call copypages
 
 	call map_proc_always
 
