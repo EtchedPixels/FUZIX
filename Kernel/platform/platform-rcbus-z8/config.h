@@ -18,6 +18,7 @@
 #define MAP_SIZE	0x8000U
 
 #define CONFIG_TD_NUM	1
+#define CONFIG_TD_SD
 #define TD_SD_NUM	1
 
 /* Read processes and big I/O direct into process space */

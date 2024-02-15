@@ -22,4 +22,9 @@ void plt_interrupt(void)
  timer_interrupt();
 }
 
+void plt_reinterrupt(void)
+{
+ tty_pollirq();
+}
+
 /* Nothing to do for the map of init */

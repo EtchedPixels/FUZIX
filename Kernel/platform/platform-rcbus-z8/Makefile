@@ -47,7 +47,7 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin loader.tmp
 
 image: 
-	$(CROSS_LD) -t -b -C 0x0100 -S 0xF000 -f CLDBbXSs -o fuzix.bin crt0.o devices.o main.o \
+	$(CROSS_LD) -b -C 0x0100 -D 0x0100 -S 0xF000 -f CLDBbXSs -o fuzix.bin crt0.o devices.o main.o \
 	discard.o commonmem.o tricks.o rcbus-z8.o devtty.o \
 	../../start.o ../../version.o ../../cpu-z8/lowlevel-z8.o \
 	../../mm/bankfixed.o ../../timer.o ../../kdata.o  ../../mm/memalloc_none.o \

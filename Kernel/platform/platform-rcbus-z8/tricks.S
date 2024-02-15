@@ -29,8 +29,8 @@ _plt_switchout:
 	incw rr14
 	lde @rr14,r3
 	call map_proc_always
-	ld r14,#>__udata
-	ld r15,#<__udata
+	ld r14,#>_udata
+	ld r15,#<_udata
 	ld r12,#>U_DATA_STASH
 	ld r13,#<U_DATA_STASH
 	clr r0
@@ -77,14 +77,14 @@ _switchin:
 	jr nz, copyback
 	sub r1,r15
 	jr z, skip_copyback
-copybank:
+copyback:
 	; Map process r3
 	call map_proc_a
 
 	push r14
 	push r15
-	ld r14,#>__udata
-	ld r15,#<__udata
+	ld r14,#>_udata
+	ld r15,#<_udata
 	ld r12,#>U_DATA_STASH
 	ld r13,#<U_DATA_STASH
 	clr r0
@@ -165,7 +165,7 @@ skip_copyback:
 in_isr:
 	ret
 
-switchfal:
+switchfail:
 	call outr14
 	ld r14,#>badswitchmsg
 	ld r15,#<badswitchmsg
@@ -223,7 +223,7 @@ copy48K:
 
 _dofork:
 	ld r15,#2
-	call __garg2
+	call __gargr2
 
 	ld r14,r2
 	ld r15,r3
@@ -263,7 +263,7 @@ _dofork:
 	ld r13,#<U_DATA__U_PAGE
 	lde r1,@rr12	; source
 
-	call copy48k
+	call copy48K
 
 	call map_proc_always
 
@@ -273,8 +273,8 @@ _dofork:
 	push r15
 
 	; udata to parent stash
-	ld r14,#>__udata
-	ld r15,#<__udata
+	ld r14,#>_udata
+	ld r15,#<_udata
 	ld r12,#>U_DATA_STASH
 	ld r13,#<U_DATA_STASH
 	clr r0
@@ -320,4 +320,8 @@ l2:
 	.export _need_resched
 
 _need_resched:
+	.byte	0
+
+badswitchmsg:
+	.ascii	"badswitch"
 	.byte	0

@@ -8,3 +8,7 @@ PROGBASE		    .equ 0x0000
 PROGLOAD		    .equ 0x0100
 
 CONFIG_SWAP		    .equ 1
+
+
+MAINBANK		    .equ 0x10
+INTBANK			    .equ 0x20

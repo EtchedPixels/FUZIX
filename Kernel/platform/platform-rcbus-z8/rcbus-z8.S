@@ -21,14 +21,17 @@ plt_interrupt_all:
 
 	.export _int_disabled
 	.export _mem_bank
+	.export istack_switched_sp
 
 	.org 8
 _int_disabled:
 	.byte 0
 _mem_bank:
 	.byte 0
-_saved_bank:
+_mem_saved_bank:
 	.byte 0
+istack_switched_sp:
+	.word 0
 
 	.code
 
@@ -115,6 +118,7 @@ map_proc_di:
 	jr nz, map_notk
 	or r15,r15
 	jr z, map_kernel
+map_notk:
 	push r3
 	lde r3,@rr14
 	ld _mem_bank,r3
@@ -157,12 +161,23 @@ outchw:
 ;
 ;	Bitbang SPI : TODO
 ;
-	.export _z8_spi_tx
-_z8_spi_tx:
-	ret
+	.export _sd_spi_tx_byte
+	.export _sd_spi_rx_byte
+	.export _sd_spi_tx_sector
+	.export _sd_spi_rx_sector
+	.export _sd_spi_lower_cs
+	.export _sd_spi_raise_cs
+	.export _sd_spi_fast
+	.export _sd_spi_slow
 
-	.export _z8_spi_rx
-_z8_spi_rx:
+_sd_spi_tx_byte:
+_sd_spi_rx_byte:
+_sd_spi_tx_sector:
+_sd_spi_rx_sector:
+_sd_spi_lower_cs:
+_sd_spi_raise_cs:
+_sd_spi_fast:
+_sd_spi_slow:
 	ret
 
 ;
@@ -204,7 +219,7 @@ has_ch:
 	.export _z8tty_put
 _z8tty_put:
 	ld r3,#2
-	call __garg2
+	call __gargr2
 	ld 0xF0,r3
 	ret
 
