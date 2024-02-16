@@ -1,10 +1,10 @@
-Initial support for the PZ1
+Support for the PZ1 platform
 
 Use a modern cc65 from https://github.com/cc65/cc65 (2.18 as shipped in
-many Linux distributions is just fine).
+many Linux distributions works well).
 
-Although the memory card can operate as 4 independent 16K pages for simplicity
-at this point we treat it as if it just provided 16K and 48K
+Although the memory can operate as 4 independent 16K pages, for simplicity
+at this point we treat it as if it just provided 16K and 48K.
 
 Interrupts deal wth the shared ZP by swapping the ZP back and forth with the
 interrupt copies (about 20 bytes involved)
@@ -28,11 +28,14 @@ User space:
 
 The memory banks are allocated as follows
 
-	32			RAM mapped initially at 0-16K
-	33			RAM mapped initially at 16-32K
-	34			RAM mapped initially at 32-48K
-	35			RAM mapped initially at 48K-64K
-	36-63			Handed out in fours for process maps
+	0			RAM mapped initially at 0-16K
+	1			RAM mapped initially at 16-32K
+	2			RAM mapped initially at 32-48K
+	3			RAM mapped initially at 48K-64K
+	4-31			Handed out in fours for process maps
+
+This port is based on the rcbus-6502 port, so share most of the same features
+and missing bits.
 
 The 6502 port has some interesting gotchas to be aware of and things that
 need addressing
@@ -77,9 +80,9 @@ Swap support
 Lots of features
 Virtual disk partitioning or multiple volumes
 
-Emulator:
-
+EmulatorKit usage:
 make diskimage
+./pz1 -r fuzix.rom -i disk.img
 
-./pz1 -r fuzix.img -i filesys.img
-
+fix for erase in console:
+stty erase '^?'
