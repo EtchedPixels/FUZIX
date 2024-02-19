@@ -88,7 +88,7 @@
 # zx+3:		ZX Spectrum +3
 # zxdiv:	ZX Spectrum 128K with DivIDE/DivMMC interface
 
-TARGET=sc720
+TARGET=pz1
 
 include version.mk
 

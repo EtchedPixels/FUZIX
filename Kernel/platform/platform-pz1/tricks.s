@@ -84,7 +84,7 @@ _switchin:
 	ldy	#P_TAB__P_PAGE_OFFSET
 	lda	(ptr1),y
 ;	jsr	outcharhex
-	sta	PORT_BANK_0		; switches zero page, stack memory area
+	sta	IO_BANK_0		; switches zero page, stack memory area
 	; ------- No valid stack, new ZP ----- stack must not be used
 
 	; Set ptr1 back up (the old ptr1 was on the other ZP)
@@ -195,7 +195,7 @@ _dofork:
 	stx ptr1+1
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y
-	sta PORT_BANK_0			; switch to child and child stack
+	sta IO_BANK_0			; switch to child and child stack
 					; and zero page etc
 	; We are now in the kernel child context
 
@@ -240,10 +240,10 @@ _dofork:
 fork_copy:
 	ldy #P_TAB__P_PAGE_OFFSET
 	lda (ptr1),y		; child->p_pag[0]
-	sta PORT_BANK_2		; 8000
+	sta IO_BANK_2		; 8000
 	sta tmp1
 	lda _udata + U_DATA__U_PAGE
-	sta PORT_BANK_1		; 4000
+	sta IO_BANK_1		; 4000
 	sta tmp2
 
 	; Now use that window to copy 48K from 0000-BFFF
@@ -253,25 +253,25 @@ fork_copy:
 	inc tmp1
 	inc tmp2
 	lda tmp1
-	sta PORT_BANK_2
+	sta IO_BANK_2
 	lda tmp2
-	sta PORT_BANK_1
+	sta IO_BANK_1
 	jsr bank2bank		; second 16K
 
 	inc tmp1
 	inc tmp2
 	lda tmp1
-	sta PORT_BANK_2
+	sta IO_BANK_2
 	lda tmp2
-	sta PORT_BANK_1
+	sta IO_BANK_1
 	jsr bank2bank		; third 16K
 
 	inc tmp1
 	inc tmp2
 	lda tmp1
-	sta PORT_BANK_2
+	sta IO_BANK_2
 	lda tmp2
-	sta PORT_BANK_1
+	sta IO_BANK_1
 	jsr bank2bank		; final block
 
 	jmp map_kernel		; put the kernel mapping back as it should be
@@ -332,9 +332,9 @@ copy1:
 
 _create_init_common:
 	lda #0
-	sta PORT_BANK_1		;	set the map for 0x4000
+	sta IO_BANK_1		;	set the map for 0x4000
 	lda #4
-	sta PORT_BANK_2		;	and 0x8000
+	sta IO_BANK_2		;	and 0x8000
 	jsr bank2bank
 	jmp map_kernel
 ;

@@ -27,7 +27,7 @@
 
 	    .export _hd_data_in
 	    .export _hd_data_out
-	    .import _hd_mode
+	    .import _td_raw
 
 	    .import interrupt_handler
 	    .import _udata
@@ -60,6 +60,7 @@
 
             .include "ports.def"
 
+RAM_SIZE_KB	.set	512
 ; -----------------------------------------------------------------------------
 ; COMMON MEMORY BANK (0x0200 upwards after the common data blocks)
 ; -----------------------------------------------------------------------------
@@ -71,7 +72,7 @@ _plt_reboot:
 				; restart
 
 	    lda #3
-	    sta PORT_BANK_3		; top 16K to ROM 0
+	    sta IO_BANK_3		; top 16K to ROM 0
 	    jmp ($FFFC)
 
 ___hard_di:
@@ -103,18 +104,18 @@ init_early:
 	    ; handling - or does it - we wrap the bit ?? FIXME
 	    jsr _create_init_common
 	    lda #4
-	    sta PORT_BANK_0		; set low page to copy
+	    sta IO_BANK_0		; set low page to copy
             rts			; stack was copied so this is ok
 
 init_hardware:
             ; set system RAM size for test purposes
-	    lda #0
+	    lda #(RAM_SIZE_KB & $FF)
 	    sta _ramsize
-	    lda #2
+	    lda #(RAM_SIZE_KB >> 8)
 	    sta _ramsize+1
-	    lda #192
+	    lda #((RAM_SIZE_KB - 64) & $FF)
 	    sta _procmem
-	    lda #1
+	    lda #((RAM_SIZE_KB - 64) >> 8)
 	    sta _procmem+1
             jmp program_vectors_k
 
@@ -226,15 +227,15 @@ map_kernel:
 ;	a 16K window in and out (which will need us to fix save/restore)
 ;
 map_bank:
-	    stx PORT_BANK_0
+	    stx IO_BANK_0
 map_bank_i:			; We are not mapping the first user page yet
 	    stx cur_map
 	    inx
-	    stx PORT_BANK_1
+	    stx IO_BANK_1
 	    inx
-	    stx PORT_BANK_2
+	    stx IO_BANK_2
 	    inx
-	    stx PORT_BANK_3
+	    stx IO_BANK_3
 	    rts
 
 ; X,A holds the map table of this process
@@ -291,11 +292,11 @@ saved_map:  .byte 0
 outchar:
 	    pha
 outcharw:
-	    lda PORT_SERIAL_0_FLAGS
+	    lda IO_SERIAL_0_FLAGS
             and #SERIAL_FLAGS_OUT_FULL
             bne outcharw
             pla
-            sta PORT_SERIAL_0_OUT
+            sta IO_SERIAL_0_OUT
             rts
 
 ;
@@ -675,46 +676,55 @@ _plt_interrupt_i:
 ;	switched.
 ;
 _hd_data_in:
-	    sta ptr1
-	    stx ptr1+1
-	    lda _hd_mode
-	    beq no_remapr
-	    jsr map_proc_always
+	sta ptr1
+	stx ptr1+1
+	lda _td_raw
+	beq no_remapr
+	jsr map_proc_always
 no_remapr:
-	    ldy #0
+	ldy #0
 hdin1:
-            lda PORT_FILE_SYSTEM_DATA
-            sta (ptr1),y
-            iny
-            bne hdin1
-	    inc ptr1+1
+	lda IO_DISK_DATA
+	sta (ptr1),y
+	lda IO_DISK_STATUS
+	bne hdin_end		;status NOK, end early
+	iny
+	bne hdin1
+	inc ptr1+1
 hdin2:
-            lda PORT_FILE_SYSTEM_DATA
-            sta (ptr1),y
-            iny
-            bne hdin2
-	    lda PORT_FILE_SYSTEM_STATUS
-	    ; This preserves A
-            jmp map_kernel
+	lda IO_DISK_DATA
+	sta (ptr1),y
+	lda IO_DISK_STATUS
+	bne hdin_end		;status NOK, end early
+	iny
+	bne hdin2
+	; This preserves A
+hdin_end:
+	jmp map_kernel
 
 _hd_data_out:
-	    sta ptr1
-	    stx ptr1+1
-	    lda _hd_mode
-	    beq no_remapw
-	    jsr map_proc_always
+	sta ptr1
+	stx ptr1+1
+	lda _td_raw
+	beq no_remapw
+	jsr map_proc_always
 no_remapw:
-	    ldy #0
+	ldy #0
 hdout1:
-            lda (ptr1),y
-            sta PORT_FILE_SYSTEM_DATA
-            iny
-            bne hdout1
-	    inc ptr1+1
+	lda (ptr1),y
+	sta IO_DISK_DATA
+	lda IO_DISK_STATUS
+	bne hdout_end		;status NOK, end early
+	iny
+	bne hdout1
+	inc ptr1+1
 hdout2:
-            lda (ptr1),y
-            sta PORT_FILE_SYSTEM_DATA
-            iny
-            bne hdout2
-	    lda PORT_FILE_SYSTEM_STATUS
-            jmp map_kernel
+	lda (ptr1),y
+	sta IO_DISK_DATA
+	lda IO_DISK_STATUS
+	bne hdout_end		;status NOK, end early
+	iny
+	bne hdout2
+	lda IO_DISK_STATUS
+hdout_end:
+	jmp map_kernel

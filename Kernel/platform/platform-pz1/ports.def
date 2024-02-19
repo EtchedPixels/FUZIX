@@ -1,30 +1,32 @@
-PORT_BANK_0             .set $FE00
-PORT_BANK_1             .set $FE01
-PORT_BANK_2             .set $FE02
-PORT_BANK_3             .set $FE03
+IO_BANK_0		.set $FE00
+IO_BANK_1		.set $FE01
+IO_BANK_2		.set $FE02
+IO_BANK_3		.set $FE03
 
-PORT_SERIAL_0_FLAGS     .set $FE10 ; bit 7: out buffer full, bit 6: in-data available
-PORT_SERIAL_0_IN        .set $FE11
-PORT_SERIAL_0_OUT       .set $FE12
-PORT_SERIAL_1_FLAGS     .set $FE18 ; bit 7: out buffer full, bit 6: in-data available
-PORT_SERIAL_1_IN        .set $FE19
-PORT_SERIAL_1_OUT       .set $FE1A
-SERIAL_FLAGS_OUT_FULL   .set   128
-SERIAL_FLAGS_IN_AVAIL   .set    64
+IO_SERIAL_0_FLAGS	.set $FE10 ; bit 7: out buffer full, bit 6: in-data available
+IO_SERIAL_0_IN		.set $FE11
+IO_SERIAL_0_OUT		.set $FE12
+IO_SERIAL_1_FLAGS	.set $FE18 ; bit 7: out buffer full, bit 6: in-data available
+IO_SERIAL_1_IN		.set $FE19
+IO_SERIAL_1_OUT		.set $FE1A
+SERIAL_FLAGS_OUT_FULL	.set   128
+SERIAL_FLAGS_IN_AVAIL	.set    64
 
-PORT_FILE_SYSTEM_CMD    .set $FE60
-PORT_FILE_SYSTEM_PRM_0  .set $FE61
-PORT_FILE_SYSTEM_PRM_1  .set $FE62
-PORT_FILE_SYSTEM_DATA   .set $FE63
-PORT_FILE_SYSTEM_STATUS .set $FE64
-FS_CMD_SELECT           .set 0
-FS_CMD_SEEK             .set 1
-FS_STATUS_OK            .set 0
-FS_STATUS_NOK           .set 1
+IO_DISK_CMD		.set $FE60
+IO_DISK_PRM_0		.set $FE61
+IO_DISK_PRM_1		.set $FE62
+IO_DISK_PRM_2		.set $FE63
+IO_DISK_PRM_3		.set $FE64
+IO_DISK_DATA		.set $FE65
+IO_DISK_STATUS		.set $FE66
+DISK_CMD_SELECT		.set 0
+DISK_CMD_SEEK		.set 1
+DISK_STATUS_OK		.set 0
+DISK_STATUS_NOK		.set 1
 
-PORT_IRQ_TIMER_TARGET   .set $FE80
-PORT_IRQ_TIMER_COUNT    .set $FE81
-PORT_IRQ_TIMER_RESET    .set $FE82
-PORT_IRQ_TIMER_TRIG     .set $FE83
-PORT_IRQ_TIMER_PAUSE    .set $FE84
-PORT_IRQ_TIMER_CONT     .set $FE85
+IO_TIMER_TARGET		.set $FE80
+IO_TIMER_COUNT		.set $FE81
+IO_TIMER_RESET		.set $FE82
+IO_TIMER_TRIG		.set $FE83
+IO_TIMER_PAUSE		.set $FE84
+IO_TIMER_CONT		.set $FE85
