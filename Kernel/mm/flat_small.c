@@ -1,7 +1,7 @@
 /*
  *	A software MMU and paging implementation for smaller address
  *	spaces. This is designed for machines where the cost of copying
- *	memory around signifcantly exceeds the cost of disk I/O - such
+ *	memory around is signifcantly below the cost of disk I/O - such
  *	as when running bitbang SD cards.
  *
  *	All applications see a classic Unix address space where the stack
