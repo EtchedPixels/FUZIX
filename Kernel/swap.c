@@ -122,6 +122,9 @@ static ptptr swapvictim(ptptr p, int notself)
 	/* FIXME: with the punishment flag we ought to also consider that */
 	do {
 		if (c->p_page && c != udata.u_ptab) {	/* No point swapping someone in swap! */
+			/* We swapped it in but have not run it yet. Avoid thrashing */
+			if (c->p_flags & PFL_SWAPIN)
+				continue;
 			/* Find the last entry before us */
 			if (c->p_status == P_READY)
 				r = c;
