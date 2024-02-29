@@ -488,6 +488,7 @@ typedef struct p_tab {
 #define PFL_BATCH	4	/* Used full time quantum */
 #define PFL_GRAPHICS	8	/* Graphics hint flag for some platforms
                                    (platform owned) */
+#define PFL_SWAPIN	16	/* Swapped in but not yet run */
     uint8_t     p_tty;          /* Process' controlling tty minor # */
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
