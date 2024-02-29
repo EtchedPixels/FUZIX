@@ -32,4 +32,4 @@ done
 #
 set -e
 
-cc85 -s -m8085 $ARGS -o "$TARGET" -M
+fcc -s -m8085 $ARGS -o "$TARGET" -M

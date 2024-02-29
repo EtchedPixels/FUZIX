@@ -1,6 +1,6 @@
-export CROSS_AS=ccz80 -X
+export CROSS_AS=fcc -mz80 -X
 export CROSS_LD=ldz80
-export CROSS_CC=ccz80
+export CROSS_CC=fcc -mz80
 export CROSS_CCOPTS= -X -c -O -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG2=
 export CROSS_CC_SEG3=

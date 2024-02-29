@@ -32,4 +32,4 @@ done
 #
 set -e
 #
-ccz80 -X -s $ARGS -o "$TARGET" -M
+fcc -mz80 -X -s $ARGS -o "$TARGET" -M
