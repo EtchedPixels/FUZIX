@@ -643,9 +643,11 @@ _devide_read_data:
 	pop	hl
 	push	hl
 	push	de
+	push	bc
 	call	ide_map
 	inir
 	inir
+	pop	bc
 	jp	map_kernel_restore
 
 _devide_write_data:
@@ -653,7 +655,9 @@ _devide_write_data:
 	pop	hl
 	push	hl
 	push	de
+	push	bc
 	call	ide_map
 	otir
 	otir
+	pop	bc
 	jp	map_kernel_restore
