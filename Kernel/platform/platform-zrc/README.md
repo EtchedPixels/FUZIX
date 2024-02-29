@@ -45,7 +45,4 @@ This is the test tree for the ccz80 compiler at the moment so expect it
 to be a bit rough
 
 ### To fix
-- Need linker to produce relocatable binary format objects
 - Linker dynamic libraries
-- Resync assembler and cc with upstream
-- Test/verify can build code on Z80
