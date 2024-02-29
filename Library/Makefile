@@ -2,7 +2,7 @@
 
 CFLAGS += -I../Kernel/include
 
-all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
+all: tools/syscall tools/binman tools/syscall_6303 \
      tools/syscall_6502 tools/syscall_68000 tools/syscall_8080 \
      tools/syscall_6809 tools/syscall-scc6809 tools/syscall_armm4 \
      tools/ack2fuzix tools/binman85 \
@@ -12,7 +12,7 @@ all: tools/syscall tools/binman tools/fcc tools/syscall_6303 \
      tools/riscv32toaout tools/syscall_8086
 
 clean:
-	rm -f tools/syscall tools/binman tools/fcc tools/fsize tools/liberror
+	rm -f tools/syscall tools/binman tools/fsize tools/liberror
 	rm -f tools/binman85 tools/relocbin6303 tools/relocbin6809 tools/shlibgen
 	rm -f tools/relocbin tools/ack2fuzix tools/fuzixlib
 	rm -f tools/syscall-z88dk tools/syscall_6502 tools/syscall_6809 tools/syscall_68000 tools/syscall-scc6809
@@ -111,47 +111,69 @@ tools/shlibgen: tools/shlibgen.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 install:
-ifeq ($(USERCPU),z80)
-	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
-	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
-	mkdir -p /opt/fcc/include/msp430x
-	mkdir -p /opt/fcc/include/net /opt/fcc/include/netinet
-	mkdir -p /opt/fcc/include/readline
-	mkdir -p /opt/fcc/include/sys
-	install -m 0755 tools/binman tools/relocbin tools/fcc /opt/fcc/bin
-	install -m 0644 include/*.h /opt/fcc/include
-	install -m 0644 include/6502/*.h /opt/fcc/include/6502
-	install -m 0644 include/arpa/*.h /opt/fcc/include/arpa
-	install -m 0644 include/msp430x/*.h /opt/fcc/include/msp430x
-	install -m 0644 include/net/*.h /opt/fcc/include/net
-	install -m 0644 include/netinet/*.h /opt/fcc/include/netinet
-	install -m 0644 include/readline/*.h /opt/fcc/include/readline
-	install -m 0644 include/sys/*.h /opt/fcc/include/sys
-	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/include/sys/
-	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
+ifeq ($(USERCPU),8080)
+	mkdir -p /opt/fcc/lib/8080/include/arpa
+	mkdir -p /opt/fcc/lib/8080/include/net /opt/fcc/lib/8080/include/netinet
+	mkdir -p /opt/fcc/lib/8080/include/readline
+	mkdir -p /opt/fcc/lib/8080/include/sys
+	install -m 0644 include/*.h /opt/fcc/lib/8080/include
+	install -m 0644 include/arpa/*.h /opt/fcc/lib/8080/include/arpa
+	install -m 0644 include/net/*.h /opt/fcc/lib/8080/include/net
+	install -m 0644 include/netinet/*.h /opt/fcc/lib/8080/include/netinet
+	install -m 0644 include/readline/*.h /opt/fcc/lib/8080/include/readline
+	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/lib/8080/include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/lib/8080/include/sys/
 	install -m 0644 ../Kernel/include/drivewire.h include/sys/
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 include/sys/*.h /opt/fcc/lib/8080/include/sys
+endif
+ifeq ($(USERCPU),8085)
+	mkdir -p /opt/fcc/lib/8085/include/arpa
+	mkdir -p /opt/fcc/lib/8085/include/net /opt/fcc/lib/8085/include/netinet
+	mkdir -p /opt/fcc/lib/8085/include/readline
+	mkdir -p /opt/fcc/lib/8085/include/sys
+	install -m 0644 include/*.h /opt/fcc/lib/8085/include
+	install -m 0644 include/arpa/*.h /opt/fcc/lib/8085/include/arpa
+	install -m 0644 include/net/*.h /opt/fcc/lib/8085/include/net
+	install -m 0644 include/netinet/*.h /opt/fcc/lib/8085/include/netinet
+	install -m 0644 include/readline/*.h /opt/fcc/lib/8085/include/readline
+	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/lib/8085/include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/lib/8085/include/sys/
+	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 include/sys/*.h /opt/fcc/lib/8085/include/sys
+endif
+ifeq ($(USERCPU),z80)
+	mkdir -p /opt/fcc/lib/z80/include/arpa
+	mkdir -p /opt/fcc/lib/z80/include/net /opt/fcc/lib/z80/include/netinet
+	mkdir -p /opt/fcc/lib/z80/include/readline
+	mkdir -p /opt/fcc/lib/z80/include/sys
+	install -m 0644 include/*.h /opt/fcc/lib/z80/include
+	install -m 0644 include/arpa/*.h /opt/fcc/lib/z80/include/arpa
+	install -m 0644 include/net/*.h /opt/fcc/lib/z80/include/net
+	install -m 0644 include/netinet/*.h /opt/fcc/lib/z80/include/netinet
+	install -m 0644 include/readline/*.h /opt/fcc/lib/z80/include/readline
+	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/lib/z80/include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/lib/z80/include/sys/
+	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 include/sys/*.h /opt/fcc/lib/z80/include/sys
 endif
 ifeq ($(USERCPU),ez80_z80)
-	mkdir -p /opt/fcc/bin /opt/fcc/lib /opt/fcc/include
-	mkdir -p /opt/fcc/include/6502 /opt/fcc/include/arpa
-	mkdir -p /opt/fcc/include/msp430x
-	mkdir -p /opt/fcc/include/net /opt/fcc/include/netinet
-	mkdir -p /opt/fcc/include/readline
-	mkdir -p /opt/fcc/include/sys
-	install -m 0755 tools/binman tools/relocbin tools/fcc /opt/fcc/bin
-	install -m 0644 include/*.h /opt/fcc/include
-	install -m 0644 include/6502/*.h /opt/fcc/include/6502
-	install -m 0644 include/arpa/*.h /opt/fcc/include/arpa
-	install -m 0644 include/msp430x/*.h /opt/fcc/include/msp430x
-	install -m 0644 include/net/*.h /opt/fcc/include/net
-	install -m 0644 include/netinet/*.h /opt/fcc/include/netinet
-	install -m 0644 include/readline/*.h /opt/fcc/include/readline
-	install -m 0644 include/sys/*.h /opt/fcc/include/sys
-	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/include/sys/
-	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/include/sys/
+	mkdir -p /opt/fcc/lib/z80/include/arpa
+	mkdir -p /opt/fcc/lib/z80/include/net /opt/fcc/lib/z80/include/netinet
+	mkdir -p /opt/fcc/lib/z80/include/readline
+	mkdir -p /opt/fcc/lib/z80/include/sys
+	install -m 0644 include/*.h /opt/fcc/lib/z80/include
+	install -m 0644 include/arpa/*.h /opt/fcc/lib/z80/include/arpa
+	install -m 0644 include/net/*.h /opt/fcc/lib/z80/include/net
+	install -m 0644 include/netinet/*.h /opt/fcc/lib/z80/include/netinet
+	install -m 0644 include/readline/*.h /opt/fcc/lib/z80/include/readline
+	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/lib/z80/include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/lib/z80/include/sys/
 	install -m 0644 ../Kernel/include/drivewire.h include/sys/
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 include/sys/*.h /opt/fcc/lib/z80/include/sys
 endif
 ifeq ($(USERCPU),6502)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
