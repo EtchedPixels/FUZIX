@@ -1,5 +1,5 @@
-CC = ccz80 -mz80
-ASM = ccz80
+CC = fcc -mz80
+ASM = fcc -mz80
 AR = ar
 PLATFORM = z80
 PLATBIN = z80

@@ -1,5 +1,5 @@
-CC = cc85 -m8080
-ASM = cc85
+CC = fcc -m8080
+ASM = fcc -m8080
 AR = ar
 PLATFORM = 8080
 PLATBIN = 85

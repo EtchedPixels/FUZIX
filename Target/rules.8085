@@ -1,5 +1,5 @@
-CC = cc85
-AS = as85
+CC = fcc
+AS = fcc -m8085
 LINKER = $(FUZIX_ROOT)/Library/link/ld8085
 CFLAGS = -X -m8085 -Os -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8085
 #CFLAGS = -X -m8085 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8085
