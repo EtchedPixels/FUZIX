@@ -25,14 +25,20 @@ images should follow in time.
 
 ## Tools
 
-Most of the trees will build with recent tool chains for that architecture.
-The one exception is Z80/Z180. A modified SDCC is available in my github.
-This contains support for banked code that was not accepted upstream, and
-does not include the recent SDCC changes that totally changed the compiler
-ABI.
+For the 8080, 8085, Z80 and Z180 the code is now built with the Fuzix C
+Compiler and Bintools which are also in github. See instructions for
+building them. Some kernels still need the customised SDCC 3.8 from from
+this github. 65C816 and Z8 are a work in progress moving to this compiler.
+
+6502 is currently built with cc65 and a distribution version should work.
+
+6303/6803 are built with CC6303 (again in this github)
+
+6809 is built with lwtools and the including gcc fork.
+
+Other targets use gcc variants. See the target specific information.
 
 ## What does FUZIX have over UZI
-
 
 * Support for multiple processes in banked memory (as per UZI180) but
 	with Minix style chmem and efficient use of bank allocations.
