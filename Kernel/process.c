@@ -1018,9 +1018,7 @@ void NORETURN panic(char *deathcry)
  *
  *	There is lots more can be done here especially if the platform
  *	has true asynchronous disk I/O - things like paging stuff out in
- *	advance. We also need at some point to avoid swapping out something
- *	that swapped in and didn't run - so need to add another flag for that
- *	and test it when picking a candidate.
+ *	advance.
  */
 
 static struct p_tab *swapin_proc;
