@@ -39,9 +39,9 @@ inoptr n_open(uint8_t *namep, inoptr *parent)
 {
     staticfast inoptr wd;     /* the directory we are currently searching. */
     staticfast inoptr ninode;
-    inoptr temp;
+    regptr uint8_t *fp;
+    regptr inoptr temp;
     uint8_t c;
-    uint8_t *fp;
     usize_t len;
 
     if (parent)
@@ -197,12 +197,12 @@ nodir:
  * zeroes.
  */
 
-inoptr srch_dir(inoptr wd, uint8_t *compname)
+inoptr srch_dir(register inoptr wd, uint8_t *compname)
 {
-    uint_fast8_t curentry;
-    blkno_t curblock;
-    struct blkbuf *buf;
     register struct direct *d;
+    register blkno_t curblock;
+    register struct blkbuf *buf;
+    uint_fast8_t curentry;
     int nblocks;
     uint16_t inum;
 
@@ -235,7 +235,7 @@ inoptr srch_dir(inoptr wd, uint8_t *compname)
  * root of the mounted filesystem.
  */
 
-inoptr srch_mt(inoptr ino)
+inoptr srch_mt(register inoptr ino)
 {
     register uint_fast8_t j;
     register struct mount *m = &fs_tab[0];
@@ -263,8 +263,8 @@ inoptr srch_mt(inoptr ino)
 
 inoptr i_open(uint16_t dev, uint16_t ino)
 {
-    regptr inoptr nindex;
-    regptr inoptr j;
+    register inoptr nindex;
+    register inoptr j;
     struct mount *m;
     bool isnew = false;
 
@@ -329,7 +329,7 @@ badino:
     return NULLINODE;
 }
 
-bool emptydir(inoptr wd)
+bool emptydir(register inoptr wd)
 {
     struct direct curentry;
 
@@ -362,10 +362,10 @@ bool emptydir(inoptr wd)
  * or the user did not have write permission.
  */
 
-bool ch_link(inoptr wd, uint8_t *oldname, uint8_t *newname, inoptr nindex)
+bool ch_link(register inoptr wd, uint8_t *oldname, uint8_t *newname, inoptr nindex)
 {
     struct direct curentry;
-    int i;
+    register int i;
 
     i_islocked(wd);
 
@@ -408,7 +408,7 @@ bool ch_link(inoptr wd, uint8_t *oldname, uint8_t *newname, inoptr nindex)
     }
 
     memcpy(curentry.d_name, newname, FILENAME_LEN);
-    // pad name with NULLs
+    /* FIXME: add strncpy and use for this */
     for(i = 0; i < FILENAME_LEN; ++i)
         if(curentry.d_name[i] == '\0')
             break;
@@ -479,10 +479,10 @@ bool namecomp(uint8_t *n1, uint8_t *n2) // return true if n1 == n2
  * it's cleaner ???
  */
 
-inoptr newfile(inoptr pino, uint8_t *name)
+inoptr newfile(register inoptr pino, uint8_t *name)
 {
-    regptr inoptr nindex;
-    uint_fast8_t j;
+    register inoptr nindex;
+    register uint_fast8_t j;
 
     /* No parent? */
     if (!pino) {
@@ -542,7 +542,7 @@ nogood:
 
 fsptr getdev(uint16_t dev)
 {
-    regptr struct mount *mnt;
+    register struct mount *mnt;
     time_t t;
 
     mnt = fs_tab_get(dev);
@@ -580,9 +580,9 @@ uint16_t i_alloc(uint16_t devno)
 {
     staticfast fsptr dev;
     staticfast blkno_t blk;
-    struct blkbuf *buf;
-    regptr struct dinode *di;
+    register struct dinode *di;
     staticfast uint16_t j;
+    register struct blkbuf *buf;
     uint16_t k;
     unsigned ino;
 
@@ -647,7 +647,7 @@ corrupt:
 
 void i_free(uint16_t devno, uint16_t ino)
 {
-    fsptr dev;
+    register fsptr dev;
 
     if(baddev(dev = getdev(devno)))
         return;
@@ -669,9 +669,9 @@ void i_free(uint16_t devno, uint16_t ino)
 
 blkno_t blk_alloc(uint16_t devno)
 {
-    fsptr dev;
+    register fsptr dev;
+    register struct blkbuf *buf;
     blkno_t newno;
-    struct blkbuf *buf;
 
     if(baddev(dev = getdev(devno)))
         goto corrupt2;
@@ -772,7 +772,7 @@ void blk_free(uint16_t devno, blkno_t blk)
 
 int_fast8_t oft_alloc(void)
 {
-    uint_fast8_t j;
+    register uint_fast8_t j;
 
     for(j=0; j < OFTSIZE ; ++j) {
         if(of_tab[j].o_refs == 0) {
@@ -791,10 +791,10 @@ int_fast8_t oft_alloc(void)
  *	and if we are dropping a lock that is not exclusive we must own one of
  *	the non exclusive locks.
  */
-void deflock(regptr struct oft *ofptr)
+void deflock(register struct oft *ofptr)
 {
-    inoptr i = ofptr->o_inode;
-    uint_fast8_t c = i->c_flags & CFLOCK;
+    register inoptr i = ofptr->o_inode;
+    register uint_fast8_t c = i->c_flags & CFLOCK;
 
     if (ofptr->o_access & O_FLOCK) {
         if (c == CFLEX)
@@ -813,7 +813,7 @@ void deflock(regptr struct oft *ofptr)
  */
 void oft_deref(uint_fast8_t of)
 {
-    struct oft *ofptr;
+    register struct oft *ofptr;
 
     ofptr = of_tab + of;
     if(!(--ofptr->o_refs) && ofptr->o_inode) {
@@ -828,7 +828,7 @@ void oft_deref(uint_fast8_t of)
 
 int_fast8_t uf_alloc_n(uint_fast8_t base)
 {
-    uint_fast8_t j;
+    register uint_fast8_t j;
 
     for(j=base; j < UFTSIZE ; ++j) {
         if(udata.u_files[j] == NO_FILE) {
@@ -851,7 +851,7 @@ int_fast8_t uf_alloc(void)
  * links, the inode itself and its blocks(if not a device) is freed.
  */
 
-void i_deref(regptr inoptr ino)
+void i_deref(register inoptr ino)
 {
     uint_fast8_t mode = getmode(ino);
 
@@ -895,11 +895,11 @@ void corrupt_fs(uint16_t devno)
  * and resets its dirty bit.
  */
 
-void wr_inode(inoptr ino)
+void wr_inode(register inoptr ino)
 {
-    struct blkbuf *buf;
+/*    struct blkbuf *buf;
     blkno_t blkno;
-
+*/
     magic(ino);
 
     if (bwritei(ino))
@@ -926,10 +926,10 @@ uint16_t devnum(inoptr ino)
 /* F_trunc frees all the blocks associated with the file, if it
  * is a disk file.
  */
-int f_trunc(regptr inoptr ino)
+int f_trunc(register inoptr ino)
 {
-    uint16_t dev;
-    int_fast8_t j;
+    register uint16_t dev;
+    register int_fast8_t j;
 
     if (ino->c_flags & CRDONLY) {
         udata.u_error = EROFS;
@@ -944,7 +944,7 @@ int f_trunc(regptr inoptr ino)
     freeblk(dev, ino->c_node.i_addr[18], 1);
 
     /* Finally, free the direct blocks */
-    for(j=17; j >= 0; --j)
+    for(j = 17; j >= 0; --j)
         freeblk(dev, ino->c_node.i_addr[j], 0);
 
     memset((uint8_t *)ino->c_node.i_addr, 0, sizeof(ino->c_node.i_addr));
@@ -1022,9 +1022,9 @@ void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
 /* Validblk panics if the given block number is not a valid
  *  data block for the given device.
  */
-void validblk(uint16_t dev, blkno_t num)
+void validblk(uint16_t dev, register blkno_t num)
 {
-    struct mount *mnt;
+    register struct mount *mnt;
 
     mnt = fs_tab_get(dev);
 
@@ -1043,8 +1043,8 @@ void validblk(uint16_t dev, blkno_t num)
  */
 inoptr getinode(uint_fast8_t uindex)
 {
-    uint_fast8_t oftindex;
-    inoptr inoindex;
+    register uint_fast8_t oftindex;
+    register inoptr inoindex;
 
     if(uindex >= UFTSIZE || udata.u_files[uindex] == NO_FILE) {
         udata.u_error = EBADF;
@@ -1083,7 +1083,7 @@ bool esuper(void)
 /* Getperm looks at the given inode and the effective user/group ids,
  * and returns the effective permissions in the low-order 3 bits.
  */
-uint8_t getperm(inoptr ino)
+uint8_t getperm(register inoptr ino)
 {
     int mode;
 
@@ -1106,7 +1106,7 @@ uint8_t getperm(inoptr ino)
 
 
 /* This sets the times of the given inode, according to the flags. */
-void setftime(inoptr ino, uint_fast8_t flag)
+void setftime(register inoptr ino, register uint_fast8_t flag)
 {
     if (ino->c_flags & CRDONLY)
         return;
@@ -1157,11 +1157,11 @@ struct mount *fs_tab_get(uint16_t dev)
 }
 
 /* Fmount places the given device in the mount table with mount point info. */
-struct mount *fmount(uint16_t dev, inoptr ino, uint16_t flags)
+struct mount *fmount(uint16_t dev, register inoptr ino, uint16_t flags)
 {
-    struct mount *m;
-    regptr struct filesys *fp;
-    bufptr buf;
+    register struct mount *m;
+    register struct filesys *fp;
+    register bufptr buf;
 
     if(d_open(dev, 0) != 0)
         return NULL;    /* Bad device */
