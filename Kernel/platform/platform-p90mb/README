@@ -1,13 +1,13 @@
 Fuzix test for the P90MB
 
+This assumes the 'RetroDOS' ROM is being used for now
+
 TODO
-- Loader
-- Serial baud rate setting
-- I2C
 - UART 2 stop bits via mode 3 ?
+- Interrupt testing (emulator doesn't yet handle interrupts)
+- I2C
 - External devices ?
 - Watchdog
 
 Longer Term
 - Play with soft control of upper address bits and buddy allocator
-

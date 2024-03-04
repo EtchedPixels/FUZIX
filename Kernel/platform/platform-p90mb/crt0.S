@@ -11,10 +11,6 @@
 		.globl __bss_start
 
 .mri 1
-		byte $15
-		byte $05
-		byte $C0
-		byte $DE
 start:
 		or #$0700,sr
 		move.l #__bss_start,a0

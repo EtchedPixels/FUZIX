@@ -6,6 +6,7 @@
 #define RCAPH0	$80002032
 #define T0CON	$80002035
 #define T0IR	$80002037
+#define URIR	$80002025
 
 #define T100HZ	$E525
 
@@ -37,6 +38,7 @@ init_early:
 
 plt_idle:
 	    stop #($2000+EI_MASK)
+;	    jsr tty_interrupt
 	    rts
 ;
 ;	FIXME: could be in discard if we wanted
@@ -56,7 +58,9 @@ init_hardware:
 
 	    move.w #T100HZ,RCAPH0	; 100Hz tick
 	    move.b #4,T0CON
-	    move.b #3,T0IR		; Interrupt autovector 3
+	    move.b #3,T0IR		; Interrupt autovector 3 (timer)
+
+	    move.b #4,URIR		; Interrupt autovector 4 (rx)
             rts
 
 timer_irq:
@@ -64,6 +68,7 @@ timer_irq:
 	    movem.l a0-a1/a5/d0-d1,-(sp)
 	    move.l udata_shadow,a5	; set up the register global
 	    move.b #1,U_DATA__U_ININTERRUPT(a5)
+	    bclr.b #7,T0CON
 	    jsr plt_interrupt
 	    clr.b U_DATA__U_ININTERRUPT(a5)
 
@@ -143,7 +148,7 @@ outcharw:
 ;
 devide_read_data:
 	move.l blk_op,a0
-	move.l #$12000000,a1
+	move.l #$01200000,a1
 	move.w #255,d0
 devide_read_l:
 	move.b (a1),(a0)+
@@ -153,7 +158,7 @@ devide_read_l:
 
 devide_write_data:
 	move.l blk_op,a0
-	move.l #$12000000,a1
+	move.l #$01200000,a1
 	move.w #255,d0
 devide_write_l:
 	move.b (a0)+,(a1)

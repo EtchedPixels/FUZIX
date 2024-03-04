@@ -48,7 +48,6 @@ image:
 	68000usercopy.o ../../cpu-68000/usermem_std-68000.o devtty.o libc.o ../../malloc.o \
 	../../level2.o ../../syscall_level2.o ../../select.o > ../../fuzix.map
 	$(CROSS_COMPILE)objcopy fuzix.elf -O binary ../../fuzix.bin
-
 	$(CROSS_CC) -c loader.S
 	$(CROSS_LD) -M -o loader.elf -T loader.ld loader.o >loader.map
 	$(CROSS_COMPILE)objcopy loader.elf -O binary loader.bin
@@ -57,12 +56,12 @@ IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage:
 	# Make a blank disk image with partition
-	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync,swab
+	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the bootstrap loader
-	dd if=loader.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc,swab
+	dd if=loader.bin of=$(IMAGES)/disk.img bs=512 conv=notrunc
 	# Add the file system
-	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc,swab
+	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc,swab
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

@@ -16,7 +16,7 @@ static uint8_t sleeping;
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
-	_CSYS|CBAUD,
+	_CSYS|CBAUD|PARENB|PARODD|CMSPAR,
 };
 
 static volatile uint8_t *uart_base = (volatile uint8_t *)0x80000000;
@@ -49,15 +49,39 @@ ttyready_t tty_writeready(uint8_t minor)
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	PUTB(SBUF, c);
+	PUTB(SBUF, tty_add_parity(minor, c));
 }
+
+static uint16_t baud_div[] = {
+	78,		/* B0: off */
+	14976,		/* 50 */
+	9984,		/* 75 */
+	6807,		/* 110 */
+	5567,		/* 134.5 */
+	2496,		/* 300 */
+	1248,		/* 600 */
+	624,		/* 1200 */
+	312,		/* 2400 */
+	156,		/* 4800 */
+	78,		/* 9600 */
+	39,		/* 19200 */
+	19,		/* 38400 - a bit off  (39410) */
+	13,		/* 57600 */
+	0		/* 115200 */
+};
 
 void tty_setup(uint8_t minor, uint8_t flags)
 {
-	/* Set up baud rate timer */
-	*(volatile uint16_t *)0x8002052 = 0xFFF3;
-	*(volatile uint8_t *)0x8002055 = 0x34;
-	/* FFD9 is 19200, FFB2 is 9600 etc */
+	struct termios *t = &ttydata[minor].termios;
+	uint8_t baud = t->c_cflag & CBAUD;
+
+	if (baud == B115200) {
+		baud = B57600;
+		t->c_cflag &= ~CBAUD;
+		t->c_cflag |= baud;
+	}
+	*(volatile uint16_t *)0x8002052 = -baud_div[baud];
+	/* TODO: we can in theory do two stop bits by abusing mode 3 */
 }
 
 /* Not wired on this board */
@@ -83,7 +107,7 @@ void tty_interrupt(void)
 		r = GETB(SBUF);
 		/* Clear received bit by hand - ugly */
 		PUTB(SCON, GETB(SCON) & 0xFE);
-		tty_inproc(1,r);
+		tty_inproc_softparity(1,r);
 	}	
 	/* Ugly - need to move to full IRQ serial I think ? */
 	if (r & 0x02)
