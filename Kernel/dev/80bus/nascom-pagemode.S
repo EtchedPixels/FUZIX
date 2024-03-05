@@ -1,6 +1,10 @@
 ;
 ;	NASCOM/Gemini 'page mode' banking
 ;
+#include "../../build/kernelu.def"
+#include "../../cpu-z80u/kernel-z80.def"
+
+#ifndef CONFIG_MAP80
 
 	; exported symbols
 	.export init_hardware
@@ -17,9 +21,6 @@
 	.export map_for_swap
 	.export map_buffers
 	.export size_ram
-
-#include "../../build/kernelu.def"
-#include "../../cpu-z80u/kernel-z80.def"
 
 ;
 ;	We keep the probe routine in the common copy area as we need
@@ -208,3 +209,4 @@ map_restore:
 ;
 
 rstblock:
+#endif

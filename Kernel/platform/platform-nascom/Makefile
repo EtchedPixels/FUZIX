@@ -7,7 +7,7 @@ ASRCS = nascom.S crt0.S
 ASRCS += tricks.S commonmem.S
 
 NASRCS = ../../dev/80bus/nascom-vt.S ../../dev/80bus/nascom-pagemode.S
-NASRCS += ../../dev/80bus/gm8x9.S
+NASRCS += ../../dev/80bus/gm8x9.S ../../dev/80bus/map80.S
 NSRCS = ../../dev/80bus/devgm8x9.c ../../dev/80bus/devgm833.c
 
 DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
@@ -60,7 +60,7 @@ image:
 	# edge.
 	$(CROSS_LD) -b -C 0x0100 -8 0xFC00 -S 0xC000 -f CLDBSbXs -o ../../fuzix.bin \
 	crt0.o commonmem.o nascom.o ../../dev/80bus/nascom-pagemode.o \
-	../../start.o ../../version.o \
+	../../dev/80bus/map80.o ../../start.o ../../version.o \
 	../../cpu-z80u/lowlevel-z80u.o ../../cpu-z80u/usermem_std-z80u.o \
 	../../usermem.o tricks.o main.o discard.o \
 	../../dev/80bus/devgm8x9.o ../../dev/80bus/gm8x9.o ide.o \

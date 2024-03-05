@@ -21,3 +21,5 @@
 		rlc d
 
 #define VIDEO	0xF800
+
+#define CONFIG_MAP80

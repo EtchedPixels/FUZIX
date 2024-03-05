@@ -69,6 +69,18 @@ void map_init(void)
 /* Add pagemap codes depending upon the present banks */
 void pagemap_init(void)
 {
+#ifdef CONFIG_MAP80
+	register unsigned m = bankmap;
+	register unsigned n = 30;
+	if ((!bankmap & 0x7FFF))	/* No extra pages ? */
+		panic("no map80 banks");
+	while(n) {
+		if (m & 1)
+			pagemap_add(n);
+		n -= 2;
+		m >>= 1;
+	}
+#else
 	/* We didn't find any extra page mode memory */
 	if (bankmap < (2 << 8))
 		panic("no pagemode");
@@ -80,4 +92,5 @@ void pagemap_init(void)
 		pagemap_add(0x44);
 	if (bankmap & 8)
 		pagemap_add(0x88);
+#endif
 }
