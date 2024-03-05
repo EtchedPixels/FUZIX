@@ -1,4 +1,22 @@
 extern uint8_t io_page;
 extern uint16_t swap_dev;
-extern uint8_t nmikey;
+extern uint8_t have_mm58174;
+extern uint8_t nmi;
+extern uint8_t clk_irq;
 
+#define clk_test	0x20
+#define clk_tenths	0x21
+#define clk_secs	0x22
+#define clk_tsecs	0x23
+#define clk_mins	0x24
+#define clk_tmins	0x25
+#define clk_hours	0x26
+#define clk_thours	0x27
+#define clk_days	0x28
+#define clk_tdays	0x29
+#define clk_dayow	0x2A
+#define clk_mons	0x2B
+#define clk_tmons	0x2C
+#define clk_years	0x2D
+#define clk_stopstart	0x2E
+#define clk_stat	0x2F

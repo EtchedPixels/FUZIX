@@ -5,7 +5,7 @@
 NASCOM
 Paged RAM cards (3 or 4 pages required) - eg GM806, GM862
 Z80PIO wired to a CF adapter
-MM58174 based RTC (only used for time sync right now)
+MM58174 based RTC (only used for time sync and NMI based tick)
 
 ## Memory Map
 
@@ -21,20 +21,25 @@ FC00-FFFF		Kernel stacks and common data
 - Video
 - Serial
 - PIO CF adapter
-- GM822 RTC (or similar) as timer only
+- GM816 RTC (or similar) as timer only, can use NMI (jumper LKS2 7-8)
 - GM833 RAMDisc
+
+## Options
+
+If you have an RTC at 0x20 wired to NMI then specify "rtcnmi" on the command
+line along with the boot device number to enable it.
 
 ## TODO 
 - Probe top of bankable space and adjust top of user memory to match
 - Report correct ramsize based on bankable space size
-- Sort out remaining keyboard bits - *, ctrl etc
+DONE? - Sort out remaining keyboard bits - *, ctrl etc
 - Floppy (nascom or gm ? - WIP)
-- Finish rewiring nmi key handler
-- Implement RTC NMI timer interrupt
+DONE - Finish rewiring nmi key handler
+DONE - Implement RTC NMI timer interrupt
 - Normal interrupt handling for timer on PIO bit
 - SD instead of CF (will be very slow though)
 - Full RTC
-- MAP80 card and maybe combos
+- MAP80
 
 ## Longer Term : Add on cards
 - GM816 CTC for proper timer interrupt
@@ -48,3 +53,21 @@ image as well as an emulation version of the latter. Boot with the standard
 boot rom from the floppy. On boot hda1 is the root file system and hda2 is
 swap.
 
+## Limitations
+
+There are several mm58174 based cards available that can provide time. Most
+are not capable of providing an NMI so will shut up if not poked within 16ms
+of an interrupt event. This makes them unreliable so for now not supported.
+Maybe checking for missed interrupts versus the time value would help but
+the question is where to do so.
+
+The same problem occurs for NMI based cards when using a flopppy but we
+need to disable it during the transfer anyway so this is ok and handled.
+
+At the moment we could use non NMI ones for clock synch only. The homebrew
+ones seem to use 0x20 as well. The GM822 attaches to any PIO you have handy.
+Conventionally this is the base system PIO (the one we use for IDE). For the
+GM822 see 80bus news issue 14. It can only provide IRQ not NMI.
+
+When running with a clock as timer only without NMI the system effectively
+runs with co-operative multitasking.

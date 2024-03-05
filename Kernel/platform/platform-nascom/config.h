@@ -22,6 +22,10 @@
 
 #define CONFIG_BANKS	1	/* 1 x 60K */
 
+/* We do a bit of magic because we have NMI timers that queue events
+   if the interrupts are off, so our "ei" has to fix it */
+#define CONFIG_SOFT_IRQ
+
 /* Vt definitions */
 /* Although it's a simple display the margins and weird top line mean it's
    got its own little driver */
@@ -30,7 +34,8 @@
 #define VT_RIGHT	47
 #define VT_BOTTOM	15
 
-#define TICKSPERSEC 50   /* Ticks per second */
+#define TICKSPERSEC 10      /* Ticks per second */
+#define MAXTICKS    10      /* The 58174 is 0.5 sec accuracy so forces this */
 #define PROGBASE    0x0000  /* Base of user  */
 #define PROGLOAD    0x0100  /* Load and run here */
 #define PROGTOP     0xBE00  /* Top of program, udata stash follows */

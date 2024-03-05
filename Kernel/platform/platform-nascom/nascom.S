@@ -7,6 +7,10 @@
         .export _program_vectors
 	.export plt_interrupt_all
 	.export _int_disabled
+	.export _nmi
+	.export _di
+	.export _ei
+	.export _irqrestore
 
         ; exported debugging tools
         .export _plt_monitor
@@ -39,9 +43,29 @@ _plt_reboot:
 
 nascom_nmi:
 	push	af
-	ld	a,(_int_disabled)
+	ld	a,(_nmi)
+	inc	a
+	; Shouldn't occur - this is quite some time !
 	or	a
-	jr	nz, nmi_event
+	jr	z, nowb
+	ld	(_nmi),a
+nowb:
+	; Reset/retrigger RTC interrpt if present
+	; Must be done in the NMI path as the device stops interrupting
+	; if it isn't serviced in time.
+	;
+	; TODO: We will need to kick it from long IRQ blocks in floppy
+	; drivers where we have to turn NMI off
+	;
+	in	a, (0x2F)
+	in	a, (0x2F)
+	in	a, (0x2F)
+	; Now figure out if interrupts are disabled. We are in an
+	; NMI so the NMOS race bug doesn't matter
+	ld	a,r
+	; Interrupt enabled treat as an IRQ
+	jp	pe, nmi_event
+	; Can't service it at this time but can pick it up next
 	; TODO: for rtc queue and check in irqrestore
 	pop	af
 	retn
@@ -55,10 +79,51 @@ nmi_event:
 	pop	af
 	jp	interrupt_handler
 
+;
+;	Custom IRQ handlers
+;
+
+_di:
+	ld hl,_int_disabled
+	di
+	ld a,(hl)
+	ld (hl),1
+	ld l,a
+	ret
+
+_ei:
+	xor a
+	ld (_int_disabled),a
+	jr irqen
+
+_irqrestore:
+	pop de
+	pop hl
+	push hl
+	push de
+	di
+	ld a,l
+	ld (_int_disabled),a
+	or a
+	ret nz
+irqen:
+	; Enabling interrupts we need to fake any queued NMI work
+	ld a,(_nmi)
+	or a
+	; There is NMI work to do. We have interrupts off so we can
+	; call into the interrupt handler as if we were an IRQ. On return
+	; interrupts will be back correctly and the C code clears _nmi
+	jp nz, interrupt_handler
+	; No work to do - just ei and back
+	ei
+	ret
+
 	.commondata
 
 _int_disabled:
 	.byte	1
+_nmi:
+	.byte	0
 
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (prob below 0xC000, only accessible when the kernel is mapped)
@@ -100,28 +165,17 @@ _program_vectors:
 	ld	hl, null_handler   ;   to Our Trap Handler
 	ld	(0x0001), hl
 
-	; Some Nascoms got fitted with an NMI button - what should it do
-	; ?
+	; Some Nascoms got fitted with an NMI button - we route it
+	; via a test and interrupt handler so it does actually get you
+	; out of hangs on an IRQless box. This path is also taken by
+	; NMI based RTC support
 	ld	(0x0066), a  ; Set vector for NMI
-	ld	hl, nmi_key_handler
+	ld	hl, nascom_nmi
 	ld	(0x0067), hl
 	jp	map_kernel
 
 ;------------------------------------------------------------------------------
 ; COMMON MEMORY PROCEDURES FOLLOW
-
-	.common
-;
-;	This isn't absolutely perfect but as close as we can get
-;
-nmi_key_handler:
-	push	af
-	ld	a,1
-	ld	(_nmikey),a
-	pop	af
-	; FIXME: take nascom port idea of forcing interrupt and do it here
-	; too, also retrofit nmi_key_handler check back into tty check
-	retn
 
 outchar:
 	push	af
@@ -131,10 +185,6 @@ outwait:
 	jr	z, outwait
         out	(0x1), a
 	ret
-
-	.commondata
-_nmikey:
-	.byte	0
 
 	.common
 

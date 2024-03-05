@@ -4,13 +4,15 @@
 #include <printf.h>
 #include <devtty.h>
 #include <tinysd.h>
-#include <z80softspi.h>
+#include <nascom.h>
+#include <devgm8x9.h>
 
 uint16_t ramtop = PROGTOP;
 uint8_t vtattr_cap;
 uint16_t swap_dev = 0xFFFF;
-uint8_t clk_irq;		/* Set if the clock can cause interrupts */
+static uint8_t clk_nmi;		/* Set if the clock can cause an NMI */
 uint8_t plt_tick_present;
+uint8_t have_mm58174;
 
 struct blkbuf *bufpool_end = bufpool + NBUFS;
 
@@ -29,10 +31,6 @@ void do_beep(void)
 {
 }
 
-#define clk_tenths	0x21
-#define clk_secs	0x22
-#define clk_tsecs	0x23
-#define clk_stat	0x2F
 
 int strcmp(const char *s1, const char *s2)
 {
@@ -42,38 +40,59 @@ int strcmp(const char *s1, const char *s2)
   return c1 - c2;
 }
 
+/* TODO: move to discard ? */
 uint_fast8_t plt_param(char *p)
 {
-	if (strcmp(p, "clkint") == 0) {
-		out(clk_irq, 1);
-		/* FIXME: do a reset cycle first */
-		out(clk_stat, 0x9);	/* Repeating 0.5 sec - really 0.516.6 sec */
-		in(clk_stat);
-		in(clk_stat);
-		in(clk_stat);	/* Enable */
+	if (strcmp(p, "rtcnmi") == 0) {
 		plt_tick_present = 1;
+		clk_nmi = 1;	/* Jumpered for NMI */
+		plt_enable_nmi();
+		kputs("NMI based RTC enabled.\n");
 		return 1;
 	}
-	used(p);
 	return 0;
+}
+
+/* These are used to avoid NMI in the tight inner floppy transfer loop */
+void plt_disable_nmi(void)
+{
+	if (clk_nmi) {
+		out(clk_stat, 0x00);
+		in(clk_stat);
+		in(clk_stat);
+		in(clk_stat);
+	}
+}
+
+void plt_enable_nmi(void)
+{
+	if (clk_nmi) {
+		out(clk_stat, 0x09);
+		in(clk_stat);
+		in(clk_stat);
+		in(clk_stat);
+	}
 }
 
 void plt_interrupt(void)
 {
+	uint8_t c;
 	/* We don't have interrupts for the keyboard */
 	kbd_poll();
 	tty_poll();
-	if (clk_irq) {
-		if (clk_stat & 0x08) {	/* Check 4 or 8 - need datasheet */
-			/* Not ideal but we need to work out how to handle
-			   the different clocks gracefully */
+	if (clk_nmi && nmi) {
+		c = nmi;
+		nmi = 0;
+		/* This isn't ideal at all */
+		/* The 58174 runs at 0.5Hz */
+		while(c--) {
 			timer_interrupt();
 			timer_interrupt();
 			timer_interrupt();
 			timer_interrupt();
 			timer_interrupt();
-			/* Do we need to read again ? */
 		}
+		/* Do we need to read again ? */
 	}
 }
 
