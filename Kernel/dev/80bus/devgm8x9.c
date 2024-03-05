@@ -135,12 +135,14 @@ static int gm8x9_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag
 				}
 			}
 			/* The timing on these is too tight to do with interrupts on */
+			plt_disable_nmi();
 			irqflags = di();
 			if (is_read)
 				err = gm8x9_ioread(udata.u_dptr);
 			else
 				err = gm8x9_iowrite(udata.u_dptr);
 			irqrestore(irqflags);
+			plt_enable_nmi();
 
 			/* It worked - exit then inner retry loop and move on */
 			if (err == 0)

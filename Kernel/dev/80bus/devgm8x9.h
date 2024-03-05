@@ -30,5 +30,8 @@ struct gmfd {
 
 extern struct gmfd gmfd_drives[MAX_GMFD];
 
+/* Platform provides */
+extern void plt_disable_nmi(void);
+extern void plt_enable_nmi(void);
 
 #endif /* __DEVFD_DOT_H__ */
