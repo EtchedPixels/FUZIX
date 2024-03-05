@@ -157,7 +157,7 @@ uint8_t keyboard[9][8] = {
 	{ ':', '/', '0', '2', '1', 'p', '[', },
 	{ 'g', 'v', '4', 'c', ' ', 'r', ']', },
 	/* What to do with ch ? */
-	{ KEY_BS, KEY_ENTER, '-', 0, 0, '@', '?', },
+	{ KEY_BS, KEY_ENTER, '-', 0, 0, '@', '|', },
 	/* Ch, @ shift cntrl - ... */
 };
 
@@ -170,10 +170,10 @@ uint8_t shiftkeyboard[9][8] = {
 	{ 'L', '<', '(', 'W', 'A', 'I', KEY_RIGHT, },
 	/* FIXME key graph ? */
 	{ '+', '>', ')', KEY_POUND, 'Q', 'O', '?', },
-	{ '*', '/', '"', '!', 'P', '\\', ':', },
+	{ '*', '?', '^', '"', '!', 'P', '\\', },
 	{ 'G', 'V', '$', 'C', ' ', 'R', '_',  },
 	/* What to do with ch ? */
-	{ KEY_BS, KEY_ESC, '=', 0, 0, '@', '?', },
+	{ KEY_BS, KEY_ESC, '=', /* CTRL */ 0, /* Shift */ 0, '@', '?', },
 	/* Ch, @ shift cntrl - ... */
 };
 
@@ -185,13 +185,13 @@ static void keydecode(void)
 	uint_fast8_t m = 0;
 	uint_fast8_t shift = 0;
 
-	if ((keymap[8] & 0x20) || (keymap[0] & 0x10)) {	/* shift */
+	if ((keymap[8] & 0x10) || (keymap[0] & 0x10)) {	/* shift */
 		c = shiftkeyboard[keybyte][keybit];
 		shift = 1;
 	} else
 		c = keyboard[keybyte][keybit];
 
-	if (keymap[8] & 0x10) {	/* control */
+	if (keymap[8] & 0x08) {	/* control */
 		if (shift) {	/* shift */
 			if (c == '(')
 				c = '{';
