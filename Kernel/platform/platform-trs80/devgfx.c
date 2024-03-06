@@ -26,7 +26,8 @@ static const struct display trsdisplay[3] = {
 	 HW_UNACCEL,
 	 GFX_MULTIMODE | GFX_TEXT,
 	 2,
-	 0
+	 0,
+	 80,24
 	 }, {
 	 1,
 	 640, 240,
