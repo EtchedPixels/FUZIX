@@ -15,7 +15,7 @@ start:
 	ld	(0xFC76),a
 	ld	hl,0x0300		; We are in 0100-02FF
 	ld	(0xFC82),hl
-	ld	a,0x70			; Sector count (512 bytes per sector)
+	ld	a,0x71			; Sector count (512 bytes per sector)
 	ld	(0xFC18),a
 next:
 	call	0xF003			; Boot helper
@@ -37,6 +37,11 @@ same:
 	dec	(hl)
 	jr	nz, next
 	; The kernel is now loaded
+	;
+	; The boot block loaded 0100-02FF
+	; We loaded 0300-E500, and we have the commondata for FC00
+	; loaded at E000-E3FF for now
+	;
 	ld	sp, kstack_top
 	; move the common memory where it belongs
 	ld	hl,0xE000
