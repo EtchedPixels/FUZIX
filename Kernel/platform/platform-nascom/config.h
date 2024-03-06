@@ -39,7 +39,7 @@
 #define PROGTOP		0xBE00	/* Top of program, udata stash follows */
 #define PROC_SIZE	48 	/* Memory needed per process */
 #define SWAPBASE	0x0000	/* We swap the lot in one, include the */
-#define SWAPTOP		0xE000	/* vectors so its a round number of sectors */
+#define SWAPTOP		0xC000	/* vectors so its a round number of sectors */
 #define SWAP_SIZE	0x60 	/* 48K in blocks (to get the udata stash) */
 #endif
 
