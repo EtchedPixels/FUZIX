@@ -44,6 +44,7 @@ struct display {
 #define HW_VDP_9958	135	/* VDP9958 MSX2+ etc */
 #define HW_EF9345	136	/* Thomson EF9345 */
 #define HW_PROPGFX	137	/* RCbus propellor graphics */
+#define HW_GM812	138	/* GM812/832 */
   uint16_t features;
 #define GFX_MAPPABLE	1	/* Can map into process memory */
 #define GFX_PALETTE	2	/* Has colour palette */

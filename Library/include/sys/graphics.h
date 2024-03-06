@@ -44,6 +44,7 @@ struct display {
 #define HW_VDP_9958	135	/* VDP9958 MSX2+ etc */
 #define HW_EF9345	136	/* Thomson EF9345 */
 #define HW_PROPGFX	137	/* RCbus propellor graphics */
+#define HW_GM812	138	/* GM812/832 */
   uint16_t features;
 #define GFX_MAPPABLE	1	/* Can map into process memory */
 #define GFX_PALETTE	2	/* Has colour palette */
@@ -161,6 +162,7 @@ struct fontinfo {
 #define FONT_INFO_8X16	5
 #define FONT_INFO_6X12P16  6	/* 6x12 on 16 byte boundaries
 				   16 line packed, low 6 bits */
+#define FONT_INFO_8X10P16  7	/* 8 x 10 but packed 16 line packed */
 };
 
 

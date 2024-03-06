@@ -202,6 +202,7 @@ struct fontinfo {
 #define FONT_INFO_8X16	5
 #define FONT_INFO_6X12P16  6	/* 6x12 on 16 byte boundaries
 				   16 line packed, low 6 bits */
+#define FONT_INFO_8X10P16  7	/* 8 x 10 but packed 16 line packed */
 };
 
 /* Group the tty into a single object. That lets 8bit processors keep all
