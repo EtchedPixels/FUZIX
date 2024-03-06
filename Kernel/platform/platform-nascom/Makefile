@@ -7,8 +7,8 @@ ASRCS = nascom.S crt0.S
 ASRCS += tricks.S commonmem.S
 
 NASRCS = ../../dev/80bus/nascom-vt.S ../../dev/80bus/nascom-pagemode.S
-NASRCS += ../../dev/80bus/gm8x9.S ../../dev/80bus/map80.S
-NSRCS = ../../dev/80bus/devgm8x9.c ../../dev/80bus/devgm833.c
+NASRCS += ../../dev/80bus/floppy.S ../../dev/80bus/map80.S
+NSRCS = ../../dev/80bus/devfdc.c ../../dev/80bus/devgm833.c
 
 DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
 DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
@@ -63,7 +63,7 @@ image:
 	../../dev/80bus/map80.o ../../start.o ../../version.o \
 	../../cpu-z80u/lowlevel-z80u.o ../../cpu-z80u/usermem_std-z80u.o \
 	../../usermem.o tricks.o main.o discard.o \
-	../../dev/80bus/devgm8x9.o ../../dev/80bus/gm8x9.o ide.o \
+	../../dev/80bus/devfdc.o ../../dev/80bus/floppy.o ide.o \
 	../../dev/80bus/nascom-vt.o devnascom.o ../../dev/80bus/devgm833.o mm58174.o \
 	../../timer.o ../../kdata.o devices.o ../../devio.o \
 	../../filesys.o ../../blk512.o ../../process.o \

@@ -5,6 +5,7 @@
 #include <blkdev.h>
 #include <tty.h>
 #include <nascom.h>
+#include <fdc80.h>
 
 uint8_t io_page;
 uint16_t bankmap;
@@ -60,6 +61,8 @@ void device_init(void)
 	}
 	/* Check for MM58174 */
 	probe_mm58174();
+	/* And floppies */
+	fdc80_probe();
 }
 
 void map_init(void)
