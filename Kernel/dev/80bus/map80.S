@@ -113,10 +113,12 @@ empty_bank:
 	out (c),b		; Bank to normal banking
 
 	; A lots of 64K (0-15)
-	rlca
-	rlca			; now in bits 5-2
+	ld l,0
+	srl a
+	rr l
+	srl a			; now in bits 5-2
+	rr l
 	ld h,a
-	ld l,0			; now in bits 13-10 (ie K)
 	ld (_ramsize), hl
 	ld de, #64		; for kernel
 	or a
