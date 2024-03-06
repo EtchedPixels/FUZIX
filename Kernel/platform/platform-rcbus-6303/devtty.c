@@ -21,7 +21,7 @@ struct s_queue ttyinq[NUM_DEV_TTY + 1] = {	/* ttyinq[0] is never used */
 
 tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 	0,
-	_CSYS	/* TODO */
+	_CSYS
 };
 
 /* Output for the system console (kprintf etc) */
@@ -48,7 +48,8 @@ void tty_putc(uint8_t minor, unsigned char c)
 
 void tty_setup(uint8_t minor, uint8_t flag)
 {
-	/* Fudge for now - it is set up by the boot ROM */
+	/* As we don't have a separate clock for serial and the
+	   divider is very limited we are stuck at 115200 8N1 */
 }
 
 void tty_sleeping(uint8_t minor)
