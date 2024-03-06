@@ -23,6 +23,13 @@ FC00-FFFF		Kernel stacks and common data
 - PIO CF adapter
 - GM816 RTC (or similar) as timer only, can use NMI (jumper LKS2 7-8)
 - GM833 RAMDisc
+- MAP80 (1 to 4 cards)
+- Floppy (Needs more testing on the variants)
+
+Note that for the MAP80 you need to set CONFIG_MAP80 in kernel-z80u.def
+and config.h and do a clean and rebuild of the kernel. The MAP80 build at
+this point uses the same memory map as the page mode, whereas it (and some
+of the GM page mode cards) could do 0xE000.
 
 ## Options
 
@@ -42,9 +49,13 @@ DONE - Implement RTC NMI timer interrupt
 - MAP80
 
 ## Longer Term : Add on cards
-- GM816 CTC for proper timer interrupt
+- GM816 CTC for proper timer interrupt (and IM2 support)
+- Second CF on GM816 PIO
 - AVC video
+- MAP80 video
 - Gemini SASI/SCSI
+- Henelec disk on PIO
+- RTC on PIO
 
 ## Installation
 
