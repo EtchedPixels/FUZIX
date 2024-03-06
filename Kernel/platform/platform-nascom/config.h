@@ -18,7 +18,7 @@
 #define CONFIG_BANK_FIXED
 
 /* Set this in the asm config (kernelu.def) to match or badness */
-#define CONFIG_MAP80		/* Set for MAP80 instead of page mode */
+#undef CONFIG_MAP80		/* Set for MAP80 instead of page mode */
 
 /* TODO: set the link options to put common at E000 for MAP80 */
 #ifdef CONFIG_MAP80_NOTYET

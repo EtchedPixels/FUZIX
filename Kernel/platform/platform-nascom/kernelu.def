@@ -22,4 +22,4 @@
 
 #define VIDEO	0xF800
 
-#define CONFIG_MAP80
+#undef CONFIG_MAP80

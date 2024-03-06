@@ -1,5 +1,11 @@
 #include "../../cpu-z80u/kernel-z80.def"
 #include "kernelu.def"
+
+#ifdef CONFIG_MAP80
+	; No sneaky ways to speed this up as we can't map two different
+	; banks at once
+#include "../../lib/z80ufixedbank.S"
+#else
 #include "../../lib/z80ufixedbank-core.s"
 
 	.common
@@ -21,3 +27,4 @@ bankfork:
 	ld	a,0x11		; kernel
 	out	(0xFF),a
 	ret
+#endif
