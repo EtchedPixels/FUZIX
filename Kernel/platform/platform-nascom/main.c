@@ -5,7 +5,7 @@
 #include <devtty.h>
 #include <tinysd.h>
 #include <nascom.h>
-#include <devgm8x9.h>
+#include <fdc80.h>
 
 uint16_t ramtop = PROGTOP;
 uint8_t vtattr_cap;
