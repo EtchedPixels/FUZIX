@@ -62,7 +62,8 @@ void device_init(void)
 	/* Check for MM58174 */
 	probe_mm58174();
 	/* And floppies */
-	fdc80_probe();
+	if (fdc80_probe() == FDC_GM849)	/* 849 also check the SASI */
+		gm849_sasi_init();
 }
 
 void map_init(void)

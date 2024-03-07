@@ -89,6 +89,7 @@
 #define CONFIG_TINYIDE_INDIRECT
 #define CONFIG_TINYIDE_8BIT
 #define IDE_IS_8BIT(x)	1
+#define CONFIG_TD_SCSI
 
 extern void plt_discard(void);
 #define plt_copyright()

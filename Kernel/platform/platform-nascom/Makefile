@@ -8,10 +8,13 @@ ASRCS += tricks.S commonmem.S
 
 NASRCS = ../../dev/80bus/nascom-vt.S ../../dev/80bus/nascom-pagemode.S
 NASRCS += ../../dev/80bus/floppy.S ../../dev/80bus/map80.S
+NASRCS += ../../dev/80bus/gmsasi.S
 NSRCS = ../../dev/80bus/devfdc.c ../../dev/80bus/devgm833.c
+NSRCS += ../../dev/80bus/devgmsasi.c
 
-DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c ../../dev/tinyscsi.c
 DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
+DISCARD_DSRCS += ../../dev/tinyscsi_discard.c
 
 COBJS = $(CSRCS:.c=.o)
 AOBJS = $(ASRCS:.S=.o)
@@ -65,6 +68,7 @@ image:
 	../../usermem.o tricks.o main.o discard.o \
 	../../dev/80bus/devfdc.o ../../dev/80bus/floppy.o ide.o \
 	../../dev/80bus/nascom-vt.o devnascom.o ../../dev/80bus/devgm833.o mm58174.o \
+	../../dev/80bus/gmsasi.o ../../dev/80bus/devgmsasi.o \
 	../../timer.o ../../kdata.o devices.o ../../devio.o \
 	../../filesys.o ../../blk512.o ../../process.o \
 	../../inode.o ../../syscall_exec.o ../../syscall_exec16.o \
@@ -74,6 +78,7 @@ image:
 	../../mm/memalloc_none.o ../../swap.o ../../mm/bankfixed.o \
 	../../devsys.o 	../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
 	../../dev/tinyide.o ../../dev/tinyide_discard.o \
+	../../dev/tinyscsi.o ../../dev/tinyscsi_discard.o \
 	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 
