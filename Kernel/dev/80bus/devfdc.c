@@ -1,18 +1,18 @@
-#/*
- *	80bus floppy controllers
+/*
+ *     80bus floppy controllers
  *
- *	Henelec/GM805
- *		Not this driver
- *	Nascom	WD1793
- *		SD/DD, DD/HD select by hardware
- *	GM809	WD1797
- *		SD/DD, DD/HD select by hardware
- *	GM829	WD1797
- *		SD/DD, DD/HD switch, no 5.25" HD speed control, SASI option
- *	GM849/A	WD2793
- *		SD/DD, DD/HD switch, 5.25" HD speed control, 8 drives, SASI
- *	MAP80
- *		As GM809 ?
+ *     Henelec/GM805
+ *             Not this driver
+ *     Nascom  WD1793
+ *             SD/DD, DD/HD select by hardware
+ *     GM809   WD1797
+ *             SD/DD, DD/HD select by hardware
+ *     GM829   WD1797
+ *             SD/DD, DD/HD switch, no 5.25" HD speed control, SASI option
+ *     GM849/A WD2793
+ *             SD/DD, DD/HD switch, 5.25" HD speed control, 8 drives, SASI
+ *     MAP80
+ *             As GM809 ?
  */
 
 #include <kernel.h>
@@ -32,6 +32,8 @@ struct fdc {
 	uint8_t skewtab[MAX_SKEW];	/* Skew table TODO */
 	uint8_t steprate;
 	uint8_t select;		/* Byte to write to select/config */
+	const struct fdcinfo *mode;	/* Pointer to FDC mode */
+	uint8_t modenum;	/* Mode number */
 };
 
 static struct fdc fdcinfo[MAX_FD];
@@ -41,6 +43,70 @@ static uint8_t fdcstatus;
 
 static uint16_t rdcmd;
 static uint16_t wrcmd;
+
+static struct fdcinfo fdcap = {
+	0,
+	0,
+	FDC_SEC0,
+	FDF_DD | FDF_DS | FDF_SEC128 | FDF_SEC256 | FDF_SEC512,
+	18,
+	40,
+	2,			/* Actually most are single sided */
+	0			/* Precomp */
+};
+
+#define NUM_MODES	6
+static struct fdcinfo fdcmodes[NUM_MODES] = {
+	{
+	 0,
+	 FDTYPE_PC360,		/* PC 40 track 5.25" DSDD */
+	 FDF_DD | FDF_SEC512,
+	 9,
+	 40,
+	 2,
+	 0 },
+	{
+	 1,
+	 FDTYPE_PC720,		/* PC 80 track 3/3.5" DSDD */
+	 FDF_DD | FDF_SEC512,
+	 9,
+	 80,
+	 2,
+	 0 },
+	{
+	 2,
+	 FDTYPE_PC12,		/* PC 80 track 5.25" DSHD */
+	 FDF_HD | FDF_SEC512,
+	 15,
+	 80,
+	 2,
+	 0 },
+	{
+	 3,
+	 FDTYPE_PC144,		/* PC 80 track 3.5" DSHD */
+	 FDF_HD | FDF_SEC512,
+	 18,
+	 80,
+	 2,
+	 0 },
+	{
+	 4,
+	 FDTYPE_NASDSSD,	/* Nascom 35 track DSSD */
+	 FDF_SD | FDF_SEC128,
+	 10,
+	 40,
+	 2,
+	 0 },
+	{
+	 5,
+	 FDTYPE_NASDSDD,
+	 FDF_SD | FDF_SEC128,
+	 18,
+	 40,
+	 2,
+	 0 }
+};
+
 
 static const uint8_t dentab[3][5] = {
 	/* Nascom: SD DD HD 8SD 8DD */
@@ -199,9 +265,9 @@ static int fdc80_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag
 	}
 	/* And done */
 	return udata.u_nblock << (9 - fdc->bs);
-bad:
+      bad:
 	kprintf("fd%d: error %x\n", minor, err);
-bad2:
+      bad2:
 	udata.u_error = EIO;
 	return -1;
 }
@@ -216,30 +282,45 @@ int fdc80_write(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag)
 	return fdc80_transfer(minor, false, rawflag);
 }
 
-/* Will need proper info passing in */
-static void fdc80_setup(struct fdc *fdc, unsigned density)
+/* fdc->mode points to the mode table entry in use */
+static void fdc80_setup(struct fdc *fdc)
 {
-	/* Assume 3.5" when HD for the moment */
-	fdc->select = fdc80_config(fdc - fdcinfo, density);
-	fdc->bs = 0;
-	fdc->ss = 512;
-	fdc->steprate = 1;	/* Assume 6ms */
-	switch (density) {
-	case 2:		/* PC HD 1440K */
-		fdc->spt = 36;
-		fdc->ds = 18;
-		break;
-	case 1:		/* PC DD 360K */
-		fdc->spt = 18;
-		fdc->ds = 9;
-		break;
-	case 0:		/* SD media - god knows */
-		fdc->spt = 36;
+	unsigned den = 0;
+	register struct fdcinfo *mode = fdc->mode;
+	unsigned feat = mode->features;
+
+	fdc->spt = mode->sectors;
+	switch (feat & FDF_SECSIZE) {
+	case FDF_SEC128:
 		fdc->bs = 2;
 		fdc->ss = 128;
-		fdc->ds = 255;
 		break;
+	case FDF_SEC256:
+		fdc->bs = 1;
+		fdc->ss = 256;
+		break;
+	case FDF_SEC512:
+		fdc->bs = 0;
+		fdc->ss = 512;
+		break;
+		/* No 1K or higher support */
 	}
+	if (feat & FDF_DS)
+		fdc->ds = fdc->spt / 2;
+	else
+		fdc->ds = 255;
+	if (feat & FDF_8INCH)
+		den += 3;
+	if (feat & FDF_DD)
+		den++;
+	if (feat & FDF_HD)	/* No HD 8" */
+		den += 2;
+	fdc->select = fdc80_config(fdc - fdcinfo, den);
+	fdcap.mode = mode->mode;
+	fdcap.type = mode->type;
+	fdcap.sectors = mode->sectors;
+	fdcap.tracks = mode->tracks;
+	fdcap.heads = mode->heads;
 }
 
 /*
@@ -253,19 +334,27 @@ static int fdc80_media(unsigned minor, struct fdc *fdc)
 	/* Try HD */
 	if (s != 0xFF) {
 		out(0xE4, s);
-		if (fdc80_test_restore(fdc) == 0)
+		if (fdc80_test_restore(fdc) == 0) {
+			/* Guess 5.25" HD */
+			fdc->mode = &fdcmodes[2];
 			return 2;
+		}
 	}
 	/* Try DD */
 	s = fdc80_config(minor, 1);
 	out(0xE4, s);
-	if (fdc80_test_restore(fdc) == 0)
+	if (fdc80_test_restore(fdc) == 0) {
+		/* Guess 5.25" DD */
+		fdc->mode = &fdcmodes[0];
 		return 1;
+	}
 	/* Try SD */
 	s = fdc80_config(minor, 0);
 	out(0xE4, s);
-	if (fdc80_test_restore(fdc) == 0)
+	if (fdc80_test_restore(fdc) == 0) {
+		fdc->mode = &fdcmodes[4];
 		return 0;
+	}
 	/* TODO: 8" handlers */
 	return -1;
 }
@@ -277,21 +366,81 @@ int fdc80_open(uint_fast8_t minor, uint16_t flags)
 {
 	register struct fdc *fdc = fdcinfo + minor;
 	int density;
-	if (fdctype == FDC_NONE || minor >= MAX_FD ||
-			(fdctype != FDC_GM849 && minor > 3)) {
+	if (fdctype == FDC_NONE || minor >= MAX_FD || (fdctype != FDC_GM849 && minor > 3)) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
 	/* Try and detect */
 	density = fdc80_media(minor, fdc);
-	if (density < 0 && !(flags & O_NDELAY)) { 
+	if (density < 0 && !(flags & O_NDELAY)) {
 		udata.u_error = EIO;
 		return -1;
 	}
-	/* Fudged for now */
-	fdc80_setup(fdc, density);
+	fdc80_setup(fdc);
 	return 0;
 }
+
+/*
+ *	Floppy ioctls
+ */
+
+int fdc80_ioctl(uint_fast8_t minor, uarg_t request, char *buffer)
+{
+	register struct fdc *fdc = fdcinfo + minor;
+	uint8_t s;
+	struct fdcstep step;
+
+	switch (request) {
+	case FDIO_GETCAP:
+		fdcap.mode = fdc->modenum;
+		return uput(&fdcap, buffer, sizeof(struct fdcinfo));
+	case FDIO_GETMODE:
+		s = ugetc(buffer);
+		if (s >= NUM_MODES) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		return uput(fdcmodes + s, buffer, sizeof(struct fdcinfo));
+	case FDIO_SETMODE:
+		s = ugetc(buffer);
+		if (s >= NUM_MODES) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		fdc->mode = fdcmodes + s;
+		fdc->modenum = s;
+		fdc80_setup(fdc);
+		return 0;
+	case FDIO_SETSTEP:
+		if (uget(buffer, &step, sizeof(step)))
+			return -1;
+		s = step.steprate;
+		/* Check chip and clock details */
+		/* WD179x - 3 6 10 15 */
+		if (s > 10)
+			s = 3;
+		else if (s > 6)
+			s = 2;
+		else if (s > 3)
+			s = 1;
+		else
+			s = 0;
+		fdc->steprate = s;
+		return 0;
+	case FDIO_FMTTRK:
+		/* TODO */
+		return -1;
+	case FDIO_RESTORE:
+		last_dev = NULL;	/* Force a re-configure */
+		if (fdc80_do_restore(fdc)) {
+			udata.u_error = EIO;
+			return -1;
+		}
+		return 0;
+	}
+	return -1;
+}
+
 
 /* To discard section ? */
 
