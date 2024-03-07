@@ -7,48 +7,109 @@
 static uint8_t use[256];
 
 struct section {
+	struct section *next;
+	uint8_t name;
 	uint16_t base;
 	uint16_t size;
 };
 
-struct section sect[14];
+struct section *sections;
 
-static char sectname[16] = "ACDBXZSLsb??????";
+/* The sections from the map we pre allocate */
+static struct section sect[10];
 
-static void check_overlap(int a, int b)
+static struct section *new_section(const char c, uint16_t base, uint16_t size)
 {
-	/* A finishes below B start -> OK */
-	if (sect[a].base + sect[a].size <= sect[b].base)
-		return;
-	/* B finishes before A start -> OK */
-	if (sect[b].base + sect[b].size <= sect[a].base)
-		return;
-	fprintf(stderr, "Section %c (%04X-%04X) overlaps section %c (%04X-%04X).\n",
-		sectname[a],
-		sect[a].base, sect[a].base + sect[a].size - 1,
-		sectname[b],
-		sect[b].base, sect[b].base + sect[b].size - 1);
+	struct section *n = malloc(sizeof(struct section));
+	if (n == NULL) {
+		fprintf(stderr, "Out of memory.\n");
+		exit(1);
+	}
+	n->name = c;
+	n->base = base;
+	n->size = size;
+	n->next = NULL;
+	return n;
 }
 
-static void add_segment(int i)
+static void insert_section(struct section *s)
 {
-	memset(use + (sect[i].base >> 8),
-		sectname[i], (sect[i].size + 255) >> 8);
+	s->next = sections;
+	sections = s;
+}
+
+static void check_overlap(struct section *sa, struct section *sb)
+{
+	/* Don't check versus self */
+	if (sa == sb)
+		return;
+	/* A finishes below B start -> OK */
+	if (sa->base + sa->size <= sb->base)
+		return;
+	/* B finishes before A start -> OK */
+	if (sb->base + sb->size <= sa->base)
+		return;
+	fprintf(stderr, "Section %c (%04X-%04X) overlaps section %c (%04X-%04X).\n",
+		sa->name,
+		sa->base, sa->base + sa->size - 1,
+		sb->name,
+		sb->base, sb->base + sb->size - 1);
+}
+
+static void add_section(struct section *s)
+{
+	memset(use + (s->base >> 8),
+		s->name, (s->size + 255) >> 8);
 }
 
 static void mark_map(void)
 {
-	int i, j;
+	struct section *s = sections;
+	struct section *a;
 
-	for (i = 1; i < 10; i++) {
-		if ((unsigned)sect[i].base + sect[i].size > 0xFFFF) {
+	while (s) {
+		if ((unsigned)s->base + s->size > 0xFFFF) {
 			fprintf(stderr, "Section %c runs over the top of memory.\n",
-				sectname[i], sect[i].base + sect[i].size - 1);
+				s->name, s->base + s->size - 1);
 		}
-		for (j = 1; j < i; j++)
-			check_overlap(i, j);
-		add_segment(i);
+		a = sections;
+		while(a) {
+			check_overlap(s, a);
+			a = a->next;
+		}
+		add_section(s);
+		s = s->next;
 	}
+}
+
+
+static char linebuf[128];
+
+int get_line(FILE *fp)
+{
+    char *p;
+    if (fgets(linebuf, sizeof(linebuf) - 1, fp) == NULL)
+        return 0;
+    p = linebuf + strlen(linebuf) - 1;
+    if (*p == '\n')
+        *p = 0;
+    return 1;
+}
+void load_info(FILE *fp)
+{
+    unsigned int st, en;
+    char name;
+    struct map *m;
+
+    while(get_line(fp)) {
+        if (*linebuf == '#')
+            continue;
+        if (sscanf(linebuf, "%c %x-%x", &name, &st, &en) != 3) {
+                fprintf(stderr, "Unknown info line '%s'.\n", linebuf);
+                exit(1);
+        }
+        insert_section(new_section(name, st, en - st + 1));
+    }
 }
 
 int main(int argc, char *argv[])
@@ -56,7 +117,17 @@ int main(int argc, char *argv[])
 	char buf[512];
 	int i;
 	int r, b;
+	FILE *fp;
 
+	fp = fopen("map.info", "r");
+	if (fp) {
+		load_info(fp);
+		fclose(fp);
+	}
+
+	for (i = 0; i < 10; i++)
+		sect[i].name = "ACDBXZSLsb??????"[i];
+		
 	memset(use, '#', sizeof(use));
 
 	while (fgets(buf, 511, stdin)) {
@@ -122,6 +193,11 @@ int main(int argc, char *argv[])
                 if (strcmp(name, "__buffers") == 0)
 			sect[9].base = addr;
 	}
+	/* Add any present sections to the map */
+	for (i = 0; i < 10; i++)
+		if (sect[i].size)
+			insert_section(sect + i);
+			
 	mark_map();
 	for (r = 0; r < 4; r++) {
 		for (i = 0; i < 256; i += 4) {
