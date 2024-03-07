@@ -15,3 +15,7 @@ extern unsigned fdc80_probe(void);
 #define FDC_NASCOM	1
 #define FDC_GM809	2
 #define FDC_GM849	3
+
+/* Platform provides */
+extern void plt_disable_nmi(void);
+extern void plt_enable_nmi(void);
