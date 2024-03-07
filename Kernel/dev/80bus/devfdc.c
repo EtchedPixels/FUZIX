@@ -23,10 +23,6 @@
 #define MAX_FD		8
 #define	MAX_SKEW	32
 
-#define FDC_NASCOM	0
-#define FDC_GM809	1
-#define FDC_GM849	2
-
 struct fdc {
 	uint8_t track;		/* Saved track value */
 	uint8_t spt;		/* Sectors per track (including both sides if DS) */
@@ -281,7 +277,8 @@ int fdc80_open(uint_fast8_t minor, uint16_t flags)
 {
 	register struct fdc *fdc = fdcinfo + minor;
 	int density;
-	if (minor >= MAX_FD && (fdctype != FDC_GM849 && minor > 3)) {
+	if (fdctype == FDC_NONE || minor >= MAX_FD ||
+			(fdctype != FDC_GM849 && minor > 3)) {
 		udata.u_error = ENODEV;
 		return -1;
 	}
@@ -298,7 +295,7 @@ int fdc80_open(uint_fast8_t minor, uint16_t flags)
 
 /* To discard section ? */
 
-int fdc80_probe(void)
+unsigned fdc80_probe(void)
 {
 	/* See if we have a working FDC track register */
 	out(0xE2, 1);
@@ -318,7 +315,7 @@ int fdc80_probe(void)
 			rdcmd = 0xE588;
 			wrcmd = 0xE5A8;
 			kputs("Nascom FDC at 0xE0\n");
-			return 1;
+			return FDC_NASCOM;
 		}
 	}
 	/* E4 does not mirror drive selection. Therefore we are a Gemini or MAP80 */
@@ -329,7 +326,7 @@ int fdc80_probe(void)
 		wrcmd = 0xE4A8;
 		/* Gemini GM849 or GM849A */
 		kputs("Gemini GM849 FDC at 0xE0\n");
-		return 1;
+		return FDC_GM849;
 	}
 	/* Gemini 809 or 829 (we don't distinguish), or MAP80 VFDC */
 	fdctype = FDC_GM809;
@@ -337,5 +334,5 @@ int fdc80_probe(void)
 	rdcmd = 0xE480;
 	wrcmd = 0xE4A0;
 	kputs("Gemini GM809/29 or compatible at 0xE0\n");
-	return 1;
+	return FDC_GM809;
 }
