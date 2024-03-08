@@ -96,11 +96,11 @@ map_kernel_di:
 	push 2
 	and 2,#0xBF
 	push r3
-	ld r3,#0xC3	; Bank 0 is kernel 
+	ld r3,#0x11	; Bank 0 is kernel data
 	; Write to E bank
 	lde @rr14,r3
 	decw rr14
-	clr r3		; Bank 0 is kernel code
+	ld r3,#0x33	; Bank 1 is kernel code
 	; Write to C bank
 	lde @rr14,r3
 	inc r3
@@ -298,9 +298,26 @@ spi_rx_r3:
 	com r3
 	ret
 	
+
+map_io:
+	ld r14,#>_td_raw
+	ld r15,#<_td_raw
+	lde r13,@rr14
+	or r13,r13
+	jr z, nowork
+	dec r13
+	jp z, map_proc_always
+	; For swap
+	ld r14,#>_td_page
+	ld r15,#<_td_page
+	lde r13,@rr14
+nowork:
+	jp map_for_swap
+
 _sd_spi_tx_sector:
-	ld r15,#2
-	call __gargr2
+	call map_io
+	ld r15,#4
+	call __gargr2		; stack is always mapped so this is ok
 	ld r15,r3
 	ld r14,r2		; pointer
 	clr r2
@@ -316,10 +333,11 @@ txlp:
 	lde @rr14,r3
 	incw rr14
 	djnz r2,txlp
-	ret
+	jp map_kernel
 
 _sd_spi_rx_sector:
-	ld r15,#2
+	call map_io
+	ld r15,#4
 	call __gargr2
 	ld r15,r3
 	ld r14,r2		; pointer
@@ -336,7 +354,7 @@ rxlp:
 	incw rr14
 	call spi_rx_r3
 	djnz r2,rxlp
-	ret
+	jp map_kernel
 
 _sd_spi_lower_cs:
 	or 2,#0x20	; set CS1 high fist
@@ -397,3 +415,63 @@ _z8tty_status:
 	ld r3,0xFB
 	clr r2
 	ret
+
+;
+;	IDE. Bit messy because of the way the I/O map works. Perhaps
+;	we should fix that on the next gen board ?
+
+	.export _devide_read_data
+	.export _devide_write_data
+;
+;	TODO: map the user page as our code space low (keep this code
+;	high in common and blast that way to avoid the messy I/O switchig)
+;
+_devide_read_data:
+	call map_io
+	ld r15,#4
+	call __gargr2
+	ld r15,r3
+	ld r14,r2		; pointer
+	ld r12,#0xFF
+	ld r13,#0x10		; IDE data port
+	clr r2			; counter
+	push 2
+rsec:
+	and 2,#0xBF		; I/O on
+	lde r3,@rr12
+	or 2,#0x10
+	lde @rr14,r3
+	incw rr14
+	and 2,#0xBF		; I/O on
+	lde r3,@rr12
+	or 2,#0x10
+	lde @rr14,r3
+	incw rr14
+	djnz r2,rsec
+	pop 2
+	jp map_kernel
+
+_devide_write_data:
+	call map_io
+	ld r15,#4
+	call __gargr2
+	ld r15,r3
+	ld r14,r2		; pointer
+	ld r12,#0xFF
+	ld r13,#0x10		; IDE data port
+	clr r2			; counter
+	push 2
+wsec:
+	lde r3, @rr14
+	and 2,#0xBF		; I/O on
+	lde @rr12,r3
+	or 2,#0x10
+	incw rr14
+	lde r3,@rr14
+	and 2,#0xBF		; I/O on
+	lde @rr12,r3
+	or 2,#0x10
+	incw rr14
+	djnz r2,wsec
+	pop 2
+	jp map_kernel

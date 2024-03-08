@@ -1,10 +1,10 @@
 #include "../../cpu-z8/kernel-z8.def"
 
 		.code
-
 .export init
 
-	.word 0x5A38
+	.word 0x5A38	; magic
+	; Next 5 words and this get trampled by IRQ vectors
 
 init:
         di
@@ -14,43 +14,25 @@ init:
 
         call init_early
 
-	; Common is packed in the BSS space
-
+	; Shuffle up the segments we packed at the end and which
+	; cover E000-FFFF areas. We put them in the upper 8K of
+	; the data area in the load (C000-DFFF)
+	ld r12,#0xC0
+	clr r13
 	ld r14,#>__common
 	ld r15,#<__common
-	ld r12,#>__bss
-	ld r13,#<__bss
 	ld r10,#>__common_size
 	ld r11,#<__common_size
-
-	; Copy it high
-nextbyte:
-	lde r0,@rr12
-	lde @rr14,r0
+copy_common:
+	lde r9,@rr12
+	ldc @rr14,r9		; From data to code map
 	incw rr12
 	incw rr14
 	decw rr10
-	jr nz, nextbyte
+	jr nz, copy_common
 
-	; The discard follows the common
-	ld r14,#>__discard
-	ld r15,#<__discard
-	ld r10,#>__discard_size
-	ld r11,#<__discard_size
-	; Go from the end as we want to copy backwards in case of
-	; an overlap
-	add r15,r11
-	adc r14,r10
-	add r13,r11
-	adc r12,r10
-
-nextbyted:
-	decw rr12
-	decw rr14
-	lde r0,@rr12
-	lde @rr14,r0
-	decw rr10
-	jr nz, nextbyted
+copy_commondata:
+	; Currently no commondata - add if needed
 
 	ld r12,#>__bss
 	ld r13,#<__bss

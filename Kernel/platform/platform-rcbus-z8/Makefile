@@ -4,7 +4,8 @@ CSRCS += devices.c main.c devtty.c
 DISCARD_CSRCS = discard.c
 
 DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinysd_discard.c
-DSRCS = ../../dev/tinydisk.c ../../dev/tinysd.c 
+DISCARD_DSRCS += ../../dev/tinyide_discard.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinysd.c  ../../dev/tinyide.c
 
 CROSS_CCOPTS += -I../../dev/
 
@@ -55,8 +56,9 @@ image:
 	../../syscall_proc.o ../../syscall_other.o ../../mm.o ../../swap.o \
 	../../tty.o ../../devsys.o ../../usermem.o ../../syscall_fs2.o \
 	../../syscall_fs3.o ../../syscall_exec.o ../../syscall_exec16.o  \
-	../../dev/tinydisk.o ../../dev/tinysd.o \
+	../../dev/tinydisk.o ../../dev/tinysd.o ../../dev/tinyide.o \
 	../../dev/tinydisk_discard.o ../../dev/tinysd_discard.o \
+	../../dev/tinyide_discard.o \
 	../../blk512.o ../../cpu-z8/usermem_std-z8.o -m fuzix.tmpmap /opt/fcc/lib/z8/libz8.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	cp fuzix.bin ../../fuzix.bin

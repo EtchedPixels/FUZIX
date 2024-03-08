@@ -21,6 +21,10 @@
 #define CONFIG_TD_SD
 #define TD_SD_NUM	1
 
+#define CONFIG_TD_IDE
+#define TD_IDE_NUM	2
+#define CONFIG_TINYIDE_INDIRECT
+
 /* Read processes and big I/O direct into process space */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
