@@ -261,7 +261,7 @@ inoptr srch_mt(register inoptr ino)
  * inodes.
  */
 
-inoptr i_open(uint16_t dev, uint16_t ino)
+inoptr i_open(register uint16_t dev, uint16_t ino)
 {
     register inoptr nindex;
     register inoptr j;
