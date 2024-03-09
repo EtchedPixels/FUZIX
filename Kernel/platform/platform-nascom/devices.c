@@ -14,7 +14,7 @@ struct devsw dev_tab[] =	/* The device driver switch table */
 	/* 0: /dev/hd         SCSI/SASI block devices */
 	{td_open, no_close, td_read, td_write, td_ioctl},
 	/* 1: /dev/fd         Floppy disc block devices */
-	{fdc80_open, no_close, fdc80_read, fdc80_write, no_ioctl},
+	{fdc80_open, no_close, fdc80_read, fdc80_write, fdc80_ioctl},
 	/* 2: /dev/tty        TTY devices */
 	{tty_open, tty_close, tty_read, tty_write, vt_ioctl},
 	/* 3: /dev/lpr        Printer devices */

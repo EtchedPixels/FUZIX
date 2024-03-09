@@ -13,6 +13,20 @@
  *             SD/DD, DD/HD switch, 5.25" HD speed control, 8 drives, SASI
  *     MAP80
  *             As GM809 ?
+ *
+ *	Disk formats
+ *	At the moment the driver is set up to favour PC style formats. NASCOM
+ *	systems used a truely wild array of media types. For the moment we
+ *	support (subject to controller limit and CPU speed)
+ *	- PC 360K, 720K, 1.2MB, 1.44MB
+ *	- NASCOM PolyDOS
+ *
+ *	There were a lot of other formats and some probably need adding
+ *	35x18x128 QDOS, PolyDOS 1, DCS-DOS, Henelec (DSSD)
+ *	35x10x512 CP/M 1.4/2.2 on Henelec/GM805 (DSDD), Gemini CP/M 2.2
+ *		  POLYDOS 2
+ *	77x16x256 Lucas NASDOS/DCS-DOS II (DSDD)
+ *	77x10x512 , CPM 2.2, PolyDOS 3 (DSDD)
  */
 
 #include <kernel.h>
@@ -47,7 +61,7 @@ static uint16_t wrcmd;
 static struct fdcinfo fdcap = {
 	0,
 	0,
-	FDC_SEC0,
+	FDC_SEC0|FDC_DSTEP,
 	FDF_DD | FDF_DS | FDF_SEC128 | FDF_SEC256 | FDF_SEC512,
 	18,
 	40,
@@ -55,7 +69,7 @@ static struct fdcinfo fdcap = {
 	0			/* Precomp */
 };
 
-#define NUM_MODES	6
+#define NUM_MODES	9
 static struct fdcinfo fdcmodes[NUM_MODES] = {
 	{
 	 0,
@@ -94,17 +108,43 @@ static struct fdcinfo fdcmodes[NUM_MODES] = {
 	 FDTYPE_NASDSSD,	/* Nascom 35 track DSSD */
 	 FDF_SD | FDF_SEC128,
 	 10,
-	 40,
+	 35,
 	 2,
 	 0 },
 	{
 	 5,
-	 FDTYPE_NASDSDD,
-	 FDF_SD | FDF_SEC128,
+	 FDTYPE_NASDSDD,	/* Double density variant - 18 x 128 */
+	 FDF_DD | FDF_SEC128,
 	 18,
+	 35,
+	 2,
+	 0 },
+	{
+	 6,
+	 FDTYPE_NASPDOS2,	/* PolyDOS 40 track, like PC but 10spt */
+	 FDF_DD | FDF_SEC512,
+	 10,
 	 40,
 	 2,
-	 0 }
+	 0 },
+	{
+	 7,
+	 FDTYPE_NASPDOS3,	/* PolyDOS 77/80 track, like PC but 10spt */
+	 FDF_DD | FDF_SEC512,
+	 10,
+	 80,
+	 2,
+	 0 },
+	{
+	  8,
+	  FDTYPE_NASDOS,
+	  FDF_DD | FDF_SEC256,
+	  16,
+	  77,
+	  256,
+	  2,
+	  0
+	}
 };
 
 
@@ -202,6 +242,7 @@ static int fdc80_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag
 	uint8_t sv;
 	uint8_t side;
 	uint8_t err;
+	unsigned config = fdc->mode->config;
 
 	/* No floppy swap */
 	if (rawflag == 2)
@@ -222,6 +263,8 @@ static int fdc80_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag
 		/* TODO: skew fdc->skew[] */
 		sector = udata.u_block % fdc->spt;
 		track = udata.u_block / fdc->spt;
+		if (config & FDC_DSTEP)
+			track += track;
 		if (sector >= fdc->ds) {
 			sector -= fdc->ds;
 			side = 1;
@@ -239,7 +282,10 @@ static int fdc80_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag
 				}
 			}
 			/* Set up the sector register, hardcode base 1 for now */
-			out(0xE2, sector + 1);
+			if (config & FDC_SEC0)
+				out(0xE2, sector);
+			else
+				out(0xE2, sector + 1);
 			fdc80_dptr = (uint16_t) udata.u_dptr;
 			/* The timing on these is too tight to do with interrupts on */
 			plt_disable_nmi();
@@ -305,9 +351,10 @@ static void fdc80_setup(struct fdc *fdc)
 		break;
 		/* No 1K or higher support */
 	}
-	if (feat & FDF_DS)
-		fdc->ds = fdc->spt / 2;
-	else
+	if (feat & FDF_DS) { 
+		fdc->ds = fdc->spt;
+		fdc->spt *= 2;
+	} else
 		fdc->ds = 255;
 	if (feat & FDF_8INCH)
 		den += 3;
