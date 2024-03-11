@@ -269,7 +269,7 @@ static void wordflush(void)
         wordsize = 0;
         return;
     }
-    if (xpos + wordsize > xright)
+    if (xpos + wordsize >= xright)
         force_newline();
     while (t != wordptr) {
         switch((uint8_t)*t) {
