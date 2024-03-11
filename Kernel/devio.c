@@ -236,7 +236,7 @@ void bufsync(void)
  */
 bufptr bfind(uint16_t dev, blkno_t blk)
 {
-	bufptr bp;
+	regptr bufptr bp;
 
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		if (bp->bf_dev == dev && bp->bf_blk == blk) {
@@ -277,8 +277,8 @@ void bdrop(uint16_t dev)
 bufptr freebuf(void)
 {
 	regptr bufptr bp;
-	bufptr oldest;
-	int16_t oldtime;
+	regptr bufptr oldest;
+	register int16_t oldtime;
 
 	/* Try to find a non-busy buffer and write out the data if it is dirty */
 	oldest = NULL;
