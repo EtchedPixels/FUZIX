@@ -8,7 +8,7 @@
 
 init:
         di
-	srp #10
+	srp #0x10
 	ld 254,#>kstack_top
 	ld 255,#<kstack_top
 

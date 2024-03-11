@@ -89,6 +89,7 @@ map_kernel_di:
 	push r3
 	push r14
 	push r15
+	; WHAT SHOULD GO HERE for split I/D
 	ld _mem_bank,#0x20
 	ld r14,#0xFF	; MMU E
 	ld r15,r14
@@ -115,11 +116,8 @@ map_kernel_di:
 
 map_proc:
 map_proc_di:
-	or r14,r14
-	jr nz, map_notk
-	or r15,r15
+	or r14,r15
 	jr z, map_kernel
-map_notk:
 	push r3
 	lde r3,@rr14
 	ld _mem_bank,r3
@@ -311,8 +309,9 @@ map_io:
 	ld r14,#>_td_page
 	ld r15,#<_td_page
 	lde r13,@rr14
-nowork:
 	jp map_for_swap
+nowork:
+	ret
 
 _sd_spi_tx_sector:
 	call map_io
