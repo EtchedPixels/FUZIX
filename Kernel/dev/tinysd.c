@@ -23,8 +23,8 @@ uint8_t tinysd_unit;
 
 static uint_fast8_t sd_spi_wait(bool want_ff)
 {
-	unsigned int timer = set_timer_ms(500);
-	uint_fast8_t b;
+	register unsigned int timer = set_timer_ms(500);
+	register uint_fast8_t b;
 
 	do {
 		b = sd_spi_rx_byte();
@@ -40,7 +40,7 @@ static uint_fast8_t sd_spi_wait(bool want_ff)
 static int sd_send_command(uint_fast8_t cmd, uint32_t arg)
 {
 	uint8_t *p = (uint8_t *)&arg;
-	uint_fast8_t n, res;
+	register uint_fast8_t n, res;
 
 	sd_spi_raise_cs();
 	sd_spi_rx_byte();
