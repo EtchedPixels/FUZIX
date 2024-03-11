@@ -1,0 +1,1 @@
+export CPU = super8
