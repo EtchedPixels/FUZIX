@@ -1,5 +1,5 @@
 CC = fcc
-AS = fcc
+AS = fcc -mz8
 LINKER = $(FUZIX_ROOT)/Library/link/ldz8
 CFLAGS = -X -mz8 -Os -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/z8
 #CFLAGS = -X -mz8 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include #-I$(FUZIX_ROOT)/Library/include/z8
