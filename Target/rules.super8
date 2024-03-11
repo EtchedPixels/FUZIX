@@ -1,0 +1,12 @@
+CC = fcc
+AS = fcc -msuper8
+LINKER = $(FUZIX_ROOT)/Library/link/ldsuper8
+CFLAGS = -X -msuper8 -Os -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/super8
+#CFLAGS = -X -msuper8 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include #-I$(FUZIX_ROOT)/Library/include/super8
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs
+LINKER_TAIL = -lcsuper8
+ASM_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_super8.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_super8.o
+HOSTCC = cc
+.SUFFIXES: .c .o .y
