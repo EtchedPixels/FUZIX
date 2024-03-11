@@ -1,13 +1,7 @@
 #!/bin/sh
 
-if [ -e /opt/ccz80/bin/ccz80 ]; then
-	echo "ccz80: installed"
-	exit 0
+X=`which fcc`
+if [ "$X" = "" ]; then
+	echo "fcc is required: see https://github.com/EtchedPixels/FuzixCompilerKit/"
+	exit 1
 fi
-
-cd Applications/assembler
-make -f Cross.z80
-make -f Cross.z80 install
-
-echo "Now install the Fuzix Compiler Kit"
-echo "https://github.com/EtchedPixels/Fuzix-Compiler-Kit.git"
