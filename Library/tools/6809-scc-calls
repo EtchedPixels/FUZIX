@@ -1,0 +1,50 @@
+args
+0		ldd #n
+		syscall
+		ret
+
+1		ldx 2,s
+		ldd #n
+		syscall
+		ret
+2
+		ldx 4,s		; arg 2 will be in 2,s still
+		ldd #n
+		syscall
+		ret
+
+3:		puls d,x,u	; 2,s 4,s 6,s hold 3 2 1
+		exg x,u		; pull 3 & 2 arg
+		pshs d,x,u	; swap so we have 2 3 1
+		ldx 6,s		; and 1 into X so we have the correct X 1 2
+		ldd #n
+		syscall
+		ret
+
+4:		puls d,x,y,u	; 4 3 2 1
+		exg x,u		; 2 3 4 1
+		pshs d,x,y,u
+		ldx 8,s
+		ldd #n
+		syscall
+		ret
+
+
+var:		u holds the arg count
+		/* Cheat and rely on this always being 2 or 3 */
+		cmpu #2
+		bne syscall3
+		ldd #n
+		ldx 4,s
+		syscall
+		ret
+syscal3:	puls d,x,u
+		exg x,u
+		pshs d,x,u
+		ldx 6,s
+		ldd #n
+		syscall
+		ret
+
+		
+** REMEMBER : check scc int foo(void,void) fails!

@@ -1,0 +1,19 @@
+--- Library/tools/libclean
++++ Library/tools/libclean
+@@ -4,7 +4,15 @@
+ #	IMHO beats forking the library or building a private copy.
+ #
+ #
+-cp /opt/sdcc/share/sdcc/lib/z80/z80.lib tmp.lib
++UNAME_S=`uname -s`
++
++if [ "${UNAME_S}" = "Darwin" ]; then
++	SDCC_LIB="/usr/local/share/sdcc/lib"
++else
++	SDCC_LIB="/usr/share/sdcc/lib"
++fi
++
++cp ${SDCC_LIB}/z80/z80.lib tmp.lib
+ #
+ #	Scrub the functions we don't want to inherit
+ #	Need to review setjmp and maybe a couple of others
