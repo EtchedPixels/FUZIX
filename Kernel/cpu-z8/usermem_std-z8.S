@@ -95,7 +95,7 @@ ugetcopy:
 	incw	rr14
 	incw	rr2
 	decw	rr0
-	jr	nz,uputcopy
+	jr	nz,ugetcopy
 	clr	r2
 	clr	r3
 	ret

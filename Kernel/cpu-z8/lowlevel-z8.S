@@ -2,8 +2,8 @@
 ;
 ;	Zilog Z8 low level code
 ;
-;	Much the same as the Z80 code except we don't provide in and out
-;	helpers because it's impossible to make them re-entrant for any port
+;	FIXME: move in/out helpers out of this code
+;	FIXME: correct helpers
 ;
 #include "../cpu-z8/kernel-z8.def"
 
@@ -19,7 +19,7 @@
 _sys_cpu:
 	.byte 5		; Zilog Z8
 _sys_cpu_feat:
-	.byte 0
+	.byte 1
 
 _sys_stubs:
 	jp	unix_syscall_entry
@@ -93,7 +93,7 @@ raced:
 	ld	r3,255
 	lde	@rr14,r2		; save sp
 	incw	rr14
-	lde	@rr15,r3
+	lde	@rr14,r3
 	ld	254,#>kstack_top
 	ld	255,#<kstack_top
 
@@ -103,9 +103,9 @@ raced:
 	call	map_proc_always_di
 	ld	r14,#>U_DATA__U_SYSCALL_SP
 	ld	r15,#<U_DATA__U_SYSCALL_SP
-	lde	r04,@rr14		; restore sp
+	lde	r14,@rr14		; restore sp
 	incw	rr14
-	lde	r1,@rr15
+	lde	r1,@rr14
 	ld	254,14
 	ld	255,15
 	jr	deliver_signals
@@ -140,18 +140,32 @@ unix_syscall_entry:
 
 	lde	r3,@rr12
 	lde	@rr14,r3
+	incw	rr12
+	incw	rr14
 	lde	r3,@rr12
 	lde	@rr14,r3
+	incw	rr12
+	incw	rr14
 	lde	r3,@rr12
 	lde	@rr14,r3
+	incw	rr12
+	incw	rr14
 	lde	r3,@rr12
 	lde	@rr14,r3
+	incw	rr12
+	incw	rr14
 	lde	r3,@rr12
 	lde	@rr14,r3
+	incw	rr12
+	incw	rr14
 	lde	r3,@rr12
 	lde	@rr14,r3
+	incw	rr12
+	incw	rr14
 	lde	r3,@rr12
 	lde	@rr14,r3
+	incw	rr12
+	incw	rr14
 	lde	r3,@rr12
 	lde	@rr14,r3
 
@@ -168,7 +182,7 @@ unix_syscall_entry:
 	ld	r3,255
 	lde	@rr14,r2
 	incw	rr14
-	lde	@rr15,r3
+	lde	@rr14,r3
 	ld	254,#>kstack_top
 	ld	255,#<kstack_top
 
@@ -260,7 +274,7 @@ _doexec:
 	call	map_proc_always
 	; Get the argument
 	pop	r0
-	pop	r0
+	pop	r1
 	pop	r2
 	pop	r3
 
@@ -276,7 +290,7 @@ _doexec:
 	; No longer in syscalls
 	ld	r14,#>U_DATA__U_INSYS
 	ld	r15,#<U_DATA__U_INSYS
-	ld	r0,#0
+	clr	r0
 	lde	@rr14,r0
 	ei
 	; jump to the passed address
@@ -369,6 +383,7 @@ reinterrupt:
 	iret
 
 interrupt_handler:
+	; This approach won't work if we allow reinterrupt - FIXME 
 	srp	#INTBANK
 	call	plt_interrupt_all
 
@@ -749,7 +764,7 @@ msloop:
 	lde @rr0,r3
 	incw rr0
 msnext:
-	decw rr2
+	decw rr12
 	jr nz, msloop
 	pop r2
 	pop r3
@@ -763,6 +778,7 @@ _strlen:
 	clr r3
 count:
 	lde r0,@rr12
+	or r0,r0
 	jr z,strlen_done
 	incw rr12
 	incw rr2
