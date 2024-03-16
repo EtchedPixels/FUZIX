@@ -1,16 +1,5 @@
 /*
- *	We have a 16x50 UART at 0x68 and maybe a PropIO2 at A8
- *
- *	TODO:
- *	- Hardware flow control
- *	- Support for abuse of 16x50 as interrupt controller
- *	- Support for timer hack
- *
- *	This file implements the serial ports for the platform. Fuzix implements
- *	a reasonable subset of the System 5 termios. Certain things that are
- *	rarely relevant like XCASE, delay fills and parity are left to the
- *	driver if desired.
- *
+ *	ACIA clone at 0x80
  */
 
 #include <kernel.h>
