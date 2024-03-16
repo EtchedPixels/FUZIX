@@ -24,19 +24,16 @@ begin_z80:
 	; the stuff above
 	; load 2K off each track (so it works 5.25" or 8")
 run_z80:
-	xor	a		; Ensure data lines are low if we switch
-	ld	(0xF701),a
-	ld	(0xF700),a
-	ld	a,4		; Switch to low 4 output
-	ld	(0xF701),a
+	ld	hl,0xF701
+	ld	(hl),4		; Select data
 	ld	a,0x0F
-	ld	(0xF700),a
-	xor	a		; Now set the bank to 0
-	ld	(0xF701),a
-	ld	(0xF700),a
+	ld	(0xF700),a	; Data to 0F
+	ld	(hl),0		; Select DDR
+	ld	a,0x0F
+	ld	(0xF700),a	; Low 4 writable
+	ld	(hl),4		; Set back to data
 
 	; Begin loading into the RAM now it is paged properly
-	ld	(0xF700),a
 	ld	hl,0x0000
 	ld	bc,0x1801	; load 48K, start at track 1
 dnext:

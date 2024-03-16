@@ -15,7 +15,8 @@
 /* The physical media runs in 3584 byte blocks (7 Fuzix sectors) so we
    have to do math. It also depends on drive type. For the moment assume
    a CD-36 */
-#define SPT	5		/* of 3584 bytes */
+#define SPB	7
+#define BPT	5		/* of 3584 bytes */
 #define HPT	6
 
 struct {
@@ -24,6 +25,7 @@ struct {
 	uint16_t start;
 	uint16_t end;
 	uint8_t *dptr;
+	uint8_t sec;
 } hddat;			/* Passes request to asm helper */
 
 /*
@@ -62,8 +64,8 @@ static unsigned map_block(register unsigned block, unsigned off)
 	/* TODO: fast path 'next block' case */
 	unsigned sec, head, cyl;
 
-	sec = block % SPT;
-	block /= SPT;
+	sec = block % BPT;
+	block /= BPT;
 	head = block % HPT;
 	cyl = block / HPT;
 
@@ -71,9 +73,8 @@ static unsigned map_block(register unsigned block, unsigned off)
 	hddat.cyl = cyl;
 	hddat.start = secst[sec] + off;
 	hddat.end = secend[sec] + off;
+	hddat.sec = sec;
 
-	kprintf("M: %u %u %u\n", cyl, head, sec);
-	kprintf("MAP: %u-%u\n", hddat.start, hddat.end);
 	return sec;
 }
 
@@ -98,7 +99,7 @@ static uint16_t checksum16(register uint8_t *p, register unsigned n)
 {
 	register uint16_t sum = 0;
 	while (n--)
-		sum += *p;
+		sum += *p++;
 	return sum;
 }
 
@@ -109,21 +110,27 @@ static unsigned read_block(unsigned block)
 	unsigned tries = 0;
 
 	while(tries++ < 5) {
-		kprintf("rb try %u\n", tries - 1);
 		/* Do we need to offset the start/end values ? */
 		map_block(block, 3);
 		irq = di();
 		if (osihd_read() == 1) {
 			irqrestore(irq);
-			/* TODO: check right cyl low */
+			/* TODO: check right cyl low etc */
 			csum = checksum(hdbuf + 0x11, 5);
 			if (csum != hdbuf[0x17]) {
 				kprintf("osihd: bad header checksum.\n");
 				continue;
 			}
+			if (hdbuf[0x13] != hddat.cyl ||
+			    hdbuf[0x14] != (hddat.head & 0x7F) ||
+			    hdbuf[0x15] != hddat.sec) {
+			    kprintf("osihd: wrong block header (%u,%u.%u)\n",
+				hdbuf[0x13],hdbuf[0x14],hdbuf[0x15]);
+			    continue;
+			}
 			csum = checksum16(hdbuf + 0x18, 3584);
-			if (csum != hdbuf[0xE18] || (csum >> 8) != hdbuf[0xE19]) {
-				kprintf("osihd: bad data checksum.\n");
+			if ((csum & 0xFF) != hdbuf[0xE18] || (csum >> 8) != hdbuf[0xE19]) {
+				kprintf("osihd: bad data checksum (%u).\n", csum);
 				continue;
 			}
 			return 1;
@@ -136,9 +143,11 @@ static unsigned read_block(unsigned block)
 
 static unsigned write_block(unsigned block)
 {
-	register uint16_t sec = map_block(block, 0);
 	register irqflags_t irq;
 	unsigned tries = 0;
+	unsigned csum;
+
+	map_block(block, 0);
 
 	while(tries++ < 5) {
 		hdbuf[0x10] = 0xA1;
@@ -146,12 +155,12 @@ static unsigned write_block(unsigned block)
 		hdbuf[0x12] = 0x00;
 		hdbuf[0x13] = hddat.cyl;
 		hdbuf[0x14] = hddat.head & 0x7F;
-		hdbuf[0x15] = sec;
+		hdbuf[0x15] = hddat.sec;
 		hdbuf[0x16] = 0x00;
 		hdbuf[0x17] = checksum(hdbuf + 0x11, 5);
-		sec = checksum16(hdbuf + 0x18, 3584);
-		hdbuf[0xE18] = sec;
-		hdbuf[0xE19] = sec >> 8;
+		csum = checksum16(hdbuf + 0x18, 3584);
+		hdbuf[0xE18] = csum;
+		hdbuf[0xE19] = csum >> 8;
 
 		/* Should move this into the asm as we can re-enable interrupts
 		   during the seek and maybe copy wait */
@@ -181,9 +190,8 @@ int osihd_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 {
 	/* Worst case is a CD74 and this will fit into a 16bit value */
 	/* TODO: fast path next lba case */
-	unsigned block = lba / SPT;
-	unsigned boff = lba % SPT;
-	kprintf("osihd_xfer %u\n", (unsigned)lba);
+	unsigned block = lba / SPB;
+	unsigned boff = lba % SPB;
 	if (block != curblock) {
 		flush_block();
 		if (read_block(block) == 0) {

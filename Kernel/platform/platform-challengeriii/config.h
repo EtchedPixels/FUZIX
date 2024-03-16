@@ -13,9 +13,9 @@
 #define MAX_MAPS	63		/* 2MB... minus the high one */
 /* How big is each bank - in our case 32K, 48K is actually more common. This
    is hardware dependant */
-#define MAP_SIZE	0x8000
+#define MAP_SIZE	0xC000	/* or BE00 - FIXME check mm/bankfixed and other ports here */
 /* How many banks do we have in our address space */
-#define CONFIG_BANKS	2	/* 2 x 32K */
+#define CONFIG_BANKS	1	/* 1 x 48K */
 
 /*
  *	Define the program loading area (needs to match kernel.def)

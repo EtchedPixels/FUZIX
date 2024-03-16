@@ -39,20 +39,13 @@ void map_init(void)
  *	of them. On some machines with a lot of RAM the implementation turns
  *	the excess into a RAM disc
  *
- *	The mapping can be logical numbers 1-n, or can be physical values to
- *	write into registers. Whatever works best. The 0 value is however
- *	reserved throughout to indicate kernel mode in calls, and also
- *	to mean swapped out for processes. If your bank 0 is user space you
- *	might need to just dec/inc before using it in an I/O port or similar
- *	to avoid confusion.
- *
- *	Kernel in bank 0, user in banks 1-63
+ *	Maps are inverted 4 upper bits. 0F is th kernel.
  */
 void pagemap_init(void)
 {
-	pagemap_add(1);		/* 192K of extra */
-	pagemap_add(2);
-	pagemap_add(3);
+	pagemap_add(0x0E);		/* 192K of extra */
+	pagemap_add(0x0D);
+	pagemap_add(0x0C);
 }
 
 /*

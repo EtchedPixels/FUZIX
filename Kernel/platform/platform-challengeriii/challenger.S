@@ -130,6 +130,12 @@ init_hardware:
 
 	im 1 ; set CPU interrupt mode
 
+	; Set up for bank switching
+	ld hl,0xF701
+	ld (hl),4
+	ld a,0x0F
+	ld (0xF700),a
+
 	ret
 
 ;
@@ -215,9 +221,7 @@ map_kernel_restore:
 map_kernel_di:
 map_kernel:
 	push	af
-	xor	a
-	ld	(mapreg),a
-	ld	a,(_piamask)
+	ld	a,0x0F
 	ld	(mapreg),a
 	ld	(0xF700),a
 	pop	af
@@ -239,13 +243,7 @@ map_proc_hl:
 map_for_swap:
 map_proc_a:			; used by bankfork
 	ld	(mapreg), a	; bank
-	push	af
-	push	de
-	ld	de,(_piamask)	; ends up in E, D is unrelated
-	or	e
 	ld	(0xF700), a
-	pop	de
-	pop	af
 	ret
 
 	;
@@ -255,13 +253,9 @@ map_proc_a:			; used by bankfork
 map_proc_always_di:
 map_proc_always:
 	push	af
-	push	de
 	ld	a,(_udata + U_DATA__U_PAGE)
 	ld	(mapreg),a
-	ld	de,(_piamask)
-	or	e
 	ld	(0xF700),a
-	pop	de
 	pop	af
 	ret
 
@@ -275,9 +269,8 @@ map_save_kernel:
 	push af
 	ld	a, (mapreg)
 	ld	(mapsave), a
-	xor	a
+	ld	a,0x0F
 	ld	(mapreg),a
-	ld	a,(_piamask)
 	ld	(0xF700),a
 	pop	af
 	ret
@@ -288,13 +281,9 @@ map_save_kernel:
 	;
 map_restore:
 	push	af
-	push	de
 	ld	a, (mapsave)
 	ld	(mapreg), a
-	ld	de,(_piamask)
-	or	e
 	ld	(0xF700), a
-	pop	de
 	pop	af
 	ret
 
@@ -370,6 +359,7 @@ osihd_initcp:
 	inc	hl
 	ld	h,(hl)		; Data pointer
 	ld	l,a
+	ld	e,0
 	ex	de,hl
 	; Block offset (in 256s) in HL, dptr in DE
 	add	hl,hl		; 512s

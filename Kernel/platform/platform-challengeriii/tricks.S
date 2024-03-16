@@ -23,12 +23,6 @@
 ;
 #include "../../lib/z80ufixedbank-core.s"
 
-;	We can also use the standard fast user copiers because all the
-;	kernel objects we need to copy to/from userspace exist in the
-;	user mapping.
-;
-#include "../../lib/z80uuser1.s"
-
 ;
 ;	We want to provide our own optimized direct 32K bank to bank
 ;	copy. This is slightly crazy stuff. The fastest Z80 copy is to use
