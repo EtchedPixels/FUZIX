@@ -23,16 +23,16 @@ volatile uint8_t *pia = (volatile uint8_t *) 0xCD00;
 
 void ide_set_w(void)
 {
-	pia[1] = 0x34;		/* Write direction reigster */
+	pia[1] = 0x30;		/* Write direction reigster */
 	pia[0] = 0xFF;
-	pia[1] = 0x30;		/* CAS2 pass throguh, no interrupts */
+	pia[1] = 0x34;		/* CAS2 pass throguh, no interrupts */
 }
 
 void ide_set_r(void)
 {
-	pia[1] = 0x34;		/* Write direction reigster */
+	pia[1] = 0x30;		/* Write direction reigster */
 	pia[0] = 0x00;
-	pia[1] = 0x30;		/* CAS2 pass throguh, no interrupts */
+	pia[1] = 0x34;		/* CAS2 pass throguh, no interrupts */
 }
 
 uint8_t ide_read(uint_fast8_t r)
@@ -63,8 +63,8 @@ void ide_setup(void)
 {
 	/* Set up control port */
 	ide_set_r();
-	pia[3] = 0x34;
-	pia[2] = 0xFF;		/* Write */
 	pia[3] = 0x30;
+	pia[2] = 0xFF;		/* Write */
+	pia[3] = 0x34;
 	pia[2] = PIAIDE_CS0 | PIAIDE_CS1 | PIAIDE_R | PIAIDE_W | PIAIDE_RESET;
 }
