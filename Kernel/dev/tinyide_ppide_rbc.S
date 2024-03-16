@@ -1,4 +1,4 @@
-#include "../build/kernel.def"
+#include "../build/kernelu.def"
 
 #ifdef CONFIG_TINYIDE_PPI
 
