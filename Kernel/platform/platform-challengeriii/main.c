@@ -80,12 +80,6 @@ void plt_discard(void)
 	}
 }
 
-/* We don't swap */
-void swapper(ptptr p)
-{
-	panic("swp");
-}
-
 /* string.c
  * Copyright (C) 1995,1996 Robert de Bath <rdebath@cix.compulink.co.uk>
  * This file is part of the Linux-8086 C library and is distributed

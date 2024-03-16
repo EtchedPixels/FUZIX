@@ -29,6 +29,14 @@
 #define PROC_SIZE   48 	    /* Memory needed per process including stash */
 
 /* TODO: swap */
+#define SWAPDEV	(swap_dev)
+extern uint16_t swap_dev;
+#define SWAP_SIZE    0x60    /* 48K */
+#define SWAPBASE     0x0000
+#define SWAPTOP      0xC000
+#define MAX_SWAPS    16
+#define CONFIG_DYNAMIC_SWAP
+#define swap_map(x)	((uint8_t *)(x))
 
 #define CONFIG_TD_NUM	2
 #define CONFIG_TD_IDE

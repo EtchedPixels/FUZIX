@@ -162,8 +162,8 @@ static unsigned read_block(unsigned block)
 			}
 			return 1;
 		}
+		irqrestore(irq);
 	}
-	irqrestore(irq);
 	kprintf("osihd: disk read error\n");
 	return 0;
 }
@@ -196,8 +196,8 @@ static unsigned write_block(unsigned block)
 			irqrestore(irq);
 			return 1;
 		}
+		irqrestore(irq);
 	}
-	irqrestore(irq);
 	/* TODO: dig out status somewhere */
 	kprintf("osihd: error\n");
 	return 0;

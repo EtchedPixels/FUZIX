@@ -35,10 +35,6 @@ Can we optimize disk writeback by looking for other blocks that are
 in the buffer cache for the chunk we will write and doing them too
 providing not in swap mode ?
 
-Rework ldir loops to be a bit faster
-
-Optimized fork()
-
 Init and test for ACIA devices on other ports, set them to a safe dummy
 if absent (2 bytes RAM as a "not busy" ACIA)
 
@@ -47,8 +43,6 @@ ACIA mode setting
 Why doesn't interrupt work on Z80 ? (emulator issue ?)
 
 Floppy disk driver
-
-Can we build without -Os
 
 Other disk sizes and make them a config option
 

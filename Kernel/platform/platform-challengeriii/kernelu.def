@@ -22,7 +22,7 @@
 ;
 ;	Set this if the platform has swap enabled in config.h
 ;
-#undef CONFIG_SWAP
+#define CONFIG_SWAP
 ;
 ;	The number of disk buffers. Must match config.h
 ;
