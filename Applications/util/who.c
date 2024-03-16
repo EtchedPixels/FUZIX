@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 			if (fmt == 0) {
 				timestr = ctime(&entry->ut_time);
 				timestr[strlen(timestr) - 1] = '\0';
-				printf("%s	tty%c%c	%s %s\n", entry->ut_user, entry->ut_id[0], entry->ut_id[1] ? entry->ut_id[1] : ' ', timestr, entry->ut_host);
+				printf("%-8s tty%c%c    %s %s\n", entry->ut_user, entry->ut_id[0], entry->ut_id[1] ? entry->ut_id[1] : ' ', timestr, entry->ut_host);
 			} else {
 				if (fmt == 2)
 					putchar(' ');
