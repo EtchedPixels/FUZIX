@@ -10,7 +10,7 @@
 ;	All of the fixed bank support is available as a library routine,
 ;	however it is a performance sensitive area. Start with
 ;
-#include "../../lib/z80ufixedbank.S"
+; #include "../../lib/z80ufixedbank.S"
 ;
 ;	As well as using "usermem_std-z80.rel" in your link file for the
 ;	userspace access operations.
@@ -21,7 +21,6 @@
 ;
 ;	Firstly we still want the core of the fixed bank support
 ;
-#if 0
 #include "../../lib/z80ufixedbank-core.s"
 
 ;
@@ -49,13 +48,13 @@ bankfork:
 	;	Set up ready for the copy
 	;
 	ld (spcache),sp
-	; 32256 bytes to copy.
+	; 48640 bytes to copy.
 	; Stack pointer at the target buffer
 	ld sp, PROGBASE	; Base of memory to fork
-	; 8 outer loops
-	ld a, 8
+	; 16 outer loops of 190 bytes (16 x 16 x 190)
+	ld a, 16
 	ld (copyct),a
-	xor a		; 256 inner loops of 16 (total 32k)
+	ld a,190	; 190 inner loops of 16 (total 32k)
 copyloop:
 	ex af,af'	; Save A as we need an A for ioports
 cpatch0:
@@ -91,7 +90,7 @@ sp_patch:
 	ld sp, 0
 	jp copyloop
 ;
-;	This outer loop only runs 8 times so isn't quite so performance
+;	This outer loop only runs 16 times so isn't quite so performance
 ;	critical
 ;
 setdone:
@@ -115,5 +114,3 @@ spcache:
 copyct:
 	.byte 0
 
-
-#endif
