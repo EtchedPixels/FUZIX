@@ -22,13 +22,34 @@ F000-FFFF	I/O and ROM	(common)
 ## Hardware:
 
 Model 510 CPU card
-48K banked memory (at least 3 banks needed)
+48K banked memory (at least 8 banks needed as no swap)
 4K  unbanked at D000-DFFF
 Floppy card	(only used for timer and boot right now)
-CD36 hard disk	(hardcoded at the moment)
+CD36/CD74 hard disk	(hardcoded at the moment)
 
+## TODO
 
-At this point we can boot to the boot prompt and read the partition table
-but trying to mount the root fs fails.
+Swap
 
-The PIA code for memory mapping needs some changes after that
+Can we optimize disk writeback by looking for other blocks that are
+in the buffer cache for the chunk we will write and doing them too
+providing not in swap mode ?
+
+Rework ldir loops to be a bit faster
+
+Optimized fork()
+
+Init and test for ACIA devices on other ports, set them to a safe dummy
+if absent (2 bytes RAM as a "not busy" ACIA)
+
+ACIA mode setting
+
+Why doesn't interrupt work on Z80 ? (emulator issue ?)
+
+Floppy disk driver
+
+Can we build without -Os
+
+Other disk sizes and make them a config option
+
+Driver for older disks 7MB etc (plus build a smaller image for them)

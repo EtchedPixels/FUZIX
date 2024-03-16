@@ -10,7 +10,7 @@
 ;	All of the fixed bank support is available as a library routine,
 ;	however it is a performance sensitive area. Start with
 ;
-;	.include "../../lib/z80fixedbank.s"
+#include "../../lib/z80ufixedbank.S"
 ;
 ;	As well as using "usermem_std-z80.rel" in your link file for the
 ;	userspace access operations.
@@ -21,6 +21,7 @@
 ;
 ;	Firstly we still want the core of the fixed bank support
 ;
+#if 0
 #include "../../lib/z80ufixedbank-core.s"
 
 ;
@@ -59,8 +60,7 @@ copyloop:
 	ex af,af'	; Save A as we need an A for ioports
 cpatch0:
 	ld a, 0		; parent bank (patched in for speed)
-bankpatch1:
-	out (0x1f),a
+	ld (0xF700),a
 	pop bc		; copy 16 bytes out of parent
 	pop de
 	pop hl
@@ -73,8 +73,7 @@ bankpatch1:
 	ld (sp_patch+1),sp
 cpatch1:
 	ld a, 0		; child bank (also patched in for speed)
-bankpatch2:
-	out (0x1f),a
+	ld (0xF700),a
 	push iy		; and put them back into the child
 	push ix
 	push hl
@@ -117,3 +116,4 @@ copyct:
 	.byte 0
 
 
+#endif

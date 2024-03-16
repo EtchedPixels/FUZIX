@@ -32,11 +32,12 @@ void plt_idle(void)
 
 /* Disk PIA has the timer tick */
 static volatile uint8_t *piab = (volatile uint8_t *) 0xC010;
-static uint8_t piac = 0x31;
+static uint8_t piac = 0xB1;
 
 /* CA2 is a 400ms tick. Not ideal */
 void plt_interrupt(void)
 {
+	kputchar('I');
 	tty_poll();
 	/* 400ms tick - can use 40ms if change link and tweak kernel */
 	if (piab[3] & 0x80) {

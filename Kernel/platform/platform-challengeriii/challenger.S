@@ -136,6 +136,9 @@ init_hardware:
 	ld a,0x0F
 	ld (0xF700),a
 
+	; Divide by 16, RTS low, RX interrupts 8N2 */
+	ld a,0x91
+	ld (0xFC00),a
 	ret
 
 ;
@@ -387,8 +390,54 @@ _osihd_copy_out:
 	add	hl,sp
 	push	bc
 	call	osihd_initcp
+docopy:
 	ld	bc,512
-	ldir
+	; Unrolled for a bit more speed. At 1Mhz every little helps
+	; especially as all disk I/O hits this
+	; Do 32 LDI. Each will dec bc
+copyout:
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ldi
+	ldi
+	ldi
+	ldi
+
+	ldi
+	ldi
+	ldi
+	ldi
+
+	jp	pe, copyout
+
 	pop	bc
 	jp	map_kernel
 
@@ -398,12 +447,9 @@ _osihd_copy_in:
 	push	bc
 	call	osihd_initcp
 	ex	de,hl
-	ld	bc,512
-	ldir
-	pop	bc
-	jp	map_kernel
+	jr	docopy
 
-	; TODO: DI stuff
+	; TODO: Push down DI stuff so we don't di during the seek phase
 _osihd_write:
 	push	bc
 	ld	b,0xC0

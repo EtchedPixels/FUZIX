@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -42,7 +44,25 @@ int main(int argc, char *argv[])
     unsigned head = 0;
     unsigned sum;
 
-    while(read(0, buf + 24, 3584) > 0) {
+    unsigned max_head;
+    unsigned max_track;
+
+    if (argc != 2) {
+        fprintf(stderr, "%s type < raw > disk.hd\n", argv[0]);
+        exit(1);
+    }
+    if (strcmp(argv[1], "cd-36") == 0) {
+        max_track = 339;
+        max_head = 6;
+    } else if (strcmp(argv[1], "cd-74") == 0) {
+        max_track = 339;
+        max_head = 12;
+    } else {
+        fprintf(stderr, "%s: only cd-36 and cd-74 types supported.\n", argv[0]);
+        exit(1);
+    }
+    while(track <= max_track) {
+        read(0, buf + 24, 3584);
         /* Investigate low 16 bytes */
         buf[16] = 0xA1;
         buf[17] = 0x00;
@@ -60,7 +80,7 @@ int main(int argc, char *argv[])
         if (sec == 5) {
             sec = 0;
             head++;
-            if (head == 6) {
+            if (head == max_head) {
                 head = 0;
                 track++;
             }

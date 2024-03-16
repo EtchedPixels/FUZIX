@@ -43,9 +43,14 @@ void map_init(void)
  */
 void pagemap_init(void)
 {
-	pagemap_add(0x0E);		/* 192K of extra */
+	/* Add lots for now until we add swapping */
+	pagemap_add(0x0E);
 	pagemap_add(0x0D);
 	pagemap_add(0x0C);
+	pagemap_add(0x0B);
+	pagemap_add(0x0A);
+	pagemap_add(0x09);
+	pagemap_add(0x08);
 }
 
 /*
@@ -60,7 +65,8 @@ static volatile uint8_t *piab = (volatile uint8_t *) 0xC010;
 void device_init(void)
 {
 	/* Timer */
-	piab[3] = 0x31;
+
+	piab[3] = 0xB1;
 	/* PIA for IDE at F80x */
 	osihd_install();
 #if 0

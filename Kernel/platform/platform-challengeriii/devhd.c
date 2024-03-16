@@ -15,9 +15,19 @@
 /* The physical media runs in 3584 byte blocks (7 Fuzix sectors) so we
    have to do math. It also depends on drive type. For the moment assume
    a CD-36 */
+
+#ifdef  CONFIG_HD_CD36
 #define SPB	7
 #define BPT	5		/* of 3584 bytes */
 #define HPT	6
+#elif defined (CONFIG_HD_CD74)
+#define SPB	7
+#define BPT	5		/* of 3584 bytes */
+#define HPT	12
+#else
+#error "define disk size"
+#endif
+
 
 struct {
 	uint8_t head;
@@ -58,11 +68,31 @@ uint16_t secend[] = {
 
 static unsigned curdirty;
 static unsigned curblock = 0xFFFF;
+static unsigned mappedblock = 0xFFFE;	/* Invalid but avoids overflow */
 
-static unsigned map_block(register unsigned block, unsigned off)
+static void map_block(register unsigned block, unsigned off)
 {
 	/* TODO: fast path 'next block' case */
 	unsigned sec, head, cyl;
+
+	/* Request for same map. This is common as we tend to
+	   read/rewrite blocks */
+	if (block == mappedblock)
+		return;
+
+	/* Linear walk */
+	if (block == mappedblock + 1) {
+		/* Could optimize further but watch the fact cyl/head
+		   has combined bits */
+		if (hddat.sec < BPT - 1) {
+			hddat.sec++;
+			mappedblock++;
+			hddat.start = secst[hddat.sec] + off;
+			hddat.end = secend[hddat.sec] + off;
+			return;
+		}
+	}
+	mappedblock = block;
 
 	sec = block % BPT;
 	block /= BPT;
@@ -74,8 +104,6 @@ static unsigned map_block(register unsigned block, unsigned off)
 	hddat.start = secst[sec] + off;
 	hddat.end = secend[sec] + off;
 	hddat.sec = sec;
-
-	return sec;
 }
 
 /* Older drives use a bump on carry 8bit checksum. later ones oddly
@@ -126,7 +154,6 @@ static unsigned read_block(unsigned block)
 			    hdbuf[0x15] != hddat.sec) {
 			    kprintf("osihd: wrong block header (%u,%u.%u)\n",
 				hdbuf[0x13],hdbuf[0x14],hdbuf[0x15]);
-			    continue;
 			}
 			csum = checksum16(hdbuf + 0x18, 3584);
 			if ((csum & 0xFF) != hdbuf[0xE18] || (csum >> 8) != hdbuf[0xE19]) {
@@ -186,12 +213,32 @@ static void flush_block(void)
 	curdirty = 0;
 }
 
+static unsigned last_block;
+static unsigned long block_lba = 0xFFFFFFF0;	/* So we don't wrap addig + SPB */
+
 int osihd_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dptr)
 {
 	/* Worst case is a CD74 and this will fit into a 16bit value */
 	/* TODO: fast path next lba case */
-	unsigned block = lba / SPB;
-	unsigned boff = lba % SPB;
+	unsigned block, boff;
+
+	/* Try and avoid expensive maths */
+	if (lba >= block_lba && lba < block_lba + SPB) {
+		block = last_block;
+		boff = lba - block_lba;
+	} else if (lba == block_lba + SPB) {
+		/* Moving on a block linearly */
+		block = ++last_block;
+		block_lba = lba;
+		boff = 0;
+	} else {
+		/* Do the maths */
+		/* FIXME: we need a divmod and divmodl in one helper */
+		block = lba / SPB;
+		boff = lba % SPB;
+		last_block = block;
+		block_lba = block * SPB;
+	}
 	if (block != curblock) {
 		flush_block();
 		if (read_block(block) == 0) {

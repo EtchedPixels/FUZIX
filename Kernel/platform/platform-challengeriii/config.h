@@ -1,3 +1,6 @@
+/* System configuration */
+#define CONFIG_HD_CD36	/* or 74 */
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
@@ -82,7 +85,7 @@
 
 /* This can optionally be set to force a default baud rate, eg if the system
    console should match a firmware set rate */
-#define TTY_INIT_BAUD B115200	/* Actually fixed */
+#define TTY_INIT_BAUD (B9600|CSTOPB)	/* Actually fixed */
 
 #define plt_copyright()
 

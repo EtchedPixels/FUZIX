@@ -96,8 +96,10 @@ diskimage:
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
 	# Add the file system
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
-	# Add the kernel
-	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=256 seek=4 skip=1 conv=notrunc
-	# TODO: bits for a bootable HD
-	# Make an emulator image of it
+	# TODO: add the kernel (not that we have an HD boot yet)
+	# Make a CD-36 out of it for winOSI
+	../../tools/makeosihd cd-36 <$(IMAGES)/disk.img >$(IMAGES)/cd-36.hd
+	# And a CD-74
+	../../tools/makeosihd cd-74 <$(IMAGES)/disk.img >$(IMAGES)/cd-74.hd
+	# Make an emulator image of it for PIA IDE
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.20M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
