@@ -30,7 +30,7 @@ static uint16_t checksum16(uint8_t *p, unsigned n)
 {
 	uint16_t sum = 0;
 	while (n--)
-		sum += *p;
+		sum += *p++;
 	return sum;
 }
 
