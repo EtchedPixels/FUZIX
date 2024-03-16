@@ -76,7 +76,7 @@ image:	bootblock
 	../../dev/net/net_native.o ../../dev/net/net_w5x00.o wiznet.o \
 	../../dev/ds1302_rbc.o ../../dev/ds1302.o ../../dev/ds1302_discard.o \
 	../../dev/tinyide_ppide_rbc.o ../../dev/devfd.o \
-	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	/opt/fcc/lib/z80/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
 	cp boot-romwbw.bin fuzix.romwbw

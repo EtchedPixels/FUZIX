@@ -41,7 +41,7 @@ image:
 	../../tty.o ../../mm.o ../../mm/memalloc_none.o ../../mm/bankfixed.o \
 	../../swap.o ../../devsys.o ../../dev/z80pack/devlpr.o \
 	../../dev/z80pack/devtty.o ../../dev/z80pack/devrtc.o \
-	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	/opt/fcc/lib/z80/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
 	asz80 bootblock.S -o bootblock.o

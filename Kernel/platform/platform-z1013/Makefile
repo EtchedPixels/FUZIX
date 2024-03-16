@@ -68,7 +68,7 @@ image:
 	../../dev/tinysd.o ../../dev/tinysd_discard.o \
 	sd.o ../../dev/z80usoftsd.o ../../dev/z80usoftspi.o \
 	../../dev/devfdc765.o fdc765.o video-poppe.o video-32x32.o \
-	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	/opt/fcc/lib/z80/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 
 	dd if=../../fuzix.bin of=fuzix.rom bs=32768 skip=1 count=1
