@@ -67,7 +67,7 @@ image:
 	../../dev/tinyide.o ppide.o ../../dev/ch375.o vdp1.o ../../font/font6x8.o \
 	../../dev/tinyscsi_discard.o ../../dev/tinyscsi.o devscsi.o ncr5380.o \
 	../../dev/ds1302.o ../../dev/ds1302_discard.o ../../dev/ds1302_8085.o \
-	../../cpu-8085/usermem_std-8085.o -m fuzix.tmpmap /opt/cc85/lib/lib8085.a
+	../../cpu-8085/usermem_std-8085.o -m fuzix.tmpmap /opt/fcc/lib/8085/lib8085.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
 
