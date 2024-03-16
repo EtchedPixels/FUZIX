@@ -88,7 +88,13 @@ loader-z80.bin: loader-z80.S
 	
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
-diskimage:
+../../tools/makeosihd: ../../tools/makeosihd.c
+	gcc -Wall -pedantic ../../tools/makeosihd.c -o ../../tools/makeosihd
+	
+../../tools/osifloppy: ../../tools/osifloppy.c
+	gcc -Wall -pedantic ../../tools/osifloppy.c -o ../../tools/osifloppy
+	
+diskimage: ../../tools/osifloppy ../../tools/makeosihd
 	# Build the bootable floppy image
 	../../tools/osifloppy 8 loader-6502.bin loader-z80.bin ../../fuzix.bin >$(IMAGES)/boot8
 	../../tools/osifloppy 5 loader-6502.bin loader-z80.bin ../../fuzix.bin >$(IMAGES)/boot5
