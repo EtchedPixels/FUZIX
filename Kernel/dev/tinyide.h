@@ -5,6 +5,10 @@
 #define TD_IDE_NUM	2		/* One port, max two devices (master/slave) per port */
 #endif
 
+#ifndef IDE_IS_8BIT
+#define IDE_IS_8BIT(x)	0
+#endif
+
 /* SDCC does I/O space weirdly. An __sfr __at x is a reference to the space
    not a pointer */
 #if defined(CONFIG_TINYIDE_SDCCPIO)
