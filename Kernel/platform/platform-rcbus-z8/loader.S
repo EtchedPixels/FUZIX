@@ -61,5 +61,5 @@ start:
 	;	0000-7FFF : data	RAM bank 1
 	;	E000-FFFF : data	RAM bank 1
 	;
-	jmp	6
+	jp	6
 	
