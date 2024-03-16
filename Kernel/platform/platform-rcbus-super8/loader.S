@@ -4,20 +4,21 @@
 ;	somewhere.
 ;
 
-		.code
-	.byte 'Z'
+	.code
+#if 0
+	FIXME - why does this cause a linker error
+	.byte 'S'
 	.byte 8
+#endif
 
 start:
 ;
 ;	Fix up the MMU mappings so we have RAM low as well
 ;
 	di			; We are about to map out the irqvecs
-	ld	r14,#0xFF
-	ld	r15,r14
 	ld	r13,#0x11
 	and	2,#0xBF		; I/O on for upper data space
-	lde	@rr14,r13
+	lde	0xFFFF,r13
 	or	2,#0x10
 	;	We now have lowest ram bank mapped for all of memory
 	;	Load the code segment
@@ -28,11 +29,9 @@ start:
 	;
 	;	Now switch the data bank for our new data bank
 	;
-	ld	r14,#0xFF
-	ld	r15,r14
 	ld	r13,#0x31
 	and	2,#0xBF
-	lde	@rr14,r13
+	lde	0xFFFF,r13
 	or	2,#0x10
 	;
 	;	Now load the data segment
@@ -44,14 +43,11 @@ start:
 	;
 	;	Switch the maps and call the program
 	;
-	ld	r14,#0xFF
-	ld	r15,#0xFF
 	and	2,#0xBF
 	ld	r13,#0x33	; Set data
-	lde	@rr14,r13
-	dec	r15
+	lde	0xFFFF,r13
 	ld	r13,#0x11	; Set code
-	lde	@rr14,r13
+	lde	0xFFFE,r13
 	or	2,#0x10
 	;
 	;	We now have code mapping of
@@ -61,5 +57,8 @@ start:
 	;	0000-7FFF : data	RAM bank 1
 	;	E000-FFFF : data	RAM bank 1
 	;
-	jmp	6
+	jp	6
+
+load_data:	;' TODO
+	ret
 	
