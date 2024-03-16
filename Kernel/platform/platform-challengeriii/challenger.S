@@ -91,10 +91,7 @@ _plt_reboot:
 init_early:
 	ret
 
-; -----------------------------------------------------------------------------
-; DISCARD is memory that will be recycled when we exec init
-; -----------------------------------------------------------------------------
-	.discard
+	.common
 
 ;
 ;	After the kernel has shuffled things into place this code is run.
@@ -107,9 +104,64 @@ init_early:
 ;	program up support hardware like PIO and CTC devices here.
 ;
 init_hardware:
-	; FIXME: size properly. For now assume banks present are 0-7
-	; so 48K * 8 + 8K RAM
-	ld hl,#392
+	; Set up for bank switching
+	ld hl,0xF701
+	ld (hl),4
+	ld a,0x0F
+	ld (0xF700),a
+
+	ld a,0x0E		; 0x0F is present defacto
+	ld hl,0x0004		; safe address for poking
+
+	ld de,1			; 0xF is present
+next:
+	rl e
+	rl d
+	ld (0xF700),a		; bank set
+	ld (hl),a
+	cp (hl)
+	jr nz, bad
+	inc (hl)
+	cp (hl)
+	jr z, bad
+	dec (hl)
+	cp (hl)
+	jr nz, bad
+	inc e
+bad:
+	dec a
+	jr nz, next
+
+	ld a,15			; restore system memory mapping
+	ld (0xF700),a
+
+	; DE is now a bit mask of present banks
+	ld (_bankmask),de
+
+	ld b,16
+	xor a
+countbits:
+	rl e
+	rl d
+	adc a,0
+	djnz countbits
+
+	; A is now number of 1 bits (each being 48K) and max of 16
+	; Convert into KB
+	add a,a
+	add a,a
+	add a,a		; x 8 then might overflow
+	ld l,a
+	ld h,0
+	add hl,hl	; x 16
+	push hl
+	add hl,hl	; x 32
+	pop de
+	add hl,de	; x 48
+
+	ld de,#8
+	add hl,de	; 8K at Dxxx
+
 	ld (_ramsize), hl
 	ld de,#56		; and 56K for kernel
 	or a
@@ -129,12 +181,6 @@ init_hardware:
 	ldir
 
 	im 1 ; set CPU interrupt mode
-
-	; Set up for bank switching
-	ld hl,0xF701
-	ld (hl),4
-	ld a,0x0F
-	ld (0xF700),a
 
 	; Divide by 16, RTS low, RX interrupts 8N2 */
 	ld a,0x91
@@ -485,11 +531,11 @@ wait_done:
 	jr	c, wait_done
 	ld	hl,1
 	pop	bc
-	ret	
+	ret
 failed:
 	ld	hl,0
 	pop	bc
-	ret	
+	ret
 
 ;
 ;	IDE disk helpers

@@ -7,6 +7,8 @@
 #include <tinyide.h>
 #include <ds1302.h>
 
+uint16_t bankmask;	/* One bit per bank present bit 15 being system */
+
 extern int strcmp(const char *, const char *);
 
 /*
@@ -43,14 +45,14 @@ void map_init(void)
  */
 void pagemap_init(void)
 {
-	/* Add lots for now until we add swapping */
-	pagemap_add(0x0E);
-	pagemap_add(0x0D);
-	pagemap_add(0x0C);
-	pagemap_add(0x0B);
-	pagemap_add(0x0A);
-	pagemap_add(0x09);
-	pagemap_add(0x08);
+	unsigned i = 1;
+	unsigned m = 1;
+	while(i < 15) {
+		if (bankmask & m)
+			pagemap_add(i);
+		i++;
+		m <<= 1;
+	}
 }
 
 /*
