@@ -37,7 +37,6 @@ static uint8_t piac = 0xB1;
 /* CA2 is a 400ms tick. Not ideal */
 void plt_interrupt(void)
 {
-	kputchar('I');
 	tty_poll();
 	/* 400ms tick - can use 40ms if change link and tweak kernel */
 	if (piab[3] & 0x80) {
