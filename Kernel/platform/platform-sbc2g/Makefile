@@ -67,7 +67,7 @@ image:	loader.bin
 	../../swap.o ../../mm/bankfixed.o ../../devsys.o \
 	devtty.o ../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
 	../../dev/tinyide.o ../../dev/tinyide_discard.o ide.o \
-	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	/opt/fcc/lib/z80/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
 

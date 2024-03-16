@@ -79,7 +79,7 @@ image:
 	../../devsys.o 	../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
 	../../dev/tinyide.o ../../dev/tinyide_discard.o \
 	../../dev/tinyscsi.o ../../dev/tinyscsi_discard.o \
-	/opt/ccz80/lib/libz80.a -m fuzix.tmpmap
+	/opt/fcc/lib/z80/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)

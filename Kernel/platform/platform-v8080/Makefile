@@ -1,5 +1,5 @@
 # FIXME: paths
-LIBC = /opt/cc85/lib/lib8080.a
+LIBC = /opt/fcc/lib/8080/lib8080.a
 
 DSRCS = ../../dev/z80pack/devfd.c
 
