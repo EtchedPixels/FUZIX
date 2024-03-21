@@ -36,10 +36,11 @@ providing not in swap mode ?
 Init and test for ACIA devices on other ports, set them to a safe dummy
 if absent (2 bytes RAM as a "not busy" ACIA)
 
-Why doesn't interrupt work on Z80 ? (emulator issue ?)
+Why doesn't interrupt work on Z80 ? (emulator issue - YES)
 
 Floppy disk driver
 
-Other disk sizes and make them a config option
+Other disk sizes and make them a config option (74 done)
 
 Driver for older disks 7MB etc (plus build a smaller image for them)
+ (in progress)
