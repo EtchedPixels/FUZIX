@@ -1,39 +1,42 @@
-CROSS_CCOPTS += -I../../dev/ -I../../dev/net/
+CROSS_CCOPTS += -I../../dev/
 
-CSRCS = devtty.c tinyide_pia.c devhd.c
-CSRCS += devices.c main.c
+CHSRCS = devhd.c
+CSRCS = devices.c main.c devtty.c
 
 DISCSRCS = discard.c
 
 ASRCS = challenger.S crt0.S
 ASRCS += tricks.S commonmem.S
 
-DISCARD_DSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
-DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
-NSRCS =
+DISCARD_DSRCS = ../../dev/tinydisk_discard.c
+DSRCS = ../../dev/tinydisk.c
 
 DASRCS =
 
 COBJS = $(CSRCS:.c=.o)
+CHOBJS = $(CHSRCS:.c=.o)
 AOBJS = $(ASRCS:.S=.o)
-NOBJS = $(NSRCS:.c=.o)
 DISCOBJS = $(DISCSRCS:.c=.o)
 DISCARD_DOBJS = $(DISCARD_DSRCS:.c=.o)
 DOBJS = $(DSRCS:.c=.o)
 DAOBJS = $(DASRCS:.S=.o)
 
-OBJS  = $(COBJS) $(AOBJS) $(NOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
+OBJS  = $(COBJS) $(CHOBJS) $(AOBJS) $(DISCOBJS) $(DOBJS) $(DISCARD_DOBJS) $(DAOBJS)
 
 JUNK =  *.o
 
 all:	$(OBJS)
 
 $(COBJS): %.o: %.c
+	$(CROSS_CC) $(CROSS_CCOPTS) -Tcommon -c $<
+
+$(CHOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
 $(DISCOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
+# Don't need to be in common but it balances the space better
 $(DOBJS): %.o: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
@@ -68,7 +71,6 @@ image:	loader-6502.bin loader-z80.bin
 	../../network.o ../../tty.o ../../mm.o ../../mm/memalloc_none.o \
 	../../swap.o ../../mm/bankfixed.o ../../devsys.o devhd.o \
 	devtty.o ../../dev/tinydisk.o ../../dev/tinydisk_discard.o \
-	../../dev/tinyide.o ../../dev/tinyide_discard.o tinyide_pia.o \
 	../../cpu-z80u/usermem_std-z80u.o \
 	/opt/fcc/lib/z80/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
@@ -96,8 +98,8 @@ IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 	
 diskimage: ../../tools/osifloppy ../../tools/makeosihd
 	# Build the bootable floppy image
-	../../tools/osifloppy 8 loader-6502.bin loader-z80.bin ../../fuzix.bin >$(IMAGES)/boot8
-	../../tools/osifloppy 5 loader-6502.bin loader-z80.bin ../../fuzix.bin >$(IMAGES)/boot5
+	../../tools/osifloppy 8 loader-6502.bin loader-z80.bin ../../fuzix.bin >$(IMAGES)/boot8.65u
+	../../tools/osifloppy 5 loader-6502.bin loader-z80.bin ../../fuzix.bin >$(IMAGES)/boot5.65u
 	# Make a blank disk image with partition
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.20M of=$(IMAGES)/disk.img bs=20152320 conv=sync
 	# Add the file system
