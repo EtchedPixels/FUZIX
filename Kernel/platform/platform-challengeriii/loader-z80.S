@@ -20,8 +20,6 @@ begin_z80:
 
 	.org	0xD000
 
-	; This bit must be relocatable unless you want to fiddle with
-	; the stuff above
 	; load 2K off each track (so it works 5.25" or 8")
 run_z80:
 	ld	hl,0xF701
