@@ -399,6 +399,8 @@ ___ldhlhl:
 	.export _osihd_write
 	.export _osihd_copy_out
 	.export _osihd_copy_in
+	.export _osihd_restore
+	.export _osihd_move_data
 
 osihd_initcp:
 	ld	d,(hl)		; Block offset (low byte)
@@ -412,7 +414,7 @@ osihd_initcp:
 	ex	de,hl
 	; Block offset (in 256s) in HL, dptr in DE
 	add	hl,hl		; 512s
-	ld	bc,0xE018	; Disk buffer (TODO CD7 this moves)
+	ld	bc,(_hd_base)	; Disk buffer (CD7 this moves around)
 	add	hl,bc		; offset
 	ld	a,(_td_raw)
 	or	a
@@ -431,6 +433,13 @@ wait_seek:
 	inc	a	; force NZ
 	ret
 
+_osihd_move_data:
+	push	bc
+	ld	hl,0xE018-24
+	ld	de,0xE1B8-24
+	ld	bc,3584+32	; 7 sectors + 8 bytes of preamble
+	; This copies 24 extra bytes but that ought to be harmless
+	jr	copyout
 _osihd_copy_out:
 	ld	hl,2
 	add	hl,sp
@@ -504,6 +513,8 @@ _osihd_read:
 	push	bc
 	ld	b,0x80
 osihd_op:
+#ifndef CONFIG_HD_CD7
+	;	Later controllers do seek themselves
 	ld	hl,0xC280
 	ld	de,(_hddat);	; head in E cyl in D
 	ld	a,(hl)
@@ -516,6 +527,81 @@ osihd_op:
 	; Wait for seek completion
 	call	wait_seek
 	jr	nz, failed
+#else
+	push	bc
+	xor	a
+	ld	hl,0xC200
+	ld	de,0xC280
+	ld	b,7
+clean:
+	cp	2
+	jr	nz, notw1
+	ld	a,(de)
+	ld	(hl),1
+	jr	clnext
+notw1;
+	ld	(hl),0
+clnext:
+	inc	de
+	djnz	clean
+	; Now seek the drive
+	ld	a,(_hd_track)
+stepper:
+	ld	hl,0xC202
+	ld	de,(_hddat);	; head in E cyl in D
+	cp	d
+	jr	z, head_match
+	jr	c, head_in
+	;	Seek out. Make sure we are not going past 0
+	ld	a,(hl)
+	and	2
+	jr	z, hit_trk0
+	ld	c,0x21
+	dec	a
+	jr	do_seek
+hit_trk0:
+	; Failed but we know where we are
+	xor	a
+	ld	(_hd_track),a
+error:
+	ld	hl,0
+	ret
+head_in:
+	ld	c,0x23
+	inc	a
+do_seek:
+	ld	c,0x23
+	push	af
+; Head outwards
+	ld	(hl),c
+	ld	a,(hl)
+	res	5,c
+	ld	(hl),c
+	ld	a,(hl)
+	set	5,c
+	; Check the loop time versus C3DMOD
+	ld	b,0
+seekwait:
+	djnz	seekwait
+seekwait2:
+	djnz	seekwait2
+	pop	af
+	jr	nz, stepper
+seekdone:
+	ld	(_hd_track),a
+	ld	b,0
+seekend:
+	nop		; check timing v 6502
+	nop
+	bit	0,(hl)
+	djnz	seekend
+	xor	a
+	cp	b
+	jz	z,error
+head_match:
+	pop	bc
+	;	And from here things work the sameish
+#endif
 	ld	de,(_hddat + 2)
 	ld	a,(hl)
 	ld	(0xC203),de
@@ -537,6 +623,39 @@ failed:
 	pop	bc
 	ret
 
+;
+;	Error recovery. On the older drives step out and try to find
+;	track 0
+;
+_osihd_restore:
+#ifdef CONFIG_HD_CD7
+	ld	b,0
+	ld	hl,0xC202
+next_out:
+	bit	1,(hl)
+	bne	at_zero
+	ld	(hl),0x21
+	ld	(hl),0x01
+	; Check the loop time versus C3DMOD
+	ld	b,0
+reswait:
+	djnz	reswait
+reswait2:
+	djnz	reswait2
+	dec	c
+	jr	nz, next_out
+	; Never found track 0, fail
+	ld	h,c
+	ld	l,c
+	ret
+at_zero:
+#endif
+	xor	a
+	ld	(_hd_track),a
+	ld	hl,1
+	ret
+
+#ifdef CONFIG_PIA_IDE
 ;
 ;	IDE disk helpers
 ;
@@ -600,3 +719,5 @@ wrloop:
 	pop	bc
 	call	map_kernel_restore
 	jp	_ide_set_r
+
+#endif

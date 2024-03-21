@@ -8,6 +8,16 @@
  *	disables.
  *
  *	Only handles single drive for now
+ *
+ *	TODO: The CD7 differs from the 36/74
+ *
+ *	Read lands at E010-EE19 as with the later devices
+ *	Write runs from E1D2 to EFCB
+ *	Stepping is software controlled
+ *	We only ever read then discard or read then write so we can
+ *	just move the sector up when we do the first write back and
+ *	adjust the working pointer
+ *
  */
 
 #include <kernel.h>
@@ -38,6 +48,12 @@ struct {
 	uint8_t sec;
 } hddat;			/* Passes request to asm helper */
 
+/* CD7 specific */
+uint8_t hd_track;		/* Current track if known */
+uint8_t hd_rest;		/* Restore needed */
+
+uint16_t hd_base;		/* Where 7 sector data block lives */
+
 /*
 0	0010  0725
 1	0750  0E65
@@ -48,7 +64,7 @@ struct {
 
 /* Will need extending for the biggest drives ? */
 
-uint16_t secst[] = {
+static const uint16_t secst[] = {
 	0x0010,
 	0x0750,
 	0x0E90,
@@ -56,7 +72,7 @@ uint16_t secst[] = {
 	0x1D10
 };
 
-uint16_t secend[] = {
+static const uint16_t secend[] = {
 	0x0725,
 	0x0E65,
 	0x15A5,
@@ -113,7 +129,7 @@ static uint8_t checksum(register uint8_t *p, register unsigned n)
 	register uint16_t sum = 0;
 	while (n--) {
 		sum += *p++;
-#ifdef OLD_CSUM
+#ifdef CONFIG_HD_CD7
 		if (sum & 0x0100) {
 		      sum &= 0xFF:
 			sum++;
@@ -141,6 +157,11 @@ static unsigned read_block(unsigned block)
 		/* Do we need to offset the start/end values ? */
 		map_block(block, 3);
 		irq = di();
+		/* Realign the head if needed */
+		if (hd_rest && osihd_restore() == 0) {
+			kprintf("oshid: unable to find track 0.\n");
+			continue;
+		}
 		if (osihd_read() == 1) {
 			irqrestore(irq);
 			/* TODO: check right cyl low etc */
@@ -154,12 +175,19 @@ static unsigned read_block(unsigned block)
 			    hdbuf[0x15] != hddat.sec) {
 			    kprintf("osihd: wrong block header (%u,%u.%u)\n",
 				hdbuf[0x13],hdbuf[0x14],hdbuf[0x15]);
+			    /* Recalibrate head */
+			    if (hdbuf[0x13] != hddat.cyl)
+				hd_rest = 1;
 			}
 			csum = checksum16(hdbuf + 0x18, 3584);
 			if ((csum & 0xFF) != hdbuf[0xE18] || (csum >> 8) != hdbuf[0xE19]) {
 				kprintf("osihd: bad data checksum (%u).\n", csum);
 				continue;
 			}
+			/* When we read the block data ends up at E018.
+			   When we write on early devices we have to adjust
+			   the blocks and thus base */
+			hd_base = 0xE018;
 			return 1;
 		}
 		irqrestore(irq);
@@ -176,6 +204,15 @@ static unsigned write_block(unsigned block)
 
 	map_block(block, 0);
 
+#ifdef CONFIG_HD_CD7
+	/* If we are the first writeback then move the data. Further
+	   modify/writes will just use the new data position */
+	if (hd_base == 0xE018) {
+		osihd_move_data();
+		hd_base = 0xE1C2;
+		kputs("WMOV\n");
+	}
+#endif
 	while(tries++ < 5) {
 		hdbuf[0x10] = 0xA1;
 		hdbuf[0x11] = 0x00;
@@ -192,6 +229,9 @@ static unsigned write_block(unsigned block)
 		/* Should move this into the asm as we can re-enable interrupts
 		   during the seek and maybe copy wait */
 		irq = di();
+		/* We always write back to a track we previously read
+		   from at this point (need to tidy that for swap)
+		   as we have no 'write allocate' concept */
 		if (osihd_write() == 1) {
 			irqrestore(irq);
 			return 1;
