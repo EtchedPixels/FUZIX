@@ -64,8 +64,8 @@ void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 
 void tty_setup(uint_fast8_t minor, uint_fast8_t flag)
 {
-	struct termios *t = &ttydata[minor].termios;
-	uint8_t r = t->c_cflag & CSIZE;
+	register struct termios *t = &ttydata[minor].termios;
+	register uint_fast8_t r = t->c_cflag & CSIZE;
 
 	/* No CS5/CS6 CS7 must have parity enabled */
 	if (r <= CS7) {
@@ -120,8 +120,6 @@ void tty_data_consumed(uint_fast8_t minor)
 
 void tty_poll(void)
 {
-	uint_fast8_t x;
-
 	if (*uart[1] & 1)
 		tty_inproc(1, uart[1][1]);
 	if (*uart[2] & 1)
