@@ -72,18 +72,26 @@ bget ../../../Applications/util/init init
 chmod 755 init
 
 cd /etc
-bget ../../../Standalone/filesystem-src/etc-files/issue
-bget ../../../Standalone/filesystem-src/etc-files/motd
-bget ../../../Standalone/filesystem-src/etc-files/passwd
+bget ../../../Standalone/filesystem-src/etc-files/fstab
+bget ../../../Standalone/filesystem-src/etc-files/group
 bget ../../../Standalone/filesystem-src/etc-files/inittab
-bget ../../../Standalone/filesystem-src/etc-files/termcap
+bget ../../../Standalone/filesystem-src/etc-files/motd
+bget ../../../Standalone/filesystem-src/etc-files/mtab
+bget ../../../Standalone/filesystem-src/etc-files/passwd
 bget ../../../Standalone/filesystem-src/etc-files/rc
-chmod 0644 issue
-chmod 0644 motd
-chmod 0644 passwd
+bget ../../../Standalone/filesystem-src/etc-files/rc.halt
+bget ../../../Standalone/filesystem-src/etc-files/rc.reboot
+bget ../../../Standalone/filesystem-src/etc-files/termcap
+chmod 0644 fstab
+chmod 0644 group
 chmod 0644 inittab
+chmod 0644 motd
+chmod 0644 mtab
+chmod 0644 passwd
 chmod 0644 termcap
 chmod 0755 rc
+chmod 0755 rc.halt
+chmod 0755 rc.reboot
 
 cd /bin
 bget ../../../Applications/util/banner
@@ -120,6 +128,7 @@ bget ../../../Applications/util/grep
 bget ../../../Applications/util/head
 bget ../../../Applications/util/id
 bget ../../../Applications/util/kill
+bget ../../../Applications/util/killall
 bget ../../../Applications/util/ll
 bget ../../../Applications/util/logname
 bget ../../../Applications/util/ls
@@ -147,6 +156,7 @@ bget ../../../Applications/util/sleep
 bget ../../../Applications/util/ssh
 bget ../../../Applications/util/sort
 bget ../../../Applications/util/stty
+bget ../../../Applications/util/substroot
 bget ../../../Applications/util/sum
 bget ../../../Applications/util/su
 bget ../../../Applications/util/swapon
@@ -162,7 +172,6 @@ bget ../../../Applications/util/uniq
 bget ../../../Applications/util/uptime
 bget ../../../Applications/util/uud
 bget ../../../Applications/util/uue
-#bget ../../../Applications/util/vile
 bget ../../../Applications/util/wc
 bget ../../../Applications/util/which
 bget ../../../Applications/util/who
@@ -170,6 +179,7 @@ bget ../../../Applications/util/whoami
 bget ../../../Applications/util/write
 bget ../../../Applications/util/xargs
 bget ../../../Applications/util/yes
+
 chmod 0755 banner
 chmod 0755 basename
 chmod 0755 bd
@@ -204,19 +214,21 @@ chmod 0755 grep
 chmod 0755 head
 chmod 0755 id
 chmod 0755 kill
+chmod 0755 killall
 chmod 0755 ll
 chmod 0755 logname
 chmod 0755 ls
 chmod 0755 man
 chmod 0755 marksman
 chmod 0755 mkdir
-chmod 0755 mkfifo
 chmod 0755 mkfs
+chmod 0755 mkfifo
 chmod 0755 mknod
 chmod 0755 more
 chmod 0755 mount
 chmod 0755 od
 chmod 0755 pagesize
+chmod 0755 passwd
 chmod 0755 printenv
 chmod 0755 prtroot
 chmod 0755 ps
@@ -227,15 +239,17 @@ chmod 0755 rm
 chmod 0755 rmdir
 chmod 0755 setdate
 chmod 0755 sleep
-chmod 0755 sort
 chmod 0755 ssh
+chmod 0755 sort
 chmod 0755 stty
+chmod 0755 substroot
 chmod 0755 sum
+chmod 0755 su
 chmod 0755 swapon
 chmod 0755 sync
-chmod 0755 tail
 chmod 0755 tar
 chmod 0755 tee
+chmod 0755 tail
 chmod 0755 touch
 chmod 0755 tr
 chmod 0755 true
@@ -244,7 +258,6 @@ chmod 0755 uniq
 chmod 0755 uptime
 chmod 0755 uud
 chmod 0755 uue
-#chmod 0755 vile
 chmod 0755 wc
 chmod 0755 which
 chmod 0755 who
@@ -252,10 +265,10 @@ chmod 0755 whoami
 chmod 0755 write
 chmod 0755 xargs
 chmod 0755 yes
-chmod 4755 passwd
-chmod 4755 su
 ln cp mv
 ln cp ln
+ln reboot halt
+ln reboot shutdown
 
 bget ../../../Applications/V7/cmd/sh/sh
 chmod 0755 sh

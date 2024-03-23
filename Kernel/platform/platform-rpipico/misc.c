@@ -3,6 +3,8 @@
 #include <printf.h>
 #include <exec.h>
 #include "picosdk.h"
+#include <pico/multicore.h>
+#include <hardware/watchdog.h>
 
 uint8_t sys_cpu = A_ARM;
 uint8_t sys_cpu_feat = AF_CORTEX_M0;
@@ -16,9 +18,20 @@ uint16_t swap_dev = 0xffff;
 void set_cpu_type(void) {}
 void map_init(void) {}
 void plt_discard(void) {}
-void plt_monitor(void) {}
-void plt_reboot(void) {}
 void program_vectors(uint16_t* pageptr) {}
+
+void plt_reboot(void)
+{
+    multicore_reset_core1();
+    watchdog_reboot(0, 0, 0);
+}
+
+void plt_monitor(void)
+{
+    sleep_ms(1); // wait to print any remaining messages
+    multicore_reset_core1();
+    for(;;) { sleep_until(at_the_end_of_time); }
+}
 
 uaddr_t pagemap_base(void)
 {
