@@ -218,7 +218,9 @@ static const struct display tms_mode = {
 	HW_VDP_9918A,
 	GFX_MULTIMODE | GFX_MAPPABLE | GFX_TEXT,
 	16,
-	0
+	0,
+	40,
+	24
 };
 
 int rctty_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
