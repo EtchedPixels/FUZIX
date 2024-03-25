@@ -101,4 +101,12 @@ void damage_set(struct utk_rect *r)
 	damage.left = r->left;
 	damage.right = r->right;
 	damage.bottom = r->bottom;
+	if (damage.top < 0)
+		damage.top = 0;
+	if (damage.left < 0)
+		damage.left = 0;
+	if (damage.right > screen.right)
+		damage.right = screen.right;
+	if (damage.bottom > screen.bottom)
+		damage.bottom = screen.bottom;
 }
