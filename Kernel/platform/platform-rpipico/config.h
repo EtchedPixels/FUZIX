@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+#include "tusb_config.h"
 /*
  *	Set this according to your SD card pins (default
  *	is the David Given arrangement).
@@ -42,13 +45,22 @@
 #undef CONFIG_VT
 #undef CONFIG_FONT8X8
 
+/* Disable block device in flash. Warning, it's unstable. */
+#define PICO_DISABLE_FLASH
+
 /* Program layout */
+#ifndef PICO_DISABLE_FLASH
+#define FLASHCODESIZE 7
+#else
+#define FLASHCODESIZE 0
+#endif
+
+#define USERMEM ((172-FLASHCODESIZE)*1024)
 
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
-#define USERMEM (160*1024)
 #define PROGSIZE (65536 - UDATA_SIZE)
-extern uint8_t progbase[USERMEM];
+extern char progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
 
 #define USERSTACK (4*1024) /* 4kB */
@@ -69,11 +81,16 @@ extern uint8_t progbase[USERMEM];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0000 /* hda */
+#define BOOTDEVICE 0x0011 /* hda 0x0000 hdb1 0x0011 */
 #define SWAPDEV    (swap_dev) /* dynamic swap */
 
 /* Device parameters */
-#define NUM_DEV_TTY 1
+#define NUM_DEV_TTY_UART 1
+#define NUM_DEV_TTY_USB (CFG_TUD_CDC)
+#define NUM_DEV_TTY (NUM_DEV_TTY_UART + NUM_DEV_TTY_USB)
+
+#define USB_TO_TTY(x) (x + 1 + NUM_DEV_TTY_UART)
+#define TTY_TO_USB(x) (x - 1 - NUM_DEV_TTY_UART)
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    20       /* Number of block buffers */
@@ -91,5 +108,5 @@ extern uint8_t progbase[USERMEM];
 #define MANGLED 1
 #include "mangle.h"
 
+#endif
 // vim: sw=4 ts=4 et
-

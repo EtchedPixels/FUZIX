@@ -8,6 +8,20 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(PICO_COPY_TO_RAM 1)
 
+add_compile_definitions(
+		PICO_HEAP_SIZE=0x0
+		PICO_NO_BINARY_INFO=1
+		PICO_TIME_DEFAULT_ALARM_POOL_DISABLED
+		PICO_NO_GC_SECTIONS
+		)
+
+remove_definitions(
+	LIB_PICO_STDIO_UART
+	LIB_PICO_STDIO_USB
+	LIB_PICO_STDIO_SEMIHOSTING
+	PICO_NO_GC_SECTIONS
+)
+
 pico_sdk_init()
 
 include_directories(
@@ -20,13 +34,16 @@ include_directories(
 
 add_executable(fuzix
 	devices.c
+	devrpi.c
 	devflash.c
 	devsdspi.c
+	#/*devsdspidma.c*/
 	devtty.c
 	elf.c 
 	main.c
 	misc.c
 	rawflash.c
+	rawuart.c
 	swapper.c
 	tricks.S
 	core1.c
@@ -70,9 +87,7 @@ target_link_libraries(fuzix
 	pico_multicore
 	hardware_flash
 	hardware_spi
-	hardware_uart
-	tinyusb_device_unmarked
-	tinyusb_board
+	tinyusb_device
 )
 
 pico_set_float_implementation(fuzix none)

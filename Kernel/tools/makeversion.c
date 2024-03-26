@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Not sure why utsname.h needs <types.h>
+ * I'm keeping it but disable it here */
+#define __TYPES_H
+#include "../../Library/include/utsname.h"
+
 
 void write_body(FILE *out, char *v, char *sv, char *p)
 {
@@ -65,6 +70,15 @@ struct sysinfoblk {\n\
 \n", (int)(strlen(v) + strlen(sv) + strlen(p) + 9));
 }
 
+void trimstr(char* str, int size) {
+	while(*str && size--) {
+		*str++;
+	}
+	*str = '\0';
+}
+
+#define member_size(type, member) (sizeof(((type*)0)->member))
+
 int main(int argc, char *argv[])
 {
 	FILE *f;
@@ -77,6 +91,11 @@ int main(int argc, char *argv[])
 		perror("include/sysinfoblk.h");
 		exit(1);
 	}
+
+	trimstr(argv[1], member_size(struct utsname, release));
+	trimstr(argv[2], member_size(struct utsname, version));
+	trimstr(argv[3], member_size(struct utsname, machine));
+
 	write_header(f, argv[1], argv[2], argv[3]);
 	fclose(f);
 	f = fopen("version.c", "w");

@@ -1,6 +1,9 @@
 #include <kernel.h>
 #include <kdata.h>
+#include "rawuart.h"
 #include "picosdk.h"
+#include <hardware/gpio.h>
+#include <hardware/regs/addressmap.h>
 #include "kernel-armm0.def"
 #include "globals.h"
 #include "printf.h"
@@ -47,6 +50,7 @@ void syscall_handler(struct svc_frame* eh)
 
 int main(void)
 {
+    uart1_init();
     core1_init();
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
@@ -64,6 +68,7 @@ int main(void)
 
 	ramsize = (SRAM_END - SRAM_BASE) / 1024;
 	procmem = USERMEM / 1024;
+
 	//turn on power led
 	gpio_init(POWER_LED);
 	gpio_set_dir(POWER_LED, GPIO_OUT);

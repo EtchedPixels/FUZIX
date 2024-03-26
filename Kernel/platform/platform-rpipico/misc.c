@@ -28,9 +28,9 @@ void plt_reboot(void)
 
 void plt_monitor(void)
 {
-    sleep_ms(1); // wait to print any remaining messages
     multicore_reset_core1();
-    for(;;) { sleep_until(at_the_end_of_time); }
+    for(;;)
+        tight_loop_contents();
 }
 
 uaddr_t pagemap_base(void)

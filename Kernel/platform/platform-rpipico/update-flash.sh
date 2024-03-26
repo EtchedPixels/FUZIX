@@ -3,8 +3,14 @@ set -e
 
 IMG=filesystem.img
 
+FSSIZE=2547
+
+if [ "$1" = "sd" ]; then
+    FSSIZE=65535
+fi
+
 rm -f ${IMG}
-../../../Standalone/mkfs ${IMG} 32 2547
+../../../Standalone/mkfs ${IMG} 32 $FSSIZE
 ../../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
@@ -44,21 +50,6 @@ mknod tty6  20660 518
 mknod tty7  20660 519
 mknod tty8  20660 520
 mknod hda   60660 0
-mknod hda1  60660 1
-mknod hda2  60660 2
-mknod hda3  60660 3
-mknod hda4  60660 4
-mknod hda5  60660 5
-mknod hda6  60660 6
-mknod hda7  60660 7
-mknod hda8  60660 8
-mknod hda9  60660 9
-mknod hda10 60660 10
-mknod hda11 60660 11
-mknod hda12 60660 12
-mknod hda13 60660 13
-mknod hda14 60660 14
-mknod hda15 60660 15
 mknod hdb   60660 16
 mknod hdb1  60660 17
 mknod hdb2  60660 18
@@ -66,6 +57,7 @@ mknod null  20666 1024
 mknod mem   20660 1025
 mknod zero  20444 1026
 mknod proc  20666 1027
+mknod pico  20220 2048
 
 cd /
 bget ../../../Applications/util/init init
@@ -145,7 +137,7 @@ bget ../../../Applications/util/pagesize
 bget ../../../Applications/util/passwd
 bget ../../../Applications/util/printenv
 bget ../../../Applications/util/prtroot
-bget ../../../Applications/util/ps
+bget utils/ps
 bget ../../../Applications/util/pwd
 bget ../../../Applications/util/reboot
 bget ../../../Applications/util/remount
@@ -167,9 +159,11 @@ bget ../../../Applications/util/tail
 bget ../../../Applications/util/touch
 bget ../../../Applications/util/tr
 bget ../../../Applications/util/true
+bget ../../../Applications/util/telinit
 bget ../../../Applications/util/umount
 bget ../../../Applications/util/uniq
 bget ../../../Applications/util/uptime
+bget ../../../Applications/util/uname
 bget ../../../Applications/util/uud
 bget ../../../Applications/util/uue
 bget ../../../Applications/util/wc
@@ -179,6 +173,8 @@ bget ../../../Applications/util/whoami
 bget ../../../Applications/util/write
 bget ../../../Applications/util/xargs
 bget ../../../Applications/util/yes
+bget utils/pico
+bget /home/yaroslav/doclocal/tcc-0.9.27/tcc
 
 chmod 0755 banner
 chmod 0755 basename
@@ -253,9 +249,11 @@ chmod 0755 tail
 chmod 0755 touch
 chmod 0755 tr
 chmod 0755 true
+chmod 0755 telinit
 chmod 0755 umount
 chmod 0755 uniq
 chmod 0755 uptime
+chmod 0755 uname
 chmod 0755 uud
 chmod 0755 uue
 chmod 0755 wc
@@ -265,6 +263,8 @@ chmod 0755 whoami
 chmod 0755 write
 chmod 0755 xargs
 chmod 0755 yes
+chmod 0755 pico
+chmod 0755 tcc
 ln cp mv
 ln cp ln
 ln reboot halt

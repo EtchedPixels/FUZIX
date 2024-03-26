@@ -121,6 +121,14 @@ You can't turn swap off again.
 
 You probably can swap to the NAND flash, but it's a terrible idea.
 
+## Boot device
+
+Edit config.h to select appropriate boot device.
+
+`#define BOOTDEVICE 0x0000` - for NAND flash (hda)
+
+`#define BOOTDEVICE 0x0011` - for the first partioin on the SD card (hdb1)
+
 ## Using the NAND flash
 
 The Pico's built-in NAND flash is supported, appearing as `/dev/hda` insize
@@ -130,6 +138,13 @@ to work efficiently; the Fuzix filesystem has trim support, so the FTL library
 gets notified when sectors become free, but if the filesystem gets very full
 and Dhara runs out it can get extremely slow as it constantly does garbage
 collection.
+
+## Using SD Card
+
+1. Create dos partition table
+    * Partition 1: 32MB partition
+    * Partition 2: 4MB partition (optional)
+2. Run `dd if=filesystem.img bs=512 seek=2048 of=/dev/sdX conv=notrunc status=progress` to copy image onto SD card. (**Be careful to not damage your system drive**)
 
 ## Issues
 

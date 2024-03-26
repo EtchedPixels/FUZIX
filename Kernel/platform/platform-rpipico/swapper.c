@@ -18,7 +18,7 @@
 #define BLOCKSIZE 4096
 #define NUM_ALLOCATION_BLOCKS (USERMEM / BLOCKSIZE)
 
-uint8_t progbase[USERMEM];
+char progbase[USERMEM];
 
 struct mapentry
 {

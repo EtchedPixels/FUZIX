@@ -1,10 +1,12 @@
 #include <kernel.h>
-#include <kdata.h>
+#include <blkdev.h>
+
+#ifndef PICO_DISABLE_FLASH
 #include <printf.h>
 #include <timer.h>
 #include <devsd.h>
+#include <kdata.h>
 #include <stdbool.h>
-#include <blkdev.h>
 #include "lib/dhara/map.h"
 #include "lib/dhara/nand.h"
 #include "globals.h"
@@ -53,7 +55,7 @@ int dhara_nand_copy(const struct dhara_nand *n,
 	return dhara_nand_prog(&nand, dst, tmp_buf, err);
 }
 
-static uint_fast8_t transfer_cb(void)
+static uint_fast8_t devflash_transfer(void)
 {
 	dhara_error_t err = DHARA_E_NONE;
 	if (blk_op.is_read)
@@ -64,7 +66,7 @@ static uint_fast8_t transfer_cb(void)
 	return (err == DHARA_E_NONE);
 }
 
-static int trim_cb(void)
+static int devflash_trim(void)
 {
 	dhara_sector_t sector = blk_op.lba;
 	if (sector < (nand.num_blocks << nand.log2_ppb))
@@ -72,12 +74,41 @@ static int trim_cb(void)
 	return 0;
 }
 
+static int devflash_flush(void)
+{
+	dhara_error_t err;
+	int res = dhara_map_sync(&dhara, &err);
+	if(res < 0)
+	{
+		udata.u_error = EIO;
+		return -1; 
+	}
+	return 0;
+}
+#else
+static uint_fast8_t devflash_transfer()
+{
+	udata.u_error = EIO;
+	return -1;
+}
+static int devflash_flush()
+{
+	udata.u_error = EIO;
+	return -1;
+}
+static int devflash_trim()
+{
+	udata.u_error = EIO;
+	return -1;
+}
+#endif
+
 void flash_dev_init(void)
 {
 	blkdev_t* blk = blkdev_alloc();
 	if (!blk)
 		return;
-
+#ifndef PICO_DISABLE_FLASH
 	kprintf("NAND flash, ");
 	dhara_map_init(&dhara, &nand, journal_buf, 10);
 	dhara_error_t err = DHARA_E_NONE;
@@ -85,14 +116,14 @@ void flash_dev_init(void)
 	uint32_t lba = dhara_map_capacity(&dhara);
 	kprintf("%dkB physical %dkB logical at 0x%p: ",
         nand.num_blocks * 4, lba / 2, XIP_NOCACHE_NOALLOC_BASE + FLASH_OFFSET);
-	
-	blk->transfer = transfer_cb;
-    #ifdef CONFIG_TRIM
-        blk->trim = trim_cb;
-    #endif
 	blk->drive_lba_count = lba;
+#endif
+	blk->transfer = devflash_transfer;
+	blk->flush = devflash_flush;
+    #ifdef CONFIG_TRIM
+        blk->trim = devflash_trim;
+    #endif
 	blkdev_scan(blk, 0);
 }
 
 /* vim: sw=4 ts=4 et: */
-

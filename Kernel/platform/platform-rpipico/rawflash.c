@@ -1,10 +1,19 @@
+#include <kernel.h>
+#include "config.h"
+
+#ifndef PICO_DISABLE_FLASH
+
 #include <stdint.h>
 #include <stddef.h>
-#include <kernel.h>
 #include "lib/dhara/nand.h"
 #include "picosdk.h"
 #include <hardware/flash.h>
 #include "globals.h"
+
+int erase_cycles;
+int program_cycles;
+int fssync_cycles;
+int fswrite_cycles;
 
 int dhara_nand_erase(const struct dhara_nand *n, dhara_block_t b,
                      dhara_error_t *err)
@@ -12,6 +21,7 @@ int dhara_nand_erase(const struct dhara_nand *n, dhara_block_t b,
     irqflags_t f = di();
     flash_range_erase(FLASH_OFFSET + (b*4096), 4096);
     irqrestore(f);
+    erase_cycles++;
 	if (err)
 		*err = DHARA_E_NONE;
 	return 0;
@@ -24,6 +34,7 @@ int dhara_nand_prog(const struct dhara_nand *n, dhara_page_t p,
     irqflags_t f = di();
     flash_range_program(FLASH_OFFSET + (p*512), data, 512);
     irqrestore(f);
+    program_cycles++;
 	if (err)
 		*err = DHARA_E_NONE;
 	return 0;
@@ -44,3 +55,4 @@ int dhara_nand_read(const struct dhara_nand *n, dhara_page_t p,
 
 /* vim: sw=4 ts=4 et: */
 
+#endif
