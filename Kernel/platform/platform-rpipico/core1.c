@@ -116,10 +116,7 @@ extern void usbconsole_putc(uint8_t minor, uint8_t b)
 		panic("ovf");
 	}
 
-	if (!console_table[minor].wbusy)
-	{
-		console_buf_write(buf, b);
-	}
+	console_buf_write(buf, b);
 }
 
 extern void usbconsole_setsleep(uint8_t minor, bool sleeping)
@@ -144,10 +141,6 @@ static void core1_main(void)
 		We ignore tud_cdc_n_connected because if DTR is not set by the host
 		all tty's will appear disconnected, which seems to be the case for pi pico
 		*/
-		for (int i = 0; i < CFG_TUD_CDC; i++)
-		{
-			console_table[i].wbusy = 0;
-		}
 
 		for(int i = 0; i < CFG_TUD_CDC; i++)
 		{
