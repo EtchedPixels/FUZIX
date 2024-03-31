@@ -24,6 +24,7 @@ $(UTILSBIN): %: %.o
 
 ps.c:
 	cp ../../../../Applications/util/ps.c .
+	patch ps.c < ps-rpipico.patch
 
 %.o: %.c progbase.h
 	$(CC) $(CFLAGS) $(CCOPTS) -c $<
