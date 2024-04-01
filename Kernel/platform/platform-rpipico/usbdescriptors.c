@@ -50,6 +50,7 @@
 #define USBD_STR_CDC (0x04)
 
 // Note: descriptors returned from callbacks must exist long enough for transfer to complete
+#if CFG_TUD_CDC > 0
 
 static const tusb_desc_device_t usbd_desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
@@ -131,3 +132,4 @@ const uint16_t *tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
     return desc_str;
 }
 
+#endif

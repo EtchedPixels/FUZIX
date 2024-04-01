@@ -107,13 +107,14 @@ void tty_interrupt()
     {
         tty_inproc(1, (char)c);
     }
-
+#if NUM_DEV_TTY_USB > 0
     uint8_t cbuf[8];
     int w = usbconsole_read(cbuf, sizeof(cbuf));
     for (int i = 0; i < w; i += 2)
     {
         tty_inproc(cbuf[i], cbuf[i + 1]);
     }
+#endif
 }
 /* vim: sw=4 ts=4 et: */
 

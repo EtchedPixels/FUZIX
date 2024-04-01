@@ -129,6 +129,7 @@ extern bool usbconsole_is_sleeping(uint8_t minor)
 	return console_table[TTY_TO_USB(minor)].sleeping;
 }
 
+#if NUM_DEV_TTY_USB > 0
 static void core1_main(void)
 {
 	tusb_init();
@@ -168,10 +169,13 @@ static void core1_main(void)
 		}
 	}
 }
+#endif
 
 void core1_init(void)
 {
 	multicore_reset_core1();
 	critical_section_init(&critical_section);
+#if NUM_DEV_TTY_USB > 0
 	multicore_launch_core1(core1_main);
+#endif
 }
