@@ -25,7 +25,7 @@
 -		fputs("    - ", stdout);
 +	{
 +		long size = pp->p_top - PROGBASE;
-+		size = (long)alignup(size, BLOCKSIZE) / BLOCKSIZE;
++		size = (long)alignup(size, BLOCKSIZE) / 1024;
 +		printf("%5d ", size);
 +	}
  	if (outflags & OF_WCHAN) {
