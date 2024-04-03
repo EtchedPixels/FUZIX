@@ -31,6 +31,7 @@ clean:
 	$(MAKE) -C ../../../Applications/cave -f Makefile.armm0 clean
 	$(MAKE) -C ../../../Applications/cursesgames -f Makefile.armm0 clean
 	$(MAKE) -C ../../../Standalone clean
+	$(MAKE) -C utils clean
 
 world: build/fuzix.elf
 	$(MAKE) -C ../../../Library/libs -f Makefile.armm0
@@ -42,6 +43,7 @@ world: build/fuzix.elf
 	$(MAKE) -C ../../../Applications/cave -f Makefile.armm0
 	$(MAKE) -C ../../../Applications/cursesgames -f Makefile.armm0
 	$(MAKE) -C ../../../Standalone
+	$(MAKE) -C utils
 
 uf2conv: tools/uf2conv.c
 	cc -O -g -o $@ $<

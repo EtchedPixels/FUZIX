@@ -145,7 +145,7 @@ bget ../../../Applications/util/pagesize
 bget ../../../Applications/util/passwd
 bget ../../../Applications/util/printenv
 bget ../../../Applications/util/prtroot
-bget ../../../Applications/util/ps
+bget utils/ps
 bget ../../../Applications/util/pwd
 bget ../../../Applications/util/reboot
 bget ../../../Applications/util/remount

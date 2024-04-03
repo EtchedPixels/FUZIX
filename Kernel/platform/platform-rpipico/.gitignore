@@ -1,0 +1,7 @@
+utils/progbase.h
+utils/ps
+utils/ps.c
+utils/*.o
+filesystem.*
+uf2conv
+
