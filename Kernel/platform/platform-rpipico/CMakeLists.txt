@@ -27,6 +27,7 @@ add_executable(fuzix
 	main.c
 	misc.c
 	rawflash.c
+	rawuart.c
 	swapper.c
 	tricks.S
 	core1.c
@@ -70,9 +71,7 @@ target_link_libraries(fuzix
 	pico_multicore
 	hardware_flash
 	hardware_spi
-	hardware_uart
-	tinyusb_device_unmarked
-	tinyusb_board
+	tinyusb_device
 )
 
 pico_set_float_implementation(fuzix none)

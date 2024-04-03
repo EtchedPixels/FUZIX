@@ -52,14 +52,12 @@ static void timer_tick_cb(unsigned alarm)
         update_us_since_boot(&next, time_us_64() + (1000000 / TICKSPERSEC));
         hardware_alarm_set_target(0, next);
     }
-
+    irqflags_t irq = di();
+    udata.u_ininterrupt = 1;
+    tty_interrupt();
     timer_interrupt();
-
-    if (usbconsole_is_readable())
-    {
-        uint8_t c = usbconsole_getc_blocking();
-        tty_inproc(minor(BOOT_TTY), c);
-    }
+    udata.u_ininterrupt = 0;
+    irqrestore(irq);
 }
 
 void device_init(void)

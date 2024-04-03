@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <kdata.h>
+#include "rawuart.h"
 #include "picosdk.h"
 #include "kernel-armm0.def"
 #include "globals.h"
@@ -47,6 +48,7 @@ void syscall_handler(struct svc_frame* eh)
 
 int main(void)
 {
+    uart1_init();
     core1_init();
 
 	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
