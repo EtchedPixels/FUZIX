@@ -66,11 +66,11 @@ void device_init(void)
 {
     /* The flash device is too small to be useful, and a corrupt flash will
      * cause a crash on startup... oddly. */
-
-	flash_dev_init();
-    
-	sd_rawinit();
-	devsd_init();
+#ifndef PICO_DISABLE_FLASH
+    flash_dev_init();
+#endif
+    sd_rawinit();
+    devsd_init();
 
     hardware_alarm_claim(0);
     update_us_since_boot(&now, time_us_64());
