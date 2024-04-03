@@ -167,9 +167,11 @@ bget ../../../Applications/util/tail
 bget ../../../Applications/util/touch
 bget ../../../Applications/util/tr
 bget ../../../Applications/util/true
+bget ../../../Applications/util/telinit
 bget ../../../Applications/util/umount
 bget ../../../Applications/util/uniq
 bget ../../../Applications/util/uptime
+bget ../../../Applications/util/uname
 bget ../../../Applications/util/uud
 bget ../../../Applications/util/uue
 bget ../../../Applications/util/wc
@@ -253,9 +255,11 @@ chmod 0755 tail
 chmod 0755 touch
 chmod 0755 tr
 chmod 0755 true
+chmod 0755 telinit
 chmod 0755 umount
 chmod 0755 uniq
 chmod 0755 uptime
+chmod 0755 uname
 chmod 0755 uud
 chmod 0755 uue
 chmod 0755 wc
