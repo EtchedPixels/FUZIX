@@ -22,3 +22,4 @@ size.report
 .obj
 *.elf
 bin
+*.debug
