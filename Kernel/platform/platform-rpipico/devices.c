@@ -10,7 +10,6 @@
 #include "globals.h"
 #include "picosdk.h"
 #include <hardware/irq.h>
-#include <hardware/structs/timer.h>
 #include <pico/multicore.h>
 #include "core1.h"
 
@@ -73,7 +72,7 @@ void device_init(void)
     hardware_alarm_claim(0);
     update_us_since_boot(&now, time_us_64());
     hardware_alarm_set_callback(0, timer_tick_cb);
-    timer_tick_cb(0);
+    hardware_alarm_force_irq(0);
 }
 
 /* vim: sw=4 ts=4 et: */
