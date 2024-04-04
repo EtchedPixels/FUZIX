@@ -3,7 +3,6 @@
 #include "config.h"
 #include "core1.h"
 
-#include <tusb.h>
 #include <pico/critical_section.h>
 #include <pico/multicore.h>
 #include <hardware/uart.h>

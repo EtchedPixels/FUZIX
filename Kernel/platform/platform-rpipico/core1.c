@@ -9,7 +9,12 @@
 #include "config.h"
 #include "core1.h"
 
+#define ssize_t __ssize_t
+#define time_t __time_t
 #include <tusb.h>
+#undef ssize_t
+#undef time_t
+
 #include <pico/critical_section.h>
 #include <pico/multicore.h>
 #include <hardware/uart.h>
