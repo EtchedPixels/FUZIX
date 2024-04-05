@@ -13,7 +13,7 @@
 #error "Only one UART is currently supported"
 #endif
 
-void uart1_init()
+void uart1_init(void)
 {
     uart_init(uart_default, PICO_DEFAULT_UART_BAUD_RATE);
     gpio_set_function(PICO_DEFAULT_UART_TX_PIN, GPIO_FUNC_UART);
@@ -31,12 +31,12 @@ void uart1_putc(uint8_t c)
     uart_putc(uart_default, c);
 }
 
-int uart1_ready()
+int uart1_ready(void)
 {
     return uart_is_writable(uart_default);
 }
 
-int uart1_getc()
+int uart1_getc(void)
 {
     if (uart_is_readable(uart_default))
     {

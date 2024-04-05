@@ -51,7 +51,7 @@
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 #define USERMEM (160*1024)
 #define PROGSIZE (65536 - UDATA_SIZE)
-extern char progbase[USERMEM];
+extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)
 
 #define USERSTACK (4*1024) /* 4kB */

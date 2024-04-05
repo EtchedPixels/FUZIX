@@ -100,7 +100,7 @@ void tty_sleeping(uint_fast8_t minor)
 void tty_data_consumed(uint_fast8_t minor) {}
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {}
 
-void tty_interrupt()
+void tty_interrupt(void)
 {
     int c;
     while ((c = uart1_getc()) >= 0)
