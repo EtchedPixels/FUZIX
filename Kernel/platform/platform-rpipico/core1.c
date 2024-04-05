@@ -4,90 +4,183 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <kernel.h>
+#include "picosdk.h"
+#include "config.h"
+#include "core1.h"
+
+#define ssize_t __ssize_t
+#define time_t __time_t
 #include <tusb.h>
-#include <pico/stdlib.h>
-#include <pico/time.h>
-#include <pico/binary_info.h>
+#undef ssize_t
+#undef time_t
+
+#include <pico/critical_section.h>
 #include <pico/multicore.h>
 #include <hardware/uart.h>
 #include <hardware/irq.h>
-#include "core1.h"
 
-bool usbconsole_is_readable(void)
+#define CONFIG_CONSOLE_BUF_LEN 16
+
+#if CONFIG_CONSOLE_BUF_LEN > 255
+#error "Invalid console buffer length"
+#endif
+
+struct console_buf_t
 {
-	return multicore_fifo_rvalid();
+	uint8_t buffer[CONFIG_CONSOLE_BUF_LEN];
+	uint8_t rindex;
+	uint8_t windex;
+	uint8_t len;
+};
+
+struct console_t
+{
+	struct console_buf_t rbuf;
+	struct console_buf_t wbuf;
+	bool sleeping;
+};
+
+static struct console_t console_table[NUM_DEV_TTY_USB];
+critical_section_t critical_section;
+
+static void console_buf_write(struct console_buf_t *buf, uint8_t b)
+{
+	/*
+	can deadlock core1 thread
+	while(buf->len >= CONFIG_CONSOLE_BUF_LEN)
+		tight_loop_contents();
+		*/
+	critical_section_enter_blocking(&critical_section);
+	if(buf->len < CONFIG_CONSOLE_BUF_LEN)
+	{
+		buf->buffer[buf->windex] = b;
+		buf->windex = (buf->windex + 1) % CONFIG_CONSOLE_BUF_LEN;
+		buf->len++;
+	}
+	critical_section_exit(&critical_section);
 }
 
-bool usbconsole_is_writable(void)
+static uint8_t console_buf_read(struct console_buf_t *buf)
 {
-	return multicore_fifo_wready();
+	critical_section_enter_blocking(&critical_section);
+	if(buf->len == 0)
+	{
+		panic("rd undrf");
+	}
+	uint8_t b = buf->buffer[buf->rindex];
+	buf->rindex = (buf->rindex + 1) % CONFIG_CONSOLE_BUF_LEN;
+	buf->len--;
+	critical_section_exit(&critical_section);
+	return b;
 }
 
-uint8_t usbconsole_getc_blocking(void)
+int usbconsole_read(uint8_t *buffer, int size)
 {
-	return multicore_fifo_pop_blocking();
+	if(size & 0x01)
+	{
+		panic("buf size");
+	}
+	int written = 0;
+	for(int i = 0; i < NUM_DEV_TTY && written < size; i++)
+	{
+		struct console_buf_t *buf = &console_table[i].rbuf;
+		if (buf->len > 0)
+		{
+			buffer[0] = USB_TO_TTY(i);
+			buffer[1] = console_buf_read(buf);
+			buffer += 2;
+			written += 2;
+		}
+	}
+	return written;
 }
 
-void usbconsole_putc_blocking(uint8_t b)
+extern bool usbconsole_is_writable(uint8_t minor)
 {
-	multicore_fifo_push_blocking(b);
+	minor = TTY_TO_USB(minor);
+	return console_table[minor].wbuf.len < CONFIG_CONSOLE_BUF_LEN;
 }
 
+extern bool usbconsole_is_available(uint8_t minor)
+{
+	minor = TTY_TO_USB(minor);
+	return minor <= NUM_DEV_TTY_USB;
+}
+
+extern void usbconsole_putc(uint8_t minor, uint8_t b)
+{
+	minor = TTY_TO_USB(minor);
+	if (minor >= NUM_DEV_TTY_USB)
+	{
+		panic("ttydev");
+	}
+	struct console_buf_t *buf = &console_table[minor].wbuf;
+	if (buf->len >= CONFIG_CONSOLE_BUF_LEN)
+	{
+		panic("ovf");
+	}
+
+	console_buf_write(buf, b);
+}
+
+extern void usbconsole_setsleep(uint8_t minor, bool sleeping)
+{
+	console_table[TTY_TO_USB(minor)].sleeping = sleeping;
+}
+
+extern bool usbconsole_is_sleeping(uint8_t minor)
+{
+	return console_table[TTY_TO_USB(minor)].sleeping;
+}
+
+#if NUM_DEV_TTY_USB > 0
 static void core1_main(void)
 {
-    uart_init(uart_default, PICO_DEFAULT_UART_BAUD_RATE);
-    gpio_set_function(PICO_DEFAULT_UART_TX_PIN, GPIO_FUNC_UART);
-    gpio_set_function(PICO_DEFAULT_UART_RX_PIN, GPIO_FUNC_UART);
-    uart_set_translate_crlf(uart_default, false);
-    uart_set_fifo_enabled(uart_default, true);
-
-    tusb_init();
+	tusb_init();
 
 	for (;;)
 	{
 		tud_task();
 
-		if (multicore_fifo_rvalid()
-			&& (!tud_cdc_connected() || tud_cdc_write_available())
-			&& uart_is_writable(uart_default))
-		{
-			int b = multicore_fifo_pop_blocking();
+		/*
+		We ignore tud_cdc_n_connected because if DTR is not set by the host
+		all tty's will appear disconnected, which seems to be the case for pi pico
+		*/
 
-			if (tud_cdc_connected())
+		for(int i = 0; i < CFG_TUD_CDC; i++)
+		{
+			if (tud_cdc_n_write_available(i)
+				&& console_table[i].wbuf.len)
 			{
-				tud_cdc_write(&b, 1);
-				tud_cdc_write_flush();
+				uint8_t b = console_buf_read(&console_table[i].wbuf);
+				tud_cdc_n_write_char(i, b);
+				tud_cdc_n_write_flush(i);
 			}
-			
-			uart_putc(uart_default, b);
 		}
 
-		if (multicore_fifo_wready()
-			&& ((tud_cdc_connected() && tud_cdc_available())
-				|| uart_is_readable(uart_default)))
+		for (int i = 0; i < CFG_TUD_CDC; i++)
 		{
-			/* Only service a byte from CDC *or* the UART, in case two show
-			 * up at the same time and we end up blocking. No big loss, the
-			 * next one will be read the next time around the loop. */
-
-			if (tud_cdc_available())
+			if (!tud_cdc_n_available(i))
 			{
-				uint8_t b;
-				int count = tud_cdc_read(&b, 1);
-				if (count)
-					multicore_fifo_push_blocking(b);
+				continue;
 			}
-			else if (uart_is_readable(uart_default))
+			struct console_buf_t *buf = &console_table[i].rbuf;
+			if (buf->len < CONFIG_CONSOLE_BUF_LEN)
 			{
-				uint8_t b = uart_get_hw(uart_default)->dr;
-				multicore_fifo_push_blocking(b);
+				uint8_t b = tud_cdc_n_read_char(i);
+				console_buf_write(buf, b);
 			}
 		}
 	}
 }
+#endif
 
 void core1_init(void)
 {
+	multicore_reset_core1();
+	critical_section_init(&critical_section);
+#if NUM_DEV_TTY_USB > 0
 	multicore_launch_core1(core1_main);
+#endif
 }
-

@@ -3,10 +3,13 @@
 
 extern void core1_init(void);
 
-extern bool usbconsole_is_readable(void);
-extern bool usbconsole_is_writable(void);
-extern uint8_t usbconsole_getc_blocking(void);
-extern void usbconsole_putc_blocking(uint8_t b);
+extern int usbconsole_read(uint8_t *buffer, int size);
+extern bool usbconsole_is_writable(uint8_t minor);
+extern bool usbconsole_is_available(uint8_t minor);
+extern void usbconsole_putc(uint8_t minor, uint8_t b);
+extern void usbconsole_setsleep(uint8_t minor, bool sleeping);
+extern bool usbconsole_is_sleeping(uint8_t minor);
+
 
 #endif
 

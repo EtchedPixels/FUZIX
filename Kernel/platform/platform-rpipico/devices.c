@@ -10,7 +10,6 @@
 #include "globals.h"
 #include "picosdk.h"
 #include <hardware/irq.h>
-#include <hardware/structs/timer.h>
 #include <pico/multicore.h>
 #include "core1.h"
 
@@ -52,14 +51,12 @@ static void timer_tick_cb(unsigned alarm)
         update_us_since_boot(&next, time_us_64() + (1000000 / TICKSPERSEC));
         hardware_alarm_set_target(0, next);
     }
-
+    irqflags_t irq = di();
+    udata.u_ininterrupt = 1;
+    tty_interrupt();
     timer_interrupt();
-
-    if (usbconsole_is_readable())
-    {
-        uint8_t c = usbconsole_getc_blocking();
-        tty_inproc(minor(BOOT_TTY), c);
-    }
+    udata.u_ininterrupt = 0;
+    irqrestore(irq);
 }
 
 void device_init(void)
@@ -75,7 +72,7 @@ void device_init(void)
     hardware_alarm_claim(0);
     update_us_since_boot(&now, time_us_64());
     hardware_alarm_set_callback(0, timer_tick_cb);
-    timer_tick_cb(0);
+    hardware_alarm_force_irq(0);
 }
 
 /* vim: sw=4 ts=4 et: */
