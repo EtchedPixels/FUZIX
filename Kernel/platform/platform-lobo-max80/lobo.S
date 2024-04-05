@@ -235,22 +235,25 @@ sasi_map:
 
 	.export _sasi_outblock
 	.export _sasi_inblock
+	.export _sasi_outbytes
+	.export _sasi_inbytes
 
-; TODO optimze the BC count with the split byte trick
 _sasi_outblock:
 	pop	de
 	pop	hl
 	push	hl
 	push	de
 	call	sasi_map
+	ld	b,0
 outn:
 	ld	a,(hl)
 	ld	(de),a
-	dec	bc
-	ld	a,b
-	or	c
-	jr	nz, outn
-	ret
+	inc	hl
+	ld	a,(hl)
+	ld	(de),a
+	inc	hl
+	djnz	outn
+	jp	map_kernel
 
 _sasi_inblock:
 	pop	de
@@ -258,14 +261,56 @@ _sasi_inblock:
 	push	hl
 	push	de
 	call	sasi_map
+	ld	b,0
 inn:
 	ld	a,(de)
 	ld	(hl),a
+	inc	hl
+	ld	a,(de)
+	ld	(hl),a
+	inc	hl
+	djnz	inn
+	jp	map_kernel
+
+_sasi_outbytes:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	call	sasi_map
+outb:
+	ld	a,(0x07F4)
+	and	0x1C		; C/D I/O and BUSY
+	cp	0x04
+	ret	nz
+	ld	a,(hl)
+	ld	(de),a
+	inc	hl
 	dec	bc
 	ld	a,b
 	or	c
-	jr	nz, inn
-	ret
+	jr	nz, outb
+	jp	map_kernel
+
+_sasi_inbytes:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	call	sasi_map
+inb:
+	ld	a,(0x07F4)
+	and	0x1C		; C/D I/O and BUSY
+	cp	0x0C
+	ret	nz
+	ld	a,(de)
+	ld	(hl),a
+	inc	hl
+	dec	bc
+	ld	a,b
+	or	c
+	jr	nz, inb
+	jp	map_kernel
 
 	.code
 ;
@@ -283,9 +328,9 @@ _memmove:
 	or	c
 	jr	z, move0
 	dec	hl
-	ld	e,(hl)
-	dec	hl
 	ld	d,(hl)
+	dec	hl
+	ld	e,(hl)
 	dec	hl
 	ld	a,(hl)
 	dec	hl
@@ -304,10 +349,9 @@ move0:
 	ret
 copy_back:
 	dec	bc
-	or	a
-	adc	hl,bc
+	add	hl,bc
 	ex	de,hl
-	adc	hl,bc
+	add	hl,bc
 	ex	de,hl
 	lddr
 	ldd

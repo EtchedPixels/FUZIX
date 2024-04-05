@@ -42,6 +42,10 @@
 #define PROGTOP     0xFE00  /* Top of program, base of U_DATA stash */
 #define PROC_SIZE   32 	    /* Memory needed per process */
 
+#define CONFIG_DYNAMIC_SWAP
+#define SWAP_DEV    (swap_dev)
+extern uint16_t swap_dev;
+
 #define SWAP_SIZE   0x40 	/* 32K in blocks */
 #define SWAPBASE    0x8000	/* We swap the lot in one, include the */
 #define SWAPTOP	    0x10000UL	/* vectors so its a round number of sectors */

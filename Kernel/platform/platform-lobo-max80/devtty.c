@@ -408,15 +408,15 @@ void scroll_up(void)
 	/* Move first 11 and a bit lines up */
 	memmove(p, p + VT_WIDTH, 944);
 	/* Now move the split line */
-	memmove(p + 944, (uint8_t *)0x0000, 80);
+	memmove(p + 944, (uint8_t *)0x0000, 0x50);
 	/* Now the lower bank */
-	memmove((uint8_t *)(0x0000 + 80), (uint8_t *)0x0000, 816);
+	memmove((uint8_t *)0x0000, (uint8_t *)0x0050, 816);
 }
 
 void scroll_down(void)
 {
 	uint8_t *p = (uint8_t *)0x0C00;	/* Start of video */
-	memmove((uint8_t *)0x0000, (uint8_t *)(0x0000 + 80), 816);
+	memmove((uint8_t *)0x0050, (uint8_t *)0x0000, 816);
 	/* Now move the split line */
 	memmove((uint8_t *)0x0000, p + 944, 80);
 	/* Move first 11 and a bit lines down */

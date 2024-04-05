@@ -43,31 +43,32 @@ static uint8_t lobo_rstat(void)
             break;
     }    
     lobo_io[0x7F4] = 0;
+    return r;
 }
 
 int scsi_cmd(uint_fast8_t dev, register uint8_t *cmd, uint8_t *data, uint16_t len)
 {
     uint_fast8_t r, s;
-    unsigned i;
+    unsigned i = 0;
 
-    /* Bus is not free */
-    if (lobo_io[0x7F4])
+    if (lobo_io[0x7F4] & 0x3F)
         return 1;
-    /* Drive selection failed */
+
     if (scsi_select(dev) == 0)
         return 1;
+
     /* Clear selection, device holds bus with BSY */
     lobo_io[0x7F4] = 0x00;		/* Drop SEL */
 
-    /* Send command bytes until the device drops C/D */
+    /* Send command bytes until the device changes state */
     while(i < 10) {
-        if (!(lobo_io[0x7F4] & 0x10))	/* Command state ? */
+        if ((lobo_io[0x7F4] & 0x18) != 0x10)	/* Command state ? */
             break;
         while(!((s = lobo_io[0x7F4]) & 0x01)) {
             if (!(s & 0x04))
                 return 1;
         }
-        lobo_io[0x7F0]= *cmd++;
+        lobo_io[0x7F0] = *cmd++;
         lobo_io[0x7F4] = 1;		/* ACK */
         while((s = lobo_io[0x7F4]) & 0x01) {
             if (!(s & 0x04)) {
@@ -81,14 +82,24 @@ int scsi_cmd(uint_fast8_t dev, register uint8_t *cmd, uint8_t *data, uint16_t le
     /* Didn't transfer a whole command */
     if (i < 6)
         return 1;
-    /* See which way the transfer goes ? */
-    if (len) {
+    /* We might be expecting data but actually the device just goes straight
+       to a status - for example if there is an error */
+    if (!(lobo_io[0x7F4] & 0x10)) {
+        /* Fast block transfers for disk I/O, but for other stuff we do byte
+           by byte bus state checks because the lengths are not rigidly defined */
         sasi_len = len;
-        if (lobo_io[0x7F4] & 0x08)
-            sasi_outblock(data);
-        else
-            sasi_inblock(data);
-    }
+        if (len == 512) {
+            if (lobo_io[0x7F4] & 0x08)
+                sasi_inblock(data);
+            else
+                sasi_outblock(data);
+        } else {
+            if (lobo_io[0x7F4] & 0x08)
+                sasi_inbytes(data);
+            else
+                sasi_outbytes(data);
+        }
+    }                
     /* Fell off the bus somewhere ? */
     if ((lobo_io[0x7F4] & 0x04) == 0)
         return 1;
@@ -100,7 +111,7 @@ int scsi_cmd(uint_fast8_t dev, register uint8_t *cmd, uint8_t *data, uint16_t le
 
 void scsi_reset(void)
 {
-    unsigned t = set_timer_ms(3000);
+    unsigned t = set_timer_ms(1000);	/* FIXME: adjust */
     kputs("Resetting SCSI bus... ");
     lobo_io[0x7F4] = 4;
     lobo_io[0x7F4] = 0;
