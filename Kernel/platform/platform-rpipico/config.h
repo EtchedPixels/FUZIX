@@ -43,7 +43,7 @@
 #undef CONFIG_FONT8X8
 
 /* Built in NAND flash. Warning, it's unstable. */
-#undef PICO_DISABLE_FLASH
+#define CONFIG_PICO_FLASH
 
 /* Program layout */
 
