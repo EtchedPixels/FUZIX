@@ -42,6 +42,9 @@
 #undef CONFIG_VT
 #undef CONFIG_FONT8X8
 
+/* Built in NAND flash. Warning, it's unstable. */
+#undef PICO_DISABLE_FLASH
+
 /* Program layout */
 
 #define UDATA_BLKS  3
