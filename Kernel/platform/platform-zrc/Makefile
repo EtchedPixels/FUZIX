@@ -73,7 +73,7 @@ image:	boot
 	../../dev/tinyide.o ../../dev/tinyide_discard.o \
 	../../dev/net/net_native.o ../../dev/net/net_w5x00.o wiznet.o \
 	../../dev/ds1302_rcbusu.o ../../dev/ds1302.o ../../dev/ds1302_discard.o \
-	/opt/fcc/lib/z80/lib/libz80.a -m fuzix.tmpmap
+	/opt/fcc/lib/z80/libz80.a -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
 	
