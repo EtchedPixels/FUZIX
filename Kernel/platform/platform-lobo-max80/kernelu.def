@@ -1,16 +1,17 @@
 ; UZI mnemonics for memory addresses etc
 
-U_DATA__TOTALSIZE           .equ 0x200
+#define U_DATA__TOTALSIZE 0x0200
+#define U_DATA_STASH 0xFE00
 
-U_DATA_STASH		    .equ 0xFE00	      ; FE00-FFFF
+#define PROGBASE 0x8000
+#define PROGLOAD 0x8000
 
-PROGBASE		    .equ 0x8000
-PROGLOAD		    .equ 0x8000
+#define Z80_TYPE 1
 
-Z80_TYPE		    .equ 1
+#define NBUFS 5
 
-NBUFS			    .equ 5
+#define CONFIG_SWAP
 
-Z80_MMU_HOOKS		    .equ 0
-
-CONFIG_SWAP		    .equ 1
+; Low memory isn't really ROM but it's video so we can't drop a null trap
+; there easily
+#define CONFIG_LOW_ROM
