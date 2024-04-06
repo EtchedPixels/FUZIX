@@ -54,7 +54,7 @@ void swapmap_init(uint_fast8_t swap)
    we are in the middle of an I/O (at least for now). If we rework the kernel
    for sleepable I/O this will change */
 
-int swapread(uint16_t dev, register blkno_t blkno, register usize_t nbytes,
+int swapread(uint16_t dev, blkno_t blkno, register usize_t nbytes,
                     uaddr_t buf, uint16_t page)
 {
 	int res;
