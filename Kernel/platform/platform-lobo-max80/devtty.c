@@ -33,6 +33,7 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 /* Write to system console */
 void kputchar(uint_fast8_t c)
 {
+	/* Set the device to 2 to get kernel messages dumped to serial */
     if(c=='\n')
         tty_putc(1, '\r');
     tty_putc(1, c);
