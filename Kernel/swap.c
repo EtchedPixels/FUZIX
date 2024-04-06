@@ -54,7 +54,7 @@ void swapmap_init(uint_fast8_t swap)
    we are in the middle of an I/O (at least for now). If we rework the kernel
    for sleepable I/O this will change */
 
-int swapread(uint16_t dev, blkno_t blkno, usize_t nbytes,
+int swapread(uint16_t dev, register blkno_t blkno, register usize_t nbytes,
                     uaddr_t buf, uint16_t page)
 {
 	int res;
@@ -109,10 +109,10 @@ int swapwrite(uint16_t dev, blkno_t blkno, usize_t nbytes,
 static ptptr swapvictim(ptptr p, int notself)
 {
 #ifdef CONFIG_MULTI
-	ptptr c;
-	ptptr r = NULL;
-	ptptr f = NULL;
-	uint16_t sc = 0;
+	register ptptr c;
+	register ptptr r = NULL;
+	register ptptr f = NULL;
+	register uint16_t sc = 0;
 	uint16_t s;
 
 	extern ptptr getproc_nextp;	/* Eww.. */
@@ -181,10 +181,10 @@ ptptr swapneeded(ptptr p, int notself)
 	return n;
 }
 
-void swapper2(ptptr p, uint16_t map)
+void swapper2(register ptptr p, uint16_t map)
 {
 #ifdef DEBUG
-	kprintf("Swapping in %p (page %d), utab.ptab %p\n", p, p->p_page,
+	kprintf("Swapping in %p (page %d), udata.ptab %p\n", p, p->p_page,
 		udata.u_ptab);
 #endif
 	swapin(p, map);
@@ -204,7 +204,7 @@ void swapper2(ptptr p, uint16_t map)
  *	a swapped process. We let pagemap_alloc cause any needed swap
  *	out of idle processes.
  */
-void swapper(ptptr p)
+void swapper(register ptptr p)
 {
         uint16_t map = p->p_page2;
 	pagemap_alloc(p);	/* May cause a swapout. May also destroy
