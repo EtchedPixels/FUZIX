@@ -476,11 +476,13 @@ intret:
 	or a
 	jr nz, interrupt_pop
 
+#ifndef CONFIG_LOW_ROM
 	ld a,(0)
 	cp #0xC3
 	jp nz, null_pointer_trap
 	; Loop through any pending signals. These could longjmp out
 	; of the handler so ensure everything is fixed before this !
+#endif
 
 	call deliver_signals
 
