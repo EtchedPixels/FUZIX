@@ -3,18 +3,21 @@
 ## Supported Hardware
 
 Lobo Max 80
+- Keyboard
+- Video
+- Serial
+- Beeper
+
 SASI hard disk
 
 ## To Do
 
 - 8" boot media
+- SASI boot
 - Floppy Disk Driver
 - UVC (if enough info exists)
-- Graphics mapping
-- UDGs
-- Hardware scrolling
-- Nicer cursor
 - Preload font in bootup
+- Expansion bus I/O
 
 ## Unsupported
 

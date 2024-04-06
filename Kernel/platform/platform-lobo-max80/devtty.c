@@ -234,7 +234,7 @@ uint_fast8_t keyboard[8][8] = {
 	{'0', '1', '2', '3', '4', '5', '6', '7' },
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
 	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_BS, KEY_DEL, ' '},
-	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+	{ 0, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_ESC, 0, 0 }
 };
 
 uint_fast8_t shiftkeyboard[8][8] = {
@@ -245,7 +245,7 @@ uint_fast8_t shiftkeyboard[8][8] = {
 	{'0', '!', '"', '#', '$', '%', '&', '\'' },
 	{'(', ')', '*', '+', '<', '=', '>', '?' },
 	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
-	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+	{ 0, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_ESC, 0, 0 }
 };
 
 static uint_fast8_t capslock = 0;
@@ -261,7 +261,7 @@ static void keydecode(void)
 		return;
 	}
 
-	if (keymap[7] & 3) {	/* shift */
+	if (keymap[7] & 1) {	/* shift */
 	        m = KEYPRESS_SHIFT;
 		c = shiftkeyboard[keybyte][keybit];
         } else
@@ -269,9 +269,9 @@ static void keydecode(void)
 
         /* The keyboard lacks some rather important symbols so remap them
            with control */
-	if (keymap[7] & 4) {	/* control */
+	if (keymap[7] & 0x80) {	/* control */
 	        m |= KEYPRESS_CTRL;
-                if (keymap[7] & 3) {	/* shift */
+                if (keymap[7] & 1) {	/* shift */
                     if (c == '(')
                         c = '{';
                     if (c == ')')
@@ -323,6 +323,8 @@ static void keydecode(void)
 void kbd_interrupt(void)
 {
 	newkey = 0;
+	if (!keysdown && lobo_io[0x08FF] == 0)
+		return;
 	keyproc();
 	if (keysdown && keysdown < 3) {
 		if (newkey) {
@@ -339,11 +341,14 @@ void kbd_interrupt(void)
 
 static volatile unsigned char *cpos;
 static unsigned char csave;
+static unsigned crtbase;		/* Base written into CRTC at this point */
 
 /* The display is split on a 1K boundary */
 static volatile uint8_t *char_addr(unsigned int y1, unsigned char x1)
 {
 	unsigned off = VT_WIDTH * y1 + x1;
+	off += crtbase;
+	off &= 0x07FF;
 	if (off < 0x0400)
 		return 0x0C00 + off;
 	else
@@ -361,66 +366,148 @@ void cursor_disable(void)
 {
 }
 
+/* Make symbol 127 the inverse of the symbol under the cursor */
+static void composite_cursor(void)
+{
+	register volatile uint8_t *cp = (uint8_t *)(127 * 8);
+	register volatile uint8_t *sp = (uint8_t *)(csave * 8);
+	irqflags_t irq;
+	uint_fast8_t old;
+	register unsigned ct = 0;
+
+	irq = di();
+	old = lobo_io[0x7DC];
+	lobo_io[0x7DC] = (old & 0xF8) | 4;
+	while(ct++ < 8)
+		*cp++ = ~*sp++;
+	lobo_io[0x7DC] = old;
+	irqrestore(irq);
+}
+
 void cursor_on(int8_t y, int8_t x)
 {
 	cpos = char_addr(y, x);
 	csave = *cpos;
-	*cpos = '_';
+	composite_cursor();
+	*cpos = 127;		/* used as the cursor composited char */
 }
 
 void plot_char(int8_t y, int8_t x, uint16_t c)
 {
-	*char_addr(y, x) = VT_MAP_CHAR(c);
+	*char_addr(y, x) = c;
 }
 
-/* Ugly as line 12 splits */
-void clear_lines(int8_t y, int8_t ct)
+void clear_lines(int8_t y, register int8_t ct)
 {
-	while(ct--) {
-		uint8_t *s = char_addr(y, 0);
-		if (y != 12)
-			memset(s, 0x20, VT_WIDTH);
-		else {
-			memset(s, 0x20, 64);
-			memset((uint_fast8_t *)0x0000, 0x20, 16);
-		}
-	}
+	/* Skip being clever for now. The join rolls */
+	while(ct--)
+		clear_across(y, 0, VT_WIDTH);
 }
 
-void clear_across(int8_t y, int8_t x, register int16_t l)
+void clear_across(int8_t y, register int8_t x, register int16_t l)
 {
-	register uint8_t *s = char_addr(y, x);
-	if (y != 12)
-		memset(s, 0x20, l);
-	else {
-		/* Optimize me */
-		while(l--)
-			*char_addr(y, x++) = 0x20;
-	}
+	while(l--)
+		*char_addr(y, x++) = 0x20;
 }
 
 void vtattr_notify(void)
 {
 }
 
+static void crt_set(void)
+{
+	irqflags_t irq;
+
+	while(!(lobo_io[0x07E0] & 0x40));
+
+	crtbase &= 0x07FF;
+	irq = di();
+	lobo_io[0x7E0] = 12;
+	lobo_io[0x7E1] = crtbase >> 8;
+	lobo_io[0x7E0] = 13;
+	lobo_io[0x7E1] = crtbase;
+	irqrestore(irq);
+}
+
 void scroll_up(void)
 {
-	uint8_t *p = (uint8_t *)0x0C00;	/* Start of video */
-	/* Move first 11 and a bit lines up */
-	memmove(p, p + VT_WIDTH, 944);
-	/* Now move the split line */
-	memmove(p + 944, (uint8_t *)0x0000, 0x50);
-	/* Now the lower bank */
-	memmove((uint8_t *)0x0000, (uint8_t *)0x0050, 816);
+	crtbase += VT_WIDTH;
+	/* Wipe the memory we will expose otherwise you sometimes
+	   get an annoying flash bottom right */
+	clear_across(23, 0, VT_WIDTH);
+	crt_set();
 }
 
 void scroll_down(void)
 {
-	uint8_t *p = (uint8_t *)0x0C00;	/* Start of video */
-	memmove((uint8_t *)0x0050, (uint8_t *)0x0000, 816);
-	/* Now move the split line */
-	memmove((uint8_t *)0x0000, p + 944, 80);
-	/* Move first 11 and a bit lines down */
-	memmove(p + VT_WIDTH, p, VT_WIDTH);
+	crtbase -= VT_WIDTH;
+	crt_set();
 }
 
+/* This is a pain... half our font is in a different format. Dump that
+   on the user and just declare 8x16 : TODO */
+static struct fontinfo fonti = {
+	0, 128, 128, 191, FONT_INFO_8X16
+};
+
+static void lobo_set_char8(uint_fast8_t c, uint8_t *ptr)
+{
+	register uint8_t *ioa = lobo_io + c * 8;
+	irqflags_t irq = di();
+	uint_fast8_t old = lobo_io[0x7DC];
+	lobo_io[0x7DC] = (old & 0xF8) | 4;
+	memcpy(ioa, ptr, 8);
+	lobo_io[0x7DC] = old;
+	irqrestore(irq);
+}
+
+static void lobo_set_char16(uint_fast8_t c, uint8_t *ptr)
+{
+	register uint8_t *ioa = lobo_io + (c & 0x3F) * 16;
+	irqflags_t irq = di();
+	uint_fast8_t old = lobo_io[0x7DC];
+	lobo_io[0x7DC] = (old & 0xF8) | 6;
+	memcpy(ioa, ptr, 16);
+	lobo_io[0x7DC] = old;
+	irqrestore(irq);
+}
+
+int lobotty_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
+{
+	register uint_fast8_t i;
+	uint8_t map[16];
+
+	if (minor != 1)
+		return tty_ioctl(minor, arg, ptr);
+
+	switch(arg) {
+	case VTFONTINFO:
+		return uput(&fonti, ptr, sizeof(struct fontinfo));
+	case VTSETUDG:
+		i = ugetc(ptr);
+		ptr++;
+		if (i < 128 || i > 191) {
+			udata.u_error = EINVAL;
+			return -1;
+		}
+		if (uget(ptr, map, 16) == -1) {
+			udata.u_error = EFAULT;
+			return -1;
+		}
+		lobo_set_char16(i, map);
+		return 0;
+	case VTSETFONT:
+		i = 0;
+		memset(map + 8, 0, 8);
+		while(i < 128) {
+			if (uget(ptr, map, 8) == -1) {
+				udata.u_error = EFAULT;
+				return -1;
+			}
+			lobo_set_char8(i++, map);
+			ptr += 16;
+		}
+		return 0;
+	}
+	return vt_ioctl(minor, arg, ptr);
+}
