@@ -26,14 +26,26 @@ _int_disabled:
 
 	.export _sio_r
 _sio_r:
-	.ds	16		; FIXME
+	.byte	0x03
+	.byte	0xC1
+	.byte	0x04
+	.byte	0xC4
+	.byte	0x05
+	.byte	0xEA
 
 	.code
 
 	.export _sio2_out
 
-_sio2_out:		; FIXME
+_sio2_out:
+	push	bc
+	ld	b,0x06
+	ld	c,l
+	ld	hl,_sio_r
+	otir
+	pop	bc
 	ret
+
 	.common
 
 	.export plt_interrupt_all
@@ -54,7 +66,7 @@ _plt_reboot:
 	di
 	xor	a
 	ld	(0x07DC),a
-	; I/O just moved low with ROM enabled
+	; I/O low with ROM enabled
 	rst	0
 
 	.code
@@ -243,6 +255,7 @@ _sasi_outblock:
 	pop	hl
 	push	hl
 	push	de
+	push	bc
 	call	sasi_map
 	ld	b,0
 outn:
@@ -253,6 +266,7 @@ outn:
 	ld	(de),a
 	inc	hl
 	djnz	outn
+	pop	bc
 	jp	map_kernel
 
 _sasi_inblock:
@@ -260,6 +274,7 @@ _sasi_inblock:
 	pop	hl
 	push	hl
 	push	de
+	push	bc
 	call	sasi_map
 	ld	b,0
 inn:
@@ -270,6 +285,7 @@ inn:
 	ld	(hl),a
 	inc	hl
 	djnz	inn
+	pop	bc
 	jp	map_kernel
 
 _sasi_outbytes:
@@ -277,12 +293,13 @@ _sasi_outbytes:
 	pop	hl
 	push	hl
 	push	de
+	push	bc
 	call	sasi_map
 outb:
 	ld	a,(0x07F4)
 	and	0x1C		; C/D I/O and BUSY
 	cp	0x04
-	ret	nz
+	jr	nz, bailo
 	ld	a,(hl)
 	ld	(de),a
 	inc	hl
@@ -290,6 +307,8 @@ outb:
 	ld	a,b
 	or	c
 	jr	nz, outb
+bailo:
+	pop	bc
 	jp	map_kernel
 
 _sasi_inbytes:
@@ -297,12 +316,13 @@ _sasi_inbytes:
 	pop	hl
 	push	hl
 	push	de
+	push	bc
 	call	sasi_map
 inb:
 	ld	a,(0x07F4)
 	and	0x1C		; C/D I/O and BUSY
 	cp	0x0C
-	ret	nz
+	jr	nz, baili
 	ld	a,(de)
 	ld	(hl),a
 	inc	hl
@@ -310,6 +330,8 @@ inb:
 	ld	a,b
 	or	c
 	jr	nz, inb
+baili:
+	pop	bc
 	jp	map_kernel
 
 	.code
