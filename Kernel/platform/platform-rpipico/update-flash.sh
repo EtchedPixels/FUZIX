@@ -63,9 +63,14 @@ mknod hdb   60660 16
 mknod hdb1  60660 17
 mknod hdb2  60660 18
 mknod null  20666 1024
-mknod mem   20660 1025
+mknod kmem  20660 1025
 mknod zero  20444 1026
 mknod proc  20666 1027
+mknod mem   20660 1028
+mknod rtc   20600 1029
+mknod sys   20644 1030
+mknod i2c   20600 1031
+mknod gpio  20600 1032
 
 cd /
 bget ../../../Applications/util/init init
@@ -179,6 +184,8 @@ bget ../../../Applications/util/whoami
 bget ../../../Applications/util/write
 bget ../../../Applications/util/xargs
 bget ../../../Applications/util/yes
+bget utils/pico
+bget utils/picoioctl
 
 chmod 0755 banner
 chmod 0755 basename
@@ -265,6 +272,8 @@ chmod 0755 whoami
 chmod 0755 write
 chmod 0755 xargs
 chmod 0755 yes
+chmod 0755 pico
+chmod 0755 picoioctl
 ln cp mv
 ln cp ln
 ln reboot halt
