@@ -10,12 +10,12 @@ void sd_spi_raise_cs(void)
     divmmc_cs = 0xFF;//0x03;		/* Active low */
 }
 
-void sd_spi_transmit_byte(uint8_t b) SD_SPI_CALLTYPE
+void sd_spi_tx_byte(uint8_t b) SD_SPI_CALLTYPE
 {
     divmmc_data = b;
 }
 
-uint8_t sd_spi_receive_byte(void)
+uint8_t sd_spi_rx_byte(void)
 {
     return divmmc_data;
 }
@@ -49,7 +49,7 @@ COMMON_MEMORY
  * Could also unroll these a bit for speed
  */
 
-bool sd_spi_receive_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
+bool sd_spi_rx_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
 {
   __asm
 #ifdef SD_SPI_BANKED
@@ -89,7 +89,7 @@ doread:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
+bool sd_spi_tx_sector(uint8_t *data) __naked SD_SPI_CALLTYPE
 {
   __asm
 #ifdef SD_SPI_BANKED
