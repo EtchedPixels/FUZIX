@@ -139,6 +139,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 				ptr[1] = pfree[pfptr++];
 			ptr[2] = BANK_VIDEO;
 		}
+		udata.u_ptab->p_page = 48;
 		return 0;
 	}
 	else if (ptr[2] == BANK_VIDEO) {
@@ -180,6 +181,9 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	/* Copy the updated allocation into the ptab */
 	udata.u_ptab->p_page = udata.u_page;
 	udata.u_ptab->p_page2 = udata.u_page2;
+
+	udata.u_ptab->p_page = want * 16;
+
 	/* Now fix the vectors up - they've potentially teleported up to 48K up
 	   the user address space, we need to put a copy back in low memory before
 	   we switch to this memory map */
