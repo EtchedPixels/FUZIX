@@ -372,6 +372,7 @@ int pagemap_realloc(usize_t csize, usize_t dsize, usize_t ssize)
 		err = ENOMEM;
 	}
 	claim_regions(m, udata.u_page);
+	udata.u_ptab->p_size = (csize + dsize + ssize) << (PAGESHIFT - 10);
 	return err;
 }
 

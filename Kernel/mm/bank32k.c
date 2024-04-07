@@ -151,6 +151,9 @@ int pagemap_realloc(struct exec *hdr, usize_t size) {
 	ptr[0] = pfree[--pfptr];
 	/* Copy the updated allocation into the ptab */
 	udata.u_ptab->p_page = udata.u_page;
+
+	udata.u_ptab->p_size = want << 5;
+
 	/* Now fix the vectors up - they've potentially teleported up to 32K up
 	   the user address space, we need to put a copy back in low memory before
 	   we switch to this memory map */

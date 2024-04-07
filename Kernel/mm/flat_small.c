@@ -674,6 +674,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 		return ENOMEM;
 	}
 
+	udata.u_ptab->p_size = (nl + nh) << (PAGE_SHIFT - 10);
 	/* This also maps the pages as desired */
 	realloc_map(nl, top_bank - nh, m->texttop);
 	m->high = top_bank - nh;
@@ -831,6 +832,7 @@ arg_t brk_extend(uaddr_t addr)
 			m[i] = alloc_page();
 	}
 	mi->low = nl;
+	udata.u_ptab->p_size += (nl - mi->low) << (PAGE_SHIFT - 10);
 	/* TODO: do we need to unpin first ? */
 	/* and map them */
 	map_pages(udata.u_ptab, 1);
@@ -859,6 +861,7 @@ arg_t stack_extend(uaddr_t sp)
 			m[i] = alloc_page();
 	}
 	mi->high = nh;
+	udata.u_ptab->p_size += (nh - mi->high) << (PAGE_SHIFT - 10);
 	map_pages(udata.u_ptab, 1);
 	return 0;
 }

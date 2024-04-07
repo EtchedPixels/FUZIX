@@ -394,6 +394,7 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 	udata.u_database = (uaddr_t)mb->start;
 	mb--;
 	udata.u_codebase = (uaddr_t)mb->start;
+	udata.u_ptab->p_size = (csize + size + 0x03FF) >> 10;
 #ifdef DEBUG
 	kprintf("code %p - %p, data %p - %p\n", udata.u_codebase, udata.u_codebase + csize - 1, udata.u_database, udata.u_database + size - 1);
 #endif
@@ -409,6 +410,7 @@ int pagemap_realloc(struct exec *a, usize_t unused)
 	pagemap_free(udata.u_ptab);
 	udata.u_codebase = (uaddr_t)mb->start;
 	udata.u_database = udata.u_codebase + a->a_text;
+	udata.u_ptab->p_size = (size + 0x03FF) >> 10;
 #ifdef DEBUG
 	kprintf("code %p data %p - %p\n", udata.u_codebase, udata.u_database, udata.u_codebase + size - 1);
 #endif
@@ -441,6 +443,7 @@ arg_t _memalloc(void)
 	struct memblk *m = &mem[proc]->memblk[0];
 	int i;
 
+	size = (size + 511) & ~511;
 	/* Map 0 and 1 are the image, the user doesn't get to play with that one */
 	for (i = MALLOC_BASE; i < MAX_BLOCKS; i++) {
 		if (m->start == NULL) {
@@ -450,6 +453,7 @@ arg_t _memalloc(void)
 				return -1;
 			}
 			m->end = m->start + size;
+			udata.u_ptab->p_size += (size + 0x03FF) >> 10;
 			return (arg_t) m->start;
 		}
 		m++;
@@ -478,6 +482,7 @@ arg_t _memfree(void)
 		if (m->start == base) {
 			kfree_s(m->start, m->end - m->start);
 			m->start = NULL;
+			udata.u_ptab->p_size -= (m->end - m->start) >> 10;
 			return 0;
 		}
 		m++;

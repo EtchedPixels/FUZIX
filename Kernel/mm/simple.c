@@ -51,6 +51,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 {
 	if (size > ramtop - PROGBASE)
 		return ENOMEM;
+	udata.u_ptab->p_size = ((PROGTOP - PROGBASE) + 0x03FF) >> 10;
 	return 0;
 }
 

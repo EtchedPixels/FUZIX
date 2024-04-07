@@ -83,6 +83,7 @@ int pagemap_alloc(ptptr p)
 /* Realloc is a no-op */
 int pagemap_realloc(struct exec *hdr, uint16_t size)
 {
+	udata.u_ptab->p_size = MAP_SPLIT >> 10;
 	return 0;
 }
 

@@ -516,8 +516,9 @@ typedef struct p_tab {
     uint8_t	p_nice;
     uint8_t	p_event;	/* Events */
     usize_t	p_top;		/* Copy of u_top */
+    usize_t	p_size;		/* For ps (KBytes) */
 #ifdef CONFIG_UDATA_TEXTTOP
-    usize_t p_texttop;  /* Copy of u_texttop */
+    usize_t	p_texttop;	/* Copy of u_texttop */
 #endif
 #ifdef CONFIG_LEVEL_2
     uint16_t	p_session;

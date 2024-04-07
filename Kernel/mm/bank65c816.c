@@ -64,6 +64,7 @@ int pagemap_alloc(ptptr p)
    and new stack model */
 int pagemap_realloc(struct exec *hdr, usize_t size)
 {
+	udata.u_ptab->p_size = 60;
 	return 0;
 }
 
