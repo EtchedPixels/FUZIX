@@ -38,6 +38,8 @@
 #define CONFIG_PLATFORM_SWAPCTL
 /* Platform manages process brk. */
 #define CONFIG_PLATFORM_BRK
+/* Platform IOCTL on /dev/sys (maj:min)(4:6) */
+#define CONFIG_DEV_PLATFORM
 
 #define CONFIG_32BIT
 #define CONFIG_USERMEM_DIRECT

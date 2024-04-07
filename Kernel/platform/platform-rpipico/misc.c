@@ -3,7 +3,9 @@
 #include <printf.h>
 #include <exec.h>
 #include "picosdk.h"
+#include "pico_ioctl.h"
 #include <pico/multicore.h>
+#include <pico/bootrom.h>
 #include <hardware/watchdog.h>
 
 uint8_t sys_cpu = A_ARM;
@@ -31,6 +33,17 @@ void plt_monitor(void)
     sleep_ms(1); // wait to print any remaining messages
     multicore_reset_core1();
     for(;;) { sleep_until(at_the_end_of_time); }
+}
+
+int plt_dev_ioctl(uarg_t request, char *data)
+{
+    used(data);
+    if (request == PICOIOC_FLASH)
+    {
+        reset_usb_boot(0, 0);
+        return 0;
+    }
+    return -1;
 }
 
 uaddr_t pagemap_base(void)
