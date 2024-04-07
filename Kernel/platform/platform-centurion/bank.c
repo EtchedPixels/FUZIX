@@ -123,7 +123,6 @@ int pagemap_alloc(ptptr p)
 		*ptr = ptr[-1];
 		ptr++;
 	}
-	
 	return 0;
 }
 
@@ -153,6 +152,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 			pfree[pfptr++] = *ptr;
 			*ptr++ = last;
 		}
+		udata.u_ptab->p_size = want * 2;	
 		program_vectors(&udata.u_page);
 		return 0;
 	}
@@ -168,6 +168,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	ptr += have - 1;
 	for (i = have; i < want; i++)
 		*ptr++ = pfree[--pfptr];
+	udata.u_ptab->p_size = want * 2;	
 	program_vectors(&udata.u_page);
 	return 0;
 }
