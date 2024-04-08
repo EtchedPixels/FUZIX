@@ -446,7 +446,7 @@ void scroll_down(void)
 
 /* This is a pain... half our font is in a different format. Dump that
    on the user and just declare 8x16 : TODO */
-static struct fontinfo fonti = {
+static const struct fontinfo fonti = {
 	0, 128, 128, 191, FONT_INFO_8X16
 };
 
