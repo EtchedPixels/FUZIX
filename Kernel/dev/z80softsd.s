@@ -1,6 +1,6 @@
 ;
 ;	Software SPI. Implements the minimal bits needed to support the
-;	SD card interface. Does not implement simultaneous send/receive
+;	SD card interface. Does not implement simultaneous send/rx
 ;	currently. The hardware can obviously do it but nobody needs it
 ;	so far.
 ;
@@ -9,8 +9,8 @@
 
 	.module softsd
 
-	.globl _sd_spi_transmit_byte
-	.globl _sd_spi_receive_byte
+	.globl _sd_spi_tx_byte
+	.globl _sd_spi_rx_byte
 	.globl _sd_spi_tx_sector
 	.globl _sd_spi_rx_sector
 	.globl spi0_set_regs
@@ -20,18 +20,18 @@
         .include "kernel.def"
         .include "../../cpu-z80/kernel-z80.def"
 
-	.globl _spi_transmit_byte
-	.globl _spi_receive_byte
+	.globl _spi_tx_byte
+	.globl _spi_rx_byte
 
 	.area _COMMONMEM
 
 ; SDCC linker is too crap to handle this
-;_sd_spi_transmit_byte .equ _spi_transmit_byte
-;_sd_spi_receive_byte .equ _spi_receive_byte
-_sd_spi_transmit_byte:
-	jp _spi_transmit_byte
-_sd_spi_receive_byte:
-	jp _spi_receive_byte
+;_sd_spi_tx_byte .equ _spi_tx_byte
+;_sd_spi_rx_byte .equ _spi_receive_byte
+_sd_spi_tx_byte:
+	jp _spi_tx_byte
+_sd_spi_rx_byte:
+	jp _spi_rx_byte
 
 
 _sd_spi_rx_sector:
