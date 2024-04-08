@@ -35,6 +35,7 @@ SIOB_D		.equ	1
 
 	.ds 10240	; boot sector and more for loader space
 
+	; F800
 start:
 	; A modern partition setup has lots of room for boot space, so we
 	; just load the blocks after the loader (24-147). We can't overlap
@@ -52,7 +53,7 @@ start:
 	out (LBA_2),a
 	out (LBA_1),a
 
-	ld de,#0x7C18		; sectors 24-119
+	ld de,#0x7B18		; sectors 24-147
 	ld hl,#0x0100		; load address
 load_loop:
 	call ide_ready

@@ -9,6 +9,3 @@ __sfr __at 0x17 cmd;
 __sfr __at 0x17 status;
 
 #define IDE_REG_DATA	0x0010
-
-/* Due to our strange banking needs */
-#define IDE_NONSTANDARD_XFER
