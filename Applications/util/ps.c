@@ -347,8 +347,12 @@ void display_process(struct p_tab *pp, int i)
 		printf("%3d ", pp->p_nice);
 	if (outflags & OF_ADDR)
 		fputs("    - ", stdout);
-	if (outflags & OF_SZ)
-		fputs("    - ", stdout);
+	if (outflags & OF_SZ) {
+		if (pp->p_size)
+			printf("%5d ", pp->p_size);
+		else
+			fputs("    - ", stdout);
+	}
 	if (outflags & OF_WCHAN) {
 		if (pp->p_status > 2)
 			printf(" %4x ", (unsigned int)pp->p_wait);
