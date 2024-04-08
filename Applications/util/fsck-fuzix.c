@@ -280,6 +280,8 @@ int main(int argc, char *argv[])
     do {
         error = 0;
         perform_fsck(argv[1]);
+        if (error & 64)
+            puts("Rescanning disk");
     }
     while(error & 64);
     exit(error);
