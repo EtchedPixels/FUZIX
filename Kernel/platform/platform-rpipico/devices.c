@@ -61,6 +61,13 @@ static void timer_tick_cb(unsigned alarm)
 
 void device_init(void)
 {
+    /* Timer interrup must be initialized before blcok devices.
+       set_boot_line uses pause syscall which will not be operational otherwise. */
+    hardware_alarm_claim(0);
+    update_us_since_boot(&now, time_us_64());
+    hardware_alarm_set_callback(0, timer_tick_cb);
+    hardware_alarm_force_irq(0);
+
     /* The flash device is too small to be useful, and a corrupt flash will
      * cause a crash on startup... oddly. */
 #ifdef CONFIG_PICO_FLASH
@@ -68,11 +75,6 @@ void device_init(void)
 #endif
     sd_rawinit();
     devsd_init();
-
-    hardware_alarm_claim(0);
-    update_us_since_boot(&now, time_us_64());
-    hardware_alarm_set_callback(0, timer_tick_cb);
-    hardware_alarm_force_irq(0);
 }
 
 /* vim: sw=4 ts=4 et: */

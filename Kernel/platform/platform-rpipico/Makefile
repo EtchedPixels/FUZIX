@@ -20,8 +20,12 @@ image:: world uf2conv
 	arm-none-eabi-objcopy -I binary -O elf32-littlearm --change-section-vma .data=0x10018000 filesystem.ftl filesystem.elf
 	./uf2conv filesystem.ftl filesystem.uf2 0x10018000
 
+image-sd:: world uf2conv
+	./update-flash.sh sd
+
 clean:
 	rm -rf build
+	rm -f uf2conv
 	$(MAKE) -C ../../../Library/libs -f Makefile.armm0 clean
 	$(MAKE) -C ../../../Applications/util -f Makefile.armm0 clean
 	$(MAKE) -C ../../../Applications/V7/cmd -f Makefile.armm0 clean

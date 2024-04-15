@@ -3,8 +3,14 @@ set -e
 
 IMG=filesystem.img
 
+FSSIZE=2547
+
+if [ "$1" = "sd" ]; then
+    FSSIZE=65535
+fi
+
 rm -f ${IMG}
-../../../Standalone/mkfs ${IMG} 32 2547
+../../../Standalone/mkfs ${IMG} 32 $FSSIZE
 ../../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
@@ -157,6 +163,7 @@ bget ../../../Applications/util/remount
 bget ../../../Applications/util/rm
 bget ../../../Applications/util/rmdir
 bget ../../../Applications/util/setdate
+bget ../../../Applications/util/setboot
 bget ../../../Applications/util/sleep
 bget ../../../Applications/util/ssh
 bget ../../../Applications/util/sort
@@ -169,6 +176,7 @@ bget ../../../Applications/util/sync
 bget ../../../Applications/util/tar
 bget ../../../Applications/util/tee
 bget ../../../Applications/util/tail
+bget ../../../Applications/util/telinit
 bget ../../../Applications/util/touch
 bget ../../../Applications/util/tr
 bget ../../../Applications/util/true
@@ -184,8 +192,7 @@ bget ../../../Applications/util/whoami
 bget ../../../Applications/util/write
 bget ../../../Applications/util/xargs
 bget ../../../Applications/util/yes
-bget utils/pico
-bget utils/picoioctl
+bget utils/picoctl
 
 chmod 0755 banner
 chmod 0755 basename
@@ -245,6 +252,7 @@ chmod 0755 remount
 chmod 0755 rm
 chmod 0755 rmdir
 chmod 0755 setdate
+chmod 0775 setboot
 chmod 0755 sleep
 chmod 0755 ssh
 chmod 0755 sort
@@ -257,6 +265,7 @@ chmod 0755 sync
 chmod 0755 tar
 chmod 0755 tee
 chmod 0755 tail
+chmod 0755 telinit
 chmod 0755 touch
 chmod 0755 tr
 chmod 0755 true
@@ -272,8 +281,7 @@ chmod 0755 whoami
 chmod 0755 write
 chmod 0755 xargs
 chmod 0755 yes
-chmod 0755 pico
-chmod 0755 picoioctl
+chmod 0755 picoctl
 ln cp mv
 ln cp ln
 ln reboot halt

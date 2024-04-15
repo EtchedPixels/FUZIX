@@ -77,16 +77,15 @@ extern uint8_t progbase[USERMEM];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
-#define BOOTDEVICE 0x0000 /* hda */
+#define BOOTDEVICENAMES "hd#"
 #define SWAPDEV    (swap_dev) /* dynamic swap */
 
 /* Device parameters */
 #define NUM_DEV_TTY_UART 1
-#define NUM_DEV_TTY_USB (CFG_TUD_CDC)
+#define NUM_DEV_TTY_USB 4
 #define NUM_DEV_TTY (NUM_DEV_TTY_UART + NUM_DEV_TTY_USB)
-
-#define USB_TO_TTY(x) (x + 1 + NUM_DEV_TTY_UART)
-#define TTY_TO_USB(x) (x - 1 - NUM_DEV_TTY_UART)
+#define DEV_USB_DETECT_TIMEOUT 5000 /* (ms) Total timeout time to detect USB host connection*/
+#define DEV_USB_INIT_TIMEOUT 2000 /* (ms) Total timeout to try not swallow messages */
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    20       /* Number of block buffers */
