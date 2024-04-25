@@ -39,21 +39,17 @@ M68K options. See [README.68000.md](README.68000.md) for a working example.
 
 ## 8080/8085
 
-Fuzix Assemblers
-https://github.com/EtchedPixels/CC6303
+Fuzix Bintools
+https://github.com/EtchedPixels/Fuzix-Bintools
 
-(At the moment they are in with cc6303 for historical reasons)
-
-cd as68
-make -f Makefile.8085 clean
-make -f Makefile.8085 install
+make
+make install
 
 Fuzix C Compiler
 https://github.com/EtchedPixels/Fuzix-Compiler-Kit
 
 Build the assembler first and ensure it's on your path
 
-make bootstrap
 make install
 
 ## 8086
@@ -80,21 +76,17 @@ back once we have assembler and compiler support from ccz80.
 
 ## Z80/Z180
 
-Fuzix Assemblers
-https://github.com/EtchedPixels/CC6303
+Fuzix Bintools
+https://github.com/EtchedPixels/Fuzix-Bintools
 
-(At the moment they are in with cc6303 for historical reasons)
-
-cd as68
-make -f Makefile.z80 clean
-make -f Makefile.z80 install
+make
+make install
 
 Fuzix C Compiler
 https://github.com/EtchedPixels/Fuzix-Compiler-Kit
 
 Build the assembler first and ensure it's on your path
 
-make bootstrap
 make install
 
 For most kernels you still need a slightly modified SDCC from
