@@ -2,7 +2,6 @@ CC = fcc -m8080
 ASM = fcc -m8080
 AR = ar
 PLATFORM = 8080
-PLATBIN = 85
 export PLATFORM
 CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/$(PLATFORM) -X -Os
 ASM_OPT = -c -o
@@ -111,7 +110,7 @@ syscall.l: fuzix$(PLATFORM)/syslib.l
 
 syslib$(PLATFORM).lib: syscall.l libc.l
 	cat libc.l syscall.l >syslib.l
-	$(AR) rc syslib$(PLATFORM).lib `lorder$(PLATBIN) $$(cat syslib.l) | tsort`
+	$(AR) rc syslib$(PLATFORM).lib `lorder$(PLATFORM) $$(cat syslib.l) | tsort`
 	ln -sf syslib$(PLATFORM).lib libc$(PLATFORM).a
 	cp libc$(PLATFORM).a libc.a
 
@@ -132,22 +131,22 @@ liberror.txt: ../tools/liberror
 	make -C .. tools/liberror
 
 curses$(PLATFORM).lib: $(OBJ_CURS)
-	$(AR) rc curses$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_CURS) | tsort`
+	$(AR) rc curses$(PLATFORM).lib `lorder$(PLATFORM) $(OBJ_CURS) | tsort`
 	ln -sf curses$(PLATFORM).lib libcurses$(PLATFORM).a
 	cp libcurses$(PLATFORM).a libcurses.a
 
 termcap$(PLATFORM).lib: $(OBJ_CT)
-	$(AR) rc termcap$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_CT) | tsort`
+	$(AR) rc termcap$(PLATFORM).lib `lorder$(PLATFORM) $(OBJ_CT) | tsort`
 	ln -sf termcap$(PLATFORM).lib libtermcap$(PLATFORM).a
 	cp libtermcap$(PLATFORM).a libtermcap.a
 
 m$(PLATFORM).lib: $(OBJ_LM)
-	$(AR) rc m$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_LM) | tsort`
+	$(AR) rc m$(PLATFORM).lib `lorder$(PLATFORM) $(OBJ_LM) | tsort`
 	ln -sf m$(PLATFORM).lib libm$(PLATFORM).a
 	cp libm$(PLATFORM).a libm.a
 
 readline$(PLATFORM).lib: $(OBJ_RL)
-	$(AR) rc readline$(PLATFORM).lib `lorder$(PLATBIN) $(OBJ_RL) | tsort`
+	$(AR) rc readline$(PLATFORM).lib `lorder$(PLATFORM) $(OBJ_RL) | tsort`
 	ln -sf readline$(PLATFORM).lib libreadline$(PLATFORM).a
 	cp libreadline$(PLATFORM).a libreadline.a
 

@@ -2,7 +2,7 @@ CC = fcc -m8085
 ASM = fcc -m8085
 AR = ar
 PLATFORM = 8085
-PLATBIN = 85
+PLATBIN = 8080
 export PLATFORM
 CC_OPT = -c -I$(shell pwd)/../include -I$(shell pwd)/../include/$(PLATFORM) -X -Os
 ASM_OPT = -c -o
