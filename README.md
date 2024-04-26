@@ -102,11 +102,9 @@ friends, while UMZIX has a neat unified "make anything" function.
 ## Tool Issues
 
 * 6809 gcc and cc65 don't have long long 64bit (for sane time_t)
-* SDCC can generate ROMmable binaries but not banked ones (hack fixes done)
 * None of the above have an O88 style common sequence compressor
 * CC65 can't handle larger objects on stack, and lacks float support
 * We need a 'proper' 65C816 C compiler
-* CC85 lacks floating point support for 8080/8085
 
 [travis-image]: https://travis-ci.org/EtchedPixels/FUZIX.png?branch=master
 [travis-url]: https://travis-ci.org/EtchedPixels/FUZIX
