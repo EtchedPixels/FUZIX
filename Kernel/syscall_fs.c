@@ -102,8 +102,8 @@ arg_t _sync(void)
 
 arg_t _stat(void)
 {
-	inoptr ino;
-	int err;
+	register inoptr ino;
+	register int err;
 	if (!(ino = n_open(path, NULLINOPTR)))
 		return (-1);
 	err = stcpy(ino, buf);
@@ -243,7 +243,7 @@ arg_t _ioctl(void)
 	register inoptr ino;
 	uint16_t dev;
 	uint_fast8_t rclass = ((uint8_t)(request >> 8)) & 0xC0;
-	struct oft *oftp;
+	register struct oft *oftp;
 
 	if ((ino = getinode(fd)) == NULLINODE)
 		return -1;
