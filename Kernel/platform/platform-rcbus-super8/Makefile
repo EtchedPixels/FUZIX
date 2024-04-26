@@ -48,7 +48,8 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin loader.tmp *.s
 
 image: 
-	$(CROSS_LD) -i -b -C 0x0100 -D 0x0000 -S 0xF000 -f CXSDLBbs -o fuzix.bin crt0.o devices.o main.o \
+	# Note that the Z space on this CPU overlaps D but they are different CPU spaces
+	$(CROSS_LD) -i -b -Z 48 -C 0x0100 -D 0x0000 -S 0xF000 -f CXSDLBbs -o fuzix.bin crt0.o devices.o main.o \
 	discard.o commonmem.o tricks.o rcbus-super8.o devtty.o \
 	../../start.o ../../version.o ../../cpu-super8/lowlevel-super8.o \
 	../../mm/bankfixed.o ../../timer.o ../../kdata.o  ../../mm/memalloc_none.o \
