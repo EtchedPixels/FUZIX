@@ -385,7 +385,7 @@ int tty_ioctl(uint_fast8_t minor, uarg_t request, char *data)
  * UZI180 - This routine is called from the raw Hardware read routine,
  * either interrupt or polled, to process the input character.  HFB
  */
-uint_fast8_t tty_inproc(uint_fast8_t minor, uint_fast8_t c)
+uint_fast8_t tty_inproc(uint_fast8_t minor, register uint_fast8_t c)
 {
 	uint_fast8_t oc;
 	uint_fast8_t canon;
