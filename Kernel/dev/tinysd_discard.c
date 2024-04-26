@@ -22,10 +22,10 @@ static uint8_t acmd41[6] = {0x69, 0x40, 0x00, 0x00, 0x00, 0x01 };
 
 static uint8_t sdbuf[4];
 
-static uint8_t sendcmd(uint8_t *cmd)
+static uint_fast8_t sendcmd(register uint8_t *cmd)
 {
-    uint8_t n = 0;
-    uint8_t r;
+    register uint_fast8_t n = 0;
+    uint_fast8_t r;
     sd_spi_raise_cs();
     sd_spi_rx_byte();
     sd_spi_lower_cs();
@@ -62,8 +62,8 @@ static int sendacmd(uint8_t *cmd)
 
 static void sd_get4(void)
 {
-    uint8_t *p = sdbuf;
-    uint_fast8_t n = 0;
+    register uint8_t *p = sdbuf;
+    register uint_fast8_t n = 0;
     while(++n <= 4)
         *p++ = sd_spi_rx_byte();
 }
