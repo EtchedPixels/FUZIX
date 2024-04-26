@@ -1,6 +1,6 @@
-export CROSS_AS=cc85 -X -m8085 -c
-export CROSS_LD=ld85
-export CROSS_CC=cc85
+export CROSS_AS=fcc -X -m8085 -c
+export CROSS_LD=ld8080
+export CROSS_CC=fcc
 export CROSS_CCOPTS= -X -m8085 -c -Os -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG2=
 export CROSS_CC_SEG3=

@@ -48,8 +48,8 @@ image:
 	../../dev/z80pack/devfd.o $(LIBC) -m fuzix.tmpmap
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
-	cc85 -c bootblock.S
-	ld85 -b bootblock.o -o bootblock.bin
+	fcc -m8080 -c bootblock.S
+	ld8080 -b bootblock.o -o bootblock.bin
 
 diskimage: image
 	# Boot floppy

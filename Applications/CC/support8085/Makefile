@@ -44,7 +44,7 @@ OBJ = workspace.o __true.o __switchc.o __switch.o __switchl.o __pushl.o __sex.o 
       _memcpy.o _memset.o _strlen.o
 
 .s.o:
-	cc85 -c $<
+	fcc -m8085 -c $<
 
 lib8085.a: $(OBJ)
 	rm -f lib8085.a
