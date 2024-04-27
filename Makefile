@@ -87,6 +87,7 @@
 # zrc:		Bill Shen's Zrc platform
 # zx+3:		ZX Spectrum +3
 # zxdiv:	ZX Spectrum 128K with DivIDE/DivMMC interface
+# zxuno:	ZX Uno FPGA system
 
 TARGET=zrc
 
