@@ -10,5 +10,7 @@ supported only 8085.
 
 make diskimage
 
-Use the boot disk as drivea.dsk and the root disk as drivei.dsk. It will
+Use the boot disk as drivea.dsk and the root disk as drivep.dsk. It will
 also use drivej.dsk as swap.
+
+P drive is 7 at the boot prompt
