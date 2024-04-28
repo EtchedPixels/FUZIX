@@ -441,19 +441,20 @@ arg_t _memalloc(void)
 {
 	unsigned int proc = udata.u_page;
 	struct memblk *m = &mem[proc]->memblk[0];
+	unsigned nsize;
 	int i;
 
-	size = (size + 511) & ~511;
+	nsize = (size + 511) & ~511;
 	/* Map 0 and 1 are the image, the user doesn't get to play with that one */
 	for (i = MALLOC_BASE; i < MAX_BLOCKS; i++) {
 		if (m->start == NULL) {
-			m->start = kmalloc(size, proc);
+			m->start = kmalloc(nsize, proc);
 			if (m->start == NULL) {
 				udata.u_error = ENOMEM;
 				return -1;
 			}
-			m->end = m->start + size;
-			udata.u_ptab->p_size += (size + 0x03FF) >> 10;
+			m->end = m->start + nsize;
+			udata.u_ptab->p_size += (nsize + 0x03FF) >> 10;
 			return (arg_t) m->start;
 		}
 		m++;
