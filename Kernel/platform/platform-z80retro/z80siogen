@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+#	Generate the z80sio helpers using the template
+#
+cd $FUZIX_ROOT
+cat Kernel/build/z80sio.hdr
+template <Kernel/dev/z80sio.tmpl a ".abs\n.org 0x200" ".data" SIOA_C SIOA_D \
+	reti "ld (sio_sp),sp\n\tld sp,istack_top\n\tcall map_save_kernel" \
+	"call map_restore\n\tld sp,(sio_sp)"
+template <Kernel/dev/z80sio.tmpl b ".abs\n.org 0x300" ".data" SIOB_C SIOB_D \
+	reti "ld (sio_sp),sp\n\tld sp,istack_top\n\tcall map_save_kernel" \
+	"call map_restore\n\tld sp,(sio_sp)"

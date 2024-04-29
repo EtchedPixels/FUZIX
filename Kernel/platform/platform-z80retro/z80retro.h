@@ -4,17 +4,17 @@
 #include "config.h"
 
 #define SIO0_BASE 0x80
-__sfr __at (SIO0_BASE + 0) SIOB_D;
-__sfr __at (SIO0_BASE + 1) SIOA_D;
-__sfr __at (SIO0_BASE + 2) SIOB_C;
-__sfr __at (SIO0_BASE + 3) SIOA_C;
+#define SIOB_D	(SIO0_BASE + 0)
+#define SIOA_D  (SIO0_BASE + 1)
+#define SIOB_C	(SIO0_BASE + 2)
+#define SIOA_C	(SIO0_BASE + 3)
 
-__sfr __at 0x40 CTC_CH0;
-__sfr __at 0x41 CTC_CH1;
-__sfr __at 0x42 CTC_CH2;
-__sfr __at 0x43 CTC_CH3;
+#define CTC_CH0	0x40
+#define CTC_CH1	0x41
+#define CTC_CH2	0x42
+#define CTC_CH3	0x43
 
-extern void sio2_otir(uint8_t port) __z88dk_fastcall;
+extern void sio2_otir(uint8_t port);
 
 extern uint8_t ds1302_present;
 

@@ -33,14 +33,8 @@ void plt_discard(void)
 	}
 }
 
-void plt_idle(void)
+uint_fast8_t plt_param(unsigned char *p)
 {
-	__asm halt __endasm;
-}
-
-uint8_t plt_param(unsigned char *p)
-{
-	used(p);
 	return 0;
 }
 

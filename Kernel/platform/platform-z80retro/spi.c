@@ -17,16 +17,16 @@ static const uint8_t spi_mask[] = {
     0x01, 0x05, 0x09, 0x11, 0x21, 0x41
 };
 
-__sfr __at 0x64	spi_cs;
+#define spi_cs 0x64
 
 void spi_select_port(uint8_t port)
 {
-    spi_cs = spi_mask[port];
+    out(spi_cs, spi_mask[port]);
 }
 
 void sd_spi_raise_cs(void)
 {
-    spi_cs = 0x01;
+    out(spi_cs, 0x01);
 }
 
 /* SD is on SPI 1 */

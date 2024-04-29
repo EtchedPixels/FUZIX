@@ -1,26 +1,26 @@
 ; FUZIX mnemonics for memory addresses etc
 
-U_DATA__TOTALSIZE	.equ	0x200	; 256+256 bytes
-Z80_TYPE		.equ	0	; just a old good Z80
+#define U_DATA__TOTALSIZE	0x200	; 256+256 bytes
 
-Z80_MMU_HOOKS		.equ 0
+#define Z80_MMU_HOOKS		0
 
 #define CONFIG_SWAP
 
-PROGBASE		.equ	0x0000
-PROGLOAD		.equ	0x0100
+#define PROGBASE		0x0000
+#define PROGLOAD		0x0100
 
 ; Mnemonics for I/O ports etc
 
-CONSOLE_RATE		.equ	115200
+#define CONSOLE_RATE		115200
 
-CPU_CLOCK_KHZ		.equ	10000
+#define CPU_CLOCK_KHZ		10000
+
 
 ; Z80 SIO ports
-SIOA_D		.EQU	0x81
-SIOA_C		.EQU	0x83
-SIOB_D		.EQU	0x80
-SIOB_C		.EQU	0x82
+SIOA_D		.equ	0x81
+SIOA_C		.equ	0x83
+SIOB_D		.equ	0x80
+SIOB_C		.equ	0x82
 
 
 ; Z80 CTC ports
@@ -36,4 +36,4 @@ MPGSEL_2	.equ	0x62	; Bank_2 page select register (W/O)
 MPGSEL_3	.equ	0x63	; Bank_3 page select register (W/O)
 MPGENA		.equ	0x64	; along with other things
 
-NBUFS		.equ	5	; must match config.h
+#define NBUFS		5	; must match config.h
