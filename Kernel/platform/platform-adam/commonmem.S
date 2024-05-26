@@ -3,5 +3,5 @@
 ;	to common space won't write through all banks
 ;
 	.common
-	.include "../../cpu-z80u/std-commonmem.s"
+	.include "../../cpu-z80u/std-commonmem.S"
 

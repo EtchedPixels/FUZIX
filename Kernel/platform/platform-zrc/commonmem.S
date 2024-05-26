@@ -5,5 +5,5 @@
 ;
         .common
 
-#include "../../cpu-z80u/std-commonmem.s"
+#include "../../cpu-z80u/std-commonmem.S"
 
