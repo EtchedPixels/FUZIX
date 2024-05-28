@@ -24,6 +24,7 @@ struct ttymap
 extern int ttymap_count;
 extern struct ttymap ttymap[NUM_DEV_TTY+1];
 extern void tty_interrupt(void);
+extern void devtty_early_init(void);
 extern void devtty_init(void);
 
 #endif

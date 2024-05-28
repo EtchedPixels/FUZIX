@@ -34,6 +34,14 @@ static void devtty_defconfig(uint8_t drv, int count, int minor)
     }
 }
 
+/* To be called right after startup to be able to print boot messages */
+void devtty_early_init(void)
+{
+    rawuart_init();
+    core1_init();
+    devtty_init();
+}
+
 void devtty_init(void)
 {
     int defconfig = 0;

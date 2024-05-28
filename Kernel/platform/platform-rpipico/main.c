@@ -92,9 +92,7 @@ void syscall_handler(struct svc_frame* eh)
 int main(void)
 {
     // early init to handle boot kernel messages
-    rawuart_init();
-    core1_init();
-    devtty_init();
+    devtty_early_init();
 
     if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
         (U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
