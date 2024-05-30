@@ -59,28 +59,23 @@ struct p_tab {
 #ifdef __XTENSA_CALL0_ABI__
     unsigned int p_texttop;	/* Copy of u_texttop */
 #endif
-};
-
-/* Followed by this structure if profiling supported */
-struct p_prof {
+#ifdef CONFIG_LEVEL_2
+    uint16_t	p_session;
+#endif
+#ifdef CONFIG_PROFIL
     uint8_t     p_profscale;
     void *      p_profbuf;
     uint16_t    p_profsize;
     uint16_t    p_profoff;
+#endif
+    void *p_timerq;
 };
 
-/* Then this one if level 2 */
-struct p_level_2 {
-    uint16_t	p_session;
-};
 
 /* The offsets of the prof structure are not guaranteed to be as per this
    structure. Use this only for sizing */
 struct p_tab_buffer {
     struct p_tab	p_tab;
-    struct p_level_2	_l2;
-    struct p_prof	_prof;
-    void *p_timerq;
 };
 
 #endif /* __PROC_H */
