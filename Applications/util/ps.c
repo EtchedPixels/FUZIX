@@ -68,6 +68,8 @@ static uint16_t outflags;
 
 static const char *month = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
+static unsigned nodesize;		/* From the kernel */
+
 static char mapstat(char s)
 {
 	switch (s) {
@@ -426,9 +428,25 @@ void display_process(struct p_tab *pp, int i)
 	}
 }
 
+static unsigned find_pid_slot(unsigned slot)
+{
+	int diff;
+	/* Work out which slot is referenced from the node size as our own ptab struct
+	   may not exactly size match the kernel */
+	if (ptab[slot].p_tab.p_pptr == NULL)
+		return 0;
+
+	diff = (uint8_t *)ptab[slot].p_tab.p_pptr - (uint8_t *)ptab[0].p_tab.p_pptr;
+	if (diff % nodesize) {
+		fputs("internal nodesize error\n", stderr);
+		exit(1);
+	}
+	return diff / nodesize;
+}
+
 int do_ps(void)
 {
-	int i, pfd, ptsize, nodesize;
+	int i, pfd, ptsize;
 	struct p_tab_buffer *ppbuf;
 	struct p_tab *pp;
 
@@ -472,7 +490,7 @@ int do_ps(void)
 			close(pfd);
 			return 1;
 		}
-		ppid_slot[i] = ptab[i].p_tab.p_pptr - ptab[0].p_tab.p_pptr;
+		ppid_slot[i] = find_pid_slot(i);
 		/* Learn our tty internal reference as we go */
 		if (ptab[i].p_tab.p_status && ptab[i].p_tab.p_pid == pid)
 			tty = ptab[i].p_tab.p_tty;
