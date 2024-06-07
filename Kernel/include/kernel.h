@@ -1131,6 +1131,7 @@ extern void updoff(void);
 extern int stcpy(inoptr ino, uint8_t *buf);
 extern bool rargs (uint8_t **userspace_argv, struct s_argblk *argbuf);
 extern uint8_t **wargs(uint8_t *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
+extern arg_t brk_extend(uaddr_t addr);
 
 /* timer.c */
 extern void rdtime(time_t *tloc);

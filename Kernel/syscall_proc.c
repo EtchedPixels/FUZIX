@@ -250,9 +250,6 @@ arg_t brk_extend(uaddr_t addr)
 	}
 	return 0;
 }
-#else
-/* Forward reference */
-arg_t brk_extend(uaddr_t addr);
 #endif
 
 #define addr (uaddr_t)udata.u_argn
