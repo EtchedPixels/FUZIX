@@ -12,8 +12,8 @@
 
 __uputc:
 	stx	(-s)
-	ldb	4(s)
-	ldx	6(s)
+	ldb	6(s)
+	ldx	4(s)
 	jsr	map_proc_always
 	stbb	(x)
 	jsr	map_kernel
@@ -22,8 +22,8 @@ __uputc:
 
 __uputw:
 	stx	(-s)
-	ldb	4(s)
-	ldx	6(s)
+	ldb	6(s)
+	ldx	4(s)
 	jsr	map_proc_always
 	stb	(x)
 	jsr	map_kernel
@@ -35,7 +35,6 @@ __ugetc:
 	jsr	map_proc_always
 	ldbb	(b)
 	jsr	map_kernel
-	xfr	b,a
 	rsr
 
 __ugetw:
@@ -43,13 +42,12 @@ __ugetw:
 	jsr	map_proc_always
 	ldb	(b)
 	jsr	map_kernel
-	xfr	b,a
 	rsr
 
 __uzero:
 	stx	(-s)
-	ldx	6(s)
-	ldb	4(s)
+	ldb	6(s)
+	ldx	4(s)
 	bnz	noworkz
 	jsr	map_proc_always
 	clab
@@ -72,10 +70,10 @@ ugetl:
 	xfr	y,a
 	sta	(-s)
 
-	ldx	10(s)		; user
+	ldx	6(s)		; user
 	lda	8(s)		; dest
 	xay
-	lda	6(s)		; count
+	lda	10(s)		; count
 
 ugetlp:
 	sta	(-s)
@@ -89,7 +87,7 @@ ugetlp:
 	lda	(s+)
 	xay
 	ldx	(s+)
-	cla
+	clr	b
 	rsr
 
 __uput:
@@ -98,10 +96,10 @@ uputl:
 	xfr	y,a
 	sta	(-s)
 
-	ldx	10(s)		; user
+	ldx	6(s)		; user
 	lda	8(s)		; dest
 	xay
-	lda	6(s)		; count
+	lda	10(s)		; count
 
 uputlp:
 	sta	(-s)
@@ -115,5 +113,5 @@ uputlp:
 	lda	(s+)
 	xay
 	ldx	(s+)
-	cla
+	clr	b
 	rsr

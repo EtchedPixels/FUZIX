@@ -1,14 +1,16 @@
 
-		.export	_strlen
-		.code
+	.export	_strlen
+	.code
 
 _strlen:
-		clr	y
-		lda	2(s)
-sl:		ldb	(a+)
-		bz	strlen_done
-		inr	y
-		bra	sl
+	stx	(-s)
+	ldx	2(s)
+	cla
+sl:	ldab	(x+)
+	bz	strlen_done
+	ina
+	bra	sl
 strlen_done:
-		xfr	y,a
-		rsr
+	xab
+	ldx	(s+)
+	rsr

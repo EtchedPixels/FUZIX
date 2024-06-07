@@ -1,24 +1,26 @@
 
-		.export _memcpy
+	.export _memcpy
 
-		.code
+	.code
 
 _memcpy:
-		xfr	z,a
-		sta	(-s)
-		lda	8(s)
-		xay
-		lda	6(s)
-		xaz
-		lda	4(s)
-		bz	nowork
+	stx	(-s)
+	xfr	y,a
+	sta	(-s)
+
+	ldx	6(s)
+	lda	8(s)
+	xay
+	lda	10(s)
+	bz	nowork
 memcpyl:
-		ldb	(z+)
-		stb	(y+)
-		dca
-		bnz	memcpyl
-		lda	8(s)
+	ldb	(x+)
+	stb	(y+)
+	dca
+	bnz	memcpyl
+	ldb	6(s)
 nowork:
-		lda	(s+)
-		xfr	a,z
-		rsr
+	lda	(s+)
+	xay
+	ldx	(s+)
+	rsr

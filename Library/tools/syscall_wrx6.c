@@ -95,7 +95,7 @@ static void write_makefile(void)
   fprintf(fp, "\techo $(AOBJS) >syslib.l\n");
   fprintf(fp, "\tar rc ../syslib.lib $(AOBJS)\n\n");
   fprintf(fp, "$(AOBJS): %%.o: %%.s\n");
-  fprintf(fp, "\taswrx6 $<\n\n");
+  fprintf(fp, "\tfcc -mee200 -c $<\n\n");
   fprintf(fp, "clean:\n");
   fprintf(fp, "\trm -f $(AOBJS) $(ASRCS) *~\n\n");
   fclose(fp);

@@ -1,22 +1,23 @@
 
-			.export _memset
-			.code
+	.export _memset
+	.code
 
 ;
 ;	memset has an int sized pattern that is byte written.
 ;
 ;
 _memset:
-		lda	6(s)
-		xay
-		ldb	4(s)
-		lda	2(s)
-		jz	nowork
+	stx	(-s)
+	ldx	2(s)
+	ldb	4(s)
+	lda	6(s)
+	jz	nowork
 
 setl:
-		stbb	(y+)
-		dca
-		jnz	setl
+	stbb	(x+)
+	dca
+	jnz	setl
 nowork:
-		lda	6(s)
-		rsr
+	ldb	2(s)
+	ldx	(s+)
+	rsr

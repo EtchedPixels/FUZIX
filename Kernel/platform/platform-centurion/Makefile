@@ -55,7 +55,7 @@ image:
 	../../syscall_exec.o ../../syscall_exec16.o ../../blk400.o \
 	_memcpy.o _memset.o _strlen.o ../../mm/memalloc_none.o \
 	../../usermem.o ../../cpu-wrx6/usermem_std-wrx6.o devtty.o \
-	/opt/aswrx6/lib/libwrx6.a
+	/opt/fcc/lib/ee200/libee200.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	dd if=../../fuzix.bin of=fuzix.img bs=256 skip=1
 

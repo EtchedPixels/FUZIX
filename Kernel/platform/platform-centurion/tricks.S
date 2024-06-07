@@ -100,10 +100,10 @@ not_swapped:
 	sub	x,b
 	bnz	switchinfail
 	
-	lda	(s+)
+	ldb	(s+)
 	ldx	(s+)
 
-	ldbb	(_udata + U_DATA__U_ININTERRUPT)
+	ldab	(_udata + U_DATA__U_ININTERRUPT)
         bnz	swtchdone	; in ISR, leave interrupts off
 	jsr	___hard_ei
 swtchdone:
@@ -149,9 +149,9 @@ _dofork:
 	sta	(_runticks)
 
         ; in the child process, fork() returns zero.
-	ldb	(s+)
+	lda	(s+)
 	ldx	(s+)
-	cla
+	clr	b
 	rsr
 
 fork_copy:

@@ -27,10 +27,10 @@
 	.code
 
 _swab:
-	lda	2(s)
-	xfrb	ah,bl
-	xfrb	al,ah
-	xfrb	bl,al
+	ldb	2(s)
+	xfrb	bh,al
+	xfrb	bl,bh
+	xfrb	al,bl
 	rsr
 
 	.common
@@ -114,12 +114,8 @@ deliver_signals_2:
 ;
 unix_syscall_entry:
 	stx	(-s)
-	clr	xh		; Look for a better ABI when we know more
-
-	xfrb	ah,xl
-	xfr	s,b
-	stb	(_udata+U_DATA__U_SYSCALL_SP)
-	add	s,x
+	xfr	s,x
+	stx	(_udata+U_DATA__U_SYSCALL_SP)
 
 	inx
 	inx
@@ -186,10 +182,10 @@ interrupt_handler:
 	lda 	1
 	sta	(_udata+U_DATA__U_ININTERRUPT)
 
-	jsr _plt_interrupt
+	jsr	_plt_interrupt
 
-	ldab (_udata+U_DATA__U_INSYS)
-	bnz iretk
+	ldab	(_udata+U_DATA__U_INSYS)
+	bnz	iretk
 	clab
 	ldab	(_need_resched)
 	bnz	preemption
@@ -227,33 +223,40 @@ iretk:
 ;
 preemption:
 	clab
-	stab (_need_resched)
+	stab	(_need_resched)
 #if 0
 	; Save the stack pointer across
-	ldd istack_switched_sp
-	std _udata+U_DATA__U_SYSCALL_SP
-	lds #kstack_top
-	ldab #1
-	stab _udata+U_DATA__U_INSYS
-	jsr _chksigs
-	ldx _udata+U_DATA__U_PTAB
-	ldab P_TAB__P_STATUS_OFFSET,x
-	cmpb #P_RUNNING
-	bne not_running
-	ldab #P_READY
-	stab P_TAB__P_STATUS_OFFSET,x
-	ldaa P_TAB__P_FLAGS_OFFSET,x
-	orab #PFL_BATCH
-	stab P_TAB__P_FLAGS_OFFSET,x
+	ldb	(istack_switched_sp)
+	stb	(_udata+U_DATA__U_SYSCALL_SP)
+	
+	lda	kstack_top
+	xas
+	ldab	1
+	stab	(_udata+U_DATA__U_INSYS)
+	jsr	_chksigs
+	ldx	(_udata+U_DATA__U_PTAB)
+	ldab	P_TAB__P_STATUS_OFFSET(x)
+	ldbb	P_RUNNING
+	sabb
+	bnz	not_running
+	ldab	P_TAB__P_STATUS_OFFSET(x)
+	ldb	P_READY
+	stab	P_TAB__P_STATUS_OFFSET(x)
+	ldab	P_TAB__P_FLAGS_OFFSET(x)
+	ldbb	PFL_BATCH
+	ori	b,a
+	stab	P_TAB__P_FLAGS_OFFSET(x)
 not_running:
-	jsr _plt_switchout
-	clr _udata+U_DATA__U_ININTERRUPT
-	clr _udata+U_DATA__U_INSYS
-	jsr map_proc_always
-	lds _udata+U_DATA__U_SYSCALL_SP
-	ldaa _udata+U_DATA__U_CURSIG
-	beq no_signals
-	jsr deliver_signals_2
+	jsr	_plt_switchout
+	clab
+	stab	_udata+U_DATA__U_ININTERRUPT
+	stab	_udata+U_DATA__U_INSYS
+	jsr	map_proc_always
+	lda	(_udata+U_DATA__U_SYSCALL_SP)
+	xas
+	ldaa	(_udata+U_DATA__U_CURSIG)
+	bz	no_signals
+	jsr	deliver_signals_2
 #endif
 	ri
 	jmp 	interrupt_handler
@@ -264,8 +267,7 @@ not_running:
 
 _set_cpu_type:
 	ldab	1
-	stab (_sys_cpu_feat)
-is_6803:
+	stab	(_sys_cpu_feat)
 	rsr
 
 	.data

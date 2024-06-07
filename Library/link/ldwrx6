@@ -30,5 +30,5 @@ done
 #
 set -e
 #
-echo "ccwrx6 "$ARGS"-o "$TARGET
-ccwrx6 $ARGS -o "$TARGET"
+echo "fcc -mee200 "$ARGS" -o "$TARGET
+fcc -mee200 $ARGS -o "$TARGET"

@@ -1,8 +1,9 @@
-CC = ccwrx6
-AS = aswrx6
+CC = fcc
+AS = fcc -mee200 -c
 LINKER = $(FUZIX_ROOT)/Library/link/ldwrx6
-CFLAGS = -m6 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/wrx6
-LINKER_TAIL = -L $(FUZIX_ROOT)/Library/libs -M -lcwrx6
+CFLAGS = -X -mee200 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/wrx6
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs
+LINKER_TAIL = -lcwrx6
 ASM_OPT = -o
 CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_wrx6.o
 CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_wrx6.o

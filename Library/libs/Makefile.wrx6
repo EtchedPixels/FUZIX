@@ -1,7 +1,7 @@
-CC = ccwrx6
-ASM = aswrx6
+CC = fcc -mee200 -X
+ASM = fcc -mee200 -c
 AR = ar
-LINKER = ldwrx6
+LINKER = ldee200
 CC_OPT = -D__STDC__ -c -I../include/ -I../include/wrx6/
 CC_NOOPT = -D__STDC__ -c -I../include/ -I../include/wrx6/
 ASM_OPT =
@@ -86,19 +86,20 @@ fuzixwrx6/Makefile: ../tools/syscall_wrx6.c ../../Kernel/include/syscall_name.h
 
 syslib.lib: fuzixwrx6/Makefile $(OBJ_ALL)
 	(cd fuzixwrx6; make)
-	$(AR) cr syslib.lib $(OBJ_ALL)
+	rm -f syslib.lib
+	$(AR) cr syslib.lib `lorderee200 fuzixwrx6/*.o $(OBJ_ALL) | tsort`
 	ln -sf syslib.lib libcwrx6.a
 
 termcap.lib: fuzixwrx6/Makefile $(OBJ_TC)
-	$(AR) cr termcap.lib $(OBJ_TC)
+	$(AR) cr termcap.lib `lorderee200 $(OBJ_TC) | tsort`
 	ln -sf termcap.lib libtermcapwrx6.a
 
 readline.lib: fuzixwrx6/Makefile $(OBJ_RL)
-	$(AR) cr readline.lib $(OBJ_RL)
+	$(AR) cr readline.lib `lorderee200 $(OBJ_RL) | tsort`
 	ln -sf readline.lib libreadlinewrx6.a
 
 curses.lib: fuzixwrx6/Makefile $(OBJ_CURS)
-	$(AR) cr curses.lib $(OBJ_CURS)
+	$(AR) cr curses.lib `lorderee200 $(OBJ_CURS) | tsort`
 	ln -sf curses.lib libcurseswrx6.a
 
 liberror.txt:

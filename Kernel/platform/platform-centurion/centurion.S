@@ -55,9 +55,9 @@ irqflag:
 	
 ___hard_di:
 	di
-	clrb	bl
-	ldab	(irqflag)
-	stbb	(irqflag)
+	clab
+	ldbb	(irqflag)
+	stab	(irqflag)
 	rsr
 ;
 ;	Enable interrupts

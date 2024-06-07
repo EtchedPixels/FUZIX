@@ -2,13 +2,5 @@ APPOTHER = cpuinfo
 include Makefile.common
 
 cpuinfo: cpuinfo.o cpuinfo-wrx6.o
-	$(LINKER) -o $@ $(CRT0) $^ $(LINKER_TAIL)
+	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^ $(LINKER_TAIL) 
 
-size.report: $(APPS) $(APPSNS) $(APPTC)
-	ls -l $^ > $@
-
-clean:
-	rm -f *.o $(APPS) $(APPSNS) $(APPTC) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
-
-rmbak:
-	rm -f *~ core

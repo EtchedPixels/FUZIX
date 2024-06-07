@@ -314,6 +314,27 @@ static void cpu_ident(void)
     /* TODO */
 
 }
+#elif defined(__ee200__)
+/* TODO: write some ee200 cpu5 cpu6 probe code */
+static uint8_t cpu_vendor;
+static uint8_t cpu_id;
+static const char *vendor_name[] = { "Electrodata", "Centurion" };
+static const char *cpu_name[] = { "ee200", "cpu5", "cpu6" };
+static const int8_t cpu_step = -1;
+static const int8_t cpu_MHz = 0;
+static const uint8_t cpu_cache = 0;
+static const char cpu_fpu[] = "no";
+static char *cpu_bugs = "";
+static char *cpu_flags = "";
+static const uint8_t cpu_vsize = 16;
+static uint8_t cpu_psize = 16;
+static const char *cpu_pm = NULL;
+
+static void cpu_ident(void)
+{
+    /* TODO */
+}
+
 #else
 #error "unsupported CPU"
 #endif

@@ -3,7 +3,7 @@
 ;
 ;
 	.export __setjmp
-	.setcpu 6
+	.setcpu 4
 	.code
 
 __setjmp:
@@ -13,5 +13,9 @@ __setjmp:
 	sta	2(x)
 	xfr	s,a
 	sta	(x)
-	cla
+	xfr	y,a
+	sta	6(x)
+	xfr	z,a
+	sta	8(x)
+	clr	b
 	rsr
