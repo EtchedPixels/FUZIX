@@ -51,7 +51,6 @@
 
 // Note: descriptors returned from callbacks must exist long enough for transfer to complete
 #if CFG_TUD_CDC > 0
-
 static const tusb_desc_device_t usbd_desc_device = {
     .bLength = sizeof(tusb_desc_device_t),
     .bDescriptorType = TUSB_DESC_DEVICE,
@@ -91,6 +90,10 @@ static const uint8_t usbd_desc_cfg[USBD_DESC_LEN] = {
         USBD_CDC_CMD_MAX_SIZE, USBD_CDC_EP_OUT+6, USBD_CDC_EP_IN+6, USBD_CDC_IN_OUT_MAX_SIZE),
 #endif
 };
+
+#if CFG_TUD_CDC > 4
+#error "Only 4 USB serial devices are supported"
+#endif
 
 static const char *const usbd_desc_str[] = {
     [USBD_STR_MANUF] = "Raspberry Pi",

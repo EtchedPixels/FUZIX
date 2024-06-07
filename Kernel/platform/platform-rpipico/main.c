@@ -1,19 +1,62 @@
+#include <stdlib.h>
 #include <kernel.h>
 #include <kdata.h>
-#include "rawuart.h"
+#include "devtty.h"
 #include "picosdk.h"
+#include "core1.h"
+#include "rawuart.h"
 #include "kernel-armm0.def"
 #include "globals.h"
 #include "printf.h"
-#include "core1.h"
 
 //the led that indicates power
 //The on board one is pin 25
-const uint POWER_LED = 25; 
+const uint POWER_LED = 25;
 
 uint_fast8_t plt_param(char* p)
 {
-	return 0;
+    char *s;
+    uint8_t drv;
+    if (strncmp(p, "tty=", sizeof("tty=")-1) == 0)
+    {
+        ttymap_count = 0;
+        p += sizeof("tty=")-1;
+        while(*p)
+        {
+            s = p;
+            while(*p && *p != ',' && *p != '\n')
+                p++;
+            if(*p)
+                *p++=0;
+            drv = 0xff;
+            if (strncmp(s, "usb", 3) == 0)
+            {
+                s += 3;
+                drv = TTYDRV_USB;
+            }
+            else if(strncmp(s, "uart", 4) == 0)
+            {
+                s += 4;
+                drv = TTYDRV_UART;
+            }
+
+            if (drv == 0xff || !(*s))
+            {
+                kprintf("invalid param %s\n", s);
+                panic("tty=");
+            }
+            ttymap[ttymap_count+1].tty = atoi(s);
+            ttymap[ttymap_count+1].drv = drv;
+            ttymap_count++;
+            if (ttymap_count >= NUM_DEV_TTY)
+            {
+                panic("ttycount");
+            }
+        }
+        devtty_init();
+        return 1;
+    }
+    return 0;
 }
 
 void fatal_exception_handler(struct extended_exception_frame* eh)
@@ -48,31 +91,30 @@ void syscall_handler(struct svc_frame* eh)
 
 int main(void)
 {
-    uart1_init();
-    core1_init();
+    // early init to handle boot kernel messages
+    devtty_early_init();
 
-	if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
-		(U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
-		(P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
+    if ((U_DATA__U_SP_OFFSET != offsetof(struct u_data, u_sp)) ||
+        (U_DATA__U_PTAB_OFFSET != offsetof(struct u_data, u_ptab)) ||
+        (P_TAB__P_PID_OFFSET != offsetof(struct p_tab, p_pid)) ||
         (P_TAB__P_STATUS_OFFSET != offsetof(struct p_tab, p_status)) ||
         (UDATA_SIZE_ASM != UDATA_SIZE))
-	{
-		kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
-		kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));
-		kprintf("P_TAB__P_PID_OFFSET = %d\n", offsetof(struct p_tab, p_pid));
-		kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
-		panic("bad offsets");
-	}
+    {
+        kprintf("U_DATA__U_SP = %d\n", offsetof(struct u_data, u_sp));
+        kprintf("U_DATA__U_PTAB = %d\n", offsetof(struct u_data, u_ptab));
+        kprintf("P_TAB__P_PID_OFFSET = %d\n", offsetof(struct p_tab, p_pid));
+        kprintf("P_TAB__P_STATUS_OFFSET = %d\n", offsetof(struct p_tab, p_status));
+        panic("bad offsets");
+    }
+    ramsize = (SRAM_END - SRAM_BASE) / 1024;
+    procmem = USERMEM / 1024;
+    //turn on power led
+    gpio_init(POWER_LED);
+    gpio_set_dir(POWER_LED, GPIO_OUT);
+    gpio_put(POWER_LED, 1);
 
-	ramsize = (SRAM_END - SRAM_BASE) / 1024;
-	procmem = USERMEM / 1024;
-	//turn on power led
-	gpio_init(POWER_LED);
-	gpio_set_dir(POWER_LED, GPIO_OUT);
-	gpio_put(POWER_LED, 1);
-	
-	di();
-	fuzix_main();
+    di();
+    fuzix_main();
 }
 
 /* vim: sw=4 ts=4 et: */

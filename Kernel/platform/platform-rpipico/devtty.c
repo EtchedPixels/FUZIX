@@ -8,80 +8,133 @@
 #include "picosdk.h"
 #include <pico/multicore.h>
 #include "core1.h"
+#include "devtty.h"
 
-static uint8_t ttybuf[TTYSIZ*NUM_DEV_TTY];
+uint8_t ttybuf[TTYSIZ*NUM_DEV_TTY];
 
-struct s_queue ttyinq[NUM_DEV_TTY+1] = { /* ttyinq[0] is never used */
-	{ 0,         0,         0,         0,      0, 0        },
-	{ &ttybuf[0],    &ttybuf[0],    &ttybuf[0],    TTYSIZ, 0, TTYSIZ/2 },
-#if NUM_DEV_TTY_USB >= 1
-	{ &ttybuf[TTYSIZ*1],    &ttybuf[TTYSIZ*1],    &ttybuf[TTYSIZ*1],    TTYSIZ, 0, TTYSIZ/2 },
-#endif
-#if NUM_DEV_TTY_USB >= 2
-	{ &ttybuf[TTYSIZ*2],    &ttybuf[TTYSIZ*2],    &ttybuf[TTYSIZ*2],    TTYSIZ, 0, TTYSIZ/2 },
-#endif
-#if NUM_DEV_TTY_USB >= 3
-	{ &ttybuf[TTYSIZ*3],    &ttybuf[TTYSIZ*3],    &ttybuf[TTYSIZ*3],    TTYSIZ, 0, TTYSIZ/2 },
-#endif
-#if NUM_DEV_TTY_USB >= 4
-	{ &ttybuf[TTYSIZ*4],    &ttybuf[TTYSIZ*4],    &ttybuf[TTYSIZ*4],    TTYSIZ, 0, TTYSIZ/2 },
-#endif
+int ttymap_count;
+struct ttymap ttymap[NUM_DEV_TTY+1];
+struct s_queue ttyinq[NUM_DEV_TTY+1];
+tcflag_t termios_mask[NUM_DEV_TTY+1];
+
+struct ttydriver ttydrivers[2] =
+{
+    { .putc = &rawuart_putc, .ready = &rawuart_ready, .sleeping = rawuart_sleeping, .getc = &rawuart_getc },
+    { .putc = &usbconsole_putc, .ready = &usbconsole_ready, .sleeping = usbconsole_sleeping, .getc = &usbconsole_getc },
 };
 
-tcflag_t termios_mask[NUM_DEV_TTY+1] = {
-    0,
-    _CSYS,
-#if NUM_DEV_TTY_USB >= 1
-	_CSYS,
-#endif
-#if NUM_DEV_TTY_USB >= 2
-	_CSYS,
-#endif
-#if NUM_DEV_TTY_USB >= 3
-	_CSYS,
-#endif
-#if NUM_DEV_TTY_USB >= 4
-	_CSYS,
-#endif
-};
+static void devtty_defconfig(uint8_t drv, int count, int minor)
+{
+    int devnum = 1;
+    while(devnum <= count)
+    {
+        ttymap[minor].tty = devnum++;
+        ttymap[minor].drv = drv;
+        minor++;
+    }
+}
+
+/* To be called right after startup to be able to print boot messages */
+void devtty_early_init(void)
+{
+    rawuart_init();
+    core1_init();
+    devtty_init();
+}
+
+void devtty_init(void)
+{
+    int defconfig = 0;
+    if (ttymap_count == 0)
+    {
+        defconfig = 1;
+    }
+    for (int i = 1; i <= NUM_DEV_TTY; i++)
+    {
+        ttyinq[i].q_base = ttyinq[i].q_head = ttyinq[i].q_tail = &ttybuf[TTYSIZ*(i-1)];
+        ttyinq[i].q_size = TTYSIZ;
+        ttyinq[i].q_count = 0;
+        ttyinq[i].q_wakeup = TTYSIZ/2;
+        termios_mask[i] = _CSYS;
+    }
+    
+    if (defconfig)
+    {
+        absolute_time_t until = delayed_by_ms(get_absolute_time(), DEV_USB_DETECT_TIMEOUT);
+
+        int usb_detected = 0;
+        while (absolute_time_diff_us(get_absolute_time(), until) > 0)
+        {
+            if (usbconsole_is_available(1))
+            {
+                usb_detected = 1;
+                break;
+            }
+        }
+
+        if (usb_detected)
+        {
+            devtty_defconfig(TTYDRV_USB, NUM_DEV_TTY_USB, 1);
+            devtty_defconfig(TTYDRV_UART, NUM_DEV_TTY_UART, 1+NUM_DEV_TTY_USB);
+            until = delayed_by_ms(get_absolute_time(), DEV_USB_INIT_TIMEOUT);
+            while (absolute_time_diff_us(get_absolute_time(), until) > 0)
+            {
+                tight_loop_contents();
+            }
+            kprintf("devtty: %s as default tty\n", "usb");
+        }
+        else
+        {
+            devtty_defconfig(TTYDRV_UART, NUM_DEV_TTY_UART, 1);
+            devtty_defconfig(TTYDRV_USB, NUM_DEV_TTY_USB, 1+NUM_DEV_TTY_UART);
+            kprintf("devtty: %s as default tty\n", "uart");
+        }
+        ttymap_count = NUM_DEV_TTY;
+    }
+}
 
 /* Output for the system console (kprintf etc) */
 void kputchar(uint_fast8_t c)
 {
-    if (c == '\n')
-        uart1_putc('\r');
-    //usbconsole_putc_blocking(minor(TTYDEV), c);
-    //usbconsole_putc_debug(c);
-    uart1_putc(c);
+    /* If tty's were not properly initialized */
+    if (ttymap_count == 0)
+    {
+        if (c == '\n')
+            rawuart_putc(1, '\r');
+        rawuart_putc(1, c);
+    }
+    else
+    {
+        if (c == '\n')
+        {
+            while(tty_writeready(1) != TTY_READY_NOW) {
+                tight_loop_contents();
+            }
+            tty_putc(1, '\r');
+        }
+        while(tty_writeready(1) != TTY_READY_NOW) {
+            tight_loop_contents();
+        }
+        tty_putc(1, c);
+    }
 }
 
 void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-
-    if (minor == 1)
-    {
-        uart1_putc(c);
-    }
-    else
-    {
-        usbconsole_putc(minor, c);
-    }
+    struct ttymap* map = &ttymap[minor];
+    if (map->tty == 0)
+        return;
+    struct ttydriver *drv = &ttydrivers[map->drv];
+    drv->putc(map->tty, c);
 }
 
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-    if (minor == 1)
-    {
-        return uart1_ready() ? TTY_READY_NOW : TTY_READY_SOON;
-    }
-    else
-    {
-        if (usbconsole_is_writable(minor))
-        {
-            return TTY_READY_NOW;
-        }
-        return TTY_READY_SOON;
-    }
+    struct ttymap* map = &ttymap[minor];
+    if (map->tty == 0)
+        return TTY_READY_LATER;
+    struct ttydriver *drv = &ttydrivers[map->drv];
+    return drv->ready(map->tty);
 }
 
 /* For the moment */
@@ -92,10 +145,11 @@ int tty_carrier(uint_fast8_t minor)
 
 void tty_sleeping(uint_fast8_t minor)
 {
-    if(minor != 1)
-    {
-        usbconsole_setsleep(minor, true);
-    }
+    struct ttymap* map = &ttymap[minor];
+    if (map->tty == 0)
+        return;
+    struct ttydriver *drv = &ttydrivers[map->drv];
+    drv->sleeping(map->tty);
 }
 void tty_data_consumed(uint_fast8_t minor) {}
 void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {}
@@ -103,18 +157,17 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {}
 void tty_interrupt(void)
 {
     int c;
-    while ((c = uart1_getc()) >= 0)
+    for (int minor = 1; minor <= ttymap_count; minor++)
     {
-        tty_inproc(1, (char)c);
+        struct ttymap* map = &ttymap[minor];
+        if (map->tty == 0)
+            continue;
+        struct ttydriver *drv = &ttydrivers[map->drv];
+        while((c = drv->getc(map->tty)) >= 0)
+        {
+            tty_inproc(minor, c);
+        }
     }
-#if NUM_DEV_TTY_USB > 0
-    uint8_t cbuf[8];
-    int w = usbconsole_read(cbuf, sizeof(cbuf));
-    for (int i = 0; i < w; i += 2)
-    {
-        tty_inproc(cbuf[i], cbuf[i + 1]);
-    }
-#endif
 }
 /* vim: sw=4 ts=4 et: */
 

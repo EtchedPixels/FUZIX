@@ -5,6 +5,7 @@
  */
 
 #include <kernel.h>
+#include <printf.h>
 #include "picosdk.h"
 #include "config.h"
 #include "core1.h"
@@ -41,18 +42,14 @@ struct console_t
 	bool sleeping;
 };
 
-static struct console_t console_table[NUM_DEV_TTY_USB];
+static struct console_t usb_console_table[NUM_DEV_TTY_USB];
+int usb_host_connected;
 critical_section_t critical_section;
 
 static void console_buf_write(struct console_buf_t *buf, uint8_t b)
 {
-	/*
-	can deadlock core1 thread
-	while(buf->len >= CONFIG_CONSOLE_BUF_LEN)
-		tight_loop_contents();
-		*/
 	critical_section_enter_blocking(&critical_section);
-	if(buf->len < CONFIG_CONSOLE_BUF_LEN)
+	if (buf->len < CONFIG_CONSOLE_BUF_LEN)
 	{
 		buf->buffer[buf->windex] = b;
 		buf->windex = (buf->windex + 1) % CONFIG_CONSOLE_BUF_LEN;
@@ -64,77 +61,73 @@ static void console_buf_write(struct console_buf_t *buf, uint8_t b)
 static uint8_t console_buf_read(struct console_buf_t *buf)
 {
 	critical_section_enter_blocking(&critical_section);
-	if(buf->len == 0)
+	uint8_t b = 0;
+	if (buf->len != 0)
 	{
-		panic("rd undrf");
+		b = buf->buffer[buf->rindex];
+		buf->rindex = (buf->rindex + 1) % CONFIG_CONSOLE_BUF_LEN;
+		buf->len--;
 	}
-	uint8_t b = buf->buffer[buf->rindex];
-	buf->rindex = (buf->rindex + 1) % CONFIG_CONSOLE_BUF_LEN;
-	buf->len--;
 	critical_section_exit(&critical_section);
 	return b;
 }
 
-int usbconsole_read(uint8_t *buffer, int size)
+int usbconsole_getc(uint8_t usb_num)
 {
-	if(size & 0x01)
+	int c = -1;
+	struct console_buf_t *buf = &usb_console_table[usb_num - 1].rbuf;
+	if (buf->len > 0)
 	{
-		panic("buf size");
+		c = console_buf_read(buf);
 	}
-	int written = 0;
-	for(int i = 0; i < NUM_DEV_TTY && written < size; i++)
-	{
-		struct console_buf_t *buf = &console_table[i].rbuf;
-		if (buf->len > 0)
-		{
-			buffer[0] = USB_TO_TTY(i);
-			buffer[1] = console_buf_read(buf);
-			buffer += 2;
-			written += 2;
-		}
-	}
-	return written;
+	return c;
 }
 
-extern bool usbconsole_is_writable(uint8_t minor)
+extern ttyready_t usbconsole_ready(uint8_t usb_num)
 {
-	minor = TTY_TO_USB(minor);
-	return console_table[minor].wbuf.len < CONFIG_CONSOLE_BUF_LEN;
-}
-
-extern bool usbconsole_is_available(uint8_t minor)
-{
-	minor = TTY_TO_USB(minor);
-	return minor <= NUM_DEV_TTY_USB;
-}
-
-extern void usbconsole_putc(uint8_t minor, uint8_t b)
-{
-	minor = TTY_TO_USB(minor);
-	if (minor >= NUM_DEV_TTY_USB)
+	if (usb_console_table[usb_num - 1].wbuf.len < CONFIG_CONSOLE_BUF_LEN)
 	{
-		panic("ttydev");
+		return TTY_READY_NOW;
 	}
-	struct console_buf_t *buf = &console_table[minor].wbuf;
+	return TTY_READY_SOON;
+}
+
+extern bool usbconsole_is_available(uint8_t usb_num)
+{
+	return usb_host_connected && usb_num != 0 && usb_num <= NUM_DEV_TTY_USB;
+}
+
+extern void usbconsole_putc(uint8_t usb_num, uint8_t c)
+{
+	while(usbconsole_ready(usb_num) != TTY_READY_NOW)
+	{
+		tight_loop_contents();
+	}
+	struct console_buf_t *buf = &usb_console_table[usb_num - 1].wbuf;
 	if (buf->len >= CONFIG_CONSOLE_BUF_LEN)
 	{
-		panic("ovf");
+		return;
 	}
 
-	console_buf_write(buf, b);
+	console_buf_write(buf, c);
 }
 
-extern void usbconsole_setsleep(uint8_t minor, bool sleeping)
+extern void usbconsole_sleeping(uint8_t usb_num)
 {
-	console_table[TTY_TO_USB(minor)].sleeping = sleeping;
+	usb_console_table[usb_num - 1].sleeping = true;
 }
 
-extern bool usbconsole_is_sleeping(uint8_t minor)
+
+void tud_mount_cb(void)
 {
-	return console_table[TTY_TO_USB(minor)].sleeping;
+	usb_host_connected = 1;
 }
 
-#if NUM_DEV_TTY_USB > 0
+void tud_umount_cb(void)
+{
+	usb_host_connected = 0;
+}
+
 static void core1_main(void)
 {
 	tusb_init();
@@ -148,12 +141,11 @@ static void core1_main(void)
 		all tty's will appear disconnected, which seems to be the case for pi pico
 		*/
 
-		for(int i = 0; i < CFG_TUD_CDC; i++)
+		for (int i = 0; i < CFG_TUD_CDC; i++)
 		{
-			if (tud_cdc_n_write_available(i)
-				&& console_table[i].wbuf.len)
+			if (tud_cdc_n_write_available(i) && usb_console_table[i].wbuf.len)
 			{
-				uint8_t b = console_buf_read(&console_table[i].wbuf);
+				uint8_t b = console_buf_read(&usb_console_table[i].wbuf);
 				tud_cdc_n_write_char(i, b);
 				tud_cdc_n_write_flush(i);
 			}
@@ -165,7 +157,7 @@ static void core1_main(void)
 			{
 				continue;
 			}
-			struct console_buf_t *buf = &console_table[i].rbuf;
+			struct console_buf_t *buf = &usb_console_table[i].rbuf;
 			if (buf->len < CONFIG_CONSOLE_BUF_LEN)
 			{
 				uint8_t b = tud_cdc_n_read_char(i);
@@ -174,11 +166,10 @@ static void core1_main(void)
 		}
 	}
 }
-#endif
 
 void core1_init(void)
 {
-	multicore_reset_core1();
+	//multicore_reset_core1();
 	critical_section_init(&critical_section);
 #if NUM_DEV_TTY_USB > 0
 	multicore_launch_core1(core1_main);
