@@ -24,7 +24,7 @@
 	.globl	__ashlsi3
 	.globl abort
 
-#include "kernel-8086.def"
+#include "../cpu-8086/kernel-8086.def"
 
 /*
  *	Things to be careful of
