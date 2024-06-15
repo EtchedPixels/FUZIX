@@ -1,23 +1,18 @@
-        .module devrd_hw
-
-        ; imported symbols
-        .globl map_kernel, mpgsel_cache, _kernel_pages
-        .globl _rd_plt_copy
-
         ; exported symbols
-        .globl _rd_page_copy
-        .globl _rd_cpy_count
-        .globl _rd_reverse
-        .globl _rd_dst_userspace
-        .globl _rd_dst_address
-        .globl _rd_src_address
-        .globl _devmem_read
-        .globl _devmem_write
+        .export _rd_page_copy
+        .export _rd_cpy_count
+        .export _rd_reverse
+        .export _rd_dst_userspace
+        .export _rd_dst_address
+        .export _rd_src_address
+        .export _devmem_read
+        .export _devmem_write
 
-        .include "kernel.def"
-        .include "../../cpu-z80/kernel-z80.def"
+#include "kernelu.def"
+#include "../../cpu-z80u/kernel-z80.def"
 
-        .area _CODE
+	.code
+
 _devmem_write:
         ld a, #1
         ld (_rd_reverse), a             ; 1 = write
@@ -47,7 +42,8 @@ _devmem_go:
         ld hl, #1                       ; return with HL set appropriately
         ret
 
-        .area _COMMONMEM
+	.common
+
 ;=========================================================================
 ; _rd_page_copy - Copy data from one physical page to another
 ; See notes in devrd.h for input parameters
@@ -126,16 +122,16 @@ go:
 
 ; variables
 _rd_cpy_count:
-        .dw     0                       ; uint16_t
+        .word     0                       ; uint16_t
 _rd_reverse:
-        .db     0                       ; bool
+        .byte     0                       ; bool
 _rd_dst_userspace:
-        .db     0                       ; bool
+        .byte     0                       ; bool
 _rd_dst_address:
-        .dw     0                       ; uint16_t
+        .word     0                       ; uint16_t
 _rd_src_address:
-        .db     0                       ; uint32_t
-        .db     0
-        .db     0
-        .db     0
+        .byte     0                       ; uint32_t
+        .byte     0
+        .byte     0
+        .byte     0
 ;=========================================================================

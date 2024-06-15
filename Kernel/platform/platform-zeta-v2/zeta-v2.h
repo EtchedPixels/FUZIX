@@ -4,18 +4,18 @@
 #include "config.h"
 
 #define UART0_BASE 0x68
-__sfr __at (UART0_BASE + 0) UART0_RBR;	/* receive buffer register, R/O */
-__sfr __at (UART0_BASE + 0) UART0_THR;	/* xmit holding register, W/O */
-__sfr __at (UART0_BASE + 1) UART0_IER;  /* interrupt enable register */
-__sfr __at (UART0_BASE + 2) UART0_IIR;	/* interrupt ident. register, R/O */
-__sfr __at (UART0_BASE + 2) UART0_FCR;	/* FIFO control register, W/O */
-__sfr __at (UART0_BASE + 3) UART0_LCR;	/* Line control register */
-__sfr __at (UART0_BASE + 4) UART0_MCR;	/* Modem control register */
-__sfr __at (UART0_BASE + 5) UART0_LSR;	/* Line status register */
-__sfr __at (UART0_BASE + 6) UART0_MSR;	/* Modem status register */
-__sfr __at (UART0_BASE + 7) UART0_SCR;	/* Scratch register */
-__sfr __at (UART0_BASE + 0) UART0_DLL;	/* Divisor latch - low byte */
-__sfr __at (UART0_BASE + 1) UART0_DLH;	/* Divisor latch - high byte */
+#define UART0_RBR (UART0_BASE + 0)	/* receive buffer register, R/O */
+#define UART0_THR (UART0_BASE + 0)	/* xmit holding register, W/O */
+#define UART0_IER (UART0_BASE + 1)	/* interrupt enable register */
+#define UART0_IIR (UART0_BASE + 2)	/* interrupt ident. register, R/O */
+#define UART0_FCR (UART0_BASE + 2)	/* FIFO control register, W/O */
+#define UART0_LCR (UART0_BASE + 3)	/* Line control register */
+#define UART0_MCR (UART0_BASE + 4)	/* Modem control register */
+#define UART0_LSR (UART0_BASE + 5)	/* Line status register */
+#define UART0_MSR (UART0_BASE + 6)	/* Modem status register */
+#define UART0_SCR (UART0_BASE + 7)	/* Scratch register */
+#define UART0_DLL (UART0_BASE + 0)	/* Divisor latch - low byte */
+#define UART0_DLH (UART0_BASE + 1)	/* Divisor latch - high byte */
 
 extern bool boot_from_rom;
 

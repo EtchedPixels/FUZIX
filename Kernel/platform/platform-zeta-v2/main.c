@@ -7,8 +7,8 @@
 #include <devfd.h>
 #endif
 
-extern unsigned char irqvector;
-extern uint16_t swap_dev = 0xFFFF;
+unsigned char irqvector;
+uint16_t swap_dev = 0xFFFF;
 struct blkbuf *bufpool_end = bufpool + NBUFS; /* minimal for boot -- expanded after we're done with _DISCARD */
 
 void plt_discard(void)
@@ -21,15 +21,6 @@ void plt_discard(void)
         bufpool_end->bf_dev = NO_DEVICE;
         bufpool_end++;
     }
-}
-
-void plt_idle(void)
-{
-	/* Let's go to sleep while we wait for something to interrupt us;
-	 * Makes the HALT LED go yellow, which amuses me greatly. */
-	__asm
-		halt
-	__endasm;
 }
 
 void plt_interrupt(void)

@@ -1,11 +1,11 @@
 ASRCS = crt0.S tricks.S commonmem.S zeta-v2.S monitor.S
-ASRCS += ds1302-n8vem.S devrd_zeta2_hw.S
+ASRCS += devrd_zeta2_hw.S
 CSRCS = devices.c main.c devtty.c devrd_zeta2.c
 DISCARD_CSRCS = discard.c devtty_discard.c
 DISCARD_DSRCS = ../../dev/ds1302_discard.c ../../dev/tinyide_discard.c ../../dev/tinydisk_discard.c
 DSRCS = ../../dev/devfd.c ../../dev/tinydisk.c ../../dev/tinyide.c
 DSRCS += ../../dev/ds1302.c ../../dev/devrd.c ../../dev/tinyide_ppide_rbc.c
-DASRCS = ../../dev/devfd_hw.S ../../dev/devrd_hw.S
+DASRCS = ../../dev/devfd_hw.S ../../dev/devrd_hw.S ../../dev/ds1302_rbc.S
 
 AOBJS = $(ASRCS:.S=.o)
 COBJS = $(CSRCS:.c=.o)

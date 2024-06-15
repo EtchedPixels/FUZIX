@@ -3,7 +3,7 @@
         .export init_from_rom
         .export _boot_from_rom
 
-#include "kernel.def"
+#include "kernelu.def"
 
         ; startup code
 	.code

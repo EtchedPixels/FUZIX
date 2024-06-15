@@ -10,7 +10,7 @@
 #define UART_16550A 4			/* 16550A and clones */
 
 #define UART_CLOCK 1843200UL
-void tty_putc(uint8_t minor, unsigned char c);
+void tty_putc(uint_fast8_t minor, uint_fast8_t c);
 void tty_pollirq_uart0(void);
 void uart0_init(void);
 

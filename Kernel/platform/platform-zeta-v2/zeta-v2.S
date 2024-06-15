@@ -28,7 +28,7 @@
 	.export inchar
 	.export outchar
 
-#include "kernel.def"
+#include "kernelu.def"
 #include "../../cpu-z80u/kernel-z80.def"
 
 ;=========================================================================

@@ -30,16 +30,16 @@ uint16_t divisor_table[16] = {
 	UART_CLOCK / 16 / 57600, UART_CLOCK / 16 / 115200
 };
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
 	uint16_t b;
-	uint8_t lcr = 0;
+	uint_fast8_t lcr = 0;
 	if (minor == 1) {
 		b = ttydata[minor].termios.c_cflag & CBAUD;
 		if (boot_from_rom && b > 0 && b < 16) {
-			UART0_LCR = 0x80;	/* LCR = DLAB ON */
-			UART0_DLL = divisor_table[b] & 0xFF;
-			UART0_DLH = divisor_table[b] >> 8;
+			out(UART0_LCR, 0x80);	/* LCR = DLAB ON */
+			out(UART0_DLL, divisor_table[b] & 0xFF);
+			out(UART0_DLH, divisor_table[b] >> 8);
 		}
 		/* word length 5(00), 6(01), 7(10), or 8(11) */
 		lcr = (ttydata[minor].termios.c_cflag & CSIZE) >> 4;
@@ -49,16 +49,16 @@ void tty_setup(uint8_t minor, uint8_t flags)
 		lcr |= (ttydata[minor].termios.c_cflag & PARENB) >> 5;
 		/* parity odd(0), or even(1) */
 		lcr |= ((ttydata[minor].termios.c_cflag & PARODD) ^ PARODD) >> 5;
-		UART0_LCR = lcr;
-		UART0_MCR = 0x03; /* DTR = ON, RTS = ON */
+		out(UART0_LCR, lcr);
+		out(UART0_MCR, 0x03); /* DTR = ON, RTS = ON */
 	}
 }
 
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
-	uint8_t c;
+	uint_fast8_t c;
 	if (minor == 1) {
-		c = UART0_MSR;
+		c = in(UART0_MSR);
 		return (c & 0x80) ? 1 : 0; /* test DCD */
 	}
 	return 1;
@@ -66,10 +66,10 @@ int tty_carrier(uint8_t minor)
 
 void tty_pollirq_uart0(void)
 {
-	uint8_t iir, msr, lsr;
+	uint_fast8_t iir, msr, lsr;
 	while (true) {
-		iir = UART0_IIR;
-		lsr = UART0_LSR;
+		iir = in(UART0_IIR);
+		lsr = in(UART0_LSR);
 		/* IRR bits
 		 * 3 2 1 0
 		 * -------
@@ -83,7 +83,7 @@ void tty_pollirq_uart0(void)
 		switch (iir & 0x0F) {
 		case 0x0: /* MSR changed */
 		case 0x2: /* transmit register empty */
-			msr = UART0_MSR;
+			msr = in(UART0_MSR);
 			if ((msr & 0x10) && (lsr & 0x20)){
 				/* CTS high, transmit reg empty */
 				tty_outproc(1);
@@ -91,13 +91,13 @@ void tty_pollirq_uart0(void)
 			/* fall through */
 		case 0x6: /* LSR changed */
 			/* we already read the LSR register so int has cleared */
-			UART0_IER = 0x01; /* enable only receive interrupts */
+			out(UART0_IER, 0x01); /* enable only receive interrupts */
 			break;
 		case 0x4: /* receive (FIFO >= threshold) */
 		case 0xC: /* receive (timeout waiting for FIFO to fill) */
 			while (lsr & 0x01) { /* Data ready */
-				tty_inproc(1, UART0_RBR);
-				lsr = UART0_LSR;
+				tty_inproc(1, in(UART0_RBR));
+				lsr = in(UART0_LSR);
 			}
 			break;
 		default:
@@ -106,33 +106,33 @@ void tty_pollirq_uart0(void)
 	}
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
 	if (minor == 1) {
-		while(!(UART0_LSR & 0x20));	/* FIXME */
-		UART0_THR = c;
+		while(!(in(UART0_LSR) & 0x20));	/* FIXME */
+		out(UART0_THR, c);
 	}
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
 	if (minor == 1) {
-		UART0_IER = 0x0B; /* enable all but LSR interrupt */
+		out(UART0_IER, 0x0B); /* enable all but LSR interrupt */
 	}
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }
 
-ttyready_t tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
-	uint8_t c;
+	uint_fast8_t c;
 	if (minor == 1) {
-		c = UART0_MSR;
+		c = in(UART0_MSR);
 		if ((ttydata[1].termios.c_cflag & CRTSCTS) && (c & 0x10) == 0) /* CTS not asserted? */
 			return TTY_READY_LATER;
-		c = UART0_LSR;
+		c = in(UART0_LSR);
 		if (c & 0x20) /* THRE? */
 			return TTY_READY_NOW;
 		return TTY_READY_SOON;
@@ -141,7 +141,7 @@ ttyready_t tty_writeready(uint8_t minor)
 }
 
 /* kernel writes to system console -- never sleep! */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
     tty_putc(TTYDEV - 512, c);
     if(c == '\n')
