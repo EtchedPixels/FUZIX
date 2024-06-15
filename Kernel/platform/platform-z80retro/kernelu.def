@@ -2,7 +2,7 @@
 
 #define U_DATA__TOTALSIZE	0x200	; 256+256 bytes
 
-#define Z80_MMU_HOOKS		0
+#undef Z80_MMU_HOOKS
 
 #define CONFIG_SWAP
 
