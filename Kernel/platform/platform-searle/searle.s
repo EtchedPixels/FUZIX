@@ -35,7 +35,7 @@ Z80_TYPE .equ 0 ; CMOS
 
 Z80_MMU_HOOKS .equ 0
 
-CONFIG_SWAP .equ 1
+
 
 PROGBASE .equ 0x0000
 PROGLOAD .equ 0x0100
