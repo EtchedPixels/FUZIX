@@ -72,6 +72,8 @@ static void ide_identify(int dev, uint8_t *buf)
 		ide_write(cmd, 0xEF);
 	}
 #endif
+	if (ide_wait_nbusy() == -1)
+		return;
 	if (ide_wait_drdy() == -1)
 		return;
 	ide_write(cmd, 0xEC);	/* Identify */
