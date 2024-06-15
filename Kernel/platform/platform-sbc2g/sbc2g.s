@@ -72,7 +72,7 @@ Z80_MMU_HOOKS .equ 0
 ;
 ; Set this if the platform has swap enabled in config.h
 ;
-CONFIG_SWAP .equ 1
+
 ;
 ; The number of disk buffers. Must match config.h
 ;

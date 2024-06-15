@@ -46,7 +46,7 @@ Z80_MMU_HOOKS .equ 0
 ;
 ; Set this if the platform has swap enabled in config.h
 ;
-CONFIG_SWAP .equ 1
+
 ;
 ; The number of disk buffers. Must match config.h
 ;
@@ -120,7 +120,6 @@ __uputc:
  ld l,a
  call map_proc_always
  ld (hl), e
-uputc_out:
  jp map_kernel ; map the kernel back below common
 
 __uputw:
@@ -191,26 +190,32 @@ __uget:
 
 ;
 __uzero:
- pop de ; return
- pop hl ; address
- pop bc ; size
+ ld hl,2
+ add hl,sp
  push bc
- push hl
- push de
+ ld e,(hl)
+ inc hl
+ ld d,(hl)
+ inc hl
+ ld c,(hl)
+ inc hl
+ ld b,(hl)
  ld a, b ; check for 0 copy
  or c
- ret z
+ jr z, popout
  call map_proc_always
+ ld l,e
+ ld h,d
  ld (hl), 0
  dec bc
  ld a, b
  or c
- jp z, uputc_out
- ld e, l
- ld d, h
+ jr z, popout
  inc de
  ldir
- jp uputc_out
+popout:
+ pop bc
+ jp map_kernel
 # 21 "tricks.S" 2
 ;
 ; The when it all works you can consider following this example and
@@ -243,7 +248,7 @@ __uzero:
 ; This function can have no arguments or auto variables.
 ;
 _plt_switchout:
-        ld hl, #0 ; return code set here is ignored, but _switchin can
+        ld hl, 0 ; return code set here is ignored, but _switchin can
         ; return from either _switchout OR _dofork, so they must both write
         ; 14 with the following on the stack:
         push hl ; return code
@@ -268,9 +273,9 @@ _plt_switchout:
 
  ; Stash the uarea back into process memory
  call map_proc_always
- ld hl, #_udata
- ld de, #U_DATA_STASH
- ld bc, #U_DATA__TOTALSIZE
+ ld hl, _udata
+ ld de, U_DATA_STASH
+ ld bc, U_DATA__TOTALSIZE
  ldir
  call map_kernel
 
@@ -298,7 +303,7 @@ _switchin:
         push de ; restore stack
         push bc ; restore stack
 
- ld a,#1
+ ld a,1
  ld (_int_disabled),a
 
 ;
@@ -306,9 +311,48 @@ _switchin:
 ;
  call map_kernel
 
-        ld hl, #15
+        ld hl, 15
  add hl, de ; process ptr
-# 129 "../../lib/z80ufixedbank-core.s"
+
+
+ ;
+ ; Always use the swapstack, otherwise when we call map_kernel
+ ; having copied the udata stash back to udata we will crap
+ ; somewhere up the stackframe and it's then down to luck
+ ; if those bytes are discarded or not.
+ ;
+ ; Yes - this was a bitch to debug, please don't break it !
+ ;
+ ld sp, _swapstack
+
+        ld a, (hl)
+
+ or a
+ jr nz, not_swapped
+
+ ;
+ ; Re-enable interrupts while we swap. This is ok because
+ ; we are not on the IRQ stack when switchin is invoked.
+ ;
+ ; There are two basic cases
+ ; #1: pre-emption. Not in a system call, must avoid
+ ; re-entering pre-emption logic, Z80 lowlevel code sets U_INSYS
+ ; #2: kernel syscall. Also protected by 6
+ ;
+ ei
+ xor a
+ ld (_int_disabled),a
+ push hl
+ push de
+ push de
+ call _swapper
+ pop de
+ pop de ; Save an extra copy as C uses the argument stack slot
+ pop hl
+ ld a,1
+ ld (_int_disabled),a
+ di
+
  ld a, (hl)
 not_swapped:
  push hl
@@ -327,9 +371,9 @@ not_swapped:
  ; to carry values over this point
 
  exx ; thank goodness for exx 8)
- ld hl, #U_DATA_STASH
- ld de, #_udata
- ld bc, #U_DATA__TOTALSIZE
+ ld hl, U_DATA_STASH
+ ld de, _udata
+ ld bc, U_DATA__TOTALSIZE
  ldir
  exx
 
@@ -348,14 +392,14 @@ skip_copyback:
  ; wants optimising up a bit
  ld ix, (_udata + 0)
         ; next_process->p_status = 1
-        ld (ix + 0), #1
+        ld (ix + 0), 1
 
  ; Fix the moved page pointers
  ; Just do one byte as that is all we use on this platform
  ld a, (ix + 15)
  ld (_udata + 2), a
         ; runticks = 0
-        ld hl, #0
+        ld hl, 0
         ld (_runticks), hl
 
         ; restore machine state -- note we may be returning from either
@@ -391,7 +435,7 @@ skip_copyback:
 
 switchinfail:
  call outhl
-        ld hl, #badswitchmsg
+        ld hl, badswitchmsg
         call outstring
  ; something went wrong and we didn't switch in what we asked for
         jp _plt_monitor
@@ -417,7 +461,7 @@ _dofork:
         ld (fork_proc_ptr), hl
 
         ; prepare return value in parent process -- HL = p->p_pid;
-        ld de, #3
+        ld de, 3
         add hl, de
         ld a, (hl)
         inc hl
@@ -459,7 +503,7 @@ _dofork:
         ; --------- copy process ---------
 
         ld hl, (fork_proc_ptr)
-        ld de, #15
+        ld de, 15
         add hl, de
         ; load p_page
         ld c, (hl)
@@ -469,6 +513,7 @@ _dofork:
  ; FIXME: We will redefine this to expect udata as parent and (hl)
  ; as child so it's also clean for multibank. For now just make
  ; sure HL happens to be right
+ ; bankfork must preserve ix and iy
  call bankfork ; do the bank to bank copy
 
  ; Copy done
@@ -478,9 +523,9 @@ _dofork:
  ; We are going to copy the uarea into the parents uarea stash
  ; we must not touch the parent uarea after this point, any
  ; changes only affect the child
- ld hl, #_udata ; copy the udata from common into the
- ld de, #U_DATA_STASH ; target process
- ld bc, #U_DATA__TOTALSIZE
+ ld hl, _udata ; copy the udata from common into the
+ ld de, U_DATA_STASH ; target process
+ ld bc, U_DATA__TOTALSIZE
  ldir
  ; Return to the kernel mapping
  call map_kernel
@@ -495,7 +540,7 @@ _dofork:
  pop af ; and the pid
 
         ; Make a new process table entry, etc.
- ld hl,#_udata
+ ld hl,_udata
  push hl
         ld hl, (fork_proc_ptr)
         push hl
@@ -504,7 +549,7 @@ _dofork:
  pop af
 
         ; runticks = 0;
-        ld hl, #0
+        ld hl, 0
         ld (_runticks), hl
         ; in the child process, fork() returns zero.
  ;
