@@ -9,7 +9,7 @@
 	.globl devide_read_data
 	.globl devide_write_data
 
-#include "../kernel-8086.def"
+#include "../cpu-8086/kernel-8086.def"
 
 init_early:
 program_vectors:

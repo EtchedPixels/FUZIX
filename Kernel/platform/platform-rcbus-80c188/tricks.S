@@ -1,4 +1,4 @@
-#include "../kernel-8086.def"
+#include "../cpu-8086/kernel-8086.def"
 
 	.arch i8086,jumps
 	.code16
