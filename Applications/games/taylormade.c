@@ -17,9 +17,9 @@
 /* Machines we can handle the full largkve text on. We can probably fix this
    on the others by paging the long texts from disk, especially as they
    are uncompressed format */
-#if defined(__linux__) || defined(__mc68000__) || defined (__ns32k__) || defined(__ARM_EABI__) || defined(__riscv) || defined(__i86)
+#if defined(__linux__) || defined(__mc68000__) || defined (__ns32k__) || defined(__ARM_EABI__) || defined(__riscv)
 #define LOAD_ALL
-#define LOAD_SIZE	0x4D00
+#define LOAD_SIZE	0x4D00U
 #endif
 
 /* Work relative to end of video */

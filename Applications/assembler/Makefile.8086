@@ -1,0 +1,5 @@
+# No 8086 support yet
+
+all:
+
+clean:
