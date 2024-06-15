@@ -17,8 +17,8 @@
 uint8_t rtc_shadow;			/* so we can stop the rtc messing us up */
 __sfr __at 0x88 rtc_latch;
 
-#define CSIO_CNTR_TE           (1<<4)   /* transmit enable */
-#define CSIO_CNTR_RE           (1<<5)   /* receive enable */
+#define CSIO_CNTR_TE           (1<<4)   /* tx enable */
+#define CSIO_CNTR_RE           (1<<5)   /* rx enable */
 #define CSIO_CNTR_END_FLAG     (1<<7)   /* operation completed flag */
 
 /* the CSI/O and SD card send the bits of each byte in opposite orders, so we need to flip them over */
@@ -93,36 +93,36 @@ void sd_spi_lower_cs(void)
     rtc_config(0x04, 0x04);
 }
 
-void sd_spi_transmit_byte(unsigned char byte)
+void sd_spi_tx_byte(unsigned char byte)
 {
     unsigned char c;
 
     /* reverse the bits before we busywait */
     byte = reverse_byte(byte);
 
-    /* wait for any current transmit operation to complete */
+    /* wait for any current tx operation to complete */
     do{
         c = CSIO_CNTR;
     }while(c & CSIO_CNTR_TE);
 
-    /* write the byte and enable transmitter */
+    /* write the byte and enable txter */
     CSIO_TRDR = byte;
     CSIO_CNTR = c | CSIO_CNTR_TE;
 }
 
-uint8_t sd_spi_receive_byte(void)
+uint8_t sd_spi_rx_byte(void)
 {
     unsigned char c;
 
-    /* wait for any current transmit or receive operation to complete */
+    /* wait for any current tx or rx operation to complete */
     do{
         c = CSIO_CNTR;
     }while(c & (CSIO_CNTR_TE | CSIO_CNTR_RE));
 
-    /* enable receive operation */
+    /* enable rx operation */
     CSIO_CNTR = c | CSIO_CNTR_RE;
 
-    /* wait for receive to complete */
+    /* wait for rx to complete */
     while(CSIO_CNTR & CSIO_CNTR_RE);
 
     /* read byte */
@@ -136,9 +136,9 @@ uint8_t sd_spi_receive_byte(void)
 COMMON_MEMORY
 
 /* WRS: measured byte transfer time as approx 5.66us with Z180 @ 36.864MHz,
-   three times faster. Main change is to start the next receive operation 
-   as soon as possible and overlap the loop housekeeping with the receive. */
-bool sd_spi_receive_sector(uint8_t *data) __naked
+   three times faster. Main change is to start the next rx operation 
+   as soon as possible and overlap the loop housekeeping with the rx. */
+bool sd_spi_rx_sector(uint8_t *data) __naked
 {
     __asm
 waitrx: 
@@ -146,10 +146,10 @@ waitrx:
         pop de
         push de			; address
         push bc
-        in0 a, (_CSIO_CNTR)     ; wait for any current transmit or receive operation to complete
+        in0 a, (_CSIO_CNTR)     ; wait for any current tx or rx operation to complete
         tst a, #0x30
         jr nz, waitrx
-        set 5, a                ; set CSIO_CNTR_RE, enable receive operation for first byte
+        set 5, a                ; set CSIO_CNTR_RE, enable rx operation for first byte
         out0 (_CSIO_CNTR), a
         ld h, a                 ; stash value for reuse later
 
@@ -181,9 +181,9 @@ waitrx2:
         ld c, #_CSIO_CNTR       ; load IO port address
 waitrx3:
         tstio #0x20             ; test bits in IO port (C)
-        jr nz, waitrx3          ; wait for receive to complete
-        in0 a, (_CSIO_TRDR)     ; load received byte
-        out0 (_CSIO_CNTR), h    ; start next receive (or NOP, if this is the final byte)
+        jr nz, waitrx3          ; wait for rx to complete
+        in0 a, (_CSIO_TRDR)     ; load rxd byte
+        out0 (_CSIO_CNTR), h    ; start next rx (or NOP, if this is the final byte)
         ld c, l                 ; restore C
         ; reverse bits in A
         ld l,a    ; a = 76543210
@@ -208,7 +208,7 @@ waitrx3:
     __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t *data) __naked
+bool sd_spi_tx_sector(uint8_t *data) __naked
 {
     __asm
         ; load parameters
@@ -223,16 +223,16 @@ bool sd_spi_transmit_sector(uint8_t *data) __naked
         jr nz, not_swapout
         ld a,(_td_page)
         call map_for_swap
-        jr gotransmit
+        jr gotx
 not_swapout:
 #endif
         or a
         jr z, wr_kernel
         call map_proc_always             ; map user process
-        jr gotransmit
+        jr gotx
 wr_kernel:
         call map_buffers
-gotransmit:
+gotx:
         in0 a, (_CSIO_CNTR)
         and #0xDF               ; mask off RE bit
         or #0x10                ; set TE bit
@@ -257,15 +257,15 @@ txnextbyte:
         ld c, #_CSIO_CNTR       ; load IO port address
 waittx: 
         tstio #0x10             ; test bits in IO port (C)
-        jr nz, waittx           ; wait for transmit to complete
-        out0 (_CSIO_TRDR), a    ; write byte to transmit
-        out0 (_CSIO_CNTR), b    ; start transmit
+        jr nz, waittx           ; wait for tx to complete
+        out0 (_CSIO_TRDR), a    ; write byte to tx
+        out0 (_CSIO_CNTR), b    ; start tx
         inc de                  ; ptr++
         dec hl                  ; length--
         ld a, h
         or l
         jr nz, txnextbyte       ; length != 0, go again
-transferdone:                   ; note this code is shared with sd_spi_receive_block
+transferdone:                   ; note this code is shared with sd_spi_rx_block
         ld l, #1                ; return true
         jp map_kernel_restore   ; map kernel and return
     __endasm;
