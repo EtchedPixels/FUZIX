@@ -429,14 +429,14 @@ sci_txe:
 
 	.globl spi_select_port
 	.globl spi_select_none
-	.globl sd_spi_transmit_byte
-	.globl sd_spi_receive_byte
+	.globl sd_spi_tx_byte
+	.globl sd_spi_rx_byte
 	.globl sd_spi_raise_cs
 	.globl sd_spi_lower_cs
 	.globl sd_spi_fast
 	.globl sd_spi_slow
-	.globl sd_spi_transmit_sector
-	.globl sd_spi_receive_sector
+	.globl sd_spi_tx_sector
+	.globl sd_spi_rx_sector
 
 ;
 ;	Select the Wiznet or other device
@@ -468,14 +468,14 @@ sd_spi_raise_cs:
 	bset 0x08,x 0x20
 
 ;
-;	Send 0xFF and receive a byte
+;	Send 0xFF and rx a byte
 ;
-sd_spi_receive_byte:
+sd_spi_rx_byte:
 	ldab #0xFF
 ;
 ;	Send a byte and return the resulting reply
 ;
-sd_spi_transmit_byte:
+sd_spi_tx_byte:
 	ldx #IOBASE
 	stab 0x2A,x		; Write to data starts the transfer
 sendwt:
@@ -503,7 +503,7 @@ sd_spi_fast:
 ;
 ;	TODO interrupt save/restore correctly
 ;
-sd_spi_transmit_sector:
+sd_spi_tx_sector:
 	xgdy			; pointer into Y
 	tpa
 	psha			; Save int flag
@@ -544,7 +544,7 @@ txw2:
 	rts
 
 ; Same stack care needed
-sd_spi_receive_sector:
+sd_spi_rx_sector:
 	xgdy			; pointer into Y
 	tpa
 	psha

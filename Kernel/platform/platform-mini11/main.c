@@ -85,13 +85,13 @@ static void spi_transaction(uint8_t ctrl, uint16_t off,
 {
 	irqflags_t irq = di();
 	spi_select_port(2);
-	sd_spi_transmit_byte(off >> 8);
-	sd_spi_transmit_byte(off);
-	sd_spi_transmit_byte(ctrl);
+	sd_spi_tx_byte(off >> 8);
+	sd_spi_tx_byte(off);
+	sd_spi_tx_byte(ctrl);
 	while(outlen--)
-		sd_spi_transmit_byte(*out++);
+		sd_spi_tx_byte(*out++);
 	while(inlen--)
-		*in++ = sd_spi_receive_byte();
+		*in++ = sd_spi_rx_byte();
 	spi_select_none();
 	irqrestore(irq);
 }
@@ -101,13 +101,13 @@ static void spi_transaction_u(uint8_t ctrl, uint16_t off,
 {
 	irqflags_t irq = di();
 	spi_select_port(2);
-	sd_spi_transmit_byte(off >> 8);
-	sd_spi_transmit_byte(off);
-	sd_spi_transmit_byte(ctrl);
+	sd_spi_tx_byte(off >> 8);
+	sd_spi_tx_byte(off);
+	sd_spi_tx_byte(ctrl);
 	while(outlen--)
-		sd_spi_transmit_byte(_ugetc(out++));
+		sd_spi_tx_byte(_ugetc(out++));
 	while(inlen--)
-		_uputc(sd_spi_receive_byte(), in++);
+		_uputc(sd_spi_rx_byte(), in++);
 	spi_select_none();
 	irqrestore(irq);
 }
