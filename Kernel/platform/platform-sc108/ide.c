@@ -17,6 +17,7 @@ void devide_read_data(uint8_t *data) __naked
             pop hl
             push hl
             push de
+            push bc
             ld a, (_td_raw)
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
@@ -36,6 +37,7 @@ not_swapin:
             out (0x38),a
             rlca
             out (0x30),a
+            pop bc
             ret
     __endasm;
 }
@@ -47,6 +49,7 @@ void devide_write_data(uint8_t *data) __naked
             pop hl
             push hl
             push de
+            push bc
             ld a, (_td_raw)
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
@@ -66,6 +69,7 @@ not_swapout:
             out (0x38),a
             rlca
             out (0x30),a
+            pop bc
             ret
     __endasm;
 }
