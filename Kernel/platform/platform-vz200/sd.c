@@ -20,15 +20,15 @@ void sd_spi_lower_cs(void)
   spiconf = spicf;
 }
 
-void sd_spi_transmit_byte(uint8_t v)
+void sd_spi_tx_byte(uint8_t v)
 {
   spidata = v;
 }
 
-uint8_t sd_spi_receive_byte(void)
+uint8_t sd_spi_rx_byte(void)
 {
   uint8_t v;
-  sd_spi_transmit_byte(0xFF);
+  sd_spi_tx_byte(0xFF);
   return spidata;
 }
 
@@ -41,7 +41,7 @@ void sd_spi_clock(bool go_fast)
 
 COMMON_MEMORY
 
-bool sd_spi_receive_sector(uint8_t *ptr) __naked
+bool sd_spi_rx_sector(uint8_t *ptr) __naked
 {
   __asm
     pop bc
@@ -73,7 +73,7 @@ readl:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t *ptr) __naked
+bool sd_spi_tx_sector(uint8_t *ptr) __naked
 {
   __asm
     pop bc

@@ -112,3 +112,5 @@ extern unsigned char vt_mangle_6847(unsigned char c);
    implies, instead we need to fiddle with ei during preboot */
 
 #define CONFIG_SOFT_IRQ
+
+#define CONFIG_SMALL
