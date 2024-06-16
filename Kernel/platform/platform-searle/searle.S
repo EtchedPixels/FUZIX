@@ -428,6 +428,7 @@ syscall_platform:
 	push ix
 	ld ix, 0
 	add ix,sp
+	push iy
 	push bc
 	ld c,(ix + 6)
 	ld b,(ix + 7)
@@ -466,6 +467,7 @@ syscall_platform:
 	; FIXME for now do the grungy C flag HL DE stuff from
 	; lowlevel-z80 until we fix the ABI
 	pop bc
+	pop iy
 	ld a,h
 	or l
 	jr nz, error

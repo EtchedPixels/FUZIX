@@ -545,6 +545,7 @@ syscall_platform:
 	push ix
 	ld ix, 0
 	add ix,sp
+	push iy
 	push bc
 	ld c,(ix + 6)
 	ld b,(ix + 7)
@@ -587,6 +588,7 @@ bankpatch4:
 	cp h
 	call nz, syscall_sigret
 	pop bc
+	pop iy
 	ld a,h
 	or l
 	jr nz, error

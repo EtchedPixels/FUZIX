@@ -427,6 +427,7 @@ syscall_high:
 	push ix
 	ld ix, 0
 	add ix,sp
+	push iy
 	push bc
 	ld c,(ix + 6)
 	ld b,(ix + 7)
@@ -459,6 +460,7 @@ syscall_high:
 	cp h
 	call nz, syscall_sigret
 	pop bc
+	pop iy
 	ld a,h
 	or l
 	jr nz, error

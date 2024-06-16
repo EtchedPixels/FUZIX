@@ -794,6 +794,7 @@ syscall_platform:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
+	    push iy
 	    push bc
 	    ld c,6(ix)
 	    ld b,7(ix)
@@ -830,16 +831,16 @@ syscall_platform:
 	    call nz, syscall_sigret
 	    ; FIXME for now do the grungy C flag HL DE stuff from
 	    ; lowlevel-z80 until we fix the ABI
+	    pop bc
+	    pop iy
 	    ld a,h
 	    or l
 	    jr nz, error
 	    ex de,hl
-	    pop bc
 	    pop ix
 	    ei
 	    ret
 error:	    scf
-	    pop bc
 	    pop ix
 	    ei
 	    ret

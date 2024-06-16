@@ -549,6 +549,7 @@ syscall_platform:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
+	    push iy
 	    push bc
 	    ld c,6(ix)
 	    ld b,7(ix)
@@ -572,6 +573,7 @@ syscall_platform:
 	    ld a,(syscall_stash)
 	    call unix_syscall_entry
 	    ; FIXME check di rules
+	    pop iy
 	    push bc
 	    ld b,a
 	    in a,(251)
