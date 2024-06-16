@@ -19,10 +19,10 @@
 	.globl	_sd_spi_fast
 	.globl	_sd_spi_raise_cs
 	.globl	_sd_spi_lower_cs
-	.globl	_sd_spi_receive_byte
-	.globl	_sd_spi_transmit_byte
-	.globl	_sd_spi_receive_sector
-	.globl	_sd_spi_transmit_sector
+	.globl	_sd_spi_rx_byte
+	.globl	_sd_spi_tx_byte
+	.globl	_sd_spi_rx_sector
+	.globl	_sd_spi_tx_sector
 
 	.globl	_gpio
 	.globl	_td_raw
@@ -62,7 +62,7 @@ _sd_spi_raise_cs:
 	ld	(_gpio),a
 	out	(0x10),a
 	; Fall through
-_sd_spi_receive_byte:
+_sd_spi_rx_byte:
 	ld	a,#1
 	ld	(_sd_busy),a
 	ld	a,(_gpio)
@@ -137,7 +137,7 @@ sd_rx:
 ;
 ;	Byte to send is in L
 ;
-_sd_spi_transmit_byte:
+_sd_spi_tx_byte:
 	ld	a,#1
 	ld	(_sd_busy),a
 
@@ -216,7 +216,7 @@ _sd_spi_transmit_byte:
 	ld	(_sd_busy),a
 	ret
 
-_sd_spi_receive_sector:
+_sd_spi_rx_sector:
 	push	ix
 	push	hl
 	pop	ix
@@ -232,8 +232,8 @@ _sd_spi_receive_sector:
 rx_user:
 	call	map_proc_always
 rx_byte:
-	call	_sd_spi_receive_byte
-	;	Mark the SD busy (sd_spi_receive_byte marked it idle
+	call	_sd_spi_rx_byte
+	;	Mark the SD busy (sd_spi_rx_byte marked it idle
 	;	and keep it busy while we burst the block. It's a trade
 	;	off versus slower I/O
 	ld	a,#1
@@ -257,7 +257,7 @@ rx_loop:
 	ld	(_sd_busy),a
 	jp	map_kernel
 
-_sd_spi_transmit_sector:
+_sd_spi_tx_sector:
 	push	ix
 	push	hl
 	pop	ix
@@ -275,10 +275,10 @@ tx_user:
 tx_byte:
 	ld	l,(ix)
 	inc	ix
-	call	_sd_spi_transmit_byte
+	call	_sd_spi_tx_byte
 	ld	l,(ix)
 	inc	ix
-	call	_sd_spi_transmit_byte
+	call	_sd_spi_tx_byte
 	djnz	tx_byte
 	pop	ix
 	jp	map_kernel
