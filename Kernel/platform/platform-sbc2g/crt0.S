@@ -2,8 +2,6 @@
 		.code
 
 		; Load at 0x0100
-		; We are executed from ROMWBW so we live in bank 14/15
-		; with the HBIOS proxy at FE00
 start:
 		di
 		ld sp, kstack_top
