@@ -82,3 +82,5 @@
 #define swap_map(x)		((uint8_t *)x)
 
 #define BOOTDEVICENAMES "hd#"
+
+#define CONFIG_SMALL

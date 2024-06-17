@@ -90,3 +90,5 @@
 #define SD_SPI_CALLTYPE	__z88dk_fastcall
 
 #define BOOTDEVICENAMES "hd#,fd#"
+
+#define CONFIG_SMALL
