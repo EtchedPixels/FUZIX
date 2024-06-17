@@ -54,7 +54,7 @@ clean:
 	rm -f $(JUNK)  core *~ loader.bin
 
 image:	loader.bin
-	$(CROSS_LD) -b -C 0x0100 -S 0xF600 -f CLDBbXSs -o fuzix.bin \
+	$(CROSS_LD) -b -C 0x0100 -S 0xF400 -f CLDBbXSs -o fuzix.bin \
 	crt0.o commonmem.o sbc2g.o ../../start.o \
 	../../version.o ../../cpu-z80u/lowlevel-z80u.o \
 	../../usermem.o tricks.o main.o discard.o \
