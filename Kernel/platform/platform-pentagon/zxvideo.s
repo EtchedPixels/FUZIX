@@ -21,7 +21,7 @@
 	; Build the video library as the only driver
 
 ZXVID_ONLY	.equ	1
-SCREENBASE	.equ 0x40
+SCREENBASE	.equ 0xC0
 
         .area _VIDEO
 

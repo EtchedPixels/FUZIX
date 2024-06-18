@@ -11,7 +11,7 @@
 ;	7		CODE 3 + VIDEO + FONTS
 ;	2/5		4000-BFFF (common and user low buffer)
 ;
-;	4		Free
+;	4/6		Free
 ;	8+		Free
 ;
 
@@ -148,6 +148,44 @@ init_early:
 	out (0xFE),a
         ret
 
+	.area _COMMONMEM
+	;
+	;	Set interrupt vectors in each bank. Run from discard
+	;	so we don't page ourself out
+
+_program_vectors:
+	pop bc
+	pop de
+	pop hl			;	task page ptr
+	push hl
+	push de
+	push bc
+	ld a, (hl)		; high page of the pair
+
+setvectors:
+	call map_save_kernel
+	call switch_bank
+	ld a, #0x18
+	ld (0xffff), a		;	JR (plus ROM at 0 gives JR $FFF4)
+	ld a, #0xC3		;	JP
+	ld (0xFFF4), a		;	FFF4-6 are the interrupt vector
+	ld (0xFFF7), a		;	FFF7-9 are syscall
+	ld hl, #interrupt_handler
+	ld (0xFFF5), hl		;	to IRQ handler
+	call map_restore
+	ret
+
+setallvectors:
+	xor a			;	bank 0	(CODE 1)
+	call setvectors
+	ld a, #1		;	bank 1	(CODE 2)
+	call setvectors
+	ld a, #7		;	bank 7	(CODE 3 / VIDEO)
+	call setvectors
+	ld a, #3		;	bank 3	(CODE 4)
+	jr setvectors
+
+
 	.area _VIDEO
 
 init_hardware:
@@ -161,24 +199,17 @@ init_hardware:
 	; 2: 4000-7FFF (screen and buffers)
 	; 3: fourth kernel bank at C000
 	; 5: 8000-BFFF (working 16K copy)
-	; 6: second kernel bank at C000
 	; 7: third kernel bank at C000
 	;
         ld hl, #(256 - 96)
         ld (_procmem), hl
 
-	;
-	;	No low RAM so need IM2 and custom syscall interface
-	;	(will need to tackle that nicely in libc too)
-	;
+	; Set up the vectors on all the kernel pages
+	; user will be set up as we go
+	push af
+	call setallvectors
+	pop af
 
-	ld a,#0xC3
-	ld (0xFFFD),a
-	ld (0xFFF4),a
-	ld hl,#unix_syscall_entry
-	ld (0xFFFE),hl
-	ld hl,#interrupt_handler
-	ld (0xFFF5),hl
         ; screen initialization
 	push af
 	call _vtinit
@@ -194,9 +225,6 @@ init_hardware:
 ; COMMON MEMORY PROCEDURES FOLLOW
 
         .area _COMMONMEM
-
-_program_vectors:
-	ret
 
 	; Swap helper. Map the page in A into the address space such
 	; that swap_map() gave the correct pointer to use. Undone by

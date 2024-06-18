@@ -37,7 +37,7 @@ bool validdev(uint16_t dev)
 void device_init(void)
 {
 #ifdef CONFIG_TD_IDE
-//  ide_probe();
+  ide_probe();
 #endif
 #ifdef CONFIG_TD_SD
   sd_probe();

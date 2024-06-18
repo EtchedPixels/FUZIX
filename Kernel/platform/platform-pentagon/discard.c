@@ -10,8 +10,6 @@ extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
 void pagemap_init(void)
 {
 	uint8_t i;
-	pagemap_add(3);
-	pagemap_add(4);
 
 	/* Pentagon uses 7FFD as follows
 		7: 256K
@@ -21,11 +19,25 @@ void pagemap_init(void)
 		0: 16K
 		
 	   The 1MB one uses bit 5 for 512K */
+
 	/* Add the rest of the first 256K */
+	pagemap_add(0x04);
+	pagemap_add(0x06);
+
+	/* 128-256K */
 	for (i = 0; i < 8; i++)
 		pagemap_add(0x40|i);
-	/* If we deal with Scorpion and friends then we have to use
-	   1FFD bits 4-7 for the high bits instead */
+
+	/* TODO: enable 512K support in pentagon.s */
+	if (ramsize == 512) {
+		for (i = 0; i < 8; i++) {
+			pagemap_add(0x80|i);
+			pagemap_add(0xC0|i);
+		}
+	}
+	/* TODO: 512K is more complex.
+	   - Pentagon 512 uses bits 7/6/2/1/0
+	   - ATM uses FDFD bits 2-0 */
 }
 
 /* string.c

@@ -54,7 +54,29 @@
 	.include "kernel.def"
 	.include "../../cpu-z80/kernel-z80.def"
 
+	.area _DISCARD
+
+	; Discard starts with the initial bootstrap
+	ld bc,#0x7ffd
+	ld a,#0x14
+	out (c),a		; map the temporary buffer
+	ld hl,#0xC000
+	ld de,#0x4000
+	ld b,d
+	ld c,e
+	ldir			; into position 4000-7FFF
+
+	; Switch to bank 0	(code 1)
+	ld a,#0x08
+	ld bc,#0x7ffd
+	out (c),a
+
+	jp	go
+
+
 	.area _CODE1
+
+go:
         ; startup code
 	;
 	; Entered from the bootstrap with 0-3FFF mapped and loaded as

@@ -56,16 +56,18 @@ loader.bin: loader.s
 	dd if=loader.tmp bs=2048 skip=15 count=1 conv=sync of=loader.bin
 
 image: loader.bin
-	# Low 16K (will end up in bank 0 0000-3FFF)
-	dd if=../../common.bin bs=16384 conv=sync skip=0 count=1 of=block0
-	# Bank 1 (C000-FFFF)
+	# Common memory 4000-7FFF - bank 5
+	dd if=../../common.bin bs=16384 conv=sync skip=1 count=1 of=block0
+	# CODE1 C000-FFFF - bank 0
 	dd if=../../bank1.bin bs=16384 conv=sync skip=3 count=1 of=block1
-	# Bank 2 (8000-BFFF)
+	# Common memory 8000-BFFF - bank 2
 	dd if=../../common.bin bs=16384 conv=sync skip=2 count=1 of=block2
-	# Bank 6 (C000-FFFF)
+	# CODE2 C000-FFFF - bank 6
 	dd if=../../bank2.bin bs=16384 conv=sync skip=3 count=1 of=block3
-	# Bank 7 (C000-FFFF)
+	# CODE3 C000-FFFF - bank 7 (video)
 	dd if=../../bank3.bin bs=16384 conv=sync skip=3 count=1 of=block4
+	# CODE4 C000-FFFF - bank 3
+	dd if=../../bank4.bin bs=16384 conv=sync skip=3 count=1 of=block5
 
 	cp base-image.trd fuzix.trd
 	# Insert 4K loader
@@ -76,6 +78,7 @@ image: loader.bin
 	../../tools/trdify fuzix.trd BLOCK2 block2
 	../../tools/trdify fuzix.trd BLOCK3 block3
 	../../tools/trdify fuzix.trd BLOCK4 block4
+	../../tools/trdify fuzix.trd BLOCK5 block5
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 

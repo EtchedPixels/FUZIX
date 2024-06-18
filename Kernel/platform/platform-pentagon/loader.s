@@ -4,6 +4,16 @@
 ;	The disk holds files of the format code{n} where n is the bank to
 ;	place it in. TRDOS is asked to load the lot and then we launch
 ;
+;	The on disk layout is
+;
+;	16K common	(0x4000-0x7FFF)		Bank 5 (loaded via 4)
+;	16K bank	(0xC000-0xFFFF)		Bank 0	(CODE1)
+;	16K common	(0x8000-0xBFFF)		Bank 2
+;	16K bank	(0xC000-0xFFFF)		Bank 1	(CODE2)
+;	16K bank	(0xC000-0xFFFF)		Bank 7  (CODE3)
+;	16K bank	(0xC000-0xFFFF)		Bank 3  (CODE4)
+;
+;
 
 		.module loader
 		.area CODE(ABS)
@@ -11,39 +21,34 @@
 
 start:
 		ld sp,#start
-		xor a
+
+		ld a,#4			; common 4000-7FFF temporary copy
 		ld de,#0x0109
-		call trdos		; bank 0	(will appear at 0x0000)
-		inc a
+		call trdos
+
+		xor a			; code 1 into bank 0
 		ld de,#0x0509
-		call trdos		; bank 1	(high bank CODE1)
-		inc a
+		call trdos
+
+		ld a,#2			; common 8000-BFFF into bank 2
 		ld de,#0x0909
-		call trdos		; bank 2	(0x8000-0xBFFF bank)
-		ld a,#6
+		call trdos
+
+		ld a,#1			; code 2 into bank 1
 		ld de,#0x0D09
-		call trdos		; bank 6	(high bank CODE2)
-		inc a
+		call trdos
+
+		ld a,#7			; code  3 into bank 7
 		ld de,#0x1109
-		call trdos		; bank 7	(high bank CODE3)
+		call trdos
+
+		ld a,#3			; code 4 into bank 3
+		ld de,#0x1509
+		call trdos
 
 		di
-		; Turn off low ROM
-		; Some older systems want 0x1FFD bit 0 instead FIXME
-		ld bc,#0xeff7
-		ld a,#0x08
-		out (c),a
-		; The kernel is loaded into 1,6,7
-		; The low memory is loaded into bank 0
-		; The 8000-BFFF range is loaded by the loader
-		; The 4000-7FFF range is zero
 
-		; Switch ROM for bank 0
-		ld a,#0x01
-		ld bc,#0x7ffd
-		out (c),a
-		; FIXME - where is best to start up
-		jp 0xC000
+		jp 0x8400		; into loaded bootstrap
 
 trdos:
 		; Switch bank

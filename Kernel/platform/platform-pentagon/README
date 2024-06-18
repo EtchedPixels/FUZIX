@@ -11,7 +11,7 @@ Then it gets more complicated (and the partial decode ports make it worse)
 
 Pentagon uses bits 7/6 to allow for 512K RAM
 
-ATM us FDFD bits 0-2
+ATM uses FDFD bits 0-2
 
 ----
 These machines all have the same basic problem, there is a 16K window at
@@ -25,16 +25,18 @@ We run with the following mapping
 8400-BFFF	_DISCARD area - blown away when we exec init
 		(tons of room in this space)
 C000-FFFF
-	0:	Kernel CODE4 (lot of room)
-	1:	Kernel CODE (fairly full)
+	0:	Kernel CODE1
+	1:	Kernel CODE2
 	2:	Mapped at 0x8000-0xBFFF (holds current process copy)
-	3:	User process
+	3:	kernel CODE4
 	4:	User process
 	5:	Mapped at 0x4000-0x7FFF (kernel data/common)
-	6:	Kernel CODE2 (fairly full)
-	7:	CODE3, Video (fairly full)
+	6:	User process
+	7:	Kernel CODE3, Video
+	8-15:	User process
+	(32-63: User process on 512K machine)
 
-User processes live in 3/4 and 8+. We have copy stuff back and forth
+User processes live in 4/6 and 8+. We have copy stuff back and forth
 to page 2 due to the memory manager limits.
 
 To Do:
