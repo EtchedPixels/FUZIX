@@ -310,7 +310,7 @@ Builds, test pending
 
 ## Pentagon 1024
 
-Builds, test pending
+Builds, passes basic tests
 
 ## Pico68K
 
@@ -458,7 +458,7 @@ Builds, passes basic tests
 
 ## scorpion
 
-Builds, testing pendng
+Builds, passes basic tests
 
 ## scrumpel
 
