@@ -4,7 +4,7 @@
 # Useful values for general work
 #
 # 2063:		John Winans Z80 Retro system
-# 68Knano:	A small retrobrew 68000 platform with IDE disk
+# 68knano:	A small retrobrew 68000 platform with IDE disk
 # amprolb:	The legendary Ampro Littleboard
 # amstradnc/nc100:	Amstrad NC100 (or emulator)
 # amstradnc/nc200:	Amstrad NC200 (or emulator)
