@@ -58,7 +58,6 @@ void fstabinit(void)
 	}
 }
 
-/* FIXME: pass remainder of boot argument to init */
 /* Remember two things when modifying this code
    1. Some processors need 2 byte alignment or better of arguments. We
       lay it out for 4
