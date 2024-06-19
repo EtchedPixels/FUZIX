@@ -772,29 +772,36 @@ ___sdcc_call_hl:
 	.globl _memset
 
 _memset:
-	pop af		; ret
-	pop iy		; dummy/banking
-	pop hl		; dest
-	pop de		; fill
-	pop bc		; count
-	push bc
-	push de
-	push hl
-	push iy
-	push af
+	ld hl,#9
+	add hl,sp
+	ld b,(hl)
+	dec hl
+	ld c,(hl)	; size
+	dec hl
+	dec hl
+	ld a,(hl)	; char
+	dec hl
+	ld d,(hl)
+	dec hl
+	ld e,(hl)	; ptr
+
+	ex de,hl	; We want HL ptr E char BC count
+	ld e,a
 
 	ld a, b
 	or c
 	ret z
 	ld (hl), e
 	dec a
+	or b
 	ret z		; > 1 ?
-	ld d, h
 
+	ld d, h
 	ld e, l
 	inc de
 	dec bc
 	ldir
+
 	ret
 
 ;--------------------------------------------------------------------------
@@ -1309,19 +1316,24 @@ __mul16::
 _memcpy:
 _memmove:
 ___memcpy:
-	pop	af
-	pop	iy
-	pop	hl
-	pop	de
-	pop	bc
-	push	bc
-	push	de
-	push	hl
-	push	iy
-	push	af
+	ld	hl,#9
+	add	hl,sp
+	ld	b,(hl)
+	dec	hl
+	ld	c,(hl)
+	dec	hl
+	ld	d,(hl)
+	dec	hl
+	ld	e,(hl)
+	dec	hl
+	ld	a,(hl)
+	dec	hl
+	ld	l,(hl)
+	ld	h,a
+
 	ld	a, c
 	or	a, b
-	ret	Z
+	ret	z
 	push	hl
 	sbc	hl, de		; or above cleared carry.
 	add	hl, de		; same carry as the line before
