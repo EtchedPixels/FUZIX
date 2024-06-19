@@ -284,8 +284,8 @@ loop_scroll_down:
         jr nz, loop_scroll_down
 
 	; Attributes
-	ld hl,#0x5ADF
-	ld de,#0x5AFF
+	ld hl,#(0x1ADF+(SCREENBASE*256))
+	ld de,#(0x1AFF+(SCREENBASE*256))
 	ld bc,#0x02E0
 	lddr
 
@@ -320,8 +320,8 @@ loop_scroll_up:
         dec c
         jr nz, loop_scroll_up
 
-	ld hl,#0x5820
-	ld de,#0x5800
+	ld hl,#(0x1820+(SCREENBASE*256))
+	ld de,#(0x1800+(SCREENBASE*256))
 	ld bc,#0x02E0
 	ldir
         ret

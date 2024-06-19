@@ -496,7 +496,7 @@ _dofork:
 ;	we can use with a lazy copying model
 ;
 bankfork:
-	ld b, #0x3E		; 64 x 256 minus 2 sets for the uarea stash/irqs
+	ld b, #0x3D		; 64 x 256 minus 3 sets for the uarea stash/irqs
 	ld hl, #0xC000		; base of memory to fork (vectors included)
 bankfork_1:
 	push bc			; Save our counter and also child offset

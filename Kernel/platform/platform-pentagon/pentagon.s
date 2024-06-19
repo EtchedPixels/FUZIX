@@ -160,6 +160,8 @@ _program_vectors:
 	push hl
 	push de
 	push bc
+	inc hl
+	inc hl
 	ld a, (hl)		; high page of the pair
 
 setvectors:
@@ -169,7 +171,6 @@ setvectors:
 	ld (0xffff), a		;	JR (plus ROM at 0 gives JR $FFF4)
 	ld a, #0xC3		;	JP
 	ld (0xFFF4), a		;	FFF4-6 are the interrupt vector
-	ld (0xFFF7), a		;	FFF7-9 are syscall
 	ld hl, #interrupt_handler
 	ld (0xFFF5), hl		;	to IRQ handler
 	call map_restore
@@ -185,13 +186,38 @@ setallvectors:
 	ld a, #3		;	bank 3	(CODE 4)
 	jr setvectors
 
+	; Has to live in common space
+
+size_ram:
+	ld hl,#0xFFFC		;	safe for the moment addr
+	ld bc,#0x7FFD
+	ld a, #0x5F
+	out (c),a
+	ld (hl),a
+	ld a, #0xDF		;	will change page on 512K
+	out (c),a
+	ld (hl),a
+	cp (hl)			;	check no decode
+	jr nz,is_256
+	ld a,#0x5F		;	check partial decode
+	out (c),a
+	cp (hl)
+	jr nz,is_256
+	ld hl,#512
+size_out:
+	ld a,#0x1F		;	back to _VIDEO/Page 7
+	out (c),a
+	ret
+is_256:
+	ld hl,#256
+	jr size_out
+
 
 	.area _VIDEO
 
 init_hardware:
         ; set system RAM size
-	; FIXME: probe this and map accordingly in discard.c
-        ld hl, #256
+	call size_ram
         ld (_ramsize), hl
 	; We lose the following to the system
 	; 0: first kernel bank at C000
@@ -201,7 +227,9 @@ init_hardware:
 	; 5: 8000-BFFF (working 16K copy)
 	; 7: third kernel bank at C000
 	;
-        ld hl, #(256 - 96)
+	ld de,#96
+	or a
+	sbc hl,de
         ld (_procmem), hl
 
 	; Set up the vectors on all the kernel pages
@@ -249,7 +277,8 @@ switch_bank:
 	pop bc
         ret
 
-
+; We are passed the pointer to the page data. We need the page2 value as
+; that holds our upper page.
 map_proc:
         ld a, h
         or l
@@ -385,7 +414,7 @@ bankina0:
 	jr z, __retmap1
 	dec a
 	jr z, __retmap2
-	cp #1			;  3  phys = logical 4
+	cp #2			;  3  phys = logical 4
 	jr z, __retmap4
 	jr __retmap3
 
@@ -484,10 +513,10 @@ __retmap4:
 	jp switch_bank
 __bank_4_2:
 	ld a, #1
-	jr bankina3
+	jr bankina4
 __bank_4_3:
 	ld a, #7
-	jr bankina3
+	jr bankina4
 
 
 ;
@@ -594,7 +623,7 @@ __stub_4_a:
 __stub_4_ret:
 	ex de, hl
 	call callhl
-	ld a,#2
+	ld a,#3
 	call switch_bank
 	pop de
 	push de		; dummy the caller will discard
