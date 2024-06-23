@@ -23,6 +23,18 @@ OMU also got blended in
 Some pre-built filesystems are now available on www.fuzix.org, and other
 images should follow in time.
 
+# Supporting Fuzix
+
+As this gets asked a bit. The best way to support Fuzix is to contribute
+code and/or docs. It's really an art project in computing. 
+
+If you want to spend money then please just buy a homeless person a pizza or a
+coat or something like that. If you are changing electricity suppliers in the
+UK to Octopus then signing up through this link gets both of us £50. Not an
+endorsement, Octopus merely suck less than other UK energy suppliers.
+
+https://share.octopus.energy/amber-calf-514
+
 ## Tools
 
 For the 8080, 8085, Z80 and Z180 the code is now built with the Fuzix C
