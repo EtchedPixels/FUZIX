@@ -306,7 +306,7 @@ basic stuff alas)
 
 ## Pentagon
 
-Builds, test pending
+Builds, passes basic tests
 
 ## Pentagon 1024
 
