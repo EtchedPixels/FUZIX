@@ -67,8 +67,8 @@
 	.globl _udata
 	.globl _doexit
 
-        .include "build/kernel.def"
-        .include "cpu-z80/kernel-z80.def"
+        .include "../build/kernel.def"
+        .include "../cpu-z80/kernel-z80.def"
 
 ; these make the code below more readable. sdas allows us only to 
 ; test if an expression is zero or non-zero.
