@@ -2,13 +2,20 @@
 #define CONFIG_H
 #include "tusb_config.h"
 /*
- *	Set this according to your SD card pins (default
- *	is the David Given arrangement).
+ * Set this according to your SD card pins
+ *  CONFIG_RC2040
+ *      SCK GPIO 14
+ *      TX  GPIO 15
+ *      RX  GPIO 12
+ *      CS  GPIO 13
+ *  If Undefined
+ *      SCK GPIO 2
+ *      TX  GPIO 3
+ *      RX  GPIO 4
+ *      CS  GPIO 5
  */
 
-#undef CONFIG_RC2040
-
-
+#define CONFIG_RC2040
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
@@ -74,15 +81,23 @@ extern uint8_t progbase[USERMEM];
                           /* In this case, the default is the first TTY device */
 
 #define TICKSPERSEC 200   /* Ticks per second */
-/* We need a tidier way to do this from the loader */
+/* 
+ * Boot cmd line.
+ * cu [BOOTDEVICE] [tty=<TTYLIST>]
+ * 
+ * <BOOTDEVICE> - use `hda` for built-in flash or `hdbX` for SD card, where X is partition number
+ * <TTYLIST> - list of TTY devices in order. If not specified system will
+ *      map USB devices to tty0-4 and UART0 to tty5 if USB is connected. Or UART0 to tty0 etc if not.
+ *      Example: `tty=usb1,uart0,usb0`
+*/
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 #define BOOTDEVICENAMES "hd#"
 #define SWAPDEV    (swap_dev) /* dynamic swap */
 
 /* Device parameters */
-#define NUM_DEV_TTY_UART 1
-#define NUM_DEV_TTY_USB 4
+#define NUM_DEV_TTY_UART 1 /* min 1 max 1*/
+#define NUM_DEV_TTY_USB 4 /* min 1 max 4. */
 #define NUM_DEV_TTY (NUM_DEV_TTY_UART + NUM_DEV_TTY_USB)
 #define DEV_USB_DETECT_TIMEOUT 5000 /* (ms) Total timeout time to detect USB host connection*/
 #define DEV_USB_INIT_TIMEOUT 2000 /* (ms) Total timeout to try not swallow messages */
