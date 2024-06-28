@@ -438,7 +438,7 @@ Builds, passes basic tests
 
 ## sbc2g
 
-Builds, crashes when running. Under investigation
+Builds, passes basic tests
 
 ## sbcv2
 
@@ -578,7 +578,7 @@ Builds, usually passes basic tests, debugging a possible interrupt problem
 
 ## z80membership
 
-Builds, need to debug the emulator to do proper testing
+Builds,passes basic tests
 
 ## z80pack
 

@@ -255,10 +255,8 @@ map_proc_a:			; used by bankfork
 map_proc_always_di:
 map_proc_always:
 	push af
-	push hl
-	ld hl, #_udata + U_DATA__U_PAGE
-	call map_proc_hl
-	pop hl
+	ld a, (_udata + U_DATA__U_PAGE)
+	out (0xCC),a
 	pop af
 	ret
 	;
@@ -269,7 +267,7 @@ map_proc_always:
 	;
 map_save_kernel:
 	push af
-	in a,(0xCC)		; FIXME: check can read back
+	in a,(0xCC)
 	and #0x0F
 	ld (mapsave), a
 	xor a
@@ -295,7 +293,7 @@ map_restore:
 	;
 outchar:
 	push af
-twait:	    in a,(0xCD)
+twait:	in a,(0xCD)
 	bit 5,a
 	jr z, twait
 	pop af
@@ -313,6 +311,10 @@ twait:	    in a,(0xCD)
 	.export _sd_spi_rx_sector
 
 _sd_spi_tx_byte:
+	pop de
+	pop hl
+	push hl
+	push de
 	push bc
 	ld a,l
 	rlca
@@ -343,6 +345,10 @@ _sd_spi_tx_byte:
 	pop bc
 	ret
 _sd_spi_rx_byte:
+	pop de
+	pop hl
+	push hl
+	push de
 	push bc
 	ld a, 1
 	out (0xC5),a		; send FF
@@ -534,8 +540,8 @@ spi_tx_loop:
 sd_map:
 	ld a,(_td_raw)
 	or a
-	jp nz, map_proc_always
-	ret
+	ret z
+	jp map_proc_always
 
 _sd_spi_rx_sector:
 	pop de

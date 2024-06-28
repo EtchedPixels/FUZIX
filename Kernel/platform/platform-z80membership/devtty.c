@@ -166,7 +166,7 @@ void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 	out(uart_ms, w >> 8);
 	out(uart_lcr,  d & 0x7F);
 
-	out(uart_ier, 0x0D);
+	out(uart_ier, 0x05);
 }
 
 /*
