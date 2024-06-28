@@ -47,6 +47,8 @@
 ;	if your platform has an NMI to handle.
 ;
 bankfork:
+	push ix
+	push iy
 	dec a			; offset by 1 from hardware (see map_*)
 	dec c			; likewise
 	ld (cpatch0 + 1),a	; patch parent into loop
@@ -114,6 +116,8 @@ copy_over:
 	;	Get the stack back
 	;
 	ld sp,(spcache)
+	pop iy
+	pop ix
 	;
 	;	And the correct kernel bank.
 	;
