@@ -14,6 +14,7 @@
 	.globl map_proc_di
 	.globl map_proc_always
 	.globl map_proc_always_di
+	.globl map_proc_noio
 	.globl map_for_swap
 	.globl map_save_kernel
 	.globl map_restore
@@ -70,7 +71,7 @@ init_hardware:
 
 	ld hl,#96
 	ld (_ramsize),hl
-	ld hl,#39
+	ld hl,#40
 	ld (_procmem),hl
         im 1 ; set CPU interrupt mode
 
@@ -101,8 +102,16 @@ map_for_swap:
 map_proc_always:
 map_proc_always_di:
 	push af
-	ld a,#0xD0		; External high, ROM unmapped, IO mapped
+	ld a,#0xD0		; External memory, ROM unmapped, IO mapped
 	ld (map_state),a	; (so we can do screen mapping)
+	out (0xC0),a
+	pop af
+	ret
+; Used for user-kernel copies only (see tricks.s)
+map_proc_noio:
+	push af
+	ld a,#0xF0		; External memory, ROM unmapped, IO unmapped
+	ld (map_state),a
 	out (0xC0),a
 	pop af
 	ret
@@ -110,7 +119,7 @@ map_save_kernel:
 	push af
 	ld a,(map_state)
 	ld (map_save_val),a
-	ld a,#0xC0		; Internal memory, ROM unmapped, IO
+	ld a,#0xE0		; Internal memory, ROM unmapped, IO unmapped
 	ld (map_state),a
 	out (0xC0),a
 	pop af
@@ -124,7 +133,7 @@ map_restore:
 	ret
 
 map_io:
-	ld a,#0xD0
+	ld a,#0xC0		; Internal memory, ROM unmapped, IO mapped
 	ld (map_state),a
 	out (0xC0),a
 	ret
