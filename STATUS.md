@@ -165,7 +165,7 @@ Passes basic tests
 
 ## COCO3
 
-Fails to load init, under investigation. Needs fixing for 0.5
+Builds, passes basic tests
 
 ## CPM22
 
@@ -261,11 +261,11 @@ Retired in 0.2, bitrotted
 
 ## MSX1
 
-Builds, test pending
+Builds, poasses basic tests
 
 ## MSX2
 
-Builds, test pending
+Builds, passes basic tests
 
 ## MTX (Memotech)
 
@@ -522,7 +522,7 @@ Builds, passes basic tests
 
 ## TRS80m1 (Model 1/3)
 
-Builds, fails with supermem, works with selector. Debug in progress
+Builds, passes basic tests
 
 ## ubee (Microbee)
 

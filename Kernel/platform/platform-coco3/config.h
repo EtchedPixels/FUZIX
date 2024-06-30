@@ -98,3 +98,7 @@ typedef unsigned char *queueptr_t;
 #define PUTQ(p, v) putq((p), (v))
 
 #define CONFIG_DEV_PLATFORM
+
+/* We want to switch to 8K paging and then sort all this out properly post
+   0.5. This is however not a regression as this selects the old sizes */
+#define CONFIG_SMALL
