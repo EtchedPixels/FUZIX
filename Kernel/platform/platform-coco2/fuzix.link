@@ -2,7 +2,7 @@ define basesympat __sectionbase_%s__
 define lensympat __sectionlen_%s__
 section .istack load 0x0000
 section .vectors load 0x0100
-section .page1
+section .text3
 section .start load 0x0400
 section .text
 section .text2
@@ -12,7 +12,6 @@ section .data
 section .videodata
 section .common
 section .commondata
-section .text3
 section .discard load 0xA000
 section .udata load 0xFD00
 entry start

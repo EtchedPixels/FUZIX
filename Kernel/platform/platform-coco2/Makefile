@@ -24,8 +24,7 @@ CROSS_CCOPTS += -I../../dev/
 
 all: $(OBJS)
 
-export CROSS_CC_SEGD=-mcode-section=.text3 -mfar-code-page=2
-export CROSS_CC_SEGI=-mcode-section=.page1 -mfar-code-page=2
+export CROSS_CC_SEGD=-mcode-section=.video -mfar-code-page=2
 
 $(COBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG2) -c $<
@@ -37,7 +36,7 @@ $(CDOBJS): %$(BINEXT): %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 tinyide.o: ../../dev/tinyide.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGI) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGD) -c $<
 
 tinydisk.o: ../../dev/tinydisk.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGD) -c $<

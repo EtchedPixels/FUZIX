@@ -157,7 +157,7 @@ Builds, needs a 0.5 test run
 
 ## COCO2 (64K, no cartridge)
 
-Fails. Needs 0.5 debug
+Builds, passes basic tests.
 
 ## COCO2Cart (64K with cartridge ROM)
 

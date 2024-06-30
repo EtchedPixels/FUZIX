@@ -104,7 +104,7 @@ waitvb2:
 _framedet:
 	.word	0
 
-        .area .page1
+        .area .text3
 ; Borrow a tiny bit of page1 to get this low so it can turn the ROM back on
 
 _plt_reboot:
