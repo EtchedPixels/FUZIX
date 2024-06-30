@@ -181,7 +181,7 @@ Passes basic tests
 
 ## Dragon (NX32)
 
-Fail in image building, needs fixing for 0.5
+Passes basic tests
 
 ## Dyno
 
@@ -558,7 +558,7 @@ Builds, test pending
 
 ## z180itx (Etched Pixels)
 
-Builds, hangs after disk scan, debug in progress
+Builds, passes basic tests
 
 ## z280rc
 

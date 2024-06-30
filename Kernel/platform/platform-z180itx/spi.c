@@ -68,7 +68,7 @@ void sd_spi_raise_cs(void)
     /* wait for idle */
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
     /* Set CS bits back */
-    ppi_c = 7;
+    ppi_c = 0x0F;	/* Keep EXTMEM off as well */
 }
 
 void spi_select_port(uint8_t port)
@@ -76,7 +76,7 @@ void spi_select_port(uint8_t port)
     uint8_t c;
 
     while(CSIO_CNTR & (CSIO_CNTR_TE | CSIO_CNTR_RE));
-    ppi_c = port;
+    ppi_c = port | 0x08;
 
     if (spi_slow[port]) {
         c = CSIO_CNTR & 0xf8; /* clear low three bits, gives fastest rate (clk/20) */
