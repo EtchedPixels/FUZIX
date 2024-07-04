@@ -357,7 +357,7 @@ __uget:
 ;
 __uzero:
 	ld hl,2
-	add hl,de
+	add hl,sp
 	push bc
 	ld e,(hl)
 	inc hl
@@ -380,7 +380,7 @@ __uzero:
 	inc de
 	ldir
 popout:	pop bc
-	ret
+	jp map_kernel
 
 	.common
 ;
@@ -503,41 +503,49 @@ ramconf9:
 	.export	_ramread5
 
 _ramread5:
+	push	bc
 	call	ramconf5
 	inir
 	out	(0x5e),a
 	inir
 	ld	(_rd_dptr),hl
+	pop	bc
 	jp	map_kernel
 
 	.export	_ramwrite5
 
 _ramwrite5:
+	push	bc
 	call	ramconf5
 	otir
 	out	(0x5e),a
 	otir
 	ld	(_rd_dptr),hl
+	pop	bc
 	jp	map_kernel
 
 	.export	_ramread9
 
 _ramread9:
+	push	bc
 	call	ramconf9
 	inir
 	out	(0x9e),a
 	inir
 	ld	(_rd_dptr),hl
+	pop	bc
 	jp	map_kernel
 
 	.export	_ramwrite9
 
 _ramwrite9:
+	push	bc
 	call	ramconf9
 	otir
 	out	(0x9e),a
 	otir
 	ld	(_rd_dptr),hl
+	pop	bc
 	jp	map_kernel
 
 	.discard
@@ -630,7 +638,7 @@ hilo:
 
 ide_map:
 	ld	a,(_td_raw)
-	ld	bc,0x10		; port 10, 256 times
+	ld	bc,0x48		; port 48h, 256 times
 	or	a
 	jp	z, map_buffers
 	dec	a

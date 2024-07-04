@@ -64,7 +64,7 @@ _vtattr_notify:
 
 _clear_lines:
 	ld	hl,2
-	add	hl,de
+	add	hl,sp
 	push	bc
 	ld	e,(hl)
 	inc	hl
@@ -92,7 +92,7 @@ nextline:
 
 _clear_across:
 	ld	hl,2
-	add	hl,de
+	add	hl,sp
 	push	bc
 	ld	e,(hl)
 	inc	hl
@@ -115,21 +115,23 @@ nchar:	djnz	ca
 
 _scroll_down:
 	call	video_on
+	push	bc
 	ld	hl,0xEFFF	; last char
 	ld	de,0xEFDF	; line above last char
 	ld	bc,0x3E0	; size to copy
 	lddr
-	jr	vidout2
+	jr	vidout
 
 	.export _scroll_up
 
 _scroll_up:
 	call	video_on
+	push	bc
 	ld	hl,0xEC20	; line 1
 	ld	de,0xEC00	; top line
 	ld	bc,0x03E0
 	ldir
-	jr	vidout2
+	jr	vidout
 
 	.export _cursor_on
 _cursor_on:
@@ -144,7 +146,7 @@ _cursor_on:
 	ld	a,(hl)
 	ld	(cursorchar),a
 	ld	(hl),0		; solid block
-	jr	vidout
+	jr	vidout2
 
 	.export	_cursor_disable
 	.export	_cursor_off
@@ -155,7 +157,7 @@ _cursor_off:
 	ld	hl,(cursorpos)
 	ld	a,(cursorchar)
 	ld	(hl),a
-	jr	vidout
+	jr	vidout2
 
 cursorpos:
 	.word	0
