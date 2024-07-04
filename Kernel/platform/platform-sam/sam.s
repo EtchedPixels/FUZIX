@@ -549,8 +549,8 @@ syscall_platform:
 	    push ix
 	    ld ix,#0
 	    add ix,sp
-	    push iy
 	    push bc
+	    push iy
 	    ld c,6(ix)
 	    ld b,7(ix)
 	    ld e,8(ix)
@@ -572,8 +572,6 @@ syscall_platform:
 	    ld sp,#kstack_top
 	    ld a,(syscall_stash)
 	    call unix_syscall_entry
-	    ; FIXME check di rules
-	    pop iy
 	    push bc
 	    ld b,a
 	    in a,(251)
@@ -584,6 +582,7 @@ syscall_platform:
 	    ; memory holding it
 	    ld sp,(_udata + U_DATA__U_SYSCALL_SP)
 	    out (251),a
+	    pop iy
 	    xor a
 	    cp h
 	    call nz, syscall_sigret
