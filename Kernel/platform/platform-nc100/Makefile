@@ -29,7 +29,7 @@ bootblock.img: bootblock.s
                 -output bootblock.img -binary
 
 image: bootblock.img
-	dd if=bootblock.img of=../fuzix.bin bs=1 conv=notrunc
+	dd if=bootblock.img of=../../fuzix.bin bs=1 conv=notrunc
 
 nc100emu.bin: nc100emu.s
 	sdasz80 -fflopzws nc100emu.rel $<
