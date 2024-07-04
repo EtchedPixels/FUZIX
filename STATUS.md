@@ -108,11 +108,11 @@ These platforms are unfinished experimental work anyway
 
 # Target Status
 
-Last updated 18/06/24
+Last updated 2024/07/04
 
 ## 2063
 
-Needs some size and layout tweaks then testing
+Builds, passes basic tests
 
 ## 68KNano
 
@@ -128,11 +128,11 @@ Passes basic tests.
 
 ## Amstrad NC100
 
-Pending
+Passes basic tests
 
 ## Amstrad NC200
 
-Pending
+Passes basic tests
 
 ## AppleIIe
 
@@ -213,7 +213,7 @@ Early WIP for TMS99xx. Needs compiler fixes and more yet
 
 ## Genie-EG64
 
-Builds, fails, needs fixing for 0.5
+Builds, passes basic tests
 
 ## IBMPC
 
@@ -229,7 +229,7 @@ Builds, not tested
 
 ## KC87
 
-Builds, test pending
+Builds, passes basic tests
 
 ## LINC80
 
@@ -261,7 +261,7 @@ Retired in 0.2, bitrotted
 
 ## MSX1
 
-Builds, poasses basic tests
+Builds, passes basic tests
 
 ## MSX2
 
@@ -297,7 +297,7 @@ Builds, passes basic tests
 
 ## PCW8256 (Amstrad)
 
-Builds, test pending
+Builds, passes basic tests
 
 ## PDP11
 
@@ -422,7 +422,7 @@ Builds, passes basic tests
 
 ## riz180 (Plasmo)
 
-Builds, boot fails, needs emulator debug
+Builds, passes basic tests
 
 ## rpipico (Rapsberry Pi Pico0
 
@@ -430,7 +430,7 @@ Builds
 
 ## sam (Sam Coupe)
 
-Builds, test pending
+Builds, passes basic tests
 
 ## sbc08k
 
@@ -526,7 +526,7 @@ Builds, passes basic tests
 
 ## ubee (Microbee)
 
-Builds, test pending
+Builds, passes basic tests
 
 ## v65c816(-big)
 
@@ -554,7 +554,7 @@ Builds
 
 ## z1013 (Robotron)
 
-Builds, test pending
+Builds, passes basic tests
 
 ## z180itx (Etched Pixels)
 
