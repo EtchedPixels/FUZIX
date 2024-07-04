@@ -62,3 +62,4 @@
 
 #define plt_copyright()
 
+#define CONFIG_SMALL
