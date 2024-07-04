@@ -117,3 +117,5 @@ extern uint16_t swap_dev;
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 #define plt_copyright()
+
+#define CONFIG_SMALL
