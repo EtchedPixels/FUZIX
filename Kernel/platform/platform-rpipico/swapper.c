@@ -188,6 +188,7 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
     }
 
     udata.u_top = p->p_top = PROGBASE + blocks*BLOCKSIZE;
+    p->p_size = blocks*BLOCKSIZE / 1024;
     #ifdef DEBUG
         debug_blocks();
     #endif
