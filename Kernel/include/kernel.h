@@ -1032,8 +1032,9 @@ extern void i_deref(inoptr ino);
 extern void corrupt_fs(uint16_t devno);
 extern void wr_inode(inoptr ino);
 extern bool isdevice(inoptr ino);
+extern int f_trunc_blocks(inoptr ino, uint16_t nblock);
 extern int f_trunc(inoptr ino);
-extern void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level);
+extern void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level, uint16_t nblock);
 extern blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg);
 extern void validblk(uint16_t dev, blkno_t num);
 extern inoptr getinode(uint_fast8_t uindex);
@@ -1317,6 +1318,7 @@ extern arg_t _sched_yield(void);  /* FUZIX system call 62 */
 extern arg_t _acct(void);	  /* FUZIX system call 63 */
 extern arg_t _memalloc(void);	  /* FUZIX system call 64 */
 extern arg_t _memfree(void);	  /* FUZIX system call 65 */
+extern arg_t _ftruncate(void);    /* FUZIX system call 67 */
 
 #if defined(CONFIG_32BIT)
 #include "kernel32.h"
