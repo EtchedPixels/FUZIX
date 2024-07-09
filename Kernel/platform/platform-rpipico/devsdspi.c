@@ -23,6 +23,16 @@
 //Pico spi0 or spi1 must match GPIO pins used above.
 #define Pico_SD_SPI_MOD spi1
 
+#elif defined(CONFIG_MAKER_PI)
+// Maker pico board
+// https://www.adafruit.com/product/5160
+#define Pico_SD_SCK 10
+#define Pico_SD_TX  11
+#define Pico_SD_RX  12
+#define Pico_SD_CS  15
+
+#define Pico_SD_SPI_MOD spi1
+
 #else
 
 /* Pico SPI GPIO connected to SD SPIO - David Given's Arrangement */

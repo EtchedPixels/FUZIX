@@ -1,6 +1,6 @@
 # Set one of these depending.
-export PICO_SDK_FETCH_FROM_GIT = yes
-#export PICO_SDK_PATH = /home/dg/src/pico/pico-sdk
+#export PICO_SDK_FETCH_FROM_GIT = yes
+export PICO_SDK_PATH = ${HOME}/.pico-sdk/sdk/1.5.1
 
 include ../../../version.mk
 
