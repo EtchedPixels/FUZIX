@@ -60,7 +60,7 @@ int tmp(void)
 	sigset_t set, oset;
 	static int first;
 	int fd;
-	char path[1024];		/* was MAXPATHLEN */
+	char path[128];		/* Should be dynamically handled */
 
 	if (!first && !envtmp) {
 		envtmp = getenv("TMPDIR");
@@ -68,7 +68,7 @@ int tmp(void)
 	}
 
 	if (envtmp)
-		sprintf(path, "%s/%s", envtmp, _NAME_ARTMP);
+		snprintf(path, sizeof(path), "%s/%s", envtmp, _NAME_ARTMP);
 	else
 		bcopy(_PATH_ARTMP, path, sizeof(_PATH_ARTMP));
 	

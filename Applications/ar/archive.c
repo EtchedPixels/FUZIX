@@ -102,7 +102,7 @@ opened:	if (flock(fd, LOCK_EX) && errno != EOPNOTSUPP)
 			if (nr >= 0)
 				badfmt();
 			error(archive);
-		} else if (bcmp(buf, ARMAG, SARMAG))
+		} else if (memcmp(buf, ARMAG, SARMAG))
 			badfmt();
 	} else if (write(fd, ARMAG, SARMAG) != SARMAG)
 		error(archive);
@@ -163,7 +163,7 @@ int get_arobj(int fd)
 	 * Long name support.  Set the "real" size of the file, and the
 	 * long name flag/size.
 	 */
-	if (!bcmp(hdr->ar_name, AR_EFMT1, sizeof(AR_EFMT1) - 1)) {
+	if (!memcmp(hdr->ar_name, AR_EFMT1, sizeof(AR_EFMT1) - 1)) {
 		chdr.lname = len = atoi(hdr->ar_name + sizeof(AR_EFMT1) - 1);
 		if (len <= 0 || len > MAXNAMLEN)
 			badfmt();
@@ -277,7 +277,7 @@ void copy_ar( CF *cfp, off_t size)
 	static char pad = '\n';
 	register off_t sz;
 	register int from, nr, nw, off, to;
-	char buf[8*1024];
+	static char buf[8*1024];
 	
 	if (!(sz = size))
 		return;
