@@ -42,6 +42,7 @@ extern char *index(const char *__s, int __c);
 extern char *rindex(const char *__s, int __c);
 extern void bcopy(const void *__src, void *__dst, size_t __n);
 extern void bzero(void *__dst, size_t __n);
+extern int bcmp(const void *__s1, const void *__s2, size_t __n);
 
 /* Other common string functions */
 extern char *strpbrk(const char *__s, const char *__accept);
