@@ -3,9 +3,7 @@
 #include <gpio.h>
 #include "picosdk.h"
 
-// Example on how to access raspberry pi pico GPIO.
-// Code inspired by the answer in this issue:
-// https://github.com/EtchedPixels/FUZIX/issues/946#issuecomment-1345529209
+// Access raspberry pi pico GPIO
 int gpio_ioctl(uarg_t request, char *data) {
   const uint8_t num_pins = 28;
   static struct gpioreq gr;
@@ -27,16 +25,15 @@ int gpio_ioctl(uarg_t request, char *data) {
     case GPIOC_SETBYTE:
       break;
     case GPIOC_SET:
-      kprintf("pin: %d\n", gr.pin);
-      kprintf("value: %d\n", gr.val);
       gpio_init(gr.pin);
       gpio_set_dir(gr.pin, GPIO_OUT);
       gpio_put(gr.pin, gr.val != 0);
+      return 0;
       break;
     default:
       udata.u_error = ENODEV;
       return -1;
   }
 
-  return 0;
+  return -1;
 }

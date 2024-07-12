@@ -21,10 +21,10 @@ int is_valid_uint8(const char *str) {
 }
 
 int main(int argc, char **argv) {
-  puts("GPIO");
   if (argc == 1 || strcmp(argv[1], "--help") == 0)
   {
-      puts("usage: picoctl <PIN> <VALUE>");
+      puts("Turn on/off GPIO pins on the pico");
+      puts("Usage: picoctl <PIN> <VALUE>");
       return 0;
   }
 
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
   struct gpioreq gr;
   gr.pin = pin;
   gr.val = value;
-  // this is how you call an ioctl device
+  
   if (ioctl(fd, GPIOC_SET, &gr) != 0) {
     puts("Failed to perform operation.");
     close(fd);
