@@ -439,3 +439,47 @@ done:
 
 #undef file
 #undef lockop
+
+/*******************************************
+  ftruncate (file, offset)         Function call 67
+  int16_t file;
+  uint32_t *offset;
+ ********************************************/
+#define file   (uint16_t)udata.u_argn
+#define offset (uint32_t *)udata.u_argn1
+
+/* We copy the 32bit offset in and out rather than passing it
+   as a 32bit OS might */
+arg_t _ftruncate(void)
+{
+	register inoptr ino;
+	register struct oft *o;
+	off_t n;
+
+	if (uget(offset, &n, sizeof(n)))
+	        return -1;
+
+	if ((ino = getinode(file)) == NULLINODE)
+		return (-1);
+
+	o = &of_tab[udata.u_files[file]];
+	if (n < 0 || (HIBYTE32(n) & BLKOVERSIZE32) ||
+	    O_ACCMODE(o->o_access) == O_RDONLY ||
+	    getmode(ino) != MODE_R(F_REG)) {
+		udata.u_error = EINVAL;
+		return -1;
+	}
+
+	if (n == ino->c_node.i_size)
+		return 0;
+	if (n < ino->c_node.i_size)
+		f_trunc_blocks(ino, BLOCK(n + BLKSIZE - 1));
+	ino->c_node.i_size = n;
+	setftime(ino, M_TIME | C_TIME);
+	wr_inode(ino);
+	return 0;
+}
+
+#undef file
+#undef offset
+#undef flag

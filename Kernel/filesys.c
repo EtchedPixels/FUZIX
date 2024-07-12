@@ -923,35 +923,87 @@ uint16_t devnum(inoptr ino)
 }
 
 
-/* F_trunc frees all the blocks associated with the file, if it
- * is a disk file.
+/*
+ *	f_trunc_blocks frees all the blocks associated with the file, if it
+ *	is a disk file. The blocks are freed in reverse order. This is
+ *	very important so that they end up on the freelist in the
+ *	order we want to allocate them.
  */
-int f_trunc(register inoptr ino)
+int f_trunc_blocks(register inoptr ino, uint16_t nblock)
 {
     register uint16_t dev;
     register int_fast8_t j;
+    uint16_t map1 = 0;
+    uint16_t map2 = 0;
 
     if (ino->c_flags & CRDONLY) {
         udata.u_error = EROFS;
         return -1;
     }
+
+    /* Block offsets are
+        0-17 direct
+        18 256 blocks (18-273)
+        19 256 * 256 blocks (274-65810)
+
+        (We only allow 65535 block offset in order to keep a lot of stuff
+         uint16_t - FIXME to fix u writei())
+
+        We don't support triple indirect blocks.
+
+        When we are called nblock is the number of blocks that will
+        remain in the file when we truncate it
+
+        We set map1 to the number of blocks we must purge for single
+        indirect. We set map2 for the number of blocks we must purge
+        of double indirect.
+
+        freeblk frees full subblocks above the block passed, and then frees
+        blocks >> 8 on the last iteration to partially clear the last set
+    */
+
+    if (nblock > 17 && nblock < 274)
+        map1 = (nblock - 18) << 8;
+    else if (nblock > 273)
+        map2 = nblock - 273;
     dev = ino->c_dev;
 
+    /* FIXME: ideally zero the indirect pointers before we write the
+       free lists */
+
     /* First deallocate the double indirect blocks */
-    freeblk(dev, ino->c_node.i_addr[19], 2);
+    freeblk(dev, ino->c_node.i_addr[19], 2, map2);
+    if (map2)
+        ino->c_node.i_addr[19] = 0;
 
     /* Also deallocate the indirect blocks */
-    freeblk(dev, ino->c_node.i_addr[18], 1);
+    freeblk(dev, ino->c_node.i_addr[18], 1, map1);
+    if (map1 == 0 && map2 == 0)	/* ???? should this just be if map1 */
+        ino->c_node.i_addr[18] = 0;
 
     /* Finally, free the direct blocks */
-    for(j = 17; j >= 0; --j)
-        freeblk(dev, ino->c_node.i_addr[j], 0);
-
-    memset((uint8_t *)ino->c_node.i_addr, 0, sizeof(ino->c_node.i_addr));
+    /* FIXME: use pointers for efficiency ? */
+    /* At this point nblock is definitely < 0x8000 so forcing a signed
+       compare does what we want */
+    for(j = 17; j >= (int)nblock; --j) {
+        freeblk(dev, ino->c_node.i_addr[j], 0, 0);
+        ino->c_node.i_addr[j] = 0;
+    }
 
     ino->c_flags |= CDIRTY;
-    ino->c_node.i_size = 0;
     return 0;
+}
+
+
+/* Truncate a file back to nothing using f_trunc_blocks and then write
+   the inode size as 0 */
+int f_trunc(regptr inoptr ino)
+{
+    /* Is it worth checking size already 0 ? */
+    if (f_trunc_blocks(ino, 0))
+        return -1;
+     ino->c_node.i_size = 0;
+     return 0;
 }
 
 /* Companion function to f_trunc().
@@ -963,11 +1015,12 @@ int f_trunc(register inoptr ino)
    This is annoying and it would be nice one day to find a clean solution */
 
 #ifdef CONFIG_BLKBUF_EXTERNAL
-void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
+void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level, uint16_t nblock)
 {
     struct blkbuf *buf;
     regptr blkno_t *bn;
     int16_t j;
+    int_fast8_t nblock1 = nblock >> 8;
 
     if(!blk)
         return;
@@ -978,9 +1031,12 @@ void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
             corrupt_fs(dev);
             return;
         }
-        for(j = BLKSIZE / 2 - 1; j >= 0; --j) {
+        for(j = BLKSIZE / 2 - 1; j >= nblock1; --j) {
+            uint8_t b = 0;
+            if (j == nblock1)
+                b = nblock & 0xFF;
             blktok(&bn, buf, j * sizeof(blkno_t), sizeof(blkno_t));
-            freeblk(dev, bn[j], level-1);
+            freeblk(dev, bn[j], level - 1, b);
         }
         brelse(buf);
     }
@@ -992,11 +1048,12 @@ void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
 
 #else
 
-void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
+void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level, uint16_t nblock)
 {
     struct blkbuf *buf;
     regptr blkno_t *bn;
     int16_t j;
+    int_fast8_t nblock1 = nblock >> 8;
 
     if(!blk)
         return;
@@ -1008,8 +1065,14 @@ void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level)
             return;
         }
         bn = blkptr(buf, 0, BLKSIZE);
-        for(j = BLKSIZE / 2 - 1; j >= 0; --j)
-            freeblk(dev, bn[j], level-1);
+        for(j = BLKSIZE / 2 - 1; j >= 0; --j) {
+            /* When we hit nblock1 we are doing the final partial clear, so
+               only tell the child freeblk to do a partial clear */
+            uint_fast8_t b = 0;
+            if (j == nblock1)
+                b = nblock & 0xFF;
+            freeblk(dev, bn[j], level-1, b);
+        }
         brelse(buf);
     }
 #ifdef CONFIG_TRIM

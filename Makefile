@@ -6,8 +6,6 @@
 # 2063:		John Winans Z80 Retro system
 # 68knano:	A small retrobrew 68000 platform with IDE disk
 # amprolb:	The legendary Ampro Littleboard
-# amstradnc/nc100:	Amstrad NC100 (or emulator)
-# amstradnc/nc200:	Amstrad NC200 (or emulator)
 # coco2cart:	Tandy COCO2 or Dragon with 64K and IDE or SDC + cartridge flash
 #		(or xroar emulator )
 # coco3:	Tandy COCO3 512K (or MAME)
@@ -32,6 +30,8 @@
 # multicomp09:	Extended multicomp 6809
 # n8:		Retrobrew N8 home computer
 # nascom:	Nascom 2 or 3 with page mode RAM and CF on PIO
+# nc100:	Amstrad NC100 (or emulator)
+# nc200:	Amstrad NC200 (or emulator)
 # p112:		DX Designs P112
 # pcw8256:	Amstrad PCW series
 # pentagon:	Pentagon (spectrum not quite clone)

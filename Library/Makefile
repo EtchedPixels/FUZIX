@@ -15,8 +15,10 @@ clean:
 	rm -f tools/syscall tools/binman tools/fsize tools/liberror
 	rm -f tools/binman85 tools/relocbin6303 tools/relocbin6809 tools/shlibgen
 	rm -f tools/relocbin tools/ack2fuzix tools/fuzixlib
-	rm -f tools/syscall-z88dk tools/syscall_6502 tools/syscall_6809 tools/syscall_68000 tools/syscall-scc6809
+	rm -f tools/syscall_z80 tools/syscall_6502 tools/syscall_6809 tools/syscall_68000 tools/syscall-scc6809
 	rm -f tools/syscall_pdp11 tools/syscall_8080 tools/syscall_6303 tools/syscall_esp8266 tools/syscall_8086
+	rm -f tools/syscall_6800 tools/syscall_68hc11 tools/syscall_8085 tools/syscall_ns32k
+	rm -f tools/syscall_super8 tools/syscall_tms9995 tools/syscall_wrx6 tools/syscall_z8
 	rm -f tools/relocbin65 tools/relocbinhc11 tools/relocbin8080 tools/syscall_armm4
 	rm -f tools/ns32ktoaout tools/syscall_riscv32 tools/riscv32toaout
 

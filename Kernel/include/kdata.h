@@ -88,7 +88,7 @@ extern struct runload loadavg[];
 #ifdef CONFIG_LEVEL_2
 #define FUZIX_SYSCALL_COUNT 80
 #else
-#define FUZIX_SYSCALL_COUNT 67
+#define FUZIX_SYSCALL_COUNT 68
 #endif
 
 typedef arg_t (*syscall_t)(void);
