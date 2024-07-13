@@ -37,6 +37,7 @@ add_executable(fuzix
 	swapper.c
 	tricks.S
 	core1.c
+	devgpio.c
 	usbdescriptors.c
 	../../dev/blkdev.c
 	../../dev/mbr.c
