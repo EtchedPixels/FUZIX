@@ -8,6 +8,11 @@
  *      TX  GPIO 15
  *      RX  GPIO 12
  *      CS  GPIO 13
+ *  CONFIG_MAKER_PI
+ *	SCK GPIO 10
+ *	TX  GPIO 11
+ *	RX  GPIO 12
+ *	CS  GPIO 15
  *  If Undefined
  *      SCK GPIO 2
  *      TX  GPIO 3
@@ -15,7 +20,7 @@
  *      CS  GPIO 5
  */
 
-#define CONFIG_MAKER_PI
+#define CONFIG_RC2040
 
 /* We have a GPIO interface */
 #define CONFIG_DEV_GPIO

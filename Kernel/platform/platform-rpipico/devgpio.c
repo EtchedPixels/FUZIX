@@ -22,18 +22,11 @@ int gpio_ioctl(uarg_t request, char *data) {
   }
 
   switch (request) {
-    case GPIOC_SETBYTE:
-      break;
     case GPIOC_SET:
       gpio_init(gr.pin);
       gpio_set_dir(gr.pin, GPIO_OUT);
       gpio_put(gr.pin, gr.val != 0);
       return 0;
-      break;
-    default:
-      udata.u_error = ENODEV;
-      return -1;
   }
-
   return -1;
 }
