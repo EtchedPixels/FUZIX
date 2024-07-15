@@ -1,0 +1,50 @@
+Fuzix for the Mini11/M8 derived from the Mini11
+
+This is a 68HC11, 2K of ROM at F800-FFFF (fixed) and 512K of RAM with a latch
+allowing the lower and upper 32K to be banked individually.
+
+The normal setup is an SD card on the SPI and the onboard serial at 9600 baud
+with a 7.3728MHz clock.
+
+Memory mapping
+
+Kernel (bank 0)
+	0x0000-0x00FF	Direct page (kernel)
+	0x0100-0x01FF	Loader space for now (can be reclaimed later)
+	0x0200-0xDFFF	Kernel
+	0xE200-0xEDFF	Common
+	0xEE00-0xEEFF	SCI serial buffers (set in m8.S)
+	0xEF00-0xEFFF	Vectors and firmware glue
+	0xF000-0xF03F	Internal I/O (only I/O)
+	0xF040-0xF1FF	Internal common RAM (but only 256 bytes on 68HC11Ax)
+	0xF200-0xF3FF	Gap
+	0xF400-0xF7FF	External I/O (not yet used)
+	0xF800-0xFFFF	ROM / memory latch
+
+In user space
+
+	0x0000-0x00FF	Direct page (user)
+	0x0100-0xDDFF	User space
+	0xDE00-0xDFFF	Udata stash
+	0xE000-0xEFFF	Common
+	0xF000-0xF03F   Internal I/O
+	0xF040-0xF1FF	Internal RAM (unbankable)
+
+This requires a thunked 68HC11 model. We pack helper data in the common
+memory and as we have so little we copy common code into each bank to
+have the same effect.
+
+There is a fair bit of space in the kernel and common maps and some holes that
+could also be tidied up if needed.
+
+TODO
+
+Would it make sense to compact the DP usage and overlap the udata at
+0x0080 in the kernel map with kernel DP at 0x00 ? This would turn a lot
+of accesses into DP mode
+
+Optimize fork and other copiers. Several could be a chunk faster with
+more self modifying code and also by using the upper/lower split for the bits
+that can be accessed via both windows.
+
+Add SPI mux support and WizNet 5500 for internet
