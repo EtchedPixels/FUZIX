@@ -608,6 +608,7 @@ _uputc:
 	ldx 2,x
 	tpa
 	psha
+	sei
 	ldaa udata+U_DATA__U_PAGE+1
 	staa IOBASE
 	stab 0,x
