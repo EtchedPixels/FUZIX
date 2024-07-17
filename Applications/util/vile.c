@@ -115,7 +115,7 @@ void con_putc(uint_fast8_t c)
 			con_putc(' ');
 		return;
 	}
-	if (c >= 127) {
+	if (c > 127) {
 		con_puts("\\x");
 		con_putc(hex[c >> 4]);
 		con_putc(hex[c & 0x0F]);
