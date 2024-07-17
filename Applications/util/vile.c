@@ -105,7 +105,7 @@ void con_flush(void)
 static const char hex[] = "0123456789ABCDEF";
 
 /* Put a character to the screen. We handle unprintables and tabs */
-void con_putc(uint8_t c)
+void con_putc(uint_fast8_t c)
 {
 	if (screeny >= screen_height)
 		return;
@@ -115,7 +115,7 @@ void con_putc(uint8_t c)
 			con_putc(' ');
 		return;
 	}
-	if (c > 127) {
+	if (c >= 127) {
 		con_puts("\\x");
 		con_putc(hex[c >> 4]);
 		con_putc(hex[c & 0x0F]);
@@ -150,8 +150,8 @@ static void con_twrite(char *p, int n)
 /* Write a string of symbols including quoting */
 void con_puts(const char *s)
 {
-	uint8_t c;
-	while ((c = (uint8_t) * s++) != 0)
+	uint_fast8_t c;
+	while ((c = (uint_fast8_t) * s++) != 0)
 		con_putc(c);
 }
 
@@ -214,7 +214,7 @@ void con_clear_to_eol(void)
 void con_clear_to_bottom(void)
 {
 	/* Most terminals have a clear to end of screen */
-	if (t_clreos && 0)
+	if (t_clreos)
 		con_twrite(t_clreos, screen_height);
 	/* If not then clear each line, which may in turn emit
 	   a lot of spaces in desperation */
@@ -230,7 +230,7 @@ void con_clear_to_bottom(void)
 
 void con_clear(void)
 {
-	con_goto(0, 0);
+	con_force_goto(0, 0);
 	con_clear_to_bottom();
 }
 
@@ -632,7 +632,7 @@ keytable_t table[] = {
 	{'w', 0, wright},
 	{'^', NORPT, lnbegin},
 	{'$', NORPT, lnend},
-	{'G', USERPT, do_goto},	/* Should be 0G */
+	{'G', USERPT, do_goto},	/* Should be 1G */
 	{'i', NORPT, insert_mode},
 	{'I', NORPT, insert_before},
 	{'J', 0, join},
@@ -694,7 +694,7 @@ int pos(char *pointer)
 int do_goto(void)
 {
 	if (repeat == -1) {
-		epage = indexp = pos(ebuf);
+		epage = indexp = pos(buf);
 		return 0;
 	}
 	/* FIXME: we need to do line tracking really to do this nicely */
@@ -906,12 +906,12 @@ int swapchars(void)
 		/* The hard case - moving a newline */
 		dirtyn = 1;
 		if (x == '\n' || *q == '\n') {
-			dirty[row] = 255;
-			dirty[row + 1] = 255;
+			dirty[row] = 0;
+			dirty[row + 1] = 0;
 		} else {
 			/* FIXME: optimize this for the case where
 			   both have the same on screen length */
-			dirty[row] = col;
+			dirty[row] = col - 1;
 			*p = *q;
 			*q = x;
 		}
@@ -1322,8 +1322,8 @@ int noop(void)
 
 void status_wipe(void)
 {
-	con_goto(screen_height - 1, 0);
-	con_clear_to_eol();
+	dirty[screen_height - 1] = 0;
+	display(0);
 	status_up = 0;
 }
 
@@ -1458,7 +1458,7 @@ void warning(const char *p)
 
 void dirty_below(void)
 {
-	memset(dirty, 0, MAX_HEIGHT - (row + 1));
+	memset(dirty + row, 0, MAX_HEIGHT - (row + 1));
 	dirtyn = 1;
 }
 
@@ -1489,29 +1489,29 @@ void display(int redraw)
 {
 	char *p;
 	unsigned int i, j;
-	int opage = page;
+	int opage = 0;
 	uint_fast8_t inpos = 0;
 	uint8_t *dirtyp = dirty;
 
-	if (indexp < page)
+	if (indexp < page) {
+		/* We don't yet do backscrolls */
+		redraw = 1;
 		page = prevline(indexp);
+	}
+	/* Need to move down */
 	if (epage <= indexp) {
 		page = nextline(indexp);
 		i = page == pos(ebuf) ? screen_height - 2 : screen_height;
-		while (0 < i--)
+		while (0 < i--) {
+			opage++;
 			page = prevline(page - 1);
+		}
+		/* Try and scroll the screen */
+		if (con_scroll(opage))
+			adjust_dirty(opage);
+		else
+			redraw = 1;
 	}
-
-	/* opage is the delta so we know if we are going to scroll. If it's
-	   negative then we need to reverse scroll, if its positive we need
-	   to normal scroll */
-	opage -= page;
-
-	/* If we can't scroll this then redraw the lot */
-	if (opage && con_scroll(opage))
-		redraw = 1;
-	else
-		adjust_dirty(opage);
 
 	if (redraw) {
 		dirtyn = 1;
@@ -1543,11 +1543,11 @@ void display(int redraw)
 		}
 		p = ptr(epage);
 		/* We ran out of screen or buffer */
-		if (screen_height <= i || ebuf <= p)
+		if (i >= screen_height || ebuf <= p)
 			break;
 		/* Normal characters */
 		if (*p != '\n') {
-			uint8_t s = con_size_x(*p, j);
+			uint_fast8_t s = con_size_x(*p, j);
 			/* If the symbol fits and is beyond our dirty marker */
 			if (j >= *dirtyp && j + s < screen_width) {
 				/* Move cursor only if needed. We assume
@@ -1577,17 +1577,19 @@ void display(int redraw)
 		++epage;
 	}
 	/* Clear the end of our final line */
-	if (*dirtyp != 255) {
+	if (j && *dirtyp != 255) {
 		if (!inpos)
 			con_goto(i, j);
 		con_clear_to_eol();
 		*dirtyp = 255;
+		dirtyp++;
+		i++;
 	}
 	/* Now mark out the unused lines with ~ markers if needed */
 	j = i + 1;
 	while (++i < tilde_start) {
-		if (*dirtyp) {
-			*dirtyp = 0;
+		if (*dirtyp != 255) {
+			*dirtyp = 255;
 			con_goto(i, 0);
 			con_putc('~');
 			con_clear_to_eol();
@@ -1640,10 +1642,15 @@ int main(int argc, char *argv[])
 			oom();
 	} else {
 		buf = malloc(65535);
-		if (buf == NULL)
-			oom();
 		ebuf = buf + 65535;
+		if (buf == NULL) {
+			buf = malloc(32768);
+			ebuf = buf + 32768;
+			if (buf == NULL)
+				oom();
+		}
 	}
+
 	gap = buf;
 	egap = ebuf;
 	if (argc < 2)
