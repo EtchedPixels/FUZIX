@@ -148,16 +148,16 @@ static void con_twrite(char *p, int n)
 }
 
 /* Write a string of symbols including quoting */
-void con_puts(const char *s)
+void con_puts(register const char *s)
 {
-	uint8_t c;
-	while ((c = (uint8_t) * s++) != 0)
+	register uint_fast8_t c;
+	while ((c = (uint_fast8_t) * s++) != 0)
 		con_putc(c);
 }
 
-void con_putsn(const char *s, unsigned n)
+void con_putsn(register const char *s, register unsigned n)
 {
-	uint8_t c;
+	register uint_fast8_t c;
 	while (n-- && (c = (uint8_t) * s++) != 0)
 		con_putc(c);
 }
@@ -234,7 +234,7 @@ void con_clear_to_bottom(void)
 
 void con_clear(void)
 {
-	con_goto(0, 0);
+	con_force_goto(0, 0);
 	con_clear_to_bottom();
 }
 
@@ -970,8 +970,8 @@ int swapchars(void)
 		/* The hard case - moving a newline */
 		dirtyn = 1;
 		if (x == '\n' || *q == '\n') {
-			dirty[row] = 255;
-			dirty[row + 1] = 255;
+			dirty[row] = 0;
+			dirty[row + 1] = 0;
 		} else {
 			/* FIXME: optimize this for the case where
 			   both have the same on screen length */
@@ -1154,7 +1154,7 @@ int delete(void)
 		modified = 1;
 		if (*egap == '\n')
 			dirty_below();
-		dirty[row] = col;
+		dirty[row] = col - 1;
 		dirtyn = 1;
 		indexp = pos(++egap);
 		return 0;
@@ -1196,7 +1196,7 @@ static char *memmem_b(const char *buf, const char *ebuf, const char *find, size_
 	return NULL;
 }
 
-static char *memmem(const char *buf, const char *ep, const char *find, size_t flen)
+static char *memmem_f(const char *buf, const char *ep, const char *find, size_t flen)
 {
 	const char *p = buf;
 	ep -= flen;
@@ -1215,7 +1215,7 @@ int searchf(void)
 		return 1;
 	movegap();
 	/* The search area is now linear from egap to ebuf */
-	p = memmem(egap, ebuf, p, strlen(p));
+	p = memmem_f(egap, ebuf, p, strlen(p));
 	if (p == NULL) {
 		warning("Not found");
 		return 1;
@@ -1255,7 +1255,7 @@ int wipe(void)
 	movegap();
 	/* The data to kill is now from egap upwards for bias */
 	egap += bias;
-	dirty[row] = 255;	/* Optimize later */
+	dirty[row] = 0;		/* Optimize later */
 	dirty_below();
 	return 0;
 }
@@ -1550,7 +1550,7 @@ void warning(const char *p)
 
 void dirty_below(void)
 {
-	memset(dirty, 0, MAX_HEIGHT - (row + 1));
+	memset(dirty + row, 0, MAX_HEIGHT - (row + 1));
 	dirtyn = 1;
 }
 
@@ -1567,7 +1567,7 @@ void adjust_dirty(int n)
 
 void dirty_all(void)
 {
-	memset(dirty, 255, MAX_HEIGHT);
+	memset(dirty, 0, MAX_HEIGHT);
 	dirtyn = 1;
 }
 
@@ -1581,39 +1581,38 @@ void display(int redraw)
 {
 	char *p;
 	unsigned int i, j;
-	int opage = page;
+	int opage = 0;
 	uint_fast8_t inpos = 0;
 	uint8_t *dirtyp = dirty;
 
-	if (indexp < page)
+	/* Need to move up */
+	if (indexp < page) {
+		/* We don't yet do backscrolls */
+		redraw = 1;
 		page = prevline(indexp);
+	}
+	/* Need to move down */
 	if (epage <= indexp) {
 		page = nextline(indexp);
 		i = page == pos(ebuf) ? screen_height - 2 : screen_height - 2;
-		while (0 < i--)
+		while (0 < i--) {
+			opage++;
 			page = prevline(page - 1);
-	}
-
-	/* opage is the delta so we know if we are going to scroll. If it's
-	   negative then we need to reverse scroll, if its positive we need
-	   to normal scroll */
-	opage -= page;
-
-	/* If we can't scroll this then redraw the lot */
-	/* TODO: see if its worth doing a scroll and repaint for the lower
-	   lines */
-	if (1 || (opage && con_scroll(opage))) {
-		redraw = 1;
+		}
 		status_dirty = 1;
-	} else {
-		adjust_dirty(opage);
-		status_dirty = 1;
+		/* Status lines stop us doing this, unless we start
+		   being far cleverer and then visually it still looks ick */
+		if (0 && con_scroll(opage))
+			adjust_dirty(opage);
+		else
+			redraw = 1;
 	}
 
 	if (redraw) {
 		dirtyn = 1;
 		dirty_all();
 		cl_start = screen_height - 2;
+		status_dirty = 1;
 	}
 
 	i = j = 0;
@@ -1674,13 +1673,14 @@ void display(int redraw)
 		++epage;
 	}
 	/* Clear the end of our final line */
-	if (*dirtyp != 255) {
+	if (j && *dirtyp != 255) {
 		if (!inpos)
 			con_goto(i, j);
 		con_clear_to_eol();
-		*dirtyp = 255;
+		*dirtyp++ = 255;
+		i++;
 	}
-	/* Now mark out the unused lines with ~ markers if needed */
+	/* Clear unused lines */
 	j = i + 1;
 	while (++i < cl_start && i < screen_height - 2) {
 		if (*dirtyp) {
@@ -1737,9 +1737,13 @@ int main(int argc, char *argv[])
 			oom();
 	} else {
 		buf = malloc(65535);
-		if (buf == NULL)
-			oom();
 		ebuf = buf + 65535;
+		if (buf == NULL) {
+			buf = malloc(32768);
+			ebuf = buf + 32767;
+			if (buf == NULL)
+				oom();
+		}
 	}
 	gap = buf;
 	egap = ebuf;
