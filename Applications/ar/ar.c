@@ -60,7 +60,7 @@ CHDR chdr;
 u_int options;
 char *archive, *envtmp, *posarg, *posname;
 static void badoptions(char *arg);
-static void usage();
+static void usage(void);
 
 /*
  * main --
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 	extern int optind;
 	int c;
 	char *p;
-	int (*fcall)();
+	int (*fcall)(char **argv);
 
 	if (argc < 3)
 		usage();
@@ -220,7 +220,7 @@ static void badoptions(char *arg)
 	usage();
 }
 
-static void usage()
+static void usage(void)
 {
 	fprintf(stderr, "usage:  ar -d [-Tv] archive file ...\n");
 	fprintf(stderr, "\tar -m [-Tv] archive file ...\n");
