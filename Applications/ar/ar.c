@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 	extern int optind;
 	int c;
 	char *p;
-	int (*fcall)(char **argv);
+	int (*fcall)(char **__argv);
 
 	if (argc < 3)
 		usage();
