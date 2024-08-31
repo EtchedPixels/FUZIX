@@ -1,7 +1,7 @@
 #!/bin/sh
 
-X=`which /opt/gcc-arm-eabi/bin/arm-none-eabi-gcc`
+X=`which arm-none-eabi-gcc`
 if [ "$X" = "" ]; then
-	echo "gcc: /opt/gcc-arm-eabi/bin/arm-none-eabi-gcc is required"
+	echo "gcc: arm-none-eabi-gcc is required"
 	exit 1
 fi
