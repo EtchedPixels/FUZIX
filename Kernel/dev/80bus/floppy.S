@@ -65,7 +65,7 @@ read_status:
 	; Next byte will be status
 	in	a,(0xE0)
 	ld	h,0
-	ld	l,a			; Return it to C
+	ld	l,a			; Return it to l
 	pop	bc	
 	ret
 fdcdone:
