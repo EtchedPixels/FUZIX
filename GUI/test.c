@@ -4,7 +4,7 @@
 struct utk_menu edit = {
 	NULL,
 	"Edit",
-	"Cut/Copy/Paste",
+	"Cut/Copy/Paste/",
 	5,
 	3,
 	7
@@ -13,7 +13,7 @@ struct utk_menu edit = {
 struct utk_menu menu = {
 	&edit,
 	"File",
-	"New/Open.../Close/Exit",
+	"New/Open.../Close/Exit/",
 	5,
 	4,
 	8
