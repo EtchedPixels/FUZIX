@@ -159,3 +159,28 @@ Doesn't supply keyboard/screen etc.
 With 256K+ Ramworks model can change - goes for a multi task model with
 kernel in base (as we can't fast I/O to user easily) and user in 1+
 
+
+Extended memory
+
+$C000/1 - 80store - off/on
+$C002/3	- RAMRD off/on
+$C004/5	- RAMWR off/on
+$C054/5 - PAGE2 off/on
+$C056/7	- HIRES off/on
+
+Read C08x for configuring language space, double read to write enable
+$C08B - r/w $D000 bank 1
+$C083 -  ditto bank2
+
+W $C008	main bank 0000-01FF	(and also D000-FFF becomes main)
+W $C009	alt bank 0000-01FF	(ditto alt)
+
+
+
+
+
+
+80store off, RAMWR on	- write to alt but read and thus execute from main
+			(ZP and stack switch with language card alt)
+ROM has AUXMOVE can we use it 
+
