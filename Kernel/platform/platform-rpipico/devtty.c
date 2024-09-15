@@ -17,10 +17,16 @@ struct ttymap ttymap[NUM_DEV_TTY+1];
 struct s_queue ttyinq[NUM_DEV_TTY+1];
 tcflag_t termios_mask[NUM_DEV_TTY+1];
 
+void no_setup(uint_fast8_t minor, uint_fast8_t devn, uint_fast8_t flags) {
+    used(minor);
+    used(devn);
+    used(flags);
+}
+
 struct ttydriver ttydrivers[2] =
 {
-    { .putc = &rawuart_putc, .ready = &rawuart_ready, .sleeping = rawuart_sleeping, .getc = &rawuart_getc },
-    { .putc = &usbconsole_putc, .ready = &usbconsole_ready, .sleeping = usbconsole_sleeping, .getc = &usbconsole_getc },
+    { rawuart_putc,     rawuart_ready,      rawuart_sleeping,       rawuart_getc,       rawuart_setup },
+    { usbconsole_putc,  usbconsole_ready,   usbconsole_sleeping,    usbconsole_getc,    no_setup },
 };
 
 static void devtty_defconfig(uint8_t drv, int count, int minor)
@@ -30,6 +36,11 @@ static void devtty_defconfig(uint8_t drv, int count, int minor)
     {
         ttymap[minor].tty = devnum++;
         ttymap[minor].drv = drv;
+        if (drv == TTYDRV_USB) {
+            termios_mask[minor] = _CSYS;
+        } else {
+            termios_mask[minor] = CSIZE | CBAUD | PARENB | PARODD | _CSYS;
+        }
         minor++;
     }
 }
@@ -55,7 +66,6 @@ void devtty_init(void)
         ttyinq[i].q_size = TTYSIZ;
         ttyinq[i].q_count = 0;
         ttyinq[i].q_wakeup = TTYSIZ/2;
-        termios_mask[i] = _CSYS;
     }
     
     if (defconfig)
@@ -151,8 +161,22 @@ void tty_sleeping(uint_fast8_t minor)
     struct ttydriver *drv = &ttydrivers[map->drv];
     drv->sleeping(map->tty);
 }
+
 void tty_data_consumed(uint_fast8_t minor) {}
-void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {}
+
+/*
+ *	This function is called whenever the terminal interface is opened
+ *	or the settings changed. It is responsible for making the requested
+ *	changes to the port if possible. Strictly speaking it should write
+ *	back anything that cannot be implemented to the state it selected.
+ */
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags) {
+    struct ttymap* map = &ttymap[minor];
+    if (map->tty == 0)
+        return;
+    struct ttydriver *drv = &ttydrivers[map->drv];
+    drv->setup(minor, map->tty, flags);
+}
 
 void tty_interrupt(void)
 {
@@ -165,7 +189,10 @@ void tty_interrupt(void)
         struct ttydriver *drv = &ttydrivers[map->drv];
         while((c = drv->getc(map->tty)) >= 0)
         {
-            tty_inproc(minor, c);
+            if(tty_inproc(minor, c) == 0)
+            {
+                break;
+            }
         }
     }
 }

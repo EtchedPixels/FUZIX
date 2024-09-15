@@ -46,17 +46,19 @@ static void timer_tick_cb(unsigned alarm)
 {
     absolute_time_t next;
     update_us_since_boot(&next, to_us_since_boot(now) + (1000000 / TICKSPERSEC));
-    if (hardware_alarm_set_target(0, next)) 
-    {
-        update_us_since_boot(&next, time_us_64() + (1000000 / TICKSPERSEC));
-        hardware_alarm_set_target(0, next);
-    }
+
     irqflags_t irq = di();
     udata.u_ininterrupt = 1;
     tty_interrupt();
     timer_interrupt();
     udata.u_ininterrupt = 0;
     irqrestore(irq);
+
+    if (hardware_alarm_set_target(0, next))
+    {
+        update_us_since_boot(&next, time_us_64() + (1000000 / TICKSPERSEC));
+        hardware_alarm_set_target(0, next);
+    }
 }
 
 void device_init(void)
