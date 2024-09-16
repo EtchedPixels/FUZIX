@@ -10,6 +10,7 @@ struct ttydriver
     ttyready_t (*ready)(uint8_t devn);
     void (*sleeping)(uint8_t devn);
     int (*getc)(uint8_t devn);
+    void (*setup)(uint_fast8_t minor, uint_fast8_t devn, uint_fast8_t flags);
 };
 
 struct ttymap

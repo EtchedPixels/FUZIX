@@ -1,7 +1,6 @@
 #define MANGLED 0
 #include "mangle.h"
 
-#include <pico/platform.h>
 #include <hardware/gpio.h>
 #include <hardware/regs/addressmap.h>
 #include "pico/stdlib.h"

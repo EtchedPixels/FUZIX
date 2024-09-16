@@ -90,12 +90,12 @@ extern uint8_t progbase[USERMEM];
 #define TICKSPERSEC 200   /* Ticks per second */
 /* 
  * Boot cmd line.
- * cu [BOOTDEVICE] [tty=<TTYLIST>]
+ * [BOOTDEVICE] [tty=<TTYLIST>]
  * 
  * <BOOTDEVICE> - use `hda` for built-in flash or `hdbX` for SD card, where X is partition number
  * <TTYLIST> - list of TTY devices in order. If not specified system will
- *      map USB devices to tty0-4 and UART0 to tty5 if USB is connected. Or UART0 to tty0 etc if not.
- *      Example: `tty=usb1,uart0,usb0`
+ *      map USB devices to tty1-4 and UART0 to tty5 if USB is connected. Or UART0 to tty1 etc if not.
+ *      Example: `tty=usb1,uart1,usb2`
 */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
@@ -103,7 +103,13 @@ extern uint8_t progbase[USERMEM];
 #define SWAPDEV    (swap_dev) /* dynamic swap */
 
 /* Device parameters */
-#define NUM_DEV_TTY_UART 1 /* min 1 max 1*/
+#define NUM_DEV_TTY_UART 1 /* min 1 max 2*/
+#define DEV_UART_0_TX_PIN PICO_DEFAULT_UART_TX_PIN
+#define DEV_UART_0_RX_PIN PICO_DEFAULT_UART_RX_PIN
+#define DEV_UART_1_TX_PIN 6
+#define DEV_UART_1_RX_PIN 7
+#define DEV_UART_1_CTS_PIN 8
+#define DEV_UART_1_RTS_PIN 9
 #define NUM_DEV_TTY_USB 4 /* min 1 max 4. */
 #define NUM_DEV_TTY (NUM_DEV_TTY_UART + NUM_DEV_TTY_USB)
 #define DEV_USB_DETECT_TIMEOUT 5000 /* (ms) Total timeout time to detect USB host connection*/
