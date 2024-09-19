@@ -14,9 +14,9 @@ uint16_t swap_dev = 0xFFFF;
 
 void plt_idle(void)
 {
-    irqflags_t flags = di();
+//    irqflags_t flags = di();
 //    tty_poll();
-    irqrestore(flags);
+//    irqrestore(flags);
 }
 
 void do_beep(void)
@@ -40,9 +40,13 @@ uint8_t timer_ticks;
 void plt_event(void)
 {
 	tty_poll();
+#ifdef CONFIG_NET
+	/* Make sure we see the true flag state */
+	barrier();
 	/* We can't poll the Wiznet if the SD card is mid transaction */
 	if (tinysd_busy == 0)
 		w5x00_poll();
+#endif
 
 	/* Turn the 50Hz counting into a 50Hz tty poll and a 10Hz
 	   timer processing */

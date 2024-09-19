@@ -36,5 +36,7 @@ uint8_t plt_param(char *p)
 void device_init(void)
 {
     sd_probe();
+#ifdef CONFIG_NET
     netdev_init();
+#endif
 }

@@ -396,6 +396,7 @@ map_save_kernel:
 	ldaa	shared_mlatch
 	staa	shared_map
 	ldaa	#0x10
+	staa	shared_mlatch
 	staa	MLATCH
 	pula
 	rts
@@ -682,7 +683,6 @@ _ugetw:
 	rts
 
 _uzero:
-	; FIXME IRQ save restore
 	tsx
 	ldy 2,x			; size
 	xgdx			; swap over as we want pointer in X
@@ -723,7 +723,7 @@ ugetl:
 	stab	MLATCH
 	ldab	,y
 	iny
-	ldaa	#0x10
+	ldaa	#0x10		; FIXME move out of loops to optimize
 	staa	MLATCH
 	stab	,x
 	inx

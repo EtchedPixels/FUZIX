@@ -15,7 +15,7 @@
 #define CONFIG_BANKS	1
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
-#define CONFIG_LARGE_IO_DIRECT(x)	1
+#define CONFIG_LARGE_IO_DIRECT(x)	0
 
 /* Arguments are tricky. The 680x binaries stack one way the 68HC11 the other.
    We deal with that in the syscall stubs and in crt0 */
@@ -60,9 +60,9 @@ extern uint16_t swap_dev;
 #define NBUFS    5        /* Number of block buffers */
 #define NMOUNTS	 2	  /* Number of mounts at a time */
 
-#define CONFIG_NET
-#define CONFIG_NET_WIZNET
-#define CONFIG_NET_W5500
+#undef CONFIG_NET
+#undef CONFIG_NET_WIZNET
+#undef CONFIG_NET_W5500
 
 #define plt_discard()
 #define plt_copyright()
