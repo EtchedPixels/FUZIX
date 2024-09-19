@@ -80,15 +80,17 @@ switchin:
 
 	;	Using the same page as before
 	ldd	P_TAB__P_PAGE_OFFSET,x
-	cmpd	udata+U_DATA__U_PAGE
-	beq	nostash
-
-	subd	#0		;compare with 0
 	bne	not_swapped
 
+
+	xgdx
 	jsr	swapper
 	ldx	switch_proc_ptr
+	bra	swapdone
 not_swapped:
+	cmpd	udata+U_DATA__U_PAGE
+	beq	nostash
+swapdone
 	; Get our bank
 	ldab	P_TAB__P_PAGE_OFFSET+1,x	; bank
 
