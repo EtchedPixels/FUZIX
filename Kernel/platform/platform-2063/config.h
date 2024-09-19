@@ -31,9 +31,6 @@
 #define NBUFS    4        /* Number of block buffers */
 #define NMOUNTS	 3	  /* Number of mounts at a time */
 
-#define CONFIG_NET
-#define CONFIG_NET_NATIVE
-
 /* SD card support */
 #define CONFIG_TD_NUM	1
 #define CONFIG_TD_SD
@@ -61,5 +58,3 @@
 #define CONFIG_INPUT
 
 #define plt_copyright()
-
-#define CONFIG_SMALL
