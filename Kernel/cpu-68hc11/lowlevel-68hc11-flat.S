@@ -250,7 +250,13 @@ call_c_irq:
 	ldx *_.d4
 	pshx
 
+	ldx *_.frame
+	pshx
+
 	jsr ,y
+
+	pulx
+	stx *_.frame
 
 	pulx
 	stx *_.d4
@@ -337,8 +343,8 @@ preemption:
 	stab	udata+U_DATA__U_INSYS
 
 	; Signal check
-	ldy #chksigs
-	jsr call_c_irq
+	ldy	#chksigs
+	jsr	call_c_irq
 
 	ldx	udata+U_DATA__U_PTAB
 	ldab	P_TAB__P_STATUS_OFFSET,x
