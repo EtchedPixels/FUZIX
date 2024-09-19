@@ -50,6 +50,6 @@ that can be accessed via both windows.
 Add SPI mux support and WizNet 5500 for internet
 
 Broken
-- Preempt appears to cause crashes when swapping out
-- On real hardware get crashes if doing disk I/O direct ?
-- Are we missing saving something?
+DONE - Preempt appears to cause crashes when swapping out
+TEST NEEDED - On real hardware get crashes if doing disk I/O direct ?
+DONE - Are we missing saving something?
