@@ -84,15 +84,18 @@ switchin:
 
 	;	Using the same page as before
 	ldd	P_TAB__P_PAGE_OFFSET,x
+	bne	not_swapped
+
+	xgdx
+	jsr	swapper
+	ldx	switch_proc_ptr
+	bra	swapdone
+
+not_swapped:
 	cmpd	udata+U_DATA__U_PAGE
 	beq	nostash
 
-	subd	#0		;compare with 0
-	bne	not_swapped
-
-	jsr	swapper
-	ldx	switch_proc_ptr
-not_swapped:
+swapdone:
 	; Get our bank
 	ldab	P_TAB__P_PAGE_OFFSET+1,x	; bank
 
@@ -250,6 +253,6 @@ switch_proc_ptr: .word 0
 ;
 ;	128 byte swap stack - can live anywhere
 ;
-	.ds 64
+	.ds 128
 swapstack:
 	.byte 0
