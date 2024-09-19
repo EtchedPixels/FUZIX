@@ -329,7 +329,13 @@ call_c_irq:
 	ldx *_.d4
 	pshx
 
+	ldx *_.frame
+	pshx
+
 	jsr ,y
+
+	pulx
+	stx *_.frame
 
 	pulx
 	stx *_.d4
