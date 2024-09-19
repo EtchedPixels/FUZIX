@@ -15,7 +15,7 @@
 #define CONFIG_BANKS	1
 
 /* Permit large I/O requests to bypass cache and go direct to userspace */
-#define CONFIG_LARGE_IO_DIRECT(x)	0
+#define CONFIG_LARGE_IO_DIRECT(x)	1
 
 /* Arguments are tricky. The 680x binaries stack one way the 68HC11 the other.
    We deal with that in the syscall stubs and in crt0 */
