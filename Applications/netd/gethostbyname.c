@@ -184,7 +184,6 @@ struct hostent *gethostbyname( char *name ){
     {
 	struct header *h = (struct header *)buf;
 	struct RRtail *t;
-	char *ptr;
 	int i,j;
 
 	if( h->id != 42 )  /* correct session ID ? */
