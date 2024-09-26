@@ -6,8 +6,8 @@ IMG=filesystem.img
 rm -f ${IMG}
 # Second number here should be slightly less that the logical size reported by
 # mkftl, in sectors.
-../../Standalone/mkfs ${IMG} 32 2590
-../../Standalone/ucp ${IMG} <<EOF
+../../../Standalone/mkfs ${IMG} 32 2590
+../../../Standalone/ucp ${IMG} <<EOF
 cd /
 mkdir bin
 mkdir dev
@@ -70,16 +70,16 @@ mknod zero  20444 1026
 mknod proc  20666 1027
 
 cd /
-bget ../../Applications/util/init init
+bget ../../../Applications/util/init init
 chmod 755 init
 
 cd /etc
-bget ../../Standalone/filesystem-src/etc-files/issue
-bget ../../Standalone/filesystem-src/etc-files/motd
-bget ../../Standalone/filesystem-src/etc-files/passwd
-bget ../../Standalone/filesystem-src/etc-files/inittab
-bget ../../Standalone/filesystem-src/etc-files/termcap
-bget ../../Standalone/filesystem-src/etc-files/rc
+bget ../../../Standalone/filesystem-src/etc-files/issue
+bget ../../../Standalone/filesystem-src/etc-files/motd
+bget ../../../Standalone/filesystem-src/etc-files/passwd
+bget ../../../Standalone/filesystem-src/etc-files/inittab
+bget ../../../Standalone/filesystem-src/etc-files/termcap
+bget ../../../Standalone/filesystem-src/etc-files/rc
 chmod 0644 issue
 chmod 0644 motd
 chmod 0644 passwd
@@ -88,90 +88,90 @@ chmod 0644 termcap
 chmod 0755 rc
 
 cd /bin
-bget ../../Applications/util/banner
-bget ../../Applications/util/basename
-bget ../../Applications/util/bd
-bget ../../Applications/util/blkdiscard
-bget ../../Applications/util/cal
-bget ../../Applications/util/cat
-bget ../../Applications/util/chgrp
-bget ../../Applications/util/chmod
-bget ../../Applications/util/chown
-bget ../../Applications/util/cksum
-bget ../../Applications/util/cmp
-bget ../../Applications/util/cp
-bget ../../Applications/util/cut
-bget ../../Applications/util/date
-bget ../../Applications/util/dd
-bget ../../Applications/util/decomp16
-bget ../../Applications/util/df
-bget ../../Applications/util/dirname
-bget ../../Applications/util/dosread
-bget ../../Applications/util/du
-bget ../../Applications/util/echo
-bget ../../Applications/util/ed
-bget ../../Applications/util/env
-bget ../../Applications/util/false
-bget ../../Applications/util/fdisk
-bget ../../Applications/util/fforth
-bget ../../Applications/util/fgrep
-bget ../../Applications/util/free
-bget ../../Applications/util/fsck
-bget ../../Applications/util/fsck-fuzix
-bget ../../Applications/util/grep
-bget ../../Applications/util/head
-bget ../../Applications/util/id
-bget ../../Applications/util/kill
-bget ../../Applications/util/ll
-bget ../../Applications/util/logname
-bget ../../Applications/util/ls
-bget ../../Applications/util/man
-bget ../../Applications/util/marksman
-bget ../../Applications/util/mkdir
-bget ../../Applications/util/mkfs
-bget ../../Applications/util/mkfifo
-bget ../../Applications/util/mknod
-bget ../../Applications/util/more
-bget ../../Applications/util/mount
-bget ../../Applications/util/od
-bget ../../Applications/util/pagesize
-bget ../../Applications/util/passwd
-bget ../../Applications/util/printenv
-bget ../../Applications/util/prtroot
-bget ../../Applications/util/ps
-bget ../../Applications/util/pwd
-bget ../../Applications/util/reboot
-bget ../../Applications/util/remount
-bget ../../Applications/util/rm
-bget ../../Applications/util/rmdir
-bget ../../Applications/util/setdate
-bget ../../Applications/util/sleep
-bget ../../Applications/util/ssh
-bget ../../Applications/util/sort
-bget ../../Applications/util/stty
-bget ../../Applications/util/sum
-bget ../../Applications/util/su
-bget ../../Applications/util/swapon
-bget ../../Applications/util/sync
-bget ../../Applications/util/tar
-bget ../../Applications/util/tee
-bget ../../Applications/util/tail
-bget ../../Applications/util/touch
-bget ../../Applications/util/tr
-bget ../../Applications/util/true
-bget ../../Applications/util/umount
-bget ../../Applications/util/uniq
-bget ../../Applications/util/uptime
-bget ../../Applications/util/uud
-bget ../../Applications/util/uue
-bget ../../Applications/util/vile
-bget ../../Applications/util/wc
-bget ../../Applications/util/which
-bget ../../Applications/util/who
-bget ../../Applications/util/whoami
-bget ../../Applications/util/write
-bget ../../Applications/util/xargs
-bget ../../Applications/util/yes
+bget ../../../Applications/util/banner
+bget ../../../Applications/util/basename
+bget ../../../Applications/util/bd
+bget ../../../Applications/util/blkdiscard
+bget ../../../Applications/util/cal
+bget ../../../Applications/util/cat
+bget ../../../Applications/util/chgrp
+bget ../../../Applications/util/chmod
+bget ../../../Applications/util/chown
+bget ../../../Applications/util/cksum
+bget ../../../Applications/util/cmp
+bget ../../../Applications/util/cp
+bget ../../../Applications/util/cut
+bget ../../../Applications/util/date
+bget ../../../Applications/util/dd
+bget ../../../Applications/util/decomp16
+bget ../../../Applications/util/df
+bget ../../../Applications/util/dirname
+bget ../../../Applications/util/dosread
+bget ../../../Applications/util/du
+bget ../../../Applications/util/echo
+bget ../../../Applications/util/ed
+bget ../../../Applications/util/env
+bget ../../../Applications/util/false
+bget ../../../Applications/util/fdisk
+bget ../../../Applications/util/fforth
+bget ../../../Applications/util/fgrep
+bget ../../../Applications/util/free
+bget ../../../Applications/util/fsck
+bget ../../../Applications/util/fsck-fuzix
+bget ../../../Applications/util/grep
+bget ../../../Applications/util/head
+bget ../../../Applications/util/id
+bget ../../../Applications/util/kill
+bget ../../../Applications/util/ll
+bget ../../../Applications/util/logname
+bget ../../../Applications/util/ls
+bget ../../../Applications/util/man
+bget ../../../Applications/util/marksman
+bget ../../../Applications/util/mkdir
+bget ../../../Applications/util/mkfs
+bget ../../../Applications/util/mkfifo
+bget ../../../Applications/util/mknod
+bget ../../../Applications/util/more
+bget ../../../Applications/util/mount
+bget ../../../Applications/util/od
+bget ../../../Applications/util/pagesize
+bget ../../../Applications/util/passwd
+bget ../../../Applications/util/printenv
+bget ../../../Applications/util/prtroot
+bget ../../../Applications/util/ps
+bget ../../../Applications/util/pwd
+bget ../../../Applications/util/reboot
+bget ../../../Applications/util/remount
+bget ../../../Applications/util/rm
+bget ../../../Applications/util/rmdir
+bget ../../../Applications/util/setdate
+bget ../../../Applications/util/sleep
+bget ../../../Applications/util/ssh
+bget ../../../Applications/util/sort
+bget ../../../Applications/util/stty
+bget ../../../Applications/util/sum
+bget ../../../Applications/util/su
+bget ../../../Applications/util/swapon
+bget ../../../Applications/util/sync
+bget ../../../Applications/util/tar
+bget ../../../Applications/util/tee
+bget ../../../Applications/util/tail
+bget ../../../Applications/util/touch
+bget ../../../Applications/util/tr
+bget ../../../Applications/util/true
+bget ../../../Applications/util/umount
+bget ../../../Applications/util/uniq
+bget ../../../Applications/util/uptime
+bget ../../../Applications/util/uud
+bget ../../../Applications/util/uue
+bget ../../../Applications/util/vile
+bget ../../../Applications/util/wc
+bget ../../../Applications/util/which
+bget ../../../Applications/util/who
+bget ../../../Applications/util/whoami
+bget ../../../Applications/util/write
+bget ../../../Applications/util/xargs
+bget ../../../Applications/util/yes
 chmod 0755 banner
 chmod 0755 basename
 chmod 0755 bd
@@ -259,41 +259,41 @@ chmod 4755 su
 ln cp mv
 ln cp ln
 
-bget ../../Applications/V7/cmd/sh/sh
+bget ../../../Applications/V7/cmd/sh/sh
 chmod 0755 sh
 
-bget ../../Applications/V7/cmd/ac
-bget ../../Applications/V7/cmd/accton
-bget ../../Applications/V7/cmd/at
-bget ../../Applications/V7/cmd/atrun
-bget ../../Applications/V7/cmd/col
-bget ../../Applications/V7/cmd/comm
-bget ../../Applications/V7/cmd/cron
-bget ../../Applications/V7/cmd/crypt
-bget ../../Applications/V7/cmd/dc
-bget ../../Applications/V7/cmd/dd
-bget ../../Applications/V7/cmd/deroff
-bget ../../Applications/V7/cmd/diff
-bget ../../Applications/V7/cmd/diff3
-bget ../../Applications/V7/cmd/diffh
-bget ../../Applications/V7/cmd/ed
-bget ../../Applications/V7/cmd/join
-bget ../../Applications/V7/cmd/look
-bget ../../Applications/V7/cmd/makekey
-bget ../../Applications/V7/cmd/mesg
-bget ../../Applications/V7/cmd/newgrp
-bget ../../Applications/V7/cmd/pg
-bget ../../Applications/V7/cmd/pr
-bget ../../Applications/V7/cmd/ptx
-bget ../../Applications/V7/cmd/rev
-bget ../../Applications/V7/cmd/split
-bget ../../Applications/V7/cmd/su
-bget ../../Applications/V7/cmd/sum
-bget ../../Applications/V7/cmd/test
-bget ../../Applications/V7/cmd/time
-bget ../../Applications/V7/cmd/tsort
-bget ../../Applications/V7/cmd/tty
-bget ../../Applications/V7/cmd/wall
+bget ../../../Applications/V7/cmd/ac
+bget ../../../Applications/V7/cmd/accton
+bget ../../../Applications/V7/cmd/at
+bget ../../../Applications/V7/cmd/atrun
+bget ../../../Applications/V7/cmd/col
+bget ../../../Applications/V7/cmd/comm
+bget ../../../Applications/V7/cmd/cron
+bget ../../../Applications/V7/cmd/crypt
+bget ../../../Applications/V7/cmd/dc
+bget ../../../Applications/V7/cmd/dd
+bget ../../../Applications/V7/cmd/deroff
+bget ../../../Applications/V7/cmd/diff
+bget ../../../Applications/V7/cmd/diff3
+bget ../../../Applications/V7/cmd/diffh
+bget ../../../Applications/V7/cmd/ed
+bget ../../../Applications/V7/cmd/join
+bget ../../../Applications/V7/cmd/look
+bget ../../../Applications/V7/cmd/makekey
+bget ../../../Applications/V7/cmd/mesg
+bget ../../../Applications/V7/cmd/newgrp
+bget ../../../Applications/V7/cmd/pg
+bget ../../../Applications/V7/cmd/pr
+bget ../../../Applications/V7/cmd/ptx
+bget ../../../Applications/V7/cmd/rev
+bget ../../../Applications/V7/cmd/split
+bget ../../../Applications/V7/cmd/su
+bget ../../../Applications/V7/cmd/sum
+bget ../../../Applications/V7/cmd/test
+bget ../../../Applications/V7/cmd/time
+bget ../../../Applications/V7/cmd/tsort
+bget ../../../Applications/V7/cmd/tty
+bget ../../../Applications/V7/cmd/wall
 chmod 0755 ac
 chmod 0755 accton
 chmod 0755 at
@@ -327,62 +327,62 @@ chmod 0755 tsort
 chmod 0755 tty
 chmod 0755 wall
 
-#bget ../../Applications/levee/levee
+#bget ../../../Applications/levee/levee
 #chmod 0755 levee
 
 #cd /usr/man/man1
-#bget ../../Applications/levee/levee.1
+#bget ../../../Applications/levee/levee.1
 #chmod 0644 levee.1
 
 cd /usr/lib
-bget ../../Library/libs/liberror.txt
-bget ../../Applications/util/tchelp
+bget ../../../Library/libs/liberror.txt
+bget ../../../Applications/util/tchelp
 chmod 0644 liberror.txt
 chmod 0755 tchelp
 
 cd /usr
 mkdir games
 cd /usr/games
-#bget ../../Applications/games/adv01
-#bget ../../Applications/games/adv02
-#bget ../../Applications/games/adv03
-#bget ../../Applications/games/adv04
-#bget ../../Applications/games/adv05
-#bget ../../Applications/games/adv06
-#bget ../../Applications/games/adv07
-#bget ../../Applications/games/adv08
-#bget ../../Applications/games/adv09
-#bget ../../Applications/games/adv10
-#bget ../../Applications/games/adv11
-#bget ../../Applications/games/adv12
-#bget ../../Applications/games/adv13
-#bget ../../Applications/games/adv14a
-#bget ../../Applications/games/adv14b
-#bget ../../Applications/games/advint
-bget ../../Applications/games/cowsay
-#bget ../../Applications/games/fortune
-#bget ../../Applications/games/fortune.dat
-#bget ../../Applications/games/hamurabi
-#bget ../../Applications/games/myst01
-#bget ../../Applications/games/myst02
-#bget ../../Applications/games/myst03
-#bget ../../Applications/games/myst04
-#bget ../../Applications/games/myst05
-#bget ../../Applications/games/myst06
-#bget ../../Applications/games/myst07
-#bget ../../Applications/games/myst08
-#bget ../../Applications/games/myst09
-#bget ../../Applications/games/myst10
-#bget ../../Applications/games/myst11
-#bget ../../Applications/games/qrun
-#bget ../../Applications/games/startrek
-#bget ../../Applications/games/z1
-#bget ../../Applications/games/z2
-#bget ../../Applications/games/z3
-#bget ../../Applications/games/z4
-#bget ../../Applications/games/z5
-#bget ../../Applications/games/z8
-#bget ../../Applications/cursesgames/invaders
+#bget ../../../Applications/games/adv01
+#bget ../../../Applications/games/adv02
+#bget ../../../Applications/games/adv03
+#bget ../../../Applications/games/adv04
+#bget ../../../Applications/games/adv05
+#bget ../../../Applications/games/adv06
+#bget ../../../Applications/games/adv07
+#bget ../../../Applications/games/adv08
+#bget ../../../Applications/games/adv09
+#bget ../../../Applications/games/adv10
+#bget ../../../Applications/games/adv11
+#bget ../../../Applications/games/adv12
+#bget ../../../Applications/games/adv13
+#bget ../../../Applications/games/adv14a
+#bget ../../../Applications/games/adv14b
+#bget ../../../Applications/games/advint
+bget ../../../Applications/games/cowsay
+#bget ../../../Applications/games/fortune
+#bget ../../../Applications/games/fortune.dat
+#bget ../../../Applications/games/hamurabi
+#bget ../../../Applications/games/myst01
+#bget ../../../Applications/games/myst02
+#bget ../../../Applications/games/myst03
+#bget ../../../Applications/games/myst04
+#bget ../../../Applications/games/myst05
+#bget ../../../Applications/games/myst06
+#bget ../../../Applications/games/myst07
+#bget ../../../Applications/games/myst08
+#bget ../../../Applications/games/myst09
+#bget ../../../Applications/games/myst10
+#bget ../../../Applications/games/myst11
+#bget ../../../Applications/games/qrun
+#bget ../../../Applications/games/startrek
+#bget ../../../Applications/games/z1
+#bget ../../../Applications/games/z2
+#bget ../../../Applications/games/z3
+#bget ../../../Applications/games/z4
+#bget ../../../Applications/games/z5
+#bget ../../../Applications/games/z8
+#bget ../../../Applications/cursesgames/invaders
 
 #chmod 0755 adv01
 #chmod 0755 adv02
@@ -425,13 +425,13 @@ chmod 0755 cowsay
 #chmod 0755 z8
 #chmod 0755 invaders
 
-#bget ../../Applications/cave/advent
+#bget ../../../Applications/cave/advent
 #chmod 0755 advent
 #
 #cd /usr/games
 #mkdir lib
 #cd lib
-#bget ../../Applications/cave/advent.db
+#bget ../../../Applications/cave/advent.db
 #chmod 0644 advent.db
 
 #cd /usr/lib
@@ -439,10 +439,10 @@ chmod 0755 cowsay
 #chmod 0711 trek
 #cd /usr/lib/trek
 #
-#bget ../../Applications/games/startrek.doc
-#bget ../../Applications/games/startrek.fatal
-#bget ../../Applications/games/startrek.intro
-#bget ../../Applications/games/startrek.logo
+#bget ../../../Applications/games/startrek.doc
+#bget ../../../Applications/games/startrek.fatal
+#bget ../../../Applications/games/startrek.intro
+#bget ../../../Applications/games/startrek.logo
 #chmod 0755 startrek.doc
 #chmod 0755 startrek.fatal
 #chmod 0755 startrek.intro
@@ -450,6 +450,4 @@ chmod 0755 cowsay
 
 EOF
 
-../../Standalone/fsck -a ${IMG}
-
-
+../../../Standalone/fsck -a ${IMG}

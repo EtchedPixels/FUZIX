@@ -77,7 +77,7 @@ filesystem.img::
 
 filesystem.ftl: filesystem.img
 	# -s is the flash size in kilobytes; the kernel and boot loader takes the first 64kB.
-	../../../../Standalone/mkftl -s 1984 -e 0x1000 -p 512 -g 10 filesystem.img -o filesystem.ftl
+	../../../Standalone/mkftl -s 1984 -e 0x1000 -p 512 -g 10 filesystem.img -o filesystem.ftl
 
 filesystem.elf: filesystem.ftl
 	xtensa-lx106-elf-objcopy -I binary -O elf32-xtensa-le --change-section-vma .data=0x40220000 filesystem.ftl filesystem.elf
@@ -95,7 +95,7 @@ image: image.elf
 burn: image
 	# You can use qio on a lot of parts but if it doesn't work try dio. For the ESP8285 use dout
 	esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -fs 4MB -ff 80m -fm dio
-	#esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin 0x100000 ../../filesystem.ftl -ff 80m -fm dout
+	#esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin 0x100000 filesystem.ftl -ff 80m -fm dout
 	#esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin -ff 80m -fm dout
 	
 clean:
