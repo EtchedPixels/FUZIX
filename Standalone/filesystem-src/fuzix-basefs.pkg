@@ -105,8 +105,8 @@ n 60660 256 /dev/fd0
 n 60660 257 /dev/fd1   
 n 60660 258 /dev/fd2   
 n 60660 259 /dev/fd3   
-n 60660 768 /dev/rd0
-n 60660 769 /dev/rd1
+n 20660 768 /dev/lp0
+n 20660 769 /dev/lp1
 n 20666 1024 /dev/null  
 n 20660 1025 /dev/kmem
 n 20444 1026 /dev/zero  
@@ -117,6 +117,10 @@ n 20644 1030 /dev/sys
 n 20600 1031 /dev/i2c
 n 20600 1032 /dev/gpio
 n 20600 1090 /dev/input
+n 60660 2048 /dev/rd0
+n 60661 2049 /dev/rd1
+n 60662 2050 /dev/rd2
+n 60663 2051 /dev/rd3
 
 f 0644 /etc/group     etc-files/group
 f 0644 /etc/issue     etc-files/issue

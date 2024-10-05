@@ -2001,7 +2001,6 @@ void seekc(struct blk *hptr, int n)
 	nn = hptr->beg + n;
 	if (nn > hptr->last) {
 		nbytes += nn - hptr->last;
-		free(hptr->beg);
 		p = realloc(hptr->beg, (unsigned) n);
 		if (p == 0) {
 			hptr->beg =
@@ -2130,7 +2129,6 @@ void redef(struct blk *p)
 		printf("odd ptr %o hdr %o\n", p->beg, p);
 		ospace("redef-bad");
 	}
-	free(p->beg);
 	free(dummy);
 	dummy = malloc(1);
 	if (dummy == NULL)

@@ -86,6 +86,8 @@ extern void enable_icache(void);
 #define UNALIGNED(x)		((x) & 1)
 #define ALIGNUP(x)		(((x) + 1) & ~1)
 #define ALIGNDOWN(x)		((x) & ~1)
+/* Stack 32bit aligned for speed on later processors */
+#define STACKALIGN(x)		((x) & ~3)
 
 /* In a 32bit environment udata.u_codebase is the progrram base for brk */
 #define PROGBASE		(udata.u_codebase)

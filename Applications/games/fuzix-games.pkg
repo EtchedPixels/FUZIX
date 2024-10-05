@@ -34,6 +34,7 @@ f 0755 /usr/games/myst09        myst09
 f 0755 /usr/games/myst10        myst10
 f 0755 /usr/games/myst11        myst11
 f 0755 /usr/games/qrun          qrun
+f 0755 /usr/games/l9x		l9x
 f 0755 /usr/games/startrek      startrek
 d 0711 /usr/lib/trek
 f 0755 /usr/lib/trek/startrek.doc startrek.doc

@@ -1,5 +1,5 @@
 ROOT = ../..
-include $(ROOT)/Applications/rules.armm4
+include $(ROOT)/Target/rules.armm4
 
 OBJS		=as.o assemble.o errors.o express.o \
 		 genbin.o genlist.o genobj.o gensym.o \

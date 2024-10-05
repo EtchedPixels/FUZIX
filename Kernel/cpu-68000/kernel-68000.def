@@ -1,0 +1,80 @@
+#include "../build/kernel.def"
+
+/* Keep these in sync with struct u_data!! */
+
+#define U_DATA__U_PTAB		0
+#define U_DATA__U_PAGE		4
+#define U_DATA__U_PAGEB		5
+#define U_DATA__U_PAGE2		6
+#define U_DATA__U_INSYS		8
+#define U_DATA__U_CALLNO	9
+#define U_DATA__U_SYSCALL_SP	10
+#define U_DATA__U_RETVAL	14
+#define U_DATA__U_ERROR		18
+#define U_DATA__U_SP		20
+#define U_DATA__U_ININTERRUPT	24
+#define U_DATA__U_CURSIG	25
+#define U_DATA__U_ARGN		26
+#define U_DATA__U_ARGN1		30
+#define U_DATA__U_ARGN2		34
+#define U_DATA__U_ARGN3		38
+#define U_DATA__U_ISP		42
+#define U_DATA__U_TOP		46
+#define U_DATA__U_BREAK		50
+#define U_DATA__U_CODEBASE	54
+#define U_DATA__U_SIGVEC	58
+
+#define UBLOCK_SIZE		1024
+
+#define P_TAB__P_STATUS_OFFSET	0
+#define P_TAB__P_FLAGS_OFFSET	1
+#define P_TAB__P_TTY_OFFSET	2
+#define P_TAB__P_PID_OFFSET	4
+#define P_TAB__P_PAGE_OFFSET	22
+#define P_TAB__P_PAGE_OFFSETB	23
+#define P_TAB__P_UDATA_OFFSET	26
+
+#define P_RUNNING		1
+#define P_READY			2
+#define P_DEFER			3
+
+#define PFL_BATCH		$04	/* Flag mask */
+
+#define OS_BANK			0
+
+#define EAGAIN			11
+
+#define SIGHUP		 1
+#define SIGINT		 2
+#define SIGQUIT		 3
+#define SIGILL		 4
+#define SIGTRAP		 5
+#define SIGABRT		 6
+#define SIGIOT		 6
+#define SIGBUS		 7
+#define SIGFPE		 8
+#define SIGKILL		 9
+#define SIGUSR1		10
+#define SIGSEGV		11
+#define SIGUSR2		12
+#define SIGPIPE		13
+#define SIGALRM		14
+#define SIGTERM		15
+#define SIGSTKFLT	16
+#define SIGCHLD		17
+#define SIGCONT		18
+#define SIGSTOP		19
+#define SIGTSTP		20
+#define SIGTTIN		21
+#define SIGTTOU		22
+#define SIGURG		23
+#define SIGXCPU		24
+#define SIGXFSZ		25
+#define SIGVTALRM	26
+#define SIGPROF		27
+#define SIGWINCH	28
+#define SIGIO		29
+#define SIGPOLL		SIGIO
+#define SIGPWR		30
+#define SIGSYS		31
+#define	SIGUNUSED	31

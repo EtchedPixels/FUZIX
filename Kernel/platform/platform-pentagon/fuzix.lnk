@@ -1,0 +1,58 @@
+-mwxuy
+-r
+-i fuzix.ihx
+-b _COMMONDATA=0x4000
+-b _CODE1=0xC000
+-b _CODE2=0xC000
+-b _FONT=0xDB00
+-b _CODE4=0xC000
+-b _DISCARD=0x8400
+-l z80
+platform/platform-pentagon/crt0.rel
+platform/platform-pentagon/commonmem.rel
+platform/platform-pentagon/pentagon.rel
+platform/platform-pentagon/zxvideo.rel
+platform/platform-pentagon/main.rel
+platform/platform-pentagon/discard.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80-banked.rel
+cpu-z80/usermem_std-z80-banked.rel
+platform/platform-pentagon/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform/platform-pentagon/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+vt.rel
+font8x8.rel
+mm.rel
+memalloc_none.rel
+platform/platform-pentagon/bankbig.rel
+swap.rel
+devsys.rel
+devinput.rel
+platform/platform-pentagon/zxtty.rel
+platform/platform-pentagon/tinyide.rel
+platform/platform-pentagon/tinyide_discard.rel
+platform/platform-pentagon/tinysd.rel
+platform/platform-pentagon/tinysd_discard.rel
+platform/platform-pentagon/nemoide.rel
+platform/platform-pentagon/zxmmc.rel
+platform/platform-pentagon/tinydisk.rel
+platform/platform-pentagon/tinydisk_discard.rel
+platform/platform-pentagon/devinput.rel
+platform/platform-pentagon/zxkeyboard.rel
+-e

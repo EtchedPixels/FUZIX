@@ -1,0 +1,52 @@
+-mwxuy
+-i fuzix.ihx
+-b _FONTCOMMON=0x0100
+-b _COMMONDATA=0x2000
+-b _CODE=0x4000
+-l z80
+platform/platform-zxuno/crt0.rel
+platform/platform-zxuno/commonmem.rel
+platform/platform-zxuno/zx128.rel
+platform/platform-zxuno/zxvideo.rel
+platform/platform-zxuno/main.rel
+platform/platform-zxuno/discard.rel
+platform/platform-zxuno/zxuno.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-zxuno/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform/platform-zxuno/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+vt.rel
+font8x8.rel
+mm.rel
+memalloc_none.rel
+bankfixed.rel
+swap.rel
+devsys.rel
+devinput.rel
+platform/platform-zxuno/devtty.rel
+platform/platform-zxuno/tinysd.rel
+platform/platform-zxuno/tinysd_discard.rel
+platform/platform-zxuno/divmmc.rel
+platform/platform-zxuno/tinydisk.rel
+platform/platform-zxuno/tinydisk_discard.rel
+platform/platform-zxuno/devinput.rel
+platform/platform-zxuno/zxkeyboard.rel
+-e

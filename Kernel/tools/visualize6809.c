@@ -7,7 +7,7 @@
 
 static char linebuf[128];
 
-static char map[256];
+static char map[257];	/* Allow an extra for rounding up */
 
 struct map {
     struct map *next;
@@ -67,9 +67,14 @@ void map_insert(char *name, uint16_t start, uint16_t end)
     m->name[15] = 0;
 
     map_add(m);
-    
+
     end = (end + 255) >> 8;
     start >>= 8;
+
+    if (start > end) {
+        fprintf(stderr, "Binary overflows address space (%X %X).\n", start, end);
+        exit(1);
+    }
 
     if (strcmp(name, ".magic") == 0)
         return;
@@ -90,6 +95,8 @@ void map_insert(char *name, uint16_t start, uint16_t end)
         c = '2';
     else if (strcmp(name, ".text3") == 0)
         c = '3';
+    else if (strcmp(name, ".text4") == 0)
+        c = '4';
     else if (strcmp(name, ".video") == 0)
         c = 'V';
     else if (strcmp(name, ".videodata") == 0)

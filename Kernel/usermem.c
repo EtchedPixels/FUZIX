@@ -16,7 +16,8 @@
 /* This checks to see if a user-supplied address is legitimate */
 usize_t valaddr(const uint8_t *base, usize_t size, uint_fast8_t is_write)
 {
-	if (base + size < base)
+	/* Cast to deal with gcc6809 fun */
+	if ((usize_t)base + size < (usize_t)base)
 		size = MAXUSIZE - (usize_t)base + 1;
 	if (!base || base < (const uint8_t *)PROGBASE ||
 		base > (const uint8_t *)(size_t)udata.u_top)

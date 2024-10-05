@@ -101,19 +101,15 @@ void scsi_probe(uint_fast8_t my_id)
     scsi_id = my_id;
     scsi_reset();
 
+    /* We only support one controller with max 8 luns for now. We can treat
+       the unit id in other ways later to handle more */
     for (n = 0; n < 8; n++) {
         if (n != my_id) {
             if (scsi_probe_unit(n)) {
                 /* Attach the disk we found */
-                r = td_register(scsi_xfer, 1);
+                r = td_register(n, scsi_xfer, td_ioctl_none, 1);
                 if (r < 0)
                     continue;
-                /* If it was the first one remember it as it will
-                   be our table base */
-                if (scsi_first == 0xFF)
-                    scsi_first = r;
-                /* Add it to our table */
-                scsi_dev[scsi_num++] = r;
             }
         }
     }

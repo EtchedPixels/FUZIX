@@ -1,0 +1,4 @@
+# CP/M ROM and video
+# Workspace RAM is FC00-FFFF
+R F000-F7FF
+V F800-FBFF

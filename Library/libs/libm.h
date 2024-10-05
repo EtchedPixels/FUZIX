@@ -17,6 +17,11 @@
 #include <float.h>
 #include <math.h>
 
+#ifndef FORCE_EVAL
+extern void __force_eval(float f);
+#define FORCE_EVAL(x)	__force_eval(x)
+#endif
+
 union fshape {
 	float value;
 	uint32_t bits;

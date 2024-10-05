@@ -1751,7 +1751,7 @@ struct uip_ip_hdr {
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 };
 
-
+#if NETSTACK_CONFIG_WITH_IPV6
 /*
  * IPv6 extension option headers: we are able to process
  * the 4 extension headers defined in RFC2460 (IPv6):
@@ -1845,6 +1845,8 @@ typedef struct uip_ext_hdr_opt_rpl {
   uint8_t instance;
   uint16_t senderrank;
 } uip_ext_hdr_opt_rpl;
+
+#endif
 
 /* TCP header */
 struct uip_tcp_hdr {

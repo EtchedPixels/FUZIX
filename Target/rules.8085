@@ -1,0 +1,12 @@
+CC = fcc
+AS = fcc -m8085
+LINKER = $(FUZIX_ROOT)/Library/link/ld8085
+CFLAGS = -X -m8085 -Os -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8085
+#CFLAGS = -X -m8085 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8085
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs
+LINKER_TAIL = -lc8085
+ASM_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_8085.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_8085.o
+HOSTCC = cc
+.SUFFIXES: .c .o .y

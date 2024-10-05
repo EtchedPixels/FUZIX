@@ -16,6 +16,8 @@ struct display {
 #define FMT_MONO_WB_TILE8 5	/* White on black 8x8 tiled (Amstrad PCW etc) */
 #define FMT_6PIXEL_128	6	/* 2x3 tiles from 128 (TRS80 style) */
 #define FMT_4PIXEL_128	7	/* 2x2 tiles from 128 (6847 style) */
+#define FMT_PLANAR2	8	/* Two bitplanes - TODO - ioctl for order, spacing etc */
+#define FMT_PLANAR4	9	/* Four bitplanes - Ditto.. TODO */
 /* Those sufficiently funky */
 #define FMT_SPECTRUM	128
 #define FMT_VDP		129	/* VDP graphics engines */
@@ -28,6 +30,8 @@ struct display {
 #define FMT_AMS16	135	/* Amstraid 16 colour - ditto */
 #define FMT_8PIXEL_MTX	136	/* 256 characters graphics mode symbols (MTX) */
 #define FMT_3BPP_U16	137	/* 5 x 3bpp pixels a word (top bit unused) */
+#define FMT_THOMSON_C16	138	/* Interleaved packed pixel */
+#define FMT_THOMSON_TO7	139	/* two colours per 8 pixel row */
   uint8_t hardware;
 #define HW_UNACCEL	1	/* Simple display */
 #define HW_VDP_9918A	128	/* Not neccessarily MSX... */
@@ -40,6 +44,7 @@ struct display {
 #define HW_VDP_9958	135	/* VDP9958 MSX2+ etc */
 #define HW_EF9345	136	/* Thomson EF9345 */
 #define HW_PROPGFX	137	/* RCbus propellor graphics */
+#define HW_GM812	138	/* GM812/832 */
   uint16_t features;
 #define GFX_MAPPABLE	1	/* Can map into process memory */
 #define GFX_PALETTE	2	/* Has colour palette */
@@ -48,6 +53,8 @@ struct display {
 #define GFX_MULTIMODE	32	/* Has multiple modes */
 #define GFX_PALETTE_SET	64	/* Has settable colour palette */
 #define GFX_TEXT	128	/* Console text works in this mode */
+#define GFX_WRAP	256	/* Viewport wraps */
+#define GFX_BITALIGN	512	/* Operations are bit not byte aligned */
   uint16_t memory;		/* Memory size in KB (may be 0 if not relevant) */
   uint16_t commands;
 #define GFX_DRAW	1	/* Supports the draw command */
@@ -63,9 +70,16 @@ struct display {
 #define GFX_WRITE	256	/* Supports writing a buffer */
 #define GFX_AWRITE	512	/* Supports writing an attribute buffer */
 #define GFX_EXG		1024	/* Simultaenous GFX_READ/GFX_WRITE to swap */
+#define GFX_SCROLL	2048	/* Has a scrolling viewport */
   uint16_t twidth;		/* Character size information */
   uint16_t theight;		/* Characters per line/column */
  /* We may want to add some hardware ones as we hit machines that have them */
+};
+
+struct blit {
+ unsigned ys, xs;
+ unsigned yd, xd;
+ unsigned height, width;
 };
 
 /* FIXME: need a way to describe/set modes if multiple supported */
@@ -114,6 +128,7 @@ struct videomap {
 #define GFXIOC_WRITE		0x0313	/* Write to screen direct */
 #define GFXIOC_AWRITE		0x0314	/* Write to attributes direct */
 #define GFXIOC_EXG		0x0315	/* Exchange a block */
+#define GFXIOC_SCROLL		0x0316	/* Set scroll offsets x word, y word */
 
 /*
  *	VDP specific ioctls: The 0x032X range is reused for each type

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+X=`which ns32k-pc532-netbsd-gcc`
+if [ "$X" = "" ]; then
+	echo "gcc: ns32k-pc532-netbsd-gcc is required"
+	exit 1
+fi

@@ -5,7 +5,7 @@ typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 
-/* ACK thinks in 16bit chunks and extends 8bit when working internally. All our
+/* Fuzix cc thinks in 16bit chunks and extends 8bit when working internally. All our
    8bit indexes etc give it indigestion */
 
 typedef unsigned short uint_fast8_t;

@@ -5,19 +5,27 @@
 #include <tty.h>
 #include <devtty.h>
 
-__sfr __at 0 tty1stat;
-__sfr __at 1 tty1data;
-__sfr __at 40 tty2stat;
-__sfr __at 41 tty2data;
-__sfr __at 42 tty3stat;
-__sfr __at 43 tty3data;
-__sfr __at 50 tty4stat;
-__sfr __at 51 tty4data;
+#define tty1stat	0
+#define tty1data	1
+#define tty2stat	40
+#define	tty2data	41
+#define tty3stat	42
+#define	tty3data	43
+#define	tty4stat	50
+#define	tty4data	51
 
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 static char tbuf3[TTYSIZ];
 static char tbuf4[TTYSIZ];
+
+static const uint8_t stat[NUM_DEV_TTY + 1] = {
+ 0, 0, 40, 42, 50 
+};
+
+static const uint8_t data[NUM_DEV_TTY + 1] = {
+ 0, 1, 41, 43, 51
+};
 
 struct  s_queue  ttyinq[NUM_DEV_TTY+1] = {       /* ttyinq[0] is never used */
     {   NULL,    NULL,    NULL,    0,        0,       0    },
@@ -39,7 +47,7 @@ tcflag_t termios_mask[NUM_DEV_TTY + 1] = {
 static uint8_t ttypoll;
 
 /* Write to system console */
-void kputchar(char c)
+void kputchar(uint_fast8_t c)
 {
     /* handle CRLF */
     if(c=='\n')
@@ -47,34 +55,19 @@ void kputchar(char c)
     tty_putc(1, c);
 }
 
-char tty_writeready(uint8_t minor)
+ttyready_t tty_writeready(uint_fast8_t minor)
 {
-    uint8_t s;
-
     if (minor == 1)
         return TTY_READY_NOW;
-    if (minor == 2)
-        s = tty2stat;
-    else if (minor == 3)
-        s = tty3stat;
-    else
-        s = tty4stat;
-    return s & 2 ? TTY_READY_NOW: TTY_READY_LATER;
+    return in(stat[minor]) & 2 ? TTY_READY_NOW: TTY_READY_LATER;
 }
 
-void tty_putc(uint8_t minor, unsigned char c)
+void tty_putc(uint_fast8_t minor, uint_fast8_t c)
 {
-    if (minor == 1)
-        tty1data = c;
-    else if (minor == 2)
-        tty2data = c;
-    else if (minor == 3)
-        tty3data = c;
-    else
-        tty4data = c;
+    out(data[minor], c);
 }
 
-void tty_sleeping(uint8_t minor)
+void tty_sleeping(uint_fast8_t minor)
 {
     ttypoll |= 1 << minor;
 }
@@ -87,55 +80,46 @@ void tty_sleeping(uint8_t minor)
    (in this case 100Hz 80 chars  ~= 9600 baud input) */
 void tty_pollirq(void)
 {
-    unsigned char c; 	/* sdcc bug workaround */
-    unsigned char l;
+    uint_fast8_t l;
 
     l = 80;
-    while(tty1stat && l--) {
-        c = tty1data;
-        tty_inproc(1, c);
-    }
+    while(in(tty1stat) && l--)
+        tty_inproc(1, in(tty1data));
     l = 80;
-    while((tty2stat & 1) &&& l--) {
-        c = tty2data;
-        tty_inproc(2, c);
-    }
+    while((in(tty2stat) & 1) && l--)
+        tty_inproc(2, in(tty2data));
     l = 80;
-    while((tty3stat & 1) && l--) {
-        c = tty3data;
-        tty_inproc(3, c);
-    }
+    while((in(tty3stat) & 1) && l--)
+        tty_inproc(3, in(tty3data));
     l = 80;
-    while((tty4stat & 1) && l--) {
-        c = tty4data;
-        tty_inproc(4, c);
-    }
-    if ((ttypoll & 4) && (tty2stat & 2)) {
+    while((in(tty4stat) & 1) && l--)
+        tty_inproc(4, in(tty4data));
+    if ((ttypoll & 4) && (in(tty2stat) & 2)) {
         ttypoll &= ~4;
         wakeup(&ttydata[2]);
     }
-    if ((ttypoll & 8) && (tty3stat & 2)) {
+    if ((ttypoll & 8) && (in(tty3stat) & 2)) {
         ttypoll &= ~8;
         wakeup(&ttydata[3]);
     }
-    if ((ttypoll & 16) && (tty4stat & 2)) {
+    if ((ttypoll & 16) && (in(tty4stat) & 2)) {
         ttypoll &= ~16;
         wakeup(&ttydata[4]);
     }
 }    
 
-void tty_setup(uint8_t minor, uint8_t flags)
+void tty_setup(uint_fast8_t minor, uint_fast8_t flags)
 {
     used(minor);
 }
 
 /* For the moment */
-int tty_carrier(uint8_t minor)
+int tty_carrier(uint_fast8_t minor)
 {
     used(minor);
     return 1;
 }
 
-void tty_data_consumed(uint8_t minor)
+void tty_data_consumed(uint_fast8_t minor)
 {
 }

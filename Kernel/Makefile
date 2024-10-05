@@ -1,6 +1,6 @@
 # Define V=1 for more verbose compilation.
 
-TARGET_LIST = $(wildcard platform-*)
+TARGET_LIST = $(wildcard platform/platform-*)
 
 export ROOT_DIR
 
@@ -11,11 +11,11 @@ ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 all:	fuzix.bin
 
 # Platform properties
-include platform-$(TARGET)/target.mk
+include platform/platform-$(TARGET)/target.mk
 # CPU properties
 include cpu-$(CPU)/rules.mk
 # Overrides (optional)
--include platform-$(TARGET)/rules.mk
+-include platform/platform-$(TARGET)/rules.mk
 
 
 #
@@ -37,10 +37,10 @@ include cpu-$(CPU)/rules.mk
 CDSRCS = start.c
 C1SRCS =  devio.c kdata.c
 C1SRCS += inode.c tty.c
-C2SRCS =  syscall_proc.c process.c malloc.c
-C2SRCS += simple.c bank8k.c bank16k.c bank16k_low.c bank32k.c
-C3SRCS = bankfixed.c bank65c816.c flat.c flat_mem.c buddy.c kmod.c
-C2SRCS += bank8086.c bank16kfc.c banksplit.c flat_small.c
+C2SRCS =  syscall_proc.c process.c mm/malloc.c
+C2SRCS += mm/simple.c mm/bank8k.c mm/bank16k.c mm/bank16k_low.c mm/bank32k.c
+C3SRCS = mm/bankfixed.c mm/bank65c816.c mm/flat.c mm/flat_mem.c mm/buddy.c kmod.c
+C2SRCS += mm/bank8086.c mm/bank16kfc.c mm/banksplit.c mm/flat_small.c
 C4SRCS = filesys.c version.c blk400.c blk512.c
 #
 #	Usually we map sysalls into CODE2 but they can be overlaid
@@ -54,7 +54,7 @@ CS4SRCS = syscall_other.c
 #
 #	Set EXECFORMAT to use one of the standard loaders
 #
-CS5SRCS = syscall_exec.c
+CS5SRCS = syscall_exec.c mm/memalloc_none.c
 ifneq ($(EXECFORMAT),)
 CS5SRCS += syscall_exec$(EXECFORMAT).c
 endif
@@ -66,11 +66,11 @@ endif
 C3SRCS += devsys.c mm.c swap.c page.c usermem.c timer.c audio.c level2.c
 C3SRCS += devinput.c
 CVIDEOSRCS = vt.c
-CFONTSRCS = font4x6.c font6x8.c font8x8.c font8x8_exp2.c font4x8.c
+CFONTSRCS = font/font4x6.c font/font6x8.c font/font8x8.c font/font8x8_exp2.c font/font4x8.c
 
 CNETSRCS = network.c
 
-ASRCS =  lowlevel-$(CPU)$(BANKED)$(ASMEXT) usermem_std-$(CPU)$(BANKED)$(ASMEXT)
+ASRCS =  cpu-$(CPU)/lowlevel-$(CPU)$(BANKED)$(ASMEXT) cpu-$(CPU)/usermem_std-$(CPU)$(BANKED)$(ASMEXT)
 
 
 CDOBJS = $(CDSRCS:.c=$(BINEXT))
@@ -103,18 +103,14 @@ JUNK = $(CSRCS:.c=.lst) $(CSRCS:.c=.s) $(CSRCS:.c=.asm) $(CSRCS:.c=.sym) $(ASRCS
 .SUFFIXES:		# delete the default suffixes
 .SUFFIXES: .c .s .rel .S
 
-usermem_std-z180.rel:	usermem_std-z180.s usermem_std-z80.s
 
-lowlevel-z180.rel:	lowlevel-z180.s lowlevel-z80.s
+build:
+	ln -sf platform/platform-$(TARGET) build
 
-platform:
-	-rm -f platform
-	ln -sf platform-$(TARGET) platform
+target: include/kernel.h $(OBJS) | build
+	+$(MAKE) -C platform/platform-$(TARGET)
 
-target: include/kernel.h $(OBJS) | platform
-	+$(MAKE) -C platform-$(TARGET)
-
-$(OBJS): | platform
+$(OBJS): | build
 
 $(CSRCS): include/kernel.h
 
@@ -168,8 +164,8 @@ $(AOBJS): %$(BINEXT): %$(ASMEXT)
 version.c: tools/makeversion
 	$(QUIET_GEN)tools/makeversion $(VERSION) $(SUBVERSION) $(TARGET)
 
-font8x8_exp2.c: font8x8.c tools/fontexpand
-	$(QUIET_GEN)tools/fontexpand <font8x8.c >font8x8_exp2.c
+font/font8x8_exp2.c: font/font8x8.c tools/fontexpand
+	$(QUIET_GEN)tools/fontexpand <font/font8x8.c >font/font8x8_exp2.c
 
 tools/makeversion: tools/makeversion.c
 
@@ -187,60 +183,61 @@ tools/trslabel: tools/trslabel.c
 
 tools/fontexpand: tools/fontexpand.c
 
-font4x6.c: tools/make4x6
+mm/font4x6.c: tools/make4x6
 	tools/make4x6 >font4x6.c
 
 clean:
-	rm -rf platform
-	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp platform fuzix.bin fuzix.map fuzix.noi
+	rm -f build
+	rm -f $(OBJS) $(JUNK) fuzix.cdb fuzix.com fuzix.tmp fuzix.bin fuzix.map fuzix.noi
 	rm -f fuzix.ihx common.ihx common.bin relocs.dat core *~ include/*~ version.c tools/make4x6
 	rm -f tools/analysemap tools/memhogs tools/binman tools/bihx tools/binmunge tools/bintomdv
 	rm -f tools/cartman tools/doubleup tools/flat2z80 tools/makedck tools/makejv3 tools/maketap
 	rm -f tools/modlib-z80 tools/plus3boot tools/raw2dsk tools/raw2mgt tools/trdify tools/visualize
 	rm -f tools/bin2sna tools/bin2z80 tools/chkmdv tools/decbdragon tools/decb-image hogs.txt
 	rm -f hogs.txt.old tools/*~ version.c include/sysinfoblk.h tools/makeversion tools/trslabel
-	rm -f tools/atariboot tools/fontexpand font8x8_exp2.c 
+	rm -f tools/atariboot tools/fontexpand font/font8x8_exp2.c tools/diskpad
 	rm -f *.rel *.lst *.sym *.o *.bin
-	rm -f lowlevel-6303.s lowlevel-6803.s usermem_std-6303.s usermem_std-6803.s modlib.s
-	+$(MAKE) -C platform-$(TARGET) clean
+	+$(MAKE) -C platform/platform-$(TARGET) clean
 	+$(MAKE) -C tools/bankld clean
 	+$(MAKE) -C cpm-loader clean
 
 clean-all: clean
 	(cd tools/bankld; $(MAKE) clean)
 	$(foreach target,$(TARGET_LIST), $(MAKE) -C $(target) clean;)
-	-rm -f platform
+	-rm -f build
 
 include quiet.mk
 
 include cpu-$(CPU)/image.mk
--include platform-$(TARGET)/image.mk
+-include platform/platform-$(TARGET)/image.mk
 
 diskimage:
-	+$(MAKE) -C platform-$(TARGET) diskimage
+	+$(MAKE) -C platform/platform-$(TARGET) diskimage
 
 # DO NOT DELETE
 
+usermem_std-z180.rel:	usermem_std-z180.s usermem_std-z80.s
+lowlevel-z180.rel:	lowlevel-z180.s lowlevel-z80.s
 audio.o: include/kernel.h include/panic.h include/sysinfoblk.h
 audio.o: include/kdata.h include/printf.h include/audio.h
-bank16k.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bank16k.o: include/kdata.h include/printf.h
-bank16k_low.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bank16k_low.o: include/kdata.h include/printf.h
-bank32k.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bank32k.o: include/kdata.h include/printf.h
-bank65c816.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bank65c816.o: include/kdata.h include/printf.h
-bank8086.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bank8086.o: include/kdata.h include/printf.h
-bank8k.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bank8k.o: include/kdata.h include/printf.h include/bank8k.h
-bankfixed.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bankfixed.o: include/kdata.h include/printf.h
-bankrigid.o: include/kernel.h include/panic.h include/sysinfoblk.h
-bankrigid.o: include/kdata.h include/printf.h
-buddy.o: include/kernel.h include/panic.h include/sysinfoblk.h
-buddy.o: include/kdata.h include/printf.h include/buddy.h
+mm/bank16k.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bank16k.o: include/kdata.h include/printf.h
+mm/bank16k_low.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bank16k_low.o: include/kdata.h include/printf.h
+mm/bank32k.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bank32k.o: include/kdata.h include/printf.h
+mm/bank65c816.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bank65c816.o: include/kdata.h include/printf.h
+mm/bank8086.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bank8086.o: include/kdata.h include/printf.h
+mm/bank8k.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bank8k.o: include/kdata.h include/printf.h include/bank8k.h
+mm/bankfixed.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bankfixed.o: include/kdata.h include/printf.h
+mm/bankrigid.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/bankrigid.o: include/kdata.h include/printf.h
+mm/buddy.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/buddy.o: include/kdata.h include/printf.h include/buddy.h
 devio.o: include/kernel.h include/panic.h include/sysinfoblk.h
 devio.o: include/printf.h include/kdata.h
 devsys.o: include/kernel.h include/panic.h include/sysinfoblk.h
@@ -248,30 +245,26 @@ devsys.o: include/version.h include/kdata.h include/devsys.h include/audio.h
 devsys.o: include/netdev.h include/devmem.h include/net_native.h
 filesys.o: include/kernel.h include/panic.h include/sysinfoblk.h
 filesys.o: include/kdata.h include/printf.h
-flat.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
-flat.o: include/printf.h
-flat_mem.o: include/kernel.h include/panic.h include/sysinfoblk.h
-flat_mem.o: include/kdata.h include/printf.h include/flat_mem.h
+mm/flat.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
+mm/flat.o: include/printf.h
+mm/flat_mem.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/flat_mem.o: include/kdata.h include/printf.h include/flat_mem.h
 inode.o: include/kernel.h include/panic.h include/sysinfoblk.h
 inode.o: include/kdata.h include/printf.h include/tty.h include/netdev.h
 kdata.o: include/kernel.h include/panic.h include/sysinfoblk.h
 kdata.o: include/version.h include/kdata.h include/netdev.h
 level2.o: include/kernel.h include/panic.h include/sysinfoblk.h
 level2.o: include/kdata.h include/printf.h include/tty.h
-lowlevel-msp430x.o: include/kernel.h include/panic.h include/sysinfoblk.h
-lowlevel-msp430x.o: include/kdata.h include/printf.h
-malloc.o: include/kernel.h include/panic.h include/sysinfoblk.h
-malloc.o: include/printf.h
+mm/malloc.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/malloc.o: include/printf.h
 mm.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
 mm.o: include/printf.h
 process.o: include/kernel.h include/panic.h include/sysinfoblk.h
 process.o: include/tty.h include/kdata.h include/printf.h include/audio.h
 select.o: include/kernel.h include/panic.h include/sysinfoblk.h
 select.o: include/version.h include/kdata.h include/printf.h
-simple.o: include/kernel.h include/panic.h include/sysinfoblk.h
-simple.o: include/kdata.h include/printf.h
-single.o: include/kernel.h include/panic.h include/sysinfoblk.h
-single.o: include/kdata.h include/printf.h
+mm/simple.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/simple.o: include/kdata.h include/printf.h
 start.o: include/kernel.h include/panic.h include/sysinfoblk.h
 start.o: include/version.h include/kdata.h include/printf.h include/tty.h
 swap.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
@@ -305,8 +298,8 @@ timer.o: include/kernel.h include/panic.h include/sysinfoblk.h
 timer.o: include/kdata.h include/timer.h include/printf.h
 tty.o: include/kernel.h include/panic.h include/sysinfoblk.h include/kdata.h
 tty.o: include/printf.h include/tty.h
-unbanked.o: include/kernel.h include/panic.h include/sysinfoblk.h
-unbanked.o: include/kdata.h include/printf.h
+mm/unbanked.o: include/kernel.h include/panic.h include/sysinfoblk.h
+mm/unbanked.o: include/kdata.h include/printf.h
 usermem.o: include/kernel.h include/panic.h include/sysinfoblk.h
 usermem.o: include/kdata.h include/printf.h
 version.o: include/kernel.h include/panic.h include/sysinfoblk.h

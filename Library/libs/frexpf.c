@@ -5,8 +5,11 @@
 
 float frexpf(float x, int *e)
 {
-	union { float f; uint32_t i; } y = { x };
-	int ee = y.i>>23 & 0xff;
+	union { float f; uint32_t i; } y;
+	int ee;
+
+	y.f = x;
+	ee = y.i>>23 & 0xff;
 
 	if (!ee) {
 		if (x) {

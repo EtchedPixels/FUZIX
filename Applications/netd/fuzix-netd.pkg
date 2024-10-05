@@ -30,4 +30,4 @@ f 0755 /usr/bin/netd-slip      netd-slip
 package  netd-eth
 if-file  netd-eth
 f 0755 /usr/bin/netd-eth  netd-eth
-n 020666 2048 /dev/eth
+n 020666 2304 /dev/eth

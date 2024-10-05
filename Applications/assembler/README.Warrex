@@ -1,0 +1,39 @@
+Warrex Centurion CPU6
+
+This is an initial cut at an assembler for what we know of the Warrex
+Centurion CPU6 processor. The register naming is believed to be right
+except for the mystery top registers. Things like instruction naming and
+syntax are another question.
+
+It should pick the shortest forms for instructions when it can.
+
+Address mode syntax
+
+	LD A,nn			constant
+	LD A,(nn)		address
+	LD A,@(nn)		address, indirected
+	LD A,(x)		register dereference
+	LD A,n(x)		register dereference with offset
+	LD A,(-x)		register pre-decremeent
+	LD A,(x+)		register post-increment
+	LD A,n(-x)		register pre-decrement with offset
+	LD A,n(x+)		register post-increment with offset
+
+Not yet handled
+
+	LD A,(PC + n)
+	LD A,@(PC + n)
+	MMU ops
+
+Broken
+
+	LD A,(x+)
+
+this confuses the generic expression parser and will need some tweaking of
+the core code, or a specifc register name parser to fix it and the PC case
+which might be simpler
+
+
+Instruction size is determined by the register references. There are now
+memory to memory instructions so the size is always explicit.
+

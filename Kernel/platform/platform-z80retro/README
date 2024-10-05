@@ -1,0 +1,59 @@
+Z80Retro		https://github.com/peterw8102/Z80-Retro
+
+A Z80 retro board built around the usual Zilog components and a bitbang SD
+interface. Optional Z80 PIO card add on. It's much like many of the 
+Retrobrew/RC2014 style setups with 4 x 16K banked RAM.
+
+Optional video card (not handled) with 8bit I/O port as well suitable
+for a maxtrix keyboard etc
+
+Supported:
+Serial
+CTC timers (CTC is required)
+
+TODO:
+video card (+ matrix keyboard ?)
+Multiple SD cards
+I2C bus and DS1307
+
+Do we want a separate buffer bank and lots of buffers given bitbang SD ?
+(could pinch from easyz80). Would need this for video option really as have
+to load a 4K font.
+Or banked with Wiznet 5500 on an SD
+
+Boot
+
+The ROM is a bit peculiar. It ignores PC partitioning type rules and just
+splats its own boot magic there. Version 2 keeps the tables clear of the
+partition block itself so can now be handled. We support booting off
+the dev tree RomWBW for this board. The native firmware is not yet supported.
+
+There is no swap - it's doable easily enough but there's enough RAM for a
+single user setup easily and swap would be painful as well as really needing
+interrupt pre-emption support adding to Z80 (which will happen but not just
+yet).
+
+Serial
+
+Because the serial runs at 115,200 baud the system runs with the serial input
+side entirely interrupt driven and in common space. It costs us a little common
+memory but that's not a resource we are short of and avoids any bank switch
+costs servicing the SIO vectors.
+
+The timer does currently block the serial interrupt and it's not clear there
+is much we can do about it easily.
+
+Memory Map (Kernel)
+0000-00FF	RST vectors etc
+0100-01FF	Bootstrap code
+0200-03FF	Serial buffers (page aligned)
+0400-BFFF	Kernel
+C000-EFFF	Top of user in the switched common banks
+F000-FFDF	Kernel common
+FFE0-FFFF	IM2 vectors
+
+Memory Map (user)
+0000-00FF	RST vectors etc
+0100-EFFF	User
+F000-FFDF	Kernel common
+FFE0-FFFF	IM2 vectors

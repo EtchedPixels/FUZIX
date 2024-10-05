@@ -1,0 +1,63 @@
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
+
+all: cc cc0 cc1 cc2 copt support
+
+SRC_C0 = frontend.c
+SRC_C1 += body.c declaration.c enum.c error.c expression.c header.c idxdata.c \
+	initializer.c label.c lex.c main.c primary.c stackframe.c storage.c \
+	struct.c switch.c symbol.c tree.c type.c type_iterator.c
+SRC_C2 += backend.c
+SRC_CC += ccfuzix.c
+SRC_COPT = copt.c
+
+INC0 = token.h
+INC1 = body.h compiler.h declaration.h enum.h error.h expression.h header.h \
+       idxdata.h initializer.h label.h lex.h primary.h stackframe.h storage.h \
+       struct.h symbol.h target.h token.h tree.h type.h type_iterator.h
+INC2 = backend.h symtab.h
+
+.SUFFIXES: .c .o
+
+OBJ_C0 = $(SRC_C0:.c=.o)
+OBJ_C1 = $(SRC_C1:.c=.o)
+OBJ_C2 = $(SRC_C2:.c=.o)
+OBJ_CC = $(SRC_CC:.c=.o)
+OBJ_COPT = $(SRC_COPT:.c=.o)
+
+.c.o:
+	$(CC) $(FLOAT) $(CFLAGS) -DCPU_$(USERCPU) $(CCOPTS) -c $<
+
+cc0: $(OBJ_C0)
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+cc1: $(OBJ_C1)
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+cc2: $(OBJ_C2)
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+
+cc: $(OBJ_CC)
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+	
+copt: $(OBJ_COPT)
+	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
+	cp rules.$(USERCPU) copt.rules
+
+clean:
+	rm -f cc cc0 cc1 cc2 *.o core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report
+	(cd support$(USERCPU); make clean)
+
+rmbak:
+	rm -f *~ core
+
+$(OBJ_C0): $(INC0) symtab.h
+
+$(OBJ_C1): $(INC1)
+
+$(OBJ_C2): $(INC1) $(INC2)
+
+$(OBJS3): $(INC1) $(INC2)
+
+support:
+	(cd support$(USERCPU); make)
+	cp support$(USERCPU)/lib$(USERCPU).a libcpu.a

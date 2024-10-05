@@ -1,0 +1,17 @@
+Arnewsh Inc SBC08K
+
+68008@8-10MHZ
+68230 PI/T (GPIO wired to CF adapter, no inverters)
+68681 DUART (timer and 2 serial) clocked @3.684MHz
+PAL memory map
+
+Memory Map
+00000-1FFFF	4 x 32K RAM (U8 U7 U6 U5)
+20000-DFFFF	Expansion space
+E0000-EFFFF	Monitor (actually a 16K ROM with Tutor)
+FF000-FF7FF	PI/T
+FF800-FFFFF	688681
+
+Assumptions
+- 128K fitted
+- No expansions

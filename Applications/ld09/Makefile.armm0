@@ -1,5 +1,5 @@
 ROOT = ../..
-include $(ROOT)/Applications/rules.armm0
+include $(ROOT)/Target/rules.armm0
 
 DEFS	=
 

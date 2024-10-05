@@ -1,0 +1,13 @@
+; UZI mnemonics for memory addresses etc
+
+; 256+256		(U, kstack copy, k C stack copy)
+U_DATA__TOTALSIZE       .equ $0200
+U_DATA_STASH		.equ $E000
+
+PROGLOAD		.equ $0100
+ZPBASE			.equ $0
+
+IRQ_DP			.equ $FF00	; FF00-FF3F
+KERNEL_DP		.equ $00	; We use the real ZP for kernel DP
+
+PROGBASE		.equ $0100

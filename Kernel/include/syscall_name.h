@@ -70,7 +70,7 @@ const char *syscall_name[NR_SYSCALL] = {
 	"memalloc",
 	"memfree",
 	"__netcall",
-	"_nosys67",
+	"_ftruncate",
 	"_nosys68",
 	"_nosys69",
 	"_nosys70",
@@ -153,7 +153,7 @@ int syscall_args[NR_SYSCALL] = {
 	1, //memalloc
 	1, //memfree
 	1, //netcall
-	0, //nosys 67
+	2, //ftruncate
 	0, //nosys 68
 	0, //nosys 69
 	0, //nosys 70

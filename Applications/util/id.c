@@ -16,8 +16,8 @@
 
 int main(int argc, char *argv[])
 {
-    struct passwd *pwd;
-    struct group *grp;
+    register struct passwd *pwd;
+    register struct group *grp;
     int uid, gid, euid, egid;
 
     uid = getuid();

@@ -4,7 +4,7 @@
 #define CONFIG_FONT8X8
 #define GENERATOR
 
-#include "../font8x8.c"
+#include "../font/font8x8.c"
 
 uint16_t widen(uint8_t n)
 {

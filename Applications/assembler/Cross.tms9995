@@ -1,0 +1,33 @@
+#
+#	Build tms9995 version of the tools
+#
+all: as9995 ld9995 nm9995 osize9995 dumprelocs9995
+
+HDR = as.h ld.h obj.h
+
+AOBJ = as0.o as1-tms9995.o as2.o as3.o as4.o as6-tms9995.o
+
+CFLAGS = -DTARGET_TMS9995 -Wall -pedantic -DOBJ_LONGNAME
+
+as9995: $(HDR) $(AOBJ)
+	cc -o as9995 $(AOBJ)
+
+ld9995: $(HDR) ld.o
+	cc -o ld9995 ld.o
+
+nm9995: $(HDR) nm.o
+	cc -o nm9995 nm.o
+
+osize9995: $(HDR) osize.o
+	cc -o osize9995 osize.o
+
+dumprelocs9995: $(HDR) dumprelocs.o
+	cc -o dumprelocs9995 dumprelocs.o
+
+clean:
+	rm -f *.o *~
+	rm -f nm9995 ld9995 as9995 osize9995 dumprelocs9995
+
+install:
+	mkdir -p /opt/as9995/bin
+	cp nm9995 ld9995 as9995 osize9995 dumprelocs9995 /opt/as9995/bin/

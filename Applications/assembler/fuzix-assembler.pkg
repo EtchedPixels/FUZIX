@@ -1,0 +1,8 @@
+package  assembler
+if-file  as
+
+f 0755 /usr/bin/as as
+f 0755 /usr/bin/dumprelocs dumprelocs
+f 0755 /usr/bin/ld ld
+f 0755 /usr/bin/nm nm
+f 0755 /usr/bin/osize osize

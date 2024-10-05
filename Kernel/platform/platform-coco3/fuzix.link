@@ -1,0 +1,19 @@
+define basesympat __sectionbase_%s__
+define lensympat __sectionlen_%s__
+section .start load 0x0200
+section .videodata
+section .text2
+section .text
+section .text.hot
+section .text.unlikely
+section .data
+section	.bss
+section .buffers
+section .udata load 0xe000
+section .common
+section .commondata
+section .text3
+section .video
+section .discard high 0xdfff
+section .cpage load 0xfe00
+entry start

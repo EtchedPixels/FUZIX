@@ -1,0 +1,95 @@
+Experimental port for the SC108 mainboard plus CF card plus RTC or CTC card, or
+for the SC114 combo mainboard/backplane. Should also work with the SC707 but
+this has not been tested yet.
+
+Cards required:
+
+SC108 processor module or SC114 motherboard
+SC104 Z80 SIO/2 (or RC2014 SIO/2 card)
+RC2014 CF adapter
+
+Either SC102 Z80 CTC (recommended) or RC2014 RTC. If you have both you get the
+best of both worlds. The CTC should be jumpered to provide CLK2 to the second
+SIO channel to get baud rate control. A standard crystal is assumed. The CTC
+should also be set to count timer 2 into timer 3 (jumper ZT2 to CT3)
+
+Not tested at this point
+ACIA based serial
+
+Unsupported
+
+Bitbang I/O port.
+
+You can probably use the SC110 instead of the SC102 and SC104 but you will need
+to run a wire to chain CTC2 into CTC3 with the current board revision.
+
+This is a design that happens to have 128K RAM but the 64K banks are flipped
+directly. Fortunately there is a ROM which lives in both banks.
+
+For the moment we stick the OS in RAM (it would be entertaining to explore
+putting the kernel in ROM but as it's not trivially reprogrammable flash
+lets leave that for a while).
+
+If you have a current SC114 ROM or you build the latest SC108 ROM from source
+the ROM containers helper functions for the bank setup. We can't actually use
+those the way it was intended as the bootstrap blows away the monitor state
+before we can intercept it instead we scan the ROM and find it.
+
+If you have an older SC108 ROM then it tries 0x7FFD and the code used to get
+this to work originally. (See README.ROMpatch)
+
+Memory map
+
+Kernel
+
+0000-00FF	Vectors (present in both banks)
+0100-EFFF	Kernel (common above 0x8000 for ROM dodging)
+F000-F1FF	UDATA
+F200-F2FF	Istack
+F300-FFFF	Common (mostly valid in both banks)
+
+User
+
+0000-00FF	Vectors (present in both banks)
+0100-EFFF	User space
+F000-F1FF	Kernel stack alternative (used during some bank switch ops)
+F200-F2FF	Istack alternate (we may take interrupts in either bank)
+F300-FFFF	Common (mostly valid in both banks)
+
+TO DO
+Support setting the serial clocks and CTC maps with a tool
+Support the bitbang port for output only (copy kputchar and outchar there for debugging ?)
+Use the extra space to put back some kernel bits we binned from -tiny
+Build a suitably high CP/M emuation and test it
+
+Faster interbank copying
+Swap only needed blocks for speed up
+
+Long term fun
+- OS core in ROM, high memory holding rest (like -tiny) but with two user space
+banks ??
+
+Bulding:
+
+make diskimage will build a set of images ready to use, one for ACIA and
+one for the SIO. Only the loader actually differs.
+
+Emulation
+
+Write the bootloader once to block 0 (repair the parition tables afterwards)
+Write kernel images to block 24
+Make it into a disk image
+rc2014 -m sc108 -r sc108.rom -s -i sc108.ide -c
+
+Real Hardware
+
+Add the bootloader to block 0 of a CF card
+Partition the CF card with a standard partitioning tool so it has the normal
+sector 2048 start for the file systems.
+Set up a partition (type 7E) for Fuzix and put a Fuzix root file system on it
+using dd or similar raw tools
+Set up a second partition (type 7F) as swap.
+
+You can partition the rest of the card however you want.
+
+Boot the machine and in the monitor run the CPM command.

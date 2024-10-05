@@ -110,7 +110,7 @@ _switchin:
 	ld a, (hl)
 not_swapped:
 	; Pages please !
-	call map_process_a
+	call map_proc_a
 
 ;; FIXME: switch common page here
 
@@ -218,7 +218,7 @@ _dofork:
 	call bankfork			;	do the bank to bank copy
 
 	; Copy done
-	call map_process_always
+	call map_proc_always
 
 	; Clone the udata into the new common
 	call clone_udata
@@ -262,7 +262,7 @@ bankfork:
 bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
-	call map_process_a
+	call map_proc_a
 	ld de, #bouncebuffer
 	ld bc, #256
 	ldir			; copy into the bounce buffer
@@ -272,7 +272,7 @@ bankfork_1:
 	push bc
 	ld b, a			; save the parent bank id
 	ld a, c			; switch to the child
-	call map_process_a
+	call map_proc_a
 	push bc			; save the bank pointers
 	ld hl, #bouncebuffer
 	ld bc, #256

@@ -1,0 +1,75 @@
+;	FUZIX mnemonics for memory addresses etc
+;
+;
+;	The U_DATA address. If we are doing a normal build this is the start
+;	of common memory. We do actually have a symbol for udata so
+;	eventually this needs to go away
+;
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @ F000
+;
+;	Space for the udata of a switched out process within the bank of
+;	memory that it uses. Normally placed at the very top
+;
+U_DATA_STASH		    .equ 0x7E00	      ; 7E00-7FFF
+;
+;	Z80 systems start program space at 0, and load at 0x100 so that the
+;	low 256 bytes are free for syscall vectors and the like, with some
+;	also used as a special case by the CP/M emulator.
+;
+PROGBASE		    .equ 0x0000
+PROGLOAD		    .equ 0x0100
+;
+;	CPU type
+;	0 = CMOS Z80
+;	1 = NMOS Z80 (also works with CMOS)
+;	2 = Z180
+;
+;	If either NMOS or CMOS may be present pick NMOS as the NMOS build
+;	contains extra code to work around an erratum n the NUMS Z80
+;
+Z80_TYPE		    .equ 1	      ; NMOS (IRQ bugs) Z80
+;
+;	For special platforms that have external memory protection hardware
+;	Just say 0.
+;
+Z80_MMU_HOOKS		    .equ 0
+;
+;	Set this if the platform has swap enabled in config.h
+;
+#define CONFIG_SWAP
+;
+;	The number of disk buffers. Must match config.h
+;
+NBUFS			    .equ 5
+;
+;	Configuration for the Zeta floppy controller. Specific to that
+;	driver rather than generic.
+;
+; FDC9266 floppy controller ports
+FDC_CCR		.equ	0	; No CCR
+FDC_MSR		.equ	0x36	; 8272 Main Status Register (R/O)
+FDC_DATA	.equ	0x37	; 8272 Data Port (R/W)
+FDC_DOR		.equ	0x38	; Digital Output Register (W/O)
+
+CPU_CLOCK_KHZ	.equ	8000	; 8MHz is usual top
+
+;
+;	Values for the PPI port
+;
+ppi_port_a	.equ	0x60
+ppi_port_b	.equ	0x61
+ppi_port_c	.equ	0x62
+ppi_control	.equ	0x63
+
+PPIDE_CS0_LINE	.equ	0x08
+PPIDE_CS1_LINE	.equ	0x10
+PPIDE_WR_LINE	.equ	0x20
+PPIDE_RD_LINE	.equ	0x40
+PPIDE_RST_LINE	.equ	0x80
+
+PPIDE_PPI_BUS_READ	.equ	0x92
+PPIDE_PPI_BUS_WRITE	.equ	0x80
+
+ppide_data	.equ	PPIDE_CS0_LINE
+
+#define CONFIG_TINYIDE_PPI

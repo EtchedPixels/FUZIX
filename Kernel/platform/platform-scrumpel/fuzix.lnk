@@ -1,0 +1,51 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _COMMONMEM=0xF400
+-b _DISCARD=0xE000
+-l z180
+platform/platform-scrumpel/crt0.rel
+platform/platform-scrumpel/commonmem.rel
+platform/platform-scrumpel/z180.rel
+platform/platform-scrumpel/scrumpel.rel
+platform/platform-scrumpel/main.rel
+start.rel
+version.rel
+cpu-z180/lowlevel-z180.rel
+cpu-z180/usermem_std-z180.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform/platform-scrumpel/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+syscall_net.rel
+tty.rel
+mm.rel
+memalloc_none.rel
+banksplit.rel
+swap.rel
+devsys.rel
+platform/platform-scrumpel/discard.rel
+platform/platform-scrumpel/devtty.rel
+platform/platform-scrumpel/devide.rel
+platform/platform-scrumpel/devide_discard.rel
+platform/platform-scrumpel/spi.rel
+platform/platform-scrumpel/ppide.rel
+platform/platform-scrumpel/devsd.rel
+platform/platform-scrumpel/devsd_discard.rel
+platform/platform-scrumpel/mbr.rel
+platform/platform-scrumpel/blkdev.rel
+platform/platform-scrumpel/monitor.rel
+platform/platform-scrumpel/net_native.rel
+-e

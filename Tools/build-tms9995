@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ -e /opt/cc9995/bin/cc9995 ]; then
+	echo "cc9995: installed"
+	exit 0
+fi
+
+cd Applications/assembler
+make -f Cross.tms9995
+make -f Cross.tms9995 install
+
+echo "Now install the ANSI PCC for TMS9995"
+echo "https://github.com/EtchedPixels/pcc-tms9995"

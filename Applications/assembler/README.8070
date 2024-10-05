@@ -1,0 +1,121 @@
+Although similar to the 8060 the assembly language format changes totally
+
+We split them up as
+
+Implicit		
+	NOP
+	RET
+	SSM
+
+imm16
+	JSR
+	JMP	(LDI 0) 
+
+p,imm16
+	PLI	(JSR is PLI 0)
+
+logic8
+	AND XOR (no S) OR
+
+	A,E
+	A,=const
+	S,=const (status)
+	A, memory
+
+logic16 ADD SUB
+
+	A,E
+	A,=const
+	EA,=const
+	A, @disp,r disp,@r , disp,r label (actually PC rel)
+	EA, ""
+	A, label (0xFFxx) .dp
+	EA, label (0xFFxx)
+
+
+mem8	DLD ILD
+
+	dld memory
+	dld 0xffxx
+
+Branches
+
+	disp,r
+	label (implies disp,pc)
+
+Swaps (both ways around allowed)
+	XCH A,E
+	XCH E,A
+	XCH EA,Pn
+	XCH Pn,EA
+
+
+Weird
+
+	CALL
+
+EA/T
+	DIV EA,T
+	MPY EA,T
+
+
+
+Loads
+	E,A
+	S,A
+	A,S
+	A,E
+	r,EA
+	T,EA
+	A,=const8
+	EA,=const16
+	Pn,=const16
+	T,=const16
+	A,mem
+	EA,mem
+	T,m
+	A,0xFFxx
+	EA,0xFFxx
+	T,0xFFxx
+	EA,Pn
+	EA,T
+
+Stores
+	A,mem
+	A,0xffxx
+	EA,mem
+	EA,0xffxx
+
+
+
+
+A only
+	RR
+	RRL
+	SRL
+	
+
+A/EA
+	SL	A
+	SR	A
+	SL	EA
+	SR	EA
+
+Pop	POP/PUSH
+
+	A
+	EA
+	Pn (not P1, P0 is RET)
+
+	A
+	EA
+	Pn (not P1)
+
+Syntax
+	=n		constant (also support #n I think)
+	n,Pn		offset (Pn, SP, PC)
+	@n,Pn		autoindex (--Pn Pn++)
+
+need a DP syntax for FFxx
+
+

@@ -1,0 +1,14 @@
+; UZI mnemonics for memory addresses etc
+
+; (this is struct u_data from kernel.h)
+; 256+256 bytes.
+#define	U_DATA__TOTALSIZE	0x200
+#define PROGLOAD		0x2000
+#define ZPBASE			0x0000
+
+
+#define KERNEL_DP	0xFE00
+#define IRQ_DP		0xFF00
+#define IRQ_SP		0xFFDF
+#define USER_SP		0x01FF
+

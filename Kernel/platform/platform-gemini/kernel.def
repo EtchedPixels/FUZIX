@@ -1,0 +1,17 @@
+; UZI mnemonics for memory addresses etc
+
+U_DATA__TOTALSIZE       .equ 0x200	; 512 bytes
+
+U_DATA_STASH		.equ 0xDE00	; DE00-DFFF
+
+PROGBASE		.equ 0x0000
+PROGLOAD		.equ 0x0100
+
+Z80_TYPE		.equ 1
+
+NBUFS			.equ 5
+
+Z80_MMU_HOOKS		.equ 0
+
+CONFIG_SWAP		.equ 1
+

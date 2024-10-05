@@ -57,6 +57,19 @@ COMMON_MEMORY
 void devide_read_data(uint8_t *addr) __naked
 {
     __asm
+#ifdef CONFIG_BANKED
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+#else
+            pop de
+            pop hl
+            push hl
+            push de
+#endif
             ld a, #data
             ld c, #PPIDE_BASE+2                     ; select control lines
             out (c), a                              ; select IDE data register
@@ -74,7 +87,7 @@ not_swapin:
 #endif
             or a                                    ; test is_user
             jr z, rd_kernel			    ; kernel buffer read ?
-            call map_process_always		    ; map the process memory
+            call map_proc_always		    ; map the process memory
             jr doread
 rd_kernel:
             call map_buffers			    ; ensure the buffers are mapped
@@ -98,6 +111,19 @@ goread:     ; now we do the transfer
 void devide_write_data(uint8_t *addr) __naked
 {
     __asm
+#ifdef CONFIG_BANKED
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+#else
+            pop de
+            pop hl
+            push hl
+            push de
+#endif
             ld c, #PPIDE_BASE+2                     ; select control lines
             ld a, #data
             out (c), a                              ; select data register
@@ -120,7 +146,7 @@ not_swapout:
 #endif
             or a                                    ; test is_user
 	    jr z, wr_kernel			    ; writing from kernel ?
-	    call map_process_always	 	    ; map user space
+	    call map_proc_always	 	    ; map user space
 	    jr dowrite
 wr_kernel:
 	    call map_buffers			    ; map the disk buffers

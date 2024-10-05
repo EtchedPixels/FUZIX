@@ -1,0 +1,54 @@
+;
+;	Combined with the templates to make the serial driver.
+;
+	.export _sio_state
+	.export _sio_dropdcd
+	.export _sio_rxl
+	.export _sio_txl
+
+	.export siob_txd
+	.export siob_status
+	.export siob_rx_ring
+	.export siob_special
+	.export sioa_txd
+	.export sioa_status
+	.export sioa_rx_ring
+	.export sioa_special
+
+	.export sio_sp
+
+	.data
+
+; These are laid out and exposed as arrays to C
+_sio_wr5:
+_sioa_wr5:
+	.byte 0xEA		; DTR, 8bit, tx enabled
+_siob_wr5:
+	.byte 0xEA		; DTR, 8bit, tx enabled
+_sio_flow:
+_sioa_flow:
+	.byte 0			; Flow starts off
+_siob_flow:
+	.byte 0			; Flow starts off
+_sio_state:
+_sioa_state:
+	.byte 0			; Last status report
+_siob_state:
+	.byte 0			; Last status report
+_sio_dropdcd:
+_sioa_dropdcd:
+	.byte 0			; DCD dropped since last checked
+_siob_dropdcd:
+	.byte 0			; DCD dropped since last checked
+_sio_rxl:
+_sioa_rxl:
+	.byte 0
+_siob_rxl:
+	.byte 0
+_sio_txl:
+_sioa_txl:
+	.byte 0
+_siob_txl:
+	.byte 0
+sio_sp:
+	.word 0

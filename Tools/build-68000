@@ -1,0 +1,6 @@
+#!/bin/sh
+
+X=`which m68k-elf-gcc`
+if [ "$X" = "" ]; then
+	echo "gcc: m68k-elf-gcc is required"
+fi

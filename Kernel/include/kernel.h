@@ -1,5 +1,5 @@
 /****************************************************
-FUZIX (Unix Z80 Implementation) Kernel:  unix.h
+FUZIX (Unix clone implementation) Kernel:  unix.h
 From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 *****************************************************/
 /* History:
@@ -88,18 +88,34 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
 
 /* Maximum UFTSIZE can be is 16, then you need to alter the O_CLOEXEC code */
 
+#ifdef CONFIG_SMALL
 #ifndef UFTSIZE
-#define UFTSIZE 10       /* Number of user files */		/*280 = 22*/
+#define UFTSIZE		10	/* User files */
 #endif
 #ifndef OFTSIZE
-#define OFTSIZE 15       /* Open file table size */		/*280 = 45*/
+#define OFTSIZE		15	/* Open files */
 #endif
 #ifndef ITABSIZE
-#define ITABSIZE 20      /* Inode table size */			/*280 = 45*/
+#define ITABSIZE	20	/* Inodes */
 #endif
 #ifndef PTABSIZE
-#define PTABSIZE 15      /* Process table size. */
+#define PTABSIZE	15	/* Processes */
 #endif
+#else
+#ifndef UFTSIZE
+#define UFTSIZE		16	/* Number of user files */
+#endif
+#ifndef OFTSIZE
+#define OFTSIZE		56	/* Open file table size */
+#endif
+#ifndef ITABSIZE
+#define ITABSIZE	45	/* Inode table size */
+#endif
+#ifndef PTABSIZE
+#define PTABSIZE	16      /* Process table size. */
+#endif
+#endif
+
 #ifndef MAPBASE		/* Usually the start of program and map match */
 #define MAPBASE PROGBASE
 #endif
@@ -472,6 +488,7 @@ typedef struct p_tab {
 #define PFL_BATCH	4	/* Used full time quantum */
 #define PFL_GRAPHICS	8	/* Graphics hint flag for some platforms
                                    (platform owned) */
+#define PFL_SWAPIN	16	/* Swapped in but not yet run */
     uint8_t     p_tty;          /* Process' controlling tty minor # */
     uint16_t    p_pid;          /* Process ID */
     uint16_t    p_uid;
@@ -499,8 +516,9 @@ typedef struct p_tab {
     uint8_t	p_nice;
     uint8_t	p_event;	/* Events */
     usize_t	p_top;		/* Copy of u_top */
+    usize_t	p_size;		/* For ps (KBytes) */
 #ifdef CONFIG_UDATA_TEXTTOP
-    usize_t p_texttop;  /* Copy of u_texttop */
+    usize_t	p_texttop;	/* Copy of u_texttop */
 #endif
 #ifdef CONFIG_LEVEL_2
     uint16_t	p_session;
@@ -1014,8 +1032,9 @@ extern void i_deref(inoptr ino);
 extern void corrupt_fs(uint16_t devno);
 extern void wr_inode(inoptr ino);
 extern bool isdevice(inoptr ino);
+extern int f_trunc_blocks(inoptr ino, uint16_t nblock);
 extern int f_trunc(inoptr ino);
-extern void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level);
+extern void freeblk(uint16_t dev, blkno_t blk, uint_fast8_t level, uint16_t nblock);
 extern blkno_t bmap(inoptr ip, blkno_t bn, unsigned int rwflg);
 extern void validblk(uint16_t dev, blkno_t num);
 extern inoptr getinode(uint_fast8_t uindex);
@@ -1113,6 +1132,7 @@ extern void updoff(void);
 extern int stcpy(inoptr ino, uint8_t *buf);
 extern bool rargs (uint8_t **userspace_argv, struct s_argblk *argbuf);
 extern uint8_t **wargs(uint8_t *userspace_ptr, struct s_argblk *argbuf, int  *cnt);
+extern arg_t brk_extend(uaddr_t addr);
 
 /* timer.c */
 extern void rdtime(time_t *tloc);
@@ -1195,6 +1215,7 @@ extern void plt_monitor(void);
 extern uint_fast8_t plt_param(char *p);
 extern void plt_switchout(void);
 extern void plt_interrupt(void);
+extern void plt_reinterrupt(void);
 extern uint_fast8_t plt_suspend(void);
 extern uint_fast8_t plt_udata_set(ptptr p);
 
@@ -1297,6 +1318,7 @@ extern arg_t _sched_yield(void);  /* FUZIX system call 62 */
 extern arg_t _acct(void);	  /* FUZIX system call 63 */
 extern arg_t _memalloc(void);	  /* FUZIX system call 64 */
 extern arg_t _memfree(void);	  /* FUZIX system call 65 */
+extern arg_t _ftruncate(void);    /* FUZIX system call 67 */
 
 #if defined(CONFIG_32BIT)
 #include "kernel32.h"

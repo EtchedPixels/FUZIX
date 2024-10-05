@@ -37,7 +37,7 @@ struct p_tab {
     void *      p_wait;         /* Address of thing waited for */
     uint16_t    p_page;         /* Page mapping data */
     uint16_t    p_page2;        /* It's really four bytes for the platform */
-#if defined(__m68k__) || defined(__arm__)
+#if defined(__m68k__) || defined(__arm__) || defined(__ns32k__)
     void *	p_udata;
 #endif
     uint16_t    p_priority;     /* Process priority */
@@ -55,8 +55,9 @@ struct p_tab {
     uint8_t	p_event;	/* Events */
     /* FIXME: usize_t strictly */
     unsigned int p_top;		/* Copy of u_top : FIXME: usize_t */
+    unsigned int p_size;	/* Process size in KB */
 #ifdef __XTENSA_CALL0_ABI__
-    unsigned int p_texttop;  /* Copy of u_texttop */
+    unsigned int p_texttop;	/* Copy of u_texttop */
 #endif
 };
 

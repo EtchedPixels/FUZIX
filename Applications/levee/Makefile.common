@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.$(USERCPU)
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 CSRCS = beep.c blockio.c display.c doscall.c editcor.c exec.c find.c
 CSRCS += flexcall.c gemcall.c globals.c insert.c main.c misc.c modify.c
@@ -9,21 +9,13 @@ OBJSL = $(CSRCS:.c=.o-l)
 OBJSA = $(CSRCS:.c=.o-a)
 OBJSV = $(CSRCS:.c=.o-v)
 
-all: levee-linux levee-ansi levee-vt52
-
-# Linux version to run on Host system for debug purposes
-levee-linux: $(OBJSL)
-	gcc -o levee-linux $(OBJSL) $(LINKER_TAIL)
+all: levee-ansi levee-vt52
 
 levee-ansi: $(OBJSA)
 	$(LINKER) -o levee-ansi $(CRT0) $(OBJSA) $(LINKER_OPT) $(LINKER_TAIL)
 
 levee-vt52: $(OBJSV) $(CRT0)
 	$(LINKER) -o levee-vt52 $(CRT0) $(OBJSV) $(LINKER_OPT) $(LINKER_TAIL)
-
-# Build for Linux - assume appropriate host tools exist with default names
-$(OBJSL): %.o-l: %.c $(HDRS)
-	gcc -O3 -c -DVT52=0 -DANSI=1 -o $*.o-l $*.c
 
 ## need to change include file and add appropriate -D -- and to z80 version, too
 
@@ -35,4 +27,4 @@ $(OBJSV): %.o-v: %.c $(HDRS)
 
 clean:
 	rm -rf $(OBJS) $(OBJSL) $(OBJSA) $(OBJSV) *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.rel *.asm
-	rm -f levee levee-vt52 levee-linux levee-ansi *.bin levee-termcap
+	rm -f levee levee-vt52 levee-ansi *.bin levee-termcap

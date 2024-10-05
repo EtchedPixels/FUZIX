@@ -91,7 +91,9 @@ _switchin:
 	ora a
 	jnz not_swapped
 	;
-	;	Swapping time. Interrupts back on
+	;	Swapping time. Interrupts back on. Can't yet do this
+	;	as it needs core changes (bank switch stacking etc)
+	;	We must be on the swap stack when this occurs
 	;
 	ei
 	xra a

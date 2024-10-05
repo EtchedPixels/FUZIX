@@ -46,7 +46,7 @@ uint_fast8_t issocket(inoptr ino)
 	return 0;
 }
 
-static inoptr sock_get(int fd, uint8_t * flags)
+static inoptr sock_get(int fd, uint_fast8_t * flags)
 {
 	inoptr ino = getinode(fd);
 	if (ino == NULL)
@@ -64,9 +64,9 @@ static inoptr sock_get(int fd, uint8_t * flags)
 /* The network layer made us a socket. We just need to nail an inode to it */
 static int make_socket(uint16_t sock)
 {
-	int8_t uindex;
-	int8_t oftindex;
-	inoptr ino;
+	int_fast8_t uindex;
+	int_fast8_t oftindex;
+	register inoptr ino;
 
 	/* Start by getting the file and inode table entries */
 	if ((uindex = uf_alloc()) == -1)
@@ -136,10 +136,10 @@ static int run_sockfunc(sockfunc_t func, uint8_t n, uint8_t flags)
 
 arg_t _netcall(void)
 {
-	uint8_t flags = 0;
-	uint8_t cn;
-	arg_t *ap;
-	uint8_t op;
+	uint_fast8_t flags = 0;
+	uint_fast8_t cn;
+	register arg_t *ap;
+	register uint_fast8_t op;
 	usize_t s;
 	int n;
 	inoptr ino = NULL;

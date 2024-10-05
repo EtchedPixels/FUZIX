@@ -1,4 +1,4 @@
-fuzix.bin: target $(OBJS) tools/decbdragon tools/decb-image tools/visualize6809
-	+make -C platform-$(TARGET) image
+fuzix.bin: target $(OBJS) tools/decbdragon tools/decb-image tools/visualize6809 tools/diskpad
+	+make -C platform/platform-$(TARGET) image
 	tools/visualize6809 < fuzix.map
 

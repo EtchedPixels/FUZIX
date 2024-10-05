@@ -85,7 +85,7 @@ not_swapin:
 #endif
             or a                                    ; test is_user
             jr z, rd_kernel			    ; kernel buffer read ?
-            call map_process_always		    ; map the process memory
+            call map_proc_always		    ; map the process memory
             jr doread
 rd_kernel:
             call map_buffers			    ; ensure the buffers are mapped
@@ -132,7 +132,7 @@ not_swapout:
 #endif
             or a                                    ; test is_user
 	    jr z, wr_kernel			    ; writing from kernel ?
-	    call map_process_always	 	    ; map user space
+	    call map_proc_always	 	    ; map user space
 	    jr dowrite
 wr_kernel:
 	    call map_buffers			    ; map the disk buffers

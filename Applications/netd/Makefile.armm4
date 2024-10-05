@@ -1,5 +1,5 @@
 ROOT = ../..
-include $(ROOT)/Applications/rules.armm4
+include $(ROOT)/Target/rules.armm4
 CFLAGS += -DNETD_LITTLE_ENDIAN -DNETD_RINGBUF_IN_MEMORY
 
 SRCS  = netd.c eth.c slip.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c

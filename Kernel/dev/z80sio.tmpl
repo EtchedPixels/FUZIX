@@ -1,0 +1,266 @@
+;
+;	SIO2 IM2 console driver
+;
+;	The buffers are 256 bytes per channel and page aligned. The lower
+;	half is used for receive the upper for transmit. Both are rings.
+
+;
+;	Transmit data from the queue. We need a stop system for this but
+;	actually the logical one might be to just turn that IRQ off, so long
+;	as we remember to kickstart it again properly. Check if it's enough
+;	to just unmask the IRQ bit ?
+;
+;	All of this lives in common space so we don't bank switch so much.
+;
+;	Template values
+;
+;	1	Name for this SIO (eg 'A' or 'B' etc)
+;	2	section/adr etc for the buffers (must be aligned correctly)
+;		eg  ".abs\n.org 0x200\n"
+;	3	ditto for the work registers, usually .common
+;	4	Control port
+;	5	Data port
+;	6	Ret instruction for interrupt (ret or reti)
+;	7	code to execute when entering handler (eg to bank the
+;		buffers in). May well be nothing for common memory setup
+;	8	code to unbank
+;
+
+	%2%		; set section and addr for these
+sio%1%_rx:
+	.ds	128
+sio%1%_tx:
+	.ds	128
+
+	%3%		; set section for these
+
+sio%1%_error:
+	.byte	0
+sio%1%_rxover:
+	.byte	0
+sio%1%_stat:
+	.byte	0
+sio%1%_txp:
+	.word	sio%1%_tx
+sio%1%_txe:
+	.word	sio%1%_tx
+sio%1%_rxp:
+	.word	sio%1%_rx
+sio%1%_rxe:
+	.word	sio%1%_rx
+
+
+;
+;	C interface methods
+;
+	.export _sio%1%_txqueue
+	.export _sio%1%_flow_off
+	.export _sio%1%_flow_on
+	.export _sio%1%_rx_get
+	.export _sio%1%_error_get
+
+;
+;	Interrupt vector handler for port A transmit empty
+;
+sio%1%_txd:
+	push af
+	%7%
+	ld a,(_sio%1%_txl)
+	or a
+	jr z, tx_%1%_none
+	push hl
+	dec a
+	ld (_sio%1%_txl),a
+	ld hl,(sio%1%_txp)
+	ld a,(hl)
+	out (%5%),a
+	inc l
+	set 7,l
+	ld (sio%1%_txp),hl
+	pop hl
+	jr txon_%1%
+tx_%1%_none:
+	ld a,0x28
+	out (%4%),a		; silence tx interrupt
+txon_%1%:
+	%8%
+	pop af
+	ei
+	%6%
+;
+;	Interrupt vector handler for port A receive ready
+;
+sio%1%_rx_ring:
+	push af
+	push hl
+	%7%
+sio%1%_rx_next:
+	in a,(%5%)		; read ASAP
+	ld l,a
+	ld a,(_sio%1%_rxl)
+	inc a
+	jp m, %1%_rx_over
+	ld (_sio%1%_rxl),a
+	; should we check bit 5/6 and if appropriate flow control on bit 5/6
+	; high ?
+	cp 0x60		; flow control threshold
+	call z, _sio%1%_flow_on
+	ld a,l
+	ld hl,(sio%1%_rxp)
+	ld (hl),a
+	inc l
+	res 7,l
+	ld (sio%1%_rxp),hl
+	;
+	;	The chip has a small FIFO and bytes can also arrive as we
+	;	read. To maximise performance try and empty it each time.
+	;
+	;	This is bounded as worst case at high data rate and low
+	;	CPU speed we will overrun and bail out.
+	;
+	in a,(%4%)		; RR 0
+	rra
+	jr c, sio%1%_rx_next
+	%8%
+	pop hl
+	pop af
+	ei
+	%6%
+%1%_rx_over:
+	ld a,(sio%1%_error)
+	or 0x20		; Fake an RX overflow bit
+	ld (sio%1%_rxover),a
+	%8%
+	pop hl
+	pop af
+	ei
+	%6%
+;
+;	Interrupt vector for a port A status change
+;
+sio%1%_status:
+	; CTS or DCD change
+	push af
+	push hl
+	%7%
+	; RR0
+	in a,(%4%)
+	ld (_sio%1%_state),a
+	and 8
+	jr z, no_dcd_drop_%1%
+	; \DCD went high
+	ld (_sio%1%_dropdcd),a		; Set the dcdflag
+no_dcd_drop_%1%:
+	; Clear the latched values
+	ld a,0x10
+	out (%4%),a
+	%8%
+	pop hl
+	pop af
+	ei
+	%6%
+
+;
+;	Interrupt vector for a port A error
+;
+sio%1%_special:
+	; Parity, RX Overrun, Framing
+	; Probably want to record them, but we at least must clean up
+	push af
+	%7%
+	ld a,1
+	out (%4%),a		; RR1 please
+	in a,(%4%)		; clear events
+	ld (sio%1%_error),a	; Save error bits
+	; Clear the latched values
+	ld a,0xC0
+	out (%4%),a
+	%8%
+	pop af
+	ei
+	%6%
+
+;
+;	Queue a byte to be sent (DI required)
+;
+;	l = byte
+;
+;	Need a way to halt processing somewhere here or a_tx ?
+;	(or can we use hardware ?)
+;	128 byte ring buffer aligned to upper half (rx is in lower)
+;
+_sio%1%_txqueue:
+	ld a,(_sio%1%_txl)
+	or a
+	jr z, sio%1%_direct_maybe	; if can tx now then do
+	inc a
+	jp m, tx%1%_overflow
+sio%1%_queue:
+	ld (_sio%1%_txl),a
+	ld a,l
+	ld hl,(sio%1%_txe)
+	ld (hl),a
+	inc l
+	set 7,l
+	ld (sio%1%_txe),hl
+	ld l,0
+	ret
+tx%1%_overflow:
+	; some kind of flag for error
+	ld l,1
+	ret
+sio%1%_direct_maybe:
+	; check RR
+	in a,(%4%)
+	and 0x04		; TX space ?
+	; if space
+	ld a,1
+	jr z, sio%1%_queue
+	; bypass the queue and kickstart the interrupt machine
+	ld a,l
+	out (%5%),a
+	ld l,0
+	ret
+	; Call with DI
+
+_sio%1%_flow_off:
+	ld a,5
+	out(%4%),a		; WR 5
+	ld a,(_sio%1%_wr5)
+	out (%4%),a		; Turn off RTS
+	ret
+
+_sio%1%_flow_on:
+	ld a,5
+	out(%4%),a		; WR 5
+	ld a,(_sio%1%_wr5)
+	and 0xFD
+	out (%4%),a		; Turn off RTS
+	ret
+
+	; DI required
+	; Returns char in L
+	;
+	; Caller responsible for making post buffer fetch decisions about
+	; RTS
+_sio%1%_rx_get:
+	ld a,(_sio%1%_rxl)
+	or a
+	ret z
+	dec a
+	ld (_sio%1%_rxl),a
+	ld hl,(sio%1%_rxe)
+	ld a,(hl)
+	inc l
+	res 7,l
+	ld (sio%1%_rxe),hl
+	ld l,a
+	ret
+
+	; DI required
+_sio%1%_error_get:
+	ld hl,sio%1%_error
+	ld a,(hl)
+	ld (hl),0
+	ld l,a
+	ret

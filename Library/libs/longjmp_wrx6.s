@@ -1,7 +1,7 @@
 
 	.export	_longjmp
 
-	.setcpu 6
+	.setcpu 4
 	.code
 
 ;
@@ -10,14 +10,18 @@
 ;	about
 ;
 _longjmp:
-	lda	2(s)		; retval
+	ldb	2(s)		; retval
 	bnz	retok
-	ina			; retval 1 if 0 requested
+	inr	b		; retval 1 if 0 requested
 retok:
 	ldx	4(s)
-	ldb	(x)
-	xfr	b,s
-	ldb	2(x)		; lost X save
-	stb	(-s)
+	lda	(x)
+	xas
+	lda	2(x)		; lost X save
+	sta	(-s)
 	ldx	4(x)
+	lda	6(x)
+	xay
+	lda	8(x)
+	xaz
 	rsr

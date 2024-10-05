@@ -1,0 +1,87 @@
+MO5N/6 Experiment
+=================
+
+This is sort of a TO8 but with the memory map messed around and some other adjustments
+for MO5 compatibility. The MO5 doesn't have the needed RAM or mappings.
+
+TODO:
+- Shuffle image into cartridge
+- Finish and debug cart boot
+- Swap and bank exchange logic (will match the Spectrum 128K but in
+  6809. MO6+network ram cart is going to be a bit of a different beast
+- Joystick
+- Map video over cartridge space when in usermode
+
+Cartridge rom appears to have a 32byte end block that contains
+
+EFE0	Name EOTdd-mm-yy\0\0\0\0\0X"\0\0DCMO5\0HL		(HL = execute address)
+
+eg
+xxe0	GEMINI\0418-01-84\0
+xxf0	\0 \0 \0 \0 X " \0 \0 DCMO5\0B000
+
+Question - what is the X" (58A2) could be it be a checksum ?
+
+Memory Map:
+
+0000-1FFF	Kernel (8K R/W common, 8K unused - buffers maybe ?)
+2000-20FF	Workspace for ROM monitor
+2100-5FFF	Fixed RAM (User)		(Bank 1)
+6000-9FFF	Banked kernel/User/Video	(Bank 2-7)
+A000-AFFF	I/O / ROM
+B000-EFFF	Kernel cartridge ROM
+F000-FFFF	Monitor
+
+User Space
+
+0000-1FFF	Kernel	(8K unused)
+2000-20FF	Monitor
+2100-5FFF	User low (copied from paging bank)
+6000-9FFF	User high (pageable)
+A000-AFFF	I/O
+B000-EFFF	Kernel	(maybe map video over this in user mode ?)
+F000-FFFF	Monitor
+
+Kernel Space
+
+0000-1FFF	Kernel common
+2000-20FF	Monitor
+2100-5FFF	User low (udata etc too)
+6000-9FFF	Kernel
+A000-AFFF	I/O
+B000-EFFF	Kernel
+F000-FFFF	Monitor
+
+(very fragmented)
+
+Pages are used
+0	Fixed for 2 x 8K views of 0000-1FFF	(Kernel common, spare)
+1	Fixed at 2000-5FFF
+2	Kernel upper segment and common		(Kernel 6000-9FFF)
+3	Video
+
+4,5	Process 1
+6,7	Process 2
+
+The 5N cartridge can apparently allow another 4 x 16K top memory banks which could be used as the copy banks
+(so 4,5,6,7 would be paged in and cart 1-4 the copy banks)
+
+We want to use the monitor SWI interface as much as we can for size. In particular
+
+SWI 0 (reset)
+SWI A for the keyboard
+SWI for joystick
+SWI for printer ?
+SWI for floppy disk raw sector I/O
+
+Need to steal the timer and IRQ somehow whilst not breaking the monitor when
+we return in weird ways on a task switch.
+
+Cartridge apparently runs from 0xEFFE/EFFF on boot
+
+Syscalls
+
+The monitor provides the address of a vector of SWI calls rather than providing
+any mechanism to redirect SWI. We point the vector 20 bytes before our single
+entry as all our syscall SWI happen to be followed by CMPD. This is a cheat
+but will do for now.

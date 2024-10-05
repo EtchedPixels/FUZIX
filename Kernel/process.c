@@ -206,6 +206,17 @@ ptptr getproc(void)
 			kprintf("[getproc returning %p pid=%d]\n",
 				getproc_nextp, getproc_nextp->p_pid);
 #endif
+#ifdef CONFIG_SWAPPER
+			if (getproc_nextp->p_page == 0) {
+				/* It gets skipped until the swapper
+				   catches up */
+				getproc_nextp->p_flags &= ~PFL_BATCH;
+				getproc_nextp->p_flags |= PFL_SWAPIN;
+				swap_in(getproc_nextp);
+				continue;
+			}
+			getproc_nextp->p_flags &= ~PFL_SWAPIN;
+#endif
 			/* Punish CPU hogs by selecting them less often */
 			if (getproc_nextp->p_flags & PFL_BATCH) {
 				getproc_nextp->p_flags &= ~PFL_BATCH;
@@ -374,8 +385,8 @@ ptptr ptab_alloc(void)
 						break;
 					}
 			}
-			if (udata.u_ptab) {
-				newp->p_top = udata.u_top;
+			newp->p_top = udata.u_top;		/* also for init creation */
+			if (udata.u_ptab) {		/* on forking */
 #ifdef CONFIG_UDATA_TEXTTOP
 				newp->p_texttop = udata.u_texttop;
 #endif
@@ -1000,10 +1011,65 @@ void NORETURN panic(char *deathcry)
 	for(;;);
 }
 
+#ifdef CONFIG_SWAPPER
+
+/*
+ *	Very simple swap helper task for systems that benefit from it.
+ *
+ *	There is lots more can be done here especially if the platform
+ *	has true asynchronous disk I/O - things like paging stuff out in
+ *	advance.
+ */
+
+static struct p_tab *swapin_proc;
+
+void NORETURN swapper(void)
+{
+	irqflags_t irq;
+	struct p_tab *proc;
+
+	while(1) {
+		irq = di();
+		if (swapin_proc) {
+			proc = swapin_proc;
+			swapin_proc = HULL;
+			irqrestore(irq);
+			swapin(proc, proc->p_page2);
+		}
+		psleep(&swapper);
+	}
+}
+
+void swap_in(ptptr proc)
+{
+	/* No queue for now */
+	if (swapin_proc == NULL) {
+		swapin_proc = proc;
+		wakeup(&swapper);
+	}
+}
+
+#endif
+
 /* We put this here so that we can blow the start.c code away on exec
    eventually, but still manage to get the panic() to happen if it fails */
 void exec_or_die(void)
 {
+#ifdef CONFIG_SWAPPER
+	irqflags_t irq;
+	unsigned pid;
+	struct p_tab *p;
+
+	kputs("Starting swapper\n");
+	p = ptab_alloc();
+	if (p == NULL)
+		panic("pswp");
+	irq = di();
+	pid = dofork(p);
+	irqrestore(irq);
+	if (pid != 1)
+		swapper();
+#endif
 	kputs("Starting /init\n");
 	plt_discard();
 	_execve();

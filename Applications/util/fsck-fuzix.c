@@ -151,7 +151,14 @@ static int bittest(uint16_t b)
     uint16_t n = b >> 3;
     if (n >= bitmap_size)
         return 0;
+    /* GCC 68HC11 miscompiles the bitmask code we use for speed elsewhere. For
+       now bodge around it until we can kick gcc out for the native compiler */
+#ifdef mc68hc11        
+    b &= 7;
+    return !!(bitmap[n] & (1 << b));
+#else    
     return (bitmap[n] & bitmask[b & 7]) ? 1 : 0;
+#endif    
 }
 
 static void panic(const char *s)
@@ -280,6 +287,8 @@ int main(int argc, char *argv[])
     do {
         error = 0;
         perform_fsck(argv[1]);
+        if (error & 64)
+            puts("Rescanning disk");
     }
     while(error & 64);
     exit(error);

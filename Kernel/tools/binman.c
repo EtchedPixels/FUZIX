@@ -237,18 +237,21 @@ int main(int argc, char *argv[])
 				memcpy(out + base, buf + s__SYSMOD, l__SYSMOD);
 				base += l__SYSMOD;
 			}
+			printf("Common packed at 0x%04X\n", base);
 			tail += l__COMMONMEM + l__COMMONDATA;
 			memcpy(out + base, buf + s__COMMONMEM,
 			       l__COMMONMEM + l__COMMONDATA);
 			base += l__COMMONMEM + l__COMMONDATA;
 			/* If we have the font packed high then add it to the image */
-			if (l__FONT && s__FONT > s__INITIALIZER) {
+			if (l__FONT && s__FONT > end) {
+				printf("Font packed at 0x%04X\n", base);
 				memcpy(out + base, buf + s__FONT, l__FONT);
 				tail += l__FONT;
 				base += l__FONT;
 			}
 			end = s__COMMONMEM + l__COMMONMEM + l__COMMONDATA + l__FONT;
 			if (pack_discard) {
+				printf("Discard packed at 0x%04X\n", base);
 			        memcpy(out + base, buf + s__DISCARD, l__DISCARD);
 			        base += l__DISCARD;
 			        tail += l__DISCARD;

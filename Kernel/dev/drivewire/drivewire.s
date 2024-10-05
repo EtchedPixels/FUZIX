@@ -31,7 +31,7 @@ _dw_transaction:
 	orcc	#0x50		; stop interrupts
 	tstb			; rawflag?
 	beq	skip@		; nope - then skip switching to process map
-	jsr	map_process_always
+	jsr	map_proc_always
 skip@	ldy	5,s		; Y = number of bytes to send
 	beq	ok@		; no byte to write - leave
 	jsr	DWWrite		; send to DW
@@ -59,7 +59,7 @@ _dw_operation:
 	pshs y
 	ldd 6,x	        ; test for kernel/usr mapping
 	beq kern@       ; is zero, so must be a kernel xfer.
-	jsr map_process_always
+	jsr map_proc_always
 	; get parameters from C, X points to cmd packet
 kern@	tst ,x		; test for write flag
 	pshs cc		; save test on stack

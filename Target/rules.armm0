@@ -1,0 +1,19 @@
+PLATFORM = armm0
+CC = arm-none-eabi-gcc
+ASM = arm-none-eabi-as
+AR = arm-none-eabi-ar
+STRIP = arm-none-eabi-strip
+LINKER = arm-none-eabi-ld
+CFLAGS = -mcpu=Cortex-M0plus -ffunction-sections -fdata-sections -fno-strict-aliasing -fomit-frame-pointer -fno-builtin -Wall -g -Os -isystem $(ROOT)/Library/include
+CFLAGS += -Wno-int-conversion -Wno-implicit-int
+LINKER_OPT = -L$(ROOT)/Library/libs -lc$(PLATFORM) -pie -static -no-dynamic-linker -z max-page-size=4
+LIBGCCDIR = $(dir $(shell $(CC) $(CFLAGS) -print-libgcc-file-name))
+LINKER_OPT += -L$(LIBGCCDIR) -lgcc -T $(ROOT)/Library/elfexe32.ld --no-export-dynamic -Bstatic -no-dynamic-linker
+STRIP_OPT =
+CRT0 = $(ROOT)/Library/libs/crt0_$(PLATFORM).o
+CRT0NS = $(ROOT)/Library/libs/crt0nostdio_$(PLATFORM).o
+# Currently the armm0 userland is only used by the rpipico port, which expects ELF.
+# ELF2FUZIX = $(ROOT)/Library/tools/elf2bin -p arm-none-eabi
+.SUFFIXES: .c .o
+HOSTCC = cc
+HAS_FP = yes

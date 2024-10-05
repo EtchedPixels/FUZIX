@@ -57,7 +57,7 @@ static void write_makefile(void)
   fprintf(fp, "\techo $(AOBJS) >syslib.l\n");
   fprintf(fp, "\tar rc syslib.lib $(AOBJS)\n\n");
   fprintf(fp, "$(AOBJS): %%.o: %%.s\n");
-  fprintf(fp, "\tcc85 -c -o $*.o $<\n\n");
+  fprintf(fp, "\tfcc -m8085 -c -o $*.o $<\n\n");
   fprintf(fp, "clean:\n");
   fprintf(fp, "\trm -f $(AOBJS) $(ASRCS) syslib.lib *~\n\n");
   fclose(fp);

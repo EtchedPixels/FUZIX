@@ -20,7 +20,7 @@ CPU_Z180	.equ	Z80_TYPE-2
         ; imported symbols
         .globl map_buffers
         .globl map_kernel_restore
-        .globl map_process_always
+        .globl map_proc_always
         .globl _devfd_dtbl
 	.globl _plt_idle
 
@@ -35,8 +35,8 @@ CPU_Z180	.equ	Z80_TYPE-2
         .globl _devfd_userbuf
         .globl _fd_tick
 
-        .include "../platform/kernel.def"
-        .include "../kernel-z80.def"
+        .include "../build/kernel.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 
 ;------------------------------------------------------------------------------
@@ -654,7 +654,7 @@ FdcXit:
 FdCmdXfer:
         BIT     0,D             ; Buffer in user memory?
 	JR	Z,  kernxfer
-        CALL    map_process_always
+        CALL    map_proc_always
 	JR 	doxfer
 kernxfer:
 	CALL	map_buffers

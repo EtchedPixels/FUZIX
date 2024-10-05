@@ -19,10 +19,10 @@
 
 /* Small multiples of pi/2 rounded to double precision. */
 static const double
-s1pio2 = 1*M_PI_2, /* 0x3FF921FB, 0x54442D18 */
-s2pio2 = 2*M_PI_2, /* 0x400921FB, 0x54442D18 */
-s3pio2 = 3*M_PI_2, /* 0x4012D97C, 0x7F3321D2 */
-s4pio2 = 4*M_PI_2; /* 0x401921FB, 0x54442D18 */
+s1pio2 = __1M_PI_2, /* 0x3FF921FB, 0x54442D18 */
+s2pio2 = __2M_PI_2, /* 0x400921FB, 0x54442D18 */
+s3pio2 = __3M_PI_2, /* 0x4012D97C, 0x7F3321D2 */
+s4pio2 = __4M_PI_2; /* 0x401921FB, 0x54442D18 */
 
 float sinf(float x)
 {

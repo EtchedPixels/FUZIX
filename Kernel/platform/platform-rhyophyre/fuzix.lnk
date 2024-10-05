@@ -1,0 +1,56 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _COMMONMEM=0xF600
+-b _DISCARD=0xE000
+-l z180
+platform/platform-rhyophyre/crt0.rel
+platform/platform-rhyophyre/commonmem.rel
+platform/platform-rhyophyre/z180.rel
+platform/platform-rhyophyre/rph.rel
+platform/platform-rhyophyre/main.rel
+start.rel
+version.rel
+cpu-z180/lowlevel-z180.rel
+cpu-z180/usermem_std-z180.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform/platform-rhyophyre/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+memalloc_none.rel
+banksplit.rel
+swap.rel
+devsys.rel
+devinput.rel
+vt.rel
+platform/platform-rhyophyre/discard.rel
+platform/platform-rhyophyre/devtty.rel
+platform/platform-rhyophyre/tinyide.rel
+platform/platform-rhyophyre/tinyide_discard.rel
+platform/platform-rhyophyre/tinyide_ppide_rbc.rel
+platform/platform-rhyophyre/tinydisk.rel
+platform/platform-rhyophyre/tinydisk_discard.rel
+platform/platform-rhyophyre/ds1302.rel
+platform/platform-rhyophyre/ds1302_discard.rel
+platform/platform-rhyophyre/ds1302-rph.rel
+platform/platform-rhyophyre/ps2.rel
+platform/platform-rhyophyre/ps2kbd.rel
+platform/platform-rhyophyre/ps2mouse.rel
+platform/platform-rhyophyre/devinput.rel
+platform/platform-rhyophyre/7220.rel
+platform/platform-rhyophyre/monitor.rel
+-e

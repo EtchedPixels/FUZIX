@@ -180,6 +180,7 @@ extern int _uname(struct _uzisysinfoblk *uzib, int len);
 extern int _profil(void *samples, uint16_t offset, uint16_t size, int16_t scale);
 extern int _lseek(int fd, off_t *offset, int mode);
 extern int _select(int nfd, uint16_t *base);
+extern int _ftruncate(int fd, off_t *offset);
 
 /* C library provided syscall emulation */
 extern int stat(const char *path, struct stat *s);
@@ -192,6 +193,7 @@ extern int utime(const char *filename, const struct utimbuf *utim);
 extern int uname(struct utsname *buf);
 extern int profil(unsigned short *bufbase, size_t bufsize, unsigned long offset,
                   unsigned int scale);
+extern int ftruncate(int fd, off_t offset);
 
 /* Networking */
 extern int __netcall(void *argbuf);

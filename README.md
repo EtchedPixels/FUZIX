@@ -1,3 +1,10 @@
+** ENGINEERING WORK IN PROGRESS **
+
+The Z80 side of the tree is currently moving to the new compiler including
+work on the compiler, linker and kernel. Thus some bits of it require you
+have absolutely bleeding edge pieces all around. I would suggest avoiding
+working on this tree for Z80 stuff right now. Non Z80 should be just fine.
+
 **FuzixOS**: Because Small Is Beautiful
 
 This is the initial public tree for the FuzixOS project. It is not yet useful although you can build and boot it and run
@@ -16,16 +23,34 @@ OMU also got blended in
 Some pre-built filesystems are now available on www.fuzix.org, and other
 images should follow in time.
 
+# Supporting Fuzix
+
+As this gets asked a bit. The best way to support Fuzix is to contribute
+code and/or docs. It's really an art project in computing. 
+
+If you want to spend money then please just buy a homeless person a pizza or a
+coat or something like that. If you are changing electricity suppliers in the
+UK to Octopus then signing up through this link gets both of us £50. Not an
+endorsement, Octopus merely suck less than other UK energy suppliers.
+
+https://share.octopus.energy/amber-calf-514
+
 ## Tools
 
-Most of the trees will build with recent tool chains for that architecture.
-The one exception is Z80/Z180. A modified SDCC is available in my github.
-This contains support for banked code that was not accepted upstream, and
-does not include the recent SDCC changes that totally changed the compiler
-ABI.
+For the 8080, 8085, Z80 and Z180 the code is now built with the Fuzix C
+Compiler and Bintools which are also in github. See instructions for
+building them. Some kernels still need the customised SDCC 3.8 from from
+this github. 65C816 and Z8 are a work in progress moving to this compiler.
+
+6502 is currently built with cc65 and a distribution version should work.
+
+6303/6803 are built with CC6303 (again in this github)
+
+6809 is built with lwtools and the including gcc fork.
+
+Other targets use gcc variants. See the target specific information.
 
 ## What does FUZIX have over UZI
-
 
 * Support for multiple processes in banked memory (as per UZI180) but
 	with Minix style chmem and efficient use of bank allocations.
@@ -89,11 +114,9 @@ friends, while UMZIX has a neat unified "make anything" function.
 ## Tool Issues
 
 * 6809 gcc and cc65 don't have long long 64bit (for sane time_t)
-* SDCC can generate ROMmable binaries but not banked ones (hack fixes done)
 * None of the above have an O88 style common sequence compressor
 * CC65 can't handle larger objects on stack, and lacks float support
 * We need a 'proper' 65C816 C compiler
-* ACK 8080 lacks floating point support
 
 [travis-image]: https://travis-ci.org/EtchedPixels/FUZIX.png?branch=master
 [travis-url]: https://travis-ci.org/EtchedPixels/FUZIX

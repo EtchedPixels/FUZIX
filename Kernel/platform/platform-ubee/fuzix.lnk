@@ -1,0 +1,53 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0200
+-b _COMMONMEM=0xF000
+-b _INITIALIZER=0x0001
+-l z80
+platform/platform-ubee/crt0.rel
+platform/platform-ubee/commonmem.rel
+platform/platform-ubee/ubee.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80.rel
+usermem.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-ubee/tricks.rel
+platform/platform-ubee/main.rel
+platform/platform-ubee/discard.rel
+timer.rel
+kdata.rel
+platform/platform-ubee/devfd.rel
+platform/platform-ubee/floppy.rel
+platform/platform-ubee/devhd.rel
+platform/platform-ubee/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_net.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+memalloc_none.rel
+swap.rel
+platform/platform-ubee/net_native.rel
+bankfixed.rel
+vt.rel
+devsys.rel
+platform/platform-ubee/devlpr.rel
+platform/platform-ubee/devtty.rel
+platform/platform-ubee/vt.rel
+platform/platform-ubee/blkdev.rel
+platform/platform-ubee/mbr.rel
+platform/platform-ubee/devide.rel
+platform/platform-ubee/devide_discard.rel
+platform/platform-ubee/ide.rel
+-e

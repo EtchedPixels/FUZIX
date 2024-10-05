@@ -1,9 +1,9 @@
 export CROSS_AS=sdasz80
 export CROSS_LD=$(FUZIX_ROOT)/Kernel/tools/bankld/sdldz80
 export CROSS_CC=sdcc
-#export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 1000000 --opt-code-size --stack-auto --constseg CONST
-#export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 200000 --opt-code-size --stack-auto --constseg CONST
-export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --stack-auto --constseg CONST --peep-file $(ROOT_DIR)/cpu-z80/switch.peep #--fverbose-asm
+#export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 1000000 --opt-code-size --stack-auto --constseg CONST
+#export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 200000 --opt-code-size --stack-auto --constseg CONST
+export CROSS_CCOPTS=-c --std-sdcc99 --no-std-crt0 -m$(CPU) -I$(ROOT_DIR)/cpu-$(CPU) -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include --max-allocs-per-node 30000 --opt-code-size --stack-auto --constseg CONST --peep-file $(ROOT_DIR)/cpu-z80/switch.peep #--fverbose-asm
 #export CROSS_CCOPTS+=--nostdlib --nostdinc -Isdcclib/include 
 export CROSS_CC_SEG2=--codeseg CODE2
 # For now but we are overspilling in a lot of configs so will need a real CODE3

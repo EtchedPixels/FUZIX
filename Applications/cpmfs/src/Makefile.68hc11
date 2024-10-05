@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.68hc11
+include $(FUZIX_ROOT)/Target/rules.68hc11
 
 SRCS = bitmap.c blockio.c cclose.c ccreat.c cfillbuf.c cflsbuf.c cmdhdl.c \
       copen.c copy.c cpm.c delete.c dirhdl.c extent.c ffc.c gensktab.c \

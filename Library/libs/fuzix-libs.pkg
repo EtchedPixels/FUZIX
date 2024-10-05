@@ -1,0 +1,8 @@
+package  libs
+if-file libc.a
+
+f 0644 /usr/lib/libc.a libc.a
+f 0644 /usr/lib/libcurses.a libcurses.a
+f 0644 /usr/lib/libreadline.a libreadline.a
+f 0644 /usr/lib/libtermcap.a libtermcap.a
+f 0644 /usr/lib/crt0.o crt0.o

@@ -1,0 +1,17 @@
+; UZI mnemonics for memory addresses etc
+
+; We stick it straight after the tag
+U_DATA__TOTALSIZE           .equ 0x200        ; 256+256 bytes @0x0100
+
+U_DATA_STASH		    .equ 0xFD00	      ; FD00-FEFF
+					      ; FFxx reserved for interrupts
+
+Z80_TYPE		    .equ 1
+
+PROGBASE		    .equ 0x8000
+PROGLOAD		    .equ 0x8000
+
+NBUFS			    .equ 5
+
+BANK_BITS		    .equ 0x18		; Spectrum ROM select
+						; Video at 0xC000

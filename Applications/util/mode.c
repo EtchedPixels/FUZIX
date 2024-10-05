@@ -43,6 +43,15 @@ static void format(int n) {
     case FMT_6PIXEL_128:
       printf("2x3 block graphics, char 128 based");
       break;
+    case FMT_4PIXEL_128:
+      printf("2x2 block graphics, char 128 based");
+      break;
+    case FMT_PLANAR2:
+      printf("two bitplane");
+      break;
+    case FMT_PLANAR4:
+      printf("four bitplane");
+      break;
     case FMT_SPECTRUM:
       printf("Sinclair Spectrum");
       break;
@@ -51,8 +60,34 @@ static void format(int n) {
       break;
     case FMT_UBEE:
       printf("UBEE");
+      break;
     case FMT_SAM2:
       printf("SAM2");
+      break;
+    case FMT_TIMEX64:
+      printf("Timex interleaved");
+      break;
+    case FMT_AMSMONO:
+      printf("Amstrad mono");
+      break;
+    case FMT_AMS4:
+      printf("Amstrad four colour");
+      break;
+    case FMT_AMS16:
+      printf("Amstrad 16 colour");
+      break;
+    case FMT_8PIXEL_MTX:
+      printf("MTX symbols");
+      break;
+    case FMT_3BPP_U16:
+      printf("3bpp word packed");
+      break;
+    case FMT_THOMSON_C16:
+      printf("Thomson 16 colour");
+      break;
+    case FMT_THOMSON_TO7:
+      printf("Thomson TO7");
+      break;
     default:
       printf("Unknown(%d)", n);
   }
@@ -125,6 +160,10 @@ static void decode_mode_c(int c)
     printf("write ");
   if (disp.commands & GFX_AWRITE)
     printf("awrite ");
+  if (disp.commands & GFX_EXG)
+    printf("exchange ");
+  if (disp.commands & GFX_SCROLL)
+    printf("scroll ");
   printf("\n");
 }
 

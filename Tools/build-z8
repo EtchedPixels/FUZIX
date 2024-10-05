@@ -1,0 +1,7 @@
+#!/bin/sh
+
+X=`which fcc`
+if [ "$X" = "" ]; then
+	echo "fcc is required: see https://github.com/EtchedPixels/FuzixCompilerKit/"
+	exit 1
+fi

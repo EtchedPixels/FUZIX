@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # Build FUZIX system disk from distributed set of fuzix-*.pkg files
-# in the Standalone/filesystem-src and Application directories.
+# in the Standalone/filesystem-src Library and Application directories.
 #
 
 # TODO
@@ -111,7 +111,7 @@ sub build_pkg_list {
 # build a datastructure representing each package file found in the
 # Standalone/filesystem-src/ and Application/ directories.
 sub build_file_list {
-    my @places = ('.','../../Applications','../../Kernel');
+    my @places = ('.','../../Applications','../../Kernel', '../../Library');
     foreach my $dir (@places) {
         find(\&pkg_file, $dir);
     }

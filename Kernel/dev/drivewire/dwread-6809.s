@@ -21,7 +21,7 @@
 *    U is preserved.  All accumulators are clobbered
 *
           IFNE MULTICOMP
-          include "../../platform-multicomp09/platform.def"        ; makes ports available to dwread, dwwrite
+          include "../../platform/platform-multicomp09/platform.def"        ; makes ports available to dwread, dwwrite
 
 *******************************************************
 * 57600 (115200) bps using 6809 code and hw UART

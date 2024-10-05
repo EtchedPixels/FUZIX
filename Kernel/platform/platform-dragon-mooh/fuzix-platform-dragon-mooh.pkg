@@ -1,0 +1,20 @@
+package platform-dragon-mooh
+
+disable-pkg platform-dragon-mooh
+
+# dw0 is also in fuzix-netd.pkg
+r /dev/dw0
+n 60660 2048 /dev/dw0
+n 60660 2049 /dev/dw1
+n 60660 2050 /dev/dw2
+n 60660 2051 /dev/dw3
+
+f 0755 /bin/uef	../../../Applications/ue/ue.fuzix
+
+l /etc/inittab /etc/inittab.orig
+r /etc/inittab
+f 0644 /etc/inittab userspace/inittab
+
+l /etc/rc /etc/rc.orig
+r /etc/rc
+f 0755 /etc/rc userspace/rc

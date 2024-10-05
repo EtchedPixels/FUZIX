@@ -3,8 +3,8 @@
  *
  *	RISCV passes the arguments in a1-a7 which covers more
  *	arguments than we need. Thus all we actually have to generate for
- *	anything (except maybe fork...) is a load of t0 (x5) with the call
- *	number and a trap. On return a1 holds the result and t0 errno
+ *	anything (except maybe fork...) is a load of t1 with the call
+ *	number and a trap. On return a1 holds the result and a0 errno
  */
 
 #include <stdio.h>
@@ -57,10 +57,10 @@ static void write_call(int n)
    *	tp,gp and ra are always preserved by the syscall
    *	s0-s11 are preserved except by fork
    */
-  fprintf(fp, "\tli t0, %d\n", n);
+  fprintf(fp, "\tli t1, %d\n", n);
   fprintf(fp, "\tecall\n");
   fprintf(fp, "\tla t1,errno\n");
-  fprintf(fp, "\tsw t0,0(t1)\n");
+  fprintf(fp, "\tsw a0,0(t1)\n");
   if (saves) {
     fprintf(fp, "\tlw s0,0(sp)\n");
     fprintf(fp, "\tlw s1,4(sp)\n");

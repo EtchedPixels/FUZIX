@@ -23,21 +23,6 @@ static void printe( char *s ){
     write(2, "\n", 1 );
 }
 
-/* A Classic, as stolen from Gnu */
-static uint32_t mul( uint32_t a, uint32_t b)
-{
-	uint32_t r=0;
-	while (a){
-		if (a & 1)
-			r += b;
-		a >>= 1;
-		b <<= 1;
-	}
-	b=r;
-	return b;
-}
-
-
 static int get_time( uint8_t *tbuf )
 {
     int fd;
@@ -70,7 +55,7 @@ int main( int argc, char *argv[] ){
     int i,x;
     unsigned char buf[6];
     uint8_t year, month, day, hour, minute, second;
-    uint32_t ret;   /* accumulator for conversion */
+    time_t ret;   /* accumulator for conversion */
     int setflg = 0;     /* set system time flag */
     int disflg = 0;     /* display retrieved time flag */
     int parbrk = 0;     /* parse break flag */
@@ -135,7 +120,7 @@ int main( int argc, char *argv[] ){
     
     /* calculate days from years */
     ret=365;
-    ret = mul( ret, year - 70 );
+    ret *= year - 70;
     
     /* count leap days in preceding years */
     ret += (year - 69) >> 2;
@@ -151,23 +136,23 @@ int main( int argc, char *argv[] ){
     /* add in days in this month */
     ret += day - 1;
     /* convert to hours */
-    ret = mul( ret, 24 );
+    ret *= 24;
     ret += hour;
     
     /* convert to minutes */
-    ret = mul( ret, 60 );
+    ret *= 60;
     ret += minute;
     
     /* convert to seconds */
-    ret = mul( ret, 60 );
+    ret *= 60;
     ret += second;
 
     if( disflg || !setflg )
-	printf( ctime( (time_t *)&ret ) );
+	fputs(ctime(&ret),stdout);
 
     if( setflg ){
 	/* This is a sleezy cast */
-	x=stime( (time_t *)&ret );
+	x=stime(&ret);
 	if( x ){
 	    perror( "stime" );
 	    exit(1);

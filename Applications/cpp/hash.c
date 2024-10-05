@@ -6,105 +6,179 @@
 #else
 #include <malloc.h>
 #endif
+#include <unistd.h>
+#include <fcntl.h>
 #include "cc.h"
 
 /*
  * Two functions:
- * char * set_entry(int namespace, char * name, void * value);
+ * char * set_entry(char * name, void * value);
  *        returns a pointer to the copy of the name;
  *
- * void * read_entry(int namespace, char * name);
+ * void * read_entry(char * name);
  *        returns the value;
  */
 
-struct hashentry
-{
-   struct hashentry * next;
-   void * value;
-   int    namespace;
-   char	  word[1];
+#define register
+
+struct hashentry {
+	struct hashentry *next;
+	unsigned size;			/* Size */
+	struct define_item *d;		/* Block of data (NULL swapped) */
+	unsigned offset;		/* Offset on disk in 16 byte chunks */
+	char word[1];
 };
 
-struct hashentry ** hashtable;
-int  hashsize  = 0xFF;	/* 2^X -1 */
-int  hashcount = 0;
-static int hashvalue P((int namespace, char * word));
+#define HASHSIZE	256
 
-void *read_entry(int namespace, char *word)
+static struct hashentry *hashtable[HASHSIZE];
+int hashsize = 0xFF;		/* 2^X -1 */
+int hashcount = 0;
+
+static int swap_fd;
+
+static void page_out(struct hashentry *h)
 {
-   int hash_val;
-   struct hashentry * hashline;
-   if( hashtable == 0 ) return 0;
-   hash_val = hashvalue(namespace, word);
-
-   hashline = hashtable[hash_val];
-
-   for(; hashline; hashline = hashline->next)
-   {
-      if(namespace != hashline->namespace) continue;
-      if(word[0] != hashline->word[0])     continue;
-      if(strcmp(word, hashline->word) )    continue;
-      return hashline->value;
-   }
-   return 0;
+	if (lseek(swap_fd, h->offset << 4, 0) < 0 ||
+		write(swap_fd, h->d, h->size) != h->size) {
+		cerror("swap error");
+		exit(1);
+	}
 }
 
-char *set_entry(int namespace, char *word, void *value)
+static void page_in(struct hashentry *h)
 {
-   int hash_val, i;
-   struct hashentry * hashline, *prev;
-   hash_val = hashvalue(namespace, word);
-
-   if( hashtable )
-   {
-      hashline = hashtable[hash_val];
-
-      for(prev=0; hashline; prev=hashline, hashline = hashline->next)
-      {
-         if(namespace != hashline->namespace) continue;
-         if(word[0] != hashline->word[0])     continue;
-         if(strcmp(word, hashline->word) )    continue;
-         if( value ) hashline->value = value;
-         else
-         {
-            if( prev == 0 ) hashtable[hash_val] = hashline->next;
-            else            prev->next = hashline->next;
-            free(hashline);
-            return 0;
-         }
-         return hashline->word;
-      }
-   }
-   if( value == 0 ) return 0;
-   if( hashtable == 0 )
-   {
-      hashtable = malloc((hashsize+1)*sizeof(char*));
-      if( hashtable == 0 ) cfatal("Out of memory");
-      for(i=0; i<=hashsize; i++) hashtable[i] = 0;
-   }
-   /* Add record */
-   hashline = malloc(sizeof(struct hashentry)+strlen(word));
-   if( hashline == 0 ) cfatal("Out of memory");
-   else
-   {
-      hashline->next  = hashtable[hash_val];
-      hashline->namespace = namespace;
-      hashline->value = value;
-      strcpy(hashline->word, word);
-      hashtable[hash_val] = hashline;
-   }
-   return hashline->word;
+	h->d = xmalloc(h->size);
+	if (lseek(swap_fd, h->offset << 4, 0) < 0 ||
+		read(swap_fd, h->d, h->size) != h->size) {
+		cerror("swap error");
+		exit(1);
+	}
+	h->d->name = h->word;
 }
 
-static int hashvalue(int namespace, char *word)
-{
-   int val = namespace;
-   char *p = word;
+static int hashvalue(char *word);
 
-   while(*p)
-   {
-      val = ((val<<4)^((val>>12)&0xF)^((*p++)&0xFF));
-   }
-   val &= hashsize;
-   return val;
+struct define_item *read_entry(char *word)
+{
+	unsigned hash_val;
+	register struct hashentry *hashline;
+	hash_val = hashvalue(word);
+
+	hashline = hashtable[hash_val];
+
+	for (; hashline; hashline = hashline->next) {
+		if (word[0] != hashline->word[0])
+			continue;
+		if (strcmp(word, hashline->word))
+			continue;
+		if (hashline->d == NULL)
+			page_in(hashline);
+		hashline->d->flags |= F_BUSY;
+		return hashline->d;
+	}
+	return 0;
+}
+
+void unlock_entry(struct define_item *d)
+{
+	if (d)
+		d->flags &= ~F_BUSY;
+}
+
+char *set_entry(char *word, struct define_item *d, unsigned size)
+{
+	unsigned hash_val;
+	register struct hashentry *hashline, *prev;
+	hash_val = hashvalue(word);
+
+	hashline = hashtable[hash_val];
+
+	for (prev = 0; hashline; prev = hashline, hashline = hashline->next) {
+		if (word[0] != hashline->word[0])
+			continue;
+		if (strcmp(word, hashline->word))
+			continue;
+		/* This is not a normal case so we just grow the page file */
+		if (d) {
+			hashline->d = d;
+			hashline->size = size;
+			hashline->offset = 0xFFFF;
+		} else {
+			if (prev == 0)
+				hashtable[hash_val] = hashline->next;
+			else
+				prev->next = hashline->next;
+			free(hashline);
+			return 0;
+		}
+		return hashline->word;
+	}
+	if (d == 0)
+		return 0;
+
+	/* Add record */
+	hashline = xmalloc(sizeof(struct hashentry) + strlen(word));
+	hashline->next = hashtable[hash_val];
+	hashline->d = d;
+	hashline->size = size;
+	hashline->offset = 0xFFFF;
+	strcpy(hashline->word, word);
+	hashtable[hash_val] = hashline;
+	return hashline->word;
+}
+
+static int hashvalue(char *word)
+{
+	register unsigned val = 0;
+	register char *p = word;
+
+	while (*p) {
+		val = ((val << 4) ^ ((val >> 12) & 0xF) ^ ((*p++) & 0xFF));
+	}
+	val &= HASHSIZE - 1;
+	return val;
+}
+
+static unsigned page_next(void)
+{
+	return (lseek(swap_fd, 0L, SEEK_END) + 15) >> 4;
+}
+
+static unsigned flush_nodes(struct hashentry *hp)
+{
+	register struct hashentry *h = hp;
+	unsigned n = 0;
+	while(h) {
+		if (h->d && !(h->d->flags & F_INUSE)) {
+			if (h->offset == 0xFFFF)
+				h->offset = page_next();
+			n++;
+			page_out(h);
+			free(h->d);
+			h->d = NULL;
+		}
+		h = h->next;
+	}
+	return n;
+}
+
+unsigned memory_short(void)
+{
+	struct hashentry **h = hashtable;
+	unsigned n = 0;
+	while(h < hashtable + HASHSIZE)
+		n += flush_nodes(*h++);
+	return n;
+}
+
+void hash_init(void)
+{
+	/* FIXME: name based on pid etc */
+	swap_fd = open(".cppswap", O_RDWR|O_CREAT|O_TRUNC, 0600);
+	if (swap_fd == -1) {
+		perror("swap");
+		exit(1);
+	}
+	unlink(".cppswap");
 }

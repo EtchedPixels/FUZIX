@@ -19,6 +19,9 @@ extern uint8_t fuller, kempston, kmouse, kempston_mbmask;
 __sfr __banked __at 0xfc3b uno_ctrl;
 __sfr __banked __at 0xfd3b uno_data;
 
+__sfr __banked __at 0xbf3b ula_ctrl;
+__sfr __banked __at 0xff3b ula_data;
+
 uint8_t probe_zxuno(void)
 {
 	uint8_t n;
@@ -37,12 +40,49 @@ uint8_t probe_zxuno(void)
 	return 0;
 }
 
-/* Turn on all the I/O devices, and fire up the turbos */
+static const uint8_t palette[] = {
+	/* Normal */
+	0x00,
+	0x02,
+	0x10,
+	0x12,
+	0x80,
+	0x82,
+	0x90,
+	0x92,
+	0x00,
+	0x02,
+	0x10,
+	0x12,
+	0x80,
+	0x82,
+	0x90,
+	0x92,
+	/* Bright */
+	0x00,
+	0x03,
+	0x1C,
+	0x1F,
+	0xE0,
+	0xE3,
+	0xEC,
+	0xFF,
+	0x00,
+	0x03,
+	0x1C,
+	0x1F,
+	0xE0,
+	0xE3,
+	0xEC,
+	0xFF
+};
 
+/* Turn on all the I/O devices, and fire up the turbos */
 void configure_zxuno(void)
 {
 	uint8_t c;
 	uint8_t d;
+	uint8_t *p;
 
 	uno_ctrl = 0xFF;
 	uno_data = 0x00;
@@ -82,8 +122,7 @@ void configure_zxuno(void)
 	uno_ctrl = 0x0E;
 	c = uno_data;
 	c &= ~0x80;		/* SD on */
-	c |= 0x40;		/* Horizontal MMU and Timex video on
-				   (although we don't use them yet) */
+	c |= 0x40;		/* Horizontal MMU and Timex video on */
 	uno_data = c;
 
 	uno_ctrl = 0x0F;
@@ -95,6 +134,15 @@ void configure_zxuno(void)
 	uno_ctrl = 0xFB;
 	if (uno_data & 1) 	/* 60 HZ */
 		kputs("Warning 60Hz not yet supported.\n");
+
+	p = palette;
+	/* Initial palette */
+	for (c = 0; c < 32; c++) {
+		ula_ctrl = c;
+		ula_data = *p;
+		ula_ctrl = c + 32;
+		ula_data = *p++;
+	}
 }
 
 uint8_t locked_zxuno(void)

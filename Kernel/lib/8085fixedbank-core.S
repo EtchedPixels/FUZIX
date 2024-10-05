@@ -91,7 +91,8 @@ _switchin:
 	ora a
 	jnz not_swapped
 	;
-	;	Swapping time. Interrupts back on
+	;	Swapping time. Interrupts back on. We must be on the
+	;	swaop stack at this point
 	;
 	ei
 	xra a

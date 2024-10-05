@@ -1,0 +1,50 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _COMMONMEM=0xF400
+-l z80
+platform/platform-zrc/crt0.rel
+platform/platform-zrc/commonmem.rel
+platform/platform-zrc/zrc.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80.rel
+usermem.rel
+platform/platform-zrc/tricks.rel
+platform/platform-zrc/main.rel
+platform/platform-zrc/discard.rel
+timer.rel
+kdata.rel
+platform/platform-zrc/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+syscall_net.rel
+network.rel
+tty.rel
+mm.rel
+memalloc_none.rel
+swap.rel
+bankfixed.rel
+devsys.rel
+platform/platform-zrc/devtty.rel
+platform/platform-zrc/tinydisk.rel
+platform/platform-zrc/tinydisk_discard.rel
+platform/platform-zrc/tinyide.rel
+platform/platform-zrc/tinyide_discard.rel
+platform/platform-zrc/ds1302.rel
+platform/platform-zrc/ds1302_discard.rel
+platform/platform-zrc/ds1302_rcbus.rel
+platform/platform-zrc/net_native.rel
+platform/platform-zrc/net_w5x00.rel
+platform/platform-zrc/wiznet.rel
+-e

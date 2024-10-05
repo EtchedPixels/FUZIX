@@ -1,0 +1,181 @@
+package  includes
+
+d 0755 /usr/include/6303
+d 0755 /usr/include/6502
+d 0755 /usr/include/6800
+d 0755 /usr/include/6809
+d 0755 /usr/include/68hc11
+d 0755 /usr/include/68000
+d 0755 /usr/include/8080
+d 0755 /usr/include/8085
+d 0755 /usr/include/8086
+d 0755 /usr/include/armm4
+d 0755 /usr/include/arpa
+d 0755 /usr/include/esp8266
+d 0755 /usr/include/msp430x
+d 0755 /usr/include/net
+d 0755 /usr/include/netinet
+d 0755 /usr/include/ns32k
+d 0755 /usr/include/pdp11
+d 0755 /usr/include/readline
+d 0755 /usr/include/riscv32
+d 0755 /usr/include/sys
+d 0755 /usr/include/tms9995
+d 0755 /usr/include/wrx6
+
+f 0644 /usr/include/libgen.h libgen.h
+f 0644 /usr/include/readline/readline.h readline/readline.h
+f 0644 /usr/include/stdlib.h stdlib.h
+f 0644 /usr/include/tms9995/stdint.h tms9995/stdint.h
+f 0644 /usr/include/tms9995/stddef.h tms9995/stddef.h
+f 0644 /usr/include/tms9995/stdarg.h tms9995/stdarg.h
+f 0644 /usr/include/tms9995/stdbool.h tms9995/stdbool.h
+f 0644 /usr/include/stdio.h stdio.h
+f 0644 /usr/include/8086/stdint.h 8086/stdint.h
+f 0644 /usr/include/errno.h errno.h
+f 0644 /usr/include/gpt.h gpt.h
+f 0644 /usr/include/termcap.h termcap.h
+f 0644 /usr/include/search.h search.h
+f 0644 /usr/include/assert.h assert.h
+f 0644 /usr/include/ns32k/stdint.h ns32k/stdint.h
+f 0644 /usr/include/ns32k/stddef.h ns32k/stddef.h
+f 0644 /usr/include/ns32k/stdarg.h ns32k/stdarg.h
+f 0644 /usr/include/ns32k/stdbool.h ns32k/stdbool.h
+f 0644 /usr/include/regmagic.h regmagic.h
+f 0644 /usr/include/sysexits.h sysexits.h
+f 0644 /usr/include/termios.h termios.h
+f 0644 /usr/include/err.h err.h
+f 0644 /usr/include/time.h time.h
+f 0644 /usr/include/locale.h locale.h
+f 0644 /usr/include/utsname.h utsname.h
+f 0644 /usr/include/unistd.h unistd.h
+f 0644 /usr/include/ftw.h ftw.h
+f 0644 /usr/include/68000/stdint.h 68000/stdint.h
+f 0644 /usr/include/68000/stddef.h 68000/stddef.h
+f 0644 /usr/include/68000/varargs.h 68000/varargs.h
+f 0644 /usr/include/68000/stdarg.h 68000/stdarg.h
+f 0644 /usr/include/68000/stdatomic.h 68000/stdatomic.h
+f 0644 /usr/include/68000/limits.h 68000/limits.h
+f 0644 /usr/include/68000/iso646.h 68000/iso646.h
+f 0644 /usr/include/68000/float.h 68000/float.h
+f 0644 /usr/include/68000/math-68881.h 68000/math-68881.h
+f 0644 /usr/include/68000/stdfix.h 68000/stdfix.h
+f 0644 /usr/include/68000/stdalign.h 68000/stdalign.h
+f 0644 /usr/include/68000/stdbool.h 68000/stdbool.h
+f 0644 /usr/include/68000/syslimits.h 68000/syslimits.h
+f 0644 /usr/include/68000/stdint-gcc.h 68000/stdint-gcc.h
+f 0644 /usr/include/68000/unwind.h 68000/unwind.h
+f 0644 /usr/include/riscv32/stdint.h riscv32/stdint.h
+f 0644 /usr/include/riscv32/stddef.h riscv32/stddef.h
+f 0644 /usr/include/riscv32/stdarg.h riscv32/stdarg.h
+f 0644 /usr/include/riscv32/stdbool.h riscv32/stdbool.h
+f 0644 /usr/include/6502/stdint.h 6502/stdint.h
+f 0644 /usr/include/6502/dbg.h 6502/dbg.h
+f 0644 /usr/include/6502/dio.h 6502/dio.h
+f 0644 /usr/include/6502/device.h 6502/device.h
+f 0644 /usr/include/6502/serial.h 6502/serial.h
+f 0644 /usr/include/6502/conio.h 6502/conio.h
+f 0644 /usr/include/termio.h termio.h
+f 0644 /usr/include/fenv.h fenv.h
+f 0644 /usr/include/utime.h utime.h
+f 0644 /usr/include/libintl.h libintl.h
+f 0644 /usr/include/grp.h grp.h
+f 0644 /usr/include/string.h string.h
+f 0644 /usr/include/aes256.h aes256.h
+f 0644 /usr/include/features.h features.h
+f 0644 /usr/include/6303/stdint.h 6303/stdint.h
+f 0644 /usr/include/6303/stddef.h 6303/stddef.h
+f 0644 /usr/include/6303/stdarg.h 6303/stdarg.h
+f 0644 /usr/include/6303/stdbool.h 6303/stdbool.h
+f 0644 /usr/include/pwd.h pwd.h
+f 0644 /usr/include/esp8266/stdint.h esp8266/stdint.h
+f 0644 /usr/include/esp8266/stdint-gcc.h esp8266/stdint-gcc.h
+f 0644 /usr/include/armm4/stdint.h armm4/stdint.h
+f 0644 /usr/include/malloc.h malloc.h
+f 0644 /usr/include/signal.h signal.h
+f 0644 /usr/include/netinet/in.h netinet/in.h
+f 0644 /usr/include/ctype.h ctype.h
+f 0644 /usr/include/6800/stdint.h 6800/stdint.h
+f 0644 /usr/include/6800/stddef.h 6800/stddef.h
+f 0644 /usr/include/6800/stdarg.h 6800/stdarg.h
+f 0644 /usr/include/6800/stdbool.h 6800/stdbool.h
+f 0644 /usr/include/varargs.h varargs.h
+f 0644 /usr/include/getopt.h getopt.h
+f 0644 /usr/include/msp430x/stdint.h msp430x/stdint.h
+f 0644 /usr/include/wrx6/stdint.h wrx6/stdint.h
+f 0644 /usr/include/wrx6/stddef.h wrx6/stddef.h
+f 0644 /usr/include/wrx6/stdarg.h wrx6/stdarg.h
+f 0644 /usr/include/wrx6/stdbool.h wrx6/stdbool.h
+f 0644 /usr/include/sys/netdev.h sys/netdev.h
+f 0644 /usr/include/sys/errno.h sys/errno.h
+f 0644 /usr/include/sys/kd.h sys/kd.h
+f 0644 /usr/include/sys/ioctl.h sys/ioctl.h
+f 0644 /usr/include/sys/net_native.h sys/net_native.h
+f 0644 /usr/include/sys/library.h sys/library.h
+f 0644 /usr/include/sys/time.h sys/time.h
+f 0644 /usr/include/sys/utsname.h sys/utsname.h
+f 0644 /usr/include/sys/fp.h sys/fp.h
+f 0644 /usr/include/sys/gpio.h sys/gpio.h
+f 0644 /usr/include/sys/socket.h sys/socket.h
+f 0644 /usr/include/sys/signal.h sys/signal.h
+f 0644 /usr/include/sys/super.h sys/super.h
+f 0644 /usr/include/sys/lock.h sys/lock.h
+f 0644 /usr/include/sys/param.h sys/param.h
+f 0644 /usr/include/sys/compiler.h sys/compiler.h
+f 0644 /usr/include/sys/drivewire.h sys/drivewire.h
+f 0644 /usr/include/sys/resource.h sys/resource.h
+f 0644 /usr/include/sys/wait.h sys/wait.h
+f 0644 /usr/include/sys/rtc.h sys/rtc.h
+f 0644 /usr/include/sys/statfs.h sys/statfs.h
+f 0644 /usr/include/sys/statvfs.h sys/statvfs.h
+f 0644 /usr/include/sys/swap.h sys/swap.h
+f 0644 /usr/include/sys/exec.h sys/exec.h
+f 0644 /usr/include/sys/cdefs.h sys/cdefs.h
+f 0644 /usr/include/sys/mman.h sys/mman.h
+f 0644 /usr/include/sys/mount.h sys/mount.h
+f 0644 /usr/include/sys/graphics.h sys/graphics.h
+f 0644 /usr/include/sys/input.h sys/input.h
+f 0644 /usr/include/sys/times.h sys/times.h
+f 0644 /usr/include/sys/stat.h sys/stat.h
+f 0644 /usr/include/sys/seek.h sys/seek.h
+f 0644 /usr/include/sys/file.h sys/file.h
+f 0644 /usr/include/sys/types.h sys/types.h
+f 0644 /usr/include/sys/userstructs.h sys/userstructs.h
+f 0644 /usr/include/6809/stdint.h 6809/stdint.h
+f 0644 /usr/include/6809/sys.h 6809/sys.h
+f 0644 /usr/include/net/if.h net/if.h
+f 0644 /usr/include/wait.h wait.h
+f 0644 /usr/include/setjmp.h setjmp.h
+f 0644 /usr/include/ar.h ar.h
+f 0644 /usr/include/68hc11/stdint.h 68hc11/stdint.h
+f 0644 /usr/include/68hc11/stddef.h 68hc11/stddef.h
+f 0644 /usr/include/mntent.h mntent.h
+f 0644 /usr/include/limits.h limits.h
+f 0644 /usr/include/curses.h curses.h
+f 0644 /usr/include/syscalls.h syscalls.h
+f 0644 /usr/include/8085/stdint.h 8085/stdint.h
+f 0644 /usr/include/8085/stddef.h 8085/stddef.h
+f 0644 /usr/include/8085/stdarg.h 8085/stdarg.h
+f 0644 /usr/include/8085/stdbool.h 8085/stdbool.h
+f 0644 /usr/include/proc.h proc.h
+f 0644 /usr/include/dirent.h dirent.h
+f 0644 /usr/include/float.h float.h
+f 0644 /usr/include/math.h math.h
+f 0644 /usr/include/cpu_ioctl.h cpu_ioctl.h
+f 0644 /usr/include/alloc.h alloc.h
+f 0644 /usr/include/paths.h paths.h
+f 0644 /usr/include/memory.h memory.h
+f 0644 /usr/include/pdp11/stdint.h pdp11/stdint.h
+f 0644 /usr/include/utmp.h utmp.h
+f 0644 /usr/include/fcntl.h fcntl.h
+f 0644 /usr/include/8080/stdint.h 8080/stdint.h
+f 0644 /usr/include/8080/stddef.h 8080/stddef.h
+f 0644 /usr/include/8080/stdarg.h 8080/stdarg.h
+f 0644 /usr/include/8080/stdbool.h 8080/stdbool.h
+f 0644 /usr/include/ncurses.h ncurses.h
+f 0644 /usr/include/strings.h strings.h
+f 0644 /usr/include/arpa/inet.h arpa/inet.h
+f 0644 /usr/include/mbr.h mbr.h
+f 0644 /usr/include/types.h types.h
+f 0644 /usr/include/poll.h poll.h
+f 0644 /usr/include/regexp.h regexp.h

@@ -1,0 +1,55 @@
+-mwxuy
+-i fuzix.ihx
+-b _PAGE0=0x0001
+-b _CODE=0x0100
+-b _COMMONMEM=0xF800
+-b _PAGEH=0xFF00
+-l z80
+platform/platform-sam/crt0.rel
+platform/platform-sam/commonmem.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80-thunked.rel
+usermem.rel
+cpu-z80/usermem_std-z80-thunked.rel
+timer.rel
+kdata.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+devinput.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+memalloc_none.rel
+swap.rel
+bank32k.rel
+vt.rel
+devsys.rel
+platform/platform-sam/atom.rel
+platform/platform-sam/blkdev.rel
+platform/platform-sam/devatom.rel
+platform/platform-sam/devfd.rel
+platform/platform-sam/devices.rel
+platform/platform-sam/devide.rel
+platform/platform-sam/devide_discard.rel
+platform/platform-sam/devlpr.rel
+platform/platform-sam/devtty.rel
+platform/platform-sam/discard.rel
+platform/platform-sam/floppy.rel
+platform/platform-sam/main.rel
+platform/platform-sam/mbr.rel
+platform/platform-sam/sam.rel
+platform/platform-sam/sam_vt.rel
+platform/platform-sam/tricks.rel
+platform/platform-sam/msm6242b.rel
+platform/platform-sam/devinput.rel
+-e

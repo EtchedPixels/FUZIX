@@ -22,25 +22,27 @@ static uint8_t acmd41[6] = {0x69, 0x40, 0x00, 0x00, 0x00, 0x01 };
 
 static uint8_t sdbuf[4];
 
-static uint8_t sendcmd(uint8_t *cmd)
+static uint_fast8_t sendcmd(register uint8_t *cmd)
 {
-    uint8_t n = 0;
-    uint8_t r;
+    register uint_fast8_t n = 0;
+    uint_fast8_t r;
     sd_spi_raise_cs();
-    sd_spi_receive_byte();
+    sd_spi_rx_byte();
     sd_spi_lower_cs();
     if (*cmd != 0x40) {
-        while(++n && sd_spi_receive_byte() != 0xFF);
+        while(++n && sd_spi_rx_byte() != 0xFF);
         if (n == 0)
             return 0xFF;
     }
     n = 0;
     while(++n <= 6)
-        sd_spi_transmit_byte(*cmd++);
-    sd_spi_receive_byte();
+        sd_spi_tx_byte(*cmd++);
+#ifndef CONFIG_TD_SD_EMUBUG        
+    sd_spi_rx_byte();
+#endif
     n = 0xA0;
     while(++n) {
-        r = sd_spi_receive_byte();
+        r = sd_spi_rx_byte();
         if (!(r & 0x80))
             break;
     }
@@ -60,10 +62,10 @@ static int sendacmd(uint8_t *cmd)
 
 static void sd_get4(void)
 {
-    uint8_t *p = sdbuf;
-    uint_fast8_t n = 0;
+    register uint8_t *p = sdbuf;
+    register uint_fast8_t n = 0;
     while(++n <= 4)
-        *p++ = sd_spi_receive_byte();
+        *p++ = sd_spi_rx_byte();
 }
 
 static uint8_t sdhc_init(void)
@@ -100,9 +102,9 @@ static uint8_t sd_try_init(void)
 {
     uint_fast8_t n = 0;
     sd_spi_raise_cs();
-    sd_spi_receive_byte();
+    sd_spi_rx_byte();
     while(++n <= 8)
-        sd_spi_receive_byte();
+        sd_spi_rx_byte();
     if (sendcmd(cmd0) != 1)
         return CT_NONE;
     if (sendcmd(cmd8) == 1)
@@ -139,20 +141,18 @@ uint8_t sd_init(uint_fast8_t unit)
 
 void sd_probe(void)
 {
-    uint_fast8_t n = 0;
+    uint_fast8_t n;
     int r;
     uint_fast8_t t;
 
     for (n = 0; n < TD_SD_NUM; n++) {
         t = sd_init(n);
+        if (!(t & CT_BLOCK))
+            sd_shift[n] = 9;
         if (t != CT_NONE) {
-            /* Partition is block 0 so we can worry about shifts later */
-            r = td_register(sd_xfer, 1);
+            r = td_register(n, sd_xfer, td_ioctl_none, 1);
             if (r < 0)
                 continue;
-            if (!(t & CT_BLOCK))
-                sd_shift[r] = 9;
-            sd_dev[r] = n;
         }
     }
     kputchar('\r');

@@ -1,2 +1,0 @@
-CFLAGS += -DTARGET_Z80
-include Makefile.common

@@ -43,6 +43,11 @@ typedef uint32_t paddr_t;
 /* Sane behaviour for unused parameters */
 #define used(x)
 
+/* Only for speed reasons */
+#define ALIGNUP(v)	(((v) + 3) & ~3)
+#define ALIGNDOWN(v)	((v) & ~3)
+#define STACKALIGN(v)	((v) & ~3)
+
 /* Our udata is handled slightly quirkily - use a register global */
 
 register struct u_data *udata_ptr asm ("r6");

@@ -329,7 +329,7 @@ Fcn9:	LD	A,(DE)		; Get char
 	CALL	BConOu
 	POP	DE
 	JR	Fcn9		; ..loop Til done
-	
+
 ;------------------------------------------------
 ;         case 10: rdbuf (arg);
 ;                  break;
@@ -594,13 +594,7 @@ ExitM1:	LD	HL,#-1
 
 Fcn33:	CALL	RWprep		; Prepare File for access
 	JP	Z,Exit1
-
-	LD	IY,(_arg)
-	LD	A,33(IY)	; Set Record Count from
-	LD	32(IY),A	; Random Record number
-	LD	A,34(IY)	;
-	LD	12(IY),A	;
-
+	CALL	RecCvt
 	CALL	DoRead
 	JR	RWEx
 
@@ -619,6 +613,23 @@ DoRead:
 
 	RET
 
+RecCvt:
+	; Record count to EX/CR
+	; CR = record & 7F
+	; EX = record >> 7
+	LD	IY,(_arg)
+	LD	A,33(IY)	; Low byte
+	AND	#0x7F
+	LD	32(IY),A	; Low 7bits into record
+
+	LD	A, 34(IY)	; High byte
+	ADD	A		; double
+	BIT	7,33(IY)	; Carry over ?
+	JR	Z, NoCarry
+	INC	A		; And drop in the upper bit of byte 0
+NoCarry:
+	LD	12(IY),A
+	RET
 
 ;------------------------------------------------
 ;         case 20: return (readfile (arg));		/* Read File */
@@ -633,9 +644,7 @@ Fcn20:	CALL	RWprep		; Prepare file for access
 
 ;     arg.recno++;
 
-	PUSH	AF
 	CALL	IncCR		; Bump Current Record #
-	POP	AF
 
 RWEx:	JP	C,Exit1		; ..Error if Carry Set
 
@@ -653,19 +662,10 @@ RWEx:	JP	C,Exit1		; ..Error if Carry Set
 ;         case 34:					/* Write File Random */
 ;	    writerandom (fcb)
 ;	    {
-;	    /* CAUTION the seek calls MUST be in this order */
-;	        _seek (f, (int)(fcb+33) % 128, 0);          /* byte  seek */
-;		_seek (f, (int)(fcb+33) / 128, 3);          /* block seek */
 
 Fcn34:	CALL	RWprep		; Prepare file for access
 	JP	Z,Exit1
-
-	LD	IY,(_arg)
-	LD	A,33(IY)	; Set Record Count from
-	LD	32(IY),A	; Random Record number
-	LD	A,34(IY)	;
-	LD	12(IY),A	;
-
+	CALL	RecCvt
 	CALL	DoWrite
 	JR	RWEx
 
@@ -698,9 +698,7 @@ Fcn21A:	CALL	DoWrite		;   Write
 
 ;     arg.recno++;
 
-	PUSH	AF
 	CALL	IncCR		; Bump Current Record #
-	POP	AF
 
 ;         return (255);
 ;     return (0);
@@ -996,36 +994,39 @@ GetNX:	LD	0(IX),#0
 ;
 ;	We use lseek for Fuzix
 ;
+;	The internal format of the FCB (abused by some apps) has
+;	EX at 0x0C and CR at 0x20. The actual disk byte offse tis
+;
+;	128 * CR + 16384 * EX
+;
 LSeek:	LD	BC,#0		; Push 0 for absolute
 	PUSH	BC
 	LD	IY, (_arg)	; FCB
-	LD	C, 32(IY)	; Pull the offset out of the FCB
-	LD	B, 12(IY)	; This is in records (128 bytes)
-				; And may overflow 2^16 bytes
+
+	LD	B, 32(IY)
+	LD	C, #0
+	SRL	B
+	RR	C		; BC = 128 x CR
+
+	LD	L,12(IY)
+	LD	H,#0
+	ADD	HL,HL		; 512
+	ADD	HL,HL		; 1024
+	ADD	HL,HL		; 2048
+	ADD	HL,HL		; 4096
+	ADD	HL,HL		; 8192
+	ADD	HL,HL		; 16384
+	; HL is now the upper 24 bits of the offset
+	LD	A,H
+	LD	H,L
+	LD	L,#0		; AHL is now the 24bit value
+	ADD	HL,BC		; Add in bits from CR
+	ADC	#0		; Update A if needed
+
+	LD	(LSeekData), HL	; low bits
+	LD	(LSeekData + 2), A	; high bit (top byte already clear)?
 	XOR	A
-	SLA	C		; C x 2, into carry
-	RL	B		; B x 2 picking up carry from C
-	RLA			; A x 2 picking up carry from B - now in 64's
-	SLA	C
-	RL	B
-	RLA			; now in 32's
-	SLA	C
-	RL	B
-	RLA			; now in 16's
-	SLA	C
-	RL	B
-	RLA			; now in 8's
-	SLA	C
-	RL	B
-	RLA			; now in 4's
-	SLA	C
-	RL	B
-	RLA			; now in 2's
-	SLA	C
-	RL	B
-	RLA			; now in bytes
-	LD	(LSeekData), BC	; low bits
-	LD	(LSeekData + 2), A	; high bit (top byte already clear)
+	LD	(LSeekData + 3),A	; Needed ????
 	LD	BC, #LSeekData	; push pointer
 	PUSH	BC
 	LD	HL, (curFil)
@@ -1201,12 +1202,19 @@ CkSrch:	PUSH	DE		; Save Regs
 	RET
 
 ;.....
-; Bump current Record # for sequential R/W operations
+; Bump current Record # for sequential R/W operations. CP/M uses only
+; 7bits of the low byte
 
-IncCR:	LD	IY,(_arg)
-	INC	32(IY)		; Bump Lo byte
-	RET	NZ
+IncCR:	
+	PUSH	AF
+	LD	IY,(_arg)
+	INC	32(IY)
+	BIT	7,32(IY)
+	JR	Z, NoBump
+	LD	32(IY),#0	
 	INC	12(IY)		; Bump Hi byte
+NoBump:
+	POP	AF
 	RET
 
 ;.....
@@ -1289,7 +1297,9 @@ BWrit:	JP	Write		; 14 Write Sector
 __cold:
 
 	LD	A,#0xC3
-	LD	SP,(SysSP)	; Set CP/M Stack for execution
+	; Needs to differ from the saved workspace or we'll trash any
+	; small stack a CP/M app assumes existss
+	LD	SP,#AppStack	; Set CP/M Stack for execution
 	LD	(0x0005),A	;  Set Bdos Vector
 	LD	HL,#__bdos
 	LD	(0x0006),HL
@@ -1327,7 +1337,7 @@ __cold:
 	LD	HL, #ttTermios
 	LD	DE, #TCSETS
 	CALL	IoCtl			; Set terminal bits 
-	
+
 	CALL	0x0100		;  ..Execute!
 
 ;.....
@@ -1529,6 +1539,9 @@ ttTermios0:
 	.ds	20		; Initial TTY Port Settings
 
 dir:	.ds	128		; Directory Buffer (can cut to 48 bytes?)
+
+	.ds	64		; Mini stack for application entry
+AppStack:
 
 BIOSIZ	.EQU	.-__bios
 CPMSIZ	.EQU	.-__bdos

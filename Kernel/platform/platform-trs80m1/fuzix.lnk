@@ -1,0 +1,64 @@
+-mwxuy
+-r
+-i fuzix.ihx
+-b _INITIALIZER=0x0001
+-b _BOOT=0x4300
+-b _CODE1=0x8000
+-b _CODE2=0x8000
+-b _UDATA=0x4100
+-l z80
+platform/platform-trs80m1/crt0.rel
+platform/platform-trs80m1/commonmem.rel
+platform/platform-trs80m1/trs80.rel
+platform/platform-trs80m1/trs80-bank.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80-banked.rel
+usermem.rel
+platform/platform-trs80m1/tricks.rel
+platform/platform-trs80m1/main.rel
+timer.rel
+kdata.rel
+platform/platform-trs80m1/devfd.rel
+platform/platform-trs80m1/floppy.rel
+platform/platform-trs80m1/floppy3.rel
+platform/platform-trs80m1/devhd.rel
+platform/platform-trs80m1/devhd_discard.rel
+platform/platform-trs80m1/devgfx.rel
+platform/platform-trs80m1/devstringy.rel
+platform/platform-trs80m1/stringy.rel
+platform/platform-trs80m1/devices.rel
+platform/platform-trs80m1/buffers.rel
+platform/platform-trs80m1/net_native.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_net.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+mm.rel
+memalloc_none.rel
+swap.rel
+bankfixed.rel
+vt.rel
+devsys.rel
+devinput.rel
+platform/platform-trs80m1/devlpr.rel
+platform/platform-trs80m1/devtty.rel
+platform/platform-trs80m1/vtsupport.rel
+platform/platform-trs80m1/devinput.rel
+platform/platform-trs80m1/tinyide.rel
+platform/platform-trs80m1/tinydisk.rel
+platform/platform-trs80m1/discard.rel
+platform/platform-trs80m1/tinyide_discard.rel
+platform/platform-trs80m1/tinydisk_discard.rel
+platform/platform-trs80m1/ide.rel
+-e

@@ -8,7 +8,7 @@
         .globl _rd_read
         .globl _rd_write
 
-        .include "../kernel-z80.def"
+        .include "../../cpu-z80/kernel-z80.def"
         .include "kernel.def"
 
         .area _CODE

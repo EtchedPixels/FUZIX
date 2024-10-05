@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false # keep on building even if one target fails
       matrix:
-        target: [appleiie, dragon-nx32, esp32, esp8266, multicomp09, rbc-mark4, rcbus-6502, rcbus-68008, rpipico, sbcv2, sc108, tiny68k, armm0-libc, z80-libc]
+        target: [appleiie, dragon-mooh, dragon-nx32, esp32, esp8266, multicomp09, rbc-mark4, rcbus-6502, rcbus-68008, rpipico, sc108, tiny68k, armm0-libc]
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
@@ -28,10 +28,12 @@ jobs:
           echo "target=USERCPU=armm0" >> $GITHUB_ENV
           echo "sub_target=libs" >> $GITHUB_ENV
           ;;
-          dragon-nx32|multicomp09)
+          dragon-mooh|dragon-nx32|multicomp09)
           sudo add-apt-repository -n -y ppa:p-pisati/fuzix
-          PKGS="lwtools gcc6809"
+          sudo add-apt-repository -n -y ppa:tormodvolden/m6809
+          PKGS="lwtools gcc6809 xroar"
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
+          echo "flags=CI_TESTING=1" >> $GITHUB_ENV
           ;;
           esp32)
           PKGS="esptool"
@@ -44,7 +46,7 @@ jobs:
           PKGS="gcc-xtensa-lx106 esptool"
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           ;;
-          rbc-mark4|sbcv2|sc108)
+          rbc-mark4|sc108)
           PKGS="sdcc"
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo "sub_target=kernel" >> $GITHUB_ENV
@@ -64,14 +66,18 @@ jobs:
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
           echo "sub_target=kernel" >> $GITHUB_ENV
           ;;
-          z80-libc)
-          PKGS="sdcc"
-          echo "target=USERCPU=z80" >> $GITHUB_ENV
-          echo "sub_target=libs" >> $GITHUB_ENV
-          ;;
           esac
         sudo apt-get update -q
         sudo apt-get install -y byacc automake ${PKGS}
         sudo update-alternatives --set yacc /usr/bin/byacc
     - name: make
-      run: ${{ env.setup_sh }} && make ${{ env.cross_cc }} ${{ env.target }} ${{ env.sub_target }} -j`nproc`
+      run: ${{ env.setup_sh }} && make ${{ env.cross_cc }} ${{ env.target }} ${{ env.sub_target }} ${{ env.flags }} -j`nproc`
+    - name: target testing
+      run: |
+        if test -x ./Build/tests/test-${{ matrix.target }} ; then \
+          if test -x ./Build/tests/test-${{ matrix.target }}-prepare ; then
+            ./Build/tests/test-${{ matrix.target }}-prepare
+          fi
+          make diskimage ${{ env.target }} && \
+          ./Build/tests/test-${{ matrix.target }}
+        fi

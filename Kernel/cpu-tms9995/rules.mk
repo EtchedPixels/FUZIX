@@ -1,7 +1,7 @@
 export CROSS_AS=as9995
 export CROSS_LD=ld9995
 export CROSS_CC=cc9995
-export CROSS_CCOPTS=-c -X -I$(ROOT_DIR)/cpu-tms9995 -I$(ROOT_DIR)/platform-$(TARGET) -I$(ROOT_DIR)/include
+export CROSS_CCOPTS=-c -X -I$(ROOT_DIR)/cpu-tms9995 -I$(ROOT_DIR)/platform/platform-$(TARGET) -I$(ROOT_DIR)/include
 export CROSS_CC_SEG1=
 export CROSS_CC_SEG2=
 export CROSS_CC_SEG3=

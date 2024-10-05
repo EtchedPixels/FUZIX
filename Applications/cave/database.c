@@ -17,6 +17,10 @@ static void dbstring(uint16_t * off)
 		perror("lseek");
 		exit(1);
 	}
+	if (s >= sizeof(db_buf)) {
+		write(2, "stringbug\n", 11);
+		exit(1);
+	}
 	if (read(db_fd, db_buf, s) != s) {
 		perror("read");
 		exit(1);

@@ -1,4 +1,4 @@
-include $(FUZIX_ROOT)/Applications/rules.esp32
+include $(FUZIX_ROOT)/Target/rules.esp32
 
 CFLAGS += -DNETD_LITTLE_ENDIAN
 

@@ -24,10 +24,10 @@
 
 int main(int argc, char *argv[])
 {
-	struct utmp *entry;
-	char *timestr;
+	register struct utmp *entry;
+	register char *timestr;
 	char *p;
-	uint8_t fmt = 0;
+	register uint_fast8_t fmt = 0;
 
 	p = strchr(argv[0],'/');
 	if (p)
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 			if (fmt == 0) {
 				timestr = ctime(&entry->ut_time);
 				timestr[strlen(timestr) - 1] = '\0';
-				printf("%s	tty%c%c	%s %s\n", entry->ut_user, entry->ut_id[0], entry->ut_id[1] ? entry->ut_id[1] : 0, timestr, entry->ut_host);
+				printf("%-8s tty%c%c    %s %s\n", entry->ut_user, entry->ut_id[0], entry->ut_id[1] ? entry->ut_id[1] : ' ', timestr, entry->ut_host);
 			} else {
 				if (fmt == 2)
 					putchar(' ');

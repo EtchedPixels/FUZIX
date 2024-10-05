@@ -1,0 +1,6 @@
+#!/bin/sh
+
+X=`which ia16-elf-gcc`
+if [ "$X" = "" ]; then
+	echo "gcc: ia16-elf-gcc is required"
+fi

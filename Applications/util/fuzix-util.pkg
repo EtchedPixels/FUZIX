@@ -124,6 +124,7 @@ l /bin/vile /bin/vi
 f 0755 /bin/wc          wc
 f 0755 /bin/which       which
 f 0755 /bin/who         who
+l /bin/who /bin/users
 f 0755 /bin/whoami      whoami
 f 0755 /bin/write       write
 f 0755 /bin/xargs       xargs

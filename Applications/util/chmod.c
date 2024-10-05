@@ -43,9 +43,10 @@ int do_change(char *name);
 void usage(void);
 
 /* Parse a P1003.2 4.7.7-conformant symbolic mode. */
-mode_t parsemode(char *symbolic, mode_t oldmode)
+mode_t parsemode(char *symbolicp, mode_t oldmode)
 {
-    mode_t who, mask, newmode, tmpmask;
+    register char *symbolic = symbolicp;
+    register mode_t who, mask, newmode, tmpmask;
     char action;
 
     newmode = oldmode & ALL_MODES;
@@ -211,8 +212,8 @@ int do_change(char *name)
 {
     mode_t m;
     DIR *dir;
-    struct dirent *entp;
-    char *namp;
+    register struct dirent *entp;
+    register char *namp;
 
     if (lstat(name, &st)) {
 	perror(name);

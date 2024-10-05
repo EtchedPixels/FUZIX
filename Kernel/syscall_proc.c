@@ -314,7 +314,7 @@ arg_t _waitpid(void)
 {
 	regptr ptptr p;
 	int retval;
-	uint8_t found;
+	uint_fast8_t found;
 
 	if (statloc && !valaddr_w((uint8_t *) statloc, sizeof(int))) {
 		udata.u_error = EFAULT;
@@ -500,7 +500,7 @@ arg_t _signal(void)
 {
 	int16_t retval;
 	irqflags_t irq;
-	struct sigbits *sb = udata.u_ptab->p_sig;
+	register struct sigbits *sb = udata.u_ptab->p_sig;
 
 	if (sig < 1 || sig >= NSIGS) {
 		udata.u_error = EINVAL;
@@ -548,7 +548,7 @@ int16_t disp;
 /* Implement sighold/sigrelse */
 arg_t _sigdisp(void)
 {
-	struct sigbits *sb = udata.u_ptab->p_sig;
+	register struct sigbits *sb = udata.u_ptab->p_sig;
 	if (sig < 1 || sig >= NSIGS || sig == SIGKILL || sig == SIGSTOP) {
 		udata.u_error = EINVAL;
 		return -1;
@@ -578,7 +578,7 @@ int16_t sig;
 arg_t _kill(void)
 {
 	regptr ptptr p;
-	int f = 0, s = 0;
+	register unsigned f = 0, s = 0;
 
 	if (sig < 0 || sig >= NSIGS) {
 		udata.u_error = EINVAL;

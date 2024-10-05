@@ -1,0 +1,50 @@
+-mwxuy
+-i fuzix.ihx
+-b _SERIAL=0x0100
+-b _COMMONMEM=0x0300
+-b _CODE=0x0F00
+-b _BOOT=0x0100
+-l z80
+platform/platform-linc80/crt0.rel
+platform/platform-linc80/commonmem.rel
+platform/platform-linc80/linc80.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80.rel
+platform/platform-linc80/tricks.rel
+platform/platform-linc80/main.rel
+timer.rel
+kdata.rel
+platform/platform-linc80/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_proc.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_other.rel
+mm.rel
+memalloc_none.rel
+swap.rel
+simple.rel
+tty.rel
+devsys.rel
+usermem.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-linc80/discard.rel
+platform/platform-linc80/devtty.rel
+platform/platform-linc80/tinydisk.rel
+platform/platform-linc80/tinydisk_discard.rel
+platform/platform-linc80/tinyide.rel
+platform/platform-linc80/tinyide_discard.rel
+platform/platform-linc80/tinysd.rel
+platform/platform-linc80/tinysd_discard.rel
+platform/platform-linc80/sd.rel
+platform/platform-linc80/piospi.rel
+platform/platform-linc80/piosd.rel
+-e

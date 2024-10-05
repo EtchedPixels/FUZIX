@@ -67,6 +67,7 @@ int pagemap_alloc(ptptr p)
 /* FIXME: update when new model is ready */
 int pagemap_realloc(struct exec *hdr, usize_t size)
 {
+	udata.u_ptab->p_size = 32;
 	return 0;
 }
 

@@ -1,0 +1,52 @@
+-mwxuy
+-i fuzix.ihx
+-b _CODE=0x0100
+-b _COMMONDATA=0xFC00
+-b _INITIALIZER=0xF000
+-l z80
+platform-gemini/crt0.rel
+platform-gemini/commonmem.rel
+platform-gemini/gemini.rel
+platform-gemini/nascom-pagemode.rel
+start.rel
+version.rel
+lowlevel-z80.rel
+usermem.rel
+usermem_std-z80.rel
+platform-gemini/tricks.rel
+platform-gemini/main.rel
+platform-gemini/discard.rel
+timer.rel
+kdata.rel
+platform-gemini/devgm8x9.rel
+platform-gemini/gm8x9.rel
+platform-gemini/devgm833.rel
+platform-gemini/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+memalloc_none.rel
+tty.rel
+mm.rel
+swap.rel
+bankfixed.rel
+vt.rel
+devsys.rel
+devinput.rel
+platform-gemini/devtty.rel
+platform-gemini/tinydisk.rel
+platform-gemini/tinydisk_discard.rel
+platform-gemini/tinyide.rel
+platform-gemini/tinyide_discard.rel
+platform-gemini/ide.rel
+platform-gemini/mm58174.rel
+-e

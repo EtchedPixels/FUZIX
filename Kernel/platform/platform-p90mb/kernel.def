@@ -1,0 +1,2 @@
+#define DI_MASK		$700		/* or bits for DI */
+#define EI_MASK		$000		/* or bits for EI */

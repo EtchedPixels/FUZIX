@@ -365,6 +365,7 @@ int main(int argc, char* const* argv)
 			case 'v':
 				verbose = 1;
 				break;
+
 			default:
 				syntax_error();
 		}
@@ -436,18 +437,18 @@ int main(int argc, char* const* argv)
 		{
 			/* Things we explicitly ignore */
 			case SHT_NULL:
-			case SHT_SYMTAB:
-			case SHT_STRTAB:
-			case SHT_HASH:
 			case SHT_NOTE:
 				break;
 
 			case SHT_PROGBITS: /* Initialised data */
 			case SHT_DYNSYM:
 			case SHT_DYNAMIC:
+			case SHT_STRTAB:
+			case SHT_HASH:
+			case SHT_SYMTAB:
 				if (verbose)
-					printf("Program bits %x - %x\n",
-						seclo, sechi);
+					printf("Program bits %x - %x (%s)\n",
+						seclo, sechi, (flags & SHF_ALLOC) ? "bits" : "none");
 				if (seclo == sechi)
 					continue;
 				if (flags & SHF_ALLOC)
@@ -548,8 +549,19 @@ int main(int argc, char* const* argv)
 		switch (endian32(sh->sh_type))
 		{
 			case SHT_PROGBITS: /* Initialised data */
-				if (flags & SHF_ALLOC)
+			case SHT_DYNSYM:
+			case SHT_DYNAMIC:
+			case SHT_STRTAB:
+			case SHT_HASH:
+			case SHT_SYMTAB:
+				if (flags & SHF_ALLOC) {
+					if (verbose) {
+						printf("copy block %04X from %04X for %04X\n",
+							endian32(sh->sh_addr) - textlo,
+							endian32(sh->sh_offset), endian32(sh->sh_size));
+					}
 					memcpy(memory - textlo + endian32(sh->sh_addr), ELFSTRUCT(endian32(sh->sh_offset)), endian32(sh->sh_size));
+				}
 				break;
 		}
 	}
@@ -589,9 +601,9 @@ int main(int argc, char* const* argv)
 	if (fwrite(&ah, sizeof(ah), 1, outfp) != 1)
 		write_error();
 
-	/* Don't copy the dso shared overlay space, we included it
+	/* Don't copy the dso shared overlay space as we included it
 	   in the header */
-	if (fwrite(memory, memory_size, 1, outfp) != 1)
+	if (fwrite(memory + 0x20 - textlo, memory_size - 0x20 + textlo, 1, outfp) != 1)
 		write_error();
 
 	if (fwrite(relocs, sizeof(uint32_t), next_reloc, outfp) != next_reloc)

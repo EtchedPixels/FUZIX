@@ -27,7 +27,7 @@ struct passwd *
 getpwuid(uid_t uid)
 {
   int passwd_fd;
-  struct passwd * passwd;
+  register struct passwd * passwd;
 
   if ((passwd_fd=open("/etc/passwd", O_RDONLY))<0)
     return NULL;

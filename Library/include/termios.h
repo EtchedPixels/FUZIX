@@ -188,4 +188,9 @@ extern int tcsendbreak(int __fildes, int __duration);
 extern int tcgetpgrp(int __fildes);
 extern int tcsetpgrp(int __fildes, int __pgrp_id);
 
+struct vt_repeat {
+  uint8_t first;
+  uint8_t continual;
+};
+
 #endif

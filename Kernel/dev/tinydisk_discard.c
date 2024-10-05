@@ -55,10 +55,17 @@ static void swap_found(uint_fast8_t minor, partition_table_entry_t * pe)
 uint_fast8_t tinydisk_setup(uint16_t dev)
 {
 	uint32_t *lba = td_lba[dev];
-	uint_fast8_t n = 0;
+	uint_fast8_t n;
 	uint_fast8_t c = 0;
-	boot_record_t *br = (boot_record_t *) tmpbuf();
-	partition_table_entry_t *pe = br->partition;
+	register boot_record_t *br = (boot_record_t *) tmpbuf();
+	register partition_table_entry_t *pe = br->partition;
+
+	/* Platform custom partitions */
+#ifdef CONFIG_TD_CUSTOMPART
+	n = td_plt_setup(dev, lba, (void *)br);
+	if (n < 2)
+		return n;
+#endif
 	udata.u_block = 0;
 	udata.u_nblock = 1;
 	udata.u_dptr = (void *) br;
@@ -69,6 +76,7 @@ uint_fast8_t tinydisk_setup(uint16_t dev)
 	kprintf("hd%c: ", 'a' + dev);
 
 	if (le16_to_cpu(br->signature) == MBR_SIGNATURE) {
+		n = 0;
 		while (n < 4) {
 			if (pe->type_chs_last[0]) {
 				kprintf("hd%c%d ", 'a' + dev, ++c);
@@ -87,22 +95,24 @@ uint_fast8_t tinydisk_setup(uint16_t dev)
 	return 1;
 }
 
-static uint8_t ntd;
+uint8_t td_next;
 static uint8_t warned;
 
-int td_register(td_xfer rwop, uint_fast8_t parts)
+int td_register(uint_fast8_t unit, td_xfer rwop, td_ioc iop, uint_fast8_t parts)
 {
-	if (ntd == CONFIG_TD_NUM) {
+	if (td_next == CONFIG_TD_NUM) {
 		if (!warned++)
                     kprintf(": no more device slots.\n");
 		return -2;
 	}
-	td_op[ntd] = rwop;
+	td_op[td_next] = rwop;
+	td_iop[td_next] = iop;
+	td_unit[td_next] = unit;
 	if (parts) {
-		if (!tinydisk_setup(ntd)) {
-			td_op[ntd] = NULL;
+		if (!tinydisk_setup(td_next)) {
+			td_op[td_next] = NULL;
 			return -1;
 		}
 	}
-	return ntd++;
+	return td_next++;
 }

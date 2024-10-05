@@ -1,0 +1,45 @@
+/* Keep these in sync with struct u_data!! */
+#define U_DATA__U_PTAB              0   /* struct p_tab* */
+#define U_DATA__U_PAGE              2   /* uint16_t */
+#define U_DATA__U_PAGE2             4   /* uint16_t */
+#define U_DATA__U_INSYS             6   /* bool */
+#define U_DATA__U_CALLNO            7   /* uint8_t */
+#define U_DATA__U_SYSCALL_SP        8   /* void * */
+#define U_DATA__U_RETVAL            10  /* int16_t */
+#define U_DATA__U_ERROR             12  /* int16_t */
+#define U_DATA__U_SP                14  /* void * */
+#define U_DATA__U_ININTERRUPT       16  /* bool */
+#define U_DATA__U_CURSIG            17  /* int8_t */
+#define U_DATA__U_ARGN              18  /* uint16_t */
+#define U_DATA__U_ARGN1             20  /* uint16_t */
+#define U_DATA__U_ARGN2             22  /* uint16_t */
+#define U_DATA__U_ARGN3             24  /* uint16_t */
+#define U_DATA__U_ISP               26  /* void * (initial stack pointer when _exec()ing) */
+#define U_DATA__U_TOP               28  /* uint16_t */
+#define U_DATA__U_BREAK             30  /* uint16_t */
+#define U_DATA__U_CODEBASE          32  /* uint16_t */
+#define U_DATA__U_SIGVEC            34  /* table of function pointers (void *) */
+#define U_DATA__U_BASE              98  /* uint8_t * */
+#define U_DATA__U_COUNT             100 /* uint16_t */
+#define U_DATA__U_OFFSET            102 /* uint32_t */
+
+/* Keep these in sync with struct p_tab!! */
+#define P_TAB__P_STATUS_OFFSET      0
+#define P_TAB__P_FLAGS_OFFSET	    1
+#define P_TAB__P_TTY_OFFSET         2
+#define P_TAB__P_PID_OFFSET         3
+#define P_TAB__P_PAGE_OFFSET        15
+#define P_TAB__P_PAGE2_OFFSET       17
+
+#define P_RUNNING                   1         /* value from include/kernel.h */
+#define P_READY                     2         /* value from include/kernel.h */
+
+#define PFL_BATCH		    2	      /* bit number */
+#define PFL_GRAPHICS		    3	      /* bit number */
+
+#define OS_BANK                     0         /* value from include/kernel.h */
+
+#define EAGAIN                      11        /* value from include/kernel.h */
+
+/* Keep in sync with struct blkbuf */
+#define BUFSIZE                     520

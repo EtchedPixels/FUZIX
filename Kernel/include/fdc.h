@@ -119,6 +119,7 @@ struct fdcstep {
 #define FDTYPE_UBEEDS84	0x53	/* Physically the same */
 #define FDTYPE_PC800	0x53	/* PC style 800K */
 #define FDTYPE_SAMCOUPE	0x53	/* Another user of the same format */
+#define FDTYPE_PC400	0x51	/* PC style 400K */
 
 /* NASCOM PolyDOS. Much like the BBC but 18spt not 16 for MFM. To
    confuse further Nascom CP/M used 512x10x77 */
@@ -127,6 +128,9 @@ struct fdcstep {
 #define FDTYPE_NASSS80	0x62	/* Nascom SSDD 80 track, 18spt */
 #define FDTYPE_NASCPMS	0x63	/* 512bps/10spt/77 track SS DD */
 #define FDTYPE_NASCPMD	0x64	/* 512bps/10spt/77 track SS DD */
+#define FDTYPE_NASPDOS2	FDTYPE_PC400	/* PolyDOS 2 */
+#define FDTYPE_NASPDOS3	FDTYPE_PC800	/* PolyDOS 3 (77 track though) */
+#define FDTYPE_NASDOS	FDTYPE_8DSDD
 
 /* Geneve - mostly match other people's configurations as an alias */
 #define FDTYPE_GENSD40	0x70	/* 40 track 9 sectors per track */

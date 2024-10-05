@@ -61,7 +61,9 @@ uint16_t umove(uint16_t n)
 static uint16_t mapcalc(inoptr ino, usize_t *size, uint_fast8_t m)
 {
 	*size = min(udata.u_count, BLKSIZE - uoff());
-	return bmap(ino, BLOCK(udata.u_offset), m);
+	/* We know offset is positive at this point. The cast makes
+	   for better code on many CPUs */
+	return bmap(ino, BLOCK((unsigned long)udata.u_offset), m);
 }
 
 /* Writei (and readi) need more i/o error handling */

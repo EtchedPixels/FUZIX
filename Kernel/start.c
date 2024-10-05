@@ -29,8 +29,8 @@ static const struct termios ttydflt = {
 };
 
 void tty_init(void) {
-        struct tty *t = &ttydata[1];
-        uint_fast8_t i;
+        register struct tty *t = &ttydata[1];
+        register uint_fast8_t i;
         for(i = 1; i <= NUM_DEV_TTY; i++) {
 		memcpy(&t->termios, &ttydflt, sizeof(struct termios));
 		t++;
@@ -39,7 +39,7 @@ void tty_init(void) {
 
 void bufinit(void)
 {
-	bufptr bp;
+	register bufptr bp;
 
 	for (bp = bufpool; bp < bufpool_end; ++bp) {
 		bp->bf_dev = NO_DEVICE;
@@ -51,14 +51,13 @@ void bufinit(void)
 
 void fstabinit(void)
 {
-	struct mount *mp;
+	register struct mount *mp;
 
 	for (mp = fs_tab; mp < fs_tab + NMOUNTS; ++mp) {
 		mp->m_dev = NO_DEVICE;
 	}
 }
 
-/* FIXME: pass remainder of boot argument to init */
 /* Remember two things when modifying this code
    1. Some processors need 2 byte alignment or better of arguments. We
       lay it out for 4
@@ -80,7 +79,7 @@ void add_argument(const char *s)
 
 void create_init(void)
 {
-	uint8_t *j, *e;
+	register uint8_t *j, *e;
 
 	udata.u_top = PROGLOAD + 512;	/* Plenty for the boot */
 	init_process = ptab_alloc();
@@ -123,7 +122,7 @@ void complete_init(void)
 	init_process->p_pgrp = 1;
 }
 
-#ifndef BOOTDEVICE
+#if !defined(BOOTDEVICE) || defined(BOOTPARAM)
 
 /* Parse boot device name, based on platform defined BOOTDEVICENAMES string.
  *
@@ -162,7 +161,7 @@ void complete_init(void)
 #define BOOTDEVICENAMES "" /* numeric parsing only */
 #endif
 
-static uint8_t system_param(char *p)
+static uint8_t system_param(register char *p)
 {
 	if (*p == 'r' && p[2] == 0) {
 		if (p[1] == 'o') {
@@ -178,9 +177,9 @@ static uint8_t system_param(char *p)
 }
 
 /* Parse other arguments */
-void parse_args(char *p)
+void parse_args(register char *p)
 {
-	char *s;
+	register char *s;
 	while(*p) {
 		while(*p == ' ' || *p == '\n')
 			p++;
@@ -194,12 +193,15 @@ void parse_args(char *p)
 
 	}
 }
+#endif
+
+#if !defined(BOOTDEVICE)
 
 uint16_t bootdevice(char *devname)
 {
 	bool match = true;
 	unsigned int b = 0, n = 0;
-	char *p;
+	register char *p;
 	const uint8_t *bdn = (const uint8_t *)BOOTDEVICENAMES;
 	uint8_t c, pc;
 
@@ -322,6 +324,9 @@ static uint8_t first = 1;
 
 static inline uint16_t get_root_dev(void)
 {
+#ifdef BOOTPARAM
+	parse_args(BOOTPARAM);
+#endif
 	if (first) {
 		first = 0;
 		return BOOTDEVICE;
@@ -352,7 +357,7 @@ void fuzix_main(void)
 			"Copyright (c) 1988-2002 by H.F.Bower, D.Braun, S.Nitschke, H.Peraza\n"
 			"Copyright (c) 1997-2001 by Arcady Schekochikhin, Adriano C. R. da Cunha\n"
 			"Copyright (c) 2013-2015 Will Sowerbutts <will@sowerbutts.com>\n"
-			"Copyright (c) 2014-2023 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
+			"Copyright (c) 2014-2024 Alan Cox <alan@etchedpixels.co.uk>\nDevboot\n",
 			sysinfo.uname);
 
 	set_cpu_type();
@@ -384,7 +389,7 @@ void fuzix_main(void)
 	create_init();
 
 	/* Parameters message */
-	kprintf("%dkB total RAM, %dkB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
+	kprintf("%dKiB total RAM, %dKiB available to processes (%d processes max)\n", ramsize, procmem, maxproc);
 
 	/* runtime configurable, defaults to build time setting */
 	ticks_per_dsecond = TICKSPERSEC / 10;

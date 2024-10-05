@@ -168,7 +168,7 @@ static int shield;			/* Current shield value */
 static uint8_t stars;			/* Stars in quadrant */
 static uint16_t time_start;		/* Starting Stardate */
 static uint16_t time_up;		/* End of time */
-static int16_t damage[9];			/* Damage Array */
+static int16_t damage[9];		/* Damage Array */
 static int16_t d4;			/* Used for computing damage repair time */
 static int16_t ship_y, ship_x;		/* Current Sector Position of Enterprise, fixed point */
 static uint16_t stardate;		/* Current Stardate */
@@ -951,17 +951,17 @@ static void phaser_control(void)
 
 	for (i = 0; i <= 2; i++) {
 		if (k->energy > 0) {
-			/* We are now 32bit with four digits accuracy */
-			h = h1 * (get_rand(100) + 200);
+			/* We are now 32bit with four digits after the point */
+			h1 = h1 * (get_rand(100) + 200);
+
 			/* Takes us down to 2 digit accuracy */
+			h1 /= distance_to(k);
 
-			h /= distance_to(k);
-
-			if (h <= 15 * k->energy) {	/* was 0.15 */
+			if (h1 <= 15 * k->energy) {	/* was 0.15 */
 				printf("Sensors show no damage to enemy at "
 				       "%d, %d\n\n", k->y, k->x);
 			} else {
-				h = FROM_FIXED00(h);
+				h = FROM_FIXED00(h1);
 				k->energy -= h;
 				printf("%d unit hit on Klingon at sector "
 				       "%d, %d\n",
@@ -1538,7 +1538,7 @@ static void klingons_shoot(void)
 
 	for (i = 0; i <= 2; i++) {
 		if (k->energy > 0) {
-			h = k->energy * (200 + get_rand(100));
+			h = k->energy * (200UL + get_rand(100));
 			h *= 100;	/* Ready for division in fixed */
 			h /= distance_to(k);
 			/* Takes us back into FIXED00 */
@@ -1547,7 +1547,7 @@ static void klingons_shoot(void)
 			k->energy = (k->energy * 100) / (300 + get_rand(100));
 
 			printf("%d unit hit on Enterprise from sector "
-			       "%d, %d\n", FROM_FIXED00(h), k->y, k->x);
+			       "%d, %d\n", (unsigned)FROM_FIXED00(h), k->y, k->x);
 
 			if (shield <= 0) {
 				putchar('\n');
@@ -1561,7 +1561,7 @@ static void klingons_shoot(void)
 				   have to use 32bit values here to avoid an overflow
 				   FIXME: use a better algorithm perhaps ? */
 				uint32_t ratio = ((uint32_t)h)/shield;
-				if (get_rand(10) <= 6 || ratio > 2) {
+				if (get_rand(10) <= 6 && ratio > 2) {
 					uint8_t r = rand8();
 					/* The original basic code computed h/s in
 					   float form the C conversion broke this. We correct it in the fixed

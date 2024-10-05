@@ -26,7 +26,7 @@
 int
 getpw(uid_t uid, char *buf)
 {
-  struct passwd * passwd;
+  register struct passwd * passwd;
 
   if (buf==NULL)
     {

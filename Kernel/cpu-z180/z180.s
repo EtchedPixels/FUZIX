@@ -9,7 +9,7 @@
         .globl z180_init_early
         .globl _init_hardware_c
         .globl _program_vectors
-        .globl _copy_and_map_process
+        .globl _copy_and_map_proc
         .globl interrupt_table ; not used elsewhere but useful to check correct alignment
         .globl hw_irqvector
         .globl _irqvector
@@ -32,9 +32,9 @@
 	.globl map_buffers
         .globl map_kernel
 	.globl map_kernel_restore
-        .globl map_process_always
+        .globl map_proc_always
         .globl map_kernel_di
-        .globl map_process_always_di
+        .globl map_proc_always_di
         .globl map_save_kernel
         .globl map_restore
 	.globl map_for_swap
@@ -48,14 +48,15 @@
         .globl outnewline
         .globl outstring
         .globl outstringhex
+	.globl ___sdcc_enter_ix
 
 .ifne CONFIG_SWAP
 	.globl _do_swapout
 	.globl _swapout
 .endif
         .include "kernel.def"
-        .include "../cpu-z180/z180.def"
-        .include "../kernel-z80.def"
+        .include "../../cpu-z180/z180.def"
+        .include "../../cpu-z80/kernel-z80.def"
 
 ; -----------------------------------------------------------------------------
 ; Initialisation code
@@ -149,21 +150,20 @@ copykernel:
 
 z180_init_hardware:
         ; setup interrupt vectors for the kernel bank
-
-        ; Install the interrupt vector at 0x0038
-        ld a, #0xC3 ; JP instruction
-        ld (0x0038), a
-        ld hl, #z80_irq
-        ld (0x0039), hl
-
+	ld a,#0xC3
         ; Set vector for jump to NULL
         ld (0x0000), a   
         ld hl, #null_handler  ;   to Our Trap Handler
         ld (0x0001), hl
 
-        ld (0x0066), a  ; Set vector for NMI
+        ld (0x0066), a  	; Set vector for NMI
         ld hl, #nmi_handler
         ld (0x0067), hl
+
+	ld hl,#rstblock		; Install rst helpers
+	ld de,#8
+	ld bc,#32
+	ldir
 
         ; program Z180 interrupt table registers
         ld hl, #interrupt_table ; note table MUST be 32-byte aligned!
@@ -193,7 +193,7 @@ z180_init_hardware:
 ; -----------------------------------------------------------------------------
         .area _CODE
 
-_copy_and_map_process:
+_copy_and_map_proc:
         di          ; just to be sure
         pop bc      ; temporarily store return address
         pop de      ; function argument -- pointer to base page number
@@ -334,7 +334,7 @@ bankok2:out0 (DMA_DAR0B), a
         ret ; was jp map_kernel but we never change MMU_BBR
 
 _program_vectors:
-        ; copy_and_map_process has all the fun now
+        ; copy_and_map_proc has all the fun now
         ret
 
 fork_proc_ptr: .dw 0 ; (C type is struct p_tab *) -- address of child process p_tab entry
@@ -351,6 +351,7 @@ _dofork:
         pop hl  ; new process p_tab*
         push hl
         push de
+
 
         ld (fork_proc_ptr), hl
 
@@ -383,7 +384,7 @@ _dofork:
         ld de, #P_TAB__P_PAGE_OFFSET
         add hl, de
         push hl
-        call _copy_and_map_process
+        call _copy_and_map_proc
         pop hl
 
         ; now the copy operation is complete we can get rid of the stuff
@@ -404,6 +405,7 @@ _dofork:
         ; runticks = 0;
         ld hl, #0
         ld (_runticks), hl
+	;
         ; in the child process, fork() returns zero.
         ;
         ; And we exit, with the kernel mapped, the child now being deemed
@@ -851,8 +853,8 @@ map_kernel: ; map the kernel into the low 60K, leaves common memory unchanged
         pop af
         ret
 
-map_process_always_di:
-map_process_always: ; map the process into the low 60K based on current common mem (which is unchanged)
+map_proc_always_di:
+map_proc_always: ; map the process into the low 60K based on current common mem (which is unchanged)
         push af
 .if DEBUGBANK
         ld a, #'='
@@ -920,3 +922,36 @@ swapstack:
 	.ds 128
 swapinstack:
 .endif
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+	.area _DISCARD
+
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
+	.ds	5
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
+	.ds	3
+___ixret:
+	pop	af
+	pop	ix
+	ret
+	.ds	4
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret

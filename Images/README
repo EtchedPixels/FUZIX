@@ -1,2 +1,2 @@
-THis is the directory where built disk images will end up once the 
+This is the directory where built disk images will end up once the 
 various "make diskimage" rulesets have been updated.

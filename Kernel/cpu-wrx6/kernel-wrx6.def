@@ -1,0 +1,75 @@
+/* Keep these in sync with struct u_data!! */
+
+#define U_DATA__U_PTAB		0
+#define U_DATA__U_PAGE		2
+#define U_DATA__U_PAGE2		4
+#define U_DATA__U_INSYS		6
+#define U_DATA__U_CALLNO	7
+#define U_DATA__U_SYSCALL_SP	8
+#define U_DATA__U_RETVAL	10
+#define U_DATA__U_ERROR		12
+#define U_DATA__U_SP		14
+#define U_DATA__U_ININTERRUPT	16
+#define U_DATA__U_CURSIG	17
+#define U_DATA__U_ARGN		18
+#define U_DATA__U_ARGN1		20
+#define U_DATA__U_ARGN2		22
+#define U_DATA__U_ARGN3		24
+#define U_DATA__U_ISP		26
+#define U_DATA__U_TOP		28
+#define U_DATA__U_BREAK		30
+#define U_DATA__U_CODEBASE	32
+#define U_DATA__U_SIGVEC	34
+
+#define P_TAB__P_STATUS_OFFSET	0
+#define P_TAB__P_FLAGS_OFFSET	1
+#define P_TAB__P_TTY_OFFSET	2
+#define P_TAB__P_PID_OFFSET	3
+#define P_TAB__P_PAGE_OFFSET	15
+#define P_TAB__P_PAGE2_OFFSET	17
+
+
+#define P_RUNNING		1
+#define P_READY			2
+#define P_DEFER			3
+
+#define PFL_BATCH		4
+
+#define OS_BANK			0
+
+#define EAGAIN			11
+
+#define SIGHUP		 1
+#define SIGINT		 2
+#define SIGQUIT		 3
+#define SIGILL		 4
+#define SIGTRAP		 5
+#define SIGABRT		 6
+#define SIGIOT		 6
+#define SIGBUS		 7
+#define SIGFPE		 8
+#define SIGKILL		 9
+#define SIGUSR1		10
+#define SIGSEGV		11
+#define SIGUSR2		12
+#define SIGPIPE		13
+#define SIGALRM		14
+#define SIGTERM		15
+#define SIGSTKFLT	16
+#define SIGCHLD		17
+#define SIGCONT		18
+#define SIGSTOP		19
+#define SIGTSTP		20
+#define SIGTTIN		21
+#define SIGTTOU		22
+#define SIGURG		23
+#define SIGXCPU		24
+#define SIGXFSZ		25
+#define SIGVTALRM	26
+#define SIGPROF		27
+#define SIGWINCH	28
+#define SIGIO		29
+#define SIGPOLL		SIGIO
+#define SIGPWR		30
+#define SIGSYS		31
+#define	SIGUNUSED	31

@@ -1,18 +1,21 @@
 
-	.include "../lib/z80fixedbank-core.s"
+	.include "../../lib/z80fixedbank-core.s"
 ;
 ;	This is related so we will keep it here. Copy the process memory
 ;	for a fork. a is the page base of the parent, c of the child
 ;
 ;	Assumption - fits into a fixed number of whole 256 byte blocks
 ;
+
+	.area _COMMONMEM
+
 bankfork:
 	ld b, #(U_DATA_STASH - PROGBASE)/256
 	ld hl, #PROGBASE	; base of memory to fork (vectors included)
 bankfork_1:
 	push bc			; Save our counter and also child offset
 	push hl
-	call map_process_a
+	call map_proc_a
 	ld de, #bouncebuffer
 	ld bc, #256
 	ldir			; copy into the bounce buffer
@@ -22,7 +25,7 @@ bankfork_1:
 	push bc
 	ld b, a			; save the parent bank id
 	ld a, c			; switch to the child
-	call map_process_a
+	call map_proc_a
 	push bc			; save the bank pointers
 	ld hl, #bouncebuffer
 	ld bc, #256

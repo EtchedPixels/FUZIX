@@ -1,0 +1,115 @@
+First sketches for the Rabbit 2000
+
+Hardware  BL18x0 'Jackrabbit' boards
+
+	Rabbit 2000 @29.5 or 14.74MHz
+	128K or 256K flash (256K on the 1800 only)
+	128K SRAM (factory option for 512K)
+
+	Serial A: control cable
+	Serial B: (we use for SPI instead) RS232
+	Serial C: RS232
+	Serial D: RS485
+
+	RTC and SRAM have battery backup
+
+PA0-PA7		Parallel I/O (Free unless doing slave stuff)
+PB0/PB1		Serial clock  (CLKA is connected to programming port)
+		CLKB is needed for SPI
+PB2-7		Free if not using slave
+PC0-PC7		Serial port outputs
+		0-1	D to RS485
+		2-5	B and C to RS232
+		6-7	A to programming port
+PD0-PD7
+		1-2	Control DA0
+		4	Control D1 (alt port B TX)
+		5	RS485 data enable (alt port B RX)
+		6-7	(Alt port A)
+PE0-PE7
+		0	HV0 output control
+		1	HV1 output control
+		2	HV2 output control
+		3	HV3 output control
+		4-5	(INT0B/INT1B)
+		6	A/D comparator output
+		7	A/D comparator output
+
+
+
+
+
+The memory map of the R2K is fairly similar to the Z180 but not quite
+
+0000	Base segment
+x000	Data segment
+y000	Stack segment
+E000	XPC
+
+The stack and data segment boundaries can be adjusted and the root segment
+can even be vanished entirely as can stack or data. The E000-FFFF window
+is however fixed and controlled by its own register (XPC)
+
+For simplicity try and get running with E000-FFFF as common. There are better
+layouts but they are more complex.
+
+There are two further complications however
+
+1. The 20bit physical address gets fed into a memory interface unit which
+in theory just sets the wait states and chip selects. However once you get
+more than 1MB it starts getting used for other games as you can route all the
+address lines to each RAM and use the chip selects as a kind of A20/A21
+address line and do further banking this way from software. For now we will
+ignore this as it's usually on Rabbbit 3000 stuff that hits this.
+
+2. All but the early Rabbit 2000 chips support split I/D. In split I/D mode
+the physical address can have either bit 16 or bit 19 inverted when accessing
+data. bit 16 effectively requires a 128K chunk of memory suitably aligned. Bit
+19 is intended for code from flash and data from RAM so is not of interest.
+
+
+Rabbit 2000 CPU bugs/differences
+
+2000		No split ID, no 9bit serial helper
+		Must nop after some I/O operations
+		Cannot start tx/rx together for SPI
+		Wait state bugs (notably in LDxR)
+
+2000A		Split I/D supported, 9bit serial added
+		Most instruction bugs fixed
+		Can start tx/rx together for SPI
+		LDIR broken differently (do not use with split I/D)
+
+2000B		Rare special run. Differently buggy LDIR
+
+2000C		Later edition. Adds early I/O enable
+		Fixes LDIR split I/D and breaks it differently
+
+In general then
+- nop after I/O operations using ioo foo (HL) - all the logic ops and LD
+- don't use LDxR
+
+
+
+Badly Documented Stuff
+
+GCSR register
+
+(0x10->0x9 is done going from 32Khz to main clock)
+Write 0x10 to turn on the main oscillator   00010000
+Write 0x09 to switch the CPU onto it	    00001001	
+Write 0x05 to switch on /8 clock divider    00000101
+Write 0x14 to switch to 32Khz osc and disable 2Khz tick
+					    00011000
+
+So my guess is
+
+bit 0 - set enabbles the tick
+bit 4 - set enables the CPU to run on 32Khz
+bit 3-2 control the clock
+
+
+Serial oddity
+
+- to send a break switch the tty port off (disconnect from the port C/D) and
+use the I/O bit interface to set/lower the bit!

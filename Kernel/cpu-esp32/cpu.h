@@ -5,6 +5,7 @@
 
 #define ALIGNUP(v)   alignup(v, 4)
 #define ALIGNDOWN(v) aligndown(v, 4)
+#define STACKALIGN(v) aligndown(v, 16)
 
 #define uputp    uputl          /* Copy user pointer type */
 #define ugetp(x) ugetl(x)	/* between user and kernel */
@@ -73,3 +74,5 @@ extern void swap_blocks(void *, void *, unsigned int);
 #define ntohl(x) ((uint32_t)(__builtin_bswap32((uint32_t)(x))))
 
 #define NORETURN __attribute__((__noreturn__))
+
+#define __fastcall

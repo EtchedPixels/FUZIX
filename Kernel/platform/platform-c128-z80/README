@@ -1,0 +1,76 @@
+Commodore 128 in Z80 mode
+
+Initial bring up code
+
+Disk Images
+
+The image build needs ctools
+https://techtinkering.com/articles/transferring-files-to-and-from-cpm-d71-disk-images-using-ctools/
+
+Tested
+- Boot up from CP/M
+- Initialise memory
+- Initialise simple 40 column text
+- Video
+
+Done (in debug)
+- Interrupt handling. Needs fleshing out to use the right timers.
+- Keyboard (seems to scan ok, need shift table setting)
+- SD card (hangs probing here)
+- Basic probing of Georam and REU. (Seems to be blowing up x128)
+- Sizing of Georam (ditto)
+- Sizing of REU
+
+To Do
+- Optimize keyboard (spot all rows up on a fast poll - a trick we should do
+ on TRS80 and ZX machines too!). Init keyboard with a scan at boot
+- Sprite pointers and memory ?
+- 80 column video as tty2 ?
+- REU and GeoRAM swap
+- IEC anything (printer, floppy, different modes)
+- Floppy (can we use the CP/M stuff ?)
+- Sound
+- Joystick
+- Video modes on both chips
+- Capslock key
+- Running 6502 apps 8)
+- 640x200 bitmap mode (with/without colour by sizing video)
+- VIC video modes
+	-	character mode	video 1000 , sprite pointers, font 2k
+	-	multicolour character - same but 20 char wide not 40
+	-	standard bitmap 320x200 8K + 1K colour data per char square 
+	-	multicolourbitmap 160x200 8K
+	-	extended background colour mode 1K + font
+- Sprite API
+
+Designed to be booted from CP/M.
+
+x128 -8 cpm.system.6228151676.d64 -cartmmcr mmcrbios.bin -mmcrcardimage /tmp/ide.cfa
+
+Memory map
+0000-00FF	MMU magic setup
+0100-01FF	MMU magic setup
+0200-EFFF	Bank 0/1 (D000-DFFF sometimes IO overlay)
+F000-FFFF	Common space (some is MMu and stuff)
+		(Q: can we set up bank 0 common bank 1 video font to hide font)
+
+Kernel (bank 0 mostly)
+0000-0FFF	ROM support from CP/M
+1000-E3FF	Kernel	[will need some bits for the ROM vars ?]
+EC00-EFFF	Console
+F000-FDFC	Common	(have to leave FDFD-FF free due to ROM
+FE00-FEFF	Free (istack ?)
+FFxx		MMU and inter CPU magic
+
+User (bank 1 mostly)
+0000-00FF	Zero page (shared ?)
+0100-01FF	User (investigate MMU issue - might have to make sure kenrel
+		0100-01FF is only boot discardables)
+0200-EFFF	User
+F000-FDFC	Common
+FE00-FEFF	Free (istack ?)
+FFxx		MMU and inter CPU magic
+
+with graphics flag need to think about VIC video modes and locations
+
+

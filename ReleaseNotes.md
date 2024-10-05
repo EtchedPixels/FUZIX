@@ -85,7 +85,9 @@ upgrades still lack decent I/O.
 ### 6809
 
 This port uses gcc 6809 and lwtools. It supports a range of classic and
-modern systems including Dragon, Tandy COCO, Thomson and RCBus machines.
+modern systems including Dragon, Tandy COCO, Thomson and RCBus machines. You
+may need to use an old lwtools (eg 4.13) if using a modern lwtoools and it
+reports a segmentation fault or similar from lwasm.
 
 ### 68HC11
 
@@ -106,11 +108,8 @@ unsupported instructions. See the README for 68000.
 
 ### 8080
 
-The 8080 is supported using the ACK C compiler at this point. The only
-targets we build for are test emulated environments in order to check that
-the output is good. The previous kernel used the 8080 build for 8085
-systems but this has changed. The goal is to remove ACK entirely for 0.5
-once the new C compiler can generate good valid 8080.
+The 8080 is supported using the Fuziz C compiler. This is a new compiler so
+there may be a few bugs left to shake out.
 
 ### 8085
 
@@ -127,7 +126,7 @@ The supported target is the rcbus 8085 card with onboard bank MMU.
 ### ARM
 
 ARM M0 is supported using gcc and targetting the Raspberry Pi Pico. ARM M4
-targets for the DK-TM4C129X.
+targets for the DK-TM4C129X and EK-TM4C129X.
 
 ### ESP8266
 
@@ -270,7 +269,7 @@ currently supported due to lack of documentation/example code.
 
 ### DK-TM4C129X
 
-An ARM development board
+An ARM development board.
 
 ### Dragon 32
 
@@ -294,6 +293,10 @@ Sergey Kiselev's EasyZ80. Very similar to the RCbus and RC2014 systems with
 also IM2 interrupt mode support.
 
 https://github.com/skiselev/easy_z80
+
+### EK-TM4C129X
+
+An ARM evaluation board.
 
 ### ESP8266
 

@@ -1,0 +1,9 @@
+U_DATA__TOTALSIZE           equ 0x0200        ; 256+256
+
+VIDEO_BASE		    equ 0x0000	     ; 8K mapped in the video window
+VIDEO_END		    equ 0x2000	     ; for now
+VIDEO_OFF		    equ 0x00	     ; mapped at 0x00
+
+PROGBASE                    equ 0x6400       ; programs and data start here
+
+IOPAGE			    equ 0xE7	     ; I/O window

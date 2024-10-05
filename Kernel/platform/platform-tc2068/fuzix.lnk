@@ -1,0 +1,50 @@
+-mwxuy
+-i fuzix.ihx
+-l z80
+-b _CODE=0x8000
+-b _COMMONDATA=0x0080
+platform/platform-tc2068/loader-divide.rel
+platform/platform-tc2068/crt0.rel
+platform/platform-tc2068/commonmem.rel
+platform/platform-tc2068/tc2068.rel
+platform/platform-tc2068/tmxvideo.rel
+platform/platform-tc2068/main.rel
+platform/platform-tc2068/discard.rel
+start.rel
+version.rel
+cpu-z80/lowlevel-z80.rel
+cpu-z80/usermem_std-z80.rel
+platform/platform-tc2068/tricks.rel
+timer.rel
+kdata.rel
+usermem.rel
+platform/platform-tc2068/devices.rel
+devio.rel
+filesys.rel
+blk512.rel
+process.rel
+inode.rel
+syscall_exec.rel
+syscall_exec16.rel
+syscall_fs.rel
+syscall_fs2.rel
+syscall_fs3.rel
+syscall_proc.rel
+syscall_other.rel
+tty.rel
+vt.rel
+font8x8.rel
+mm.rel
+memalloc_none.rel
+simple.rel
+swap.rel
+devsys.rel
+devinput.rel
+platform/platform-tc2068/devtty.rel
+platform/platform-tc2068/tinyide.rel
+platform/platform-tc2068/tinyide_discard.rel
+platform/platform-tc2068/tinydisk.rel
+platform/platform-tc2068/tinydisk_discard.rel
+platform/platform-tc2068/devinput.rel
+platform/platform-tc2068/zxkeyboard.rel
+-e

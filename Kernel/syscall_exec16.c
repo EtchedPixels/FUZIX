@@ -9,8 +9,8 @@
 static void close_on_exec(void)
 {
 	/* Keep the mask separate to stop SDCC generating crap code */
-	uint16_t m = 1U << (UFTSIZE - 1);
-	int8_t j;
+	register uint16_t m = 1U << (UFTSIZE - 1);
+	register int_fast8_t j;
 
 	for (j = UFTSIZE - 1; j >= 0; --j) {
 		if (udata.u_cloexec & m)
@@ -34,7 +34,7 @@ char *envp[];
 /*
  *	See exec.h
  */
-static int header_ok(struct exec *pp)
+static int header_ok(register struct exec *pp)
 {
 	/* Executable ? */
 	if (pp->a_magic != EXEC_MAGIC)
@@ -278,21 +278,4 @@ nogood:
 #undef name
 #undef argv
 #undef envp
-
-
-/*
- *	Stub the 32bit only allocator calls
- */
-
-arg_t _memalloc(void)
-{
-	udata.u_error = ENOMEM;
-	return -1;
-}
-
-arg_t _memfree(void)
-{
-	udata.u_error = ENOMEM;
-	return -1;
-}
 

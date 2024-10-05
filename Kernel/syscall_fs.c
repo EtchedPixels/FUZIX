@@ -102,8 +102,8 @@ arg_t _sync(void)
 
 arg_t _stat(void)
 {
-	inoptr ino;
-	int err;
+	register inoptr ino;
+	register int err;
 	if (!(ino = n_open(path, NULLINOPTR)))
 		return (-1);
 	err = stcpy(ino, buf);
@@ -235,15 +235,15 @@ arg_t _umask(void)
   char *data;
  ********************************************/
 #define fd (int)udata.u_argn
-#define request (int)udata.u_argn1
+#define request (unsigned)udata.u_argn1
 #define data (char *)udata.u_argn2
 
 arg_t _ioctl(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	uint16_t dev;
 	uint_fast8_t rclass = ((uint8_t)(request >> 8)) & 0xC0;
-	struct oft *oftp;
+	register struct oft *oftp;
 
 	if ((ino = getinode(fd)) == NULLINODE)
 		return -1;
@@ -364,7 +364,7 @@ char *path;
 
 arg_t _unlink(void)
 {
-	inoptr ino;
+	register inoptr ino;
 	inoptr pino;
 	int r;
 

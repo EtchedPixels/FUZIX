@@ -1,4 +1,4 @@
-#include "../kernel-68000.def"
+#include "../../cpu-68000/kernel-68000.def"
 
 
 .globl plt_switchout,switchin,dofork,udata_shadow
