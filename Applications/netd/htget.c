@@ -88,7 +88,7 @@ int xreadline(void)
         }
         readp++;
     }
-    writes(2,"htpget: overlong/misformatted header\n");
+    writes(2,"htget: overlong/misformatted header\n");
     exit(1);
 }
     
