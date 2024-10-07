@@ -3,6 +3,7 @@
 
 */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -23,6 +24,7 @@ struct header{
     uint16_t arcount;
 };
 
+/* This needs to be packed if your compiler adds padding */
 struct RRtail{
     uint16_t type;
     uint16_t class;
@@ -33,7 +35,7 @@ struct RRtail{
 
 int fd;
 char buf[1024];
-char server[17] = "1921.168.1.1";
+char server[17] = "192.168.1.1";
 char name[256] = ".";
 
 void alarm_handler( int signum ){
@@ -50,9 +52,9 @@ int send_question( char *name ){
     char *l = o++;
 
     memset( p, 0, sizeof(buf) );
-    p->id = 42;     /* "random" query ID */
+    p->id = htons(42);     /* "random" query ID */
     p->cntl = 0x1;  /* request a recursive query */
-    p->qdcount = 1; /* one question */
+    p->qdcount = htons(1); /* one question */
     /* fill out name string */
     
     while(1){
@@ -103,6 +105,7 @@ void print_entry( char **pptr, int no ){
     struct RRtail *t;
     int i,j;
     char *ptr = *pptr;
+    struct in_addr addr;
     for( i = 0; i < no; i++ ){
 	print_name( ptr );
 	while(1){
@@ -116,28 +119,30 @@ void print_entry( char **pptr, int no ){
 	    }
 	    ptr += *ptr + 1;
 	}
+	
 	t = (struct RRtail *)ptr;
 	ptr += sizeof( struct RRtail);
 
 	/* cname */
-	if( t->type == 6 ){
+	if( ntohs(t->type) == 6 ){
 	    printf( "SOA   ");
 	    print_name( ptr );
-	    ptr += t->rdlen;
+	    ptr += ntohs(t->rdlen);
 	}
-	else if( t->type == 5 ){
+	else if( ntohs(t->type) == 5 ){
 	    printf( "CNAME ");
 	    print_name( ptr );
-	    ptr += t->rdlen;
+	    ptr += ntohs(t->rdlen);
 	}
-	else if( t->type == 1 ){
+	else if( ntohs(t->type) == 1 ){
 	    printf( "A     ");
-	    for( j=0; j<t->rdlen; j++ )
-		printf("%d.",*ptr++ );
+            memcpy(&addr, ptr, sizeof(struct in_addr));
+            printf("%s", inet_ntoa(addr));
+	    ptr += ntohs(t->rdlen);
 	}
 	else{
 	    printf( "???   ");
-	    ptr += t->rdlen;
+	    ptr += ntohs(t->rdlen);
 	}
 	printf("\n");
     }
@@ -228,7 +233,7 @@ int main( int argc, char *argv[] ){
 	char *ptr;
 	int i;
 	
-	if( h->id != 42 ){
+	if( ntohs(h->id) != 42 ){
 	    fprintf( stderr, "bad ID\n");
 	    exit(1);
 	}
@@ -243,11 +248,11 @@ int main( int argc, char *argv[] ){
 	}
 	/* skip over our question(s) */
 	printf("qust: %d, ans: %d, ns: %d, add: %d\n",
-	       h->qdcount, h->ancount, h->nscount, h->arcount );
+	       ntohs(h->qdcount), ntohs(h->ancount), ntohs(h->nscount), ntohs(h->arcount) );
 	ptr = buf + sizeof( struct header );
 	printf("questions:\n");
 	/* move ptr past questions */
-	for( i = 0; i < h->qdcount; i++ ){
+	for( i = 0; i < ntohs(h->qdcount); i++ ){
 	    print_name( ptr );
 	    printf("\n");
 	    while(1){
@@ -264,17 +269,17 @@ int main( int argc, char *argv[] ){
 	    ptr +=4;
 	}   
 	/* print out answers */
-	if( h->ancount ){
+	if( ntohs(h->ancount) ){
 	    printf("answers:\n");
-	    print_entry( &ptr, h->ancount );
+	    print_entry( &ptr, ntohs(h->ancount) );
 	}
-	if( h->nscount ){
+	if( ntohs(h->nscount) ){
 	    printf("authority:\n");
-	    print_entry( &ptr, h->nscount );
+	    print_entry( &ptr, ntohs(h->nscount) );
 	}
-	if( h->arcount ){
-	    printf("addional:\n");
-	    print_entry( &ptr, h->arcount );
+	if( ntohs(h->arcount) ){
+	    printf("additional:\n");
+	    print_entry( &ptr, ntohs(h->arcount) );
 	}
     }
     exit(0);
