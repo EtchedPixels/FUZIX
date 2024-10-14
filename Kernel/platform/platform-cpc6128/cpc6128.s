@@ -1,4 +1,5 @@
-; CPC6128 support
+;
+;    Spectrum +3 support
 
         .module plus3
 
@@ -62,8 +63,8 @@
 _plt_monitor:
 	;
 	;	Not so much a monitor as wait for space
-	;
-	;This code is from https://github.com/lronaldo/cpctelera
+	;	Part of this code is borrowed from https://github.com/lronaldo/cpctelera
+
 	ld bc,#0x7fc2
 	out (c),c		; keep us mapped
 	ld  bc,  #0xF782         ;; [3] Configure PPI 8255: Set Both Port A and Port C as Output. 
@@ -89,7 +90,7 @@ _plt_monitor:
 	ld    b, e               ;; [1] B = F4h => Read from PPI's Port A: Pressed/Not Pressed Values from PSG
 	in a,(c)                 
 	rla
-	jr nc, _plt_monitor
+	jr c, _plt_monitor
 
 _plt_reboot:
 	di
@@ -143,7 +144,8 @@ init_hardware:
 				; already by now	
 	ld bc,#0x7f10
 	out (c),c
-	ld a,#0x54
+	ld a,#0x54		;
+	ld (_vtborder), a
 	out (c),a		; black border
 	ld bc,#0x7f00
 	out (c),c
@@ -153,6 +155,7 @@ init_hardware:
 	out (c),c
 	ld a,#0x4b
 	out (c),a		; white ink
+
 
 	;we set the crtc for a screen with 64x32 colsxrows
 	;pros: max number of characters on screen and easy hardware scroll
@@ -344,10 +347,28 @@ ___ldhlhl:
 
 	.globl _nap20
 
-	; 18.432MHz so 360 cycles (25 in call/ret sequence)
-_nap20:
-	ld	b,#120
-snooze:
-	djnz	snooze
+_nap20: ;modified, in the cpc 1 nop = 1us. the call-ret add some us', it can be optimized (FIXME)
+	
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
 	ret
 

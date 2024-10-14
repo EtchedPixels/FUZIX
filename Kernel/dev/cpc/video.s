@@ -307,13 +307,15 @@ zx_cursor_on:
         push de
         push hl
         ld (cursorpos), de
-
         call videopos
-        ;ld a, #0x38
-        ;add a, d
-        ;ld d, a
-        ld a, #0xFF
-        ld (de), a
+        
+        ld b,#7
+set_cursor_line:
+        call scr_next_line
+        djnz set_cursor_line
+        ld a,#0xFF
+        ld (de),a
+
 	VIDEO_UNMAP
         ret
 	.if ZXVID_ONLY
@@ -324,12 +326,15 @@ zx_cursor_disable:
 zx_cursor_off:
         ld de, (cursorpos)
         call videopos
-        ;ld a, #0x38
-        ;add a, d
-        ;ld d, a
+
+        ld b,#7
+reset_cursor_line:
+        call scr_next_line
+        djnz reset_cursor_line
         xor a
-        ld (de), a
-	VIDEO_UNMAP
+        ld (de),a
+	
+        VIDEO_UNMAP
 
 	.if ZXVID_ONLY
 _do_beep:

@@ -44,16 +44,17 @@ To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load
 
 Fix fdc driver.
 Fix IDE driver.
-Sometimes the top byte of the characters isn't drawn.
+Sometimes the top byte of the characters isn't drawn. FIXED
+Vertical scroll shows the bottom line of the screen in the top of the screen
 Fix memory size reporting 64 v 48K (inherited from zx+3).
 do_beep() doesn't seem to work.
 Write a proper loader.
 Configurable screen, at least add 80x25, maybe also change the video mode and routines to manage 6x8 fonts.
-Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac, networking with wifi module plugged in the usifac, sdcard in the Albireo, ...
+Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac, networking with wifi module plugged in the usifac, sdcard in the Albireo, try slip with the serial port of the usifac...
 
 Fix lots of bugs.
 
-Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be an model for this solution. As there is no real common memory, switching the whole 64k space means that the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion. If this proves to be too hard, a RAM disk for swapping can be a way to use the RAM expansions.
+Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be an model to this solution. As ther is no real common memory switching the whole 64k space the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion. If this proves to be too hard, a RAM disk for swapping can be a way to use the RAM expansions.
 
 Look for speed optimization opportunities.
 
