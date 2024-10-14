@@ -1,5 +1,4 @@
-;
-;    Spectrum +3 support
+; CPC6128 support
 
         .module plus3
 
@@ -64,6 +63,7 @@ _plt_monitor:
 	;
 	;	Not so much a monitor as wait for space
 	;
+	;This code is from https://github.com/lronaldo/cpctelera
 	ld bc,#0x7fc2
 	out (c),c		; keep us mapped
 	ld  bc,  #0xF782         ;; [3] Configure PPI 8255: Set Both Port A and Port C as Output. 
