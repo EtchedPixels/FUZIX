@@ -14,8 +14,6 @@ all: $(UTILSBIN)
 clean:
 	rm -f *.o
 	rm -f $(UTILSBIN)
-	rm -f progbase.h
-	rm -f ps.c
 
 $(UTILSBIN): %: %.o
 	$(LINKER) $(CRT0) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
