@@ -54,7 +54,7 @@ Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac, netwo
 
 Fix lots of bugs.
 
-Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be an model to this solution. As ther is no real common memory switching the whole 64k space the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion. If this proves to be too hard, a RAM disk for swapping can be a way to use the RAM expansions.
+Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be a model to this solution. As ther is no real common as we are switching the whole 64k space, the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion. If this proves to be too hard, a RAM disk for swapping can be a way to use the RAM expansions.
 
 Look for speed optimization opportunities.
 
