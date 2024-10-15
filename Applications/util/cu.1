@@ -1,0 +1,61 @@
+.TH cu 1 "FUZIX System Utilities" "FUZIX"
+.SH NAME
+cu \- simple serial console.
+.SH SYNOPSIS
+.B cu
+\-l device
+[\-s speed]
+[\-E escape-character]
+.SH DESCRIPTION
+Simple and minimal terminal emulator program, to use with modems and alike.
+.P
+Just like other terminal emulator progrms
+.B cu
+supports escape sequence to execute a command in
+.B cu
+itself.
+.SH OPTIONS
+.TP
+.B "-l device"
+Path to the character device.
+.B "-E escape-character"
+Set alternate escape character.
+.P
+.TP
+.B "-s speed"
+Set speed of the
+.B device
+in baud before connecting.
+
+.SH COMMANDS
+Commands are executed by first inputing
+.I escape character
+(
+.B ESC
+) which by default is
+.B ~
+
+.TP
+.B "ESC ."
+Quit program and restore
+.B device termios
+to the previous settings.
+
+.TP
+.B "ESC ESC"
+Print escape character verbatim.
+
+.P
+.I Note:
+Escape character is only acknowledged after a new line.
+
+.SH EXAMPLES
+.P
+cu -l /dev/tty2
+.P
+cu -s 300 -l /dev/tty2
+.SH BUGS
+To be found.
+.SH AUTHORS
+Yaroslav Veremenko
+.SH SEE ALSO
