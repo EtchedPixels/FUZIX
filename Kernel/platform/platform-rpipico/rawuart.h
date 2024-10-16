@@ -3,6 +3,7 @@
 
 #include <tty.h>
 
+extern void rawuart_early_init();
 extern void rawuart_putc(uint8_t devn, uint8_t c);
 extern ttyready_t rawuart_ready(uint8_t devn);
 extern void rawuart_sleeping(uint8_t devn);
