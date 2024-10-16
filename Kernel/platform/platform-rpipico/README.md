@@ -74,7 +74,7 @@ Partition SD card on your computer using MBR partition scheme then create 32MB p
 If using Linux or MacOS you can then copy `filesystem.img` onto the SD card using `dd` command.
 
 ```
-dd if=filesystem.img of=/dev/sdN bs=512 seek=2048
+dd if=filesystem.img of=/dev/sdXn oflag=direct bs=8192
 ```
 
 The first thing you probably want to do is `stty erase '^?'` to make the DELETE
