@@ -186,6 +186,7 @@ clean:
 	libcurses$(PLATFORM).a libreadline$(PLATFORM).a liberror.txt
 	-cd fuzix$(PLATFORM) && make clean
 	rm -rf fuzix$(PLATFORM)/Makefile
+	rm -f ../tools/syscall_$(PLATFORM)
 	rm -f $(KRN_HEADERS_COPY)
 	-cd curses && rm -rf *.o *.asm *.sym *.lst *~
 

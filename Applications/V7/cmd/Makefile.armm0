@@ -5,7 +5,7 @@ SRCS  = ac.c col.c dc.c diff.c ed.c makekey.c ptx.c sum.c wall.c
 SRCS += accton.c  comm.c   dd.c      diffh.c  mesg.c     rev.c    test.c
 SRCS += at.c      cron.c   deroff.c  join.c   newgrp.c   split.c  time.c
 SRCS += atrun.c   crypt.c  diff3.c   look.c   pr.c       su.c     tsort.c
-SRCS += pg.c	  tty.c
+SRCS += pg.c	  tty.c    clear.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -16,7 +16,7 @@ all: $(APPS) size.report
 $(APPS): $(CRT0)
 
 $(APPS) $(APPSNS): %: %.o
-	$(LINKER) $^ -o $@.debug $(LINKER_OPT)
+	$(LINKER) $^ -o $@.debug -ltermcaparmm0 $(LINKER_OPT)
 	$(STRIP) -o $@ $(STRIP_OPT) $@.debug
 
 size.report: $(APPS)
