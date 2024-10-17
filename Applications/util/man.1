@@ -3,7 +3,7 @@
 man \- display on-line reference manuals
 .SH SYNOPSIS
 .B man
-[\-w] [\-b|\-q] [section-number] page
+[\-w] [\-v|\-q] [\-l file] [section-number] page
 .SH DESCRIPTION
 This document describes the FUZIX version of
 .BR man .
@@ -57,6 +57,9 @@ Force verbose output. (default)
 .TP
 .I "-q"
 Force quiet output.
+.TP
+.I "-l"
+Search pages in current directory. Manual section is ignored.
 .SH EXAMPLES
 .IP
 man ls

@@ -72,6 +72,7 @@ char man_file[256] = "";
 
 int flg_w = 0;
 int verbose = 1;
+int local = 0;
 
 
 /* Prototypes */
@@ -105,6 +106,19 @@ int find_page(char *name, char *sect)
 	char *mansuff;
 	char *mc, *mp, *ms, *su, *nmc, *nmp, *nms, *nsu;
 	int rv = -1;
+
+	if (local) {
+		if ((rv = open_page(name)) < 0) {
+			fprintf(stderr, "File not found: %s\n", name);
+			exit(1);
+		}
+		if (flg_w) {
+			printf("%s\n", name);
+			close(rv);
+			return 0;
+		}
+		return rv;
+	}
 
 	manpath = getenv("MANPATH");
 	if (!manpath)
@@ -1064,6 +1078,9 @@ int main(int argc, char **argv)
 					break;
 				case 'q':
 					verbose = 0;
+					break;
+				case 'l':
+					local = 1;
 					break;
 				}
 		} else if (isdigit(argv[ar][0]))
