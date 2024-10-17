@@ -1,0 +1,49 @@
+.TH ucom 1 "FUZIX System Utilities" "FUZIX"
+.SH NAME
+ucom \- simple serial console.
+.SH SYNOPSIS
+.B ucom
+[\-s speed] device
+.SH DESCRIPTION
+Simple and minimal terminal emulator program, to use with modems and alike.
+.P
+Just like other terminal emulator progrms
+.B ucom
+supports escape sequence to execute a command in
+.B ucom
+itself.
+.SH OPTIONS
+.TP
+.B "-s speed"
+Set speed of the
+.B device
+in baud before connecting.
+
+.SH COMMANDS
+Commands are executed by first inputing
+.I escape character
+(
+.B ESC
+) which by default is
+.B ^A.
+
+.TP
+.B "ESC q"
+Quit program and restore
+.B device termios
+to the previous settings.
+
+.TP
+.B "ESC ESC"
+Print escape character verbatim.
+
+.SH EXAMPLES
+.P
+ucom /dev/tty2
+.P
+man -s 300 /dev/tty2
+.SH BUGS
+To be found.
+.SH AUTHORS
+Yaroslav Veremenko
+.SH SEE ALSO
