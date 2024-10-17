@@ -35,12 +35,7 @@
 static struct termios termsave[2];
 static struct termios termcur[2];
 static int remotefd = -1;
-static speed_t speedval;
-static char escape = 1;
-static int opt;
-static char buf[2];
 static pid_t child;
-static char *remotename;
 
 static int baud[] = {
     50,     /* B50 */
@@ -113,8 +108,9 @@ static void quit()
 }
 
 static int parsespeed(char* str, speed_t* s){
-    int b = atoi(optarg);
-    for (int i = 0; i < sizeof(baud) / sizeof(baud[0]); i++)
+    register int i;
+    register int b = atoi(optarg);
+    for (i = 0; i < sizeof(baud) / sizeof(baud[0]); i++)
     {
         if (baud[i] == b)
         {
@@ -137,6 +133,11 @@ static void usage()
 
 int main(int argc, char *argv[])
 {
+    speed_t speedval = 0;
+    char escchar = 1;
+    int opt;
+    char *remotename;
+
     if (isatty(0) != 1)
     {
         fputs("fd 0 is not tty\n", stderr);
@@ -202,30 +203,32 @@ int main(int argc, char *argv[])
     }
     if (child == 0)
     {
-        while (read(remotefd, &buf[0], 1) > 0)
+        uint_fast8_t r;
+        while (read(remotefd, &r, 1) == 1)
         {
-            write(0, &buf[0], 1);
+            write(0, &r, 1);
         }
         fputs("Disconnected\r\n", stderr);
     }
     else
     {
-        uint_fast8_t isEscape = 0;
+        uint_fast8_t is_esc = 0;
+        uint_fast8_t w;
         atexit(restore);
-        fprintf(stderr, "Connected. Escape character ^%c\r\n", '@' + escape);
-        while (read(0, &buf[1], 1) > 0)
+        fprintf(stderr, "Connected. Escape character ^%c\r\n", '@' + escchar);
+        while (read(0, &w, 1) == 1)
         {
-            if (!isEscape && buf[1] == escape)
+            if (!is_esc && w == escchar)
             {
-                isEscape = 1;
+                is_esc = 1;
                 continue;
             }
-            if (isEscape && buf[1] == 'q')
+            if (is_esc && w == 'q')
             {
                 break;
             }
-            isEscape = 0;
-            write(remotefd, &buf[1], 1);
+            is_esc = 0;
+            write(remotefd, &w, 1);
         }
         quit();
     }
