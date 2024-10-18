@@ -234,7 +234,7 @@ dowrite:
             out (c),c
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
-            ld a,#512/#64
+            ld a,#8
 dowrite1:                    ; transfer first 256 bytes
             inc b
             outi
@@ -306,7 +306,7 @@ dowrite1:                    ; transfer first 256 bytes
             out (c),c
             ld c,#0x4e
             out (c),c                                   
-            ld a,#512/#64
+            ld a,#8
 dowrite2:
             inc b
             outi

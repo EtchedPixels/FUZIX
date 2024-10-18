@@ -9,6 +9,7 @@
 #include <tinysd.h>
 #include <devtty.h>
 #include <devfdc765.h>
+#include <netdev.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -23,7 +24,16 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 4: /dev/mem etc	System devices (one offs) */
   {  no_open,      no_close,     sys_read,      sys_write,     sys_ioctl  },
   /* 5: Pack to 7 with nxio if adding private devices and start at 8 */
+  #ifdef CONFIG_NET
+  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
+  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
+  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
+  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
+#endif
 };
+
+
+
 
 bool validdev(uint16_t dev)
 {
@@ -44,4 +54,9 @@ void device_init(void)
   sd_probe();
 #endif
 ch375_probe();
+
+#ifdef CONFIG_NET
+  sock_init();
+#endif
 }
+

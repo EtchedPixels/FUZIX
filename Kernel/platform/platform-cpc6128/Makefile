@@ -50,7 +50,7 @@ $(AOBJS): %.rel: %.s
 
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
-	rm -f loader.tmp loader.ihx loader.bin padding.bin disk.raw
+	rm -f loader.tmp loader.ihx loader.lst loader.bin padding.bin disk.raw
 	rm -rf fuzix.dsk
 
 image:
@@ -58,7 +58,19 @@ image:
 	cp $(FUZIX_ROOT)/Standalone/filesystem-src/6128.sna $(IMAGES)/
 	createSnapshot $(IMAGES)/6128.sna --loadFileData ../../fuzix.bin 256
 	printf '\x01' | dd of=$(IMAGES)/6128.sna  bs=1 seek=24 conv=notrunc
+	sdasz80 -l -o loader.s
+	sdldz80 -i loader.rel
+	hex2bin loader.ihx
 
+	dd if=/dev/zero of=padding.bin bs=512 count=360
+	# Make a disk image to work from
+	dd if=loader.bin of=padding.bin seek=0 bs=512 conv=notrunc
+	dd if=../../fuzix.bin of=padding.bin bs=512 seek=1 conv=notrunc
+	cat padding.bin >disk.raw
+	# And generate a 40 track cpc system disk from it
+	../../tools/raw2dskcpc disk.raw fuzix.dsk
+	cp fuzix.dsk $(IMAGES)/$(TARGET)
+	
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage:

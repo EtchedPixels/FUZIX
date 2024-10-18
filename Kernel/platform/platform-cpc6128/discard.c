@@ -19,5 +19,10 @@ void plt_copyright(void)
 {
 	kprintf("Amstrad CPC6128 platform\nCopyright (c) 2024 Antonio J. Casado Alias\n");
 }
-
+/*
+void ide_reset(void)
+{
+	ide_std_reset();
+}
+*/
 

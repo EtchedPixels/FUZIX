@@ -380,9 +380,7 @@ write_ay_reg: ; E = register, D = data from https://cpctech.cpc-live.com/source/
         .area _DATA
 
 cursorpos:
-        .dw 0
-scroll_index:
-        .db 0        
+        .dw 0   
 scroll_offset:
         .dw 0
 CRTC_offset:

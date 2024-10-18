@@ -33,6 +33,7 @@
 #undef CONFIG_KMOD
 
 #undef CONFIG_NET
+#undef CONFIG_NET_NATIVE
 #undef CONFIG_NET_WIZNET
 #undef CONFIG_NET_W5100
 
