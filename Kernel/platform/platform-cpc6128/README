@@ -58,4 +58,9 @@ Switch to a thunked memory model based on C2 Map to use the standard and extende
 
 Look for speed optimization opportunities.
 
+## BUILD & RUN
+
+make diskimage with cpc6128 target in base Makefile
+.sna snapshot and dsk. Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from folly use |cpm command from basic prompt
+
 
