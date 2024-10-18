@@ -8,7 +8,7 @@ The CPC6128 supported memory maps:
  -MAP-	     C0     C1     C2     C3     C4     C5     C6     C7
  0000-3FFF   RAM_0  RAM_0  RAM_4  RAM_0  RAM_0  RAM_0  RAM_0  RAM_0
  4000-7FFF   RAM_1  RAM_1  RAM_5  RAM_3  RAM_4  RAM_5  RAM_6  RAM_7
- 8000-BFFF   RAM_2  RAM_2  RAM_6  RAM_2  RAM_2  RAM_2  RAM_2  RAM_2
+ 8000-BFFF   RAM_2  RAM_2  RAM_6  RAM_2  RAM_2  RAM_2  RAM_2  RAM_2DATA
  C000-FFFF   RAM_3  RAM_7  RAM_7  RAM_7  RAM_3  RAM_3  RAM_3  RAM_3
 
 This port is based on the zx+3 port, following Alan Cox's suggestion to take advantage of the fact that memory maps C1, C2 and C3 correspond to the maps used in the zx+3 port.
@@ -61,6 +61,6 @@ Look for speed optimization opportunities.
 ## BUILD & RUN
 
 make diskimage with cpc6128 target in base Makefile
-.sna snapshot and dsk. Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from folly use |cpm command from basic prompt
+.sna snapshot, dsk. Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from folly use |cpm command from basic prompt
 
 
