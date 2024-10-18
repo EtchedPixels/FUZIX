@@ -22,15 +22,13 @@
 #include <stdio.h>
 #include <signal.h>
 #include <termios.h>
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
-#include <termio.h>
 #include <errno.h>
-#include <getopt.h>
 #include <sys/wait.h>
+#include <getopt.h>
 
 static struct termios termsave[2];
 static struct termios termcur[2];
