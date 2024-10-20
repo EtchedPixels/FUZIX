@@ -23,6 +23,8 @@ image:: world uf2conv
 image-sd:: world uf2conv
 	./update-flash.sh sd
 
+diskimage:
+
 clean:
 	rm -rf build
 	rm -f uf2conv
