@@ -91,7 +91,7 @@ static void rawuart_deinit(uart_inst_t * uart){
     uart_deinit(uart);
 }
 
-void rawuart_early_init()
+void rawuart_early_init(void)
 {
     // init first uart for kprint
     rawuart_init(0);
