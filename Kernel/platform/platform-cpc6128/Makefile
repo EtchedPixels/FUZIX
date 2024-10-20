@@ -69,7 +69,7 @@ image:
 	cat padding.bin >disk.raw
 	# And generate a 40 track cpc system disk from it
 	../../tools/raw2dskcpc disk.raw fuzix.dsk
-	cp fuzix.dsk $(IMAGES)/$(TARGET)
+	cp fuzix.dsk $(IMAGES)/fuzix.dsk
 	
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
