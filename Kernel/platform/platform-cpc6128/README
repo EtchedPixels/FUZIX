@@ -8,7 +8,7 @@ The CPC6128 supported memory maps:
  -MAP-	     C0     C1     C2     C3     C4     C5     C6     C7
  0000-3FFF   RAM_0  RAM_0  RAM_4  RAM_0  RAM_0  RAM_0  RAM_0  RAM_0
  4000-7FFF   RAM_1  RAM_1  RAM_5  RAM_3  RAM_4  RAM_5  RAM_6  RAM_7
- 8000-BFFF   RAM_2  RAM_2  RAM_6  RAM_2  RAM_2  RAM_2  RAM_2  RAM_2
+ 8000-BFFF   RAM_2  RAM_2  RAM_6  RAM_2  RAM_2  RAM_2  RAM_2  RAM_2DATA
  C000-FFFF   RAM_3  RAM_7  RAM_7  RAM_7  RAM_3  RAM_3  RAM_3  RAM_3
 
 This port is based on the zx+3 port, following Alan Cox's suggestion to take advantage of the fact that memory maps C1, C2 and C3 correspond to the maps used in the zx+3 port.
@@ -57,5 +57,10 @@ Fix lots of bugs.
 Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be a model to this solution. As ther is no real common as we are switching the whole 64k space, the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion. If this proves to be too hard, a RAM disk for swapping can be a way to use the RAM expansions.
 
 Look for speed optimization opportunities.
+
+## BUILD & RUN
+
+make diskimage with cpc6128 target in base Makefile
+.sna snapshot, .dsk Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from floppy use |cpm command from basic prompt
 
 
