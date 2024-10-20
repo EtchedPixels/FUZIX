@@ -90,7 +90,7 @@
 # zxdiv:	ZX Spectrum 128K with DivIDE/DivMMC interface
 # zxuno:	ZX Uno FPGA system
 
-TARGET ?= cpc6128
+TARGET ?= zrc
 
 include version.mk
 
