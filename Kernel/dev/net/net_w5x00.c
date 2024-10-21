@@ -825,6 +825,7 @@ int netproto_begin_connect(struct socket *s)
 		return 1;
 	} else {
 		/* UDP/RAW - note have to do our own filtering for 'connect' */
+		memcpy(&s->src_addr, &udata.u_net.addrbuf, sizeof(struct ksockaddr));
 		s->s_state = SS_CONNECTED;
 	}
 	return 0;
