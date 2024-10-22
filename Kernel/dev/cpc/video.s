@@ -30,7 +30,7 @@ videopos: ;get x->d, y->e => set de address for top byte of char
         ld a,#SCREENBASE
         ld b,a
         ld c,#0
-        adc hl,bc
+        add hl,bc
         ld de,(#scroll_offset)
         add hl,de
         res 7,h
