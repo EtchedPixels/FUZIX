@@ -35,6 +35,7 @@ videopos: ;get x->d, y->e => set de address for top byte of char
         add hl,de
         res 7,h
         set 6,h
+        res 3,h
         ex de,hl
         VIDEO_MAP
 	ret     
@@ -45,29 +46,24 @@ scr_next_line:                    ;{{Addr=$0c1f Code Calls/jump count: 10 Data u
         ld      a,d               ;{{0c1f:7c}} 
         add     a,#8             ;{{0c20:c608}} 
         ld      d,a               ;{{0c22:67}} 
-
-
-        and     #0x38               ;{{0c23:e638}} 
-        ret     nz                ;{{0c25:c0}} 
-
-;; 
-
-        ld      a,d               ;{{0c26:7c}} 
-        sub     #0x40               ;{{0c27:d640}} 
-        ld      d,a               ;{{0c29:67}} 
-        ld      a,e               ;{{0c2a:7d}} 
-        add     a,#64             ;{{0c2b:c650}} ; number of bytes per line
-        ld      e,a               ;{{0c2d:6f}} 
-        ret     nc                ;{{0c2e:d0}} 
-
-        inc     d                 ;{{0c2f:24}} 
-        ld      a,d               ;{{0c30:7c}} 
-        and     #0x07               ;{{0c31:e607}} 
-        ret     nz                ;{{0c33:c0}} 
-
-        ld      a,d               ;{{0c34:7c}} 
-        sub     #0x08               ;{{0c35:d608}} 
-        ld      d,a               ;{{0c37:67}} 
+;        and     #0x38               ;{{0c23:e638}} 
+;        ret     nz                ;{{0c25:c0}} 
+;        ld      a,d               ;{{0c26:7c}} 
+;        sub     #0x40               ;{{0c27:d640}} 
+;        ld      d,a               ;{{0c29:67}} 
+;        ld      a,e               ;{{0c2a:7d}} 
+;        add     a,#64             ;{{0c2b:c650}} ; number of bytes per line
+;        ld      e,a               ;{{0c2d:6f}} 
+;        ret     nc                ;{{0c2e:d0}} 
+;        inc     d                 ;{{0c2f:24}} 
+;        ld      a,d               ;{{0c30:7c}} 
+;        and     #0x07               ;{{0c31:e607}} 
+;        ret     nz                ;{{0c33:c0}} 
+;        ld      a,d               ;{{0c34:7c}} 
+;        sub     #0x08               ;{{0c35:d608}} 
+;        ld      d,a               ;{{0c37:67}}
+        res 7,d
+        set 6,d
         ret                 
 
 	.if ZXVID_ONLY

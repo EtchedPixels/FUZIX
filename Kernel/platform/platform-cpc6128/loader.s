@@ -254,7 +254,7 @@ ld a,(#track)
 inc a
 ld (#track),a
 
-ld a,#0x41      ;; #0xC1 = first sector id on the track
+ld a,#0x41      ;; #0x41 = first sector id on the track
 ld (#sector),a
 jp read_sectors_new_track
 
