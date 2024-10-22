@@ -187,6 +187,7 @@ void swapper2(register ptptr p, uint16_t map)
 	kprintf("Swapping in %p (page %d), udata.ptab %p\n", p, p->p_page,
 		udata.u_ptab);
 #endif
+	/* inswap = 1/0 around the swapin to sort preempt ? */
 	swapin(p, map);
 	swapmap_add(map);
 #ifdef DEBUG

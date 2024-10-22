@@ -8,6 +8,7 @@
 	.byte 'Z'
 	.byte 8
 
+#if 0
 start:
 ;
 ;	Fix up the MMU mappings so we have RAM low as well
@@ -62,4 +63,4 @@ start:
 	;	E000-FFFF : data	RAM bank 1
 	;
 	jp	6
-	
+#endif

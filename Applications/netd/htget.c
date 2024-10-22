@@ -88,7 +88,7 @@ int xreadline(void)
         }
         readp++;
     }
-    writes(2,"htpget: overlong/misformatted header\n");
+    writes(2,"htget: overlong/misformatted header\n");
     exit(1);
 }
     
@@ -204,10 +204,6 @@ int main(int argc, char *argv[])
     /* FIXME: if we saw a Transfer-Encoding: chunked" we need to do this
        bit differently */
     if (code == 200) {
-	if (write(of, readp, bufend - readp) < 0){
-	    perror("write");
-	    exit(1);
-	}
         while((len = xread()) > 0) {
             if (write(of, buf, len) != len) {
                 perror("write");

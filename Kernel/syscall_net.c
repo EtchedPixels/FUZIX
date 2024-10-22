@@ -180,7 +180,7 @@ arg_t _netcall(void)
 		s = valaddr((void *) *ap, ap[1], !!(op & N_DATAI));
 		if (s == 0 && ap[1])
 			return -1;
-		ap += 2;
+		ap += 3;
 		udata.u_count = s;
 	}
 	/* Expect an address and length for an address to copy into the network
