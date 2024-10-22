@@ -30,14 +30,14 @@ videopos: ;get x->d, y->e => set de address for top byte of char
         ld a,#SCREENBASE
         ld b,a
         ld c,#0
-        add hl,bc
+        adc hl,bc
         ld de,(#scroll_offset)
         add hl,de
         res 7,h
         set 6,h
         ex de,hl
         VIDEO_MAP
-	ret
+	ret     
 
 ;from cpc firmware: https://github.com/Bread80/CPC6128-Firmware-Source/tree/main
  
@@ -217,7 +217,6 @@ zx_clear_across:
 
         ; no boundary checks. Assuming that D + C < SCREEN_WIDTH
         
-clear_line:
 
         ;ld c,d
         ;ld (de),a
@@ -240,18 +239,24 @@ clear_line:
         ;ld (de),a
         
         ld b,#8
-clear_char:
+clear_line:
+        ld a, b
+        push af
         xor a
+        push bc
+clear_scanline:         
         ld (de),a
-        call scr_next_line
-        djnz clear_char
-
-        ex de, hl
         inc de
+        dec c
+        jr nz, clear_scanline
+        ex de, hl
+        call scr_next_line
+        pop bc
+        pop af
+        ld b,a
         push de
         pop hl
-        dec c
-        jr nz, clear_line
+        djnz clear_line
 	pop de
 	VIDEO_UNMAP
         ret
