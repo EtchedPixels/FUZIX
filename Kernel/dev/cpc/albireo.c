@@ -41,7 +41,7 @@ not_swapin:
 doread:
             ld bc,#0x7f10
             out (c),c
-            ld c,#0x53
+            ld c,#0x4a  ;yellow
             out (c),c
             ld bc, #CH376_REG_DATA                    ; setup port number
                                                     ; and count
@@ -110,13 +110,13 @@ doread:
             inc b
             ini
             inc b
-            push bc
-            ld bc,#0x7f10
-            out (c),c
-            ld c,#0x4c
-            out (c),c
+            ;push bc
+            ;ld bc,#0x7f10
+            ;out (c),c
+            ;ld c,#0x4c
+            ;out (c),c
                       ; transfer second 32 bytes
-            pop bc
+            ;pop bc
             ini
             inc b
             ini
@@ -226,7 +226,7 @@ dowrite:
 
             ld bc,#0x7f10
             out (c),c
-            ld c,#0x55
+            ld c,#0x4e  ;orange
             out (c),c
             ld bc, #CH376_REG_DATA                    ; setup port number
                                                     ; and count
@@ -295,12 +295,12 @@ dowrite:
             outi
             inc b
             outi
-            push bc
-            ld bc,#0x7f10
-            out (c),c
-            ld c,#0x4e
-            out (c),c                                   
-            pop bc
+            ;push bc
+            ;ld bc,#0x7f10
+            ;out (c),c
+            ;ld c,#0x55
+            ;out (c),c                                   
+            ;pop bc
             inc b
             outi
             inc b
