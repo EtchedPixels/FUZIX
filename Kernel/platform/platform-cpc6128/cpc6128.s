@@ -1,7 +1,7 @@
 ;
 ;    Spectrum +3 support
 
-        .module plus3
+        .module cpc6128
 
         ; exported symbols
         .globl init_early
@@ -94,12 +94,10 @@ _plt_monitor:
 
 _plt_reboot:
 	di
-	halt ;we are debugging why we end here
-	ld bc, #0x7fc0
+	;halt ;we are debugging why we end here
+	ld bc, #0x7f89 ;this would set the firmware ready for boot into firmware with (out (c),c ; rst0)
 	out (c), c
-	ld bc, #0x7fa9 ;this would set the firmware ready for boot into firmware with (out (c),c ; rst0)
-	out (c), c
-        rst 0		; back into our booter
+	    rst 0		; back into our booter
 
 plt_interrupt_all:
         ret
