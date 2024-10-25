@@ -1,16 +1,16 @@
 ;
-;        zx128 vt primitives
+;        amstrad cpc vt primitives
 ;
         ; exported symbols
-        .globl zx_plot_char
-        .globl zx_scroll_down
-        .globl zx_scroll_up
-        .globl zx_cursor_on
-        .globl zx_cursor_off
-	.globl zx_cursor_disable
-        .globl zx_clear_lines
-        .globl zx_clear_across
-        .globl zx_do_beep
+        .globl cpc_plot_char
+        .globl cpc_scroll_down
+        .globl cpc_scroll_up
+        .globl cpc_cursor_on
+        .globl cpc_cursor_off
+	.globl cpc_cursor_disable
+        .globl cpc_clear_lines
+        .globl cpc_clear_across
+        .globl cpc_do_beep
 	.globl _fontdata_8x8
 	.globl _curattr
 	.globl _vtattr
@@ -66,10 +66,10 @@ scr_next_line:                    ;{{Addr=$0c1f Code Calls/jump count: 10 Data u
         set 6,d
         ret                 
 
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _plot_char:
 	.endif
-zx_plot_char:
+cpc_plot_char:
         pop hl
         pop de              ; D = x E = y
         pop bc
@@ -159,10 +159,10 @@ last_ul:
 	ld a,#0xff
 	jr plot_attr
 
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _clear_lines:
 	.endif
-zx_clear_lines:
+cpc_clear_lines:
         pop hl
         pop de              ; E = line, D = count
         push de
@@ -191,10 +191,10 @@ nextline:
         ret
 
 
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _clear_across:
 	.endif
-zx_clear_across:
+cpc_clear_across:
         pop hl
         pop de              ; DE = coords 
         pop bc              ; C = count
@@ -271,10 +271,10 @@ set_hardware_scroll:
         add hl,hl
         ld (scroll_offset),hl   ;prepare scroll_offset for videopos
         ret
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _scroll_up:
 	.endif
-zx_scroll_up:
+cpc_scroll_up:
         ld hl, (CRTC_offset)
         ld bc, #32           ; one crtc character are two bytes
         add hl,bc
@@ -284,10 +284,10 @@ zx_scroll_up:
         ld (CRTC_offset),hl
         jr set_hardware_scroll
  
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _scroll_down:
 	.endif
-zx_scroll_down:
+cpc_scroll_down:
         ld hl, (CRTC_offset)
         ld bc, #32           ; one crtc character are two bytes
         or a
@@ -299,10 +299,10 @@ zx_scroll_down:
         jr set_hardware_scroll
         ret
 
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _cursor_on:
 	.endif
-zx_cursor_on:
+cpc_cursor_on:
         pop hl
         pop de
         push de
@@ -319,12 +319,12 @@ set_cursor_line:
 
 	VIDEO_UNMAP
         ret
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _cursor_disable:
 _cursor_off:
 	.endif
-zx_cursor_disable:
-zx_cursor_off:
+cpc_cursor_disable:
+cpc_cursor_off:
         ld de, (cursorpos)
         call videopos
 
@@ -337,10 +337,10 @@ reset_cursor_line:
 	
         VIDEO_UNMAP
 
-	.if ZXVID_ONLY
+	.if CPCVID_ONLY
 _do_beep:
 	.endif
-zx_do_beep:
+cpc_do_beep:
         ld e,#4
         ld d,#38        ;channel C 110Hz
         call write_ay_reg

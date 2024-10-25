@@ -1,8 +1,8 @@
 ;
-;        zx128 vt primitives
+;        cpc vt primitives
 ;
 
-        .module zxvideo
+        .module cpcvideo
 
         ; exported symbols
         .globl _plot_char
@@ -23,7 +23,7 @@
 
 	; Build the video library as the only driver
 
-ZXVID_ONLY	.equ	1
+CPCVID_ONLY	.equ	1
 SCREENBASE	.equ 0x40
 
 .macro VIDEO_MAP
