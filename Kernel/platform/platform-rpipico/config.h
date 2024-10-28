@@ -28,6 +28,9 @@
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
 #undef CONFIG_MONITOR
+/* Enable to support network stack */
+#undef CONFIG_NET
+#undef CONFIG_NET_NATIVE
 /* Profil syscall support (not yet complete) */
 #undef CONFIG_PROFIL
 /* Multiple processes in memory at once */
@@ -68,7 +71,17 @@
 
 #define UDATA_BLKS  3
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
-#define USERMEM (160*1024)
+
+#define TOTALMEM 160
+#define NETMEM 0
+
+#ifdef CONFIG_NET
+#undef NETMEM
+#define NETMEM 10
+#endif
+
+#define USERMEM ((TOTALMEM-NETMEM)*1024)
+
 #define PROGSIZE (65536 - UDATA_SIZE)
 extern uint8_t progbase[USERMEM];
 #define udata (*(struct u_data*)progbase)

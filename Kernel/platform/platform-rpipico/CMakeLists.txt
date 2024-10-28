@@ -71,6 +71,9 @@ add_executable(fuzix
 	../../tty.c
 	../../usermem.c
 	../../version.c
+	../../dev/net/net_native.c
+	../../syscall_net.c
+	../../network.c
 )
 
 target_link_libraries(fuzix

@@ -62,6 +62,10 @@ static void timer_tick_cb(unsigned alarm)
     irqrestore(irq);
 }
 
+#ifdef CONFIG_NET
+extern void netdev_init(void);
+#endif
+
 void device_init(void)
 {
     /* Timer interrup must be initialized before blcok devices.
@@ -75,6 +79,9 @@ void device_init(void)
      * cause a crash on startup... oddly. */
 #ifdef CONFIG_PICO_FLASH
     flash_dev_init();
+#endif
+#ifdef CONFIG_NET
+	netdev_init();
 #endif
     sd_rawinit();
     devsd_init();
