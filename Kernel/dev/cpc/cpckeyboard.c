@@ -76,8 +76,10 @@ static void keydecode(void)
 	
 	if (ct) {
 		m |= KEYPRESS_CTRL;
-		if (c == 'C' || c == 'c')
-				c = KEY_STOP;				
+		if (c >= 'a' && c <= 'z')
+				c = CTRL(c - ('a' - 'A'));
+		else 
+				c = CTRL(c);
 	}
 	if (c) {
 		switch (keyboard_grab) {
