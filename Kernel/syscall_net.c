@@ -13,6 +13,7 @@
 
 #ifdef CONFIG_NET
 
+extern void netdev_init(void);
 
 #define N_MAKE		0x80
 #define N_SOCKFD	0x40
