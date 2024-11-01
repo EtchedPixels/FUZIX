@@ -10,7 +10,6 @@
 #include "globals.h"
 #include "picosdk.h"
 #include <hardware/irq.h>
-#include <pico/multicore.h>
 #include "core1.h"
 
 struct devsw dev_tab[] =  /* The device driver switch table */
