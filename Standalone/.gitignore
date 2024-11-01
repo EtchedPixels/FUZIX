@@ -1,7 +1,12 @@
 # Executables
 chmem
+elf2aout
 fsck
+fsck400
 mkfs
+mkfs400
+mkftl
+sethint
 size
 ucp
 # Disk images

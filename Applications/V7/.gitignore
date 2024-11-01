@@ -5,6 +5,7 @@ at
 atrun
 col
 comm
+clear
 cron
 crypt
 dc
@@ -13,11 +14,14 @@ deroff
 diff
 diff3
 diffh
+ed
+fsh
 join
 look
 makekey
 mesg
 newgrp
+pg
 pr
 ptx
 rev
@@ -27,6 +31,7 @@ sum
 test
 time
 tsort
+tty
 wall
 # from cmd/sh/
 cmd/sh/sh

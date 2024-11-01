@@ -6,3 +6,5 @@ syslib*.lib
 curses*.lib
 m6809.lib
 termcap*.lib
+readline*.lib
+m*.lib
