@@ -53,6 +53,7 @@ static uint8_t ringbuf[BMEM_SIZE];
 static uint8_t *bmem = ringbuf;
 #else
 int bfd;   /* fd of data backing file */
+#define NETD_RINGBUF_FILE "/tmp/net.back"
 #endif
 int knet;  /* fd of kernel's network inface */
 int rc;    /* fd of rc file */
@@ -967,7 +968,24 @@ int parse_rcfile( void ){
 	return 0;
 }
 
-
+void cleanup(int sig)
+{
+#ifndef NETD_RINGBUF_IN_MEMORY
+	if ( bfd >= 0 ){
+		close(bfd);
+		bfd = -1;
+		unlink(NETD_RINGBUF_FILE);
+	}
+#endif
+	if ( knet >= 0 ){
+		close(knet);
+		knet = -1;
+	}
+	if ( sig != 0 ){
+		exit(128 + sig);
+	}
+	exit(0);
+}
 
 int main( int argc, char *argv[] )
 {
@@ -975,9 +993,12 @@ int main( int argc, char *argv[] )
 	uip_ipaddr_t ipaddr;
 	uip_eth_addr ethaddr;       /* mac address buffer */
 
+	signal(SIGHUP, cleanup);
+	signal(SIGINT, cleanup);
+	signal(SIGTERM, cleanup);
 #ifndef NETD_RINGBUF_IN_MEMORY
 	/* where should backing file go? /var, /tmp, other?  */
-	bfd = open( "/tmp/net.back", O_RDWR|O_CREAT, 0644 );
+	bfd = open( NETD_RINGBUF_FILE, O_RDWR|O_CREAT, 0644 );
 	if ( bfd < 0 ){
 		exit_err( "cannot open backing file\n");
 	}
@@ -1057,4 +1078,5 @@ int main( int argc, char *argv[] )
 		if( ! (a || b) )
 			_pause(3);
 	}
+	cleanup(0);
 }
