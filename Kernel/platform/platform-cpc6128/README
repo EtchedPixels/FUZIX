@@ -31,24 +31,24 @@ Video mode 2 is used. The video driver configures the CRTC in 64x32 characters t
 
 Trying to mount the floppy hangs the machine, and may do nasty things to the floppy and the drive, don't try on a real machine!!
 
-The IDE driver that is supposed to work with the symbiface and xmass fails to initialize.
+The IDE driver that is supposed to work with the symbiface and xmass fails to initialize. FIXED, tested with ACE-DL emulator x-mass suport.
 
 The USB mass storage of the Albiero works using the ch375 driver used in other platforms. It should be easy to get it working with the Usifac/Ulifac.
 
-There isn't a proper loader, for now a snapshot is generated.
+There isn't a proper loader, for now a snapshot is generated. FIXED, dsk floppy boot image generated.
 
-To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load an run the snapshot.
+To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load an run the snapshot or burn the dsk in a floppy and start FUZIX with |cpm.
 
 
 ## TODO
 
 Fix fdc driver.
-Fix IDE driver.
+Fix IDE driver. DONE
 Sometimes the top byte of the characters isn't drawn. FIXED
-Vertical scroll shows the bottom line of the screen in the top of the screen
+Vertical scroll shows the bottom line of the screen in the top of the screen. FIXED
 Fix memory size reporting 64 v 48K (inherited from zx+3).
 do_beep() doesn't seem to work.
-Write a proper loader.
+Write a proper loader. DONE.
 Configurable screen, at least add 80x25, maybe also change the video mode and routines to manage 6x8 fonts.
 Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac, networking with wifi module plugged in the usifac, sdcard in the Albireo, try slip with the serial port of the usifac...
 
@@ -62,5 +62,7 @@ Look for speed optimization opportunities.
 
 make diskimage with cpc6128 target in base Makefile
 .sna snapshot, .dsk Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from floppy use |cpm command from basic prompt
+
+To run on emulator use ACE-DL emulator and use disk.img as image for the x-mass IDE interface emulation.
 
 
