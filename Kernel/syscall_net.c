@@ -230,7 +230,7 @@ arg_t _netcall(void)
 				/* Copy the buffer, oe less if truncated by size */
 				if (s > udata.u_net.addrlen)
 					s = udata.u_net.addrlen;
-				if (uput(&udata.u_net.addrbuf, (void *) *ap, s) != s) {
+				if (uput(&udata.u_net.addrbuf, (void *) *ap, s) < 0) {
 					udata.u_error = EFAULT;
 					return -1;
 				}

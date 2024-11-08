@@ -388,30 +388,28 @@ static void w5x00_queue_u(uint16_t i, uint16_t n, void *p)
 		w5x00_bwriteu(i, dm, p, n);
 }
 
-static void w5x00_dequeue(uint16_t i, uint16_t n, void *p)
+static void w5x00_read(uint16_t i, uint16_t off, uint16_t n, void *p)
 {
-	uint16_t dm = w5x00_readsw(i, Sn_RX_RD0) & RX_MASK;
 	i = SOCK2BANK_R(i);
 
-	if (dm + n > RX_MASK) {
-		uint16_t us = RX_MASK + 1 - dm;
-		w5x00_bread(i, dm, p, us);
+	if (off + n > RX_MASK) {
+		uint16_t us = RX_MASK + 1 - off;
+		w5x00_bread(i, off, p, us);
 		w5x00_bread(i, 0, (uint8_t *)p + us, n - us);
 	} else
-		w5x00_bread(i, dm, p, n);
+		w5x00_bread(i, off, p, n);
 }
 
-static void w5x00_dequeue_u(uint16_t i, uint16_t n, void *p)
+static void w5x00_read_u(uint16_t i, uint16_t off, uint16_t n, void *p)
 {
-	uint16_t dm = w5x00_readsw(i, Sn_RX_RD0) & RX_MASK;
 	i = SOCK2BANK_R(i);
 
-	if (dm + n > RX_MASK) {
-		uint16_t us = RX_MASK + 1 - dm;
-		w5x00_breadu(i, dm, p, us);
+	if (off + n > RX_MASK) {
+		uint16_t us = RX_MASK + 1 - off;
+		w5x00_breadu(i, off, p, us);
 		w5x00_breadu(i, 0, (uint8_t *)p + us, n - us);
 	} else
-		w5x00_breadu(i, dm, p, n);
+		w5x00_breadu(i, off, p, n);
 }
 
 static void w5x00_cmd(uint8_t s, uint8_t v)
@@ -868,6 +866,7 @@ int netproto_read(struct socket *s)
 	uint16_t n;
 	register uint16_t r;
 	uint_fast8_t filtered;
+	uint16_t off;
 
 	if (udata.u_count == 0)
 		return 0;
@@ -887,18 +886,23 @@ int netproto_read(struct socket *s)
 
 		memcpy(&udata.u_net.addrbuf, &s->dst_addr, sizeof(struct ksockaddr));
 
+		off = w5x00_readsw(i, Sn_RX_RD0) & RX_MASK;
+
 		switch (s->s_type) {
 		case W5100_RAW:
 		case W5100_UDP:
 		/* UDP comes with a header */
-			w5x00_dequeue(i, 4, &udata.u_net.addrbuf.sa.sin.sin_addr);
+			w5x00_read(i, off, 4, &udata.u_net.addrbuf.sa.sin.sin_addr);
+			off +=4;
 			if (s->s_type == W5100_UDP) {
-				w5x00_dequeue(i, 2, &udata.u_net.addrbuf.sa.sin.sin_addr);
+				w5x00_read(i, off, 2, &udata.u_net.addrbuf.sa.sin.sin_port);
+				off +=2;
 				if (s->src_addr.sa.sin.sin_addr.s_addr && s->src_addr.sa.sin.sin_addr.s_addr !=
 					udata.u_net.addrbuf.sa.sin.sin_addr.s_addr)
 					filtered = 1;
 			}
-			w5x00_dequeue(i, 2, (uint8_t *) & n);	/* Actual packet size */
+			w5x00_read(i, off, 2, (uint8_t *) &n);	/* Actual packet size */
+			off +=2;
 			n = ntohs(n);	/* Big endian on device */
 			/* Fall through */
 		case W5100_TCP:
@@ -912,8 +916,8 @@ int netproto_read(struct socket *s)
 					/* Wait */
 					return 1;
 				}
-				/* Now dequeue some bytes into udata.u_base */
-				w5x00_dequeue_u(i, r, udata.u_base);
+				/* Now read some bytes into udata.u_base */
+				w5x00_read_u(i, off, r, udata.u_base);
 				udata.u_done += r;
 				udata.u_base += r;
 			}
