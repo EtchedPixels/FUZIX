@@ -17,17 +17,19 @@ ld hl,#0x100
 ld de,#0xfdff
 ld bc,#512
 ldir
+
+jp start
+
+start:
 ;;clean room
 ld hl,#0
 ld de ,#1
 ld (#0),hl
 ld bc,#0xfdfe
+ldir
 ;;patch interrupt vector
 LD HL,#0XC9FB		
 LD (#0X0038),HL
-jp start
-
-start:
 ;; turn on disc motor
 ld bc,#0xfa7e
 ld a,#1
@@ -76,7 +78,7 @@ call fdc_recalibrate
 
 ;; now the drive is at a known position and is ready the fdc knows it is at a known position
 ;; we can read data..
-call read_file
+;call read_file
 
 read_file:
 ;; set variable for starting sector for our data (#0xC1 is first sector ID for

@@ -41,12 +41,12 @@ not_swapin:
 doread:
             ld bc,#0x7f10
             out (c),c
-            ld c,#0x53
+            ld c,#0x51 ; Sea Green
             out (c),c
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
-            ld a,#8
-doread1:                    ; transfer first 256 bytes
+            ld a,#16
+doread1:                    ; transfer 512 bytes
             ini
             inc b
             ini
@@ -113,78 +113,7 @@ doread1:                    ; transfer first 256 bytes
             inc b
             dec a
             jr nz,doread1
-            ld bc,#0x7f10
-            out (c),c
-            ld c,#0x4c
-            out (c),c
-            ld a,#8
-doread2:                    ; transfer second 256 bytes
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            ini
-            inc b
-            dec a
-            jr nz,doread2
+            
             ld bc,#0x7f10
             out (c),c                                    
             ld a,(_vtborder)
@@ -230,12 +159,12 @@ dowrite:
 
             ld bc,#0x7f10
             out (c),c
-            ld c,#0x55
+            ld c,#0x5d  ;Mauve
             out (c),c
             ld bc, #IDE_REG_DATA                    ; setup port number
                                                     ; and count
-            ld a,#8
-dowrite1:                    ; transfer first 256 bytes
+            ld a,#16
+dowrite1:                    ; transfer 512 bytes
             inc b
             outi
             inc b
@@ -302,78 +231,7 @@ dowrite1:                    ; transfer first 256 bytes
             outi
             dec a
             jr nz,dowrite1
-            ld bc,#0x7f10
-            out (c),c
-            ld c,#0x4e
-            out (c),c                                   
-            ld a,#8
-dowrite2:
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            inc b
-            outi
-            dec a
-            jr nz,dowrite2
+
             ld bc,#0x7f10
             out (c),c                                    
             ld a,(_vtborder)
