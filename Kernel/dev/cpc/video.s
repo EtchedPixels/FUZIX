@@ -336,6 +336,7 @@ reset_cursor_line:
         ld (de),a
 	
         VIDEO_UNMAP
+	ret
 
 	.if CPCVID_ONLY
 _do_beep:
