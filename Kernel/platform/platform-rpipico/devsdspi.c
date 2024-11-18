@@ -46,6 +46,9 @@
 
 #endif
 
+#define SLOW_SPEED 250000
+#define FAST_SPEED 4000000
+
 void sd_rawinit(void)
 {
     //initilase GPIO ports
@@ -62,13 +65,15 @@ void sd_rawinit(void)
     gpio_set_dir(Pico_SD_CS, true);
 
     //initalise SPI module
-    spi_init(Pico_SD_SPI_MOD, 250000);
+
+    spi_init(Pico_SD_SPI_MOD, SLOW_SPEED);
     spi_set_format(Pico_SD_SPI_MOD, 8, 0, 0, SPI_MSB_FIRST);
 }
 
 void sd_spi_clock(bool go_fast)
 {
-    spi_set_baudrate(Pico_SD_SPI_MOD, 250000);
+    spi_set_baudrate(Pico_SD_SPI_MOD,
+        go_fast ? FAST_SPEED : SLOW_SPEED);
 }
 
 void sd_spi_raise_cs(void)

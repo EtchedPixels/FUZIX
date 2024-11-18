@@ -32,6 +32,7 @@ static uint8_t get_slot(ptptr p)
 	uint8_t slot = p - ptab;
     if (slot >= PTABSIZE)
         panic("bad ptab");
+    return slot;
 }
 
 static uaddr_t get_proc_size(ptptr p)

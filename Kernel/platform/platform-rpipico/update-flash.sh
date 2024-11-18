@@ -5,10 +5,6 @@ IMG=filesystem.img
 
 FSSIZE=2547
 
-if [ "$1" = "sd" ]; then
-    FSSIZE=65535
-fi
-
 rm -f ${IMG}
 ../../../Standalone/mkfs ${IMG} 32 $FSSIZE
 ../../../Standalone/ucp ${IMG} <<EOF
