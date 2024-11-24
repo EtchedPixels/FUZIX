@@ -26,7 +26,7 @@ make TARGET=esp866 DEFAULT_BOOT=hda kernel
 ```
 If your root device in the SD card:
 ```
-make TARGET=esp866 DEFAULT_BOOT=hdb1 kernel diskimage
+make TARGET=esp866 DEFAULT_BOOT=hdb1 kernel
 ```
 Then you can build the application and the filesystem:
 ```
