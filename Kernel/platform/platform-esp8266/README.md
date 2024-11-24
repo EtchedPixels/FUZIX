@@ -20,17 +20,11 @@ for further file storage and swap.
 ## Building
 
 The kernel needs to know the boot device, therefore, depending on your setup,
-you will need to run one of the following. If your root device is the flash:
+you will need to run one of the following. If your root device is the flash,
+you must edit Kernel/platform/platform-esp8266/config.h.
+Otherwise, if your root device is the SD card, the default is fine for you.
 ```
-make TARGET=esp866 DEFAULT_BOOT=hda kernel
-```
-If your root device in the SD card:
-```
-make TARGET=esp866 DEFAULT_BOOT=hdb1 kernel
-```
-Then you can build the application and the filesystem:
-```
-make TARGET=esp866 diskimage
+make TARGET=esp866 kernel diskimage
 ```
 
 You need the `xtensa-lx106-elf` gcc toolchain --- install the
