@@ -118,6 +118,7 @@ f 0755 /bin/uniq        uniq
 f 0755 /bin/uptime      uptime
 f 0755 /bin/uud         uud
 f 0755 /bin/uue         uue
+f 0755 /bin/cu          cu
 f 0755 /bin/vile        vile
 l /bin/vile /bin/vi
 f 0755 /bin/wc          wc
@@ -138,3 +139,4 @@ f 0655 /usr/man/man1/mv.1        mv.1
 f 0655 /usr/man/man1/ps.1        ps.1
 f 0655 /usr/man/man1/size.1      size.1
 f 0655 /usr/man/man1/substroot.1 substroot.1
+f 0655 /usr/man/man1/cu.1        cu.1

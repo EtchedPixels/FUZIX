@@ -10,7 +10,6 @@
 #include "globals.h"
 #include "picosdk.h"
 #include <hardware/irq.h>
-#include <pico/multicore.h>
 #include "core1.h"
 
 struct devsw dev_tab[] =  /* The device driver switch table */
@@ -26,7 +25,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 3: /dev/lpr	Printer devices */
   {  no_open,     no_close,   no_rdwr,   no_rdwr,  no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
-  {  no_open,      no_close,    sys_read, sys_write, sys_ioctl  },
+  {  no_open,      sys_close,    sys_read, sys_write, sys_ioctl  },
   /* Pack to 7 with nxio if adding private devices and start at 8 */
 };
 
@@ -63,6 +62,10 @@ static void timer_tick_cb(unsigned alarm)
     irqrestore(irq);
 }
 
+#ifdef CONFIG_NET
+extern void netdev_init(void);
+#endif
+
 void device_init(void)
 {
     /* Timer interrup must be initialized before blcok devices.
@@ -76,6 +79,9 @@ void device_init(void)
      * cause a crash on startup... oddly. */
 #ifdef CONFIG_PICO_FLASH
     flash_dev_init();
+#endif
+#ifdef CONFIG_NET
+	netdev_init();
 #endif
     sd_rawinit();
     devsd_init();

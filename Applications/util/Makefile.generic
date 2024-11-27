@@ -46,6 +46,7 @@ SRCS  = \
 	chmem.c \
 	cksum.c \
 	cp.c \
+	cu.c \
 	cut.c \
 	dd.c \
 	decomp16.c \

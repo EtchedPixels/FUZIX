@@ -87,14 +87,15 @@ setupl:	    outi
 _vdp_readb:
 	    call _vdp_set
 	    dec c
+	    VDP_DELAY			; Data is not immediately available
 	    in l,(c)
 	    ret
 
 _vdp_out:
 	    ld bc,(_vdpport)
 	    dec c
-	    out (c),l
-	    ret
+	    out (c),l			; Write will be queued but must
+	    ret				; not do another op too soon after
 ;
 ;	vdp_setup40(void)
 ;	vdp_init(void)
@@ -216,8 +217,8 @@ fontnext:
 	    out (c),l
 	    cpl
 	    dec c
-	    VDP_DELAY
 	    out (c),a
+	    VDP_DELAY
 	    inc c
 	    inc e
 	    jr nz, fontnext
