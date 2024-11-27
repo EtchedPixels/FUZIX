@@ -73,6 +73,9 @@ f 0755 /bin/cut         cut
 f 0755 /bin/decomp16    decomp16
 f 0755 /bin/dirname     dirname
 f 0755 /bin/dosread     dosread
+l /bin/dosread /bin/dosdir
+l /bin/dosread /bin/doswrite
+l /bin/dosread /bin/dosdel
 f 0755 /bin/env         env
 f 0755 /bin/factor      factor
 f 0755 /bin/false       false
