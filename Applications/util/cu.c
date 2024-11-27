@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
         uint_fast8_t is_esc = 0;
         uint_fast8_t is_nl = 1;
         uint_fast8_t w;
-        atexit(restore);
+        atexit((void *)&restore);
         if (escchar <= 0x1A)
         {
             escStr[0] = '^';
