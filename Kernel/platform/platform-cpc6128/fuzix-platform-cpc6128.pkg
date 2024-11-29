@@ -1,0 +1,7 @@
+package platform-cpc6128
+
+disable-pkg platform-cpc6128
+
+l /bin/sh /bin/sh.orig
+r /bin/sh
+l /bin/fsh /bin/sh
