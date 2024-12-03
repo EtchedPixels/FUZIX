@@ -57,7 +57,7 @@ extern uint16_t waitno;   /* Serial number of processes entering wait state */
 extern int16_t acct_fh;	  /* acct() filehandle */
 extern struct sysinfoblk sysinfo;
 
-// The device driver switch table
+/* The device driver switch table */
 typedef int (*dev_read_t)(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
 typedef int (*dev_write_t)(uint_fast8_t minor, uint_fast8_t rawflag, uint_fast8_t flag);
 typedef int (*dev_init_t)(void);
@@ -75,7 +75,7 @@ typedef struct devsw {
 
 extern struct devsw dev_tab[];
 
-// Load management
+/* Load management */
 struct runload {
 	/* exponent is 8.8 fixed point */
 	uint8_t exponent;
@@ -84,7 +84,7 @@ struct runload {
 
 extern struct runload loadavg[];
 
-// the system call dispatch table
+/* the system call dispatch table */
 #ifdef CONFIG_LEVEL_2
 #define FUZIX_SYSCALL_COUNT 80
 #else

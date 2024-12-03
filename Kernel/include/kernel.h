@@ -132,11 +132,6 @@ From UZI by Doug Braun and UZI280 by Stefan Nitschke.
                               default process time slice */
 #endif
 
-// #define MAXBACK      3   /* Process time slice for tasks not connected
-//                             to the current tty */
-// #define MAXBACK2     2   /* Process time slice for background tasks */
-// #define MAXINTER     5   /* Process time slice for interactive tasks */
-
 #define MAXPID    32000
 
 #define NSIGS	  32      /* Number of signals <= 32 */
@@ -285,7 +280,7 @@ struct hd_geometry {
 #define F_REG   0100000
 #define F_DIR   040000
 #define F_PIPE  010000
-#define F_BDEV  060000  // important that F_BDEV & F_CDEV != 0 (see isdevice() function)
+#define F_BDEV  060000  /* important that F_BDEV & F_CDEV != 0 (see isdevice() function) */
 #define F_CDEV  020000
 #define F_SOCK	0140000
 
@@ -331,7 +326,7 @@ typedef struct direct {
  * Superblock structure
  */
 #define FILESYS_TABSIZE 50
-typedef struct filesys { // note: exists in mem and on disk
+typedef struct filesys { /* note: exists in mem and on disk */
     uint16_t      s_mounted;
     uint16_t      s_isize;
     uint16_t      s_fsize;
@@ -1027,7 +1022,7 @@ extern int_fast8_t uf_alloc(void);
 /* returns index of slot, or -1 on failure */
 extern int_fast8_t uf_alloc_n(uint_fast8_t n);
 #define i_ref(ino) ((ino)->c_refs++, (ino))
-//extern void i_ref(inoptr ino);
+/* extern void i_ref(inoptr ino); */
 extern void i_deref(inoptr ino);
 extern void corrupt_fs(uint16_t devno);
 extern void wr_inode(inoptr ino);
