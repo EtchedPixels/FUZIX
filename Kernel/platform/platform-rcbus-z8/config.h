@@ -58,10 +58,13 @@
 #if 0
 #define SWAPDEV  (256 + 1)  /* Device for swapping. (FIXME) */
 #endif
-#define NBUFS    8	  /* Number of block buffers */
-#define NMOUNTS	 4	  /* Number of mounts at a time */
+/* TODO make dynamic */
+#define NBUFS    5	  /* Number of block buffers */
+#define NMOUNTS	 3	  /* Number of mounts at a time */
 
 #define plt_discard()
 #define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"
+
+#define CONFIG_SMALL
