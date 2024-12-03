@@ -50,5 +50,4 @@ platform/platform-2063/tinysd.rel
 platform/platform-2063/sd.rel
 platform/platform-2063/serial.rel
 platform/platform-2063/vdp.rel
-platform/platform-2063/net_native.rel
 -e
