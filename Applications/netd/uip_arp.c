@@ -113,12 +113,6 @@ static uint8_t tmpage;
 #define IPBUF ((struct ethip_hdr *)&uip_buf[0])
 
 #define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 /*-----------------------------------------------------------------------------------*/
 /**
@@ -295,11 +289,6 @@ uip_arp_arpin(void)
        reply. */
     /*    if(BUF->dipaddr[0] == uip_hostaddr[0] &&
 	  BUF->dipaddr[1] == uip_hostaddr[1]) {*/
-    PRINTF("uip_arp_arpin: request for %d.%d.%d.%d (we are %d.%d.%d.%d)\n",
-	   BUF->dipaddr.u8[0], BUF->dipaddr.u8[1],
-	   BUF->dipaddr.u8[2], BUF->dipaddr.u8[3],
-	   uip_hostaddr.u8[0], uip_hostaddr.u8[1],
-	   uip_hostaddr.u8[2], uip_hostaddr.u8[3]);
     if(uip_ipaddr_cmp(&BUF->dipaddr, &uip_hostaddr)) {
       /* First, we register the one who made the request in our ARP
 	 table, since it is likely that we will do more communication
