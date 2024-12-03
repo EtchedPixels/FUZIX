@@ -87,49 +87,49 @@ const char *shelter[] = {
 
 const char *bombAnim = "\\|/-";
 
-// We have to use global variables becase our main loop is driven by
-// an alarm signal - so we put them into tidy structures.
-// TODO!  Define the structs, but declare the game state objects on
-// the stack of main.  Down with globalisation!
+/* We have to use global variables becase our main loop is driven by */
+/* an alarm signal - so we put them into tidy structures. */
+/* TODO!  Define the structs, but declare the game state objects on */
+/* the stack of main.  Down with globalisation! */
 
 struct {
 	int score;
 	int lives;
 	int state;
-	int screenCols;		// screen columns
-	int screenRows;		// screen rows
-	int timer;		// timer used to switch between game states
+	int screenCols;		/* screen columns */
+	int screenRows;		/* screen rows */
+	int timer;		/* timer used to switch between game states */
 } game;
 
 struct {
-	int rows, cols;		// how many rows and columns of aliens are there?
-	int x, y;		// alien position
-	int *table;		// the table of aliens
-	// which rows and columns have been cleared?
+	int rows, cols;		/* how many rows and columns of aliens are there? */
+	int x, y;		/* alien position */
+	int *table;		/* the table of aliens */
+	/* which rows and columns have been cleared? */
 	int emptyLeft, emptyRight, emptyTop, emptyBottom;
 	int direction;
-	int paintRow;		// cursor for repainting row by row
-	int paintWait;		// counter for repainting row by row
-	int sideAnim;		// staggered sideways movement
-	int count;		// how many aliens are left?
-	int anim;		// used for wiggling
-	struct Bomb *headBomb;	// linked list of bombs
+	int paintRow;		/* cursor for repainting row by row */
+	int paintWait;		/* counter for repainting row by row */
+	int sideAnim;		/* staggered sideways movement */
+	int count;		/* how many aliens are left? */
+	int anim;		/* used for wiggling */
+	struct Bomb *headBomb;	/* linked list of bombs */
 } aliens;
 
 struct {
-	int x;			// x position
-	int move;		// buffered moves
-	int explodeTimer;	// timer used when gunner explodes
+	int x;			/* x position */
+	int move;		/* buffered moves */
+	int explodeTimer;	/* timer used when gunner explodes */
 	struct {
-		int x;		// x position
-		int y;		// y position
+		int x;		/* x position */
+		int y;		/* y position */
 	} missile;
-	char *shields;		// pointer to shield table
+	char *shields;		/* pointer to shield table */
 } gun;
 
 struct {
-	int x;			// x position
-	int pointsTimer;	// how long to leave the points on the screen
+	int x;			/* x position */
+	int pointsTimer;	/* how long to leave the points on the screen */
 } ma;
 
 
@@ -162,6 +162,12 @@ static void cleanup(int sig)
 	exit(0);
 }
 
+static void die(const char *p)
+{
+	write(2, p, strlen(p));
+	cleanup(0);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -173,14 +179,14 @@ int main(int argc, char **argv)
 	signal(SIGQUIT, cleanup);
 	signal(SIGTSTP, SIG_IGN);
 
-	// set up curses library
+	/* set up curses library */
 	if (initscr() == NULL) {
 	    fprintf(stderr,"TERM variable not set.\n");
 	    exit(0);
 	}
 	cbreak();
 	noecho();
-	curs_set(0);		// hide cursor
+	curs_set(0);		/* hide cursor */
 #ifdef USE_KEYS
 	keypad(stdscr, TRUE);
 #endif
@@ -249,7 +255,7 @@ int main(int argc, char **argv)
 		while(getch() != ERR);
 	}
 
-	return 0;		// not reached
+	return 0;		/* not reached */
 }
 
 void paintShelters(void)
@@ -280,9 +286,9 @@ void handleTimer(void)
 	int i;
 	struct Bomb *b;
 
-	// check which state the game is in
+	/* check which state the game is in */
 	if (game.state == STATE_INTRO) {
-		// intro anim
+		/* intro anim */
 		return;
 	} else if (game.state == STATE_WAIT) {
 		if (game.timer++ == 10) {
@@ -296,25 +302,26 @@ void handleTimer(void)
 			paintIntro();
 			refresh();
 		}
-		// game over anim
+		/* game over anim */
 		return;
 	} else if (game.state == STATE_EXPLODE) {
-		// explode anim
+		/* explode anim */
 		if (gun.explodeTimer++ % 4 == 0) {
 			paintGunner();
 		}
 		if (gun.explodeTimer == 40) {
 			if (game.lives-- == 0) {
-				// game over
+				/* game over */
 				game.state = STATE_GAMEOVER;
 				game.timer = 0;
 				mvprintw(LINES / 2, (COLS / 2) - 5, "GAME OVER");
 				refresh();
 				return;
 			} else {
-				// start next life
-				// if the aliens have reached the shields
-				// then move them back up to the top of the screen
+				/* start next life
+				 * if the aliens have reached the shields
+				 * then move them back up to the top of the screen
+				 */
 				int lastLine = aliens.y + (ALIEN_HEIGHT * aliens.emptyBottom) - 1;
 				int shieldTop = LINES - GUNNER_HEIGHT - SHELTER_HEIGHT - 1;
 				if (lastLine >= shieldTop)
@@ -322,8 +329,8 @@ void handleTimer(void)
 
 				game.timer = 0;
 				game.state = STATE_WAIT;
-				ma.x = 0;	// just in case she was there at the time
-				freeBombs();	// get rid of any bombs
+				ma.x = 0;	/* just in case she was there at the time */
+				freeBombs();	/* get rid of any bombs */
 				clear();
 				paintShelters();
 				refresh();
@@ -332,17 +339,17 @@ void handleTimer(void)
 			}
 		}
 	}
-	// otherwise handle game play...
+	/* otherwise handle game play... */
 	game.timer++;
 
 	if (game.timer == GUNNER_ENTRANCE && game.state == STATE_PLAY) {
 		paintGunner();
 	}
-	// decide if it's time to send on ma
+	/* decide if it's time to send on ma */
 	if (game.timer % MA_ENTRANCE == MA_ENTRANCE - 1 && aliens.y > 5) {
 		ma.x = COLS - ALIEN_WIDTH - 1;
 	}
-	// if ma is currently on, display
+	/* if ma is currently on, display */
 	if (ma.x > 0) {
 		int i1;
 
@@ -351,30 +358,30 @@ void handleTimer(void)
 			attron(COLOR_PAIR(2));
 #endif
 		if (ma.pointsTimer != 0) {
-			// ma has been shot and is now just showing points
+			/* ma has been shot and is now just showing points */
 			if (ma.pointsTimer++ == 20) {
 				mvprintw(2, ma.x, "%s", alienBlank);
 				ma.pointsTimer = 0;
 				ma.x = 0;
 			}
 		} else {
-			// ma is grooving across the top of the screen
+			/* ma is grooving across the top of the screen */
 			ma.x--;
 			for (i1 = 0; i1 < MA_HEIGHT; i1++)
 				mvprintw(2 + i1, ma.x, "%s ", alienMa[i1]);
 			refresh();
-			// if we have reach the edge then remove ma
+			/* if we have reach the edge then remove ma */
 			if (ma.x == 0) {
 				for (i1 = 0; i1 < MA_HEIGHT; i1++)
 					mvprintw(2 + i1, ma.x, "%s ", alienBlank);
 			}
 		}
 	}
-	// drop bombs
+	/* drop bombs */
 	if (game.timer > GUNNER_ENTRANCE) {
 		for (x = aliens.emptyLeft; x < aliens.emptyRight; x++) {
 			int y;
-			// find the first alien from the bottom
+			/* find the first alien from the bottom */
 			for (y = aliens.emptyBottom - 1; y >= 0; y--) {
 				if (aliens.table[(aliens.cols * y) + x] > ALIEN_EMPTY) {
 					/* Might be fun to make this grow by level.. */
@@ -386,7 +393,7 @@ void handleTimer(void)
 			}
 		}
 	}
-	// handle gunner movements
+	/* handle gunner movements */
 	if (game.state == STATE_PLAY && game.timer > GUNNER_ENTRANCE) {
 		if (gun.move < 0 && gun.x > GUNNER_WIDTH / 2) {
 			gun.move++;
@@ -401,21 +408,21 @@ void handleTimer(void)
 			refresh();
 		}
 	}
-	// handle alien movements
+	/* handle alien movements */
 	if (--aliens.paintWait <= 0) {
-		// time to repaint one row of aliens (speeds up as you shoot aliens)
-//		aliens.paintWait = (int) ((double) PAINT_WAIT * ((double) aliens.count / (double) (aliens.cols * aliens.rows)));;
+		/* time to repaint one row of aliens (speeds up as you shoot aliens) */
+/*		aliens.paintWait = (int) ((double) PAINT_WAIT * ((double) aliens.count / (double) (aliens.cols * aliens.rows)));; */
 		aliens.paintWait = (PAINT_WAIT * aliens.count) / (aliens.cols * aliens.rows);
 		aliens.paintRow--;
 		paintAlienRow(aliens.paintRow, 0);
 		refresh();
 		if (aliens.paintRow <= aliens.emptyTop) {
-			// time to move the block of aliens
-			aliens.paintRow = aliens.emptyBottom;	// reset counter
-			aliens.anim = (aliens.anim ? 0 : 1);	// wiggle
+			/* time to move the block of aliens */
+			aliens.paintRow = aliens.emptyBottom;	/* reset counter */
+			aliens.anim = (aliens.anim ? 0 : 1);	/* wiggle */
 			if (aliens.direction == -1) {
 				if (--aliens.x + (aliens.emptyLeft * ALIEN_WIDTH) == 0) {
-					// change direction, clear top line, shuffle down
+					/* change direction, clear top line, shuffle down */
 					aliens.direction = 1;
 					move(aliens.y, 0);
 					clrtoeol();
@@ -423,7 +430,7 @@ void handleTimer(void)
 				}
 			} else if (aliens.direction == 1) {
 				if (++aliens.x + (aliens.emptyRight * ALIEN_WIDTH) == COLS) {
-					// change direction, clear top line, shuffle down
+					/* change direction, clear top line, shuffle down */
 					aliens.direction = -1;
 					move(aliens.y, 0);
 					clrtoeol();
@@ -431,8 +438,8 @@ void handleTimer(void)
 				}
 			}
 			paintScore();
-/*
-            // see if the aliens have hit the bottom
+#if 0
+            /* see if the aliens have hit the bottom */
             if (game.state == STATE_PLAY
                     && aliens.y + (ALIEN_HEIGHT * 
                             (aliens.rows - aliens.emptyBottom)) 
@@ -440,30 +447,30 @@ void handleTimer(void)
                 game.state = STATE_EXPLODE;
                 gun.explodeTimer = 0;
             }
-*/
+#endif
 		}
 	}
 #ifdef USE_COLORS
-	// use white for missiles and bombs
+	/* use white for missiles and bombs */
 	if (has_colors())
 		attron(COLOR_PAIR(4));
 #endif
 
-	// handle bomb movements
+	/* handle bomb movements */
 	for (b = aliens.headBomb; b != NULL;) {
 		struct Bomb *next = b->next;
 		move(b->y, b->x);
 		addch(' ');
 		if (++(b->y) < LINES) {
 			if (gun.missile.y != 0 && abs(b->x - gun.missile.x) < 2 && abs(b->y - gun.missile.y) < 2) {
-				// collision with missile
+				/* collision with missile */
 				removeBomb(b);
 				move(gun.missile.y, gun.missile.x);
 				addch(' ');
 				gun.missile.y = 0;
 			} else if (game.state == STATE_PLAY && game.timer > GUNNER_ENTRANCE && b->y >= LINES - GUNNER_HEIGHT && b->x > (gun.x - (GUNNER_WIDTH / 2))
 				   && b->x < (gun.x + (GUNNER_WIDTH / 2))) {
-				// collision with gunner
+				/* collision with gunner */
 				removeBomb(b);
 #ifndef BULLET_PROOF
 				game.state = STATE_EXPLODE;
@@ -471,13 +478,13 @@ void handleTimer(void)
 #endif
 			} else if (b->y < LINES - 1 - GUNNER_HEIGHT && b->y >= LINES - 1 - GUNNER_HEIGHT - SHELTER_HEIGHT && gun.shields[((b->y - (LINES - 1 - GUNNER_HEIGHT - SHELTER_HEIGHT))
 																	  * game.screenCols) + b->x] != ' ') {
-				// collision with shield
+				/* collision with shield */
 				gun.shields[((b->y - (LINES - 1 - GUNNER_HEIGHT - SHELTER_HEIGHT))
 					     * game.screenCols) + b->x] = ' ';
 				mvaddch(b->y, b->x, ' ');
 				removeBomb(b);
 			} else {
-				// advance bomb
+				/* advance bomb */
 				move(b->y, b->x);
 				addch(bombAnim[b->anim++]);
 				if (b->anim == BOMB_ANIM_SIZE) {
@@ -491,7 +498,7 @@ void handleTimer(void)
 		b = next;
 	}
 
-	// handle missile movements
+	/* handle missile movements */
 	if (gun.missile.y != 0) {
 
 		for (i = 0; i < 2; i++) {
@@ -503,7 +510,7 @@ void handleTimer(void)
 			} else {
 				gun.missile.y = 0;
 			}
-			// test for collision with shield
+			/* test for collision with shield */
 			if (gun.missile.y < LINES - 1 - GUNNER_HEIGHT && gun.missile.y >= LINES - 1 - GUNNER_HEIGHT - SHELTER_HEIGHT) {
 				if (gun.shields[((gun.missile.y - (LINES - 1 - GUNNER_HEIGHT - SHELTER_HEIGHT))
 						 * game.screenCols) + gun.missile.x] != ' ') {
@@ -514,14 +521,14 @@ void handleTimer(void)
 					gun.missile.y = 0;
 				}
 			}
-			// test for collision with aliens
+			/* test for collision with aliens */
 			else if (gun.missile.x >= aliens.x && gun.missile.x < aliens.x + (ALIEN_WIDTH * aliens.cols)
 				 && gun.missile.y < aliens.y + ALIEN_HEIGHT * aliens.rows && gun.missile.y >= aliens.y) {
 				int alien;
 				int xd = gun.missile.x - aliens.x;
 				int yd = gun.missile.y - aliens.y;
 				if (xd % ALIEN_WIDTH != 0 && xd % ALIEN_WIDTH != ALIEN_WIDTH - 1) {
-					// it didn't sneak between two aliens
+					/* it didn't sneak between two aliens */
 					xd /= ALIEN_WIDTH;
 					yd /= ALIEN_HEIGHT;
 					alien = aliens.table[(yd * aliens.cols) + xd];
@@ -529,7 +536,7 @@ void handleTimer(void)
 						game.score += alien * 10;
 						paintExplodingAlien(yd, xd);
 						paintScore();
-						gun.missile.y = 0;	// no more missile
+						gun.missile.y = 0;	/* no more missile */
 						aliens.table[(yd * aliens.cols) + xd] = ALIEN_EXPLODE1;
 						if (--aliens.count == 0) {
 							resetAliens();
@@ -542,16 +549,16 @@ void handleTimer(void)
 					}
 				}
 			}
-			// test for collection with ma
+			/* test for collection with ma */
 			else if (ma.x != 0 && gun.missile.y <= 2 + MA_HEIGHT && gun.missile.x >= ma.x && gun.missile.x <= ma.x + ALIEN_WIDTH) {
-				// chose a 'random' number of points, either 50, 100 or 150
+				/* chose a 'random' number of points, either 50, 100 or 150 */
 				int points = ((time(0) % 3) + 1) * 50;
 				int i1;
 				game.score += points;
-				// remove ma
+				/* remove ma */
 				for (i1 = 0; i1 < MA_HEIGHT; i1++)
 					mvprintw(2 + i1, ma.x, "%s ", alienBlank);
-				// draw the number of points
+				/* draw the number of points */
 				mvprintw(2, ma.x, "  %d", points);
 				ma.pointsTimer = 1;
 				paintScore();
@@ -566,24 +573,24 @@ void handleTimer(void)
  */
 void moveAliensDown(void)
 {
-	// figure out which screen row the bottom alien is one
-	// and if it's over the sheilds then clear the line of
-	// the shields or at the bottom of the screen
+	/* figure out which screen row the bottom alien is one */
+	/* and if it's over the sheilds then clear the line of */
+	/* the shields or at the bottom of the screen */
 	int lastLine = ++aliens.y + (ALIEN_HEIGHT * aliens.emptyBottom) - 1;
 	int topShield = LINES - GUNNER_HEIGHT - SHELTER_HEIGHT - 1;
 	int gunnerTop = LINES - GUNNER_HEIGHT - 1;
 
 	if (lastLine >= topShield && lastLine < topShield + SHELTER_HEIGHT) {
-		// clear the shield line
+		/* clear the shield line */
 		int i = (lastLine - topShield) * game.screenCols;
 		int j;
 		for (j = 0; j < game.screenCols; j++) {
-			gun.shields[i + j] = ' ';	// DEBUG
+			gun.shields[i + j] = ' ';	/* DEBUG */
 		}
 		paintShelters();
 	}
 	if (lastLine == gunnerTop) {
-		// blow up gunner if not already blowing up
+		/* blow up gunner if not already blowing up */
 		if (game.state != STATE_EXPLODE) {
 			game.state = STATE_EXPLODE;
 			gun.explodeTimer = 0;
@@ -597,7 +604,7 @@ void moveAliensDown(void)
  */
 void trimAliens(void)
 {
-	// update empty line pointers
+	/* update empty line pointers */
 	int found = 0;
 	for (;;) {
 		int i;
@@ -669,8 +676,8 @@ void paintExplodingAlien(int y, int x)
 	int i;
 	for (i = 0; i < ALIEN_HEIGHT; i++) {
 		move((y * ALIEN_HEIGHT) + aliens.y + i, (x * ALIEN_WIDTH) + aliens.x + (y > aliens.paintRow ? aliens.direction : 0));
-		// adjustment because of
-		// alien drawing technique
+		/* adjustment because of */
+		/* alien drawing technique */
 		printw("%s", alienExplode[i]);
 	}
 }
@@ -709,15 +716,15 @@ void paintAlienRow(int row, int clean)
 		move((row * ALIEN_HEIGHT) + aliens.y - 1, 0);
 		deleteln();
 	}
-	// draw the alien space ships
+	/* draw the alien space ships */
 #ifdef USE_COLORS
 	if (has_colors())
 		attron(COLOR_PAIR(4));
 #endif
-	// this is a slight kludge - occasionally bits of explosion were left
-	// behind when the aliens were moving and exploding at the same time, so:
-	// if we are not right against the left or right of the screen,
-	// we delete the column immediately before and after each line
+	/* this is a slight kludge - occasionally bits of explosion were left */
+	/* behind when the aliens were moving and exploding at the same time, so: */
+	/* if we are not right against the left or right of the screen, */
+	/* we delete the column immediately before and after each line */
 	if (aliens.x > 0) {
 		for (i = 0; i < ALIEN_HEIGHT; i++) {
 			move((row * ALIEN_HEIGHT) + aliens.y + i, (aliens.emptyLeft * ALIEN_WIDTH) + aliens.x - 1);
@@ -730,7 +737,7 @@ void paintAlienRow(int row, int clean)
 			addch(' ');
 		}
 	}
-	// draw the aliens
+	/* draw the aliens */
 	for (x = aliens.emptyLeft; x < aliens.emptyRight; x++) {
 		int line = ALIEN_HEIGHT * aliens.anim;
 		int alien = aliens.table[(row * aliens.cols) + x];
@@ -747,16 +754,16 @@ void paintAlienRow(int row, int clean)
 				printw("%s", alien30[line + i]);
 				break;
 			case ALIEN_EXPLODE1:
-				//printw("%s", alienExplode[i]);
-				// do nothing, to leave the explosion on the screen
+				/*printw("%s", alienExplode[i]); */
+				/* do nothing, to leave the explosion on the screen */
 				break;
 			case ALIEN_EXPLODE2:
 			case ALIEN_EMPTY:
-				// wipe out
+				/* wipe out */
 				printw("%s", alienBlank);
 			}
 		}
-		// if the alien is exploding then advance its explosion state
+		/* if the alien is exploding then advance its explosion state */
 		if (alien == ALIEN_EXPLODE1) {
 			aliens.table[(row * aliens.cols) + x] = ALIEN_EXPLODE2;
 		} else if (alien == ALIEN_EXPLODE2) {
@@ -769,7 +776,7 @@ void paintAlienRow(int row, int clean)
 void initGame(void)
 {
 
-	// how many aliens?
+	/* how many aliens? */
 	if (COLS < 80 || LINES < 20) {
 		fprintf(stderr, "Terminal size too small to play Ascii Invaders.\n");
 		cleanup(0);
@@ -835,16 +842,16 @@ void resetAliens(void)
 {
 	int x, y = 0;
 
-	// we make one row of alien30s...
+	/* we make one row of alien30s... */
 	for (x = 0; x < aliens.cols; x++)
 		aliens.table[x] = ALIEN30;
 
-	// next we fill half of the remaining rows with alien20s...
+	/* next we fill half of the remaining rows with alien20s... */
 	while (++y < (aliens.rows / 2))
 		for (x = 0; x < aliens.cols; x++)
 			aliens.table[(y * aliens.cols) + x] = ALIEN20;
 
-	// next we stick in some alien10s...
+	/* next we stick in some alien10s.. */
 	do
 		for (x = 0; x < aliens.cols; x++)
 			aliens.table[(y * aliens.cols) + x] = ALIEN10;
@@ -894,9 +901,8 @@ void addBomb(int x, int y)
 {
 	struct Bomb *b;
 	b = malloc(sizeof(struct Bomb));
-	if (b == NULL) {
-		// die("Out of memory");
-	}
+	if (b == NULL)
+		die("Out of memory");
 	b->x = x;
 	b->y = y;
 	b->anim = 0;
@@ -914,17 +920,17 @@ int removeBomb(struct Bomb *b)
 	struct Bomb *this;
 	struct Bomb *last;
 
-	// see if it's illegal to search
+	/* see if it's illegal to search */
 	if (b == NULL || aliens.headBomb == NULL)
 		return 0;
 
-	// see if it's the first one
+	/* see if it's the first one */
 	if (aliens.headBomb == b) {
 		aliens.headBomb = b->next;
 		free(b);
 		return 1;
 	}
-	// no, look for it in the list
+	/* no, look for it in the list */
 	for (this = aliens.headBomb, last = NULL; this != NULL; last = this, this = this->next) {
 
 		if (this == b) {
@@ -934,7 +940,7 @@ int removeBomb(struct Bomb *b)
 		}
 	}
 
-	// couldn't find it
+	/* couldn't find it */
 	return 0;
 }
 

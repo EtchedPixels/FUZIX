@@ -29,18 +29,18 @@ struct Bomb {
     struct Bomb *next;
 };
 
-/* To make this compile under Darwin/BSD I have to comment these, until
-   I figure out how to fix this problem (may involve not using apple's curses
-   implementation). */
-//#define USE_COLORS 1 
-//#define USE_KEYS 1
+/* Not supported in Fuzix curses */
+#if 0
+#define USE_COLORS 1 
+#define USE_KEYS 1
+#endif
 
-//#define BULLET_PROOF 1  // debug
+/*#define BULLET_PROOF 1 *//* debug */
 
-#define BOMB_ANIM_SIZE 4 // "frames" in bomb anim
+#define BOMB_ANIM_SIZE 4 /* "frames" in bomb anim */
 
-#define FPS 10          // frames per second
-#define PAINT_WAIT 2    // how many frames between row repaints
+#define FPS 10          /* frames per second */
+#define PAINT_WAIT 2    /* how many frames between row repaints */
 
 #define ALIEN30 3
 #define ALIEN20 2
@@ -58,8 +58,8 @@ struct Bomb {
 #define MA_HEIGHT 2
 #define MA_WIDTH 6
 
-#define GUNNER_ENTRANCE 40 // how many frames before gunner appears
-#define MA_ENTRANCE 400 // how many frames before MA comes on the screen
+#define GUNNER_ENTRANCE 40 /* how many frames before gunner appears */
+#define MA_ENTRANCE 400 /* how many frames before MA comes on the screen */
 
 #define STATE_INTRO 1
 #define STATE_PLAY 2
