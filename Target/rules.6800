@@ -1,5 +1,5 @@
-CC = cc68
-AS = as68
+CC = fcc -m6800
+AS = fcc -m6800
 LINKER = $(FUZIX_ROOT)/Library/link/ld6800
 CFLAGS = -X -m6800 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/6800
 LINKER_OPT =

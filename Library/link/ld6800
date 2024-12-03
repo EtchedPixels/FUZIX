@@ -32,4 +32,4 @@ done
 set -e
 #
 # With
-cc68 -m6800 -tfuzix -s $ARGS -o "$TARGET" -M
+fcc -s -m6800 $ARGS -o "$TARGET" -M

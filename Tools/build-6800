@@ -1,12 +1,7 @@
 #!/bin/sh
 
-X=`which as68`
+X=`which fcc`
 if [ "$X" = "" ]; then
-	(cd ../Applications/assembler; make -f Cross.6800)
-fi
-
-X=`which cc68`
-if [ "$X" = "" ]; then
-	echo "CC68 is required: see https://github.com/EtchedPixels/CC6303/"
+	echo "fcc is required: see https://github.com/EtchedPixels/FuzixCompilerKit/"
 	exit 1
 fi

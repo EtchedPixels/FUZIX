@@ -195,6 +195,14 @@ ifeq ($(USERCPU),6303)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
 	install -m 0644 ../Kernel/include/drivewire.h include/sys/
 endif
+ifeq ($(USERCPU),6800)
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+endif
+ifeq ($(USERCPU),6803)
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+endif
 ifeq ($(USERCPU),ns32k)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
 endif
