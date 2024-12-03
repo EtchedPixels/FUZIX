@@ -7,6 +7,7 @@
 #include <malloc.h>
 #endif
 #include <unistd.h>
+#include <stdint.h>
 #include <fcntl.h>
 #include "cc.h"
 

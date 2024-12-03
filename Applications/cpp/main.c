@@ -10,6 +10,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <stdint.h>
 #include "cc.h"
 
 #define MAXINCPATH	5
@@ -25,6 +26,15 @@ void cmsg(char *mtype, char *str);
 char *token_txn(int);
 void pr_indent(int);
 void hash_line(void);
+
+#if defined(__linux__)
+char *_ltoa(long v)
+{
+	static char buf[32];
+	sprintf(buf, "%ld", v);
+	return buf; 
+}
+#endif
 
 char *include_paths[MAXINCPATH];
 

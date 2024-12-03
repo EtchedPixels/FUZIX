@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "cc.h"
 
 #define CPP_DEBUG 0		/* LOTS of junk to stderr. */
@@ -220,7 +221,7 @@ static int get_onetok(int keep)
 		case 0:
 			if ((ch >= 'A' && ch <= 'Z')
 			    || (ch >= 'a' && ch <= 'z')
-			    || ch == '_' || ch == '$')
+			    || ch == '_' || ch == '$' || ch >= 0x80)
 				state = 1;
 			else if (ch == '0')
 				state = 2;
@@ -233,7 +234,7 @@ static int get_onetok(int keep)
 			if ((ch >= '0' && ch <= '9')
 			    || (ch >= 'A' && ch <= 'Z')
 			    || (ch >= 'a' && ch <= 'z')
-			    || ch == '_' || ch == '$')
+			    || ch == '_' || ch == '$' || ch >= 0x80)
 				break;
 			else
 				goto break_break;
