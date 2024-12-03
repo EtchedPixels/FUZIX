@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
-#include "malloc.h"
+#include "libmalloc.h"
 
 struct memh __mroot = { &__mroot, 0 };
 

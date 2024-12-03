@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
-#include "malloc.h"
+#include "libmalloc.h"
 
 /*
  * We cannot just free/malloc because there is a pathalogical case when we free
