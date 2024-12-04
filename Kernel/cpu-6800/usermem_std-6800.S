@@ -16,7 +16,7 @@ __uputc:
 	jsr map_proc_always
 	stab 0,x
 	jsr map_kernel
-	jmp ret4
+	jmp __cleanup4
 
 __uputw:
 	ldaa 4,x
@@ -27,7 +27,7 @@ __uputw:
 	staa 0,x
 	stab 1,x
 	jsr map_kernel
-	jmp ret4
+	jmp __cleanup4
 
 __ugetc:
 	tsx
@@ -36,7 +36,7 @@ __ugetc:
 	ldab 0,x
 	clra
 	jsr map_kernel
-	jmp ret2
+	jmp __cleanup2
 
 __ugetw:
 	tsx
@@ -45,7 +45,7 @@ __ugetw:
 	ldaa 0,x
 	ldab 1,x
 	jsr map_kernel
-	jmp ret2
+	jmp __cleanup2
 
 __uzero:
 	tsx
@@ -69,7 +69,7 @@ endwipe:
 	bsr	uzerolp
 enduz:
 	jsr map_kernel
-	jmp ret4
+	jmp __cleanup4
 
 	
 uzerolp:
@@ -110,7 +110,7 @@ ugetl:
 	bne ugetl
 	clrb
 	clra
-	jmp ret6
+	jmp __cleanup6
 
 __uput:
 	; This one is harder as we've got to juggle two pointers
@@ -142,7 +142,7 @@ uputl:
 	bne uputl
 	clrb
 	clra
-	jmp ret6
+	jmp __cleanup6
 
 	.zp
 

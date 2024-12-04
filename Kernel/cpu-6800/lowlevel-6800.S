@@ -43,13 +43,13 @@ _irqrestore:
 	ldaa	2,x 
 			; D holds the return from di where A is the cc
 	tap		; we trash overflow and carry but they are assumed
-	jmp ret1
+	jmp	__cleanup1
 
 _swab:
 	tsx
 	ldab	2,x
 	ldaa	3,x
-	jmp ret2
+	jmp	__cleanup2
 
 	.common
 
@@ -294,24 +294,40 @@ interrupt_handler:
 	psha
 	ldaa @tmp2+1
 	psha
-	ldaa @sreg
+	ldaa @hireg
 	psha
-	ldaa @sreg+1
+	ldaa @hireg+1
 	psha
-	ldaa @fp
+	ldaa @tmp3
 	psha
-	ldaa @fp+1
+	ldaa @tmp3+1
+	psha
+	ldaa @tmp4
+	psha
+	ldaa @tmp4+1
+	psha
+	ldaa @tmp5
+	psha
+	ldaa @tmp5+1
 	psha
 	jsr _plt_interrupt
 	; Restore the C direct page
 	pula
-	staa @fp+1
+	staa @tmp5+1
 	pula
-	staa @fp
+	staa @tmp5
 	pula
-	staa @sreg+1
+	staa @tmp4+1
 	pula
-	staa @sreg
+	staa @tmp4
+	pula
+	staa @tmp3+1
+	pula
+	staa @tmp3
+	pula
+	staa @hireg+1
+	pula
+	staa @hireg
 	pula
 	staa @tmp2+1
 	pula
@@ -466,3 +482,122 @@ _sys_stubs:
 	nop
 	nop
 	nop
+
+;
+;	Support routines
+;
+
+
+	.code
+	.export _strlen
+
+	.setcpu 6800
+
+_strlen:
+	tsx
+	ldx 2,x
+	clra
+	clrb
+cl:	tst ,x
+	beq to_rts
+	inx
+	addb #1
+	adca #0
+	bra cl
+to_rts:
+	jmp __cleanup2
+
+
+	.export _memset
+
+	.code
+
+_memset:
+	tsx
+	ldaa	4,x
+	ldab	5,x
+	stab	@tmp		; destination
+	ldaa	2,x		; length
+	ldab	3,x
+	ldx	6,x		; destination
+	bsr	snextblock
+	tsx
+	ldaa	7,x
+	ldab	8,x
+	jmp	__cleanup6
+
+snextblock:
+	tsta
+	beq	tailset
+	; Set 256 bytes
+	pshb
+	psha
+	clrb
+	bsr	tailset
+	pula
+	pulb
+	deca
+	bra	snextblock
+
+tailset:
+	ldaa	@tmp
+clearloop:
+	staa	,x
+	inx
+	decb
+	bne	clearloop
+	rts
+
+;
+;	There isn't a nice way to do this on 680x/630x.
+;
+;
+	.export _memcpy
+
+	.setcpu 6800
+	.code
+
+_memcpy:
+	tsx
+	ldaa	6,x
+	ldab	7,x
+	staa	@tmp		; destination
+	stab	@tmp+1
+	ldaa	2,x		; length
+	oraa	3,x
+	beq	nocopy
+	ldaa	2,x
+	ldab	3,x
+	ldx	4,x		; src
+	bsr	nextblock
+	tsx
+nocopy:
+	ldaa	6,x
+	ldab	7,x
+	jmp	__cleanup6
+
+nextblock:
+	tsta
+	beq	tailcopy
+	; Copy 256 bytes repeatedly until we get to the leftovers
+	pshb
+	psha
+	clrb
+	bsr	tailcopy
+	pula
+	pulb
+	deca
+	bra	nextblock
+
+tailcopy:
+	ldaa	,x
+	inx
+	stx	@tmp2
+	ldx	@tmp
+	staa	,x
+	inx
+	stx	@tmp
+	ldx	@tmp2
+	decb
+	bne	tailcopy
+	rts
