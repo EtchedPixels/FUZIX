@@ -170,6 +170,7 @@ _vdp_load_font:
 	    ld bc,(_vdpport)
 	    ld de,#0x7C00
 	    out (c),e			; set write and font area
+	    VDP_DELAY3
 	    out (c),d
 	    ld hl,#_fontdata_6x8
 	    ld b,e
@@ -202,18 +203,22 @@ _vdp_restore_font:
 	    in a,(c)
 fontnext:
 	    out (c),e
+	    VDP_DELAY3
 	    out (c),d
 	    VDP_DELAY2
 	    dec c
 	    in a,(c)
 	    inc c
+	    VDP_DELAY3		; shouldn't need a normal delay here
 	    out (c),e
+	    VDP_DELAY3
 	    out (c),h
 	    dec c
 	    out (c),a
 	    VDP_DELAY
 	    inc c
 	    out (c),e
+	    VDP_DELAY3
 	    out (c),l
 	    cpl
 	    dec c
@@ -234,6 +239,7 @@ _vdp_wipe_consoles:
 	    ld b,#0
 	    ld a,#0x40
 	    out (c),b			; 0x0000 for writing
+ 	    VDP_DELAY3
 	    out (c),a
 	    dec c
 	    ld a,#32
@@ -251,6 +257,7 @@ _vdp_setcolour:
 	    ld b,#0
 	    ld a,#0x60			; 0x2000 in the VDP, for write
 	    out (c),b
+	    VDP_DELAY3
 	    out (c),a
 	    dec c
 	    ld b,#32
@@ -270,6 +277,7 @@ _vdp_set:
 	    ex de, hl
 vdpout:	    ld bc, (_vdpport)
 	    out (c), e			; Write the data
+	    VDP_DELAY3
 	    out (c), d			; and then the register | 0x80
 	    ret
 
@@ -335,6 +343,7 @@ plotit:
 plotit2:
 	    ld bc, (_vdpport)
 	    out (c), l			; address
+	    VDP_DELAY3
 	    out (c), h			; address | 0x40
 	    dec c
 	    out (c), a			; character
@@ -380,6 +389,7 @@ upline:
 	    ld bc, (_vdpport)	; vdpport + 1 always holds #80
 	    ld hl, #scrollbuf
 	    out (c), e		; our position
+	    VDP_DELAY3
 	    out (c), d
 	    dec c
 down_0:
@@ -390,8 +400,8 @@ down_0:
 	    ld hl, (_scrolld_s1); go down one line and into write mode
 	    add hl, de		; relative to our position
 	    out (c), l
+	    VDP_DELAY3
 	    out (c), h
-	; FIME - from vdpport - and into other copies
 	    ld b, #40
 	    ld hl, #scrollbuf
 	    dec c
@@ -430,6 +440,7 @@ downline:   push bc
 	    ld bc, (_vdpport)
 	    ld hl, #scrollbuf
 	    out (c), e
+	    VDP_DELAY3
 	    out (c), d
 	    dec c
 up_0:
@@ -442,6 +453,7 @@ up_0:
 				; nybble)
 	    add hl, de
 	    out (c), l
+	    VDP_DELAY3
 	    out (c), h
 	    dec c
 	    ld hl, #scrollbuf
@@ -479,6 +491,7 @@ clear_lines:
 	    ld e, c
 	    ld bc, (_vdpport)
 	    out (c), l
+	    VDP_DELAY3
 	    out (c), h
 				; Safe on MSX 2 to loop the data with IRQ on
 				; but *not* on MSX 1
@@ -516,6 +529,7 @@ clear_across:
 	    ld a, c
 	    ld bc, (_vdpport)
 	    out (c), l
+	    VDP_DELAY3
 	    out (c), h
 	    ld b, a
             ld a, #' '
@@ -550,6 +564,7 @@ cursor_on:
 	    ld a, c
 	    ld bc, (_vdpport)
 	    out (c), l			; address
+	    VDP_DELAY3
 	    out (c), h			; address
 	    dec c
 	    VDP_DELAY2
@@ -627,6 +642,7 @@ _vdp_rop:
 	    ld d, #0
 	    ld bc, (_vdpport)
 	    out (c), l
+	    VDP_DELAY3
 	    out (c), h		; Set starting pointer
 	    exx
 	    ld l, (ix)		; User pointer
@@ -648,6 +664,7 @@ ropc:
 	    cp h		; just 3F
 	    jr c, bounds
 	    out (c), l		; next line
+	    VDP_DELAY3
 	    out (c), h
 	    exx
 	    dec e
@@ -675,6 +692,7 @@ _vdp_wop:
 	    ld e, 6(ix)		; Stride
 	    ld d, #0
 	    out (c),l
+	    VDP_DELAY3
 	    out (c),h		; Set starting pointer
 	    exx
 	    ld l,(ix)		; User pointer

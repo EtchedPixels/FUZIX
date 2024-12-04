@@ -24,7 +24,7 @@ VDP_IRQ	     .equ	0	; leave the vdp irq off
 VDP_ROP      .equ	1
 
 ;
-;	On an MSX at 4Mhz our loop worst case is 26 clocks so for
+;	On an MTX at 4Mhz our loop worst case is 26 clocks so for
 ;	graphics one we need a nop
 ;
 .macro VDP_DELAY
@@ -32,6 +32,8 @@ VDP_ROP      .equ	1
 .endm
 .macro VDP_DELAY2
 	    nop
+.endm
+.macro VDP_DELAY2
 .endm
 
 	    .area _COMMONMEM

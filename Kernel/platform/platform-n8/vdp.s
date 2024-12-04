@@ -44,6 +44,10 @@ VDP_ROP		.equ	1
 		call twiddle_thumbs
 .endm
 
+; This is covered by the I/O wait states
+.macro VDP_DELAY3
+.endm
+
 twiddle_thumbs:			; Burn 125 clocks including the call return
 		; We spend 27 getting here and going back
 		ex (sp),ix	; 19

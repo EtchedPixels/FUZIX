@@ -27,23 +27,24 @@ VDP_ROP		.equ	1
 ;	We need 2us between the last control write and a data read. We might
 ;	be running at 10MHz or faster so use long delays
 ;
-;
-;	These are 38 cycles a pair so 72 cycles all in. That should be
-;	good for 10MHz and a fair bit more. We could tune the delays down
-;	a bit if we were sure nobody went over 10MHz.
+;	These will only work on the TMS9918A text mode but fail on the
+;	later chips. There is no 9938/58 for the 2063 however
 ;
 .macro VDP_DELAY
-	ex (sp),hl
-	ex (sp),hl
-	ex (sp),hl
-	ex (sp),hl
+	nop
+	nop
+	nop
 .endm
 
 .macro VDP_DELAY2
-	ex (sp),hl
-	ex (sp),hl
-	ex (sp),hl
-	ex (sp),hl
+	nop
+	nop
+	nop
+.endm
+
+; The 2063 doesn't waitstate the I/O so back to back outs go funny
+.macro VDP_DELAY3
+	nop
 .endm
 
 	    .include "../../dev/vdp1.s"
