@@ -1,5 +1,5 @@
 ;
-;	Setjmp is nice and simple on the 6803/6303. X is scratch, D is
+;	Setjmp is nice and simple on the 6800. X is scratch, D is
 ;	return so only the program counter and S matter
 ;
 	.export __setjmp
@@ -15,4 +15,4 @@ __setjmp:
 	staa	3,x
 	clra
 	clrb
-	rts
+	jmp	__popret2	; clear the argument

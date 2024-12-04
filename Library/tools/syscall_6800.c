@@ -36,7 +36,7 @@ static void write_call(int n)
   fprintf(fp, "noerror:\n");
   /* Non varargs functions do their own tail clean up */
   if (syscall_args[n])
-    fprintf(fp, "\tjmp ret%d\n", syscall_args[n] * 2);
+    fprintf(fp, "\tjmp __popret%d\n", syscall_args[n] * 2);
   else
     fprintf(fp, "\trts\n");
   fclose(fp);

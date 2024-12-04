@@ -70,6 +70,12 @@
 	extern int setjmp(jmp_buf __env);
 	__attribute__((__noreturn__)) void longjmp (jmp_buf __env, int __val);
 
+#elif defined(__6800__)
+
+	typedef char jmp_buf[4];
+	extern int _setjmp(jmp_buf __env);
+	#define setjmp(x) _setjmp(x)
+
 #elif defined(mc68hc11)
 
 	/* Quite large due to the dp fake registers */

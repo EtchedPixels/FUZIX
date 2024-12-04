@@ -47,8 +47,6 @@ start:
 	stab	@zero+1
 	incb
 	stab	@one+1
-	ldab	#0x7E
-	stab	@jmptmp
 	tsx
 	inx
 	inx
