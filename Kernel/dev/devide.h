@@ -79,10 +79,10 @@ void devide_writeb(uint_fast8_t regaddr, uint_fast8_t value);
 #define IDE_STATUS_BUSY         0x80
 #define IDE_STATUS_READY        0x40
 #define IDE_STATUS_DEVFAULT     0x20
-#define IDE_STATUS_SEEKCOMPLETE 0x10 // not important
+#define IDE_STATUS_SEEKCOMPLETE 0x10 /* not important */
 #define IDE_STATUS_DATAREQUEST  0x08
-#define IDE_STATUS_CORRECTED    0x04 // not important
-#define IDE_STATUS_INDEX        0x02 // not important
+#define IDE_STATUS_CORRECTED    0x04 /* not important */
+#define IDE_STATUS_INDEX        0x02 /* not important */
 #define IDE_STATUS_ERROR        0x01
 
 /* IDE command codes */

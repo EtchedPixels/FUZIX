@@ -107,12 +107,12 @@ static void ide_setup_block(uint_fast8_t drive)
 #if defined(__SDCC_z80) || defined(__SDCC_z180) || defined(__SDCC_gbz80) || defined(__SDCC_r2k) || defined(__SDCC_r3k)
     /* sdcc sadly unable to figure this out for itself yet */
     uint8_t *p  = ((uint8_t *)&blk_op.lba)+3;
-    devide_writeb(ide_reg_lba_3, (*(p--) & 0x0F) | ((drive & 1) ? 0xF0 : 0xE0)); // select drive, start loading LBA
+    devide_writeb(ide_reg_lba_3, (*(p--) & 0x0F) | ((drive & 1) ? 0xF0 : 0xE0)); /* select drive, start loading LBA */
     devide_writeb(ide_reg_lba_2, *(p--));
     devide_writeb(ide_reg_lba_1, *(p--));
     devide_writeb(ide_reg_lba_0, *p);
 #else
-    devide_writeb(ide_reg_lba_3, ((blk_op.lba >> 24) & 0xF) | ((drive & 1) ? 0xF0 : 0xE0)); // select drive, start loading LBA
+    devide_writeb(ide_reg_lba_3, ((blk_op.lba >> 24) & 0xF) | ((drive & 1) ? 0xF0 : 0xE0)); /* select drive, start loading LBA */
     devide_writeb(ide_reg_lba_2, (blk_op.lba >> 16));
     devide_writeb(ide_reg_lba_1, (blk_op.lba >> 8));
     devide_writeb(ide_reg_lba_0, blk_op.lba);
@@ -166,7 +166,7 @@ int devide_flush_cache(void)
     /* check drive has a cache and was written to since the last flush */
     if((blk_op.blkdev->driver_data & (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY))
 		                 == (FLAG_WRITE_CACHE | FLAG_CACHE_DIRTY)){
-	devide_writeb(ide_reg_lba_3, (((drive & 1) == 0) ? 0xE0 : 0xF0)); // select drive
+	devide_writeb(ide_reg_lba_3, (((drive & 1) == 0) ? 0xE0 : 0xF0)); /* select drive */
 
 	if (!devide_wait(IDE_STATUS_READY))
 	    goto fail;

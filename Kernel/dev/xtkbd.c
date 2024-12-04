@@ -196,8 +196,8 @@ void xtkbd_keycode(uint_fast8_t code)
 #endif
 
 
-//    kprintf("Code %d Key %d KG %d IT %d\n",
-//        code, key, keyboard_grab, inputtty);
+/*    kprintf("Code %d Key %d KG %d IT %d\n",  *
+ *        code, key, keyboard_grab, inputtty); */
 
 	if (shift_down)
 		m = KEYPRESS_SHIFT;

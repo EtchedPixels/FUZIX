@@ -215,8 +215,8 @@ static void keycode(uint_fast8_t code, uint_fast8_t up, uint_fast8_t shifted)
 #endif
 
 
-//    kprintf("Code %d Key %d KG %d IT %d\n",
-//        code, key, keyboard_grab, inputtty);
+/*    kprintf("Code %d Key %d KG %d IT %d\n",  *
+ *        code, key, keyboard_grab, inputtty); */
 
     /* FIXME: need to handle keypad / (0xCA) which is elsewhere
        - review - not all bits shiftable ? */

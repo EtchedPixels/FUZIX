@@ -143,10 +143,11 @@ static int devfd_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t is_raw)
     blocks = udata.u_nblock;
     lba = udata.u_block;
 
-    // kprintf("[%s %d @ %x : %d:%x]\n", is_read ? "read" : "write",
-    //     blocks, lba, is_raw, udata.u_dptr);
-    // if (!is_read)
-    //     return blocks << BLKSHIFT;
+    /* kprintf("[%s %d @ %x : %d:%x]\n", is_read ? "read" : "write",
+          blocks, lba, is_raw, udata.u_dptr);
+       if (!is_read)
+          return blocks << BLKSHIFT;
+    */
 
     fd_select(minor);
     fd765_is_user = is_raw;

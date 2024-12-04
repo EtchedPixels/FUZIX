@@ -98,7 +98,7 @@ uint16_t ps2_put(struct ps2op *p, uint8_t c)
 
     /* Figure out wtf the asm is doing here ?? */
     while(p->timeout--) {
-        if (!(in(p->port) & p->clockin))	// FIXME clock or data ?
+        if (!(in(p->port) & p->clockin))	/* FIXME clock or data ? */
             return ps2_get(p);
     }
     return 0xFFFF;

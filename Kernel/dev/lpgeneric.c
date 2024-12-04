@@ -57,7 +57,7 @@ static uint8_t iopoll(void)
 int lpr_write(uint8_t minor, uint8_t rawflag, uint8_t flag)
 {
     char *p = udata.u_base;
-    minor; rawflag; flag; // shut up compiler
+    minor; rawflag; flag; /* shut up compiler */
 
     while(udata.u_done < udata.u_count) {
         while (LP_IS_BUSY) {

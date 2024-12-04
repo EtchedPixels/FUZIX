@@ -18,7 +18,7 @@ uint8_t rp5c01_rtc_secs(void)
         rv = sl + rp5c01_read_reg(REG_10_SEC_CTR) * 10;
     } while (sl != rp5c01_read_reg(REG_1_SEC_CTR));
 
-    //rp5c01_write_reg(MODE_SEL, TIMER_ENABLE | MODE01);
+    /* rp5c01_write_reg(MODE_SEL, TIMER_ENABLE | MODE01); */
 
     return rv;
 }

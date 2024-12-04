@@ -44,27 +44,27 @@ static uint8_t ch375_rpoll(void)
     ch375_wcmd(0x22);
     nap20();
     r = ch375_rdata();
-//    kprintf("ch375_rpoll %2x", r);
+/*    kprintf("ch375_rpoll %2x", r); 8/;
     return r;
 }
 
 static uint8_t ch375_cmd_r(uint8_t cmd)
 {
     ch375_wcmd(cmd);
-//    kprintf("cmd_r %2x\n", cmd);
+/*    kprintf("cmd_r %2x\n", cmd); */
     return ch375_rpoll();
 }
 
 static void ch375_cmd2(uint8_t cmd, uint8_t data)
 {
-//    kprintf("cmd2: %2x %2x\n", cmd, data);
+/*    kprintf("cmd2: %2x %2x\n", cmd, data); */
     ch375_wcmd(cmd);
     ch375_wdata(data);
 }
 
 static uint8_t ch375_cmd2_r(uint8_t cmd, uint8_t data)
 {
-//    kprintf("cmd2_r: %2x %2x\n", cmd, data);
+/*    kprintf("cmd2_r: %2x %2x\n", cmd, data); */
     ch375_wcmd(cmd);
     ch375_wdata(data);
     return ch375_rpoll();
@@ -92,7 +92,7 @@ static int ch375_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dpt
             ch375_wcmd(ch_rd);
             r = ch375_rdata();	/* Throw byte count away - always 64 */
             if (r != 64) {
-//                kprintf("weird rd len %d\n", r);
+/*                kprintf("weird rd len %d\n", r); */
                 return 0;
             }
             ch375_rblock(dptr);

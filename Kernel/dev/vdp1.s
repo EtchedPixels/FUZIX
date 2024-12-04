@@ -383,8 +383,8 @@ upline:
 	    out (c), d
 	    dec c
 down_0:
+	    VDP_DELAY2
 	    ini
-	    VDP_DELAY
 	    jp nz, down_0
 	    inc c
 	    ld hl, (_scrolld_s1); go down one line and into write mode
@@ -433,8 +433,8 @@ downline:   push bc
 	    out (c), d
 	    dec c
 up_0:
+	    VDP_DELAY2
 	    ini
-	    VDP_DELAY
 	    jp nz, up_0
 	    inc c
 	    ld hl, (_scrollu_mov); up w bytes in the low 12 bits, add 0x40

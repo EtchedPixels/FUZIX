@@ -116,7 +116,7 @@ void mbr_parse(uint_fast8_t letter)
 	    switch(t) {
 #ifdef CONFIG_GPT
 		case MBR_GPT_PROTECTED_TYPE:
-		    // TODO assert next is zero (unless hybrid...)
+		    /* TODO assert next is zero (unless hybrid...) */
 		    parse_gpt((uint8_t *) br, i);
 		    goto out;
 #endif

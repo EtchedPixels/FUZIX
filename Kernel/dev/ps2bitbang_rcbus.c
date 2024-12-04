@@ -152,15 +152,13 @@ static struct ps2op mouseops = {
 uint16_t ps2kbd_get(void)
 {
     uint16_t v = ps2_get(&kbdops);
-    kprintf("KBD G %x\n", v);
-    return v;//ps2_get(&kbdops);
+    return v;/* ps2_get(&kbdops); */
 }
 
 uint16_t ps2kbd_put(uint_fast8_t ch)
 {
     uint16_t v = ps2_put(&kbdops, ch);
-    kprintf("KBD P %x -> %x\n", ch, v);
-    return v; //ps2_put(&kbdops, ch);
+    return v; /8 ps2_put(&kbdops, ch); 8/
 }
 
 uint16_t ps2mouse_get(void)
