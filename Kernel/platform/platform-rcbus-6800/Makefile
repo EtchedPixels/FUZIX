@@ -52,7 +52,7 @@ image: loader
 	../../syscall_proc.o ../../syscall_other.o ../../mm.o ../../swap.o ../../mm/bank16kfc.o \
 	../../tty.o ../../devsys.o ../../syscall_fs2.o ../../syscall_fs3.o \
 	../../syscall_exec16.o ../../syscall_exec.o ../../blk512.o \
-	../../usermem.o ../../cpu-6800/usermem_std-6800.o devtty.o /opt/cc68/lib/lib6800.a
+	../../usermem.o ../../cpu-6800/usermem_std-6800.o devtty.o /opt/fcc/lib/6800/lib6800.a
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	dd if=../../fuzix.bin of=fuzix.img bs=256 skip=1
 

@@ -15,8 +15,6 @@ entry:
 		stab @zero+1
 		incb
 		stab @one+1		; set up '@one' for the compiler
-		ldab #0x7E
-		stab @jmptmp
 		lds #kstack_top		; C stack
 		ldx #_udata
 wipeud:
