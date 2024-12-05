@@ -19,6 +19,10 @@ for further file storage and swap.
 
 ## Building
 
+The kernel needs to know the boot device, therefore, depending on your setup,
+you will need to run one of the following. If your root device is the flash,
+you must edit Kernel/platform/platform-esp8266/config.h.
+Otherwise, if your root device is the SD card, the default is fine for you.
 ```
 make TARGET=esp866 kernel diskimage
 ```
@@ -63,13 +67,13 @@ Remember to also connect the SD card's GND to any ESP8266 GND pin and Vcc to
 
 The console is UART0, and runs at 115200 baud.
 
-Doing `make -C Kernel/platform-esp8266 burn` will flash the kernel onto the device
-connected on `/dev/ttyUSB0` with this command:
+Doing `make -C Kernel/platform/platform-esp8266 burn` will flash the kernel
+onto the device connected on `/dev/ttyUSB0` with this command:
 
     `esptool --port /dev/ttyUSB0 write_flash 0x00000 image.elf-0x00000.bin 0x10000 image.elf-0x10000.bin -ff 80m -fm dio'
 
-Doing `make -C Kernel/platform-esp8266 fburn` will flash the filesystem onto
-the device in the same manner.
+Doing `make -C Kernel/platform/platform-esp8266 fburn` will flash the
+filesystem onto the device in the same manner.
 
 ## Swap
 

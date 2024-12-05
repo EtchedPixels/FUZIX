@@ -72,7 +72,7 @@ image.elf: kernel.ld addresses.ld $(KOBJS)
 	$(CROSS_CC) -T kernel.ld -T addresses.ld -flto -mlongcalls -nostdlib -o image.elf \
 		$(KOBJS)
 	
-filesystem.img::
+filesystem.img:
 	./update-flash.sh
 
 filesystem.ftl: filesystem.img
@@ -81,6 +81,8 @@ filesystem.ftl: filesystem.img
 
 filesystem.elf: filesystem.ftl
 	xtensa-lx106-elf-objcopy -I binary -O elf32-xtensa-le --change-section-vma .data=0x40220000 filesystem.ftl filesystem.elf
+	xtensa-lx106-elf-ld -Tdata 0x40220000 -o filesystem2.elf filesystem.elf
+	mv filesystem2.elf filesystem.elf
 
 fburn: filesystem.elf
 	esptool elf2image filesystem.elf

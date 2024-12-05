@@ -92,7 +92,13 @@ extern uint8_t _code_top[];
 /* We need a tidier way to do this from the loader */
 #define CMDLINE	NULL	  /* Location of root dev name */
 
+//#define BOOTDEVICE 0x0000 /* hda */
+//#define BOOTDEVICE 0x0011 /* hdb1 */
+#ifndef BOOTDEVICE
 #define BOOTDEVICE 0x0011 /* hdb1 */
+#warning "Default boot device is hdb1, if you want to change that you can edit Kernel/platform/platform-esp8266/config.h"
+#endif
+
 #define SWAPDEV    (swap_dev) /* wherever */
 
 #define CONFIG_DYNAMIC_SWAP
