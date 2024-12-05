@@ -182,7 +182,7 @@ int rtcwrite(void)
         close(fd);
         return 0;
     }
-    if (rtc.type != CMOS_RTC_BCD) {
+    if (rtc.type != CMOS_RTC_BCD && rtc.type != CMOS_RTC_DEC) {
        close (fd);
        return 0;
     }
@@ -191,14 +191,27 @@ int rtcwrite(void)
     tm = localtime(&t);
 
     p = rtc.data.bytes;
-    *p++ = bc((tm->tm_year + 1900) / 100);
-    *p++ = bc((tm->tm_year + 1900) % 100);
-    *p++ = bc(tm->tm_mon);
-    *p++ = bc(tm->tm_mday);
-    *p++ = bc(tm->tm_hour);
-    *p++ = bc(tm->tm_min);
-    *p++ = bc(tm->tm_sec);
-    *p = bc(tm->tm_wday);
+    if (rtc.type == CMOS_RTC_BCD)
+    {
+        *p++ = bc((tm->tm_year + 1900) / 100);
+        *p++ = bc((tm->tm_year + 1900) % 100);
+        *p++ = bc(tm->tm_mon);
+        *p++ = bc(tm->tm_mday);
+        *p++ = bc(tm->tm_hour);
+        *p++ = bc(tm->tm_min);
+        *p++ = bc(tm->tm_sec);
+        *p   = bc(tm->tm_wday);
+    } else { /* CMOS_RTC_DEC */
+        uint16_t year = tm->tm_year + 1900;
+        *p++ = year & 0xFF;
+        *p++ = year >> 8;
+        *p++ = tm->tm_mon;
+        *p++ = tm->tm_mday;
+        *p++ = tm->tm_hour;
+        *p++ = tm->tm_min;
+        *p++ = tm->tm_sec;
+        *p   = tm->tm_wday;
+    }
 
     lseek(fd, 0, SEEK_SET);
     puts("writing\n");
