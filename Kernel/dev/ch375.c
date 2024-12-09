@@ -44,7 +44,7 @@ static uint8_t ch375_rpoll(void)
     ch375_wcmd(0x22);
     nap20();
     r = ch375_rdata();
-/*    kprintf("ch375_rpoll %2x", r); 8/;
+/*    kprintf("ch375_rpoll %2x", r); */;
     return r;
 }
 
