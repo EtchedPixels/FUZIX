@@ -1,17 +1,22 @@
 /*
- *	This is a bit strange because our argments are left to right on
- *	the stack.
+ * stdarg.h - variable arguments
+ *
+ * From the ack cc
+ *
+ * (c) copyright 1987 by the Vrije Universiteit, Amsterdam, The Netherlands.
+ * See the copyright notice in the ACK home directory, in the file "Copyright".
  */
+/* $Id$ */
+
 #ifndef _STDARG_H
 #define	_STDARG_H
 
-typedef unsigned char *va_list;
+typedef char* va_list;
 
-#define __typesize(__type)	(sizeof(__type) == 1 ? sizeof(int) : sizeof(__type))
+#define __vasz(x)		((sizeof(x)+sizeof(int)-1) & ~(sizeof(int) -1))
 
-#define va_start(__ap, __last)	((__ap) = (va_list)(&(__last)))
-#define va_end(__ap)
-
-#define va_arg(__ap, __type)	(*((__type *)(void *)(__ap -= __typesize(__type))))
+#define va_start(ap, parmN)	(ap = (va_list)&parmN + __vasz(parmN))
+#define va_arg(ap, type)	(*((type *)(void *)((ap += __vasz(type)) - __vasz(type))))
+#define va_end(ap)
 
 #endif

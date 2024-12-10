@@ -112,14 +112,10 @@ outd:
 	
 
 ;
-;	We are called from SWI. The stack holds 7 bytes of return
-;	information, A holds the syscall number on entry, B the arg count
-;	Arguments are left to right ordered.
-;
 ;	On enry our frame looks like this
 ;
 ;	12->	more arguments
-;	11-10	last arg
+;	11-10	first argument
 ;	9-8	return PC for caller to syscall
 ;	7-6	UserPC
 ;	5-4	X
@@ -129,30 +125,23 @@ outd:
 ;
 ;
 unix_syscall_entry:
-	sts @tmp		; No ABX so we have to do a bit of work
-	addb @tmp+1
-	stab @tmp+1
-	bcc noinc
-	inc @tmp
-noinc:
-	ldx @tmp
-	inx			; Because we are not using TSX
+	tsx
 	sts _udata+U_DATA__U_SYSCALL_SP
 	staa _udata+U_DATA__U_CALLNO
-	ldaa 7,x
-	ldab 8,x
+	ldaa 9,x
+	ldab 10,x
 	staa _udata+U_DATA__U_ARGN
 	stab _udata+U_DATA__U_ARGN+1
-	ldaa 5,x
-	ldab 6,x
+	ldaa 11,x
+	ldab 12,x
 	staa _udata+U_DATA__U_ARGN+2
 	stab _udata+U_DATA__U_ARGN+3
-	ldaa 3,x
-	ldab 4,x
+	ldaa 13,x
+	ldab 14,x
 	staa _udata+U_DATA__U_ARGN+4
 	stab _udata+U_DATA__U_ARGN+5
-	ldaa ,x
-	ldab 1,x
+	ldaa 15,x
+	ldab 16,x
 	staa _udata+U_DATA__U_ARGN+6
 	stab _udata+U_DATA__U_ARGN+7
 	ldaa #1
@@ -514,16 +503,15 @@ to_rts:
 
 _memset:
 	tsx
-	ldaa	4,x
 	ldab	5,x
-	stab	@tmp		; destination
-	ldaa	2,x		; length
-	ldab	3,x
-	ldx	6,x		; destination
+	stab	@tmp		; pattern
+	ldaa	6,x		; length
+	ldab	7,x
+	ldx	2,x		; destination
 	bsr	snextblock
 	tsx
-	ldaa	7,x
-	ldab	8,x
+	ldaa	2,x
+	ldab	3,x
 	jmp	__cleanup6
 
 snextblock:
@@ -559,21 +547,21 @@ clearloop:
 
 _memcpy:
 	tsx
-	ldaa	6,x
-	ldab	7,x
-	staa	@tmp		; destination
-	stab	@tmp+1
-	ldaa	2,x		; length
-	oraa	3,x
-	beq	nocopy
 	ldaa	2,x
 	ldab	3,x
+	staa	@tmp		; destination
+	stab	@tmp+1
+	ldaa	6,x		; length
+	oraa	7,x
+	beq	nocopy
+	ldaa	6,x
+	ldab	7,x
 	ldx	4,x		; src
 	bsr	nextblock
 	tsx
 nocopy:
-	ldaa	6,x
-	ldab	7,x
+	ldaa	2,x
+	ldab	3,x
 	jmp	__cleanup6
 
 nextblock:

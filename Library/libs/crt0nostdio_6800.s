@@ -11,11 +11,11 @@ head:
 	.word	$80A8
 	.byte	2		;	6800 series
 	.byte	0		;	Need no extra features
-	.byte   >head		;	Load page
+	.byte   1		;	Load at 0x0100
 	.byte	0		;	No hints
-	.word	__code_size
-	.word	__data_size
-	.word	__bss_size
+	.word	__data - 0x0100	;	Code size
+	.word	__data_size	;	Data size
+	.word	__bss_size	;	And BSS
 	.byte	<start		;	Offset to execute from
 	.byte	0		;	No size hint
 	.byte	0		;	No stack hint

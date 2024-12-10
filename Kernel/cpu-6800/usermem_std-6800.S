@@ -11,18 +11,18 @@
 
 __uputc:
 	tsx
-	ldab 5,x
-	ldx 2,x
+	ldab 3,x
+	ldx 4,x
 	jsr map_proc_always
 	stab 0,x
 	jsr map_kernel
 	jmp __cleanup4
 
 __uputw:
-	ldaa 4,x
 	tsx
-	ldab 5,x
-	ldx 2,x
+	ldaa 2,x
+	ldab 3,x
+	ldx 4,x
 	jsr map_proc_always
 	staa 0,x
 	stab 1,x
@@ -49,9 +49,9 @@ __ugetw:
 
 __uzero:
 	tsx
-	ldaa 2,x
-	ldab 3,x
-	ldx 4,x
+	ldaa 4,x
+	ldab 5,x
+	ldx 2,x
 	jsr map_proc_always
 	; Optimize, unroll etc ?
 	pshb
@@ -84,13 +84,13 @@ __uget:
 	; We can optimize this a lot by abusing the stack etc but
 	; start simple. Take care as tmp/to/from are kernel mapped
 	tsx
-	ldx 2,x
+	ldx 6,x
 	stx @tmp
 	tsx
 	ldx 4,x	; to
 	stx @to
 	tsx
-	ldx 6,x		; from
+	ldx 2,x		; from
 	stx @from
 ugetl:
 	ldx @from
@@ -117,13 +117,13 @@ __uput:
 	; We can optimize this a lot by abusing the stack etc but
 	; start simple. Take care as tmp/to/from are kernel mapped
 	tsx
-	ldx 2,x
-	stx @tmp
+	ldx 6,x
+	stx @tmp		
 	tsx
 	ldx 4,x
 	stx @to
 	tsx
-	ldx 6,x		; from
+	ldx 2,x		; from
 	stx @from
 uputl:
 	ldx @from

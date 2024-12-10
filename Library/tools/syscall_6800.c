@@ -36,7 +36,7 @@ static void write_call(int n)
   fprintf(fp, "noerror:\n");
   /* Non varargs functions do their own tail clean up */
   if (syscall_args[n])
-    fprintf(fp, "\tjmp __popret%d\n", syscall_args[n] * 2);
+    fprintf(fp, "\tjmp __cleanup%d\n", syscall_args[n] * 2);
   else
     fprintf(fp, "\trts\n");
   fclose(fp);
@@ -55,8 +55,8 @@ static void write_vacall(int n)
   fprintf(fp, "\t.code\n\n");
   fprintf(fp, "\t.export _%s\n\n", syscall_name[n]);
   fprintf(fp, "_%s:\n\tldaa #%d\n", syscall_name[n], n);
-  /* This works because all varargs syscalls have 2 fixed arguments */
-  fprintf(fp, "\taddb #4\n");
+  /* We don't really use this for the fcc ABI but pass it for now */
+  fprintf(fp, "\tldab #4\n");
   fprintf(fp, "\tswi\n");
   fprintf(fp, "\tcpx @zero\n");
   fprintf(fp, "\tbeq noerror\n");
