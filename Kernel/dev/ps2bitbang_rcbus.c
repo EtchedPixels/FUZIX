@@ -158,7 +158,7 @@ uint16_t ps2kbd_get(void)
 uint16_t ps2kbd_put(uint_fast8_t ch)
 {
     uint16_t v = ps2_put(&kbdops, ch);
-    return v; /8 ps2_put(&kbdops, ch); 8/
+    return v; /* ps2_put(&kbdops, ch); */
 }
 
 uint16_t ps2mouse_get(void)
