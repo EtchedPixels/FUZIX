@@ -62,3 +62,5 @@ extern uint16_t swap_dev;
 #define plt_copyright()
 
 #define BOOTDEVICENAMES "hd#"
+
+#define CONFIG_SMALL

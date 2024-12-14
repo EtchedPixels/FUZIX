@@ -44,7 +44,7 @@ clean:
 	rm -f $(OBJS) *.o core *~ fuzix.bin fuzix.tmpmap
 
 image: loader
-	$(CROSS_LD) -b -C 0x100 -S 0xF400 -Z 0x20 -o ../../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
+	$(CROSS_LD) -b -C 0x100 -S 0xF200 -Z 0x20 -o ../../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
 	rcbus-6800.o ../../start.o ../../version.o ../../cpu-6800/lowlevel-6800.o \
 	tricks.o main.o discard.o ../../timer.o ../../kdata.o devices.o \
 	blkdev.o mbr.o devide.o devide_discard.o ../../mm/memalloc_none.o \
