@@ -134,6 +134,7 @@ void updatetod(void)
 void inittod(void)
 {
 	rtcsec = plt_rtc_secs();
+	tod_deci = 0;
 }
 
 #endif				/* NO_RTC */
