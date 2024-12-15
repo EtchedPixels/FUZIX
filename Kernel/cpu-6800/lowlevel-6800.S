@@ -431,7 +431,7 @@ _set_cpu_type:
 	sec
 	cpx #0		; on 6800 does not change carry
 			; on 6803 it does
-	bcc is_6800
+	bcs is_6800
 	clrb
 	ldx #1
 	xgdx		; appears to do nothing on the 6803
