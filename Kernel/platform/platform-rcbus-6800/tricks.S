@@ -224,8 +224,8 @@ _dofork:
 	ldab #<_udata
 	pshb
 	psha
-	ldaa #>fork_proc_ptr
-	ldab #<fork_proc_ptr
+	ldaa fork_proc_ptr
+	ldab fork_proc_ptr+1
 	pshb
 	psha
         jsr _makeproc
