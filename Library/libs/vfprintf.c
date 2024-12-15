@@ -182,7 +182,7 @@ int _vfnprintf(FILE * op, size_t maxlen, const char *fmt, va_list ap)
 			usproc:
 				val = lval ? va_arg(ap, unsigned long) :
 				    va_arg(ap, unsigned int);
-				ptmp = __ultostr_r(buf, val, radix < 0 ? -radix : radix);
+				ptmp = __ultostr_r(buf, val, radix);
 				add = "";
 				if (hash) {
 					if (radix == 2)
