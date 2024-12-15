@@ -7,23 +7,27 @@
 
 #include <string.h>
 
-
-
 char * __ultostr_r(char *buf, unsigned long val, int radix)
 {
    register char *p;
    register int c;
+   register int rdbase = 'A' - 10;
 
-   if( radix > 36 || radix < 2 ) return 0;
+   /* Caller wants us to use capitals */
+   if (radix < 0) {
+    rdbase = 'a' - 10;
+    radix = -radix;
+   }
+   if (radix > 36 || radix < 2 ) return 0;
 
    p = buf + 34;
    *--p = '\0';
 
    do
    {
-      c = val%radix;
-      val/=radix;
-      if( c > 9 ) *--p = 'a'-10+c; else *--p = '0'+c;
+      c = val % radix;
+      val /= radix;
+      if( c > 9 ) *--p = rdbase + c; else *--p = '0'+c;
    }
    while(val);
    return p;
