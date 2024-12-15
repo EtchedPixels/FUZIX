@@ -51,9 +51,9 @@ _plt_switchout:
         jsr _plt_monitor
 
 stash_udata:
-	ldx #_udata
 	ldx #$BE00		; Ick FIXME hardcoded
 	stx work
+	ldx #_udata
 stash_loop:
 	ldaa ,x
 	ldab 1,x
@@ -187,20 +187,20 @@ _dofork:
 
 	stx fork_proc_ptr
 
+	tsx
+	ldab 1,x
+	ldaa 0,x	; return address
+	stab 3,x	; copy over the argument to remove it
+	staa 2,x
+
+	ldx fork_proc_ptr
 	ldaa P_TAB__P_PID_OFFSET,x
 	ldab P_TAB__P_PID_OFFSET+1,x
-	pshb				; Push the PID
-	psha
-
-	; We were called with dofork(procptr) this means our caller
-	; expects us to clean the stack up on the parent and child
-	; cheat a bit as we've stashed the value we need
 
 	tsx
-	ldx ,x		; return value
-	stx 2,x		; overwrite the passed procptr value with return
-	ins
-	ins		; save the modified stack pointer
+	staa 0,x	; overwrite the space under the moved return
+	stab 1,x	; address with the return value
+
 	sts _udata + U_DATA__U_SP
 
         ; now we're in a safe state for _switchin to return in the parent
@@ -210,19 +210,22 @@ _dofork:
 	;	Assumes fork_proc_ptr still holds the new process ptr
 	;
 
+	jsr map_proc_always	; map parent
+	jsr stash_udata		; save parent udata
+	jsr map_kernel
 	jsr fork_copy
 
         ; now the copy operation is complete we can get rid of the stuff
 	; _switchin will be expecting from our copy of the stack.
-	inx
-	inx
+	ins
+	ins
 
-	ldaa #>fork_proc_ptr
-	ldab #<fork_proc_ptr
-	pshb
-	psha
 	ldaa #>_udata
 	ldab #<_udata
+	pshb
+	psha
+	ldaa #>fork_proc_ptr
+	ldab #<fork_proc_ptr
 	pshb
 	psha
         jsr _makeproc
@@ -265,31 +268,25 @@ fork_copy:
 	bsr bank2bank
 
 	ldx _udata+U_DATA__U_PTAB
-	jsr map_proc_x
-	jsr stash_udata
 	jmp map_kernel_di
 
 ;
-;	The 680x isn't very good at block copying. We can do tricks with
+;	The 6800 isn't very good at block copying. We can do tricks with
 ;	the stack pointer but lets avoid that for now. We could really do
 ;	with an MMU with split read/write mappings so we could ldx,stx the
 ;	same address.
 ;
-;	In fact for the 6803/6303 it's actually better to pretend to have
-;	an MMU that works like that and keep switching the MMU
-;
-;	Alas we can't use EIM here because it doesn't do extended addresses
-;	and our MMU is in I/O space ($FExx)
-;
-;	Copy 16K from page A to page B. Caller is responsible for putting
+;	Copy 16K from page B to page A. Caller is responsible for putting
 ;	banks back sane
+;
+;	One option if we want to take the irq latency is to do blocks
+;	using S as a pointer.
 ;
 bank2bank:
 	stx work
-	stab $FE79		; Switch to destination bank
-	staa patch1+1		; Patch the source bank return id
-	staa $FE79		; Switch to source bank
-	stab patch2+1		; And patch the dest bank switch
+	staa patch1+1		; Patch destination bank in
+	stab patch2+1		; Patch source bank switch
+	stab $FE79		; Switch to source bank
 	ldx #$4000		; Start address
 copyloop:
 	ldab ,x
