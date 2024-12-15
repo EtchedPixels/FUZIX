@@ -68,7 +68,7 @@ static int display_one_gpio(int i, int fd)
 			putchar('-');
 	}
 	if (gpio.info.wmask)
-		printf(" W:%02X ", gpio.info.wdata);
+		printf(" W:%02X", gpio.info.wdata);
 	else
 		printf("     ");
 
@@ -79,9 +79,9 @@ static int display_one_gpio(int i, int fd)
 			perror("gpioc_getbyte");
 			exit(1);
 		}
-		printf("  R:%02X ", r);
+		printf(" R:%02X ", r);
 	} else
-		printf("       ");
+		printf("      ");
 	switch(gpio.info.flags) {
 	case 0:
 		printf("fixed direction");
