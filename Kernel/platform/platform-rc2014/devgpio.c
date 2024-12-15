@@ -36,13 +36,13 @@ static struct gpio pioinfo[NUM_GPIO] = {
         0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, "SC129R0"
     },
     {
-        0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, "SC129W0"
+        0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, "SC129W0"
     },
     {
-        0xFF, 0x00, GPIO_BIT_CONFIG, 0x00, 0xFF, 0x00, "PIO0A"
+        0xFF, 0x00, GPIO_BIT_CONFIG, 0x00, 0xFF, 0x00, "KPIOA"
     },
     {
-        0xFF, 0x00, GPIO_BIT_CONFIG, 0x00, 0xFF, 0x00, "PIO0B"
+        0xFF, 0x00, GPIO_BIT_CONFIG, 0x00, 0xFF, 0x00, "KPIOB"
     },
 };
 
@@ -100,14 +100,15 @@ int gpio_ioctl(uarg_t request, char *data)
         return uput(p, data, sizeof(struct gpio));
     case GPIOC_SETRW:
         /* This one differs per device. The console switches are fixed */
-        if (port < 32) {
+        if (p->flags == GPIO_BIT_CONFIG) {
             p->wmask = gr.val;
             port += 2;
             out16(port, 0xFF);
             out16(port, ~p->wmask);
             return 0;
         }
-        /* Fall through */
+        udata.u_error = EOPNOTSUPP;
+        return -1;
     default:
         udata.u_error = ENOTTY;
         return -1;
@@ -115,3 +116,6 @@ int gpio_ioctl(uarg_t request, char *data)
     out(port, p->wdata);
     return 0;
 }
+
+/* TODO our boot state is not this well defined so we should init the
+   GPIO we can detect */
