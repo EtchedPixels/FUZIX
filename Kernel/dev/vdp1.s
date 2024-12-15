@@ -201,6 +201,8 @@ _vdp_restore_font:
 	    ld hl,#0x5054
 	    ld bc,(_vdpport)
 	    in a,(c)
+	    VDP_DELAY		; needed for devices that don't waitstate
+				; properly
 fontnext:
 	    out (c),e
 	    VDP_DELAY3
@@ -209,7 +211,9 @@ fontnext:
 	    dec c
 	    in a,(c)
 	    inc c
-	    VDP_DELAY3		; shouldn't need a normal delay here
+	    VDP_DELAY		; shouldn't need a normal delay here
+				; but this covers devices without
+				; proper wait states
 	    out (c),e
 	    VDP_DELAY3
 	    out (c),h
