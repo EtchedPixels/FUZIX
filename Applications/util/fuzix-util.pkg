@@ -81,6 +81,7 @@ f 0755 /bin/factor      factor
 f 0755 /bin/false       false
 f 0755 /bin/fdisk       fdisk
 f 0755 /bin/free        free
+f 0755 /usr/bin/gpiotool gpiotool
 f 0755 /bin/gptparse    gptparse
 f 0755 /bin/grep        grep
 f 0755 /bin/groups      groups

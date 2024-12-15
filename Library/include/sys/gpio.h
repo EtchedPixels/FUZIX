@@ -15,6 +15,7 @@ struct gpio {
     uint8_t wmask;
     uint8_t wdata;
     uint8_t imask;
+    uint8_t name[8];		/* So you can work out the relationship */
 };
 
 #define GPIOC_SETBYTE	0x0530

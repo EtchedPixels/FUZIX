@@ -64,6 +64,7 @@ SRCS  = \
 	free.c \
 	fsck.c \
 	fsck-fuzix.c \
+	gpiotool.c \
 	gptparse.c \
 	grep.c \
 	id.c \
