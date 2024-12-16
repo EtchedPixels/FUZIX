@@ -29,7 +29,7 @@ head:
 ;	non-reentrancy issues in the compiler temporary and regvar usage
 ;
 ;	On entry
-;	D = signal number
+;	B = signal number
 ;	X = undefined
 ;
 ;	Return address is the correct route back to the kernel. Above it is
@@ -37,8 +37,75 @@ head:
 ;
 __sighandler:
 	; Save compiler temporaries and dp register variables
-	; TODO
-	; Back to kernel provided address
+	ldaa @tmp
+	psha
+	ldaa @tmp+1
+	psha
+	ldaa @tmp1
+	psha
+	ldaa @tmp1+1
+	psha
+	ldaa @tmp2
+	psha
+	ldaa @tmp2+1
+	psha
+	ldaa @hireg
+	psha
+	ldaa @hireg+1
+	psha
+	ldaa @tmp3
+	psha
+	ldaa @tmp3+1
+	psha
+	ldaa @tmp4
+	psha
+	ldaa @tmp4+1
+	psha
+	ldaa @tmp5
+	psha
+	ldaa @tmp5+1
+	psha
+	pshb		; signal number
+	clra
+	psha		; extended to 16bits
+
+	;
+	;	Fishing time. Our vector is up the stack above all the
+	;	stuff we pushed
+
+	tsx
+	ldx 18,x
+	jsr ,x
+	; ABI has callee removing argument
+	; Restore the C direct page
+	pula
+	staa @tmp5+1
+	pula
+	staa @tmp5
+	pula
+	staa @tmp4+1
+	pula
+	staa @tmp4
+	pula
+	staa @tmp3+1
+	pula
+	staa @tmp3
+	pula
+	staa @hireg+1
+	pula
+	staa @hireg
+	pula
+	staa @tmp2+1
+	pula
+	staa @tmp2
+	pula
+	staa @tmp1+1
+	pula
+	staa @tmp1
+	pula
+	staa @tmp+1
+	pula
+	staa @tmp
 	rts
 
 start:
@@ -55,7 +122,6 @@ start:
 	inx
 	stx	_environ
 	; Now call main
-	ldab	#3	; In case someone defines it vararg! (4 bytes of arg)
 	jsr	_main
 	pshb
 	psha
