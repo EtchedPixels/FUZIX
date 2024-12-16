@@ -516,7 +516,12 @@ _memset:
 
 snextblock:
 	tsta
-	beq	tailset
+	bne	blocks
+	tstb
+	bne	tailset
+	rts
+
+blocks:
 	; Set 256 bytes
 	pshb
 	psha
