@@ -30,7 +30,8 @@
 	.code
 
 _di:
-	tpa		; return cc codes in D
+	tpa		; return cc codes in B
+	tab
 	sei
 	rts
 
@@ -41,7 +42,7 @@ _ei:
 _irqrestore:
 	tsx
 	ldaa	2,x 
-			; D holds the return from di where A is the cc
+			; D holds the return from di where B is the cc
 	tap		; we trash overflow and carry but they are assumed
 	jmp	__cleanup1
 
