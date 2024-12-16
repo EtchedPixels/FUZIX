@@ -2,8 +2,7 @@
 #include <timer.h>
 #include <kdata.h>
 #include <printf.h>
-#include <blkdev.h>
-#include <devide.h>
+#include <tinydisk.h>
 #include <devtty.h>
 
 uint8_t kernel_flag = 1;
@@ -38,25 +37,24 @@ void plt_interrupt(void)
 }
 
 /* For now this and the supporting logic don't handle swap */
-
 extern uint8_t hd_map;
 extern void hd_read_data(uint8_t *p);
 extern void hd_write_data(uint8_t *p);
 
-void devide_read_data(void)
+void devide_read_data(uint8_t *p)
 {
-	if (blk_op.is_user)
+	if (td_raw)
 		hd_map = 1;
 	else
 		hd_map = 0;
-	hd_read_data(blk_op.addr);	
+	hd_read_data(p);
 }
 
-void devide_write_data(void)
+void devide_write_data(uint8_t *p)
 {
-	if (blk_op.is_user)
+	if (td_raw)
 		hd_map = 1;
 	else
 		hd_map = 0;
-	hd_write_data(blk_op.addr);	
+	hd_write_data(p);
 }

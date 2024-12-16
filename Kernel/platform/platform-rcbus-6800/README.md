@@ -21,8 +21,8 @@ rcbus-6800 -b -i emu-ide.img -1
 
 ## Things To Do
 
-- Switch to tinydisk
 - Swap support
 - Stop using CONFIG_SMALL
 - Serial speed/format support
-
+- DS1302
+- Dynamic bufpool
