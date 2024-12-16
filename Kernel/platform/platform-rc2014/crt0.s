@@ -122,7 +122,7 @@ stop:   halt
 ;
 
 	.area _STUBS
-	.ds 600
+	.ds 630
 
 	.area _BUFFERS
 ;
