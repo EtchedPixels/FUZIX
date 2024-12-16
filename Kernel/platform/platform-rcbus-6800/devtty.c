@@ -7,7 +7,7 @@
 #include <vt.h>
 #include <tty.h>
 
-#define IO(x)		*((uint8_t *)0xFE00 + (x))
+#define IO(x)		*((volatile uint8_t *)0xFE00 + (x))
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -33,7 +33,6 @@ void kputchar(uint_fast8_t c)
 
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
-	/* Console is the 6803 onboard port */
 	if (IO(0xC5) & 0x20)
 		return TTY_READY_NOW;
 	return TTY_READY_SOON;

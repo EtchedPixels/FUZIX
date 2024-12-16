@@ -23,9 +23,6 @@
 /* Permit large I/O requests to bypass cache and go direct to userspace */
 #define CONFIG_LARGE_IO_DIRECT(x)	1
 
-/* Arguments the other way around */
-#define CONFIG_CALL_R2L
-
 #define TICKSPERSEC 20	    /* Ticks per second */
 
 #define MAPBASE	    0x0000  /* We map from 0 */

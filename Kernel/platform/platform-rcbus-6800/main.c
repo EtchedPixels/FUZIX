@@ -10,8 +10,7 @@ uint8_t kernel_flag = 1;
 uint8_t need_resched;
 uint16_t swap_dev = 0xFFFF;
 
-/* Onboard I/O */
-static volatile uint8_t *cpuio = (volatile uint8_t *)0;
+#define IO(x)		*((volatile uint8_t *)0xFE00 + (x))
 
 void plt_idle(void)
 {
@@ -25,27 +24,16 @@ void do_beep(void)
 }
 
 
-/* FIXME: route serial interrupts directly in asm to a buffer and just
-   queue process here */
-
-static uint8_t tickmod;
-
 void plt_interrupt(void)
 {
 	uint8_t dummy;
 
 	tty_poll();
 
-	/* Reading the register resets the flag if set */
-	if (cpuio[0x08] & 0x20) {
-		cpuio[9];	/* Read tmer to clear interrupt */
-		tickmod++;
-		if (tickmod == 7)
-			tickmod = 0;
-		/* Turn it into a 20Hz timer. For now do a simple fixup
-		   for the 28->20 and ignore the extra 1% or so error */
-		if (tickmod != 2 && tickmod != 6)
-			timer_interrupt();
+	/* Check the PTM */
+	if (IO(0x61) & 0x80) {
+		IO(0x66);
+		timer_interrupt();
 	}
 }
 

@@ -39,6 +39,4 @@ void device_init(void)
 #ifdef CONFIG_IDE
 	devide_init();
 #endif
-	/* We will just use the TOF event */
-	cpuio[0x08] = 0x04;
 }

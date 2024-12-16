@@ -151,7 +151,7 @@ nostash:
         ; _switchout or _dofork
         lds _udata + U_DATA__U_SP
 	ldaa _udata + U_DATA__U_ININTERRUPT
-        beq swtchdone		; in ISR, leave interrupts off
+        bne swtchdone		; in ISR, leave interrupts off
 	cli
 swtchdone:
 	pula			; recover return code
