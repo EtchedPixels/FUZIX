@@ -1,5 +1,7 @@
 /*
  *	Z80 PIO based GPIO ports on the Z80 PIO card
+ *
+ *	TODO: KIO PIA, TinyZ80 etc 0x1C PIO
  */
 
 #include <kernel.h>
@@ -47,11 +49,12 @@ static struct gpio pioinfo[NUM_GPIO] = {
 };
 
 /* Track the actual data port as it's easier to mix types with that
-   approach */
+   approach. Zilog PIO logic requires M1 snooping so must be on the
+   main bus */
 
 #ifdef CONFIG_RC2014_EXTREME
-static uint16_t portmap[] = {
-    0x68B8, 0x69B8, 0x6CB8, 0x6DB8, 0xFF, 0x00, 0x00, 0xC0, 0xC2
+static uint8_t portmap[] = {
+    0x68, 0x69, 0x6C, 0x6D, 0xFF, 0x00, 0x00, 0xC0, 0xC2
 };
 #else
 static uint8_t portmap[] = {
@@ -95,7 +98,7 @@ int gpio_ioctl(uarg_t request, char *data)
         p->wdata &= ~gr.val;
         break;
     case GPIOC_GETBYTE:
-        return in16(port) & ~p->wmask;
+        return in(port) & ~p->wmask;
     case GPIOC_GETINFO:
         return uput(p, data, sizeof(struct gpio));
     case GPIOC_SETRW:
@@ -103,8 +106,8 @@ int gpio_ioctl(uarg_t request, char *data)
         if (p->flags == GPIO_BIT_CONFIG) {
             p->wmask = gr.val;
             port += 2;
-            out16(port, 0xFF);
-            out16(port, ~p->wmask);
+            out(port, 0xFF);
+            out(port, ~p->wmask);
             return 0;
         }
         udata.u_error = EOPNOTSUPP;
