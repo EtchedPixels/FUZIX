@@ -166,6 +166,7 @@ unix_syscall_entry:
 	ldab _udata+U_DATA__U_ERROR+1
 	staa 3,x			; error in X
 	stab 4,x
+
 rti_return:
 	ldab _udata+U_DATA__U_CURSIG
 	beq no_signal
@@ -174,6 +175,7 @@ rti_return:
 	lslb
 	ldaa #<_udata+U_DATA__U_SIGVEC
 	aba
+	tab
 	ldaa #>_udata+U_DATA__U_SIGVEC
 	adca #0
 	stab @tmp+1
@@ -181,7 +183,10 @@ rti_return:
 	ldx @tmp
 	ldaa 0,x
 	ldab 1,x
+	bne signal_pop
+	tsta
 	beq no_signal_pop
+signal_pop:
 	clr 0,x
 	clr 1,x
 	; Save the vector
@@ -196,7 +201,7 @@ rti_return:
 	psha
 	ldaa @tmp
 	psha
-	ldx  PROGLOAD+16	; Helper vector (FIXME: assumes binary relocatd here)
+	ldx  PROGLOAD+16	; Helper vector (FIXME: assumes binary relocated here)
 	; We are off the kernel stack at this point so we can
 	; enable interrupts and leap into userspace
 	cli
