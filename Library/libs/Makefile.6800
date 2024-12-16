@@ -125,7 +125,7 @@ fuzix$(PLATFORM)/syslib.l: ../tools/syscall_$(PLATFORM)
 	make -C .. tools/syscall_$(PLATFORM)
 
 liberror.txt: ../tools/liberror
-	$< > $@
+	$< -X > $@
 
 ../tools/liberror: ../tools/liberror.c
 	make -C .. tools/liberror
