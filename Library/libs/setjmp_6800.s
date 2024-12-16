@@ -7,12 +7,12 @@
 
 __setjmp:
 	tsx
-	ldab	,x		; return address
-	ldaa	1,x
+	ldaa	,x		; return address
+	ldab	1,x
 	ldx	2,x		; get the jmp buffer
 	sts	,x		; remember the stack pointer
-	stab	2,x		; return address
-	staa	3,x
+	staa	2,x		; return address
+	stab	3,x
 	clra
 	clrb
-	jmp	__popret2	; clear the argument
+	jmp	__cleanup2	; clear the argument

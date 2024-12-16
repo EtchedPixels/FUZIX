@@ -10,14 +10,18 @@
 ;
 _longjmp:
 	tsx
-	ldab	2,x		; retval
-	ldaa	3,x
+	ldaa	4,x		; retval
+	ldab	5,x
+	bne	retok
+	tsta
 	bne	retok
 	incb			; retval 1 if 0 requested
 retok:
-	ldx	4,x		; get the setjmp buffer
+	ldx	2,x		; get the setjmp buffer
 	lds	,x		; recover the stack pointer
 	ldx	2,x		; and the restored pc
 	ins			; adjust the stack
 	ins
+	ins			; including the expected callee
+	ins			; removed arguments
 	jmp	,x
