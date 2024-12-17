@@ -56,44 +56,60 @@ static int display_one_gpio(int i, int fd)
 	gpio_query(fd, i);
 
 	printf("%-3d : %-8.8s (%02X) ", i, gpio.info.name, gpio.info.group);
+	if (gpio.info.wmask) {
+		printf("W:%02X(", gpio.info.wdata);
+		for (j = 0; j < 8; j++) {
+			m >>= 1;
+			if (gpio.info.pinmask & m)
+				if ( gpio.info.wmask & m) {
+					if (gpio.info.wdata & m)
+						putchar('1');
+					else
+						putchar('0');
+				}
+				else
+					putchar('.');
+			else
+				putchar('-');
+		}
+		putchar(')');
+	} else {
+		printf("              ");
+	}
+	r = ioctl(fd, GPIOC_GETBYTE, &greq);
+	if (r == -1) {
+		perror("gpioc_getbyte");
+		exit(1);
+	}
+	m = 0x100;
+	printf(" R:%02X(", r);
 	for (j = 0; j < 8; j++) {
 		m >>= 1;
-		if (gpio.info.pinmask & m) {
-			if (gpio.info.wmask & m)
-				putchar('W');
+		if (gpio.info.pinmask & m)
+			if (~gpio.info.wmask & m) {
+				if (r & m)
+					putchar('1');
+				else
+					putchar('0');
+			}
 			else
-				putchar('R');
-		}
+				putchar('.');
 		else
 			putchar('-');
 	}
-	if (gpio.info.wmask)
-		printf(" W:%02X", gpio.info.wdata);
-	else
-		printf("     ");
-
-	if (gpio.info.wmask != 0xFF) {
-		greq.pin = i;
-		r = ioctl(fd, GPIOC_GETBYTE, &greq);
-		if (r == -1) {
-			perror("gpioc_getbyte");
-			exit(1);
-		}
-		printf(" R:%02X ", r);
-	} else
-		printf("      ");
+	putchar(')');
 	switch(gpio.info.flags) {
 	case 0:
-		printf("fixed direction");
+		printf(" fixed direction");
 		break;
 	case GPIO_BIT_CONFIG:
-		printf("per bit direction");
+		printf(" per bit direction");
 		break;
 	case GPIO_GRP_CONFIG:
-		printf("per group direction");
+		printf(" per group direction");
 		break;
 	default:
-		printf("(unknown %u)", gpio.info.flags);
+		printf(" (unknown %u)", gpio.info.flags);
 	}
 	putchar('\n');
 }
@@ -130,6 +146,7 @@ static int set_output(const char *name, int fd, unsigned pin, unsigned long iop)
 			perror("GPIO set direction");
 			return 1;
 		}
+		greq.val = pmask;
 	}
 	if (ioctl(fd, iop, &greq) != 0) {
 		perror("GPIO change failed");
