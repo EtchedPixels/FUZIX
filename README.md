@@ -37,7 +37,7 @@ https://share.octopus.energy/amber-calf-514
 
 ## Tools
 
-For the 8080, 8085, Z80 and Z180 the code is now built with the Fuzix C
+For the 6800, 8080, 8085, Z80 and Z180 the code is now built with the Fuzix C
 Compiler and Bintools which are also in github. See instructions for
 building them. Some kernels still need the customised SDCC 3.8 from from
 this github. 65C816 and Z8 are a work in progress moving to this compiler.
@@ -71,8 +71,8 @@ Other targets use gcc variants. See the target specific information.
 	O_NDELAY, O_CLOEXEC, F_SETFL, F_DUPFD etc
 * Address validation checks on all syscall copies
 * Builds with a modern ANSI C compiler (SDCC)
-* Kernel boots to userspace on 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, arm32, esp8266, MSP430 (bitrotted) and eZ80/Z80/Z180
-* Core code can be built for 6303, 6502, 65C816, 68000, 6803, 6809, 68HC11, 8080, 8085, 8086, arm32, esp8266, MSP430, pdp11, rabbit r2k/r3k and eZ80/Z80/Z180 so should be far more portable
+* Kernel boots to userspace on 6303, 6502, 65C816, 6800, 68000, 6803, 6809, 68HC11, 8080, 8085, arm32, esp8266, MSP430 (bitrotted) and eZ80/Z80/Z180
+* Core code can be built for 6303, 6502, 65C816, 68000, 6800, 6803, 6809, 68HC11, 8080, 8085, 8086, arm32, esp8266, MSP430, pdp11, rabbit r2k/r3k and eZ80/Z80/Z180 so should be far more portable
 * Core architecture designed to support building and maintaining
 	multiple target machines without forking each one
 * Helpers to make many bits of implementation wrappers to core code
