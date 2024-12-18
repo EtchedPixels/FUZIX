@@ -173,9 +173,9 @@ switchfail:
 	jp _plt_monitor
 
 
-; Copy 56K between two banks - this one is a bit of a mess with the
+; Copy 48K between two banks - this one is a bit of a mess with the
 ; fixed banking setup.
-; Should optimize this to do the low 32K fast, then the upper
+; Should optimize this to do the low 48K fast, then the upper
 ; Also to use ldei and a buffer in register space
 copypages:
 	push r15
@@ -194,8 +194,8 @@ copypages:
 	ld r12,r13
 	ld r2,2
 	push 2
-	; 8 bytes a loop for 56K
-	ld r2,#28
+	; 8 bytes a loop for 48K
+	ld r2,#24
 	clr r3
 loop:
 	and 2,#0xBF	; I/O map on
@@ -340,7 +340,7 @@ l2:
 	lde @rr13,r3
 	incw rr12
 	lde @rr13,r3
-	; Fix up stack and retunr as child
+	; Fix up stack and return as child
 
 	adc 255,#10	; frame we pushed
 	adc 254,#0

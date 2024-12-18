@@ -1,4 +1,10 @@
 Initial sketch to see if Z8 is doable
 
-Currently the compiler can't generate dense enough code to make it fit.
+Status:
+- Gets as far as the initial printk with the modified boot loader
+
+Next Steps:
+- Correct memory mapping logic for actual 4x16K card used in the real machine
+- Figure out how to generate a single shared set of the register indirected
+  short calls, or turn them off (or we'll have problems with user v kernel)
 

@@ -660,7 +660,7 @@ ___hard_irqrestore:
 	jr	nz, diret
 	ei
 diret:
-	ret
+	jp	__cleanup2
 
 ;
 ;	We have no variants to care about (eZ8 is quite different)
@@ -727,9 +727,9 @@ _set_cpu_type:
 _memcpy:
 	ld r15,#4
 	call __gargr4
-	ld r15,#6
+	ld r15,#8
 	call __garg12r2
-	; r12 is length
+	; r12/13 is length
 	; r0/r1 dest
 	; r2/r3 src
 	incw r12
@@ -746,14 +746,14 @@ mcnext:
 	jr nz,mcloop
 	pop r2
 	pop r3
-	ret
+	jp __cleanup6
 	
 _memset:
 	ld r15,#4
 	call __gargr4
-	ld r15,#6
+	ld r15,#8
 	call __garg12r2
-	; r12 is length
+	; r12/13 is length
 	; r0/r1 ptr
 	push r1
 	push r0
@@ -768,7 +768,7 @@ msnext:
 	jr nz, msloop
 	pop r2
 	pop r3
-	ret
+	jp __cleanup6
 
 _strlen:
 	ld r15,#2
@@ -784,7 +784,7 @@ count:
 	incw rr2
 	jr count
 strlen_done:
-	ret
+	jp __cleanup2
 
 _swab:
 	ld r15,#2
@@ -792,7 +792,7 @@ _swab:
 	ld r0,r3
 	ld r3,r2
 	ld r2,r0
-	ret
+	jp __cleanup2
 
 _swab32:
 	ld r15,#2
@@ -803,4 +803,4 @@ _swab32:
 	ld r12,r2
 	ld r2,r1
 	ld r1,r12
-	ret
+	jp __cleanup4

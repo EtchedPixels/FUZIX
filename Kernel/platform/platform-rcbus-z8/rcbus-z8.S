@@ -404,10 +404,10 @@ has_ch:
 
 	.export _z8tty_put
 _z8tty_put:
-	ld r3,#2
+	ld r15,#4
 	call __gargr2
 	ld 0xF0,r3
-	ret
+	jp __cleanup2
 
 	.export _z8tty_status
 _z8tty_status:
@@ -448,7 +448,8 @@ rsec:
 	incw rr14
 	djnz r2,rsec
 	pop 2
-	jp map_kernel
+	call map_kernel
+	jp __cleanup2
 
 _devide_write_data:
 	call map_io
@@ -473,4 +474,5 @@ wsec:
 	incw rr14
 	djnz r2,wsec
 	pop 2
-	jp map_kernel
+	call map_kernel
+	jp __cleanup2

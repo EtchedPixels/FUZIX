@@ -1,66 +1,80 @@
 ;
-;	We are loaded from the boot block by the firmware and are somewhere
-;	in the original mapping 0 low, 1 high at E000. Stack is at FExx
-;	somewhere.
+;	The bootblock is loaded at address 0 and runs
+;	with interrupts disabled from 12 so there is room
+;	to load vectors. RAM is fulled mapped (MMU is 0x11). If split I/D
+;	support is present the alt MMU is also 0x11
+;
+;	Stack is at FF00, SRP is 0x10
 ;
 
 		.code
-	.byte 'Z'
-	.byte 8
 
-#if 0
+	.word	'Z8'		; bootable marker
+	.word	0
+	.word	0
+	.word	0
+	.word	0
+	.word	0
+
 start:
-;
-;	Fix up the MMU mappings so we have RAM low as well
-;
-	di			; We are about to map out the irqvecs
-	ld	r14,#0xFF
-	ld	r15,r14
-	ld	r13,#0x11
-	and	2,#0xBF		; I/O on for upper data space
-	lde	@rr14,r13
-	or	2,#0x10
-	;	We now have lowest ram bank mapped for all of memory
-	;	Load the code segment
-	clr	r14
-	clr	r15
-	ld	r13,#112	; load 56K of blocks
-	call	load_data
-	;
-	;	Now switch the data bank for our new data bank
-	;
-	ld	r14,#0xFF
-	ld	r15,r14
-	ld	r13,#0x31
-	and	2,#0xBF
-	lde	@rr14,r13
-	or	2,#0x10
-	;
-	;	Now load the data segment
-	;
-	clr	r14
-	clr	r15
-	ld	r13,#112	; Will be plenty
-	call	load_data
-	;
-	;	Switch the maps and call the program
-	;
-	ld	r14,#0xFF
-	ld	r15,#0xFF
-	and	2,#0xBF
-	ld	r13,#0x33	; Set data
-	lde	@rr14,r13
-	dec	r15
-	ld	r13,#0x11	; Set code
-	lde	@rr14,r13
-	or	2,#0x10
-	;
-	;	We now have code mapping of
-	;	0000-DFFF : code	RAM bank 0
-	;	E000-FFFF : loader etc	RAM bank 0
-	;	Data mapping of
-	;	0000-7FFF : data	RAM bank 1
-	;	E000-FFFF : data	RAM bank 1
-	;
-	jp	6
-#endif
+	di
+	ld	r11,#2		; disk block number count
+	ld	r12,#0xFF
+	ld	r13,#0x10	; used for I/O
+	ld	r14,#2
+	clr	r15		; destination address for reads
+
+	and	2,#0xBF		; enable I/O
+
+
+	; I/O is on so access memory via C space (C and E space are the
+	; same at this point)
+
+next:
+	ld	r13,#0x17
+	lde	r0,@rr12
+	and	r0,#0x80
+	jr	nz, next	; wait for busy to clear
+
+	ld	r13,#0x12
+	ld	r0,#1
+	lde	@rr12,r0	; 1 sector
+	inc	r13
+	lde	@rr12,r11	; LBA.0
+	clr	r0
+	inc	r13
+	lde	@rr12,r0	; LBA.8
+	inc	r13
+	lde	@rr12,r0	; LBA.16.
+	inc	r13
+	ld	r0,#0xE0	; LBA.24 | Device
+	lde	@rr12,r0	; LBA high
+	inc	r13		; Command/Status
+	ld	r0,#0x20	; READ
+	lde	@rr12,r0
+
+wait_drq:			; Wait for drive to provide data
+	lde	r0,@rr12
+	and	r0,#8
+	jr	z, wait_drq
+
+	clr	r0		; count
+	ld	r13,#0x10	; data
+dblock:
+	lde	r1,@rr12	; read CF card
+	ldc	@rr14,r1
+	incw	rr14
+	lde	r1,@rr12	; read CF card
+	ldc	@rr14,r1
+	incw	rr14
+	djnz	r0,dblock
+
+	; Move on
+	inc	r11		; next disk block
+	cp	r14,#0		; top of memory ?
+	jr	nz,next
+
+	; All loaded
+	or	2,#0x10		; I/O mode off
+	jp	0x0202		; Launch
+	; TODO check 0200 is 58 38

@@ -48,7 +48,7 @@ clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootblock.bin bootblock fuzix.bin loader.tmp
 
 image: 
-	$(CROSS_LD) -b -Z 48 -C 0x0100 -S 0xF000 -f CLDBbXSs -o fuzix.bin crt0.o devices.o main.o \
+	$(CROSS_LD) -b -Z 48 -C 0x0200 -S 0xF000 -f CLDBbXSs -o fuzix.bin crt0.o devices.o main.o \
 	discard.o commonmem.o tricks.o rcbus-z8.o devtty.o \
 	../../start.o ../../version.o ../../cpu-z8/lowlevel-z8.o \
 	../../mm/bankfixed.o ../../timer.o ../../kdata.o  ../../mm/memalloc_none.o \
@@ -73,14 +73,14 @@ loader: loader.o
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage: loader
-	dd if=../../fuzix.bin of=fuzix.img bs=256 skip=1
+	dd if=../../fuzix.bin of=fuzix.img bs=512 skip=1
 	# Make a blank disk image with partition
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the bootstrap loader
-	dd if=loader of=$(IMAGES)/disk.img conv=notrunc
+	dd if=loader of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
 	# Add the file system
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	# Add the kernel
-	dd if=fuzix.img of=$(IMAGES)/disk.img bs=512 seek=1 conv=notrunc
+	dd if=fuzix.img of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

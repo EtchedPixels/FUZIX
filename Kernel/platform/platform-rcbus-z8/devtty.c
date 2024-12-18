@@ -121,9 +121,9 @@ void tty_data_consumed(uint_fast8_t minor)
 ttyready_t tty_writeready(uint_fast8_t minor)
 {
     if (z8tty_status() & 0x10)
-        return TTY_READY_NOW;
-    else
         return TTY_READY_SOON;
+    else
+        return TTY_READY_NOW;
 }
 
 /* kernel writes to system console -- never sleep! */
