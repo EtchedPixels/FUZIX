@@ -85,10 +85,10 @@ bootit:
 	ld hl,#0x8000		; Don't copy first 256 bytes over
 	ld de,#0x4000
 	ld bc,#0x4000		; We've loaded 0000-4000
-	ld a,#32
+	ld a,#40
 
 	di
-	out (MPGSEL_1),a	; Low bank at 0x4000 please
+	out (MPGSEL_1),a	; Bank 4 first 16K at 0x4000
 	ldir
 
 	;
@@ -102,8 +102,9 @@ bootit:
 	ld hl,#0x8000		; Move it into place
 	ld de,#0x4000
 	ld bc,#0x4000
-	ld a,#33
-	out (MPGSEL_1),a	; Second kernel bank at 0x4000 please
+	ld a,#41
+	di
+	out (MPGSEL_1),a	; Bank 4 second 16K at 0x4000
 	ldir
 	pop bc
 
@@ -205,6 +206,28 @@ bootit:
 
 	di
 	out (MPGSEL_1),a
+	ldir
+
+	;
+	;	Copy from bank 4 to bank 0
+	;
+	ld hl,#0x4000
+	ld de,#0x0000
+	ld bc,#0x4000
+	ld a,#40
+	out (MPGSEL_1),a
+	ld a,#32
+	out (MPGSEL_0),a
+	ldir
+
+	; page 41 to page 33
+	ld hl,#0x4000
+	ld de,#0x0000
+	ld bc,#0x4000
+	ld a,#41
+	out (MPGSEL_1),a
+	ld a,#33
+	out (MPGSEL_0),a
 	ldir
 
 	;
