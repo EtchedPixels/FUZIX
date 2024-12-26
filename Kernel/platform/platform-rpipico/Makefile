@@ -35,6 +35,7 @@ build/Makefile: CMakeLists.txt $(wildcard ../../*.[chS]) $(wildcard ../../*/*.[c
 image:: world
 	./update-flash.sh
 	../../../Standalone/mkftl -s 1952 -e 0x1000 -g 10 filesystem.img -o filesystem.ftl
+	${PICOTOOL} uf2 convert --verbose filesystem.ftl -t bin filesystem.uf2 -o 0x10018000 --family ${FSFAMILY}
 
 diskimage:
 
