@@ -60,12 +60,13 @@ vi Makefile
 To build flash image use `make image -j`
 Or to build SD card image `make image-sd -j`
 
-You should now end up with `build/fuzix.uf2` and `filesystem.uf2`. The `uf2`
-files can be flashed onto the Pico in the usual way (i.e. connect it up as a
+You should now end up with `build/fuzix.uf2` and `filesystem.ftl`. The `uf2`
+file can be flashed onto the Pico in the usual way (i.e. connect it up as a
 mass storage device and copy the files on). Alternatively, you can use OpenOCD
 to load `build/fuzix.elf`. Once the board has rebooted it will appear as a USB
 serial device which you can connect to. Alternatively, connect a terminal to
-UART 0 on the Pico.
+UART 0 on the Pico. You can copy `filesystem.ftl` to the board using
+`picotool load filesystem.ftl -t bin -o 0x10018000`.
 
 If you want to use an SD card, note that only filesystems up to 32MB are
 supported.
