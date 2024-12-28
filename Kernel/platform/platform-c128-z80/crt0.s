@@ -48,7 +48,7 @@
 	; We came here from CP/M (for now anyway)
 	; That means our MMU setup is that we are in bank 1 with an 8K
 	; common. The MMU preloads are set to 3F, 7F, 3E, 7E
-	; D507 is 00:00 D5808 is 01:00 (so low is mapped to bank 0 and 1:1)
+	; D507 is 00:00 D508 is 01:00 (so low is mapped to bank 0 and 1:1)
 	; RAM config is set to 0B and MMU config to B0
 
 	.area _BOOT
@@ -64,16 +64,23 @@ init:
 	ld	(0xFF00),a
 	;	Now set up the LCR
 	ld	a,#0x3F
-	ld	(0xD501),a	; PCR A		bank 0
+	ld	bc,#0xD501
+	out	(c),a		; PCR A		bank 0
 	ld	a,#0x7F
-	ld	(0xD502),a	; PCR B		bank 1
+	inc	bc
+	out	(c),a		; PCR B		bank 1
 	ld	a,#0x3E
-	ld	(0xD503),a	; PCR C		bank 0 with I/O
+	inc	bc
+	out	(c),a		; PCR C		bank 0 with I/O
 	ld	a,#0x7E
-	ld	(0xD504),a	; PCR D		bank 1 with I/O
+	inc 	bc
+	out	(c),a		; PCR D		bank 1 with I/O
+
 	;	D505 should be correct (Z80, C128 mode)
+	inc	bc
+	inc	bc
 	ld	a,#0x0A
-	ld	(0xD506),a	; 8K common, top is common
+	out	(c),a	; 8K common, top is common
 	;	Page ptrs should be fine : TODO review
 
 	ld	(0xFF02),a	; bank 1 no I/O
@@ -85,8 +92,8 @@ init:
 	; and run it
 	jp	0xFE00
 copier:
-	ld	hl,#0x1400
-	ld	bc,#0xCC00		; copy 1400-DFFF
+	ld	hl,#0x1000
+	ld	bc,#0xCC00		; copy 1000-DBFF
 initcp:
 	ld	a,(hl)
 	ld	(0xFF01),a		; bank 0
@@ -100,8 +107,8 @@ initcp:
 
 	ld	(0xFF03),a		; bank 0, I/O on
 
-	ld	a,#0x46
-	ld	bc,#0xD018
+	ld	a,#0x96			; character set ROM
+	ld	bc,#0xD018		; characters at E400
 	out	(c),a
 
 	; Now begin setting up the video as the most important thing
@@ -110,7 +117,7 @@ initcp:
 	;	CIA2A bits 1-0 are A15 and A14 for the 14 bit VIC
 	ld	bc,#0xDD00
 	in	a,(c)
-	or	#0x03			; low 16K for the video
+	and	#0xFC			; top 16K for the video
 	out	(c),a
 
 	ld	(0xFF01),a		; bank 0, I/O off
@@ -154,8 +161,8 @@ go:
 	ldir
 
 	;	clear video
-	ld	hl,#0x1000
-	ld	de,#0x1001
+	ld	hl,#0xE400
+	ld	de,#0xE401
 	ld	bc,#999
 	ld	(hl),#' '
 	ldir

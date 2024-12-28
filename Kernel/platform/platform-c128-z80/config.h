@@ -72,7 +72,7 @@ extern uint16_t swap_dev;
 /* Console: 40 column for simplicity to begin with */
 #define CONFIG_VT
 #define CONFIG_VT_SIMPLE
-#define VT_BASE		((uint8_t *)0x1000)
+#define VT_BASE		((uint8_t *)0xE400)
 #define VT_WIDTH	40
 #define VT_HEIGHT	25
 #define VT_RIGHT	39
@@ -88,3 +88,5 @@ extern uint8_t petscii(uint8_t c);
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
 #define plt_copyright()
+
+#define CONFIG_SMALL

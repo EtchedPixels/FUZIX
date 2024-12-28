@@ -68,6 +68,6 @@ diskimage: image
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img
 	# Floppy boot
 	rm -f $(IMAGES)/fuzix.d71
-	cp $(FUZIX_ROOT)/../../c128/cpm.d71 $(IMAGES)/fuzix.d71
+	cp $(FUZIX_ROOT)/../c128/cpm.d71 $(IMAGES)/fuzix.d71
 	ctools $(IMAGES)/fuzix.d71 p fuzix.com
 	
