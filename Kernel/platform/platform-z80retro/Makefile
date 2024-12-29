@@ -64,7 +64,7 @@ image: bootblock
 	perl -lpe '$$_=hex' fuzix.tmpmap | paste -d" " - fuzix.tmpmap  |  sort -n |  cut -d" " -f 2- >../../fuzix.map
 	../../tools/pack85 <../../fuzix.map fuzix.bin ../../fuzix.bin
 	# Attach the kernel to the boot block
-	cat boot-romwbw.bin ../../fuzix.bin >fuzix.romwbw
+	#cat boot-romwbw.bin ../../fuzix.bin >fuzix.romwbw
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~
@@ -86,7 +86,9 @@ diskimage: image
 	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.40M of=$(IMAGES)/disk.img bs=40017920 conv=sync
 	# Add the file system
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
-	# Add the kernel
-	dd if=fuzix.romwbw of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	# Add the bootstrap
+	dd if=boot-romwbw.bin of=$(IMAGES)/disk.img bs=512 seek=2 conv=notrunc
+	# And kernel
+	dd if=../../fuzix.bin of=$(IMAGES)/disk.img bs=512 seek=4 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/idehdr.40M $(IMAGES)/disk.img > $(IMAGES)/emu-ide.img

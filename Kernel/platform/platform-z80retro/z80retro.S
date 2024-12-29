@@ -459,7 +459,10 @@ inchar_s:
 	.export _sd_spi_rx_sector
 
 _sd_spi_tx_byte:
-	ld	e,l
+	pop	hl
+	pop	de
+	push	de
+	push	hl
 sd_tx:
 	; bit 0
 	rl	e
@@ -506,9 +509,12 @@ sd_tx:
 ;	Receive is by far the most important path
 ;
 _sd_spi_rx_byte:
+	push	bc
 	ld	c,0xFF
 	call	sd_rx
+	pop	bc
 	ld	l,e
+	ld	h,0
 	ret
 
 ; FIXME - rotate C
@@ -572,6 +578,11 @@ sd_rx:
 	ret
 
 _sd_spi_rx_sector:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
 	ld	bc,0xFF		; 0 for count 255 for reload of A
 	ld	a,(_td_raw)
 	or	a
@@ -591,9 +602,15 @@ rx_byte:
 	ld	(hl),e
 	inc	hl
 	djnz	rx_byte
+	pop	bc
 	jp	map_kernel
 
 _sd_spi_tx_sector:
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
 	ld	b,0
 	ld	a,(_td_raw)
 	or	a
@@ -613,6 +630,7 @@ tx_byte:
 	inc	hl
 	call	sd_tx
 	djnz	tx_byte
+	pop	bc
 	jp	map_kernel
 
 ;

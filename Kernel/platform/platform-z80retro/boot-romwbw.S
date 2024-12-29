@@ -72,22 +72,22 @@ bootit:
 	ld e, 32		; 32 sectors (16K)
 	push bc
 	rst 8			; Can error but if so wtf do we do ?
-	ld hl,0x8000
+	ld hl,0x8100
 	ld de,0x0100
-	ld bc,0x4000		; We've loaded 0100-40FF
+	ld bc,0x3F00		; We've loaded 0100-4000
 	ldir
 	pop bc
 	ld hl,0x8000
-	ld e,32		; Load the next 16K
+	ld e,32			; Load the next 16K
 	push bc
 	rst 8
 	ld hl,0x8000		; Move it into place
-	ld de,0x4100
+	ld de,0x4000
 	ld bc,0x4000
 	ldir
 	pop bc
-	ld hl,0x8100		; Now load 8100 up
-	ld e, 55		; takes us up to F100. If that's not enough
+	ld hl,0x8000		; Now load 8000 up
+	ld e, 55		; takes us up to F000. If that's not enough
 				; before unpack we have a problem as we
 				; will need to move the loader
 	rst 8
