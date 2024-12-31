@@ -207,8 +207,8 @@ void apply_gime(int minor)
 	*(volatile uint8_t *) 0xff98 = (hz & 0x78) | p->vmod;
 	*(volatile uint8_t *) 0xff99 = p->vres;
 	*(volatile uint8_t *) 0xff9a = p->border;
-	twidth = curtty->width << 1;	/* One word per symbol */
-	theight = curtty->height;
+	twidth = p->width << 1;	/* One word per symbol */
+	theight = p->height;
 }
 
 /* A wrapper for tty_close that closes the DW port properly */
@@ -467,8 +467,10 @@ int gfx_ioctl(uint_fast8_t minor, uarg_t arg, char *ptr)
 			if (m > 4)
 				goto inval;
 			memcpy(&(ttytab[minor - 1].vmod), &(mode[m]), sizeof(struct mode_s));
-			if (minor == curminor)
+			if (minor == curminor) {
+				vt_load(&curtty->vt);
 				apply_gime(minor);
+			}
 			return 0;
 		}
 	case GFXIOC_DRAW:

@@ -366,6 +366,7 @@ scrdnt:
 	puls	u,y,cc
 	rts
 
+	.area .videodata
 _twidth:
 	.byte 160
 _theight:

@@ -101,7 +101,7 @@ apply, so "BOOT=FUZIX.BIN:1" works as expected.
 ## Emulation
 
 ### Xroar
-xroar -machine coco3 -cart ide -cart-rom hdblba13.rom -load-hd0 Images/coco3/disk.ing
+xroar -machine coco3 -cart ide -cart-rom hdblba13.rom -load-hd0 Images/coco3/disk.img
 
 Options specify -ccr none.
 
