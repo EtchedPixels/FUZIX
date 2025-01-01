@@ -49,14 +49,14 @@
 
 /* Adjust copy_common if you touch the above */
 
-//#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+/*#define SWAPDEV     (swap_dev) */	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
 #define SWAP_SIZE   0x78 	/* Program + udata in blocks */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
 #define SWAPTOP	    0xF000	/* Swap out udata and program */
 #define MAX_SWAPS   16	    	/* We will size if from the partition */
 /* Swap will be set up when a suitably labelled partition is seen */
-//#define CONFIG_DYNAMIC_SWAP
+/*#define CONFIG_DYNAMIC_SWAP */
 /* We have lots of RAM so make better use of it for disk buffers. We grab
    a 16K page and use it as our disk cache */
 #define CONFIG_BLKBUF_EXTERNAL
@@ -95,4 +95,4 @@ extern uint16_t swap_dev;
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define plt_copyright()		// for now
+#define plt_copyright()		/* for now */

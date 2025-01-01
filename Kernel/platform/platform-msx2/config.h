@@ -59,7 +59,7 @@
 #define MAX_BLKDEV 4      /* 2 IDE and 2 SD drives */
 #define CONFIG_RTC
 #define CONFIG_RTC_INTERVAL	10
-//#define CONFIG_RTC_RP5C01_NVRAM
+/* #define CONFIG_RTC_RP5C01_NVRAM */
 
 #define plt_copyright()
 

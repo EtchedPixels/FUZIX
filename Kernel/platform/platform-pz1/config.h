@@ -34,14 +34,16 @@
 #define PROGTOP		0xFE00
 
 /* TODO: swap */
-//#define SWAPDEV		1
-//#define SWAP_SIZE	127	/* 0xfe00 / 512 */
-//#define SWAPBASE	0x0000	/* We swap the lot in one, include the */
-//#define SWAPTOP		0xfe00	/* uarea so its a round number of sectors */
-//#define UDATA_BLOCKS	0	/* We swap the uarea in the data */
-//#define UDATA_SWAPSIZE	0
-//#define MAX_SWAPS	16
-//#define swap_map(x)	((uint8_t *)(x & 0x3fff ))
+#if 0
+#define SWAPDEV		1
+#define SWAP_SIZE	127	/* 0xfe00 / 512 */
+#define SWAPBASE	0x0000	/* We swap the lot in one, include the */
+#define SWAPTOP		0xfe00	/* uarea so its a round number of sectors */
+#define UDATA_BLOCKS	0	/* We swap the uarea in the data */
+#define UDATA_SWAPSIZE	0
+#define MAX_SWAPS	16
+#define swap_map(x)	((uint8_t *)(x & 0x3fff ))
+#endif
 
 #define BOOT_TTY	513	/* Set this to default device for stdio, stderr */
 

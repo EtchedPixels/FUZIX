@@ -46,5 +46,5 @@
 #define plt_discard()
 #define plt_copyright()
 
-//#define BOOTDEVICENNAMES "hd#,fd#,,rd#"
+/* #define BOOTDEVICENNAMES "hd#,fd#,,rd#" */
 #define BOOTDEVICE (0<<8) /* hda */

@@ -55,5 +55,5 @@
 #define plt_discard()
 #define plt_copyright()
 
-//#define BOOTDEVICENNAMES "hd#,fd#"
+/* #define BOOTDEVICENNAMES "hd#,fd#" */
 #define BOOTDEVICE 0x00
