@@ -33,7 +33,7 @@ VDP_ROP      .equ	1
 .macro VDP_DELAY2
 	    nop
 .endm
-.macro VDP_DELAY2
+.macro VDP_DELAY3
 .endm
 
 	    .area _COMMONMEM
