@@ -90,7 +90,7 @@ switchin:
 not_swapped:
 	cmpd	udata+U_DATA__U_PAGE
 	beq	nostash
-swapdone
+swapdone:
 	; Get our bank
 	ldab	P_TAB__P_PAGE_OFFSET+1,x	; bank
 
