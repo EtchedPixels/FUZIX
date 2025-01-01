@@ -57,4 +57,4 @@ extern uint16_t swap_dev;
 #define CONFIG_DYNAMIC_SWAP
 #define swap_map(x)	((uint8_t *)(x))
 
-#define plt_copyright()		// for now
+#define plt_copyright()		/* for now */

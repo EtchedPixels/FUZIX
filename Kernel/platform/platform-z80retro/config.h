@@ -26,7 +26,7 @@
 /* Adjust copy_common if you touch the above */
 
 /* No swap yet - needs tricks.S work */
-//#define SWAPDEV     (swap_dev)	/* A variable for dynamic, or a device major/minor */
+/* #define SWAPDEV     (swap_dev) */	/* A variable for dynamic, or a device major/minor */
 extern uint16_t swap_dev;
 #define SWAP_SIZE   0x78 	/* Program + udata in blocks */
 #define SWAPBASE    0x0000	/* start at the base of user mem */
@@ -63,4 +63,4 @@ extern uint16_t swap_dev;
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 
-#define plt_copyright()		// for now
+#define plt_copyright()		/* for now */

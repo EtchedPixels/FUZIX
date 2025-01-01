@@ -3,7 +3,9 @@
 #include <gpio.h>
 #include "picosdk.h"
 
-// Access raspberry pi pico GPIO
+/* Access raspberry pi pico GPIO */
+/* FIXME: this is missing a lot of minimal functionality, and also has
+   the functionality wrong */
 int gpio_ioctl(uarg_t request, char *data) {
   const uint8_t num_pins = 28;
   static struct gpioreq gr;

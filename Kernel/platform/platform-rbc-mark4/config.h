@@ -77,7 +77,7 @@ extern uint16_t swap_dev;
 #define DEV_RD_RAM_SIZE  ((uint32_t)DEV_RD_RAM_PAGES << 12)
 
 /* Optional PropIOv2 board on ECB bus */
-//#define CONFIG_PROPIO2		/* #define CONFIG_PROPIO2 to enable as tty3 */
+/* #define CONFIG_PROPIO2 */		/* #define CONFIG_PROPIO2 to enable as tty3 */
 #define PROPIO2_IO_BASE		0xA8
 
 /* Device parameters */

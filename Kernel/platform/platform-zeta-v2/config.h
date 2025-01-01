@@ -43,7 +43,7 @@ extern uint16_t swap_dev;
 #define CMDLINE	NULL  /* Location of root dev name */
 #define BOOTDEVICENAMES "hd#,fd,,rd"
 
-//#define SWAPDEV  (256 + 1)  /* Device for swapping */
+/* #define SWAPDEV  (256 + 1) */  /* Device for swapping */
 #define CONFIG_DYNAMIC_BUFPOOL /* we expand bufpool to overwrite the _DISCARD segment at boot */
 #define NBUFS    4        /* Number of block buffers, keep in line with space reserved in zeta-v2.s */
 #define NMOUNTS	 4	  /* Number of mounts at a time */

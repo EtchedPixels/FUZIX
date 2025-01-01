@@ -1,7 +1,7 @@
 #define CONFIG_LEVEL_0
 
 #define CONFIG_IDE
-//#define CONFIG_BETADISK
+/* #define CONFIG_BETADISK */
 
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP

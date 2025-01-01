@@ -48,8 +48,8 @@ extern uint16_t swap_dev;
 #define swap_map(x)	((uint8_t *)(x))
 
 /* Set these two for networking - no point right now */
-//#define CONFIG_NET
-//#define CONFIG_NET_NATIVE
+/* #define CONFIG_NET */
+/* #define CONFIG_NET_NATIVE */
 
 
 /* What is the maximum number of /dev/hd devices we have. In theory right now

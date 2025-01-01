@@ -102,7 +102,7 @@ extern uint16_t swap_dev;
 #define CONFIG_NET_WIZNET
 #define CONFIG_NET_W5100
 /* Or native (eg SLIP) */
-//#define CONFIG_NET_NATIVE
+/* #define CONFIG_NET_NATIVE */
 
 /*
  *	The device (major/minor) for the console and boot up tty attached to

@@ -197,4 +197,4 @@ extern void qwrite(uint8_t *addr, uint8_t val);
 #define AMD_DATA	0x42
 #define AMD_CTL		0x43
 
-#define plt_copyright()		// for now
+#define plt_copyright()		/* for now */

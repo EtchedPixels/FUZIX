@@ -17,10 +17,10 @@
 #define MAP_SIZE	0x8000
 
 /* Set these two for networking - no point right now */
-//#define CONFIG_NET
-//#define CONFIG_NET_NATIVE
+/* #define CONFIG_NET */
+/* #define CONFIG_NET_NATIVE */
 /* Set this for IDE */
-//#define CONFIG_IDE
+/* #define CONFIG_IDE */
 
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
