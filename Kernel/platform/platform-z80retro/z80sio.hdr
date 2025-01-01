@@ -1,3 +1,4 @@
+#include "kernelu.def"
 ;
 ;	Combined with the templates to make the serial driver.
 ;
@@ -50,5 +51,8 @@ _sioa_txl:
 	.byte 0
 _siob_txl:
 	.byte 0
+
+	.commondata
+
 sio_sp:
 	.word 0

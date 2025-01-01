@@ -1,3 +1,4 @@
+#include "kernelu.def"
 ;
 ;	Combined with the templates to make the serial driver.
 ;
@@ -50,6 +51,9 @@ _sioa_txl:
 	.byte 0
 _siob_txl:
 	.byte 0
+
+	.commondata
+
 sio_sp:
 	.word 0
 ;
@@ -71,13 +75,14 @@ sio_sp:
 ;	1	Name for this SIO (eg 'A' or 'B' etc)
 ;	2	section/adr etc for the buffers (must be aligned correctly)
 ;		eg  ".abs\n.org 0x200\n"
-;	3	ditto for the work registers, usually .common
+;	3	ditto for the work registers, usually .commondata
 ;	4	Control port
 ;	5	Data port
 ;	6	Ret instruction for interrupt (ret or reti)
 ;	7	code to execute when entering handler (eg to bank the
 ;		buffers in). May well be nothing for common memory setup
 ;	8	code to unbank
+;	9	bank to place the code parts into, usually .common
 ;
 
 	.abs
@@ -87,7 +92,7 @@ sioa_rx:
 sioa_tx:
 	.ds	128
 
-	.data		; set section for these
+	.commondata		; set section for these
 
 sioa_error:
 	.byte	0
@@ -108,6 +113,9 @@ sioa_rxe:
 ;
 ;	C interface methods
 ;
+
+	.common
+
 	.export _sioa_txqueue
 	.export _sioa_flow_off
 	.export _sioa_flow_on
@@ -323,6 +331,7 @@ _sioa_rx_get:
 	res 7,l
 	ld (sioa_rxe),hl
 	ld l,a
+	ld h,0
 	ret
 
 	; DI required
@@ -331,6 +340,7 @@ _sioa_error_get:
 	ld a,(hl)
 	ld (hl),0
 	ld l,a
+	ld h,0
 	ret
 ;
 ;	SIO2 IM2 console driver
@@ -351,13 +361,14 @@ _sioa_error_get:
 ;	1	Name for this SIO (eg 'A' or 'B' etc)
 ;	2	section/adr etc for the buffers (must be aligned correctly)
 ;		eg  ".abs\n.org 0x200\n"
-;	3	ditto for the work registers, usually .common
+;	3	ditto for the work registers, usually .commondata
 ;	4	Control port
 ;	5	Data port
 ;	6	Ret instruction for interrupt (ret or reti)
 ;	7	code to execute when entering handler (eg to bank the
 ;		buffers in). May well be nothing for common memory setup
 ;	8	code to unbank
+;	9	bank to place the code parts into, usually .common
 ;
 
 	.abs
@@ -367,7 +378,7 @@ siob_rx:
 siob_tx:
 	.ds	128
 
-	.data		; set section for these
+	.commondata		; set section for these
 
 siob_error:
 	.byte	0
@@ -388,6 +399,9 @@ siob_rxe:
 ;
 ;	C interface methods
 ;
+
+	.common
+
 	.export _siob_txqueue
 	.export _siob_flow_off
 	.export _siob_flow_on
@@ -603,6 +617,7 @@ _siob_rx_get:
 	res 7,l
 	ld (siob_rxe),hl
 	ld l,a
+	ld h,0
 	ret
 
 	; DI required
@@ -611,4 +626,5 @@ _siob_error_get:
 	ld a,(hl)
 	ld (hl),0
 	ld l,a
+	ld h,0
 	ret
