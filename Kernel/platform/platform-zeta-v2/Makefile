@@ -1,56 +1,56 @@
-ASRCS = crt0.S tricks.S commonmem.S zeta-v2.S monitor.S
-ASRCS += devrd_zeta2_hw.S
+ASRCS = crt0.s tricks.s commonmem.s zeta-v2.s monitor.s
+ASRCS += ds1302-n8vem.s devrd_zeta2_hw.s
 CSRCS = devices.c main.c devtty.c devrd_zeta2.c
 DISCARD_CSRCS = discard.c devtty_discard.c
 DISCARD_DSRCS = ../../dev/ds1302_discard.c ../../dev/tinyide_discard.c ../../dev/tinydisk_discard.c
 DSRCS = ../../dev/devfd.c ../../dev/tinydisk.c ../../dev/tinyide.c
 DSRCS += ../../dev/ds1302.c ../../dev/devrd.c ../../dev/tinyide_ppide_rbc.c
-DASRCS = ../../dev/devfd_hw.S ../../dev/devrd_hw.S ../../dev/ds1302_rbc.S
+DASRCS = ../../dev/devfd_hw.s ../../dev/devrd_hw.s
 
-AOBJS = $(ASRCS:.S=.o)
-COBJS = $(CSRCS:.c=.o)
-DISCARD_COBJS = $(DISCARD_CSRCS:.c=.o)
-DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.o, $(DISCARD_DSRCS))
-DOBJS = $(patsubst ../../dev/%.c,%.o, $(DSRCS))
-DAOBJS = $(patsubst ../../dev/%.S,%.o, $(DASRCS))
+AOBJS = $(ASRCS:.s=.rel)
+COBJS = $(CSRCS:.c=.rel)
+DISCARD_COBJS = $(DISCARD_CSRCS:.c=.rel)
+DISCARD_DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DISCARD_DSRCS))
+DOBJS = $(patsubst ../../dev/%.c,%.rel, $(DSRCS))
+DAOBJS = $(patsubst ../../dev/%.s,%.rel, $(DASRCS))
 
 OBJS  = $(AOBJS) $(COBJS) $(DOBJS) $(DAOBJS) $(DISCARD_DOBJS) $(DISCARD_COBJS)
 
 CROSS_CCOPTS += -I../../dev/
 
-JUNK = *.o *.lst *.asm *.sym *.rst *.map *.ihx *.bin
+JUNK = *.rel *.lst *.asm *.sym *.rst *.map *.ihx *.bin
 
 all:	$(OBJS) diskboot.bin
 
-$(AOBJS): %.o: %.S
+$(AOBJS): %.rel: %.s
 	$(CROSS_AS) $(ASOPTS) $<
 
-$(COBJS): %.o: %.c
+$(COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DOBJS): %.o: ../../dev/%.c
+$(DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<
 
-$(DAOBJS): %.o: ../../dev/%.S
+$(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
-$(DISCARD_COBJS): %.o: %.c
+$(DISCARD_COBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
-$(DISCARD_DOBJS): %.o: ../../dev/%.c
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 clean:
 	rm -f $(OBJS) $(JUNK)  core *~ bootrom.ihx bootrom.bin diskboot.bin fuzix.com fuzix.rom
 
-diskboot.bin:	diskboot.S
-	$(CROSS_AS) $(ASOPTS) diskboot.S
-	sdldz80 -nmi diskboot.o
+diskboot.bin:	diskboot.s
+	$(CROSS_AS) $(ASOPTS) diskboot.s
+	sdldz80 -nmi diskboot.rel
 	makebin -s 65536 diskboot.ihx | dd bs=512 skip=125 count=1 of=diskboot.bin
 
 image:
-	sdasz80 -o bootrom.S
-	sdldz80 -m -i bootrom.o
+	sdasz80 -o bootrom.s
+	sdldz80 -m -i bootrom.rel
 	makebin -s 136 bootrom.ihx > bootrom.bin
 	# Work around bugs in Fedora dd
 	cat bootrom.bin ../../fuzix.bin > fuzix.tmp
