@@ -20,7 +20,7 @@
 ;
 ;	Required to preserve BC
 ;
-addr:		
+addr:
 	ld	a,e		; get Y
 	dec	a		; weird line wrapping
 	and	#15
