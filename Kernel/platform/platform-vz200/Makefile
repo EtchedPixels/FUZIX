@@ -36,11 +36,10 @@ $(DAOBJS): %.rel: ../../dev/%.s
 	$(CROSS_AS) $(ASOPTS) $@ $<
 
 $(DISCARD_COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG1) -c $<
-
-# We don't put it in discard as it fits better in code1
-$(DISCARD_DOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
+
+$(DISCARD_DOBJS): %.rel: ../../dev/%.c
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(NOBJS): %.rel: ../../dev/net/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) -c $<

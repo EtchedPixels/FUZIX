@@ -6,7 +6,6 @@
 #include <devtty.h>
 #include <rtc.h>
 
-struct blkbuf *bufpool_end = bufpool + NBUFS;	/* minimal for boot -- expanded after we're done with _DISCARD */
 uint16_t swap_dev = 0xFFFF;
 uint16_t ramtop = 0xFFF4;	/* TODO */
 uint8_t need_resched = 0;
@@ -20,14 +19,6 @@ extern void interrupt_setup(void);
 
 void plt_discard(void)
 {
-	while (bufpool_end < (struct blkbuf *) (KERNTOP - sizeof(struct blkbuf))) {
-		memset(bufpool_end, 0, sizeof(struct blkbuf));
-#if BF_FREE != 0
-		bufpool_end->bf_busy = BF_FREE;	/* redundant when BF_FREE == 0 */
-#endif
-		bufpool_end->bf_dev = NO_DEVICE;
-		bufpool_end++;
-	}
 	/* Now discard is gone we can finally set up our interrupt handler */
 	interrupt_setup();
 	/* Switch video if the 8K video banking is available */

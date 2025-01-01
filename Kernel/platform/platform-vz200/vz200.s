@@ -42,19 +42,6 @@
         .include "../../cpu-z80/kernel-z80.def"
 
 ;=========================================================================
-; Buffers
-;=========================================================================
-        .area _BUFFERS
-	.globl kernel_endmark
-
-_bufpool:
-        .ds (BUFSIZE * 4) ; adjust NBUFS in config.h in line with this
-;
-;	So we can check for overflow
-;
-kernel_endmark:
-
-;=========================================================================
 ; Initialization code
 ;=========================================================================
         .area _DISCARD
