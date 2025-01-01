@@ -1,7 +1,7 @@
 ;
 ;	The ADAM boots by loading a block (1K) from an adamnet
-;	device at C800 and running it. We move to F200-F3FF
-;	this leaves the adamnet support available
+;	device at C800 and running it. We move to 0080-00FF and load
+;	0100-F0FF. This leaves the adamnet support available
 
 	.abs
 
@@ -38,7 +38,7 @@ next:
 	inc	h
 	inc	h		; Move on 1K
 	ld	a,h
-	cp	0xF3
+	cp	0xF1
 	jr	z, done
 	pop	af
 	jr	next

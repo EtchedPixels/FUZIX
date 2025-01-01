@@ -1,6 +1,22 @@
 ;
 ;	ADAM support
 ;
+;	The fully loaded ADAM has 128K of RAM. We can control the upper and
+;	lower 32K independently.
+;
+;	Lower 32K
+;	- Intrinsic lower 32K (used for kernel, DMAable for I/O)
+;	- Expansion lower 32K (used for user)
+;
+;	Upper 32K
+;	- Intrinsic upper 32K (used for kernel,, DMAable for I/O)
+;	- Expansion upper 32K (used for user)
+;
+;
+;	The fancier expansion boards used port 0x42 to select between
+;	multiple 64K banks of "expansion". We don't deal with this yet.
+;	These went up to 2MB
+;
 
         ; exported symbols
         .export init_hardware
@@ -58,7 +74,7 @@ _int_disabled:
 ; -----------------------------------------------------------------------------
 
 banknum:
-	.byte 0x06		; copied into far bank then set to 0x02
+	.byte 0x0A		; copied into far bank then set to 0x01
 
 ; -----------------------------------------------------------------------------
 ;	All of discard gets reclaimed when init is run
@@ -75,7 +91,7 @@ init_hardware:
         ld (_procmem), hl
 
 	ld	hl, __common
-	ld	de, 0x0602
+	ld	de, 0x0A01
 	ld	c, 0x7F
 	;	Move COMMON between banks (we are in low 32K)
 next_byte:
@@ -85,7 +101,7 @@ next_byte:
 	out	(c),d
 	inc	hl
 	djnz	next_byte
-	ld	a, 0xF4
+	ld	a, 0xF3
 	cp	h
 	jr	nz,next_byte
 
@@ -180,13 +196,14 @@ rst10:
 	nop
 	nop
 rst18:
-	ld a, 0x81
-	out (0x38),a
-	rlca
-	out (0x30),a
+	ld a, 0x0A	;	TODO bank flip
+	out (0x7F),a
 	ei
-rst20:
 	jp (hl)
+	nop
+	nop
+rst20:
+	nop
 	nop
 	nop
 	nop
@@ -225,7 +242,7 @@ rst38:
 	.ds 0x26
 nmi_handler:		; Should be at 0x66
 	push af
-	in a,(0xA0)
+	in a,(0xBE)
 	pop af	; shouldn't happen or be used
 	retn
 
@@ -242,27 +259,18 @@ nmi_handler:		; Should be at 0x66
 ;
 ;	This needs some properly optimized versions!
 ;
-; FIXME: save a byte and some setup by makign byte 2 of 0to1 the first
-; of 1to0
-_bank0to1:
-	.dw 0x0001			; 0x0181 for SC108
-_bank1to0:
-	.dw 0x0100			; 0x8101 for SC108
-_bankport:
-	.byte 0x30			; 0x38 for SC108
 ldir_to_user:
-	ld de, 0x0206		; from bank 0 to bank  1
+	ld de, 0x010A		; from bank 0 to bank  1
 ldir_far:
 	push bc
-	ld c, 0x7F
 	exx
 	pop bc			; get BC into alt bank
 far_ldir_1:
 	exx
-	out (c),d
+	out (0x7F),d
 	ld a,(hl)
 	inc hl
-	out (c),e
+	out (0x7F),e
 	ld (ix),a
 	inc ix
 	exx
@@ -270,11 +278,11 @@ far_ldir_1:
 	ld a,b
 	or c
 	jr nz, far_ldir_1
-	ld a, 0x02
+	ld a, 0x01
 	out (0x7F),a
 	ret
 ldir_from_user:
-	ld de, 0x0602
+	ld de, 0x0A01
 	jr ldir_far
 ;
 ;	High stubs. Present in each bank in the top 256 bytes
@@ -294,14 +302,9 @@ interrupt_high:
 	push iy
 	ld a,(banknum)
 	ld c,a
-	;
-	; The trick going on here is that an SC108 will respond to
-	;  0x38 bit 7 = RAM bank 0 = ROM and ignore 0x30
-            ; but the SC114 will respond to 0x38 bit 0 only (ROM) and
-	; to 0x30 bit 0 for RAM.
-	;
-	ld a, 0x02
-	out (0x7F),a		; Internal, No ROM
+
+	ld a, 0x01
+	out (0x7F),a			; Internal, No ROM
 	ld (istack_switched_sp),sp	; istack is positioned to be valid
 	ld sp, istack_top		; in both banks. We just have to
 	;
@@ -321,7 +324,7 @@ interrupt_high:
 	or a
 	jr z, kernout
 	; Returning to user space
-	ld a, 0x06			; User bank
+	ld a, 0x0A			; User bank
 	out (0x7F),a
 	; User stack is now valid
 	; back on user stack
@@ -394,7 +397,7 @@ syscall_platform:
 	di
 	; AF' can be changed in the ABI
 	ex af, af'		; Ick - find a better way to do this bit !
-	ld a, 0x02
+	ld a, 0x01
 	out (0x7F),a
 	ex af,af'
 	; Stack now invalid
@@ -405,7 +408,7 @@ syscall_platform:
 	; stack now invalid. Grab the new sp before we unbank the
 	; memory holding it
 	ld sp,(_udata + U_DATA__U_SYSCALL_SP)
-	ld a, 0x86		; back to the user page
+	ld a, 0x0A		; back to the user page
 	out (0x7F),a
 	xor a
 	cp h

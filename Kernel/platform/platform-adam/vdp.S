@@ -24,8 +24,6 @@
 /* Can't use due to thunked code */
 #undef VDP_ROP
 ;
-;	On an MSX at 3.5Mhz our loop worst case is 26 clocks so for
-;	graphics one we need a nop
 ;
 #define	VDP_DELAY	nop
 #define VDP_DELAY2	nop
@@ -38,4 +36,4 @@ plt_interrupt_all:
 	ret
 
 _vdpport:
-	.word 0x28A1	; port 0xA1, 40 byte count in fastest load
+	.word 0x28BF	; port 0xBF, 40 byte count in fastest load
