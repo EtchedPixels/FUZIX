@@ -383,14 +383,12 @@ mmu_irq_ret:
 	; unbanked if so ?)
 #ifdef CPU_Z180
         ; On Z180 we have more than one IRQ, so we need to track of which one
-        ; we arrived through. The IRQ handler sets irqvector_hw when each
+        ; we arrived through. The IRQ handler sets hw_irqvector when each
         ; interrupt arrives. If we are not already handling an interrupt then
         ; we copy this into _irqvector which is the value the kernel code
         ; examines (and will not change even if reentrant interrupts arrive).
-        ; Generally the only place that irqvector_hw should be used is in
+        ; Generally the only place that hw_irqvector should be used is in
         ; the plt_interrupt_all routine.
-        .export hw_irqvector
-        .export _irqvector
         ld a, (hw_irqvector)
         ld (_irqvector), a
 #endif
