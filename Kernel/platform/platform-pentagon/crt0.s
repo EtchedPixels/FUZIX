@@ -123,7 +123,7 @@ stop:   halt
 
 	.area _STUBS
 stubs:
-	.ds 540
+	.ds 570
 
 	.area _BUFFERS
 ;
