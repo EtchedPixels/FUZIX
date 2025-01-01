@@ -93,4 +93,4 @@ extern uint16_t swap_dev;
 
 #define plt_copyright()
 
-//#define CONFIG_SMALL
+/* #define CONFIG_SMALL */

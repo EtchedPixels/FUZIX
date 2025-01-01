@@ -1,4 +1,4 @@
-//#define CONFIG_RAMWORKS
+/* #define CONFIG_RAMWORKS */
 
 #ifdef CONFIG_RAMWORKS
 /* Multiple processes in memory at once */

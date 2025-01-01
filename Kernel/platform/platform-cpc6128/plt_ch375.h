@@ -1,6 +1,6 @@
 extern void nap20(void);
-extern void ch375_rblock(uint8_t *ptr);// __z88dk_fastcall;
-extern void ch375_wblock(uint8_t *ptr);// __z88dk_fastcall;
+extern void ch375_rblock(uint8_t *ptr);/* __z88dk_fastcall; */
+extern void ch375_wblock(uint8_t *ptr);/* __z88dk_fastcall; */
 
 __sfr __banked __at 0xFE80 ch375_dport;
 __sfr __banked __at 0xFE81 ch375_sport;
