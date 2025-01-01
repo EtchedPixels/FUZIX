@@ -1,6 +1,6 @@
 
-Edit the top level Makefile and set ARCH
-Read Kernel/platform-$ARCH/README
+Edit the top level Makefile and set TARGET
+Read Kernel/platform/platform-$ARCH/README.md
 Adjust anything it recommends for your platform
 
 The Z80 build tools get stuck in /opt/fcc as will others in future. Right now
@@ -20,8 +20,7 @@ Standalone/filesystem-src contains some scripts to build filesystems
 fuzix.org contains a bunch ready to download
 
 For Z80 your VM needs at least 16GB including swap because sdcc is a bit of a
-memory monster. Also use sdcc 3.7.1 or later as 3.7.0 is broken in ways that
-cause Fuzix to break.
+memory monster.
 
 Fuzix expects yacc to be yacc not Bison. if your system for some reason thinks
 that executing yacc should run bison you'll have a build failure. For Debian
