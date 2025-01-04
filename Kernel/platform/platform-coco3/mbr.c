@@ -60,7 +60,7 @@ uint_fast8_t td_plt_setup(uint_fast8_t dev, uint32_t *lba, void *buf)
 				tstart >>= 1;
 			else
 				tstart <<= (br->secz - 1);
-			*lba++ = tstart;
+			*++lba = tstart;
 			k++;
 			kprintf("hd%c%d ", dev + 'a', k);
 			/* TODO: swap on CCPT */
