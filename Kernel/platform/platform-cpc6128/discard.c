@@ -17,7 +17,7 @@ void map_init(void)
 
 void plt_copyright(void)
 {
-	kprintf("Amstrad CPC6128 platform\nCopyright (c) 2024 Antonio J. Casado Alias\n");
+	kprintf("Amstrad CPC6128 platform\nCopyright (c) 2024-2025 Antonio J. Casado Alias\n");
 }
 /*
 void ide_reset(void)
