@@ -90,7 +90,7 @@
 /* #undef CONFIG_TD_SD_EMUBUG */
 /*#undef SD_SPI_CALLTYPE	__z88dk_fastcall */
 
-#define BOOTDEVICENAMES "hd#,fd#"
+#define BOOTDEVICENAMES "hd#,fd"
 
 #define CONFIG_SMALL
 
