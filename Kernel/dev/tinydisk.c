@@ -47,7 +47,7 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	lba = udata.u_block;
 	if (minor) {
-		if (minor < MAX_PART && td_lba[dev][minor])
+		if (minor <= MAX_PART && td_lba[dev][minor])
 			lba += td_lba[dev][minor];
 		else
 			goto fail;
