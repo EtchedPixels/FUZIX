@@ -146,6 +146,10 @@ init_hardware:
 	;; High speed poke
 	sta	0xffd9		; high speed poke
 	sta	0xffdf		; RAM mode
+	;; configure PIA1B to read monitor detect line
+	clr	$ff23
+	ldd	#$f037
+	std	$ff22
 	;; set system RAM size
 	jsr	_scanmem	; X = number of pages
 	tfr 	x,d
