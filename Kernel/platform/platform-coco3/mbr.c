@@ -2,6 +2,7 @@
 #include <kdata.h>
 #include <printf.h>
 #include <tinydisk.h>
+#include "config.h"
 
 typedef struct {
 	uint8_t flags;
@@ -31,6 +32,7 @@ typedef struct {
 } boot_record_t;
 
 
+#ifdef CONFIG_TD_CUSTOMPART
 uint_fast8_t td_plt_setup(uint_fast8_t dev, uint32_t *lba, void *buf)
 {
 	boot_record_t *br = buf;
@@ -70,3 +72,4 @@ uint_fast8_t td_plt_setup(uint_fast8_t dev, uint32_t *lba, void *buf)
 	}
 	return 1;	/* Found it, don't scan further */
 }
+#endif
