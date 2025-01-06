@@ -86,11 +86,11 @@ _m6847_plot_char:
 	lda 4,s
 	bsr vidaddr		; preserves X (holding the char)
 	tfr x,d
-	rolb			; multiply by 8
+	lslb			; multiply by 8
 	rola
-	rolb
+	lslb
 	rola
-	rolb
+	lslb
 	rola
 	addd #_fontdata_8x8	; relative to font
 	tfr d,x
