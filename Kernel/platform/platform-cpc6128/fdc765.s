@@ -61,7 +61,7 @@
 
 ;
 ; Twiddle the Terminal Count line to the FDC. Not supported by the
-; Spectrum +3
+; CPC
 ;
 _fd765_do_nudge_tc:
 	ret
