@@ -351,14 +351,14 @@ _scroll_down:
 	std	$FFA9
 
 scrdnt:
-	ldd	,--x
-	std	,--u
-	ldd	,--x
-	std	,--u
-	ldd	,--x
-	std	,--u
-	ldd	,--x
-	std	,--u
+	ldd	,--u
+	std	,--x
+	ldd	,--u
+	std	,--x
+	ldd	,--u
+	std	,--x
+	ldd	,--u
+	std	,--x
 	leay	-8,y
 	bne	scrdnt
 	ldd	#0x0102
