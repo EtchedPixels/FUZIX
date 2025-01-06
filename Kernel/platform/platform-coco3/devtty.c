@@ -527,6 +527,7 @@ void set_defmode(char *s)
 __attribute__((section(".discard")))
 void devtty_init()
 {
+	int i;
 	/* set default keyboard delay/repeat rates */
 	keyrepeat.first = REPEAT_FIRST * (TICKSPERSEC / 10);
 	keyrepeat.continual = REPEAT_CONTINUAL * (TICKSPERSEC / 10);
@@ -546,6 +547,12 @@ void devtty_init()
 		memcpy((uint8_t *) 0xffb0, rgb_def_pal, 16);
 	else	/* These are bit dubious see : https://exstructus.com/tags/coco/australia-colour-palette/ */
 		memcpy((uint8_t *) 0xffb0, cmp_def_pal, 16);
-	vt_load(&curtty->vt);
-	clear_lines(0, theight);
+	for (i = 1; i >= 0; --i) {
+		curtty = &ttytab[i];
+		vt_load(&curtty->vt);
+		twidth = curtty->width << 1;	/* One word per symbol */
+		vt_cursor_off();
+		clear_lines(0, curtty->height);
+		vt_cursor_on();
+	}
 }
