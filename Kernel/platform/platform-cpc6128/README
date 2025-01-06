@@ -42,7 +42,7 @@ To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load
 
 ## TODO
 
-Fix fdc driver.
+Fix fdc driver. DONE
 Fix IDE driver. DONE
 Sometimes the top byte of the characters isn't drawn. FIXED
 Vertical scroll shows the bottom line of the screen in the top of the screen. FIXED
