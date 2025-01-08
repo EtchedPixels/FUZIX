@@ -530,7 +530,7 @@ void devtty_init()
 	/* set default keyboard delay/repeat rates */
 	keyrepeat.first = REPEAT_FIRST * (TICKSPERSEC / 10);
 	keyrepeat.continual = REPEAT_CONTINUAL * (TICKSPERSEC / 10);
-	is_rgb = *((volatile uint8_t *)0xFF22) & 8;
+	is_rgb = (*((volatile uint8_t *)0xFF22) & 8) == 0;
 	if (is_rgb)
 		apply_defmode(0);
 	else {
