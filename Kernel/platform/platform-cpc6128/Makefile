@@ -1,7 +1,7 @@
 CSRCS = devtty.c devices.c main.c
 CDSRCS = discard.c
-DSRCS = ../../dev/tinyide.c ../../dev/tinydisk.c ../../dev/devfdc765.c ../../dev/tinysd.c ../../dev/ch375.c
-DDSRCS = ../../dev/tinyide_discard.c ../../dev/tinydisk_discard.c ../../dev/tinysd_discard.c
+DSRCS = ../../dev/tinyide.c ../../dev/tinydisk.c ../../dev/devfdc765.c ../../dev/ch375.c
+DDSRCS = ../../dev/tinyide_discard.c ../../dev/tinydisk_discard.c
 DZSRCS = ../../dev/cpc/cpcide.c ../../dev/cpc/cpckeyboard.c ../../dev/cpc/devinput.c ../../dev/cpc/albireo.c
 DDZSRCS =
 ASRCS = crt0.s cpc6128.s cpcvideo.s fdc765.s
