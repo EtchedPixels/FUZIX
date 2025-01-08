@@ -279,7 +279,7 @@ _clear_lines:
 	beq	donea
 clt:
 	std	,u++
-	leax	-1,x
+	leax	-2,x
 	bne	clt
 donea:
 	ldd	#0x0102
@@ -326,7 +326,7 @@ scrupt:
 	std	,u++
 	ldd	,x++
 	std	,u++
-	leay	-4,y
+	leay	-8,y
 	bne	scrupt
 	ldd	#0x0102
 	std	$FFA9
@@ -351,15 +351,15 @@ _scroll_down:
 	std	$FFA9
 
 scrdnt:
-	ldd	,--x
-	std	,--u
-	ldd	,--x
-	std	,--u
-	ldd	,--x
-	std	,--u
-	ldd	,--x
-	std	,--u
-	leay	-4,y
+	ldd	,--u
+	std	,--x
+	ldd	,--u
+	std	,--x
+	ldd	,--u
+	std	,--x
+	ldd	,--u
+	std	,--x
+	leay	-8,y
 	bne	scrdnt
 	ldd	#0x0102
 	std	$FFA9
