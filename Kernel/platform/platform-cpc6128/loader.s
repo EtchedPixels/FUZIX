@@ -1,6 +1,6 @@
 ;;from https://cpctech.cpc-live.com/
 ;; Load data by talking directly to the NEC765 floppy disc controller (FDC)
-;;
+;; https://cpctech.cpcwiki.de/source/fdcload.html from Kevin Thacker site
 ;; Code assumes there is a drive 0 and there is a disc in it and the disc is formatted
 ;; to SYSTEM format.
 .area BOOT (ABS)

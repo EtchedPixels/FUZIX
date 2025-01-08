@@ -68,7 +68,7 @@ image:
 	dd if=../../fuzix.bin of=padding.bin bs=512 seek=1 conv=notrunc
 	cat padding.bin >disk.raw
 	# And generate a 40 track cpc system disk from it
-	../../tools/raw2dskcpc disk.raw fuzix.dsk
+	../../tools/raw2dskcpc disk.raw fuzix.dsk 40 1 64
 	cp fuzix.dsk $(IMAGES)/fuzix.dsk
 	
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
@@ -81,4 +81,6 @@ diskimage:
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=67584 conv=notrunc
 	# Make an emulator image of it
 	cat $(FUZIX_ROOT)/Standalone/filesystem-src/hdfheader $(IMAGES)/disk.img > $(IMAGES)/emu-ide.hdf
+	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/root.raw 64 1440)
+	../../tools/raw2dskcpc $(FUZIX_ROOT)/Images/$(TARGET)/root.raw $(FUZIX_ROOT)/Images/$(TARGET)/root.dsk 80 2 0
 	

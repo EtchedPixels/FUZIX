@@ -25,12 +25,8 @@ videopos: ;get x->d, y->e => set de address for top byte of char
         add hl,hl
         add hl,hl
         ld e,d
-        ld d,#0
+        ld d,#SCREENBASE
         add hl,de
-        ld a,#SCREENBASE
-        ld b,a
-        ld c,#0
-        add hl,bc
         ld de,(#scroll_offset)
         add hl,de
         res 7,h
@@ -38,33 +34,7 @@ videopos: ;get x->d, y->e => set de address for top byte of char
         res 3,h
         ex de,hl
         VIDEO_MAP
-	ret     
-
-;from cpc firmware: https://github.com/Bread80/CPC6128-Firmware-Source/tree/main
- 
-scr_next_line:                    ;{{Addr=$0c1f Code Calls/jump count: 10 Data use count: 1}}
-        ld      a,d               ;{{0c1f:7c}} 
-        add     a,#8             ;{{0c20:c608}} 
-        ld      d,a               ;{{0c22:67}} 
-;        and     #0x38               ;{{0c23:e638}} 
-;        ret     nz                ;{{0c25:c0}} 
-;        ld      a,d               ;{{0c26:7c}} 
-;        sub     #0x40               ;{{0c27:d640}} 
-;        ld      d,a               ;{{0c29:67}} 
-;        ld      a,e               ;{{0c2a:7d}} 
-;        add     a,#64             ;{{0c2b:c650}} ; number of bytes per line
-;        ld      e,a               ;{{0c2d:6f}} 
-;        ret     nc                ;{{0c2e:d0}} 
-;        inc     d                 ;{{0c2f:24}} 
-;        ld      a,d               ;{{0c30:7c}} 
-;        and     #0x07               ;{{0c31:e607}} 
-;        ret     nz                ;{{0c33:c0}} 
-;        ld      a,d               ;{{0c34:7c}} 
-;        sub     #0x08               ;{{0c35:d608}} 
-;        ld      d,a               ;{{0c37:67}}
-        res 7,d
-        set 6,d
-        ret                 
+	ret                  
 
 	.if CPCVID_ONLY
 _plot_char:
@@ -94,56 +64,14 @@ cpc_plot_char:
         ld a,(hl)
         ld (de),a
 plot_char_line:
-        call scr_next_line
+        ld a,d               
+        add a,#8             
+        ld  d,a              
         inc hl
         ld a,(hl)
         ld (de),a
         djnz plot_char_line
 
-;Fastest way to print a character in Mode 2 : https://www.cpcwiki.eu/index.php/Programming:Next_/_previous_line_calculation
-;
-;Input: HL=Address of sprite/char.data DE=screen address (works for every first line of screen !! For example: &C000, &C050, &C0A0 etc..)
-;
-;Destroyed: AF, C
-;
-;Unchanged: DE returns to its input value (through C register)
-;
-;'If HL is not page aligned, INC HL must be used instead of INC L (1 NOP SLOWER!)
-;
-;
-;        ld c,d
-;        ld a,(hl)
-;        ld (de),a
-;        inc hl
-;        set 3,d
-;        ld a,(hl)
-;        ld (de),a
-;        inc hl
-;        ld d,c
-;        set 4,d
-;        ld a,(hl)
-;        ld (de),a
-;        inc hl
-;        set 3,d
-;        ld a,(hl)
-;        ld (de),a
-;        inc hl
-;        ld d,c
-;        set 5,d
-;        ld a,(hl)
-;        ld (de),a
-;        inc hl
-;        set 3,d
-;        ld a,(hl)
-;        ld (de),a
-;        inc hl
-;        set 4,d
-;        res 3,d
-;        ld a,(hl)
-;        ld (de),a
-;        inc hl
-;        set 3,d
-;        ld a,(hl)
         
 	; We do underline for now - not clear italic or bold are useful
 	; with the font we have.
@@ -181,15 +109,13 @@ clear_next_line:
         call _clear_across
         pop hl              ; clear stack
         pop hl
-
         pop de
         inc e
+
 nextline:
         dec d
         jr nz, clear_next_line
-
         ret
-
 
 	.if CPCVID_ONLY
 _clear_across:
@@ -210,30 +136,6 @@ cpc_clear_across:
         pop bc
         push de
         pop hl              ; copy to hl
-
-        ; no boundary checks. Assuming that D + C < SCREEN_WIDTH
-        
-
-        ;ld c,d
-        ;ld (de),a
-        ;set 3,d
-        ;ld (de),a
-        ;ld d,c
-        ;set 4,d
-        ;ld (de),a
-        ;set 3,d
-        ;ld (de),a
-        ;ld d,c
-        ;set 5,d
-        ;ld (de),a
-        ;set 3,d
-        ;ld (de),a
-        ;set 4,d
-        ;res 3,d
-        ;ld (de),a
-        ;set 3,d
-        ;ld (de),a
-        
         ld b,#8
 clear_line:
         ld a, b
@@ -246,7 +148,9 @@ clear_scanline:
         dec c
         jr nz, clear_scanline
         ex de, hl
-        call scr_next_line
+        ld a,d               
+        add a,#8             
+        ld  d,a              
         pop bc
         pop af
         ld b,a
@@ -256,6 +160,18 @@ clear_scanline:
 	pop de
 	VIDEO_UNMAP
         ret
+
+	.if CPCVID_ONLY
+_scroll_up:
+	.endif
+cpc_scroll_up:
+        ld hl, (CRTC_offset)
+        ld bc, #32           ; one crtc character are two bytes
+        add hl,bc
+        ld a,h
+        and #3
+        ld h,a
+        ld (CRTC_offset),hl
 
 set_hardware_scroll:
         ld bc,#0xbc0c           ;select CRTC R12
@@ -270,20 +186,8 @@ set_hardware_scroll:
         out (c),l
         add hl,hl
         ld (scroll_offset),hl   ;prepare scroll_offset for videopos
-        ret
-	.if CPCVID_ONLY
-_scroll_up:
-	.endif
-cpc_scroll_up:
-        ld hl, (CRTC_offset)
-        ld bc, #32           ; one crtc character are two bytes
-        add hl,bc
-        ld a,h
-        and #3
-        ld h,a
-        ld (CRTC_offset),hl
-        jr set_hardware_scroll
- 
+        ret 
+
 	.if CPCVID_ONLY
 _scroll_down:
 	.endif
@@ -297,7 +201,6 @@ cpc_scroll_down:
         ld h,a
         ld (CRTC_offset),hl
         jr set_hardware_scroll
-        ret
 
 	.if CPCVID_ONLY
 _cursor_on:
@@ -309,16 +212,15 @@ cpc_cursor_on:
         push hl
         ld (cursorpos), de
         call videopos
-        
-        ld b,#7
-set_cursor_line:
-        call scr_next_line
-        djnz set_cursor_line
+        ld a,d               
+        add a,#0x38             
+        ld  d,a            
         ld a,#0xFF
         ld (de),a
 
 	VIDEO_UNMAP
         ret
+
 	.if CPCVID_ONLY
 _cursor_disable:
 _cursor_off:
@@ -327,11 +229,9 @@ cpc_cursor_disable:
 cpc_cursor_off:
         ld de, (cursorpos)
         call videopos
-
-        ld b,#7
-reset_cursor_line:
-        call scr_next_line
-        djnz reset_cursor_line
+        ld a,d               
+        add a,#0x38
+        ld  d,a              
         xor a
         ld (de),a
 	

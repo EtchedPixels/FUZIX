@@ -1,14 +1,15 @@
 ;
 ;		765 Floppy Controller Support
 ;
-;	This is based upon the Amstrad NC200 driver by David Given
+;	This is based upon the Amstrad NC200 driver by David Given and 
+;  this example https://cpctech.cpcwiki.de/source/fdcload.html from Kevin Thacker site
 ;
-;	It differs on the Sinclair in the following ways
+;	It differs on the CPC in the following ways
 ;
-;	- The timings are tighter (3.5Mhz) so we use in a,(c) jp p and other
+;	- The timings are tighter so we use in a,(c) jp p and other
 ;	  tricks to make the clocks. Even so it should be in uncontended RAM
 ;
-;	- Sinclair doesn't expose the tc line, so if the 765 decides to
+;	- The CPC doesn't expose the tc line, so if the 765 decides to
 ;	  expect more data or feed us more data all we can do is dump it or
 ;	  feed it crap until it shuts up
 ;
@@ -60,7 +61,7 @@
 
 ;
 ; Twiddle the Terminal Count line to the FDC. Not supported by the
-; Spectrum +3
+; CPC
 ;
 _fd765_do_nudge_tc:
 	ret
@@ -69,21 +70,44 @@ _fd765_do_nudge_tc:
 
 fd765_tx:
 	push bc
-	ex af, af'
-	ld bc,#0xfb7e			; floppy register (16bit access)
-fd765_tx_loop:
-	in a, (c)
-	add a
-	jr nc, fd765_tx_loop
-	; FIXME: backport this fix
-	add a
-	jr c, fd765_tx_exit		; controller doesn't want data ??
-	ex af, af'
-	ld c,#0x7f
-	out (c), a
-	ex (sp),hl
-	ex (sp),hl
-fd765_tx_exit:
+;	ex af, af'
+;	ld bc,#0xfb7e			; floppy register (16bit access)
+;fd765_tx_loop:
+;	in a, (c)
+;	add a
+;	jr nc, fd765_tx_loop
+;	; FIXME: backport this fix
+;	add a
+;	jr c, fd765_tx_exit		; controller doesn't want data ??
+;	ex af, af'
+;	ld c,#0x7f
+;	out (c), a
+;	ex (sp),hl
+;	ex (sp),hl
+;fd765_tx_exit:
+	ld bc,#0xfb7e					;; I/O address for FDC main status register
+	push af						;;
+	fwc1: in a,(c)				;; 
+	add a,a						;; 
+	jr nc,fwc1					;; 
+	add a,a						;; 
+	jr nc,fwc2					;; 
+	pop af						;; 
+	ret							
+
+	fwc2: 
+	pop af				;; 
+
+	inc c						;; 
+	out (c),a					;; write command byte 
+	dec c						;; 
+
+	;; some FDC documents say there must be a delay between each
+	;; command byte, but in practice it seems this isn't needed on CPC.
+	;; Here for compatiblity.
+	ld a,#5				;;
+	fwc3: dec a			;; 
+	jr nz,fwc3			;; 
 	pop bc
 	; FIXME: is our delay quite long enough for spec ?
 	; might need them to be ex (sp),ix ?
@@ -94,23 +118,45 @@ fd765_tx_exit:
 
 fd765_read_status:
 	ld hl, #_fd765_status
-	ld c, #0x7e		; we flip between 2ffd 3ffd as we go
-read_status_loop:
-	ld b,#0xfb			; control port
-	in a, (c)
-	rla 				; RQM...
-	jr nc, read_status_loop 	; ...low, keep waiting 
-	rla				; DIO...
-	ret nc				; ...low, no more data
-	ld c,#0x7f			; data port
-	in a,(c)			; INI ? FIXME
-	ld (hl),a
-	inc hl
-	ex (sp),hl			; wait for the 765A
-	ex (sp),hl
-	ex (sp),hl
-	ex (sp),hl
-	jr read_status_loop		; next byte
+;	ld c, #0x7e		; we flip between 2ffd 3ffd as we go
+;read_status_loop:
+;	ld b,#0xfb			; control port
+;	in a, (c)
+;	rla 				; RQM...
+;	jr nc, read_status_loop 	; ...low, keep waiting 
+;	rla				; DIO...
+;	ret nc				; ...low, no more data
+;	ld c,#0x7f			; data port
+;	in a,(c)			; INI ? FIXME
+;	ld (hl),a
+;	inc hl
+;	ex (sp),hl			; wait for the 765A
+;	ex (sp),hl
+;	ex (sp),hl
+;	ex (sp),hl
+;	jr read_status_loop		; next byte
+	ld bc,#0xfb7e
+	fr1:
+	in a,(c)
+	cp #0xc0 
+	jr c,fr1
+	
+	inc c 
+	in a,(c) 
+	dec c 
+	ld (hl),a 
+	inc hl 
+
+	ld a,#5 
+	fr2: 
+	dec a 
+	jr nz,fr2
+	in a,(c) 
+	and #0x10 
+	jr nz,fr1
+
+
+	ret
 _fd765_status:
 	.ds 8				; 8 bytes of status data
 
@@ -157,25 +203,17 @@ _fd765_drive:
 ; Waits for a SEEK or RECALIBRATE command to finish by polling SENSE INTERRUPT STATUS.
 wait_for_seek_ending:
 
-	push bc
-	ld bc,#0x7f10
-	out (c),c
-	ld c,#0x55
-	out (c),c
-
 	ld a, #0x08				; SENSE INTERRUPT STATUS
 	call fd765_tx
 	call fd765_read_status
 
-	ld a, (_fd765_status)
+	ld a, (#_fd765_status)
 	bit 5, a				; SE, seek end
 	jr z, wait_for_seek_ending
 
-	ld bc,#0x7f10
-	out (c),c
-	ld c,#0x4c
-	out (c),c
-	pop bc
+	bit 4,a
+	
+	ret
 
 	; Now settle the head (FIXME: what is the right value ?)
 	ld a, #30		; 30ms
@@ -191,12 +229,6 @@ wait_ms_loop2:
 	jr nz, wait_ms_loop2
 	dec a
 	jr nz, wait_ms_loop
-	ld bc,#0x7f10
-	out (c),c
-	ld a,(_vtborder)
-	set 6,a
-	res 7,a
-	out (c),a
 	pop bc
 	ret
 
@@ -213,7 +245,6 @@ _fd765_motor_on:
 	ld a,(diskmotor)
 	or a
 	ret nz
-	push bc
 	ld a,#0x01
 	ld (diskmotor),a
 	; Take effect
@@ -232,7 +263,6 @@ wait1:
 	jr nz, wait1
 	dec e
 	jr nz, wait2
-	pop bc
 	ret
 ;
 ; Reads a 512-byte sector, after having previously saught to the right track.
@@ -255,7 +285,7 @@ _fd765_do_read:
 
 	ld bc,#0x7f10
 	out (c),c
-	ld c,#0x46
+	ld c,#0x46		;Cyan
 	out (c),c
 
 	di				; performance critical,
@@ -265,52 +295,68 @@ _fd765_do_read:
 					; to fire off the command	
 	ld hl, (_fd765_buffer)
 	ld bc, #0xfb7e
-	ld de, #0x2000			; so we can make timing
-	jp read_wait
+
+fdc_data_read: 
+	in a,(c)				          ;; FDC has data and the direction is from FDC to CPU
+	jp p,fdc_data_read		;; 
+	and #0x20					;; "Execution phase" i.e. indicates reading of sector data
+	jp z,fdc_read_end 		
+
+	inc c					;; BC = I/O address for FDC data register
+	in a,(c)				;; read from FDC data register
+	ld (hl),a				;; write to memory
+	dec c					;; BC = I/O address for FDC main status register
+	inc hl					;; increment memory pointer
+	jp fdc_data_read
+
+fdc_read_end:
+
+;	ld de, #0x2000			; so we can make timing
+;	jp read_wait
 ;
 ;	First 256 bytes
 
-read_loop:
-	inc c				; data port
-	ini
-	inc b
-	dec c				; control port
-	dec e
-	jp z, read_wait2
-read_wait:
-	in a,(c)			; read the fdc status
-	jp p, read_wait
-	and d
-	jp nz, read_loop
-	jp read_finished
+;read_loop:
+;	inc c				; data port
+;	ini
+;	inc b
+;	dec c				; control port
+;	dec e
+;	jp z, read_wait2
+;read_wait:
+;	in a,(c)			; read the fdc status
+;	jp p, read_wait
+;	and d
+;	jp nz, read_loop
+;	jp read_finished
 ;
 ;	Second 256 bytes
 ;
-read_loop2:
-	inc c			; data port
-	ini
-	inc b
-	dec c			; control port
-	dec e
-	jp z, read_flush_wait
-read_wait2:
-	in a,(c)			; read the fdc status
-	jp p, read_wait2
-	and d
-	jp nz, read_loop2
-	jp read_finished
+;read_loop2:
+;	inc c			; data port
+;	ini
+;	inc b
+;	dec c			; control port
+;	dec e
+;	jp z, read_flush_wait
+;read_wait2:
+;	in a,(c)			; read the fdc status
+;	jp p, read_wait2
+;	and d
+;	jp nz, read_loop2
+;	jp read_finished
 ;
 ;	Flush out any extra data (no tc control)
 ;
-read_flush:
-	inc c
-	in a,(c)
-	dec c			
-read_flush_wait:
-	in a,(c)
-	jp p, read_flush_wait
-	and d
-	jp nz, read_flush
+;read_flush:
+;	inc c
+;	in a,(c)
+;	dec c			
+;read_flush_wait:
+;	in a,(c)
+;	jp p, read_flush_wait
+;	and d
+;	jp nz, read_flush
 ;
 ;	And done
 ;
@@ -325,8 +371,6 @@ read_finished:
 	ld bc,#0x7f10
 	out (c),c
 	ld a,(_vtborder)
-	set 6,a
-	res 7,a
 	out (c),a
 
 	pop af
@@ -367,7 +411,7 @@ _fd765_do_write:
 
 	ld bc,#0x7f10
 	out (c),c
-	ld c,#0x43
+	ld c,#0x47		;Pink
 	out (c),c
 
 	di
@@ -377,44 +421,58 @@ _fd765_do_write:
 					; to fire off the command	
 	ld hl, (_fd765_buffer)
 	ld bc, #0xfb7e
-	ld de,#0x2000			; to make timing
-	jp write_wait
+fdc_data_write: 
+	in a,(c)				          ;; FDC has data and the direction is from FDC to CPU
+	jp p,fdc_data_write		;; 
+	and #0x20					;; "Execution phase" i.e. indicates reading of sector data
+	jp z,fdc_write_end 		
 
-write_loop:
-	inc c
-	outi
-	inc b
-	dec c
-	dec e
-	jp z, write_wait2
-write_wait:
-	in a,(c)
-	jp p, write_wait
-	and d
-	jp nz, write_loop
-	jp write_finished
-write_loop2:
-	inc c
-	outi
-	inc b
-	dec c
-	dec e
-	jp z, write_flush_wait
-write_wait2:
-	in a,(c)
-	jp p, write_wait2
-	and d
-	jp nz, write_loop2
-	jp write_finished
-write_flush:
-	inc c
-	in a,(c)
-	dec c
-write_flush_wait:
-	in a,(c)
-	jp p, write_flush_wait
-	and d
-	jp nz, write_flush
+	inc c					;; BC = I/O address for FDC data register
+	ld a,(hl)				;; read from memory
+	out (c),a				;; write to FDC data register
+	dec c					;; BC = I/O address for FDC main status register
+	inc hl					;; increment memory pointer
+	jp fdc_data_write
+
+fdc_write_end:
+;	ld de,#0x2000			; to make timing
+;	jp write_wait
+;
+;write_loop:
+;	inc c
+;	outi
+;	inc b
+;	dec c
+;	dec e
+;	jp z, write_wait2
+;write_wait:
+;	in a,(c)
+;	jp p, write_wait
+;	and d
+;	jp nz, write_loop
+;	jp write_finished
+;write_loop2:
+;	inc c
+;	outi
+;	inc b
+;	dec c
+;	dec e
+;	jp z, write_flush_wait
+;write_wait2:
+;	in a,(c)
+;	jp p, write_wait2
+;	and d
+;	jp nz, write_loop2
+;	jp write_finished
+;write_flush:
+;	inc c
+;	in a,(c)
+;	dec c
+;write_flush_wait:
+;	in a,(c)
+;	jp p, write_flush_wait
+;	and d
+;	jp nz, write_flush
 write_finished:
 	ld (_fd765_buffer), hl
 	call _fd765_do_nudge_tc		; Tell FDC we've finished
@@ -425,8 +483,6 @@ write_finished:
 	ld bc,#0x7f10
 	out (c),c
 	ld a,(_vtborder)
-	set 6,a
-	res 7,a
 	out (c),a
 
 	pop af

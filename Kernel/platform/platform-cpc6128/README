@@ -29,7 +29,7 @@ In the CPC6128:
 
 Video mode 2 is used. The video driver configures the CRTC in 64x32 characters to do easy hardware scroll and use the whole video memory bank.
 
-Trying to mount the floppy hangs the machine, and may do nasty things to the floppy and the drive, don't try on a real machine!!
+The floppy driver seems to work. /dev/fd0 is drive A and /dev/fd1 is drive B. fd0 is hard coded to one side and fd1 to double side. A minimal system root disk image is generated to boot from fd1. Format is 9 sectors per track with sector ID from 1 to 9.
 
 The IDE driver that is supposed to work with the symbiface and xmass fails to initialize. FIXED, tested with ACE-DL emulator x-mass suport.
 
@@ -42,7 +42,7 @@ To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load
 
 ## TODO
 
-Fix fdc driver.
+Fix fdc driver. DONE
 Fix IDE driver. DONE
 Sometimes the top byte of the characters isn't drawn. FIXED
 Vertical scroll shows the bottom line of the screen in the top of the screen. FIXED
