@@ -141,7 +141,7 @@ tfr_cmd:
 c@	sta	b@+1		; !!! self modify inner loop
 	stb	b@+3		; !!!  
 	bsr	vidptr		; U = screen addr
-	tfr	x,y		; Y = ptr to Height, width
+	leay	,x		; Y = ptr to Height, width
 	leax	4,x		; X = pixel data
 	;; outter loop: iterate over pixel rows
 a@	lda	3,y		; count = width
@@ -228,8 +228,7 @@ _cursor_on:
 	puls	y,cc,pc
 
 txtaddr:		; A = X B = Y preserve X
-	ldy	_curtty
-	ldy	,y		; Base
+	ldy	[_curtty]	; base
 	leay	a,y	; lea is signed
 	leay	a,y	; 80 cols will overflow if we shift first
 	lda	_twidth
@@ -249,7 +248,9 @@ _plot_char:
 	cmpb	#'_'
 	beq	unsc
 	cmpb	#'^'
-	beq	hat
+	bne	plotit
+hat:
+	ldb	#0x5E
 plotit:
 	lda	_curattr
 	sta	1,y
@@ -260,31 +261,26 @@ plotit:
 unsc:
 	ldb	#0x7F
 	bra	plotit
-hat:
-	ldb	#0x5E
-	bra	plotit
 
 _clear_lines:
-	pshs	y,u,cc
+	pshs	y,cc
 	clra
 	bsr	txtaddr
-	lda	7,s
+	lda	5,s
 	ldb	_twidth
 	mul
+	beq	donea
 	tfr	d,x
 	lda	#$20
 	ldb	_curattr
-	tfr	y,u
-	cmpx	#0
-	beq	donea
 clt:
-	std	,u++
+	std	,y++
 	leax	-2,x
 	bne	clt
 donea:
 	ldd	#0x0102
 	std	$FFA9
-	puls	y,u,cc,pc
+	puls	y,cc,pc
 
 _clear_across:
 	cmpx #0
@@ -306,9 +302,8 @@ clat:
 _scroll_up:
 	pshs	u,y,cc
 	orcc	#$10
-	ldx	_curtty
-	ldx	,x
-	tfr	x,u	; save screen base in U as source
+	ldx	[_curtty]	; base
+	leau	,x	; save screen base in U as source
 	ldb	_twidth	; in bytes (can be > 128 so use abx)
 	abx		; X now points to line below.
 	lda	_theight
@@ -317,54 +312,53 @@ _scroll_up:
 	tfr	d,y	; words to copy for a whole screen minus a line
 	ldd	#0x0809
 	std	$FFA9
+	exg	x,u	; burn 8 cycles here to save 4 per loop
 scrupt:
-	ldd	,x++
-	std	,u++
-	ldd	,x++
-	std	,u++
-	ldd	,x++
-	std	,u++
-	ldd	,x++
-	std	,u++
+	pulu	d
+	std	,x++
+	pulu	d
+	std	,x++
+	pulu	d
+	std	,x++
+	pulu	d
+	std	,x++
 	leay	-8,y
 	bne	scrupt
 	ldd	#0x0102
 	std	$FFA9
-	puls	u,y,cc
-	rts
+	puls	u,y,cc,pc
 
 _scroll_down:
 	pshs	u,y,cc
 	orcc	#$10
-	ldx	_curtty
-	ldx	,x		; base
+	ldx	[_curtty]	; base
 	ldb	_twidth
 	lda	_theight
 	deca
 	mul
 	tfr	d,y	; count
 	leax	d,x	; end of screen bar one line
-	tfr	x,u	; save
+	leau	,x	; save
 	ldb	_twidth
 	abx		; true end (must be abx as > 128 and unsigned)
 	ldd	#0x0809
 	std	$FFA9
+	exg	x,u	; burn 8 cycles here to save 4 per loop
 
 scrdnt:
-	ldd	,--u
-	std	,--x
-	ldd	,--u
-	std	,--x
-	ldd	,--u
-	std	,--x
-	ldd	,--u
-	std	,--x
+	ldd	,--x
+	pshu	d
+	ldd	,--x
+	pshu	d
+	ldd	,--x
+	pshu	d
+	ldd	,--x
+	pshu	d
 	leay	-8,y
 	bne	scrdnt
 	ldd	#0x0102
 	std	$FFA9
-	puls	u,y,cc
-	rts
+	puls	u,y,cc,pc
 
 	.area .videodata
 _twidth:

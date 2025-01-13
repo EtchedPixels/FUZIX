@@ -86,14 +86,14 @@ _m6847_plot_char:
 	lda 4,s
 	bsr vidaddr		; preserves X (holding the char)
 	tfr x,d
-	rolb			; multiply by 8
+	lslb			; multiply by 8
 	rola
-	rolb
+	lslb
 	rola
-	rolb
+	lslb
 	rola
+	addd #_fontdata_8x8	; relative to font
 	tfr d,x
-	leax _fontdata_8x8,x		; relative to font
 	jsr _map_video
 	ldb _vtattr
 	andb #0x3F		; drop the bits that don't affect our video
@@ -164,30 +164,27 @@ plotnext:
 ;	Fast path for normal attributes
 ;
 plot_fast:
-	lda ,x+			; simple 8x8 renderer for now
+	leay 128,y	; saves time later keeping offsets 8-bit
+	ldd ,x		; simple 8x8 renderer for now
 	coma
-	sta 0,y
-	lda ,x+
+	comb
+	sta -128,y
+	stb -96,y
+	ldd 2,x
 	coma
-	sta 32,y
-	lda ,x+
+	comb
+	sta -64,y
+	stb -32,y
+	ldd 4,x
 	coma
+	comb
+	sta ,y
+	stb 32,y
+	ldd 6,x
+	coma
+	comb
 	sta 64,y
-	lda ,x+
-	coma
-	sta 96,y
-	lda ,x+
-	coma
-	sta 128,y
-	lda ,x+
-	coma
-	sta 160,y
-	lda ,x+
-	coma
-	sta 192,y
-	lda ,x+
-	coma
-	sta 224,y
+	stb 96,y
 	jsr _unmap_video
 	puls y,pc
 
@@ -195,95 +192,79 @@ plot_fast:
 ;	void scroll_up(void)
 ;
 _m6847_scroll_up:
-	pshs y
+	pshs y,u
 	ldy #VIDEO_BASE
-	leax 256,y
+	leau 256,y
 	jsr _map_video
 vscrolln:
 	; Unrolled line by line copy
-	ldd ,x++
+	pulu d,x
 	std ,y++
-	ldd ,x++
+	stx ,y++
+	pulu d,x
 	std ,y++
-	ldd ,x++
+	stx ,y++
+	pulu d,x
 	std ,y++
-	ldd ,x++
+	stx ,y++
+	pulu d,x
 	std ,y++
-	ldd ,x++
+	stx ,y++
+	pulu d,x
 	std ,y++
-	ldd ,x++
+	stx ,y++
+	pulu d,x
 	std ,y++
-	ldd ,x++
+	stx ,y++
+	pulu d,x
 	std ,y++
-	ldd ,x++
+	stx ,y++
+	pulu d,x
 	std ,y++
-	ldd ,x++
-	std ,y++
-	ldd ,x++
-	std ,y++
-	ldd ,x++
-	std ,y++
-	ldd ,x++
-	std ,y++
-	ldd ,x++
-	std ,y++
-	ldd ,x++
-	std ,y++
-	ldd ,x++
-	std ,y++
-	ldd ,x++
-	std ,y++
-	cmpx #VIDEO_END
+	stx ,y++
+	cmpu #VIDEO_END
 	bne vscrolln
 	jsr _unmap_video
-	puls y,pc
+	puls y,u,pc
 
 ;
 ;	void scroll_down(void)
 ;
 _m6847_scroll_down:
-	pshs y
-	ldy #VIDEO_END
-	leax -256,y
+	pshs y,u
+	ldu #VIDEO_END
+	leay -256,u
 	jsr _map_video
 vscrolld:
 	; Unrolled line by line loop
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	ldd ,--x
-	std ,--y
-	cmpx #VIDEO_BASE
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	ldx ,--y
+	ldd ,--y
+	pshu d,x
+	cmpy #VIDEO_BASE
 	bne vscrolld
 	jsr _unmap_video
-	puls y,pc
+	puls y,u,pc
 
 ;
 ;	clear_across(int8_t y, int8_t x, uint16_t l)
@@ -292,20 +273,19 @@ _m6847_clear_across:
 	pshs y
 	lda 4,s		; x into A, B already has y
 	jsr vidaddr	; Y now holds the address
-	tfr x,d		; Shuffle so we are writng to X and the counter
-	tfr y,x		; l is in d
+	tfr x,d		; Counter is in D
 	jsr _map_video
 	lda #$ff
+	leay 128,y	; saves time later keeping offsets 8-bit
 clearnext:
-	sta ,x
-	sta 32,x
-	sta 64,x
-	sta 96,x
-	sta 128,x
-	sta 160,x
-	sta 192,x
-	sta 224,x
-	leax 1,x
+	sta -128,y
+	sta -96,y
+	sta -64,y
+	sta -32,y
+	sta ,y+
+	sta 31,y
+	sta 63,y
+	sta 95,y
 	decb
 	bne clearnext
 	jsr _unmap_video
@@ -317,30 +297,30 @@ _m6847_clear_lines:
 	pshs y
 	clra			; b holds Y pos already
 	jsr vidaddr		; y now holds ptr to line start
-	tfr y,x
-	lsl 4,s
-	lsl 4,s
-	lsl 4,s
+	ldb 4,s
+	lslb
+	lslb
+	lslb
 	jsr _map_video
-	ldd #$ffff
+	ldx #$ffff
 wipel:
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	std ,x++
-	dec 4,s			; count of lines
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	stx ,y++
+	decb			; count of lines
 	bne wipel
 	jsr _unmap_video
 	puls y,pc
@@ -349,7 +329,7 @@ _m6847_cursor_on:
 	pshs y
 	lda  4,s
 	jsr vidaddr
-	tfr y,x
+	leax ,y
 	puls y
 	stx cursor_save
 	; Fall through
@@ -359,14 +339,15 @@ _m6847_cursor_off:
 	bitb #0x80
 	bne nocursor
 	ldx cursor_save
+	leax 128,x	; saves time later keeping offsets 8-bit
+	com -128,x
+	com -96,x
+	com -64,x
+	com -32,x
 	com ,x
 	com 32,x
 	com 64,x
 	com 96,x
-	com 128,x
-	com 160,x
-	com 192,x
-	com 224,x
 	jsr _unmap_video
 nocursor:
 _m6847_cursor_disable:
@@ -397,7 +378,7 @@ tfr_cmd:
 c@	sta	b@+1		; !!! self modify inner loop
 	stb	b@+3		; !!!  
 	bsr	vidptr		; U = screen addr
-	tfr	x,y		; Y = ptr to Height, width
+	leay	,x		; Y = ptr to Height, width
 	leax	4,x		; X = pixel data
 	;; outter loop: iterate over pixel rows
 a@	lda	3,y		; count = width
