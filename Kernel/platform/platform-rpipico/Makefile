@@ -1,17 +1,16 @@
 # Set one of these depending.
 export PICO_SDK_FETCH_FROM_GIT = yes
 #export PICO_SDK_PATH = ${HOME}/.pico-sdk/sdk/1.5.1
-#export PICO_SDK_PATH = ${HOME}/doclocal/pico-sdk
-SUBTARGET=pico
 
 # Set 'SUBTARGET' to one of pico-sdk compatible boards
+# valid values: pico or pico2
 ifndef SUBTARGET
-$(error "Must set SUBTARGET to pico, pico_w or pico2")
+SUBTARGET=pico # set default subtarget
 endif
 
-FSFAMILY=rp2040
-ifeq (SUBTARGET, 'pico2')
-FSFAMILY=data
+PICOTOOLFLAGS= --family rp2040
+ifeq (${SUBTARGET}, pico2)
+PICOTOOLFLAGS= --family data
 endif
 
 PICOTOOL=picotool
@@ -35,7 +34,7 @@ build/Makefile: CMakeLists.txt $(wildcard ../../*.[chS]) $(wildcard ../../*/*.[c
 image:: world
 	./update-flash.sh
 	../../../Standalone/mkftl -s 1952 -e 0x1000 -g 10 filesystem.img -o filesystem.ftl
-	${PICOTOOL} uf2 convert --verbose filesystem.ftl -t bin filesystem.uf2 -o 0x10018000 --family ${FSFAMILY}
+	${PICOTOOL} uf2 convert --verbose filesystem.ftl -t bin filesystem.uf2 -o 0x10018000 ${PICOTOOLFLAGS}
 
 diskimage:
 
