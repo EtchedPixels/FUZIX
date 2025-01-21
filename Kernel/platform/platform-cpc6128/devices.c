@@ -6,10 +6,11 @@
 #include <vt.h>
 #include <tinydisk.h>
 #include <tinyide.h>
-#include <tinysd.h>
+/*#include <tinysd.h>*/
 #include <devtty.h>
 #include <devfdc765.h>
-#include <netdev.h>
+/*#include <netdev.h>*/
+#include <devrd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
@@ -24,15 +25,17 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 4: /dev/mem etc	System devices (one offs) */
   {  no_open,      no_close,     sys_read,      sys_write,     sys_ioctl  },
   /* 5: Pack to 7 with nxio if adding private devices and start at 8 */
-  #ifdef CONFIG_NET
-  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
-  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
-  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
-  {  nxio_open,     no_close,   no_rdwr,        no_rdwr,        no_ioctl },
-#endif
+  #if defined EXTENDED_RAM_512 || defined EXTENDED_RAM_1024
+  /* 5: unused */
+  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  /* 6: unused */
+  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  /* 7: unused */
+   {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  /* 8: Standard memory expansions RAM swap */
+  {  rd_open,      no_close,     rd_read,       rd_write,      no_ioctl  },
+  #endif
 };
-
-
 
 
 bool validdev(uint16_t dev)
@@ -40,7 +43,7 @@ bool validdev(uint16_t dev)
     /* This is a bit uglier than needed but the right hand side is
        a constant this way */
     if(dev > ((sizeof(dev_tab)/sizeof(struct devsw)) << 8) - 1)
-	return false;
+	      return false;
     else
         return true;
 }
