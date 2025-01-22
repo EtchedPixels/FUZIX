@@ -30,6 +30,7 @@ f 0755 /bin/echo        echo
 f 0755 /bin/fgrep       fgrep
 f 0755 /bin/kill        kill
 f 0755 /bin/killall     killall
+f 0755 /bin/less        less
 f 0755 /bin/ls          ls
 f 0755 /bin/mkdir       mkdir
 f 0755 /bin/mkfs        mkfs
@@ -137,6 +138,7 @@ f 0755 /bin/yes         yes
 f 0655 /usr/man/man1/cp.1        cp.1
 f 0655 /usr/man/man1/cpuinfo.1   cpuinfo.1
 f 0655 /usr/man/man1/date.1      date.1
+f 0655 /usr/man/man1/less.1      less.1
 f 0655 /usr/man/man1/man.1       man.1
 f 0655 /usr/man/man1/mkdir.1     mkdir.1
 f 0655 /usr/man/man1/mv.1        mv.1

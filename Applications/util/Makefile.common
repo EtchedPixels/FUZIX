@@ -70,6 +70,7 @@ SRCS  = \
 	id.c \
 	kbdrate.c \
 	labelfs.c \
+	less.c \
 	ll.c \
 	ls.c \
 	mail.c \
