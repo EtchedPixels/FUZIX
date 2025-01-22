@@ -77,8 +77,8 @@
     #define TOTAL_SWAP_BLOCKS (1088-128) * 2
 #endif
 #ifdef EXTENDED_RAM_512
-    #define MAX_SWAPS	9       /*See platform devrd.c*/
-    #define PTABSIZE    9
+    #define MAX_SWAPS	8       /*See platform devrd.c*/
+    #define PTABSIZE    8
     #define TOTAL_SWAP_BLOCKS (576-128) * 2
 #endif
 #if defined EXTENDED_RAM_512 || defined EXTENDED_RAM_1024
