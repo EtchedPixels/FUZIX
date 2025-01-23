@@ -17,7 +17,6 @@
  * cause a malloc() failure, the program free()s memory,
  * and you won't be able to back to the start of the file.
  *
- * Also, the VT100 escape sequences are built-in.
  */
 
 #include <sys/types.h>
@@ -52,7 +51,7 @@ struct lineposn *linehead = NULL;	/* Head of the line offset list */
 struct lineposn *linetail = NULL;	/* Tail of the line offset list */
 struct termios orig_termios;		/* Original blocking terminal setting */
 
-/* VT100 Escape sequences */
+/* VT100 Escape sequences, but we check for VT52 and replace */
 char *cls = "[2J";			/* Clear the screen */
 char *home = "[;H";			/* Move to top-left corner */
 char *noattr = "[m";			/* No bold or underlining */
@@ -394,6 +393,15 @@ int main(int argc, char *argv[]) {
   get_termsize();
   set_cbreak();
   this = linehead;
+
+  /* If this is a VT52, replace the escape characters */
+  if (!strcmp(getenv("TERM"), "vt52")) {
+    cls = "HJ";
+    home = "H";
+    noattr = "";
+    bold = "";
+    underline = "";
+  }
 
   /* Allocate buffers to paint each line */
   linebuf = (char *) malloc(cols + 1);
