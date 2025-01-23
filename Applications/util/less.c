@@ -345,12 +345,13 @@ void paint_screen(struct lineposn *this) {
 
 /* Reposition the current view of the file */
 struct lineposn *reposition(struct lineposn *this, int count) {
+  int i;
   struct lineposn *last;
 
   if (count == 0) return (this);
 
   if (count > 0)
-    for (int i = 0; i < count; i++) {
+    for (i = 0; i < count; i++) {
       /* Get more offsets if we don't have any */
       if (this->next == NULL) append_offsets(this, count - i);
       last = this; this = this->next;
@@ -360,7 +361,7 @@ struct lineposn *reposition(struct lineposn *this, int count) {
       }
   } else {
     count = -count;
-    for (int i = 0; i < count; i++) {
+    for (i = 0; i < count; i++) {
       last = this; this = this->prev;
       if (this == NULL) {	/* Too far, go forward a line */
 	this = last; break;
