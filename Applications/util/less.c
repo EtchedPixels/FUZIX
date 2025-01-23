@@ -450,7 +450,6 @@ int main(int argc, char *argv[]) {
 
     switch (ch) {
     case 'q':			/* Quit the pager */
-    case EOF:
       looping = 0;
       break;
     case 'f':			/* Move down a screen */
