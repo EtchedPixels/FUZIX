@@ -6,6 +6,7 @@
 platform/platform-cpc6128/crt0.rel
 platform/platform-cpc6128/commonmem.rel
 platform/platform-cpc6128/cpc6128.rel
+platform/platform-cpc6128/rd_cpcsme.rel
 platform/platform-cpc6128/cpcvideo.rel
 platform/platform-cpc6128/main.rel
 platform/platform-cpc6128/discard.rel
@@ -54,4 +55,5 @@ platform/platform-cpc6128/devfdc765.rel
 platform/platform-cpc6128/fdc765.rel
 platform/platform-cpc6128/ch375.rel
 platform/platform-cpc6128/albireo.rel
+platform/platform-cpc6128/devrd.rel
 -e

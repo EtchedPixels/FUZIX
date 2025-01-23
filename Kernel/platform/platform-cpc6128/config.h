@@ -27,8 +27,8 @@
 #define UDATA_BLKS	1
 #define UDATA_SIZE	0x200
 #define CONFIG_DYNAMIC_BUFPOOL
-#define CONFIG_DYNAMIC_SWAP
-#define MAXTICKS	20	/* Has to be high because we are swap only */
+
+#define MAXTICKS	60	/* Has to be high because we are swap only */
 
 #undef CONFIG_KMOD
 
@@ -70,8 +70,24 @@
 #define SWAPBASE 0x0000
 #define SWAPTOP  0xC000UL
 #define SWAP_SIZE 0x61		/* 48K + udata */
-#define MAX_SWAPS	16
-#define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
+#define EXTENDED_RAM_1024
+#ifdef EXTENDED_RAM_1024
+    #define MAX_SWAPS	19       /*See platform devrd.c*/
+    #define PTABSIZE    19
+    #define TOTAL_SWAP_BLOCKS (1088-128) * 2
+#endif
+#ifdef EXTENDED_RAM_512
+    #define MAX_SWAPS	8       /*See platform devrd.c*/
+    #define PTABSIZE    8
+    #define TOTAL_SWAP_BLOCKS (576-128) * 2
+#endif
+#if defined EXTENDED_RAM_512 || defined EXTENDED_RAM_1024
+    #define SWAPDEV  0x800  /* Device for swapping  - RAM disk on standard memory expansion. */
+#else
+    #define CONFIG_DYNAMIC_SWAP
+    #define SWAPDEV  (swap_dev)  /* Device for swapping (dynamic). */
+    #define MAX_SWAPS	16
+#endif
 
 /* We swap by hitting the user map */
 #define swap_map(x)		((uint8_t *)(x))
@@ -83,15 +99,12 @@
 #define CONFIG_TINYIDE_SDCCPIO
 #define CONFIG_TINYIDE_8BIT
 #define IDE_IS_8BIT(x)		1
-/* SD support */
-/* #define TD_SD_NUM 2 */
-/* #define CONFIG_TD_SD */
-/* Emulator for this platform needs bug workarounds */
-/* #undef CONFIG_TD_SD_EMUBUG */
-/*#undef SD_SPI_CALLTYPE	__z88dk_fastcall */
 
 #define BOOTDEVICENAMES "hd#,fd"
 
 #define CONFIG_SMALL
 
-/* #define DEBUG */
+
+
+
+

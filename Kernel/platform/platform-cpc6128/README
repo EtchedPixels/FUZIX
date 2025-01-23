@@ -1,7 +1,7 @@
 # Amstrad CPC6128
 
 
-## Mmeory Model
+## Memory Model
 
 The CPC6128 supported memory maps:
 
@@ -23,7 +23,13 @@ In the CPC6128:
 | Kernel	| 0 / 1 / 2  | Common 7 (map C1)
 | Video		| 0 / 3 / 2  | Common 7 (map C3)
 
+The use of standard memory expansions as swap space has been implemented. With this memory map, the ability to have multiple tasks simultaneously in RAM has not been implemented. This is because the expanded memory can only be mapped in 16k blocks starting at address 0x4000, which removes the common area from the map (this mapping is used to implement the RAM disk for swap while executing code in the non-common code area). Alternatively, it can be mapped in 64k blocks, replacing the entire memory space without any common area to rely on. See this references:
+https://www.cpcwiki.eu/index.php/Gate_Array#Register_MMR_.28RAM_memory_mapping.29
+https://www.cpcwiki.eu/index.php/Standard_Memory_Expansions
 
+This latter 64k block mapping approach, which involves switching between 64k blocks, is being considered for another port inspired by the memory usage in the Cromemco port.
+
+Two standard memory expansion sizes are supported: 512k and 1024k. To build the port with either of these options, simply define the macros EXTENDED_RAM_512 or EXTENDED_RAM_1024 depending on the desired size in the file config.h. If neither is defined, the build will default to supporting a swap partition on any of the supported disk types.
 
 ## STATUS
 
@@ -54,7 +60,7 @@ Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac, netwo
 
 Fix lots of bugs.
 
-Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be a model to this solution. As ther is no real common as we are switching the whole 64k space, the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion. If this proves to be too hard, a RAM disk for swapping can be a way to use the RAM expansions.
+Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be a model to this solution. As there is no real common as we are switching the whole 64k space, the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion.
 
 Look for speed optimization opportunities.
 
