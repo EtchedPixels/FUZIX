@@ -233,7 +233,7 @@ char *attrbuf = NULL;
 /* Print out a single line. The cursor has been positioned */
 /* at the start of the correct line on the screen. */
 /* We have to interpret any backspace character in the input buffer */
-void paint_line(struct lineposn *this, int newline) {
+void paint_line(int newline) {
   char *lineptr = linebuf;
   char *attrptr = attrbuf;
   char *bufptr;
@@ -338,7 +338,7 @@ void paint_screen(struct lineposn *this) {
     if (this == NULL) return;
     if (this->next == NULL) append_offsets(this, rows - i);
     if (i == rows - 1) newline = 0;
-    paint_line(this, newline);
+    paint_line(newline);
     this = this->next;
   }
 }
