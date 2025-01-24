@@ -107,4 +107,4 @@ clean:
 	(cd cpp; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd dw; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd ar; $(MAKE) -f Makefile.$(USERCPU) clean)
-	(cd wish; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd wish; $(MAKE) -f Makefile.$(USERCPU) wish)
