@@ -69,3 +69,5 @@ extern uint16_t sys_prog_top;
 extern uint16_t swap_dev;
 
 #include <sysmod.h>
+
+#define CONFIG_SMALL
