@@ -1,7 +1,7 @@
 Z80 2063
 
 A fairly simple 32/32 banked 512K RAM machine with the usual top bank pinned
-high. Has an SIO and CTC and yet another varianr on bitbang SD that's not
+high. Has an SIO and CTC and yet another variant on bitbang SD that's not
 the same as anyone else's. Slightly odd boot arrangement (it loads 16K
 from the start of partition 1). We subvert it by making the first 512
 bytes of our partition boot block just load the kernel from the proper
@@ -33,7 +33,3 @@ buffers unbanked and by counting CTC interrupts it can't service during an
 SD bitbang and catching up on them the first CTC interrupt that this isn't
 a problem.
 
-TODO
-
-Joystick x 2
-TMS9918A
