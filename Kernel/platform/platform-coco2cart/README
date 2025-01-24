@@ -14,12 +14,9 @@ a small space for both and for a full high res display.
 Disk Layout
 ===========
 
-Standard disk partitions are not handled due to limited memory. Instead each
-minor number corresponds to a 32MB slice of disc. Slice 0 holds the kernel image
-and the rest is used for swapping processes. Slice 1 then normally holds the
-first file system and so on. Add 128 for the second disc. Remember to keep
-all of them under the offset you have set in the HDBDOS ROM for your disk
-basic floppy images.
+Standard PC style disk partitions are now used but only primary partitions
+are supported. Remember to keep all of them under the offset you have set in
+the HDBDOS ROM for your disk basic floppy images.
 
 Memory Map
 ==========
@@ -78,10 +75,3 @@ xroar -default-machine dragon64 -cart ide -cart-rom fuzixide.rom -load-hd0 disk.
 
 exec 49152
 
-A 32MB filesystem can be put in slice 1 using dd with an offset of 32MB + 2
-sectors.
-
-For the CocoSDC the same procedure applies (without an emulator however) but
-using the fuzixsdc rom and SD image.
-
-enjoy

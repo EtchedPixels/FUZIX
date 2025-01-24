@@ -3,7 +3,7 @@
 This is a less suited platform than the conventional 512/512K builds as it
 lacks the paged MMU and has no timer. In particular the user program size is
 limited to just under 32K per program and thus disk sizes to 8MB in order for
-fsck to be able to operate in the avaiable process space.
+fsck to be able to operate in the available process space.
 
 ## Supported Hardware
 
