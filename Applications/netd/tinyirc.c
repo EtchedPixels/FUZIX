@@ -93,7 +93,7 @@ static struct dlist *additem(char *item, struct dlist *p)
 	return newobj;
 }
 
-static struct dlist *finditem(char *item, struct dlist *p)
+static struct dlist *finditem(register char *item, register struct dlist *p)
 {
 	while (p != NULL)
 		if (strcasecmp(item, p->name) == 0)
@@ -103,9 +103,9 @@ static struct dlist *finditem(char *item, struct dlist *p)
 	return p;
 }
 
-static struct dlist *delitem(char *item, struct dlist *p)
+static struct dlist *delitem(register char *item, register struct dlist *p)
 {
-	struct dlist *prev = NULL, *start = p;
+	register struct dlist *prev = NULL, *start = p;
 	while (p != NULL)
 		if (strcasecmp(item, p->name) == 0) {
 			newobj = p->next;
@@ -127,11 +127,11 @@ static struct dlist *delitem(char *item, struct dlist *p)
 
 static char encoded[513];
 
-static void hexascii(const char *s)
+static void hexascii(register const char *s)
 {
 	uint8_t byte = 0;
 	uint8_t k = 0;
-	char *p = encoded;
+	register char *p = encoded;
 
 	while(*s && p < encoded + 400) {
 		ch = toupper(*s);
@@ -148,9 +148,9 @@ static void hexascii(const char *s)
 	*p = 0;
 }
 
-static void asciihex(const char *s)
+static void asciihex(register const char *s)
 {
-	char *p = encoded;
+	register char *p = encoded;
 	static char hex[] = "0123456789ABCDEF";
 	
 	while(*s && p != encoded + sizeof(encoded) - 1) {
@@ -403,7 +403,7 @@ static int (*docommand[LISTSIZE]) (void) = {
 nop, nop, nop, nop, nop, nop, doerror, nop, nop, nop, doinvite,
 	    nop, dojoin, dokick, dokill, nop, nop, nop, domode, nop, nop, nop, donick, nop, donotice, nop, dopart, nop, nop, dopong, doprivmsg, doquit, nop, nop, nop, dosquit, nop, nop, dotime, dotopic, nop, nop, nop, nop, nop, nop, nop, nop, nop};
 
-static int wordwrapout(char *p, int count)
+static int wordwrapout(register char *p, register int count)
 {
 	while (p != NULL) {
 		if ((tmp = strchr(p, ' ')) != NULL)
@@ -422,7 +422,8 @@ static int wordwrapout(char *p, int count)
 
 static int parsedata(void)
 {
-	int i, found = 0;
+	register int i;
+	int found = 0;
 
 	if (serverdata[0] == 'P') {
 		sprintf(lineout, "PONG :%s\n", ircname);
@@ -476,7 +477,8 @@ static int parsedata(void)
 
 static int serverinput(void)
 {
-	int count, i;
+	register int i;
+	int count;
 	int hidden = 0;
 	
 	while ((count = read(my_tcp, ib, IB_SIZE)) >= 1) {
@@ -609,7 +611,7 @@ static void parseinput(void)
 
 static int userinput(void)
 {
-	int err = tty_event();
+	register int err = tty_event();
 	if (err < 0)
 		return err;
 	if (err == 2) {
@@ -646,8 +648,8 @@ static void redraw(int sig)
 static int makeconnect(char *hostname)
 {
 	struct sockaddr_in sa;
-	struct hostent *hp;
-	int s, t;
+	register struct hostent *hp;
+	register int s, t;
 	if ((hp = gethostbyname(hostname)) == NULL)
 		return -1;
 	for (t = 0, s = -1; s < 0 && hp->h_addr_list[t] != NULL; t++) {
