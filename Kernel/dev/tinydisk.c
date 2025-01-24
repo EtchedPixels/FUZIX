@@ -15,7 +15,7 @@
 /* Used by the asm helpers */
 uint8_t td_page;
 uint8_t td_raw;
-uint32_t td_lba[CONFIG_TD_NUM][MAX_PART + 1];
+uint32_t td_lba[CONFIG_TD_NUM][CONFIG_TD_MAX_PART + 1];
 uint8_t td_unit[CONFIG_TD_NUM];
 td_xfer td_op[CONFIG_TD_NUM];
 td_ioc td_iop[CONFIG_TD_NUM];
@@ -47,7 +47,7 @@ static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
 
 	lba = udata.u_block;
 	if (minor) {
-		if (minor < MAX_PART && td_lba[dev][minor])
+		if (minor <= CONFIG_TD_MAX_PART && td_lba[dev][minor])
 			lba += td_lba[dev][minor];
 		else
 			goto fail;
@@ -77,7 +77,7 @@ int td_open(uint_fast8_t minor, uint16_t flag)
 {
 	uint8_t dev = minor >> 4;
 	minor &= 0x0F;
-	if (dev >= CONFIG_TD_NUM || minor > MAX_PART || td_op[dev] == NULL) {
+	if (dev >= CONFIG_TD_NUM || minor > CONFIG_TD_MAX_PART || td_op[dev] == NULL) {
 		udata.u_error = ENODEV;
 		return -1;
 	}

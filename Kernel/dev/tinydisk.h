@@ -21,12 +21,14 @@ extern uint_fast8_t td_plt_setup(uint_fast8_t unit, uint32_t *lba, void *br);
 extern uint8_t td_page;
 extern uint8_t td_raw;
 
-/* Base disk and four partitions */
-#define MAX_PART	5
+/* Base disk and four partitions 0, 1-4. Can be overridden */
+#ifndef CONFIG_TD_MAX_PART
+#define CONFIG_TD_MAX_PART	4
+#endif
 
 #ifdef _TINYDISK_PRIVATE
 
-extern uint32_t td_lba[CONFIG_TD_NUM][MAX_PART + 1];
+extern uint32_t td_lba[CONFIG_TD_NUM][CONFIG_TD_MAX_PART + 1];
 extern td_xfer td_op[CONFIG_TD_NUM];
 extern td_ioc td_iop[CONFIG_TD_NUM];
 extern uint8_t td_unit[CONFIG_TD_NUM];
