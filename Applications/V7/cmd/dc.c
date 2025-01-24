@@ -45,10 +45,10 @@
 #define errorrt(p)	{printf(p); return NULL; }
 
 struct blk {
-	char *rd;
-	char *wt;
-	char *beg;
-	char *last;
+	signed char *rd;
+	signed char *wt;
+	signed char *beg;
+	signed char *last;
 };
 struct sym {
 	struct sym *next;
@@ -145,8 +145,8 @@ void (*outdit) (struct blk *, int);
 int logo;
 int intlog10;
 int count;
-char *pp;
-char *dummy;
+signed char *pp;
+signed char *dummy;
 
 int main(int argc, char *argv[])
 {
@@ -1123,7 +1123,7 @@ void init(int argc, char *argv[])
 	readptr = &readstk[0];
 	k = 0;
 	sp = sptr = &symlst[0];
-	while (sptr < &symlst[TBLSZ]) {
+	while (sptr < &symlst[TBLSZ-1]) {
 		sptr->next = ++sp;
 		sptr++;
 	}
@@ -1958,7 +1958,7 @@ struct blk *copy(struct blk *hptr, int size)
 {
 	register struct blk *hdr;
 	register unsigned sz;
-	register char *ptr;
+	register signed char *ptr;
 
 	all++;
 	nbytes += size;
@@ -1985,7 +1985,7 @@ struct blk *copy(struct blk *hptr, int size)
 
 void sdump(char *s1, struct blk *hptr)
 {
-	char *p;
+	signed char *p;
 	printf("%s %o rd %o wt %o beg %o last %o\n", s1, hptr, hptr->rd,
 	       hptr->wt, hptr->beg, hptr->last);
 	p = hptr->beg;
@@ -1996,7 +1996,7 @@ void sdump(char *s1, struct blk *hptr)
 
 void seekc(struct blk *hptr, int n)
 {
-	char *nn, *p;
+	signed char *nn, *p;
 
 	nn = hptr->beg + n;
 	if (nn > hptr->last) {
@@ -2123,7 +2123,7 @@ void garbage(char *s)
 void redef(struct blk *p)
 {
 	register int offset;
-	register char *newp;
+	register signed char *newp;
 
 	if ((int) p->beg & 01) {
 		printf("odd ptr %o hdr %o\n", p->beg, p);
