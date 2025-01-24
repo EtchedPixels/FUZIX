@@ -18,7 +18,7 @@ Currently this build supports
 - Onboard video
 - PS/2 port
 - CF interface
-- Time tick
+- Timer tick
 
 ## TODO
 

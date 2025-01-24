@@ -7,7 +7,7 @@ The first modification is to use the W/RDYB pin to control A16 of the 628128
 the SIO. Wire a 4K7 pull up to that link. This trick was taken from Bill
 Shen's Simple80 design.
 
-The second modification is to bend up DCDA on the SIO-2 and wire it to a
+The second modification is to bend up DCDA on the SIO-2 and wire it to an
 8Hz square wave source. The board as designed has no timer source as CP/M
 2.2 doesn't actually need one. There are plenty of ways to make an 8Hz
 square wave circuit, including these days just using one of the tiny PIC

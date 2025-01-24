@@ -34,7 +34,7 @@ other hardware. Can have 256K but would need its own port.
 
 - Lobo max
 
-TRS80-ish but not compatible.
+TRS80-ish but not compatible (see lobo-max port).
 
 ## Supported Hardware
 
