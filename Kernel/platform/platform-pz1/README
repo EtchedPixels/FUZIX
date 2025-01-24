@@ -34,7 +34,7 @@ The memory banks are allocated as follows
 	3			RAM mapped initially at 48K-64K
 	4-31			Handed out in fours for process maps
 
-This port is based on the rcbus-6502 port, so share most of the same features
+This port is based on the rcbus-6502 port, so shares most of the same features
 and missing bits.
 
 The 6502 port has some interesting gotchas to be aware of and things that

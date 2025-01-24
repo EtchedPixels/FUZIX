@@ -44,8 +44,8 @@ C000-FFFF
 	6:	Kernel CODE2 (fairly full)
 	7:	CODE3, Video (lots of room)
 
-User processes live in 3/4 and 8+. We have copy stuff back and forth
-to page 2 due to the memory manager liits.
+User processes live in 3/4 and 8+. We have to copy stuff back and forth
+to page 2 due to the memory manager limits.
 
 To Do:
 -	Floppy driver

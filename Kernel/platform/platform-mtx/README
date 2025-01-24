@@ -21,7 +21,7 @@ DONE	- keyboard etc devinput support
 - How to expose effectively having 512 chars (same problem as ubee)
 DONE	- How to detect a rememorizer ?
 DONE	- VDP high characters as inverses for cursor like RC2014
-IP	- Multiple virtual consoles on VDP only systems
+DONE	- Multiple virtual consoles on VDP only systems
 - Colour setting on VDP
 
 
