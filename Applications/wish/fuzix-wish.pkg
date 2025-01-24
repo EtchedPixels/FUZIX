@@ -1,7 +1,0 @@
-package  wish
-if-file  wish
-
-f 0755 /usr/bin/wish		wish
-f 0655 /usr/man/man1/wish.1	Wish.1
-f 0644 /root/.wishrc		Wishrc
-
