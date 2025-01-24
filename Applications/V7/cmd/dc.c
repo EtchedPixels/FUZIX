@@ -45,10 +45,10 @@
 #define errorrt(p)	{printf(p); return NULL; }
 
 struct blk {
-	signed char *rd;
-	signed char *wt;
-	signed char *beg;
-	signed char *last;
+	char *rd;
+	char *wt;
+	char *beg;
+	char *last;
 };
 struct sym {
 	struct sym *next;
@@ -145,8 +145,8 @@ void (*outdit) (struct blk *, int);
 int logo;
 int intlog10;
 int count;
-signed char *pp;
-signed char *dummy;
+char *pp;
+char *dummy;
 
 int main(int argc, char *argv[])
 {
@@ -1958,7 +1958,7 @@ struct blk *copy(struct blk *hptr, int size)
 {
 	register struct blk *hdr;
 	register unsigned sz;
-	register signed char *ptr;
+	register char *ptr;
 
 	all++;
 	nbytes += size;
@@ -1985,7 +1985,7 @@ struct blk *copy(struct blk *hptr, int size)
 
 void sdump(char *s1, struct blk *hptr)
 {
-	signed char *p;
+	char *p;
 	printf("%s %o rd %o wt %o beg %o last %o\n", s1, hptr, hptr->rd,
 	       hptr->wt, hptr->beg, hptr->last);
 	p = hptr->beg;
@@ -1996,7 +1996,7 @@ void sdump(char *s1, struct blk *hptr)
 
 void seekc(struct blk *hptr, int n)
 {
-	signed char *nn, *p;
+	char *nn, *p;
 
 	nn = hptr->beg + n;
 	if (nn > hptr->last) {
@@ -2123,7 +2123,7 @@ void garbage(char *s)
 void redef(struct blk *p)
 {
 	register int offset;
-	register signed char *newp;
+	register char *newp;
 
 	if ((int) p->beg & 01) {
 		printf("odd ptr %o hdr %o\n", p->beg, p);
