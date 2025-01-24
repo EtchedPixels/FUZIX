@@ -1,4 +1,4 @@
-/* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
+	/* UNIX V7 source code: see /COPYRIGHT or www.tuhs.org for details. */
 /* ANSIfield for FUZIX */
 
 #include <stdio.h>
@@ -45,10 +45,10 @@
 #define errorrt(p)	{printf(p); return NULL; }
 
 struct blk {
-	char *rd;
-	char *wt;
-	char *beg;
-	char *last;
+	signed char *rd;
+	signed char *wt;
+	signed char *beg;
+	signed char *last;
 };
 struct sym {
 	struct sym *next;
@@ -68,7 +68,7 @@ struct blk *getdec(struct blk *p, int sc);
 struct blk *morehd(void);
 void release(struct blk *p);
 void putwd(struct blk *p, struct blk *c);
-char *nalloc(char *p, unsigned nbytes);
+signed char *nalloc(signed char *p, unsigned nbytes);
 void redef(struct blk *p);
 void garbage(char *s);
 void ospace(char *s);
@@ -80,7 +80,7 @@ struct blk *copy(struct blk *hptr, int size);
 struct blk *salloc(int size);
 int intlog2(long n);
 void load(void);
-int cond(char c);
+int cond(signed char c);
 int command(void);
 int subt(void);
 struct blk *scale(struct blk *p, int n);
@@ -89,11 +89,11 @@ int eqk(void);
 struct blk *add(struct blk *a1, struct blk *a2);
 void bigot(struct blk *p, int flg);
 void hexot(struct blk *p, int flg);
-void oneot(struct blk *p, int sc, char ch);
+void oneot(struct blk *p, int sc, signed char ch);
 void tenot(struct blk *p, int sc);
 void print(struct blk *hptr);
-void binop(char c);
-void unreadc(char c);
+void binop(signed char c);
+void unreadc(signed char c);
 int readc(void);
 void chsign(struct blk *p);
 struct blk *mult(struct blk *p, struct blk *q);
@@ -113,7 +113,7 @@ void commnds(void);
 
 struct blk *arg1, *arg2;
 int svargc;
-char savk;
+signed char savk;
 char **svargv;
 int dbg;
 int ifile;
@@ -145,8 +145,8 @@ void (*outdit) (struct blk *, int);
 int logo;
 int intlog10;
 int count;
-char *pp;
-char *dummy;
+signed char *pp;
+signed char *dummy;
 
 int main(int argc, char *argv[])
 {
@@ -776,7 +776,8 @@ struct blk *div(struct blk *ddivd, struct blk *ddivr)
 	if (length(ddivr) == 0) {
 		pushp(ddivr);
 		puts("divide by 0");
-		return 1;
+		/* Eww... */
+		return (struct blk *)1;
 	}
 	divsign = remsign = 0;
 	divr = ddivr;
@@ -1077,7 +1078,7 @@ void init(int argc, char *argv[])
 
 	if (signal(SIGINT, SIG_IGN) != SIG_IGN)
 		signal(SIGINT, onintr);
-	setbuf(stdout, (char *) NULL);
+	setbuf(stdout, NULL);
 	svargc = --argc;
 	svargv = argv;
 	while (svargc > 0 && svargv[1][0] == '-') {
@@ -1302,7 +1303,7 @@ struct blk *mult(struct blk *p, struct blk *q)
 void chsign(struct blk *p)
 {
 	register int carry;
-	register char ct;
+	register signed char ct;
 
 	carry = 0;
 	rewind(p);
@@ -1360,7 +1361,7 @@ int readc(void)
 	exit(0);
 }
 
-void unreadc(char c)
+void unreadc(signed char c)
 {
 
 	if ((readptr != &readstk[0]) && (*readptr != 0)) {
@@ -1370,7 +1371,7 @@ void unreadc(char c)
 	return;
 }
 
-void binop(char c)
+void binop(signed char c)
 {
 	register struct blk *r;
 
@@ -1557,7 +1558,7 @@ void tenot(struct blk *p, int sc)
 	return;
 }
 
-void oneot(struct blk *p, int sc, char ch)
+void oneot(struct blk *p, int sc, signed char ch)
 {
 	register struct blk *q;
 
@@ -1789,7 +1790,7 @@ int subt(void)
 int command(void)
 {
 	int c;
-	char line[100], *sl;
+	signed char line[100], *sl;
 	void (*savint) (int);
 	pid_t pid, rpid;
 	int retcode;
@@ -1819,10 +1820,10 @@ int command(void)
 	}
 }
 
-int cond(char c)
+int cond(signed char c)
 {
 	register struct blk *p;
-	register char cc;
+	register signed char cc;
 
 	if (subt() != 0)
 		return (1);
@@ -1911,7 +1912,7 @@ int intlog2(long n)
 struct blk *salloc(int size)
 {
 	register struct blk *hdr;
-	register char *ptr;
+	register signed char *ptr;
 	all++;
 	nbytes += size;
 	ptr = malloc((unsigned) size);
@@ -1941,7 +1942,7 @@ struct blk *morehd(void)
 	}
 	kk = h;
 	while (h < hfree + (HEADSZ / BLK))
-		(h++)->rd = (char *) ++kk;
+		(h++)->rd = (signed char *) ++kk;
 	(--h)->rd = 0;
 	return (hfree);
 }
@@ -1958,7 +1959,7 @@ struct blk *copy(struct blk *hptr, int size)
 {
 	register struct blk *hdr;
 	register unsigned sz;
-	register char *ptr;
+	register signed char *ptr;
 
 	all++;
 	nbytes += size;
@@ -1985,7 +1986,7 @@ struct blk *copy(struct blk *hptr, int size)
 
 void sdump(char *s1, struct blk *hptr)
 {
-	char *p;
+	signed char *p;
 	printf("%s %o rd %o wt %o beg %o last %o\n", s1, hptr, hptr->rd,
 	       hptr->wt, hptr->beg, hptr->last);
 	p = hptr->beg;
@@ -1996,7 +1997,7 @@ void sdump(char *s1, struct blk *hptr)
 
 void seekc(struct blk *hptr, int n)
 {
-	char *nn, *p;
+	signed char *nn, *p;
 
 	nn = hptr->beg + n;
 	if (nn > hptr->last) {
@@ -2033,7 +2034,7 @@ void salterwd(struct wblk *hptr, struct blk *n)
 void more(struct blk *hptr)
 {
 	register unsigned size;
-	register char *p;
+	register signed char *p;
 
 	if ((size = (hptr->last - hptr->beg) * 2) == 0)
 		size = 1;
@@ -2123,7 +2124,7 @@ void garbage(char *s)
 void redef(struct blk *p)
 {
 	register int offset;
-	register char *newp;
+	register signed char *newp;
 
 	if ((int) p->beg & 01) {
 		printf("odd ptr %o hdr %o\n", p->beg, p);
@@ -2147,7 +2148,7 @@ void release(struct blk *p)
 {
 	rel++;
 	nbytes -= p->last - p->beg;
-	p->rd = (char *) hfree;
+	p->rd = (signed char *) hfree;
 	hfree = p;
 	free(p->beg);
 }
@@ -2182,9 +2183,9 @@ struct blk *lookwd(struct blk *p)
 	return (*wp->rdw);
 }
 
-char *nalloc(char *p, unsigned nbytes)
+signed char *nalloc(signed char *p, unsigned nbytes)
 {
-	char *q, *r;
+	signed char *q, *r;
 	q = r = malloc(nbytes);
 	if (q == 0)
 		return (0);
