@@ -25,6 +25,4 @@ make diskimage
 Boot from an ESXDOS enabled DIVMMC emulation
 
 For Fuse use the Spectrum SE emulation. Zesarux will not run this code as it
-has a various ZX Uno and DIVMMC emulation bugs.
-
-
+has various ZX Uno and DIVMMC emulation bugs.

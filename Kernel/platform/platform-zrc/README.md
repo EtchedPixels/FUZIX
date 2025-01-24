@@ -39,10 +39,5 @@ make diskimage
 
 boot it. It does not need or want a softloaded ROMWBW.
 
-## FIXME
-
-This is the test tree for the ccz80 compiler at the moment so expect it
-to be a bit rough
-
 ### To fix
 - Linker dynamic libraries
