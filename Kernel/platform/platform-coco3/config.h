@@ -80,6 +80,9 @@ extern uint16_t swap_dev;
 #define CONFIG_TD_SD
 #define TD_SD_NUM	2
 #define CONFIG_TD_CUSTOMPART		/* Custom partition tables (CCPT) */
+/* CCPT supports 14 partitions, but more than 6 makes the buffers take too much
+ * space for the memory map as it stands.  Keep to the default of 4 for now. */
+#define CONFIG_TD_MAX_PART 4
 
 #define CONFIG_RTC		/* enable RTC code */
 #define CONFIG_RTC_INTERVAL 100	/* time in deciseconds to atually poll rtc */

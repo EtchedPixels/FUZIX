@@ -64,7 +64,7 @@ uint_fast8_t td_plt_setup(uint_fast8_t dev, uint32_t *lba, void *buf)
 			k++;
 			kprintf("hd%c%d ", dev + 'a', k);
 			/* TODO: swap on CCPT */
-			if (k == MAX_PART)
+			if (k == CONFIG_TD_MAX_PART)
 				break;
 		}
 	}
