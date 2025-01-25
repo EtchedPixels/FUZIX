@@ -9,7 +9,7 @@ hogs.txt
 build
 relocs.dat
 version.c
-/font8x8_exp2.c
+/font/font8x8_exp2.c
 
 # binmunge output
 bank[0-9].bin
