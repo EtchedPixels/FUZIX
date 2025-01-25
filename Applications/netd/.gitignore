@@ -1,0 +1,13 @@
+/netd-eth
+/netd-coconic
+/netd-lwwire
+/netd-slip
+/telnet
+/echoping
+/dig
+/httpd
+/ifconfig
+/ping
+/ntpdate
+/htget
+/tinyirc

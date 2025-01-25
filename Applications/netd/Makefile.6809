@@ -8,29 +8,52 @@ SRCS += htget.c tinyirc.c linein.c ifconfig.c
 
 OBJS = $(SRCS:.c=.o)
 
-APPS = netd
+APPS = netd-lwwire netd-coconic telnet echoping dig httpd ping ntpdate htget
+APPS += tinyirc ifconfig
 
+.PHONY: all
 all: $(APPS)
 
+netd-lwwire: $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o lwwire.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
 
-netd: $(OBJS)
-	$(LINKER) $(LINKER_TAIL) -o netd-lwwire $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o lwwire.o
-	$(LINKER) $(LINKER_TAIL) -o netd-coconic $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o coconic.o
-	$(LINKER) $(LINKER_TAIL) -o telnet $(CRT0) telnet.o gethostbyname.o
-	$(LINKER) $(LINKER_TAIL) -o echoping $(CRT0) echoping.o
-	$(LINKER) $(LINKER_TAIL) -o dig $(CRT0) dig.o
-	$(LINKER) $(LINKER_TAIL) -o httpd $(CRT0) httpd.o
-	$(LINKER) $(LINKER_TAIL) -o ifconfig $(CRT0) ifconfig.o
-	$(LINKER) $(LINKER_TAIL) -o ping $(CRT0) ping.o gethostbyname.o
-	$(LINKER) $(LINKER_TAIL) -o ntpdate $(CRT0) ntpdate.o gethostbyname.o
-	$(LINKER) $(LINKER_TAIL) -o htget $(CRT0) htget.o gethostbyname.o
-	$(LINKER) $(LINKER_TAIL) -o tinyirc $(CRT0) tinyirc.o linein.o gethostbyname.o
+netd-coconic: $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o coconic.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+telnet: $(CRT0) telnet.o gethostbyname.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+echoping: $(CRT0) echoping.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+dig: $(CRT0) dig.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+httpd: $(CRT0) httpd.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+ping: $(CRT0) ping.o gethostbyname.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+ntpdate: $(CRT0) ntpdate.o gethostbyname.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+htget: $(CRT0) htget.o gethostbyname.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+tinyirc: $(CRT0) tinyirc.o linein.o gethostbyname.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
+
+ifconfig: $(CRT0) ifconfig.o
+	$(LINKER) $(LINKER_OPT) -o $@ $^ $(LINKER_TAIL)
 
 size.report: $(APPS)
 	ls -l $^ > $@
 
+.PHONY: clean
 clean:
 	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *~
 
+.PHONY: rmbak
 rmbak:
 	rm -f *~ core
