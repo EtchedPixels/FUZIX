@@ -62,7 +62,9 @@ void device_init(void)
 	devrtsd_probe();
 #endif
 	dw_init();
+#ifdef CONFIG_RTC
 	inittod();
+#endif
 #ifdef CONFIG_NET
 	sock_init();
 #endif
