@@ -35,6 +35,7 @@ tty
 wall
 # from cmd/sh/
 cmd/sh/sh
+/cmd/sh/fshbuild_*.c
 # from games/
 arithmetic
 backgammon
