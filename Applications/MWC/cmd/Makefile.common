@@ -20,11 +20,13 @@ expr.c: expr.y
 
 find.c: find.y
 
+BUILT_SRCS = expr.c find.c
+
 size.report: $(APPS)
 	ls -l $^ > $@
 
 clean:
-	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) $(BUILT_SRCS) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
 	rm -f y.tab.c
 
 rmbak:
