@@ -6,6 +6,8 @@ SRC = cpp.c hash.c main.c token1.c token2.c
 
 OBJ = $(SRC:.c=.o)
 
+APPS = cpp
+
 all: cpp
 
 .c.o:
