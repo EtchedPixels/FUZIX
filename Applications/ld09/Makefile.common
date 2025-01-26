@@ -16,7 +16,7 @@ ld09: $(CRT0) $(OBJS)
 	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 clean realclean clobber:
-	rm -f *.o $(APPS) ld09r objchop catimage objdump09 *~
+	rm -f *.o $(APPS) ld09r objchop catimage objdump09 *~ *.map
 
 $(OBJS): align.h ar.h bindef.h byteord.h config.h const.h globvar.h obj.h \
 	 syshead.h type.h
