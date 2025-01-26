@@ -11,7 +11,7 @@ as09: $(CRT0) $(OBJS)
 	$(LINKER) $^ -o $@ $(LINKER_OPT) $(LINKER_TAIL)
 
 clean:
-	rm -f *.o as09 *~
+	rm -f *.o as09 *~ *.map
 
 .c.o:
 	$(CC) $(CFLAGS) $(COPT) -c $<
