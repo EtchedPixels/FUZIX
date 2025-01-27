@@ -187,13 +187,13 @@ _dofork:
 
         ; now the copy operation is complete we can get rid of the stuff
         ; _switchin will be expecting from our copy of the stack.
-	puls x
+	leas 2,s
 
 	ldx #_udata
 	pshs x
         ldx fork_proc_ptr
         jsr _makeproc
-	puls x
+	leas 2,s
 
 	; any calls to map process will now map the childs memory
 
