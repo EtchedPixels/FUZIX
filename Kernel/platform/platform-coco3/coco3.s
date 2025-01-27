@@ -197,28 +197,21 @@ b@	sta	,x+
 	jsr	_video_init
         ;; Our vectors are in high memory unlike Z80 but we still
         ;; need vectors
-	ldu	#0xfeee		; vector area
+	ldu	#0xff00		; top of vector area
 	lda	#$7e		; jump opcode
-	ldx	#swi3_handler
-	sta	,u+
-	stx	,u++
-	ldx 	#swi2_handler
-	sta	,u+
-	stx	,u++
-	ldx 	#firq_handler
-	sta	,u+
-	stx	,u++
-        ldx 	#my_interrupt_handler
-	sta	,u+
-	stx	,u++
-        ldx 	#unix_syscall_entry
-	sta	,u+
-	stx 	,u++
 	ldx 	#nmi_handler
-	sta	,u+
-	stx	,u
-	jsr	_devtty_init
-        rts
+	pshu	a,x
+	ldx 	#unix_syscall_entry
+	pshu	a,x
+	ldx 	#my_interrupt_handler
+	pshu	a,x
+	ldx 	#firq_handler
+	pshu	a,x
+	ldx 	#swi2_handler
+	pshu	a,x
+	ldx	#swi3_handler
+	pshu	a,x
+	jmp	_devtty_init	; tail call
 
 
 ;------------------------------------------------------------------------------
@@ -269,24 +262,6 @@ a@	rti
 firq_handler:
 	    rti
 
-
-;;; Userspace mapping pages 7+  kernel mapping pages 3-5, first common 6
-;;; All registers preserved
-map_proc_always:
-	    pshs x,y,u
-	    ldx #U_DATA__U_PAGE
-	    jsr map_proc_2
-	    puls x,y,u,pc
-
-;;; Maps a page table into cpu space
-;;;   takes: X - pointer page table ( ptptr )
-;;;   returns: nothing
-;;;   modifies: nothing
-map_proc:
-	    cmpx #0		; is zero?
-	    bne map_proc_2	; no then map process; else: map the kernel
-	;; !!! fall-through to below
-
 ;;; Maps the Kernel into CPU space
 ;;;   takes: nothing
 ;;;   returns: nothing
@@ -299,41 +274,45 @@ map_kernel:
 	    sta 0xff91		;
 	    puls a,pc
 
+;;; Maps a page table into cpu space
+;;;   takes: X - pointer page table ( ptptr )
+;;;   returns: nothing
+;;;   modifies: nothing
+map_proc:
+	    cmpx #0		; is zero?
+	    beq map_kernel	; yes then map kernel; else: map process
+	    pshs a,b,x,u
+	    bra map_proc_2
+
+;;; Userspace mapping pages 7+  kernel mapping pages 3-5, first common 6
+;;; All registers preserved.
+
 ;;; User is in the FFA0 map with the top 8K as common
 ;;; As the core code currently does 16K happily but not 8 we just pair
 ;;; up pages
 
-;;; Maps a page table into the MMU
-;;;   takes: X = pointer to page table
-;;;   returns: nothing
-;;;   modifies: nothing
+map_proc_always:
+	    pshs a,b,x,u
+	    ldx #U_DATA__U_PAGE
 map_proc_2:
-	    pshs x,y,a
-	    ldy #0xffa0		; MMU user map. We can fiddle with
+	    ldu #0xffa0		; MMU user map. We can fiddle with
 
-	    lda ,x+		; get byte from page table
-	    sta ,y+		; put it in mmu
+	    ldd ,x		; get two bytes from page table
+	    sta ,u		; first byte in mmu
 	    inca		; increment to get next 8k block
-	    sta ,y+		; put it in mmu
+	    std 1,u		; put it in mmu, second byte in mmu
+	    incb		; next 8k block
+	    stb 3,u		; put it in mmu
 
-	    lda ,x+
-	    sta ,y+
+	    ldd 2,x		; bank all but common memory
+	    sta 4,u
 	    inca
-	    sta ,y+
+	    std 5,u
 
-	    lda ,x+
-	    sta ,y+
-	    inca
-	    sta ,y+
-
-	    lda ,x+		; bank all but common memory
-	    sta ,y
-
-
-	    lda  #0
+	    clra
 	    sta init1_mirror		; and save INIT1 setting in mirror
 	    sta 0xff91			; new mapping goes live here
-	    puls x,y,a,pc		; so had better include common!
+	    puls a,b,x,u,pc		; so had better include common!
 
 ;;;
 ;;;	Restore a saved mapping. We are guaranteed that we won't switch
@@ -425,5 +404,4 @@ blkdev_unrawflg
         stb 0xffa8
         incb
         stb 0xffa9
-        jsr map_kernel
-	rts
+        jmp map_kernel	; tail call
