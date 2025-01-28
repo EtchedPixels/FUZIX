@@ -39,7 +39,7 @@ uint8_t shiftkeyboard[10][8] = {
 	{KEY_UP, KEY_RIGHT, KEY_DOWN, KEY_F9, KEY_F6, KEY_F3,KEY_ENTER, KEY_F11},
 	{KEY_LEFT ,KEY_PASTE , KEY_F7, KEY_F8, KEY_F5, KEY_F1, KEY_F2, KEY_F10},
 	{KEY_DEL, '{', 13, '}', KEY_F4, 0/*SHIFT*/, '`', 0/*CONTROL*/ },
-	{KEY_POUND, '=', '|', 'P', '+', '*', '?', '>'},
+	{'~', '=', '|', 'P', '+', '*', '?', '>'},
 	{'_', ')', 'O', 'I', 'L', 'K', 'M', '<'},
 	{'(', 39/*'*/, 'U', 'Y', 'H', 'J', 'N', ' '},
 	{'&', '%', 'R', 'T', 'G', 'F', 'B', 'V'},
