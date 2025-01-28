@@ -15,6 +15,8 @@ adv14a
 adv14b
 fortune
 fortune-gen
+fortune-gen-linux
+fortune.dat
 myst01
 myst02
 myst03
@@ -26,6 +28,7 @@ myst08
 myst09
 myst10
 myst11
+ppt
 qrun
 z[0-8]
 taylormade

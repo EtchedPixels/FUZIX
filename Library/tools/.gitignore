@@ -1,10 +1,19 @@
 /ack2fuzix
 /binman
+/binman85
 /fcc
 /fuzixlib
 /libclean
 /liberror
+/ns32ktoaout
 /relocbin
+/relocbin6303
+/relocbin65
+/relocbin6809
+/relocbin8080
+/relocbinhc11
+/riscv32toaout
+/shlibgen
 /syscall
 /syscall-scc6809
 /syscall_6303
@@ -12,4 +21,7 @@
 /syscall_68000
 /syscall_6809
 /syscall_8080
+/syscall_8086
+/syscall_armm4
 /syscall_msp430x
+/syscall_riscv32

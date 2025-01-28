@@ -149,7 +149,7 @@ size.report: $(APPS) $(APPSNS) $(APPTC)
 
 clean:
 	rm -f $(OBJS) $(OBJSNS) $(OBJTC) $(OBJCURSES)
-	rm -f $(APPS) $(APPSNS) $(APPTC) $(APPCURSES)
+	rm -f $(APPS) $(APPSNS) $(APPTC) $(APPCURSES) $(APPOTHER)
 	rm -f $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *.o
 
 rmbak:
