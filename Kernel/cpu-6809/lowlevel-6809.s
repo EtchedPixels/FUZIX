@@ -229,8 +229,7 @@ interrupt_handler:
 
         ; switch stacks
         sts istack_switched_sp
-        lds #istack_top-2
-	; FIXME: check store/dec order might not need to be -2 here!!!!
+        lds #istack_top
 
 	jsr map_save
 
@@ -355,7 +354,7 @@ nmimsg: .ascii "[NMI]"
         .db 13,10,0
 
 nmi_handler:
-	lds #istack_top-2		; We aren't coming back so this is ok
+	lds #istack_top		; We aren't coming back so this is ok
 	jsr map_kernel
         ldx #nmimsg
 	jsr outstring
