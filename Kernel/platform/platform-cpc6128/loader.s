@@ -6,13 +6,29 @@
 .area BOOT (ABS)
 .org #0xfdff
 
-;;ROM's & interrupts off
+;;ROM's & interrupts off & mode 2
 
 di
 ld b, #0x7f
-ld c,#0b10101101
+ld c,#0b10101110
 out (c),c
-;;from default boot org to the needed one
+
+;; hide screen
+
+ld bc,#0x7f10
+out (c),c
+ld a,#0x54		;black
+out (c),a		
+ld bc,#0x7f00
+out (c),c
+;ld a,#0x44     ;blue
+out (c),a		
+ld bc,#0x7f01
+out (c),c
+;ld a,#0x4b     ;bright white
+out (c),a		
+
+;;from default boot org to the needed one. 
 ld hl,#0x100
 ld de,#0xfdff
 ld bc,#512
@@ -22,11 +38,11 @@ jp start
 
 start:
 ;;clean room
-ld hl,#0
-ld de ,#1
-ld (#0),hl
-ld bc,#0xfdfe
-ldir
+;ld hl,#0
+;ld de ,#1
+;ld (#0),hl
+;ld bc,#0xfdfe
+;ldir
 ;;patch interrupt vector
 LD HL,#0XC9FB		
 LD (#0X0038),HL
@@ -242,9 +258,18 @@ ld hl,(#data_ptr)
 ld bc,#512
 add hl,bc
 ld (#data_ptr),hl
-
 ;; update sector id (loops #0x41-#0x49).
 ld a,(#sector)
+
+ex af,af'       
+ld bc,#0x7f10
+out (c),c
+ld a,r
+and #0x5F
+or #0x40
+out (c),a
+ex af,af'
+
 inc a
 ld (#sector),a
 cp #0x4a        ;; #0x49+1 (last sector id on the track+1)
@@ -255,6 +280,11 @@ jp nz,read_sectors
 ld a,(#track)
 inc a
 ld (#track),a
+
+ld bc,#0x7f10
+out (c),c
+add #0x4a
+out (c),a
 
 ld a,#0x41      ;; #0x41 = first sector id on the track
 ld (#sector),a
