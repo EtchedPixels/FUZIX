@@ -36,7 +36,7 @@ void rd_io(void) __naked
 	jp z, is_wr
 	ld	bc,#0x7f10
 	out	(c),c
-	ld	c,#0x53 ;Bright cyan
+	ld	c,#0x57 ;Sky blue
 	out	(c),c
 	ld a,(_rd_swap_mem_port_h)
 	ld b,a
@@ -70,7 +70,7 @@ end_io:
 is_wr:
 	ld	bc,#0x7f10
 	out	(c),c
-	ld	c,#0x4c ;Bright red
+	ld	c,#0x5C ;Red
 	out	(c),c
 	ld bc,#0x7fff
 	ld a,(_rd_proc_bank)
