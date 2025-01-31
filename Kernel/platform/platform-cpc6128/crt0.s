@@ -121,9 +121,9 @@ _start:
 	ld (hl), #0
 	ldir
 
-		;We are loading from a .sna with first 64k filled with fuzix.bin starting at 0x100
+		;After loading first 64k are filled with fuzix.bin starting at 0x100 with default map C0
 	;copy bank 3 to bank 7 in C7 mode (7 at 0x4000), zero bank 3 (vmem) and switch to C1 (kernel map)
-	;when a proper loader is done this should be managed there
+	;when a proper loader is done this should be managed there; FIXME
 	
 		ld bc,#0x7fc7
 		out (c),c
@@ -133,15 +133,6 @@ _start:
 		ld bc, #0x4000
 		ldir
 		
-		ld bc,#0x7f00
-		out (c),c
-		ld a,#0x44
-		out (c),a		; blue paper
-		ld bc,#0x7f01
-		out (c),c
-		ld a,#0x4b
-		out (c),a		; white ink
-
 		ld hl, #0xc000
 		ld de, #0xc001
 		ld bc, #0x3fff
@@ -180,7 +171,7 @@ stop:   halt
 
 		;code to copy font
 copyfont: ;;this wil be in the loader
-		di
+		;di interrupts should be off when mapping roms
         ld bc, #0x7faa ;RMR ->UROM disable LROM enable
         out (c),c
         ld hl, #0x3800 ;Firmware (LROM) character bitmaps
