@@ -74,13 +74,21 @@ image:
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
 diskimage:
-	# Make a blank disk image with partition
-	dd if=$(FUZIX_ROOT)/Standalone/filesystem-src/parttab.64M of=$(IMAGES)/disk.img bs=64M conv=sync
-	# Add the file system
+	# Make a blank disk image and partition it P1->32M,FUZIX P2->8M,FUZIX P3->4M,FUZIX.SWAP P4->(64-(32+8+4+1(reserved)))M,FAT16
+	dd if=/dev/zero of=$(IMAGES)/disk.img bs=512 count=131072
+	echo 'label: dos' | sfdisk $(IMAGES)/disk.img
+	echo -e 'size=32M, id=7e\n size=8M, id=7e\n size=4M, id=7f\n size=+, id=4\n' | sfdisk $(IMAGES)/disk.img
+	
+	# Make a FAT16 filesystem so we can play with dos utils (dosread, etc.) root directory entries are limited by available RAM
+	dd if=/dev/zero of=$(IMAGES)/FAT16.img bs=512 count=38912
+	mkfs.fat -F 16 -r 128 -v $(IMAGES)/FAT16.img
+
+   	# Add the file systems
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
 	dd if=$(IMAGES)/filesys8.img of=$(IMAGES)/disk.img bs=512 seek=67584 conv=notrunc
-	# Make an emulator image of it
-	cat $(FUZIX_ROOT)/Standalone/filesystem-src/hdfheader $(IMAGES)/disk.img > $(IMAGES)/emu-ide.hdf
+	dd if=$(IMAGES)/FAT16.img of=$(IMAGES)/disk.img bs=512 seek=92160 conv=notrunc
+	
+	# Make a 720k floppy with minimal root filesystem
 	(cd $(FUZIX_ROOT)/Standalone/filesystem-src; ./build-mini-filesystem $(ENDIANFLAG) $(FUZIX_ROOT)/Images/$(TARGET)/root.raw 64 1440)
 	../../tools/raw2dskcpc $(FUZIX_ROOT)/Images/$(TARGET)/root.raw $(FUZIX_ROOT)/Images/$(TARGET)/root.dsk 80 2 0
 	
