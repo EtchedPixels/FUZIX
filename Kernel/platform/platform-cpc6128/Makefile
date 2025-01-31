@@ -54,20 +54,21 @@ clean:
 	rm -rf fuzix.dsk
 
 image:
-	# Copy snapshot file template, transfer fuzix code to 0x100 and set execution at 0x100
-	cp $(FUZIX_ROOT)/Standalone/filesystem-src/6128.sna $(IMAGES)/
-	createSnapshot $(IMAGES)/6128.sna --loadFileData ../../fuzix.bin 256
-	printf '\x01' | dd of=$(IMAGES)/6128.sna  bs=1 seek=24 conv=notrunc
+	# Create a snapshot file with fuzix code at right places and set execution at 0x100
+	dd if=../../fuzix.bin of=bank012.bin bs=48896 count=1
+	dd if=../../fuzix.bin of=bank7.bin bs=1 skip=48896
+	createSnapshot $(IMAGES)/6128.sna -l bank012.bin 0x100 -l bank7.bin 0x1c000 -s Z80_PC 0x100
+
+	#Assemble loader
 	sdasz80 -l -o loader.s
 	sdldz80 -i loader.rel
 	hex2bin loader.ihx
-
+	# Make a system disk raw image to work from with loader at cpm boot sector followed by fuzix.bin
 	dd if=/dev/zero of=padding.bin bs=512 count=360
-	# Make a disk image to work from
 	dd if=loader.bin of=padding.bin seek=0 bs=512 conv=notrunc
 	dd if=../../fuzix.bin of=padding.bin bs=512 seek=1 conv=notrunc
 	cat padding.bin >disk.raw
-	# And generate a 40 track cpc system disk from it
+	# And generate a 40 track cpc system disk dsk file from it
 	../../tools/raw2dskcpc disk.raw fuzix.dsk 40 1 64
 	cp fuzix.dsk $(IMAGES)/fuzix.dsk
 	
@@ -79,9 +80,9 @@ diskimage:
 	echo 'label: dos' | sfdisk $(IMAGES)/disk.img
 	echo -e 'size=32M, id=7e\n size=8M, id=7e\n size=4M, id=7f\n size=+, id=4\n' | sfdisk $(IMAGES)/disk.img
 	
-	# Make a FAT16 filesystem so we can play with dos utils (dosread, etc.) root directory entries are limited by available RAM
+	# Make a FAT16 filesystem for partition P4 so we can play with dos utils (dosread, etc.), root directory entries are limited by available RAM
 	dd if=/dev/zero of=$(IMAGES)/FAT16.img bs=512 count=38912
-	mkfs.fat -F 16 -r 128 -v $(IMAGES)/FAT16.img
+	mkfs.fat -F 16 -r 128 -v $(IMAGES)/FAT16.img #we could mount this now as loop device and put stuff on it before adding to the disk image
 
    	# Add the file systems
 	dd if=$(IMAGES)/filesys.img of=$(IMAGES)/disk.img bs=512 seek=2048 conv=notrunc
