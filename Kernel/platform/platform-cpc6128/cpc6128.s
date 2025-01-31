@@ -95,7 +95,8 @@ _plt_monitor:
 _plt_reboot:
 	di
 	;halt ;we are debugging why we end here
-	ld bc, #0x7f89 ;this would set the firmware ready for boot into firmware with (out (c),c ; rst0)
+	ld bc, #0x7f89 	;this would set the firmware ready for boot into firmware with (out (c),c ; rst0)
+					;work with the 6128 firmware, fails with the 464 & the 664 firmware, need to investigate.
 	out (c), c
 	    rst 0		; back into our booter
 
