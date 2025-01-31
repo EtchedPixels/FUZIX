@@ -116,7 +116,7 @@ static char drive[] = "/dev/dosX";
 static char drive2[] = "/dev/fdX";
 #define DRIVE_NR	(sizeof (drive) - 2)
 static char buffer[MAX_CLUSTER_SIZE], *device = drive, path[128];
-static long data_start;
+static long data_start,root_address, fat_start;
 static long mark;	/* offset of directory entry to be written */
 static unsigned short total_clusters, cluster_size, root_entries, sub_entries;
 static unsigned long fat_size;
@@ -284,8 +284,8 @@ void determine(void)
 	fprintf (stderr, "%s: fats != 2\n", cmnd);
 	++errcount;
   }
-  if (reservsec != 1) {
-	fprintf (stderr, "%s: reserved != 1\n", cmnd);
+  if (reservsec < 1) {
+	fprintf (stderr, "%s: reserved < 1\n", cmnd);
 	++errcount;
   }
   if (errcount != 0) {
@@ -301,10 +301,12 @@ void determine(void)
   	/* first 2 entries in FAT aren't used */
   cluster_size = bytepers * boot.secpclus;
   fat_size = (unsigned long) secpfat * (unsigned long) bytepers;
-  data_start = (long) bytepers + (long) boot.fats * fat_size
+  data_start = (long) (bytepers * reservsec) + (long) boot.fats * fat_size
 	+ (long) dirents *32L;
   root_entries = dirents;
   sub_entries = boot.secpclus * bytepers / 32;
+  fat_start = (long)(bytepers * reservsec);	/* After bootsector + reserved */
+  root_address = (fat_start + 2L * fat_size);
   if (total_clusters > 4096) fat_16 = 1;
 
   /* Further safety checking */
@@ -319,8 +321,8 @@ void determine(void)
   }
 #endif
   
-  disk_io(READ, FAT_START, &fat_info, 1);
-  disk_io(READ, FAT_START + fat_size, &fat_check, 1);
+  disk_io(READ, fat_start, &fat_info, 1);
+  disk_io(READ, fat_start + fat_size, &fat_check, 1);
   if (fat_check != fat_info) {
 	fprintf (stderr, "%s: Disk type in FAT copy differs from disk type in FAT original.\n", cmnd);
 	++errcount;
@@ -411,7 +413,7 @@ int main(int argc, char *argv[])
   determine();
 
 #ifdef CACHE_ROOT
-  disk_io(READ, ROOTADDR, root, 
+  disk_io(READ, root_address, root, 
   	root_entries > MAX_ROOT_ENTRIES ? 
   	DIR_SIZE * MAX_ROOT_ENTRIES : 
   	DIR_SIZE * root_entries);
@@ -557,7 +559,7 @@ DIRECTORY *directory(DIRECTORY *dir, int entries, int function, char *pathname)
 	}
 #ifndef CACHE_ROOT
 	 else {
-		disk_io(READ, ROOTADDR, buffer, root_entries * DIR_SIZE);
+		disk_io(READ, root_address, buffer, root_entries * DIR_SIZE);
 		dir_ptr = (void *)buffer;
 		cl_no = dir_ptr->d_cluster;		
 	}
@@ -565,7 +567,7 @@ DIRECTORY *directory(DIRECTORY *dir, int entries, int function, char *pathname)
 	for (i = 0; i < entries; i++, dir_ptr++) {
 		type = dir_ptr->d_name[0] & 0x0FF;
 		if (!mem)
-			mark = ROOTADDR + (long) i *(long) DIR_SIZE;
+			mark = root_address + (long) i *(long) DIR_SIZE;
 		else
 			mark = clus_add(last) + (long) i *(long) DIR_SIZE;
 		if (function == ENTRY) {
@@ -1058,7 +1060,7 @@ void read_fat (unsigned int cl_no)
   	unsigned char	*rp;
   	unsigned short	i;
 
-	disk_io (READ, FAT_START + fat_low * 3 / 2, raw_fat, rawfat_size);
+	disk_io (READ, fat_start + fat_low * 3 / 2, raw_fat, rawfat_size);
 	for (rp = raw_fat, cp = cooked_fat, i = 0;
 	     i < cache_size;
 	     rp += 3, i += 2) {
@@ -1075,7 +1077,7 @@ void read_fat (unsigned int cl_no)
 	assert (sizeof (short) == 2);
 	assert (CHAR_BIT == 8);		/* just in case */
 
-	disk_io (READ, FAT_START + fat_low * 2, (void *)cooked_fat, cache_size * 2);
+	disk_io (READ, fat_start + fat_low * 2, (void *)cooked_fat, cache_size * 2);
 	if (big_endian) {
 		unsigned short	*cp;
 		unsigned char	*rp;
@@ -1107,8 +1109,8 @@ void flush_fat(void)
 		     	*(rp + 1) = *cp >> 8;
 		}
 	}
-	disk_io (WRITE, FAT_START + fat_low * 2, (void *)cooked_fat, cache_size * 2);
-	disk_io (WRITE, FAT_START + fat_size + fat_low * 2, (void *)cooked_fat, cache_size * 2);
+	disk_io (WRITE, fat_start + fat_low * 2, (void *)cooked_fat, cache_size * 2);
+	disk_io (WRITE, fat_start+ fat_size + fat_low * 2, (void *)cooked_fat, cache_size * 2);
   } else {
   	unsigned short	*cp;
   	unsigned char	*rp;
@@ -1122,8 +1124,8 @@ void flush_fat(void)
 	     		    ((*(cp + 1) & 0x00f) << 4);
 	     	*(rp + 2) = ((*(cp + 1) & 0xff0) >> 4);
 	}
-	disk_io (WRITE, FAT_START + fat_low * 3 / 2, raw_fat, rawfat_size);
-	disk_io (WRITE, FAT_START + fat_size + fat_low * 3 / 2, raw_fat, rawfat_size);
+	disk_io (WRITE, fat_start + fat_low * 3 / 2, raw_fat, rawfat_size);
+	disk_io (WRITE, fat_start+ fat_size + fat_low * 3 / 2, raw_fat, rawfat_size);
   }
 }
 
