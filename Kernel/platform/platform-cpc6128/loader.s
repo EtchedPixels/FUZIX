@@ -13,6 +13,9 @@ ld b, #0x7f
 ld c,#0b10101110
 out (c),c
 
+ld bc,#0x7fc1 ;select the kernel map
+out (c),c
+
 ;; hide screen
 
 ld bc,#0x7f10
@@ -119,7 +122,9 @@ ld de,#0x100
 ld (#data_ptr),de
 
 ;; number of complete sectors to read for our data
-;; 30 sectors, 512 bytes per sector. Total data to read is 30*512 = 15360 bytes.
+;; 126 sectors, 512 bytes per sector. Total data to read is 126*512 = 64512 bytes. Fuzix binary is smaller.
+;; We can load
+;; 
 ld a,#126
 ld (#sector_count),a
 
