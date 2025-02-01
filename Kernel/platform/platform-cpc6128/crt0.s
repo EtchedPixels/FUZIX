@@ -41,6 +41,20 @@
 
         .area _DISCARD
 
+				;code to copy font from firmware rom to its ram place
+copyfont:
+		;di interrupts should be off when mapping roms
+        ld bc, #0x7faa ;RMR ->UROM disable LROM enable
+        out (c),c
+        ld hl, #0x3800 ;Firmware (LROM) character bitmaps
+		ld de, #(_fontdata_8x8) 
+		ld bc, #0x800
+		ldir
+		ld bc, #0x7fae ;RMR ->UROM disable LROM disable
+        out (c),c
+		ret		
+copyfont_end:
+
 
         .area _COMMONMEM
 
@@ -85,7 +99,10 @@ _start:
 
 
 	di
-        ld sp, #kstack_top
+		ld bc,#0x7fc1 	;select the correct map (kernel map) in case of snapshot loading.
+		out (c),c		;this should be set in the snapshot file. FIXME
+        
+		ld sp, #kstack_top
 	;
 	; move the common memory where it belongs    
 	ld hl, #s__DATA
@@ -93,10 +110,6 @@ _start:
 	ld bc, #l__COMMONMEM
 	ldir
 
-	; then the font
-;	ld de, #s__FONT
-;	ld bc, #l__FONT
-;	ldir
 
 	; then the discard (backwards as will overlap)
 	ld de, #s__DISCARD
@@ -121,49 +134,8 @@ _start:
 	ld (hl), #0
 	ldir
 
-		;We are loading from a .sna with first 64k filled with fuzix.bin starting at 0x100
-	;copy bank 3 to bank 7 in C7 mode (7 at 0x4000), zero bank 3 (vmem) and switch to C1 (kernel map)
-	;when a proper loader is done this should be managed there
+	call copyfont
 	
-		ld bc,#0x7fc7
-		out (c),c
-
-		ld hl, #0xc000
-		ld de, #0x4000
-		ld bc, #0x4000
-		ldir
-		
-		ld bc,#0x7f00
-		out (c),c
-		ld a,#0x44
-		out (c),a		; blue paper
-		ld bc,#0x7f01
-		out (c),c
-		ld a,#0x4b
-		out (c),a		; white ink
-
-		ld hl, #0xc000
-		ld de, #0xc001
-		ld bc, #0x3fff
-		ld (hl), #0
-		ldir
-
-		ld bc,#0x7fc1
-		out (c),c
-
-		ld hl,#copyfont
-		ld de,#0xF000
-		ld bc,#(copyfont_end-copyfont)
-		ldir
-
-		call #0xF000
-
-		ld hl,#0xF000
-		ld de,#0xF001
-		ld bc,#(copyfont_end-copyfont-1)
-		ld (hl),#0
-		ldir
-
         ; Configure memory map
         call init_early
 
@@ -177,21 +149,6 @@ _start:
         di
 stop:   halt
         jr stop
-
-		;code to copy font
-copyfont: ;;this wil be in the loader
-		di
-        ld bc, #0x7faa ;RMR ->UROM disable LROM enable
-        out (c),c
-        ld hl, #0x3800 ;Firmware (LROM) character bitmaps
-		ld de, #(_fontdata_8x8) 
-		ld bc, #0x800
-		ldir
-		ld bc, #0x7fae ;RMR ->UROM disable LROM disable
-        out (c),c
-		ret		
-copyfont_end:
-
 
 	.area _BUFFERS
 ;
