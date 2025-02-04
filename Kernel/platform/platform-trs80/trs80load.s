@@ -26,7 +26,8 @@ floppy_read:
 	    out (0xF0), a
 	    ld b, #100
 l1:	    djnz l1
-	    ld de, #0x8116
+	    ld de, #0xC116		; D = wait state, precomp, drv 0
+					; E = status mask
 	    ld bc, #0xF3
 flopin:	    in a, (0xF0)
 	    and e
@@ -69,7 +70,7 @@ ctcloop:    out (c), b			; select register
 	    ldir
 	    ld de, #0xF800
 	    call prints
-	    .ascii 'TRS80Load 0.2\0'
+	    .ascii 'TRS80Load 0.5\0'
 
 	    ld hl, #0x0100
 ;
@@ -150,6 +151,6 @@ out:	   jp (hl)
 
 booted:	    ld de, #0xF850
 	    call prints
-	    .ascii 'Booting..\0'
+	    .ascii 'Booting...\0'
 
 ; OS starts on the following byte
