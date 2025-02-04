@@ -9,6 +9,8 @@
 #include <devinput.h>
 #include <stdarg.h>
 
+//#define AZERTY // uncomment this for AZERTY keyboards
+
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 static char tbuf3[TTYSIZ];
@@ -246,6 +248,16 @@ static void keyproc(void)
 }
 
 uint8_t keyboard[8][8] = {
+#ifdef AZERTY
+	{'>', 'q', 'b', 'c', 'd', 'e', 'f', 'g' },
+	{'h', 'i', 'j', 'k', 'l', ',', 'n', 'o' },
+	{'p', 'a', 'r', 's', 't', 'u', 'v', 'z' },
+	{'x', 'y', 'w', '^', '@', 'm', '\\','}' },
+	{'}', '&', '[', '"', '\'','(', '|', ']' },
+	{'!', '{', ')', '-', '$', ';', ':', '=' },
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_BS, KEY_DEL, ' '},
+	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+#else
 	{'@', 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
 	{'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o' },
 	{'p', 'q', 'r', 's', 't', 'u', 'v', 'w' },
@@ -254,9 +266,20 @@ uint8_t keyboard[8][8] = {
 	{'8', '9', ':', ';', ',', '-', '.', '/' },
 	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_BS, KEY_DEL, ' '},
 	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+#endif
 };
 
 uint8_t shiftkeyboard[8][8] = {
+#ifdef AZERTY
+	{'<', 'Q', 'B', 'C', 'D', 'E', 'F', 'G' },
+	{'H', 'I', 'J', 'K', 'L', '?', 'N', 'O' },
+	{'P', 'A', 'R', 'S', 'T', 'U', 'V', 'Z' },
+	{'X', 'Y', 'W', '`', '*', 'M', '%', '{' },
+	{'0', '1', '2', '3', '4', '5', '6', '7' },
+	{'8', '9', '~', '_', '#', '.', '/', '+' },
+	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
+	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+#else
 	{'@', 'A', 'B', 'C', 'D', 'E', 'F', 'G' },
 	{'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O' },
 	{'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W' },
@@ -265,6 +288,7 @@ uint8_t shiftkeyboard[8][8] = {
 	{'(', ')', '*', '+', '<', '=', '>', '?' },
 	{ KEY_ENTER, KEY_CLEAR, KEY_STOP, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, ' '},
 	{ 0, 0, 0, 0, KEY_F1, KEY_F2, KEY_F3, 0 }
+#endif
 };
 
 static uint8_t capslock = 0;
@@ -298,6 +322,24 @@ static void keydecode(void)
            with control */
 	if (keymap[7] & 4) {	/* control */
 	        m |= KEYPRESS_CTRL;
+#ifdef AZERTY
+                if (!(keymap[7] & 3)) {	/* no shift */
+                    if (c == '&')
+                        c = '|';
+                    else if (c == '^')
+                        c = '[';
+                    else if (c == '@')
+                        c = ']';
+                    else if (c == '=')
+                        c = '~';
+                    else if (c == '$')
+                        c = '`';
+                    else if (c == '>')
+                        c = '\\';
+                    else if (c > 31 && c < 127)
+			c &= 31;
+		}
+#else
                 if (keymap[7] & 3) {	/* shift */
                     if (c == '(')
                         c = '{';
@@ -319,6 +361,7 @@ static void keydecode(void)
                     else if (c > 31 && c < 127)
 			c &= 31;
                 }
+#endif
 	}
 	else if (capslock && c >= 'a' && c <= 'z')
 		c -= 'a' - 'A';
