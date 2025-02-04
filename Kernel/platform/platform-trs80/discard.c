@@ -18,7 +18,7 @@ __sfr __at 0x8E gfx_xor;
 
    The control port differs as follows
    Tandy
-   0: set to tun graphics on, clear for alpha
+   0: set to turn graphics on, clear for alpha
    1: set to turn on wait states (no flicker on update)
 
    Micrografyx
@@ -35,25 +35,35 @@ static uint_fast8_t probe_gfx(void)
 {
  kputs("Probing gfx\n");
  gfx_x = 1;
- if (gfx_x != 1)
+ gfx_y = 1;
+ gfx_ctrl = 0xA0;	/* Graphics off, inc X on read/write */
+ gfx_data = 0x55;
+ gfx_data = 0xAA;
+ gfx_x = 1;
+ if (gfx_data != 0x55) { 
+  kputs("none\n") ; 
   return 0;
- gfx_ctrl = 0x10;	/* Graphics off, inc X on read */
- gfx_data;
- if (gfx_x != 0x11)
+ }
+ if (gfx_data != 0xAA) { 
+  kputs("none\n") ; 
   return 0;
+ }
  /* We have either a TRS80 or a clone card present */
- gfx_xpan = 0xAA;
- if (gfx_xpan != 0xAA)
+ gfx_x = 0x7F;
+ gfx_y = 0xFF;
+ gfx_ctrl = 0xF0; 		/* No inc of X or Y */
+ gfx_data = 0xA5;
+ if (gfx_data != 0xA5) { 	/* this may need to be forced for Grafyx clone */
+  kputs("uLabs Grafyx (original)\n") ; 	
   return 2;
- gfx_xpan = 0;
+ }
+ kputs("Tandy (assumed) or Grafyx clone (unhandled)\n") ; 
  return 1;
 }
 
 void device_init(void)
 {
- kputs("Probing gfx\n");
   gfxtype = probe_gfx();
-  kputs("Done\n");
   vtbuf_init();
 #ifdef CONFIG_RTC
   /* Time of day clock */
