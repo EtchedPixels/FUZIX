@@ -167,7 +167,7 @@ int hd_open(uint8_t minor, uint16_t flag)
 {
 	uint8_t dev = minor >> 4;
 	flag;
-	if (dev > MAX_HD || parts[dev].g.head == 0 ||
+	if (dev >= MAX_HD || parts[dev].g.head == 0 ||
 		(minor && parts[dev].cyl[(minor-1)&0x0F] == 0xFFFF)) {
 		udata.u_error = ENODEV;
 		return -1;
