@@ -97,16 +97,14 @@ _switchin:
 	std     U_DATA__U_PAGE
 	sta     0xffa0
 	inca    
-	sta     0xffa1
-	stb     0xffa2
+	std     0xffa1
 	incb
 	stb     0xffa3
 	ldd     P_TAB__P_PAGE_OFFSET+2,x
 	std     U_DATA__U_PAGE2 
 	sta     0xffa4
 	inca
-	sta     0xffa5
-	stb     0xffa6
+	std     0xffa5
 	stx 	swapstack	; save passed page table *
 
 	;; flip in the newly choosen task's common page
@@ -186,13 +184,13 @@ _dofork:
 
         ;; now the copy operation is complete we can get rid of the stuff
         ;; _switchin will be expecting from our copy of the stack.
-	puls 	x
+	leas	2,s
 
 	ldx	#_udata
 	pshs	x
         ldx 	fork_proc_ptr	; get forked process
         jsr 	_makeproc	; and set it up
-	puls	x
+	leas	2,s
 
 	;; any calls to map process will now map the childs memory
 
@@ -210,11 +208,9 @@ _dofork:
 ;;; and stash parent uarea to old bank
 fork_copy:
 	;; calculate how many regular pages we need to copy
-	ldd	U_DATA__U_TOP	       ; get size of process
-	tfr	d,y		       ; make copy of progtop
-	anda	#$3f		       ; mask off remainder
-	pshs	cc		       ; push onto stack ( remcc )
-	tfr	y,d		       ; get copy of progtop
+	lda	U_DATA__U_TOP	       ; get size of process
+	bita	#$3f		       ; test remainder
+	pshs	cc		       ; push test result to stack ( remcc )
 	rola			       ; make low bits = whole pages
 	rola			       ;
 	rola			       ;
@@ -230,7 +226,7 @@ skip@	ldx	fork_proc_ptr
 	ldu	#U_DATA__U_PAGE	       ; parent process page tables (src)
 loop@	ldb	,x+		       ; B = child's next page
 	lda	,u+		       ; A = parent's next page
-	jsr	copybank	       ; copy bank
+	bsr	copybank	       ; copy bank
 	dec	1,s		       ; bump counter
 	bne	loop@
 	;; copy UDATA + common (if needed)
@@ -239,7 +235,7 @@ loop@	ldb	,x+		       ; B = child's next page
 	puls	cc,a		       ; pull 4th? condition codes
 	beq	skip2@		       ; 4th bank already copied?
 	lda	U_DATA__U_PAGE+3	 ;  A = parent's UDATA/common page
-	jsr	copybank		 ; copy it
+	bsr	copybank		 ; copy it
 	;; remap common page in MMU to new process
 skip2@	incb
 	stb	0xffaf
@@ -251,12 +247,10 @@ skip2@	incb
 ;;;   takes: B = dest bank, A = src bank
 copybank
 	pshs	d
-	;; map in src and dest
 	bsr	copy_mmu
-	incb
-	inca
+	incb			; second 8K bank of DEST
+	inca			; second 8K bank of SRC
 	bsr	copy_mmu
-	;; return
 	puls	d,pc		; return
 
 ;;; copy data from one 8k bank to another
@@ -264,9 +258,12 @@ copybank
 copy_mmu
 	pshs	dp,d,x,y,u
 	sts	@temp
-	std	0xffa9		; map in src,dest into mmu
-	lds	#0x6000		; to and from ptrs
-	ldu	#0x4000+7
+	std	0xffa9		; map SRC,DEST into MMU
+	;; Note: the way this copy works, it's important that S is the
+	;; destination.  That way when an interrupt stacks registers, it's
+	;; only touching memory that will be immediately overwritten.
+	lds	#0x6000		; DEST (0x4000-0x5fff)
+	ldu	#0x4000+7	; SRC (0x2000-0x3fff)
 a@	leau	-14,u
 	pulu	dp,d,x,y	; transfer 7 bytes at a time
 	pshs	dp,d,x,y	; 6 times.. 42 bytes per loop
@@ -287,14 +284,16 @@ a@	leau	-14,u
 	pshs	dp,d,x,y
 	cmpu	#0x2002+42+7	; end of copy? (leave space for interrupt)
 	bne	a@		; no repeat
-	ldx	@temp		; put stack back
-	exg	x,s		; and data to ptr to x now
-	leau	-7,u
-b@	ldd	,--u		; move last 44 bytes with a normal stack
-	std	,--x		; 4 bytes per loop
-	ldd	,--u
-	std	,--x
-	cmpx	#0x4000
+	;; We can't use S any more - interrupts could stack registers
+	;; below our destination page - so restore S and use a slower copy
+	;; for the last 44 bytes.
+	leax	-7,u		; pick up SRC in X
+	ldu	@temp		; restore stack...
+	exg	u,s		; ... and DEST now in U
+b@	ldy	,--x		; move last 44 bytes with a normal stack
+	ldd	,--x		; 4 bytes per loop
+	pshu	d,y
+	cmpx	#0x2000		; reached bottom of SRC?
 	bne	b@
 	;; restore mmu
 	ldd	#0x0102
