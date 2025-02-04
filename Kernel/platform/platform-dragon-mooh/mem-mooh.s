@@ -132,14 +132,13 @@ smash@	leau	-14,u
 	pshs	dp,d,x,y
 	cmpu	#0x8002+42+7	; end of copy? (leave space for interrupt) - bottom of SRC
 	bne	smash@		; no repeat
-	ldx	save_sp		; put stack back
-	exg	x,s		; and data DEST ptr to X now
-	leau	-7,u
-safe@	ldd	,--u		; move last 44 bytes with a normal stack
-	std	,--x		; 4 bytes per loop
-	ldd	,--u
-	std	,--x
-	cmpx	#0xA000		; reached bottom of DEST?
+	leax	-7,u		; pick up SRC in X
+	ldu	save_sp		; restore stack...
+	exg	u,s		; ... and DEST now in U
+safe@	ldy	,--x		; move last 44 bytes with a normal stack
+	ldd	,--x		; 4 bytes per loop
+	pshu	d,y
+	cmpx	#0x8000		; reached bottom of SRC?
 	bne	safe@
 	puls	x
 	stx	0xFFA4		; restore MMU regs
