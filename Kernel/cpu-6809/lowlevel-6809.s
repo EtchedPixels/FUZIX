@@ -229,8 +229,7 @@ interrupt_handler:
 
         ; switch stacks
         sts istack_switched_sp
-        lds #istack_top-2
-	; FIXME: check store/dec order might not need to be -2 here!!!!
+        lds #istack_top
 
 	jsr map_save
 
@@ -238,11 +237,10 @@ interrupt_handler:
 	bne in_kernel
 
         ; we're not in kernel mode, check for signals and fault
-	lda 0		; save address 0 contents for checking
-        cmpa #0x7E		; JMP at 0
-	beq nofault
-	lda #0x7E		; put it back
-	sta 0		; write
+	lda #0x7e
+	cmpa 0		; JMP at 0?
+	beq nofault	; yes?  not a fault
+	sta 0		; fault - put JMP back
 	jsr map_kernel
 	ldb #11		; SIGSEGV
 	jsr trap_signal	; signal the user with a fault
@@ -355,7 +353,7 @@ nmimsg: .ascii "[NMI]"
         .db 13,10,0
 
 nmi_handler:
-	lds #istack_top-2		; We aren't coming back so this is ok
+	lds #istack_top		; We aren't coming back so this is ok
 	jsr map_kernel
         ldx #nmimsg
 	jsr outstring
