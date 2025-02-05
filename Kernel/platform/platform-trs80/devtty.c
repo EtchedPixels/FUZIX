@@ -9,8 +9,6 @@
 #include <devinput.h>
 #include <stdarg.h>
 
-//#define AZERTY // uncomment this for AZERTY keyboards
-
 static char tbuf1[TTYSIZ];
 static char tbuf2[TTYSIZ];
 static char tbuf3[TTYSIZ];
@@ -248,7 +246,7 @@ static void keyproc(void)
 }
 
 uint8_t keyboard[8][8] = {
-#ifdef AZERTY
+#ifdef CONFIG_AZERTY
 	{'>', 'q', 'b', 'c', 'd', 'e', 'f', 'g' },
 	{'h', 'i', 'j', 'k', 'l', ',', 'n', 'o' },
 	{'p', 'a', 'r', 's', 't', 'u', 'v', 'z' },
@@ -270,7 +268,7 @@ uint8_t keyboard[8][8] = {
 };
 
 uint8_t shiftkeyboard[8][8] = {
-#ifdef AZERTY
+#ifdef CONFIG_AZERTY
 	{'<', 'Q', 'B', 'C', 'D', 'E', 'F', 'G' },
 	{'H', 'I', 'J', 'K', 'L', '?', 'N', 'O' },
 	{'P', 'A', 'R', 'S', 'T', 'U', 'V', 'Z' },
@@ -322,7 +320,7 @@ static void keydecode(void)
            with control */
 	if (keymap[7] & 4) {	/* control */
 	        m |= KEYPRESS_CTRL;
-#ifdef AZERTY
+#ifdef CONFIG_AZERTY
                 if (!(keymap[7] & 3)) {	/* no shift */
                     if (c == '&')
                         c = '|';

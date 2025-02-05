@@ -2,6 +2,10 @@
 #define CONFIG_RTC
 #define CONFIG_RTC_FULL
 #define CONFIG_RTC_INTERVAL	10	/* fast RTC */
+
+/* Set this for AZERTY keyboard handling */
+#undef CONFIG_AZERTY
+
 /* Enable to make ^Z dump the inode table for debug */
 #undef CONFIG_IDUMP
 /* Enable to make ^A drop back into the monitor */
