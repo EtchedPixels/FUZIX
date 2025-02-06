@@ -1,0 +1,34 @@
+#!/bin/sh
+image=sdcard.img
+size=36				# in Megabytes
+
+# Input files
+kernel=../../fuzix.bin
+filesys=../../../Images/rosco-r2/filesys.img
+
+# Make a 36M image to start with
+dd if=/dev/zero of=$image bs=1M count=$size
+
+# Put in a partition table with an 18M FAT32
+# partition and an 18M UDF partition which
+# xv6 will use.
+/sbin/parted $image mklabel msdos
+/sbin/parted $image mkpart primary fat32 1MB 50%
+/sbin/parted $image mkpart primary udf 50% 100%
+/sbin/parted $image print
+
+# Make the FAT32 filesystem
+/sbin/mkfs.vfat -F 32 --offset=2048 $image
+
+# Copy the FUZIX kernel to the FAT32 partition
+mcopy -i "$image"@@1M $kernel ::RosCode1.bin
+
+# Print out the FAT32 contents
+mdir -i "$image"@@1M
+
+# Now copy the FAT32 filesystem to a temp file and
+# append the FUZIX filesystem
+dd if=$image of=temp.img bs=1M count=18
+cat $filesys >> temp.img
+mv temp.img $image
+echo Result is file $image
