@@ -328,17 +328,6 @@ Kill(argc, argv)
       if (*sigwd == '-')
 	sigwd++;
       sig = atoi(sigwd);
-#ifdef FUZIX
-      goto killit;		/* Yuk, a goto */
-#else
-      if (sig == 0)
-	for (i = 1; signame[i]; i++)
-	  if (!strcmp(sigwd, signame[i]))
-	  {
-	    sig = i;
-	    break;
-	  }
-#endif
   killit:
       if (sig == 0)
       {
@@ -370,21 +359,7 @@ Kill(argc, argv)
       kill(pid, sig);
       return (0);
     default:
-#ifdef FUZIX
       prints("Usage: kill [-]number job|pid\n");
-#else
-      prints("Usage: kill [-]signame|number job|pid\n");
-      prints("  Signal names are:\n");
-      for (i = 1; signame[i]; i++)
-      {
-	if (i % 6 == 1)
-	  prints("    ");
-	prints("%s  ", signame[i]);
-	if (i % 6 == 0)
-	  prints("\n");
-      }
-      prints("\n");
-#endif
       return (1);
   }
 }

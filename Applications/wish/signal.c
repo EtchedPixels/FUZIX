@@ -17,10 +17,8 @@ graceful(sig)
   int sig;
 #endif
 {
-  extern char *signame[];
-
   setcooked();
-  fprints(2, "Received SIG%s signal, # %d\n", signame[sig],sig);
+  fprints(2, "Received signal %d\n", sig);
   exit(1);
 }
 
