@@ -1,1 +1,5 @@
-include Makefile.common
+all:
+
+clean:
+	rm -f *.o wish core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx \
+	  *.tmp *.bin size.report
