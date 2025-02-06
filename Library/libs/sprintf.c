@@ -64,7 +64,8 @@ int snprintf(char *sp, size_t size, const char *fmt, ...)
 	string->bufpos = (unsigned char *) sp;
 	rv = _vfnprintf(string, size, fmt, ptr);
 	va_end(ptr);
-	*(string->bufpos) = 0;
+	if (size != 0)
+		*(string->bufpos) = 0;
 
 	string->bufpos = p;
 	return rv;
@@ -84,7 +85,8 @@ int vsnprintf(char *sp, size_t size, const char *fmt, va_list ptr)
 
 	string->bufpos = (unsigned char *) sp;
 	rv = _vfnprintf(string, size, fmt, ptr);
-	*(string->bufpos) = 0;
+	if (size != 0)
+		*(string->bufpos) = 0;
 
 	string->bufpos = p;
 	return rv;
