@@ -1,0 +1,85 @@
+.TH LESS 1
+.SH NAME
+less
+\- display pager
+.SH SYNOPSIS
+.B less
+[file]
+.SH DESCRIPTION
+.I Less
+is a small and memory-efficient subset of the normal Unix
+.IR less(1)
+pager. It displays either the text file named on the command line,
+or standard input if there is no command-line argument. The input
+is displayed one screen at a time, and the user can scroll backwards
+and forwards through the input using these commands:
+.RS
+.TP
+.B f or <space>
+Move forward one screen
+.TP
+.B b
+Move backwards one screen
+.TP
+.B d
+Move forward half a screen
+.TP
+.B u
+Move backwards half a screen
+.TP
+.B j or <return>
+Move forward a line
+.TP
+.B k
+Move backwards a line
+.TP
+.B g
+Move to the start of the input
+.TP
+.B q
+Exit the program
+.RE
+.PP
+.IR less(1)
+will interpret sequences in the input such as x<backspace>x and
+display them in bold using ANSI escape sequences. Similarly,
+input sequences such as x<backspace>_ will be displayed underlined.
+.PP
+When using standard input,
+.IR less(1)
+buffers the input in a temporary file which is immediately unlinked
+so that it does not persist after the program exits.
+.SH SEE ALSO
+.IR more(1)
+.SH DIAGNOSTICS
+.IR less(1)
+normally exits with a zero value unless something goes wrong, when it will
+exit with value 1. These diagnostic messages may be issued:
+.RS
+.TP
+.B Unable to open <filename>
+The file named on the command line does not exist.
+.TP
+.B Cannot tc[gs]etattr
+The terminal cannot be put into cbreak mode.
+.TP
+.B fseek error in <function>
+.IR less(1)
+tried to move to a position in the input file which is not there.
+.TP
+.B Unable to open /dev/tty
+The character device /dev/tty does not exist:
+.IR less(1)
+needs to open this to set it to cbreak mode.
+.TP
+.B [mc]alloc error in <function>
+The program ran out of memory, even after freeing some memory.
+.RE
+.SH BUGS AND LIMITTATIONS
+.IR less(1)
+caches the file offsets for each line in memory. As you page down through
+a big file,
+.IR less(1)
+may run out of memory to hold all the offsets. When this happens, offsets
+from the beginning of the file are freed. This implies that you may not
+be able to page back to the top of the file.

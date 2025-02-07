@@ -88,6 +88,7 @@ f 0755 /bin/groups      groups
 f 0755 /bin/head        head
 f 0755 /bin/id          id
 f 0755 /bin/kbdrate     kbdrate
+f 0755 /bin/less        less
 f 0755 /bin/ll          ll
 f 0755 /bin/logname     logname
 f 0755 /bin/mail	mail
@@ -137,6 +138,7 @@ f 0755 /bin/yes         yes
 f 0655 /usr/man/man1/cp.1        cp.1
 f 0655 /usr/man/man1/cpuinfo.1   cpuinfo.1
 f 0655 /usr/man/man1/date.1      date.1
+f 0655 /usr/man/man1/less.1      less.1
 f 0655 /usr/man/man1/man.1       man.1
 f 0655 /usr/man/man1/mkdir.1     mkdir.1
 f 0655 /usr/man/man1/mv.1        mv.1
