@@ -28,9 +28,6 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <curses.h>
-#ifdef __linux__
-# include <term.h>
-#endif
 
 #define DEVTTY "/dev/tty"	/* Name of the terminal device */
 #define BUFLEN	512		/* Size of the line buffer */
