@@ -1,9 +1,6 @@
 #include <time.h>
 #include <string.h>
 
-#include <time.h>
-#include <string.h>
-
 /* Slight duplication here so gmtime doesn't suck in tz and all the rest */
 #define SECS_PER_DAY	86400
 #define SECS_PER_HOUR	3600
