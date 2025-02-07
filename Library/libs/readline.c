@@ -221,7 +221,7 @@ static void history(int8_t dir)
 int rl_edit_timeout(int fd, int ofd, const char *prompt,
                 char *input, size_t len, uint8_t timeout, int (*timeout_fn)(void))
 {
-    uint_fast8_t c;
+    uint8_t c;
     uint_fast8_t quote = 0;
     uint_fast8_t esc = 0;
     register uint_fast8_t r;
