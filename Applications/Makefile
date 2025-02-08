@@ -1,7 +1,8 @@
 #
 APPS = util cmd sh games cave cpm v7games games cursesgames \
        as09 ld09 netd MWC flashrom ue cpmfs plato \
-       emulators cpnet dw assembler CC cpp ar
+       emulators cpnet dw assembler CC cpp ar \
+       2048
 
 .PHONY: $(APPS)
 
@@ -27,6 +28,9 @@ cpm:
 
 games:
 	+(cd games; $(MAKE) -f Makefile.$(USERCPU))
+
+2048:
+	+(cd games/2048; $(MAKE) -f Makefile.$(USERCPU))
 
 cursesgames:
 	+(cd cursesgames; $(MAKE) -f Makefile.$(USERCPU))
@@ -87,6 +91,7 @@ clean:
 	(cd cave; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd cpm; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd games; $(MAKE) -f Makefile.$(USERCPU) clean)
+	(cd games/2048; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd cursesgames; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd as09; $(MAKE) -f Makefile.$(USERCPU) clean)
 	(cd ld09; $(MAKE) -f Makefile.$(USERCPU) clean)
