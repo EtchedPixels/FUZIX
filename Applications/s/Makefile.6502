@@ -1,1 +1,4 @@
-include Makefile.common
+all:
+
+clean:
+
