@@ -1,0 +1,4 @@
+package  s
+if-file  s
+
+f 0755 /usr/bin/s           s

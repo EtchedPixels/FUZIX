@@ -1,0 +1,19 @@
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
+
+CSRCS = address.c adjust.c Bman.c buffer.c commands.c keyboard.c lib.c
+CSRCS += operator.c s.c screen.c Sman.c yank.c
+HDRS  = s.h
+
+OBJS = $(CSRCS:.c=.o)
+
+all: s
+
+s: $(OBJS)
+	$(LINKER) -o s $(CRT0) $(OBJS) $(LINKER_OPT) $(LINKER_TAIL)
+
+$(OBJS): %.o: %.c $(HDRS)
+	$(CC) $(CFLAGS) $(COPT) -c -o $*.o $*.c
+
+clean:
+	rm -f s $(OBJS)
+	rm -f *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *~ *.o *.rel *.asm

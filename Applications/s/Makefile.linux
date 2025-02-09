@@ -1,0 +1,9 @@
+CC= cc
+CFLAGS= -g
+
+s:	s.o address.o adjust.o Bman.o buffer.o commands.o \
+	keyboard.o lib.o operator.o screen.o Sman.o yank.o
+	$(CC) -o s *.o
+
+clean:
+	rm -f *.o s
