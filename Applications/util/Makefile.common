@@ -112,6 +112,7 @@ SRCS  = \
 	xargs.c
 
 SRCTC = fleamacs.c \
+	less.c \
 	tget.c \
         tchelp.c \
 	marksman.c \
