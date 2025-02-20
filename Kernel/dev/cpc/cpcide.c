@@ -7,6 +7,7 @@
 
 /* We have to provide slightly custom methods here because of the banked
    kernel */
+#ifdef CONFIG_TD_IDE
 COMMON_MEMORY
 
 void devide_read_data(uint8_t *p) __naked
@@ -242,3 +243,4 @@ dowrite1:                    ; transfer 512 bytes
             ret
     __endasm;
 }
+#endif
