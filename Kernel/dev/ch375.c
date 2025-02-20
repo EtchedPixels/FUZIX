@@ -24,6 +24,8 @@
 #include <printf.h>
 #include "ch375.h"
 
+#if defined CONFIG_CH375
+
 static uint8_t ch_ver;
 static uint8_t ch_rd = 0x28;
 static uint8_t ch_wd = 0x2B;
@@ -161,3 +163,5 @@ uint_fast8_t ch375_probe(void)
     ch_dev = td_register(0, ch375_xfer, td_ioctl_none, 1);
     return 1;
 }
+
+#endif
