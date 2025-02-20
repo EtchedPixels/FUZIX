@@ -24,6 +24,7 @@
 	; Build the video library as the only driver
 
 CPCVID_ONLY	.equ	1
+C3_6128		.equ	0
 SCREENBASE	.equ 0x40
 
 .macro VIDEO_MAP
@@ -36,9 +37,10 @@ SCREENBASE	.equ 0x40
 
 	.globl _fontdata_8x8
 
-;_fontdata_8x8	.equ	0xF000		; routines except this
-									; to point to space char
-        .area _COMMONMEM
+
+_fontdata_8x8	.equ	0x3800			; routines except this
+										; to point to space char
+        .area _VIDEO
 
 	.include "../../dev/cpc/video.s"
 
