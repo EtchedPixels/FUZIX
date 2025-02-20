@@ -19,7 +19,7 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 1: /dev/fd		Floppy disc block devices */
   {  devfd_open,   no_close,     devfd_read,    devfd_write,   no_ioctl },
   /* 2: /dev/tty	TTY devices */
-  {  tty_open,	   tty_close,    tty_read,      tty_write,     cpcvt_ioctl },
+  {  tty_open,	   tty_close,    tty_read,      tty_write,     cpctty_ioctl },
   /* 3: /dev/lpr	Printer devices */
   {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
   /* 4: /dev/mem etc	System devices (one offs) */
@@ -50,16 +50,23 @@ bool validdev(uint16_t dev)
 
 void device_init(void)
 {
+#ifdef CONFIG_USIFAC_SERIAL
+  usifac_serial_init();
+#endif
 #ifdef CONFIG_TD_IDE
   ide_probe();
 #endif
 #ifdef CONFIG_TD_SD
   sd_probe();
 #endif
-ch375_probe();
+#ifdef CONFIG_ALBIREO
+  ch375_probe();
+#endif
 
 #ifdef CONFIG_NET
   sock_init();
 #endif
+
+
 }
 
