@@ -41,19 +41,8 @@
 
         .area _DISCARD
 
-				;code to copy font from firmware rom to its ram place
-copyfont:
-		;di interrupts should be off when mapping roms
-        ld bc, #0x7faa ;RMR ->UROM disable LROM enable
-        out (c),c
-        ld hl, #0x3800 ;Firmware (LROM) character bitmaps
-		ld de, #(_fontdata_8x8) 
-		ld bc, #0x800
-		ldir
-		ld bc, #0x7fae ;RMR ->UROM disable LROM disable
-        out (c),c
-		ret		
-copyfont_end:
+
+		.ds 24
 
 
         .area _COMMONMEM
@@ -99,10 +88,15 @@ _start:
 
 
 	di
-		ld bc,#0x7fc1 	;select the correct map (kernel map) in case of snapshot loading.
-		out (c),c		;this should be set in the snapshot file. FIXME
-        
-		ld sp, #kstack_top
+
+	;clear loader traces
+	ld hl, #0xFC00
+	ld de, #0xFC01
+	ld bc, #0x3FF
+	ld (hl), #0
+	ldir
+
+	ld sp, #kstack_top
 	;
 	; move the common memory where it belongs    
 	ld hl, #s__DATA
@@ -134,7 +128,7 @@ _start:
 	ld (hl), #0
 	ldir
 
-	call copyfont
+	;call copyfont
 	
         ; Configure memory map
         call init_early
@@ -162,7 +156,3 @@ stop:   halt
 _bufpool:
 	.ds BUFSIZE * NBUFS
 
-	.globl _fontdata_8x8
-	.area _FONT
-	_fontdata_8x8:
-	.ds 2048
