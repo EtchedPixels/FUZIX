@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
             buf[0x11] = side;
             buf[0x14] = 2;
             buf[0x15] = 9;
-            buf[0x16] = 0x2A;
+            buf[0x16] = 0x4e;
             buf[0x17] = 0xE5;
             bp = buf + 0x18;
             for (sector = 1; sector < 10; sector++) {
