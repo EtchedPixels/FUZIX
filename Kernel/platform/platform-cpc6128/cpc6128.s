@@ -135,6 +135,23 @@ init_hardware:
 	ld bc,#32
 	ldir
 
+	ld bc,#0xfbd1
+	ld a,#16
+	out (c),a ; try to set usifac baudrate 115200
+	ld c,#0xdd
+	in a,(c)
+	cp #16
+	jr nz, end_usifac
+	ld c,#0xd1
+flush_usifac:	
+	in a,(c)
+	dec a
+	jr z,end_usifac
+	dec c
+	in a,(c)
+	inc c
+	jr flush_usifac
+end_usifac:
 	ld bc,#0x7fc3
 				; bank 7 (common) in high in either mapping
 				; video bank 3 at &4000

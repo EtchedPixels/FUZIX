@@ -84,9 +84,11 @@ void tty_putc(uint8_t minor, unsigned char c)
 		case 1:
 			vtoutput(&c, 1);
 			break;
+#if defined CONFIG_USIFAC_SERIAL			
 		case 2:
 			usifdata = c;
 			break;
+#endif
 	}
 }
 
