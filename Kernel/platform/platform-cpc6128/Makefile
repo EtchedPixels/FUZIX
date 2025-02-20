@@ -6,7 +6,7 @@ DZSRCS = ../../dev/cpc/cpcide.c ../../dev/cpc/cpckeyboard.c ../../dev/cpc/devinp
 DDZSRCS =
 ASRCS = crt0.s cpc6128.s cpcvideo.s fdc765.s  
 ASRCS += tricks.s commonmem.s 
-NSRCS = 
+NSRCS = ../../dev/net/net_native.c
 
 COBJS = $(CSRCS:.c=.rel)
 CDOBJS = $(CDSRCS:.c=.rel)
@@ -57,20 +57,19 @@ image:
 	# Create a snapshot file with fuzix code at right places and set execution at 0x100
 	dd if=../../fuzix.bin of=bank012.bin bs=48896 count=1
 	dd if=../../fuzix.bin of=bank7.bin bs=1 skip=48896
-	createSnapshot $(IMAGES)/6128.sna -l bank012.bin 0x100 -l bank7.bin 0x1c000 -s Z80_PC 0x100
+	createSnapshot $(IMAGES)/6128.sna -l bank012.bin 0x100 -l bank7.bin 0x1c000 -s Z80_PC 0x100 -s GA_RAMCFG 0xc1
 
 	#Assemble loader
 	sdasz80 -l -o loader.s
 	sdldz80 -i loader.rel
 	hex2bin loader.ihx
 	# Make a system disk raw image to work from with loader at cpm boot sector followed by fuzix.bin
-	dd if=/dev/zero of=padding.bin bs=512 count=360
-	dd if=loader.bin of=padding.bin seek=0 bs=512 conv=notrunc
-	dd if=../../fuzix.bin of=padding.bin bs=512 seek=1 conv=notrunc
-	cat padding.bin >disk.raw
+	dd if=/dev/zero of=disk.raw bs=512 count=360
+	dd if=loader.bin of=disk.raw seek=0 bs=512 conv=notrunc
+	dd if=../../fuzix.bin of=disk.raw bs=512 seek=1 conv=notrunc
 	# And generate a 40 track cpc system disk dsk file from it
-	../../tools/raw2dskcpc disk.raw fuzix.dsk 40 1 64
-	cp fuzix.dsk $(IMAGES)/fuzix.dsk
+	../../tools/raw2dskcpc disk.raw $(IMAGES)/fuzix.dsk 40 1 64
+
 	
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 
@@ -78,7 +77,7 @@ diskimage:
 	# Make a blank disk image and partition it P1->32M,FUZIX P2->8M,FUZIX P3->4M,FUZIX.SWAP P4->(64-(32+8+4+1(reserved)))M,FAT16
 	dd if=/dev/zero of=$(IMAGES)/disk.img bs=512 count=131072
 	echo 'label: dos' | sfdisk $(IMAGES)/disk.img
-	echo -e 'size=32M, id=7e\n size=8M, id=7e\n size=4M, id=7f\n size=+, id=4\n' | sfdisk $(IMAGES)/disk.img
+	sfdisk $(IMAGES)/disk.img < diskimage.sfdisk
 	
 	# Make a FAT16 filesystem for partition P4 so we can play with dos utils (dosread, etc.), root directory entries are limited by available RAM
 	dd if=/dev/zero of=$(IMAGES)/FAT16.img bs=512 count=38912
