@@ -75,7 +75,15 @@ Look for speed optimization opportunities.
 
 ## BUILD & RUN
 
-make diskimage with cpc6128 target in base Makefile
+Install cpctools: https://github.com/cpcsdk/cpctools
+install hex2bin: https://github.com/algodesigner/hex2bin
+
+make TARGET=cpc6128 diskimage
+
+install hex2bin: https://github.com/algodesigner/hex2bin
+
+make TARGET=cpc6128 diskimage
+
 .sna snapshot, .dsk Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from floppy use |cpm command from basic prompt
 
 To run on emulator use ACE-DL emulator and use disk.img as image for the x-mass IDE interface emulation.
