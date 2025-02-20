@@ -1,6 +1,8 @@
 ;
 ;        amstrad cpc vt primitives
 ;
+        .globl _int_disabled
+        
         ; exported symbols
         .globl cpc_plot_char
         .globl cpc_scroll_down
@@ -14,6 +16,7 @@
 	.globl _fontdata_8x8
 	.globl _curattr
 	.globl _vtattr
+
 
 videopos: ;get x->d, y->e => set de address for top byte of char
         ld l,e
@@ -59,7 +62,9 @@ cpc_plot_char:
         add hl,hl
         ld bc, #_fontdata_8x8
         add hl, bc          ; hl points to first byte of char data
-
+        di
+        ld bc, #0x7faa ;RMR ->UROM disable LROM enable
+        out (c),c
         ld b,#7
         ld a,(hl)
         ld (de),a
@@ -71,10 +76,17 @@ plot_char_line:
         ld a,(hl)
         ld (de),a
         djnz plot_char_line
-
-        
+        ld bc, #0x7fae ;RMR ->UROM disable LROM disable
+        out (c),c
+        ex af,af'
+        ld a,(_int_disabled)
+	or a
+	jr nz,cont_no_int_char
+	ei
 	; We do underline for now - not clear italic or bold are useful
 	; with the font we have.
+cont_no_int_char:
+        ex af,af'
 	ld bc,(_vtattr)	    ; c is vt attributes
 	bit 1,c		    ; underline ?
 	jr nz, last_ul
@@ -210,11 +222,30 @@ cpc_cursor_on:
         pop de
         push de
         push hl
-        ld (cursorpos), de
         call videopos
         ld a,d               
         add a,#0x38             
-        ld  d,a            
+        ld  d,a
+        add a,#0x80      ;here start a workaround to avoid the behaviour of C3 map on cpc 664 & 464 reading rom instead of ram data at 0x4000
+        ld l,e
+        ld h,a
+        ;push bc
+        di
+        ld bc,#0x7fc0
+        out (c),c
+        ld a,(hl)
+        ld c,#0xc3
+        out (c),c
+        ld (saved_cursor_byte),a
+        ld a,(_int_disabled)
+	or a
+	jr nz,cont_no_int_cursor
+	ei
+cont_no_int_cursor:
+        ;pop bc
+        ;pop hl
+        ;push hl         ;here ends the wotkaround, on a 6128 ld a,(de) does the same
+        ld (cursorpos), de
         ld a,#0xFF
         ld (de),a
 
@@ -227,12 +258,10 @@ _cursor_off:
 	.endif
 cpc_cursor_disable:
 cpc_cursor_off:
-        ld de, (cursorpos)
-        call videopos
-        ld a,d               
-        add a,#0x38
-        ld  d,a              
-        xor a
+        VIDEO_MAP
+
+        ld de, (cursorpos)              
+        ld a,(saved_cursor_byte)
         ld (de),a
 	
         VIDEO_UNMAP
@@ -283,7 +312,9 @@ write_ay_reg: ; E = register, D = data from https://cpctech.cpc-live.com/source/
         .area _DATA
 
 cursorpos:
-        .dw 0   
+        .dw 0
+saved_cursor_byte:
+        .db 0
 scroll_offset:
         .dw 0
 CRTC_offset:
