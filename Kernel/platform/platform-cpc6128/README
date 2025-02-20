@@ -45,6 +45,15 @@ There isn't a proper loader, for now a snapshot is generated. FIXED, dsk floppy 
 
 To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load an run the snapshot or burn the dsk in a floppy and start FUZIX with |cpm.
 
+Added support for the USIFAC serial port. If CONFIG_USIFAC_SERIAL is defined in config.h, the tty2 device is added. To use the console on this device, modify the following line in /etc/inittab:
+02:3:off:getty /dev/tty2
+to:
+02:3:respawn:getty /dev/tty2
+This has been tested with Putty conecting the usifac to a linux box using a USB-Serial converter and works wery well. By default the usifac is set at 115200 baud with no flow control.
+
+If CONFIG_USIFAC_SLIP is defined, the tty2 device can no longer be used as the system console. You must change tty4 to tty2 in slip.c and start the network driver by running netd-slip&. However, mainly as this platform relies solely on swap for multitasking, this functionality is practically useless except for basic operations like ping as while the netd-slip driver is active, the console becomes extremely slow. Also, among other issues, name resolution does not work and ipconfig provides incorrect information. Tested connecting the usifac to a ESP-01 module with this firmware: https://github.com/martin-ger/esp_slip_router
+
+
 
 ## TODO
 
