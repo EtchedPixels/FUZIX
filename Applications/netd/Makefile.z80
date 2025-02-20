@@ -2,7 +2,7 @@ include $(FUZIX_ROOT)/Target/rules.z80
 
 CFLAGS += -DNETD_LITTLE_ENDIAN
 
-SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
+SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c slip.c
 SRCS += echoping.c dig.c gethostbyname.c httpd.c ping.c ntpdate.c
 SRCS += htget.c tinyirc.c linein.c ifconfig.c
 
@@ -14,6 +14,7 @@ all: $(APPS)
 
 
 netd: $(OBJS)
+	$(LINKER) $(LINKER_OPT) -o netd-slip $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o slip.o $(LINKER_TAIL)
 	$(LINKER) $(LINKER_OPT) -o netd-lwwire $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o lwwire.o $(LINKER_TAIL)
 	$(LINKER) $(LINKER_OPT) -o telnet $(CRT0) telnet.o gethostbyname.o $(LINKER_TAIL)
 	$(LINKER) $(LINKER_OPT) -o echoping $(CRT0) echoping.o $(LINKER_TAIL)
