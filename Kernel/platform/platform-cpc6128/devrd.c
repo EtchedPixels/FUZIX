@@ -8,7 +8,7 @@
 
 #if defined EXTENDED_RAM_512 || defined EXTENDED_RAM_1024
 #include <devrd.h>
-
+#undef DEBUG
 
 static int rd_transfer(uint8_t is_read, uint8_t rawflag)
 {
@@ -43,9 +43,17 @@ static int rd_transfer(uint8_t is_read, uint8_t rawflag)
             rd_swap_bank = swap_bank_long;
             rd_swap_mem_port_h = 0x7f;
         }
-        rd_proc_bank = ((uint16_t)rd_dptr / 0x4000) + 0xc4;
         rd_swap_bank_addr = ((block & 31) << BLKSHIFT) + 0x4000;
-        rd_proc_bank_addr = ((uint16_t)rd_dptr & 0x3fff) + 0x4000;
+        switch (rawflag){
+            case 0:
+                rd_proc_bank = 0xc1;
+                rd_proc_bank_addr = (uint16_t)rd_dptr;
+                break;
+            case 2:
+                rd_proc_bank = ((uint16_t)rd_dptr / 0x4000) + 0xc4;
+                rd_proc_bank_addr = ((uint16_t)rd_dptr & 0x3fff) + 0x4000;
+                break;
+        }
         
         #ifdef DEBUG
             if (nblock == 1)
