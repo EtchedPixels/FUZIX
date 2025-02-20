@@ -33,7 +33,7 @@
 #define BUFLEN	512		/* Size of the line buffer */
 
 int ttyfd;			/* The fd for the terminal */
-int rows = 25, cols = 80;	/* The default size of the terminal */
+unsigned short rows = 25, cols = 80;	/* The default size of the terminal */
 int is_stdin = 0;		/* Is input from standard input? */
 
 /* We keep track of line offsets from the input file */
@@ -115,7 +115,7 @@ void set_cbreak() {
     error("Cannot tcsetattr\n");
 
   /* Ensure we reset the terminal when we exit */
-  atexit(reset_terminal);
+  atexit((void*)reset_terminal);
 }
 
 /* Get the terminal's size */
