@@ -66,6 +66,7 @@ network driver by running netd-slip&. However, mainly as this platform relies so
 useless except for basic operations like ping as while the netd-slip driver is active, the console becomes extremely slow. Also, among other issues,
 name resolution does not work and ipconfig provides incorrect information. Tested connecting the usifac to a ESP-01 module with this firmware:
 https://github.com/martin-ger/esp_slip_router
+This driver uses /etc/netrc and /etc/resolv.conf files for network interface configuration
 
 
 
