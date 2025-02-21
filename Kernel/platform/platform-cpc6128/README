@@ -68,8 +68,6 @@ name resolution does not work and ipconfig provides incorrect information. Teste
 https://github.com/martin-ger/esp_slip_router
 This driver uses /etc/netrc and /etc/resolv.conf files for network interface configuration
 
-
-
 ## TODO
 
 Fix fdc driver. DONE
@@ -94,10 +92,6 @@ Look for speed optimization opportunities.
 ## BUILD & RUN
 
 Install cpctools: https://github.com/cpcsdk/cpctools
-install hex2bin: https://github.com/algodesigner/hex2bin
-
-make TARGET=cpc6128 diskimage
-
 install hex2bin: https://github.com/algodesigner/hex2bin
 
 make TARGET=cpc6128 diskimage
