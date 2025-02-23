@@ -2,7 +2,7 @@
 -i fuzix.ihx
 -l z80
 -b _CODE=0x0100
--b _COMMONMEM=0xF000
+-b _COMMONMEM=0xF280
 platform/platform-cpc6128/crt0.rel
 platform/platform-cpc6128/commonmem.rel
 platform/platform-cpc6128/cpc6128.rel
@@ -56,4 +56,5 @@ platform/platform-cpc6128/fdc765.rel
 platform/platform-cpc6128/ch375.rel
 platform/platform-cpc6128/albireo.rel
 platform/platform-cpc6128/devrd.rel
+platform/platform-cpc6128/net_native.rel
 -e

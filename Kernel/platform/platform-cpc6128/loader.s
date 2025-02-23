@@ -16,6 +16,8 @@ out (c),c
 ld bc,#0x7fc1 ;select the kernel map
 out (c),c
 
+ld sp,#0xffff ; move the stack to a safe place
+
 ;; hide screen
 
 ld bc,#0x7f10
@@ -41,11 +43,11 @@ jp start
 
 start:
 ;;clean room
-;ld hl,#0
-;ld de ,#1
-;ld (#0),hl
-;ld bc,#0xfdfe
-;ldir
+ld hl,#0
+ld de ,#1
+ld (#0),hl
+ld bc,#0xfdfe
+ldir
 ;;patch interrupt vector
 LD HL,#0XC9FB		
 LD (#0X0038),HL
@@ -263,18 +265,17 @@ ld hl,(#data_ptr)
 ld bc,#512
 add hl,bc
 ld (#data_ptr),hl
-;; update sector id (loops #0x41-#0x49).
-ld a,(#sector)
 
-ex af,af'       
+;;change border color
 ld bc,#0x7f10
 out (c),c
 ld a,r
 and #0x5F
 or #0x40
 out (c),a
-ex af,af'
 
+;; update sector id (loops #0x41-#0x49).
+ld a,(#sector)
 inc a
 ld (#sector),a
 cp #0x4a        ;; #0x49+1 (last sector id on the track+1)
@@ -441,8 +442,6 @@ ret
 
 ;;===============================================
 
-file_buffer:
-.dw 0x100
 result_data:
 .ds 8
 end:

@@ -23,19 +23,26 @@ In the CPC6128:
 | Kernel	| 0 / 1 / 2  | Common 7 (map C1)
 | Video		| 0 / 3 / 2  | Common 7 (map C3)
 
-The use of standard memory expansions as swap space has been implemented. With this memory map, the ability to have multiple tasks simultaneously in RAM has not been implemented. This is because the expanded memory can only be mapped in 16k blocks starting at address 0x4000, which removes the common area from the map (this mapping is used to implement the RAM disk for swap while executing code in the non-common code area). Alternatively, it can be mapped in 64k blocks, replacing the entire memory space without any common area to rely on. See this references:
+The use of standard memory expansions as swap space has been implemented. With this memory map, the ability to have multiple tasks simultaneously in RAM
+has not been implemented.
+This is because the expanded memory can only be mapped in 16k blocks starting at address 0x4000, which removes the common area from the map (this
+mapping is used to implement the RAM disk for swap while executing code in the non-common code area). Alternatively, it can be mapped in 64k blocks,
+replacing the entire memory space without any common area to rely on. See this references:
 https://www.cpcwiki.eu/index.php/Gate_Array#Register_MMR_.28RAM_memory_mapping.29
 https://www.cpcwiki.eu/index.php/Standard_Memory_Expansions
 
-This latter 64k block mapping approach, which involves switching between 64k blocks, is being considered for another port inspired by the memory usage in the Cromemco port.
-
-Two standard memory expansion sizes are supported: 512k and 1024k. To build the port with either of these options, simply define the macros EXTENDED_RAM_512 or EXTENDED_RAM_1024 depending on the desired size in the file config.h. If neither is defined, the build will default to supporting a swap partition on any of the supported disk types.
+This latter 64k block mapping approach, which involves switching between 64k blocks, is being considered for another port inspired by the memory usage
+in the Cromemco port.
+Two standard memory expansion sizes are supported: 512k and 1024k. To build the port with either of these options, simply define the macros
+EXTENDED_RAM_512 or EXTENDED_RAM_1024 depending on the desired size in the file config.h. If neither is defined, the build will default to supporting
+a swap partition on any of the supported disk types.
 
 ## STATUS
 
 Video mode 2 is used. The video driver configures the CRTC in 64x32 characters to do easy hardware scroll and use the whole video memory bank.
 
-The floppy driver seems to work. /dev/fd0 is drive A and /dev/fd1 is drive B. fd0 is hard coded to one side and fd1 to double side. A minimal system root disk image is generated to boot from fd1. Format is 9 sectors per track with sector ID from 1 to 9.
+The floppy driver seems to work. /dev/fd0 is drive A and /dev/fd1 is drive B. fd0 is hard coded to one side and fd1 to double side. A minimal system
+root disk image is generated to boot from fd1. Format is 9 sectors per track with sector ID from 1 to 9.
 
 The IDE driver that is supposed to work with the symbiface and xmass fails to initialize. FIXED, tested with ACE-DL emulator x-mass suport.
 
@@ -43,8 +50,23 @@ The USB mass storage of the Albiero works using the ch375 driver used in other p
 
 There isn't a proper loader, for now a snapshot is generated. FIXED, dsk floppy boot image generated.
 
-To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load an run the snapshot or burn the dsk in a floppy and start FUZIX with |cpm.
+To test it burn disk.img on a spare usb pendrive and put it on the albireo. Load an run the snapshot or burn the dsk in a floppy and start FUZIX with
+|cpm.
 
+Added support for the USIFAC serial port. If CONFIG_USIFAC_SERIAL is defined in config.h, the tty2 device is added. To use the console on this device,
+modify the following line in /etc/inittab:
+02:3:off:getty /dev/tty2
+to:
+02:3:respawn:getty /dev/tty2
+This has been tested with Putty conecting the usifac to a linux box using a USB-Serial converter and works wery well. By default the usifac is set at
+115200 baud with no flow control.
+
+If CONFIG_USIFAC_SLIP is defined, the tty2 device can no longer be used as the system console. You must change tty4 to tty2 in slip.c and start the
+network driver by running netd-slip&. However, mainly as this platform relies solely on swap for multitasking, this functionality is practically
+useless except for basic operations like ping as while the netd-slip driver is active, the console becomes extremely slow. Also, among other issues,
+name resolution does not work and ipconfig provides incorrect information. Tested connecting the usifac to a ESP-01 module with this firmware:
+https://github.com/martin-ger/esp_slip_router
+This driver uses /etc/netrc and /etc/resolv.conf files for network interface configuration
 
 ## TODO
 
@@ -56,19 +78,28 @@ Fix memory size reporting 64 v 48K (inherited from zx+3).
 do_beep() doesn't seem to work. FIXED
 Write a proper loader. DONE.
 Configurable screen, at least add 80x25, maybe also change the video mode and routines to manage 6x8 fonts.
-Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac, networking with wifi module plugged in the usifac, sdcard in the Albireo, try slip with the serial port of the usifac...
+Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac storage, networking with wifi module plugged in the usifac, sdcard in the
+Albireo.
 
 Fix lots of bugs.
 
-Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be a model to this solution. As there is no real common as we are switching the whole 64k space, the common data area has to be updated in all the used banks, but this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion.
+Switch to a thunked memory model based on C2 Map to use the standard and extended RAM expansions up to 4MiB, the Cromemco port could be a model to
+this solution. As there is no real common as we are switching the whole 64k space, the common data area has to be updated in all the used banks, but
+this can give aprox. 60K for kernel and user and hold a lot of processes in memory with a big RAM expansion.
 
 Look for speed optimization opportunities.
 
 ## BUILD & RUN
 
-make diskimage with cpc6128 target in base Makefile
-.sna snapshot, .dsk Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from floppy use |cpm command from basic prompt
+Install cpctools: https://github.com/cpcsdk/cpctools
+install hex2bin: https://github.com/algodesigner/hex2bin
 
+make TARGET=cpc6128 diskimage
+
+.sna snapshot, .dsk Floppy image, and mass storage filesystem images are generated in Images folder. Tu boot from floppy use |cpm command from basic
+prompt
+
+To run on emulator use ACE-DL emulator and use disk.img as image for the x-mass IDE interface emulation.
 To run on emulator use ACE-DL emulator and use disk.img as image for the x-mass IDE interface emulation.
 
 

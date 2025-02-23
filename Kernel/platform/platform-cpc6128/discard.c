@@ -24,10 +24,24 @@ void plt_copyright(void)
 {
 	kprintf("Amstrad CPC6128 platform\nCopyright (c) 2024-2025 Antonio J. Casado Alias\n");
 }
-/*
-void ide_reset(void)
-{
-	ide_std_reset();
-}
-*/
 
+#if defined CONFIG_USIFAC_SERIAL
+void usifac_serial_init()
+{
+	char c;
+	kprintf("Configuring Usifac serial port\n");
+	usifctrl = USIFAC_RESET_COMMAND;
+	usifctrl = USIFAC_CLEAR_RECEIVE_BUFFER_COMMAND;
+	usifctrl = USIFAC_DISABLE_BURST_MODE_COMMAND;
+	usifctrl = USIFAC_DISABLE_DIRECT_MODE_COMMAND;
+	usifctrl = USIFAC_SET_115200B_COMMAND;
+	while (usifctrl == 0xff)
+		c=usifdata; /*flush transmit buffer*/
+	c=usifspr; /*read baudrate*/
+	if (c == USIFAC_SET_115200B_COMMAND)
+	{
+		kprintf("Usifac serial port configured at 115200 baud\n");
+	/*	usifac_present = 1;*/
+	}
+}
+	#endif

@@ -7,6 +7,8 @@
 
 /* We have to provide slightly custom methods here because of the banked
    kernel */
+
+#ifdef CONFIG_ALBIREO   
 COMMON_MEMORY
 
 void ch375_rblock(uint8_t *p) __naked
@@ -375,3 +377,5 @@ dowrite:
             ret
     __endasm;
 }
+
+#endif

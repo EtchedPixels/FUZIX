@@ -5,7 +5,6 @@
 #include <printf.h>
 #include <devtty.h>
 #include <devinput.h>
-//#include <net_w5x00.h>
 
 uint16_t ramtop = PROGTOP;
 uint16_t swap_dev = 0xFFFF;
@@ -25,6 +24,9 @@ uint8_t timer_wait;
 void plt_interrupt(void)
 {
  tty_pollirq();
+#if defined CONFIG_USIFAC_SERIAL
+ tty_pollirq_usifac();
+#endif
  timer_interrupt();
  poll_input();
  if (timer_wait)

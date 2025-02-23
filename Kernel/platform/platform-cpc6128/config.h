@@ -32,8 +32,16 @@
 
 #undef CONFIG_KMOD
 
-#undef CONFIG_NET
-#undef CONFIG_NET_NATIVE
+/*Usifac compatible serial device*/
+#define CONFIG_USIFAC_SERIAL
+#undef CONFIG_USIFAC_SLIP
+#if defined CONFIG_USIFAC_SLIP
+    #define CONFIG_NET
+    #define CONFIG_NET_NATIVE
+#else
+    #undef CONFIG_NET
+    #undef CONFIG_NET_NATIVE
+#endif
 #undef CONFIG_NET_WIZNET
 #undef CONFIG_NET_W5100
 
@@ -51,8 +59,7 @@
 #define TICKSPERSEC 300   /* Ticks per second */
 #define PROGBASE    0x0000  /* also data base */
 #define PROGLOAD    0x0100  /* also data base */
-#define PROGTOP     0xC000  /* Top of program, below C000 for simplicity
-                               to get going */
+#define PROGTOP     0xC000  /* Top of program, below C000 for simplicity to get going */
 
 #define BOOT_TTY (513)  /* Set this to default device for stdio, stderr */
                           /* In this case, the default is the first TTY device */
@@ -61,7 +68,8 @@
 #define CMDLINE	NULL	  /* Location of root dev name */
 
 /* Device parameters */
-#define NUM_DEV_TTY 1
+#define NUM_DEV_TTY 2
+#define TTY_INIT_BAUD B115200	/*USIFAC*/
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
 #define NBUFS    5       /* Number of block buffers */
@@ -77,8 +85,8 @@
     #define TOTAL_SWAP_BLOCKS (1088-128) * 2
 #endif
 #ifdef EXTENDED_RAM_512
-    #define MAX_SWAPS	8       /*See platform devrd.c*/
-    #define PTABSIZE    8
+    #define MAX_SWAPS	9       /*See platform devrd.c*/
+    #define PTABSIZE    9
     #define TOTAL_SWAP_BLOCKS (576-128) * 2
 #endif
 #if defined EXTENDED_RAM_512 || defined EXTENDED_RAM_1024
@@ -96,9 +104,17 @@
 #define CONFIG_TD_NUM	2
 /* IDE/CF support */
 #define CONFIG_TD_IDE
-#define CONFIG_TINYIDE_SDCCPIO
-#define CONFIG_TINYIDE_8BIT
-#define IDE_IS_8BIT(x)		1
+#ifdef CONFIG_TD_IDE
+    #define CONFIG_TINYIDE_SDCCPIO
+    #define CONFIG_TINYIDE_8BIT
+    #define IDE_IS_8BIT(x)		1
+#endif
+/* Albireo ch376 USB storage support*/
+#define CONFIG_ALBIREO
+#ifdef CONFIG_ALBIREO
+#define CONFIG_CH375
+#endif
+
 
 #define BOOTDEVICENAMES "hd#,fd"
 
