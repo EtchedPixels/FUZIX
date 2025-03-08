@@ -22,6 +22,7 @@
 /syscall_6809
 /syscall_8080
 /syscall_8086
+/syscall_armm0
 /syscall_armm4
 /syscall_msp430x
 /syscall_riscv32
