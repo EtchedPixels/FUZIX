@@ -1,0 +1,54 @@
+			Installation of Wish 2.0
+			------------------------
+
+$Revision: 41.4 $ $Date: 2003/04/21 13:13:32 $
+
+1) Link the most appropriate file from the list of the m_*.h files to machine.h.
+   The current machine types are:
+
+	m_386bsd.h		386BSD-0.1
+	m_attpyr.h		OSx 5.1a, SysV Universe
+	m_aux.h			A/UX 2.01
+	m_bsdpyr.h		OSx 5.1a, BSD Universe
+	m_coherent.h		Coherent
+	m_freebsd1.h		FreeBSD 1.x
+	m_freebsd2.h		FreeBSD 2.x
+	m_freebsd4.h		FreeBSD 4.x
+	m_genbsd.h		Generic 4.x BSD machine
+	m_gensysv.h		Generic SysV machine
+	m_minix1.5.h		Minix 1.5
+	m_minix1.7.h		Minix 1.7
+	m_solaris.h		Solaris
+	m_sunos3.h		Sun OS 3.x
+	m_sunos4.h		Sun OS 4.x
+	m_ultrix.h		Ultrix 4.2
+
+   Not all of these have been tested recently, only those described in the
+   `Systems' file. If you get any to work, especially with the changes
+   required, let me know.
+
+   If there is no m_*.h file for your system, pick one which is close, and
+   alter it to work:
+
+	POSIX:		m_sunos4.h or m_386bsd.h
+	Old SYSV:	m_gensysv.h
+	4.3BSD:		m_genbsd.h
+
+   Put a unique system #define in the file, and try to #ifdef code with this
+   define only when absolutely necessary. The file `Ifdefs' has information
+   about what defines are available in Wish. Please send me a copy of the new
+   machine file when it works.
+
+2) Copy the file Std.Makefile to Makefile. Make sure Makefile is writeable.
+   Edit the Makefile to define how to compile the shell. You should define:
+
+	CFLAGS		The compiler flags used when compiling each .c file
+	LDFLAGS		The link flags used when linking the program
+	CC		The name of your compiler
+	DEFINES		Special defines needed during the compilation stage
+	CLIB		Any libraries needed during the link stage
+	FINAL_TOUCHES	Any final touches needed after the linking
+
+   Suggestions for these defines are given in the Makefile.
+
+3) Run `make' to make the shell.
