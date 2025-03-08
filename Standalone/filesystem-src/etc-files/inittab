@@ -8,7 +8,7 @@ is:s:respawn:/bin/sh
 rc::bootwait:/etc/rc
 # Terminals
 01:3:respawn:getty /dev/tty1
-02:3:off:getty /dev/tty2
+02:3:askfirst:getty /dev/tty2
 03:3:off:getty /dev/tty3
 # Reboot
 bt:5:wait:/etc/rc.reboot
