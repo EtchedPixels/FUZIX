@@ -24,7 +24,7 @@
 #include <printf.h>
 #include "ch375.h"
 
-#if defined CONFIG_CH375
+#ifdef CONFIG_CH375
 
 static uint8_t ch_ver;
 static uint8_t ch_rd = 0x28;
