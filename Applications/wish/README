@@ -1,0 +1,29 @@
+		Wish 2.0 - Warren's Interactive Shell
+		-------------------------------------
+
+Welcome to Wish, a sort-of-tcsh-like shell based largely on the Clam shell
+written by Callum Gibson. The aims of wish are:
+
+	+ to be as small as possible, so as to compile on small
+	  systems like Minix
+	+ to have some of the interactive features of tcsh, such
+	  as command-line editing, tab and ^D expansion, history,
+	  aliases etc.
+	+ to be portable across as many systems as possible,
+	+ to be fast and have minimal impact on the system.
+
+I worked on this shell from 1991 to 1996 and then gave up to finish off
+my Ph.D. This release of Wish is an alpha-release, and I doubt I will ever
+get back to finishing it off. It is known to run on FreeBSD 4.7, but I have
+not tried it on any other system since 1996.
+
+The manual is in nroff form in `Wish.1'. Instructions on how to compile wish
+are in the `Installation'. If you are porting wish to another system, read
+the file `Ifdefs', `Systems' and the `m_*.h' files.
+
+Anybody who would like to take over development of the shell should email me,
+as I can supply some good documentation about the development up to now, and
+also a good description of the shell's internals.
+
+	Warren Toomey	wkt@tuhs.org		1996, then a bit in 2003.
+
