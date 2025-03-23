@@ -1,0 +1,23 @@
+; FUZIX mnemonics for memory addresses etc
+
+#define U_DATA__TOTALSIZE	0x200	; 256+256 bytes
+
+#undef Z80_MMU_HOOKS
+
+#define CONFIG_SWAP
+
+#define PROGBASE		0x0000
+#define PROGLOAD		0x0100
+
+; Mnemonics for I/O ports etc
+
+#define CONSOLE_RATE		115200
+
+; MMU Ports
+MPGSEL_0	.equ	0xF0	; Bank_0 page select register (W/O)
+MPGSEL_1	.equ	0xF1	; Bank_1 page select register (W/O)
+MPGSEL_2	.equ	0xF2	; Bank_2 page select register (W/O)
+MPGSEL_3	.equ	0xF3	; Bank_3 page select register (W/O)
+MPGENA		.equ	0xF4	; along with other things
+
+#define NBUFS		5	; must match config.h

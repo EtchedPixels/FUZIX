@@ -1,0 +1,31 @@
+Aquarius+ Initial Prototyping
+
+4 x 16K memory banking
+Disk I/O via an ESP interface, unfortunately with no direct block I/O and
+with gaps in the tcp: VFS that mean we can't use it for a socket API
+
+TODO
+- ESP32 interface lib
+- Disk driver
+- RTC driver
+- Set up when start
+- Boot loader
+- Input device (joystick, mouse, keyboard)
+- Video support for 40/80 col
+- Video support for bitmap modes (font space where ?)
+- Graphics ioctls
+- Tilemap mode has 512 tokens so we need to sort that as with some other
+  targets (do 256 for now)
+- Interrupt off video, set ram speed, irqmask etc
+- Loader
+- Multiple consoles
+
+Modes
+
+8K 1bpp		char sized colour table follows bitmap
+16K 4bpp	16 colours per pixel through colour table
+64x32 tilemap	512 tiles with priority,v/h flip and palette
+
+Sprites on top
+
+Cannot have bitmap and tile at once but text is independent
