@@ -1,14 +1,16 @@
 Fuzix on the 8070 RCBUS banked memory platform
 
 Memory mapping
-	0x0000-0x00FF	Kernel (only low 10 bytes used so can shuffle bases)
+	0x0000-0x0009	Kernel (only low 10 bytes used so can shuffle bases)
+	0x000A-0x01FF	Loader (not reclaimed yet)
 	0x0100-0xFDFF	Kernel
 	0xFE00-0xFEFF	I/O
 	0xFF00-0xFFBF	Unused RAM hole
 	0xFFC0-0xFFFF	Internal RAM (not banked)
 
 In user space
-	0x0000-0x00FF	Kernel (only low 10 bytes used so can shuffle bases)
+	0x0000-0x0009	Kernel (only low 10 bytes used so can shuffle bases)
+	0x000A-0x00FF	Unused
 	0x0100-0xBDFF	User space
 	0xBE00-0xBFFF	Udata stash
 	0xC000-0xFDFF	Kernel

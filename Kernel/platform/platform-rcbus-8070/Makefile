@@ -45,7 +45,7 @@ clean:
 	rm -f commonmem.s crt0.s rcbus-8070.s tricks.s
 
 image:
-	$(CROSS_LD) -b -C 0x400 -S 0xF000 -Z 0x80 -o ../../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
+	$(CROSS_LD) -b -C 0x0200 -S 0xF000 -Z 0xFFC0 -o ../../fuzix.bin -m fuzix.tmpmap crt0.o commonmem.o \
 	rcbus-8070.o ../../start.o ../../version.o ../../cpu-8070/lowlevel-8070.o \
 	tricks.o main.o discard.o ../../timer.o ../../kdata.o devices.o \
 	tinydisk.o tinydisk_discard.o tinyide.o tinyide_discard.o \
