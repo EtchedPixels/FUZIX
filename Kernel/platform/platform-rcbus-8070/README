@@ -1,0 +1,42 @@
+Fuzix on the 8070 RCBUS banked memory platform
+
+Memory mapping
+	0x0000-0x00FF	Kernel (only low 10 bytes used so can shuffle bases)
+	0x0100-0xFDFF	Kernel
+	0xFE00-0xFEFF	I/O
+	0xFF00-0xFFBF	Unused RAM hole
+	0xFFC0-0xFFFF	Internal RAM (not banked)
+
+In user space
+	0x0000-0x00FF	Kernel (only low 10 bytes used so can shuffle bases)
+	0x0100-0xBDFF	User space
+	0xBE00-0xBFFF	Udata stash
+	0xC000-0xFDFF	Kernel
+	0xFE00-0xFEFF	I/O
+	0xFF00-0xFFBF	Unused RAM hole
+	0xFFC0-0xFFFF	Internal RAM (not banked)
+
+
+Hardware Arrangement
+
+807x CPU (without ROM)
+FE00-FEFF hardwired as an I/O window that generates Z80 I/O cycles 0-FF on the
+RCBUS bus
+512K RAM/ROM
+16x50 UART (TODO)
+
+Things to address
+- Timer
+- Interrupt handling properly
+- Dynamic buffer allocation
+- Don't disable all interrupts in the Fuzix paths
+- Add device support for some of the RCBUS external devices
+- Minimal 8073 support (can't do interrupts properly)
+
+Put the loader on sector 0
+Put the kernel on sector 1+
+
+To run on the emulator
+
+rc2014-8070 -b -i /tmp/emu-ide.img
+
