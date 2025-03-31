@@ -1,0 +1,7 @@
+# TODO right target once we update to match upstream
+
+ASRC = as1-8085.c as6-8085.c
+
+TARGET_DEF = -DTARGET_8085
+
+include Makefile.common

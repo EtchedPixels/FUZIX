@@ -1,0 +1,34 @@
+include $(FUZIX_ROOT)/Target/rules.8070
+
+CFLAGS += -DNETD_LITTLE_ENDIAN
+
+SRCS  = netd.c uip.c uiplib.c timer.c clock-arch.c uip_arp.c telnet.c lwwire.c
+SRCS += echoping.c dig.c gethostbyname.c httpd.c ping.c ntpdate.c
+SRCS += htget.c tinyirc.c linein.c ifconfig.c
+
+OBJS = $(SRCS:.c=.o)
+
+BUSTEDAPPS = netd
+
+all: $(APPS)
+
+
+netd: $(OBJS)
+	$(LINKER) $(LINKER_OPT) -o netd-lwwire $(CRT0) netd.o uip.o uiplib.o timer.o clock-arch.o uip_arp.o lwwire.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o telnet $(CRT0) telnet.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o echoping $(CRT0) echoping.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o dig $(CRT0) dig.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o httpd $(CRT0) httpd.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o ping $(CRT0) ping.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o ntpdate $(CRT0) ntpdate.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o htget $(CRT0) htget.o gethostbyname.o $(LIBC)
+	$(LINKER) $(LINKER_OPT) -o tinyirc $(CRT0) tinyirc.o linein.o gethostbyname.o $(LIBC)
+
+size.report: $(APPS)
+	ls -l $^ > $@
+
+clean:
+	rm -f $(OBJS) $(APPS) $(SRCS:.c=) core *~ *.asm *.lst *.sym *.map *.noi *.lk *.ihx *.tmp *.bin size.report *~
+
+rmbak:
+	rm -f *~ core
