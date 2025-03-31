@@ -10,6 +10,9 @@
  *  sizeof(xxx) == sizeof(long) or sizeof(xxx) == sizeof(short)
  *
  * -RDB
+ *
+ * Added snprintf Alan Cox
+ * TODO: split this into multiple files a bit
  */
 
 #include <stdarg.h>
@@ -59,15 +62,17 @@ int snprintf(char *sp, size_t size, const char *fmt, ...)
 	va_list ptr;
 	int rv;
 	unsigned char *p = string->bufpos;
+	register size_t n = size;
 
-	if (size == 0)
-		return 0;
+	if (n)
+		n--;
 
 	va_start(ptr, fmt);
 	string->bufpos = (unsigned char *) sp;
-	rv = _vfnprintf(string, size - 1, fmt, ptr);
+	rv = _vfnprintf(string, n, fmt, ptr);
 	va_end(ptr);
-	*(string->bufpos) = 0;
+	if (size)
+		*(string->bufpos) = 0;
 
 	string->bufpos = p;
 	return rv;
@@ -84,13 +89,15 @@ int vsnprintf(char *sp, size_t size, const char *fmt, va_list ptr)
 #endif
 	int rv;
 	unsigned char *p = string->bufpos;
+	register size_t n = size;
 
-	if (size == 0)
-		return 0;
+	if (n)
+		n--;
 
 	string->bufpos = (unsigned char *) sp;
-	rv = _vfnprintf(string, size - 1, fmt, ptr);
-	*(string->bufpos) = 0;
+	rv = _vfnprintf(string, n, fmt, ptr);
+	if (size)
+		*(string->bufpos) = 0;
 
 	string->bufpos = p;
 	return rv;
