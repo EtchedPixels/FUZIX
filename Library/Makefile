@@ -9,7 +9,7 @@ all: tools/syscall tools/binman tools/syscall_6303 \
      tools/liberror tools/relocbin tools/relocbin65 tools/fuzixlib \
      tools/relocbinhc11 tools/relocbin6303 tools/relocbin8080 tools/shlibgen \
      tools/relocbin6809 tools/ns32ktoaout tools/syscall_riscv32 \
-     tools/riscv32toaout tools/syscall_8086
+     tools/riscv32toaout tools/syscall_8086 tools/syscall_8070
 
 clean:
 	rm -f tools/syscall tools/binman tools/fsize tools/liberror
@@ -21,6 +21,7 @@ clean:
 	rm -f tools/syscall_super8 tools/syscall_tms9995 tools/syscall_wrx6 tools/syscall_z8
 	rm -f tools/relocbin65 tools/relocbinhc11 tools/relocbin8080 tools/syscall_armm4
 	rm -f tools/ns32ktoaout tools/syscall_riscv32 tools/riscv32toaout
+	rm -f tools/syscall_8070
 
 tools/syscall: tools/syscall.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
@@ -29,6 +30,9 @@ tools/syscall_6303: tools/syscall_6303.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_6502: tools/syscall_6502.c ../Kernel/include/syscall_name.h
+	$(CC) $(CFLAGS) -o $@ $<
+
+tools/syscall_8070: tools/syscall_8070.c ../Kernel/include/syscall_name.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 tools/syscall_8080: tools/syscall_8080.c ../Kernel/include/syscall_name.h
@@ -179,6 +183,22 @@ ifeq ($(USERCPU),ez80_z80)
 	install -m 0644 ../Kernel/include/drivewire.h include/sys/
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/
 	install -m 0644 include/sys/*.h /opt/fcc/lib/z80/include/sys
+endif
+ifeq ($(USERCPU),8070)
+	mkdir -p /opt/fcc/lib/8070/include/arpa
+	mkdir -p /opt/fcc/lib/8070/include/net /opt/fcc/lib/8070/include/netinet
+	mkdir -p /opt/fcc/lib/8070/include/readline
+	mkdir -p /opt/fcc/lib/8070/include/sys
+	install -m 0644 include/*.h /opt/fcc/lib/8070/include
+	install -m 0644 include/arpa/*.h /opt/fcc/lib/8070/include/arpa
+	install -m 0644 include/net/*.h /opt/fcc/lib/8070/include/net
+	install -m 0644 include/netinet/*.h /opt/fcc/lib/8070/include/netinet
+	install -m 0644 include/readline/*.h /opt/fcc/lib/8070/include/readline
+	install -m 0644 ../Kernel/include/drivewire.h /opt/fcc/lib/8070/include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h /opt/fcc/lib/8070/include/sys/
+	install -m 0644 ../Kernel/include/drivewire.h include/sys/
+	install -m 0644 ../Kernel/include/userstructs.h include/sys/
+	install -m 0644 include/sys/*.h /opt/fcc/lib/8070/include/sys
 endif
 ifeq ($(USERCPU),6502)
 	install -m 0644 ../Kernel/include/userstructs.h include/sys/

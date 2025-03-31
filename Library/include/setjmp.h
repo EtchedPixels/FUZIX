@@ -136,6 +136,12 @@
 	extern int setjmp(jmp_buf __env);
 	#define setjmp(x) _setjmp(x)
 
+#elif defined(__8070__)
+
+	typedef unsigned jmp_buf[2];	/*  (sp) and sp */
+	extern int _setjmp(jmp_buf __env);
+	#define setjmp(x) _setjmp(x)
+
 #else
 	#error jmp_buf definition not set for this architecture
 #endif

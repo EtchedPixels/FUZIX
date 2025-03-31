@@ -1,0 +1,36 @@
+#!/bin/bash
+#
+TARGET=a.out
+# TODO; stack option
+STACK=
+ARGS=""
+#
+#	Find the target and strip out the -o foo option
+#
+while [[ $# -gt 0 ]]
+do
+	case "$1" in
+	-o)
+	TARGET="$2"
+	shift
+	shift
+	;;
+	-s)
+	STACK="$2"
+	shift
+	shift
+	;;
+	*)
+	ARGS+=' '"$1"
+	shift
+	;;
+esac
+done
+
+#
+#	Link at 0x100 DP 0xFFF0
+#
+set -e
+#
+fcc -s -m8070 $ARGS -o "$TARGET" -M
+
