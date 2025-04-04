@@ -1,0 +1,4 @@
+package  2048
+if-file  2048
+
+f 0755 /usr/games/2048          2048

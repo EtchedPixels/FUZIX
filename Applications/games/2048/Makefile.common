@@ -1,0 +1,25 @@
+include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
+
+APPS = 2048
+
+CFLAGS += -Os
+
+app_2048_SRCS = board.c draw.c main.c
+app_2048_OBJS = $(app_2048_SRCS:.c=.o)
+
+OBJS = $(app_2048_OBJS)
+
+.PHONY: all
+all: $(APPS)
+
+MAPS = $(APPS:=.map)
+
+# Build rule
+2048: $(app_2048_OBJS)
+
+$(APPS):
+	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^ -ltermcap$(USERCPU) $(LINKER_TAIL)
+
+# Clean up
+clean:
+	rm -f $(OBJS) $(APPS) $(MAPS)
