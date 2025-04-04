@@ -15,26 +15,17 @@ bool opt_mono = false;
 bool opt_small = false;
 
 
-void signal_callback_handler(int s)
-{
+void signal_callback_handler(int s) {
 	(void)s;
-	SET_TEXT_COLOR(RED);
-	printf("%*s\n", 26, "TERMINATED");
-	RESET_FORMATING;
-
-	setBufferedInput(true);
-
+	draw_setup(false);
 	exit(EXIT_SUCCESS);
 }
 
 void setup() {
-	CLEAR;
-	/* make cursor invisible, erase entire screen */
-	printf("\033f\033J");
+	/* initialise display */
+	draw_setup(true);
 	/* init rng */
 	srand(time(NULL));
-	/* disable input buffering, input are processed immediately */
-	setBufferedInput(false);
 	/* register signal handler for when ctrl-c is pressed */
 	signal(SIGINT, signal_callback_handler);
 }
@@ -119,7 +110,7 @@ int main(int argc, char **argv) {
 			print_indicators();
 			continue;
 		} else if (c == 12) {
-			CLEAR;
+			draw_clear();
 			print_score(score);
 			print_board(board);
 			print_indicators();
@@ -178,7 +169,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* restore terminal settings */
-	setBufferedInput(true);
+	draw_setup(false);
 	putchar('\n');
 
 	return EXIT_SUCCESS;

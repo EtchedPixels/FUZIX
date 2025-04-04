@@ -1,50 +1,98 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>     /* defines: STDIN_FILENO, usleep */
 #include <termios.h>    /* defines: termios, TCSANOW, ICANON, ECHO */
+#include <termcap.h>
+#include <string.h>
 
 #include "draw.h"
 
 
 #define CELL_WIDTH  11
 #define CELL_HEIGHT 5
-#define ROW_OFFCET  2
+#define ROW_OFFSET  2
+
+/* Termcap entry buffer */
+static char tc_entry[1024];
+/* Termcap data buffer (allocated) */
+static char *tc_data = NULL;
+/* Termcap entries - pointers within tc_data or NULL */
+static char *tc_cl = NULL;  /* Clear screen and cursor home */
+static char *tc_cm = NULL;  /* Cursor move to row %1, col %2 (on screen) */
+static char *tc_ve = NULL;  /* Normal cursor visible */
+static char *tc_vi = NULL;  /* Cursor invisible */
 
 
 /******************************************************
  *                 Private functions                  *
  ******************************************************/
 
-static Color _get_color(u16 nb);
-static void _print_cell(u16 nb, i8 r, i8 c);
+static int tputchar(int c);
+static void print_cell(u16 nb, i8 r, i8 c);
 
+static const char *fuzix_colours[NUM_COLOURS] = {
+	"\033b\047",  /* reset (white) */
+	"\033b\040",  /* black */
+	"\033b\042",  /* red */
+	"\033b\044",  /* green */
+	"\033b\046",  /* yellow */
+	"\033b\041",  /* blue */
+	"\033b\043",  /* magenta */
+	"\033b\045",  /* cyan */
+	"\033b\047",  /* white */
+};
 
-static Color _get_color(u16 nb) {
+static const char *ansi_colours[NUM_COLOURS] = {
+	"\033[0m",   /* reset */
+	"\033[90m",  /* black */
+	"\033[91m",  /* red */
+	"\033[92m",  /* green */
+	"\033[93m",  /* yellow */
+	"\033[94m",  /* blue */
+	"\033[95m",  /* magenta */
+	"\033[96m",  /* cyan */
+	"\033[97m",  /* white */
+};
+
+static const char **colours = NULL;
+
+static u8 get_colour(u16 nb) {
 
 	switch (nb) {
-	case    2: return WHITE;
-	case    4: return YELLOW;
-	case    8: return GREEN;
-	case   16: return CYAN;
-	case   32: return BLUE;
-	case   64: return MAGENTA;
-	case  128: return RED;
-	case  256: return BLUE;
-	case  512: return CYAN;
-	case 1024: return GREEN;
-	case 2048: return YELLOW;
+	case    2: return COLOUR_WHITE;
+	case    4: return COLOUR_YELLOW;
+	case    8: return COLOUR_GREEN;
+	case   16: return COLOUR_CYAN;
+	case   32: return COLOUR_BLUE;
+	case   64: return COLOUR_MAGENTA;
+	case  128: return COLOUR_RED;
+	case  256: return COLOUR_BLUE;
+	case  512: return COLOUR_CYAN;
+	case 1024: return COLOUR_GREEN;
+	case 2048: return COLOUR_YELLOW;
 	}
 
-	return WHITE;
+	return COLOUR_RESET;
 }
 
-static void _print_cell(u16 nb, i8 r, i8 c) {
+static void set_text_colour(u8 c) {
+	if (colours && c < NUM_COLOURS) {
+		fputs(colours[c], stdout);
+	}
+}
+
+static void move_cursor(int row, int col) {
+	tputs(tgoto(tc_cm, col, row), 0, tputchar);
+}
+
+static void print_cell(u16 nb, i8 r, i8 c) {
 	int nb_spaces_before = 0, nb_spaces_after = 0;
 
 	if (nb == 0) {
-		SET_TEXT_COLOR(WHITE);
+		set_text_colour(COLOUR_RESET);
 	} else {
-		SET_TEXT_COLOR(_get_color(nb));
+		set_text_colour(get_colour(nb));
 	}
 
 	if (nb < 10)         { nb_spaces_before = 4; nb_spaces_after = 4; }
@@ -56,34 +104,34 @@ static void _print_cell(u16 nb, i8 r, i8 c) {
 		/* normal display */
 
 		/* top half */
-		MOVE_CURSOR(r * CELL_HEIGHT + ROW_OFFCET + 1, c * CELL_WIDTH + 1);
+		move_cursor(r * CELL_HEIGHT + ROW_OFFSET, c * CELL_WIDTH);
 		printf("+--------+");
-		MOVE_CURSOR(r * CELL_HEIGHT + ROW_OFFCET + 2, c * CELL_WIDTH + 1);
+		move_cursor(r * CELL_HEIGHT + ROW_OFFSET + 1, c * CELL_WIDTH);
 		printf("|        |");
 		/* middle part */
-		MOVE_CURSOR(r * CELL_HEIGHT + ROW_OFFCET + 3, c * CELL_WIDTH + 1);
+		move_cursor(r * CELL_HEIGHT + ROW_OFFSET + 2, c * CELL_WIDTH);
 		if (nb == 0) printf("|        |");
 		else printf("|%*d%*s|", nb_spaces_before, nb, nb_spaces_after, "");
 		/* bottom half */
-		MOVE_CURSOR(r * CELL_HEIGHT + ROW_OFFCET + 4, c * CELL_WIDTH + 1);
+		move_cursor(r * CELL_HEIGHT + ROW_OFFSET + 3, c * CELL_WIDTH);
 		printf("|        |");
-		MOVE_CURSOR(r * CELL_HEIGHT + ROW_OFFCET + 5, c * CELL_WIDTH + 1);
+		move_cursor(r * CELL_HEIGHT + ROW_OFFSET + 4, c * CELL_WIDTH);
 		printf("+--------+");
 	} else {
 		/* small display */
 
 		nb_spaces_before -= 2;
 		nb_spaces_after -= 2;
-		MOVE_CURSOR(r * 3 + 2 + 1, c * 7 + 2 + 1);
+		move_cursor(r * 3 + 2, c * 7 + 2);
 		printf("+----+");
-		MOVE_CURSOR(r * 3 + 2 + 2, c * 7 + 2 + 1);
+		move_cursor(r * 3 + 3, c * 7 + 2);
 		if (nb == 0) printf("|    |");
 		else printf("|%*d%*s|", nb_spaces_before, nb, nb_spaces_after, "");
-		MOVE_CURSOR(r * 3 + 2 + 3, c * 7 + 2 + 1);
+		move_cursor(r * 3 + 4, c * 7 + 2);
 		printf("+----+");
 	}
 
-	RESET_FORMATING;
+	set_text_colour(COLOUR_RESET);
 }
 
 
@@ -91,23 +139,36 @@ static void _print_cell(u16 nb, i8 r, i8 c) {
  *                 Public functions                   *
  ******************************************************/
 
-void setBufferedInput(bool enable)
-{
-	static bool enabled = true;
+void draw_setup(bool enable) {
+	static bool enabled = false;
 	static struct termios old;
 	struct termios new;
 
-	if (enable && !enabled)
-	{
-		/* restore the former settings */
-		tcsetattr(STDIN_FILENO, TCSANOW, &old);
-		/* make cursor visible, reset all modes */
-		printf("\033e");
-		/* set the new state */
-		enabled = true;
-	}
-	else if (!enable && enabled)
-	{
+	if (enable && !enabled) {
+		char *term;
+		char *dptr = tc_data;
+		/* get termcap entry */
+		term = getenv("TERM");
+		if (!term || tgetent(tc_entry, term) != 1) {
+			if (!term)
+				term = "";
+			fprintf(stderr, "%s: no termcap\n", term);
+			exit(EXIT_FAILURE);
+		}
+		dptr = tc_data = malloc(strlen(tc_entry)+1);
+		if (!opt_mono) {
+			if (strcmp(term, "vt52") == 0) {
+				colours = fuzix_colours;
+			} else if (strncmp(term, "xterm", 5) == 0) {
+				colours = ansi_colours;
+			}
+		}
+		/* record important termcap information */
+		tc_cl = tgetstr("cl", &dptr);
+		tc_cm = tgetstr("cm", &dptr);
+		tc_ve = tgetstr("ve", &dptr);
+		tc_vi = tgetstr("vi", &dptr);
+
 		/* get the terminal settings for standard input */
 		tcgetattr(STDIN_FILENO, &new);
 		/* we want to keep the old setting to restore them at the end */
@@ -117,24 +178,47 @@ void setBufferedInput(bool enable)
 		new.c_cc[VMIN] = 1;
 		/* set the new settings immediately */
 		tcsetattr(STDIN_FILENO, TCSANOW, &new);
-		/* set the new state */
-		enabled = false;
+		/* invisible cursor */
+		tputs(tc_vi, 0, tputchar);
+		/* clear screen */
+		draw_clear();
+	} else if (!enable && enabled) {
+		/* make cursor visible, reset all modes */
+		set_text_colour(COLOUR_RESET);
+		tputs(tc_ve, 0, tputchar);
+		/* restore the former settings */
+		tcsetattr(STDIN_FILENO, TCSANOW, &old);
+		free(tc_data);
+		tc_data = NULL;
 	}
+	enabled = enable;
+}
+
+/* Wrap putchar for use with tputs because putchar may be a macro */
+static int tputchar(int c) {
+	putchar(c);
+	return 0;
+}
+
+void draw_clear(void) {
+	tputs(tc_cl, 0, tputchar);
 }
 
 void print_score(u32 score) {
 	static u32 last_score = 0;
 	int swidth = opt_small ? 22 : 32;
 
-	MOVE_CURSOR(1, opt_small ? 1 : 2);
+	move_cursor(0, opt_small ? 0 : 1);
 
-	SET_TEXT_COLOR(YELLOW); printf("Score"); RESET_FORMATING;
+	set_text_colour(COLOUR_YELLOW);
+	printf("Score");
+	set_text_colour(COLOUR_RESET);
 
 	if (score - last_score != 0) {
 		int len = snprintf(NULL, 0, "  + %d", score - last_score);
-		SET_TEXT_COLOR(GREEN);
+		set_text_colour(COLOUR_GREEN);
 		printf("  + %d", score - last_score);
-		RESET_FORMATING;
+		set_text_colour(COLOUR_RESET);
 		printf("%*d", swidth - len, score);
 	} else {
 		printf("%*d", swidth, score);
@@ -149,7 +233,7 @@ void print_board(u16 board[SIZE][SIZE]) {
 	i8 r, c;
 	for (r = 0; r < SIZE; r++) {
 		for (c = 0; c < SIZE; c++) {
-			_print_cell(board[r][c], r, c);
+			print_cell(board[r][c], r, c);
 		}
 	}
 }
@@ -159,7 +243,7 @@ void diff_board(u16 old[SIZE][SIZE], u16 new[SIZE][SIZE]) {
 	for (r = 0; r < SIZE; r++) {
 		for (c = 0; c < SIZE; c++) {
 			if (new[r][c] != old[r][c]) {
-				_print_cell(new[r][c], r, c);
+				print_cell(new[r][c], r, c);
 			}
 		}
 	}
@@ -167,43 +251,43 @@ void diff_board(u16 old[SIZE][SIZE], u16 new[SIZE][SIZE]) {
 
 void print_indicators(void) {
 	/* back */
-	MOVE_CURSOR(opt_small ? 16 : 24, 1);
-	SET_TEXT_COLOR(CYAN);
+	move_cursor(opt_small ? 15 : 23, 0);
+	set_text_colour(COLOUR_CYAN);
 	printf("B");
-	RESET_FORMATING;
+	set_text_colour(COLOUR_RESET);
 	printf("ack  ");
 
 	/* restart */
-	SET_TEXT_COLOR(GREEN);
+	set_text_colour(COLOUR_GREEN);
 	printf("R");
-	RESET_FORMATING;
+	set_text_colour(COLOUR_RESET);
 	printf("estart   ");
 
 	if (!opt_small) {
-		SET_TEXT_COLOR(MAGENTA);
+		set_text_colour(COLOUR_MAGENTA);
 		printf("WASD, HJKL, Cursors   ");
-		RESET_FORMATING;
+		set_text_colour(COLOUR_RESET);
 	} else {
 		printf("%11s", "");
 	}
 
 	/* quit */
-	SET_TEXT_COLOR(RED);
+	set_text_colour(COLOUR_RED);
 	printf("Q");
-	RESET_FORMATING;
+	set_text_colour(COLOUR_RESET);
 	printf("uit");
 }
 
 void print_win(void) {
-	MOVE_CURSOR(opt_small ? 2 : 1, opt_small ? 12 : 18);
-	SET_TEXT_COLOR(CYAN);
+	move_cursor(opt_small ? 1 : 0, opt_small ? 11 : 17);
+	set_text_colour(COLOUR_CYAN);
 	printf("You win !");
-	RESET_FORMATING;
+	set_text_colour(COLOUR_RESET);
 }
 
 void print_game_over(void) {
-	MOVE_CURSOR(opt_small ? 2 : 1, opt_small ? 12 : 18);
-	SET_TEXT_COLOR(RED);
+	move_cursor(opt_small ? 2 : 1, opt_small ? 11 : 17);
+	set_text_colour(COLOUR_RED);
 	printf("GAME OVER");
-	RESET_FORMATING;
+	set_text_colour(COLOUR_RESET);
 }

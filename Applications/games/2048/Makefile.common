@@ -18,7 +18,7 @@ MAPS = $(APPS:=.map)
 2048: $(app_2048_OBJS)
 
 $(APPS):
-	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^ $(LINKER_TAIL)
+	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^ -ltermcap$(USERCPU) $(LINKER_TAIL)
 
 # Clean up
 clean:

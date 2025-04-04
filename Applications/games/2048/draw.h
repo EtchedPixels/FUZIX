@@ -3,23 +3,24 @@
 
 #include "common.h"
 
-#define CLEAR              printf("\033H\033J")
-#define SET_TEXT_COLOR(X)  do { if (!opt_mono) { printf("\033b%c", 0x20|(X)); } } while (0)
-#define MOVE_CURSOR(R, C)  printf("\033Y%c%c", (R)+' '-1, (C)+' '-1)
-#define RESET_FORMATING    printf("\033b\007")
+enum {
+	COLOUR_RESET,
+	COLOUR_BLACK,
+	COLOUR_RED,
+	COLOUR_GREEN,
+	COLOUR_YELLOW,
+	COLOUR_BLUE,
+	COLOUR_MAGENTA,
+	COLOUR_CYAN,
+	COLOUR_WHITE,
+	NUM_COLOURS
+};
 
-typedef enum {
-	BLACK,
-	BLUE,
-	RED,
-	MAGENTA,
-	GREEN,
-	CYAN,
-	YELLOW,
-	WHITE
-} Color;
+void draw_setup(bool enable);
 
-void setBufferedInput(bool enable);
+void draw_clear(void);
+void draw_set_text_color(u8 c);
+void draw_move_cursor(int col, int row);
 
 void print_score(u32 score);
 void print_board(u16 board[SIZE][SIZE]);
