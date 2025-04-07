@@ -34,7 +34,7 @@ start2:
 		; pointers and data stuffed above stack by execve()
 		leax 4,s
 		stx _environ
-		leax 2,s
+		ldx 2,s
 		stx ___argv
 		puls x			; argc
 		ldy #_exit		; return vector
