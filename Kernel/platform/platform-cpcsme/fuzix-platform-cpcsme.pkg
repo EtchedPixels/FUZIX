@@ -1,0 +1,23 @@
+package platform-cpcsme
+
+disable-pkg platform-cpcsme
+
+l /bin/sh /bin/sh.orig
+r /bin/sh
+l /bin/fsh /bin/sh
+
+l /etc/inittab /etc/inittab.orig
+r /etc/inittab
+f 0644 /etc/inittab /userspace/inittab
+
+l /etc/netrc /etc/netrc.orig
+r /etc/netrc
+f 0644 /etc/netrc /userspace/netrc
+
+l /etc/resolv.conf /etc/resolv.conf.orig
+r /etc/resolv.conf
+f 0644 /etc/resolv.conf /userspace/resolv.conf
+
+l /etc/termcap /etc/termcap.orig
+r /etc/termcap
+f 0644 /etc/termcap /userspace/termcap

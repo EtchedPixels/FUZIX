@@ -7,6 +7,7 @@
 #include <tty.h>
 #include <input.h>
 #include <devinput.h>
+#include <devtty.h>
 
 /* buffer for port scan procedure */
 uint8_t keybuf[10];
@@ -75,6 +76,16 @@ static void keydecode(void)
 		c -= 'a' - 'A';
 	
 	if (ct) {
+#ifdef CONFIG_VT_MULTI
+		if (c == KEY_F1){
+			cpckbd_conswitch(1);
+			return;
+		}
+		if (c == KEY_F2){
+			cpckbd_conswitch(2);
+			return;
+		}
+#endif
 		m |= KEYPRESS_CTRL;
 		if (c >= 'a' && c <= 'z')
 				c = CTRL(c - ('a' - 'A'));
@@ -84,11 +95,19 @@ static void keydecode(void)
 	if (c) {
 		switch (keyboard_grab) {
 		case 0:
+#ifdef CONFIG_VT_MULTI		
+			vt_inproc(inputtty, c);
+#else
 			vt_inproc(1, c);
+#endif
 			break;
 		case 1:
 			if (!input_match_meta(c)) {
+#ifdef CONFIG_VT_MULTI		
+				vt_inproc(inputtty, c);
+#else
 				vt_inproc(1, c);
+#endif
 				break;
 			}
 			/* Fall through */
