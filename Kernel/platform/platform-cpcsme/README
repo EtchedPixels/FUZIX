@@ -1,0 +1,78 @@
+# Amstrad CPC with Standard Memory Expansions
+
+Currently, standard 512K RAM expansions are supported using the thunked memory model, alternating complete 64K blocks in the RAM space visible to the CPU. This gives a total amount of 576K of usable RAM on all Amstrad CPC models.
+
+This port is in a very early and immature state. It is still unstable and suffers from random crashes. Sometimes it needs to be loaded several times before it manages to complete the boot process.
+
+The memory model from the Cromemco port has been adapted to the Amstrad CPC hardware, and the drivers from the CPC 6128 port have been modified to work with this memory model.
+
+The first 64K, which are the only ones accessible by the video hardware, have been reserved for VRAM. For now, the video driver from the CPC 6128 port has been extended to handle two simultaneous terminals (accessible with CTRL+SHIFT+F1 and CTRL+SHIFT+F2), using the 16K pages located at 0x4000 and 0x8000, by configuring the memory mode corresponding to value 0xC1 in the Gate Array's MMR register. The 0x0000 page hasn't been used yet, as it interferes with the RST call execution area, and the 0xC000 page hasn't been used so far because it's not accessible with the 0xC1 MMR value. It could probably be used by switching to 0xC3, as done in the CPC 6128 port. In any case, since each user process occupies a full 64K block and each terminal runs its own instance of the sh interpreter, the use of the remaining pages to implement four terminals is left for the future, when larger RAM expansions are supported.
+
+The kernel reserves the second 64K block, leaving 7 blocks of 64K available for up to 7 user processes.
+
+The video driver has been extended to support two simultaneous terminals, using the 16K RAM blocks accessible by the CRTC as video memory.
+
+## Memory Model
+
+Bank 0      Video RAM
+            0000-3FFF vectors (future tty?)
+            4000-7FFF tty1
+            8000-BFFF tty2
+            C000-FFFF unused (future tty)
+
+Bank 1		Kernel
+		0000-00FF, F200-FFFF are propogated into the other banks
+
+Bank 2-8	User
+		0000-00FF start with shared vectors
+			  FIXME: we need to clean this up in program_vectors
+			  from the kernel copy ????
+		0100-EFFF application
+		F000-F1FF udata copy for this application
+		F200-FFFF common copy
+
+## STATUS
+
+Video mode 2 is used. The video driver configures the CRTC in 64x32 characters to do easy hardware scroll and use the whole video memory bank.
+
+The floppy driver seems to work. /dev/fd0 is drive A and /dev/fd1 is drive B. fd0 is hard coded to one side and fd1 to double side. A minimal system
+root disk image is generated to boot from fd1. Format is 9 sectors per track with sector ID from 1 to 9.
+
+The IDE driver works and the USB mass storage of the Albiero using the ch375 driver used in other platforms also works. It should be easy to get it working with the Usifac/Ulifac.
+
+There isn't a proper loader, for now a snapshot is generated.
+
+To test it burn disk.img on your mass storage media. Load an run the snapshot.
+
+Added support for the USIFAC serial port. If CONFIG_USIFAC_SERIAL is defined in config.h, the tty3 device is added. To use the console on this device,
+modify the following line in /etc/inittab:
+03:3:off:getty /dev/tty3
+to:
+03:3:respawn:getty /dev/tty3
+This has been tested with Putty conecting the usifac to a linux box using a USB-Serial converter and works wery well. By default the usifac is set at
+115200 baud with no flow control.
+
+
+## TODO
+
+Write a proper loader.
+Configurable screen, at least add 80x25, maybe also change the video mode and routines to manage 6x8 fonts.
+Support more hardware: M4 Board (storage, network and RTC), Ulifac/Usifac storage, networking with wifi module plugged in the usifac, sdcard in the
+Albireo.
+
+Fix lots of bugs.
+
+Look for speed optimization opportunities.
+
+## BUILD & RUN
+
+Install cpctools: https://github.com/cpcsdk/cpctools
+install hex2bin: https://github.com/algodesigner/hex2bin
+
+make TARGET=cpcsme diskimage
+
+.sna snapshot,  and mass storage filesystem images are generated in Images folder.
+
+To run on emulator use ACE-DL emulator and use disk.img as image for the x-mass IDE interface emulation.
+
+

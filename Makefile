@@ -10,6 +10,7 @@
 #		(or xroar emulator )
 # coco3:	Tandy COCO3 512K (or MAME)
 # cpc6128: Amstrad CPC6128
+# cpcsme: Amstrad CPC with 512K standard memory expansion
 # cpm22:	Designed for S.100 and similar setups. Uses BIOS plus Z80
 #		customisations
 # cromemco:	Cromemco with banked memory

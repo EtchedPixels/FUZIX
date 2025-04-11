@@ -1,0 +1,28 @@
+vt52|dec vt52:\
+        :bs:\
+        :co#64:it#8:li#32:\
+        :ac=``aaffggjjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~:\
+        :ae=\EG:as=\EF:bl=^G:cd=\EJ:ce=\EK:cl=\EH\EJ:cm=\EY%+ %+ :\
+        :cr=^M:do=\EB:ho=\EH:kb=^H:kd=\EB:kl=\ED:kr=\EC:ku=\EA:\
+        :le=\ED:nd=\EC:nw=^M^J:sf=^J:sr=\EI:ta=^I:up=\EA:ve=\Ee:vi=\Ef:
+
+xterm|X11 terminal emulator:\
+	:am:bs:km:mi:ms:xn:\
+	:co#80:it#8:li#24:\
+	:AL=\E[%dL:DC=\E[%dP:DL=\E[%dM:DO=\E[%dB:IC=\E[%d@:\
+	:K2=\EOE:LE=\E[%dD:RI=\E[%dC:SF=\E[%dS:SR=\E[%dT:\
+	:UP=\E[%dA:ae=\E(B:al=\E[L:as=\E(0:bl=^G:bt=\E[Z:cd=\E[J:\
+	:ce=\E[K:cl=\E[H\E[2J:cm=\E[%i%d;%dH:cr=^M:\
+	:cs=\E[%i%d;%dr:ct=\E[3g:dc=\E[P:dl=\E[M:do=^J:ec=\E[%dX:\
+	:ei=\E[4l:ho=\E[H:im=\E[4h:is=\E[!p\E[?3;4l\E[4l\E>:\
+	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:k5=\E[15~:k6=\E[17~:\
+	:k7=\E[18~:k8=\E[19~:k9=\E[20~:kD=\E[3~:kI=\E[2~:kN=\E[6~:\
+	:kP=\E[5~:kb=\177:kd=\EOB:ke=\E[?1l\E>:kh=\EOH:kl=\EOD:\
+	:kr=\EOC:ks=\E[?1h\E=:ku=\EOA:le=^H:mb=\E[5m:md=\E[1m:\
+	:me=\E[0m:mr=\E[7m:nd=\E[C:rc=\E8:\
+	:..sa=%?%p9%t\E(0%e\E(B%;\E[0%?%p6%t;1%;%?%p2%t;4%;%?%p1%p3%|%t;7%;%?%p4%t;5%;%?%p7%t;8%;m:\
+	:sc=\E7:se=\E[27m:sf=^J:so=\E[7m:sr=\EM:st=\EH:ta=^I:\
+	:te=\E[?1049l:ti=\E[?1049h:ue=\E[24m:up=\E[A:us=\E[4m:\
+	:vb=\E[?5h\E[?5l:ve=\E[?12l\E[?25h:vi=\E[?25l:\
+	:vs=\E[?12;25h:
+

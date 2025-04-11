@@ -1,0 +1,10 @@
+label: dos
+label-id: 0x51c489f0
+device: $(IMAGES)/disk.img
+unit: sectors
+sector-size: 512
+
+$(IMAGES)/disk.img : start=        2048, size=       65536, type=7e
+$(IMAGES)/disk.img : start=       67584, size=       16384, type=7e
+$(IMAGES)/disk.img : start=       83968, size=        8192, type=7f
+$(IMAGES)/disk.img : start=       92160, size=       38912, type=4
