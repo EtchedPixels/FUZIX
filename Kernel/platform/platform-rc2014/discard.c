@@ -703,7 +703,9 @@ void device_init(void)
 	kputs("sd0: ");
 	sd_probe();
 #endif
+#ifdef CONFIG_CH375
 	ch375_probe();
+#endif
 #ifdef CONFIG_TD_SCSI
 	scsi_init();
 #endif	

@@ -16,6 +16,8 @@
 #define CONFIG_RC2014_SD
 /* Set this for SCSI support via the NCR5380 at 0x58 */
 #define CONFIG_RC2014_SCSI
+/* Set this for the CH375 card */
+#define CONFIG_RC2014_CH375
 /* Do not set this unless you have the propellor graphics card installed
    and with non TMS9918A firmware as it can't be probed so will be assumed */
 #undef CONFIG_RC2014_PROPGFX
@@ -61,6 +63,9 @@
 #define CONFIG_TD_SD
 #define TD_SD_NUM 1
 #define SD_SPI_CALLTYPE __z88dk_fastcall
+#endif
+#ifdef CONFIG_RC2014_CH375
+#define CONFIG_CH375
 #endif
 
 /* Enable to make ^Z dump the inode table for debug */
