@@ -172,7 +172,7 @@ void draw_setup(bool enable) {
 		/* get the terminal settings for standard input */
 		tcgetattr(STDIN_FILENO, &new);
 		/* we want to keep the old setting to restore them at the end */
-		old = new;
+		memcpy(&old, &new, sizeof(struct termios));
 		/* disable canonical mode (buffered i/o) and local echo */
 		new.c_lflag &= (~ICANON & ~ECHO);
 		new.c_cc[VMIN] = 1;

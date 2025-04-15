@@ -16,12 +16,11 @@ bool opt_small = false;
 
 
 void signal_callback_handler(int s) {
-	(void)s;
 	draw_setup(false);
 	exit(EXIT_SUCCESS);
 }
 
-void setup() {
+void setup(void) {
 	/* initialise display */
 	draw_setup(true);
 	/* init rng */

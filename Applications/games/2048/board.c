@@ -11,9 +11,9 @@
 
 static bool _slide_col(u16 board[SIZE][SIZE], i8 c, u32 *score);
 /* rotate the board 90 degres clockwise */
-static void _rotate_board(u16 board[SIZE][SIZE]);
-static bool _empty_cells_left(u16 board[SIZE][SIZE]);
-static bool _can_slide_up(u16 board[SIZE][SIZE]);
+static void rotate_board(u16 board[SIZE][SIZE]);
+static bool empty_cells_left(u16 board[SIZE][SIZE]);
+static bool can_slide_up(u16 board[SIZE][SIZE]);
 
 
 static bool _slide_col(u16 board[SIZE][SIZE], i8 c, u32 *score) {
@@ -57,7 +57,7 @@ static bool _slide_col(u16 board[SIZE][SIZE], i8 c, u32 *score) {
 	return has_move;
 }
 
-static void _rotate_board(u16 board[SIZE][SIZE]) {
+static void rotate_board(u16 board[SIZE][SIZE]) {
 	i8 r, c;
 	/* transpose the board */
 	for (r = 0; r < SIZE - 1; r++) {
@@ -78,7 +78,7 @@ static void _rotate_board(u16 board[SIZE][SIZE]) {
 	}
 }
 
-static bool _empty_cells_left(u16 board[SIZE][SIZE]) {
+static bool empty_cells_left(u16 board[SIZE][SIZE]) {
 	i8 r, c;
 
 	for (r = 0; r < SIZE; r++) {
@@ -91,7 +91,7 @@ static bool _empty_cells_left(u16 board[SIZE][SIZE]) {
 	return false;
 }
 
-static bool _can_slide_up(u16 board[SIZE][SIZE]) {
+static bool can_slide_up(u16 board[SIZE][SIZE]) {
 	i8 r, c;
 
 	for (r = 1; r < SIZE; r++) {
@@ -147,16 +147,16 @@ void board_add_piece(u16 board[SIZE][SIZE]) {
 bool board_can_move(u16 board[SIZE][SIZE]) {
 	bool can_move;
 
-	if (_empty_cells_left(board)) return true;
-	if (_can_slide_up(board)) return true;
+	if (empty_cells_left(board)) return true;
+	if (can_slide_up(board)) return true;
 
 	can_move = false;
 
-	_rotate_board(board);
-	can_move = _can_slide_up(board);
-	_rotate_board(board);
-	_rotate_board(board);
-	_rotate_board(board);
+	rotate_board(board);
+	can_move = can_slide_up(board);
+	rotate_board(board);
+	rotate_board(board);
+	rotate_board(board);
 
 	return can_move;
 }
@@ -188,11 +188,11 @@ bool board_move_up(u16 board[SIZE][SIZE], u32 *score) {
 bool board_move_down(u16 board[SIZE][SIZE], u32 *score) {
 	bool has_move;
 
-	_rotate_board(board);
-	_rotate_board(board);
+	rotate_board(board);
+	rotate_board(board);
 	has_move = board_move_up(board, score);
-	_rotate_board(board);
-	_rotate_board(board);
+	rotate_board(board);
+	rotate_board(board);
 
 	return has_move;
 }
@@ -200,11 +200,11 @@ bool board_move_down(u16 board[SIZE][SIZE], u32 *score) {
 bool board_move_left(u16 board[SIZE][SIZE], u32 *score) {
 	bool has_move;
 
-	_rotate_board(board);
+	rotate_board(board);
 	has_move = board_move_up(board, score);
-	_rotate_board(board);
-	_rotate_board(board);
-	_rotate_board(board);
+	rotate_board(board);
+	rotate_board(board);
+	rotate_board(board);
 
 	return has_move;
 }
@@ -212,11 +212,11 @@ bool board_move_left(u16 board[SIZE][SIZE], u32 *score) {
 bool board_move_right(u16 board[SIZE][SIZE], u32 *score) {
 	bool has_move;
 
-	_rotate_board(board);
-	_rotate_board(board);
-	_rotate_board(board);
+	rotate_board(board);
+	rotate_board(board);
+	rotate_board(board);
 	has_move = board_move_up(board, score);
-	_rotate_board(board);
+	rotate_board(board);
 
 	return has_move;
 }
