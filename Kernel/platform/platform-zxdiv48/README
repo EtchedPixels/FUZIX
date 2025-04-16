@@ -1,5 +1,26 @@
 Just a mad experiment for now
 
+Memory map:
+0000-35FF:	Banked code: buffers/fonts are also banked
+3600-3FFF:	Copies of common code space (to leave us room in 5B00-7FFF)
+4000-5AFF:	Screen
+5B00-7FFF:	Writable kernel space
+8000-FDFF:	User live copy
+FE00-FFFF:	Udata (live)
+
+On a task switch we put the old 8000-FFFF into the two user blocks assigned
+to that task, we then reverse the process for the two user blocks.
+
+Execution model is thus actually that the other ram banks are "swap". We need
+special care with the ramdisk copiers because we'll be swapping the main
+commonmem out
+
+As the 8000-FFFF range isn't kernel overlapped we can use it as the live udata
+as well as the user process.
+
+In theory we can also load binaries 8000-FDFF and if they'd have less space for
+data maybe load data 0000-3FFF. Might need reloc changes though.
+
 TODO
 - Wrap the loader into something useful like a .tap or snapshot for FATware
 - Maybe use ResiDOS for the ZXCF+ loader ?

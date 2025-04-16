@@ -1,9 +1,7 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <devide.h>
-#include <blkdev.h>
-#include <platform_ide.h>
+#include <tinyide.h>
 #include <devtty.h>
 
 /*
@@ -12,16 +10,21 @@
  */
 COMMON_MEMORY
 
-void zxcf_read_data(void) __naked
+void zxcf_read_data(uint8_t *p) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw)
             ld bc, #0x00BF	                    ; setup port number
                                                     ; and count
-	    cp #1
+            or a
             push af
-            call z, map_buffers
+            call nz, map_buffers
             ld a,#0x05
             out (0xfe),a
             ; The ZXCF design is sucky as we have a 16bit port decode
@@ -56,7 +59,7 @@ next4_2:
             ld a,(_vtborder)
             out (0xfe),a
             pop af
-            ret nz
+            ret z
             jp map_kernel_restore               ; else map kernel then return
     __endasm;
 }
@@ -64,11 +67,16 @@ next4_2:
 void zxcf_write_data(void) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw)
             ld bc, #0x00BF	                    ; setup port number
                                                     ; and count
-	    cp #1
+            or a
             push af
             call z, map_buffers
             ld a,#0x05
@@ -105,7 +113,7 @@ w_next4_2:
             ld a,(_vtborder)
             out (0xfe),a
             pop af
-            ret nz
+            ret z
             jp map_kernel_restore               ; else map kernel then return
     __endasm;
 }

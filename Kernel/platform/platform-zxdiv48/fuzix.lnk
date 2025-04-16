@@ -7,7 +7,8 @@
 -b _FONT=0x0100
 -b _CODE4=0x0080
 -b _DISCARD=0xA000
--b _UDATA=0xFD00
+-b _UDATA=0x7C00
+-b _COMMONMEM=0x3600
 -l z80
 platform/platform-zxdiv48/crt0.rel
 platform/platform-zxdiv48/commonmem.rel
@@ -46,13 +47,13 @@ swap.rel
 devsys.rel
 devinput.rel
 platform/platform-zxdiv48/devtty.rel
-platform/platform-zxdiv48/devide.rel
-platform/platform-zxdiv48/devide_discard.rel
+platform/platform-zxdiv48/tinyide.rel
+platform/platform-zxdiv48/tinyide_discard.rel
 platform/platform-zxdiv48/ide.rel
 platform/platform-zxdiv48/divide.rel
 platform/platform-zxdiv48/zxcf.rel
-platform/platform-zxdiv48/mbr.rel
-platform/platform-zxdiv48/blkdev.rel
+platform/platform-zxdiv48/tinydisk.rel
+platform/platform-zxdiv48/tinydisk_discard.rel
 platform/platform-zxdiv48/devrd.rel
 platform/platform-zxdiv48/rd_divideplus.rel
 platform/platform-zxdiv48/devinput.rel

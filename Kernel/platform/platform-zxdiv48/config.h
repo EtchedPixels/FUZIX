@@ -1,4 +1,8 @@
-#define CONFIG_IDE
+#define CONFIG_TD_NUM		1
+#define CONFIG_TD_IDE
+#define CONFIG_TINYIDE_INDIRECT
+#define IDE_IS_8BIT(x)	0
+
 #define CONFIG_LARGE_IO_DIRECT(x)	1  /* We support direct to user I/O */
 
 /* Enable to make ^Z dump the inode table for debug */
@@ -17,7 +21,7 @@
 #define CONFIG_PARENT_FIRST
 
 /* Settings for swap only mode */
-#define CONFIG_SPLIT_UDATA		/* Not really but need to fix simple.c */
+#define CONFIG_SPLIT_UDATA
 #define UDATA_SIZE 0x200
 #define UDATA_BLKS 1
 
@@ -51,7 +55,7 @@
 #define TICKSPERSEC 50   /* Ticks per second */
 #define PROGBASE    0x8000  /* also data base */
 #define PROGLOAD    0x8000  /* also data base */
-#define PROGTOP     0xFC00  /* Top of program, base of U_DATA */
+#define PROGTOP     0x1000UL  /* Top of program */
 #define PROC_SIZE   32	  /* Memory needed per process */
 #define MAXTICKS    10	  /* As our task switch is so expensive */
 
@@ -70,13 +74,14 @@
 #define MAX_BLKDEV 2	    /* 2 IDE drives, 2 SD drive */
 
 #define SWAPBASE 0x8000
-#define SWAPTOP  0xFC00UL	/* FC00+ is udata, stacks etc */
-#define SWAP_SIZE 0x40
+#define SWAPTOP  0x1000UL	/* FE00+ is udata, stacks etc */
+#define SWAP_SIZE 0x41		/* 0x40 for image and 1 for udata */
 /* We need to set the swaps up dynamically. In theory the counts are
    14 for DivIDE plus (512K RAM, of which 64K is kernel banks), and
    13 for ZXCF+ 512K (512K RAM 64K kernel banks 32K ResiDOS) but there
    is a 1MB version that would need 29.. which is silly. Set it to 16
    which is our process count and worst case */
+/* FIXME: set max procs properly by swap space */
 #define MAX_SWAPS	16
 #define SWAPDEV  0x800	  /* Device for swapping (ram special). */
 
@@ -84,3 +89,5 @@
 #define swap_map(x)		((uint8_t *)(x))
 
 #define BOOTDEVICENAMES "hd#"
+
+#define CONFIG_SMALL

@@ -1,8 +1,10 @@
 ;
 ;	RAM disc helpers for DivIDE Plus
 ;
+;	We will make even COMMONMEM vanish whilst we work!
+;
 
-	.area _COMMONMEM
+	.area _COMMONDATA
 
 	.globl _rd_io
 

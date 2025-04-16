@@ -1,7 +1,7 @@
 CSRCS = devtty.c devices.c main.c buffers.c divide.c zxcf.c devrd.c ide.c
 CDSRCS = discard.c
-DSRCS = ../../dev/devide.c ../../dev/blkdev.c
-DDSRCS = ../../dev/devide_discard.c ../../dev/mbr.c
+DSRCS = ../../dev/tinydisk.c ../../dev/tinyide.c
+DDSRCS = ../../dev/tinydisk_discard.c ../../dev/tinyide_discard.c
 DZSRCS = ../../dev/zx/zxkeyboard.c
 DZSRCS += ../../dev/zx/devinput.c
 DDZSRCS =
@@ -20,17 +20,18 @@ OBJS  = $(COBJS) $(CDOBJS) $(AOBJS) $(DOBJS) $(DDOBJS) $(DZOBJS) $(DDZOBJS)
 CROSS_CCOPTS += -I../../dev/ -I../../dev/zx/
 
 CROSS_CC_SEG3 = --codeseg CODE3
+CROSS_CC_SEG4 = --codeseg CODE4
 
 all:	$(OBJS)
 
 $(COBJS): %.rel: %.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG4) -c $<
 
 $(CDOBJS): %.rel: %.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<
 
 $(DOBJS): %.rel: ../../dev/%.c
-	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG3) -c $<
+	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEG4) -c $<
 
 $(DDOBJS): %.rel: ../../dev/%.c
 	$(CROSS_CC) $(CROSS_CCOPTS) $(CROSS_CC_SEGDISC) -c $<

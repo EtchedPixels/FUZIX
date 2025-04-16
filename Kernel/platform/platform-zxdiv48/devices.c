@@ -4,17 +4,17 @@
 #include <tty.h>
 #include <devsys.h>
 #include <vt.h>
-#include <devide.h>
-#include <blkdev.h>
+#include <tinydisk.h>
+#include <tinyide.h>
+#include <devrd.h>
 #include <devtty.h>
-#include <divrd.h>
 
 struct devsw dev_tab[] =  /* The device driver switch table */
 {
   /* 0: /dev/hd		Hard disc block devices */
-  {  blkdev_open,  no_close,     blkdev_read,   blkdev_write,  blkdev_ioctl },
+  {  td_open,      no_close,     td_read,       td_write,      td_ioctl },
   /* 1: /dev/fd	Floppy disc block devices: nope */
-  {  no_open,      no_close,     no_rdwr,  no_rdwr,   no_ioctl },
+  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl },
   /* 2: /dev/tty	TTY devices */
   {  tty_open,	   tty_close,    tty_read,      tty_write,     gfx_ioctl },
   /* 3: /dev/lpr	Printer devices */
@@ -47,7 +47,5 @@ extern void bufsetup(void);
 void device_init(void)
 {
   bufsetup();
-#ifdef CONFIG_IDE
-  devide_init();
-#endif
+  ide_probe();
 }

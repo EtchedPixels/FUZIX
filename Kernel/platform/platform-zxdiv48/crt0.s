@@ -3,7 +3,6 @@
 	;	Our common lives low
 	;
         .area _CONST
-        .area _COMMONMEM
 	.area _STUBS
 	.area _COMMONDATA
         .area _INITIALIZED
@@ -32,6 +31,11 @@
         .area _DISCARD
 	; Somewhere to throw it out of the way
         .area _INITIALIZER
+
+	; Commonmem is copied into each bank top. Banks are not precious
+	; but the 5B00-7FFF range is
+
+        .area _COMMONMEM
 
         ; imported symbols
         .globl _fuzix_main

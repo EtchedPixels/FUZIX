@@ -1,27 +1,28 @@
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
-#include <devide.h>
-#include <blkdev.h>
-#include <platform_ide.h>
-#include <devtty.h>
-
+#include <tinyide.h>
 /*
  *	Might be worth unifying with the other versions but this one
  *	differs a little
  */
 COMMON_MEMORY
 
-void divide_read_data(void) __naked
+void divide_read_data(uint8_t *p) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw)			    ; user or not (no swap yet)
             ld bc, #0x00A3                    	    ; setup port number
                                                     ; and count
-	    cp #1
+	    or a
             push af
-            call z, map_buffers
+            call nz, map_buffers
             ld a,#0x05
             out (0xfe),a
             inir                                    ; transfer first 256 bytes
@@ -31,21 +32,26 @@ void divide_read_data(void) __naked
             ld a,(_vtborder)
             out (0xfe),a
             pop af
-            ret nz
+            ret z
             jp map_kernel_restore               ; else map kernel then return
     __endasm;
 }
 
-void divide_write_data(void) __naked
+void divide_write_data(uint8_t *p) __naked
 {
     __asm
-            ld a, (_blk_op+BLKPARAM_IS_USER_OFFSET) ; blkparam.is_user
-            ld hl, (_blk_op+BLKPARAM_ADDR_OFFSET)   ; blkparam.addr
+            pop bc
+            pop de
+            pop hl
+            push hl
+            push de
+            push bc
+            ld a, (_td_raw)
             ld bc, #0x00A3	                    ; setup port number
                                                     ; and count
-	    cp #1
+	    or a
             push af
-            call z, map_buffers
+            call nz, map_buffers
             ld a,#0x05
             out (0xfe),a
             otir                                    ; transfer first 256 bytes
@@ -55,7 +61,7 @@ void divide_write_data(void) __naked
             ld a,(_vtborder)
             out (0xfe),a
             pop af
-            ret nz
+            ret z
             jp map_kernel_restore               ; else map kernel then return
     __endasm;
 }
