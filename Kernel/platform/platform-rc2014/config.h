@@ -62,7 +62,7 @@
 #ifdef CONFIG_RC2014_SD
 #define CONFIG_TD_SD
 #define TD_SD_NUM 1
-#define SD_SPI_CALLTYPE __z88dk_fastcall
+/* Cannot use fastcall as we are banked */
 #endif
 #ifdef CONFIG_RC2014_CH375
 #define CONFIG_CH375

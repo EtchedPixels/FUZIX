@@ -71,9 +71,15 @@ void sd_spi_slow(void)
 
 COMMON_MEMORY
 
-bool sd_spi_receive_sector(uint8_t *data) __naked __z88dk_fastcall
+bool sd_spi_receive_sector(uint8_t *data) __naked
 {
   __asm
+    pop bc
+    pop de
+    pop hl
+    push hl
+    push de
+    push bc
     ld a, (_td_raw)
 #ifdef SWAPDEV
     cp #2
@@ -95,9 +101,15 @@ doread:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t *data) __naked __z88dk_fastcall
+bool sd_spi_transmit_sector(uint8_t *data) __naked
 {
   __asm
+    pop bc
+    pop de
+    pop hl
+    push hl
+    push de
+    push bc
     ld a, (_td_raw)
 #ifdef SWAPDEV
     cp #2

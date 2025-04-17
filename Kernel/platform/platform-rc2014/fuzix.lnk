@@ -58,8 +58,8 @@ platform/platform-rc2014/tinyide_discard.rel
 platform/platform-rc2014/tinysd.rel
 platform/platform-rc2014/tinysd_discard.rel
 platform/platform-rc2014/sd.rel
-platform/platform-rc2014/z80softsd.rel
-platform/platform-rc2014/z80softspi.rel
+platform/platform-rc2014/z80softsd-banked.rel
+platform/platform-rc2014/z80softspi-banked.rel
 platform/platform-rc2014/devppa.rel
 platform/platform-rc2014/ch375.rel
 platform/platform-rc2014/tinyscsi.rel
