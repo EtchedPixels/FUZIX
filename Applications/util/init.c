@@ -35,6 +35,7 @@
 #define INIT_ONCE	3
 #define INIT_RESPAWN	4
 #define INIT_DEFAULT	5
+#define INIT_ASKFIRST	6
 #define INIT_OPMASK	0x0F
 #define INIT_WAIT	0x80
 #define MASK_BOOT	0x80
@@ -52,6 +53,7 @@ static struct utmp ut;
 /* State that has to persist across an inittab reload */
 struct initpid {
 	pid_t pid;
+	int fd;
 	uint8_t id[2];
 };
 
@@ -82,10 +84,16 @@ static int default_rl;
 static int runlevel;
 
 volatile static int dingdong;
+volatile static int askfirst;
 
-void sigalarm(int sig)
+void gettysigalarm(int sig)
 {
 	return;
+}
+
+void initsigalarm(int sig)
+{
+	askfirst = 1;
 }
 
 void sigusr1(int sig)
@@ -177,6 +185,15 @@ static pid_t spawn_process(uint8_t * p, uint8_t wait)
 		return pid;
 }
 
+char askfirst_msg[] = "\nPlease press Enter\n";
+
+static void make_askfirst(struct initpid *t) {
+	char buf[32];
+	sprintf(buf, "/dev/tty%d", atoi((char*)t->id));
+	t->fd = open(buf, O_RDWR|O_NOCTTY|O_NONBLOCK);
+	write(t->fd, askfirst_msg, sizeof(askfirst_msg));
+}
+
 /*
  *	Clear any dead processes
  */
@@ -199,9 +216,15 @@ static int clear_utmp(struct initpid *ip, uint16_t count, pid_t pid)
 			endutent();
 			/* Mark as done */
 			initpid[i].pid = 0;
+			initpid[i].fd = 0;
 			/* Respawn the task if appropriate */
-			if ((p[3] & (1 << runlevel)) && p[4] == INIT_RESPAWN)
-				initpid[i].pid = spawn_process(p, 0);
+			if ((p[3] & (1 << runlevel))) {
+				if(p[4] == INIT_RESPAWN) {
+					initpid[i].pid = spawn_process(p, 0);
+				} else if (p[4] == INIT_ASKFIRST) {
+					make_askfirst(&initpid[i]);
+				}
+			}
 			return 0;
 		}
 		ip++;
@@ -336,6 +359,9 @@ static void parse_initline(void)
 		idata[-1] = MASK_BOOT;
 		*idata++ = INIT_SYS | INIT_WAIT;
 		sdata += 8;
+	} else if (memcmp(sdata, "askfirst:", 9) == 0) {
+		*idata++ = INIT_ASKFIRST;
+		sdata += 9;
 	} else {
 		/* We don't yet spport power* methods */
 		bad_line();
@@ -390,6 +416,7 @@ static void parse_inittab(void)
 		ip->id[0] = p[1];
 		ip->id[1] = p[2];
 		ip->pid = 0;
+		ip->fd = 0;
 		p += *p;
 		ip++;
 	}
@@ -502,6 +529,14 @@ static int cleanup_runlevel(uint8_t oldmask, uint8_t newmask, int sig)
 				if (kill(initpid[n].pid, sig) == 0)
 					nrun++;
 			}
+			if (p[4] == INIT_ASKFIRST && initpid[n].pid) {
+				if (kill(initpid[n].pid, sig) == 0)
+					nrun++;
+			}
+			if (p[4] == INIT_ASKFIRST && initpid[n].fd) {
+				close(initpid[n].fd);
+				initpid[n].fd = 0;
+			}
 		}
 		/* Next entry */
 		p += *p;
@@ -544,13 +579,17 @@ static void do_for_runlevel(uint8_t newmask, int op)
 		if ((p[4] & INIT_OPMASK) == op) {
 			if (!p[5])
 				goto next;
-			/* Already running ? */
-			if (op == INIT_RESPAWN && t->pid)
-				goto next;
-			/* Spawn and maybe wait for a process */
-			t->pid = spawn_process(p, (p[3] & INIT_WAIT));
+			if (op == INIT_ASKFIRST) {
+				if (t->pid) goto next;
+				make_askfirst(t);
+			} else {
+				/* Already running ? */
+				if (op == INIT_RESPAWN && t->pid)
+					goto next;
+				t->pid = spawn_process(p, (p[3] & INIT_WAIT));
+			}
 		}
-next:		p += *p;
+next:	p += *p;
 		t++;
 		n++;
 	}
@@ -564,6 +603,7 @@ static void enter_runlevel(uint8_t newmask)
 {
 	do_for_runlevel(newmask, INIT_ONCE);
 	do_for_runlevel(newmask, INIT_RESPAWN);
+	do_for_runlevel(newmask, INIT_ASKFIRST);
 }
 
 /*
@@ -575,6 +615,31 @@ static void boot_runlevel(void)
 	do_for_runlevel(MASK_BOOT, INIT_BOOT);
 	runlevel = default_rl;
 	enter_runlevel(1 << default_rl);
+}
+
+static void do_askfist(void) {
+	uint8_t *p = inittab;
+	int n = 0;
+	uint_fast8_t c;
+	ssize_t r;
+	while (n < initcount) {
+		if (p[4] == INIT_ASKFIRST && initpid[n].fd) {
+			r = read(initpid[n].fd, &c, sizeof(c));
+			if (r > 0) {
+				if(c == '\n') {
+					close(initpid[n].fd);
+					initpid[n].fd = 0;
+					initpid[n].pid = spawn_process(p, 0);
+				}
+			} else if(r < 0 && errno != EAGAIN) {
+				perror("askfirst");
+				close(initpid[n].fd);
+				initpid[n].fd = 0;
+			}
+		}
+		p += *p;
+		n++;
+	}
 }
 
 
@@ -620,6 +685,8 @@ int main(int argc, char *argv[])
 	boot_runlevel();
 
 	for (;;) {
+		signal(SIGALRM, initsigalarm);
+		alarm(1);
 		clear_zombies(0);
 		if (dingdong) {
 			uint8_t newrl, orl;
@@ -645,6 +712,14 @@ int main(int argc, char *argv[])
 			}
 			close(fd);
 			dingdong = 0;
+			continue;
+		}
+
+		if(askfirst) {
+			do_askfist();
+			askfirst = 0;
+			signal(SIGALRM, initsigalarm);
+			alarm(1);
 		}
 	}
 }
@@ -897,7 +972,7 @@ static pid_t getty(const char **argv, const char *id)
 					crypt(p, "ZZ");
 
 				putstr("\nLogin incorrect\n\n");
-				signal(SIGALRM, sigalarm);
+				signal(SIGALRM, gettysigalarm);
 				alarm(2);
 				pause();
 			}
