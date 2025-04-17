@@ -2,6 +2,7 @@ Just a mad experiment for now
 
 Memory map:
 0000-35FF:	Banked code: buffers/fonts are also banked
+		Buffers must be in CODE3 (bank 2)
 3600-3FFF:	Copies of common code space (to leave us room in 5B00-7FFF)
 4000-5AFF:	Screen
 5B00-7FFF:	Writable kernel space

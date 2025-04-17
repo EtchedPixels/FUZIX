@@ -48,7 +48,7 @@ $(AOBJS): %.rel: %.s
 clean:
 	rm -f $(OBJS) *.lst *.asm *.sym *.rst *.rel core *~ 
 	rm -f *.ihx *.tmp loader loader-zxcf
-	rm -f FUZIX.BIN FUZIX
+	rm -f FUZIX.BIN FUZIX comcode
 
 # Re-order the image and turn it into the raw image to load from disk
 image:
@@ -64,6 +64,13 @@ image:
 
 	# Now build a FUZIX.BIN to load
 	# in the order we need it
+	# Extract the common code for each bank
+	dd if=../../common.bin bs=512 skip=27 count=5 of=comcode
+	# Add the common code to each bank top
+	dd if=comcode bs=512 seek=27 of=../bank1.bin
+	dd if=comcode bs=512 seek=27 of=../bank2.bin
+	dd if=comcode bs=512 seek=27 of=../bank3.bin
+	dd if=comcode bs=512 seek=27 of=../bank4.bin
 	dd if=../../bank1.bin bs=16384 >FUZIX.BIN conv=sync
 	dd if=../../bank2.bin bs=16384 >>FUZIX.BIN conv=sync
 	dd if=../../bank3.bin bs=16384 >>FUZIX.BIN conv=sync

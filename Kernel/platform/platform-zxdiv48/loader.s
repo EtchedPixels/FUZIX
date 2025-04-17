@@ -12,7 +12,7 @@
 	.area _BOOT(ABS)
 	.org 0xE000		; we are loaded at 0x2000 for ESX, but it
 				; doesn't matter where in reality providing
-				; it's not just below and overlapping E000
+				; we are above 0x4000 when we run
 
 start:
 	di
