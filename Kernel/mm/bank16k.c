@@ -169,6 +169,7 @@ retry:
 		/* If we are adding then just insert the new pages, keeping the common
 		   unchanged at the top */
 		i = want - have;
+		ptr += (have - 1);
 		/* This is written this slightly odd way to stop gcc 6809 miscompiling it */
 		pfptr -= i;
 		while(i--)
