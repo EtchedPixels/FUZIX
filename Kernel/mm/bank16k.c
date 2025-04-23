@@ -145,8 +145,6 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 	uint8_t update = 0;
 	irqflags_t irq;
 
-	/* If we are shrinking then free pages and propogate the
-	   common page into the freed spaces */
 	if (want == have)
 		return 0;
 
@@ -157,6 +155,8 @@ int pagemap_realloc(struct exec *hdr, usize_t size)
 
 retry:
 	if (have > want) {
+		/* If we are shrinking then free pages and propogate the
+		   common page into the freed spaces */
 		for (i = want; i < have; i++) {
 			pfree[pfptr++] = ptr[i - 1];
 			ptr[i - 1] = ptr[3];
@@ -169,6 +169,7 @@ retry:
 		/* If we are adding then just insert the new pages, keeping the common
 		   unchanged at the top */
 		i = want - have;
+		ptr += (have - 1);
 		/* This is written this slightly odd way to stop gcc 6809 miscompiling it */
 		pfptr -= i;
 		while(i--)
