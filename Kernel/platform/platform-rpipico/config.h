@@ -73,6 +73,9 @@
 #define UDATA_SIZE  (UDATA_BLKS << BLKSHIFT)
 
 #define TOTALMEM 160
+#if TOTALMEM == 0
+#error TOTALMEM should have been defined via cmake
+#endif
 #define NETMEM 0
 
 #ifdef CONFIG_NET

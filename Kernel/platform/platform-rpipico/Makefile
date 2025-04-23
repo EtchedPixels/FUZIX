@@ -8,6 +8,19 @@ ifndef SUBTARGET
 SUBTARGET=pico # set default subtarget
 endif
 
+ifeq ($(SUBTARGET),pico)
+TOTALMEM=160
+endif
+ifeq ($(SUBTARGET),pico_w)
+TOTALMEM=160
+endif
+ifeq ($(SUBTARGET),pico2)
+TOTALMEM=320
+endif
+ifeq ($(SUBTARGET),pico2_w)
+TOTALMEM=320
+endif
+
 PICOTOOLFLAGS= --family rp2040
 ifeq (${SUBTARGET}, pico2)
 PICOTOOLFLAGS= --family data
@@ -29,7 +42,7 @@ build/fuzix.elf: ../../version.c build/Makefile
 
 build/Makefile: CMakeLists.txt $(wildcard ../../*.[chS]) $(wildcard ../../*/*.[chS])
 	mkdir -p build
-	(cd build && cmake -DPICO_BOARD=${SUBTARGET} ..)
+	(cd build && cmake -DPICO_BOARD=${SUBTARGET} -DTOTALMEM=${TOTALMEM} ..)
 
 image:: world
 	./update-flash.sh

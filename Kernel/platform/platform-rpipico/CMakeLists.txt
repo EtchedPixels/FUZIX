@@ -7,11 +7,13 @@ project(fuzix C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(PICO_COPY_TO_RAM 1)
+option(TOTALMEM "specify how much TOTALMEM is present" 0)
 
 add_compile_definitions(
 		PICO_HEAP_SIZE=0x0
 		PICO_NO_BINARY_INFO=1
 		PICO_TIME_DEFAULT_ALARM_POOL_DISABLED
+    TOTALMEM=${TOTALMEM}
 		)
 
 pico_sdk_init()
