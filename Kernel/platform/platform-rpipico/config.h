@@ -9,10 +9,15 @@
  *      RX  GPIO 12
  *      CS  GPIO 13
  *  CONFIG_MAKER_PI
- *	SCK GPIO 10
- *	TX  GPIO 11
- *	RX  GPIO 12
- *	CS  GPIO 15
+ *	    SCK GPIO 10
+ *	    TX  GPIO 11
+ *	    RX  GPIO 12
+ *	    CS  GPIO 15
+ *  CONFIG_PICOCALC
+ *	    SCK GPIO 18
+ *	    TX  GPIO 19
+ *	    RX  GPIO 16
+ *	    CS  GPIO 17
  *  If Undefined
  *      SCK GPIO 2
  *      TX  GPIO 3

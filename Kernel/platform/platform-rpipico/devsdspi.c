@@ -33,6 +33,15 @@
 
 #define Pico_SD_SPI_MOD spi1
 
+#elif defined(CONFIG_PICOCALC)
+
+// Picocalc
+// https://www.clockworkpi.com/product-page/picocalc
+#define Pico_SD_SCK 18 //
+#define Pico_SD_TX  19 // MOSI
+#define Pico_SD_RX  16 // MISO
+#define Pico_SD_CS  17 // SD_CS
+
 #else
 
 /* Pico SPI GPIO connected to SD SPIO - David Given's Arrangement */
