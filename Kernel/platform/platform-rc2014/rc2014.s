@@ -1204,10 +1204,22 @@ map:
 	jp	map_for_swap
 
 _ch375_rblock:
+	pop	bc
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
 	call	map
 	inir
 	jp	map_kernel
 _ch375_wblock:
+	pop	bc
+	pop	de
+	pop	hl
+	push	hl
+	push	de
+	push	bc
 	call	map
 	otir
 	jp	map_kernel
