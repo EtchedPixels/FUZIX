@@ -11,8 +11,8 @@
 
 	.globl _sd_spi_tx_byte
 	.globl _sd_spi_rx_byte
-	.globl _sd_spi_tx_sector
-	.globl _sd_spi_rx_sector
+	.globl sd_spi_tx_sector
+	.globl sd_spi_rx_sector
 	.globl spi0_set_regs
 	.globl spi0_bitbang_rx
 	.globl spi0_bitbang_tx
@@ -34,7 +34,7 @@ _sd_spi_rx_byte:
 	jp _spi_rx_byte
 
 
-_sd_spi_rx_sector:
+sd_spi_rx_sector:
 	exx
 	call spi0_set_regs
 	exx
@@ -58,7 +58,7 @@ spi_rx_loop:
 	exx
 	ret
 
-_sd_spi_tx_sector:
+sd_spi_tx_sector:
 	exx
 	call spi0_set_regs
 	exx

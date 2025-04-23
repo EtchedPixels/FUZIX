@@ -69,9 +69,11 @@ void sd_spi_slow(void)
 {
 }
 
+/* These wrap the asm helpers and do the bank flipping first */
+
 COMMON_MEMORY
 
-bool sd_spi_receive_sector(uint8_t *data) __naked
+bool sd_spi_rx_sector(uint8_t *data) __naked
 {
   __asm
     pop bc
@@ -96,12 +98,12 @@ not_swapin:
 to_user:
     call map_proc_always
 doread:
-    call _sd_spi_rx_sector
+    call sd_spi_rx_sector
     jp map_kernel_restore
   __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t *data) __naked
+bool sd_spi_tx_sector(uint8_t *data) __naked
 {
   __asm
     pop bc
@@ -126,7 +128,7 @@ not_swapout:
 from_user:
     call map_proc_always
 dowrite:
-    call _sd_spi_tx_sector
+    call sd_spi_tx_sector
     jp map_kernel_restore
   __endasm;
 }
