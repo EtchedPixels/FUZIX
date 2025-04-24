@@ -25,6 +25,7 @@
 #include "ch375.h"
 
 #define CH375_CMD_GET_IC_VER            0x01
+#define CH375_CMD_RESET_ALL             0x05
 #define CH375_CMD_CHECK_EXIST           0x06
 #define CH375_CMD_SET_USB_MODE          0x15
 #define CH375_CMD_GET_STATUS            0x22
@@ -43,6 +44,9 @@
 #define CH375_USB_INT_DISK_READ         0x1D
 #define CH375_USB_INT_DISK_WRITE        0x1E
 
+/* TODO: 2 us delay should be implemented by platform */
+#define nap2() nap20()
+
 #ifdef CONFIG_CH375
 
 static uint8_t ch_ver;
@@ -55,13 +59,14 @@ static uint8_t ch375_rpoll(void)
 {
     uint16_t count = 0x8000;
     uint8_t r;
-    while(--count && ((ch375_rstatus() & 0x80) != 0));
+    while(--count && ((ch375_rstatus() & 0x80) != 0)) nap2();
     if (count == 0) {
         kprintf("ch375: timeout.\n");
         return 0xFF;
     }
     /* Get interrupt status, and clear interrupt */
     ch375_wcmd(CH375_CMD_GET_STATUS);
+    nap2();
     r = ch375_rdata();
 /*    kprintf("ch375_rpoll %2x", r); */;
     return r;
@@ -78,6 +83,7 @@ static void ch375_cmd2(uint8_t cmd, uint8_t data)
 {
 /*    kprintf("cmd2: %2x %2x\n", cmd, data); */
     ch375_wcmd(cmd);
+    nap2();
     ch375_wdata(data);
 }
 
@@ -85,6 +91,7 @@ static uint8_t ch375_cmd2_r(uint8_t cmd, uint8_t data)
 {
 /*    kprintf("cmd2_r: %2x %2x\n", cmd, data); */
     ch375_wcmd(cmd);
+    nap2();
     ch375_wdata(data);
     return ch375_rpoll();
 }
@@ -98,6 +105,7 @@ static int ch375_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dpt
         ch375_wcmd(CH375_CMD_DISK_READ);
     else
         ch375_wcmd(CH375_CMD_DISK_WRITE);
+    nap2();
     ch375_wdata(lba);
     ch375_wdata(lba >> 8);
     ch375_wdata(lba >> 16);
@@ -109,6 +117,7 @@ static int ch375_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dpt
             if (r != CH375_USB_INT_DISK_READ)
                 return 0;
             ch375_wcmd(ch_rd);
+            nap2();
             r = ch375_rdata();	/* Throw byte count away - always 64 */
             if (r != 64) {
 /*                kprintf("weird rd len %d\n", r); */
@@ -120,6 +129,7 @@ static int ch375_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dpt
             if (r != 0x1E)
                 return 0;
             ch375_wcmd(ch_wd);
+            nap2();
             ch375_wdata(0x40);	/* Send write count */
             ch375_wblock(dptr);
             ch375_wcmd(CH375_CMD_DISK_WR_GO);
@@ -136,11 +146,17 @@ static int ch375_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dpt
 
 uint_fast8_t ch375_probe(void)
 {
+    uint16_t i;
     uint_fast8_t chip = 5;
-    uint_fast8_t n;
     uint_fast8_t r;
 
+    /* Reset module in case of a crash. Takes 40 ms. */
+    ch375_wcmd(CH375_CMD_RESET_ALL);
+    for (i = 0; i < 2000; i++)
+        nap20();
+
     ch375_cmd2(CH375_CMD_CHECK_EXIST, 0x55);
+    nap2();
     r = ch375_rdata();
     if (r != 0xAA) {
 /*        kprintf("ch375: response %2x not AA\n", r); */
@@ -148,6 +164,7 @@ uint_fast8_t ch375_probe(void)
     }
 
     ch375_wcmd(CH375_CMD_GET_IC_VER);	/* Version */
+    nap2();
     ch_ver = ch375_rdata();
     kprintf("ch375: version %2x\n", ch_ver);
     if (ch_ver == 0xFF)
