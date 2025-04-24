@@ -126,7 +126,7 @@ static int ch375_xfer(uint_fast8_t dev, bool is_read, uint32_t lba, uint8_t *dpt
             ch375_rblock(dptr);
             ch375_wcmd(CH375_CMD_DISK_RD_GO);
         } else {
-            if (r != 0x1E)
+            if (r != CH375_USB_INT_DISK_WRITE)
                 return 0;
             ch375_wcmd(ch_wd);
             nap2();
