@@ -1197,6 +1197,7 @@ snooze:
 map:
 	ld	bc,#0x40BE		; 64 bytes port BE
 	ld	a,(_td_raw)
+	or	a
 	ret	z
 	dec	a
 	jp	z,map_proc_always
@@ -1212,7 +1213,10 @@ _ch375_rblock:
 	push	bc
 	call	map
 	inir
-	jp	map_kernel
+	ld	a,(_td_raw)
+	or	a
+	jp	nz, map_kernel
+	ret
 _ch375_wblock:
 	pop	bc
 	pop	de
@@ -1222,4 +1226,7 @@ _ch375_wblock:
 	push	bc
 	call	map
 	otir
-	jp	map_kernel
+	ld	a,(_td_raw)
+	or	a
+	jp	nz, map_kernel
+	ret
