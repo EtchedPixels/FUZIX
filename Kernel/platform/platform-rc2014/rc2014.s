@@ -1194,16 +1194,6 @@ snooze:
 	.globl _td_raw
 	.globl _td_page
 
-map:
-	ld	bc,#0x40BE		; 64 bytes port BE
-	ld	a,(_td_raw)
-	or	a
-	ret	z
-	dec	a
-	jp	z,map_proc_always
-	ld	a,(_td_page)
-	jp	map_for_swap
-
 _ch375_rblock:
 	pop	bc
 	pop	de
@@ -1211,12 +1201,24 @@ _ch375_rblock:
 	push	hl
 	push	de
 	push	bc
-	call	map
+	ld	a, (_td_raw)
+	push	af
+	cp	#2
+	jr	nz, _chrnot_swap
+	ld	a, (_td_page)
+	call	map_for_swap
+	jr	_chread
+_chrnot_swap:
+	or	a
+	call	nz, map_proc_always
+_chread:
+	ld	bc, #0x40BE
 	inir
-	ld	a,(_td_raw)
+	pop	af
 	or	a
 	jp	nz, map_kernel
 	ret
+
 _ch375_wblock:
 	pop	bc
 	pop	de
@@ -1224,9 +1226,20 @@ _ch375_wblock:
 	push	hl
 	push	de
 	push	bc
-	call	map
+	ld	a, (_td_raw)
+	push	af
+	cp	#2
+	jr	nz, _chwnot_swap
+	ld	a, (_td_page)
+	call	map_for_swap
+	jr	_chwrite
+_chwnot_swap:
+	or	a
+	call	nz, map_proc_always
+_chwrite:
+	ld	bc, #0x40BE
 	otir
-	ld	a,(_td_raw)
+	pop	af
 	or	a
 	jp	nz, map_kernel
 	ret
