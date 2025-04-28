@@ -20,7 +20,7 @@ uint8_t td_unit[CONFIG_TD_NUM];
 td_xfer td_op[CONFIG_TD_NUM];
 td_ioc td_iop[CONFIG_TD_NUM];
 
-static int td_transfer(uint8_t minor, bool is_read, uint8_t rawflag)
+static int td_transfer(uint_fast8_t minor, bool is_read, uint_fast8_t rawflag)
 {
 	uint8_t dev = minor >> 4;
 	register uint16_t ct = 0;
