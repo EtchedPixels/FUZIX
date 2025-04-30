@@ -24,6 +24,8 @@
 #define CONFIG_DYNAMIC_BUFPOOL
 #define CONFIG_DYNAMIC_SWAP
 
+#define CONFIG_SMALL
+
 /* Custom banking */
 
 /* We have two mappings from our 128K of memory */
