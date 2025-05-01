@@ -1,4 +1,4 @@
-#include "../kernel-8080.def"
+#include "../cpu-8080/kernel-8080.def"
 ;
 ;	8080 version of the DS1302 support for RCbus
 ;
@@ -15,7 +15,7 @@
 #define PIN_CE_MASK	0xEF00
 #define PIN_CLK_MASK	0xBF00
 
-	.setcpu	8085
+	.setcpu	8080
 
 	.code
 
