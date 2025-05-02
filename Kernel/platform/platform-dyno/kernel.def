@@ -1,0 +1,27 @@
+; FUZIX mnemonics for memory addresses etc
+
+U_DATA__TOTALSIZE       .equ 0x200        ; 256+256 bytes @ F800
+Z80_TYPE                .equ 2
+
+OS_BANK                 .equ 0x00         ; value from include/kernel.h
+
+; Memory layout
+FIRST_RAM_BANK          .equ 0x80         ; low 512K of physical memory is ROM/ECB window.
+Z180_IO_BASE            .equ 0xC0
+
+USE_FANCY_MONITOR       .equ 1            ; disabling this saves around approx 0.5KB
+CPU_CLOCK_KHZ           .equ 18432        ; 18.432MHz * 1
+Z180_TIMER_SCALE        .equ 20           ; CPU clocks per timer tick
+TICKSPERSEC             .equ 40           ; timer interrupt rate (Hz)
+
+PROGBASE		.equ 0x0000
+PROGLOAD		.equ 0x0100
+
+CONFIG_SWAP		.equ 1
+
+FDC_MSR			.equ	0x84
+FDC_DATA		.equ	0x85
+FDC_DOR			.equ	0x86
+FDC_CCR			.equ	0x87
+FDC_TC			.equ	0x86	  ; TC is a read
+
