@@ -1,0 +1,12 @@
+CC = fcc -mz80
+AS = fcc -mz80
+LINKER = $(FUZIX_ROOT)/Library/link/ldz80
+CFLAGS = -X -Os -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/z80
+#CFLAGS = -X  -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include #-I$(FUZIX_ROOT)/Library/include/z80
+LINKER_OPT = -L$(FUZIX_ROOT)/Library/libs
+LINKER_TAIL = -lcz80
+ASM_OPT = -o
+CRT0 = $(FUZIX_ROOT)/Library/libs/crt0_z80.o
+CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_z80.o
+HOSTCC = cc
+.SUFFIXES: .c .o .y
