@@ -1,5 +1,5 @@
 #include <kernel.h>
-#include <devide.h>
+#include <tinyide.h>
 
 /*
  * Map handling: addd all the spare 16K pages
