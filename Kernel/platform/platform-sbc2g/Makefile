@@ -74,7 +74,6 @@ image:	loader.bin
 loader.bin: loader.S
 	asz80 loader.S
 	ldz80 -b loader.o -o loader.tmp
-	makebin -s 65536 loader.ihx loader.tmp
 	dd if=loader.tmp bs=256 skip=192 of=loader.bin
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
