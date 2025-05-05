@@ -327,7 +327,7 @@ _fd765_do_write:
 	ld a, (_fd765_map)
 	or a
 	;push af
-	jr z, cont_read_nomap
+	jr z, cont_write_nomap
 	ld bc,#0x7fff
 	out (c),a
 cont_write_nomap:
