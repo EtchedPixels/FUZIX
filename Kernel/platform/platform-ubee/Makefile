@@ -50,10 +50,7 @@ clean:
 image:
 	sdasz80 -o bootstrap.s
 	sdldz80 -m -i bootstrap.rel
-	sdasz80 -o hellotest.s
-	sdldz80 -m -i hellotest.rel
 	makebin -s 640 bootstrap.ihx | dd of=bootstrap.bin bs=128 skip=1
-	makebin -s 640 hellotest.ihx | dd of=hellotest.bin bs=512 skip=1
 	dd if=/dev/zero of=fuzix.ss80 bs=512 count=800
 	dd if=bootstrap.bin of=fuzix.ss80 conv=notrunc
 	dd if=../../fuzix.bin of=fuzix.ss80 bs=512 seek=1 conv=notrunc

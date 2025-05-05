@@ -48,6 +48,7 @@ OBJ = workspace.o __true.o __switchc.o __switch.o __switchl.o __pushl.o __sex.o 
 include ldst.mk
 
 ldword/_10.o: makeldst
+	mkdir -p ldword stword ldbyte stbyte
 	./makeldst
 	fcc -m8080 -c ldword/_10.s
 

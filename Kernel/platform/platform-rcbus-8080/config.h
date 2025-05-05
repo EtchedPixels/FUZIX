@@ -46,6 +46,7 @@
 #define CONFIG_TD_IDE
 #define CONFIG_TINYIDE_INDIRECT
 #define CONFIG_TD_SCSI
+#define CONFIG_CH375
 
 #define swap_map(x)	((uint8_t *)(x)) /* Simple zero based mapping */
 

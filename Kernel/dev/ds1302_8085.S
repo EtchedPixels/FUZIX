@@ -1,4 +1,4 @@
-#include "../kernel-8085.def"
+#include "../cpu-8085/kernel-8085.def"
 ;
 ;	8085 version of the DS1302 support for RCbus
 ;

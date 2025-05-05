@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "syscall_name.h"
 
 static char namebuf[128];
@@ -81,6 +82,8 @@ static void write_makefile(void)
   int i;
   char path[256];
   FILE *fp;
+
+  mkdir("fuzix6800", 0777);
 
   fp = fopen("fuzix6800/Makefile", "w");
   if (fp == NULL) {
