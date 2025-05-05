@@ -98,14 +98,14 @@ void kputchar(char c)
 		tty_putc(syscon, '\r');
 #ifndef CONFIG_USIFAC_SLIP
  #ifdef CONFIG_USIFAC_SERIAL
-		tty_putc(2, '\r');
+		tty_putc(3, '\r');
  #endif
 #endif 
 	}
 	tty_putc(syscon, c);
 #ifndef CONFIG_USIFAC_SLIP
  #ifdef CONFIG_USIFAC_SERIAL
-	tty_putc(2, c);
+	tty_putc(3, c);
  #endif
 #endif 	
 }
@@ -162,8 +162,8 @@ void tty_setup(uint8_t minor, uint8_t flags)
 void tty_pollirq_usifac(void)
 {		
 	while (usifctrl == 0xff)
-		tty_inproc(2, usifdata);
-	tty_outproc(2);
+		tty_inproc(3, usifdata);
+	tty_outproc(3);
 }
 #endif
 void tty_sleeping(uint8_t minor)
