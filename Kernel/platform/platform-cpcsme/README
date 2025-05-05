@@ -68,10 +68,14 @@ Look for speed optimization opportunities.
 
 Install cpctools: https://github.com/cpcsdk/cpctools
 install hex2bin: https://github.com/algodesigner/hex2bin
+install iDSK: https://github.com/cpcsdk/idsk
+install flip
 
 make TARGET=cpcsme diskimage
 
-.sna snapshot,  and mass storage filesystem images are generated in Images folder.
+.sna snapshot, .dsk boot disk image and mass storage filesystem images are generated in Images folder.
+
+For booting from floppy execute RUN"FUZIX at basic prompt
 
 To run on emulator use ACE-DL emulator and use disk.img as image for the x-mass IDE interface emulation.
 
