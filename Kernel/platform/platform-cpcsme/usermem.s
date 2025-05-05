@@ -93,9 +93,8 @@ __uzero:
 	ld d,h
 	inc de
 	ldir
-	ld b,#0x7f
 uout:
-	ld c,#0xc2
+	ld bc,#0x7fc2
 	out (c),c
 	ret
 
