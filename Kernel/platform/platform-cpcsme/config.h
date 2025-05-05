@@ -11,7 +11,7 @@
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
-#undef CONFIG_SMALL
+#define CONFIG_SMALL
 
 /* Input layer support */
 #define CONFIG_INPUT
