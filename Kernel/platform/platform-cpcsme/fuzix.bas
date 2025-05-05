@@ -1,0 +1,13 @@
+10 MEMORY &3FFF
+20 REM LOAD "FUZIX.SCR",&C000
+30 FileName$="FUZIXX.BIN"
+40 FOR i%=1 TO 4
+50 MID$(FileName$,6,1)=RIGHT$(STR$(i%),1)
+60 MMR%=&C3+i%
+70 CLS:PRINT "Loading block:";FileName$;" at:";hex$(MMR%)
+80 OUT &7FFF,MMR%
+90 LOAD FileName$
+100 NEXT i%
+110 OUT &7FFF,&C0
+120 RUN "RUNFUZIX.BIN"
+130 REM END
