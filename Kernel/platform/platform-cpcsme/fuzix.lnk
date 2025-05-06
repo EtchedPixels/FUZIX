@@ -50,7 +50,6 @@ platform/platform-cpcsme/tinydisk.rel
 platform/platform-cpcsme/tinydisk_discard.rel
 platform/platform-cpcsme/cpckeyboard.rel
 platform/platform-cpcsme/ch375.rel
-platform/platform-cpcsme/ch375_discard.rel
 platform/platform-cpcsme/albireosme.rel
 platform/platform-cpcsme/net_native.rel
 platform/platform-cpcsme/net_w5x00.rel
