@@ -15,7 +15,11 @@ struct devsw dev_tab[] =  /* The device driver switch table */
   /* 0: /dev/hd		Hard disc block devices */
   {  td_open,      no_close,     td_read,	td_write,	td_ioctl },
   /* 1: /dev/fd		Floppy disc block devices */
+  #ifdef CONFIG_FDC765
   {  devfd_open,   no_close,     devfd_read,    devfd_write,   no_ioctl },
+  #else
+  {  no_open,      no_close,     no_rdwr,       no_rdwr,       no_ioctl  },
+  #endif
   /* 2: /dev/tty	TTY devices */
   {  tty_open,	   tty_close,    tty_read,      tty_write,     cpctty_ioctl },
   /* 3: /dev/lpr	Printer devices */
@@ -45,5 +49,8 @@ void device_init(void)
 #endif
 #ifdef CONFIG_ALBIREO
   ch375_probe();
+#endif
+#ifdef CONFIG_NET
+sock_init();
 #endif
 }

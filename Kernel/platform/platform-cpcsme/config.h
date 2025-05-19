@@ -11,6 +11,8 @@
 /* CP/M emulation */
 #undef CONFIG_CPM_EMU
 
+#define CONFIG_SMALL
+
 /* Input layer support */
 #define CONFIG_INPUT
 #define CONFIG_INPUT_GRABMAX	3
@@ -53,6 +55,15 @@
 #else
     #define NUM_DEV_TTY 2
 #endif
+
+/* Core networking support */
+#define CONFIG_NET
+/* With a WizNet card */
+#define CONFIG_NET_WIZNET
+#define CONFIG_NET_W5100
+/* Or native (eg SLIP) */
+#undef CONFIG_NET_NATIVE
+#undef CONFIG_USIFAC_SLIP
 
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
