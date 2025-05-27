@@ -359,55 +359,67 @@ _tmpout:
 ; to zero. Instead define where it ends up.
 ;
 
-_plt_doexec	.equ	0x18
+_plt_doexec	.equ	0x28
 
         .area _COMMONMEM
 
 	.globl rst38
 	.globl stubs_low
+	.globl ___sdcc_enter_ix
 ;
 ;	This exists at the bottom of each bank. We move these into place
 ;	from discard.
 ;
+
 stubs_low:
 	.byte 0xC9	;changed from c3 to keep going!!
 	.word 0		; cp/m emu changes this
 	.byte 0		; cp/m emu I/O byte
 	.byte 0		; cp/m emu drive and user
 	jp 0		; cp/m emu bdos entry point
-rst8:	ret
+
+;
+;	Stub helpers for code compactness. Note that
+;	sdcc_enter_ix is in the standard compiler support already
+;
+;	The first two use an rst as a jump. In the reload sp case we don't
+;	have to care. In the pop ix case for the function end we need to
+;	drop the spare frame first, but we know that af contents don't
+;	matter
+;
+
+rstblock:
+	jp	___sdcc_enter_ix
 	nop
 	nop
 	nop
 	nop
 	nop
-	nop
-	nop
-rst10:	ret
-	nop
-	nop
-	nop
-	nop
+___spixret:
+	ld	sp,ix
+	pop	ix
+	ret
 	nop
 	nop
 	nop
-rst18:	jp plt_doexec_high
-	nop
-	nop
-	nop
-	nop
-	nop
-rst20:	ret
+___ixret:
+	pop	af
+	pop	ix
+	ret
 	nop
 	nop
 	nop
 	nop
+___ldhlhl:
+	ld	a,(hl)
+	inc	hl
+	ld	h,(hl)
+	ld	l,a
+	ret
 	nop
 	nop
 	nop
-rst28:	ret
-	nop
-	nop
+rst28:	jp plt_doexec_high
 	nop
 	nop
 	nop

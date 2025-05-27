@@ -12,3 +12,5 @@ __sfr __banked __at 0xFE81 ch375_sport;
 #define ch375_wcmd(x)	do {ch375_sport = (x); } while(0)
 
 #define CH376_REG_DATA 0xFE80
+
+#define nap2() __asm__ ("nop\nnop");

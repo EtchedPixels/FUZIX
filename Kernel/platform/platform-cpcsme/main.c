@@ -18,15 +18,20 @@ uint8_t timer_wait;
 
 void plt_interrupt(void)
 {
- tty_pollirq();
+	tty_pollirq();
 #if defined CONFIG_USIFAC_SERIAL
 	tty_pollirq_usifac();
 #endif
+#ifdef CONFIG_NET_WIZNET
+	w5x00_poll();
+#endif
 	timer_interrupt();
- poll_input();
- if (timer_wait)
-  wakeup(&timer_interrupt);
- devfd_spindown();
+	poll_input();
+	if (timer_wait)
+		wakeup(&timer_interrupt);
+#ifdef CONFIG_FDC765
+	devfd_spindown();
+#endif
 }
 
 /*

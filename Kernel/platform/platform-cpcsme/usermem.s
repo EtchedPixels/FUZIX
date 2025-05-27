@@ -78,11 +78,13 @@ __uzero:
 	or c
 	ret z
 	ld d,b
-	ld b,#0x7f
+	ld e,c
+	ld bc,#0x7fff
 	ld a,(_udata + U_DATA__U_PAGE)
 	out (c),a		; user bank
 	ld (hl),#0
 	ld b,d
+	ld c,e
 	dec bc
 	ld a,b
 	or c
@@ -91,15 +93,14 @@ __uzero:
 	ld d,h
 	inc de
 	ldir
-	ld b,#0x7f
 uout:
-	ld c,#0xc2
+	ld bc,#0x7fc2
 	out (c),c
 	ret
 
 __ugetc:
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld b,#0x7f
+	ld bc,#0x7fff
 	out (c),a
 	ld l,(hl)
 	ld h,#0
@@ -107,7 +108,7 @@ __ugetc:
 
 __ugetw:
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld b,#0x7f
+	ld bc,#0x7fff
 	out (c),a
 	ld a,(hl)
 	inc hl
@@ -123,7 +124,7 @@ __uputc:
 	push de
 	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld b,#0x7f
+	ld bc,#0x7fff
 	out (c),a
 	ld (hl),e
 	jr uout
@@ -136,7 +137,7 @@ __uputw:
 	push de
 	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld b,#0x7f
+	ld bc,#0x7fff
 	out (c),a
 	ld (hl),e
 	inc hl
