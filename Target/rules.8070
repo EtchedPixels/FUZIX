@@ -1,7 +1,7 @@
 CC = fcc -m8070
 AS = fcc -m8070
 LINKER = $(FUZIX_ROOT)/Library/link/ld8070
-CFLAGS = -X -m8070 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8070
+CFLAGS = -Os -X -m8070 -D__STDC__ -c -I$(FUZIX_ROOT)/Library/include -I$(FUZIX_ROOT)/Library/include/8070
 LINKER_OPT =
 LINKER_TAIL = -L $(FUZIX_ROOT)/Library/libs -lc8070 -M
 AS_OPT = -o
