@@ -39,18 +39,4 @@ bool validdev(uint16_t dev)
 		return true;
 }
 
-void device_init(void)
-{
-#ifdef CONFIG_USIFAC_SERIAL
-  usifac_serial_init();
-#endif
-#ifdef CONFIG_TD_IDE
-  ide_probe();
-#endif
-#ifdef CONFIG_ALBIREO
-  ch375_probe();
-#endif
-#ifdef CONFIG_NET
-sock_init();
-#endif
-}
+

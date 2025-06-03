@@ -7,18 +7,16 @@ platform/platform-cpcsme/crt0.rel
 platform/platform-cpcsme/commonmem.rel
 platform/platform-cpcsme/cpcsme.rel
 platform/platform-cpcsme/cpcvideo.rel
-platform/platform-cpcsme/fdc765.rel
 platform/platform-cpcsme/main.rel
 platform/platform-cpcsme/discard.rel
 start.rel
 version.rel
 cpu-z80/lowlevel-z80-thunked.rel
+platform/platform-cpcsme/usermem.rel
 platform/platform-cpcsme/tricks.rel
 timer.rel
 kdata.rel
 usermem.rel
-platform/platform-cpcsme/usermem.rel
-platform/platform-cpcsme/devfdc765.rel
 platform/platform-cpcsme/devices.rel
 platform/platform-cpcsme/devinput.rel
 devio.rel
@@ -34,7 +32,6 @@ syscall_fs3.rel
 syscall_proc.rel
 syscall_other.rel
 syscall_net.rel
-network.rel
 tty.rel
 vt.rel
 mm.rel
@@ -42,6 +39,7 @@ memalloc_none.rel
 bankfixed.rel
 devsys.rel
 devinput.rel
+network.rel
 platform/platform-cpcsme/devtty.rel
 platform/platform-cpcsme/tinyide.rel
 platform/platform-cpcsme/tinyide_discard.rel
@@ -49,6 +47,8 @@ platform/platform-cpcsme/cpcidesme.rel
 platform/platform-cpcsme/tinydisk.rel
 platform/platform-cpcsme/tinydisk_discard.rel
 platform/platform-cpcsme/cpckeyboard.rel
+platform/platform-cpcsme/devfdc765.rel
+platform/platform-cpcsme/fdc765.rel
 platform/platform-cpcsme/ch375.rel
 platform/platform-cpcsme/albireosme.rel
 platform/platform-cpcsme/net_native.rel

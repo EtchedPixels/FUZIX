@@ -18,6 +18,7 @@
 
 	.globl map_kernel
 	.globl map_video
+	.globl a_map_to_bc
 
 
 	.globl _plt_reboot
@@ -26,7 +27,11 @@
 
 	.globl _int_disabled
 
-	.globl MMR_for_this_bank
+	.globl _MMR_for_this_bank
+
+	.globl _n_valid_maps
+
+	.globl _valid_maps_array
 
 	.globl _vtborder
 
@@ -125,8 +130,12 @@ _int_disabled:
 _vtborder:		; needs to be common
 	.db 0
 
-MMR_for_this_bank:
+_MMR_for_this_bank:
 	.db 0
+_n_valid_maps:
+		.db 0
+_valid_maps_array:
+		.ds 15
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
 ; In this port, as DISCARD area is in the  upper 16K we can use C1 map to see the
@@ -154,15 +163,52 @@ early_ret:
 		ld bc, #0x7fc2 			;Kernel map
 		out (c),c
 		ret
-copy_common:		;Copy common to each user bank top 16K mapped at 0x4000
-		ld d,#0
-		ld e,#0
+copy_common:		;Copy common to each user bank top 16K mapped at 0x4000, mark banks
+					;and setup available ram
+		ld de, #0
+erase_marks_loop:
+		ld hl, #0x100+#MMR_array_for_copy_common-#copy_common
+		add hl, de
+		ld a,(hl)
+		bit 6,a
+		jr nz,l_ram_0
+		add #0x40
+		ld b,#0x7e
+		jr cont_cc_0
+l_ram_0:
+		ld b,#0x7f
+cont_cc_0:
+		ld c,a
+		out(c),c
+		xor a
+		ld (#_MMR_for_this_bank - #0x8000), a
+		ld a,(#0x100+#nmaps-#copy_common)
+		inc e
+		cp e
+		jr nz, erase_marks_loop
+		ld bc, #0x7fc1 			;convenient map to copy common to a visible area for copy routine
+		out (c),c				;also used for video output
+		ld a, #0xc2
+		ld (#_MMR_for_this_bank), a		;mark kernel bank
+
+		ld de,#0
 cc_loop:			; copy the common memory to all banks
 		ld hl,#0x100+#MMR_array_for_copy_common-#copy_common
 		add hl,de
 		ld a,(hl)
-		ld bc,#0x7fff
-		out(c),a
+		bit 6,a
+		jr nz,l_ram
+		add #0x40
+		ld b,#0x7e
+		jr cont_cc
+l_ram:
+		ld b,#0x7f
+cont_cc:
+		ld c,a
+		out(c),c
+		ld a, (#_MMR_for_this_bank - #0x8000)
+		or a
+		jr nz, not_valid		;bank is marked, so map is not valid
 		exx
 		ld hl, #0x8000
 		ld de, #s__COMMONMEM - #0x8000
@@ -172,7 +218,26 @@ cc_loop:			; copy the common memory to all banks
 		ld hl,#0x100+#MMR_array_for_user_bank-#copy_common
 		add hl,de
 		ld a,(hl)
-		ld (#MMR_for_this_bank - #0x8000),a ;mark each user bank with the corresponding MMR value
+		ld (#_MMR_for_this_bank - #0x8000),a ;mark each user bank with the corresponding MMR value
+		ld c, a
+		ld a, (#_MMR_for_this_bank - #0x8000)
+		cp c								;check that bank is valid
+		jr nz, not_valid
+		.db 0xdd ; undoc ld ixl,c
+		ld l,c   ; undoc ld ixl,c
+		ld bc, #0x7fc7
+		out (c),c 							;common memory of kernel map at 0x4000
+		ld hl, #_valid_maps_array - #0x8000
+		ld b, #0
+		ld a, (#_n_valid_maps - #0x8000)
+		ld c, a
+		add hl, bc
+		.db 0xdd ; undoc ld c,ixl
+		ld c,l   ; undoc ld c,ixl
+		ld (hl), c							;update valid banks array
+		inc a
+		ld (#_n_valid_maps - #0x8000), a	;update number of valid maps
+not_valid:
 		ld a,(#0x100+#nmaps-#copy_common)
 		inc e
 		cp e
@@ -194,8 +259,8 @@ cc_loop:			; copy the common memory to all banks
 		
 		jp early_ret
 nmaps:
-        .db 7
-MMR_array_for_copy_common:
+        .db 15
+MMR_array_for_copy_common:; cambiar esto- otro array para 7f, 7e, etc. recorrer ambos marcando cada 64k y añadiendo a pagemap init los marcados haciendo balance del total de RAM->discard
         .db 0xcf
         .db 0xd7
         .db 0xdf
@@ -203,6 +268,14 @@ MMR_array_for_copy_common:
         .db 0xef
         .db 0xf7
 		.db 0xff
+        .db 0x87
+        .db 0x8f
+        .db 0x97
+        .db 0x9f
+        .db 0xa7
+        .db 0xaf
+        .db 0xb7
+		.db 0xbf		
 MMR_array_for_user_bank:
         .db 0xca
         .db 0xd2
@@ -211,13 +284,41 @@ MMR_array_for_user_bank:
         .db 0xea
         .db 0xf2
 		.db 0xfa
+        .db 0x82        
+		.db 0x8a
+        .db 0x92
+        .db 0x9a
+        .db 0xa2
+        .db 0xaa
+        .db 0xb2
+		.db 0xba		
 copy_common_end:
 
 init_hardware:
         ; set system RAM size
-        ld hl, #512		; Assuming 576K cpc for now. First 64K video, second kernel, rest user
+        ld hl, #128				;reserved for kernel and video
+		ld a, (#_n_valid_maps)
+		ld b, a
+		ld de, #64				;bank size
+		ld ix, #0
+		exx
+		ld de, #4				;reserved for common
+		exx
+ramsize_loop:
+		add hl, de
+		exx
+		add ix, de
+		exx
+		djnz ramsize_loop
         ld (_ramsize), hl
-        ld hl, #(512-64)	; 64K for kernel
+		ld de, #128
+		or a
+		sbc hl, de
+		.db 0xdd ; undoc ld e,ixl
+		ld e,l   ; undoc ld e,ixl
+		.db 0xdd ; undoc ld d,ixh
+		ld d,h   ; undoc ld d,ixh
+		sbc hl, de
         ld (_procmem), hl
 
 	; Write the stubs for our bank
@@ -299,7 +400,7 @@ end_usifac:
 
 ;
 ;	We switch in one go so we don't have these helpers. This means
-;	we need custom I/O wrappers and custom usercopy functions.MMR_array_for_user_bank:
+;	we need custom I/O wrappers and custom usercopy functions.
 
 
 map_save_low:
@@ -310,6 +411,8 @@ map_page_low:
 	ret
 
 _program_vectors:
+	; Write the stubs for our bank
+	; From kernel to user bank
 	pop de
 	pop hl
 	push hl
@@ -329,12 +432,11 @@ _program_vectors:
 
 ; outchar: Print the char in A
 outchar:
+	di
 	push bc
 	ld bc,#0xfbd0
 	out(c),a
-	pop bc
 	ld (_tmpout), a
-	push bc
 	push de
 	push hl
 	push ix
@@ -349,6 +451,11 @@ outchar:
 	pop hl
 	pop de
 	pop bc
+	ld a,(_int_disabled)
+	or a
+	jr nz,cont_no_int_oc
+	ei
+cont_no_int_oc:
    ret
 
 _tmpout:
@@ -372,7 +479,7 @@ _plt_doexec	.equ	0x28
 ;
 
 stubs_low:
-	.byte 0xC9	;changed from c3 to keep going!!
+	.byte 0xC9	; FIXME changed from c3 to keep going!!
 	.word 0		; cp/m emu changes this
 	.byte 0		; cp/m emu I/O byte
 	.byte 0		; cp/m emu drive and user
@@ -386,7 +493,8 @@ stubs_low:
 ;	have to care. In the pop ix case for the function end we need to
 ;	drop the spare frame first, but we know that af contents don't
 ;	matter
-;
+
+;	FIXME Is this only needed in kernel map?
 
 rstblock:
 	jp	___sdcc_enter_ix
@@ -445,8 +553,6 @@ my_nmi_handler:	jp nmi_handler
 stubs_low_end:
 
 
-;MMR_for_this_bank:	
-;	.ds 1 ;; Should be at 0x68
 ;
 ;	This stuff needs to live somewhere, anywhere out of the way (so we
 ;	use common). We need to copy it to the same address on both banks
@@ -460,32 +566,40 @@ stubs_low_end:
 	.globl ldir_far
 ;
 ;	This needs some properly optimized versions!
+;	hl->source address, d->source bank, ix->destination address, e->destination bank
 ;
 ldir_to_user:
 	ld a,(_udata + U_DATA__U_PAGE)	;
 	ld e,a
 	ld d,#0xc2			; Kernel is in 0xc2
 ldir_far:				;hl->source address, d->source bank, ix->destination address, e->destination bank
+	exx
+	push bc				;store bc'
+	exx
 	push bc				;bc->byte count
 	ld bc,#0x7f10
 	out (c),c
 	ld c,#0x4b   ;Bright white
 	out (c),c
-	ld bc,#0x7fff
+	ld a,d
+	call a_map_to_bc;bc source bank
+	ld a,e
 	exx
-	pop bc			; get BC into alt bank
+	call a_map_to_bc	;bc' target bank
+	exx
+	pop de			;de byte count
 far_ldir_1:
-	exx
-	out (c),d			; Select source
+	out (c),c			; Select source
 	ld a,(hl)
 	inc hl
-	out (c),e			; Select target
+	exx
+	out (c),c			; Select target
 	ld (ix),a
 	inc ix
 	exx
-	dec bc
-	ld a,b
-	or c
+	dec de
+	ld a,d
+	or e
 	jr nz, far_ldir_1
 	ld bc,#0x7fc2
 	out (c),c		; Select kernel
@@ -493,6 +607,9 @@ far_ldir_1:
 	out (c),c                                    
 	ld a,(_vtborder)
 	out (c),a
+	exx
+	pop bc		;restore bc'
+	exx
 	ret
 ldir_from_user:
 	ld a,(_udata + U_DATA__U_PAGE)
@@ -517,21 +634,22 @@ interrupt_high:
 	push hl
 	push ix
 	push iy
-	ld a,(#MMR_for_this_bank)		; bank MMR is stored in each bank early
-	ld d,a
+	ld a,(#_MMR_for_this_bank)		; bank MMR is stored in each bank early
+	.db 0xdd ; undoc ld ixl,a
+	ld l,a   ; undoc ld ixl,a
 	ld bc,#0x7fc2
 	out (c),c		; Kernel map
 	ld (istack_switched_sp),sp	; istack is positioned to be valid
 	ld sp,#istack_top		; in both banks. We just have to
 	;
 	;	interrupt_handler may come back on a different stack in
-	;	which case de is junk. Fortuntely we never pre-empt in
-	;	kernel so the case we care about de is always safe. This is
+	;	which case ix is junk. Fortuntely we never pre-empt in
+	;	kernel so the case we care about ix is always safe. This is
 	;	not a good way to write code and should be fixed! FIXME
 	;
-	push de
+	push ix
 	call interrupt_handler	; switch on the right SP
-	pop de
+	pop ix
 	; Restore stack pointer to user. This leaves us with an invalid
 	; stack pointer if called from user but interrupts are off anyway
 	ld sp,(istack_switched_sp)
@@ -539,9 +657,17 @@ interrupt_high:
 	; high
 	or a 
 	jr z, kernout
-	; Returning to user space
-	ld bc,#0x7fff
-	out (c),a		; page passed back
+	; Returning to user space.
+	bit 6,a		;we can't call (a_map_to_bc) with the wrong SP while in kernel map
+	jr nz,lower_512_1
+	set 6,a
+	ld b,#0x7e
+	jr ld_ca_and_ret_1
+lower_512_1:
+	ld b,#0x7f
+ld_ca_and_ret_1:
+	ld c,a
+	out (c),c
 	; User stack is now valid
 	; back on user stack
 	xor a
@@ -567,9 +693,10 @@ pops:
 kernout:
 	; restore bank - if we interrupt mid user copy or similar we
 	; have to put the right bank back
-	ld a,d
-	ld bc,#0x7fff
-	out (c),a
+	.db 0xdd ; undoc ld a,ixl
+	ld a,l   ; undoc ld a,ixl
+	call a_map_to_bc
+	out (c),c
 	jr pops
 
 sigpath:
@@ -603,7 +730,7 @@ syscall_high:
 	pop ix
 	di
 	exx
-	push bc
+	push bc ; push bc' to ustack
 	ld bc,#0x7fc2
 	out (c),c
 	exx
@@ -614,12 +741,13 @@ syscall_high:
 	; FIXME check di rules
 	; stack now invalid. Grab the new sp before we unbank the
 	; memory holding it
-	ld sp,(_udata + U_DATA__U_SYSCALL_SP)
+
 	ld a, (_udata + U_DATA__U_PAGE)	; back to the user page
 	exx
-	ld c,#0xff
-	out (c),a
-	pop bc
+	call a_map_to_bc 
+	ld sp,(_udata + U_DATA__U_SYSCALL_SP)
+	out (c),c
+	pop bc	;pop bc' from ustack
 	exx
 	xor a
 	cp h
@@ -659,8 +787,16 @@ syscall_sighelp:
 plt_doexec_high:
 	; Activate the user bank (which also holds these bytes)
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld bc,#0x7fff
-	out (c),a
+	bit 6,a		;we can't call (a_map_to_bc) with the wrong SP while in kernel map
+	jr nz,lower_512_2
+	set 6,a
+	ld b,#0x7e
+	jr ld_ca_and_ret_2
+lower_512_2:
+	ld b,#0x7f
+ld_ca_and_ret_2:
+	ld c,a
+	out (c),c
 	ei
 	; and leap into user space
 	jp (hl)
@@ -669,10 +805,10 @@ map_kernel:
 	push bc
 	ld bc,#0x7fc2
 	out (c),c
-;	push af
-;	ld a,c
-;	ld (#MMR_for_this_bank),a ; mark kernel bank with its MMR value
-;	pop af
+	push af
+	ld a,c
+	ld (#_MMR_for_this_bank),a ; mark kernel bank with its MMR value
+	pop af
 	pop bc
 	ret
 
@@ -680,12 +816,25 @@ map_video:
 	push bc	
 	ld bc,#0x7fc1
 	out (c),c	
-;	push af
-;	ld a,c
-;	ld (#MMR_for_this_bank),a ; mark kernel bank with video map MMR value
-;	pop af
+	push af
+	ld a,c
+	ld (#_MMR_for_this_bank),a ; mark kernel bank with video map MMR value
+	pop af
 	pop bc
 	ret
+
+a_map_to_bc:		;to map page in a, call this => out (c),c
+	bit 6,a
+	jr nz,lower_512
+	set 6,a
+	ld b,#0x7e
+	jr ld_ca_and_ret
+lower_512:
+	ld b,#0x7f
+ld_ca_and_ret:
+	ld c,a
+	ret
+
 
 ;
 ;	Helpers for the CH375

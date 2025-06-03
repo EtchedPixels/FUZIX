@@ -11,6 +11,7 @@ COMMON_MEMORY
 void devide_read_data(uint8_t *p) __naked
 {
     __asm
+    	.globl a_map_to_bc
 #ifdef CONFIG_BANKED
             pop bc
             pop de
@@ -35,9 +36,9 @@ not_swapin:
 #endif
             or a                                    ; test is_user
             jr z, doread		    ; map user memory first if required
-            ld bc,#0x7fff
             ld a, (_td_page)
-            out (c),a
+            call a_map_to_bc
+            out (c),c
 doread:
             ld bc,#0x7f10
             out (c),c
@@ -78,6 +79,7 @@ doread1:                    ; transfer 512 bytes
 void devide_write_data(uint8_t *p) __naked
 {
     __asm
+	.globl a_map_to_bc
 #ifdef CONFIG_BANKED
             pop bc
             pop de
@@ -103,9 +105,9 @@ not_swapout:
 #endif
             or a                                    ; test is_user
             jr z, dowrite		    ; map user memory first if required
-            ld bc,#0x7fff
             ld a, (_td_page)
-            out (c),a
+            call a_map_to_bc
+            out (c),c
 dowrite:
 
             ld bc,#0x7f10

@@ -20,13 +20,16 @@
 #define CONFIG_VT
 /* Keyboard contains non-ascii symbols */
 #define CONFIG_UNIKEY
-/* 8 64K banks, 1 is kernel */
-#define MAX_MAPS	7
+/* 16 64K banks, 1 is kernel */
+#define MAX_MAPS	15
 #define MAP_SIZE	0xF000U
 
 /* Banks as reported to user space */
 #define CONFIG_BANKS	1
-
+/*
+#define MAP_TRANS_8TO16(M)	(uint16_t)(M) + (((M) & (1 << 6)) ? 0x7F00 : 0x7E40)
+#define MAP_TRANS_16TO8(M)	(uint8_t)(((M) - (((M) & 0x7F00) == 0x7F00) ? 0x7F00 : 0x7E40))
+*/
 /* Vt definitions */
 #define VT_WIDTH	64
 #define VT_HEIGHT	32
@@ -67,7 +70,8 @@
 
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    5	  /* Number of block buffers */
+#define NBUFS    5	  /* Number of block buffers MUST be big enough to push discard above 0xC000*/
+                        /*Remember to set it also in kernel.def*/
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
 #define CONFIG_DYNAMIC_BUFPOOL

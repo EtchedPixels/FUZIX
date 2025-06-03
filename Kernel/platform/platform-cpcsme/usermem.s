@@ -19,6 +19,8 @@
 
 	.globl ldir_from_user
 	.globl ldir_to_user
+	.globl a_map_to_bc
+
 
         .area _COMMONMEM
 
@@ -79,9 +81,10 @@ __uzero:
 	ret z
 	ld d,b
 	ld e,c
-	ld bc,#0x7fff
+	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
-	out (c),a		; user bank
+	call a_map_to_bc
+	out (c),c		; user bank
 	ld (hl),#0
 	ld b,d
 	ld c,e
@@ -96,20 +99,23 @@ __uzero:
 uout:
 	ld bc,#0x7fc2
 	out (c),c
+	pop bc
 	ret
 
 __ugetc:
+	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld bc,#0x7fff
-	out (c),a
+	call a_map_to_bc
+	out (c),c		; user bank
 	ld l,(hl)
 	ld h,#0
 	jr uout
 
 __ugetw:
+	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld bc,#0x7fff
-	out (c),a
+	call a_map_to_bc
+	out (c),c		; user bank
 	ld a,(hl)
 	inc hl
 	ld h,(hl)
@@ -123,9 +129,10 @@ __uputc:
 	push hl
 	push de
 	push bc
+	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld bc,#0x7fff
-	out (c),a
+	call a_map_to_bc
+	out (c),c		; user bank
 	ld (hl),e
 	jr uout
 
@@ -136,9 +143,10 @@ __uputw:
 	push hl
 	push de
 	push bc
+	push bc
 	ld a,(_udata + U_DATA__U_PAGE)
-	ld bc,#0x7fff
-	out (c),a
+	call a_map_to_bc
+	out (c),c		; user bank
 	ld (hl),e
 	inc hl
 	ld (hl),d

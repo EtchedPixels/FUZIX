@@ -37,7 +37,6 @@
         .globl s__DATA
         .globl l__DATA
         .globl kstack_top
-        .globl MMR_for_this_bank
 
 	; For the boot vector
 	.globl init
@@ -80,8 +79,6 @@ init:
 
         ; Configure memory map
         call init_early ;this also copies common to all banks
-        ld a,#0xc2
-	ld (#MMR_for_this_bank),a ; mark kernel bank with its MMR value
 
 
 	; then zero the data area
@@ -102,7 +99,7 @@ init:
 stop:   halt
         jr stop
 
-
+.if DYNAMIC_BUFPOOL
 	.area _BUFFERS
 ;
 ; Buffers (we use asm to set this up as we need them in a special segment
@@ -114,3 +111,4 @@ stop:   halt
 
 _bufpool:
 	.ds BUFSIZE * NBUFS
+.endif

@@ -26,3 +26,5 @@ CONFIG_SWAP		    .equ 0
 HIGHPAGE		    .equ 0
 
 NBUFS			    .equ 5
+
+DYNAMIC_BUFPOOL		.equ 1

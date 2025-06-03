@@ -52,6 +52,7 @@
 	.globl _fd765_drive
 
 	.globl _vtborder
+	.globl a_map_to_bc
 
 
 	.globl diskmotor
@@ -252,8 +253,8 @@ _fd765_do_read:
 	or a
 	;push af
 	jr z, cont_read_nomap
-	ld bc,#0x7fff
-	out (c),a
+	call a_map_to_bc
+	out (c),c
 cont_read_nomap:
 	ld bc,#0x7f10
 	out (c),c
@@ -328,8 +329,8 @@ _fd765_do_write:
 	or a
 	;push af
 	jr z, cont_write_nomap
-	ld bc,#0x7fff
-	out (c),a
+	call a_map_to_bc
+	out (c),c
 cont_write_nomap:
 
 	ld bc,#0x7f10
