@@ -10,7 +10,6 @@ The kernel reserves the second 64K block, leaving up to 15 blocks of 64K availab
 
 The upper 4K of each block are used as common memory so 60KiB are available for each process.
 
-The video driver has been extended to support two simultaneous terminals, using the 16K RAM blocks accessible by the CRTC as video memory.
 
 ## Memory Model
 
@@ -23,7 +22,7 @@ Bank 0      Video RAM
 Bank 1		Kernel
 		0000-00FF, F200-FFFF are propogated into the other banks
 
-Bank 2-8	User
+Bank 2-16	User
 		0000-00FF start with shared vectors
 			  FIXME: we need to clean this up in program_vectors
 			  from the kernel copy ????
