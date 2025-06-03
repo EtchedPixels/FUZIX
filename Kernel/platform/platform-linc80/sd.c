@@ -58,7 +58,7 @@ void sd_spi_slow(void)
 
 COMMON_MEMORY
 
-bool sd_spi_receive_sector(uint8_t *data) __naked __z88dk_fastcall
+bool sd_spi_rx_sector(uint8_t *data) __naked __z88dk_fastcall
 {
   __asm
     ld a, (_td_raw)
@@ -82,7 +82,7 @@ doread:
   __endasm;
 }
 
-bool sd_spi_transmit_sector(uint8_t *data) __naked __z88dk_fastcall
+bool sd_spi_tx_sector(uint8_t *data) __naked __z88dk_fastcall
 {
   __asm
     ld a, (_td_raw)

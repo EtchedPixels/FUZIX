@@ -33,14 +33,14 @@ dread:
 	ld	a,='.'
 	jsr	outchar
 	ild	a,:sector
-	sub	=0x7D
+	sub	a,=0x7D
 	bz	load_done
 	ld	a,:sector
 	st	a,3,p2		; sector LBA
 	ld	a,=1
 	st	a,2,p2		; num sectors (drives may clear this each I/O)
 	jsr	waitready
-	ld	a,0x20
+	ld	a,=0x20
 	st	a,7,p2		; read command
 
 	jsr	waitdrq
@@ -115,7 +115,7 @@ outchar:
 outcharw:
 	ld	a,5,p2
 	and	a,=0x20
-	beq	outcharw
+	bz	outcharw
 	ld	a,e
 	st	a,0,p2
 	pop	p2
