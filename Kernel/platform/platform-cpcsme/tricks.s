@@ -28,6 +28,7 @@
 
 	.globl ldir_to_user
 	.globl ldir_far
+	.globl a_map_to_bc
 
 	.globl _vtborder
 
@@ -48,7 +49,7 @@ _plt_switchout:
         ; return from either _switchout OR _dofork, so they must both write 
         ; U_DATA__U_SP with the following on the stack:
         push hl ; return code
-        push ix
+		push ix
         push iy
         ld (_udata + U_DATA__U_SP), sp ; this is where the SP is restored in _switchin
 
@@ -190,7 +191,7 @@ skip_copyback:
         pop ix
         pop hl ; return code
 
-        ; enable interrupts, if we didn't pre-empt in an ISR
+	; enable interrupts, if we didn't pre-empt in an ISR
         ld a, (_udata + U_DATA__U_ININTERRUPT)
 	ld (_int_disabled),a
         or a
@@ -257,14 +258,20 @@ _dofork:
         ld de, #P_TAB__P_PAGE_OFFSET
         add hl, de
         ; load p_page
-        ld c, (hl)
+        ld a, (hl)
+		call a_map_to_bc	;BC->child bank for bankfork
 	; load existing page ptr
 	ld a, (_udata + U_DATA__U_PAGE)
-
 	push bc
+	exx
+	push bc			;store BC'
+	call a_map_to_bc ;BC'->parent bank for bankfork
+	exx
 	call bankfork			;	do the bank to bank copy
+	exx
+	pop bc			;restore BC'
+	exx
 	pop bc
-
 	; Copy done
 
 	; We are going to copy the uarea into the parents uarea stash
@@ -318,18 +325,16 @@ _need_resched:	.db 0
 ;	We are swapping the full address space so we must be really careful
 ;	that we save and restore globals in the same bank!
 ;
-bankfork:	;a parent, c child
+bankfork:	;BC parent, BC' child
 
-	ld b,#0x7f
-	out (c),c		;->switch to child bank
-	ld e,c
-
-	ld c,#0x10
+	push bc
+	ld bc,#0x7f10
 	out (c),c
 	ld c,#0x4e  ;orange
 	out (c),c
-	
-	ld c,a
+	pop bc
+	out (c),c		;->switch to child bank
+	exx
 	ld (cpatch2 + 1),bc	; patch parent into loops ->child bank
 	ld (spcache),sp		;->child bank
 		; 15 outer loops
@@ -341,7 +346,7 @@ bankfork:	;a parent, c child
 	; F000 bytes to copy.
 	; Stack pointer at the target buffer
 	out(c),c	;->switch to parent bank
-	ld c,e
+	exx
 	ld (cpatch1 + 1),bc	; patch child into loop ->parent bank
 	ld sp,#PROGBASE	; Base of memory to fork
 	xor a
