@@ -190,7 +190,8 @@ map_proc_2:
 	pop	ea
 	ret
 	;	Care needed as we unmap the data we are pointing into
-	;	so must read it all via T first
+	;	so must read it all via T first. Do we need to save T?
+	;	FIXME: ??
 map_proc_p2:
 	push	ea
 map_bank:
@@ -200,6 +201,7 @@ map_bank:
 	ld	t,ea
 	ld	a,2,p2
 	st	a,:cur_map+2
+	st	a,2,p3
 	ld	ea,t
 	st	ea,:cur_map
 	st	ea,0,p3
