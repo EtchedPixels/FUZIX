@@ -7,8 +7,8 @@
 #include <vt.h>
 #include <tty.h>
 
-/* Onboard UART */
-static volatile uint8_t *cpuio = (volatile uint8_t *)0;
+/* 16550A or similar */
+static volatile uint8_t *uart = (volatile uint8_t *)0xFEC0;
 
 static char tbuf1[TTYSIZ];
 PTY_BUFFERS;
@@ -34,16 +34,14 @@ void kputchar(uint8_t c)
 
 ttyready_t tty_writeready(uint8_t minor)
 {
-	/* Console is the 6803 onboard port */
-	if (cpuio[0x11] & 0x20)
+	if (uart[5] & 0x20)
 		return TTY_READY_NOW;
 	return TTY_READY_SOON;
 }
 
 void tty_putc(uint8_t minor, unsigned char c)
 {
-	while(!(cpuio[0x11] & 0x20));	/* Hack FIXME */
-	cpuio[0x13] = c;
+	*uart = c;
 }
 
 void tty_setup(uint8_t minor, uint8_t flag)
@@ -69,6 +67,6 @@ void tty_data_consumed(uint8_t minor)
 
 void tty_poll(void)
 {
-	if (cpuio[0x11] & 0x80)
-		tty_inproc(1, cpuio[0x12]);
+/* TODO	if (cpuio[0x11] & 0x80)
+		tty_inproc(1, cpuio[0x12]); */
 }
