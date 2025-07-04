@@ -1,10 +1,9 @@
 .area BOOT (ABS)
 .org #0x4000
-    ld hl,#0x100+#switch_to_fuzix-#switch_to_fuzix_end
-    ld de,#switch_to_fuzix
+    ld hl,#switch_to_fuzix
+    ld de,#0x100+#switch_to_fuzix-#switch_to_fuzix_end
     ld bc,#switch_to_fuzix_end-#switch_to_fuzix
-    push hl
-    ex de,hl
+    push de
     ldir
     pop hl
     jp (hl)
