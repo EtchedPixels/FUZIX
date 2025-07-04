@@ -49,8 +49,9 @@ size_t strlen(const char *p)
 
 /* This points to the last buffer in the disk buffers. There must be at least
    four buffers to avoid deadlocks. */
+#ifdef CONFIG_DYNAMIC_BUFPOOL
 struct blkbuf *bufpool_end = bufpool + NBUFS;
-
+#endif
 /*
  *	We pack discard into the memory image is if it were just normal
  *	code but place it at the end after the buffers. When we finish up
@@ -59,6 +60,7 @@ struct blkbuf *bufpool_end = bufpool + NBUFS;
  */
 void plt_discard(void)
 {
+#ifdef CONFIG_DYNAMIC_BUFPOOL
 	uint16_t discard_size = PROGTOP - (uint16_t)bufpool_end;
 	bufptr bp = bufpool_end;
 
@@ -74,4 +76,5 @@ void plt_discard(void)
 		bp->bf_dev = NO_DEVICE;
 		bp->bf_busy = BF_FREE;
 	}
+#endif	
 }
