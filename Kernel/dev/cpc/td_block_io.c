@@ -1,14 +1,14 @@
 #include <kernel.h>
 #include <kdata.h>
-#include <plt_ch375.h>
 
 /* We have to provide slightly custom methods here because of the banked
    kernel */
 
-#ifdef CONFIG_ALBIREO
+#ifdef CONFIG_TD
+
 COMMON_MEMORY
 
-void ch375_rblock(uint8_t *p) __naked
+void td_io_rblock(uint8_t *p) __naked
 {
     __asm
 	.globl a_map_to_bc
@@ -25,6 +25,14 @@ void ch375_rblock(uint8_t *p) __naked
             push hl
             push de
 #endif
+            ld bc,#0x7f10
+            out (c),c
+            ld c,#0x51 ; Sea Green
+            out (c),c
+            ld bc, (_td_io_data_reg)            ; setup port number
+            ex af,af'                       ;'
+            ld a, (_td_io_data_count)
+            ex af,af'                       ;'            
             ld a, (_td_raw) 			    ; I/O type ?
 #ifdef SWAPDEV
 	        cp #2
@@ -34,20 +42,18 @@ void ch375_rblock(uint8_t *p) __naked
             jr doread
 not_swapin:
 #endif
-            or a                                    ; test is_user
-            jr z, doread		    ; map user memory first if required
+            or a                                ; test is_user
+            jr z, doread		                ; map user memory first if required
             ld a, (_td_page)
+            exx
             call a_map_to_bc
             out (c),c
+            exx
 doread:
-            ld bc,#0x7f10
-            out (c),c
-            ld c,#0x4a  ;bright yellow
-            out (c),c
-            ld bc, #CH376_REG_DATA                    ; setup port number
-                                                    ; and count
+
+                    ; and count
                     ; transfer 64 bytes
-            ld a,#8
+            ex af,af'                       ;'
 doread1:                    
             ini
             inc b
@@ -66,7 +72,8 @@ doread1:
             ini
             inc b
             dec a
-            jr nz,doread1            
+            jr nz,doread1
+            ex af,af'                       ;'                     
             ld bc,#0x7fc2
             out (c),c
             ld bc,#0x7f10
@@ -77,7 +84,7 @@ doread1:
     __endasm;
 }
 
-void ch375_wblock(uint8_t *p) __naked
+void td_io_wblock(uint8_t *p) __naked
 {
     __asm
     .globl a_map_to_bc
@@ -94,6 +101,14 @@ void ch375_wblock(uint8_t *p) __naked
             push hl
             push de
 #endif
+            ld bc,#0x7f10
+            out (c),c
+            ld c,#0x45  ;Purple
+            out (c),c
+            ld bc, (_td_io_data_reg)            ; setup port number
+            ex af,af'                       ;'
+            ld a, (_td_io_data_count)
+            ex af,af'                       ;'
             ld a, (_td_raw) ;			    ; I/O type
                                                     ; and count
 #ifdef SWAPDEV
@@ -104,20 +119,18 @@ void ch375_wblock(uint8_t *p) __naked
             jr dowrite
 not_swapout:
 #endif
-            or a                                    ; test is_user
-            jr z, dowrite		    ; map user memory first if required
+            or a                                ; test is_user
+            jr z, dowrite		                ; map user memory first if required
             ld a, (_td_page)
+            exx
             call a_map_to_bc
             out (c),c
+            exx
+
 dowrite:
-            ld bc,#0x7f10
-            out (c),c
-            ld c,#0x55  ;bright blue
-            out (c),c
-            ld bc, #CH376_REG_DATA                    ; setup port number
-                                                    ; and count
+                        ; and count
                         ; transfer 64 bytes
-            ld a,#8
+            ex af,af'                       ;'
 dowrite1:
             inc b
             outi
@@ -136,9 +149,10 @@ dowrite1:
             inc b
             outi
             dec a
-            jr nz,dowrite1            
+            jr nz,dowrite1
+            ex af,af'                       ;'            
             ld bc,#0x7fc2
-            out (c),c
+            out (c),c         
             ld bc,#0x7f10
             out (c),c                                    
             ld a,(_vtborder)

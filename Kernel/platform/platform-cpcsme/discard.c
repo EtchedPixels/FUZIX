@@ -1,6 +1,7 @@
 #include <kernel.h>
 #include <devtty.h>
 #include <printf.h>
+#include "plt_ch375.h"
 
 extern int8_t n_valid_maps;
 extern uint8_t valid_maps_array[MAX_MAPS];
@@ -16,21 +17,7 @@ void pagemap_init(void)
 /* Nothing to do for the map of init but we do set our vectors up here */
 void map_init(void)
 {
- /*if (request_irq(0xE7, tuart0_rx_ring) |
- request_irq(0xEF, tuart0_txd) |
- request_irq(0xF7, tuart0_timer4))
-  panic("irqset");*/
- /* We need to claim these in case we set one off as they are at odd vectors
-    as the base tu_uart is strapped for 8080 mode */
- /*if (
-  request_irq(0xC7, spurious) |
-  request_irq(0xCF, spurious) |
-  request_irq(0xD7, spurious) |
-  request_irq(0xDF, spurious) |
-  request_irq(0xFF, spurious)
-  )
-  panic("irqset2");*/
-  /* FIXME: request vectors for uart1 and 2 */
+
 }
 
 uint8_t plt_param(char *p)
@@ -44,34 +31,59 @@ void plt_copyright(void)
 	kprintf("Amstrad CPC with standard memory expansion platform\nCopyright (c) 2024-2025 Antonio J. Casado Alias\n");
 }
 
-#if defined CONFIG_USIFAC_SERIAL
-void usifac_serial_init()
-{
+#if (defined CONFIG_USIFAC_SERIAL || defined CONFIG_USIFAC_CH376)
+void usifac_flush(){
 	char c;
-	kprintf("Configuring Usifac serial port\n");
-	usifctrl = USIFAC_RESET_COMMAND;
-	usifctrl = USIFAC_CLEAR_RECEIVE_BUFFER_COMMAND;
-	usifctrl = USIFAC_DISABLE_BURST_MODE_COMMAND;
-	usifctrl = USIFAC_DISABLE_DIRECT_MODE_COMMAND;
-	usifctrl = USIFAC_SET_115200B_COMMAND;
-	while (usifctrl == 0xff) /*Use some kind of timeout*/
+	while ((usifctrl == 0xff)){
 		c=usifdata; /*flush transmit buffer*/
-	c=usifspr; /*read baudrate*/
-	if (c == USIFAC_SET_115200B_COMMAND)
-	{
+		/*kprintf("%2x:",c);*/
+	}
+	/*kprintf("\n");*/
+}
+void usifac_init()
+{
+	kprintf("Configuring Usifac\n");
+	if (usifexists == 255){
+		kprintf("Usifac not present\n");
+		return;
+	}
+#if (defined CONFIG_USIFAC_SERIAL && !(defined CONFIG_USIFAC_CH376))
+	usifctrl = USIFAC_SET_115200B_COMMAND;
+	usifac_flush();
+#endif
+#if (!(defined CONFIG_USIFAC_SERIAL) && (defined CONFIG_USIFAC_CH376))
+	usifctrl = USIFAC_SET_9600B_COMMAND;
+	usifac_flush();
+	usifdata = 0x57;
+	usifdata = 0xAB;
+	usifdata = 0x02; /*CH375_CMD_SET_BAUDRATE*/
+	usifdata = 0x03;
+	usifdata = 0xFA;
+	usifctrl = USIFAC_SET_1MBPS_COMMAND;
+	usifac_flush();
+#endif
+	switch (usifgetbaud){
+	case USIFAC_SET_1MBPS_COMMAND:
+		kprintf("Usifac CH376 module serial comunication configured at 1MBPS\n");
+		break;
+	case USIFAC_SET_115200B_COMMAND:
 		kprintf("Usifac serial port configured at 115200 baud\n");
-	/*	usifac_present = 1;*/
+		break;
+	default:
+		kprintf("Error configuring Usifac, baudcode:%u\n",usifgetbaud);
 	}
 }
 #endif
+
 void device_init(void)
 {
-#ifdef CONFIG_ALBIREO
+#if (defined CONFIG_USIFAC_SERIAL || defined CONFIG_USIFAC_CH376)
+	usifac_init();
+#endif
+#if (defined CONFIG_ALBIREO || defined CONFIG_USIFAC_CH376)
 	ch375_probe();
 #endif
-#ifdef CONFIG_USIFAC_SERIAL
-	usifac_serial_init();
-#endif
+
 #ifdef CONFIG_TD_IDE
 	ide_probe();
 #endif
