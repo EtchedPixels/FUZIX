@@ -28,12 +28,13 @@
 	.globl _int_disabled
 
 	.globl _MMR_for_this_bank
-
 	.globl _n_valid_maps
-
 	.globl _valid_maps_array
 
 	.globl _vtborder
+
+	.globl _td_io_data_reg
+	.globl _td_io_data_count
 
 
 	; exported debugging tools
@@ -130,12 +131,14 @@ _int_disabled:
 _vtborder:		; needs to be common
 	.db 0
 
+_td_io_data_reg:
+	.dw 0
+_td_io_data_count:
+	.db 0
+
 _MMR_for_this_bank:
 	.db 0
-_n_valid_maps:
-		.db 0
-_valid_maps_array:
-		.ds 15
+
 ; -----------------------------------------------------------------------------
 ; KERNEL MEMORY BANK (only accessible when the kernel is mapped)
 ; In this port, as DISCARD area is in the  upper 16K we can use C1 map to see the
@@ -146,6 +149,11 @@ _valid_maps_array:
 ; and https://www.cpcwiki.eu/index.php/Gate_Array#Register_MMR_.28RAM_memory_mapping.29
 ; -----------------------------------------------------------------------------
 	.area _DISCARD
+
+_n_valid_maps:
+		.db 0
+_valid_maps_array:
+		.ds 15
 
 init_early: 
 		ld bc, #0x7fc1 			;convenient map to copy common to a visible area for copy routine
@@ -260,7 +268,7 @@ not_valid:
 		jp early_ret
 nmaps:
         .db 15
-MMR_array_for_copy_common:; cambiar esto- otro array para 7f, 7e, etc. recorrer ambos marcando cada 64k y añadiendo a pagemap init los marcados haciendo balance del total de RAM->discard
+MMR_array_for_copy_common:
         .db 0xcf
         .db 0xd7
         .db 0xdf
@@ -327,25 +335,6 @@ ramsize_loop:
 	ld bc,#stubs_low_end-stubs_low
 	ldir
 
-	;init usifac serial
-
-	ld bc,#0xfbd1
-	ld a,#16
-	out (c),a ; try to set usifac baudrate 115200
-	ld c,#0xdd
-	in a,(c)
-	cp #16
-	jr nz, end_usifac ;usifac is not present
-	ld c,#0xd1
-flush_usifac:	
-	in a,(c)
-	dec a
-	jr z,end_usifac
-	dec c
-	in a,(c)
-	inc c
-	jr flush_usifac
-end_usifac:
 	ld bc,#0x7f10
 	out (c),c
 	ld a,#0x54		;
