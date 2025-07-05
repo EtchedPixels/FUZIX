@@ -1,9 +1,10 @@
 CSRCS = devtty.c devices.c main.c devfdc765.c wiznet.c
 CDSRCS = discard.c
-DSRCS = ../../dev/tinyide.c ../../dev/tinydisk.c ../../dev/ch375.c
+DSRCS = ../../dev/tinyide.c ../../dev/tinydisk.c 
 DDSRCS = ../../dev/tinyide_discard.c ../../dev/tinydisk_discard.c 
-DZSRCS = ../../dev/cpc/cpcidesme.c ../../dev/cpc/cpckeyboard.c ../../dev/cpc/devinput.c  ../../dev/cpc/albireosme.c 
-DDZSRCS =
+DZSRCS = ../../dev/cpc/cpcidesme.c ../../dev/cpc/cpckeyboard.c ../../dev/cpc/devinput.c
+DZSRCS += ../../dev/cpc/ch375.c ../../dev/cpc/td_block_io.c
+DDZSRCS = ../../dev/cpc/ch375_discard.c
 ASRCS = crt0.s cpcsme.s cpcvideo.s fdc765.s
 ASRCS += usermem.s tricks.s commonmem.s
 NSRCS = ../../dev/net/net_w5x00.c ../../dev/net/net_native.c
@@ -76,7 +77,7 @@ image:
 	flip -m fuzix.bas
 #Insert files to DSK image
 	iDSK $(IMAGES)/fuzix.dsk -i fuzix.bas -t 0 -f
-#	iDSK $(IMAGES)/fuzix.dsk -i fuzix.scr -t 1 -c c000 -f
+	iDSK $(IMAGES)/fuzix.dsk -i fuzix.scr -t 1 -c c000 -f
 	iDSK $(IMAGES)/fuzix.dsk -i runfuzix.bin -e 4000 -c 4000 -t 1 -f
 	iDSK $(IMAGES)/fuzix.dsk -i fuzix1.bin -t 1 -c 4100 -f
 	iDSK $(IMAGES)/fuzix.dsk -i fuzix2.bin -t 1 -c 4000 -f

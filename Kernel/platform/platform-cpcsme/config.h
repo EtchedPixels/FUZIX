@@ -59,18 +59,21 @@
     #define NUM_DEV_TTY 2
 #endif
 
-/* Core networking support */
-#define CONFIG_NET
-/* With a WizNet card */
-#define CONFIG_NET_WIZNET
-#define CONFIG_NET_W5100
-/* Or native (eg SLIP) */
-#undef CONFIG_NET_NATIVE
-#undef CONFIG_USIFAC_SLIP
 
+/* SLIP on Usifac */
+#undef CONFIG_USIFAC_SLIP
+#ifdef CONFIG_USIFAC_SLIP
+    #ifdef CONFIG_USIFAC_SERIAL
+        /* Core networking support */
+        #define CONFIG_NET
+        #define CONFIG_NET_NATIVE
+    #else
+        #undef CONFIG_USIFAC_SLIP
+    #endif
+#endif
 
 #define TTYDEV   BOOT_TTY /* Device used by kernel for messages, panics */
-#define NBUFS    5	  /* Number of block buffers MUST be big enough to push discard above 0xC000*/
+#define NBUFS    8	  /* Number of block buffers MUST be big enough to push discard above 0xC000*/
                         /*Remember to set it also in kernel.def*/
 #define NMOUNTS	 4	  /* Number of mounts at a time */
 
@@ -79,7 +82,7 @@
 
 #define CONFIG_FDC765
 #define CONFIG_TD
-#define CONFIG_TD_NUM	2
+#define CONFIG_TD_NUM	4
 /* IDE/CF support */
 #define CONFIG_TD_IDE
 #ifdef CONFIG_TD_IDE
@@ -89,9 +92,26 @@
 #endif
 /* Albireo ch376 USB storage support*/
 #define CONFIG_ALBIREO
-#ifdef CONFIG_ALBIREO
+/* USIFAC/ULIFAC ch376 USB storage support*/
+#define CONFIG_USIFAC_CH376
+#ifdef CONFIG_USIFAC_CH376
+    #undef CONFIG_USIFAC_SERIAL
+    #undef CONFIG_USIFAC_SLIP
+    #undef CONFIG_NET
+    #undef CONFIG_NET_NATIVE
+#endif
+
+#if ((defined CONFIG_ALBIREO)||(defined CONFIG_USIFAC_CH376))
     #define CONFIG_CH375
 #endif
 
+/* Net4CPC card */
+#undef CONFIG_NET4CPC
+#ifdef CONFIG_NET4CPC
+    /* Core networking support */
+    #define CONFIG_NET
+    #define CONFIG_NET_WIZNET
+    #define CONFIG_NET_W5100
+#endif
 
 #define BOOTDEVICENAMES "hd#,fd"
