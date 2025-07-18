@@ -43,7 +43,7 @@ __uzero:
 	ld	ea,2,p1
 	ld	p3,ea
 	ld	ea,4,p1
-	add	ea,=0x010	; inc high half
+	add	ea,=0x0100	; inc high half
 	add	a,=0x01		; inc low half
 	st	ea,:__tmp
 	

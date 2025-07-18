@@ -64,7 +64,7 @@ loader.o: loader.S
 
 loader: loader.o
 	$(CROSS_LD) -b -C 0xFC00 -Z 0xFFC0 -o loader.tmp loader.o
-	dd if=loader.tmp of=loader.bin bs=256 skip=252
+	dd if=loader.tmp of=loader.bin bs=256 skip=252 count=1
 
 IMAGES = $(FUZIX_ROOT)/Images/$(TARGET)
 

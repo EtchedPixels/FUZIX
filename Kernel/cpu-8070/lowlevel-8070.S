@@ -253,7 +253,7 @@ nmimsg:
 	.ascii '[NMI]'
 	.byte 0
 ;
-;	The trap saved our entire register state for us
+;	Save state and get going
 ;
 interrupt_handler:
 	push	ea
