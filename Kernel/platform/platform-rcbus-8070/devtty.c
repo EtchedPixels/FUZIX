@@ -1,3 +1,6 @@
+/*
+ *	TODO: support multiple 16x50 ports
+ */
 #include <kernel.h>
 #include <kdata.h>
 #include <printf.h>
@@ -44,10 +47,58 @@ void tty_putc(uint8_t minor, unsigned char c)
 	*uart = c;
 }
 
+/*
+ *	16x50 conversion betwen a Bxxxx speed rate (see tty.h) and the values
+ *	to stuff into the chip.
+ */
+static uint16_t clocks[] = {
+	12,		/* Not a real rate */
+	2304,
+	1536,
+	1047,
+	857,
+	768,
+	384,
+	192,
+	96,
+	48,
+	24,
+	12,
+	6,
+	3,
+	2,
+	1
+};
+
+
 void tty_setup(uint8_t minor, uint8_t flag)
 {
-	/* As we don't have a separate clock for serial and the
-	   divider is very limited we are stuck at 115200 8N1 */
+	uint8_t d;
+	uint16_t w;
+	struct termios *t = &ttydata[1].termios;
+
+	d = 0x80;	/* DLAB (so we can write the speed) */
+	d |= (t->c_cflag & CSIZE) >> 4;
+	if(t->c_cflag & CSTOPB)
+		d |= 0x04;
+	if (t->c_cflag & PARENB)
+		d |= 0x08;
+	if (!(t->c_cflag & PARODD))
+		d |= 0x10;
+	uart[3] = d;	/* LCR */
+	w = clocks[t->c_cflag & CBAUD];
+	*uart = w;		/* Set the DL */
+	uart[1] = w >> 8;
+	if (w >> 8)	/* Low speeds interrupt every byte for latency */
+		uart[2] = 0;
+	else		/* High speeds set our interrupt quite early
+			   as our latency is poor, turn on 64 byte if
+			   we have a 16C750 */
+		uart[2] = 0x51;
+	uart[3] = d & 0x7F;
+	/* FIXME: CTS/RTS support */
+	uart[4] = 0x03; /* DTR RTS */
+	uart[1] = 0x0D; /* We don't use tx ints */
 }
 
 void tty_sleeping(uint8_t minor)
@@ -57,7 +108,7 @@ void tty_sleeping(uint8_t minor)
 /* No carrier signal */
 int tty_carrier(uint8_t minor)
 {
-	return 1;
+	return uart[6] & 0x80;
 }
 
 /* No flow control */
@@ -67,6 +118,15 @@ void tty_data_consumed(uint8_t minor)
 
 void tty_poll(void)
 {
-/* TODO	if (cpuio[0x11] & 0x80)
-		tty_inproc(1, cpuio[0x12]); */
+	uint8_t msr;
+	if (uart[5] & 0x01)
+		tty_inproc(1, *uart);
+	msr = uart[6];
+	if (msr & 0x08) {
+		if (msr & 0x80)
+			tty_carrier_raise(1);
+		else
+			tty_carrier_drop(1);
+	}
+	/* TOOD: CTS/RTS etc */
 }
