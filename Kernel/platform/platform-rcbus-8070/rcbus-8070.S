@@ -107,7 +107,8 @@ _program_vectors:
 	;
 	; our C caller will invoke us with the pointer C style
 	ld	ea,2,p1
-	jsr	map_proc
+	ld	p2,ea
+	jsr	map_proc_p2
 program_vectors_k:
 	ld	p2,=0
 	ld	p3,=lowbuf
@@ -121,6 +122,10 @@ program_vectors_k:
 	st	ea,@2,p2
 	ld	ea,@2,p3
 	st	ea,@2,p2
+	; Set the call vectors - only CALL0 for now
+	ld	ea,=unix_syscall_entry-1
+	ld	p2,=0x20
+	st	ea,0,p2
 	jmp	map_kernel
 
 lowbuf:
@@ -190,11 +195,11 @@ map_proc_2:
 	pop	ea
 	ret
 	;	Care needed as we unmap the data we are pointing into
-	;	so must read it all via T first. Do we need to save T?
-	;	FIXME: ??
+	;	so must read it all via T first.
 map_proc_p2:
 	push	ea
-map_bank:
+	ld	ea,t
+	push	ea
 	push	p3
 	ld	p3,=0xFE78		; MMU
 	ld	ea,0,p2
@@ -207,6 +212,8 @@ map_bank:
 	st	ea,0,p3
 	pop	p3
 	pop	ea
+	ld	t,ea
+	pop	ea
 	ret
 
 ;
@@ -218,7 +225,7 @@ map_bank:
 map_restore:
 	push	p2
 	ld	p2,=saved_map
-	jsr	map_bank
+	jsr	map_proc_p2
 	pop	p2
 	ret
 
@@ -235,7 +242,7 @@ map_save_kernel:
 	ld	a,:cur_map+2
 	st	a,2,p2
 	ld	p2,=kmap	
-	jsr	map_bank
+	jsr	map_proc_p2
 	pop	p2
 	pop	ea
 	ret

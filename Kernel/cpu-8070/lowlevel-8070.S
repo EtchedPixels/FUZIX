@@ -203,9 +203,9 @@ no_signal:
 _doexec:
 	ld	ea,2,p1
 	and	s,=0xfe
-	ld	t,ea
 	jsr	map_proc_always
 	ld	p3,=_udata
+	ld	t,ea
 	ld	ea,U_DATA__U_ISP,p3
 	ld	p1,ea
 	ld	ea,=0
@@ -213,9 +213,12 @@ _doexec:
 	or	s,=1
 	;	Now into user code with the needed info
 	ld	ea,t
+	;	CPU increment/fetch is not the usual pattern so compensate
+	sub	ea,=1
 	push	ea
 	;	We hardcode the user DP space but pass it anyway
 	;	in case it ever becomes dynamic
+	ld	p2,=PROGLOAD
 	ld	p3,=0xFFF0
 	ret
 
@@ -319,7 +322,7 @@ no_signals:
 	pop	p3
 	pop	p2
 	pop	ea
-	ld	ea,t
+	ld	t,ea
 	pop	a
 	ld	s,a
 	pop	ea
