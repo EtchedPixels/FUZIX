@@ -143,9 +143,9 @@ unix_syscall_entry:
 	st	ea,U_DATA__U_ARGN,p3
 	ld	ea,6,p1
 	st	ea,U_DATA__U_ARGN+2,p3
-	ld	ea,6,p1
+	ld	ea,8,p1
 	st	ea,U_DATA__U_ARGN+4,p3
-	ld	ea,6,p1
+	ld	ea,10,p1
 	st	ea,U_DATA__U_ARGN+6,p3
 
 	ld	a,=1
@@ -334,8 +334,8 @@ no_signals:
 iretk:
 	jsr	map_restore
 	ld	p2,=istack_switched_sp
-	ld	ea,p2
-;TODO	ld	p2,
+	ld	ea,0,p2
+	ld	p1,ea
 	ld	a,=0
 	st	a,U_DATA__U_ININTERRUPT,p3
 	bra	no_signals
