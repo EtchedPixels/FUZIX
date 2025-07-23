@@ -70,12 +70,10 @@ _plt_switchout:
 stash_udata:
 	ld	p2,=_udata
 	ld	p3,=UDATA_STASH
-	ld	a,=0
+	ld	a,=0			; 512 bytes so 256 words
 	st	a,:__tmp
 stash_loop:
-	ld	ea,@2,p2
-	st	ea,@2,p3
-	ld	ea,@2,p2
+	ld	ea,@2,p2		; copy a word at a time
 	st	ea,@2,p3
 	dld	a,:__tmp
 	bnz	stash_loop
@@ -97,8 +95,8 @@ _switchin:
 	ld	p2,ea
 	ld	p3,=_udata
 	ld	ea,P_TAB__P_PAGE_OFFSET,p2
-	sub	ea,U_DATA__U_PAGE,p3
 	ld	t,ea
+	sub	ea,U_DATA__U_PAGE,p3
 	or	a,e
 	bz	nostash
 
@@ -111,23 +109,29 @@ _switchin:
 	pop	p2
 
 not_swapped:
+	ld	ea,p2
+	st	ea,:__tmp2
+	add	ea,=P_TAB__P_PAGE_OFFSET
+	ld	p2,ea
+
 	jsr	map_proc_p2
 
-	push	p2
 	; We must do this inline as we will be changing stack under
-	; ourselves and without stack
+	; ourselves and without stack. We saved our pointer in tmp2 as
+	; we are about to mash our own stack.
 
 	ld	p2,=_udata
 	ld	p3,=UDATA_STASH
 	ld	a,=0
 	st	a,:__tmp
 unstash_loop:
-	ld	ea,@2,p3
-	st	ea,@2,p2
-	ld	ea,@2,p3
+	ld	ea,@2,p3		; 256 words
 	st	ea,@2,p2
 	dld	a,:__tmp
 	bnz	unstash_loop
+
+	ld	ea,:__tmp2		; recover pointer
+	ld	p2,ea
 
 	; Now get the stack back sane
 	ld	p3,=_udata
@@ -136,13 +140,17 @@ unstash_loop:
 
 	jsr	map_kernel
 nostash:
+	; At this point:
+	; p2 points to the process
+	; p3 points to the udata
+
         ; check u_data->u_ptab matches what we wanted
 	ld	ea,U_DATA__U_PTAB,p3
+	push	p2		; So we can compare p2 and ea
 	sub	ea,0,p1		; it's top of stack right now
+	pop	p2
 	or	a,e
 	bnz	switchinfail
-
-	pop	p2		; get the pointer back
 
 	ld	a,=P_RUNNING
 	st	a,P_TAB__P_STATUS_OFFSET,p2
@@ -185,7 +193,7 @@ swtchdone:
         ret
 
 switchinfail:
-	ld	p2,=badswitchmsg
+	ld	p3,=badswitchmsg
         jsr	outstring
 	; something went wrong and we didn't switch in what we asked for
         jmp	_plt_monitor
@@ -298,8 +306,13 @@ fork_copy:
 	ld	a,U_DATA__U_PAGE+2,p3
 	jsr	bank2bank
 
+	push	p2
+	ld	ea,=P_TAB__P_PAGE_OFFSET
+	add	ea,0,p1		; add the saved p2 to get the page pointer
+	ld	p2,ea
 	jsr	map_proc_p2
 	jsr	stash_udata
+	pop	p2		; recover the pointer
 	jmp	map_kernel_di
 
 bank2bank:
@@ -325,7 +338,7 @@ copyloop:
 	st	ea,@2,p3
 	ld	ea,@2,p2
 	st	ea,@2,p3
-	ld	ea,p3
+	ld	ea,p2
 	xch	a,e		; get top byte
 	bp	copyloop	; sign +ve  (ie below 0x8000)
 	pop	p2
