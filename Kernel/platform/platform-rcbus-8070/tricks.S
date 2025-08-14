@@ -258,9 +258,9 @@ _dofork:
 	pop	ea
 	pop	ea		; and the pid
 
-	push	p2		; arguments for C
 	ld	ea,=_udata
 	push	ea
+	push	p2		; arguments for C
         jsr	_makeproc
 	pop	ea
 	pop	ea
@@ -307,10 +307,10 @@ fork_copy:
 	jsr	bank2bank
 
 	push	p2
-	ld	ea,=P_TAB__P_PAGE_OFFSET
-	add	ea,0,p1		; add the saved p2 to get the page pointer
-	ld	p2,ea
+	; Get parent mapping table into p2
+	ld	p2,=_udata+U_DATA__U_PAGE
 	jsr	map_proc_p2
+	; Save udata as is (the parent one) into the parent save
 	jsr	stash_udata
 	pop	p2		; recover the pointer
 	jmp	map_kernel_di
