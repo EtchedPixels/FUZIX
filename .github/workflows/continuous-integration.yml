@@ -16,7 +16,7 @@ jobs:
       fail-fast: false # keep on building even if one target fails
       matrix:
         target: [appleiie, dragon-mooh, dragon-nx32, esp32, esp8266, multicomp09, rbc-mark4, rcbus-6502, rcbus-68008, rpipico, sc108, tiny68k, armm0-libc]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v3
     - name: install build deps
@@ -29,7 +29,6 @@ jobs:
           echo "sub_target=libs" >> $GITHUB_ENV
           ;;
           dragon-mooh|dragon-nx32|multicomp09)
-          sudo add-apt-repository -n -y ppa:p-pisati/fuzix
           sudo add-apt-repository -n -y ppa:tormodvolden/m6809
           PKGS="lwtools gcc6809 xroar"
           echo "target=TARGET=${{ matrix.target }}" >> $GITHUB_ENV
