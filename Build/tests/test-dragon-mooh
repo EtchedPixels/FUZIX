@@ -29,10 +29,12 @@ echo "Starting XRoar $(date)"
 xroar \
     -no-ratelimit \
     -ui $UI \
+    -ao null \
     -timeout 60 \
     -timeout-motoroff 10 \
     -default-machine dragon32 -romlist d32=$BASROM \
     -cart mooh -cart-rom $CARTROM -load-hd0 $IMAGE \
+    -cart-opt mooh-crt9128-stderr \
     2>&1 | tee $LOGFILE
 echo "XRoar done $(date)"
 

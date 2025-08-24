@@ -8,7 +8,9 @@ prtroot >/etc/mtab
 #fsck -a
 #mount -a
 >/var/run/utmp
-echo "Starting various tests from rc"
-echo '[dc is working] P' | dc ; echo
-echo "Testing done!"
+echo "Starting various tests from /etc/rc:"
+echo '[dc is working OK] P' | dc ; echo
+echo "shell pipeline" | head | tail | sed 's/$/ OK/' | cat
+echo ': test1 ." fforth is working OK" CR ; test1' | fforth
+echo "Testing done! Cycling motor relay..."
 echo "HEX 3c ff21 C! 34 ff21 C!" | fforth
