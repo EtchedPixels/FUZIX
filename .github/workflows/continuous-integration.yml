@@ -35,6 +35,7 @@ jobs:
           echo "flags=CI_TESTING=1" >> $GITHUB_ENV
           ;;
           esp32)
+          sudo add-apt-repository -n -y ppa:tormodvolden/esp
           PKGS="esptool"
           (cd ~ && git clone -b v5.0.2 --depth 1 --recursive https://github.com/espressif/esp-idf.git)
           (cd ~/esp-idf && ./install.sh esp32)
