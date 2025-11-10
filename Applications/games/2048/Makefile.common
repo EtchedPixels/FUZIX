@@ -2,7 +2,12 @@ include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 APPS = 2048
 
-CFLAGS += -Os
+ifeq ($(TARGET),rpipico)
+CFLAGS := -I$(FUZIX_ROOT)/Library/include $(CFLAGS)
+endif
+
+# Append optimization flags without overwriting platform-specific CFLAGS
+CFLAGS := $(CFLAGS) -Os
 
 app_2048_SRCS = board.c draw.c main.c
 app_2048_OBJS = $(app_2048_SRCS:.c=.o)
