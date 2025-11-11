@@ -23,7 +23,11 @@ CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_$(PLATFORM).o
 HOSTCC = cc
 HAS_FP = yes
 
-#11NOV2025 DJP LINKER_TAIL
-# Include libgcc for Cortex-M0 runtime helpers (__aeabi_* and __gnu_thumb1_case_*),
+#11NOV2025 DJP Added LINKER_TAIL
+# Include libgcc (-lgcc) for Cortex-M0 runtime helpers (__aeabi_* and __gnu_thumb1_case_*),
 # required for integer division and other compiler-generated routines.
-LINKER_TAIL = -lgcc
+# Switch Ordering
+# -lgcc first for __aeabi_* helpers
+# -lcarmm0 provides standard C functions for ARM M0
+# -ltermcaparmm0 last since it depends on libcarmm0
+LINKER_TAIL = -L$(FUZIX_ROOT)/Library/libs -lgcc -lcarmm0 -ltermcaparmm0
