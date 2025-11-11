@@ -22,3 +22,8 @@ CRT0NS = $(FUZIX_ROOT)/Library/libs/crt0nostdio_$(PLATFORM).o
 .SUFFIXES: .c .o
 HOSTCC = cc
 HAS_FP = yes
+
+#11NOV2025 DJP LINKER_TAIL
+# Include libgcc for Cortex-M0 runtime helpers (__aeabi_* and __gnu_thumb1_case_*),
+# required for integer division and other compiler-generated routines.
+LINKER_TAIL = -lgcc
