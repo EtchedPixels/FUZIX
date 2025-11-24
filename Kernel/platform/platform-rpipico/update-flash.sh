@@ -26,6 +26,10 @@ chmod 0755 usr
 chmod 0755 var
 chmod 0700 root
 
+cd /root
+bget ../../../Kernel/platform/platform-rpipico/files/root/.profile .profile
+chmod 0700 .profile
+
 mkdir /usr/man
 mkdir /usr/man/man1
 mkdir /var/run
