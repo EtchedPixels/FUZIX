@@ -2,7 +2,12 @@ include $(FUZIX_ROOT)/Target/rules.$(USERCPU)
 
 APPS = 2048
 
-CFLAGS += -Os
+ifeq ($(TARGET),rpipico)
+CFLAGS := -I$(FUZIX_ROOT)/Library/include $(CFLAGS)
+endif
+
+# Append optimization flags without overwriting platform-specific CFLAGS
+CFLAGS := $(CFLAGS) -Os
 
 app_2048_SRCS = board.c draw.c main.c
 app_2048_OBJS = $(app_2048_SRCS:.c=.o)
@@ -18,7 +23,9 @@ MAPS = $(APPS:=.map)
 2048: $(app_2048_OBJS)
 
 $(APPS):
-	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^ -ltermcap$(USERCPU) $(LINKER_TAIL)
+#	Change the order of -ltermcap$(USERCPU) $(LINKER_TAIL) and add -lc$(USERCPU)
+#	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^ -ltermcap$(USERCPU) $(LINKER_TAIL)
+	$(LINKER) $(LINKER_OPT) -o $@ $(CRT0) $^ $(LINKER_TAIL) -lc$(USERCPU) -ltermcap$(USERCPU)
 
 # Clean up
 clean:

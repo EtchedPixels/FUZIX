@@ -118,7 +118,11 @@ extern uint8_t progbase[USERMEM];
  *      map USB devices to tty1-4 and UART0 to tty5 if USB is connected. Or UART0 to tty1 etc if not.
  *      Example: `tty=usb1,uart1,usb2`
 */
-#define CMDLINE	NULL	  /* Location of root dev name */
+
+/* 23Nov2025 DJP Change to mount root filesystem on SD card */
+// #define CMDLINE	NULL	  /* Location of root dev name */
+#define CMDLINE "hdb1"
+/* 23Nov2025 DJP End of modification */
 
 #define BOOTDEVICENAMES "hd#"
 #define SWAPDEV    (swap_dev) /* dynamic swap */
